@@ -1,4 +1,3 @@
-
 query "aws_ebs_volume_count" {
   sql = <<-EOQ
     select count(*) as "Volumes" from aws_ebs_volume
@@ -26,8 +25,6 @@ query "aws_ebs_encrypted_volume_count" {
       not encrypted
   EOQ
 }
-
-
 
 query "aws_ebs_unattached_volume_count" {
   sql = <<-EOQ
