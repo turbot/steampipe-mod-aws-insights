@@ -1,0 +1,458 @@
+query "aws_rds_db_instance_count" {
+  sql = <<-EOQ
+    select count(*) as "RDS DB Instances" from aws_rds_db_instance
+  EOQ
+}
+
+query "aws_rds_public_db_instances_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Public Instances' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as style
+    from
+      aws_rds_db_instance
+    where
+      publicly_accessible
+  EOQ
+}
+
+query "aws_rds_unencrypted_db_instances_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Unencrypted Instances' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as style
+    from
+      aws_rds_db_instance
+    where
+      not storage_encrypted
+  EOQ
+}
+
+query "aws_rds_db_instance_not_in_vpc_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Instances Not In VPC' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as style
+    from
+      aws_rds_db_instance
+    where
+      vpc_id is null
+  EOQ
+}
+
+query "aws_rds_db_instance_cost_per_month" {
+  sql = <<-EOQ
+    select
+       to_char(period_start, 'Mon-YY') as "Month",
+       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+    from
+      aws_cost_by_service_usage_type_monthly
+    where
+      service = 'Amazon Relational Database Service'
+    group by
+      period_start
+    order by
+      period_start
+  EOQ
+}
+
+
+query "aws_rds_db_instance_cost_last_30_counter" {
+  sql = <<-EOQ
+    select
+       'Cost - Last 30 Days' as label,
+       sum(unblended_cost_amount)::numeric::money as value
+    from
+      aws_cost_by_service_daily
+    where
+      service = 'Amazon Relational Database Service'
+      and period_start  >=  CURRENT_DATE - INTERVAL '30 day'
+  EOQ
+}
+
+
+query "aws_rds_db_instance_cost_by_usage_types_12mo" {
+  sql = <<-EOQ
+    select
+       usage_type,
+       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+    from
+      aws_cost_by_service_usage_type_monthly
+    where
+      service = 'Amazon Relational Database Service'
+      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
+    group by
+      usage_type
+    order by
+      sum(unblended_cost_amount) desc
+  EOQ
+}
+
+query "aws_rds_db_instance_cost_30_60_counter" {
+  sql = <<-EOQ
+    select
+      'Cost - Penultimate 30 Days' as label,
+       sum(unblended_cost_amount)::numeric::money as value
+    from
+      aws_cost_by_service_daily
+    where
+      service = 'Amazon Relational Database Service'
+      and period_start  between CURRENT_DATE - INTERVAL '60 day' and CURRENT_DATE - INTERVAL '30 day'
+
+  EOQ
+
+}
+
+query "aws_rds_db_instance_cost_by_usage_types_30day" {
+  sql = <<-EOQ
+    select
+       usage_type,
+       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+    from
+      aws_cost_by_service_usage_type_daily
+    where
+      service = 'Amazon Relational Database Service'
+      --and period_end >= date_trunc('month', CURRENT_DATE::timestamp)
+      and period_end >=  CURRENT_DATE - INTERVAL '30 day'
+
+    group by
+      usage_type
+    order by
+      sum(unblended_cost_amount) desc
+  EOQ
+}
+
+query "aws_rds_db_instance_cost_by_account_30day" {
+  sql = <<-EOQ
+    select
+       a.title as "account",
+       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+    from
+      aws_cost_by_service_monthly as c,
+      aws_account as a
+    where
+      a.account_id = c.account_id
+      and service = 'Amazon Relational Database Service'
+      and period_end >=  CURRENT_DATE - INTERVAL '30 day'
+    group by
+      account
+    order by
+      account
+  EOQ
+}
+
+
+query "aws_rds_db_instance_cost_by_account_12mo" {
+  sql = <<-EOQ
+    select
+       a.title as "account",
+       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+    from
+      aws_cost_by_service_monthly as c,
+      aws_account as a
+    where
+      a.account_id = c.account_id
+      and service = 'Amazon Relational Database Service'
+      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
+    group by
+      account
+    order by
+      account
+  EOQ
+}
+
+
+
+query "aws_rds_db_instance_by_account" {
+  sql = <<-EOQ
+
+
+    select
+      a.title as "account",
+      count(i.*) as "total"
+    from
+      aws_rds_db_instance as i,
+      aws_account as a
+    where
+      a.account_id = i.account_id
+    group by
+      account
+    order by count(i.*) desc
+
+  EOQ
+}
+
+
+query "aws_rds_db_instance_by_region" {
+  sql = <<-EOQ
+    select
+      region,
+      count(i.*) as total
+    from
+      aws_rds_db_instance as i
+    group by
+      region
+  EOQ
+}
+
+
+query "aws_rds_db_instance_by_engine_type" {
+  sql = <<-EOQ
+    select engine as "Engine Type", count(*) as "instances" from aws_rds_db_instance group by engine order by engine
+  EOQ
+}
+
+query "aws_rds_db_instance_logging_status" {
+  sql = <<-EOQ
+  with logging_stat as(
+    select
+      db_instance_identifier
+    from
+      aws_rds_db_instance
+    where
+      (engine like any (array ['mariadb', '%mysql']) and enabled_cloudwatch_logs_exports ?& array ['audit','error','general','slowquery'] )or
+      ( engine like any (array['%postgres%']) and enabled_cloudwatch_logs_exports ?& array ['postgresql','upgrade'] ) or
+      ( engine like 'oracle%' and enabled_cloudwatch_logs_exports ?& array ['alert','audit', 'trace','listener'] ) or
+      ( engine = 'sqlserver-ex' and enabled_cloudwatch_logs_exports ?& array ['error'] ) or
+      ( engine like 'sqlserver%' and enabled_cloudwatch_logs_exports ?& array ['error','agent'] )
+     )
+  select
+    'Enabled' as "Logging Status",
+    count(db_instance_identifier) as "Total"
+  from
+    logging_stat
+union
+  select
+    'Disabled' as "Logging Status",
+    count( db_instance_identifier) as "Total"
+  from
+    aws_rds_db_instance as s where s.db_instance_identifier not in (select db_instance_identifier from logging_stat);
+  EOQ
+}
+
+query "aws_rds_db_instance_multiple_az_status" {
+  sql = <<-EOQ
+    with multiaz_stat as (
+    select
+      distinct db_instance_identifier as name
+    from
+      aws_rds_db_instance
+    where
+      multi_az
+      and not (engine ilike any (array ['%aurora-mysql%', '%aurora-postgres%']))
+    group by name
+ )
+  select
+    'Enabled' as "Multi-AZ Status",
+    count(name) as "Total"
+  from
+    multiaz_stat
+union
+  select
+    'Disabled' as "Multi-AZ Status",
+    count( db_instance_identifier) as "Total"
+  from
+    aws_rds_db_instance as s where s.db_instance_identifier not in (select name from multiaz_stat);
+  EOQ
+}
+
+
+query "aws_rds_db_instance_iam_authentication_enabled" {
+  sql = <<-EOQ
+    with iam_authentication_stat as (
+    select
+      distinct db_instance_identifier as name
+    from
+      aws_rds_db_instance
+    where
+      iam_database_authentication_enabled
+    group by name
+  )
+  select
+    'Enabled' as "IAM Authentication Status",
+    count(name) as "Total"
+  from
+    iam_authentication_stat
+  union
+  select
+    'Disabled' as "IAM Authentication Status",
+    count( db_instance_identifier) as "Total"
+  from
+    aws_rds_db_instance as s where s.db_instance_identifier not in (select name from iam_authentication_stat);
+  EOQ
+}
+
+query "aws_rds_db_instance_by_encryption_status" {
+  sql = <<-EOQ
+    # to do
+
+
+  EOQ
+}
+
+query "aws_rds_db_instance_by_state" {
+  sql = <<-EOQ
+    select
+      status,
+      count(status)
+    from
+      aws_rds_db_instance
+    group by
+      status
+  EOQ
+}
+
+report "aws_rds_db_instance_summary" {
+
+  title = "AWS RDS DB Instance Dashboard"
+
+  container {
+
+    counter {
+      sql   = query.aws_rds_db_instance_count.sql
+      width = 2
+    }
+
+    counter {
+      sql   = query.aws_rds_public_db_instances_count.sql
+      width = 2
+    }
+
+    counter {
+      sql   = query.aws_rds_unencrypted_db_instances_count.sql
+      width = 2
+    }
+
+    counter {
+      sql   = query.aws_rds_db_instance_not_in_vpc_count.sql
+      width = 2
+    }
+
+
+   counter {
+      sql   = query.aws_rds_db_instance_cost_last_30_counter.sql
+      width = 2
+    }
+
+  counter {
+      sql   = query.aws_rds_db_instance_cost_30_60_counter.sql
+      width = 2
+    }
+
+  }
+
+
+    container {
+      title = "Analysis"
+
+
+      #title = "Counts"
+      chart {
+        title = "Instances by Account"
+        sql   = query.aws_rds_db_instance_by_account.sql
+        type  = "column"
+        width = 3
+      }
+
+
+      chart {
+        title = "RDS DB Instances by Region"
+        sql   = query.aws_rds_db_instance_by_region.sql
+        type  = "column"
+        width = 3
+      }
+
+      chart {
+        title = "RDS DB Instances by State"
+        sql   = query.aws_rds_db_instance_by_state.sql
+        type  = "column"
+        width = 3
+      }
+
+      chart {
+        title = "RDS DB Instances by Type"
+        sql   = query.aws_rds_db_instance_by_engine_type.sql
+        type  = "column"
+        width = 3
+      }
+
+    }
+
+
+
+  container {
+    title = "Costs"
+
+    chart {
+      title = "RDS Monthly Cost"
+      type  = "line"
+      sql   = query.aws_rds_db_instance_cost_per_month.sql
+      width = 4
+    }
+
+
+   chart {
+      title = "RDS Cost by Usage Type - last 30 days"
+      type  = "donut"
+      sql   = query.aws_rds_db_instance_cost_by_usage_types_30day.sql
+      width = 2
+    }
+
+   chart {
+      title = "RDS Cost by Usage Type - Last 12 months"
+      type  = "donut"
+      sql   = query.aws_rds_db_instance_cost_by_usage_types_12mo.sql
+      width = 2
+    }
+
+
+    chart {
+      title = "By Account - MTD"
+      type  = "donut"
+      sql   = query.aws_rds_db_instance_cost_by_account_30day.sql
+       width = 2
+    }
+
+    chart {
+      title = "By Account - Last 12 months"
+      type  = "donut"
+      sql   = query.aws_rds_db_instance_cost_by_account_12mo.sql
+      width = 2
+    }
+
+  }
+
+  container {
+    title = "Assessments"
+
+    chart {
+      title = "Logging Status"
+      sql = query.aws_rds_db_instance_logging_status.sql
+      type  = "donut"
+      width = 3
+
+      series "Enabled" {
+         color = "green"
+      }
+    }
+
+    chart {
+      title = "Multi-AZ Status"
+      sql = query.aws_rds_db_instance_multiple_az_status.sql
+      type  = "donut"
+      width = 3
+
+    }
+
+    chart {
+      title = "IAM Authentication"
+      sql = query.aws_rds_db_instance_iam_authentication_enabled.sql
+      type  = "donut"
+      width = 3
+    }
+  }
+}
+
