@@ -428,9 +428,15 @@ report "aws_ebs_volume_dashboard" {
       type  = "donut"
       width = 3
 
-      series "Enabled" {
-         color = "green"
-      }
+      # series "encryption_status" {
+      #   point "Enabled" {
+      #     color = "green"
+      #   }
+
+      #   point "Disabled" {
+      #     color = "red"
+      #   }
+      # }
     }
 
     chart {
