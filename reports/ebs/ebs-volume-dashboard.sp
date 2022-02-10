@@ -436,6 +436,7 @@ report "aws_ebs_volume_dashboard" {
       type  = "donut"
       width = 3
 
+      # TODO: Re-enable once this works
       # series "encryption_status" {
       #   point "Enabled" {
       #     color = "green"
