@@ -3,7 +3,7 @@ query "aws_s3_bucket_logging_disabled_count" {
     select
       count(*) as value,
       'Logging Disabled' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_s3_bucket
     where
@@ -18,7 +18,7 @@ report "aws_s3_bucket_logging_report" {
 
   container {
 
-    counter {
+    card {
       sql = query.aws_s3_bucket_logging_disabled_count.sql
       width = 2
     }

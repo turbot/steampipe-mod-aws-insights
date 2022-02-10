@@ -18,7 +18,7 @@ query "aws_ec2_public_instance_count" {
     select
       count(*) as value,
       'Public Instances' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_ec2_instance
     where
@@ -31,7 +31,7 @@ query "aws_ec2_unencrypted_instance_count" {
     select
        999 as value,
       'TODO: Unencrypted Instances' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
   EOQ
 }
 
@@ -337,19 +337,19 @@ report "aws_ec2_instance_dashboard" {
   container {
 
     # Analysis
-    counter {
+    card {
       sql   = query.aws_ec2_instance_count.sql
       width = 2
     }
 
-    counter {
+    card {
       sql   = query.aws_ec2_instance_total_cores.sql
       width = 2
     }
 
 
    # Costs
-   counter {
+   card {
       sql = <<-EOQ
         select
           'Cost - MTD' as label,
@@ -363,7 +363,7 @@ report "aws_ec2_instance_dashboard" {
       width = 2
     }
 
-  counter {
+  card {
       sql = <<-EOQ
         select
           'Cost - Previous Month' as label,
@@ -378,12 +378,12 @@ report "aws_ec2_instance_dashboard" {
     }
 
     # Assessments
-    counter {
+    card {
       sql   = query.aws_ec2_public_instance_count.sql
       width = 2
     }
 
-    counter {
+    card {
       sql   = query.aws_ec2_unencrypted_instance_count.sql
       width = 2
     }

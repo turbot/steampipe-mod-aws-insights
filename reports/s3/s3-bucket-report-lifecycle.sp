@@ -3,7 +3,7 @@ query "aws_s3_bucket_versioning_disabled_count" {
     select
       count(*) as value,
       'Versioning Disabled' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_s3_bucket
     where
@@ -16,7 +16,7 @@ query "aws_s3_bucket_versioning_mfa_disabled_count" {
     select
       count(*) as value,
       'Versioning MFA Disabled' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_s3_bucket
     where
@@ -31,12 +31,12 @@ report "aws_s3_bucket_lifecycle_report" {
 
   container {
 
-    counter {
+    card {
       sql = query.aws_s3_bucket_versioning_disabled_count.sql
       width = 2
     }
 
-    counter {
+    card {
       sql = query.aws_s3_bucket_versioning_mfa_disabled_count.sql
       width = 2
     }

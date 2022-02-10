@@ -3,7 +3,7 @@ query "aws_s3_bucket_unencrypted_count" {
     select
       count(*) as value,
       'Unencrypted' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_s3_bucket
     where
@@ -35,7 +35,7 @@ query "aws_s3_bucket_https_unenforced_count" {
     select
       count(*) as value,
       'HTTPS Unenforced' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_s3_bucket as b
       left join ssl_ok as ssl on ssl.arn != b.arn
@@ -49,12 +49,12 @@ report "aws_s3_bucket_encryption_report" {
 
   container {
 
-    counter {
+    card {
       sql = query.aws_s3_bucket_unencrypted_count.sql
       width = 2
     }
 
-    counter {
+    card {
       sql = query.aws_s3_bucket_https_unenforced_count.sql
       width = 2
     }
