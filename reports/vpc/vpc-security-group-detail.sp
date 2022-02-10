@@ -1,28 +1,4 @@
 
-  # hierarchy "aws_security_group_rule_sankey" {
-  #       type  = "sankey"
-  #       //title = "Ingress Analysis"
-  #       //sql   = query.aws_vpc_security_group_ingress_rule_sankey.sql
-
-  #       category "aws_ec2_isntance" {
-  #         color = "orange"
-  #       }
-
-  #       category "aws_lambda_function" {
-  #         color = "dark orange"
-  #       }
-
-  #       category "alert" {
-  #         color = "red"
-  #       }
-
-  #       category "ok" {
-  #         color = "green"
-  #       }
-
-  #     }
-
-
 
 report aws_vpc_security_group_detail {
   title = "AWS VPC Security Group Detail"
@@ -35,7 +11,6 @@ report aws_vpc_security_group_detail {
       from 
         aws_vpc_security_group
     EOQ
-    //default = "sg-029cd86da723916fa"
     width = 2
   }
 
@@ -195,23 +170,6 @@ report aws_vpc_security_group_detail {
         title = "Associated To"
         sql   = query.aws_vpc_security_group_assoc.sql
         width = 6 
-      #   base = table.aws_iam_user_analysis_table
-
-      #   column "parent" {
-      #     wrap = "always"
-      #   }
-      #   column "id" {
-      #     wrap = "always"
-      #   }
-      #   column "name" {
-      #     wrap = "always"
-      #   }
-      #   column "depth" {
-      #     display = "none"
-      #   }
-      #   column "category" {
-      #     wrap = "always"
-      #   }
       }
     }
 
@@ -219,7 +177,6 @@ report aws_vpc_security_group_detail {
       width = 6
 
       hierarchy {
-       // base = hierarchy.aws_security_group_rule_sankey
         type  = "sankey"
         title = "Ingress Analysis"
         sql   = query.aws_vpc_security_group_ingress_rule_sankey.sql
@@ -252,7 +209,6 @@ report aws_vpc_security_group_detail {
       width = 6
 
       hierarchy {
-       // base = hierarchy.aws_security_group_rule_sankey
         type  = "sankey"
         title = "Egress Analysis"
         sql   = query.aws_vpc_security_group_egress_rule_sankey.sql
