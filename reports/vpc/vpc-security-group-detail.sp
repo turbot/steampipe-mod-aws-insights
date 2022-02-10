@@ -1,5 +1,3 @@
-
-
 report aws_vpc_security_group_detail {
   title = "AWS VPC Security Group Detail"
 
@@ -13,8 +11,6 @@ report aws_vpc_security_group_detail {
     EOQ
     width = 2
   }
-
-
 
   container {
 
@@ -46,8 +42,6 @@ report aws_vpc_security_group_detail {
       width = 2
     }
 
-
-
     card {
       sql   = <<-EOQ
         select
@@ -65,9 +59,6 @@ report aws_vpc_security_group_detail {
       EOQ
       width = 2
     }
-
-
-
 
     card {
       sql   = <<-EOQ
@@ -92,7 +83,6 @@ report aws_vpc_security_group_detail {
       EOQ
       width = 2
     }
-
 
     card {
       sql   = <<-EOQ
@@ -120,12 +110,10 @@ report aws_vpc_security_group_detail {
 
   }
 
-
   container {
     title  = "Analysis"
 
     container {
-
 
       container {
         width = 6 
@@ -241,8 +229,6 @@ report aws_vpc_security_group_detail {
 
 }
 
-
-
 query "aws_vpc_security_group_assoc" {
   sql = <<EOQ
    select
@@ -265,15 +251,9 @@ query "aws_vpc_security_group_assoc" {
     where 
      sg = 'sg-029cd86da723916fa'
 
-    -- also aws_rds_db_instance / db_security_groups, ELB, ALB, elasticache, etc....
-    -- etc
-     
-      
+    -- TODO: Add aws_rds_db_instance / db_security_groups, ELB, ALB, elasticache, etc....
   EOQ
 }
-
-
-
 
 query "aws_vpc_security_group_ingress_rules" {
   sql = <<EOQ
@@ -302,10 +282,8 @@ query "aws_vpc_security_group_ingress_rules" {
     where
       group_id = 'sg-029cd86da723916fa'
       and not is_egress
-      
   EOQ
 }
-
 
 query "aws_vpc_security_group_egress_rules" {
   sql = <<EOQ
@@ -333,7 +311,6 @@ query "aws_vpc_security_group_egress_rules" {
     where
       group_id = 'sg-029cd86da723916fa'
       and is_egress
-      
   EOQ
 }
 
@@ -362,8 +339,7 @@ with associations as (
       jsonb_array_elements_text(vpc_security_group_ids) as sg
     where 
      sg = 'sg-029cd86da723916fa'
-    -- also aws_rds_db_instance / db_security_groups
-    -- etc
+    -- TODO: Add aws_rds_db_instance / db_security_groups, etc.
 ),
 rules as (
   select
@@ -437,7 +413,7 @@ analysis as (
   select
       group_id as parent,
       arn as id,
-      title || '(' || category || ')' as name, -- arn???
+      title || '(' || category || ')' as name, -- TODO: Should this be arn instead?
       3 as depth,
       category
     from 
@@ -456,10 +432,6 @@ order by
 
   EOQ
 }
-
-
-
-
 
 query "aws_vpc_security_group_egress_rule_sankey" {
 
@@ -486,8 +458,7 @@ with associations as (
       jsonb_array_elements_text(vpc_security_group_ids) as sg
     where 
      sg = 'sg-029cd86da723916fa'
-    -- also aws_rds_db_instance / db_security_groups
-    -- etc
+    -- TODO: Add aws_rds_db_instance / db_security_groups, etc.
 ),
 rules as (
   select
@@ -530,7 +501,7 @@ analysis as (
   select
       group_id as parent,
       arn as id,
-      title || '(' || category || ')' as name, -- arn???
+      title || '(' || category || ')' as name, -- TODO: Should this be arn instead?
       0 as depth,
       category
     from 
@@ -549,7 +520,6 @@ analysis as (
     aws_vpc_security_group sg
     inner join rules sgr on sg.group_id = sgr.group_id
 
-
   union select
     group_id as parent,
     port_proto as id,
@@ -567,10 +537,6 @@ analysis as (
     category
   from
     rules
-
-
-  
-  
   )
 select
   *
