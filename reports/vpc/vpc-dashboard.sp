@@ -86,6 +86,33 @@ query "aws_vpc_by_rfc1918_range" {
   EOQ
 }
 
+
+
+
+query "aws_vpc_by_size" {
+  sql = <<-EOQ
+    with vpc_size as (
+      select
+        vpc_id,
+        cidr_block,
+        concat( 
+          '/', masklen(cidr_block), 
+          ' (', power(2, 32 - masklen(cidr_block :: cidr)), ')'
+        ) as size
+      from
+        aws_vpc
+    )
+    select 
+      size,
+      count(*)
+    from 
+      vpc_size
+    group by
+      size
+  EOQ
+}
+
+
 ###
 
 query "aws_vpc_cost_per_month" {
@@ -197,13 +224,13 @@ report "aws_vpc_dashboard" {
   container {
 
     # Analysis
-    card {
+    counter {
       sql   = query.aws_vpc_count.sql
       width = 2
     }
 
     # Costs
-    card {
+    counter {
       sql = <<-EOQ
         select
           'Cost - MTD' as label,
@@ -217,7 +244,7 @@ report "aws_vpc_dashboard" {
       width = 2
     }
 
-    card {
+    counter {
       sql = <<-EOQ
         select
           'Cost - Previous Month' as label,
@@ -234,7 +261,7 @@ report "aws_vpc_dashboard" {
 
    # Assessments
 
-    card {
+    counter {
       sql = <<-EOQ
         select
           count(*) as value,
@@ -249,7 +276,7 @@ report "aws_vpc_dashboard" {
     }
 
 
-    card {
+    counter {
       sql = <<-EOQ
         select
           count(*)  filter (where vpc_id not in (select resource_id from aws_vpc_flow_log)) as value,
@@ -264,7 +291,7 @@ report "aws_vpc_dashboard" {
       width = 2
     }
 
-    card {
+    counter {
       sql = query.aws_vpc_no_subnet_count.sql
       width = 2
     }
@@ -287,8 +314,21 @@ report "aws_vpc_dashboard" {
       title = "VPCs by Region"
       sql   = query.aws_vpc_by_region.sql
       type  = "column"
+      legend {
+          position  = "bottom"
+      }
       width = 3
     }
+
+
+    chart {
+      title = "VPCs by Size"
+      sql   = query.aws_vpc_by_size.sql
+      type  = "column"
+      width = 3
+    }
+
+
 
     chart {
       title = "VPCs by RFC1918 Range"
@@ -400,6 +440,31 @@ report "aws_vpc_dashboard" {
       EOQ
 
     }
+
+    chart {
+      title  = "Empty VPC (No subnets)"
+      type   = "donut"
+      width = 4
+      sql    = <<-EOQ
+        with by_empty as (
+          select 
+            vpc.vpc_id,
+            case when s.subnet_id is null then 'empty' else 'non-empty' end as status    
+            from 
+              aws_vpc as vpc
+              left join aws_vpc_subnet as s on vpc.vpc_id = s.vpc_id
+        )
+        select
+          status,
+          count(*)
+        from
+          by_empty
+        group by
+          status
+      EOQ
+    }
+
+
 
   }
 

@@ -14,7 +14,7 @@ report aws_vpc_security_group_detail {
 
   container {
 
-    card {
+    counter {
       sql   = <<-EOQ
         select
           'Ingress Rules' as label,
@@ -28,7 +28,7 @@ report aws_vpc_security_group_detail {
       width = 2
     }
 
-    card {
+    counter {
       sql   = <<-EOQ
         select
           'Egress Rules' as label,
@@ -42,7 +42,7 @@ report aws_vpc_security_group_detail {
       width = 2
     }
 
-    card {
+    counter {
       sql   = <<-EOQ
         select
           'Attached ENIs' as label,
@@ -60,7 +60,7 @@ report aws_vpc_security_group_detail {
       width = 2
     }
 
-    card {
+    counter {
       sql   = <<-EOQ
         select
           'Unrestricted Ingress (excludes ICMP)' as label,
@@ -84,7 +84,7 @@ report aws_vpc_security_group_detail {
       width = 2
     }
 
-    card {
+    counter {
       sql   = <<-EOQ
          select
           'Unrestricted Egress  (excludes ICMP)' as label,
