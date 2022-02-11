@@ -17,7 +17,7 @@ report "aws_redshift_cluster_logging_report" {
 
   container {
 
-    counter {
+    card {
       sql = query.aws_redshift_cluster_logging_disabled_count.sql
       width = 2
     }

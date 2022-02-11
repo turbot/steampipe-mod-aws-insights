@@ -131,16 +131,57 @@ query "aws_sns_topic_cost_by_account_12mo" {
   EOQ
 }
 
+query "aws_sns_topic_by_encryption_status" {
+  sql = <<-EOQ
+    select
+      encryption_status,
+      count(*)
+    from (
+      select kms_master_key_id,
+        case when kms_master_key_id is not null then
+          'Enabled'
+        else
+          'Disabled'
+        end encryption_status
+      from
+        aws_sns_topic) as t
+    group by
+      encryption_status
+    order by
+      encryption_status desc
+  EOQ
+}
+
+
+query "aws_sns_topic_by_subscription_status" {
+  sql = <<-EOQ
+    select
+      count(*)
+    from (
+      select subscriptions_confirmed,
+        case when subscriptions_confirmed::int = 0 then
+          'Alarm'
+        else
+          'Ok'
+        end subscription_status
+      from
+        aws_sns_topic) as t
+    group by
+      subscription_status
+    order by
+      subscription_status desc
+  EOQ
+}
 
 
 report "aws_sns_topic_summary" {
     title = "AWS SNS Topic Dashboard"
     container {
-        counter {
+        card {
             sql   = query.aws_sns_topic_count.sql
             width = 6
         }
-        counter {
+        card {
             sql   = query.aws_sns_topic_encrypted_count.sql
             width = 6
         }
@@ -198,6 +239,27 @@ report "aws_sns_topic_summary" {
       type  = "donut"
       sql   = query.aws_sns_topic_cost_by_account_12mo.sql
       width = 2
+    }
+    }
+
+    container {
+      title = "Assessments"
+
+    chart {
+      title = "Encryption Status"
+      sql = query.aws_sns_topic_by_encryption_status.sql
+      type  = "donut"
+      width = 3
+
+      series "Enabled" {
+         color = "green"
+      } 
+    } 
+    chart {
+      title = "Subscription Status"
+      sql = query.aws_sns_topic_by_subscription_status.sql
+      type  = "donut"
+      width = 3
     }
     }
 }

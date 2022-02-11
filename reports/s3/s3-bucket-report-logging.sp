@@ -18,7 +18,7 @@ report "aws_s3_bucket_logging_report" {
 
   container {
 
-    counter {
+    card {
       sql = query.aws_s3_bucket_logging_disabled_count.sql
       width = 2
     }

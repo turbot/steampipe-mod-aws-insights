@@ -69,27 +69,27 @@ report "aws_s3_bucket_public_access_report" {
 
   container {
 
-    counter {
+    card {
       sql = query.aws_s3_bucket_public_policy_count.sql
       width = 2
     }
 
-    counter {
+    card {
       sql = query.aws_s3_bucket_block_public_acls_disabled_count.sql
       width = 2
     }
 
-    counter {
+    card {
       sql = query.aws_s3_bucket_block_public_policy_disabled_count.sql
       width = 2
     }
 
-    counter {
+    card {
       sql = query.aws_s3_bucket_ignore_public_acls_disabled_count.sql
       width = 2
     }
 
-    counter {
+    card {
       sql = query.aws_s3_bucket_restrict_public_buckets_disabled_count.sql
       width = 2
     }
