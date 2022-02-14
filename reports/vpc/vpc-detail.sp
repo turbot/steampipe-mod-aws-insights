@@ -143,58 +143,135 @@ query "aws_vpc_route_tables_for_vpc" {
   EOQ
 }
 
-query "aws_vpc_routes_vpc" {
+
+
+
+
+
+query "aws_vpc_routes_for_vpc_sankey" {
   sql = <<-EOQ
-    select
-      -- title,
+
+  with routes as (
+   select
       route_table_id,
-      -- jsonb_pretty(associations),
-      --jsonb_pretty(routes)
+      vpc_id,
+      -- jsonb_pretty(a),
+      -- jsonb_pretty(routes),
       r ->> 'State' as state,
       case 
         when r ->> 'GatewayId' is not null then r ->> 'GatewayId' 
         when r ->> 'InstanceId' is not null then r ->> 'InstanceId' 
         when r ->> 'NatGatewayId' is not null then r ->> 'NatGatewayId' 
-        -- what is this??? when r ->> 'CoreNetworkArn' is not null then r ->> 'CoreNetworkArn' 
-        -- what is this??? when r ->> 'InstanceOwnerId' is not null then r ->> 'InstanceOwnerId' 
         when r ->> 'LocalGatewayId' is not null then r ->> 'LocalGatewayId' 
         when r ->> 'CarrierGatewayId' is not null then r ->> 'CarrierGatewayId' 
         when r ->> 'TransitGatewayId' is not null then r ->> 'TransitGatewayId' 
-        -- when r ->> 'NetworkInterfaceId' is not null then r ->> 'NetworkInterfaceId' 
         when r ->> 'VpcPeeringConnectionId' is not null then r ->> 'VpcPeeringConnectionId' 
         when r ->> 'DestinationPrefixListId' is not null then r ->> 'DestinationPrefixListId' 
         when r ->> 'DestinationIpv6CidrBlock' is not null then r ->> 'DestinationIpv6CidrBlock' 
         when r ->> 'EgressOnlyInternetGatewayId' is not null then r ->> 'EgressOnlyInternetGatewayId' 
+        when r ->> 'NetworkInterfaceId' is not null then r ->> 'NetworkInterfaceId' 
+        when r ->> 'CoreNetworkArn' is not null then r ->> 'CoreNetworkArn' 
+        when r ->> 'InstanceOwnerId' is not null then r ->> 'InstanceOwnerId' 
       end as gateway,
-      r ->> 'DestinationCidrBlock' as destination_cidr
+      case 
+        when r ->> 'DestinationCidrBlock' is not null then r ->> 'DestinationCidrBlock' 
+        when r ->> 'DestinationIpv6CidrBlock' is not null then r ->> 'DestinationIpv6CidrBlock' 
+        else '???'
+      end as destination_cidr,
+      case
+        when a ->> 'Main' = 'true' then vpc_id
+        when a ->> 'SubnetId' is not null then  a->> 'SubnetId'
+        else '??'
+      end as associated_to
+
     from 
       aws_vpc_route_table,
-      jsonb_array_elements(routes) as r
+      jsonb_array_elements(routes) as r,
+      jsonb_array_elements(associations) as a
     where 
-      vpc_id = 'vpc-9d7ae1e7'
+      vpc_id = 'vpc-9d7ae1e7' --'vpc-078f28832846343e5' --
+)
+    select
+      null as parent,
+      associated_to as id,
+      associated_to as name,
+      'aws_vpc_route_table' as category,
+      0 as depth
+    from 
+      routes
+    union
+      select 
+        associated_to as parent,
+        destination_cidr as id,
+        destination_cidr as name,
+        'vpc_or_subnet' as category,
+        1 as depth
+      from 
+        routes
+    union
+      select 
+        destination_cidr as parent,
+        gateway as id,
+        gateway as name,
+        'gateway' as category,
+        2 as depth
+      from 
+        routes
+
+
+    
   EOQ
 }
 
-/*
 
-"State": "active",                                     |
-|                       |                       |         "Origin": "CreateRouteTable",                          |
-|                       |                       |         "GatewayId": "local",                                  |
-|                       |                       |         "InstanceId": null,                                    |
-|                       |                       |         "NatGatewayId": null,                                  |
-|                       |                       |         "CoreNetworkArn": null,                                |
-|                       |                       |         "LocalGatewayId": null,                                |
-|                       |                       |         "InstanceOwnerId": null,                               |
-|                       |                       |         "CarrierGatewayId": null,                              |
-|                       |                       |         "TransitGatewayId": null,                              |
-|                       |                       |         "NetworkInterfaceId": null,                            |
-|                       |                       |         "DestinationCidrBlock": "10.10.10.0/24",               |
-|                       |                       |         "VpcPeeringConnectionId": null,                        |
-|                       |                       |         "DestinationPrefixListId": null,                       |
-|                       |                       |         "DestinationIpv6CidrBlock": null,                      |
-|                       |                       |         "EgressOnlyInternetGatewayId": null 
 
-*/
+
+query "aws_vpc_routes_for_vpc" {
+  sql = <<-EOQ
+    select
+      route_table_id,
+      r ->> 'State' as state,
+      case 
+        when r ->> 'GatewayId' is not null then r ->> 'GatewayId' 
+        when r ->> 'InstanceId' is not null then r ->> 'InstanceId' 
+        when r ->> 'NatGatewayId' is not null then r ->> 'NatGatewayId' 
+        when r ->> 'LocalGatewayId' is not null then r ->> 'LocalGatewayId' 
+        when r ->> 'CarrierGatewayId' is not null then r ->> 'CarrierGatewayId' 
+        when r ->> 'TransitGatewayId' is not null then r ->> 'TransitGatewayId' 
+        when r ->> 'VpcPeeringConnectionId' is not null then r ->> 'VpcPeeringConnectionId' 
+        when r ->> 'DestinationPrefixListId' is not null then r ->> 'DestinationPrefixListId' 
+        when r ->> 'DestinationIpv6CidrBlock' is not null then r ->> 'DestinationIpv6CidrBlock' 
+        when r ->> 'EgressOnlyInternetGatewayId' is not null then r ->> 'EgressOnlyInternetGatewayId' 
+        when r ->> 'NetworkInterfaceId' is not null then r ->> 'NetworkInterfaceId' 
+        when r ->> 'CoreNetworkArn' is not null then r ->> 'CoreNetworkArn' 
+        when r ->> 'InstanceOwnerId' is not null then r ->> 'InstanceOwnerId' 
+        
+      end as gateway,
+      r ->> 'DestinationCidrBlock' as destination_cidr,
+      case
+        when a ->> 'Main' = 'true' then vpc_id
+        when a ->> 'SubnetId' is not null then  a->> 'SubnetId'
+        else '??'
+      end as associated_to
+
+    from 
+      aws_vpc_route_table,
+      jsonb_array_elements(routes) as r,
+      jsonb_array_elements(associations) as a
+    where 
+      vpc_id = 'vpc-9d7ae1e7'
+
+    order by
+      route_table_id,
+      associated_to,
+      destination_cidr,
+      gateway
+
+    
+  EOQ
+}
+
+
 
 
 query "aws_vpc_peers_for_vpc" {
@@ -309,6 +386,7 @@ query "aws_ingress_nacl_for_vpc_sankey" {
       concat(network_acl_id, '_', to_char((e->>'RuleNumber')::numeric, 'fm00000'))  as parent,   
       concat(network_acl_id, '_'::text, e ->> 'RuleNumber', '_port_proto') as id,
 
+      case when e ->> 'RuleAction' = 'allow' then 'Allow ' else 'Deny ' end || 
       case
         when e->>'Protocol' = '-1' then 'All Traffic'
         when e->>'Protocol' = '1'  and e->'IcmpTypeCode' is null then 'All ICMP'
@@ -434,6 +512,8 @@ query "aws_egress_nacl_for_vpc_sankey" {
       concat(network_acl_id, '_', to_char((e->>'RuleNumber')::numeric, 'fm00000'))  as parent,   
       concat(network_acl_id, '_'::text, e ->> 'RuleNumber', '_port_proto') as id,
 
+
+      case when e ->> 'RuleAction' = 'allow' then 'Allow ' else 'Deny ' end || 
       case
         when e->>'Protocol' = '-1' then 'All Traffic'
         when e->>'Protocol' = '1'  and e->'IcmpTypeCode' is null then 'All ICMP'
@@ -781,89 +861,66 @@ report aws_vpc_detail {
 
     }
 
+  }
+
+  container {
+    title = "Subnets"
 
 
-    container {
-      title = "Subnets"
-
-
-      chart {
-        title = "Subnets by AZ"
-        sql   = <<-EOQ
-          select 
-            availability_zone,
-            count(*)
-          from
-            aws_vpc_subnet
-          where 
-            vpc_id = 'vpc-9d7ae1e7'
-          group by
-            availability_zone
-          order by
-            availability_zone
-        EOQ
-        type  = "donut"
-        width = 4
-      }
-
-
-      table {
-        sql   = query.aws_vpc_subnets_for_vpc.sql
-        width = 6 
-      }
-
+    chart {
+      title = "Subnets by AZ"
+      sql   = <<-EOQ
+        select 
+          availability_zone,
+          count(*)
+        from
+          aws_vpc_subnet
+        where 
+          vpc_id = 'vpc-9d7ae1e7'
+        group by
+          availability_zone
+        order by
+          availability_zone
+      EOQ
+      type  = "donut"
+      width = 4
     }
 
 
-    container {
-      title = "Security Groups"
-
-      table {
-        sql   = query.aws_vpc_security_groups_for_vpc.sql
-        width = 6 
-      }
+    table {
+      sql   = query.aws_vpc_subnets_for_vpc.sql
+      width = 6 
     }
 
-
-    container {
-      title = "VPC Endpoints"
-
-       table {
-        sql   = query.aws_vpc_endpoints_for_vpc.sql
-        width = 6 
-      }
-    }
-  
-
-    container {
-
-      table {
-        title = "Gateways"
-        sql   = query.aws_vpc_gateways_for_vpc.sql
-        width = 6 
-      }
-  
-    } 
-
-    container {
-        title = "Routing"
+  }
 
 
-      table {
-        title = "Route Tables"
-        sql   = query.aws_vpc_route_tables_for_vpc.sql
-        width = 6 
-      }
-      
-      table {
-        title = "Routes"
-        sql   = aws_vpc_routes_for_vpc.sql
-        width = 6 
-      }
 
+
+
+
+
+  container {
+      title = "Routing"
+
+    hierarchy {
+      sql   = query.aws_vpc_routes_for_vpc_sankey.sql
     }
     
 
+
+    table {
+      title = "Route Tables"
+      sql   = query.aws_vpc_route_tables_for_vpc.sql
+      width = 6 
+    }
+    
+
+    table {
+      title = "Routes"
+      sql   = query.aws_vpc_routes_for_vpc.sql
+      width = 6 
+    }
 
   }
 
@@ -930,216 +987,32 @@ report aws_vpc_detail {
 
   }
 
-  # table {
-  #   sql = query.aws_ingress_nacl_for_vpc_sankey.sql
-  # }
-
-  # table {
-  #   title = "Ingress NACLS"
-
-  #   sql   = <<-EOQ
-  #     select
-  #       title,
-  #       network_acl_id,
-  #       is_default,
-  #       jsonb_pretty(a),
-  #       jsonb_pretty(e)
-
-  #     from
-  #       aws_vpc_network_acl,
-  #       jsonb_array_elements(entries) as e,
-  #       jsonb_array_elements(associations) as a
-  #     where 
-  #       vpc_id = 'vpc-9d7ae1e7'
-  #   EOQ
-  # }
 
 
+
+  container {
+      title = "Gateways & Endpoints"
+      table {
+      title = "VPC Endpoints"
+
+      sql   = query.aws_vpc_endpoints_for_vpc.sql
+      width = 6
+    }
+
+    table {
+      title = "Gateways"
+      sql   = query.aws_vpc_gateways_for_vpc.sql
+      width = 6
+    }
+
+
+  }
+
+  container {
+    title = "Security Groups"
+    table {
+      sql   = query.aws_vpc_security_groups_for_vpc.sql
+      width = 4
+    }
+  }
 }
-
-#     chart {
-#       title = "VPCs by Account"
-#       sql   = query.aws_vpc_by_account.sql
-#       type  = "column"
-#       width = 3
-#     }
-
-
-#     chart {
-#       title = "VPCs by Region"
-#       sql   = query.aws_vpc_by_region.sql
-#       type  = "column"
-#       legend {
-#           position  = "bottom"
-#       }
-#       width = 3
-#     }
-
-
-#     chart {
-#       title = "VPCs by Size"
-#       sql   = query.aws_vpc_by_size.sql
-#       type  = "column"
-#       width = 3
-#     }
-
-
-
-#     chart {
-#       title = "VPCs by RFC1918 Range"
-#       sql   = query.aws_vpc_by_rfc1918_range.sql
-#       type  = "column"
-#       width = 3
-#     }
-
-
-#   }
-
-
-
-#   container {
-#       title = "Costs"
-
-#       chart {
-#         title = "VPC Monthly Unblended Cost"
-#         type  = "line"
-#         sql   = query.aws_vpc_cost_per_month.sql
-#         width = 4
-#       }
-
-#     chart {
-#         title = "VPC Cost by Usage Type - MTD"
-#         type  = "donut"
-#         sql   = query.aws_vpc_cost_top_usage_types_mtd.sql
-#         width = 2
-
-#         legend {
-#           position  = "bottom"
-#         }
-#       }
-
-#     chart {
-#         title = "VPC Cost by Usage Type - 12 months"
-#         type  = "donut"
-#         sql   = query.aws_vpc_cost_by_usage_types_12mo.sql
-#         width = 2
-
-#         legend {
-#           position  = "right"
-#         }
-#       }
-
-#       chart {
-#         title = "VPC Cost by Account - MTD"
-#         type  = "donut"
-#         sql   = query.aws_vpc_cost_by_account_mtd.sql
-#         width = 2
-#       }
-
-#       chart {
-#         title = "VPC Cost by Account - 12 months"
-#         type  = "donut"
-#         sql   = query.aws_vpc_cost_by_account_12mo.sql
-#         width = 2
-#       }
-
-#     }
-
-
-  
-
-#   container {
-#     title = "Assessments"
-#     width = 6
-
-#     chart {
-#       title  = "VPC Flow Logs"
-#       type   = "donut"
-#       width = 4
-#       sql    = <<-EOQ
-#         with vpc_logs as (
-#             select 
-#               vpc_id,
-#               case
-#                 when vpc_id in (select resource_id from aws_vpc_flow_log) then 'Configured'
-#                 else 'Not Configured'
-#               end as flow_logs_configured
-#               from 
-#                 aws_vpc
-#           )
-#           select
-#               flow_logs_configured,
-#               count(*)
-#             from
-#               vpc_logs
-#             group by
-#               flow_logs_configured
-#       EOQ
-#     }
-
-#     chart {
-#       title  = "Default VPC"
-#       type   = "donut"
-#       width = 4
-#       sql    = <<-EOQ
-#         select
-#           case
-#             when is_default then 'Default'
-#             else 'Non-Default'
-#           end as default_status,
-#           count(*)
-#         from
-#           aws_vpc
-#         group by
-#           is_default   
-#       EOQ
-
-#     }
-
-#     chart {
-#       title  = "Empty VPC (No subnets)"
-#       type   = "donut"
-#       width = 4
-#       sql    = <<-EOQ
-#         with by_empty as (
-#           select 
-#             vpc.vpc_id,
-#             case when s.subnet_id is null then 'empty' else 'non-empty' end as status    
-#             from 
-#               aws_vpc as vpc
-#               left join aws_vpc_subnet as s on vpc.vpc_id = s.vpc_id
-#         )
-#         select
-#           status,
-#           count(*)
-#         from
-#           by_empty
-#         group by
-#           status
-#       EOQ
-#     }
-
-
-
-#   }
-
-# }
- 
-
-
-
-#   # container {
-#   #   title  = "Performance & Utilization"
-#   # 
-#   #   No performance metrics for VPC?
-#   #   
-#   # }
-
-#   # container {
-#   #   title   = "Resources by Age"
-#   #
-#   #   No create time data for VPC?
-#   #
-#   # }
-
-
