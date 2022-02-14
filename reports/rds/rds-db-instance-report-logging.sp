@@ -29,7 +29,7 @@ report "aws_rds_db_instance_logging_report" {
   title = "AWS RDS DB Instance Logging Report"
 
   container {
-    counter {
+    card {
       sql = query.aws_rds_db_instance_logging_disabled_count.sql
       width = 2
     }

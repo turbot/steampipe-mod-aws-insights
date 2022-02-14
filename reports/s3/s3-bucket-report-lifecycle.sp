@@ -31,12 +31,12 @@ report "aws_s3_bucket_lifecycle_report" {
 
   container {
 
-    counter {
+    card {
       sql = query.aws_s3_bucket_versioning_disabled_count.sql
       width = 2
     }
 
-    counter {
+    card {
       sql = query.aws_s3_bucket_versioning_mfa_disabled_count.sql
       width = 2
     }

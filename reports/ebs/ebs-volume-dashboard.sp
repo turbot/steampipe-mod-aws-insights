@@ -292,18 +292,18 @@ report "aws_ebs_volume_dashboard" {
 
     # Analysis
 
-    counter {
+    card {
       sql = query.aws_ebs_volume_count.sql
       width = 2
     }
 
-    counter {
+    card {
       sql = query.aws_ebs_volume_storage_total.sql
       width = 2
     }
 
   # Costs
-   counter {
+   card {
       sql = <<-EOQ
         select
           'Cost - MTD' as label,
@@ -318,7 +318,7 @@ report "aws_ebs_volume_dashboard" {
       width = 2
     }
 
-   counter {
+   card {
       sql = <<-EOQ
         select
           'Cost - Previous Month' as label,
@@ -334,12 +334,12 @@ report "aws_ebs_volume_dashboard" {
     }
 
     # Assessments
-    counter {
+    card {
       sql = query.aws_ebs_encrypted_volume_count.sql
       width = 2
     }
 
-    counter {
+    card {
       sql = query.aws_ebs_unattached_volume_count.sql
       width = 2
     }

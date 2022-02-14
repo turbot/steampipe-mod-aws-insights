@@ -18,7 +18,7 @@ report "aws_rds_db_instance_encryption_report" {
 
   container {
 
-    counter {
+    card {
       sql = query.aws_rds_db_instance_unencrypted_count.sql
       width = 2
     }

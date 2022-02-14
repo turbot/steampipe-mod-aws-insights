@@ -49,12 +49,12 @@ report "aws_s3_bucket_encryption_report" {
 
   container {
 
-    counter {
+    card {
       sql = query.aws_s3_bucket_unencrypted_count.sql
       width = 2
     }
 
-    counter {
+    card {
       sql = query.aws_s3_bucket_https_unenforced_count.sql
       width = 2
     }

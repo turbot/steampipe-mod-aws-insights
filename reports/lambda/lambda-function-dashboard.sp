@@ -59,7 +59,6 @@ query "aws_rds_db_instance_cost_per_month" {
   EOQ
 }
 
-
 query "aws_rds_db_instance_cost_last_30_counter" {
   sql = <<-EOQ
     select
@@ -72,7 +71,6 @@ query "aws_rds_db_instance_cost_last_30_counter" {
       and period_start  >=  CURRENT_DATE - INTERVAL '30 day'
   EOQ
 }
-
 
 query "aws_rds_db_instance_cost_by_usage_types_12mo" {
   sql = <<-EOQ
@@ -103,7 +101,6 @@ query "aws_rds_db_instance_cost_30_60_counter" {
       and period_start  between CURRENT_DATE - INTERVAL '60 day' and CURRENT_DATE - INTERVAL '30 day'
 
   EOQ
-
 }
 
 query "aws_rds_db_instance_cost_by_usage_types_30day" {
@@ -143,7 +140,6 @@ query "aws_rds_db_instance_cost_by_account_30day" {
       account
   EOQ
 }
-
 
 query "aws_rds_db_instance_cost_by_account_12mo" {
   sql = <<-EOQ
