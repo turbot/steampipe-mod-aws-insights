@@ -606,7 +606,7 @@ query "aws_vpc_peers_for_vpc_sankey" {
     from 
       peers
        
-      union select 
+    union select 
       -- concat('requestor_', requester_cidr_block) as parent,
       id as parent,
       concat('requestor_', requester_region) as id,
@@ -661,67 +661,6 @@ query "aws_vpc_peers_for_vpc_sankey" {
   EOQ
 }
 
-# ###
-
-
-/*
-
-
-
-
-
-
-
-
-
-
-
-
-   {                                                           |                       |                                                                      |            | 
-|         "SubnetId": "subnet-c3883db8",                          |                       |                                                                      |            | 
-|         "NetworkAclId": "acl-abea15c0",                         |                       |                                                                      |            | 
-|         "NetworkAclAssociationId": "aclassoc-061bba6b"          |                       |                                                                      |            | 
-|     }  
-
-
-   
-*/
-
-
-# query "aws_vpc_by_rfc1918_range" {
-#   sql = <<-EOQ
-#     with cidr_buckets as (
-#       select 
-#         vpc_id,
-#         title,
-#         b ->> 'CidrBlock' as cidr,
-#         case
-#           when (b ->> 'CidrBlock')::cidr <<= '10.0.0.0/8'::cidr then '10.0.0.0/8'
-#           when (b ->> 'CidrBlock')::cidr <<= '172.16.0.0/12'::cidr then '172.16.0.0/12'
-#           when (b ->> 'CidrBlock')::cidr <<= '192.168.0.0/16'::cidr then '192.168.0.0/16'
-#           else 'Public Range'
-#         end as rfc1918_bucket
-#       from
-#         aws_vpc,
-#         jsonb_array_elements(cidr_block_association_set) as b
-#     )
-#     select 
-#       rfc1918_bucket,
-#       count(*)
-#     from 
-#       cidr_buckets
-#     group by 
-#       rfc1918_bucket
-#     order by
-#       rfc1918_bucket
-#   EOQ
-# }
-
-
-
-
-
-# ###
 
 
 
@@ -743,26 +682,25 @@ report aws_vpc_detail {
 
   
      # Analysis
-    counter {
+    card {
       #title = "Size"
       sql   = query.aws_vpc_num_ips_for_vpc.sql
       width = 2
     }
 
     #    # Assessments
-    counter {
+    card {
       #title = "Subnet Count"
       sql   = query.aws_subnet_count_for_vpc.sql
       width = 2
     }
 
-    counter {
-      #title = "Subnet Count"
+    card {
       sql   = query.aws_vpc_is_default.sql
       width = 2
     }
 
-    counter {
+    card {
       sql = query.aws_flowlogs_count_for_vpc.sql
       width = 2
     }
@@ -882,7 +820,7 @@ report aws_vpc_detail {
         order by
           availability_zone
       EOQ
-      type  = "donut"
+      type  = "column"
       width = 4
     }
 

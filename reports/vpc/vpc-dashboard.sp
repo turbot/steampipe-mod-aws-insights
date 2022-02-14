@@ -224,13 +224,13 @@ report "aws_vpc_dashboard" {
   container {
 
     # Analysis
-    counter {
+    card {
       sql   = query.aws_vpc_count.sql
       width = 2
     }
 
     # Costs
-    counter {
+    card {
       sql = <<-EOQ
         select
           'Cost - MTD' as label,
@@ -244,7 +244,7 @@ report "aws_vpc_dashboard" {
       width = 2
     }
 
-    counter {
+    card {
       sql = <<-EOQ
         select
           'Cost - Previous Month' as label,
@@ -261,7 +261,7 @@ report "aws_vpc_dashboard" {
 
    # Assessments
 
-    counter {
+    card {
       sql = <<-EOQ
         select
           count(*) as value,
@@ -276,7 +276,7 @@ report "aws_vpc_dashboard" {
     }
 
 
-    counter {
+    card {
       sql = <<-EOQ
         select
           count(*)  filter (where vpc_id not in (select resource_id from aws_vpc_flow_log)) as value,
@@ -291,7 +291,7 @@ report "aws_vpc_dashboard" {
       width = 2
     }
 
-    counter {
+    card {
       sql = query.aws_vpc_no_subnet_count.sql
       width = 2
     }
