@@ -38,14 +38,3 @@ report "aws_redshift_cluster_logging_report" {
   }
 
 }
-
-
-
-    #   select
-    #     cluster_identifier as "Cluster",
-    #     case when logging_status ->> 'LoggingEnabled' = 'true' then 'Enabled' else null end as "Logging",
-    #     account_id as "Account",
-    #     region as "Region",
-    #     arn as "ARN"
-    #   from
-    #     aws_redshift_cluster
