@@ -56,7 +56,7 @@ query "aws_kms_key_cost_per_month" {
   sql = <<-EOQ
     select
       to_char(period_start, 'Mon-YY') as "Month",
-      sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+      sum(unblended_cost_amount)::numeric as "Unblended Cost"
     from
       aws_cost_by_service_usage_type_monthly
     where
@@ -65,86 +65,6 @@ query "aws_kms_key_cost_per_month" {
       period_start
     order by
       period_start
-  EOQ
-}
-
-query "aws_kms_key_cost_last_30_card" {
-  sql = <<-EOQ
-    select
-      'Cost - Last 30 Days' as label,
-       sum(unblended_cost_amount)::numeric::money as value
-    from
-      aws_cost_by_service_daily
-    where
-      service = 'AWS Key Management Service'
-      and period_start  >=  CURRENT_DATE - INTERVAL '30 day'
-  EOQ
-}
-
-query "aws_kms_key_cost_by_usage_types_12mo" {
-  sql = <<-EOQ
-    select
-      usage_type,
-      sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-    from
-      aws_cost_by_service_usage_type_monthly
-    where
-      service = 'AWS Key Management Service'
-      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-    group by
-      usage_type
-    order by
-      sum(unblended_cost_amount) desc
-  EOQ
-}
-
-query "aws_kms_key_cost_30_60_card" {
-  sql = <<-EOQ
-    select
-      'Cost - Penultimate 30 Days' as label,
-      sum(unblended_cost_amount)::numeric::money as value
-    from
-      aws_cost_by_service_daily
-    where
-      service = 'AWS Key Management Service'
-      and period_start  between CURRENT_DATE - INTERVAL '60 day' and CURRENT_DATE - INTERVAL '30 day'
-  EOQ
-}
-
-query "aws_kms_key_cost_by_usage_types_30day" {
-  sql = <<-EOQ
-    select
-      usage_type,
-      sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-    from
-      aws_cost_by_service_usage_type_daily
-    where
-      service = 'AWS Key Management Service'
-      --and period_end >= date_trunc('month', CURRENT_DATE::timestamp)
-      and period_end >=  CURRENT_DATE - INTERVAL '30 day'
-    group by
-      usage_type
-    order by
-      sum(unblended_cost_amount) desc
-  EOQ
-}
-
-query "aws_kms_key_cost_by_account_30day" {
-  sql = <<-EOQ
-    select
-      a.title as "account",
-      sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-    from
-      aws_cost_by_service_monthly as c,
-      aws_account as a
-    where
-      a.account_id = c.account_id
-      and service = 'AWS Key Management Service'
-      and period_end >=  CURRENT_DATE - INTERVAL '30 day'
-    group by
-      account
-    order by
-      account
   EOQ
 }
 
@@ -290,6 +210,68 @@ query "aws_kms_key_by_creation_month" {
   EOQ
 }
 
+query "aws_kms_key_cost_top_usage_types_mtd" {
+  sql = <<-EOQ
+    select
+      usage_type,
+      sum(unblended_cost_amount)::numeric as "Unblended Cost"
+      --sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+    from
+      aws_cost_by_service_usage_type_monthly
+    where
+      service = 'AWS Key Management Service'
+      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+    group by
+      period_start,
+      usage_type
+    having
+      round(sum(unblended_cost_amount)::numeric,2) > 0
+    order by
+      sum(unblended_cost_amount) desc
+  EOQ
+}
+
+query "aws_kms_key_cost_by_usage_types_12mo" {
+  sql = <<-EOQ
+    select
+       usage_type,
+       sum(unblended_cost_amount)::numeric as "Unblended Cost"
+       --sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+
+    from
+      aws_cost_by_service_usage_type_monthly
+    where
+      service = 'AWS Key Management Service'
+      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
+    group by
+      usage_type
+    having
+      round(sum(unblended_cost_amount)::numeric,2) > 0
+    order by
+      sum(unblended_cost_amount) desc
+  EOQ
+}
+
+query "aws_kms_key_cost_by_account_mtd" {
+  sql = <<-EOQ
+    select
+       a.title as "account",
+       sum(unblended_cost_amount)::numeric as "Unblended Cost"
+       --        sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+    from
+      aws_cost_by_service_monthly as c,
+      aws_account as a
+    where
+      a.account_id = c.account_id
+      and service = 'AWS Key Management Service'
+      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+    group by
+      account
+    order by
+      account
+  EOQ
+}
+
 report "aws_kms_key_summary" {
 
   title = "AWS KMS Key Dashboard"
@@ -298,11 +280,6 @@ report "aws_kms_key_summary" {
 
     card {
       sql   = query.aws_kms_key_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_kms_key_aws_managed_count.sql
       width = 2
     }
 
@@ -323,6 +300,20 @@ report "aws_kms_key_summary" {
 
       card {
       sql   = query.aws_kms_key_rotation_enabled_count.sql
+      width = 2
+    }
+
+    card {
+       sql = <<-EOQ
+        select
+          'Cost - Previous Month' as label,
+          sum(unblended_cost_amount)::numeric::money as value
+        from
+          aws_cost_by_service_monthly
+        where
+          service = 'AWS Key Management Service'
+          and date_trunc('month', period_start) =  date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
+      EOQ
       width = 2
     }
 
@@ -368,18 +359,21 @@ report "aws_kms_key_summary" {
     title = "Costs"
 
     chart {
-      title = "KMS Monthly Cost"
+      title = "KMS Monthly Unblended Cost"
       type  = "line"
       sql   = query.aws_kms_key_cost_per_month.sql
       width = 4
     }
 
-
    chart {
-      title = "KMS Cost by Usage Type - last 30 days"
+      title = "KMS Cost by Usage Type - MTD"
       type  = "donut"
-      sql   = query.aws_kms_key_cost_by_usage_types_30day.sql
+      sql   = query.aws_kms_key_cost_top_usage_types_mtd.sql
       width = 2
+
+      legend {
+        position  = "bottom"
+      }
     }
 
    chart {
@@ -387,18 +381,22 @@ report "aws_kms_key_summary" {
       type  = "donut"
       sql   = query.aws_kms_key_cost_by_usage_types_12mo.sql
       width = 2
+
+      legend {
+        position  = "right"
+      }
     }
 
 
     chart {
-      title = "By Account - MTD"
+      title = "KMS Cost by Account - MTD"
       type  = "donut"
-      sql   = query.aws_kms_key_cost_by_account_30day.sql
+      sql   = query.aws_kms_key_cost_by_account_mtd.sql
        width = 2
     }
 
     chart {
-      title = "By Account - Last 12 months"
+      title = "KMS Cost by Account - 12 months"
       type  = "donut"
       sql   = query.aws_kms_key_cost_by_account_12mo.sql
       width = 2
