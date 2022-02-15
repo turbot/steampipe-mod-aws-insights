@@ -47,7 +47,7 @@ query "aws_rds_db_instance_cost_per_month" {
   sql = <<-EOQ
     select
        to_char(period_start, 'Mon-YY') as "Month",
-       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+       sum(unblended_cost_amount)::numeric as "Unblended Cost"
     from
       aws_cost_by_service_usage_type_monthly
     where
@@ -59,24 +59,11 @@ query "aws_rds_db_instance_cost_per_month" {
   EOQ
 }
 
-query "aws_rds_db_instance_cost_last_30_counter" {
-  sql = <<-EOQ
-    select
-       'Cost - Last 30 Days' as label,
-       sum(unblended_cost_amount)::numeric::money as value
-    from
-      aws_cost_by_service_daily
-    where
-      service = 'Amazon Relational Database Service'
-      and period_start  >=  CURRENT_DATE - INTERVAL '30 day'
-  EOQ
-}
-
 query "aws_rds_db_instance_cost_by_usage_types_12mo" {
   sql = <<-EOQ
     select
-       usage_type,
-       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+      usage_type,
+      sum(unblended_cost_amount)::numeric as "Unblended Cost"
     from
       aws_cost_by_service_usage_type_monthly
     where
@@ -84,55 +71,45 @@ query "aws_rds_db_instance_cost_by_usage_types_12mo" {
       and period_end >=  CURRENT_DATE - INTERVAL '1 year'
     group by
       usage_type
+    having
+      round(sum(unblended_cost_amount)::numeric,2) > 0
     order by
       sum(unblended_cost_amount) desc
   EOQ
 }
 
-query "aws_rds_db_instance_cost_30_60_counter" {
+query "aws_rds_db_instance_cost_top_usage_types_mtd" {
   sql = <<-EOQ
     select
-      'Cost - Penultimate 30 Days' as label,
-       sum(unblended_cost_amount)::numeric::money as value
+      usage_type,
+      sum(unblended_cost_amount)::numeric as "Unblended Cost"
     from
-      aws_cost_by_service_daily
+      aws_cost_by_service_usage_type_monthly
     where
       service = 'Amazon Relational Database Service'
-      and period_start  between CURRENT_DATE - INTERVAL '60 day' and CURRENT_DATE - INTERVAL '30 day'
-  EOQ
-}
-
-query "aws_rds_db_instance_cost_by_usage_types_30day" {
-  sql = <<-EOQ
-    select
-       usage_type,
-       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-    from
-      aws_cost_by_service_usage_type_daily
-    where
-      service = 'Amazon Relational Database Service'
-      --and period_end >= date_trunc('month', CURRENT_DATE::timestamp)
-      and period_end >=  CURRENT_DATE - INTERVAL '30 day'
-
+      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
     group by
+      period_start,
       usage_type
+    having
+      round(sum(unblended_cost_amount)::numeric,2) > 0
     order by
       sum(unblended_cost_amount) desc
   EOQ
 }
 
-query "aws_rds_db_instance_cost_by_account_30day" {
+query "aws_rds_db_instance_cost_by_account_mtd" {
   sql = <<-EOQ
     select
-       a.title as "account",
-       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+      a.title as "account",
+      sum(unblended_cost_amount)::numeric as "Unblended Cost"
     from
       aws_cost_by_service_monthly as c,
       aws_account as a
     where
       a.account_id = c.account_id
       and service = 'Amazon Relational Database Service'
-      and period_end >=  CURRENT_DATE - INTERVAL '30 day'
+      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
     group by
       account
     order by
@@ -143,8 +120,8 @@ query "aws_rds_db_instance_cost_by_account_30day" {
 query "aws_rds_db_instance_cost_by_account_12mo" {
   sql = <<-EOQ
     select
-       a.title as "account",
-       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+      a.title as "account",
+      sum(unblended_cost_amount)::numeric as "Unblended Cost"
     from
       aws_cost_by_service_monthly as c,
       aws_account as a
@@ -174,7 +151,6 @@ query "aws_rds_db_instance_by_account" {
     order by count(i.*) desc
   EOQ
 }
-
 
 query "aws_rds_db_instance_by_region" {
   sql = <<-EOQ
@@ -213,7 +189,7 @@ query "aws_rds_db_instance_logging_status" {
     count(db_instance_identifier) as "Total"
   from
     logging_stat
-union
+  union
   select
     'Disabled' as "Logging Status",
     count( db_instance_identifier) as "Total"
@@ -239,7 +215,7 @@ query "aws_rds_db_instance_multiple_az_status" {
     count(name) as "Total"
   from
     multiaz_stat
-union
+  union
   select
     'Disabled' as "Multi-AZ Status",
     count( db_instance_identifier) as "Total"
@@ -420,16 +396,35 @@ report "aws_rds_db_instance_summary" {
       width = 2
     }
 
+   # Costs
    card {
-      sql   = query.aws_rds_db_instance_cost_last_30_counter.sql
+    sql = <<-EOQ
+      select
+        'Cost - MTD' as label,
+        sum(unblended_cost_amount)::numeric::money as value
+      from
+        aws_cost_by_service_monthly
+      where
+        service = 'Amazon Relational Database Service'
+        and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+    EOQ
       width = 2
     }
 
-    card {
-        sql   = query.aws_rds_db_instance_cost_30_60_counter.sql
-        width = 2
-      }
+  card {
+    sql = <<-EOQ
+      select
+        'Cost - Previous Month' as label,
+        sum(unblended_cost_amount)::numeric::money as value
+      from
+        aws_cost_by_service_monthly
+      where
+        service = 'Amazon Relational Database Service'
+        and date_trunc('month', period_start) =  date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
+    EOQ
+    width = 2
   }
+}
 
   container {
     title = "Analysis"
@@ -442,21 +437,21 @@ report "aws_rds_db_instance_summary" {
     }
 
     chart {
-      title = "RDS DB Instances by Region"
+      title = "Instances by Region"
       sql   = query.aws_rds_db_instance_by_region.sql
       type  = "column"
       width = 3
     }
 
     chart {
-      title = "RDS DB Instances by State"
+      title = "Instances by State"
       sql   = query.aws_rds_db_instance_by_state.sql
       type  = "column"
       width = 3
     }
 
     chart {
-      title = "RDS DB Instances by Type"
+      title = "Instances by Type"
       sql   = query.aws_rds_db_instance_by_engine_type.sql
       type  = "column"
       width = 3
@@ -467,35 +462,43 @@ report "aws_rds_db_instance_summary" {
     title = "Costs"
 
     chart {
-      title = "RDS Monthly Cost"
+      title = "RDS Monthly Unblended Cost"
       type  = "line"
       sql   = query.aws_rds_db_instance_cost_per_month.sql
       width = 4
     }
 
    chart {
-      title = "RDS Cost by Usage Type - last 30 days"
+      title = "RDS Cost by Usage Type - MTD"
       type  = "donut"
-      sql   = query.aws_rds_db_instance_cost_by_usage_types_30day.sql
+      sql   = query.aws_rds_db_instance_cost_top_usage_types_mtd.sql
       width = 2
+
+      legend {
+        position  = "bottom"
+      }
     }
 
    chart {
-      title = "RDS Cost by Usage Type - Last 12 months"
+      title = "RDS Cost by Usage Type - 12 months"
       type  = "donut"
       sql   = query.aws_rds_db_instance_cost_by_usage_types_12mo.sql
       width = 2
+
+      legend {
+        position  = "right"
+      }
     }
 
     chart {
-      title = "By Account - MTD"
+      title = "RDS Cost by Account - MTD"
       type  = "donut"
-      sql   = query.aws_rds_db_instance_cost_by_account_30day.sql
+      sql   = query.aws_rds_db_instance_cost_by_account_mtd.sql
       width = 2
     }
 
     chart {
-      title = "By Account - Last 12 months"
+      title = "RDS Cost by Account - 12 months"
       type  = "donut"
       sql   = query.aws_rds_db_instance_cost_by_account_12mo.sql
       width = 2
@@ -547,7 +550,7 @@ report "aws_rds_db_instance_summary" {
     title   = "Resources by Age"
 
     chart {
-      title = "DB Instance by Creation Month"
+      title = "Instance by Creation Month"
       sql   = query.aws_rds_db_instance_by_creation_month.sql
       type  = "column"
       width = 4
@@ -558,7 +561,7 @@ report "aws_rds_db_instance_summary" {
     }
 
     table {
-      title = "Oldest DB Instances"
+      title = "Oldest Instances"
       width = 4
 
       sql = <<-EOQ
@@ -576,7 +579,7 @@ report "aws_rds_db_instance_summary" {
     }
 
     table {
-      title = "Newest DB Instances"
+      title = "Newest Instances"
       width = 4
 
       sql = <<-EOQ

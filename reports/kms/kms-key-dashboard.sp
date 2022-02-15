@@ -456,14 +456,14 @@ report "aws_kms_key_summary" {
       sql = <<-EOQ
         select
           title as "key",
-          (deletion_date - current_date) as "Age in Days",
+          (deletion_date - current_date) as "Deleting After",
           account_id as "Account"
         from
           aws_kms_key
         where
           extract(day from deletion_date - current_date) <= 7
         order by
-          "Age in Days" desc,
+          "Deleting After" desc,
           title
         limit 5
       EOQ
