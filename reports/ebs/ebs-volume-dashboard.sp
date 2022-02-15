@@ -314,12 +314,12 @@ report "aws_ebs_volume_dashboard" {
     # Analysis
     card {
       sql   = query.aws_ebs_volume_count.sql
-      width = 2
+      width = 1
     }
 
     card {
       sql   = query.aws_ebs_volume_storage_total.sql
-      width = 2
+      width = 1
     }
 
     # Costs
