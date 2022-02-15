@@ -370,7 +370,7 @@ query "aws_rds_db_instance_by_creation_month" {
   EOQ
 }
 
-report "aws_rds_db_instance_summary" {
+report "aws_rds_db_instance_dashboard" {
 
   title = "AWS RDS DB Instance Dashboard"
 

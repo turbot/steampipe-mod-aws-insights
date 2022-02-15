@@ -266,7 +266,7 @@ query "aws_lambda_function_cost_by_account_12mo" {
   EOQ
 }
 
-report "aws_lambda_function_summary" {
+report "aws_lambda_function_dashboard" {
 
   title = "AWS Lambda Function Dashboard"
 

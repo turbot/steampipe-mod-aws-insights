@@ -272,7 +272,7 @@ query "aws_kms_key_cost_by_account_mtd" {
   EOQ
 }
 
-report "aws_kms_key_summary" {
+report "aws_kms_key_dashboard" {
 
   title = "AWS KMS Key Dashboard"
 
