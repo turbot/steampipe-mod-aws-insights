@@ -4,19 +4,6 @@ query "aws_rds_db_cluster_count" {
   EOQ
 }
 
-# query "aws_rds_public_db_cluster_count" {
-#   sql = <<-EOQ
-#     select
-#       count(*) as value,
-#       'Public Clusters' as label,
-#       case count(*) when 0 then 'ok' else 'alert' end as style
-#     from
-#       aws_rds_db_cluster
-#     where
-#       publicly_accessible
-#   EOQ
-# }
-
 query "aws_rds_unencrypted_db_cluster_count" {
   sql = <<-EOQ
     select
@@ -309,70 +296,6 @@ query "aws_rds_db_cluster_iam_authentication_enabled" {
   EOQ
 }
 
-# query "aws_rds_db_instance_top10_cpu_past_week" {
-#   sql = <<-EOQ
-#     with top_n as (
-#       select
-#         db_cluster_identifier,
-#         avg(average)
-#       from
-#         aws_rds_db_instance_metric_cpu_utilization_daily
-#       where
-#         timestamp  >= CURRENT_DATE - INTERVAL '7 day'
-#       group by
-#         db_instance_identifier
-#       order by
-#         avg desc
-#       limit 10
-#   )
-#   select
-#       timestamp,
-#       db_instance_identifier,
-#       average
-#     from
-#        aws_rds_db_instance_metric_cpu_utilization_hourly
-#     where
-#       timestamp  >= CURRENT_DATE - INTERVAL '7 day'
-#       and db_instance_identifier in (select db_instance_identifier from top_n)
-#     order by
-#       timestamp
-#   EOQ
-# }
-
-# query "aws_rds_db_instance_by_cpu_utilization_category" {
-#   sql = <<-EOQ
-#     with cpu_buckets as (
-#       select
-#     unnest(array ['Unused (<1%)','Underutilized (1-10%)','Right-sized (10-90%)', 'Overutilized (>90%)' ]) as cpu_bucket
-#     ),
-#     max_averages as (
-#       select
-#         db_instance_identifier,
-#         case
-#           when max(average) <= 1 then 'Unused (<1%)'
-#           when max(average) between 1 and 10 then 'Underutilized (1-10%)'
-#           when max(average) between 10 and 90 then 'Right-sized (10-90%)'
-#           when max(average) > 90 then 'Overutilized (>90%)'
-#         end as cpu_bucket,
-#         max(average) as max_avg
-#       from
-#         aws_rds_db_instance_metric_cpu_utilization_daily
-#       where
-#         date_part('day', now() - timestamp) <= 30
-#       group by
-#         db_instance_identifier
-#     )
-#     select
-#       b.cpu_bucket as "CPU Utilization",
-#       count(a.*)
-#     from
-#       cpu_buckets as b
-#     left join max_averages as a on b.cpu_bucket = a.cpu_bucket
-#     group by
-#       b.cpu_bucket
-#   EOQ
-# }
-
 query "aws_rds_db_cluster_by_state" {
   sql = <<-EOQ
     select
@@ -458,11 +381,6 @@ report "aws_rds_db_cluster_dashboard" {
       sql   = query.aws_rds_db_cluster_count.sql
       width = 2
     }
-
-    # card {
-    #   sql   = query.aws_rds_public_db_instances_count.sql
-    #   width = 2
-    # }
 
     card {
       sql   = query.aws_rds_unencrypted_db_cluster_count.sql

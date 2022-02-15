@@ -6,13 +6,13 @@ query "aws_redshift_cluster_count" {
 
 query "aws_redshift_cluster_encrypted_count" {
   sql = <<-EOQ
-    select count(*) as "Encrypted Clusters" from aws_redshift_cluster where encrypted
+    select count(*) as "Unencrypted Clusters" from aws_redshift_cluster where not encrypted
   EOQ
 }
 
 query "aws_redshift_cluster_publicly_accessible" {
   sql = <<-EOQ
-    select count(*) as "Publicly accessible Clusters" from aws_redshift_cluster where publicly_accessible
+    select count(*) as "Publicly Accessible Clusters" from aws_redshift_cluster where publicly_accessible
   EOQ
 }
 
@@ -25,8 +25,8 @@ query "aws_redshift_cluster_enhanced_vpc_routing" {
 query "aws_redshift_cluster_cost_per_month" {
   sql = <<-EOQ
     select
-       to_char(period_start, 'Mon-YY') as "Month",
-       sum(unblended_cost_amount) as "Unblended Cost"
+      to_char(period_start, 'Mon-YY') as "Month",
+      sum(unblended_cost_amount) as "Unblended Cost"
     from
       aws_cost_by_service_usage_type_monthly
     where
