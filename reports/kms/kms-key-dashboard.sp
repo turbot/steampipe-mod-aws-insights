@@ -450,7 +450,7 @@ report "aws_kms_key_summary" {
     }
 
     table {
-      title = "KMS Keys Deleting within 7 days"
+      title = "KMS Keys To Be Deleted Within 7 days"
       width = 4
 
       sql = <<-EOQ
