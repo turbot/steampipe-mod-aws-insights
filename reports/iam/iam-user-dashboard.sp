@@ -50,6 +50,18 @@ query "aws_iam_users_by_account" {
   EOQ
 }
 
+query "aws_iam_user_by_path" {
+  sql = <<-EOQ
+    select
+      path,
+      count(name) as "total"
+    from
+      aws_iam_user
+    group by
+      path
+  EOQ
+}
+
 query "aws_iam_user_password_last_used_gt_90_days" {
   sql = <<-EOQ
   select
@@ -123,6 +135,7 @@ query "aws_iam_user_mfa_enabled_by_account" {
       account
   EOQ
 }
+
 query "aws_iam_user_with_inline_policies_by_account" {
   sql = <<-EOQ
     select
@@ -177,25 +190,29 @@ report "aws_iam_user_dashboard" {
     # Analysis
     card {
       sql   = query.aws_iam_user_count.sql
-      width = 3
+      width = 2
     }
 
     card {
       sql   = query.aws_iam_mfa_not_enabled_users_count.sql
-      width = 3
+      width = 2
     }
 
     # Assessments
+    card {
+      sql   = query.aws_iam_user_not_attached_to_groups.sql
+      width = 2
+    }
+
     card {
       sql   = query.aws_iam_user_access_key_age_gt_90_days.sql
       width = 3
     }
 
     card {
-      sql   = query.aws_iam_user_not_attached_to_groups.sql
+      sql   = query.aws_iam_user_password_last_used_gt_90_days.sql
       width = 3
     }
-
   }
 
   container {
@@ -205,50 +222,37 @@ report "aws_iam_user_dashboard" {
       title = "Users by Account"
       sql   = query.aws_iam_users_by_account.sql
       type  = "column"
-      width = 3
+      width = 4
     }
     chart {
-      title = "MFA Enabled Users by Account"
-      sql   = query.aws_iam_user_mfa_enabled_by_account.sql
-      type  = "donut"
-      width = 3
-    }
-    chart {
-      title = "Users with inline policies by Account"
-      sql   = query.aws_iam_user_with_inline_policies_by_account.sql
-      type  = "donut"
-      width = 3
-    }
-    chart {
-      title = "Users having Administrator access by Account"
-      sql   = query.aws_iam_user_having_administrator_access_by_account.sql
-      type  = "donut"
-      width = 3
+      title = "Users by Path"
+      sql   = query.aws_iam_user_by_path.sql
+      type  = "column"
+      width = 4
     }
   }
 
   container {
     title = "Assesments"
-    width = 6
 
-    card {
-      sql   = query.aws_iam_user_password_last_used_gt_90_days.sql
+    chart {
+      title = "MFA Enabled Users by Account"
+      sql   = query.aws_iam_user_mfa_enabled_by_account.sql
+      type  = "donut"
       width = 4
     }
-
-    # chart {
-    #   title = "Password Last Used More Than 90 Days Ago"
-    #   sql   = query.aws_iam_user_password_last_used_gt_90_days.sql
-    #   type  = "donut"
-    #   width = 4
-    # }
-
-    # chart {
-    #   title = "Public/Private"
-    #   sql   = query.aws_ec2_instance_by_public_ip.sql
-    #   type  = "donut"
-    #   width = 4
-    # }
+    chart {
+      title = "Users with inline policies by Account"
+      sql   = query.aws_iam_user_with_inline_policies_by_account.sql
+      type  = "donut"
+      width = 4
+    }
+    chart {
+      title = "Users having Administrator access by Account"
+      sql   = query.aws_iam_user_having_administrator_access_by_account.sql
+      type  = "donut"
+      width = 4
+    }
   }
 
   container {
