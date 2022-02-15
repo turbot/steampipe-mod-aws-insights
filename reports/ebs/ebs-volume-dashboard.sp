@@ -18,7 +18,7 @@ query "aws_ebs_encrypted_volume_count" {
     select
       count(*) as value,
       'Unencrypted Volumes' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_ebs_volume
     where
@@ -31,7 +31,7 @@ query "aws_ebs_unattached_volume_count" {
     select
       count(*) as value,
       'Unattached Volumes' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_ebs_volume
     where
@@ -352,29 +352,37 @@ report "aws_ebs_volume_dashboard" {
       title = "Volumes by Account"
       sql = query.aws_ebs_volume_by_account.sql
       type  = "column"
-      width = 3
+      width = 2
     }
 
     chart {
       title = "Volumes by Region"
       sql = query.aws_ebs_volume_by_region.sql
       type  = "column"
-      width = 3
+      width = 2
     }
 
     chart {
       title = "Volume Storage by Account (GB)"
       sql = query.aws_ebs_volume_storage_by_account.sql
       type  = "column"
-      width = 3
+      width = 2
     }
 
     chart {
       title = "Volume Storage by Region (GB)"
       sql = query.aws_ebs_volume_storage_by_region.sql
       type  = "column"
-      width = 3
+      width = 2
     }
+
+    chart {
+      title = "Volume Type"
+      sql = query.aws_ebs_volume_by_type.sql
+      type  = "column"
+      width = 2
+    }
+
   }
 
   container {
@@ -428,9 +436,16 @@ report "aws_ebs_volume_dashboard" {
       type  = "donut"
       width = 3
 
-      series "Enabled" {
-         color = "green"
-      }
+      # TODO: Re-enable once this works
+      # series "encryption_status" {
+      #   point "Enabled" {
+      #     color = "green"
+      #   }
+
+      #   point "Disabled" {
+      #     color = "red"
+      #   }
+      # }
     }
 
     chart {
@@ -441,12 +456,7 @@ report "aws_ebs_volume_dashboard" {
 
     }
 
-    chart {
-      title = "Volume Type"
-      sql = query.aws_ebs_volume_by_type.sql
-      type  = "donut"
-      width = 3
-    }
+
   }
 
   container {

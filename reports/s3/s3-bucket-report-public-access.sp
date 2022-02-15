@@ -3,7 +3,7 @@ query "aws_s3_bucket_public_policy_count" {
     select
       count(*) as value,
       'Has Public Bucket Policy' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_s3_bucket
     where
@@ -16,7 +16,7 @@ query "aws_s3_bucket_block_public_acls_disabled_count" {
     select
       count(*) as value,
       'New Public ACLs Allowed' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_s3_bucket
     where
@@ -29,7 +29,7 @@ query "aws_s3_bucket_block_public_policy_disabled_count" {
     select
       count(*) as value,
       'New Public Bucket Policies Allowed' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_s3_bucket
     where
@@ -42,7 +42,7 @@ query "aws_s3_bucket_ignore_public_acls_disabled_count" {
     select
       count(*) as value,
       'Public ACLs Not Ignored' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_s3_bucket
     where
@@ -55,7 +55,7 @@ query "aws_s3_bucket_restrict_public_buckets_disabled_count" {
     select
       count(*) as value,
       'Public Bucket Policies Unrestricted' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_s3_bucket
     where

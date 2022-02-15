@@ -18,7 +18,7 @@ query "aws_ec2_public_instance_count" {
     select
       count(*) as value,
       'Public Instances' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_ec2_instance
     where
@@ -31,7 +31,7 @@ query "aws_ec2_unencrypted_instance_count" {
     select
        999 as value,
       'TODO: Unencrypted Instances' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
   EOQ
 }
 
