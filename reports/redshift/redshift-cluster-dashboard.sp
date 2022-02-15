@@ -492,12 +492,12 @@ report "aws_redshift_cluster_dashboard" {
     }
 
     table {
-      title = "Oldest clusters"
+      title = "Oldest Clusters"
       width = 4
 
       sql = <<-EOQ
         select
-          title as "cluster",
+          title as "Cluster",
           current_date - cluster_create_time as "Age in Days",
           account_id as "Account"
         from
@@ -510,12 +510,12 @@ report "aws_redshift_cluster_dashboard" {
     }
 
     table {
-      title = "Newest clusters"
+      title = "Newest Clusters"
       width = 4
 
       sql = <<-EOQ
         select
-          title as "cluster",
+          title as "Cluster",
           current_date - cluster_create_time as "Age in Days",
           account_id as "Account"
         from
