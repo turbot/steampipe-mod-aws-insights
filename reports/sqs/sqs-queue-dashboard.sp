@@ -170,7 +170,7 @@ query "aws_sqs_queue_by_encryption_status" {
 #   EOQ
 # }
 
-report "aws_sqs_queue_summary" {
+report "aws_sqs_queue_dashboard" {
     title = "AWS SQS Queue Dashboard"
     container {
         card {

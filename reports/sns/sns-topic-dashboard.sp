@@ -173,7 +173,7 @@ query "aws_sns_topic_by_subscription_status" {
   EOQ
 }
 
-report "aws_sns_topic_summary" {
+report "aws_sns_topic_dashboard" {
     title = "AWS SNS Topic Dashboard"
     container {
         card {
