@@ -11,7 +11,6 @@ query "aws_rds_db_instance_unencrypted_count" {
   EOQ
 }
 
-
 report "aws_rds_db_instance_encryption_report" {
 
   title = "AWS RDS DB Instance Encryption Report"
@@ -22,7 +21,6 @@ report "aws_rds_db_instance_encryption_report" {
       sql = query.aws_rds_db_instance_unencrypted_count.sql
       width = 2
     }
-
   }
 
   table {
@@ -37,5 +35,4 @@ report "aws_rds_db_instance_encryption_report" {
         aws_rds_db_instance
     EOQ
   }
-
 }

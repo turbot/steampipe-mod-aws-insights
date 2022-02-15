@@ -1,57 +1,61 @@
-query "aws_rds_db_instance_count" {
+query "aws_lambda_function_count" {
   sql = <<-EOQ
-    select count(*) as "RDS DB Instances" from aws_rds_db_instance
+    select count(*) as "Lambda Functions" from aws_lambda_function
   EOQ
 }
 
-query "aws_rds_public_db_instances_count" {
+query "aws_public_lambda_function_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Public Instances' as label,
+      'Public Lambda Functions' as label,
       case count(*) when 0 then 'ok' else 'alert' end as style
     from
-      aws_rds_db_instance
+      aws_lambda_function
     where
-      publicly_accessible
+      policy_std -> 'Statement' ->> 'Effect' = 'Allow'
+    and (
+      policy_std -> 'Statement' ->> 'Prinipal' = '*'
+      or ( policy_std -> 'Principal' -> 'AWS' ) :: text = '*'
+    )
   EOQ
 }
 
-query "aws_rds_unencrypted_db_instances_count" {
+query "aws_lambda_function_not_in_vpc_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Unencrypted Instances' as label,
+      'Functions Not In VPC' as label,
       case count(*) when 0 then 'ok' else 'alert' end as style
     from
-      aws_rds_db_instance
-    where
-      not storage_encrypted
-  EOQ
-}
-
-query "aws_rds_db_instance_not_in_vpc_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Instances Not In VPC' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
-    from
-      aws_rds_db_instance
+      aws_lambda_function
     where
       vpc_id is null
   EOQ
 }
 
-query "aws_rds_db_instance_cost_per_month" {
+query "aws_lambda_function_use_latest_runtime" {
   sql = <<-EOQ
     select
-       to_char(period_start, 'Mon-YY') as "Month",
-       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+      count(*) as value,
+      'Functions Not Using Latest Runtime' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as style
+    from
+      aws_lambda_function
+    where
+      runtime not in ('nodejs14.x', 'nodejs12.x', 'nodejs10.x', 'python3.8', 'python3.7', 'python3.6', 'ruby2.5', 'ruby2.7', 'java11', 'java8', 'go1.x', 'dotnetcore2.1', 'dotnetcore3.1')
+  EOQ
+}
+
+query "aws_lambda_function_cost_per_month" {
+  sql = <<-EOQ
+    select
+      to_char(period_start, 'Mon-YY') as "Month",
+      sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
     from
       aws_cost_by_service_usage_type_monthly
     where
-      service = 'Amazon Relational Database Service'
+      service = 'AWS Lambda'
     group by
       period_start
     order by
@@ -59,7 +63,7 @@ query "aws_rds_db_instance_cost_per_month" {
   EOQ
 }
 
-query "aws_rds_db_instance_cost_last_30_counter" {
+query "aws_lambda_function_cost_last_30_counter" {
   sql = <<-EOQ
     select
        'Cost - Last 30 Days' as label,
@@ -67,110 +71,18 @@ query "aws_rds_db_instance_cost_last_30_counter" {
     from
       aws_cost_by_service_daily
     where
-      service = 'Amazon Relational Database Service'
+      service = 'AWS Lambda'
       and period_start  >=  CURRENT_DATE - INTERVAL '30 day'
   EOQ
 }
 
-query "aws_rds_db_instance_cost_by_usage_types_12mo" {
+query "aws_lambda_function_by_account" {
   sql = <<-EOQ
-    select
-       usage_type,
-       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-    from
-      aws_cost_by_service_usage_type_monthly
-    where
-      service = 'Amazon Relational Database Service'
-      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-    group by
-      usage_type
-    order by
-      sum(unblended_cost_amount) desc
-  EOQ
-}
-
-query "aws_rds_db_instance_cost_30_60_counter" {
-  sql = <<-EOQ
-    select
-      'Cost - Penultimate 30 Days' as label,
-       sum(unblended_cost_amount)::numeric::money as value
-    from
-      aws_cost_by_service_daily
-    where
-      service = 'Amazon Relational Database Service'
-      and period_start  between CURRENT_DATE - INTERVAL '60 day' and CURRENT_DATE - INTERVAL '30 day'
-
-  EOQ
-}
-
-query "aws_rds_db_instance_cost_by_usage_types_30day" {
-  sql = <<-EOQ
-    select
-       usage_type,
-       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-    from
-      aws_cost_by_service_usage_type_daily
-    where
-      service = 'Amazon Relational Database Service'
-      --and period_end >= date_trunc('month', CURRENT_DATE::timestamp)
-      and period_end >=  CURRENT_DATE - INTERVAL '30 day'
-
-    group by
-      usage_type
-    order by
-      sum(unblended_cost_amount) desc
-  EOQ
-}
-
-query "aws_rds_db_instance_cost_by_account_30day" {
-  sql = <<-EOQ
-    select
-       a.title as "account",
-       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-    from
-      aws_cost_by_service_monthly as c,
-      aws_account as a
-    where
-      a.account_id = c.account_id
-      and service = 'Amazon Relational Database Service'
-      and period_end >=  CURRENT_DATE - INTERVAL '30 day'
-    group by
-      account
-    order by
-      account
-  EOQ
-}
-
-query "aws_rds_db_instance_cost_by_account_12mo" {
-  sql = <<-EOQ
-    select
-       a.title as "account",
-       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-    from
-      aws_cost_by_service_monthly as c,
-      aws_account as a
-    where
-      a.account_id = c.account_id
-      and service = 'Amazon Relational Database Service'
-      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-    group by
-      account
-    order by
-      account
-  EOQ
-}
-
-
-
-query "aws_rds_db_instance_by_account" {
-  sql = <<-EOQ
-
-
     select
       a.title as "account",
       count(i.*) as "total"
     from
-      aws_rds_db_instance as i,
+      aws_lambda_function as i,
       aws_account as a
     where
       a.account_id = i.account_id
@@ -181,343 +93,247 @@ query "aws_rds_db_instance_by_account" {
   EOQ
 }
 
-
-query "aws_rds_db_instance_by_region" {
+query "aws_lambda_function_by_region" {
   sql = <<-EOQ
     select
       region,
       count(i.*) as total
     from
-      aws_rds_db_instance as i
+      aws_lambda_function as i
     group by
       region
   EOQ
 }
 
-
-query "aws_rds_db_instance_by_engine_type" {
+query "aws_lambda_function_by_state" {
   sql = <<-EOQ
-    select engine as "Engine Type", count(*) as "instances" from aws_rds_db_instance group by engine order by engine
-  EOQ
-}
-
-query "aws_rds_db_instance_logging_status" {
-  sql = <<-EOQ
-  with logging_stat as(
     select
-      db_instance_identifier
+      state,
+      count(state)
     from
-      aws_rds_db_instance
-    where
-      (engine like any (array ['mariadb', '%mysql']) and enabled_cloudwatch_logs_exports ?& array ['audit','error','general','slowquery'] )or
-      ( engine like any (array['%postgres%']) and enabled_cloudwatch_logs_exports ?& array ['postgresql','upgrade'] ) or
-      ( engine like 'oracle%' and enabled_cloudwatch_logs_exports ?& array ['alert','audit', 'trace','listener'] ) or
-      ( engine = 'sqlserver-ex' and enabled_cloudwatch_logs_exports ?& array ['error'] ) or
-      ( engine like 'sqlserver%' and enabled_cloudwatch_logs_exports ?& array ['error','agent'] )
-     )
-  select
-    'Enabled' as "Logging Status",
-    count(db_instance_identifier) as "Total"
-  from
-    logging_stat
-union
-  select
-    'Disabled' as "Logging Status",
-    count( db_instance_identifier) as "Total"
-  from
-    aws_rds_db_instance as s where s.db_instance_identifier not in (select db_instance_identifier from logging_stat);
+      aws_lambda_function
+    group by
+      state
   EOQ
 }
 
-query "aws_rds_db_instance_multiple_az_status" {
+query "aws_lambda_function_by_runtime" {
   sql = <<-EOQ
-    with multiaz_stat as (
     select
-      distinct db_instance_identifier as name
+      runtime,
+      count(runtime)
     from
-      aws_rds_db_instance
-    where
-      multi_az
-      and not (engine ilike any (array ['%aurora-mysql%', '%aurora-postgres%']))
-    group by name
- )
-  select
-    'Enabled' as "Multi-AZ Status",
-    count(name) as "Total"
-  from
-    multiaz_stat
-union
-  select
-    'Disabled' as "Multi-AZ Status",
-    count( db_instance_identifier) as "Total"
-  from
-    aws_rds_db_instance as s where s.db_instance_identifier not in (select name from multiaz_stat);
+      aws_lambda_function
+    group by
+      runtime
   EOQ
 }
 
-
-query "aws_rds_db_instance_iam_authentication_enabled" {
+query "aws_lambda_function_dead_letter_queue_status" {
   sql = <<-EOQ
-    with iam_authentication_stat as (
-    select
-      distinct db_instance_identifier as name
-    from
-      aws_rds_db_instance
-    where
-      iam_database_authentication_enabled
-    group by name
-  )
-  select
-    'Enabled' as "IAM Authentication Status",
-    count(name) as "Total"
-  from
-    iam_authentication_stat
-  union
-  select
-    'Disabled' as "IAM Authentication Status",
-    count( db_instance_identifier) as "Total"
-  from
-    aws_rds_db_instance as s where s.db_instance_identifier not in (select name from iam_authentication_stat);
-  EOQ
-}
-
-query "aws_rds_db_instance_top10_cpu_past_week" {
-  sql = <<-EOQ
-    with top_n as (
+    with functions as (
       select
-        db_instance_identifier,
-        avg(average)
-      from
-        aws_rds_db_instance_metric_cpu_utilization_daily
-      where
-        timestamp  >= CURRENT_DATE - INTERVAL '7 day'
-      group by
-        db_instance_identifier
-      order by
-        avg desc
-      limit 10
-  )
-  select
-      timestamp,
-      db_instance_identifier,
-      average
-    from
-       aws_rds_db_instance_metric_cpu_utilization_hourly
-    where
-      timestamp  >= CURRENT_DATE - INTERVAL '7 day'
-      and db_instance_identifier in (select db_instance_identifier from top_n)
-    order by
-      timestamp
-  EOQ
-}
-
-query "aws_rds_db_instance_by_cpu_utilization_category" {
-  sql = <<-EOQ
-    with cpu_buckets as (
-      select
-    unnest(array ['Unused (<1%)','Underutilized (1-10%)','Right-sized (10-90%)', 'Overutilized (>90%)' ]) as cpu_bucket
-    ),
-    max_averages as (
-      select
-        db_instance_identifier,
         case
-          when max(average) <= 1 then 'Unused (<1%)'
-          when max(average) between 1 and 10 then 'Underutilized (1-10%)'
-          when max(average) between 10 and 90 then 'Right-sized (10-90%)'
-          when max(average) > 90 then 'Overutilized (>90%)'
-        end as cpu_bucket,
-        max(average) as max_avg
+          when dead_letter_config_target_arn is not null then 'enabled'
+          else 'disabled'
+        end as dead_letter
       from
-        aws_rds_db_instance_metric_cpu_utilization_daily
+        aws_lambda_function
+    )
+    select
+      dead_letter,
+      count(*)
+    from
+      functions
+    group by
+      dead_letter
+  EOQ
+}
+
+query "aws_lambda_function_concurrent_execution_limit_status" {
+  sql = <<-EOQ
+    with functions as (
+      select
+        case
+          when reserved_concurrent_executions is not null then 'enabled'
+          else 'disabled'
+        end as reserved_concurrent_executions
+      from
+        aws_lambda_function
+    )
+    select
+      reserved_concurrent_executions,
+      count(*)
+    from
+      functions
+    group by
+      reserved_concurrent_executions
+  EOQ
+}
+
+query "aws_lambda_high_error_rate" {
+  sql = <<-EOQ
+    with error_rates as (
+      select
+          errors.name as name,
+          sum(errors.sum)/sum(invocations.sum)*100 as error_rate
+      from
+        aws_lambda_function_metric_errors_daily as errors , aws_lambda_function_metric_invocations_daily as invocations
       where
-        date_part('day', now() - timestamp) <= 30
+          errors.name = invocations.name
       group by
-        db_instance_identifier
+          errors.name
     )
     select
-      b.cpu_bucket as "CPU Utilization",
-      count(a.*)
+      name,
+      error_rate
     from
-      cpu_buckets as b
-    left join max_averages as a on b.cpu_bucket = a.cpu_bucket
-    group by
-      b.cpu_bucket
+      error_rates
+    where  error_rate >= 10
   EOQ
 }
 
-query "aws_rds_db_instance_by_state" {
+query "aws_lambda_function_cost_by_usage_types_30day" {
   sql = <<-EOQ
     select
-      status,
-      count(status)
+      usage_type,
+      sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
     from
-      aws_rds_db_instance
+      aws_cost_by_service_usage_type_daily
+    where
+      service = 'AWS Lambda'
+      --and period_end >= date_trunc('month', CURRENT_DATE::timestamp)
+      and period_end >=  CURRENT_DATE - INTERVAL '30 day'
     group by
-      status
-  EOQ
-}
-
-query "aws_rds_db_instance_by_creation_month" {
-  sql = <<-EOQ
-    with instances as (
-      select
-        title,
-        create_time,
-        to_char(create_time,
-          'YYYY-MM') as creation_month
-      from
-        aws_rds_db_instance
-    ),
-    months as (
-      select
-        to_char(d,
-          'YYYY-MM') as month
-      from
-        generate_series(date_trunc('month',
-            (
-              select
-                min(create_time)
-                from instances)),
-            date_trunc('month',
-              current_date),
-            interval '1 month') as d
-    ),
-    instances_by_month as (
-      select
-        creation_month,
-        count(*)
-      from
-        instances
-      group by
-        creation_month
-    )
-    select
-      months.month,
-      instances_by_month.count
-    from
-      months
-      left join instances_by_month on months.month = instances_by_month.creation_month
+      usage_type
     order by
-      months.month desc;
+      sum(unblended_cost_amount) desc
   EOQ
 }
 
-report "aws_rds_db_instance_summary" {
+query "aws_lambda_function_cost_by_usage_types_12mo" {
+  sql = <<-EOQ
+    select
+      usage_type,
+      sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+    from
+      aws_cost_by_service_usage_type_monthly
+    where
+      service = 'AWS Lambda'
+      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
+    group by
+      usage_type
+    order by
+      sum(unblended_cost_amount) desc
+  EOQ
+}
 
-  title = "AWS RDS DB Instance Dashboard"
+query "aws_lambda_function_cost_by_account_30day" {
+  sql = <<-EOQ
+    select
+      a.title as "account",
+      sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+    from
+      aws_cost_by_service_monthly as c,
+      aws_account as a
+    where
+      a.account_id = c.account_id
+      and service = 'AWS Lambda'
+     and period_end >=  CURRENT_DATE - INTERVAL '30 day'
+    group by
+      account
+    order by
+      account
+  EOQ
+}
+
+query "aws_lambda_function_cost_by_account_12mo" {
+  sql = <<-EOQ
+    select
+      a.title as "account",
+      sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+    from
+      aws_cost_by_service_monthly as c,
+      aws_account as a
+    where
+      a.account_id = c.account_id
+      and service = 'AWS Lambda'
+      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
+    group by
+      account
+    order by
+      account
+  EOQ
+}
+
+report "aws_lambda_function_summary" {
+
+  title = "AWS Lambda Function Dashboard"
 
   container {
 
     card {
-      sql   = query.aws_rds_db_instance_count.sql
+      sql   = query.aws_lambda_function_count.sql
       width = 2
     }
 
     card {
-      sql   = query.aws_rds_public_db_instances_count.sql
+      sql   = query.aws_public_lambda_function_count.sql
       width = 2
     }
 
     card {
-      sql   = query.aws_rds_unencrypted_db_instances_count.sql
+      sql   = query.aws_lambda_function_not_in_vpc_count.sql
       width = 2
     }
 
     card {
-      sql   = query.aws_rds_db_instance_not_in_vpc_count.sql
+      sql   = query.aws_lambda_function_use_latest_runtime.sql
       width = 2
     }
 
-
-   card {
-      sql   = query.aws_rds_db_instance_cost_last_30_counter.sql
+    card {
+      sql   = query.aws_lambda_function_cost_last_30_counter.sql
       width = 2
     }
 
-  card {
-      sql   = query.aws_rds_db_instance_cost_30_60_counter.sql
+    card {
+      sql   = query.aws_lambda_function_cost_per_month.sql
       width = 2
     }
 
   }
 
-
-    container {
-      title = "Analysis"
-
-
-      #title = "Counts"
-      chart {
-        title = "Instances by Account"
-        sql   = query.aws_rds_db_instance_by_account.sql
-        type  = "column"
-        width = 3
-      }
-
-
-      chart {
-        title = "RDS DB Instances by Region"
-        sql   = query.aws_rds_db_instance_by_region.sql
-        type  = "column"
-        width = 3
-      }
-
-      chart {
-        title = "RDS DB Instances by State"
-        sql   = query.aws_rds_db_instance_by_state.sql
-        type  = "column"
-        width = 3
-      }
-
-      chart {
-        title = "RDS DB Instances by Type"
-        sql   = query.aws_rds_db_instance_by_engine_type.sql
-        type  = "column"
-        width = 3
-      }
-
-    }
-
-
-
   container {
-    title = "Costs"
+    title = "Analysis"
 
+    #title = "Counts"
     chart {
-      title = "RDS Monthly Cost"
-      type  = "line"
-      sql   = query.aws_rds_db_instance_cost_per_month.sql
-      width = 4
-    }
-
-
-   chart {
-      title = "RDS Cost by Usage Type - last 30 days"
-      type  = "donut"
-      sql   = query.aws_rds_db_instance_cost_by_usage_types_30day.sql
-      width = 2
-    }
-
-   chart {
-      title = "RDS Cost by Usage Type - Last 12 months"
-      type  = "donut"
-      sql   = query.aws_rds_db_instance_cost_by_usage_types_12mo.sql
-      width = 2
-    }
-
-
-    chart {
-      title = "By Account - MTD"
-      type  = "donut"
-      sql   = query.aws_rds_db_instance_cost_by_account_30day.sql
-       width = 2
+      title = "Functions by Account"
+      sql   = query.aws_lambda_function_by_account.sql
+      type  = "column"
+      width = 3
     }
 
     chart {
-      title = "By Account - Last 12 months"
-      type  = "donut"
-      sql   = query.aws_rds_db_instance_cost_by_account_12mo.sql
-      width = 2
+      title = "Functions by Region"
+      sql   = query.aws_lambda_function_by_region.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Functions by State"
+      sql   = query.aws_lambda_function_by_state.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Functions by Type"
+      sql   = query.aws_lambda_function_by_runtime.sql
+      type  = "column"
+      width = 3
     }
 
   }
@@ -526,8 +342,8 @@ report "aws_rds_db_instance_summary" {
     title = "Assessments"
 
     chart {
-      title = "Logging Status"
-      sql = query.aws_rds_db_instance_logging_status.sql
+      title = "Dead Letter Config Status"
+      sql = query.aws_lambda_function_dead_letter_queue_status.sql
       type  = "donut"
       width = 3
 
@@ -537,11 +353,52 @@ report "aws_rds_db_instance_summary" {
     }
 
     chart {
-      title = "Multi-AZ Status"
-      sql = query.aws_rds_db_instance_multiple_az_status.sql
+      title = "Concurrent Execution Status"
+      sql = query.aws_lambda_function_concurrent_execution_limit_status.sql
       type  = "donut"
       width = 3
+    }
 
+  }
+
+  container {
+    title = "Costs"
+
+    chart {
+      title = "Lambda Monthly Cost"
+      type  = "line"
+      sql   = query.aws_lambda_function_cost_per_month.sql
+      width = 4
+    }
+
+
+   chart {
+      title = "Lambda Cost by Usage Type - last 30 days"
+      type  = "donut"
+      sql   = query.aws_lambda_function_cost_by_usage_types_30day.sql
+      width = 2
+    }
+
+   chart {
+      title = "Lambda Cost by Usage Type - Last 12 months"
+      type  = "donut"
+      sql   = query.aws_lambda_function_cost_by_usage_types_12mo.sql
+      width = 2
+    }
+
+
+    chart {
+      title = "By Account - MTD"
+      type  = "donut"
+      sql   = query.aws_lambda_function_cost_by_account_30day.sql
+       width = 2
+    }
+
+    chart {
+      title = "By Account - Last 12 months"
+      type  = "donut"
+      sql   = query.aws_lambda_function_cost_by_account_12mo.sql
+      width = 2
     }
 
   }
@@ -550,70 +407,35 @@ report "aws_rds_db_instance_summary" {
     title  = "Performance & Utilization"
 
     chart {
-      title = "Top 10 CPU - Last 7 days"
-      sql   = query.aws_rds_db_instance_top10_cpu_past_week.sql
+      title = "Lambda function with high error rate (> 10 In Last 1 Month)"
+      sql   = query.aws_lambda_high_error_rate.sql
       type  = "line"
       width = 6
     }
 
-    chart {
-      title = "Average max daily CPU - Last 30 days"
-      sql   = query.aws_rds_db_instance_by_cpu_utilization_category.sql
-      type  = "column"
-      width = 6
-    }
   }
 
   container {
     title   = "Resources by Age"
 
-    chart {
-      title = "DB Instance by Creation Month"
-      sql   = query.aws_rds_db_instance_by_creation_month.sql
-      type  = "column"
-      width = 4
-
-      series "month" {
-        color = "green"
-      }
-    }
-
     table {
-      title = "Oldest DB Instances"
-      width = 4
-
+      title = "Functions Not Modified within 7 days"
+      width = 10
       sql = <<-EOQ
         select
-          title as "instance",
-          (current_date - create_time)::text as "Age in Days",
+          title as "function",
+          (current_date - date(last_modified )) as "Last Modified in Days",
           account_id as "Account"
         from
-          aws_rds_db_instance
+          aws_lambda_function
+        where
+          ((current_date) - date(last_modified )) > 7
         order by
-          "Age in Days" desc,
-          title
-        limit 5
-      EOQ
-    }
-
-    table {
-      title = "Newest DB Instances"
-      width = 4
-
-      sql = <<-EOQ
-        select
-          title as "instance",
-          current_date - create_time as "Age in Days",
-          account_id as "Account"
-        from
-          aws_rds_db_instance
-        order by
-          "Age in Days" asc,
+          "Last Modified in Days" desc,
           title
         limit 5
       EOQ
     }
   }
-
 }
 

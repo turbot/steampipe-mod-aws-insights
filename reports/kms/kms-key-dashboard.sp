@@ -55,8 +55,8 @@ query "aws_kms_key_rotation_enabled_count" {
 query "aws_kms_key_cost_per_month" {
   sql = <<-EOQ
     select
-       to_char(period_start, 'Mon-YY') as "Month",
-       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+      to_char(period_start, 'Mon-YY') as "Month",
+      sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
     from
       aws_cost_by_service_usage_type_monthly
     where
@@ -67,7 +67,6 @@ query "aws_kms_key_cost_per_month" {
       period_start
   EOQ
 }
-
 
 query "aws_kms_key_cost_last_30_card" {
   sql = <<-EOQ
@@ -82,12 +81,11 @@ query "aws_kms_key_cost_last_30_card" {
   EOQ
 }
 
-
 query "aws_kms_key_cost_by_usage_types_12mo" {
   sql = <<-EOQ
     select
-       usage_type,
-       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+      usage_type,
+      sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
     from
       aws_cost_by_service_usage_type_monthly
     where
@@ -104,22 +102,20 @@ query "aws_kms_key_cost_30_60_card" {
   sql = <<-EOQ
     select
       'Cost - Penultimate 30 Days' as label,
-       sum(unblended_cost_amount)::numeric::money as value
+      sum(unblended_cost_amount)::numeric::money as value
     from
       aws_cost_by_service_daily
     where
       service = 'AWS Key Management Service'
       and period_start  between CURRENT_DATE - INTERVAL '60 day' and CURRENT_DATE - INTERVAL '30 day'
-
   EOQ
-
 }
 
 query "aws_kms_key_cost_by_usage_types_30day" {
   sql = <<-EOQ
     select
-       usage_type,
-       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+      usage_type,
+      sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
     from
       aws_cost_by_service_usage_type_daily
     where
@@ -136,8 +132,8 @@ query "aws_kms_key_cost_by_usage_types_30day" {
 query "aws_kms_key_cost_by_account_30day" {
   sql = <<-EOQ
     select
-       a.title as "account",
-       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+      a.title as "account",
+      sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
     from
       aws_cost_by_service_monthly as c,
       aws_account as a
@@ -152,12 +148,11 @@ query "aws_kms_key_cost_by_account_30day" {
   EOQ
 }
 
-
 query "aws_kms_key_cost_by_account_12mo" {
   sql = <<-EOQ
     select
-       a.title as "account",
-       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+      a.title as "account",
+      sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
     from
       aws_cost_by_service_monthly as c,
       aws_account as a
@@ -169,36 +164,6 @@ query "aws_kms_key_cost_by_account_12mo" {
       account
     order by
       account
-  EOQ
-}
-
-
-query "aws_kms_db_instance_by_account" {
-  sql = <<-EOQ
-    select
-      a.title as "account",
-      count(i.*) as "total"
-    from
-      aws_kms_db_instance as i,
-      aws_account as a
-    where
-      a.account_id = i.account_id
-    group by
-      account
-    order by count(i.*) desc
-
-  EOQ
-}
-
-query "aws_kms_db_instance_by_region" {
-  sql = <<-EOQ
-    select
-      region,
-      count(i.*) as total
-    from
-      aws_kms_db_instance as i
-    group by
-      region
   EOQ
 }
 
@@ -228,7 +193,6 @@ query "aws_kms_key_by_account" {
     group by
       account
     order by count(i.*) desc
-
   EOQ
 }
 
@@ -370,7 +334,7 @@ report "aws_kms_key_summary" {
 
     #title = "Counts"
     chart {
-      title = "KMS Key by Account"
+      title = "KMS Keys by Account"
       sql   = query.aws_kms_key_by_account.sql
       type  = "column"
       width = 3
@@ -378,21 +342,21 @@ report "aws_kms_key_summary" {
 
 
     chart {
-      title = "KMS Key by Region"
+      title = "KMS Keys by Region"
       sql   = query.aws_kms_key_by_region.sql
       type  = "column"
       width = 3
     }
 
     chart {
-      title = "KMS Key by State"
+      title = "KMS Keys by State"
       sql   = query.aws_kms_key_by_state.sql
       type  = "column"
       width = 3
     }
 
     chart {
-      title = "KMS Key by origin"
+      title = "KMS Keys by Origin"
       sql   = query.aws_kms_key_by_origin.sql
       type  = "column"
       width = 3
@@ -473,12 +437,11 @@ report "aws_kms_key_summary" {
 
   }
 
-
   container {
     title   = "Resources by Age"
 
     chart {
-      title = "KMS Key by Creation Month"
+      title = "KMS Keys by Creation Month"
       sql   = query.aws_kms_key_by_creation_month.sql
       type  = "column"
       width = 4
@@ -489,18 +452,18 @@ report "aws_kms_key_summary" {
     }
 
     table {
-      title = "Key Expiring in 7 days"
+      title = "KMS Keys Deleting within 7 days"
       width = 4
 
       sql = <<-EOQ
         select
           title as "key",
-          (current_date - valid_to)::text as "Age in Days",
+          (deletion_date - current_date) as "Age in Days",
           account_id as "Account"
         from
           aws_kms_key
         where
-         valid_to <= (current_date - interval '7' day)
+          extract(day from deletion_date - current_date) <= 7
         order by
           "Age in Days" desc,
           title
@@ -510,4 +473,5 @@ report "aws_kms_key_summary" {
   }
 
 }
+
 

@@ -1,17 +1,17 @@
 query "aws_rds_db_instance_logging_disabled_count" {
   sql = <<-EOQ
-  with logging_stat as(
-    select
-      db_instance_identifier
-    from
-      aws_rds_db_instance
-    where
-      ( engine like any (array ['mariadb', '%mysql']) and enabled_cloudwatch_logs_exports ?& array ['audit','error','general','slowquery'] ) or
-      ( engine like any (array['%postgres%']) and enabled_cloudwatch_logs_exports ?& array ['postgresql','upgrade'] ) or
-      ( engine like 'oracle%' and enabled_cloudwatch_logs_exports ?& array ['alert','audit', 'trace','listener'] ) or
-      ( engine = 'sqlserver-ex' and enabled_cloudwatch_logs_exports ?& array ['error'] ) or
-      ( engine like 'sqlserver%' and enabled_cloudwatch_logs_exports ?& array ['error','agent'] )
-     )
+    with logging_stat as(
+      select
+        db_instance_identifier
+      from
+        aws_rds_db_instance
+      where
+        ( engine like any (array ['mariadb', '%mysql']) and enabled_cloudwatch_logs_exports ?& array ['audit','error','general','slowquery'] ) or
+        ( engine like any (array['%postgres%']) and enabled_cloudwatch_logs_exports ?& array ['postgresql','upgrade'] ) or
+        ( engine like 'oracle%' and enabled_cloudwatch_logs_exports ?& array ['alert','audit', 'trace','listener'] ) or
+        ( engine = 'sqlserver-ex' and enabled_cloudwatch_logs_exports ?& array ['error'] ) or
+        ( engine like 'sqlserver%' and enabled_cloudwatch_logs_exports ?& array ['error','agent'] )
+      )
   select
     count(*) as value,
     'Logging Disabled' as label,
@@ -23,7 +23,6 @@ query "aws_rds_db_instance_logging_disabled_count" {
   EOQ
 }
 
-
 report "aws_rds_db_instance_logging_report" {
 
   title = "AWS RDS DB Instance Logging Report"
@@ -33,7 +32,6 @@ report "aws_rds_db_instance_logging_report" {
       sql = query.aws_rds_db_instance_logging_disabled_count.sql
       width = 2
     }
-
   }
 
   table {
@@ -56,5 +54,4 @@ report "aws_rds_db_instance_logging_report" {
         aws_rds_db_instance
     EOQ
   }
-
 }

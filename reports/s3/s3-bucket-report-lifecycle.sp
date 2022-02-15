@@ -7,7 +7,7 @@ query "aws_s3_bucket_versioning_disabled_count" {
     from
       aws_s3_bucket
     where
-      not versioning
+      not versioning_enabled
   EOQ
 }
 

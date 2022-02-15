@@ -59,7 +59,6 @@ query "aws_rds_db_instance_cost_per_month" {
   EOQ
 }
 
-
 query "aws_rds_db_instance_cost_last_30_counter" {
   sql = <<-EOQ
     select
@@ -72,7 +71,6 @@ query "aws_rds_db_instance_cost_last_30_counter" {
       and period_start  >=  CURRENT_DATE - INTERVAL '30 day'
   EOQ
 }
-
 
 query "aws_rds_db_instance_cost_by_usage_types_12mo" {
   sql = <<-EOQ
@@ -101,9 +99,7 @@ query "aws_rds_db_instance_cost_30_60_counter" {
     where
       service = 'Amazon Relational Database Service'
       and period_start  between CURRENT_DATE - INTERVAL '60 day' and CURRENT_DATE - INTERVAL '30 day'
-
   EOQ
-
 }
 
 query "aws_rds_db_instance_cost_by_usage_types_30day" {
@@ -144,7 +140,6 @@ query "aws_rds_db_instance_cost_by_account_30day" {
   EOQ
 }
 
-
 query "aws_rds_db_instance_cost_by_account_12mo" {
   sql = <<-EOQ
     select
@@ -164,12 +159,8 @@ query "aws_rds_db_instance_cost_by_account_12mo" {
   EOQ
 }
 
-
-
 query "aws_rds_db_instance_by_account" {
   sql = <<-EOQ
-
-
     select
       a.title as "account",
       count(i.*) as "total"
@@ -181,7 +172,6 @@ query "aws_rds_db_instance_by_account" {
     group by
       account
     order by count(i.*) desc
-
   EOQ
 }
 
@@ -197,7 +187,6 @@ query "aws_rds_db_instance_by_region" {
       region
   EOQ
 }
-
 
 query "aws_rds_db_instance_by_engine_type" {
   sql = <<-EOQ
@@ -259,17 +248,16 @@ union
   EOQ
 }
 
-
 query "aws_rds_db_instance_iam_authentication_enabled" {
   sql = <<-EOQ
     with iam_authentication_stat as (
-    select
-      distinct db_instance_identifier as name
-    from
-      aws_rds_db_instance
-    where
-      iam_database_authentication_enabled
-    group by name
+      select
+        distinct db_instance_identifier as name
+      from
+        aws_rds_db_instance
+      where
+        iam_database_authentication_enabled
+      group by name
   )
   select
     'Enabled' as "IAM Authentication Status",
@@ -432,57 +420,48 @@ report "aws_rds_db_instance_summary" {
       width = 2
     }
 
-
    card {
       sql   = query.aws_rds_db_instance_cost_last_30_counter.sql
       width = 2
     }
 
-  card {
-      sql   = query.aws_rds_db_instance_cost_30_60_counter.sql
-      width = 2
-    }
-
+    card {
+        sql   = query.aws_rds_db_instance_cost_30_60_counter.sql
+        width = 2
+      }
   }
 
+  container {
+    title = "Analysis"
 
-    container {
-      title = "Analysis"
-
-
-      #title = "Counts"
-      chart {
-        title = "Instances by Account"
-        sql   = query.aws_rds_db_instance_by_account.sql
-        type  = "column"
-        width = 3
-      }
-
-
-      chart {
-        title = "RDS DB Instances by Region"
-        sql   = query.aws_rds_db_instance_by_region.sql
-        type  = "column"
-        width = 3
-      }
-
-      chart {
-        title = "RDS DB Instances by State"
-        sql   = query.aws_rds_db_instance_by_state.sql
-        type  = "column"
-        width = 3
-      }
-
-      chart {
-        title = "RDS DB Instances by Type"
-        sql   = query.aws_rds_db_instance_by_engine_type.sql
-        type  = "column"
-        width = 3
-      }
-
+    chart {
+      title = "Instances by Account"
+      sql   = query.aws_rds_db_instance_by_account.sql
+      type  = "column"
+      width = 3
     }
 
+    chart {
+      title = "RDS DB Instances by Region"
+      sql   = query.aws_rds_db_instance_by_region.sql
+      type  = "column"
+      width = 3
+    }
 
+    chart {
+      title = "RDS DB Instances by State"
+      sql   = query.aws_rds_db_instance_by_state.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "RDS DB Instances by Type"
+      sql   = query.aws_rds_db_instance_by_engine_type.sql
+      type  = "column"
+      width = 3
+    }
+  }
 
   container {
     title = "Costs"
@@ -493,7 +472,6 @@ report "aws_rds_db_instance_summary" {
       sql   = query.aws_rds_db_instance_cost_per_month.sql
       width = 4
     }
-
 
    chart {
       title = "RDS Cost by Usage Type - last 30 days"
@@ -509,12 +487,11 @@ report "aws_rds_db_instance_summary" {
       width = 2
     }
 
-
     chart {
       title = "By Account - MTD"
       type  = "donut"
       sql   = query.aws_rds_db_instance_cost_by_account_30day.sql
-       width = 2
+      width = 2
     }
 
     chart {
@@ -523,7 +500,6 @@ report "aws_rds_db_instance_summary" {
       sql   = query.aws_rds_db_instance_cost_by_account_12mo.sql
       width = 2
     }
-
   }
 
   container {
@@ -536,7 +512,7 @@ report "aws_rds_db_instance_summary" {
       width = 3
 
       series "Enabled" {
-         color = "green"
+        color = "green"
       }
     }
 
@@ -545,7 +521,6 @@ report "aws_rds_db_instance_summary" {
       sql = query.aws_rds_db_instance_multiple_az_status.sql
       type  = "donut"
       width = 3
-
     }
 
   }
@@ -618,6 +593,4 @@ report "aws_rds_db_instance_summary" {
       EOQ
     }
   }
-
 }
-
