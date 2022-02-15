@@ -2,7 +2,6 @@ report "aws_vpc_security_group_dashboard" {
   title = "AWS VPC Security Group Dashboard"
 
   container {
-    # Analysis
     card {
       sql = <<-EOQ
         select count(*) as "Security Groups" from aws_vpc_security_group;
@@ -10,7 +9,6 @@ report "aws_vpc_security_group_dashboard" {
       width = 2
     }
 
-    # Assessments
     card {
       sql = <<-EOQ
         with associated_sg as (
@@ -24,7 +22,7 @@ report "aws_vpc_security_group_dashboard" {
         select
           count(*) as value,
           'Unassociated Security Groups' as label,
-          case count(*) when 0 then 'ok' else 'alert' end as style
+          case count(*) when 0 then 'ok' else 'alert' end as "type"
         from
           aws_vpc_security_group s
           left join associated_sg a on s.group_id = a.secgrp_id
@@ -36,50 +34,24 @@ report "aws_vpc_security_group_dashboard" {
 
     card {
       sql = <<-EOQ
-        with unrestricted_sg as (
+        with default_sg_with_inbound_outbound_traffic as (
           select
-            count(group_id) as unrestricted_sg_count
+            group_name
           from
-            aws_vpc_security_group_rule
+            aws_vpc_security_group
           where
-            type = 'ingress'
-            and cidr_ipv4 = '0.0.0.0/0'
+            group_name = 'default'
             and (
-                ( ip_protocol = '-1'
-                and from_port is null
-                )
-                or (
-                    from_port >= 22
-                    and to_port <= 22
-                )
-                or (
-                    from_port >= 3389
-                    and to_port <= 3389
-                )
-                or (
-                    from_port >= 21
-                    and to_port <= 21
-                )
-                or (
-                    from_port >= 20
-                    and to_port <= 20
-                )
-                or (
-                    from_port >= 3306
-                    and to_port <= 3306
-                )
-                or (
-                    from_port >= 4333
-                    and to_port <= 4333
-                )
+              ip_permissions is not null
+              or ip_permissions_egress is not null
             )
         )
         select
-          unrestricted_sg_count as value,
-          'Unrestricted Security Groups' as label,
-          case unrestricted_sg_count when 0 then 'ok' else 'alert' end as style
+        count(*) as value,
+        'Unrestricted Default Security Groups' as label,
+        case count(*) when 0 then 'ok' else 'alert' end as "type"
         from
-          unrestricted_sg;
+          default_sg_with_inbound_outbound_traffic;
       EOQ
       width = 2
     }
@@ -135,7 +107,165 @@ report "aws_vpc_security_group_dashboard" {
         order by vpc_id;
       EOQ
       type  = "column"
+      width = 6
+    }
+  }
+
+  container {
+    title = "Assessments"
+
+    chart {
+      title = "Default Security Group"
+      type  = "donut"
+      width = 2
+      sql   = <<-EOQ
+        with default_sg as (
+          select
+            group_id,
+            case when group_name = 'default' then true else false end as is_default
+          from
+            aws_vpc_security_group
+        )
+        select
+          case
+            when is_default then 'Default'
+            else 'Non-Default'
+          end as default_status,
+          count(*)
+        from
+          default_sg
+        group by is_default
+      EOQ
+    }
+
+    chart {
+      title = "Security Group with unrestricted ingress SSH"
+      type  = "donut"
       width = 3
+      sql   = <<-EOQ
+        with ingress_ssh_rules as (
+          select
+            group_id
+          from
+            aws_vpc_security_group_rule
+          where
+            type = 'ingress'
+            and cidr_ipv4 = '0.0.0.0/0'
+            and (
+                ( ip_protocol = '-1'
+                and from_port is null
+                )
+                or (
+                    from_port >= 22
+                    and to_port <= 22
+                )
+            )
+          group by
+            group_id
+        ),
+        sg_list as (
+          select
+            sg.group_id,
+            case
+            when ingress_ssh_rules.group_id is null then true
+            else false
+          end as restricted
+          from
+            aws_vpc_security_group as sg
+            left join ingress_ssh_rules on sg.group_id = ingress_ssh_rules.group_id
+        )
+        select
+          case
+            when restricted then 'Restricted'
+            else 'Unrestricted'
+          end as restrict_ingress_ssh_status,
+          count(*)
+        from
+          sg_list
+        group by restricted;
+      EOQ
+    }
+
+    chart {
+      title = "Security Group with unrestricted ingress TCP and UDP"
+      type  = "donut"
+      width = 3
+      sql   = <<-EOQ
+        with ingress_tcp_udp_rules as (
+          select
+            group_id
+          from
+            aws_vpc_security_group_rule
+          where
+            type = 'ingress'
+            and cidr_ipv4 = '0.0.0.0/0'
+            and (
+              ip_protocol in ('tcp', 'udp')
+              or (
+                ip_protocol = '-1'
+                and from_port is null
+              )
+            )
+          group by
+            group_id
+        ),
+        sg_list as (
+          select
+            sg.group_id,
+            case
+            when ingress_tcp_udp_rules.group_id is null then true
+            else false
+          end as restricted
+          from
+            aws_vpc_security_group as sg
+            left join ingress_tcp_udp_rules on sg.group_id = ingress_tcp_udp_rules.group_id
+        )
+        select
+          case
+            when restricted then 'Restricted'
+            else 'Unrestricted'
+          end as restrict_ingress_tcp_udp_status,
+          count(*)
+        from
+          sg_list
+        group by restricted;
+      EOQ
+    }
+
+    chart {
+      title = "Unassociated Security Group"
+      type  = "donut"
+      width = 3
+      sql   = <<-EOQ
+        with associated_sg as (
+          select
+            sg ->> 'GroupId' as sg_id,
+            sg ->> 'GroupName' as secgrp_name
+          from
+            aws_ec2_network_interface,
+            jsonb_array_elements(groups) as sg
+        ),
+        sg_list as (
+          select
+            s.group_id,
+            case
+              when a.sg_id is null then false
+              else true
+            end as is_associated
+          from
+            aws_vpc_security_group as s
+            left join associated_sg a on s.group_id = a.sg_id
+        )
+        select
+          case
+            when is_associated then 'Associated'
+            else 'Not-Associated'
+          end as sg_association_status,
+          count(*)
+        from
+          sg_list
+        group by is_associated;
+      EOQ 
     }
   }
 }
