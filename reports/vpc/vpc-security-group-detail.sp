@@ -1,7 +1,7 @@
-report aws_vpc_security_group_detail {
+dashboard aws_vpc_security_group_detail {
   title = "AWS VPC Security Group Detail"
 
-  input {
+  input "security_group_id" {
     title = "Security Group"
     sql   = <<-EOQ
       select 

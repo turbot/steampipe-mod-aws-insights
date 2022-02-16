@@ -63,7 +63,7 @@ query "aws_s3_bucket_restrict_public_buckets_disabled_count" {
   EOQ
 }
 
-report "aws_s3_bucket_public_access_report" {
+dashboard "aws_s3_bucket_public_access_report" {
 
   title = "AWS S3 Bucket Public Access Report"
 

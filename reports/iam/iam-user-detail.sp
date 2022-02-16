@@ -7,13 +7,13 @@ variable "iam_detail_user_arn" {
 
 query "aws_iam_user_input" {
   sql = <<EOQ
-select
-  title as label,
-  arn as value
-from
-  aws_iam_user
-order by
-  title;
+    select
+      title as label,
+      arn as value
+    from
+      aws_iam_user
+    order by
+      title;
 EOQ
 }
 
@@ -277,10 +277,10 @@ EOQ
 
 
 
-report aws_iam_user_detail {
+dashboard "aws_iam_user_detail" {
   title = "AWS IAM User Detail"
 
-  input {
+  input "user_arn" {
     title = "User"
     sql   = query.aws_iam_user_input.sql
     width = 2
@@ -432,7 +432,7 @@ report aws_iam_user_detail {
 
 
   container {
-    title = "AWS IAM User Analysis"
+    title = "AWS IAM User Policy Analysis"
 
     # table {
     #   sql = query.aws_iam_user_manage_policies_sankey.sql
@@ -483,9 +483,12 @@ report aws_iam_user_detail {
       sql   = query.aws_iam_all_policies_for_user.sql
 
     }
-
-
-
   }
+
+
+  # container { 
+  #   title = "Policy Simulator"
+  # # > select jsonb_pretty(matched_statements) from aws_iam_policy_simulator where principal_arn = 'arn:aws:iam::876515858155:user/jsmyth' and resource_arn='*' and action='ec2:Describe*'
+  # }
 
 }

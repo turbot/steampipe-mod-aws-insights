@@ -284,7 +284,7 @@ query "aws_ebs_volume_by_creation_month" {
   EOQ
 }
 
-report "aws_ebs_volume_dashboard" {
+dashboard "aws_ebs_volume_dashboard" {
 
   title = "AWS EBS Volume Dashboard"
 
