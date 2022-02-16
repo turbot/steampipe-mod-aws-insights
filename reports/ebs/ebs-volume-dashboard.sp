@@ -18,7 +18,7 @@ query "aws_ebs_encrypted_volume_count" {
     select
       count(*) as value,
       'Unencrypted Volumes' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_ebs_volume
     where
@@ -31,7 +31,7 @@ query "aws_ebs_unattached_volume_count" {
     select
       count(*) as value,
       'Unattached Volumes' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_ebs_volume
     where
