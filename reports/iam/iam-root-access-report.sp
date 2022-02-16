@@ -45,7 +45,7 @@ dashboard "aws_iam_root_access_report" {
           a.title as "Account",
           s.account_id as "Account ID",
           s.account_access_keys_present as "# Root Keys",
-          account_mfa_enabled as "Root MFA Enabled?"
+          account_mfa_enabled as "Root MFA Enabled"
         from 
           aws_iam_account_summary as s,
           aws_account as a
@@ -66,7 +66,9 @@ dashboard "aws_iam_root_access_report" {
 
 
 /*
-> 
+To Do - find root logins in cloudtrail events??
+  - join with cloudtrail table to find the log group?
+  - bug:  https://github.com/turbot/steampipe-plugin-aws/issues/902
 
 select 
   event_name,

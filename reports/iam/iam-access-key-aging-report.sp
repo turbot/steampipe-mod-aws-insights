@@ -43,7 +43,6 @@ dashboard "aws_iam_access_key_aging_report" {
 
   container {
 
-
    table {
       title = "Aged Access Keys"
 
@@ -67,10 +66,6 @@ dashboard "aws_iam_access_key_aging_report" {
       
       EOQ
     }
-
-
   }
-  
-
   
 }

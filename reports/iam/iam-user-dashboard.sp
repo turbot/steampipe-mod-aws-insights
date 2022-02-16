@@ -22,6 +22,23 @@ query "aws_iam_user_mfa_count" {
 }
 
 
+
+
+query "aws_iam_user_no_boundary_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'No Boundary Policy' as label,
+      case when count(*) = 0 then 'ok' else 'alert' end as type
+    from 
+      aws_iam_user  
+    where
+      permissions_boundary_type is null or permissions_boundary_type = '' 
+  EOQ
+}
+
+
+
 ### 
 query "aws_iam_users_by_account" {
   sql = <<-EOQ
@@ -66,8 +83,8 @@ query "aws_iam_users_by_boundary_policy" {
   sql   = <<-EOQ
     select
       case
-        when permissions_boundary_type is null or permissions_boundary_type = '' then 'Disabled'
-        else 'Enabled'
+        when permissions_boundary_type is null or permissions_boundary_type = '' then 'Not Configured'
+        else 'Configured'
       end as policy_type,
       count(*)
     from
@@ -76,36 +93,6 @@ query "aws_iam_users_by_boundary_policy" {
       permissions_boundary_type 
   EOQ
 }
-
-
-####
-
-/*
-query "aws_iam_users_with_direct_attached_policy" {
-  sql = <<-EOQ
-    select
-      jsonb_array_length(attached_policy_arns) as value,
-      'Direct Attached Policies' as label,
-      case when jsonb_array_length(attached_policy_arns) = 0 then 'ok' else 'alert' end as type
-    from 
-      aws_iam_user  
-
-  EOQ
-}
-
-query "aws_iam_users_with_inline_policy" {
-  sql = <<-EOQ
-    select
-      jsonb_array_length(inline_policies) as value,
-      'Inline Policies' as label,
-      case when jsonb_array_length(inline_policies) = 0 then 'ok' else 'alert' end as type
-    from 
-      aws_iam_user  
-
-  EOQ
-
-}
-*/
 
 
 query "aws_iam_users_with_direct_attached_policy_count" {
@@ -141,7 +128,7 @@ query "aws_iam_users_with_direct_attached_policy" {
       select
         arn,
         case
-          when jsonb_array_length(attached_policy_arns) > 0 then 'Direct'
+          when jsonb_array_length(attached_policy_arns) > 0 then 'With Attached Policies'
           else 'OK'
         end as has_attached
       from 
@@ -164,7 +151,7 @@ query "aws_iam_users_with_inline_policy" {
       select
         arn,
         case
-          when jsonb_array_length(inline_policies) > 0 then 'Inline'
+          when jsonb_array_length(inline_policies) > 0 then 'With Inline Policies'
           else 'OK'
         end as has_inline
       from 
@@ -177,13 +164,8 @@ query "aws_iam_users_with_inline_policy" {
         inline_compliance
       group by
         has_inline
-  
-
   EOQ
-
 }
-
-
 
 
 query "aws_iam_user_by_creation_month" {
@@ -248,6 +230,11 @@ dashboard "aws_iam_user_dashboard" {
     # Assessments
     card {
       sql   = query.aws_iam_user_mfa_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_iam_user_no_boundary_count.sql
       width = 2
     }
 
@@ -318,8 +305,6 @@ dashboard "aws_iam_user_dashboard" {
       type  = "donut"
       width = 3
     }
-
-
   }
   
 

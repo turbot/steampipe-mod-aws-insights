@@ -22,7 +22,8 @@ dashboard "aws_iam_credential_report" {
 
   container {
 
-  
+    // TO DO - either add more cards (with passwrd and no mfa, password never used, keys over 90 days. etc)
+    // or get rid of the cards altogether (they dont work unless there is a vred report for EVERY account in the aggregator)
      # Analysis
     card {
       sql   = <<-EOQ
@@ -61,42 +62,45 @@ dashboard "aws_iam_credential_report" {
 
       sql   = <<-EOQ
         select
-          user_name,
-          user_arn,
+          user_name as "Username",
+          user_arn as "User ARN",
 
-          password_enabled,
-          mfa_active,
-          password_status,
-          date_trunc('day',age(now(),password_last_changed))::text as password_age,
-          password_last_changed,
-          password_last_used,
-          password_next_rotation,
+          password_enabled as "Password Enabled",
+          mfa_active as "MFA Active",
+          password_status as "Password Status",
+          date_trunc('day',age(now(),password_last_changed))::text as "Password Age",
+          password_last_changed as "Password Changed Timestamp",
+          date_trunc('day',age(now(),password_last_used))::text as "Password Last Used",
+          password_last_used as "Password Last Used Timestamp",
+          date_trunc('day',age(now(),password_next_rotation))::text as "Next Password Rotation",
+          password_next_rotation "Next Password Rotation Timestamp",
 
+          access_key_1_active as "Access Key 1 Active",
+          date_trunc('day',age(now(),access_key_1_last_rotated))::text as "Key 1 Age",
+          access_key_1_last_rotated as "Key 1 Last Rotated",
+          date_trunc('day',age(now(),access_key_1_last_used_date))::text as  "Key 1 Last Used",
+          access_key_1_last_used_date as "Key 1 Last Used Timestamp",
+          access_key_1_last_used_region as "Key 1 Last Used Region",
+          access_key_1_last_used_service as "Key 1 Last Used Service",
 
-          access_key_1_active,
-          date_trunc('day',age(now(),access_key_1_last_rotated))::text as access_key_1_age,
-          access_key_1_last_rotated,
-          access_key_1_last_used_date,
-          access_key_1_last_used_region,
-          access_key_1_last_used_service,
+          access_key_2_active as "Access Key 2 Active",
+          date_trunc('day',age(now(),access_key_2_last_rotated))::text as "Key 2 Age",
+          access_key_2_last_rotated as "Key 2 Last Rotated Timestamp",
+          date_trunc('day',age(now(),access_key_2_last_used_date))::text as  "Key 2 Last Used",
+          access_key_2_last_used_date as "Key 2 Last Used Timestamp",
+          access_key_2_last_used_region as "Key 2 Last Used Region",
+          access_key_2_last_used_service as "Key 2 Last Used Service",
 
-          access_key_2_active,
-          date_trunc('day',age(now(),access_key_2_last_rotated))::text as access_key_2_age,
-          access_key_2_last_rotated,
-          access_key_2_last_used_date,
-          access_key_2_last_used_region,
-          access_key_2_last_used_service,
-
-          cert_1_active,
-          date_trunc('day',age(now(),cert_1_last_rotated))::text as cert_1_age,
-          cert_1_last_rotated,
+          cert_1_active as "Cert 1 Active",
+          date_trunc('day',age(now(),cert_1_last_rotated))::text as "Cert 1 Age",
+          cert_1_last_rotated "Cert 1 Last Rotated",
 
           cert_2_active,
-          date_trunc('day',age(now(),cert_2_last_rotated))::text as cert_2_age,
-          cert_2_last_rotated,
+          date_trunc('day',age(now(),cert_2_last_rotated))::text as "Cert 2 Age",
+          cert_2_last_rotated as "Cert 2 Last Rotated",
 
-          a.title as account,
-          r.account_id
+          a.title as "Account",
+          r.account_id as "Account ID"
           
         from 
           aws_iam_credential_report as r,

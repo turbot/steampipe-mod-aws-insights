@@ -20,6 +20,14 @@ query "aws_iam_principal_input" {
       aws_iam_group
     order by
       value;
+
+    union all select
+      arn as label,
+      arn as value
+    from
+      aws_iam_policy
+    order by
+      value;
 EOQ
 }
 
@@ -134,19 +142,3 @@ dashboard "iam_excessive_privilege_report" {
   }
 
 }
-
-
-/*
-
-select
-          aa.principal_arn,
-          aa.service_name,
-          aa.service_namespace,
-          aa.last_authenticated,
-          aa.last_authenticated_region
-        from
-          aws_iam_access_advisor as aa, aws_iam_user 
-        where 
-          principal_arn = arn
-          and account_id = account_id
-*/
