@@ -149,7 +149,7 @@ query "aws_iam_roles_by_creation_month" {
   EOQ
 }
 
-report "aws_iam_role_dashboard" {
+dashboard "aws_iam_role_dashboard" {
 
   title = "AWS IAM Role Dashboard"
 

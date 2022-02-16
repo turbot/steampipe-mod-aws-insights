@@ -181,7 +181,7 @@ query "aws_iam_user_having_administrator_access_by_account" {
 }
 
 
-report "aws_iam_user_dashboard" {
+dashboard "aws_iam_user_dashboard" {
 
   title = "AWS IAM User Dashboard"
 

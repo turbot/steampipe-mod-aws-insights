@@ -43,19 +43,19 @@ query "aws_s3_bucket_https_unenforced_count" {
 }
 
 
-report "aws_s3_bucket_encryption_report" {
+dashboard "aws_s3_bucket_encryption_report" {
 
   title = "AWS S3 Bucket Encryption Report"
 
   container {
 
     card {
-      sql = query.aws_s3_bucket_unencrypted_count.sql
+      sql   = query.aws_s3_bucket_unencrypted_count.sql
       width = 2
     }
 
     card {
-      sql = query.aws_s3_bucket_https_unenforced_count.sql
+      sql   = query.aws_s3_bucket_https_unenforced_count.sql
       width = 2
     }
 

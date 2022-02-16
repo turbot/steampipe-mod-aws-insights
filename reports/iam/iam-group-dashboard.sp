@@ -138,7 +138,7 @@ query "aws_iam_groups_by_creation_month" {
   EOQ
 }
 
-report "aws_iam_group_dashboard" {
+dashboard "aws_iam_group_dashboard" {
 
   title = "AWS IAM Group Dashboard"
 
