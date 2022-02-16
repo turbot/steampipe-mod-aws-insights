@@ -472,20 +472,34 @@ report "aws_ec2_instance_dashboard" {
 
   container {
     title = "Assesments"
-    width = 6
+    width = 12
 
     chart {
       title  = "Encryption Status [TODO]"
       # sql    = query.aws_ec2_instance_by_encryption_status.sql
       # type   = "donut"
-      width = 4
+      width = 3
     }
 
    chart {
       title = "Public/Private"
       sql   = query.aws_ec2_instance_by_public_ip.sql
       type  = "donut"
-      width = 4
+      width = 3
+    }
+
+    table {
+      title = "Detailed Monitoring Status"
+      width = 6
+
+      sql = <<-EOQ
+        select
+          title as "instance",
+          case when monitoring_state = 'enabled' then 'Enabled' else 'Disabled' end as "Detailed Monitoring",
+          account_id as "Account"
+        from
+          aws_ec2_instance
+      EOQ
     }
   }
 

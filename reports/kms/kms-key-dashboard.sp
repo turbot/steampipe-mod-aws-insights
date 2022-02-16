@@ -1,6 +1,6 @@
 query "aws_kms_key_count" {
   sql = <<-EOQ
-    select count(*) as "KMS Keys" from aws_kms_key
+    select count(*) as "Keys" from aws_kms_key
   EOQ
 }
 
@@ -30,7 +30,7 @@ query "aws_inactive_kms_key_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Inactive KMS Keys' as label,
+      'Inactive Keys' as label,
       case count(*) when 0 then 'ok' else 'alert' end as style
     from
       aws_kms_key
@@ -325,7 +325,7 @@ report "aws_kms_key_dashboard" {
 
     #title = "Counts"
     chart {
-      title = "KMS Keys by Account"
+      title = "Keys by Account"
       sql   = query.aws_kms_key_by_account.sql
       type  = "column"
       width = 3
@@ -333,21 +333,21 @@ report "aws_kms_key_dashboard" {
 
 
     chart {
-      title = "KMS Keys by Region"
+      title = "Keys by Region"
       sql   = query.aws_kms_key_by_region.sql
       type  = "column"
       width = 3
     }
 
     chart {
-      title = "KMS Keys by State"
+      title = "Keys by State"
       sql   = query.aws_kms_key_by_state.sql
       type  = "column"
       width = 3
     }
 
     chart {
-      title = "KMS Keys by Origin"
+      title = "Keys by Origin"
       sql   = query.aws_kms_key_by_origin.sql
       type  = "column"
       width = 3
@@ -414,25 +414,6 @@ report "aws_kms_key_dashboard" {
       width = 3
     }
 
-    table {
-      title = "IAM Policy with decryption actions allowed on all keys"
-      width = 4
-
-      sql = <<-EOQ
-        select
-          distinct arn
-        from
-          aws_iam_policy,
-          jsonb_array_elements(policy_std -> 'Statement') as statement
-        where
-          not is_aws_managed
-          and statement ->> 'Effect' = 'Allow'
-          and statement -> 'Resource' ?| array['*', 'arn:aws:kms:*:' || account_id || ':key/*', 'arn:aws:kms:*:' || account_id || ':alias/*']
-          and statement -> 'Action' ?| array['*', 'kms:*', 'kms:decrypt', 'kms:reencryptfrom', 'kms:reencrypt*']
-          limit 5;
-      EOQ
-    }
-
   }
 
   container {
@@ -442,7 +423,7 @@ report "aws_kms_key_dashboard" {
       title = "KMS Keys by Creation Month"
       sql   = query.aws_kms_key_by_creation_month.sql
       type  = "column"
-      width = 4
+      width = 6
 
       series "month" {
         color = "green"
@@ -451,12 +432,13 @@ report "aws_kms_key_dashboard" {
 
     table {
       title = "KMS Keys To Be Deleted Within 7 days"
-      width = 4
+      width = 6
 
       sql = <<-EOQ
         select
-          title as "key",
+          title as "Key",
           (deletion_date - current_date) as "Deleting After",
+          aliases as "Aliases",
           account_id as "Account"
         from
           aws_kms_key

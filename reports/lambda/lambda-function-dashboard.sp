@@ -1,6 +1,6 @@
 query "aws_lambda_function_count" {
   sql = <<-EOQ
-    select count(*) as "Lambda Functions" from aws_lambda_function
+    select count(*) as "Functions" from aws_lambda_function
   EOQ
 }
 
@@ -8,7 +8,7 @@ query "aws_public_lambda_function_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Public Lambda Functions' as label,
+      'Public Functions' as label,
       case count(*) when 0 then 'ok' else 'alert' end as style
     from
       aws_lambda_function
@@ -266,6 +266,37 @@ query "aws_lambda_function_cost_by_account_12mo" {
   EOQ
 }
 
+
+query "aws_lambda_function_invocation_rate" {
+  sql = <<-EOQ
+    with top_n as (
+      select
+        name,
+        avg(average)
+      from
+        aws_lambda_function_metric_invocations_daily
+      where
+      timestamp  >= CURRENT_DATE - INTERVAL '365 day'
+      group by
+        name
+      order by
+        avg desc
+      limit 10
+    )
+    select
+      timestamp,
+      name,
+      average
+    from
+      aws_lambda_function_metric_invocations_daily
+    where
+      timestamp  >= CURRENT_DATE - INTERVAL '365 day'
+      and name in (select name from top_n)
+    order by
+      timestamp
+  EOQ
+}
+
 report "aws_lambda_function_dashboard" {
 
   title = "AWS Lambda Function Dashboard"
@@ -330,7 +361,7 @@ report "aws_lambda_function_dashboard" {
     }
 
     chart {
-      title = "Functions by Type"
+      title = "Functions by Runtime"
       sql   = query.aws_lambda_function_by_runtime.sql
       type  = "column"
       width = 3
@@ -341,24 +372,35 @@ report "aws_lambda_function_dashboard" {
   container {
     title = "Assessments"
 
-    chart {
+    table {
       title = "Dead Letter Config Status"
-      sql = query.aws_lambda_function_dead_letter_queue_status.sql
-      type  = "donut"
-      width = 3
-
-      series "Enabled" {
-         color = "green"
-      }
+      width = 6
+      sql = <<-EOQ
+        select
+          name as "function",
+          case when dead_letter_config_target_arn is not null then 'Enabled' else 'Disabled' end as "Dead Letter Config ",
+          account_id as "Account",
+          region as "Region",
+          arn as "ARN"
+        from
+          aws_lambda_function
+      EOQ
     }
 
-    chart {
+    table {
       title = "Concurrent Execution Status"
-      sql = query.aws_lambda_function_concurrent_execution_limit_status.sql
-      type  = "donut"
-      width = 3
+      width = 6
+      sql = <<-EOQ
+        select
+          name as "function",
+          case when reserved_concurrent_executions is not null then 'Enabled' else 'Disabled' end as "Concurrent Execution",
+          account_id as "Account",
+          region as "Region",
+          arn as "ARN"
+        from
+          aws_lambda_function
+      EOQ
     }
-
   }
 
   container {
@@ -407,35 +449,20 @@ report "aws_lambda_function_dashboard" {
     title  = "Performance & Utilization"
 
     chart {
-      title = "Lambda function with high error rate (> 10 In Last 1 Month)"
+      title = "Functions with high error rate (> 10 In Last 1 Month)"
       sql   = query.aws_lambda_high_error_rate.sql
       type  = "line"
       width = 6
     }
-
   }
 
   container {
-    title   = "Resources by Age"
 
-    table {
-      title = "Functions Not Modified within 7 days"
-      width = 10
-      sql = <<-EOQ
-        select
-          title as "function",
-          (current_date - date(last_modified )) as "Last Modified in Days",
-          account_id as "Account"
-        from
-          aws_lambda_function
-        where
-          ((current_date) - date(last_modified )) > 7
-        order by
-          "Last Modified in Days" desc,
-          title
-        limit 5
-      EOQ
+    chart {
+      title = "Functions Invocation Rate"
+      sql   = query.aws_lambda_function_invocation_rate.sql
+      type  = "line"
+      width = 6
     }
   }
 }
-
