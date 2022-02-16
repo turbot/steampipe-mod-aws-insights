@@ -24,7 +24,7 @@ query "aws_kms_key_pending_deletion_count" {
   EOQ
 }
 
-report "aws_kms_key_lifecycle_report" {
+dashboard "aws_kms_key_lifecycle_report" {
 
   title = "AWS KMS Key Lifecycle Report"
 

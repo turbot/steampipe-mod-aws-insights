@@ -664,10 +664,10 @@ query "aws_vpc_peers_for_vpc_sankey" {
 
 
 
-report aws_vpc_detail {
+dashboard aws_vpc_detail {
   title = "AWS VPC  Detail"
 
-  input {
+  input "vpc_id" {
     title = "VPC"
     sql   = <<-EOQ
       select 

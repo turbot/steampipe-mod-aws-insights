@@ -254,7 +254,7 @@ query "aws_redshift_cluster_by_creation_month" {
   EOQ
 }
 
-report "aws_redshift_cluster_dashboard" {
+dashboard "aws_redshift_cluster_dashboard" {
 
   title = "AWS Redshift Cluster Dashboard"
 

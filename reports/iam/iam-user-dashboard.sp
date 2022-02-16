@@ -60,7 +60,7 @@ query "aws_iam_users_by_mfa_enabled" {
 
 
 
-report aws_iam_user_dashboard {
+dashboard "aws_iam_user_dashboard" {
   title = "AWS IAM User Dashboard"
 
   
@@ -69,7 +69,6 @@ report aws_iam_user_dashboard {
   
      # Analysis
     card {
-      #title = "Size"
       sql   = query.aws_iam_user_count.sql
       width = 2
     }
@@ -81,15 +80,7 @@ report aws_iam_user_dashboard {
       width = 2
     }
 
-    # card {
-    #   sql   = query.aws_vpc_is_default.sql
-    #   width = 2
-    # }
-
-    # card {
-    #   sql = query.aws_flowlogs_count_for_vpc.sql
-    #   width = 2
-    # }
+  
   }
 
   container {
@@ -102,10 +93,6 @@ report aws_iam_user_dashboard {
       width = 3
     }
   }
-
-
-
-
 
 
   container {

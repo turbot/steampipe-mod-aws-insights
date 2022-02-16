@@ -371,7 +371,7 @@ query "aws_rds_db_cluster_by_creation_month" {
   EOQ
 }
 
-report "aws_rds_db_cluster_dashboard" {
+dashboard "aws_rds_db_cluster_dashboard" {
 
   title = "AWS RDS DB Cluster Dashboard"
 

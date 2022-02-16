@@ -217,7 +217,7 @@ query "aws_vpc_cost_by_account_12mo" {
 }
 
 
-report "aws_vpc_dashboard" {
+dashboard "aws_vpc_dashboard" {
 
   title = "AWS VPC Dashboard"
 
