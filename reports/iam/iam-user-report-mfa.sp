@@ -2,7 +2,7 @@ query "aws_iam_user_mfa_not_enabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'MFA Enabled' as label,
+      'MFA Not Enabled' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_iam_user
