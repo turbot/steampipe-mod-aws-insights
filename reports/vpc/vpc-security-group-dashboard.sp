@@ -13,8 +13,8 @@ report "aws_vpc_security_group_dashboard" {
       sql = <<-EOQ
         with associated_sg as (
           select
-            sg ->> 'GroupId' as secgrp_id,
-            sg ->> 'GroupName' as secgrp_name
+            sg ->> 'GroupId' as sg_id,
+            sg ->> 'GroupName' as sg_name
           from
             aws_ec2_network_interface,
             jsonb_array_elements(groups) as sg
@@ -25,9 +25,9 @@ report "aws_vpc_security_group_dashboard" {
           case count(*) when 0 then 'ok' else 'alert' end as "type"
         from
           aws_vpc_security_group s
-          left join associated_sg a on s.group_id = a.secgrp_id
+          left join associated_sg a on s.group_id = a.sg_id
         where
-          a.secgrp_id is null;
+          a.sg_id is null;
       EOQ
       width = 2
     }
@@ -107,7 +107,7 @@ report "aws_vpc_security_group_dashboard" {
         order by vpc_id;
       EOQ
       type  = "column"
-      width = 6
+      width = 5
     }
   }
 
@@ -240,7 +240,7 @@ report "aws_vpc_security_group_dashboard" {
         with associated_sg as (
           select
             sg ->> 'GroupId' as sg_id,
-            sg ->> 'GroupName' as secgrp_name
+            sg ->> 'GroupName' as sg_name
           from
             aws_ec2_network_interface,
             jsonb_array_elements(groups) as sg
