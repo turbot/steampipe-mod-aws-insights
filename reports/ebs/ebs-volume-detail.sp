@@ -75,18 +75,18 @@ report aws_ebs_volume_detail {
 
           sql   = <<-EOQ
             select
-              volume_id,
-              volume_type as type,
-              state,
-              encrypted,
-              auto_enable_io,
-              snapshot_id,
-              availability_zone,
-              kms_key_id,
-              title,
-              region,
-              account_id,
-              arn
+              volume_id as "Volume ID",
+              volume_type as "Volume Type",
+              state as "Volume State",
+              encrypted as "Encrypted",
+              auto_enable_io as "Auto Enabled IO",
+              snapshot_id as "Snapshot ID",
+              availability_zone as "Availability Zone",
+              kms_key_id as "Key ID",
+              title as "Title",
+              region as "Region",
+              account_id as "Account ID",
+              arn as "ARN"
             from
               aws_ebs_volume
             where 
