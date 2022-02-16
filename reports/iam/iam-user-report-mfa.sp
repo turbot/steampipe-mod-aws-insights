@@ -12,6 +12,7 @@ query "aws_iam_user_mfa_not_enabled_count" {
 }
 
 report "aws_iam_user_mfa_report" {
+
   title = "AWS IAM User MFA Report"
 
   container {
