@@ -11,7 +11,7 @@ query "aws_lambda_function_unencrypted_count" {
   EOQ
 }
 
-dashboard "aws_lambda_function_encryption_report" {
+dashboard "aws_lambda_function_encryption_dashboard" {
 
   title = "AWS Lambda Function Encryption Report"
 

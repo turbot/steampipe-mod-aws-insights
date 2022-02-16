@@ -1,4 +1,4 @@
-report "aws_vpc_security_group_dashboard" {
+dashboard "aws_vpc_security_group_dashboard" {
   title = "AWS VPC Security Group Dashboard"
 
   container {

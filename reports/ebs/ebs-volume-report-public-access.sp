@@ -1,4 +1,4 @@
-report "aws_ebs_volume_public_access_report" {
+dashboard "aws_ebs_volume_public_access_dashboard" {
   title = "AWS EBS Volume Public Access Report"
 
   container {

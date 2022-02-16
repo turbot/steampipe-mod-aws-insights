@@ -23,7 +23,7 @@ query "aws_rds_db_instance_logging_disabled_count" {
   EOQ
 }
 
-dashboard "aws_rds_db_instance_logging_report" {
+dashboard "aws_rds_db_instance_logging_dashboard" {
 
   title = "AWS RDS DB Instance Logging Report"
 

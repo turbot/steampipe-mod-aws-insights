@@ -1,7 +1,7 @@
-report aws_ebs_volume_detail {
+dashboard "aws_ebs_volume_detail" {
   title = "AWS EBS Volume Detail"
 
-  input {
+  input "ebs_volume_id" {
     title = "Volume"
     type  = "select"
     sql   = <<-EOQ
