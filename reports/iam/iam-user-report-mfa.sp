@@ -26,29 +26,16 @@ dashboard "aws_iam_user_mfa_report" {
   container {
     table {
       sql = <<-EOQ
-        with access_keys as (
-          select
-            user_name,
-            string_agg(access_key_id, ',') as access_key_ids,
-            string_agg(status, ',') as status,
-            string_agg(create_date :: text, ',') as create_date
-          from
-            aws.aws_iam_access_key
-          group by
-            user_name
-        )
-        select
-          user_name,
-          split_part(access_key_ids, ',', 1) as key1,
-          split_part(status, ',', 1) as key1_status,
-          split_part(create_date, ',', 1) as key1_create_date,
-          current_date - split_part(create_date, ',', 1)::date as key1_age,
-          case split_part(access_key_ids, ',', 2) when '' then 'NA' else split_part(access_key_ids, ',', 2) end as key2,
-          case split_part(status, ',', 2) when '' then 'NA' else split_part(status, ',', 2) end as key2_status,
-          case split_part(create_date, ',', 2) when '' then 'NA' else split_part(create_date, ',', 2) end as key2_create_date,
-          case split_part(create_date, ',', 2) when '' then 0 else current_date - split_part(create_date, ',', 2)::date end as key2_age
-        from
-          access_keys;
+      select
+        name as "User",
+        mfa_enabled as "mfa status",
+        account_id as "Account",
+        arn as "ARN"
+      from
+        aws_iam_user
+      order by
+        account_id,
+        mfa_enabled
       EOQ
     }
   }
