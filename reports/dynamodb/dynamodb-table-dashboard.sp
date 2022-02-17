@@ -1,6 +1,7 @@
 dashboard "aws_dynamodb_table_dashboard" {
   title = "AWS DynamoDB Table Dashboard"
 
+  # Top cards
   container {
     card {
       sql = <<-EOQ
@@ -9,6 +10,7 @@ dashboard "aws_dynamodb_table_dashboard" {
       width = 2
     }
 
+    # Unused Table
     card {
       sql = <<-EOQ
         select
@@ -52,6 +54,7 @@ dashboard "aws_dynamodb_table_dashboard" {
       width = 2
     }
 
+    # Autoscaling
     card {
       sql = <<-EOQ
         with table_with_autoscaling as (
@@ -76,6 +79,7 @@ dashboard "aws_dynamodb_table_dashboard" {
       width = 2
     }
 
+    # Table Backup
     card {
       sql = <<-EOQ
         select
@@ -91,6 +95,7 @@ dashboard "aws_dynamodb_table_dashboard" {
       width = 2
     }
 
+    # Continuous Backup
     card {
       sql = <<-EOQ
         select
@@ -105,6 +110,7 @@ dashboard "aws_dynamodb_table_dashboard" {
       width = 2
     }
 
+    # PITR
     card {
       sql = <<-EOQ
         select
@@ -119,6 +125,7 @@ dashboard "aws_dynamodb_table_dashboard" {
       width = 2
     }
 
+    # Default Encryption
     card {
       sql = <<-EOQ
         select
@@ -133,6 +140,7 @@ dashboard "aws_dynamodb_table_dashboard" {
       width = 2
     }
 
+    # Backup Plan Protected
     card {
       sql = <<-EOQ
         with backup_protected_table as (
@@ -157,6 +165,7 @@ dashboard "aws_dynamodb_table_dashboard" {
     }
   }
 
+  # Analysis
   container {
     title = "Analysis"
 
@@ -227,6 +236,7 @@ dashboard "aws_dynamodb_table_dashboard" {
     }
   }
 
+  # Costs
   container {
     title = "Costs"
 
@@ -338,6 +348,7 @@ dashboard "aws_dynamodb_table_dashboard" {
     }
   }
 
+  # Assessments
   container {
     title = "Assessments"
 
@@ -472,6 +483,7 @@ dashboard "aws_dynamodb_table_dashboard" {
     }
   }
 
+  # Performance & Utilization
   container {
     title  = "Performance & Utilization"
 
@@ -508,6 +520,7 @@ dashboard "aws_dynamodb_table_dashboard" {
     }
   }
 
+  # Resources by Age
   container {
     title = "Resources by Age"
 
