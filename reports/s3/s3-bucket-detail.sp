@@ -100,20 +100,6 @@ container {
     }
   }
 
-  container {
-
-    table {
-      title = "Logging"
-      sql   = query.aws_s3_bucket_logging.sql
-      width = 6
-    }
-
-    table {
-      title = "Lifecycle Rules"
-      sql   = query.aws_s3_bucket_lifecycle_rules.sql
-      width = 6
-    }
-  }
 
    container {
 
@@ -122,12 +108,12 @@ container {
       sql   = query.aws_s3_bucket_server_side_encryption.sql
       width = 6
     }
+
     table {
       title = "Public Access"
       sql   = query.aws_s3_bucket_public_access.sql
       width = 6
     }
-
   }
 
   container {
@@ -135,6 +121,22 @@ container {
       title = "Policy"
       sql   = query.aws_s3_bucket_policy.sql
       width = 12
+    }
+  }
+
+   container {
+    table {
+      title = "Lifecycle Rules"
+      sql   = query.aws_s3_bucket_lifecycle_policy.sql
+      width = 12
+    }
+  }
+
+  container {
+    table {
+      title = "Logging"
+      sql   = query.aws_s3_bucket_logging.sql
+      width = 6
     }
   }
 }
@@ -148,7 +150,7 @@ query "aws_s3_bucket_access_points_count" {
     from
       aws_s3_access_point
     where
-      bucket_name = 'aab-saea1-1t8oayt4mlkjv'
+      bucket_name = 'aws-cloudtrail-logs-533793682495-21293883'
   EOQ
 }
 
@@ -212,19 +214,6 @@ query "aws_s3_bucket_logging" {
       logging -> 'TargetPrefix' as "Target Grants"
     from
       aws_s3_bucket
-    where
-      name = 'aab-saea1-1t8oayt4mlkjv'
-  EOQ
-}
-
-query "aws_s3_bucket_lifecycle_rules" {
-  sql = <<-EOQ
-    select
-      rule as "Lifecycle Rules",
-      region as "Region"
-    from
-      aws_s3_bucket,
-     jsonb_array_elements(lifecycle_rules ) as rule
     where
       name = 'aab-saea1-1t8oayt4mlkjv'
   EOQ
@@ -326,5 +315,24 @@ query "aws_s3_bucket_policy" {
       jsonb_array_elements(policy_std -> 'Statement') as p
     where
       name = 'codepipeline-ap-south-1-237305900706'
+  EOQ
+}
+
+query "aws_s3_bucket_lifecycle_policy" {
+  sql = <<-EOQ
+    select
+      r -> 'ID'  as "ID",
+      r -> 'AbortIncompleteMultipartUpload'  as "AbortIncompleteMultipartUpload",
+      r -> 'Expiration' as "Expiration",
+      r -> 'Filter'  as "Filter",
+      r -> 'NoncurrentVersionExpiration'  as "NoncurrentVersionExpiration",
+      r -> 'Prefix'  as "Prefix",
+      r -> 'Status'  as "Status",
+      r -> 'Transitions'  as "Transitions"
+    from
+      aws_s3_bucket,
+      jsonb_array_elements(lifecycle_rules) as r
+    where
+      name = 'aab-saea1-1t8oayt4mlkjv'
   EOQ
 }

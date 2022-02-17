@@ -47,20 +47,6 @@ query "aws_rds_db_cluster_cost_per_month" {
 }
 
 
-query "aws_rds_db_cluster_cost_last_30_counter" {
-  sql = <<-EOQ
-    select
-       'Cost - Last 30 Days' as label,
-       sum(unblended_cost_amount)::numeric::money as value
-    from
-      aws_cost_by_service_daily
-    where
-      service = 'Amazon Relational Database Service'
-      and period_start  >=  CURRENT_DATE - INTERVAL '30 day'
-  EOQ
-}
-
-
 query "aws_rds_db_cluster_cost_by_usage_types_12mo" {
   sql = <<-EOQ
     select
@@ -78,37 +64,22 @@ query "aws_rds_db_cluster_cost_by_usage_types_12mo" {
   EOQ
 }
 
-query "aws_rds_db_cluster_cost_30_60_counter" {
+query "aws_rds_db_cluster_cost_by_account_mtd" {
   sql = <<-EOQ
     select
-      'Cost - Penultimate 30 Days' as label,
-       sum(unblended_cost_amount)::numeric::money as value
+      a.title as "account",
+      sum(unblended_cost_amount)::numeric as "Unblended Cost"
     from
-      aws_cost_by_service_daily
+      aws_cost_by_service_monthly as c,
+      aws_account as a
     where
-      service = 'Amazon Relational Database Service'
-      and period_start  between CURRENT_DATE - INTERVAL '60 day' and CURRENT_DATE - INTERVAL '30 day'
-
-  EOQ
-
-}
-
-query "aws_rds_db_cluster_cost_by_usage_types_30day" {
-  sql = <<-EOQ
-    select
-       usage_type,
-       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-    from
-      aws_cost_by_service_usage_type_daily
-    where
-      service = 'Amazon Relational Database Service'
-      --and period_end >= date_trunc('month', CURRENT_DATE::timestamp)
-      and period_end >=  CURRENT_DATE - INTERVAL '30 day'
-
+      a.account_id = c.account_id
+      and service = 'Amazon Relational Database Service'
+      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
     group by
-      usage_type
+        account
     order by
-      sum(unblended_cost_amount) desc
+        account
   EOQ
 }
 
@@ -371,6 +342,26 @@ query "aws_rds_db_cluster_by_creation_month" {
   EOQ
 }
 
+query "aws_rds_db_cluster_cost_top_usage_types_mtd" {
+  ql = <<-EOQ
+    select
+      usage_type,
+      sum(unblended_cost_amount)::numeric as "Unblended Cost"
+    from
+      aws_cost_by_service_usage_type_monthly
+    where
+      service = 'Amazon Relational Database Service'
+      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+    group by
+      period_start,
+      usage_type
+    having
+      round(sum(unblended_cost_amount)::numeric,2) > 0
+    order by
+      sum(unblended_cost_amount) desc
+  EOQ
+}
+
 dashboard "aws_rds_db_cluster_dashboard" {
 
   title = "AWS RDS DB Cluster Dashboard"
@@ -420,18 +411,7 @@ dashboard "aws_rds_db_cluster_dashboard" {
       width = 2
     }
 
-   card {
-      sql   = query.aws_rds_db_cluster_cost_last_30_counter.sql
-      width = 2
-    }
-
-  card {
-      sql   = query.aws_rds_db_cluster_cost_30_60_counter.sql
-      width = 2
-    }
-
   }
-
 
     container {
       title = "Analysis"
@@ -479,14 +459,14 @@ dashboard "aws_rds_db_cluster_dashboard" {
     }
 
    chart {
-      title = "RDS Cost by Usage Type - last 30 days"
+      title = "RDS Cost by Usage Type - MTD"
       type  = "donut"
-      sql   = query.aws_rds_db_cluster_cost_by_usage_types_30day.sql
+      sql   = query.aws_rds_db_cluster_cost_top_usage_types_mtd.sql
       width = 2
     }
 
    chart {
-      title = "RDS Cost by Usage Type - Last 12 months"
+      title = "RDS Cost by Usage Type - 12 months"
       type  = "donut"
       sql   = query.aws_rds_db_cluster_cost_by_usage_types_12mo.sql
       width = 2
@@ -497,12 +477,12 @@ dashboard "aws_rds_db_cluster_dashboard" {
       title = "RDS Cost by Account - MTD"
 
       type  = "donut"
-      sql   = query.aws_rds_db_cluster_cost_by_account_30day.sql
+      sql   = query.aws_rds_db_cluster_cost_by_account_mtd.sql
        width = 2
     }
 
     chart {
-      title = "RDS Cost By Account - Last 12 months"
+      title = "RDS Cost By Account - 12 months"
       type  = "donut"
       sql   = query.aws_rds_db_cluster_cost_by_account_12mo.sql
       width = 2

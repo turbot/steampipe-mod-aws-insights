@@ -6,19 +6,40 @@ query "aws_redshift_cluster_count" {
 
 query "aws_redshift_cluster_encrypted_count" {
   sql = <<-EOQ
-    select count(*) as "Unencrypted Clusters" from aws_redshift_cluster where not encrypted
+    select
+      count(*) as value,
+      'Unencrypted Clusters' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
+    from
+      aws_redshift_cluster
+    where
+      not encrypted
   EOQ
 }
 
 query "aws_redshift_cluster_publicly_accessible" {
   sql = <<-EOQ
-    select count(*) as "Publicly Accessible Clusters" from aws_redshift_cluster where publicly_accessible
+    select
+      count(*) as value,
+      'Publicly Accessible Clusters' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
+    from
+      aws_redshift_cluster
+    where
+      publicly_accessible
   EOQ
 }
 
 query "aws_redshift_cluster_enhanced_vpc_routing" {
   sql = <<-EOQ
-    select count(*) as "Redshift Clusters in VPC" from aws_redshift_cluster where enhanced_vpc_routing
+    select
+      count(*) as value,
+      'Redshift Clusters in VPC' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
+    from
+      aws_redshift_cluster w
+    where 
+      enhanced_vpc_routing
   EOQ
 }
 

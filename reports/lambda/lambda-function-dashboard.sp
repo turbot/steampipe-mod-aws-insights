@@ -63,19 +63,6 @@ query "aws_lambda_function_cost_per_month" {
   EOQ
 }
 
-query "aws_lambda_function_cost_last_30_counter" {
-  sql = <<-EOQ
-    select
-       'Cost - Last 30 Days' as label,
-       sum(unblended_cost_amount)::numeric::money as value
-    from
-      aws_cost_by_service_daily
-    where
-      service = 'AWS Lambda'
-      and period_start  >=  CURRENT_DATE - INTERVAL '30 day'
-  EOQ
-}
-
 query "aws_lambda_function_by_account" {
   sql = <<-EOQ
     select
@@ -193,24 +180,6 @@ query "aws_lambda_high_error_rate" {
   EOQ
 }
 
-query "aws_lambda_function_cost_by_usage_types_30day" {
-  sql = <<-EOQ
-    select
-      usage_type,
-      sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-    from
-      aws_cost_by_service_usage_type_daily
-    where
-      service = 'AWS Lambda'
-      --and period_end >= date_trunc('month', CURRENT_DATE::timestamp)
-      and period_end >=  CURRENT_DATE - INTERVAL '30 day'
-    group by
-      usage_type
-    order by
-      sum(unblended_cost_amount) desc
-  EOQ
-}
-
 query "aws_lambda_function_cost_by_usage_types_12mo" {
   sql = <<-EOQ
     select
@@ -266,7 +235,6 @@ query "aws_lambda_function_cost_by_account_12mo" {
   EOQ
 }
 
-
 query "aws_lambda_function_invocation_rate" {
   sql = <<-EOQ
     with top_n as (
@@ -297,6 +265,46 @@ query "aws_lambda_function_invocation_rate" {
   EOQ
 }
 
+query "aws_lambda_function_cost_top_usage_types_mtd" {
+  sql = <<-EOQ
+    select
+      usage_type,
+      sum(unblended_cost_amount)::numeric as "Unblended Cost"
+    from
+      aws_cost_by_service_usage_type_monthly
+    where
+      service = 'AWS Lambda'
+      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+    group by
+      period_start,
+      usage_type
+    having
+      round(sum(unblended_cost_amount)::numeric,2) > 0
+    order by
+      sum(unblended_cost_amount) desc
+  EOQ
+}
+
+
+query "aws_lambda_function_cost_by_account_mtd" {
+  sql = <<-EOQ
+    select
+      a.title as "account",
+      sum(unblended_cost_amount)::numeric as "Unblended Cost"
+    from
+      aws_cost_by_service_monthly as c,
+      aws_account as a
+    where
+      a.account_id = c.account_id
+      and service = 'AWS Lambda'
+      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+    group by
+      account
+    order by
+      account
+  EOQ
+}
+
 dashboard "aws_lambda_function_dashboard" {
 
   title = "AWS Lambda Function Dashboard"
@@ -323,15 +331,34 @@ dashboard "aws_lambda_function_dashboard" {
       width = 2
     }
 
+      # Costs
     card {
-      sql   = query.aws_lambda_function_cost_last_30_counter.sql
-      width = 2
+        sql = <<-EOQ
+          select
+            'Cost - MTD' as label,
+            sum(unblended_cost_amount)::numeric::money as value
+          from
+            aws_cost_by_service_monthly
+          where
+            service = 'AWS Lambda'
+            and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+        EOQ
+        width = 2
     }
 
     card {
-      sql   = query.aws_lambda_function_cost_per_month.sql
-      width = 2
-    }
+        sql = <<-EOQ
+          select
+            'Cost - Previous Month' as label,
+            sum(unblended_cost_amount)::numeric::money as value
+          from
+            aws_cost_by_service_monthly
+          where
+            service = 'AWS Lambda'
+            and date_trunc('month', period_start) =  date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
+        EOQ
+        width = 2
+      }
 
   }
 
@@ -407,37 +434,35 @@ dashboard "aws_lambda_function_dashboard" {
     title = "Costs"
 
     chart {
-      title = "Lambda Monthly Cost"
+      title = "Lambda Monthly Unblended Cost"
       type  = "line"
       sql   = query.aws_lambda_function_cost_per_month.sql
       width = 4
     }
 
-
    chart {
-      title = "Lambda Cost by Usage Type - last 30 days"
+      title = "Lambda Cost by Usage Type - MTD"
       type  = "donut"
-      sql   = query.aws_lambda_function_cost_by_usage_types_30day.sql
+      sql   = query.aws_lambda_function_cost_top_usage_types_mtd.sql
       width = 2
     }
 
    chart {
-      title = "Lambda Cost by Usage Type - Last 12 months"
+      title = "Lambda Cost by Usage Type - 12 months"
       type  = "donut"
       sql   = query.aws_lambda_function_cost_by_usage_types_12mo.sql
       width = 2
     }
 
-
     chart {
-      title = "By Account - MTD"
+      title = "Lambda Cost by Account - MTD"
       type  = "donut"
-      sql   = query.aws_lambda_function_cost_by_account_30day.sql
+      sql   = query.aws_lambda_function_cost_by_account_mtd.sql
        width = 2
     }
 
     chart {
-      title = "By Account - Last 12 months"
+      title = "Lambda Cost By Account - 12 months"
       type  = "donut"
       sql   = query.aws_lambda_function_cost_by_account_12mo.sql
       width = 2
