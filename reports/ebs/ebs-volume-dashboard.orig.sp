@@ -1,10 +1,10 @@
-query "aws_ebs_volume_count" {
+query "deleteme_aws_ebs_volume_count" {
   sql = <<-EOQ
     select count(*) as "Volumes" from aws_ebs_volume
   EOQ
 }
 
-query "aws_ebs_volume_storage_total" {
+query "deleteme_aws_ebs_volume_storage_total" {
   sql = <<-EOQ
     select
       sum(size) as "Total Storage"
@@ -13,7 +13,7 @@ query "aws_ebs_volume_storage_total" {
   EOQ
 }
 
-query "aws_ebs_encrypted_volume_count" {
+query "deleteme_aws_ebs_encrypted_volume_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -26,7 +26,7 @@ query "aws_ebs_encrypted_volume_count" {
   EOQ
 }
 
-query "aws_ebs_unattached_volume_count" {
+query "deleteme_aws_ebs_unattached_volume_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -39,8 +39,28 @@ query "aws_ebs_unattached_volume_count" {
   EOQ
 }
 
+query "deleteme_aws_ebs_backup_plan_protected_volume_count" {
+  sql = <<-EOQ
+    with backup_protected_volume as (
+      select
+        resource_arn as arn
+      from
+        aws_backup_protected_resource as b
+      where
+        resource_type = 'EBS'
+    )
+    select
+      count(*) as value,
+      'Backup Protected Volumes' as label,
+      case when b.arn is not null then 'ok' else 'alert' end as style
+    from
+      aws_ebs_volume as v
+      left join backup_protected_volume as b on v.arn = b.arn
+    group by b.arn;
+  EOQ
+}
 
-query "aws_ebs_volume_cost_per_month" {
+query "deleteme_aws_ebs_volume_cost_per_month" {
   sql = <<-EOQ
     select
       to_char(period_start, 'Mon-YY') as "Month",
@@ -57,108 +77,87 @@ query "aws_ebs_volume_cost_per_month" {
   EOQ
 }
 
-
-query "aws_ebs_volume_cost_per_month_stacked" {
+query "deleteme_aws_ebs_volume_cost_by_usage_types_mtd" {
   sql = <<-EOQ
     select
-      to_char(period_start, 'Mon-YY') as "Month",
-      usage_type as "Usage Type",
+      usage_type,
       sum(unblended_cost_amount) as "Unblended Cost"
     from
-      aws_cost_by_service_usage_type_monthly
+      aws_cost_by_service_usage_type_monthly as c
     where
       service = 'EC2 - Other'
       and usage_type like '%EBS:%'
+      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
     group by
-      period_start,
       usage_type
+    having
+      round(sum(unblended_cost_amount)::numeric,2) > 0
     order by
-      period_start
+      sum(unblended_cost_amount) desc
   EOQ
 }
 
+query "deleteme_aws_ebs_volume_cost_by_usage_types_12mo" {
+  sql = <<-EOQ
+    select
+      usage_type,
+      sum(unblended_cost_amount) as "Unblended Cost"
+    from
+      aws_cost_by_service_usage_type_monthly as c
+    where
+      service = 'EC2 - Other'
+      and usage_type like '%EBS:%'
+      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
+    group by
+      usage_type
+    having
+      round(sum(unblended_cost_amount)::numeric,2) > 0
+    order by
+      sum(unblended_cost_amount) desc
+  EOQ
+}
 
-# query "aws_ebs_volume_cost_by_usage_types_mtd" {
-#   sql = <<-EOQ
-#     select
-#       usage_type,
-#       sum(unblended_cost_amount) as "Unblended Cost"
-#     from
-#       aws_cost_by_service_usage_type_monthly as c
-#     where
-#       service = 'EC2 - Other'
-#       and usage_type like '%EBS:%'
-#       and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-#     group by
-#       usage_type
-#     having
-#       round(sum(unblended_cost_amount)::numeric,2) > 0
-#     order by
-#       sum(unblended_cost_amount) desc
-#   EOQ
-# }
+query "deleteme_aws_ebs_volume_cost_by_account_mtd" {
+  sql = <<-EOQ
+    select
+      a.title as "account",
+      sum(unblended_cost_amount) as "Unblended Cost"
+    from
+      aws_cost_by_service_usage_type_monthly as c,
+      aws_account as a
+    where
+      a.account_id = c.account_id
+      and service = 'EC2 - Other'
+      and usage_type like '%EBS:%'
+      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+    group by
+      account
+    order by
+      account
+  EOQ
+}
 
-# query "aws_ebs_volume_cost_by_usage_types_12mo" {
-#   sql = <<-EOQ
-#     select
-#       usage_type,
-#       sum(unblended_cost_amount) as "Unblended Cost"
-#     from
-#       aws_cost_by_service_usage_type_monthly as c
-#     where
-#       service = 'EC2 - Other'
-#       and usage_type like '%EBS:%'
-#       and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-#     group by
-#       usage_type
-#     having
-#       round(sum(unblended_cost_amount)::numeric,2) > 0
-#     order by
-#       sum(unblended_cost_amount) desc
-#   EOQ
-# }
+query "deleteme_aws_ebs_volume_cost_by_account_12mo" {
+  sql = <<-EOQ
+    select
+      a.title as "account",
+      sum(unblended_cost_amount) as "Unblended Cost"
+    from
+      aws_cost_by_service_usage_type_monthly as c,
+      aws_account as a
+    where
+      a.account_id = c.account_id
+      and service = 'EC2 - Other'
+      and usage_type like '%EBS:%'
+      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
+    group by
+      account
+    order by
+      account
+  EOQ
+}
 
-# query "aws_ebs_volume_cost_by_account_mtd" {
-#   sql = <<-EOQ
-#     select
-#       a.title as "account",
-#       sum(unblended_cost_amount) as "Unblended Cost"
-#     from
-#       aws_cost_by_service_usage_type_monthly as c,
-#       aws_account as a
-#     where
-#       a.account_id = c.account_id
-#       and service = 'EC2 - Other'
-#       and usage_type like '%EBS:%'
-#       and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-#     group by
-#       account
-#     order by
-#       account
-#   EOQ
-# }
-
-# query "aws_ebs_volume_cost_by_account_12mo" {
-#   sql = <<-EOQ
-#     select
-#       a.title as "account",
-#       sum(unblended_cost_amount) as "Unblended Cost"
-#     from
-#       aws_cost_by_service_usage_type_monthly as c,
-#       aws_account as a
-#     where
-#       a.account_id = c.account_id
-#       and service = 'EC2 - Other'
-#       and usage_type like '%EBS:%'
-#       and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-#     group by
-#       account
-#     order by
-#       account
-#   EOQ
-# }
-
-query "aws_ebs_volume_by_account" {
+query "deleteme_aws_ebs_volume_by_account" {
   sql = <<-EOQ
     select
       a.title as "account",
@@ -175,7 +174,7 @@ query "aws_ebs_volume_by_account" {
   EOQ
 }
 
-query "aws_ebs_volume_storage_by_account" {
+query "deleteme_aws_ebs_volume_storage_by_account" {
   sql = <<-EOQ
     select
       a.title as "account",
@@ -192,25 +191,25 @@ query "aws_ebs_volume_storage_by_account" {
   EOQ
 }
 
-query "aws_ebs_volume_by_region" {
+query "deleteme_aws_ebs_volume_by_region" {
   sql = <<-EOQ
     select region as "Region", count(*) as "volumes" from aws_ebs_volume group by region order by region
   EOQ
 }
 
-query "aws_ebs_volume_storage_by_region" {
+query "deleteme_aws_ebs_volume_storage_by_region" {
   sql = <<-EOQ
     select region as "Region", sum(size) as "GB" from aws_ebs_volume group by region order by region
   EOQ
 }
 
-query "aws_ebs_volume_by_type" {
+query "deleteme_aws_ebs_volume_by_type" {
   sql = <<-EOQ
     select volume_type as "Type", count(*) as "volumes" from aws_ebs_volume group by volume_type order by volume_type
   EOQ
 }
 
-query "aws_ebs_volume_by_encryption_status" {
+query "deleteme_aws_ebs_volume_by_encryption_status" {
   sql = <<-EOQ
     select
       encryption_status,
@@ -231,7 +230,7 @@ query "aws_ebs_volume_by_encryption_status" {
   EOQ
 }
 
-query "aws_ebs_volume_by_state" {
+query "deleteme_aws_ebs_volume_by_state" {
   sql = <<-EOQ
     select
       state,
@@ -243,7 +242,7 @@ query "aws_ebs_volume_by_state" {
   EOQ
 }
 
-query "aws_ebs_volume_with_no_snapshots" {
+query "deleteme_aws_ebs_volume_with_no_snapshots" {
   sql = <<-EOQ
     select
       v.volume_id,
@@ -261,7 +260,7 @@ query "aws_ebs_volume_with_no_snapshots" {
   EOQ
 }
 
-query "aws_ebs_volume_by_creation_month" {
+query "deleteme_aws_ebs_volume_by_creation_month" {
   sql = <<-EOQ
     with volumes as (
       select
@@ -306,24 +305,21 @@ query "aws_ebs_volume_by_creation_month" {
   EOQ
 }
 
-dashboard "aws_ebs_volume_dashboard" {
+dashboard "deleteme_aws_ebs_volume_dashboard" {
 
-  title = "AWS EBS Volume Dashboard"
+  title = "AWS EBS Volume Dashboard [Old]"
 
   container {
 
     # Analysis
     card {
-      sql   = query.aws_ebs_volume_count.sql
-      width = 2
-     // type = "info"
+      sql   = query.deleteme_aws_ebs_volume_count.sql
+      width = 1
     }
 
     card {
-      sql   = query.aws_ebs_volume_storage_total.sql
-      width = 2
-      type = "info"
-
+      sql   = query.deleteme_aws_ebs_volume_storage_total.sql
+      width = 1
     }
 
     # Costs
@@ -339,8 +335,6 @@ dashboard "aws_ebs_volume_dashboard" {
           and usage_type like '%EBS:%'
           and period_end > date_trunc('month', CURRENT_DATE::timestamp)
       EOQ
-      type = "info"
-      icon = "currency-dollar"
       width = 2
     }
 
@@ -356,22 +350,24 @@ dashboard "aws_ebs_volume_dashboard" {
           and usage_type like '%EBS:%'
           and date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
       EOQ
-      type = "info"
-      icon = "currency-dollar"
       width = 2
     }
 
     # Assessments
     card {
-      sql   = query.aws_ebs_encrypted_volume_count.sql
+      sql   = query.deleteme_aws_ebs_encrypted_volume_count.sql
       width = 2
     }
 
     card {
-      sql   = query.aws_ebs_unattached_volume_count.sql
+      sql   = query.deleteme_aws_ebs_unattached_volume_count.sql
       width = 2
     }
 
+    card {
+      sql   = query.deleteme_aws_ebs_backup_plan_protected_volume_count.sql
+      width = 2
+    }
   }
 
   container {
@@ -379,41 +375,83 @@ dashboard "aws_ebs_volume_dashboard" {
 
     chart {
       title = "Volumes by Account"
-      sql   = query.aws_ebs_volume_by_account.sql
+      sql   = query.deleteme_aws_ebs_volume_by_account.sql
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Volumes by Region"
-      sql   = query.aws_ebs_volume_by_region.sql
+      sql   = query.deleteme_aws_ebs_volume_by_region.sql
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Volume Storage by Account (GB)"
-      sql   = query.aws_ebs_volume_storage_by_account.sql
+      sql   = query.deleteme_aws_ebs_volume_storage_by_account.sql
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Volume Storage by Region (GB)"
-      sql   = query.aws_ebs_volume_storage_by_region.sql
+      sql   = query.deleteme_aws_ebs_volume_storage_by_region.sql
       type  = "column"
       width = 3
     }
   }
 
   container {
+    title = "Costs"
+    chart {
+      title = "EBS Monthly Unblended Cost"
+
+      type  = "line"
+      sql   = query.deleteme_aws_ebs_volume_cost_per_month.sql
+      width = 4
+    }
+
+   chart {
+      title = "EBS Cost by Usage Type - MTD"
+      type  = "donut"
+      sql   = query.deleteme_aws_ebs_volume_cost_by_usage_types_mtd.sql
+      width = 2
+    }
+
+   chart {
+      title = "EBS Cost by Usage Type - 12 months"
+      type  = "donut"
+      sql   = query.deleteme_aws_ebs_volume_cost_by_usage_types_12mo.sql
+      width = 2
+    }
+
+    chart {
+      title = "EBS Cost By Account - MTD"
+
+      type  = "donut"
+      sql   = query.deleteme_aws_ebs_volume_cost_by_account_mtd.sql
+      width = 2
+    }
+
+    chart {
+      title = "EBS Cost By Account - 12 months"
+
+      type  = "donut"
+      sql   = query.deleteme_aws_ebs_volume_cost_by_account_12mo.sql
+      width = 2
+    }
+  }
+
+  # donut charts in a 2 x 2 layout
+  container {
     title = "Assessments"
 
     chart {
       title = "Encryption Status"
-      sql   = query.aws_ebs_volume_by_encryption_status.sql
+      sql   = query.deleteme_aws_ebs_volume_by_encryption_status.sql
       type  = "donut"
-      width = 2
+      width = 3
 
       series "Enabled" {
          color = "green"
@@ -422,56 +460,27 @@ dashboard "aws_ebs_volume_dashboard" {
 
     chart {
       title = "Volume State"
-      sql   = query.aws_ebs_volume_by_state.sql
+      sql   = query.deleteme_aws_ebs_volume_by_state.sql
       type  = "donut"
-      width = 2
+      width = 3
 
     }
 
     chart {
       title = "Volume Type"
-      sql   = query.aws_ebs_volume_by_type.sql
+      sql   = query.deleteme_aws_ebs_volume_by_type.sql
       type  = "donut"
-      width = 2
+      width = 3
     }
   }
 
-  
-  container {
-    title = "Cost"
-    width = 3
-
-    chart {
-      title = "EBS Monthly Unblended Cost"
-
-      type  = "line"
-      sql   = query.aws_ebs_volume_cost_per_month.sql
-     // width = 4
-    }
-  }
-
-  container {
-    title = "Resource Age"
-    width = 3
-
-    chart {
-      title = "Volume by Creation Month"
-      sql   = query.aws_ebs_volume_by_creation_month.sql
-      type  = "column"
-      //width = 4
-      series "month" {
-        color = "green"
-      }
-    }
-  }
-     
   container {
     title  = "Performance & Utilization"
-    width = 6
+
     chart {
       title = "Top 10 Average Read OPS - Last 7 days"
       type  = "line"
-      width = 6
+      width = 4
       sql   =  <<-EOQ
         with top_n as (
           select
@@ -502,7 +511,7 @@ dashboard "aws_ebs_volume_dashboard" {
     chart {
       title = "Top 10 Average write OPS - Last 7 days"
       type  = "line"
-      width = 6
+      width = 4
       sql   =  <<-EOQ
         with top_n as (
           select
@@ -529,60 +538,56 @@ dashboard "aws_ebs_volume_dashboard" {
           and volume_id in (select volume_id from top_n)
       EOQ
     }
-
   }
 
+  container {
+    title = "Resources by Age"
 
+    chart {
+      title = "Volume by Creation Month"
+      sql   = query.deleteme_aws_ebs_volume_by_creation_month.sql
+      type  = "column"
+      width = 4
+      series "month" {
+        color = "green"
+      }
+    }
 
+    table {
+      title = "Oldest volumes"
+      width = 4
 
-  # container {
-  #   title = "Costs"
-  #   chart {
-  #     title = "EBS Monthly Unblended Cost"
+      sql = <<-EOQ
+        select
+          title as "volume",
+          current_date - create_time as "Age in Days",
+          account_id as "Account"
+        from
+          aws_ebs_volume
+        order by
+          "Age in Days" desc,
+          title
+        limit 5
+      EOQ
+    }
 
-  #     type  = "line"
-  #     sql   = query.aws_ebs_volume_cost_per_month.sql
-  #     width = 3
-  #   }
+    table {
+      title = "Newest volumes"
+      width = 4
 
-  #   chart {
-  #     title = "EBS Monthly Unblended Cost"
-
-  #     type  = "line"
-  #     sql   = query.aws_ebs_volume_cost_per_month_stacked.sql
-  #     width = 4
-  #   }
-
-  #  chart {
-  #     title = "EBS Cost by Usage Type - MTD"
-  #     type  = "donut"
-  #     sql   = query.aws_ebs_volume_cost_by_usage_types_mtd.sql
-  #     width = 2
-  #   }
-
-  #  chart {
-  #     title = "EBS Cost by Usage Type - 12 months"
-  #     type  = "donut"
-  #     sql   = query.aws_ebs_volume_cost_by_usage_types_12mo.sql
-  #     width = 2
-  #   }
-
-  #   chart {
-  #     title = "EBS Cost By Account - MTD"
-
-  #     type  = "donut"
-  #     sql   = query.aws_ebs_volume_cost_by_account_mtd.sql
-  #     width = 2
-  #   }
-
-  #   chart {
-  #     title = "EBS Cost By Account - 12 months"
-
-  #     type  = "donut"
-  #     sql   = query.aws_ebs_volume_cost_by_account_12mo.sql
-  #     width = 2
-  #   }
-  # }
-
+      sql = <<-EOQ
+        select
+          title as "volume",
+          current_date - create_time as "Age in Days",
+          account_id as "Account"
+        from
+          aws_ebs_volume
+        order by
+          "Age in Days" asc,
+          title
+        limit 5
+      EOQ
+    }
+  }
 
 }

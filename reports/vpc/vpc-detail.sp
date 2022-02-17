@@ -716,6 +716,7 @@ dashboard aws_vpc_detail {
 
       table {
         title = "Overview"
+        type = "list"
         width = 6 
         sql   = <<-EOQ
           select

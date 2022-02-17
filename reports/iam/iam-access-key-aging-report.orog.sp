@@ -1,6 +1,6 @@
 
-dashboard "aws_iam_access_key_aging_report" {
-  title = "AWS IAM Access Key Aging Report"
+dashboard "aws_iam_access_key_aging_report_orig" {
+  title = "AWS IAM Access Key Aging Report [Old]"
 
   input "threshold_in_days" {
     title = "Threshold (days)"

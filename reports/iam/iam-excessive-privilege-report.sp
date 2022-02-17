@@ -1,3 +1,6 @@
+variable "iam_excess_priv_arn" {
+  default = "arn:aws:iam::876515858155:user/jsmyth"
+}
 
 query "aws_iam_principal_input" {
   sql = <<EOQ
@@ -53,20 +56,103 @@ dashboard "iam_excessive_privilege_report" {
 
 
   # bug - https://github.com/turbot/steampipe-plugin-aws/issues/900
-  # container { 
-  #   card {
-  #      sql   = <<-EOQ
-  #       select
-  #         count(*) as value,
-  #         'Accessible Services'
-  #       from
-  #         aws_iam_access_advisor 
-  #       where 
-  #         principal_arn = 'arn:aws:iam::876515858155:user/jsmyth'
-  #     EOQ
-  #     width = 2
-  #   }
-  # }
+  container { 
+    card {
+       sql   = <<-EOQ
+        select
+          count(*) as value,
+          'Accessible Services' as label
+        from
+          aws_iam_access_advisor 
+        where 
+          principal_arn = '${var.iam_excess_priv_arn}' 
+      EOQ
+      width = 2
+    }
+
+
+    card {
+      sql   = <<-EOQ
+        select
+          count(*) as value,
+          'Last 30 Days' as label
+        from 
+          aws_iam_access_advisor
+        where 
+          principal_arn = '${var.iam_excess_priv_arn}'
+          -- and last_authenticated between symmetric now() - '1 days' :: interval and now() - '30 days' :: interval 
+          and last_authenticated  > now() - '30 days' :: interval 
+
+      EOQ
+      width = 2
+      type = "info"
+    }
+
+    card {
+      sql   = <<-EOQ
+        select
+          count(*) as value,
+          '30-90 Days' as label
+        from 
+          aws_iam_access_advisor
+        where 
+          principal_arn = '${var.iam_excess_priv_arn}'
+          and last_authenticated between symmetric now() - '30 days' :: interval and now() - '90 days' :: interval 
+      EOQ
+      width = 2
+      type = "info"
+    }
+
+    card {
+      sql   = <<-EOQ
+        select
+          count(*) as value,
+          '90-365 Days' as label
+        from 
+          aws_iam_access_advisor
+        where 
+          principal_arn = '${var.iam_excess_priv_arn}'
+          and last_authenticated between symmetric (now() - '90 days'::interval) and (now() - '365 days'::interval)
+      EOQ
+      width = 2
+      type = "info"
+    }
+
+    card {
+      sql   = <<-EOQ
+        select
+          count(*) as value,
+          '> 1 Year' as label
+        from 
+          aws_iam_access_advisor
+        where 
+          principal_arn = '${var.iam_excess_priv_arn}'
+          and last_authenticated  <= now() - '1 year' :: interval 
+      EOQ
+      width = 2
+      type = "info"
+    }
+
+
+    card {
+      sql   = <<-EOQ
+        select
+          count(*) as value,
+          'Never in Tracking Period' as label,
+          case 
+            when count(*) = 0 then 'ok'
+            else 'alert'
+          end as type
+        from
+          aws_iam_access_advisor 
+        where 
+          principal_arn = '${var.iam_excess_priv_arn}'
+          and last_authenticated is null
+      EOQ
+      width = 2
+    }
+
+  }
 
 
   container { 
@@ -99,7 +185,7 @@ dashboard "iam_excessive_privilege_report" {
     #       from
     #         aws_iam_access_advisor 
     #       where 
-    #         principal_arn = 'arn:aws:iam::876515858155:user/jsmyth'
+    #         principal_arn = '{var.iam_excess_priv_arn}'
     #     )
     #     select 
     #       last_access_bucket,
@@ -134,7 +220,7 @@ dashboard "iam_excessive_privilege_report" {
         from
           aws_iam_access_advisor 
         where 
-          principal_arn = 'arn:aws:iam::876515858155:user/jsmyth'
+          principal_arn = '${var.iam_excess_priv_arn}'
           and coalesce(last_authenticated, now() - '400 days' :: interval ) < now() - '90 days' :: interval  -- should use the thrreshold value...
 
       EOQ
