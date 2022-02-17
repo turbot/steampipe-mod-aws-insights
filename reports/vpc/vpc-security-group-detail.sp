@@ -4,9 +4,9 @@ report aws_vpc_security_group_detail {
   input {
     title = "Security Group"
     sql   = <<-EOQ
-      select 
-        group_id 
-      from 
+      select
+        group_id
+      from
         aws_vpc_security_group
     EOQ
     width = 2
@@ -18,12 +18,12 @@ report aws_vpc_security_group_detail {
       sql   = <<-EOQ
         select
           'Ingress Rules' as label,
-          count(*) as value     
+          count(*) as value
         from
           aws_vpc_security_group_rule
-        where 
-          group_id = 'sg-029cd86da723916fa'
-          and not is_egress
+        where
+          group_id = 'sg-026be10541f24688e'
+          and type <> 'ingress'
       EOQ
       width = 2
     }
@@ -32,12 +32,12 @@ report aws_vpc_security_group_detail {
       sql   = <<-EOQ
         select
           'Egress Rules' as label,
-          count(*) as value     
+          count(*) as value
         from
           aws_vpc_security_group_rule
-        where 
-          group_id = 'sg-029cd86da723916fa'
-          and is_egress
+        where
+          group_id = 'sg-026be10541f24688e'
+          and type = 'ingress'
       EOQ
       width = 2
     }
@@ -50,12 +50,12 @@ report aws_vpc_security_group_detail {
           case
             when count(*) > 0 then 'ok'
             else 'alert'
-          end as style       
+          end as style
         from
           aws_ec2_network_interface,
           jsonb_array_elements(groups) as sg
-        where 
-          sg ->> 'GroupId' = 'sg-029cd86da723916fa'
+        where
+          sg ->> 'GroupId' = 'sg-026be10541f24688e'
       EOQ
       width = 2
     }
@@ -68,18 +68,18 @@ report aws_vpc_security_group_detail {
           case
             when count(*) = 0 then 'ok'
             else 'alert'
-          end as style   
+          end as style
         from
           aws_vpc_security_group_rule
-        where 
-          group_id = 'sg-029cd86da723916fa'
-          and ( cidr_ipv4 = '0.0.0.0/0' or cidr_ipv6 = '::/0')
+        where
+          group_id = 'sg-026be10541f24688e'
+          and ( cidr_ip = '0.0.0.0/0' or cidr_ipv6 = '::/0')
           and ip_protocol <> 'icmp'
           and (
             from_port = -1
             or (from_port = 0 and to_port = 65535)
           )
-          and not is_egress
+          and  type <> 'ingress'
       EOQ
       width = 2
     }
@@ -92,18 +92,18 @@ report aws_vpc_security_group_detail {
           case
             when count(*) = 0 then 'ok'
             else 'alert'
-          end as style   
+          end as style
         from
           aws_vpc_security_group_rule
-        where 
-          group_id = 'sg-029cd86da723916fa'
-          and ( cidr_ipv4 = '0.0.0.0/0' or cidr_ipv6 = '::/0')
+        where
+          group_id = 'sg-026be10541f24688e'
+          and ( cidr_ip = '0.0.0.0/0' or cidr_ipv6 = '::/0')
           and ip_protocol <> 'icmp'
           and (
             from_port = -1
             or (from_port = 0 and to_port = 65535)
           )
-          and is_egress
+          and  type = 'ingress'
       EOQ
       width = 2
     }
@@ -116,7 +116,7 @@ report aws_vpc_security_group_detail {
     container {
 
       container {
-        width = 6 
+        width = 6
 
         table {
           title = "Overview"
@@ -133,8 +133,8 @@ report aws_vpc_security_group_detail {
               arn
             from
               aws_vpc_security_group
-                where 
-              group_id = 'sg-029cd86da723916fa'
+                where
+              group_id = 'sg-026be10541f24688e'
           EOQ
         }
 
@@ -148,8 +148,8 @@ report aws_vpc_security_group_detail {
             from
               aws_vpc_security_group,
               jsonb_array_elements(tags_src) as tag
-            where 
-              group_id = 'sg-029cd86da723916fa'
+            where
+              group_id = 'sg-026be10541f24688e'
           EOQ
         }
       }
@@ -157,7 +157,7 @@ report aws_vpc_security_group_detail {
       table {
         title = "Associated To"
         sql   = query.aws_vpc_security_group_assoc.sql
-        width = 6 
+        width = 6
       }
     }
 
@@ -233,23 +233,23 @@ query "aws_vpc_security_group_assoc" {
   sql = <<EOQ
    select
       title,
-      'aws_ec2_instance' as type, 
+      'aws_ec2_instance' as type,
       arn
-    from 
+    from
       aws_ec2_instance,
       jsonb_array_elements(security_groups) as sg
-    where 
-     sg ->> 'GroupId' = 'sg-029cd86da723916fa'
+    where
+     sg ->> 'GroupId' = 'sg-026be10541f24688e'
 
    union all select
       title,
-      'aws_lambda_function' as type, 
+      'aws_lambda_function' as type,
       arn
-    from 
+    from
       aws_lambda_function,
       jsonb_array_elements_text(vpc_security_group_ids) as sg
-    where 
-     sg = 'sg-029cd86da723916fa'
+    where
+     sg = 'sg-026be10541f24688e'
 
     -- TODO: Add aws_rds_db_instance / db_security_groups, ELB, ALB, elasticache, etc....
   EOQ
@@ -258,8 +258,7 @@ query "aws_vpc_security_group_assoc" {
 query "aws_vpc_security_group_ingress_rules" {
   sql = <<EOQ
     select
-      concat(text(cidr_ipv4), text(cidr_ipv6), referenced_group_id, referenced_vpc_id,prefix_list_id) as source,
-      security_group_rule_id,
+      concat(text(cidr_ip), text(cidr_ipv6), group_id, vpc_id) as source,
       case
         when ip_protocol = '-1' then 'All Traffic'
         when ip_protocol = 'icmp' then 'All ICMP'
@@ -280,16 +279,15 @@ query "aws_vpc_security_group_ingress_rules" {
     from
       aws_vpc_security_group_rule
     where
-      group_id = 'sg-029cd86da723916fa'
-      and not is_egress
+      group_id = 'sg-026be10541f24688e'
+      and type <> 'ingress'
   EOQ
 }
 
 query "aws_vpc_security_group_egress_rules" {
   sql = <<EOQ
     select
-      concat(text(cidr_ipv4), text(cidr_ipv6), referenced_group_id, referenced_vpc_id,prefix_list_id) as destination,
-      security_group_rule_id,
+      concat(text(cidr_ip), text(cidr_ipv6), group_id, vpc_id) as destination,
       case
         when ip_protocol = '-1' then 'All Traffic'
         when ip_protocol = 'icmp' then 'All ICMP'
@@ -309,8 +307,8 @@ query "aws_vpc_security_group_egress_rules" {
     from
       aws_vpc_security_group_rule
     where
-      group_id = 'sg-029cd86da723916fa'
-      and is_egress
+      group_id = 'sg-026be10541f24688e'
+      and type = 'ingress'
   EOQ
 }
 
@@ -321,30 +319,29 @@ with associations as (
   select
       title,
       arn,
-      'aws_ec2_instance' as category, 
+      'aws_ec2_instance' as category,
       sg ->> 'GroupId' as group_id
-    from 
+    from
       aws_ec2_instance,
       jsonb_array_elements(security_groups) as sg
-    where 
-     sg ->> 'GroupId' = 'sg-029cd86da723916fa'
+    where
+     sg ->> 'GroupId' = 'sg-026be10541f24688e'
 
    union all select
       title,
       arn,
-      'aws_lambda_function' as category, 
+      'aws_lambda_function' as category,
       sg
-    from 
+    from
       aws_lambda_function,
       jsonb_array_elements_text(vpc_security_group_ids) as sg
-    where 
-     sg = 'sg-029cd86da723916fa'
+    where
+     sg = 'sg-026be10541f24688e'
     -- TODO: Add aws_rds_db_instance / db_security_groups, etc.
 ),
 rules as (
   select
-    concat(text(cidr_ipv4), text(cidr_ipv6), referenced_group_id, referenced_vpc_id,prefix_list_id) as source,
-    security_group_rule_id,
+    concat(text(cidr_ip), text(cidr_ipv6), group_id, vpc_id) as source,
     case
       when ip_protocol = '-1' then 'All Traffic'
       when ip_protocol = 'icmp' then 'All ICMP'
@@ -362,7 +359,7 @@ rules as (
     type,
     case
       when ip_protocol = '-1' then 'alert'
-      when ( cidr_ipv4 = '0.0.0.0/0' or cidr_ipv6 = '::/0')
+      when ( cidr_ip = '0.0.0.0/0' or cidr_ipv6 = '::/0')
           and ip_protocol <> 'icmp'
           and (
             from_port = -1
@@ -374,7 +371,7 @@ rules as (
   from
     aws_vpc_security_group_rule
   where
-    group_id = 'sg-029cd86da723916fa'
+    group_id = 'sg-026be10541f24688e'
     and type = 'ingress'
     ),
 
@@ -396,7 +393,7 @@ analysis as (
     1 as depth,
     category
   from
-    rules 
+    rules
 
   union
   select
@@ -416,10 +413,10 @@ analysis as (
       title || '(' || category || ')' as name, -- TODO: Should this be arn instead?
       3 as depth,
       category
-    from 
+    from
       associations
-    where 
-     group_id = 'sg-029cd86da723916fa'
+    where
+     group_id = 'sg-026be10541f24688e'
   )
 select
   *
@@ -440,30 +437,29 @@ with associations as (
   select
       title,
       arn,
-      'aws_ec2_instance' as category, 
+      'aws_ec2_instance' as category,
       sg ->> 'GroupId' as group_id
-    from 
+    from
       aws_ec2_instance,
       jsonb_array_elements(security_groups) as sg
-    where 
-     sg ->> 'GroupId' = 'sg-029cd86da723916fa'
+    where
+     sg ->> 'GroupId' = 'sg-026be10541f24688e'
 
    union all select
       title,
       arn,
-      'aws_lambda_function' as category, 
+      'aws_lambda_function' as category,
       sg
-    from 
+    from
       aws_lambda_function,
       jsonb_array_elements_text(vpc_security_group_ids) as sg
-    where 
-     sg = 'sg-029cd86da723916fa'
+    where
+     sg = 'sg-026be10541f24688e'
     -- TODO: Add aws_rds_db_instance / db_security_groups, etc.
 ),
 rules as (
   select
-    concat(text(cidr_ipv4), text(cidr_ipv6), referenced_group_id, referenced_vpc_id,prefix_list_id) as destination,
-    security_group_rule_id,
+    concat(text(cidr_ip), text(cidr_ipv6), group_id, vpc_id) as destination,
     case
       when ip_protocol = '-1' then 'All Traffic'
       when ip_protocol = 'icmp' then 'All ICMP'
@@ -481,7 +477,7 @@ rules as (
     type,
     case
       when ip_protocol = '-1' then 'alert'
-      when ( cidr_ipv4 = '0.0.0.0/0' or cidr_ipv6 = '::/0')
+      when ( cidr_ip = '0.0.0.0/0' or cidr_ipv6 = '::/0')
           and ip_protocol <> 'icmp'
           and (
             from_port = -1
@@ -493,8 +489,8 @@ rules as (
   from
     aws_vpc_security_group_rule
   where
-    group_id = 'sg-029cd86da723916fa'
-    and is_egress
+    group_id = 'sg-026be10541f24688e'
+    and type = 'ingress'
     ),
 
 analysis as (
@@ -504,10 +500,10 @@ analysis as (
       title || '(' || category || ')' as name, -- TODO: Should this be arn instead?
       0 as depth,
       category
-    from 
+    from
       associations
-    where 
-     group_id = 'sg-029cd86da723916fa'
+    where
+     group_id = 'sg-026be10541f24688e'
 
 
   union select
@@ -527,7 +523,7 @@ analysis as (
     2 as depth,
     category
   from
-    rules 
+    rules
 
   union select
     port_proto as parent,

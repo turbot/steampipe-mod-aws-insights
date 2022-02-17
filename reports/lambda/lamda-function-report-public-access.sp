@@ -35,7 +35,7 @@ report "aws_lambda_function_public_access_report" {
           policy_std -> 'Statement' ->> 'Effect' = 'Allow'
           and (policy_std -> 'Statement' ->> 'Prinipal' = '*'
           or ( policy_std -> 'Principal' -> 'AWS' ) :: text = '*')
-       then 'Public' else 'Not public' end as "Public/Not Public",
+       then 'Public' else 'Private' end as "Public/Private",
         account_id as "Account",
         region as "Region",
         arn as "ARN"

@@ -15,6 +15,42 @@ query "aws_s3_bucket_versioning_count" {
   EOQ
 }
 
+query "aws_s3_bucket_public_read_access_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Public Read Access' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
+    from
+      aws_s3_bucket,
+      jsonb_array_elements(acl -> 'Grants') as grants
+    where
+      grants -> 'Grantee' ->> 'URI' = 'http://acs.amazonaws.com/groups/global/AllUsers'
+      and (
+        grants ->> 'Permission' = 'FULL_CONTROL'
+        or grants ->> 'Permission' = 'READ_ACP'
+      )
+  EOQ
+}
+
+query "aws_s3_bucket_public_write_access_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Public Write Access' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
+    from
+      aws_s3_bucket,
+      jsonb_array_elements(acl -> 'Grants') as grants
+    where
+      grants -> 'Grantee' ->> 'URI' = 'http://acs.amazonaws.com/groups/global/AllUsers'
+      and (
+        grants ->> 'Permission' = 'FULL_CONTROL'
+        or grants ->> 'Permission' = 'WRITE_ACP'
+      )
+  EOQ
+}
+
 query "aws_s3_bucket_cost_per_month" {
   sql = <<-EOQ
     select
@@ -200,19 +236,6 @@ query "aws_s3_bucket_by_creation_month" {
   EOQ
 }
 
-query "aws_s3_public_bucket_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Public' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as "type"
-    from
-      aws_s3_bucket
-    where
-      bucket_policy_is_public
-  EOQ
-}
-
 query "aws_s3_bucket_cross_region_replication_status" {
   sql = <<-EOQ
     with bucket_with_replication as (
@@ -280,12 +303,47 @@ report "aws_s3_bucket_dashboard" {
 
     # Assessments
     card {
-      sql   = query.aws_s3_public_bucket_count.sql
+      sql   = query.aws_s3_bucket_unencrypted_count.sql
       width = 2
     }
 
     card {
-      sql   = query.aws_s3_bucket_unencrypted_count.sql
+      sql = query.aws_s3_bucket_logging_disabled_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_s3_bucket_public_policy_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_s3_bucket_block_public_acls_disabled_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_s3_bucket_block_public_policy_disabled_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_s3_bucket_ignore_public_acls_disabled_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_s3_bucket_restrict_public_buckets_disabled_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_s3_bucket_public_read_access_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_s3_bucket_public_write_access_count.sql
       width = 2
     }
 
