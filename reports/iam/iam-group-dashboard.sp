@@ -1,10 +1,10 @@
 query "aws_iam_group_count" {
   sql = <<-EOQ
-    select count(*) as "Groups" from aws_iam_group
+    select count(*) as "Total Groups" from aws_iam_group
   EOQ
 }
 
-query "aws_iam_group_by_account" {
+query "aws_iam_groups_by_account" {
   sql = <<-EOQ
     select
       a.title as "account",
@@ -20,7 +20,7 @@ query "aws_iam_group_by_account" {
   EOQ
 }
 
-query "aws_iam_group_by_path" {
+query "aws_iam_groups_by_path" {
   sql = <<-EOQ
     select
       path,
@@ -32,24 +32,42 @@ query "aws_iam_group_by_path" {
   EOQ
 }
 
-query "aws_iam_group_with_inline_policies_by_account" {
+query "aws_iam_groups_with_inline_policy_count" {
   sql = <<-EOQ
     select
-       a.title as "account",
-       count(name)::numeric as "Inline Policies"
+      count(*) as value,
+      'Groups with Inline Policies' as label,
+      case when count(*) = 0 then 'ok' else 'alert' end as type
     from
-      aws_iam_group as c,
-      aws_account as a
+      aws_iam_group
     where
-      a.account_id = c.account_id and inline_policies is not null
-    group by
-      account
-    order by
-      account
+      jsonb_array_length(inline_policies) > 0
   EOQ
 }
 
-query "aws_iam_groups_with_administrator_policy_by_account" {
+query "aws_iam_groups_with_inline_policy" {
+  sql = <<-EOQ
+    with group_inline_compliance as (
+      select
+        arn,
+        case
+          when jsonb_array_length(inline_policies) > 0 then 'With Inline Policies'
+          else 'OK'
+        end as has_inline
+      from
+        aws_iam_group
+      )
+      select
+        has_inline,
+        count(*)
+      from
+        group_inline_compliance
+      group by
+        has_inline
+  EOQ
+}
+
+query "aws_iam_groups_with_administrator_policy" {
   sql = <<-EOQ
     with groups_having_admin_access as (
       select
@@ -76,7 +94,7 @@ query "aws_iam_groups_with_administrator_policy_by_account" {
   EOQ
 }
 
-query "aws_iam_group_without_users" {
+query "aws_iam_groups_without_users" {
   sql = <<-EOQ
     select
       a.title as "account",
@@ -147,6 +165,11 @@ dashboard "aws_iam_group_dashboard" {
       sql   = query.aws_iam_group_count.sql
       width = 2
     }
+
+    card {
+      sql   = query.aws_iam_groups_with_inline_policy_count.sql
+      width = 2
+    }
   }
 
   container {
@@ -154,14 +177,14 @@ dashboard "aws_iam_group_dashboard" {
 
     chart {
       title = "Groups by Account"
-      sql   = query.aws_iam_group_by_account.sql
+      sql   = query.aws_iam_groups_by_account.sql
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Groups by Path"
-      sql   = query.aws_iam_group_by_path.sql
+      sql   = query.aws_iam_groups_by_path.sql
       type  = "column"
       width = 4
     }
@@ -172,22 +195,22 @@ dashboard "aws_iam_group_dashboard" {
     title = "Assesments"
 
     chart {
-      title = "Groups With No User Associated"
-      sql   = query.aws_iam_group_without_users.sql
+      title = "Groups Without Users"
+      sql   = query.aws_iam_groups_without_users.sql
       type  = "donut"
-      width = 4
+      width = 3
     }
     chart {
-      title = "Groups with inline policies by Account"
-      sql   = query.aws_iam_group_with_inline_policies_by_account.sql
+      title = "Inline Policy"
+      sql   = query.aws_iam_groups_with_inline_policy.sql
       type  = "donut"
-      width = 4
+      width = 3
     }
     chart {
-      title = "Groups attached with Administrator policy by Account"
-      sql   = query.aws_iam_groups_with_administrator_policy_by_account.sql
+      title = "Groups With Administrator Access Policy"
+      sql   = query.aws_iam_groups_with_administrator_policy.sql
       type  = "donut"
-      width = 4
+      width = 3
     }
   }
 
