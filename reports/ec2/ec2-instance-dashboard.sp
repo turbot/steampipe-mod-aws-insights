@@ -330,7 +330,7 @@ query "aws_ec2_instance_by_cpu_utilization_category" {
   EOQ
 }
 
-report "aws_ec2_instance_dashboard" {
+dashboard "aws_ec2_instance_dashboard" {
 
   title = "AWS EC2 Instance Dashboard"
 

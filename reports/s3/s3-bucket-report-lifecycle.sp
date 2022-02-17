@@ -25,7 +25,7 @@ query "aws_s3_bucket_versioning_mfa_disabled_count" {
 }
 
 
-report "aws_s3_bucket_lifecycle_report" {
+dashboard "aws_s3_bucket_lifecycle_dashboard" {
 
   title = "AWS S3 Bucket Lifecycle Report"
 

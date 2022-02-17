@@ -10,7 +10,7 @@ query "aws_kms_cmk_count" {
   EOQ
 }
 
-report "aws_kms_cmk_report" {
+dashboard "aws_kms_cmk_dashboard" {
 
   title = "AWS KMS CMK Report"
 

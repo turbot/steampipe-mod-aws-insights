@@ -43,7 +43,7 @@ query "aws_s3_bucket_https_unenforced_count" {
 }
 
 
-report "aws_s3_bucket_encryption_report" {
+dashboard "aws_s3_bucket_encryption_dashboard" {
 
   title = "AWS S3 Bucket Encryption Report"
 
