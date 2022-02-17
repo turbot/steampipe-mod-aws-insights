@@ -57,6 +57,18 @@ query "aws_iam_users_by_account" {
   EOQ
 }
 
+query "aws_iam_user_by_path" {
+  sql = <<-EOQ
+    select
+      path,
+      count(name) as "total"
+    from
+      aws_iam_user
+    group by
+      path
+  EOQ
+}
+
 
 ####
 
@@ -238,7 +250,6 @@ dashboard "aws_iam_user_dashboard" {
       width = 2
     }
 
-
     card {
       sql   = query.aws_iam_users_with_direct_attached_policy_count.sql
       width = 2
@@ -257,6 +268,13 @@ dashboard "aws_iam_user_dashboard" {
     chart {
       title = "Users by Account"
       sql   = query.aws_iam_users_by_account.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Users by Path"
+      sql   = query.aws_iam_user_by_path.sql
       type  = "column"
       width = 3
     }
