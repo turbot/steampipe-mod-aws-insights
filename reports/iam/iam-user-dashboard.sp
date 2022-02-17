@@ -1,80 +1,174 @@
 query "aws_iam_user_count" {
   sql = <<-EOQ
-    select count(*) as "Users" from aws_iam_user
+    select
+      count(*) as value,
+      'Total Users' as label
+    from
+      aws_iam_user
   EOQ
 }
 
-query "aws_iam_mfa_not_enabled_users_count" {
+query "aws_iam_user_mfa_count" {
   sql = <<-EOQ
-  select count(*) as "MFA Not Enabled Users" from aws_iam_user where not mfa_enabled
+    select
+      count(*) as value,
+      'MFA Not Enabled' as label,
+      case when count(*) = 0 then 'ok' else 'alert' end as type
+    from
+      aws_iam_user
+    where
+      not mfa_enabled
   EOQ
 }
 
-query "aws_iam_user_access_key_age_gt_90_days" {
+
+
+
+query "aws_iam_user_no_boundary_count" {
   sql = <<-EOQ
-  select
-    count(distinct user_name) as "Users With Active Key Age > 90 Days"
-  from
-    aws_iam_access_key
-  where
-    create_date > now() - interval '90 days' and
-    status = 'Active'
+    select
+      count(*) as value,
+      'No Boundary Policy' as label,
+      case when count(*) = 0 then 'ok' else 'alert' end as type
+    from
+      aws_iam_user
+    where
+      permissions_boundary_type is null or permissions_boundary_type = ''
   EOQ
 }
 
 
-query "aws_iam_user_not_attached_to_groups" {
-  sql = <<-EOQ
-  select
-    count(name) as "Users Not Attached to Groups"
-  from
-    aws_iam_user
-  where
-    groups is null
-  EOQ
-}
 
+###
 query "aws_iam_users_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
-      count(i.*) as "total"
+      a.title,
+      count(*)
     from
-      aws_iam_user as i,
+      aws_iam_user as u,
       aws_account as a
     where
-      a.account_id = i.account_id
+      u.account_id = a.account_id
     group by
-      account
-    order by count(i.*) desc
+      a.title
+    order by
+      count desc
   EOQ
 }
 
-query "aws_iam_user_by_path" {
+
+####
+
+query "aws_iam_users_by_mfa_enabled" {
+  sql = <<-EOQ
+    with mfa as (
+      select
+        case when mfa_enabled then 'Enabled' else 'Disabled' end as mfa_status
+      from
+        aws_iam_user
+    )
+    select
+      mfa_status,
+      count(mfa_status)
+    from
+      mfa
+    group by
+      mfa_status
+  EOQ
+}
+
+
+query "aws_iam_users_by_boundary_policy" {
   sql = <<-EOQ
     select
-      path,
-      count(name) as "total"
+      case
+        when permissions_boundary_type is null or permissions_boundary_type = '' then 'Not Configured'
+        else 'Configured'
+      end as policy_type,
+      count(*)
     from
       aws_iam_user
     group by
-      path
+      permissions_boundary_type
   EOQ
 }
 
-query "aws_iam_user_password_last_used_gt_90_days" {
+
+query "aws_iam_users_with_direct_attached_policy_count" {
   sql = <<-EOQ
-  select
-    count(name) as "Password Not Used for 90 days and more"
-  from
-    aws.aws_iam_user
-  where
-    password_last_used is not null or
-    password_last_used < now() - interval '90 days'
+    select
+      count(*) as value,
+       'Users with Attached Policies' as label,
+      case when count(*) = 0 then 'ok' else 'alert' end as type
+    from
+      aws_iam_user
+    where
+      jsonb_array_length(attached_policy_arns) > 0
   EOQ
 }
 
-query "aws_iam_users_by_creation_month" {
+query "aws_iam_users_with_inline_policy_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Users with Inline Policies' as label,
+      case when count(*) = 0 then 'ok' else 'alert' end as type
+    from
+      aws_iam_user
+    where
+      jsonb_array_length(inline_policies) > 0
+  EOQ
+}
+
+
+query "aws_iam_users_with_direct_attached_policy" {
+  sql = <<-EOQ
+    with attached_compliance as (
+      select
+        arn,
+        case
+          when jsonb_array_length(attached_policy_arns) > 0 then 'With Attached Policies'
+          else 'OK'
+        end as has_attached
+      from
+        aws_iam_user
+      )
+      select
+        has_attached,
+        count(*)
+      from
+        attached_compliance
+      group by
+        has_attached
+
+  EOQ
+}
+
+query "aws_iam_users_with_inline_policy" {
+  sql = <<-EOQ
+    with inline_compliance as (
+      select
+        arn,
+        case
+          when jsonb_array_length(inline_policies) > 0 then 'With Inline Policies'
+          else 'OK'
+        end as has_inline
+      from
+        aws_iam_user
+      )
+      select
+        has_inline,
+        count(*)
+      from
+        inline_compliance
+      group by
+        has_inline
+  EOQ
+}
+
+
+query "aws_iam_user_by_creation_month" {
   sql = <<-EOQ
     with users as (
       select
@@ -115,77 +209,17 @@ query "aws_iam_users_by_creation_month" {
       months
       left join users_by_month on months.month = users_by_month.creation_month
     order by
-      months.month desc;
-  EOQ
-}
-
-query "aws_iam_user_mfa_enabled_by_account" {
-  sql = <<-EOQ
-    select
-       a.title as "account",
-       count(name)::numeric as "MFA Enabled"
-    from
-      aws_iam_user as c,
-      aws_account as a
-    where
-      a.account_id = c.account_id and mfa_enabled
-    group by
-      account
-    order by
-      account
-  EOQ
-}
-
-query "aws_iam_user_with_inline_policies_by_account" {
-  sql = <<-EOQ
-    select
-       a.title as "account",
-       count(name)::numeric as "Inline Policies Enabled"
-    from
-      aws_iam_user as c,
-      aws_account as a
-    where
-      a.account_id = c.account_id and inline_policies is not null
-    group by
-      account
-    order by
-      account
-  EOQ
-}
-
-query "aws_iam_user_having_administrator_access_by_account" {
-  sql = <<-EOQ
-    with users_having_admin_access as (
-      select
-        name,
-        account_id,
-        split_part(attachments, '/', 2) as attached_policies
-      from
-        aws_iam_user
-        cross join jsonb_array_elements_text(attached_policy_arns) as attachments
-      where
-        split_part(attachments, '/', 2) = 'AdministratorAccess'
-    ) select
-      a.title as "account",
-      count(name)::numeric as "Administrator Access"
-    from
-      users_having_admin_access as c,
-      aws_account as a
-    where
-      a.account_id = c.account_id
-    group by
-      account
-    order by
-      account
+      months.month;
   EOQ
 }
 
 
 dashboard "aws_iam_user_dashboard" {
-
   title = "AWS IAM User Dashboard"
 
+
   container {
+
 
     # Analysis
     card {
@@ -193,26 +227,28 @@ dashboard "aws_iam_user_dashboard" {
       width = 2
     }
 
-    card {
-      sql   = query.aws_iam_mfa_not_enabled_users_count.sql
-      width = 2
-    }
-
     # Assessments
     card {
-      sql   = query.aws_iam_user_not_attached_to_groups.sql
+      sql   = query.aws_iam_user_mfa_count.sql
       width = 2
     }
 
     card {
-      sql   = query.aws_iam_user_access_key_age_gt_90_days.sql
-      width = 3
+      sql   = query.aws_iam_user_no_boundary_count.sql
+      width = 2
+    }
+
+
+    card {
+      sql   = query.aws_iam_users_with_direct_attached_policy_count.sql
+      width = 2
     }
 
     card {
-      sql   = query.aws_iam_user_password_last_used_gt_90_days.sql
-      width = 3
+      sql   = query.aws_iam_users_with_inline_policy_count.sql
+      width = 2
     }
+
   }
 
   container {
@@ -222,61 +258,78 @@ dashboard "aws_iam_user_dashboard" {
       title = "Users by Account"
       sql   = query.aws_iam_users_by_account.sql
       type  = "column"
-      width = 4
-    }
-    chart {
-      title = "Users by Path"
-      sql   = query.aws_iam_user_by_path.sql
-      type  = "column"
-      width = 4
+      width = 3
     }
   }
+
 
   container {
-    title = "Assesments"
+    title = "Assessments"
 
     chart {
-      title = "MFA Enabled Users by Account"
-      sql   = query.aws_iam_user_mfa_enabled_by_account.sql
+      title = "MFA Status"
+      sql   = query.aws_iam_users_by_mfa_enabled.sql
       type  = "donut"
-      width = 4
+      width = 3
+
+      # series "mfa_status" {
+      #   point "Enabled" {
+      #     color = "ok"
+      #   }
+      #   point "Disabled" {
+      #     color = "alert"
+      #   }
+      # }
     }
+
+
     chart {
-      title = "Users with inline policies by Account"
-      sql   = query.aws_iam_user_with_inline_policies_by_account.sql
+      title = "Boundary Policy"
+      sql   = query.aws_iam_users_by_boundary_policy.sql
       type  = "donut"
-      width = 4
+      width = 3
     }
+
+
     chart {
-      title = "Users having Administrator access by Account"
-      sql   = query.aws_iam_user_having_administrator_access_by_account.sql
+      title = "Direct Attached Policy"
+      sql   = query.aws_iam_users_with_direct_attached_policy.sql
       type  = "donut"
-      width = 4
+      width = 3
+    }
+
+
+    chart {
+      title = "Inline Policy"
+      sql   = query.aws_iam_users_with_inline_policy.sql
+      type  = "donut"
+      width = 3
     }
   }
+
+
 
   container {
     title = "Resources by Age"
 
     chart {
-      title = "Users by Creation Month"
-      sql   = query.aws_iam_users_by_creation_month.sql
+      title = "User by Creation Month"
+      sql   = query.aws_iam_user_by_creation_month.sql
       type  = "column"
       width = 4
-
       series "month" {
         color = "green"
       }
     }
 
     table {
-      title = "Oldest Users"
+      title = "Oldest users"
       width = 4
 
       sql = <<-EOQ
         select
           title as "user",
-          (current_date - create_date)::text as "Age in Days",
+          current_date - create_date as "Age in Days",
           account_id as "Account"
         from
           aws_iam_user
@@ -288,7 +341,7 @@ dashboard "aws_iam_user_dashboard" {
     }
 
     table {
-      title = "Newest Users"
+      title = "Newest users"
       width = 4
 
       sql = <<-EOQ
@@ -305,4 +358,5 @@ dashboard "aws_iam_user_dashboard" {
       EOQ
     }
   }
+
 }

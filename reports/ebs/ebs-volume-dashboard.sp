@@ -39,11 +39,32 @@ query "aws_ebs_unattached_volume_count" {
   EOQ
 }
 
+query "aws_ebs_backup_plan_protected_volume_count" {
+  sql = <<-EOQ
+    with backup_protected_volume as (
+      select
+        resource_arn as arn
+      from
+        aws_backup_protected_resource as b
+      where
+        resource_type = 'EBS'
+    )
+    select
+      count(*) as value,
+      'Backup Protected Volumes' as label,
+      case when b.arn is not null then 'ok' else 'alert' end as style
+    from
+      aws_ebs_volume as v
+      left join backup_protected_volume as b on v.arn = b.arn
+    group by b.arn;
+  EOQ
+}
+
 query "aws_ebs_volume_cost_per_month" {
   sql = <<-EOQ
     select
-       to_char(period_start, 'Mon-YY') as "Month",
-       sum(unblended_cost_amount) as "Unblended Cost"
+      to_char(period_start, 'Mon-YY') as "Month",
+      sum(unblended_cost_amount) as "Unblended Cost"
     from
       aws_cost_by_service_usage_type_monthly
     where
@@ -59,8 +80,8 @@ query "aws_ebs_volume_cost_per_month" {
 query "aws_ebs_volume_cost_by_usage_types_mtd" {
   sql = <<-EOQ
     select
-       usage_type,
-       sum(unblended_cost_amount) as "Unblended Cost"
+      usage_type,
+      sum(unblended_cost_amount) as "Unblended Cost"
     from
       aws_cost_by_service_usage_type_monthly as c
     where
@@ -79,8 +100,8 @@ query "aws_ebs_volume_cost_by_usage_types_mtd" {
 query "aws_ebs_volume_cost_by_usage_types_12mo" {
   sql = <<-EOQ
     select
-       usage_type,
-       sum(unblended_cost_amount) as "Unblended Cost"
+      usage_type,
+      sum(unblended_cost_amount) as "Unblended Cost"
     from
       aws_cost_by_service_usage_type_monthly as c
     where
@@ -99,8 +120,8 @@ query "aws_ebs_volume_cost_by_usage_types_12mo" {
 query "aws_ebs_volume_cost_by_account_mtd" {
   sql = <<-EOQ
     select
-       a.title as "account",
-       sum(unblended_cost_amount) as "Unblended Cost"
+      a.title as "account",
+      sum(unblended_cost_amount) as "Unblended Cost"
     from
       aws_cost_by_service_usage_type_monthly as c,
       aws_account as a
@@ -119,8 +140,8 @@ query "aws_ebs_volume_cost_by_account_mtd" {
 query "aws_ebs_volume_cost_by_account_12mo" {
   sql = <<-EOQ
     select
-       a.title as "account",
-       sum(unblended_cost_amount) as "Unblended Cost"
+      a.title as "account",
+      sum(unblended_cost_amount) as "Unblended Cost"
     from
       aws_cost_by_service_usage_type_monthly as c,
       aws_account as a
@@ -291,7 +312,6 @@ dashboard "aws_ebs_volume_dashboard" {
   container {
 
     # Analysis
-
     card {
       sql   = query.aws_ebs_volume_count.sql
       width = 2
@@ -328,7 +348,7 @@ dashboard "aws_ebs_volume_dashboard" {
         where
           service = 'EC2 - Other'
           and usage_type like '%EBS:%'
-          and date_trunc('month', period_start) =  date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
+          and date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
       EOQ
       width = 2
     }
@@ -352,28 +372,28 @@ dashboard "aws_ebs_volume_dashboard" {
       title = "Volumes by Account"
       sql   = query.aws_ebs_volume_by_account.sql
       type  = "column"
-      width = 2
+      width = 3
     }
 
     chart {
       title = "Volumes by Region"
       sql   = query.aws_ebs_volume_by_region.sql
       type  = "column"
-      width = 2
+      width = 3
     }
 
     chart {
       title = "Volume Storage by Account (GB)"
       sql   = query.aws_ebs_volume_storage_by_account.sql
       type  = "column"
-      width = 2
+      width = 3
     }
 
     chart {
       title = "Volume Storage by Region (GB)"
       sql   = query.aws_ebs_volume_storage_by_region.sql
       type  = "column"
-      width = 2
+      width = 3
     }
 
     chart {
@@ -436,16 +456,9 @@ dashboard "aws_ebs_volume_dashboard" {
       type  = "donut"
       width = 3
 
-      # TODO: Re-enable once this works
-      # series "encryption_status" {
-      #   point "Enabled" {
-      #     color = "green"
-      #   }
-
-      #   point "Disabled" {
-      #     color = "red"
-      #   }
-      # }
+      series "Enabled" {
+        color = "green"
+      }
     }
 
     chart {
@@ -456,7 +469,12 @@ dashboard "aws_ebs_volume_dashboard" {
 
     }
 
-
+    chart {
+      title = "Volume Type"
+      sql   = query.aws_ebs_volume_by_type.sql
+      type  = "donut"
+      width = 3
+    }
   }
 
   container {
@@ -513,14 +531,14 @@ dashboard "aws_ebs_volume_dashboard" {
           limit 10
         )
         select
-            timestamp,
-            volume_id,
-            average
-          from
-            aws_ebs_volume_metric_write_ops_hourly
-          where
-            timestamp  >= CURRENT_DATE - INTERVAL '7 day'
-            and volume_id in (select volume_id from top_n)
+          timestamp,
+          volume_id,
+          average
+        from
+          aws_ebs_volume_metric_write_ops_hourly
+        where
+          timestamp  >= CURRENT_DATE - INTERVAL '7 day'
+          and volume_id in (select volume_id from top_n)
       EOQ
     }
   }
