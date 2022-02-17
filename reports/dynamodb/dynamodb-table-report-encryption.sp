@@ -1,4 +1,4 @@
-report "aws_dynamodb_table_encryption_report" {
+dashboard "aws_dynamodb_table_encryption_report" {
   title = "AWS DynamoDB Table Encryption Report"
 
   container {

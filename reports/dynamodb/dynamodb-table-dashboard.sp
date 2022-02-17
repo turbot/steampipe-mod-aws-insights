@@ -1,4 +1,4 @@
-report "aws_dynamodb_table_dashboard" {
+dashboard "aws_dynamodb_table_dashboard" {
   title = "AWS DynamoDB Table Dashboard"
 
   container {
@@ -129,6 +129,29 @@ report "aws_dynamodb_table_dashboard" {
         where
           sse_description is null
           or sse_description ->> 'SSEType' is null;
+      EOQ
+      width = 2
+    }
+
+    card {
+      sql = <<-EOQ
+        with backup_protected_table as (
+          select
+            resource_arn as arn
+          from
+            aws_backup_protected_resource as b
+          where
+            resource_type = 'DynamoDB'
+        )
+        select
+          count(*) as value,
+          'Backup Plan Protected Tables' as label,
+          case count(*) when 0 then 'alert' else 'ok' end as type
+        from
+          aws_dynamodb_table as t
+          left join backup_protected_table as b on t.arn = b.arn
+        where
+          b.arn is not null;
       EOQ
       width = 2
     }
@@ -321,7 +344,7 @@ report "aws_dynamodb_table_dashboard" {
     chart {
       title = "Encryption Status"
       type  = "donut"
-      width = 3
+      width = 2
       sql   = <<-EOQ
         with table_encryption_status as (
           select
@@ -345,6 +368,63 @@ report "aws_dynamodb_table_dashboard" {
     }
 
     chart {
+      title = "Unused Table Status"
+      type  = "donut"
+      width = 2
+      sql   = <<-EOQ
+        with table_status as (
+          select
+            name,
+            case
+              when item_count > 0 then 'In-Use'
+              else 'Unused'
+            end as table_usage_status
+          from
+            aws_dynamodb_table
+        )
+        select
+          table_usage_status,
+          count(*) as table_count
+        from
+          table_status
+        group by table_usage_status;
+      EOQ
+    }
+
+    chart {
+      title = "Autoscaling Status"
+      type  = "donut"
+      width = 2
+      sql   = <<-EOQ
+        with table_with_autoscaling as (
+          select
+            t.resource_id as resource_id,
+            count(t.resource_id) as count
+          from
+            aws_appautoscaling_target as t where service_namespace = 'dynamodb'
+            group by t.resource_id
+        ),
+        table_autoscaling_status as (
+          select
+          d.name as table_name,
+          case
+            when t.resource_id is null or t.count < 2 then 'Disabled'
+            else 'Enabled'
+          end as autoscaling_status
+          from
+            aws_dynamodb_table as d
+            left join table_with_autoscaling as t on concat('table/', d.name) = t.resource_id
+        )
+        select
+          autoscaling_status,
+          count(*) as table_count
+        from
+          table_autoscaling_status
+        group by autoscaling_status;
+      EOQ
+    }
+
+    chart {
       title = "Continuous Backup Status"
       type  = "donut"
       width = 3
@@ -355,6 +435,39 @@ report "aws_dynamodb_table_dashboard" {
         from
           aws_dynamodb_table
         group by continuous_backups_status;
+      EOQ
+    }
+
+    chart {
+      title = "Backup Plan Protection Status"
+      type  = "donut"
+      width = 3
+      sql   = <<-EOQ
+        with backup_protected_table as (
+          select
+            resource_arn as arn
+          from
+            aws_backup_protected_resource as b
+          where
+            resource_type = 'DynamoDB'
+        ),
+        table_backup_plan_protection_status as (
+          select
+            t.name as table_name,
+            case
+              when b.arn is not null then 'Protected'
+              else 'Unprotected'
+            end as backup_plan_protection_status
+          from
+            aws_dynamodb_table as t
+            left join backup_protected_table as b on t.arn = b.arn
+        )
+        select
+          backup_plan_protection_status,
+          count(*) as table_count
+        from
+          table_backup_plan_protection_status
+        group by backup_plan_protection_status;
       EOQ
     }
   }
