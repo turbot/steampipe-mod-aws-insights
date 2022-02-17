@@ -4,7 +4,20 @@ query "aws_iam_role_count" {
   EOQ
 }
 
-query "aws_iam_role_by_account" {
+query "aws_iam_roles_with_inline_policy_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Roles with Inline Policies' as label,
+      case when count(*) = 0 then 'ok' else 'alert' end as type
+    from
+      aws_iam_role
+    where
+      jsonb_array_length(inline_policies) > 0
+  EOQ
+}
+
+query "aws_iam_roles_by_account" {
   sql = <<-EOQ
     select
       a.title as "account",
@@ -21,7 +34,7 @@ query "aws_iam_role_by_account" {
 }
 
 
-query "aws_iam_role_by_path" {
+query "aws_iam_roles_by_path" {
   sql = <<-EOQ
     select
       path,
@@ -35,24 +48,29 @@ query "aws_iam_role_by_path" {
   EOQ
 }
 
-query "aws_iam_role_without_inline_policies_by_account" {
+query "aws_iam_roles_with_inline_policy" {
   sql = <<-EOQ
-    select
-       a.title as "account",
-       count(name)::numeric as "Roles Without Inline Policies"
-    from
-      aws_iam_user as c,
-      aws_account as a
-    where
-      a.account_id = c.account_id and inline_policies is null
-    group by
-      account
-    order by
-      account
+    with roles_inline_compliance as (
+      select
+        arn,
+        case
+          when jsonb_array_length(inline_policies) > 0 then 'With Inline Policies'
+          else 'OK'
+        end as has_inline
+      from
+        aws_iam_role
+      )
+      select
+        has_inline,
+        count(*)
+      from
+        roles_inline_compliance
+      group by
+        has_inline
   EOQ
 }
 
-query "aws_iam_role_allow_all_action_by_account" {
+query "aws_iam_roles_allow_all_action" {
   sql = <<-EOQ
     with roles_allow_all_actions as (
       select
@@ -74,7 +92,7 @@ query "aws_iam_role_allow_all_action_by_account" {
     )
     select
       a.title as "account",
-      count(role_name)::numeric as "Roles Allows All Actions"
+      count(role_name)::numeric as "Allows * Actions"
     from
       roles_allow_all_actions as c,
       aws_account as a
@@ -87,20 +105,25 @@ query "aws_iam_role_allow_all_action_by_account" {
   EOQ
 }
 
-query "aws_iam_role_without_any_attached_policy_by_account" {
+query "aws_iam_roles_with_direct_attached_policy" {
   sql = <<-EOQ
-    select
-       a.title as "account",
-       count(name)::numeric as "Roles Without Attached Policies"
-    from
-      aws_iam_role as c,
-      aws_account as a
-    where
-      a.account_id = c.account_id and attached_policy_arns is null
-    group by
-      account
-    order by
-      account
+    with role_attached_compliance as (
+      select
+        arn,
+        case
+          when jsonb_array_length(attached_policy_arns) > 0 then 'With Attached Policies'
+          else 'OK'
+        end as has_attached
+      from
+        aws_iam_role
+      )
+      select
+        has_attached,
+        count(*)
+      from
+        role_attached_compliance
+      group by
+        has_attached
   EOQ
 }
 
@@ -158,6 +181,11 @@ dashboard "aws_iam_role_dashboard" {
       sql   = query.aws_iam_role_count.sql
       width = 2
     }
+
+    card {
+      sql   = query.aws_iam_roles_with_inline_policy_count.sql
+      width = 2
+    }
   }
 
   container {
@@ -165,16 +193,16 @@ dashboard "aws_iam_role_dashboard" {
 
     chart {
       title = "Roles by Account"
-      sql   = query.aws_iam_role_by_account.sql
+      sql   = query.aws_iam_roles_by_account.sql
       type  = "column"
-      width = 6
+      width = 3
     }
 
     chart {
       title = "Roles by Path"
-      sql   = query.aws_iam_role_by_path.sql
+      sql   = query.aws_iam_roles_by_path.sql
       type  = "column"
-      width = 6
+      width = 3
     }
   }
 
@@ -182,22 +210,24 @@ dashboard "aws_iam_role_dashboard" {
     title = "Assesments"
 
     chart {
-      title = "Roles Without inline policies by Account"
-      sql   = query.aws_iam_role_without_inline_policies_by_account.sql
+      title = "Inline Policy"
+      sql   = query.aws_iam_roles_with_inline_policy.sql
       type  = "donut"
-      width = 4
+      width = 3
     }
+
     chart {
-      title = "Roles that Allow All Actions by Account"
-      sql   = query.aws_iam_role_allow_all_action_by_account.sql
+      title = "Direct Attached Policy"
+      sql   = query.aws_iam_roles_with_direct_attached_policy.sql
       type  = "donut"
-      width = 4
+      width = 3
     }
+
     chart {
-      title = "Roles Without Any Attached Policy"
-      sql   = query.aws_iam_role_without_any_attached_policy_by_account.sql
+      title = "Allow All Actions"
+      sql   = query.aws_iam_roles_allow_all_action.sql
       type  = "donut"
-      width = 4
+      width = 3
     }
   }
 
