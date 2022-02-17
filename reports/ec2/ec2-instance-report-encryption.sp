@@ -11,7 +11,7 @@ query "aws_ec2_default_ebs_encryption_count" {
   EOQ
 }
 
-report "aws_ec2_default_ebs_encryption_count" {
+dashboard "aws_ec2_default_ebs_encryption_count" {
 
   title = "AWS EC2 Default Encryption Report"
 

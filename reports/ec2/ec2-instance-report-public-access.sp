@@ -11,7 +11,7 @@ query "aws_ec2_instance_public_access_count" {
   EOQ
 }
 
-report "aws_ec2_instance_public_access_report" {
+dashboard "aws_ec2_instance_public_access_report" {
 
   title = "AWS EC2 Instance Public Access Report"
 

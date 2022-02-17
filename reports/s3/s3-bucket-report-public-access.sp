@@ -54,7 +54,7 @@ query "aws_s3_bucket_restrict_public_buckets_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Public Bucket Policies Unrestricted' as label,
+      'Unrestricted Public Bucket Policies' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_s3_bucket

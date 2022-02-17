@@ -14,7 +14,7 @@ query "aws_lambda_function_public_count" {
   EOQ
 }
 
-report "aws_lambda_function_public_access_report" {
+dashboard "aws_lambda_function_public_access_report" {
 
   title = "AWS Lambda Function Public Access Report"
 

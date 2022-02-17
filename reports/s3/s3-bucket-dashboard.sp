@@ -15,42 +15,6 @@ query "aws_s3_bucket_versioning_count" {
   EOQ
 }
 
-query "aws_s3_bucket_public_read_access_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Public Read Access' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as "type"
-    from
-      aws_s3_bucket,
-      jsonb_array_elements(acl -> 'Grants') as grants
-    where
-      grants -> 'Grantee' ->> 'URI' = 'http://acs.amazonaws.com/groups/global/AllUsers'
-      and (
-        grants ->> 'Permission' = 'FULL_CONTROL'
-        or grants ->> 'Permission' = 'READ_ACP'
-      )
-  EOQ
-}
-
-query "aws_s3_bucket_public_write_access_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Public Write Access' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as "type"
-    from
-      aws_s3_bucket,
-      jsonb_array_elements(acl -> 'Grants') as grants
-    where
-      grants -> 'Grantee' ->> 'URI' = 'http://acs.amazonaws.com/groups/global/AllUsers'
-      and (
-        grants ->> 'Permission' = 'FULL_CONTROL'
-        or grants ->> 'Permission' = 'WRITE_ACP'
-      )
-  EOQ
-}
-
 query "aws_s3_bucket_cost_per_month" {
   sql = <<-EOQ
     select
@@ -264,12 +228,45 @@ query "aws_s3_bucket_cross_region_replication_status" {
       EOQ
 }
 
-query "aws_s3_bucket_object_lock_status" {
+query "aws_s3_bucket_public_read_write_status" {
   sql = <<-EOQ
-    with object_lock as(
+    with bucket_with_public_read_write as (
+      select
+        name
+      from
+        aws_s3_bucket,
+        jsonb_array_elements(acl -> 'Grants') as grants
+      where
+        grants -> 'Grantee' ->> 'URI' = 'http://acs.amazonaws.com/groups/global/AllUsers'
+      and (
+        grants ->> 'Permission' = 'FULL_CONTROL'
+        or grants ->> 'Permission' = 'READ_ACP'
+        or grants ->> 'Permission' = 'WRITE_ACP'
+      )), tets as(
+            select
+              case
+                when w.name is not null then 'Public Write' else 'Private'
+              end as visibility
+            from
+              aws_s3_bucket as b
+              left join bucket_with_public_read_write w on b.name = w.name
+          )
+          select
+            visibility,
+            count(*)
+          from
+            tets
+          group by
+            visibility
+      EOQ
+}
+
+query "aws_s3_bucket_lifecycle_rules_status" {
+  sql = <<-EOQ
+    with lifecycle_r as(
       select
         case
-          when object_lock_configuration is not null then 'Enabled' else 'Disabled'
+          when lifecycle_rules is not null then 'Enabled' else 'Disabled'
         end as visibility
       from
         aws_s3_bucket
@@ -278,13 +275,13 @@ query "aws_s3_bucket_object_lock_status" {
       visibility,
       count(*)
     from
-      object_lock
+      lifecycle_r
     group by
       visibility
   EOQ
 }
 
-report "aws_s3_bucket_dashboard" {
+dashboard "aws_s3_bucket_dashboard" {
 
   title = "AWS S3 Bucket Dashboard"
 
@@ -337,15 +334,6 @@ report "aws_s3_bucket_dashboard" {
       width = 2
     }
 
-    card {
-      sql   = query.aws_s3_bucket_public_read_access_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_s3_bucket_public_write_access_count.sql
-      width = 2
-    }
 
     # Costs
     card {
@@ -463,8 +451,15 @@ report "aws_s3_bucket_dashboard" {
     }
 
    chart {
-      title = "Object Lock Status"
-      sql   = query.aws_s3_bucket_object_lock_status.sql
+      title = "Public Read/Write Access Status"
+      sql   = query.aws_s3_bucket_public_read_write_status.sql
+      type  = "donut"
+      width = 3
+    }
+
+    chart {
+      title = "Lifecycle Rules Status"
+      sql   = query.aws_s3_bucket_lifecycle_rules_status.sql
       type  = "donut"
       width = 3
     }

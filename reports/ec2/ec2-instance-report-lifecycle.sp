@@ -11,7 +11,7 @@ query "aws_ec2_stopped_instance_count" {
   EOQ
 }
 
-report "aws_ec2_instance_lifecycle_report" {
+dashboard "aws_ec2_instance_lifecycle_report" {
 
   title = "AWS EC2 Instance Lifecycle Report"
 

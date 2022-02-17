@@ -297,7 +297,7 @@ query "aws_lambda_function_invocation_rate" {
   EOQ
 }
 
-report "aws_lambda_function_dashboard" {
+dashboard "aws_lambda_function_dashboard" {
 
   title = "AWS Lambda Function Dashboard"
 
