@@ -129,8 +129,8 @@ dashboard "aws_iam_group_detail" {
   }
 
   container {
-    title = "AWS IAM Group Policy Analysis"
-
+    title = "AWS IAM Group Analysis"
+    
     table {
       title = "Users"
       width = 6
