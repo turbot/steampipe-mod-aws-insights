@@ -23,7 +23,7 @@ query "aws_rds_db_cluster_logging_disabled_count" {
   EOQ
 }
 
-report "aws_rds_db_cluster_logging_report" {
+dashboard "aws_rds_db_cluster_logging_dashboard" {
 
   title = "AWS RDS DB Cluster Logging Report"
 

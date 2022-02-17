@@ -12,7 +12,7 @@ query "aws_s3_bucket_logging_disabled_count" {
 }
 
 
-report "aws_s3_bucket_logging_report" {
+dashboard "aws_s3_bucket_logging_dashboard" {
 
   title = "AWS S3 Bucket Logging Report"
 

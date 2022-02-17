@@ -11,7 +11,7 @@ query "aws_rds_db_cluster_unencrypted_count" {
   EOQ
 }
 
-report "aws_rds_db_cluster_encryption_report" {
+dashboard "aws_rds_db_cluster_encryption_dashboard" {
 
   title = "AWS RDS DB Cluster Encryption Report"
 

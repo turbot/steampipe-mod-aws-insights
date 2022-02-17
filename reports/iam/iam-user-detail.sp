@@ -7,13 +7,13 @@ variable "iam_detail_user_arn" {
 
 query "aws_iam_user_input" {
   sql = <<EOQ
-select
-  title as label,
-  arn as value
-from
-  aws_iam_user
-order by
-  title;
+    select
+      title as label,
+      arn as value
+    from
+      aws_iam_user
+    order by
+      title;
 EOQ
 }
 
@@ -37,7 +37,6 @@ query "aws_iam_user_mfa_for_user" {
 }
 
 
-#select jsonb_array_length(attached_policy_arns), jsonb_array_length(inline_policies) from aws_iam_user
 
 ### 
 query "aws_iam_user_direct_attached_policy_count_for_user" {
@@ -277,10 +276,10 @@ EOQ
 
 
 
-report aws_iam_user_detail {
+dashboard "aws_iam_user_detail" {
   title = "AWS IAM User Detail"
 
-  input {
+  input "user_arn" {
     title = "User"
     sql   = query.aws_iam_user_input.sql
     width = 2
@@ -288,21 +287,9 @@ report aws_iam_user_detail {
 
   container {
 
-  
-    #  # Analysis
-    # card {
-    #   #title = "Size"
-    #   sql   = query.aws_vpc_num_ips_for_vpc.sql
-    #   width = 2
-    # }
-
     # Assessments
     card {
       sql = query.aws_iam_user_mfa_for_user.sql
-      //query = query.aws_iam_user_mfa_for_user
-      # param "arn" {
-      #   default = var.iam_detail_user_arn
-      # }
       width = 2
     }
 
@@ -330,7 +317,6 @@ report aws_iam_user_detail {
 
 
   container {
-    # title = "Overiew"
 
     container {
       title = "Overview"
@@ -432,27 +418,8 @@ report aws_iam_user_detail {
 
 
   container {
-    title = "AWS IAM User Analysis"
+    title = "AWS IAM User Policy Analysis"
 
-    # table {
-    #   sql = query.aws_iam_user_manage_policies_sankey.sql
-
-    #   column "parent" {
-    #     wrap = "always"
-    #   }
-    #   column "id" {
-    #     wrap = "always"
-    #   }
-    #   column "name" {
-    #     wrap = "always"
-    #   }
-    #   column "depth" {
-    #     display = "none"
-    #   }
-    #   column "category" {
-    #     wrap = "always"
-    #   }
-    # }
 
     hierarchy {
       type  = "sankey"
@@ -464,11 +431,6 @@ report aws_iam_user_detail {
       }
     }
 
-    hierarchy {
-      type  = "tree"
-      title = "Attached Policies"
-      sql = query.aws_iam_user_manage_policies_sankey.sql
-    }
 
     table {
       title = "Groups" 
@@ -483,9 +445,7 @@ report aws_iam_user_detail {
       sql   = query.aws_iam_all_policies_for_user.sql
 
     }
-
-
-
   }
+
 
 }

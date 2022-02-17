@@ -11,7 +11,7 @@ query "aws_redshift_cluster_logging_disabled_count" {
   EOQ
 }
 
-report "aws_redshift_cluster_logging_report" {
+dashboard "aws_redshift_cluster_logging_dashboard" {
 
   title = "AWS Redshift Cluster Logging Report"
 
