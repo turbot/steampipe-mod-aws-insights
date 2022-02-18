@@ -363,6 +363,11 @@ dashboard "aws_ebs_volume_dashboard" {
       sql   = query.aws_ebs_unattached_volume_count.sql
       width = 2
     }
+
+    card {
+      sql   = query.aws_ebs_backup_plan_protected_volume_count.sql
+      width = 2
+    }
   }
 
   container {
@@ -394,13 +399,6 @@ dashboard "aws_ebs_volume_dashboard" {
       sql   = query.aws_ebs_volume_storage_by_region.sql
       type  = "column"
       width = 3
-    }
-
-    chart {
-      title = "Volume Type"
-      sql   = query.aws_ebs_volume_by_type.sql
-      type  = "column"
-      width = 2
     }
 
   }

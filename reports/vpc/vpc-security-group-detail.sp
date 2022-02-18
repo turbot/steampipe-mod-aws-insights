@@ -1,7 +1,7 @@
 dashboard "aws_vpc_security_group_detail" {
   title = "AWS VPC Security Group Detail"
 
-  input "sg" {
+  input "security_group_id" {
     title = "Security Group"
     sql   = <<-EOQ
       select
@@ -50,7 +50,7 @@ dashboard "aws_vpc_security_group_detail" {
           case
             when count(*) > 0 then 'ok'
             else 'alert'
-          end as style
+          end as type
         from
           aws_ec2_network_interface,
           jsonb_array_elements(groups) as sg
