@@ -17,7 +17,7 @@ query "aws_ebs_encrypted_volume_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Unencrypted Volumes' as label,
+      'Unencrypted' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_ebs_volume
@@ -30,7 +30,7 @@ query "aws_ebs_unattached_volume_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Unattached Volumes' as label,
+      'Unattached' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_ebs_volume
@@ -155,9 +155,9 @@ query "aws_ebs_volume_by_encryption_status" {
     from (
       select encrypted,
         case when encrypted then
-          'Enabled'
+          'enabled'
         else
-          'Disabled'
+          'disabled'
         end encryption_status
       from
         aws_ebs_volume) as t
@@ -366,7 +366,6 @@ dashboard "aws_ebs_volume_dashboard" {
       sql   = query.aws_ebs_volume_by_state.sql
       type  = "donut"
       width = 4
-
     }
 
 
@@ -381,6 +380,9 @@ dashboard "aws_ebs_volume_dashboard" {
     # Costs
     table  {
       width = 6
+
+    title = "Forecast"
+
       sql = <<-EOQ
             
         with monthly_costs as (
@@ -419,7 +421,7 @@ dashboard "aws_ebs_volume_dashboard" {
 
         union all
         select
-          'Forecast' as "Period",
+          'This Month (Forecast)' as "Period",
           (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
           (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
               
@@ -430,6 +432,7 @@ dashboard "aws_ebs_volume_dashboard" {
     chart {
       width = 6
       type  = "column"
+      title = "Monthly Cost - 12 Months"
       sql   = query.aws_ebs_volume_cost_per_month.sql
     }
   }
@@ -493,7 +496,7 @@ dashboard "aws_ebs_volume_dashboard" {
     }
 
     chart {
-      title = "Storage by Type"
+      title = "Storage by Type (GB)"
       sql   = query.aws_ebs_volume_storage_by_type.sql
       type  = "column"
       width = 3
@@ -505,7 +508,7 @@ dashboard "aws_ebs_volume_dashboard" {
 
 
     chart {
-      title = "Storage by Age"
+      title = "Storage by Age (GB)"
       sql   = query.aws_ebs_storage_by_creation_month.sql
       type  = "column"
       width = 3

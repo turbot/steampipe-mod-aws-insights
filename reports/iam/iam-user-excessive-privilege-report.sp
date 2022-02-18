@@ -36,7 +36,7 @@ card {
       sql   = <<-EOQ
         select
           count(distinct principal_arn) as value,
-          'Users with excessive permissions' as label,
+          'Users with Excessive Permissions' as label,
           case 
             when count(*) = 0 then 'ok'
             else 'alert'
@@ -56,7 +56,7 @@ card {
       sql   = <<-EOQ
         select
           count(*) as value,
-          'Excessive user service permissiions' as label,
+          'Excessive Permissiions' as label,
           case 
             when count(*) = 0 then 'ok'
             else 'alert'
@@ -76,31 +76,28 @@ card {
 
 
   container { 
-    title = "Access Advisor"
 
 
     # per, https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_access-advisor-view-data.html ,
     #  The tracking period for services is for the last 400 days.
     table {
-      //width = 8
-      title = "Services granted access"
       sql   = <<-EOQ
         select
           principal_arn as "Principal",
           service_name as "Service",
           service_namespace as "Service Namespace",
+          -- case
+          --  when last_authenticated is null then 'Never in Tracking Period'
+          --  else date_trunc('day',age(now(),last_authenticated))::text
+          -- end as "Last Authenticated",
+          -- cant do: invalid input syntax for type integer: "Never in Tracking Period"
           case
             when last_authenticated is null then 'Never in Tracking Period'
-            else date_trunc('day',age(now(),last_authenticated))::text
-          end as "Last Authenticted",
-          -- cant do: invalid input syntax for type integer: "Never in Tracking Period"
-          -- case
-          --   when last_authenticated is null then 'Never in Tracking Period'
-          --   else now()::date  - last_authenticated::date
-          -- end as "Last Authenticted (Days)",
-          last_authenticated as "Last Authenticted Timestamp",
-          last_authenticated_entity as "Last Authenticted Entity",
-          last_authenticated_region as "Last Authenticted Region"
+            else (now()::date  - last_authenticated::date)::text
+          end as "Last Authenticted (Days)",
+          last_authenticated as "Last Authenticated Timestamp",
+          last_authenticated_entity as "Last Authenticated Entity",
+          last_authenticated_region as "Last Authenticated Region"
         from
           aws_iam_access_advisor,
           aws_iam_user
