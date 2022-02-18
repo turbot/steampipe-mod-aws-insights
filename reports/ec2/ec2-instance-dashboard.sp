@@ -330,6 +330,56 @@ query "aws_ec2_instance_by_cpu_utilization_category" {
   EOQ
 }
 
+
+
+query "aws_ec2_monthly_forecast_table" {
+
+  sql = <<-EOQ
+    with monthly_costs as (
+      select
+        period_start,
+        period_end,
+        case 
+          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp) then 'Month to Date'
+          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month') then 'Previous Month'
+          else to_char (period_start, 'Month')
+        end as period_label,
+        period_end::date - period_start::date as days,
+        sum(unblended_cost_amount)::numeric::money as unblended_cost_amount,
+        (sum(unblended_cost_amount) / (period_end::date - period_start::date ) )::numeric::money as average_daily_cost,
+        date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval ) as days_in_month,
+        sum(unblended_cost_amount) / (period_end::date - period_start::date ) * date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval )::numeric::money  as forecast_amount
+      from
+        aws_cost_by_service_monthly as c
+
+      where
+        service = 'Amazon Elastic Compute Cloud - Compute'
+        and date_trunc('month', period_start) >= date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
+
+        group by
+        period_start, 
+        period_end
+    )
+
+    select
+      period_label as "Period",
+      unblended_cost_amount as "Cost",
+      average_daily_cost as "Daily Avg Cost"
+    from 
+      monthly_costs
+
+    union all
+    select
+      'This Month (Forecast)' as "Period",
+      (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
+      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
+          
+  EOQ
+
+}
+
+
+
 dashboard "aws_ec2_instance_dashboard" {
 
   title = "AWS EC2 Instance Dashboard"
@@ -345,7 +395,18 @@ dashboard "aws_ec2_instance_dashboard" {
     card {
       sql   = query.aws_ec2_instance_total_cores.sql
       width = 2
-      type  = "info"
+    }
+
+
+    # Assessments
+    card {
+      sql   = query.aws_ec2_public_instance_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_ec2_unencrypted_instance_count.sql
+      width = 2
     }
 
 
@@ -367,33 +428,63 @@ dashboard "aws_ec2_instance_dashboard" {
       width = 2
     }
 
-  card {
-      type  = "info"
-      icon = "currency-dollar"
-      sql = <<-EOQ
-        select
-          'Cost - Previous Month' as label,
-          sum(unblended_cost_amount)::numeric::money as value
-        from
-          aws_cost_by_service_monthly
-        where
-          service = 'Amazon Elastic Compute Cloud - Compute'
-          and date_trunc('month', period_start) =  date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
-      EOQ
-      width = 2
+  }
+
+  container {
+    title = "Assesments"
+    width = 6
+
+    chart {
+      title  = "Encryption Status [TODO]"
+      # sql    = query.aws_ec2_instance_by_encryption_status.sql
+      # type   = "donut"
+      width = 4
     }
 
-    # Assessments
-    card {
-      sql   = query.aws_ec2_public_instance_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_ec2_unencrypted_instance_count.sql
-      width = 2
+   chart {
+      title = "Public/Private"
+      sql   = query.aws_ec2_instance_by_public_ip.sql
+      type  = "donut"
+      width = 4
     }
   }
+
+  container {
+    title = "Costs"
+    width = 6
+
+
+    table  {
+      width = 6
+      title = "Forecast"
+      sql = query.aws_ec2_monthly_forecast_table.sql
+    }
+
+    chart {
+      width = 6
+      title = "EC2 Compute Monthly Unblended Cost"
+      type  = "column"
+      sql   = query.aws_ec2_instance_cost_per_month.sql
+    }
+  }
+
+
+
+
+  container {
+
+    
+
+
+    container {
+      title   = "Resources by Age"
+      width = 3
+
+     
+    }
+
+
+
 
   container {
     title = "Analysis"
@@ -427,59 +518,18 @@ dashboard "aws_ec2_instance_dashboard" {
       width = 3
     }
 
-  }
-  container {
-    title = "Assesments"
-    width = 6
-
     chart {
-      title  = "Encryption Status [TODO]"
-      # sql    = query.aws_ec2_instance_by_encryption_status.sql
-      # type   = "donut"
-      width = 4
-    }
+      title = "Instances by Age"
+      sql   = query.aws_ec2_instance_by_creation_month.sql
+      type  = "column"
+        width = 3
 
-   chart {
-      title = "Public/Private"
-      sql   = query.aws_ec2_instance_by_public_ip.sql
-      type  = "donut"
-      width = 4
     }
   }
-
-
-  container {
-
-    container {
-      title = "Costs"
-      width = 3
-
-      chart {
-        title = "EC2 Compute Monthly Unblended Cost"
-        type  = "line"
-        sql   = query.aws_ec2_instance_cost_per_month.sql
-      }
-    }
-
-
-    container {
-      title   = "Resources by Age"
-      width = 3
-
-      chart {
-        title = "Instance by Creation Month"
-        sql   = query.aws_ec2_instance_by_creation_month.sql
-        type  = "column"
-
-        series "month" {
-          color = "green"
-        }
-      }
-    }
 
     container {
       title  = "Performance & Utilization"
-      width = 6
+      //width = 6
 
       chart {
         title = "Top 10 CPU - Last 7 days"
@@ -489,14 +539,11 @@ dashboard "aws_ec2_instance_dashboard" {
       }
 
       chart {
-        title = "Average max daily CPU - Last 30 days"
+        title = "Average Max Daily CPU - Last 30 days"
         sql   = query.aws_ec2_instance_by_cpu_utilization_category.sql
         type  = "column"
-        width = 6
+        width = 3
 
-        # series "Unused (<1%)" {
-        #   color = "red"
-        # }
       }
     }
 
