@@ -3,7 +3,7 @@ query "aws_lambda_function_public_count" {
     select
       count(*) as value,
       'Public Lambda Functions' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_lambda_function
     where
