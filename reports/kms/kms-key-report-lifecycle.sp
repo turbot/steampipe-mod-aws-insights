@@ -3,7 +3,7 @@ query "aws_kms_key_rotation_disabled_count" {
     select
       count(*) as value,
       'Rotation Disabled' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      case count(*) when 0 then 'ok' else 'alert' end as type
     from
       aws_kms_key
     where
@@ -16,7 +16,7 @@ query "aws_kms_key_pending_deletion_count" {
     select
       count(*) as value,
       'Pending Deletion' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      case count(*) when 0 then 'ok' else 'alert' end as type
     from
       aws_kms_key
     where

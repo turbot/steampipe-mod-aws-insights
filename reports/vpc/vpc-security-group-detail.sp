@@ -68,7 +68,7 @@ dashboard "aws_vpc_security_group_detail" {
           case
             when count(*) = 0 then 'ok'
             else 'alert'
-          end as style
+          end as type
         from
           aws_vpc_security_group_rule
         where
@@ -92,7 +92,7 @@ dashboard "aws_vpc_security_group_detail" {
           case
             when count(*) = 0 then 'ok'
             else 'alert'
-          end as style
+          end as type
         from
           aws_vpc_security_group_rule
         where

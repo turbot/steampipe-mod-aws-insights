@@ -3,7 +3,7 @@ query "aws_rds_db_cluster_unencrypted_count" {
     select
       count(*) as value,
       'Unencrypted' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      case count(*) when 0 then 'ok' else 'alert' end as type
     from
       aws_rds_db_cluster
     where

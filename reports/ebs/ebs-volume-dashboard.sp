@@ -52,7 +52,7 @@ query "aws_ebs_backup_plan_protected_volume_count" {
     select
       count(*) as value,
       'Backup Protected Volumes' as label,
-      case when b.arn is not null then 'ok' else 'alert' end as style
+      case when b.arn is not null then 'ok' else 'alert' end as type
     from
       aws_ebs_volume as v
       left join backup_protected_volume as b on v.arn = b.arn

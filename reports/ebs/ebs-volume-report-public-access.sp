@@ -25,7 +25,7 @@ dashboard "aws_ebs_volume_public_access_dashboard" {
       select
         count(*) as value,
         'Publicly Accessible' as label,
-        case count(*) when 0 then 'ok' else 'alert' end as style
+        case count(*) when 0 then 'ok' else 'alert' end as type
       from
         public_volumes;
       EOQ

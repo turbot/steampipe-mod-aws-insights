@@ -15,7 +15,7 @@ query "aws_rds_db_cluster_logging_disabled_count" {
   select
     count(*) as value,
     'Logging Disabled' as label,
-    case count(*) when 0 then 'ok' else 'alert' end as style
+    case count(*) when 0 then 'ok' else 'alert' end as type
   from
     aws_rds_db_cluster
   where
