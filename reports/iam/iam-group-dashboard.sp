@@ -1,3 +1,4 @@
+# Analysis
 query "aws_iam_group_count" {
   sql = <<-EOQ
     select count(*) as "Total Groups" from aws_iam_group
@@ -32,6 +33,8 @@ query "aws_iam_groups_by_path" {
   EOQ
 }
 
+# Assessments Cards
+
 query "aws_iam_groups_with_inline_policy_count" {
   sql = <<-EOQ
     select
@@ -42,6 +45,74 @@ query "aws_iam_groups_with_inline_policy_count" {
       aws_iam_group
     where
       jsonb_array_length(inline_policies) > 0
+  EOQ
+}
+
+query "aws_iam_groups_without_users_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Groups without Users' as label,
+      case when count(*) = 0 then 'ok' else 'alert' end as type
+    from
+      aws_iam_group
+    where
+      users is null
+  EOQ
+}
+
+query "aws_iam_groups_with_administrator_policy_count" {
+  sql = <<-EOQ
+    with groups_having_admin_access as
+    (
+      select
+        name,
+        attached_policy_arns,
+        case
+          when
+            attached_policy_arns @> ('["arn:' || partition || ':iam::aws:policy/AdministratorAccess"]')::jsonb
+          then
+            'With Administrator Policy'
+          else
+            'OK'
+        end
+        as has_administrator_policy
+      from
+        aws_iam_group
+    )
+    select
+      count(*) as value,
+      'Groups with Administrator Policy' as label,
+      case when count(*) > 1 then 'alert' else 'ok' end as type
+    from
+      groups_having_admin_access
+    where
+      has_administrator_policy = 'With Administrator Policy'
+    group by
+      has_administrator_policy
+  EOQ
+}
+
+# Assessments Donut
+query "aws_iam_groups_without_users" {
+  sql = <<-EOQ
+    with groups_without_users as (
+      select
+        arn,
+        case
+          when users is null then 'Group without Users'
+          else 'OK'
+        end as has_users
+      from
+        aws_iam_group
+      )
+      select
+        has_users,
+        count(*)
+      from
+        groups_without_users
+      group by
+        has_users
   EOQ
 }
 
@@ -69,48 +140,34 @@ query "aws_iam_groups_with_inline_policy" {
 
 query "aws_iam_groups_with_administrator_policy" {
   sql = <<-EOQ
-    with groups_having_admin_access as (
+    with groups_having_admin_access as
+    (
       select
         name,
-        account_id,
-        split_part(attachments, '/', 2) as attached_policies
+        attached_policy_arns,
+        case
+          when
+            attached_policy_arns @> ('["arn:' || partition || ':iam::aws:policy/AdministratorAccess"]')::jsonb
+          then
+            'With Administrator Policy'
+          else
+            'OK'
+        end
+        as has_administrator_policy
       from
         aws_iam_group
-        cross join jsonb_array_elements_text(attached_policy_arns) as attachments
-      where
-        split_part(attachments, '/', 2) = 'AdministratorAccess'
-    ) select
-      a.title as "account",
-      count(name)::numeric as "Administrator Access"
-    from
-      groups_having_admin_access as c,
-      aws_account as a
-    where
-      a.account_id = c.account_id
-    group by
-      account
-    order by
-      account
-  EOQ
-}
-
-query "aws_iam_groups_without_users" {
-  sql = <<-EOQ
+    )
     select
-      a.title as "account",
-      count(name)::numeric as "Groups Without Users"
+      has_administrator_policy,
+      count(*)
     from
-      aws_iam_group as c,
-      aws_account as a
-    where
-      a.account_id = c.account_id and users is null
+      groups_having_admin_access
     group by
-      account
-    order by
-      account
+      has_administrator_policy
   EOQ
 }
 
+# Resources by Age
 query "aws_iam_groups_by_creation_month" {
   sql = <<-EOQ
     with groups as (
@@ -161,13 +218,25 @@ dashboard "aws_iam_group_dashboard" {
   title = "AWS IAM Group Dashboard"
 
   container {
+
+    # Analysis
     card {
       sql   = query.aws_iam_group_count.sql
       width = 2
     }
 
     card {
+      sql   = query.aws_iam_groups_without_users_count.sql
+      width = 2
+    }
+
+    card {
       sql   = query.aws_iam_groups_with_inline_policy_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_iam_groups_with_administrator_policy_count.sql
       width = 2
     }
   }
@@ -195,7 +264,7 @@ dashboard "aws_iam_group_dashboard" {
     title = "Assesments"
 
     chart {
-      title = "Groups Without Users"
+      title = "Groups without Users"
       sql   = query.aws_iam_groups_without_users.sql
       type  = "donut"
       width = 3
@@ -207,7 +276,7 @@ dashboard "aws_iam_group_dashboard" {
       width = 3
     }
     chart {
-      title = "Groups With Administrator Access Policy"
+      title = "Administrator Access Policy"
       sql   = query.aws_iam_groups_with_administrator_policy.sql
       type  = "donut"
       width = 3
