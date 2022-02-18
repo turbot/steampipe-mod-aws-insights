@@ -1,9 +1,11 @@
+# Analysis card
 query "aws_iam_role_count" {
   sql = <<-EOQ
     select count(*) as "Roles" from aws_iam_role
   EOQ
 }
 
+# Assessment card
 query "aws_iam_roles_with_inline_policy_count" {
   sql = <<-EOQ
     select
@@ -17,6 +19,49 @@ query "aws_iam_roles_with_inline_policy_count" {
   EOQ
 }
 
+query "aws_iam_roles_without_direct_attached_policy_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+       'Roles without Attached Policies' as label,
+      case when count(*) > 0 then 'alert' else 'ok' end as type
+    from
+      aws_iam_role
+    where
+      attached_policy_arns is null
+  EOQ
+}
+
+query "aws_iam_roles_allow_all_action_count" {
+  sql = <<-EOQ
+    with roles_allow_all_actions as (
+      select
+        r.name as role_name,
+        r.account_id as account_id,
+        p.name as policy_name
+      from
+        aws_iam_role as r,
+        jsonb_array_elements_text(r.attached_policy_arns) as policy_arn,
+        aws_iam_policy as p,
+        jsonb_array_elements(p.policy_std -> 'Statement') as stmt,
+        jsonb_array_elements_text(stmt -> 'Action') as action
+      where
+        policy_arn = p.arn
+        and stmt ->> 'Effect' = 'Allow'
+        and action = '*'
+      order by
+        r.name
+    )
+    select
+      count(role_name)::numeric as value,
+      'Roles Allows All Actions' as label,
+      case when count(*) > 0 then 'alert' else 'ok' end as type
+    from
+      roles_allow_all_actions
+  EOQ
+}
+
+# Analysis
 query "aws_iam_roles_by_account" {
   sql = <<-EOQ
     select
@@ -33,7 +78,6 @@ query "aws_iam_roles_by_account" {
   EOQ
 }
 
-
 query "aws_iam_roles_by_path" {
   sql = <<-EOQ
     select
@@ -47,6 +91,8 @@ query "aws_iam_roles_by_path" {
       total desc
   EOQ
 }
+
+# Assessment
 
 query "aws_iam_roles_with_inline_policy" {
   sql = <<-EOQ
@@ -105,6 +151,8 @@ query "aws_iam_roles_allow_all_action" {
   EOQ
 }
 
+# Resources by Age
+
 query "aws_iam_roles_with_direct_attached_policy" {
   sql = <<-EOQ
     with role_attached_compliance as (
@@ -112,7 +160,7 @@ query "aws_iam_roles_with_direct_attached_policy" {
         arn,
         case
           when jsonb_array_length(attached_policy_arns) > 0 then 'With Attached Policies'
-          else 'OK'
+          else 'Alert'
         end as has_attached
       from
         aws_iam_role
@@ -172,20 +220,35 @@ query "aws_iam_roles_by_creation_month" {
   EOQ
 }
 
+
 dashboard "aws_iam_role_dashboard" {
 
   title = "AWS IAM Role Dashboard"
 
   container {
+
+    # Analysis
     card {
       sql   = query.aws_iam_role_count.sql
       width = 2
     }
 
+    # Assessments
     card {
       sql   = query.aws_iam_roles_with_inline_policy_count.sql
       width = 2
     }
+
+    card {
+      sql   = query.aws_iam_roles_without_direct_attached_policy_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_iam_roles_allow_all_action_count.sql
+      width = 2
+    }
+
   }
 
   container {

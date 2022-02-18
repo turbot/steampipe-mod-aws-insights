@@ -225,6 +225,7 @@ dashboard "aws_iam_group_dashboard" {
       width = 2
     }
 
+    # Assessments
     card {
       sql   = query.aws_iam_groups_without_users_count.sql
       width = 2
