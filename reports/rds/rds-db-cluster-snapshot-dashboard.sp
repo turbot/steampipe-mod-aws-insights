@@ -226,7 +226,7 @@ query "aws_rds_db_cluster_snapshot_by_creation_month" {
 
 dashboard "aws_rds_db_cluster_snapshot_dashboard" {
 
-  title = "AWS RDS DB Cluster Snapshots Dashboard"
+  title = "AWS RDS DB Cluster Snapshot Dashboard"
 
   container {
 

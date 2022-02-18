@@ -33,9 +33,9 @@ query "roles_allow_all_actions" {
   EOQ
 }
 
-dashboard "aws_iam_role_allow_full_administrative_privileges_report" {
+dashboard "aws_iam_role_full_administrative_privileges_report" {
 
-  title = "AWS IAM Role Allow Full \\*:\\* Administrative Privileges"
+  title = "AWS IAM Role Full Administrative Privileges Report"
 
   container {
     card {
