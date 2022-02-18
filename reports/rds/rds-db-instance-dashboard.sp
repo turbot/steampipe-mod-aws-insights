@@ -224,6 +224,27 @@ query "aws_rds_db_instance_multiple_az_status" {
   EOQ
 }
 
+query "aws_rds_db_instance_in_vpc_status" {
+  sql = <<-EOQ
+    select
+      vpc_status,
+      count(*)
+    from (
+      select
+        case when vpc_id is not null then
+          'Enabled'
+        else
+          'Disabled'
+        end vpc_status
+      from
+        aws_rds_db_instance) as t
+    group by
+      vpc_status
+    order by
+      vpc_status desc
+  EOQ
+}
+
 query "aws_rds_db_instance_by_encryption_status" {
   sql = <<-EOQ
     select
@@ -487,10 +508,10 @@ dashboard "aws_rds_db_instance_dashboard" {
     title = "Assessments"
 
     chart {
-      title = "Logging Status"
-      sql = query.aws_rds_db_instance_logging_status.sql
+      title = "Public/Private"
+      sql   = query.aws_rds_db_instance_public_status.sql
       type  = "donut"
-      width = 3
+      width = 2
 
       series "Enabled" {
         color = "green"
@@ -501,22 +522,30 @@ dashboard "aws_rds_db_instance_dashboard" {
       title = "Encryption Status"
       sql = query.aws_rds_db_instance_by_encryption_status.sql
       type  = "donut"
-      width = 3
+      width = 2
+    }
+
+    chart {
+      title = "Not In VPC"
+      sql = query.aws_rds_db_instance_in_vpc_status.sql
+      type  = "donut"
+      width = 2
+    }
+
+    chart {
+      title = "Logging Status"
+      sql = query.aws_rds_db_instance_logging_status.sql
+      type  = "donut"
+      width = 2
     }
 
     chart {
       title = "Multi-AZ Status"
       sql = query.aws_rds_db_instance_multiple_az_status.sql
       type  = "donut"
-      width = 3
+      width = 2
     }
 
-   chart {
-      title = "Public/Private"
-      sql   = query.aws_rds_db_instance_public_status.sql
-      type  = "donut"
-      width = 3
-    }
   }
 
   container {

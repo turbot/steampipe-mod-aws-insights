@@ -256,6 +256,48 @@ query "aws_s3_bucket_versioning_status" {
   EOQ
 }
 
+query "aws_s3_bucket_public_status" {
+  sql = <<-EOQ
+    with public_status as(
+      select
+        case
+          when
+            block_public_acls
+            and block_public_policy
+            and ignore_public_acls
+            and restrict_public_buckets
+          then 'Private' else 'Public'
+        end as visibility
+      from
+        aws_s3_bucket
+    )
+    select
+      visibility,
+      count(*)
+    from
+      public_status
+    group by
+      visibility
+  EOQ
+}
+
+
+query "aws_s3_bucket_public_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Public' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
+    from
+      aws_s3_bucket
+    where
+      not block_public_acls
+      or not block_public_policy
+      or not ignore_public_acls
+      or not restrict_public_buckets
+  EOQ
+}
+
 dashboard "aws_s3_bucket_dashboard" {
 
   title = "AWS S3 Bucket Dashboard"
@@ -313,32 +355,7 @@ dashboard "aws_s3_bucket_dashboard" {
     }
 
     card {
-      sql = query.aws_s3_bucket_logging_disabled_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_s3_bucket_public_policy_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_s3_bucket_block_public_acls_disabled_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_s3_bucket_block_public_policy_disabled_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_s3_bucket_ignore_public_acls_disabled_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_s3_bucket_restrict_public_buckets_disabled_count.sql
+      sql   = query.aws_s3_bucket_public_count.sql
       width = 2
     }
 
@@ -368,32 +385,40 @@ dashboard "aws_s3_bucket_dashboard" {
     width = 12
 
     chart {
-      title  = "Default Encryption Status"
-      sql    = query.aws_s3_bucket_by_default_encryption_status.sql
-      type   = "donut"
-      width = 3
-    }
-
-   chart {
-      title = "Cross-Region Replication Status"
-      sql   = query.aws_s3_bucket_cross_region_replication_status.sql
-      type  = "donut"
-      width = 3
-    }
-
-   chart {
-      title = "Logging Status"
-      sql   = query.aws_s3_bucket_logging_status.sql
-      type  = "donut"
-      width = 3
-    }
-
-    chart {
       title = "Versioning Status"
       sql   = query.aws_s3_bucket_versioning_status.sql
       type  = "donut"
-      width = 3
+      width = 2
     }
+
+    chart {
+      title  = "Default Encryption Status"
+      sql    = query.aws_s3_bucket_by_default_encryption_status.sql
+      type   = "donut"
+      width = 2
+    }
+
+    chart {
+      title  = "Public/Private"
+      sql    = query.aws_s3_bucket_public_status.sql
+      type   = "donut"
+      width = 2
+    }
+
+    chart {
+      title = "Logging Status"
+      sql   = query.aws_s3_bucket_logging_status.sql
+      type  = "donut"
+      width = 2
+    }
+
+    chart {
+      title = "Cross-Region Replication"
+      sql   = query.aws_s3_bucket_cross_region_replication_status.sql
+      type  = "donut"
+      width = 2
+    }
+
   }
 
   container {

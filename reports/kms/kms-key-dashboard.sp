@@ -28,6 +28,27 @@ query "aws_inactive_kms_key_count" {
   EOQ
 }
 
+query "aws_inactive_kms_key_status" {
+  sql = <<-EOQ
+    select
+      inactive_status,
+      count(*)
+    from (
+      select
+        case when enabled then
+          'Enabled'
+        else
+          'Disabled'
+        end inactive_status
+      from
+        aws_kms_key) as t
+    group by
+      inactive_status
+    order by
+      inactive_status desc
+  EOQ
+}
+
 query "aws_kms_key_rotation_enabled_count" {
   sql = <<-EOQ
     select
@@ -374,8 +395,8 @@ dashboard "aws_kms_key_dashboard" {
     title = "Assessments"
 
     chart {
-      title = "Usage Status"
-      sql = query.aws_kms_key_usage_status.sql
+      title = "Inactive/Active Status"
+      sql = query.aws_inactive_kms_key_status.sql
       type  = "donut"
       width = 3
     }
@@ -387,6 +408,12 @@ dashboard "aws_kms_key_dashboard" {
       width = 3
     }
 
+    chart {
+      title = "Usage Status"
+      sql = query.aws_kms_key_usage_status.sql
+      type  = "donut"
+      width = 3
+    }
   }
 
   container {

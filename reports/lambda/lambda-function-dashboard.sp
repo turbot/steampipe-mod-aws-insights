@@ -420,6 +420,13 @@ dashboard "aws_lambda_function_dashboard" {
   container {
     title = "Assessments"
 
+    chart {
+      title = "Public/Private Status"
+      sql   = query.aws_lambda_function_public_status.sql
+      type  = "donut"
+      width = 3
+    }
+
      chart {
       title = "Encryption Status"
       sql   = query.aws_lambda_function_by_encryption_status.sql
@@ -429,13 +436,6 @@ dashboard "aws_lambda_function_dashboard" {
       series "Enabled" {
         color = "green"
       }
-    }
-
-   chart {
-      title = "Public/Private Status"
-      sql   = query.aws_lambda_function_public_status.sql
-      type  = "donut"
-      width = 3
     }
 
     chart {
