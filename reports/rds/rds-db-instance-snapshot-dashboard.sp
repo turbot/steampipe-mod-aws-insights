@@ -331,13 +331,6 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
     }
 
    chart {
-      title = "RDS Cost by Usage Type - last 30 days"
-      type  = "donut"
-      sql   = query.aws_rds_db_instance_snapshot_cost_by_usage_types_30day.sql
-      width = 2
-    }
-
-   chart {
       title = "RDS Cost by Usage Type - Last 12 months"
       type  = "donut"
       sql   = query.aws_rds_db_instance_snapshot_cost_by_usage_types_12mo.sql
