@@ -61,6 +61,19 @@ query "aws_iam_roles_allow_all_action_count" {
   EOQ
 }
 
+query "aws_iam_role_no_boundary_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'No Boundary Policy' as label,
+      case when count(*) = 0 then 'ok' else 'alert' end as type
+    from
+      aws_iam_role
+    where
+      permissions_boundary_type is null or permissions_boundary_type = ''
+  EOQ
+}
+
 # Analysis
 query "aws_iam_roles_by_account" {
   sql = <<-EOQ
@@ -93,7 +106,6 @@ query "aws_iam_roles_by_path" {
 }
 
 # Assessment
-
 query "aws_iam_roles_with_inline_policy" {
   sql = <<-EOQ
     with roles_inline_compliance as (
@@ -151,7 +163,20 @@ query "aws_iam_roles_allow_all_action" {
   EOQ
 }
 
-# Resources by Age
+query "aws_iam_roles_by_boundary_policy" {
+  sql = <<-EOQ
+    select
+      case
+        when permissions_boundary_type is null or permissions_boundary_type = '' then 'Not Configured'
+        else 'Configured'
+      end as policy_type,
+      count(*)
+    from
+      aws_iam_role
+    group by
+      permissions_boundary_type
+  EOQ
+}
 
 query "aws_iam_roles_with_direct_attached_policy" {
   sql = <<-EOQ
@@ -175,6 +200,7 @@ query "aws_iam_roles_with_direct_attached_policy" {
   EOQ
 }
 
+# Resources by Age
 query "aws_iam_roles_by_creation_month" {
   sql = <<-EOQ
     with roles as (
@@ -249,6 +275,11 @@ dashboard "aws_iam_role_dashboard" {
       width = 2
     }
 
+    card {
+      sql   = query.aws_iam_role_no_boundary_count.sql
+      width = 2
+    }
+
   }
 
   container {
@@ -292,6 +323,13 @@ dashboard "aws_iam_role_dashboard" {
       type  = "donut"
       width = 3
     }
+
+    chart {
+      title = "Boundary Policy"
+      sql   = query.aws_iam_roles_by_boundary_policy.sql
+      type  = "donut"
+      width = 3
+    }
   }
 
   container {
@@ -314,13 +352,13 @@ dashboard "aws_iam_role_dashboard" {
 
       sql = <<-EOQ
         select
-          title as "role",
-          (current_date - create_date)::text as "Age in Days",
+          title as "Role",
+          date_trunc('day',age(now(),create_date))::text as "Age",
           account_id as "Account"
         from
           aws_iam_role
         order by
-          "Age in Days" desc,
+          "Age" desc,
           title
         limit 5
       EOQ
@@ -332,13 +370,13 @@ dashboard "aws_iam_role_dashboard" {
 
       sql = <<-EOQ
         select
-          title as "role",
-          current_date - create_date as "Age in Days",
+          title as "Role",
+          date_trunc('day',age(now(),create_date))::text as "Age",
           account_id as "Account"
         from
           aws_iam_role
         order by
-          "Age in Days" asc,
+          "Age" asc,
           title
         limit 5
       EOQ

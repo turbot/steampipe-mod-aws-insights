@@ -347,12 +347,12 @@ dashboard "aws_iam_user_dashboard" {
       sql = <<-EOQ
         select
           title as "user",
-          current_date - create_date as "Age in Days",
+          date_trunc('day',age(now(),create_date))::text as "Age",
           account_id as "Account"
         from
           aws_iam_user
         order by
-          "Age in Days" desc,
+          "Age" desc,
           title
         limit 5
       EOQ
@@ -365,12 +365,12 @@ dashboard "aws_iam_user_dashboard" {
       sql = <<-EOQ
         select
           title as "user",
-          current_date - create_date as "Age in Days",
+          date_trunc('day',age(now(),create_date))::text as "Age",
           account_id as "Account"
         from
           aws_iam_user
         order by
-          "Age in Days" asc,
+          "Age" asc,
           title
         limit 5
       EOQ
