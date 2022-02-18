@@ -7,7 +7,7 @@ query "aws_ebs_volume_count" {
 query "aws_ebs_volume_storage_total" {
   sql = <<-EOQ
     select
-      sum(size) as "Total Storage"
+      sum(size) as "Total Storage (GB)"
     from
       aws_ebs_volume
   EOQ
@@ -316,15 +316,27 @@ dashboard "aws_ebs_volume_dashboard" {
     card {
       sql   = query.aws_ebs_volume_count.sql
       width = 2
-     // type = "info"
     }
 
     card {
       sql   = query.aws_ebs_volume_storage_total.sql
       width = 2
-      type = "info"
 
     }
+
+
+    # Assessments
+    card {
+      sql   = query.aws_ebs_encrypted_volume_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_ebs_unattached_volume_count.sql
+      width = 2
+    }
+
+
 
     # Costs
     card {
@@ -344,34 +356,88 @@ dashboard "aws_ebs_volume_dashboard" {
       width = 2
     }
 
-    card {
-      sql = <<-EOQ
-        select
-          'Cost - Previous Month' as label,
-          sum(unblended_cost_amount)::numeric::money as value
-        from
-          aws_cost_by_service_usage_type_monthly as c
-        where
-          service = 'EC2 - Other'
-          and usage_type like '%EBS:%'
-          and date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
-      EOQ
-      type = "info"
-      icon = "currency-dollar"
-      width = 2
+    # card {
+    #   sql = <<-EOQ
+    #     select
+    #       'Cost - Previous Month' as label,
+    #       sum(unblended_cost_amount)::numeric::money as value
+    #     from
+    #       aws_cost_by_service_usage_type_monthly as c
+    #     where
+    #       service = 'EC2 - Other'
+    #       and usage_type like '%EBS:%'
+    #       and date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
+    #   EOQ
+    #   type = "info"
+    #   icon = "currency-dollar"
+    #   width = 2
+    # }
+
+
+
+  }
+
+
+
+  container {
+    title = "Assessments"
+    width = 6
+
+    chart {
+      title = "Encryption Status"
+      sql   = query.aws_ebs_volume_by_encryption_status.sql
+      type  = "donut"
+      width = 4
+
+      series "Enabled" {
+         color = "green"
+      }
     }
 
-    # Assessments
-    card {
-      sql   = query.aws_ebs_encrypted_volume_count.sql
-      width = 2
+    chart {
+      title = "Volume State"
+      sql   = query.aws_ebs_volume_by_state.sql
+      type  = "donut"
+      width = 4
+
     }
 
-    card {
-      sql   = query.aws_ebs_unattached_volume_count.sql
-      width = 2
+
+  }
+
+  
+  container {
+    title = "Cost"
+    width = 6
+
+
+
+    # table {
+    #   width = 6
+    #   title = "Last Month, MTD, Forecast"
+    # }
+
+
+    text {
+      width = 6
+      value = <<-EOM
+        | Period | Cost
+        |-|-
+        | Last Month | 99.99
+        | MTD | 99.99
+        | Forecast| 99.99
+
+      EOM
     }
 
+    chart {
+      width = 6
+      //title = "EBS Monthly Unblended Cost"
+
+      type  = "column"
+      sql   = query.aws_ebs_volume_cost_per_month.sql
+     // width = 4
+    }
   }
 
   container {
@@ -392,79 +458,69 @@ dashboard "aws_ebs_volume_dashboard" {
     }
 
     chart {
-      title = "Volume Storage by Account (GB)"
+      title = "Volumes by Type"
+      sql   = query.aws_ebs_volume_by_type.sql
+      type  = "column"
+      width = 3
+    }
+
+    // container {
+    //title = "Resource Age"
+    //width = 3
+
+    chart {
+      title = "Volumes by Age"
+      sql   = query.aws_ebs_volume_by_creation_month.sql
+      type  = "column"
+      width = 3
+      
+   //}
+  }
+     
+  }
+
+
+  container {
+      chart {
+      title = "Storage by Account (GB)"
       sql   = query.aws_ebs_volume_storage_by_account.sql
       type  = "column"
       width = 3
+
+      series "GB" {
+        color = "brown"
+      }
     }
 
     chart {
-      title = "Volume Storage by Region (GB)"
+      title = "Storage by Region (GB)"
       sql   = query.aws_ebs_volume_storage_by_region.sql
       type  = "column"
       width = 3
-    }
-  }
 
-  container {
-    title = "Assessments"
-
-    chart {
-      title = "Encryption Status"
-      sql   = query.aws_ebs_volume_by_encryption_status.sql
-      type  = "donut"
-      width = 2
-
-      series "Enabled" {
-         color = "green"
+      series "GB" {
+        color = "brown"
       }
-    }
-
-    chart {
-      title = "Volume State"
-      sql   = query.aws_ebs_volume_by_state.sql
-      type  = "donut"
-      width = 2
 
     }
 
     chart {
-      title = "Volume Type"
-      sql   = query.aws_ebs_volume_by_type.sql
-      type  = "donut"
-      width = 2
-    }
-  }
-
-  
-  container {
-    title = "Cost"
-    width = 3
-
-    chart {
-      title = "EBS Monthly Unblended Cost"
-
-      type  = "line"
-      sql   = query.aws_ebs_volume_cost_per_month.sql
-     // width = 4
-    }
-  }
-
-  container {
-    title = "Resource Age"
-    width = 3
-
-    chart {
-      title = "Volume by Creation Month"
-      sql   = query.aws_ebs_volume_by_creation_month.sql
+      title = "Storage by Type"
+      //sql   = query.aws_ebs_volume_by_type.sql
       type  = "column"
-      //width = 4
-      series "month" {
-        color = "green"
+      width = 3
+
+      series "GB" {
+        color = "brown"
       }
     }
+
   }
-     
+  
+
+
+
+ 
   container {
     title  = "Performance & Utilization"
     width = 6

@@ -90,18 +90,20 @@ dashboard "aws_ebs_volume_age_report" {
 
     table {
 
+      column "Account ID" {
+        display = "none"
+      }
+
       sql = <<-EOQ
         select
-          v.title as "Volume",
-          'some other value' as "Volume",
-
-
-
+          v.tags ->> 'Name' as "Name",
+          v.volume_id as "Volume",
           date_trunc('day',age(now(),v.create_time))::text as "Age",
           v.create_time as "Create Time",
+          v.state as "State",
           a.title as "Account",
           v.account_id as "Account ID",
-          v.state as "State",
+          v.region as "Region",
           v.arn as "ARN"
         from
           aws_ebs_volume as v,
