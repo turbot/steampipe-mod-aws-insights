@@ -314,17 +314,17 @@ dashboard "aws_ebs_volume_dashboard" {
     # Analysis
     card {
       sql   = query.aws_ebs_volume_count.sql
-      width = 1
+      width = 2
     }
 
     card {
       sql   = query.aws_ebs_volume_storage_total.sql
-      width = 1
+      width = 2
     }
 
     # Costs
     card {
-      sql = <<-EOQ
+      sql   = <<-EOQ
         select
           'Cost - MTD' as label,
           sum(unblended_cost_amount)::numeric::money as value
@@ -339,7 +339,7 @@ dashboard "aws_ebs_volume_dashboard" {
     }
 
     card {
-      sql = <<-EOQ
+      sql   = <<-EOQ
         select
           'Cost - Previous Month' as label,
           sum(unblended_cost_amount)::numeric::money as value
@@ -400,6 +400,7 @@ dashboard "aws_ebs_volume_dashboard" {
       type  = "column"
       width = 3
     }
+
   }
 
   container {
@@ -412,14 +413,14 @@ dashboard "aws_ebs_volume_dashboard" {
       width = 4
     }
 
-   chart {
+    chart {
       title = "EBS Cost by Usage Type - MTD"
       type  = "donut"
       sql   = query.aws_ebs_volume_cost_by_usage_types_mtd.sql
       width = 2
     }
 
-   chart {
+    chart {
       title = "EBS Cost by Usage Type - 12 months"
       type  = "donut"
       sql   = query.aws_ebs_volume_cost_by_usage_types_12mo.sql
@@ -454,7 +455,7 @@ dashboard "aws_ebs_volume_dashboard" {
       width = 3
 
       series "Enabled" {
-         color = "green"
+        color = "green"
       }
     }
 
@@ -475,13 +476,13 @@ dashboard "aws_ebs_volume_dashboard" {
   }
 
   container {
-    title  = "Performance & Utilization"
+    title = "Performance & Utilization"
 
     chart {
       title = "Top 10 Average Read OPS - Last 7 days"
       type  = "line"
       width = 4
-      sql   =  <<-EOQ
+      sql   = <<-EOQ
         with top_n as (
           select
             volume_id,
@@ -512,7 +513,7 @@ dashboard "aws_ebs_volume_dashboard" {
       title = "Top 10 Average write OPS - Last 7 days"
       type  = "line"
       width = 4
-      sql   =  <<-EOQ
+      sql   = <<-EOQ
         with top_n as (
           select
             volume_id,

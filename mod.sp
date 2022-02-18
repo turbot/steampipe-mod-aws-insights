@@ -8,8 +8,8 @@ mod "aws_insights" {
   categories    = ["aws", "insights", "public cloud"]
 
   opengraph {
-    title        = "Steampipe Mod for AWS Insights"
-    description  = "Create dashboards and reports for your AWS resources using Steampipe."
-    image        = "/images/mods/turbot/aws-insights-social-graphic.png"
+    title       = "Steampipe Mod for AWS Insights"
+    description = "Create dashboards and reports for your AWS resources using Steampipe."
+    image       = "/images/mods/turbot/aws-insights-social-graphic.png"
   }
 }

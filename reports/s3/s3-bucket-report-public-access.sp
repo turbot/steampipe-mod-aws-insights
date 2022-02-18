@@ -63,34 +63,34 @@ query "aws_s3_bucket_restrict_public_buckets_disabled_count" {
   EOQ
 }
 
-dashboard "aws_s3_bucket_public_access_dashboard" {
+dashboard "aws_s3_bucket_public_access_report" {
 
   title = "AWS S3 Bucket Public Access Report"
 
   container {
 
     card {
-      sql = query.aws_s3_bucket_public_policy_count.sql
+      sql   = query.aws_s3_bucket_public_policy_count.sql
       width = 2
     }
 
     card {
-      sql = query.aws_s3_bucket_block_public_acls_disabled_count.sql
+      sql   = query.aws_s3_bucket_block_public_acls_disabled_count.sql
       width = 2
     }
 
     card {
-      sql = query.aws_s3_bucket_block_public_policy_disabled_count.sql
+      sql   = query.aws_s3_bucket_block_public_policy_disabled_count.sql
       width = 2
     }
 
     card {
-      sql = query.aws_s3_bucket_ignore_public_acls_disabled_count.sql
+      sql   = query.aws_s3_bucket_ignore_public_acls_disabled_count.sql
       width = 2
     }
 
     card {
-      sql = query.aws_s3_bucket_restrict_public_buckets_disabled_count.sql
+      sql   = query.aws_s3_bucket_restrict_public_buckets_disabled_count.sql
       width = 2
     }
 

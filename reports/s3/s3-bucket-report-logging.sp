@@ -12,14 +12,14 @@ query "aws_s3_bucket_logging_disabled_count" {
 }
 
 
-dashboard "aws_s3_bucket_logging_dashboard" {
+dashboard "aws_s3_bucket_logging_report" {
 
   title = "AWS S3 Bucket Logging Report"
 
   container {
 
     card {
-      sql = query.aws_s3_bucket_logging_disabled_count.sql
+      sql   = query.aws_s3_bucket_logging_disabled_count.sql
       width = 2
     }
 

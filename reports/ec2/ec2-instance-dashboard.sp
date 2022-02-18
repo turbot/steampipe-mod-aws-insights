@@ -348,9 +348,9 @@ dashboard "aws_ec2_instance_dashboard" {
     }
 
 
-   # Costs
-   card {
-      sql = <<-EOQ
+    # Costs
+    card {
+      sql   = <<-EOQ
         select
           'Cost - MTD' as label,
           sum(unblended_cost_amount)::numeric::money as value
@@ -363,8 +363,8 @@ dashboard "aws_ec2_instance_dashboard" {
       width = 2
     }
 
-  card {
-      sql = <<-EOQ
+    card {
+      sql   = <<-EOQ
         select
           'Cost - Previous Month' as label,
           sum(unblended_cost_amount)::numeric::money as value
@@ -432,25 +432,25 @@ dashboard "aws_ec2_instance_dashboard" {
       width = 4
     }
 
-   chart {
+    chart {
       title = "EC2 Cost by Usage Type - MTD"
       type  = "donut"
       sql   = query.aws_ec2_instance_cost_top_usage_types_mtd.sql
       width = 2
 
       legend {
-        position  = "bottom"
+        position = "bottom"
       }
     }
 
-   chart {
+    chart {
       title = "EC2 Cost by Usage Type - 12 months"
       type  = "donut"
       sql   = query.aws_ec2_instance_cost_by_usage_types_12mo.sql
       width = 2
 
       legend {
-        position  = "right"
+        position = "right"
       }
     }
 
@@ -475,13 +475,13 @@ dashboard "aws_ec2_instance_dashboard" {
     width = 12
 
     chart {
-      title  = "Encryption Status [TODO]"
+      title = "Encryption Status [TODO]"
       # sql    = query.aws_ec2_instance_by_encryption_status.sql
       # type   = "donut"
       width = 3
     }
 
-   chart {
+    chart {
       title = "Public/Private"
       sql   = query.aws_ec2_instance_by_public_ip.sql
       type  = "donut"
@@ -504,7 +504,7 @@ dashboard "aws_ec2_instance_dashboard" {
   }
 
   container {
-    title  = "Performance & Utilization"
+    title = "Performance & Utilization"
 
     chart {
       title = "Top 10 CPU - Last 7 days"
@@ -522,7 +522,7 @@ dashboard "aws_ec2_instance_dashboard" {
   }
 
   container {
-    title   = "Resources by Age"
+    title = "Resources by Age"
 
     chart {
       title = "Instance by Creation Month"

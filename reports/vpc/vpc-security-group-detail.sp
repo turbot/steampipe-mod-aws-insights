@@ -1,4 +1,4 @@
-dashboard aws_vpc_security_group_detail {
+dashboard "aws_vpc_security_group_detail" {
   title = "AWS VPC Security Group Detail"
 
   input "security_group_id" {
@@ -50,7 +50,7 @@ dashboard aws_vpc_security_group_detail {
           case
             when count(*) > 0 then 'ok'
             else 'alert'
-          end as style
+          end as type
         from
           aws_ec2_network_interface,
           jsonb_array_elements(groups) as sg
@@ -111,7 +111,7 @@ dashboard aws_vpc_security_group_detail {
   }
 
   container {
-    title  = "Analysis"
+    title = "Analysis"
 
     container {
 
@@ -121,7 +121,7 @@ dashboard aws_vpc_security_group_detail {
         table {
           title = "Overview"
 
-          sql   = <<-EOQ
+          sql = <<-EOQ
             select
               group_name,
               group_id,
@@ -141,7 +141,7 @@ dashboard aws_vpc_security_group_detail {
         table {
           title = "Tags"
 
-          sql   = <<-EOQ
+          sql = <<-EOQ
             select
               tag ->> 'Key' as "Key",
               tag ->> 'Value' as "Value"
