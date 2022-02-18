@@ -1,6 +1,6 @@
 query "aws_lambda_function_count" {
   sql = <<-EOQ
-    select count(*) as "Lambda Functions" from aws_lambda_function
+    select count(*) as "Functions" from aws_lambda_function
   EOQ
 }
 
@@ -8,8 +8,8 @@ query "aws_public_lambda_function_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Public Lambda Functions' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      'Public' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_lambda_function
     where
@@ -25,8 +25,8 @@ query "aws_lambda_function_not_in_vpc_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Functions Not In VPC' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      'Not In VPC' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_lambda_function
     where
@@ -34,16 +34,87 @@ query "aws_lambda_function_not_in_vpc_count" {
   EOQ
 }
 
-query "aws_lambda_function_use_latest_runtime" {
+query "aws_lambda_function_by_encryption_status" {
   sql = <<-EOQ
     select
-      count(*) as value,
-      'Functions Not Using Latest Runtime' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
-    from
-      aws_lambda_function
-    where
-      runtime not in ('nodejs14.x', 'nodejs12.x', 'nodejs10.x', 'python3.8', 'python3.7', 'python3.6', 'ruby2.5', 'ruby2.7', 'java11', 'java8', 'go1.x', 'dotnetcore2.1', 'dotnetcore3.1')
+      encryption_status,
+      count(*)
+    from (
+      select
+        case when kms_key_arn is not null then
+          'Enabled'
+        else
+          'Disabled'
+        end encryption_status
+      from
+        aws_lambda_function) as t
+    group by
+      encryption_status
+    order by
+      encryption_status desc
+  EOQ
+}
+
+query "aws_lambda_function_use_latest_runtime_status" {
+  sql = <<-EOQ
+    select
+      runtime_status,
+      count(*)
+    from (
+      select
+        case when runtime not in ('nodejs14.x', 'nodejs12.x', 'nodejs10.x', 'python3.8', 'python3.7', 'python3.6', 'ruby2.5', 'ruby2.7', 'java11', 'java8', 'go1.x', 'dotnetcore2.1', 'dotnetcore3.1') then
+          'Disabled'
+        else
+          'Enabled'
+        end runtime_status
+      from
+        aws_lambda_function) as t
+    group by
+      runtime_status
+    order by
+      runtime_status desc
+  EOQ
+}
+
+query "aws_lambda_function_dead_letter_config_status" {
+  sql = <<-EOQ
+    select
+      dead_letter_config_status,
+      count(*)
+    from (
+        select
+          case when dead_letter_config_target_arn is not null then
+            'Enabled'
+          else
+            'Disabled'
+          end dead_letter_config_status
+        from
+          aws_lambda_function) as t
+        group by
+          dead_letter_config_status
+        order by
+          dead_letter_config_status desc
+  EOQ
+}
+
+query "aws_lambda_function_vpc_status" {
+  sql = <<-EOQ
+    select
+      vpc_status,
+      count(*)
+    from (
+      select
+        case when vpc_id is not null then
+          'Enabled'
+        else
+          'Disabled'
+        end vpc_status
+      from
+        aws_lambda_function) as t
+    group by
+      vpc_status
+    order by
+      vpc_status desc
   EOQ
 }
 
@@ -63,24 +134,11 @@ query "aws_lambda_function_cost_per_month" {
   EOQ
 }
 
-query "aws_lambda_function_cost_last_30_counter" {
-  sql = <<-EOQ
-    select
-       'Cost - Last 30 Days' as label,
-       sum(unblended_cost_amount)::numeric::money as value
-    from
-      aws_cost_by_service_daily
-    where
-      service = 'AWS Lambda'
-      and period_start  >=  CURRENT_DATE - INTERVAL '30 day'
-  EOQ
-}
-
 query "aws_lambda_function_by_account" {
   sql = <<-EOQ
     select
       a.title as "account",
-      count(i.*) as "total"
+      count(i.*) as "functions"
     from
       aws_lambda_function as i,
       aws_account as a
@@ -88,8 +146,8 @@ query "aws_lambda_function_by_account" {
       a.account_id = i.account_id
     group by
       account
-    order by count(i.*) desc
-
+    order by
+      account
   EOQ
 }
 
@@ -105,18 +163,6 @@ query "aws_lambda_function_by_region" {
   EOQ
 }
 
-query "aws_lambda_function_by_state" {
-  sql = <<-EOQ
-    select
-      state,
-      count(state)
-    from
-      aws_lambda_function
-    group by
-      state
-  EOQ
-}
-
 query "aws_lambda_function_by_runtime" {
   sql = <<-EOQ
     select
@@ -126,48 +172,6 @@ query "aws_lambda_function_by_runtime" {
       aws_lambda_function
     group by
       runtime
-  EOQ
-}
-
-query "aws_lambda_function_dead_letter_queue_status" {
-  sql = <<-EOQ
-    with functions as (
-      select
-        case
-          when dead_letter_config_target_arn is not null then 'enabled'
-          else 'disabled'
-        end as dead_letter
-      from
-        aws_lambda_function
-    )
-    select
-      dead_letter,
-      count(*)
-    from
-      functions
-    group by
-      dead_letter
-  EOQ
-}
-
-query "aws_lambda_function_concurrent_execution_limit_status" {
-  sql = <<-EOQ
-    with functions as (
-      select
-        case
-          when reserved_concurrent_executions is not null then 'enabled'
-          else 'disabled'
-        end as reserved_concurrent_executions
-      from
-        aws_lambda_function
-    )
-    select
-      reserved_concurrent_executions,
-      count(*)
-    from
-      functions
-    group by
-      reserved_concurrent_executions
   EOQ
 }
 
@@ -193,78 +197,135 @@ query "aws_lambda_high_error_rate" {
   EOQ
 }
 
-query "aws_lambda_function_cost_by_usage_types_30day" {
+#query "aws_lambda_function_cost_by_usage_types_12mo" {
+#  sql = <<-EOQ
+#    select
+#      usage_type,
+#      sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+#    from
+#      aws_cost_by_service_usage_type_monthly
+#    where
+#      service = 'AWS Lambda'
+#      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
+#    group by
+#      usage_type
+#    order by
+#      sum(unblended_cost_amount) desc
+#  EOQ
+#}
+
+#query "aws_lambda_function_cost_by_account_12mo" {
+#  sql = <<-EOQ
+#    select
+#     a.title as "account",
+#      sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+#    from
+#      aws_cost_by_service_monthly as c,
+#      aws_account as a
+#    where
+#      a.account_id = c.account_id
+#      and service = 'AWS Lambda'
+#      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
+#    group by
+#      account
+#    order by
+#      account
+#  EOQ
+#}
+
+query "aws_lambda_function_invocation_rate" {
   sql = <<-EOQ
+    with top_n as (
+      select
+        name,
+        avg(average)
+      from
+        aws_lambda_function_metric_invocations_daily
+      where
+      timestamp  >= CURRENT_DATE - INTERVAL '365 day'
+      group by
+        name
+      order by
+        avg desc
+      limit 10
+    )
     select
-      usage_type,
-      sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+      timestamp,
+      name,
+      average
     from
-      aws_cost_by_service_usage_type_daily
+      aws_lambda_function_metric_invocations_daily
     where
-      service = 'AWS Lambda'
-      --and period_end >= date_trunc('month', CURRENT_DATE::timestamp)
-      and period_end >=  CURRENT_DATE - INTERVAL '30 day'
-    group by
-      usage_type
+      timestamp  >= CURRENT_DATE - INTERVAL '365 day'
+      and name in (select name from top_n)
     order by
-      sum(unblended_cost_amount) desc
+      timestamp
   EOQ
 }
 
-query "aws_lambda_function_cost_by_usage_types_12mo" {
+#query "aws_lambda_function_cost_top_usage_types_mtd" {
+#  sql = <<-EOQ
+#    select
+#      usage_type,
+#      sum(unblended_cost_amount)::numeric as "Unblended Cost"
+#    from
+#      aws_cost_by_service_usage_type_monthly
+#    where
+#      service = 'AWS Lambda'
+#      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+#    group by
+#      period_start,
+#      usage_type
+#    having
+#      round(sum(unblended_cost_amount)::numeric,2) > 0
+#    order by
+#      sum(unblended_cost_amount) desc
+#  EOQ
+#}
+
+query "aws_lambda_function_public_status" {
   sql = <<-EOQ
+    with functions as (
+      select
+        case
+          when
+          policy_std -> 'Statement' ->> 'Effect' = 'Allow'
+          and ( policy_std -> 'Statement' ->> 'Prinipal' = '*'
+          or ( policy_std -> 'Principal' -> 'AWS' ) :: text = '*'
+        ) then 'public'
+          else 'private'
+        end as visibility
+      from
+        aws_lambda_function
+    )
     select
-      usage_type,
-      sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+      visibility,
+      count(*)
     from
-      aws_cost_by_service_usage_type_monthly
-    where
-      service = 'AWS Lambda'
-      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
+      functions
     group by
-      usage_type
-    order by
-      sum(unblended_cost_amount) desc
+      visibility
   EOQ
 }
 
-query "aws_lambda_function_cost_by_account_30day" {
-  sql = <<-EOQ
-    select
-      a.title as "account",
-      sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-    from
-      aws_cost_by_service_monthly as c,
-      aws_account as a
-    where
-      a.account_id = c.account_id
-      and service = 'AWS Lambda'
-     and period_end >=  CURRENT_DATE - INTERVAL '30 day'
-    group by
-      account
-    order by
-      account
-  EOQ
-}
-
-query "aws_lambda_function_cost_by_account_12mo" {
-  sql = <<-EOQ
-    select
-      a.title as "account",
-      sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-    from
-      aws_cost_by_service_monthly as c,
-      aws_account as a
-    where
-      a.account_id = c.account_id
-      and service = 'AWS Lambda'
-      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-    group by
-      account
-    order by
-      account
-  EOQ
-}
+#query "aws_lambda_function_cost_by_account_mtd" {
+#  sql = <<-EOQ
+#    select
+#      a.title as "account",
+#      sum(unblended_cost_amount)::numeric as "Unblended Cost"
+#    from
+#      aws_cost_by_service_monthly as c,
+#      aws_account as a
+#    where
+#      a.account_id = c.account_id
+#      and service = 'AWS Lambda'
+#      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+#    group by
+#      account
+#    order by
+#      account
+#  EOQ
+#}
 
 dashboard "aws_lambda_function_dashboard" {
 
@@ -277,28 +338,53 @@ dashboard "aws_lambda_function_dashboard" {
       width = 2
     }
 
+    # Costs
+    card {
+      sql = <<-EOQ
+        select
+          'Cost - MTD' as label,
+          sum(unblended_cost_amount)::numeric::money as value
+        from
+          aws_cost_by_service_usage_type_monthly as c
+        where
+          service = 'AWS Lambda'
+          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+      EOQ
+      type = "info"
+      icon = "currency-dollar"
+      width = 2
+    }
+
+    card {
+      sql = <<-EOQ
+        select
+          'Cost - Previous Month' as label,
+          sum(unblended_cost_amount)::numeric::money as value
+        from
+          aws_cost_by_service_usage_type_monthly as c
+        where
+          service = 'AWS Lambda'
+          and date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
+      EOQ
+      type = "info"
+      icon = "currency-dollar"
+      width = 2
+    }
+
+    # Assessments
+
     card {
       sql   = query.aws_public_lambda_function_count.sql
       width = 2
     }
 
     card {
+      sql   = query.aws_lambda_function_unencrypted_count.sql
+      width = 2
+    }
+
+    card {
       sql   = query.aws_lambda_function_not_in_vpc_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_lambda_function_use_latest_runtime.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_lambda_function_cost_last_30_counter.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_lambda_function_cost_per_month.sql
       width = 2
     }
 
@@ -323,14 +409,7 @@ dashboard "aws_lambda_function_dashboard" {
     }
 
     chart {
-      title = "Functions by State"
-      sql   = query.aws_lambda_function_by_state.sql
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Functions by Type"
+      title = "Functions by Runtime"
       sql   = query.aws_lambda_function_by_runtime.sql
       type  = "column"
       width = 3
@@ -342,100 +421,102 @@ dashboard "aws_lambda_function_dashboard" {
     title = "Assessments"
 
     chart {
-      title = "Dead Letter Config Status"
-      sql = query.aws_lambda_function_dead_letter_queue_status.sql
+      title = "Public/Private Status"
+      sql   = query.aws_lambda_function_public_status.sql
       type  = "donut"
       width = 3
+    }
+
+     chart {
+      title = "Encryption Status"
+      sql   = query.aws_lambda_function_by_encryption_status.sql
+      type  = "donut"
+      width = 2
 
       series "Enabled" {
-         color = "green"
+        color = "green"
       }
     }
 
     chart {
-      title = "Concurrent Execution Status"
-      sql = query.aws_lambda_function_concurrent_execution_limit_status.sql
+      title = "VPC Status"
+      sql   = query.aws_lambda_function_vpc_status.sql
       type  = "donut"
-      width = 3
+      width = 2
     }
 
+    chart {
+      title = "Latest Runtime Status"
+      sql   = query.aws_lambda_function_use_latest_runtime_status.sql
+      type  = "donut"
+      width = 2
+    }
+
+    chart {
+      title = "Dead Letter Config Status"
+      sql   = query.aws_lambda_function_dead_letter_config_status.sql
+      type  = "donut"
+      width = 2
+    }
   }
 
   container {
     title = "Costs"
+    width = 4
 
     chart {
-      title = "Lambda Monthly Cost"
+      title = "Lambda Monthly Unblended Cost"
       type  = "line"
       sql   = query.aws_lambda_function_cost_per_month.sql
-      width = 4
     }
 
+   #chart {
+     # title = "Lambda Cost by Usage Type - MTD"
+      #type  = "donut"
+      #sql   = #query.aws_lambda_function_cost_top_usage_types_mtd.sql
+      #width = 2
+    #}
 
-   chart {
-      title = "Lambda Cost by Usage Type - last 30 days"
-      type  = "donut"
-      sql   = query.aws_lambda_function_cost_by_usage_types_30day.sql
-      width = 2
-    }
+   #chart {
+      #title = "Lambda Cost by Usage Type - 12 months"
+     # type  = "donut"
+     # sql   = #query.aws_lambda_function_cost_by_usage_types_12mo.sql
+     # width = 2
+   # }
 
-   chart {
-      title = "Lambda Cost by Usage Type - Last 12 months"
-      type  = "donut"
-      sql   = query.aws_lambda_function_cost_by_usage_types_12mo.sql
-      width = 2
-    }
+   # chart {
+     # title = "Lambda Cost by Account - MTD"
+     # type  = "donut"
+     # sql   = query.aws_lambda_function_cost_by_account_mtd.sql
+     #  width = 2
+    #}
 
-
-    chart {
-      title = "By Account - MTD"
-      type  = "donut"
-      sql   = query.aws_lambda_function_cost_by_account_30day.sql
-       width = 2
-    }
-
-    chart {
-      title = "By Account - Last 12 months"
-      type  = "donut"
-      sql   = query.aws_lambda_function_cost_by_account_12mo.sql
-      width = 2
-    }
+    #chart {
+    #  title = "Lambda Cost By Account - 12 months"
+     # type  = "donut"
+     # sql   = query.aws_lambda_function_cost_by_account_12mo.sql
+    # # width = 2
+    #}
 
   }
 
   container {
     title  = "Performance & Utilization"
+    width = 8
 
     chart {
-      title = "Lambda function with high error rate (> 10 In Last 1 Month)"
+      title = "Functions with high error rate (> 10 In Last 1 Month)"
       sql   = query.aws_lambda_high_error_rate.sql
       type  = "line"
       width = 6
     }
 
-  }
-
-  container {
-    title   = "Resources by Age"
-
-    table {
-      title = "Functions Not Modified within 7 days"
-      width = 10
-      sql = <<-EOQ
-        select
-          title as "function",
-          (current_date - date(last_modified )) as "Last Modified in Days",
-          account_id as "Account"
-        from
-          aws_lambda_function
-        where
-          ((current_date) - date(last_modified )) > 7
-        order by
-          "Last Modified in Days" desc,
-          title
-        limit 5
-      EOQ
+    chart {
+      title = "Functions Invocation Rate"
+      sql   = query.aws_lambda_function_invocation_rate.sql
+      type  = "line"
+      width = 6
     }
   }
-}
 
+}
