@@ -38,7 +38,7 @@ query "aws_redshift_cluster_enhanced_vpc_routing" {
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_redshift_cluster w
-    where 
+    where
       enhanced_vpc_routing
   EOQ
 }
@@ -373,7 +373,7 @@ dashboard "aws_redshift_cluster_dashboard" {
    chart {
       title = "Redshift Cluster Cost by Usage Type - 12 months"
       type  = "donut"
-      sql   = query.aws_ebs_volume_cost_by_usage_types_12mo.sql
+      sql   = query.aws_redshift_cluster_cost_by_usage_types_12mo.sql
       width = 2
     }
 

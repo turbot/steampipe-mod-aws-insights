@@ -8,8 +8,8 @@ query "aws_rds_public_db_instances_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Public Instances' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      'Public' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_rds_db_instance
     where
@@ -21,8 +21,8 @@ query "aws_rds_unencrypted_db_instances_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Unencrypted Instances' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      'Unencrypted' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_rds_db_instance
     where
@@ -34,8 +34,8 @@ query "aws_rds_db_instance_not_in_vpc_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Instances Not In VPC' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      'Not In VPC' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_rds_db_instance
     where
@@ -59,82 +59,82 @@ query "aws_rds_db_instance_cost_per_month" {
   EOQ
 }
 
-query "aws_rds_db_instance_cost_by_usage_types_12mo" {
-  sql = <<-EOQ
-    select
-      usage_type,
-      sum(unblended_cost_amount)::numeric as "Unblended Cost"
-    from
-      aws_cost_by_service_usage_type_monthly
-    where
-      service = 'Amazon Relational Database Service'
-      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-    group by
-      usage_type
-    having
-      round(sum(unblended_cost_amount)::numeric,2) > 0
-    order by
-      sum(unblended_cost_amount) desc
-  EOQ
-}
+#query "aws_rds_db_instance_cost_by_usage_types_12mo" {
+#  sql = <<-EOQ
+#    select
+#     usage_type,
+#      sum(unblended_cost_amount)::numeric as "Unblended Cost"
+#    from
+#      aws_cost_by_service_usage_type_monthly
+#    where
+#      service = 'Amazon Relational Database Service'
+#      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
+#    group by
+#      usage_type
+#    having
+#      round(sum(unblended_cost_amount)::numeric,2) > 0
+#    order by
+#      sum(unblended_cost_amount) desc
+#  EOQ
+#}
 
-query "aws_rds_db_instance_cost_top_usage_types_mtd" {
-  sql = <<-EOQ
-    select
-      usage_type,
-      sum(unblended_cost_amount)::numeric as "Unblended Cost"
-    from
-      aws_cost_by_service_usage_type_monthly
-    where
-      service = 'Amazon Relational Database Service'
-      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-    group by
-      period_start,
-      usage_type
-    having
-      round(sum(unblended_cost_amount)::numeric,2) > 0
-    order by
-      sum(unblended_cost_amount) desc
-  EOQ
-}
+#query "aws_rds_db_instance_cost_top_usage_types_mtd" {
+# sql = <<-EOQ
+#    select
+#      usage_type,
+#      sum(unblended_cost_amount)::numeric as "Unblended Cost"
+#    from
+#      aws_cost_by_service_usage_type_monthly
+#    where
+#      service = 'Amazon Relational Database Service'
+#      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+#    group by
+#      period_start,
+#      usage_type
+#    having
+#      round(sum(unblended_cost_amount)::numeric,2) > 0
+#    order by
+#      sum(unblended_cost_amount) desc
+#  EOQ
+#}
 
-query "aws_rds_db_instance_cost_by_account_mtd" {
-  sql = <<-EOQ
-    select
-      a.title as "account",
-      sum(unblended_cost_amount)::numeric as "Unblended Cost"
-    from
-      aws_cost_by_service_monthly as c,
-      aws_account as a
-    where
-      a.account_id = c.account_id
-      and service = 'Amazon Relational Database Service'
-      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-    group by
-      account
-    order by
-      account
-  EOQ
-}
+#query "aws_rds_db_instance_cost_by_account_mtd" {
+#  sql = <<-EOQ
+#    select
+#      a.title as "account",
+#      sum(unblended_cost_amount)::numeric as "Unblended Cost"
+#    from
+#      aws_cost_by_service_monthly as c,
+#      aws_account as a
+#    where
+#      a.account_id = c.account_id
+#      and service = 'Amazon Relational Database Service'
+#      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+#    group by
+#      account
+#    order by
+#      account
+#  EOQ
+#}
 
-query "aws_rds_db_instance_cost_by_account_12mo" {
-  sql = <<-EOQ
-    select
-      a.title as "account",
-      sum(unblended_cost_amount)::numeric as "Unblended Cost"
-    from
-      aws_cost_by_service_monthly as c,
-      aws_account as a
-    where
-      a.account_id = c.account_id
-      and service = 'Amazon Relational Database Service'
-      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-    group by
-      account
-    order by
-      account
-  EOQ
-}
+#query "aws_rds_db_instance_cost_by_account_12mo" {
+#  sql = <<-EOQ
+#    select
+#      a.title as "account",
+#      sum(unblended_cost_amount)::numeric as "Unblended Cost"
+#    from
+#      aws_cost_by_service_monthly as c,
+#      aws_account as a
+#    where
+#      a.account_id = c.account_id
+#      and service = 'Amazon Relational Database Service'
+#      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
+#    group by
+#      account
+#    order by
+#      account
+#  EOQ
+#}
 
 query "aws_rds_db_instance_by_account" {
   sql = <<-EOQ
@@ -224,28 +224,24 @@ query "aws_rds_db_instance_multiple_az_status" {
   EOQ
 }
 
-query "aws_rds_db_instance_iam_authentication_enabled" {
+query "aws_rds_db_instance_by_encryption_status" {
   sql = <<-EOQ
-    with iam_authentication_stat as (
+    select
+      encryption_status,
+      count(*)
+    from (
       select
-        distinct db_instance_identifier as name
+        case when storage_encrypted then
+          'Enabled'
+        else
+          'Disabled'
+        end encryption_status
       from
-        aws_rds_db_instance
-      where
-        iam_database_authentication_enabled
-      group by name
-  )
-  select
-    'Enabled' as "IAM Authentication Status",
-    count(name) as "Total"
-  from
-    iam_authentication_stat
-  union
-  select
-    'Disabled' as "IAM Authentication Status",
-    count( db_instance_identifier) as "Total"
-  from
-    aws_rds_db_instance as s where s.db_instance_identifier not in (select name from iam_authentication_stat);
+        aws_rds_db_instance) as t
+    group by
+      encryption_status
+    order by
+      encryption_status desc
   EOQ
 }
 
@@ -370,20 +366,78 @@ query "aws_rds_db_instance_by_creation_month" {
   EOQ
 }
 
+query "aws_rds_db_instance_public_status" {
+  sql = <<-EOQ
+    with db_instances as (
+      select
+        case
+          when publicly_accessible is null then 'private'
+          else 'public'
+        end as visibility
+      from
+        aws_rds_db_instance
+    )
+    select
+      visibility,
+      count(*)
+    from
+      db_instances
+    group by
+      visibility
+  EOQ
+}
+
 dashboard "aws_rds_db_instance_dashboard" {
 
   title = "AWS RDS DB Instance Dashboard"
 
   container {
 
+    # Analysis
     card {
       sql   = query.aws_rds_db_instance_count.sql
       width = 2
     }
 
+    # Costs
+    card {
+      sql = <<-EOQ
+        select
+          'Cost - MTD' as label,
+          sum(unblended_cost_amount)::numeric::money as value
+        from
+          aws_cost_by_service_monthly
+        where
+          service = 'Amazon Relational Database Service'
+          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+      EOQ
+        type = "info"
+        icon = "currency-dollar"
+        width = 2
+      }
+
+    card {
+      sql = <<-EOQ
+        select
+          'Cost - Previous Month' as label,
+          sum(unblended_cost_amount)::numeric::money as value
+        from
+          aws_cost_by_service_monthly
+        where
+          service = 'Amazon Relational Database Service'
+          and date_trunc('month', period_start) =  date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
+      EOQ
+        type = "info"
+        icon = "currency-dollar"
+        width = 2
+    }
+
+    # Assessments
+
     card {
       sql   = query.aws_rds_public_db_instances_count.sql
       width = 2
+      type = "info"
     }
 
     card {
@@ -395,36 +449,7 @@ dashboard "aws_rds_db_instance_dashboard" {
       sql   = query.aws_rds_db_instance_not_in_vpc_count.sql
       width = 2
     }
-
-   # Costs
-   card {
-    sql = <<-EOQ
-      select
-        'Cost - MTD' as label,
-        sum(unblended_cost_amount)::numeric::money as value
-      from
-        aws_cost_by_service_monthly
-      where
-        service = 'Amazon Relational Database Service'
-        and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-    EOQ
-      width = 2
-    }
-
-  card {
-    sql = <<-EOQ
-      select
-        'Cost - Previous Month' as label,
-        sum(unblended_cost_amount)::numeric::money as value
-      from
-        aws_cost_by_service_monthly
-      where
-        service = 'Amazon Relational Database Service'
-        and date_trunc('month', period_start) =  date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
-    EOQ
-    width = 2
   }
-}
 
   container {
     title = "Analysis"
@@ -459,53 +484,6 @@ dashboard "aws_rds_db_instance_dashboard" {
   }
 
   container {
-    title = "Costs"
-
-    chart {
-      title = "RDS Monthly Unblended Cost"
-      type  = "line"
-      sql   = query.aws_rds_db_instance_cost_per_month.sql
-      width = 4
-    }
-
-   chart {
-      title = "RDS Cost by Usage Type - MTD"
-      type  = "donut"
-      sql   = query.aws_rds_db_instance_cost_top_usage_types_mtd.sql
-      width = 2
-
-      legend {
-        position  = "bottom"
-      }
-    }
-
-   chart {
-      title = "RDS Cost by Usage Type - 12 months"
-      type  = "donut"
-      sql   = query.aws_rds_db_instance_cost_by_usage_types_12mo.sql
-      width = 2
-
-      legend {
-        position  = "right"
-      }
-    }
-
-    chart {
-      title = "RDS Cost by Account - MTD"
-      type  = "donut"
-      sql   = query.aws_rds_db_instance_cost_by_account_mtd.sql
-      width = 2
-    }
-
-    chart {
-      title = "RDS Cost by Account - 12 months"
-      type  = "donut"
-      sql   = query.aws_rds_db_instance_cost_by_account_12mo.sql
-      width = 2
-    }
-  }
-
-  container {
     title = "Assessments"
 
     chart {
@@ -520,16 +498,57 @@ dashboard "aws_rds_db_instance_dashboard" {
     }
 
     chart {
+      title = "Encryption Status"
+      sql = query.aws_rds_db_instance_by_encryption_status.sql
+      type  = "donut"
+      width = 3
+    }
+
+    chart {
       title = "Multi-AZ Status"
       sql = query.aws_rds_db_instance_multiple_az_status.sql
       type  = "donut"
       width = 3
     }
 
+   chart {
+      title = "Public/Private"
+      sql   = query.aws_rds_db_instance_public_status.sql
+      type  = "donut"
+      width = 3
+    }
+  }
+
+  container {
+    title = "Costs"
+    width = 3
+
+    chart {
+      title = "RDS Monthly Unblended Cost"
+      type  = "line"
+      sql   = query.aws_rds_db_instance_cost_per_month.sql
+      //width = 4
+    }
+  }
+
+  container {
+    title = "Resource Age"
+    width = 3
+
+    chart {
+      title = "Instance by Creation Month"
+      sql   = query.aws_rds_db_instance_by_creation_month.sql
+      type  = "column"
+      //width = 4
+      series "month" {
+        color = "green"
+      }
+    }
   }
 
   container {
     title  = "Performance & Utilization"
+    width = 6
 
     chart {
       title = "Top 10 CPU - Last 7 days"
@@ -546,54 +565,40 @@ dashboard "aws_rds_db_instance_dashboard" {
     }
   }
 
-  container {
-    title   = "Resources by Age"
+#   chart {
+#       title = "RDS Cost by Usage Type - MTD"
+#       type  = "donut"
+#       sql   = query.aws_rds_db_instance_cost_top_usage_types_mtd.sql
+#       width = 2
 
-    chart {
-      title = "Instance by Creation Month"
-      sql   = query.aws_rds_db_instance_by_creation_month.sql
-      type  = "column"
-      width = 4
+#       legend {
+#         position  = "bottom"
+#       }
+#     }
 
-      series "month" {
-        color = "green"
-      }
-    }
+#    chart {
+#       title = "RDS Cost by Usage Type - 12 months"
+#      type  = "donut"
+#       sql   = query.aws_rds_db_instance_cost_by_usage_types_12mo.sql
+#       width = 2
 
-    table {
-      title = "Oldest Instances"
-      width = 4
+#       legend {
+#         position  = "right"
+#       }
+#    }
 
-      sql = <<-EOQ
-        select
-          title as "instance",
-          (current_date - create_time)::text as "Age in Days",
-          account_id as "Account"
-        from
-          aws_rds_db_instance
-        order by
-          "Age in Days" desc,
-          title
-        limit 5
-      EOQ
-    }
+#     chart {
+#      title = "RDS Cost by Account - MTD"
+#       type  = "donut"
+#       sql   = query.aws_rds_db_instance_cost_by_account_mtd.sql
+#       width = 2
+#     }
 
-    table {
-      title = "Newest Instances"
-      width = 4
+#    chart {
+#       title = "RDS Cost by Account - 12 months"
+#       type  = "donut"
+#       sql   = query.aws_rds_db_instance_cost_by_account_12mo.sql
+#       width = 2
+#     }
 
-      sql = <<-EOQ
-        select
-          title as "instance",
-          current_date - create_time as "Age in Days",
-          account_id as "Account"
-        from
-          aws_rds_db_instance
-        order by
-          "Age in Days" asc,
-          title
-        limit 5
-      EOQ
-    }
-  }
 }

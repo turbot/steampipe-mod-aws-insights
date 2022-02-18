@@ -4,17 +4,6 @@ query "aws_s3_bucket_count" {
   EOQ
 }
 
-query "aws_s3_bucket_versioning_count" {
-  sql = <<-EOQ
-    select
-      count(*)
-    from
-      aws_s3_bucket
-    where
-      not versioning_enabled
-  EOQ
-}
-
 query "aws_s3_bucket_cost_per_month" {
   sql = <<-EOQ
     select
@@ -31,82 +20,82 @@ query "aws_s3_bucket_cost_per_month" {
   EOQ
 }
 
-query "aws_s3_bucket_cost_by_usage_types_12mo" {
-  sql = <<-EOQ
-    select
-      usage_type,
-      sum(unblended_cost_amount)::numeric as "Unblended Cost"
-    from
-      aws_cost_by_service_usage_type_monthly
-    where
-      service = 'Amazon Simple Storage Service'
-      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-    group by
-      usage_type
-    having
-      round(sum(unblended_cost_amount)::numeric,2) > 0
-    order by
-      sum(unblended_cost_amount) desc
-  EOQ
-}
+#query "aws_s3_bucket_cost_by_usage_types_12mo" {
+#  sql = <<-EOQ
+#    select
+#      usage_type,
+#      sum(unblended_cost_amount)::numeric as "Unblended Cost"
+#    from
+#      aws_cost_by_service_usage_type_monthly
+#    where
+#     service = 'Amazon Simple Storage Service'
+#      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
+#   group by
+#      usage_type
+#    having
+#      round(sum(unblended_cost_amount)::numeric,2) > 0
+#    order by
+#      sum(unblended_cost_amount) desc
+#  EOQ
+#}
 
-query "aws_s3_bucket_cost_top_usage_types_mtd" {
-  sql = <<-EOQ
-    select
-      usage_type,
-      sum(unblended_cost_amount)::numeric as "Unblended Cost"
-    from
-      aws_cost_by_service_usage_type_monthly
-    where
-      service = 'Amazon Simple Storage Service'
-      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-    group by
-      period_start,
-      usage_type
-    having
-      round(sum(unblended_cost_amount)::numeric,2) > 0
-    order by
-      sum(unblended_cost_amount) desc
-  EOQ
-}
+# query "aws_s3_bucket_cost_top_usage_types_mtd" {
+#  sql = <<-EOQ
+#    select
+#      usage_type,
+#      sum(unblended_cost_amount)::numeric as "Unblended Cost"
+#    from
+#      aws_cost_by_service_usage_type_monthly
+#    where
+#      service = 'Amazon Simple Storage Service'
+#      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+#    group by
+#      period_start,
+#      usage_type
+#    having
+#      round(sum(unblended_cost_amount)::numeric,2) > 0
+#    order by
+#      sum(unblended_cost_amount) desc
+#  EOQ
+#}
 
-query "aws_s3_bucket_cost_by_account_mtd" {
-  sql = <<-EOQ
-    select
-      a.title as "account",
-      sum(unblended_cost_amount)::numeric as "Unblended Cost"
-    from
-      aws_cost_by_service_monthly as c,
-      aws_account as a
-    where
-      a.account_id = c.account_id
-      and service = 'Amazon Simple Storage Service'
-      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-    group by
-      account
-    order by
-      account
-  EOQ
-}
+#query "aws_s3_bucket_cost_by_account_mtd" {
+# sql = <<-EOQ
+#    select
+#      a.title as "account",
+#      sum(unblended_cost_amount)::numeric as "Unblended Cost"
+#    from
+#      aws_cost_by_service_monthly as c,
+#      aws_account as a
+#    where
+#      a.account_id = c.account_id
+#      and service = 'Amazon Simple Storage Service'
+#      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+#    group by
+#      account
+#    order by
+#      account
+#  EOQ
+#}
 
-query "aws_s3_bucket_cost_by_account_12mo" {
-  sql = <<-EOQ
-    select
-      a.title as "account",
-      sum(unblended_cost_amount)::numeric as "Unblended Cost"
-    from
-      aws_cost_by_service_monthly as c,
-      aws_account as a
-    where
-      a.account_id = c.account_id
-      and service = 'Amazon Simple Storage Service'
-      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-    group by
-      account
-    order by
-      account
-  EOQ
-}
+#query "aws_s3_bucket_cost_by_account_12mo" {
+# sql = <<-EOQ
+#    select
+#      a.title as "account",
+#     sum(unblended_cost_amount)::numeric as "Unblended Cost"
+#   from
+#      aws_cost_by_service_monthly as c,
+#     aws_account as a
+#   where
+#      a.account_id = c.account_id
+#      and service = 'Amazon Simple Storage Service'
+#      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
+#    group by
+#      account
+#    order by
+#      account
+#  EOQ
+#}
 
 query "aws_s3_bucket_by_account" {
   sql = <<-EOQ
@@ -228,45 +217,11 @@ query "aws_s3_bucket_cross_region_replication_status" {
       EOQ
 }
 
-query "aws_s3_bucket_public_read_write_status" {
+query "aws_s3_bucket_logging_status" {
   sql = <<-EOQ
-    with bucket_with_public_read_write as (
+    with logging_status as(
       select
-        name
-      from
-        aws_s3_bucket,
-        jsonb_array_elements(acl -> 'Grants') as grants
-      where
-        grants -> 'Grantee' ->> 'URI' = 'http://acs.amazonaws.com/groups/global/AllUsers'
-      and (
-        grants ->> 'Permission' = 'FULL_CONTROL'
-        or grants ->> 'Permission' = 'READ_ACP'
-        or grants ->> 'Permission' = 'WRITE_ACP'
-      )), tets as(
-            select
-              case
-                when w.name is not null then 'Public Write' else 'Private'
-              end as visibility
-            from
-              aws_s3_bucket as b
-              left join bucket_with_public_read_write w on b.name = w.name
-          )
-          select
-            visibility,
-            count(*)
-          from
-            tets
-          group by
-            visibility
-      EOQ
-}
-
-query "aws_s3_bucket_lifecycle_rules_status" {
-  sql = <<-EOQ
-    with lifecycle_r as(
-      select
-        case
-          when lifecycle_rules is not null then 'Enabled' else 'Disabled'
+        case when logging -> 'TargetBucket' is not null then 'Enabled' else 'Disabled'
         end as visibility
       from
         aws_s3_bucket
@@ -275,7 +230,27 @@ query "aws_s3_bucket_lifecycle_rules_status" {
       visibility,
       count(*)
     from
-      lifecycle_r
+      logging_status
+    group by
+      visibility
+      EOQ
+}
+
+query "aws_s3_bucket_versioning_status" {
+  sql = <<-EOQ
+    with versioning_status as(
+      select
+        case
+          when versioning_enabled then 'Enabled' else 'Disabled'
+        end as visibility
+      from
+        aws_s3_bucket
+    )
+    select
+      visibility,
+      count(*)
+    from
+      versioning_status
     group by
       visibility
   EOQ
@@ -290,6 +265,39 @@ dashboard "aws_s3_bucket_dashboard" {
     # Analysis
     card {
       sql   = query.aws_s3_bucket_count.sql
+      width = 2
+    }
+
+    # Costs
+    card {
+      sql = <<-EOQ
+        select
+          'Cost - MTD' as label,
+          sum(unblended_cost_amount)::numeric::money as value
+        from
+          aws_cost_by_service_monthly
+        where
+          service = 'Amazon Simple Storage Service'
+          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+      EOQ
+      type = "info"
+      icon = "currency-dollar"
+      width = 2
+    }
+
+    card {
+      sql = <<-EOQ
+        select
+          'Cost - Previous Month' as label,
+          sum(unblended_cost_amount)::numeric::money as value
+        from
+          aws_cost_by_service_monthly
+        where
+          service = 'Amazon Simple Storage Service'
+          and date_trunc('month', period_start) =  date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
+      EOQ
+      type = "info"
+      icon = "currency-dollar"
       width = 2
     }
 
@@ -334,35 +342,6 @@ dashboard "aws_s3_bucket_dashboard" {
       width = 2
     }
 
-
-    # Costs
-    card {
-      sql = <<-EOQ
-        select
-          'Cost - MTD' as label,
-          sum(unblended_cost_amount)::numeric::money as value
-        from
-          aws_cost_by_service_monthly
-        where
-          service = 'Amazon Simple Storage Service'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-      EOQ
-      width = 2
-    }
-
-    card {
-      sql = <<-EOQ
-        select
-          'Cost - Previous Month' as label,
-          sum(unblended_cost_amount)::numeric::money as value
-        from
-          aws_cost_by_service_monthly
-        where
-          service = 'Amazon Simple Storage Service'
-          and date_trunc('month', period_start) =  date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
-      EOQ
-      width = 2
-    }
   }
 
   container {
@@ -384,55 +363,7 @@ dashboard "aws_s3_bucket_dashboard" {
     }
   }
 
-  container {
-    title = "Costs"
-
-    chart {
-      title = "S3 Monthly Unblended Cost"
-      type  = "line"
-      sql   = query.aws_s3_bucket_cost_per_month.sql
-      width = 4
-    }
-
-   chart {
-      title = "S3 Cost by Usage Type - MTD"
-      type  = "donut"
-      sql   = query.aws_s3_bucket_cost_top_usage_types_mtd.sql
-      width = 2
-
-      legend {
-        position  = "bottom"
-      }
-    }
-
-   chart {
-      title = "S3 Cost by Usage Type - 12 months"
-      type  = "donut"
-      sql   = query.aws_s3_bucket_cost_by_usage_types_12mo.sql
-      width = 2
-
-      legend {
-        position  = "right"
-      }
-    }
-
-    chart {
-      title = "S3 Cost by Account - MTD"
-      type  = "donut"
-      sql   = query.aws_s3_bucket_cost_by_account_mtd.sql
-      width = 2
-    }
-
-    chart {
-      title = "S3 Cost by Account - 12 months"
-      type  = "donut"
-      sql   = query.aws_s3_bucket_cost_by_account_12mo.sql
-      width = 2
-    }
-
-  }
-
-  container {
+    container {
     title = "Assesments"
     width = 12
 
@@ -451,69 +382,81 @@ dashboard "aws_s3_bucket_dashboard" {
     }
 
    chart {
-      title = "Public Read/Write Access Status"
-      sql   = query.aws_s3_bucket_public_read_write_status.sql
+      title = "Logging Status"
+      sql   = query.aws_s3_bucket_logging_status.sql
       type  = "donut"
       width = 3
     }
 
     chart {
-      title = "Lifecycle Rules Status"
-      sql   = query.aws_s3_bucket_lifecycle_rules_status.sql
+      title = "Versioning Status"
+      sql   = query.aws_s3_bucket_versioning_status.sql
       type  = "donut"
       width = 3
     }
   }
 
   container {
-    title   = "Resources by Age"
+    title = "Costs"
+    width = 3
+
+    chart {
+      title = "S3 Monthly Unblended Cost"
+      type  = "line"
+      sql   = query.aws_s3_bucket_cost_per_month.sql
+      //width = 4
+    }
+  }
+
+  container {
+    title = "Resource Age"
+    width = 3
 
     chart {
       title = "Bucket by Creation Month"
       sql   = query.aws_s3_bucket_by_creation_month.sql
       type  = "column"
-      width = 4
-
+      //width = 4
       series "month" {
         color = "green"
       }
     }
-
-    table {
-      title = "Oldest Buckets"
-      width = 4
-
-      sql = <<-EOQ
-        select
-          title as "Bucket",
-          (current_date - creation_date)::text as "Age in Days",
-          account_id as "Account"
-        from
-          aws_s3_bucket
-        order by
-          "Age in Days" desc,
-          title
-        limit 5
-      EOQ
-    }
-
-    table {
-      title = "Newest Buckets"
-      width = 4
-
-      sql = <<-EOQ
-        select
-          title as "Bucket",
-          current_date - creation_date as "Age in Days",
-          account_id as "Account"
-        from
-          aws_s3_bucket
-        order by
-          "Age in Days" asc,
-          title
-        limit 5
-      EOQ
-    }
   }
+
+#  chart {
+#       title = "S3 Cost by Usage Type - MTD"
+#       type  = "donut"
+#      sql   = query.aws_s3_bucket_cost_top_usage_types_mtd.sql
+#       width = 2
+
+#       legend {
+#        position  = "bottom"
+#      }
+#    }
+
+#    chart {
+#       title = "S3 Cost by Usage Type - 12 months"
+#       type  = "donut"
+#       sql   = query.aws_s3_bucket_cost_by_usage_types_12mo.sql
+#       width = 2
+
+#       legend {
+#        position  = "right"
+#      }
+#     }
+
+#     chart {
+#       title = "S3 Cost by Account - MTD"
+#       type  = "donut"
+#       sql   = query.aws_s3_bucket_cost_by_account_mtd.sql
+#       width = 2
+#     }
+
+#     chart {
+#       title = "S3 Cost by Account - 12 months"
+#       type  = "donut"
+#       sql   = query.aws_s3_bucket_cost_by_account_12mo.sql
+#       width = 2
+#     }
 
 }
