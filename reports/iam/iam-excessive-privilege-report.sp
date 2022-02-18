@@ -75,12 +75,11 @@ dashboard "iam_excessive_privilege_report" {
       sql   = <<-EOQ
         select
           count(*) as value,
-          'Last 30 Days' as label
+          '< 30 Days' as label
         from 
           aws_iam_access_advisor
         where 
           principal_arn = '${var.iam_excess_priv_arn}'
-          -- and last_authenticated between symmetric now() - '1 days' :: interval and now() - '30 days' :: interval 
           and last_authenticated  > now() - '30 days' :: interval 
 
       EOQ

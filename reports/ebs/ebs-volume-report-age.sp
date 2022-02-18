@@ -98,9 +98,11 @@ dashboard "aws_ebs_volume_age_report" {
         select
           v.tags ->> 'Name' as "Name",
           v.volume_id as "Volume",
-          date_trunc('day',age(now(),v.create_time))::text as "Age",
+          -- date_trunc('day',age(now(),v.create_time))::text as "Age",
+          now()::date - v.create_time::date as "Age in Days",
           v.create_time as "Create Time",
           v.state as "State",
+          -- a.account_aliases  ->> 0 as "Account Name",
           a.title as "Account",
           v.account_id as "Account ID",
           v.region as "Region",

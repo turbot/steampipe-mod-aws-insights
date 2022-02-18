@@ -58,105 +58,26 @@ query "aws_ebs_volume_cost_per_month" {
 }
 
 
-query "aws_ebs_volume_cost_per_month_stacked" {
-  sql = <<-EOQ
-    select
-      to_char(period_start, 'Mon-YY') as "Month",
-      usage_type as "Usage Type",
-      sum(unblended_cost_amount) as "Unblended Cost"
-    from
-      aws_cost_by_service_usage_type_monthly
-    where
-      service = 'EC2 - Other'
-      and usage_type like '%EBS:%'
-    group by
-      period_start,
-      usage_type
-    order by
-      period_start
-  EOQ
-}
-
-
-# query "aws_ebs_volume_cost_by_usage_types_mtd" {
+# query "aws_ebs_volume_cost_per_month_stacked" {
 #   sql = <<-EOQ
 #     select
-#       usage_type,
+#       to_char(period_start, 'Mon-YY') as "Month",
+#       usage_type as "Usage Type",
 #       sum(unblended_cost_amount) as "Unblended Cost"
 #     from
-#       aws_cost_by_service_usage_type_monthly as c
+#       aws_cost_by_service_usage_type_monthly
 #     where
 #       service = 'EC2 - Other'
 #       and usage_type like '%EBS:%'
-#       and period_end > date_trunc('month', CURRENT_DATE::timestamp)
 #     group by
+#       period_start,
 #       usage_type
-#     having
-#       round(sum(unblended_cost_amount)::numeric,2) > 0
 #     order by
-#       sum(unblended_cost_amount) desc
+#       period_start
 #   EOQ
 # }
 
-# query "aws_ebs_volume_cost_by_usage_types_12mo" {
-#   sql = <<-EOQ
-#     select
-#       usage_type,
-#       sum(unblended_cost_amount) as "Unblended Cost"
-#     from
-#       aws_cost_by_service_usage_type_monthly as c
-#     where
-#       service = 'EC2 - Other'
-#       and usage_type like '%EBS:%'
-#       and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-#     group by
-#       usage_type
-#     having
-#       round(sum(unblended_cost_amount)::numeric,2) > 0
-#     order by
-#       sum(unblended_cost_amount) desc
-#   EOQ
-# }
 
-# query "aws_ebs_volume_cost_by_account_mtd" {
-#   sql = <<-EOQ
-#     select
-#       a.title as "account",
-#       sum(unblended_cost_amount) as "Unblended Cost"
-#     from
-#       aws_cost_by_service_usage_type_monthly as c,
-#       aws_account as a
-#     where
-#       a.account_id = c.account_id
-#       and service = 'EC2 - Other'
-#       and usage_type like '%EBS:%'
-#       and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-#     group by
-#       account
-#     order by
-#       account
-#   EOQ
-# }
-
-# query "aws_ebs_volume_cost_by_account_12mo" {
-#   sql = <<-EOQ
-#     select
-#       a.title as "account",
-#       sum(unblended_cost_amount) as "Unblended Cost"
-#     from
-#       aws_cost_by_service_usage_type_monthly as c,
-#       aws_account as a
-#     where
-#       a.account_id = c.account_id
-#       and service = 'EC2 - Other'
-#       and usage_type like '%EBS:%'
-#       and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-#     group by
-#       account
-#     order by
-#       account
-#   EOQ
-# }
 
 query "aws_ebs_volume_by_account" {
   sql = <<-EOQ
@@ -191,6 +112,22 @@ query "aws_ebs_volume_storage_by_account" {
       account
   EOQ
 }
+
+
+query "aws_ebs_volume_storage_by_type" {
+  sql = <<-EOQ
+    select
+      volume_type,
+      sum(size) as "GB"
+    from
+      aws_ebs_volume
+    group by
+      volume_type
+    order by
+      volume_type
+  EOQ
+}
+
 
 query "aws_ebs_volume_by_region" {
   sql = <<-EOQ
@@ -306,6 +243,58 @@ query "aws_ebs_volume_by_creation_month" {
   EOQ
 }
 
+
+
+
+query "aws_ebs_storage_by_creation_month" {
+  sql = <<-EOQ
+    with volumes as (
+      select
+        title,
+        size,
+        create_time,
+        to_char(create_time,
+          'YYYY-MM') as creation_month
+      from
+        aws_ebs_volume
+    ),
+    months as (
+      select
+        to_char(d,
+          'YYYY-MM') as month
+      from
+        generate_series(date_trunc('month',
+            (
+              select
+                min(create_time)
+                from volumes)),
+            date_trunc('month',
+              current_date),
+            interval '1 month') as d
+    ),
+    volumes_by_month as (
+      select
+        creation_month,
+        sum(size) as size
+      from
+        volumes
+      group by
+        creation_month
+    )
+    select
+      months.month,
+      volumes_by_month.size as "GB"
+    from
+      months
+      left join volumes_by_month on months.month = volumes_by_month.creation_month
+    order by
+      months.month;
+  EOQ
+}
+
+
+
+
 dashboard "aws_ebs_volume_dashboard" {
 
   title = "AWS EBS Volume Dashboard"
@@ -356,25 +345,6 @@ dashboard "aws_ebs_volume_dashboard" {
       width = 2
     }
 
-    # card {
-    #   sql = <<-EOQ
-    #     select
-    #       'Cost - Previous Month' as label,
-    #       sum(unblended_cost_amount)::numeric::money as value
-    #     from
-    #       aws_cost_by_service_usage_type_monthly as c
-    #     where
-    #       service = 'EC2 - Other'
-    #       and usage_type like '%EBS:%'
-    #       and date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
-    #   EOQ
-    #   type = "info"
-    #   icon = "currency-dollar"
-    #   width = 2
-    # }
-
-
-
   }
 
 
@@ -389,9 +359,6 @@ dashboard "aws_ebs_volume_dashboard" {
       type  = "donut"
       width = 4
 
-      series "Enabled" {
-         color = "green"
-      }
     }
 
     chart {
@@ -411,32 +378,59 @@ dashboard "aws_ebs_volume_dashboard" {
     width = 6
 
 
-
-    # table {
-    #   width = 6
-    #   title = "Last Month, MTD, Forecast"
-    # }
-
-
-    text {
+    # Costs
+    table  {
       width = 6
-      value = <<-EOM
-        | Period | Cost
-        |-|-
-        | Last Month | 99.99
-        | MTD | 99.99
-        | Forecast| 99.99
+      sql = <<-EOQ
+            
+        with monthly_costs as (
+          select
+            period_start,
+            period_end,
+            case 
+              when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp) then 'Month to Date'
+              when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month') then 'Previous Month'
+              else to_char (period_start, 'Month')
+            end as period_label,
+            period_end::date - period_start::date as days,
+            sum(unblended_cost_amount)::numeric::money as unblended_cost_amount,
+            (sum(unblended_cost_amount) / (period_end::date - period_start::date ) )::numeric::money as average_daily_cost,
+            date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval ) as days_in_month,
+            sum(unblended_cost_amount) / (period_end::date - period_start::date ) * date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval )::numeric::money  as forecast_amount
+          from
+            aws_cost_by_service_usage_type_monthly as c
 
-      EOM
+          where
+            service = 'EC2 - Other'
+            and usage_type like '%EBS:%'
+            and date_trunc('month', period_start) >= date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
+
+            group by
+            period_start, 
+            period_end
+        )
+
+        select
+          period_label as "Period",
+          unblended_cost_amount as "Cost",
+          average_daily_cost as "Daily Avg Cost"
+        from 
+          monthly_costs
+
+        union all
+        select
+          'Forecast' as "Period",
+          (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
+          (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
+              
+      EOQ
     }
+
 
     chart {
       width = 6
-      //title = "EBS Monthly Unblended Cost"
-
       type  = "column"
       sql   = query.aws_ebs_volume_cost_per_month.sql
-     // width = 4
     }
   }
 
@@ -464,18 +458,12 @@ dashboard "aws_ebs_volume_dashboard" {
       width = 3
     }
 
-    // container {
-    //title = "Resource Age"
-    //width = 3
-
     chart {
       title = "Volumes by Age"
       sql   = query.aws_ebs_volume_by_creation_month.sql
       type  = "column"
       width = 3
-      
-   //}
-  }
+    }
      
   }
 
@@ -488,7 +476,7 @@ dashboard "aws_ebs_volume_dashboard" {
       width = 3
 
       series "GB" {
-        color = "brown"
+        color = "tan"
       }
     }
 
@@ -499,19 +487,31 @@ dashboard "aws_ebs_volume_dashboard" {
       width = 3
 
       series "GB" {
-        color = "brown"
+        color = "tan"
       }
 
     }
 
     chart {
       title = "Storage by Type"
-      //sql   = query.aws_ebs_volume_by_type.sql
+      sql   = query.aws_ebs_volume_storage_by_type.sql
       type  = "column"
       width = 3
 
       series "GB" {
-        color = "brown"
+        color = "tan"
+      }
+    }
+
+
+    chart {
+      title = "Storage by Age"
+      sql   = query.aws_ebs_storage_by_creation_month.sql
+      type  = "column"
+      width = 3
+
+      series "GB" {
+        color = "tan"
       }
     }
 
@@ -585,60 +585,6 @@ dashboard "aws_ebs_volume_dashboard" {
           and volume_id in (select volume_id from top_n)
       EOQ
     }
-
   }
-
-
-
-
-  # container {
-  #   title = "Costs"
-  #   chart {
-  #     title = "EBS Monthly Unblended Cost"
-
-  #     type  = "line"
-  #     sql   = query.aws_ebs_volume_cost_per_month.sql
-  #     width = 3
-  #   }
-
-  #   chart {
-  #     title = "EBS Monthly Unblended Cost"
-
-  #     type  = "line"
-  #     sql   = query.aws_ebs_volume_cost_per_month_stacked.sql
-  #     width = 4
-  #   }
-
-  #  chart {
-  #     title = "EBS Cost by Usage Type - MTD"
-  #     type  = "donut"
-  #     sql   = query.aws_ebs_volume_cost_by_usage_types_mtd.sql
-  #     width = 2
-  #   }
-
-  #  chart {
-  #     title = "EBS Cost by Usage Type - 12 months"
-  #     type  = "donut"
-  #     sql   = query.aws_ebs_volume_cost_by_usage_types_12mo.sql
-  #     width = 2
-  #   }
-
-  #   chart {
-  #     title = "EBS Cost By Account - MTD"
-
-  #     type  = "donut"
-  #     sql   = query.aws_ebs_volume_cost_by_account_mtd.sql
-  #     width = 2
-  #   }
-
-  #   chart {
-  #     title = "EBS Cost By Account - 12 months"
-
-  #     type  = "donut"
-  #     sql   = query.aws_ebs_volume_cost_by_account_12mo.sql
-  #     width = 2
-  #   }
-  # }
-
 
 }

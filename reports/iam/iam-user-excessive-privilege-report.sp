@@ -72,92 +72,6 @@ card {
       width = 2
     }
 
-
-    # card {
-    #   sql   = <<-EOQ
-    #     select
-    #       count(*) as value,
-    #       'Last 30 Days' as label
-    #     from 
-    #       aws_iam_access_advisor,
-    #       aws_iam_user
-    #     where 
-    #       principal_arn = arn 
-    #       and last_authenticated  > now() - '30 days' :: interval 
-
-    #   EOQ
-    #   width = 2
-    #   type = "info"
-    # }
-
-    # card {
-    #   sql   = <<-EOQ
-    #     select
-    #       count(*) as value,
-    #       '30-90 Days' as label
-    #     from 
-    #       aws_iam_access_advisor,
-    #       aws_iam_user
-    #     where 
-    #       principal_arn = arn
-    #       and last_authenticated between symmetric now() - '30 days' :: interval and now() - '90 days' :: interval 
-    #   EOQ
-    #   width = 2
-    #   type = "info"
-    # }
-
-    # card {
-    #   sql   = <<-EOQ
-    #     select
-    #       count(*) as value,
-    #       '90-365 Days' as label
-    #     from 
-    #       aws_iam_access_advisor,
-    #       aws_iam_user
-    #     where 
-    #       principal_arn = arn
-    #       and last_authenticated between symmetric (now() - '90 days'::interval) and (now() - '365 days'::interval)
-    #   EOQ
-    #   width = 2
-    #   type = "info"
-    # }
-
-    # card {
-    #   sql   = <<-EOQ
-    #     select
-    #       count(*) as value,
-    #       '> 1 Year' as label
-    #     from 
-    #       aws_iam_access_advisor,
-    #       aws_iam_user
-    #     where 
-    #       principal_arn = arn
-    #       and last_authenticated  <= now() - '1 year' :: interval 
-    #   EOQ
-    #   width = 2
-    #   type = "info"
-    # }
-
-
-    # card {
-    #   sql   = <<-EOQ
-    #     select
-    #       count(*) as value,
-    #       'Never in Tracking Period' as label,
-    #       case 
-    #         when count(*) = 0 then 'ok'
-    #         else 'alert'
-    #       end as type
-    #     from
-    #       aws_iam_access_advisor,
-    #       aws_iam_user
-    #     where 
-    #       principal_arn = arn
-    #       and last_authenticated is null
-    #   EOQ
-    #   width = 2
-    # }
-
   }
 
 
@@ -179,6 +93,11 @@ card {
             when last_authenticated is null then 'Never in Tracking Period'
             else date_trunc('day',age(now(),last_authenticated))::text
           end as "Last Authenticted",
+          -- cant do: invalid input syntax for type integer: "Never in Tracking Period"
+          -- case
+          --   when last_authenticated is null then 'Never in Tracking Period'
+          --   else now()::date  - last_authenticated::date
+          -- end as "Last Authenticted (Days)",
           last_authenticated as "Last Authenticted Timestamp",
           last_authenticated_entity as "Last Authenticted Entity",
           last_authenticated_region as "Last Authenticted Region"
