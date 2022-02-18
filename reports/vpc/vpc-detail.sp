@@ -13,6 +13,9 @@ query "aws_subnet_count_for_vpc" {
 }
 
 
+
+
+
 query "aws_vpc_is_default" {
   sql = <<-EOQ
     select
@@ -38,7 +41,8 @@ query "aws_vpc_num_ips_for_vpc" {
       from
         aws_vpc,
         jsonb_array_elements(cidr_block_association_set) as b
-      where vpc_id = 'vpc-0cde9775d4cb9e4a6'
+      where vpc_id = 'vpc-9d7ae1e7'
+
     )
     select
       sum(num_ips) as "IP Addresses"
