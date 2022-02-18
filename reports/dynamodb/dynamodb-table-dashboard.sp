@@ -1,12 +1,16 @@
+query "aws_dynamodb_table_count" {
+  sql = <<-EOQ
+    select count(*) as "Tables" from aws_dynamodb_table;
+  EOQ
+}
+
 dashboard "aws_dynamodb_table_dashboard" {
   title = "AWS DynamoDB Table Dashboard"
 
   # Top cards
   container {
     card {
-      sql = <<-EOQ
-        select count(*) as "Tables" from aws_dynamodb_table;
-      EOQ
+      sql   = query.aws_dynamodb_table_count.sql
       width = 2
     }
 
@@ -27,31 +31,35 @@ dashboard "aws_dynamodb_table_dashboard" {
 
     # Costs
     card {
-      sql = <<-EOQ
+      type  = "info"
+      icon  = "currency-dollar"
+      width = 2
+      sql   = <<-EOQ
         select
           'Cost - MTD' as label,
           sum(unblended_cost_amount)::numeric::money as value
         from
-          aws_cost_by_service_usage_type_monthly as c
+          aws_cost_by_service_usage_type_monthly
         where
           service = 'Amazon DynamoDB'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+          and period_end > date_trunc('month', CURRENT_DATE::timestamp);
       EOQ
-      width = 2
     }
 
     card {
-      sql = <<-EOQ
+      type  = "info"
+      icon  = "currency-dollar"
+      width = 2
+      sql   = <<-EOQ
         select
           'Cost - Previous Month' as label,
           sum(unblended_cost_amount)::numeric::money as value
         from
-          aws_cost_by_service_usage_type_monthly as c
+          aws_cost_by_service_usage_type_monthly
         where
           service = 'Amazon DynamoDB'
-          and date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
+          and date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month');
       EOQ
-      width = 2
     }
 
     # Autoscaling
@@ -79,87 +87,17 @@ dashboard "aws_dynamodb_table_dashboard" {
       width = 2
     }
 
-    # Table Backup
-    card {
-      sql = <<-EOQ
-        select
-          count(*) as value,
-          'Tables with No Backup' as label,
-          case count(*) when 0 then 'ok' else 'alert' end as type
-        from
-          aws_dynamodb_table as d
-          left join aws_dynamodb_backup as b on b.table_name = d.name
-        where
-          b.table_name is null;
-      EOQ
-      width = 2
-    }
-
     # Continuous Backup
     card {
       sql = <<-EOQ
         select
           count(*) as value,
-          'Continuous Backup Disabled' as label,
-          case count(*) when 0 then 'ok' else 'alert' end as type
-        from
-          aws_dynamodb_table
-        where
-          continuous_backups_status = 'DISABLED';
-      EOQ
-      width = 2
-    }
-
-    # PITR
-    card {
-      sql = <<-EOQ
-        select
-          count(*) as value,
-          'PITR Disabled' as label,
-          case count(*) when 0 then 'ok' else 'alert' end as type
-        from
-          aws_dynamodb_table
-        where
-          point_in_time_recovery_description ->> 'PointInTimeRecoveryStatus' = 'DISABLED';
-      EOQ
-      width = 2
-    }
-
-    # Default Encryption
-    card {
-      sql = <<-EOQ
-        select
-          count(*) as value,
-          'Tables with Default Encryption' as label
-        from
-          aws_dynamodb_table
-        where
-          sse_description is null
-          or sse_description ->> 'SSEType' is null;
-      EOQ
-      width = 2
-    }
-
-    # Backup Plan Protected
-    card {
-      sql = <<-EOQ
-        with backup_protected_table as (
-          select
-            resource_arn as arn
-          from
-            aws_backup_protected_resource as b
-          where
-            resource_type = 'DynamoDB'
-        )
-        select
-          count(*) as value,
-          'Backup Plan Protected Tables' as label,
+          'Tables with Continuous Backup' as label,
           case count(*) when 0 then 'alert' else 'ok' end as type
         from
-          aws_dynamodb_table as t
-          left join backup_protected_table as b on t.arn = b.arn
+          aws_dynamodb_table
         where
-          b.arn is not null;
+          continuous_backups_status = 'ENABLED';
       EOQ
       width = 2
     }
@@ -236,118 +174,6 @@ dashboard "aws_dynamodb_table_dashboard" {
     }
   }
 
-  # Costs
-  container {
-    title = "Costs"
-
-    chart {
-      title = "DynamoDB Monthly Unblended Cost"
-      type  = "line"
-      width = 3
-      sql   = <<-EOQ
-        select
-          to_char(period_start, 'Mon-YY') as "Month",
-          sum(unblended_cost_amount) as "Unblended Cost"
-        from
-          aws_cost_by_service_usage_type_monthly
-        where
-          service = 'Amazon DynamoDB'
-        group by
-          period_start
-        order by
-          period_start;
-      EOQ
-    }
-
-    chart {
-      title = "DynamoDB Cost by Usage Type - MTD"
-      type  = "donut"
-      width = 2
-      sql   = <<-EOQ
-        select
-          usage_type,
-          sum(unblended_cost_amount) as "Unblended Cost"
-        from
-          aws_cost_by_service_usage_type_monthly as c
-        where
-          service = 'Amazon DynamoDB'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-        group by
-          usage_type
-        having
-          round(sum(unblended_cost_amount)::numeric,2) > 0
-        order by
-          sum(unblended_cost_amount) desc;
-      EOQ
-    }
-
-    chart {
-      title = "DynamoDB Cost by Usage Type - 12 months"
-      type  = "donut"
-      width = 2
-      sql   = <<-EOQ
-        select
-          usage_type,
-          sum(unblended_cost_amount) as "Unblended Cost"
-        from
-          aws_cost_by_service_usage_type_monthly as c
-        where
-          service = 'Amazon DynamoDB'
-          and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-        group by
-          usage_type
-        having
-          round(sum(unblended_cost_amount)::numeric,2) > 0
-        order by
-          sum(unblended_cost_amount) desc;
-      EOQ
-    }
-
-    chart {
-      title = "DynamoDB Cost By Account - MTD"
-      type  = "donut"
-      width = 2
-      sql   = <<-EOQ
-        select
-          a.title as "account",
-          sum(unblended_cost_amount) as "Unblended Cost"
-        from
-          aws_cost_by_service_usage_type_monthly as c,
-          aws_account as a
-        where
-          a.account_id = c.account_id
-          and service = 'Amazon DynamoDB'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-        group by
-          account
-        order by
-          account;
-      EOQ
-    }
-
-    chart {
-      title = "DynamoDB Cost By Account - 12 months"
-      type  = "donut"
-      width = 2
-      sql   = <<-EOQ
-        select
-          a.title as "account",
-          sum(unblended_cost_amount) as "Unblended Cost"
-        from
-          aws_cost_by_service_usage_type_monthly as c,
-          aws_account as a
-        where
-          a.account_id = c.account_id
-          and service = 'Amazon DynamoDB'
-          and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-        group by
-          account
-        order by
-          account
-      EOQ
-    }
-  }
-
   # Assessments
   container {
     title = "Assessments"
@@ -419,8 +245,8 @@ dashboard "aws_dynamodb_table_dashboard" {
           select
           d.name as table_name,
           case
-            when t.resource_id is null or t.count < 2 then 'Disabled'
-            else 'Enabled'
+            when t.resource_id is null or t.count < 2 then 'DISABLED'
+            else 'ENABLED'
           end as autoscaling_status
           from
             aws_dynamodb_table as d
@@ -438,7 +264,7 @@ dashboard "aws_dynamodb_table_dashboard" {
     chart {
       title = "Continuous Backup Status"
       type  = "donut"
-      width = 3
+      width = 2
       sql   = <<-EOQ
         select
           continuous_backups_status,
@@ -452,7 +278,7 @@ dashboard "aws_dynamodb_table_dashboard" {
     chart {
       title = "Backup Plan Protection Status"
       type  = "donut"
-      width = 3
+      width = 2
       sql   = <<-EOQ
         with backup_protected_table as (
           select
@@ -483,39 +309,26 @@ dashboard "aws_dynamodb_table_dashboard" {
     }
   }
 
-  # Performance & Utilization
+  # Costs
   container {
-    title  = "Performance & Utilization"
+    title = "Costs"
+    width = 3
 
     chart {
-      title = "Average Read Throughput - Last 7 days"
+      title = "DynamoDB Monthly Unblended Cost"
       type  = "line"
-      width = 5
-      sql   =  <<-EOQ
+      sql   = <<-EOQ
         select
-          timestamp,
-          average
+          to_char(period_start, 'Mon-YY') as "Month",
+          sum(unblended_cost_amount) as "Unblended Cost"
         from
-          aws_dynamodb_metric_account_provisioned_read_capacity_util
+          aws_cost_by_service_usage_type_monthly
         where
-          timestamp  >= current_date - interval '7 day'
-        order by timestamp;
-      EOQ
-    }
-
-    chart {
-      title = "Average Write Throughput - Last 7 days"
-      type  = "line"
-      width = 5
-      sql   =  <<-EOQ
-        select
-          timestamp,
-          average
-        from
-          aws_dynamodb_metric_account_provisioned_write_capacity_util
-        where
-          timestamp  >= current_date - interval '7 day'
-        order by timestamp;
+          service = 'Amazon DynamoDB'
+        group by
+          period_start
+        order by
+          period_start;
       EOQ
     }
   }
@@ -523,11 +336,11 @@ dashboard "aws_dynamodb_table_dashboard" {
   # Resources by Age
   container {
     title = "Resources by Age"
+    width = 3
 
     chart {
       title = "Volume by Creation Month"
       type  = "column"
-      width = 4
       sql   = <<-EOQ
         with tables as (
           select
@@ -569,40 +382,42 @@ dashboard "aws_dynamodb_table_dashboard" {
         color = "green"
       }
     }
+  }
 
-    table {
-      title = "Oldest Tables"
-      width = 4
+  # Performance & Utilization
+  container {
+    title = "Performance & Utilization"
+    width = 6
 
-      sql = <<-EOQ
+    chart {
+      title = "Average Read Throughput - Last 7 days"
+      type  = "line"
+      width = 5
+      sql   =  <<-EOQ
         select
-          title as "table",
-          extract('day' from (current_date - creation_date_time)) as "Age in Days",
-          account_id as "Account"
+          timestamp,
+          average
         from
-          aws_dynamodb_table
-        order by
-          "Age in Days" desc,
-          title
-        limit 5;
+          aws_dynamodb_metric_account_provisioned_read_capacity_util
+        where
+          timestamp  >= current_date - interval '7 day'
+        order by timestamp;
       EOQ
     }
 
-    table {
-      title = "Newest Tables"
-      width = 4
-
-      sql = <<-EOQ
+    chart {
+      title = "Average Write Throughput - Last 7 days"
+      type  = "line"
+      width = 6
+      sql   =  <<-EOQ
         select
-          title as "table",
-          extract('day' from (current_date - creation_date_time)) as "Age in Days",
-          account_id as "Account"
+          timestamp,
+          average
         from
-          aws_dynamodb_table
-        order by
-          "Age in Days" asc,
-          title
-        limit 5;
+          aws_dynamodb_metric_account_provisioned_write_capacity_util
+        where
+          timestamp  >= current_date - interval '7 day'
+        order by timestamp;
       EOQ
     }
   }

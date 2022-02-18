@@ -14,6 +14,7 @@ dashboard "aws_dynamodb_table_encryption_report" {
           or sse_description ->> 'SSEType' is null;
       EOQ
       width = 2
+      type  = "info"
     }
 
     card {
@@ -31,6 +32,7 @@ dashboard "aws_dynamodb_table_encryption_report" {
           and k.key_manager = 'AWS';
       EOQ
       width = 2
+      type  = "info"
     }
 
     card {
@@ -48,6 +50,7 @@ dashboard "aws_dynamodb_table_encryption_report" {
           and k.key_manager = 'CUSTOMER';
       EOQ
       width = 2
+      type  = "info"
     }
   }
 

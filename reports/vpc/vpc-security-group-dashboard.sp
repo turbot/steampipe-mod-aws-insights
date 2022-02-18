@@ -22,7 +22,7 @@ dashboard "aws_vpc_security_group_dashboard" {
         select
           count(*) as value,
           'Unassociated Security Groups' as label,
-          case count(*) when 0 then 'ok' else 'alert' end as "type"
+          case count(*) when 0 then 'ok' else 'alert' end as type
         from
           aws_vpc_security_group s
           left join associated_sg a on s.group_id = a.sg_id
@@ -49,7 +49,7 @@ dashboard "aws_vpc_security_group_dashboard" {
         select
         count(*) as value,
         'Unrestricted Default Security Groups' as label,
-        case count(*) when 0 then 'ok' else 'alert' end as "type"
+        case count(*) when 0 then 'ok' else 'alert' end as type
         from
           default_sg_with_inbound_outbound_traffic;
       EOQ
