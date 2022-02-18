@@ -6,7 +6,14 @@ query "aws_sqs_queue_count" {
 
 query "aws_sqs_queue_encrypted_count" {
   sql = <<-EOQ
-    select count(*) as "Unencrypted Queues" from aws_sqs_queue where kms_master_key_id is null
+    select 
+      count(*) as value,
+      'Unencrypted Queues' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
+    from 
+      aws_sqs_queue 
+    where 
+      kms_master_key_id is null
   EOQ
 }
 
@@ -64,25 +71,6 @@ query "aws_sqs_queue_cost_by_usage_types_12mo" {
     where 
       service = 'Amazon Simple Queue Service'
       and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-    group by 
-      usage_type
-    order by 
-      sum(unblended_cost_amount) desc
-  EOQ
-}
-
-query "aws_sqs_queue_cost_by_usage_types_30day" {
-  sql = <<-EOQ
-    select 
-       usage_type, 
-       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-    from 
-      aws_cost_by_service_usage_type_daily 
-    where 
-      service = 'Amazon Simple Queue Service'
-      --and period_end >= date_trunc('month', CURRENT_DATE::timestamp)
-      and period_end >=  CURRENT_DATE - INTERVAL '30 day'
-
     group by 
       usage_type
     order by 
@@ -150,36 +138,37 @@ query "aws_sqs_queue_by_encryption_status" {
 }
 
 
-# query "aws_sqs_queue_by_subscription_status" {
-#   sql = <<-EOQ
-#     select
-#       count(*)
-#     from (
-#       select subscriptions_confirmed,
-#         case when subscriptions_confirmed::int = 0 then
-#           'Alarm'
-#         else
-#           'Ok'
-#         end subscription_status
-#       from
-#         aws_sns_topic) as t
-#     group by
-#       subscription_status
-#     order by
-#       subscription_status desc
-#   EOQ
-# }
+query "aws_sqs_queue_by_subscription_status" {
+  sql = <<-EOQ
+    select
+      subscription_status,
+      count(*)
+    from (
+      select subscriptions_confirmed,
+        case when subscriptions_confirmed::int = 0 then
+          'Alarm'
+        else
+          'Ok'
+        end subscription_status
+      from
+        aws_sns_topic) as t
+    group by
+      subscription_status
+    order by
+      subscription_status desc
+  EOQ
+}
 
 dashboard "aws_sqs_queue_dashboard" {
     title = "AWS SQS Queue Dashboard"
     container {
         card {
             sql   = query.aws_sqs_queue_count.sql
-            width = 6
+            width = 2
         }
         card {
             sql   = query.aws_sqs_queue_encrypted_count.sql
-            width = 6
+            width = 2
         }
     }
     container {
@@ -189,73 +178,68 @@ dashboard "aws_sqs_queue_dashboard" {
             title = "Queues by Account"
             sql   = query.aws_sqs_queue_by_account.sql
             type  = "column"
-            width = 6
+            width = 3
         }
         chart {
             title = "Queues by Region"
             sql   = query.aws_sqs_queue_by_region.sql
-            type  = "line"
-            width = 6
+            type  = "column"
+            width = 3
         }
-    }
-
-    container {
-        title = "Costs"
-
-    chart {
-      title = "SQS Monthly Cost"
-      type  = "line"
-      sql   = query.aws_sqs_queue_cost_per_month.sql
-      width = 4
-    }  
-   chart {
-      title = "SQS Cost by Usage Type - last 30 days"
-      type  = "donut"
-      sql   = query.aws_sqs_queue_cost_by_usage_types_30day.sql
-      width = 2
-    }
-    
-   chart {
-      title = "SQS Cost by Usage Type - Last 12 months"
-      type  = "donut"
-      sql   = query.aws_sqs_queue_cost_by_usage_types_12mo.sql
-      width = 2
-    }
-
-
-    chart {
-      title = "By Account - MTD"
-      type  = "donut"
-      sql   = query.aws_sqs_queue_cost_by_account_30day.sql
-       width = 2
-    }
-
-    chart {
-      title = "By Account - Last 12 months"
-      type  = "donut"
-      sql   = query.aws_sqs_queue_cost_by_account_12mo.sql
-      width = 2
-    }
     }
 
     container {
       title = "Assessments"
 
-    chart {
-      title = "Encryption Status"
-      sql = query.aws_sqs_queue_by_encryption_status.sql
-      type  = "donut"
-      width = 3
+      chart {
+        title = "Encryption Status"
+        sql = query.aws_sqs_queue_by_encryption_status.sql
+        type  = "donut"
+        width = 3
 
-      series "Enabled" {
-         color = "green"
+        series "Enabled" {
+          color = "green"
+        } 
       } 
-    } 
-    # chart {
-    #   title = "Subscription Status"
-    #   sql = query.aws_sqs_queue_by_subscription_status.sql
-    #   type  = "donut"
-    #   width = 3
-    # }
+      chart {
+        title = "Subscription Status"
+        sql = query.aws_sqs_queue_by_subscription_status.sql
+        type  = "donut"
+        width = 3
+      }
     }
+
+    container {
+      title = "Costs"
+
+      chart {
+        title = "SQS Monthly Cost"
+        type  = "line"
+        sql   = query.aws_sqs_queue_cost_per_month.sql
+        width = 4
+      }  
+    
+      chart {
+          title = "SQS Cost by Usage Type - Last 12 months"
+          type  = "donut"
+          sql   = query.aws_sqs_queue_cost_by_usage_types_12mo.sql
+          width = 2
+        }
+
+
+      chart {
+        title = "By Account - MTD"
+        type  = "donut"
+        sql   = query.aws_sqs_queue_cost_by_account_30day.sql
+        width = 2
+      }
+
+      chart {
+        title = "By Account - Last 12 months"
+        type  = "donut"
+        sql   = query.aws_sqs_queue_cost_by_account_12mo.sql
+        width = 2
+      }
+    }
+
 }

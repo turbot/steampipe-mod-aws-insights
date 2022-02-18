@@ -6,7 +6,14 @@ query "aws_sns_topic_count" {
 
 query "aws_sns_topic_encrypted_count" {
   sql = <<-EOQ
-    select count(*) as "Unencrypted Topics" from aws_sns_topic where kms_master_key_id is null
+    select 
+      count(*) as value, 
+      'Unencrypted Topics' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type" 
+    from 
+      aws_sns_topic 
+    where 
+      kms_master_key_id is null
   EOQ
 }
 
@@ -67,25 +74,6 @@ query "aws_sns_topic_cost_by_usage_types_12mo" {
     where 
       service = 'Amazon Simple Notification Service'
       and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-    group by 
-      usage_type
-    order by 
-      sum(unblended_cost_amount) desc
-  EOQ
-}
-
-query "aws_sns_topic_cost_by_usage_types_30day" {
-  sql = <<-EOQ
-    select 
-       usage_type, 
-       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-    from 
-      aws_cost_by_service_usage_type_daily 
-    where 
-      service = 'Amazon Simple Notification Service'
-      --and period_end >= date_trunc('month', CURRENT_DATE::timestamp)
-      and period_end >=  CURRENT_DATE - INTERVAL '30 day'
-
     group by 
       usage_type
     order by 
@@ -178,11 +166,11 @@ dashboard "aws_sns_topic_dashboard" {
     container {
         card {
             sql   = query.aws_sns_topic_count.sql
-            width = 6
+            width = 2
         }
         card {
             sql   = query.aws_sns_topic_encrypted_count.sql
-            width = 6
+            width = 2
         }
     }
     container {
@@ -211,13 +199,7 @@ dashboard "aws_sns_topic_dashboard" {
       sql   = query.aws_sns_topic_cost_per_month.sql
       width = 4
     }  
-   chart {
-      title = "SNS Cost by Usage Type - last 30 days"
-      type  = "donut"
-      sql   = query.aws_sns_topic_cost_by_usage_types_30day.sql
-      width = 2
-    }
-    
+
    chart {
       title = "SNS Cost by Usage Type - Last 12 months"
       type  = "donut"
