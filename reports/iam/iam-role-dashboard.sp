@@ -65,12 +65,36 @@ query "aws_iam_role_no_boundary_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'No Boundary Policy' as label,
+      'Roles with No Boundary Policy' as label,
       case when count(*) = 0 then 'ok' else 'alert' end as type
     from
       aws_iam_role
     where
       permissions_boundary_type is null or permissions_boundary_type = ''
+  EOQ
+}
+
+query "aws_iam_role_allows_assume_role_to_all_principal_count" {
+  sql = <<-EOQ
+    with roles_can_be_assumed_anonymously as (
+      select
+        name,
+        stmt -> 'Principal',
+        Principal
+      from
+        aws_iam_role role,
+        jsonb_array_elements(role.assume_role_policy_std -> 'Statement') as stmt,
+        jsonb_array_elements_text(stmt -> 'Principal' -> 'AWS') as principal
+      where
+        principal = '*'
+        and stmt ->> 'Effect' = 'Allow'
+    )
+    select
+      count(distinct name) as value,
+      'Allows All Principals To Assume Role' as label,
+      case when count(distinct name) > 0 then 'alert' else 'ok' end as type
+    from
+      roles_can_be_assumed_anonymously
   EOQ
 }
 
@@ -277,6 +301,12 @@ dashboard "aws_iam_role_dashboard" {
 
     card {
       sql   = query.aws_iam_role_no_boundary_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_iam_role_allows_assume_role_to_all_principal_count.sql
+      icon  = "shield-check"
       width = 2
     }
 
