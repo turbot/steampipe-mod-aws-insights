@@ -16,7 +16,6 @@ dashboard "aws_iam_user_mfa_report" {
   title = "AWS IAM User MFA Report"
 
   container {
-
     card {
       sql   = query.aws_iam_user_mfa_not_enabled_count.sql
       width = 2
@@ -28,7 +27,7 @@ dashboard "aws_iam_user_mfa_report" {
       sql = <<-EOQ
       select
         name as "User",
-        mfa_enabled as "mfa status",
+        mfa_enabled as "MFA Active",
         account_id as "Account",
         arn as "ARN"
       from

@@ -186,7 +186,7 @@ dashboard "aws_iam_group_dashboard" {
       title = "Groups by Path"
       sql   = query.aws_iam_groups_by_path.sql
       type  = "column"
-      width = 4
+      width = 3
     }
   }
 

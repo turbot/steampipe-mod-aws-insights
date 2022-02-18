@@ -111,7 +111,7 @@ dashboard "aws_iam_group_detail" {
       title = "Overview"
 
       table {
-        width = 8
+        width = 6
         sql   = <<-EOQ
           select
             name as "Name",
@@ -130,7 +130,7 @@ dashboard "aws_iam_group_detail" {
 
   container {
     title = "AWS IAM Group Analysis"
-    
+
     table {
       title = "Users"
       width = 6
