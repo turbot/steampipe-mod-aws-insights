@@ -56,28 +56,6 @@ query "aws_ebs_volume_cost_per_month" {
   EOQ
 }
 
-
-# query "aws_ebs_volume_cost_per_month_stacked" {
-#   sql = <<-EOQ
-#     select
-#       to_char(period_start, 'Mon-YY') as "Month",
-#       usage_type as "Usage Type",
-#       sum(unblended_cost_amount) as "Unblended Cost"
-#     from
-#       aws_cost_by_service_usage_type_monthly
-#     where
-#       service = 'EC2 - Other'
-#       and usage_type like '%EBS:%'
-#     group by
-#       period_start,
-#       usage_type
-#     order by
-#       period_start
-#   EOQ
-# }
-
-
-
 query "aws_ebs_volume_by_account" {
   sql = <<-EOQ
     select
@@ -112,7 +90,6 @@ query "aws_ebs_volume_storage_by_account" {
   EOQ
 }
 
-
 query "aws_ebs_volume_storage_by_type" {
   sql = <<-EOQ
     select
@@ -126,7 +103,6 @@ query "aws_ebs_volume_storage_by_type" {
       volume_type
   EOQ
 }
-
 
 query "aws_ebs_volume_by_region" {
   sql = <<-EOQ
@@ -242,9 +218,6 @@ query "aws_ebs_volume_by_creation_month" {
   EOQ
 }
 
-
-
-
 query "aws_ebs_storage_by_creation_month" {
   sql = <<-EOQ
     with volumes as (
@@ -292,13 +265,12 @@ query "aws_ebs_storage_by_creation_month" {
 }
 
 query "aws_ebs_monthly_forecast_table" {
-
   sql = <<-EOQ
     with monthly_costs as (
       select
         period_start,
         period_end,
-        case 
+        case
           when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp) then 'Month to Date'
           when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month') then 'Previous Month'
           else to_char (period_start, 'Month')
@@ -317,7 +289,7 @@ query "aws_ebs_monthly_forecast_table" {
         and date_trunc('month', period_start) >= date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
 
         group by
-        period_start, 
+        period_start,
         period_end
     )
 
@@ -325,7 +297,7 @@ query "aws_ebs_monthly_forecast_table" {
       period_label as "Period",
       unblended_cost_amount as "Cost",
       average_daily_cost as "Daily Avg Cost"
-    from 
+    from
       monthly_costs
 
     union all
@@ -333,9 +305,8 @@ query "aws_ebs_monthly_forecast_table" {
       'This Month (Forecast)' as "Period",
       (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
       (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
-          
-  EOQ
 
+  EOQ
 }
 
 
@@ -356,7 +327,6 @@ dashboard "aws_ebs_volume_dashboard" {
       width = 2
     }
 
-
     # Assessments
     card {
       sql   = query.aws_ebs_encrypted_volume_count.sql
@@ -370,6 +340,9 @@ dashboard "aws_ebs_volume_dashboard" {
 
     # Costs
     card {
+      type  = "info"
+      icon  = "currency-dollar"
+      width = 2
       sql   = <<-EOQ
         select
           'Cost - MTD' as label,
@@ -381,9 +354,6 @@ dashboard "aws_ebs_volume_dashboard" {
           and usage_type like '%EBS:%'
           and period_end > date_trunc('month', CURRENT_DATE::timestamp)
       EOQ
-      type = "info"
-      icon = "currency-dollar"
-      width = 2
     }
   }
 
@@ -411,14 +381,12 @@ dashboard "aws_ebs_volume_dashboard" {
     title = "Cost"
     width = 6
 
-
     # Costs
     table  {
       width = 6
       title = "Forecast"
-      sql = query.aws_ebs_monthly_forecast_table.sql
+      sql   = query.aws_ebs_monthly_forecast_table.sql
     }
-
 
     chart {
       width = 6
@@ -461,7 +429,7 @@ dashboard "aws_ebs_volume_dashboard" {
   }
 
   container {
-      chart {
+    chart {
       title = "Storage by Account (GB)"
       sql   = query.aws_ebs_volume_storage_by_account.sql
       type  = "column"
@@ -481,7 +449,6 @@ dashboard "aws_ebs_volume_dashboard" {
       series "GB" {
         color = "tan"
       }
-
     }
 
     chart {
@@ -495,7 +462,6 @@ dashboard "aws_ebs_volume_dashboard" {
       }
     }
 
-
     chart {
       title = "Storage by Age (GB)"
       sql   = query.aws_ebs_storage_by_creation_month.sql
@@ -506,21 +472,15 @@ dashboard "aws_ebs_volume_dashboard" {
         color = "tan"
       }
     }
-
   }
-  
 
-
-
- 
   container {
     title  = "Performance & Utilization"
-   // width = 6
     chart {
       title = "Top 10 Average Read OPS - Last 7 days"
       type  = "line"
       width = 6
-      sql   =  <<-EOQ
+      sql   = <<-EOQ
         with top_n as (
           select
             volume_id,
@@ -551,7 +511,7 @@ dashboard "aws_ebs_volume_dashboard" {
       title = "Top 10 Average write OPS - Last 7 days"
       type  = "line"
       width = 6
-      sql   =  <<-EOQ
+      sql   = <<-EOQ
         with top_n as (
           select
             volume_id,
