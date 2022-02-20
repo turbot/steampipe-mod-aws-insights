@@ -375,6 +375,7 @@ dashboard "aws_redshift_cluster_dashboard" {
 
   }
 
+  /*
   container {
     title = "Costs"
     chart {
@@ -415,6 +416,7 @@ dashboard "aws_redshift_cluster_dashboard" {
       width = 2
     }
   }
+  */
 
   # donut charts in a 2 x 2 layout
   container {

@@ -368,8 +368,6 @@ dashboard "aws_ebs_volume_dashboard" {
       width = 2
     }
 
-
-
     # Costs
     card {
       sql   = <<-EOQ
@@ -387,10 +385,7 @@ dashboard "aws_ebs_volume_dashboard" {
       icon = "currency-dollar"
       width = 2
     }
-
   }
-
-
 
   container {
     title = "Assessments"
@@ -409,11 +404,9 @@ dashboard "aws_ebs_volume_dashboard" {
       type  = "donut"
       width = 4
     }
-
-
   }
 
-  
+
   container {
     title = "Cost"
     width = 6
