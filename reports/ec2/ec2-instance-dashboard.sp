@@ -397,7 +397,6 @@ dashboard "aws_ec2_instance_dashboard" {
       width = 2
     }
 
-
     # Assessments
     card {
       sql   = query.aws_ec2_public_instance_count.sql
@@ -427,7 +426,6 @@ dashboard "aws_ec2_instance_dashboard" {
       EOQ
       width = 2
     }
-
   }
 
   container {
@@ -468,23 +466,13 @@ dashboard "aws_ec2_instance_dashboard" {
     }
   }
 
-
-
-
   container {
-
-    
-
 
     container {
       title   = "Resources by Age"
       width = 3
 
-     
     }
-
-
-
 
   container {
     title = "Analysis"
@@ -495,7 +483,6 @@ dashboard "aws_ec2_instance_dashboard" {
       type  = "column"
       width = 3
     }
-
 
     chart {
       title = "Instances by Region"

@@ -3,7 +3,7 @@ query "aws_rds_db_cluster_unencrypted_count" {
     select
       count(*) as value,
       'Unencrypted' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      case count(*) when 0 then 'ok' else 'alert' end as type
     from
       aws_rds_db_cluster
     where
@@ -26,14 +26,18 @@ dashboard "aws_rds_db_cluster_encryption_dashboard" {
   table {
     sql = <<-EOQ
       select
-        db_cluster_identifier as "DB Cluster",
-        case when storage_encrypted then 'Enabled' else null end as "Encryption",
-        kms_key_id as "KMS Key ID",
-        account_id as "Account",
-        region as "Region",
-        arn as "ARN"
+        r.db_cluster_identifier as "DB Cluster",
+        case when r.storage_encrypted then 'Enabled' else null end as "Encryption",
+        r.kms_key_id as "KMS Key ID",
+        a.title as "Account"
+        r.account_id as "Account ID",
+        r.region as "Region",
+        r.arn as "ARN"
       from
-        aws_rds_db_cluster
+        aws_rds_db_cluster as r,
+        aws_account as a
+      where
+        r.account_id = a.account_id
     EOQ
   }
 }

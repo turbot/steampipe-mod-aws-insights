@@ -39,7 +39,6 @@ query "aws_ebs_unattached_volume_count" {
   EOQ
 }
 
-
 query "aws_ebs_volume_cost_per_month" {
   sql = <<-EOQ
     select
@@ -355,7 +354,6 @@ dashboard "aws_ebs_volume_dashboard" {
     card {
       sql   = query.aws_ebs_volume_storage_total.sql
       width = 2
-
     }
 
 
@@ -374,7 +372,7 @@ dashboard "aws_ebs_volume_dashboard" {
 
     # Costs
     card {
-      sql = <<-EOQ
+      sql   = <<-EOQ
         select
           'Cost - MTD' as label,
           sum(unblended_cost_amount)::numeric::money as value
@@ -403,7 +401,6 @@ dashboard "aws_ebs_volume_dashboard" {
       sql   = query.aws_ebs_volume_by_encryption_status.sql
       type  = "donut"
       width = 4
-
     }
 
     chart {
@@ -468,9 +465,7 @@ dashboard "aws_ebs_volume_dashboard" {
       type  = "column"
       width = 3
     }
-     
   }
-
 
   container {
       chart {
