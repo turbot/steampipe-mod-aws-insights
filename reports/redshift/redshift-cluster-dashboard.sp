@@ -375,6 +375,50 @@ dashboard "aws_redshift_cluster_dashboard" {
 
   }
 
+  /*
+  container {
+    title = "Costs"
+    chart {
+      title = "Redshift Cluster Monthly Unblended Cost"
+
+      type  = "line"
+      sql   = query.aws_redshift_cluster_cost_per_month.sql
+      width = 4
+    }
+
+   chart {
+      title = "Redshift Cluster Cost by Usage Type - MTD"
+      type  = "donut"
+      sql   = query.aws_redshift_cluster_cost_by_usage_types_mtd.sql
+      width = 2
+    }
+
+   chart {
+      title = "Redshift Cluster Cost by Usage Type - 12 months"
+      type  = "donut"
+      sql   = query.aws_redshift_cluster_cost_by_usage_types_12mo.sql
+      width = 2
+    }
+
+    chart {
+      title = "Redshift Cluster Cost By Account - MTD"
+
+      type  = "donut"
+      sql   = query.aws_redshift_cluster_cost_by_account_mtd.sql
+      width = 2
+    }
+
+    chart {
+      title = "Redshift Cluster Cost By Account - 12 months"
+
+      type  = "donut"
+      sql   = query.aws_redshift_cluster_cost_by_account_12mo.sql
+      width = 2
+    }
+  }
+  */
+
+  # donut charts in a 2 x 2 layout
   container {
     title = "Assessments"
 
