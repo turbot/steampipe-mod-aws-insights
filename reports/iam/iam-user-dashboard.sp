@@ -3,8 +3,8 @@ query "aws_iam_user_count" {
     select
       count(*) as value,
       'Total Users' as label
-    from 
-      aws_iam_user    
+    from
+      aws_iam_user
   EOQ
 }
 
@@ -14,10 +14,10 @@ query "aws_iam_user_mfa_count" {
       count(*) as value,
       'MFA Not Enabled' as label,
       case when count(*) = 0 then 'ok' else 'alert' end as type
-    from 
-      aws_iam_user  
+    from
+      aws_iam_user
     where
-      not mfa_enabled  
+      not mfa_enabled
   EOQ
 }
 
@@ -30,30 +30,42 @@ query "aws_iam_user_no_boundary_count" {
       count(*) as value,
       'No Boundary Policy' as label,
       case when count(*) = 0 then 'ok' else 'alert' end as type
-    from 
-      aws_iam_user  
+    from
+      aws_iam_user
     where
-      permissions_boundary_type is null or permissions_boundary_type = '' 
+      permissions_boundary_type is null or permissions_boundary_type = ''
   EOQ
 }
 
 
 
-### 
+###
 query "aws_iam_users_by_account" {
   sql = <<-EOQ
-    select 
+    select
       a.title,
       count(*)
-    from 
+    from
       aws_iam_user as u,
       aws_account as a
     where
       u.account_id = a.account_id
-    group by 
+    group by
       a.title
     order by
       count desc
+  EOQ
+}
+
+query "aws_iam_user_by_path" {
+  sql = <<-EOQ
+    select
+      path,
+      count(name) as "total"
+    from
+      aws_iam_user
+    group by
+      path
   EOQ
 }
 
@@ -71,16 +83,16 @@ query "aws_iam_users_by_mfa_enabled" {
     select
       mfa_status,
       count(mfa_status)
-    from 
+    from
       mfa
-    group by 
+    group by
       mfa_status
   EOQ
 }
 
 
 query "aws_iam_users_by_boundary_policy" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       case
         when permissions_boundary_type is null or permissions_boundary_type = '' then 'Not Configured'
@@ -90,7 +102,7 @@ query "aws_iam_users_by_boundary_policy" {
     from
       aws_iam_user
     group by
-      permissions_boundary_type 
+      permissions_boundary_type
   EOQ
 }
 
@@ -101,9 +113,9 @@ query "aws_iam_users_with_direct_attached_policy_count" {
       count(*) as value,
        'Users with Attached Policies' as label,
       case when count(*) = 0 then 'ok' else 'alert' end as type
-    from 
-      aws_iam_user  
-    where 
+    from
+      aws_iam_user
+    where
       jsonb_array_length(attached_policy_arns) > 0
   EOQ
 }
@@ -114,9 +126,9 @@ query "aws_iam_users_with_inline_policy_count" {
       count(*) as value,
       'Users with Inline Policies' as label,
       case when count(*) = 0 then 'ok' else 'alert' end as type
-    from 
-      aws_iam_user  
-    where 
+    from
+      aws_iam_user
+    where
       jsonb_array_length(inline_policies) > 0
   EOQ
 }
@@ -131,13 +143,13 @@ query "aws_iam_users_with_direct_attached_policy" {
           when jsonb_array_length(attached_policy_arns) > 0 then 'With Attached Policies'
           else 'OK'
         end as has_attached
-      from 
+      from
         aws_iam_user
       )
       select
         has_attached,
         count(*)
-      from 
+      from
         attached_compliance
       group by
         has_attached
@@ -154,13 +166,13 @@ query "aws_iam_users_with_inline_policy" {
           when jsonb_array_length(inline_policies) > 0 then 'With Inline Policies'
           else 'OK'
         end as has_inline
-      from 
+      from
         aws_iam_user
       )
       select
         has_inline,
         count(*)
-      from 
+      from
         inline_compliance
       group by
         has_inline
@@ -217,11 +229,11 @@ query "aws_iam_user_by_creation_month" {
 dashboard "aws_iam_user_dashboard" {
   title = "AWS IAM User Dashboard"
 
-  
+
   container {
 
-  
-     # Analysis
+
+    # Analysis
     card {
       sql   = query.aws_iam_user_count.sql
       width = 2
@@ -238,7 +250,6 @@ dashboard "aws_iam_user_dashboard" {
       width = 2
     }
 
-
     card {
       sql   = query.aws_iam_users_with_direct_attached_policy_count.sql
       width = 2
@@ -248,7 +259,7 @@ dashboard "aws_iam_user_dashboard" {
       sql   = query.aws_iam_users_with_inline_policy_count.sql
       width = 2
     }
-  
+
   }
 
   container {
@@ -257,6 +268,13 @@ dashboard "aws_iam_user_dashboard" {
     chart {
       title = "Users by Account"
       sql   = query.aws_iam_users_by_account.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Users by Path"
+      sql   = query.aws_iam_user_by_path.sql
       type  = "column"
       width = 3
     }
@@ -306,7 +324,7 @@ dashboard "aws_iam_user_dashboard" {
       width = 3
     }
   }
-  
+
 
 
   container {
@@ -314,7 +332,7 @@ dashboard "aws_iam_user_dashboard" {
 
     chart {
       title = "User by Creation Month"
-      sql = query.aws_iam_user_by_creation_month.sql
+      sql   = query.aws_iam_user_by_creation_month.sql
       type  = "column"
       width = 4
       series "month" {
@@ -329,12 +347,12 @@ dashboard "aws_iam_user_dashboard" {
       sql = <<-EOQ
         select
           title as "user",
-          current_date - create_date as "Age in Days",
+          date_trunc('day',age(now(),create_date))::text as "Age",
           account_id as "Account"
         from
           aws_iam_user
         order by
-          "Age in Days" desc,
+          "Age" desc,
           title
         limit 5
       EOQ
@@ -347,16 +365,16 @@ dashboard "aws_iam_user_dashboard" {
       sql = <<-EOQ
         select
           title as "user",
-          current_date - create_date as "Age in Days",
+          date_trunc('day',age(now(),create_date))::text as "Age",
           account_id as "Account"
         from
           aws_iam_user
         order by
-          "Age in Days" asc,
+          "Age" asc,
           title
         limit 5
       EOQ
     }
   }
-  
+
 }

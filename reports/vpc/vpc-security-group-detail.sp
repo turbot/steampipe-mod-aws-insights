@@ -1,12 +1,12 @@
-dashboard aws_vpc_security_group_detail {
+dashboard "aws_vpc_security_group_detail" {
   title = "AWS VPC Security Group Detail"
 
   input "security_group_id" {
     title = "Security Group"
     sql   = <<-EOQ
-      select 
-        group_id 
-      from 
+      select
+        group_id
+      from
         aws_vpc_security_group
     EOQ
     width = 2
@@ -18,10 +18,10 @@ dashboard aws_vpc_security_group_detail {
       sql   = <<-EOQ
         select
           'Ingress Rules' as label,
-          count(*) as value     
+          count(*) as value
         from
           aws_vpc_security_group_rule
-        where 
+        where
           group_id = 'sg-029cd86da723916fa'
           and not is_egress
       EOQ
@@ -32,10 +32,10 @@ dashboard aws_vpc_security_group_detail {
       sql   = <<-EOQ
         select
           'Egress Rules' as label,
-          count(*) as value     
+          count(*) as value
         from
           aws_vpc_security_group_rule
-        where 
+        where
           group_id = 'sg-029cd86da723916fa'
           and is_egress
       EOQ
@@ -50,11 +50,11 @@ dashboard aws_vpc_security_group_detail {
           case
             when count(*) > 0 then 'ok'
             else 'alert'
-          end as style       
+          end as type
         from
           aws_ec2_network_interface,
           jsonb_array_elements(groups) as sg
-        where 
+        where
           sg ->> 'GroupId' = 'sg-029cd86da723916fa'
       EOQ
       width = 2
@@ -68,10 +68,10 @@ dashboard aws_vpc_security_group_detail {
           case
             when count(*) = 0 then 'ok'
             else 'alert'
-          end as style   
+          end as type
         from
           aws_vpc_security_group_rule
-        where 
+        where
           group_id = 'sg-029cd86da723916fa'
           and ( cidr_ipv4 = '0.0.0.0/0' or cidr_ipv6 = '::/0')
           and ip_protocol <> 'icmp'
@@ -92,10 +92,10 @@ dashboard aws_vpc_security_group_detail {
           case
             when count(*) = 0 then 'ok'
             else 'alert'
-          end as style   
+          end as type
         from
           aws_vpc_security_group_rule
-        where 
+        where
           group_id = 'sg-029cd86da723916fa'
           and ( cidr_ipv4 = '0.0.0.0/0' or cidr_ipv6 = '::/0')
           and ip_protocol <> 'icmp'
@@ -111,17 +111,17 @@ dashboard aws_vpc_security_group_detail {
   }
 
   container {
-    title  = "Analysis"
+    title = "Analysis"
 
     container {
 
       container {
-        width = 6 
+        width = 6
 
         table {
           title = "Overview"
 
-          sql   = <<-EOQ
+          sql = <<-EOQ
             select
               group_name,
               group_id,
@@ -133,7 +133,7 @@ dashboard aws_vpc_security_group_detail {
               arn
             from
               aws_vpc_security_group
-                where 
+                where
               group_id = 'sg-029cd86da723916fa'
           EOQ
         }
@@ -141,14 +141,14 @@ dashboard aws_vpc_security_group_detail {
         table {
           title = "Tags"
 
-          sql   = <<-EOQ
+          sql = <<-EOQ
             select
               tag ->> 'Key' as "Key",
               tag ->> 'Value' as "Value"
             from
               aws_vpc_security_group,
               jsonb_array_elements(tags_src) as tag
-            where 
+            where
               group_id = 'sg-029cd86da723916fa'
           EOQ
         }
@@ -157,7 +157,7 @@ dashboard aws_vpc_security_group_detail {
       table {
         title = "Associated To"
         sql   = query.aws_vpc_security_group_assoc.sql
-        width = 6 
+        width = 6
       }
     }
 
@@ -233,22 +233,22 @@ query "aws_vpc_security_group_assoc" {
   sql = <<EOQ
    select
       title,
-      'aws_ec2_instance' as type, 
+      'aws_ec2_instance' as type,
       arn
-    from 
+    from
       aws_ec2_instance,
       jsonb_array_elements(security_groups) as sg
-    where 
+    where
      sg ->> 'GroupId' = 'sg-029cd86da723916fa'
 
    union all select
       title,
-      'aws_lambda_function' as type, 
+      'aws_lambda_function' as type,
       arn
-    from 
+    from
       aws_lambda_function,
       jsonb_array_elements_text(vpc_security_group_ids) as sg
-    where 
+    where
      sg = 'sg-029cd86da723916fa'
 
     -- TODO: Add aws_rds_db_instance / db_security_groups, ELB, ALB, elasticache, etc....
@@ -321,23 +321,23 @@ with associations as (
   select
       title,
       arn,
-      'aws_ec2_instance' as category, 
+      'aws_ec2_instance' as category,
       sg ->> 'GroupId' as group_id
-    from 
+    from
       aws_ec2_instance,
       jsonb_array_elements(security_groups) as sg
-    where 
+    where
      sg ->> 'GroupId' = 'sg-029cd86da723916fa'
 
    union all select
       title,
       arn,
-      'aws_lambda_function' as category, 
+      'aws_lambda_function' as category,
       sg
-    from 
+    from
       aws_lambda_function,
       jsonb_array_elements_text(vpc_security_group_ids) as sg
-    where 
+    where
      sg = 'sg-029cd86da723916fa'
     -- TODO: Add aws_rds_db_instance / db_security_groups, etc.
 ),
@@ -396,7 +396,7 @@ analysis as (
     1 as depth,
     category
   from
-    rules 
+    rules
 
   union
   select
@@ -416,9 +416,9 @@ analysis as (
       title || '(' || category || ')' as name, -- TODO: Should this be arn instead?
       3 as depth,
       category
-    from 
+    from
       associations
-    where 
+    where
      group_id = 'sg-029cd86da723916fa'
   )
 select
@@ -440,23 +440,23 @@ with associations as (
   select
       title,
       arn,
-      'aws_ec2_instance' as category, 
+      'aws_ec2_instance' as category,
       sg ->> 'GroupId' as group_id
-    from 
+    from
       aws_ec2_instance,
       jsonb_array_elements(security_groups) as sg
-    where 
+    where
      sg ->> 'GroupId' = 'sg-029cd86da723916fa'
 
    union all select
       title,
       arn,
-      'aws_lambda_function' as category, 
+      'aws_lambda_function' as category,
       sg
-    from 
+    from
       aws_lambda_function,
       jsonb_array_elements_text(vpc_security_group_ids) as sg
-    where 
+    where
      sg = 'sg-029cd86da723916fa'
     -- TODO: Add aws_rds_db_instance / db_security_groups, etc.
 ),
@@ -504,9 +504,9 @@ analysis as (
       title || '(' || category || ')' as name, -- TODO: Should this be arn instead?
       0 as depth,
       category
-    from 
+    from
       associations
-    where 
+    where
      group_id = 'sg-029cd86da723916fa'
 
 
@@ -527,7 +527,7 @@ analysis as (
     2 as depth,
     category
   from
-    rules 
+    rules
 
   union select
     port_proto as parent,

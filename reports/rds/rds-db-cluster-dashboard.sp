@@ -9,7 +9,7 @@ query "aws_rds_unencrypted_db_cluster_count" {
     select
       count(*) as value,
       'Unencrypted Clusters' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      case count(*) when 0 then 'ok' else 'alert' end as type
     from
       aws_rds_db_cluster
     where
@@ -22,7 +22,7 @@ query "aws_rds_db_cluster_not_in_vpc_count" {
     select
       count(*) as value,
       'Clusters not in VPC' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as style
+      case count(*) when 0 then 'ok' else 'alert' end as type
     from
       aws_rds_db_cluster
     where
@@ -46,21 +46,6 @@ query "aws_rds_db_cluster_cost_per_month" {
   EOQ
 }
 
-
-query "aws_rds_db_cluster_cost_last_30_counter" {
-  sql = <<-EOQ
-    select
-       'Cost - Last 30 Days' as label,
-       sum(unblended_cost_amount)::numeric::money as value
-    from
-      aws_cost_by_service_daily
-    where
-      service = 'Amazon Relational Database Service'
-      and period_start  >=  CURRENT_DATE - INTERVAL '30 day'
-  EOQ
-}
-
-
 query "aws_rds_db_cluster_cost_by_usage_types_12mo" {
   sql = <<-EOQ
     select
@@ -71,40 +56,6 @@ query "aws_rds_db_cluster_cost_by_usage_types_12mo" {
     where
       service = 'Amazon Relational Database Service'
       and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-    group by
-      usage_type
-    order by
-      sum(unblended_cost_amount) desc
-  EOQ
-}
-
-query "aws_rds_db_cluster_cost_30_60_counter" {
-  sql = <<-EOQ
-    select
-      'Cost - Penultimate 30 Days' as label,
-       sum(unblended_cost_amount)::numeric::money as value
-    from
-      aws_cost_by_service_daily
-    where
-      service = 'Amazon Relational Database Service'
-      and period_start  between CURRENT_DATE - INTERVAL '60 day' and CURRENT_DATE - INTERVAL '30 day'
-
-  EOQ
-
-}
-
-query "aws_rds_db_cluster_cost_by_usage_types_30day" {
-  sql = <<-EOQ
-    select
-       usage_type,
-       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-    from
-      aws_cost_by_service_usage_type_daily
-    where
-      service = 'Amazon Relational Database Service'
-      --and period_end >= date_trunc('month', CURRENT_DATE::timestamp)
-      and period_end >=  CURRENT_DATE - INTERVAL '30 day'
-
     group by
       usage_type
     order by
@@ -420,15 +371,15 @@ dashboard "aws_rds_db_cluster_dashboard" {
       width = 2
     }
 
-   card {
-      sql   = query.aws_rds_db_cluster_cost_last_30_counter.sql
-      width = 2
-    }
+  #  card {
+  #     sql   = query.aws_rds_db_cluster_cost_last_30_counter.sql
+  #     width = 2
+  #   }
 
-  card {
-      sql   = query.aws_rds_db_cluster_cost_30_60_counter.sql
-      width = 2
-    }
+  # card {
+  #     sql   = query.aws_rds_db_cluster_cost_30_60_counter.sql
+  #     width = 2
+  #   }
 
   }
 
@@ -476,13 +427,6 @@ dashboard "aws_rds_db_cluster_dashboard" {
       type  = "line"
       sql   = query.aws_rds_db_cluster_cost_per_month.sql
       width = 4
-    }
-
-   chart {
-      title = "RDS Cost by Usage Type - last 30 days"
-      type  = "donut"
-      sql   = query.aws_rds_db_cluster_cost_by_usage_types_30day.sql
-      width = 2
     }
 
    chart {
