@@ -16,13 +16,13 @@ dashboard "aws_ebs_volume_encryption_dashboard" {
       EOQ
       width = 2
     }
-
   }
 
   table {
     sql = <<-EOQ
       select
-        title as "Volume",
+        tags ->> 'Name' as "Name",
+        volume_id as "Volume",
         case when encrypted then 'Enabled' else null end as "Encryption",
         account_id as "Account",
         region as "Region",
@@ -31,5 +31,4 @@ dashboard "aws_ebs_volume_encryption_dashboard" {
         aws_ebs_volume;
     EOQ
   }
-
 }

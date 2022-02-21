@@ -57,7 +57,7 @@ dashboard "aws_dynamodb_table_encryption_report" {
   table {
     sql = <<-EOQ
       select
-        t.title as "Table",
+        t.name as "Name",
         case
           when t.sse_description ->> 'SSEType' = 'KMS' and k.key_manager = 'AWS' then 'AWS Managed'
           when t.sse_description ->> 'SSEType' = 'KMS' and k.key_manager = 'CUSTOMER' then 'Customer Managed'

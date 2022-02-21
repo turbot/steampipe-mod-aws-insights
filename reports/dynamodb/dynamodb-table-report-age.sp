@@ -82,12 +82,13 @@ dashboard "aws_dynamodb_table_age_report" {
     table {
       sql = <<-EOQ
         select
-          v.title as "Table",
-          date_trunc('day',age(now(),v.creation_date_time))::text as "Age",
+          v.name as "Name",
+          now()::date - v.creation_date_time::date as "Age in Days",
           v.creation_date_time as "Create Time",
+          v.table_status as "State",
           a.title as "Account",
           v.account_id as "Account ID",
-          v.table_status as "State",
+          v.region as "Region",
           v.arn as "ARN"
         from
           aws_dynamodb_table as v,

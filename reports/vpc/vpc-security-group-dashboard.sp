@@ -58,66 +58,12 @@ dashboard "aws_vpc_security_group_dashboard" {
   }
 
   container {
-    title = "Analysis"
-
-    chart {
-      title = "Security Groups by Account"
-      sql   = <<-EOQ
-        select
-          a.title as "account",
-          count(s.*) as "security_groups"
-        from
-          aws_vpc_security_group as s,
-          aws_account as a
-        where
-          a.account_id = s.account_id
-        group by
-          account
-        order by
-          account;
-      EOQ
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Security Groups by Region"
-      sql = <<-EOQ
-        select
-          region as "Region",
-          count(*) as "security_groups"
-        from
-          aws_vpc_security_group
-        group by region
-        order by region;
-      EOQ
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Security Groups by VPC"
-      sql = <<-EOQ
-        select
-          vpc_id as "VPC",
-          count(*) as "security_groups"
-        from
-          aws_vpc_security_group
-        group by vpc_id
-        order by vpc_id;
-      EOQ
-      type  = "column"
-      width = 5
-    }
-  }
-
-  container {
-    title = "Assessments"
+    title = "Assessment"
 
     chart {
       title = "Default Security Group"
       type  = "donut"
-      width = 2
+      width = 3
       sql   = <<-EOQ
         with default_sg as (
           select
@@ -266,6 +212,60 @@ dashboard "aws_vpc_security_group_dashboard" {
           sg_list
         group by is_associated;
       EOQ 
+    }
+  }
+
+  container {
+    title = "Analysis"
+
+    chart {
+      title = "Security Groups by Account"
+      sql   = <<-EOQ
+        select
+          a.title as "account",
+          count(s.*) as "security_groups"
+        from
+          aws_vpc_security_group as s,
+          aws_account as a
+        where
+          a.account_id = s.account_id
+        group by
+          account
+        order by
+          account;
+      EOQ
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Security Groups by Region"
+      sql = <<-EOQ
+        select
+          region as "Region",
+          count(*) as "security_groups"
+        from
+          aws_vpc_security_group
+        group by region
+        order by region;
+      EOQ
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Security Groups by VPC"
+      sql = <<-EOQ
+        select
+          vpc_id as "VPC",
+          count(*) as "security_groups"
+        from
+          aws_vpc_security_group
+        group by vpc_id
+        order by vpc_id;
+      EOQ
+      type  = "column"
+      width = 5
     }
   }
 }
