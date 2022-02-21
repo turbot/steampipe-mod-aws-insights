@@ -104,10 +104,8 @@ query "aws_vpc_by_size" {
 query "aws_vpc_cost_per_month" {
   sql = <<-EOQ
     select
-       to_char(period_start, 'Mon-YY') as "Month",
-       sum(unblended_cost_amount)::numeric as "Unblended Cost"
-       --        sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-
+      to_char(period_start, 'Mon-YY') as "Month",
+      sum(unblended_cost_amount)::numeric as "Unblended Cost"
     from
       aws_cost_by_service_usage_type_monthly
     where
@@ -202,6 +200,45 @@ query "aws_vpc_cost_by_account_12mo" {
   EOQ
 }
 
+query "aws_vpc_monthly_forecast_table" {
+  sql = <<-EOQ
+    with monthly_costs as (
+      select
+        period_start,
+        period_end,
+        case
+          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp) then 'Month to Date'
+          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month') then 'Previous Month'
+          else to_char (period_start, 'Month')
+        end as period_label,
+        period_end::date - period_start::date as days,
+        sum(unblended_cost_amount)::numeric::money as unblended_cost_amount,
+        (sum(unblended_cost_amount) / (period_end::date - period_start::date))::numeric::money as average_daily_cost,
+        date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval - '1 DAY'::interval) as days_in_month,
+        sum(unblended_cost_amount) / (period_end::date - period_start::date ) * date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval - '1 DAY'::interval)::numeric::money as forecast_amount
+      from
+        aws_cost_by_service_usage_type_monthly as c
+      where
+        service = 'Amazon Virtual Private Cloud'
+        and date_trunc('month', period_start) >= date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
+      group by
+        period_start,
+        period_end
+    )
+    select
+      period_label as "Period",
+      unblended_cost_amount as "Cost",
+      average_daily_cost as "Daily Avg Cost"
+    from
+      monthly_costs
+    union all
+    select
+      'This Month (Forecast)' as "Period",
+      (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
+      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
+  EOQ
+}
+
 dashboard "aws_vpc_dashboard" {
   title = "AWS VPC Dashboard"
 
@@ -283,43 +320,8 @@ dashboard "aws_vpc_dashboard" {
   }
 
   container {
-    title = "Analysis"
-
-    chart {
-      title = "VPCs by Account"
-      sql   = query.aws_vpc_by_account.sql
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "VPCs by Region"
-      sql   = query.aws_vpc_by_region.sql
-      type  = "column"
-      legend {
-        position = "bottom"
-      }
-      width = 3
-    }
-
-    chart {
-      title = "VPCs by Size"
-      sql   = query.aws_vpc_by_size.sql
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "VPCs by RFC1918 Range"
-      sql   = query.aws_vpc_by_rfc1918_range.sql
-      type  = "column"
-      width = 3
-    }
-  }
-
-  container {
     title = "Assessments"
-    width = 8
+    width = 6
 
     chart {
       title = "VPC Flow Logs"
@@ -389,51 +391,105 @@ dashboard "aws_vpc_dashboard" {
   }
 
   container {
-    title = "Costs"
-    width = 4
+    title = "Cost"
+    width = 6
 
-    chart {
-      title = "VPC Monthly Unblended Cost"
-      type  = "line"
-      sql   = query.aws_vpc_cost_per_month.sql
+    # Costs
+    table {
+      width = 6
+      title = "Forecast"
+      sql   = query.aws_vpc_monthly_forecast_table.sql
     }
 
-    #chart {
-    #  title = "VPC Cost by Usage Type - MTD"
-    #  type  = "donut"
-    #  sql   = query.aws_vpc_cost_top_usage_types_mtd.sql
-    #  width = 2
-    #
-    #  legend {
-    #    position = "bottom"
-    #  }
-    #}
-
-    #chart {
-    #  title = "VPC Cost by Usage Type - 12 months"
-    #  type  = "donut"
-    #  sql   = query.aws_vpc_cost_by_usage_types_12mo.sql
-    #  width = 2
-    #
-    #  legend {
-    #    position = "right"
-    #  }
-    #}
-
-    #chart {
-    #  title = "VPC Cost by Account - MTD"
-    #  type  = "donut"
-    #  sql   = query.aws_vpc_cost_by_account_mtd.sql
-    #  width = 2
-    #}
-
-    #chart {
-    #  title = "VPC Cost by Account - 12 months"
-    #  type  = "donut"
-    #  sql   = query.aws_vpc_cost_by_account_12mo.sql
-    #  width = 2
-    #}
+    chart {
+      width = 6
+      type  = "column"
+      title = "Monthly Cost - 12 Months"
+      sql   = query.aws_vpc_cost_per_month.sql
+    }
   }
+
+  container {
+    title = "Analysis"
+
+    chart {
+      title = "VPCs by Account"
+      sql   = query.aws_vpc_by_account.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "VPCs by Region"
+      sql   = query.aws_vpc_by_region.sql
+      type  = "column"
+      legend {
+        position = "bottom"
+      }
+      width = 3
+    }
+
+    chart {
+      title = "VPCs by Size"
+      sql   = query.aws_vpc_by_size.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "VPCs by RFC1918 Range"
+      sql   = query.aws_vpc_by_rfc1918_range.sql
+      type  = "column"
+      width = 3
+    }
+  }
+
+  #container {
+  #  title = "Costs"
+  #  width = 4
+  #
+  #  chart {
+  #    title = "VPC Monthly Unblended Cost"
+  #    type  = "line"
+  #    sql   = query.aws_vpc_cost_per_month.sql
+  #  }
+  #
+  #  chart {
+  #    title = "VPC Cost by Usage Type - MTD"
+  #    type  = "donut"
+  #    sql   = query.aws_vpc_cost_top_usage_types_mtd.sql
+  #    width = 2
+  #  
+  #    legend {
+  #      position = "bottom"
+  #    }
+  #  }
+  #
+  #  chart {
+  #    title = "VPC Cost by Usage Type - 12 months"
+  #    type  = "donut"
+  #    sql   = query.aws_vpc_cost_by_usage_types_12mo.sql
+  #    width = 2
+  #  
+  #    legend {
+  #      position = "right"
+  #    }
+  #  }
+  #
+  #chart {
+  #  title = "VPC Cost by Account - MTD"
+  #  type  = "donut"
+  #  sql   = query.aws_vpc_cost_by_account_mtd.sql
+  #  width = 2
+  #}
+
+  #  chart {
+  #    title = "VPC Cost by Account - 12 months"
+  #    type  = "donut"
+  #    sql   = query.aws_vpc_cost_by_account_12mo.sql
+  #    width = 2
+  #  }
+  #}
 }
  
 # container {
