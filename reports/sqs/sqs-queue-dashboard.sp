@@ -127,27 +127,6 @@ query "aws_sqs_queue_by_encryption_status" {
 }
 
 
-query "aws_sqs_queue_by_subscription_status" {
-  sql = <<-EOQ
-    select
-      subscription_status,
-      count(*)
-    from (
-      select subscriptions_confirmed,
-        case when subscriptions_confirmed::int = 0 then
-          'Disabled'
-        else
-          'Enabled'
-        end subscription_status
-      from
-        aws_sns_topic) as t
-    group by
-      subscription_status
-    order by
-      subscription_status desc
-  EOQ
-}
-
 dashboard "aws_sqs_queue_dashboard" {
     title = "AWS SQS Queue Dashboard"
     container {
@@ -158,6 +137,22 @@ dashboard "aws_sqs_queue_dashboard" {
       card {
         sql   = query.aws_sqs_queue_unencrypted_count.sql
         width = 2
+      }
+
+      card {
+        type  = "info"
+        icon  = "currency-dollar"
+        width = 2
+        sql   = <<-EOQ
+          select
+            'Cost - MTD' as label,
+            sum(unblended_cost_amount)::numeric::money as value
+          from
+            aws_cost_by_service_usage_type_monthly as c
+          where
+            service = 'Amazon Simple Queue Service'
+            and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+        EOQ
       }
     }
 
@@ -171,13 +166,6 @@ dashboard "aws_sqs_queue_dashboard" {
         type  = "donut"
         width = 4
       } 
-
-      chart {
-        title = "Subscription Status"
-        sql = query.aws_sqs_queue_by_subscription_status.sql
-        type  = "donut"
-        width = 4
-      }
     }
 
   container {
