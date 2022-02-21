@@ -4,6 +4,15 @@ query "aws_lambda_function_count" {
   EOQ
 }
 
+query "aws_lambda_function_memory_total" {
+  sql = <<-EOQ
+    select
+      sum(memory_size) as "Total Memory(MB)"
+    from
+      aws_lambda_function
+  EOQ
+}
+
 query "aws_public_lambda_function_count" {
   sql = <<-EOQ
     select
@@ -122,7 +131,7 @@ query "aws_lambda_function_cost_per_month" {
   sql = <<-EOQ
     select
       to_char(period_start, 'Mon-YY') as "Month",
-      sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+      sum(unblended_cost_amount) as "Unblended Cost"
     from
       aws_cost_by_service_usage_type_monthly
     where
@@ -197,42 +206,6 @@ query "aws_lambda_high_error_rate" {
   EOQ
 }
 
-#query "aws_lambda_function_cost_by_usage_types_12mo" {
-#  sql = <<-EOQ
-#    select
-#      usage_type,
-#      sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-#    from
-#      aws_cost_by_service_usage_type_monthly
-#    where
-#      service = 'AWS Lambda'
-#      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-#    group by
-#      usage_type
-#    order by
-#      sum(unblended_cost_amount) desc
-#  EOQ
-#}
-
-#query "aws_lambda_function_cost_by_account_12mo" {
-#  sql = <<-EOQ
-#    select
-#     a.title as "account",
-#      sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-#    from
-#      aws_cost_by_service_monthly as c,
-#      aws_account as a
-#    where
-#      a.account_id = c.account_id
-#      and service = 'AWS Lambda'
-#      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-#    group by
-#      account
-#    order by
-#      account
-#  EOQ
-#}
-
 query "aws_lambda_function_invocation_rate" {
   sql = <<-EOQ
     with top_n as (
@@ -263,26 +236,6 @@ query "aws_lambda_function_invocation_rate" {
   EOQ
 }
 
-#query "aws_lambda_function_cost_top_usage_types_mtd" {
-#  sql = <<-EOQ
-#    select
-#      usage_type,
-#      sum(unblended_cost_amount)::numeric as "Unblended Cost"
-#    from
-#      aws_cost_by_service_usage_type_monthly
-#    where
-#      service = 'AWS Lambda'
-#      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-#    group by
-#      period_start,
-#      usage_type
-#    having
-#      round(sum(unblended_cost_amount)::numeric,2) > 0
-#    order by
-#      sum(unblended_cost_amount) desc
-#  EOQ
-#}
-
 query "aws_lambda_function_public_status" {
   sql = <<-EOQ
     with functions as (
@@ -308,24 +261,54 @@ query "aws_lambda_function_public_status" {
   EOQ
 }
 
-#query "aws_lambda_function_cost_by_account_mtd" {
-#  sql = <<-EOQ
-#    select
-#      a.title as "account",
-#      sum(unblended_cost_amount)::numeric as "Unblended Cost"
-#    from
-#      aws_cost_by_service_monthly as c,
-#      aws_account as a
-#    where
-#      a.account_id = c.account_id
-#      and service = 'AWS Lambda'
-#      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-#    group by
-#      account
-#    order by
-#      account
-#  EOQ
-#}
+query "aws_lambda_monthly_forecast_table" {
+  sql = <<-EOQ
+    with monthly_costs as (
+        select
+          period_start,
+          period_end,
+          case
+            when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp) then 'Month to Date'
+            when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month') then 'Previous Month'
+            else to_char (period_start, 'Month')
+          end as period_label,
+          period_end::date - period_start::date as days,
+          sum(unblended_cost_amount)::numeric::money as unblended_cost_amount,
+          (sum(unblended_cost_amount) / (period_end::date - period_start::date ) )::numeric::money as average_daily_cost,
+          date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval ) as days_in_month,
+          sum(unblended_cost_amount) / (period_end::date - period_start::date ) * date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval )::numeric::money  as forecast_amount
+        from
+          aws_cost_by_service_monthly as c
+
+        where
+          service = 'AWS Lambda'
+          and date_trunc('month', period_start) >= date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
+
+          group by
+          period_start,
+          period_end
+      )
+
+      select
+        period_label as "Period",
+        unblended_cost_amount as "Cost",
+        average_daily_cost as "Daily Avg Cost"
+      from
+        monthly_costs
+      union all
+      select
+        'This Month (Forecast)' as "Period",
+        (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
+        (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
+
+      EOQ
+}
+
+query "aws_lambda_function_memory_by_region" {
+  sql = <<-EOQ
+    select region as "Region", sum(memory_size) as "MB" from aws_lambda_function group by region order by region
+  EOQ
+}
 
 dashboard "aws_lambda_function_dashboard" {
 
@@ -333,46 +316,18 @@ dashboard "aws_lambda_function_dashboard" {
 
   container {
 
+    # Analysis
     card {
       sql   = query.aws_lambda_function_count.sql
       width = 2
     }
 
-    # Costs
     card {
-      sql = <<-EOQ
-        select
-          'Cost - MTD' as label,
-          sum(unblended_cost_amount)::numeric::money as value
-        from
-          aws_cost_by_service_usage_type_monthly as c
-        where
-          service = 'AWS Lambda'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-      EOQ
-      type = "info"
-      icon = "currency-dollar"
-      width = 2
-    }
-
-    card {
-      sql = <<-EOQ
-        select
-          'Cost - Previous Month' as label,
-          sum(unblended_cost_amount)::numeric::money as value
-        from
-          aws_cost_by_service_usage_type_monthly as c
-        where
-          service = 'AWS Lambda'
-          and date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
-      EOQ
-      type = "info"
-      icon = "currency-dollar"
+      sql   = query.aws_lambda_function_memory_total.sql
       width = 2
     }
 
     # Assessments
-
     card {
       sql   = query.aws_public_lambda_function_count.sql
       width = 2
@@ -388,6 +343,85 @@ dashboard "aws_lambda_function_dashboard" {
       width = 2
     }
 
+    # Costs
+    card {
+      sql = <<-EOQ
+        select
+          'Cost - MTD' as label,
+          sum(unblended_cost_amount)::numeric::money as value
+        from
+          aws_cost_by_service_monthly as c
+        where
+          service = 'AWS Lambda'
+          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+      EOQ
+      type = "info"
+      icon = "currency-dollar"
+      width = 2
+    }
+  }
+
+  container {
+    title = "Assessments"
+     width = 6
+
+    chart {
+      title = "Public/Private Status"
+      sql   = query.aws_lambda_function_public_status.sql
+      type  = "donut"
+      width = 4
+    }
+
+     chart {
+      title = "Encryption Status"
+      sql   = query.aws_lambda_function_by_encryption_status.sql
+      type  = "donut"
+      width = 4
+
+      series "Enabled" {
+        color = "green"
+      }
+    }
+
+    chart {
+      title = "VPC Status"
+      sql   = query.aws_lambda_function_vpc_status.sql
+      type  = "donut"
+      width = 4
+    }
+
+    chart {
+      title = "Latest Runtime Status"
+      sql   = query.aws_lambda_function_use_latest_runtime_status.sql
+      type  = "donut"
+      width = 4
+    }
+
+    chart {
+      title = "Dead Letter Config Status"
+      sql   = query.aws_lambda_function_dead_letter_config_status.sql
+      type  = "donut"
+      width = 4
+    }
+  }
+
+  container {
+    title = "Cost"
+    width = 6
+
+    # Costs
+    table  {
+      width = 6
+      title = "Forecast"
+      sql   = query.aws_lambda_monthly_forecast_table.sql
+    }
+
+    chart {
+      width = 6
+      type  = "column"
+      title = "Monthly Cost - 12 Months"
+      sql   = query.aws_lambda_function_cost_per_month.sql
+    }
   }
 
   container {
@@ -415,94 +449,17 @@ dashboard "aws_lambda_function_dashboard" {
       width = 3
     }
 
-  }
-
-  container {
-    title = "Assessments"
-
     chart {
-      title = "Public/Private Status"
-      sql   = query.aws_lambda_function_public_status.sql
-      type  = "donut"
+      title = "Functions Storage by Region (MB)"
+      sql   = query.aws_lambda_function_memory_by_region.sql
+      type  = "column"
       width = 3
     }
-
-     chart {
-      title = "Encryption Status"
-      sql   = query.aws_lambda_function_by_encryption_status.sql
-      type  = "donut"
-      width = 2
-
-      series "Enabled" {
-        color = "green"
-      }
-    }
-
-    chart {
-      title = "VPC Status"
-      sql   = query.aws_lambda_function_vpc_status.sql
-      type  = "donut"
-      width = 2
-    }
-
-    chart {
-      title = "Latest Runtime Status"
-      sql   = query.aws_lambda_function_use_latest_runtime_status.sql
-      type  = "donut"
-      width = 2
-    }
-
-    chart {
-      title = "Dead Letter Config Status"
-      sql   = query.aws_lambda_function_dead_letter_config_status.sql
-      type  = "donut"
-      width = 2
-    }
-  }
-
-  container {
-    title = "Costs"
-    width = 4
-
-    chart {
-      title = "Lambda Monthly Unblended Cost"
-      type  = "line"
-      sql   = query.aws_lambda_function_cost_per_month.sql
-    }
-
-   #chart {
-     # title = "Lambda Cost by Usage Type - MTD"
-      #type  = "donut"
-      #sql   = #query.aws_lambda_function_cost_top_usage_types_mtd.sql
-      #width = 2
-    #}
-
-   #chart {
-      #title = "Lambda Cost by Usage Type - 12 months"
-     # type  = "donut"
-     # sql   = #query.aws_lambda_function_cost_by_usage_types_12mo.sql
-     # width = 2
-   # }
-
-   # chart {
-     # title = "Lambda Cost by Account - MTD"
-     # type  = "donut"
-     # sql   = query.aws_lambda_function_cost_by_account_mtd.sql
-     #  width = 2
-    #}
-
-    #chart {
-    #  title = "Lambda Cost By Account - 12 months"
-     # type  = "donut"
-     # sql   = query.aws_lambda_function_cost_by_account_12mo.sql
-    # # width = 2
-    #}
-
   }
 
   container {
     title  = "Performance & Utilization"
-    width = 8
+    width = 12
 
     chart {
       title = "Functions with high error rate (> 10 In Last 1 Month)"
