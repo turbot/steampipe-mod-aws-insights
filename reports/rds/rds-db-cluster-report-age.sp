@@ -95,7 +95,8 @@ dashboard "aws_rds_db_cluster_age_report" {
       sql = <<-EOQ
         select
           v.title as "Cluster",
-          date_trunc('day',age(now(),v.create_time))::text as "Age",
+          -- date_trunc('day',age(now(),v.create_time))::text as "Age",
+          now()::date - v.create_time::date as "Age in Days",
           v.create_time as "Create Time",
           a.title as "Account",
           v.account_id as "Account ID",

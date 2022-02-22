@@ -95,7 +95,8 @@ dashboard "aws_redshift_cluster_age_report" {
       sql = <<-EOQ
         select
           v.title as "Cluster",
-          date_trunc('day',age(now(),v.cluster_create_time))::text as "Age",
+          -- date_trunc('day',age(now(),v.cluster_create_time))::text as "Age",
+          now()::date - v.create_time::date as "Age in Days",
           v.cluster_create_time as "Create Time",
           v.cluster_status as "Status",
           a.title as "Account",
