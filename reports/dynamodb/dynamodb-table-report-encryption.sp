@@ -14,6 +14,7 @@ dashboard "aws_dynamodb_table_encryption_report" {
           or sse_description ->> 'SSEType' is null;
       EOQ
       width = 2
+      type  = "info"
     }
 
     card {
@@ -31,6 +32,7 @@ dashboard "aws_dynamodb_table_encryption_report" {
           and k.key_manager = 'AWS';
       EOQ
       width = 2
+      type  = "info"
     }
 
     card {
@@ -48,25 +50,32 @@ dashboard "aws_dynamodb_table_encryption_report" {
           and k.key_manager = 'CUSTOMER';
       EOQ
       width = 2
+      type  = "info"
     }
   }
 
   table {
+    column "Account ID" {
+      display = "none"
+    }
+
     sql = <<-EOQ
       select
-        t.title as "Table",
+        t.name as "Name",
         case
           when t.sse_description ->> 'SSEType' = 'KMS' and k.key_manager = 'AWS' then 'AWS Managed'
           when t.sse_description ->> 'SSEType' = 'KMS' and k.key_manager = 'CUSTOMER' then 'Customer Managed'
           else 'DEFAULT'
         end as "Type",
         t.sse_description ->> 'KMSMasterKeyArn' as "Key ARN",
-        t.account_id as "Account",
+        a.title as "Account",
+        t.account_id as "Account ID",
         t.region as "Region",
         t.arn as "ARN"
       from
         aws_dynamodb_table as t
-        left join aws_kms_key as k on t.sse_description ->> 'KMSMasterKeyArn' = k.arn;
+        left join aws_kms_key as k on t.sse_description ->> 'KMSMasterKeyArn' = k.arn
+        join aws_account as a on t.account_id = a.account_id;
     EOQ
   }
 }
