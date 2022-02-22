@@ -4,6 +4,12 @@ query "aws_acm_certificate_count" {
   EOQ
 }
 
+query "aws_acm_certificate_revoked_count" {
+  sql = <<-EOQ
+    select count(*) as "Revoked Certificates" from aws_acm_certificate where revoked_at is not null
+  EOQ
+}
+
 query "aws_acm_certificate_transparency_logging_disabled" {
   sql = <<-EOQ
     with transparency_logging_disabled as (
@@ -16,7 +22,7 @@ query "aws_acm_certificate_transparency_logging_disabled" {
     )
     select
       count(*) as value,
-      'Transparency Logging Preference Disabled' as label,
+      'Disabled Transparency Logging' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       transparency_logging_disabled
@@ -54,22 +60,10 @@ query "aws_acm_certificate_renewal_eligibility_ineligible" {
     )
     select
       count(*) as value,
-      'Ineligible for Renewal' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as "type"
+      'Ineligible for Renewal' as label
+      -- case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       renewal_eligibility_ineligible
-  EOQ
-}
-
-query "aws_acm_certificate_amazon_issued" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Amazon Issued Certificates' as label
-    from
-      aws_acm_certificate
-    where
-      type = 'AMAZON_ISSUED'
   EOQ
 }
 
@@ -228,9 +222,9 @@ query "aws_acm_certificate_by_validity" {
     from (
       select not_after,
         case when not_after is null or not_after < now() then
-          'invalid'
+          'Invalid'
         else
-          'valid'
+          'Valid'
         end validity
       from
         aws_acm_certificate) as t
@@ -240,6 +234,29 @@ query "aws_acm_certificate_by_validity" {
       validity
   EOQ
 }
+
+query "aws_acm_certificate_by_use" {
+  sql = <<-EOQ
+    select
+       usage,
+      count(*)
+    from (
+      select
+        in_use_by,
+        case when jsonb_array_length(in_use_by) > 0 then
+          'In-Use'
+        else
+          'Not In-Use'
+        end usage
+      from
+        aws_acm_certificate) as t
+    group by
+      usage
+    order by
+      usage
+  EOQ
+}
+
 
 dashboard "aws_acm_certificate_dashboard" {
 
@@ -253,7 +270,13 @@ dashboard "aws_acm_certificate_dashboard" {
     }
 
     card {
-      sql   = query.aws_acm_certificate_amazon_issued.sql
+      sql   = query.aws_acm_certificate_revoked_count.sql
+      width = 2
+    }
+
+    card {
+      type  = "info"
+      sql   = query.aws_acm_certificate_renewal_eligibility_ineligible.sql
       width = 2
     }
 
@@ -268,11 +291,6 @@ dashboard "aws_acm_certificate_dashboard" {
     }
 
     card {
-      sql   = query.aws_acm_certificate_renewal_eligibility_ineligible.sql
-      width = 2
-    }
-
-    card {
       sql   = query.aws_acm_certificate_transparency_logging_disabled.sql
       width = 2
     }
@@ -281,35 +299,43 @@ dashboard "aws_acm_certificate_dashboard" {
   container {
 
     title = "Assessments"
-    width = 12
+    # width = 12
 
     chart {
       title = "Certificate Status"
       sql   = query.aws_acm_certificate_by_status.sql
       type  = "donut"
-      width = 3
-    }
-
-    chart {
-      title = "Certificate Validity"
-      sql   = query.aws_acm_certificate_by_validity.sql
-      type  = "donut"
-      width = 3
+      width = 2
     }
 
     chart {
       title = "Certificate Renewal Eligibilty"
       sql   = query.aws_acm_certificate_by_eligibility.sql
       type  = "donut"
-      width = 3
+      width = 2
     }
 
     chart {
-      title = "Certificate Transparency Logging Preference"
+      title = "Certificate Validity"
+      sql   = query.aws_acm_certificate_by_validity.sql
+      type  = "donut"
+      width = 2
+    }
+
+    chart {
+      title = "Certificate Usage Status"
+      sql   = query.aws_acm_certificate_by_use.sql
+      type  = "donut"
+      width = 2
+    }
+
+    chart {
+      title = "Certificate Transparency Logging Status"
       sql   = query.aws_acm_certificate_by_transparency_logging_preference.sql
       type  = "donut"
-      width = 3
+      width = 2
     }
+
   }
 
   container {

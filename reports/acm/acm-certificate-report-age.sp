@@ -92,12 +92,11 @@ dashboard "acm_certificate_age_report" {
       sql = <<-EOQ
         select
           v.tags ->> 'Name' as "Name",
+          v.domain_name as "Domain Name",
           v.title as "ID",
-          -- date_trunc('day',age(now(),v.created_at))::text as "Age",
           now()::date - v.created_at::date as "Age in Days",
           v.created_at as "Create Time",
           v.status as "Status",
-          -- a.account_aliases  ->> 0 as "Account Name",
           a.title as "Account",
           v.account_id as "Account ID",
           v.region as "Region",
