@@ -134,39 +134,6 @@ dashboard "aws_dynamodb_table_dashboard" {
       width = 2
     }
 
-    # Costs
-    card {
-      type  = "info"
-      icon  = "currency-dollar"
-      width = 2
-      sql   = <<-EOQ
-        select
-          'Cost - MTD' as label,
-          sum(unblended_cost_amount)::numeric::money as value
-        from
-          aws_cost_by_service_usage_type_monthly
-        where
-          service = 'Amazon DynamoDB'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp);
-      EOQ
-    }
-
-    card {
-      type  = "info"
-      icon  = "currency-dollar"
-      width = 2
-      sql   = <<-EOQ
-        select
-          'Cost - Previous Month' as label,
-          sum(unblended_cost_amount)::numeric::money as value
-        from
-          aws_cost_by_service_usage_type_monthly
-        where
-          service = 'Amazon DynamoDB'
-          and date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month');
-      EOQ
-    }
-
     # Autoscaling
     card {
       sql = <<-EOQ
@@ -205,6 +172,39 @@ dashboard "aws_dynamodb_table_dashboard" {
           continuous_backups_status = 'ENABLED';
       EOQ
       width = 2
+    }
+
+    # Costs
+    card {
+      type  = "info"
+      icon  = "currency-dollar"
+      width = 2
+      sql   = <<-EOQ
+        select
+          'Cost - MTD' as label,
+          sum(unblended_cost_amount)::numeric::money as value
+        from
+          aws_cost_by_service_usage_type_monthly
+        where
+          service = 'Amazon DynamoDB'
+          and period_end > date_trunc('month', CURRENT_DATE::timestamp);
+      EOQ
+    }
+
+    card {
+      type  = "info"
+      icon  = "currency-dollar"
+      width = 2
+      sql   = <<-EOQ
+        select
+          'Cost - Previous Month' as label,
+          sum(unblended_cost_amount)::numeric::money as value
+        from
+          aws_cost_by_service_usage_type_monthly
+        where
+          service = 'Amazon DynamoDB'
+          and date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month');
+      EOQ
     }
   }
 

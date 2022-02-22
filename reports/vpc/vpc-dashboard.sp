@@ -250,40 +250,7 @@ dashboard "aws_vpc_dashboard" {
       width = 2
     }
 
-    # Costs
-    card {
-      sql = <<-EOQ
-        select
-          'Cost - MTD' as label,
-          sum(unblended_cost_amount)::numeric::money as value
-        from
-          aws_cost_by_service_monthly
-        where
-          service = 'Amazon Virtual Private Cloud'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-      EOQ
-      width = 2
-      type  = "info"
-      icon  = "currency-dollar"
-    }
-
-    card {
-      sql = <<-EOQ
-        select
-          'Cost - Previous Month' as label,
-          sum(unblended_cost_amount)::numeric::money as value
-        from
-          aws_cost_by_service_monthly
-        where
-          service = 'Amazon Virtual Private Cloud'
-          and date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
-      EOQ
-      width = 2
-      type  = "info"
-      icon  = "currency-dollar"
-    }
-
-   # Assessments
+    # Assessments
     card {
       sql = <<-EOQ
         select
@@ -316,6 +283,39 @@ dashboard "aws_vpc_dashboard" {
     card {
       sql = query.aws_vpc_no_subnet_count.sql
       width = 2
+    }
+
+    # Costs
+    card {
+      sql = <<-EOQ
+        select
+          'Cost - MTD' as label,
+          sum(unblended_cost_amount)::numeric::money as value
+        from
+          aws_cost_by_service_monthly
+        where
+          service = 'Amazon Virtual Private Cloud'
+          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+      EOQ
+      width = 2
+      type  = "info"
+      icon  = "currency-dollar"
+    }
+
+    card {
+      sql = <<-EOQ
+        select
+          'Cost - Previous Month' as label,
+          sum(unblended_cost_amount)::numeric::money as value
+        from
+          aws_cost_by_service_monthly
+        where
+          service = 'Amazon Virtual Private Cloud'
+          and date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
+      EOQ
+      width = 2
+      type  = "info"
+      icon  = "currency-dollar"
     }
   }
 
