@@ -24,17 +24,26 @@ dashboard "aws_rds_db_instance_public_access_report" {
   }
 
   table {
+
+    column "Account ID" {
+      display = "none"
+    }
+
     sql = <<-EOQ
       select
-        db_instance_identifier as "Instance",
+        i.db_instance_identifier as "DB Instance Identifier",
         case
-          when publicly_accessible then 'Public' else 'Private' end as "Public/Private",
-        status as "Status",
-        account_id as "Account",
-        region as "Region",
-        arn as "ARN"
+          when i.publicly_accessible then 'Public' else 'Private' end as "Public/Private",
+        i.status as "Status",
+        a.title as "Account",
+        i.account_id as "Account ID",
+        i.region as "Region",
+        i.arn as "ARN"
       from
-        aws_rds_db_instance
+        aws_rds_db_instance as i,
+        aws_account as a
+      where
+        i.account_id = a.account_id
     EOQ
   }
 }

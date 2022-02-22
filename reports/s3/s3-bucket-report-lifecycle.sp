@@ -44,16 +44,25 @@ dashboard "aws_s3_bucket_lifecycle_report" {
   }
 
   table {
+
+    column "Account ID" {
+      display = "none"
+    }
+
     sql = <<-EOQ
       select
-        name as "Bucket",
-        case when versioning_enabled then 'Enabled' else null end as "Versioning",
-        case when versioning_mfa_delete then 'Enabled' else null end as "Versioning MFA Delete",
-        account_id as "Account",
-        region as "Region",
-        arn as "ARN"
+        v.name as "Name",
+        case when v.versioning_enabled then 'Enabled' else null end as "Versioning",
+        case when v.versioning_mfa_delete then 'Enabled' else null end as "Versioning MFA Delete",
+        a.title as "Account",
+        v.account_id as "Account ID",
+        v.region as "Region",
+        v.arn as "ARN"
       from
-        aws_s3_bucket
+        aws_s3_bucket as v,
+        aws_account as a
+      where
+        v.account_id = a.account_id
     EOQ
   }
 

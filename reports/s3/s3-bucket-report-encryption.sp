@@ -62,6 +62,11 @@ dashboard "aws_s3_bucket_encryption_report" {
   }
 
   table {
+
+    column "Account ID" {
+      display = "none"
+    }
+
     sql = <<-EOQ
       with default_encryption as (
         select
@@ -100,13 +105,15 @@ dashboard "aws_s3_bucket_encryption_report" {
         d.bucket_key_enabled as "Bucket Key Enabled",
         d.sse_algorithm as "SSE Algorithm",
         d.kms_key_master_id as "KMS Key ID",
+        a.title as "Account",
         b.account_id as "Account",
         b.region as "Region",
         b.arn as "ARN"
       from
         aws_s3_bucket as b
         left join default_encryption as d on b.arn = d.arn
-        left join ssl_ok as ssl on b.arn = ssl.arn;
+        left join ssl_ok as ssl on b.arn = ssl.arn
+        left join aws_account as a on b.account_id = a.account_id;
     EOQ
   }
 

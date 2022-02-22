@@ -88,8 +88,6 @@ query "aws_iam_groups_with_administrator_policy_count" {
       groups_having_admin_access
     where
       has_administrator_policy = 'With Administrator Policy'
-    group by
-      has_administrator_policy
   EOQ
 }
 
@@ -242,26 +240,7 @@ dashboard "aws_iam_group_dashboard" {
     }
   }
 
-  container {
-    title = "Analysis"
-
-    chart {
-      title = "Groups by Account"
-      sql   = query.aws_iam_groups_by_account.sql
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Groups by Path"
-      sql   = query.aws_iam_groups_by_path.sql
-      type  = "column"
-      width = 3
-    }
-  }
-
-
-  container {
+   container {
     title = "Assesments"
 
     chart {
@@ -286,53 +265,28 @@ dashboard "aws_iam_group_dashboard" {
 
 
   container {
-    title = "Resources by Age"
+    title = "Analysis"
 
     chart {
-      title = "Groups by Creation Month"
+      title = "Groups by Account"
+      sql   = query.aws_iam_groups_by_account.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Groups by Path"
+      sql   = query.aws_iam_groups_by_path.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Groups by Age"
       sql   = query.aws_iam_groups_by_creation_month.sql
       type  = "column"
-      width = 4
-
-      series "month" {
-        color = "green"
-      }
-    }
-
-    table {
-      title = "Oldest Groups"
-      width = 4
-
-      sql = <<-EOQ
-        select
-          title as "Group",
-          date_trunc('day',age(now(),create_date))::text as "Age",
-          account_id as "Account"
-        from
-          aws_iam_group
-        order by
-          "Age" desc,
-          title
-        limit 5
-      EOQ
-    }
-
-    table {
-      title = "Newest Groups"
-      width = 4
-
-      sql = <<-EOQ
-        select
-          title as "Group",
-          date_trunc('day',age(now(),create_date))::text as "Age",
-          account_id as "Account"
-        from
-          aws_iam_group
-        order by
-          "Age" asc,
-          title
-        limit 5
-      EOQ
+      width = 3
     }
   }
+
 }

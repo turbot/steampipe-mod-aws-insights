@@ -24,15 +24,24 @@ dashboard "aws_rds_db_instance_encryption_dashboard" {
   }
 
   table {
+
+    column "Account ID" {
+        display = "none"
+    }
+
     sql = <<-EOQ
       select
-        db_instance_identifier as "DB Instance",
-        case when storage_encrypted then 'Enabled' else null end as "Encryption",
-        account_id as "Account",
-        region as "Region",
-        arn as "ARN"
+        i.db_instance_identifier as "DB Instance Identifier",
+        case when i.storage_encrypted then 'Enabled' else null end as "Encryption",
+        a.title as "Account",
+        i.account_id as "Account ID",
+        i.region as "Region",
+        i.arn as "ARN"
       from
-        aws_rds_db_instance
+        aws_rds_db_instance as i,
+        aws_account as a
+      where
+        i.account_id = a.account_id
     EOQ
   }
 }
