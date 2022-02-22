@@ -24,6 +24,11 @@ dashboard "aws_sqs_queue_encryption_report" {
   }
 
   table {
+
+    column "Account ID" {
+        display = "none"
+    }
+
     sql = <<-EOQ
       select
         r.title as "Queue",
