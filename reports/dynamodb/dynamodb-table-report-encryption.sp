@@ -55,6 +55,10 @@ dashboard "aws_dynamodb_table_encryption_report" {
   }
 
   table {
+    column "Account ID" {
+      display = "none"
+    }
+
     sql = <<-EOQ
       select
         t.name as "Name",
@@ -64,12 +68,14 @@ dashboard "aws_dynamodb_table_encryption_report" {
           else 'DEFAULT'
         end as "Type",
         t.sse_description ->> 'KMSMasterKeyArn' as "Key ARN",
-        t.account_id as "Account",
+        a.title as "Account",
+        t.account_id as "Account ID",
         t.region as "Region",
         t.arn as "ARN"
       from
         aws_dynamodb_table as t
-        left join aws_kms_key as k on t.sse_description ->> 'KMSMasterKeyArn' = k.arn;
+        left join aws_kms_key as k on t.sse_description ->> 'KMSMasterKeyArn' = k.arn
+        join aws_account as a on t.account_id = a.account_id;
     EOQ
   }
 }

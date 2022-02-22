@@ -80,6 +80,10 @@ dashboard "aws_dynamodb_table_age_report" {
 
   container {
     table {
+      column "Account ID" {
+        display = "none"
+      }
+
       sql = <<-EOQ
         select
           v.name as "Name",

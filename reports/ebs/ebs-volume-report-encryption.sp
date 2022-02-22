@@ -19,16 +19,24 @@ dashboard "aws_ebs_volume_encryption_dashboard" {
   }
 
   table {
+    column "Account ID" {
+      display = "none"
+    }
+
     sql = <<-EOQ
       select
-        tags ->> 'Name' as "Name",
-        volume_id as "Volume",
-        case when encrypted then 'Enabled' else null end as "Encryption",
-        account_id as "Account",
-        region as "Region",
-        arn as "ARN"
+        v.tags ->> 'Name' as "Name",
+        v.volume_id as "Volume",
+        case when v.encrypted then 'Enabled' else null end as "Encryption",
+        a.title as "Account",
+        v.account_id as "Account ID",
+        v.region as "Region",
+        v.arn as "ARN"
       from
-        aws_ebs_volume;
+        aws_ebs_volume as v,
+        aws_account as a
+      where
+        v.account_id = a.account_id;
     EOQ
   }
 }

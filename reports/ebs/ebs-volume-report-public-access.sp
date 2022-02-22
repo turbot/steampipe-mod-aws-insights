@@ -34,10 +34,14 @@ dashboard "aws_ebs_volume_public_access_dashboard" {
   }
 
   table {
+    column "Account ID" {
+      display = "none"
+    }
+
     sql = <<-EOQ
       with public_snapshots as (
         select
-        snapshot_id
+          snapshot_id
         from
           aws_ebs_snapshot
         where
@@ -47,12 +51,14 @@ dashboard "aws_ebs_volume_public_access_dashboard" {
         v.tags ->> 'Name' as "Name",
         v.volume_id as "Volume",
         case when s.snapshot_id is not null then 'Enabled' else null end as "Public Access",
-        v.account_id as "Account",
+        a.title as "Account",
+        v.account_id as "Account ID",
         v.region as "Region",
         v.arn as "ARN"
       from
         aws_ebs_volume as v
-        left join public_snapshots as s on v.snapshot_id = s.snapshot_id;
+        left join public_snapshots as s on v.snapshot_id = s.snapshot_id
+        left join aws_account as a on v.account_id = a.account_id;
     EOQ
   }
 }
