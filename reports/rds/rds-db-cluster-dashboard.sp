@@ -8,12 +8,25 @@ query "aws_rds_unencrypted_db_cluster_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Unencrypted Clusters' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as type
+      'Unencrypted' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_rds_db_cluster
     where
       not storage_encrypted
+  EOQ
+}
+
+query "aws_rds_db_cluster_logging_disabled_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Logging Disabled' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
+    from
+      aws_rds_db_cluster
+    where
+      enabled_cloudwatch_logs_exports is null
   EOQ
 }
 
@@ -22,11 +35,24 @@ query "aws_rds_db_cluster_not_in_vpc_count" {
     select
       count(*) as value,
       'Clusters not in VPC' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as type
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_rds_db_cluster
     where
       vpc_security_groups is null
+  EOQ
+}
+
+query "aws_rds_db_cluster_no_deletion_protection_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'No Deleteion Protection' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
+    from
+      aws_rds_db_cluster
+    where
+      not deletion_protection
   EOQ
 }
 
@@ -346,6 +372,16 @@ dashboard "aws_rds_db_cluster_dashboard" {
     }
 
     card {
+      sql   = query.aws_rds_db_cluster_logging_disabled_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_rds_db_cluster_no_deletion_protection_count.sql
+      width = 2
+    }
+
+    card {
       sql   = query.aws_rds_db_cluster_not_in_vpc_count.sql
       width = 2
     }
@@ -369,20 +405,44 @@ dashboard "aws_rds_db_cluster_dashboard" {
 
   container {
     title = "Assessments"
+    width = 6
 
     chart {
       title = "Encryption Status"
       sql = query.aws_rds_db_cluster_by_encryption_status.sql
       type  = "donut"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Logging Status"
       sql = query.aws_rds_db_cluster_logging_status.sql
       type  = "donut"
-      width = 3
+      width = 4
     }
+  }
+
+  container {
+    title = "Cost"
+    width = 6
+
+    # Costs
+    table  {
+      width = 6
+      title = "Forecast"
+      sql   = query.aws_rds_db_cluster_monthly_forecast_table.sql
+    }
+
+    chart {
+      width = 6
+      type  = "column"
+      title = "Monthly Cost - 12 Months"
+      sql   = query.aws_rds_db_cluster_cost_per_month.sql
+    }
+  }
+
+  container {
+    title = "Assessments"
 
     chart {
       title = "Multi-AZ Status"
@@ -406,25 +466,6 @@ dashboard "aws_rds_db_cluster_dashboard" {
       type  = "donut"
       width = 3
 
-    }
-  }
-
-  container {
-    title = "Cost"
-    width = 6
-
-    # Costs
-    table  {
-      width = 6
-      title = "Forecast"
-      sql   = query.aws_rds_db_cluster_monthly_forecast_table.sql
-    }
-
-    chart {
-      width = 6
-      type  = "column"
-      title = "Monthly Cost - 12 Months"
-      sql   = query.aws_rds_db_cluster_cost_per_month.sql
     }
   }
 

@@ -17,6 +17,19 @@ query "aws_sqs_queue_unencrypted_count" {
   EOQ
 }
 
+query "aws_sqs_queue_fifo_count" {
+  sql = <<-EOQ
+    select 
+      count(*) as value,
+      'FIFO Queues' as label,
+     -- case count(*) when 0 then 'ok' else 'alert' end as "type"
+    from 
+      aws_sqs_queue 
+    where 
+      fifo_queue
+  EOQ
+}
+
 query "aws_sqs_queue_by_account" {
   sql = <<-EOQ
     select 
@@ -126,16 +139,45 @@ query "aws_sqs_queue_by_encryption_status" {
   EOQ
 }
 
+query "aws_sqs_queue_by_dlq_status" {
+  sql = <<-EOQ
+    select
+      redrive_policy_status,
+      count(*)
+    from (
+      select redrive_policy,
+        case when redrive_policy is not null then
+          'Enabled'
+        else
+          'Disabled'
+        end redrive_policy_status
+      from
+        aws_sqs_queue) as t
+    group by
+      redrive_policy_status
+    order by
+      redrive_policy_status desc
+  EOQ
+}
+
 
 dashboard "aws_sqs_queue_dashboard" {
     title = "AWS SQS Queue Dashboard"
     container {
+
       card {
         sql   = query.aws_sqs_queue_count.sql
         width = 2
       }
+
       card {
         sql   = query.aws_sqs_queue_unencrypted_count.sql
+        width = 2
+      }
+
+      card {
+        type  = "info"
+        sql   = query.aws_sqs_queue_fifo_count.sql
         width = 2
       }
 
@@ -166,6 +208,14 @@ dashboard "aws_sqs_queue_dashboard" {
         type  = "donut"
         width = 4
       } 
+
+      chart {
+        title = "DLQ Status"
+        sql = query.aws_sqs_queue_by_dlq_status.sql
+        type  = "donut"
+        width = 4
+      }
+
     }
 
   container {

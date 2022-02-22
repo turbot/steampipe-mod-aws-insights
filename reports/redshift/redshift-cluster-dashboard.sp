@@ -8,7 +8,7 @@ query "aws_redshift_cluster_unencrypted_count" {
   sql = <<-EOQ
     select 
       count(*) as value,
-      'Unencrypted Clusters' as label,
+      'Unencrypted' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from 
       aws_redshift_cluster 
@@ -21,7 +21,7 @@ query "aws_redshift_cluster_publicly_accessible" {
   sql = <<-EOQ
     select 
       count(*) as value,
-      'Publicly Accessible Clusters' as label,
+      'Publicly Accessible' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from 
       aws_redshift_cluster 
@@ -308,13 +308,6 @@ dashboard "aws_redshift_cluster_dashboard" {
       width = 4
 
     }
-
-    chart {
-      title = "Cluster State"
-      sql = query.aws_redshift_cluster_by_state.sql
-      type  = "donut"
-      width = 4
-    }
   }
 
   container {
@@ -355,6 +348,13 @@ dashboard "aws_redshift_cluster_dashboard" {
     chart {
       title = "Clusters by Age"
       sql = query.aws_redshift_cluster_by_creation_month.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Cluster State"
+      sql = query.aws_redshift_cluster_by_state.sql
       type  = "column"
       width = 3
     }
