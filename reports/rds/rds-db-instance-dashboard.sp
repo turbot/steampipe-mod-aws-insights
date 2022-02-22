@@ -582,6 +582,13 @@ dashboard "aws_rds_db_instance_dashboard" {
     }
 
     chart {
+      title = "Instances by Age"
+      sql   = query.aws_rds_db_instance_by_creation_month.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
       title = "Instances by Engine Type"
       sql   = query.aws_rds_db_instance_by_engine_type.sql
       type  = "column"
@@ -594,13 +601,7 @@ dashboard "aws_rds_db_instance_dashboard" {
       type  = "column"
       width = 3
     }
-    
-    chart {
-      title = "Instances by Age"
-      sql   = query.aws_rds_db_instance_by_creation_month.sql
-      type  = "column"
-      width = 3
-    }
+
   }
 
   container {

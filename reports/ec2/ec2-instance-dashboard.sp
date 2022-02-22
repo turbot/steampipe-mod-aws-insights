@@ -489,19 +489,19 @@ dashboard "aws_ec2_instance_dashboard" {
     }
 
     chart {
+      title = "Instances by Age"
+      sql   = query.aws_ec2_instance_by_creation_month.sql
+      type  = "column"
+        width = 3
+    }
+
+    chart {
       title = "Instances by Type"
       sql   = query.aws_ec2_instance_by_type.sql
       type  = "column"
       width = 3
     }
 
-    chart {
-      title = "Instances by Age"
-      sql   = query.aws_ec2_instance_by_creation_month.sql
-      type  = "column"
-        width = 3
-
-    }
   }
 
   container {

@@ -19,7 +19,7 @@ query "aws_inactive_kms_key_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Inactive Keys' as label,
+      'Inactive' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_kms_key
@@ -53,7 +53,7 @@ query "aws_kms_key_rotation_enabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Rotation Disabled Keys' as label,
+      'Rotation Disabled' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_kms_key
@@ -368,39 +368,10 @@ dashboard "aws_kms_key_dashboard" {
     }
 
     chart {
-      title = "Keys by Origin"
-      sql   = query.aws_kms_key_by_origin.sql
-      type  = "column"
-      width = 3
-    }
-
-    chart {
       title = "Keys by Age"
       sql   = query.aws_kms_key_by_creation_month.sql
       type  = "column"
       width = 3
-    }
-
-    table {
-      title = "KMS Keys To Be Deleted Within 7 Days"
-      width = 9
-
-      sql = <<-EOQ
-        select
-          id as "Key",
-          extract(day from deletion_date - current_date)::int as "Deleting After Days",
-          deletion_date as "Deletion Date",
-          aliases as "Aliases",
-          account_id as "Account"
-        from
-          aws_kms_key
-        where
-          extract(day from deletion_date - current_date) <= 7
-        order by
-          "Deleting After Days" desc,
-          id
-        limit 5
-      EOQ
     }
   }
 }
