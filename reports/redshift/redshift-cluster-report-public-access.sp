@@ -6,7 +6,7 @@ dashboard "aws_redshift_cluster_public_access_dashboard" {
     card {
       sql = <<-EOQ
         select count(*) as value,
-        "Publicly Accessible Clusters" as label ,
+        'Publicly Accessible Clusters' as label ,
         case count(*) when 0 then 'ok' else 'alert' end as "type"
         from 
           aws_redshift_cluster 
@@ -19,6 +19,11 @@ dashboard "aws_redshift_cluster_public_access_dashboard" {
   }
 
   table {
+
+    column "Account ID" {
+        display = "none"
+    }
+
     sql = <<-EOQ
       select
         r.title as "Cluster",

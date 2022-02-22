@@ -24,6 +24,11 @@ dashboard "aws_sns_topic_encryption_report" {
   }
 
   table {
+
+    column "Account ID" {
+      display = "none"
+    }
+
     sql = <<-EOQ
       select
         r.title as "Topic",

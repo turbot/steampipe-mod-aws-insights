@@ -24,6 +24,11 @@ dashboard "aws_sqs_queue_encryption_report" {
   }
 
   table {
+
+    column "Account ID" {
+      display = "none"
+    }
+
     sql = <<-EOQ
       select
         r.title as "Queue",
@@ -31,7 +36,7 @@ dashboard "aws_sqs_queue_encryption_report" {
         r.kms_master_key_id as "KMS Key ID",
         a.title as "Account",
         r.account_id as "Account ID",
-        r.region as "Region",
+        r.region as "Region"
       from
         aws_sqs_queue as r,
         aws_account as a

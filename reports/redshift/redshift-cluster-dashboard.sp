@@ -4,11 +4,11 @@ query "aws_redshift_cluster_count" {
   EOQ
 }
 
-query "aws_redshift_cluster_encrypted_count" {
+query "aws_redshift_cluster_unencrypted_count" {
   sql = <<-EOQ
     select 
       count(*) as value,
-      'Unencrypted Clusters' as label,
+      'Unencrypted' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from 
       aws_redshift_cluster 
@@ -21,7 +21,7 @@ query "aws_redshift_cluster_publicly_accessible" {
   sql = <<-EOQ
     select 
       count(*) as value,
-      'Publicly Accessible Clusters' as label,
+      'Publicly Accessible' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from 
       aws_redshift_cluster 
@@ -58,100 +58,6 @@ query "aws_redshift_cluster_cost_per_month" {
       period_start
   EOQ
 }
-
-# query "aws_redshift_cluster_cost_by_usage_types_mtd" {
-#   sql = <<-EOQ
-#     select
-#        usage_type,
-#        sum(unblended_cost_amount) as "Unblended Cost"
-#     from
-#       aws_cost_by_service_usage_type_monthly as c
-#     where
-#       service = 'Amazon Redshift'
-#       and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-#     group by
-#       usage_type
-#     having
-#       round(sum(unblended_cost_amount)::numeric,2) > 0
-#     order by
-#       sum(unblended_cost_amount) desc
-#   EOQ
-# }
-
-# query "aws_redshift_cluster_cost_per_month_stacked" {
-#   sql = <<-EOQ
-#     select
-#       to_char(period_start, 'Mon-YY') as "Month",
-#       usage_type as "Usage Type",
-#       sum(unblended_cost_amount) as "Unblended Cost"
-#     from
-#       aws_cost_by_service_usage_type_monthly
-#     where
-#       service = 'Amazon Redshift'
-#     group by
-#       period_start,
-#       usage_type
-#     order by
-#       period_start
-#   EOQ
-# }
-
-# query "aws_redshift_cluster_cost_by_usage_types_12mo" {
-#   sql = <<-EOQ
-#     select
-#        usage_type,
-#        sum(unblended_cost_amount) as "Unblended Cost"
-#     from
-#       aws_cost_by_service_usage_type_monthly as c
-#     where
-#       service = 'Amazon Redshift'
-#       and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-#     group by
-#       usage_type
-#     having
-#       round(sum(unblended_cost_amount)::numeric,2) > 0
-#     order by
-#       sum(unblended_cost_amount) desc
-#   EOQ
-# }
-
-# query "aws_redshift_cluster_cost_by_account_mtd" {
-#   sql = <<-EOQ
-#     select
-#        a.title as "account",
-#        sum(unblended_cost_amount) as "Unblended Cost"
-#     from
-#       aws_cost_by_service_usage_type_monthly as c,
-#       aws_account as a
-#     where
-#       a.account_id = c.account_id
-#       and service = 'Amazon Redshift'
-#       and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-#     group by
-#       account
-#     order by
-#       account
-#   EOQ
-# }
-
-# query "aws_redshift_cluster_cost_by_account_12mo" {
-#   sql = <<-EOQ
-#     select
-#        a.title as "account",
-#        sum(unblended_cost_amount) as "Unblended Cost"
-#     from
-#       aws_cost_by_service_usage_type_monthly as c,
-#       aws_account as a
-#     where
-#       a.account_id = c.account_id
-#       and service = 'Amazon Redshift'
-#       and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-#     group by
-#       account
-#     order by
-#       account
-#   EOQ
-# }
 
 query "aws_redshift_cluster_by_account" {
   sql = <<-EOQ
@@ -293,6 +199,50 @@ query "aws_redshift_cluster_by_creation_month" {
   EOQ
 }
 
+query "aws_redshift_cluster_monthly_forecast_table" {
+  sql = <<-EOQ
+    with monthly_costs as (
+      select
+        period_start,
+        period_end,
+        case
+          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp) then 'Month to Date'
+          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month') then 'Previous Month'
+          else to_char (period_start, 'Month')
+        end as period_label,
+        period_end::date - period_start::date as days,
+        sum(unblended_cost_amount)::numeric::money as unblended_cost_amount,
+        (sum(unblended_cost_amount) / (period_end::date - period_start::date ) )::numeric::money as average_daily_cost,
+        date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval ) as days_in_month,
+        sum(unblended_cost_amount) / (period_end::date - period_start::date ) * date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval )::numeric::money  as forecast_amount
+      from
+        aws_cost_by_service_usage_type_monthly as c
+
+      where
+        service = 'Amazon Redshift'
+        and date_trunc('month', period_start) >= date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
+
+        group by
+        period_start,
+        period_end
+    )
+
+    select
+      period_label as "Period",
+      unblended_cost_amount as "Cost",
+      average_daily_cost as "Daily Avg Cost"
+    from
+      monthly_costs
+
+    union all
+    select
+      'This Month (Forecast)' as "Period",
+      (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
+      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
+
+  EOQ
+}
+
 dashboard "aws_redshift_cluster_dashboard" {
 
   title = "AWS Redshift Cluster Dashboard"
@@ -307,7 +257,7 @@ dashboard "aws_redshift_cluster_dashboard" {
     }
 
     card {
-      sql = query.aws_redshift_cluster_encrypted_count.sql
+      sql = query.aws_redshift_cluster_unencrypted_count.sql
       width = 2
     }
 
@@ -323,38 +273,60 @@ dashboard "aws_redshift_cluster_dashboard" {
 
   # Costs
     card {
-        sql = <<-EOQ
-          select
-            'Cost - MTD' as label,
-            sum(unblended_cost_amount)::numeric::money as value
-          from
-            aws_cost_by_service_usage_type_monthly as c
-          where
-            service = 'Amazon Redshift'
-            and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-        EOQ
-        type = "info"
-        icon = "currency-dollar"
-        width = 2
-        }
-
-    card {
-        sql = <<-EOQ
-          select
-            'Cost - Previous Month' as label,
-            sum(unblended_cost_amount)::numeric::money as value
-          from
-            aws_cost_by_service_usage_type_monthly as c
-          where
-            service = 'Amazon Redshift'
-            and date_trunc('month', period_start) =  date_trunc('month', CURRENT_DATE::timestamp - interval  '1 month')
-        EOQ
-        type = "info"
-        icon = "currency-dollar"
-        width = 2
-        }
+      type = "info"
+      icon = "currency-dollar"
+      width = 2
+      sql = <<-EOQ
+        select
+          'Cost - MTD' as label,
+          sum(unblended_cost_amount)::numeric::money as value
+        from
+          aws_cost_by_service_usage_type_monthly as c
+        where
+          service = 'Amazon Redshift'
+          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+      EOQ
+    }
    }
     # Assessments
+
+  container {
+    title = "Assessments"
+    width = 6
+
+    chart {
+      title = "Encryption Status"
+      sql = query.aws_redshift_cluster_by_encryption_status.sql
+      type  = "donut"
+      width = 4
+    }
+
+    chart {
+      title = "Public Accessibility"
+      sql = query.aws_redshift_cluster_by_publicly_accessible_status.sql
+      type  = "donut"
+      width = 4
+
+    }
+  }
+
+  container {
+    title = "Cost"
+    width = 6
+    
+    table  {
+      width = 6
+      title = "Forecast"
+      sql   = query.aws_redshift_cluster_monthly_forecast_table.sql
+    }
+
+    chart {
+      title = "Monthly Cost - 12 Months"
+      type  = "column"
+      sql   = query.aws_redshift_cluster_cost_per_month.sql
+      width = 6
+    }
+  }
 
   container {
     title = "Analysis"
@@ -373,125 +345,20 @@ dashboard "aws_redshift_cluster_dashboard" {
       width = 3
     }
 
-  }
-
-  /*
-  container {
-    title = "Costs"
     chart {
-      title = "Redshift Cluster Monthly Unblended Cost"
-
-      type  = "line"
-      sql   = query.aws_redshift_cluster_cost_per_month.sql
-      width = 4
-    }
-
-   chart {
-      title = "Redshift Cluster Cost by Usage Type - MTD"
-      type  = "donut"
-      sql   = query.aws_redshift_cluster_cost_by_usage_types_mtd.sql
-      width = 2
-    }
-
-   chart {
-      title = "Redshift Cluster Cost by Usage Type - 12 months"
-      type  = "donut"
-      sql   = query.aws_redshift_cluster_cost_by_usage_types_12mo.sql
-      width = 2
-    }
-
-    chart {
-      title = "Redshift Cluster Cost By Account - MTD"
-
-      type  = "donut"
-      sql   = query.aws_redshift_cluster_cost_by_account_mtd.sql
-      width = 2
-    }
-
-    chart {
-      title = "Redshift Cluster Cost By Account - 12 months"
-
-      type  = "donut"
-      sql   = query.aws_redshift_cluster_cost_by_account_12mo.sql
-      width = 2
-    }
-  }
-  */
-
-  # donut charts in a 2 x 2 layout
-  container {
-    title = "Assessments"
-
-    chart {
-      title = "Encryption Status"
-      sql = query.aws_redshift_cluster_by_encryption_status.sql
-      type  = "donut"
-      width = 2
-
-      series "Enabled" {
-         color = "green"
-      }
-    }
-
-    chart {
-      title = "Public Accessibility"
-      sql = query.aws_redshift_cluster_by_publicly_accessible_status.sql
-      type  = "donut"
-      width = 2
-
+      title = "Clusters by Age"
+      sql = query.aws_redshift_cluster_by_creation_month.sql
+      type  = "column"
+      width = 3
     }
 
     chart {
       title = "Cluster State"
       sql = query.aws_redshift_cluster_by_state.sql
-      type  = "donut"
-      width = 2
+      type  = "column"
+      width = 3
     }
   }
-
-  container {
-    title = "Costs"
-    chart {
-      title = "Redshift Cluster Monthly Unblended Cost"
-
-      type  = "line"
-      sql   = query.aws_redshift_cluster_cost_per_month.sql
-      width = 4
-    }
-
-  #  chart {
-  #     title = "Redshift Cluster Cost by Usage Type - MTD"
-  #     type  = "donut"
-  #     sql   = query.aws_redshift_cluster_cost_by_usage_types_mtd.sql
-  #     width = 2
-  #   }
-
-  #  chart {
-  #     title = "Redshift Cluster Cost by Usage Type - 12 months"
-  #     type  = "donut"
-  #     sql   = query.aws_redshift_cluster_cost_by_usage_types_12mo.sql
-  #     width = 2
-  #   }
-
-  #   chart {
-  #     title = "Redshift Cluster Cost By Account - MTD"
-
-  #     type  = "donut"
-  #     sql   = query.aws_redshift_cluster_cost_by_account_mtd.sql
-  #     width = 2
-  #   }
-
-  #   chart {
-  #     title = "Redshift Cluster Cost By Account - 12 months"
-
-  #     type  = "donut"
-  #     sql   = query.aws_redshift_cluster_cost_by_account_12mo.sql
-  #     width = 2
-  #   }
-  }
-
-  # donut charts in a 2 x 2 layout
-
 
   container {
     title  = "Performance & Utilization"
@@ -499,7 +366,7 @@ dashboard "aws_redshift_cluster_dashboard" {
     chart {
       title = "Top 10 CPU - Last 7 days"
       type  = "line"
-      width = 4
+      width = 6
       sql = <<-EOQ
         with top_n as (
           select
@@ -532,7 +399,7 @@ dashboard "aws_redshift_cluster_dashboard" {
     chart {
       title = "Average max daily CPU - Last 30 days"
       type  = "line"
-      width = 4
+      width = 6
       sql = <<-EOQ
         with cpu_buckets as (
           select
@@ -568,18 +435,10 @@ dashboard "aws_redshift_cluster_dashboard" {
   }
 
   container {
-    title = "Resources by Age"
-
-    chart {
-      title = "Cluster by Creation Month"
-      sql = query.aws_redshift_cluster_by_creation_month.sql
-      type  = "column"
-      width = 4
-      series "month" {
-        color = "green"
-      }
+    title = "Clusters with no Snapshots"
+    table  {
+      width = 6
+      sql   = query.aws_redshift_cluster_with_no_snapshots.sql
     }
-
   }
-
 }

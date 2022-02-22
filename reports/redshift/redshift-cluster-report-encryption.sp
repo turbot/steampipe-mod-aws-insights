@@ -24,6 +24,11 @@ dashboard "aws_redshift_cluster_encryption_report" {
   }
 
   table {
+
+    column "Account ID" {
+      display = "none"
+    }
+
     sql = <<-EOQ
       select
         r.cluster_identifier as "Cluster",
