@@ -324,6 +324,24 @@ dashboard "aws_vpc_dashboard" {
     width = 6
 
     chart {
+      title = "Default VPC"
+      type  = "donut"
+      width = 4
+      sql   = <<-EOQ
+        select
+          case
+            when is_default then 'Default'
+            else 'Non-Default'
+          end as default_status,
+          count(*)
+        from
+          aws_vpc
+        group by
+          is_default
+      EOQ
+    }
+
+    chart {
       title = "VPC Flow Logs"
       type  = "donut"
       width = 4
@@ -345,24 +363,6 @@ dashboard "aws_vpc_dashboard" {
           vpc_logs
         group by
           flow_logs_configured
-      EOQ
-    }
-
-    chart {
-      title = "Default VPC"
-      type  = "donut"
-      width = 4
-      sql   = <<-EOQ
-        select
-          case
-            when is_default then 'Default'
-            else 'Non-Default'
-          end as default_status,
-          count(*)
-        from
-          aws_vpc
-        group by
-          is_default
       EOQ
     }
 
