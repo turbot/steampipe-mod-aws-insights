@@ -100,6 +100,7 @@ dashboard "aws_redshift_cluster_age_report" {
           v.cluster_status as "Status",
           a.title as "Account",
           v.account_id as "Account ID",
+          v.region as "Region",
           v.arn as "ARN"
         from
           aws_redshift_cluster as v,

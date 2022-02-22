@@ -435,7 +435,7 @@ dashboard "aws_redshift_cluster_dashboard" {
   }
 
   container {
-    title = "Clusters with no snapshots"
+    title = "Clusters with no Snapshots"
     table  {
       width = 6
       sql   = query.aws_redshift_cluster_with_no_snapshots.sql

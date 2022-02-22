@@ -24,6 +24,11 @@ dashboard "aws_rds_db_cluster_encryption_dashboard" {
   }
 
   table {
+
+    column "Account ID" {
+      display = "none"
+    }
+
     sql = <<-EOQ
       select
         r.db_cluster_identifier as "DB Cluster",

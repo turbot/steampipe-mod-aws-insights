@@ -20,6 +20,11 @@ dashboard "aws_rds_db_instace_snapshot_encryption_dashboard" {
   }
 
   table {
+
+    column "Account ID" {
+        display = "none"
+    }
+
     sql = <<-EOQ
       select
         title as "Snapshot",

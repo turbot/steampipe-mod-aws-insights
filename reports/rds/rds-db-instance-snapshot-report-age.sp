@@ -88,6 +88,10 @@ dashboard "aws_rds_db_instance_snapshot_age_report" {
 
     table {
 
+      column "Account ID" {
+        display = "none"
+      }
+
       sql = <<-EOQ
         select
           v.title as "Snapshot",
