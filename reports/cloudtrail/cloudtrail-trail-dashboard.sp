@@ -328,7 +328,7 @@ query "aws_cloudtrail_trail_monthly_forecast_table" {
     select
       'This Month (Forecast)' as "Period",
       (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
-      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
+      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost";
   EOQ
 }
 
@@ -369,8 +369,16 @@ dashboard "aws_cloudtrail_trail_dashboard" {
       width = 2
     }
 
+    card {
+      sql   = query.aws_cloudtrail_trail_log_file_validation_enabled_count.sql
+      width = 2
+    }
+
     # Costs
     card {
+      width = 2
+      type  = "info"
+      icon  = "currency-dollar"
       sql   = <<-EOQ
         select
           'Cost - MTD' as label,
@@ -379,14 +387,14 @@ dashboard "aws_cloudtrail_trail_dashboard" {
           aws_cost_by_service_monthly
         where
           service = 'AWS CloudTrail'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+          and period_end > date_trunc('month', CURRENT_DATE::timestamp);
       EOQ
-      width = 2
-      type  = "info"
-      icon  = "currency-dollar"
     }
 
     card {
+      width = 2
+      type  = "info"
+      icon  = "currency-dollar"
       sql   = <<-EOQ
         select
           'Cost - Previous Month' as label,
@@ -395,16 +403,8 @@ dashboard "aws_cloudtrail_trail_dashboard" {
           aws_cost_by_service_monthly
         where
           service = 'AWS CloudTrail'
-          and date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
+          and date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month');
       EOQ
-      width = 2
-      type  = "info"
-      icon  = "currency-dollar"
-    }
-
-    card {
-      sql   = query.aws_cloudtrail_trail_log_file_validation_enabled_count.sql
-      width = 2
     }
   }
 
