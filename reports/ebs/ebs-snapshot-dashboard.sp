@@ -326,14 +326,14 @@ dashboard "aws_ebs_snapshot_dashboard" {
       title = "Snapshots by Account"
       sql   = query.aws_ebs_snapshot_by_account.sql
       type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
       title = "Snapshots by Region"
       sql   = query.aws_ebs_snapshot_by_region.sql
       type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
@@ -349,7 +349,7 @@ container {
       title = "Storage by Account (GB)"
       sql   = query.aws_ebs_snapshot_storage_by_account.sql
       type  = "column"
-      width = 3
+      width = 4
 
       series "GB" {
         color = "tan"
@@ -360,7 +360,7 @@ container {
       title = "Storage by Region (GB)"
       sql   = query.aws_ebs_snapshot_storage_by_region.sql
       type  = "column"
-      width = 3
+      width = 4
 
       series "GB" {
         color = "tan"
