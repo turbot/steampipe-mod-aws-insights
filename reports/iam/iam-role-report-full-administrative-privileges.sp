@@ -46,6 +46,9 @@ dashboard "aws_iam_role_full_administrative_privileges_report" {
 
   container {
     table {
+      column "Account ID" {
+        display = "none"
+      }
       sql = query.roles_allow_all_actions.sql
     }
   }

@@ -13,12 +13,11 @@ dashboard "aws_iam_access_key_age_report" {
       //default = "90"
     }
         # #    # Assessments
-
   }
 
   container {
   
-     # Analysis
+    # Analysis
     card {
       sql   = <<-EOQ
         select 
@@ -28,24 +27,23 @@ dashboard "aws_iam_access_key_age_report" {
           aws_iam_access_key
         where
           create_date < now() - '${var.aws_iam_access_key_age_report_min_age} days' :: interval  -- should use the threshold value...
-
       EOQ
       width = 2
     }
 
     card {
-      sql   = <<-EOQ
+      sql = <<-EOQ
         select
           count(*) as value,
           '< 24 hours' as label
-        from 
+        from
           aws_iam_access_key
-        where 
-          create_date > now() - '1 days' :: interval 
+        where
+          create_date > now() - '1 days' :: interval
           and create_date < now() - '${var.aws_iam_access_key_age_report_min_age} days' :: interval  -- should use the threshold value...
       EOQ
       width = 2
-      type = "info"
+      type  = "info"
     }
 
     card {
@@ -53,14 +51,14 @@ dashboard "aws_iam_access_key_age_report" {
         select
           count(*) as value,
           '1-30 Days' as label
-        from 
+        from
           aws_iam_access_key
-        where 
-          create_date between symmetric now() - '1 days' :: interval and now() - '30 days' :: interval 
+        where
+          create_date between symmetric now() - '1 days' :: interval and now() - '30 days' :: interval
           and create_date < now() - '${var.aws_iam_access_key_age_report_min_age} days' :: interval  -- should use the threshold value...
       EOQ
       width = 2
-      type = "info"
+      type  = "info"
     }
 
     card {
@@ -68,14 +66,14 @@ dashboard "aws_iam_access_key_age_report" {
         select
           count(*) as value,
           '30-90 Days' as label
-        from 
+        from
           aws_iam_access_key
-        where 
-          create_date between symmetric now() - '30 days' :: interval and now() - '${var.aws_iam_access_key_age_report_min_age} days' :: interval 
+        where
+          create_date between symmetric now() - '30 days' :: interval and now() - '${var.aws_iam_access_key_age_report_min_age} days' :: interval
           and create_date < now() - '${var.aws_iam_access_key_age_report_min_age} days' :: interval  -- should use the threshold value...
       EOQ
       width = 2
-      type = "info"
+      type  = "info"
     }
 
     card {
@@ -83,14 +81,14 @@ dashboard "aws_iam_access_key_age_report" {
         select
           count(*) as value,
           '90-365 Days' as label
-        from 
+        from
           aws_iam_access_key
-        where 
+        where
           create_date between symmetric (now() - '90 days'::interval) and (now() - '365 days'::interval)
           and create_date < now() - '${var.aws_iam_access_key_age_report_min_age} days' :: interval  -- should use the threshold value...
       EOQ
       width = 2
-      type = "info"
+      type  = "info"
     }
 
     card {
@@ -98,21 +96,20 @@ dashboard "aws_iam_access_key_age_report" {
         select
           count(*) as value,
           '> 1 Year' as label
-        from 
+        from
           aws_iam_access_key
-        where 
-          create_date <= now() - '1 year' :: interval 
+        where
+          create_date <= now() - '1 year' :: interval
           and create_date < now() - '${var.aws_iam_access_key_age_report_min_age} days' :: interval  -- should use the threshold value...
       EOQ
       width = 2
-      type = "info"
+      type  = "info"
     }
   }
 
-
   container {
 
-   table {
+    table {
       title = "Aged Access Keys"
 
       column "Account ID" {
@@ -137,9 +134,7 @@ dashboard "aws_iam_access_key_age_report" {
           and k.create_date < now() - '${var.aws_iam_access_key_age_report_min_age} days' :: interval  -- should use the threshold value...
         order by
           create_date
-      
       EOQ
     }
   }
-  
 }

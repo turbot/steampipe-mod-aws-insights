@@ -3,28 +3,27 @@ dashboard "aws_iam_credential_report" {
   title = "AWS IAM Credential Report"
 
   text {
-      value = <<-EOT
-      ### Note 
-      This report requires an [AWS Credential Report](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_getting-report.html) for each account.
-      You can generate a credential report via the AWS CLI:
-
-      EOT
+    value = <<-EOT
+    ### Note 
+    This report requires an [AWS Credential Report](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_getting-report.html) for each account.
+    You can generate a credential report via the AWS CLI:
+    EOT
   }
 
-    text {
-      width = 3
-      value = <<-EOT
-      ```bash
-      aws iam generate-credential-report
-      ```
-      EOT
+  text {
+    width = 3
+    value = <<-EOT
+    ```bash
+    aws iam generate-credential-report
+    ```
+    EOT
   }
 
   container {
 
-    // TO DO - either add more cards (with passwrd and no mfa, password never used, keys over 90 days. etc)
-    // or get rid of the cards altogether (they dont work unless there is a vred report for EVERY account in the aggregator)
-     # Analysis
+    // TO DO - either add more cards (with password and no mfa, password never used, keys over 90 days. etc)
+    // or get rid of the cards altogether (they don't work unless there is a cred report for EVERY account in the aggregator)
+    # Analysis
     card {
       sql   = <<-EOQ
         select 
@@ -41,7 +40,7 @@ dashboard "aws_iam_credential_report" {
       sql   = <<-EOQ
         select 
           count(*) as value,
-          'Cosole Access & No MFA' as label,
+          'Console Access & No MFA' as label,
           case when count(*) = 0 then 'ok' else 'alert' end as type
         from 
           aws_iam_credential_report
@@ -53,12 +52,14 @@ dashboard "aws_iam_credential_report" {
     }
   }
 
-
   container {
-
 
    table {
       title = "Accounts with Root Access Keys"
+
+      column "Account ID" {
+        display = "none"
+      }
 
       sql   = <<-EOQ
         select
@@ -107,13 +108,7 @@ dashboard "aws_iam_credential_report" {
           aws_account as a
         where
           a.account_id = r.account_id
-
-
-      
       EOQ
     }
-
   }
-  
-
 }

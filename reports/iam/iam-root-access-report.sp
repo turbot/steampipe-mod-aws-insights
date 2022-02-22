@@ -1,12 +1,9 @@
-
 dashboard "aws_iam_root_access_report" {
   title = "AWS IAM Root Access Report"
 
-  
   container {
 
-  
-     # Analysis
+    # Analysis
     card {
       sql   = <<-EOQ
         select 
@@ -33,11 +30,9 @@ dashboard "aws_iam_root_access_report" {
     }
   }
 
-
   container {
 
-
-   table {
+    table {
       title = "Accounts with Root Access Keys"
 
       sql   = <<-EOQ
@@ -51,18 +46,10 @@ dashboard "aws_iam_root_access_report" {
           aws_account as a
         where
           a.account_id = s.account_id
-
-      
       EOQ
     }
-
-
   }
-  
-
 }
-
-
 
 
 /*
