@@ -59,7 +59,7 @@ query "aws_rds_db_instance_logging_count" {
      )
     select
       count(*) as value,
-      'Logging' as label,
+      'Logging Disabled' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_rds_db_instance as a
@@ -347,6 +347,27 @@ query "aws_rds_db_instance_by_creation_month" {
   EOQ
 }
 
+query "aws_rds_db_instance_deletion_protection_status" {
+  sql = <<-EOQ
+    with db_instances as (
+      select
+        case
+          when deletion_protection then 'Enabled'
+          else 'Disabled'
+        end as visibility
+      from
+        aws_rds_db_instance
+    )
+    select
+      visibility,
+      count(*)
+    from
+      db_instances
+    group by
+      visibility
+  EOQ
+}
+
 query "aws_rds_db_instance_public_status" {
   sql = <<-EOQ
     with db_instances as (
@@ -508,6 +529,13 @@ dashboard "aws_rds_db_instance_dashboard" {
       type  = "donut"
       width = 4
     }
+
+    chart {
+      title = "Deletion Protection Status"
+      sql = query.aws_rds_db_instance_deletion_protection_status.sql
+      type  = "donut"
+      width = 4
+    }
   }
 
   container {
@@ -561,15 +589,15 @@ dashboard "aws_rds_db_instance_dashboard" {
     }
 
     chart {
-      title = "Instances by Age"
-      sql   = query.aws_rds_db_instance_by_creation_month.sql
+      title = "Instances by Class"
+      sql   = query.aws_rds_db_instance_by_class.sql
       type  = "column"
       width = 3
     }
-
+    
     chart {
-      title = "Instances by Class"
-      sql   = query.aws_rds_db_instance_by_class.sql
+      title = "Instances by Age"
+      sql   = query.aws_rds_db_instance_by_creation_month.sql
       type  = "column"
       width = 3
     }

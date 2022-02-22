@@ -7,7 +7,7 @@ query "aws_ec2_instance_count" {
 query "aws_ec2_instance_total_cores" {
   sql = <<-EOQ
     select
-      sum(cpu_options_core_count)  as "Total Cores"
+      sum(cpu_options_core_count) as "Total Cores"
     from
       aws_ec2_instance as i
   EOQ
@@ -41,7 +41,6 @@ query "aws_ec2_instance_cost_per_month" {
        to_char(period_start, 'Mon-YY') as "Month",
        sum(unblended_cost_amount)::numeric as "Unblended Cost"
        --        sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-
     from
       aws_cost_by_service_usage_type_monthly
     where
@@ -339,7 +338,7 @@ query "aws_ec2_monthly_forecast_table" {
       select
         period_start,
         period_end,
-        case 
+        case
           when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp) then 'Month to Date'
           when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month') then 'Previous Month'
           else to_char (period_start, 'Month')
@@ -357,7 +356,7 @@ query "aws_ec2_monthly_forecast_table" {
         and date_trunc('month', period_start) >= date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
 
         group by
-        period_start, 
+        period_start,
         period_end
     )
 
@@ -365,7 +364,7 @@ query "aws_ec2_monthly_forecast_table" {
       period_label as "Period",
       unblended_cost_amount as "Cost",
       average_daily_cost as "Daily Avg Cost"
-    from 
+    from
       monthly_costs
 
     union all
@@ -373,11 +372,10 @@ query "aws_ec2_monthly_forecast_table" {
       'This Month (Forecast)' as "Period",
       (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
       (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
-          
+
   EOQ
 
 }
-
 
 
 dashboard "aws_ec2_instance_dashboard" {
@@ -467,14 +465,6 @@ dashboard "aws_ec2_instance_dashboard" {
   }
 
   container {
-
-    container {
-      title   = "Resources by Age"
-      width = 3
-
-    }
-
-  container {
     title = "Analysis"
 
     chart {
@@ -514,27 +504,24 @@ dashboard "aws_ec2_instance_dashboard" {
     }
   }
 
-    container {
-      title  = "Performance & Utilization"
-      //width = 6
+  container {
+    title  = "Performance & Utilization"
+    //width = 6
 
-      chart {
-        title = "Top 10 CPU - Last 7 days"
-        sql   = query.aws_ec2_top10_cpu_past_week.sql
-        type  = "line"
-        width = 6
-      }
-
-      chart {
-        title = "Average Max Daily CPU - Last 30 days"
-        sql   = query.aws_ec2_instance_by_cpu_utilization_category.sql
-        type  = "column"
-        width = 3
-
-      }
+    chart {
+      title = "Top 10 CPU - Last 7 days"
+      sql   = query.aws_ec2_top10_cpu_past_week.sql
+      type  = "line"
+      width = 6
     }
 
-  }
+    chart {
+      title = "Average Max Daily CPU - Last 30 days"
+      sql   = query.aws_ec2_instance_by_cpu_utilization_category.sql
+      type  = "column"
+      width = 3
 
+    }
+  }
 
 }
