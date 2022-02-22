@@ -66,11 +66,35 @@ query "aws_ebs_snapshot_by_account" {
   EOQ
 }
 
+query "aws_ebs_snapshot_storage_by_account" {
+  sql = <<-EOQ
+    select
+      a.title as "account",
+      sum(v.volume_size) as "GB"
+    from
+      aws_ebs_snapshot as v,
+      aws_account as a
+    where
+      a.account_id = v.account_id
+    group by
+      account
+    order by
+      account
+  EOQ
+}
+
 query "aws_ebs_snapshot_by_region" {
   sql = <<-EOQ
     select region as "Region", count(*) as "volumes" from aws_ebs_snapshot group by region order by region
   EOQ
 }
+
+query "aws_ebs_snapshot_storage_by_region" {
+  sql = <<-EOQ
+    select region as "Region", sum(volume_size) as "GB" from aws_ebs_snapshot group by region order by region
+  EOQ
+}
+
 
 query "aws_ebs_snapshot_by_encryption_status" {
   sql = <<-EOQ
@@ -302,22 +326,46 @@ dashboard "aws_ebs_snapshot_dashboard" {
       title = "Snapshots by Account"
       sql   = query.aws_ebs_snapshot_by_account.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Snapshots by Region"
       sql   = query.aws_ebs_snapshot_by_region.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Snapshots by Age"
       sql   = query.aws_ebs_snapshot_by_creation_month.sql
       type  = "column"
-      width = 3
+      width = 4
     }
   }
+
+container {
+    chart {
+      title = "Storage by Account (GB)"
+      sql   = query.aws_ebs_snapshot_storage_by_account.sql
+      type  = "column"
+      width = 3
+
+      series "GB" {
+        color = "tan"
+      }
+    }
+
+    chart {
+      title = "Storage by Region (GB)"
+      sql   = query.aws_ebs_snapshot_storage_by_region.sql
+      type  = "column"
+      width = 3
+
+      series "GB" {
+        color = "tan"
+      }
+    }
+}
 
 }
