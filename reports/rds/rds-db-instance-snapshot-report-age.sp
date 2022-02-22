@@ -7,7 +7,7 @@ dashboard "aws_rds_db_instance_snapshot_age_report" {
 
     # Analysis
     card {
-      sql   = query.aws_rds_db_cluster_count.sql
+      sql   = query.aws_rds_db_instance_snapshot_count.sql
       width = 2
     }
 
