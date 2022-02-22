@@ -21,9 +21,6 @@ query "aws_iam_user_mfa_count" {
   EOQ
 }
 
-
-
-
 query "aws_iam_user_no_boundary_count" {
   sql = <<-EOQ
     select
@@ -36,8 +33,6 @@ query "aws_iam_user_no_boundary_count" {
       permissions_boundary_type is null or permissions_boundary_type = ''
   EOQ
 }
-
-
 
 ###
 query "aws_iam_users_by_account" {
@@ -69,7 +64,6 @@ query "aws_iam_user_by_path" {
   EOQ
 }
 
-
 ####
 
 query "aws_iam_users_by_mfa_enabled" {
@@ -90,7 +84,6 @@ query "aws_iam_users_by_mfa_enabled" {
   EOQ
 }
 
-
 query "aws_iam_users_by_boundary_policy" {
   sql = <<-EOQ
     select
@@ -105,7 +98,6 @@ query "aws_iam_users_by_boundary_policy" {
       permissions_boundary_type
   EOQ
 }
-
 
 query "aws_iam_users_with_direct_attached_policy_count" {
   sql = <<-EOQ
@@ -132,7 +124,6 @@ query "aws_iam_users_with_inline_policy_count" {
       jsonb_array_length(inline_policies) > 0
   EOQ
 }
-
 
 query "aws_iam_users_with_direct_attached_policy" {
   sql = <<-EOQ
@@ -179,7 +170,6 @@ query "aws_iam_users_with_inline_policy" {
   EOQ
 }
 
-
 query "aws_iam_user_by_creation_month" {
   sql = <<-EOQ
     with users as (
@@ -225,13 +215,10 @@ query "aws_iam_user_by_creation_month" {
   EOQ
 }
 
-
 dashboard "aws_iam_user_dashboard" {
   title = "AWS IAM User Dashboard"
 
-
   container {
-
 
     # Analysis
     card {
@@ -259,27 +246,7 @@ dashboard "aws_iam_user_dashboard" {
       sql   = query.aws_iam_users_with_inline_policy_count.sql
       width = 2
     }
-
   }
-
-  container {
-    title = "Analysis"
-
-    chart {
-      title = "Users by Account"
-      sql   = query.aws_iam_users_by_account.sql
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Users by Path"
-      sql   = query.aws_iam_user_by_path.sql
-      type  = "column"
-      width = 3
-    }
-  }
-
 
   container {
     title = "Assessments"
@@ -300,7 +267,6 @@ dashboard "aws_iam_user_dashboard" {
       # }
     }
 
-
     chart {
       title = "Boundary Policy"
       sql   = query.aws_iam_users_by_boundary_policy.sql
@@ -308,14 +274,12 @@ dashboard "aws_iam_user_dashboard" {
       width = 3
     }
 
-
     chart {
       title = "Direct Attached Policy"
       sql   = query.aws_iam_users_with_direct_attached_policy.sql
       type  = "donut"
       width = 3
     }
-
 
     chart {
       title = "Inline Policy"
@@ -325,56 +289,28 @@ dashboard "aws_iam_user_dashboard" {
     }
   }
 
-
-
   container {
-    title = "Resources by Age"
+    title = "Analysis"
 
     chart {
-      title = "User by Creation Month"
+      title = "Users by Account"
+      sql   = query.aws_iam_users_by_account.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Users by Path"
+      sql   = query.aws_iam_user_by_path.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Users by Age"
       sql   = query.aws_iam_user_by_creation_month.sql
       type  = "column"
-      width = 4
-      series "month" {
-        color = "green"
-      }
-    }
-
-    table {
-      title = "Oldest users"
-      width = 4
-
-      sql = <<-EOQ
-        select
-          title as "user",
-          date_trunc('day',age(now(),create_date))::text as "Age",
-          account_id as "Account"
-        from
-          aws_iam_user
-        order by
-          "Age" desc,
-          title
-        limit 5
-      EOQ
-    }
-
-    table {
-      title = "Newest users"
-      width = 4
-
-      sql = <<-EOQ
-        select
-          title as "user",
-          date_trunc('day',age(now(),create_date))::text as "Age",
-          account_id as "Account"
-        from
-          aws_iam_user
-        order by
-          "Age" asc,
-          title
-        limit 5
-      EOQ
+      width = 3
     }
   }
-
 }

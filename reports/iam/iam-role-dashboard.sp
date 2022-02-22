@@ -224,7 +224,6 @@ query "aws_iam_roles_with_direct_attached_policy" {
   EOQ
 }
 
-# Resources by Age
 query "aws_iam_roles_by_creation_month" {
   sql = <<-EOQ
     with roles as (
@@ -309,29 +308,10 @@ dashboard "aws_iam_role_dashboard" {
       icon  = "shield-check"
       width = 2
     }
-
   }
 
   container {
-    title = "Analysis"
-
-    chart {
-      title = "Roles by Account"
-      sql   = query.aws_iam_roles_by_account.sql
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Roles by Path"
-      sql   = query.aws_iam_roles_by_path.sql
-      type  = "column"
-      width = 3
-    }
-  }
-
-  container {
-    title = "Assesments"
+    title = "Assessments"
 
     chart {
       title = "Inline Policy"
@@ -363,54 +343,27 @@ dashboard "aws_iam_role_dashboard" {
   }
 
   container {
-    title = "Resources by Age"
+    title = "Analysis"
 
     chart {
-      title = "Roles by Creation Month"
+      title = "Roles by Account"
+      sql   = query.aws_iam_roles_by_account.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Roles by Path"
+      sql   = query.aws_iam_roles_by_path.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Roles by Age"
       sql   = query.aws_iam_roles_by_creation_month.sql
       type  = "column"
-      width = 4
-
-      series "month" {
-        color = "green"
-      }
-    }
-
-    table {
-      title = "Oldest Roles"
-      width = 4
-
-      sql = <<-EOQ
-        select
-          title as "Role",
-          date_trunc('day',age(now(),create_date))::text as "Age",
-          account_id as "Account"
-        from
-          aws_iam_role
-        order by
-          "Age" desc,
-          title
-        limit 5
-      EOQ
-    }
-
-    table {
-      title = "Newest Roles"
-      width = 4
-
-      sql = <<-EOQ
-        select
-          title as "Role",
-          date_trunc('day',age(now(),create_date))::text as "Age",
-          account_id as "Account"
-        from
-          aws_iam_role
-        order by
-          "Age" asc,
-          title
-        limit 5
-      EOQ
+      width = 3
     }
   }
 }
-
