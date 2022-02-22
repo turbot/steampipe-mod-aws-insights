@@ -97,19 +97,28 @@ dashboard "aws_s3_bucket_public_access_report" {
   }
 
   table {
+
+    column "Account ID" {
+      display = "none"
+    }
+
     sql = <<-EOQ
       select
-        name as "Bucket",
-        case when bucket_policy_is_public then 'Public' else 'Not public' end as "Bucket Policy Public",
-        case when block_public_acls then 'Enabled' else null end as "Block Public ACLs",
-        case when block_public_policy then 'Enabled' else null end as "Block Public Policy",
-        case when ignore_public_acls then 'Enabled' else null end as "Ignore Public ACLs",
-        case when restrict_public_buckets then 'Enabled' else null end as "Restrict Public Buckets",
-        account_id as "Account",
-        region as "Region",
-        arn as "ARN"
+        v.name as "Name",
+        case when v.bucket_policy_is_public then 'Public' else 'Not public' end as "Bucket Policy Public",
+        case when v.block_public_acls then 'Enabled' else null end as "Block Public ACLs",
+        case when v.block_public_policy then 'Enabled' else null end as "Block Public Policy",
+        case when v.ignore_public_acls then 'Enabled' else null end as "Ignore Public ACLs",
+        case when v.restrict_public_buckets then 'Enabled' else null end as "Restrict Public Buckets",
+        a.title as "Account",
+        v.account_id as "Account ID",
+        v.region as "Region",
+        v.arn as "ARN"
       from
-        aws_s3_bucket
+        aws_s3_bucket as v,
+        aws_account as a
+      where
+        v.account_id = a.account_id
     EOQ
   }
 

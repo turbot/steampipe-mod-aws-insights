@@ -27,20 +27,29 @@ dashboard "aws_lambda_function_public_access_report" {
   }
 
   table {
+
+    column "Account ID" {
+        display = "none"
+    }
+
     sql = <<-EOQ
       select
-        name as "Lambda",
+        f.name as "Name",
         case
           when
-          policy_std -> 'Statement' ->> 'Effect' = 'Allow'
-          and (policy_std -> 'Statement' ->> 'Prinipal' = '*'
-          or ( policy_std -> 'Principal' -> 'AWS' ) :: text = '*')
-       then 'Public' else 'Private' end as "Public/Private",
-        account_id as "Account",
-        region as "Region",
-        arn as "ARN"
+          f.policy_std -> 'Statement' ->> 'Effect' = 'Allow'
+          and (f.policy_std -> 'Statement' ->> 'Prinipal' = '*'
+          or ( f.policy_std -> 'Principal' -> 'AWS' ) :: text = '*')
+          then 'Public' else 'Private' end as "Public/Private",
+        a.title as "Account",
+        f.account_id as "Account ID",
+        f.region as "Region",
+        f.arn as "ARN"
       from
-        aws_lambda_function
+        aws_lambda_function as f,
+        aws_account as a
+      where
+        f.account_id = a.account_id
     EOQ
   }
 }

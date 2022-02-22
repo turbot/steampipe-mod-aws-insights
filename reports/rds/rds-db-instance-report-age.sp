@@ -88,12 +88,14 @@ dashboard "aws_db_instance_age_report" {
 
       sql = <<-EOQ
         select
-          v.db_instance_identifier as "Instance Identifier",
-          date_trunc('day',age(now(),v.create_time))::text as "Age",
-          v.create_time as "Create Date",
+          v.db_instance_identifier as "Instance",
+          --date_trunc('day',age(now(),v.create_time))::text as "Age",
+          now()::date - v.create_time::date as "Age in Days",
+          v.create_time as "Create Time",
+          v.status as "Status",
           a.title as "Account",
           v.account_id as "Account ID",
-          v.status as "Status",
+          v.region as "Region",
           v.arn as "ARN"
         from
           aws_rds_db_instance as v,

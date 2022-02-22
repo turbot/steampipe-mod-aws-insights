@@ -86,15 +86,20 @@ dashboard "aws_kms_key_age_report" {
 
     table {
 
+      column "Account ID" {
+        display = "none"
+      }
+
       sql = <<-EOQ
         select
-          v.title as "Key",
-          v.id as "Id",
-          date_trunc('day',age(now(),v.creation_date))::text as "Age",
-          v.creation_date as "Create Date",
+          v.id as "Key",
+         -- date_trunc('day',age(now(),v.creation_date))::text as "Age",
+          now()::date - v.creation_date::date as "Age in Days",
+          v.creation_date as "Create Time",
+          v.key_state as "State",
           a.title as "Account",
           v.account_id as "Account ID",
-          v.key_state as "State",
+          v.region as "Region",
           v.arn as "ARN"
         from
           aws_kms_key as v,

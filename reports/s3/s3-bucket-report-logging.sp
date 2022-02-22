@@ -26,17 +26,26 @@ dashboard "aws_s3_bucket_logging_report" {
   }
 
   table {
+
+    column "Account ID" {
+       display = "none"
+    }
+
     sql = <<-EOQ
       select
-        name as "Bucket",
-        case when logging -> 'TargetBucket' is not null then 'Enabled' else null end as "Logging",
-        (logging ->> 'TargetBucket') || (logging ->> 'TargetPrefix') as "Target",
-        logging -> 'TargetGrants' as "Grants",
-        account_id as "Account",
-        region as "Region",
-        arn as "ARN"
+        v.name as "Name",
+        case when v.logging -> 'TargetBucket' is not null then 'Enabled' else null end as "Logging",
+        (v.logging ->> 'TargetBucket') || (v.logging ->> 'TargetPrefix') as "Target",
+        v.logging -> 'TargetGrants' as "Grants",
+        a.title as "Account",
+        v.account_id as "Account ID",
+        v.region as "Region",
+        v.arn as "ARN"
       from
-        aws_s3_bucket
+        aws_s3_bucket as v,
+        aws_account as a
+      where
+        v.account_id = a.account_id
     EOQ
   }
 

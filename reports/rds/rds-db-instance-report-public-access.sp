@@ -1,24 +1,24 @@
-query "aws_rds_db_instance_unencrypted_count" {
+query "aws_rds_db_instance_public_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Unencrypted' as label,
+      'Public DB Instances' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_rds_db_instance
     where
-      not storage_encrypted
+      publicly_accessible
   EOQ
 }
 
-dashboard "aws_rds_db_instance_encryption_dashboard" {
+dashboard "aws_rds_db_instance_public_access_report" {
 
-  title = "AWS RDS DB Instance Encryption Report"
+  title = "AWS RDS DB Instance Public Access Report"
 
   container {
 
     card {
-      sql = query.aws_rds_db_instance_unencrypted_count.sql
+      sql = query.aws_rds_db_instance_public_count.sql
       width = 2
     }
   }
@@ -26,13 +26,15 @@ dashboard "aws_rds_db_instance_encryption_dashboard" {
   table {
 
     column "Account ID" {
-        display = "none"
+      display = "none"
     }
 
     sql = <<-EOQ
       select
         i.db_instance_identifier as "DB Instance Identifier",
-        case when i.storage_encrypted then 'Enabled' else null end as "Encryption",
+        case
+          when i.publicly_accessible then 'Public' else 'Private' end as "Public/Private",
+        i.status as "Status",
         a.title as "Account",
         i.account_id as "Account ID",
         i.region as "Region",

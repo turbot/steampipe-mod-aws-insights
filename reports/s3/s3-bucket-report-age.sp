@@ -86,13 +86,19 @@ dashboard "aws_s3_bucket_age_report" {
 
     table {
 
+      column "Account ID" {
+        display = "none"
+      }
+
       sql = <<-EOQ
         select
-          v.name as "Bucket",
-          date_trunc('day',age(now(),v.creation_date))::text as "Age",
-          v.creation_date as "Create Date",
+          v.name as "Name",
+          --date_trunc('day',age(now(),v.creation_date))::text as "Age",
+          now()::date - v.creation_date::date as "Age in Days",
+          v.creation_date as "Create Time",
           a.title as "Account",
           v.account_id as "Account ID",
+          v.region as "Region",
           v.arn as "ARN"
         from
           aws_s3_bucket as v,

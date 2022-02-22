@@ -43,17 +43,26 @@ dashboard "aws_kms_key_lifecycle_dashboard" {
   }
 
   table {
+
+    column "Account ID" {
+        display = "none"
+    }
+
     sql = <<-EOQ
       select
-        id as "Key",
-        case when key_rotation_enabled then 'Enabled' else null end as "Rotation",
-        key_state as "Key State",
-        deletion_date as "Deletion Date",
-        account_id as "Account",
-        region as "Region",
-        arn as "ARN"
+        v.id as "Key",
+        case when v.key_rotation_enabled then 'Enabled' else null end as "Rotation",
+        v.key_state as "Key State",
+        v.deletion_date as "Deletion Date",
+        a.title as "Account",
+        v.account_id as "Account ID",
+        v.region as "Region",
+        v.arn as "ARN"
       from
-        aws_kms_key
+        aws_kms_key as v,
+        aws_account as a
+      where
+        v.account_id = a.account_id
     EOQ
   }
 
