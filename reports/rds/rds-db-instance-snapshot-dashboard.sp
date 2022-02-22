@@ -46,64 +46,6 @@ query "aws_rds_db_instance_snapshot_cost_per_month" {
   EOQ
 }
 
-query "aws_rds_db_instance_snapshot_cost_by_usage_types_12mo" {
-  sql = <<-EOQ
-    select
-       usage_type,
-       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-    from
-      aws_cost_by_service_usage_type_monthly
-    where
-      service = 'Amazon Relational Database Service'
-      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-    group by
-      usage_type
-    order by
-      sum(unblended_cost_amount) desc
-  EOQ
-}
-
-query "aws_rds_db_instance_snapshot_cost_by_account_30day" {
-  sql = <<-EOQ
-    select
-       a.title as "account",
-       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-    from
-      aws_cost_by_service_monthly as c,
-      aws_account as a
-    where
-      a.account_id = c.account_id
-      and service = 'Amazon Relational Database Service'
-      and period_end >=  CURRENT_DATE - INTERVAL '30 day'
-    group by
-      account
-    order by
-      account
-  EOQ
-}
-
-
-query "aws_rds_db_instance_snapshot_cost_by_account_12mo" {
-  sql = <<-EOQ
-    select
-       a.title as "account",
-       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-    from
-      aws_cost_by_service_monthly as c,
-      aws_account as a
-    where
-      a.account_id = c.account_id
-      and service = 'Amazon Relational Database Service'
-      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-    group by
-      account
-    order by
-      account
-  EOQ
-}
-
-
-
 query "aws_rds_db_instance_snapshot_by_account" {
   sql = <<-EOQ
     select
@@ -166,6 +108,27 @@ query "aws_rds_db_instance_snapshot_iam_authentication_enabled" {
   EOQ
 }
 
+query "aws_rds_db_instance_snapshot_by_encryption_status" {
+  sql = <<-EOQ
+    select
+      encryption_status,
+      count(*)
+    from (
+      select encrypted,
+        case when encrypted then
+          'enabled'
+        else
+          'disabled'
+        end encryption_status
+      from
+        aws_rds_db_snapshot) as t
+    group by
+      encryption_status
+    order by
+      encryption_status desc
+  EOQ
+}
+
 query "aws_rds_db_instance_snapshot_by_state" {
   sql = <<-EOQ
     select
@@ -223,6 +186,50 @@ query "aws_rds_db_instance_snapshot_by_creation_month" {
   EOQ
 }
 
+query "aws_rds_db_instance_snapshot_monthly_forecast_table" {
+  sql = <<-EOQ
+    with monthly_costs as (
+      select
+        period_start,
+        period_end,
+        case
+          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp) then 'Month to Date'
+          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month') then 'Previous Month'
+          else to_char (period_start, 'Month')
+        end as period_label,
+        period_end::date - period_start::date as days,
+        sum(unblended_cost_amount)::numeric::money as unblended_cost_amount,
+        (sum(unblended_cost_amount) / (period_end::date - period_start::date ) )::numeric::money as average_daily_cost,
+        date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval ) as days_in_month,
+        sum(unblended_cost_amount) / (period_end::date - period_start::date ) * date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval )::numeric::money  as forecast_amount
+      from
+        aws_cost_by_service_usage_type_monthly as c
+
+      where
+        service = 'Amazon Relational Database Service'
+        and date_trunc('month', period_start) >= date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
+
+        group by
+        period_start,
+        period_end
+    )
+
+    select
+      period_label as "Period",
+      unblended_cost_amount as "Cost",
+      average_daily_cost as "Daily Avg Cost"
+    from
+      monthly_costs
+
+    union all
+    select
+      'This Month (Forecast)' as "Period",
+      (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
+      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
+
+  EOQ
+}
+
 dashboard "aws_rds_db_instance_snapshot_dashboard" {
 
   title = "AWS RDS DB Instance Snapshots Dashboard"
@@ -244,8 +251,11 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
       width = 2
     }
 
-   card {
-      sql = <<-EOQ
+    card {
+      type  = "info"
+      icon  = "currency-dollar"
+      width = 2
+      sql   = <<-EOQ
         select
           'Cost - MTD' as label,
           sum(unblended_cost_amount)::numeric::money as value
@@ -255,171 +265,86 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
           service = 'Amazon Relational Database Service'
           and period_end > date_trunc('month', CURRENT_DATE::timestamp)
       EOQ
-      width = 2
     }
 
-   card {
-      sql = <<-EOQ
-        select
-          'Cost - Previous Month' as label,
-          sum(unblended_cost_amount)::numeric::money as value
-        from
-          aws_cost_by_service_usage_type_monthly as c
-        where
-          service = 'Amazon Relational Database Service'
-          and date_trunc('month', period_start) =  date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
-      EOQ
-      width = 2
-    }
-
-#    card {
-#       sql   = query.aws_rds_db_instance_snapshot_cost_last_30_counter.sql
-#       width = 2
-#     }
-
-#   card {
-#       sql   = query.aws_rds_db_instance_snapshot_cost_30_60_counter.sql
-#       width = 2
-#     }
-
-  }
-
-
-    container {
-      title = "Analysis"
-
-
-      #title = "Counts"
-      chart {
-        title = "RDS DB Instance Snapshots by Account"
-        sql   = query.aws_rds_db_instance_snapshot_by_account.sql
-        type  = "column"
-        width = 3
-      }
-
-
-      chart {
-        title = "RDS DB Instance Snapshots by Region"
-        sql   = query.aws_rds_db_instance_snapshot_by_region.sql
-        type  = "column"
-        width = 3
-      }
-
-      chart {
-        title = "RDS DB Instance Snapshots by State"
-        sql   = query.aws_rds_db_instance_snapshot_by_state.sql
-        type  = "column"
-        width = 3
-      }
-
-      chart {
-        title = "RDS DB Instance Snapshots by Type"
-        sql   = query.aws_rds_db_instance_snapshot_by_engine_type.sql
-        type  = "column"
-        width = 3
-      }
-
-    }
-
-  container {
-    title = "Costs"
-    chart {
-      title = "RDS Monthly Unblended Cost"
-      type  = "line"
-      sql   = query.aws_rds_db_instance_snapshot_cost_per_month.sql
-      width = 4
-    }
-
-   chart {
-      title = "RDS Cost by Usage Type - Last 12 months"
-      type  = "donut"
-      sql   = query.aws_rds_db_instance_snapshot_cost_by_usage_types_12mo.sql
-      width = 2
-    }
-
-
-    chart {
-      title = "RDS Cost by Account - MTD"
-
-      type  = "donut"
-      sql   = query.aws_rds_db_instance_snapshot_cost_by_account_30day.sql
-       width = 2
-    }
-
-    chart {
-      title = "RDS Cost By Account - Last 12 months"
-      type  = "donut"
-      sql   = query.aws_rds_db_instance_snapshot_cost_by_account_12mo.sql
-      width = 2
-    }
   }
 
   container {
     title = "Assessments"
-
-    # chart {
-    #   title = "Logging Status"
-    #   sql = query.aws_rds_db_instance_snapshot_logging_status.sql
-    #   type  = "donut"
-    #   width = 3
-
-    #   series "Enabled" {
-    #      color = "green"
-    #   }
-    # }
-
-  }
-
-
-  container {
-    title   = "Resources by Age"
+    width = 6
 
     chart {
-      title = "RDS DB Instance Snapshots by Creation Month"
+      title = "Encryption Status"
+      sql   = query.aws_rds_db_instance_snapshot_by_encryption_status.sql
+      type  = "donut"
+      width = 4
+    }
+
+    chart {
+      title = "IAM Authentication Status"
+      sql   = query.aws_rds_db_instance_snapshot_iam_authentication_enabled.sql
+      type  = "donut"
+      width = 4
+    }
+  }
+
+  container {
+    title = "Cost"
+    width = 6
+
+    # Costs
+    table  {
+      width = 6
+      title = "Forecast"
+      sql   = query.aws_rds_db_instance_snapshot_monthly_forecast_table.sql
+    }
+
+    chart {
+      width = 6
+      type  = "column"
+      title = "Monthly Cost - 12 Months"
+      sql   = query.aws_rds_db_instance_snapshot_cost_per_month.sql
+    }
+  }
+
+  container {
+    title = "Analysis"  
+
+    chart {
+      title = "Instance Snapshots by Account"
+      sql   = query.aws_rds_db_instance_snapshot_by_account.sql
+      type  = "column"
+      width = 3
+    }  
+
+    chart {
+      title = "Instance Snapshots by Region"
+      sql   = query.aws_rds_db_instance_snapshot_by_region.sql
+      type  = "column"
+      width = 3
+    }  
+
+    chart {
+      title = "Instance Snapshots by State"
+      sql   = query.aws_rds_db_instance_snapshot_by_state.sql
+      type  = "column"
+      width = 3
+    }  
+
+    chart {
+      title = "Instance Snapshots by Type"
+      sql   = query.aws_rds_db_instance_snapshot_by_engine_type.sql
+      type  = "column"
+      width = 3
+    }  
+
+    chart {
+      title = "Instance Snapshots by Age"
       sql   = query.aws_rds_db_instance_snapshot_by_creation_month.sql
       type  = "column"
-      width = 4
-
-      series "month" {
-        color = "green"
-      }
+      width = 3
     }
 
-    table {
-      title = "Oldest RDS DB Instance Snapshots"
-      width = 4
-
-      sql = <<-EOQ
-        select
-          title as "Snapshot",
-          (current_date - create_time)::text as "Age in Days",
-          account_id as "Account"
-        from
-          aws_rds_db_snapshot
-        order by
-          "Age in Days" desc,
-          title
-        limit 5
-      EOQ
-    }
-
-    table {
-      title = "Newest RDS DB Instance Snapshots"
-      width = 4
-
-      sql = <<-EOQ
-        select
-          title as "Snapshot",
-          (current_date - create_time)::text as "Age in Days",
-          account_id as "Account"
-        from
-          aws_rds_db_snapshot
-        order by
-          "Age in Days" asc,
-          title
-        limit 5
-      EOQ
-    }
   }
 
 }
