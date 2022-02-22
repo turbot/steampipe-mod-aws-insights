@@ -235,7 +235,7 @@ dashboard "aws_vpc_security_group_dashboard" {
           account;
       EOQ
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
@@ -250,7 +250,7 @@ dashboard "aws_vpc_security_group_dashboard" {
         order by region;
       EOQ
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
@@ -265,7 +265,7 @@ dashboard "aws_vpc_security_group_dashboard" {
         order by vpc_id;
       EOQ
       type  = "column"
-      width = 5
+      width = 4
     }
   }
 }
