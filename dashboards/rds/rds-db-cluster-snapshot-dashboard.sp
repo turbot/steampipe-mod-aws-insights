@@ -312,7 +312,7 @@ dashboard "aws_rds_db_cluster_snapshot_dashboard" {
     title = "Analysis"
 
     chart {
-      title = "RDS DB Cluster Snapshots by Account"
+      title = "Snapshots by Account"
       sql   = query.aws_rds_db_cluster_snapshot_by_account.sql
       type  = "column"
       width = 3 
@@ -320,31 +320,32 @@ dashboard "aws_rds_db_cluster_snapshot_dashboard" {
 
 
     chart {
-      title = "RDS DB Cluster Snapshots by Region"
+      title = "Snapshots by Region"
       sql   = query.aws_rds_db_cluster_snapshot_by_region.sql
       type  = "column"
       width = 3
     }
 
     chart {
-      title = "RDS DB Cluster Snapshots by State"
+      title = "Snapshots by State"
       sql   = query.aws_rds_db_cluster_snapshot_by_state.sql
       type  = "column"
       width = 3     
     }
 
     chart {
-      title = "RDS DB Cluster Snapshots by Type"
+      title = "Snapshots by Age"
+      sql   = query.aws_rds_db_cluster_snapshot_by_creation_month.sql
+      type  = "column"
+      width = 3
+    } 
+
+    chart {
+      title = "Snapshots by Type"
       sql   = query.aws_rds_db_cluster_snapshot_by_engine_type.sql
       type  = "column"
       width = 3
     }
 
-    chart {
-      title = "Cluster Snapshots by Age"
-      sql   = query.aws_rds_db_cluster_snapshot_by_creation_month.sql
-      type  = "column"
-      width = 3
-    } 
   }
 }
