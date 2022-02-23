@@ -17,19 +17,6 @@ query "aws_sqs_queue_unencrypted_count" {
   EOQ
 }
 
-query "aws_sqs_queue_fifo_count" {
-  sql = <<-EOQ
-    select 
-      count(*) as value,
-      'FIFO Queues' as label,
-     -- case count(*) when 0 then 'ok' else 'alert' end as "type"
-    from 
-      aws_sqs_queue 
-    where 
-      fifo_queue
-  EOQ
-}
-
 query "aws_sqs_queue_by_account" {
   sql = <<-EOQ
     select 
@@ -172,12 +159,6 @@ dashboard "aws_sqs_queue_dashboard" {
 
       card {
         sql   = query.aws_sqs_queue_unencrypted_count.sql
-        width = 2
-      }
-
-      card {
-        type  = "info"
-        sql   = query.aws_sqs_queue_fifo_count.sql
         width = 2
       }
 
