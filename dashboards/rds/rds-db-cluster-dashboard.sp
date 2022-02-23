@@ -420,6 +420,28 @@ dashboard "aws_rds_db_cluster_dashboard" {
       type  = "donut"
       width = 4
     }
+    chart {
+      title = "Deletition Protection Status"
+      sql = query.aws_rds_db_cluster_deletion_protection_status.sql
+      type  = "donut"
+      width = 4
+
+    }
+    chart {
+      title = "Multi-AZ Status"
+      sql = query.aws_rds_db_cluster_multiple_az_status.sql
+      type  = "donut"
+      width = 4
+
+    }
+
+    chart {
+      title = "Snapshot Status"
+      sql = query.aws_rds_db_cluster_with_no_snapshots.sql
+      type  = "donut"
+      width = 4
+
+    }
   }
 
   container {
@@ -441,33 +463,25 @@ dashboard "aws_rds_db_cluster_dashboard" {
     }
   }
 
-  container {
-    title = "Assessments"
+  # container {
 
-    chart {
-      title = "Multi-AZ Status"
-      sql = query.aws_rds_db_cluster_multiple_az_status.sql
-      type  = "donut"
-      width = 3
 
-    }
+  #   chart {
+  #     title = "Multi-AZ Status"
+  #     sql = query.aws_rds_db_cluster_multiple_az_status.sql
+  #     type  = "donut"
+  #     width = 4
 
-    chart {
-      title = "Snapshot Status"
-      sql = query.aws_rds_db_cluster_with_no_snapshots.sql
-      type  = "donut"
-      width = 3
+  #   }
 
-    }
+  #   chart {
+  #     title = "Snapshot Status"
+  #     sql = query.aws_rds_db_cluster_with_no_snapshots.sql
+  #     type  = "donut"
+  #     width = 4
 
-    chart {
-      title = "Deletition Protection Status"
-      sql = query.aws_rds_db_cluster_deletion_protection_status.sql
-      type  = "donut"
-      width = 3
-
-    }
-  }
+  #   }
+  # }
 
   container {
     title = "Analysis"
@@ -497,17 +511,18 @@ dashboard "aws_rds_db_cluster_dashboard" {
     }
 
     chart {
+      title = "Clusters by Age"
+      sql   = query.aws_rds_db_cluster_by_creation_month.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
       title = "RDS DB Clusters by Type"
       sql   = query.aws_rds_db_cluster_by_engine_type.sql
       type  = "column"
       width = 3
     }
 
-    chart {
-      title = "Clusters by Age"
-      sql   = query.aws_rds_db_cluster_by_creation_month.sql
-      type  = "column"
-      width = 3
-    }
   }
 }
