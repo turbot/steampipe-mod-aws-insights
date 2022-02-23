@@ -17,7 +17,7 @@ query "aws_ec2_public_instance_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Public Instances' as label,
+      'Public' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_ec2_instance
@@ -26,12 +26,92 @@ query "aws_ec2_public_instance_count" {
   EOQ
 }
 
-query "aws_ec2_unencrypted_instance_count" {
+query "aws_ec2_ebs_optimized_count" {
   sql = <<-EOQ
     select
-       999 as value,
-      'TODO: Unencrypted Instances' as label,
+      count(*) as value,
+      'EBS Not Optimized' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
+    from
+      aws_ec2_instance
+    where
+      not ebs_optimized
+  EOQ
+}
+
+query "aws_ec2_instance_ebs_optimized_status" {
+  sql = <<-EOQ
+    with instances as (
+      select
+        case
+          when ebs_optimized then 'Enabled'
+          else 'Disabled'
+        end as visibility
+      from
+        aws_ec2_instance
+    )
+    select
+      visibility,
+      count(*)
+    from
+      instances
+    group by
+      visibility
+  EOQ
+}
+
+query "aws_ec2_instance_detailed_monitoring_enabled" {
+  sql = <<-EOQ
+    with instances as (
+      select
+        case
+          when monitoring_state = 'enabled' then 'Enabled'
+          else 'Disabled'
+        end as visibility
+      from
+        aws_ec2_instance
+    )
+    select
+      visibility,
+      count(*)
+    from
+      instances
+    group by
+      visibility
+  EOQ
+}
+
+query "aws_ec2_instance_root_volume_encryption_status" {
+  sql = <<-EOQ
+    with encrypted_instances as (
+      select
+        encrypted,
+        volume_id,
+        att -> 'InstanceId' as "instanceid",
+        att -> 'Device' as "device"
+      from
+        aws_ebs_volume,
+        jsonb_array_elements(attachments) as att
+      where
+        encrypted and attachments is not null
+    )
+    select
+      encryption_status,
+      count(*)
+    from (
+      select
+        case when e.encrypted then
+          'Enabled'
+        else
+          'Disabled'
+        end encryption_status
+      from
+        aws_ec2_instance as i left join encrypted_instances as e on ((e.instanceid)::text = i.instance_id) and (i.root_device_name = (e.device)::text)
+        ) as t
+    group by
+      encryption_status
+    order by
+      encryption_status
   EOQ
 }
 
@@ -51,6 +131,29 @@ query "aws_ec2_instance_cost_per_month" {
       period_start
   EOQ
 }
+
+query "aws_ec2_unencrypted_instance_count" {
+  sql = <<-EOQ
+    with encrypted_instances as (
+      select
+        encrypted,
+        volume_id,
+        att -> 'InstanceId' as "instanceid",
+        att -> 'Device' as "device"
+      from
+        aws_ebs_volume,
+        jsonb_array_elements(attachments) as att  where not encrypted
+        and attachments is not null
+    )
+    select
+      count(*) as value,
+      'Root Volume Unencrypted' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
+    from
+      aws_ec2_instance as i left join encrypted_instances as e on ((e.instanceid)::text = i.instance_id) and (i.root_device_name = (e.device)::text)
+  EOQ
+}
+
 
 # query "aws_ec2_instance_cost_by_usage_types_12mo" {
 #   sql = <<-EOQ
@@ -187,8 +290,8 @@ query "aws_ec2_instance_by_public_ip" {
     with instances as (
       select
         case
-          when public_ip_address is null then 'private'
-          else 'public'
+          when public_ip_address is null then 'Private'
+          else 'Public'
         end as visibility
       from
         aws_ec2_instance
@@ -402,10 +505,14 @@ dashboard "aws_ec2_instance_dashboard" {
     }
 
     card {
-      sql   = query.aws_ec2_unencrypted_instance_count.sql
+      sql   = query.aws_ec2_ebs_optimized_count.sql
       width = 2
     }
 
+     card {
+      sql   = query.aws_ec2_unencrypted_instance_count.sql
+      width = 2
+    }
 
    # Costs
    card {
@@ -430,17 +537,31 @@ dashboard "aws_ec2_instance_dashboard" {
     title = "Assesments"
     width = 6
 
-    chart {
-      title  = "Encryption Status [TODO]"
-      # sql    = query.aws_ec2_instance_by_encryption_status.sql
-      # type   = "donut"
-      width = 4
-    }
-
    chart {
       title = "Public/Private"
       sql   = query.aws_ec2_instance_by_public_ip.sql
       type  = "donut"
+      width = 4
+    }
+
+    chart {
+      title = "EBS Optimized Status"
+      sql   = query.aws_ec2_instance_ebs_optimized_status.sql
+      type  = "donut"
+      width = 4
+    }
+
+    chart {
+      title  = "Root Volume Encryption"
+      sql    = query.aws_ec2_instance_root_volume_encryption_status.sql
+      type   = "donut"
+      width = 4
+    }
+
+    chart {
+      title  = "Detailed Monitoring Status"
+      sql    = query.aws_ec2_instance_detailed_monitoring_enabled.sql
+      type   = "donut"
       width = 4
     }
   }

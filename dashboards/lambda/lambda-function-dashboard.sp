@@ -7,7 +7,7 @@ query "aws_lambda_function_count" {
 query "aws_lambda_function_memory_total" {
   sql = <<-EOQ
     select
-      sum(memory_size) as "Total Memory(MB)"
+      round(cast(sum(memory_size)/1024 as numeric), 1) as "Total Memory(GB)"
     from
       aws_lambda_function
   EOQ
@@ -245,8 +245,8 @@ query "aws_lambda_function_public_status" {
           policy_std -> 'Statement' ->> 'Effect' = 'Allow'
           and ( policy_std -> 'Statement' ->> 'Prinipal' = '*'
           or ( policy_std -> 'Principal' -> 'AWS' ) :: text = '*'
-        ) then 'public'
-          else 'private'
+        ) then 'Public'
+          else 'Private'
         end as visibility
       from
         aws_lambda_function
@@ -307,6 +307,90 @@ query "aws_lambda_monthly_forecast_table" {
 query "aws_lambda_function_memory_by_region" {
   sql = <<-EOQ
     select region as "Region", sum(memory_size) as "MB" from aws_lambda_function group by region order by region
+  EOQ
+}
+
+query "aws_lambda_function_code_size_by_account" {
+  sql = <<-EOQ
+    select
+      a.title as "account",
+      round(cast(sum(i.code_size)/1024/1024 as numeric), 1) as "Total Code Size(MB)"
+      --sum(code_size) as "total_Size",
+    from
+      aws_lambda_function as i,
+      aws_account as a
+    where
+      a.account_id = i.account_id
+    group by
+      account
+    order by
+      account
+  EOQ
+}
+
+query "aws_lambda_function_code_size_by_region" {
+  sql = <<-EOQ
+    select
+      region,
+      round(cast(sum(i.code_size)/1024/1024 as numeric), 1) as "Total Code Size(MB)"
+    from
+      aws_lambda_function as i
+    group by
+      region
+  EOQ
+}
+
+query "aws_lambda_function_code_size_by_runtime" {
+  sql = <<-EOQ
+    select
+      runtime,
+      round(cast(sum(i.code_size)/1024/1024 as numeric), 1) as "Total Code Size(MB)"
+    from
+      aws_lambda_function as i
+    group by
+      runtime
+  EOQ
+}
+
+query "aws_lambda_function_memory_size_by_account" {
+  sql = <<-EOQ
+    select
+      a.title as "account",
+      round(cast(sum(i.memory_size)/1024 as numeric), 1) as "Total Code Size(GB)"
+      --sum(code_size) as "total_Size",
+    from
+      aws_lambda_function as i,
+      aws_account as a
+    where
+      a.account_id = i.account_id
+    group by
+      account
+    order by
+      account
+  EOQ
+}
+
+query "aws_lambda_function_memory_size_by_region" {
+  sql = <<-EOQ
+    select
+      region,
+      round(cast(sum(i.memory_size)/1024 as numeric), 1) as "Total Code Size(GB)"
+    from
+      aws_lambda_function as i
+    group by
+      region
+  EOQ
+}
+
+query "aws_lambda_function_memory_size_by_runtime" {
+  sql = <<-EOQ
+    select
+      runtime,
+      round(cast(sum(i.memory_size)/1024 as numeric), 1) as "Total Code Size(GB)"
+    from
+      aws_lambda_function as i
+    group by
+      runtime
   EOQ
 }
 
@@ -432,28 +516,63 @@ dashboard "aws_lambda_function_dashboard" {
       title = "Functions by Account"
       sql   = query.aws_lambda_function_by_account.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Functions by Region"
       sql   = query.aws_lambda_function_by_region.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Functions by Runtime"
       sql   = query.aws_lambda_function_by_runtime.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
-      title = "Functions Storage by Region (MB)"
-      sql   = query.aws_lambda_function_memory_by_region.sql
+      title = "Functions Code Size by Account(MB)"
+      sql   = query.aws_lambda_function_code_size_by_account.sql
       type  = "column"
-      width = 3
+      width = 4
+    }
+
+    chart {
+      title = "Functions Code Size by Region(MB)"
+      sql   = query.aws_lambda_function_code_size_by_region.sql
+      type  = "column"
+      width = 4
+    }
+
+    chart {
+      title = "Functions Code Size by Runtime"
+      sql   = query.aws_lambda_function_code_size_by_runtime.sql
+      type  = "column"
+      width = 4
+    }
+
+    chart {
+      title = "Functions Memory Size by Account(GB)"
+      sql   = query.aws_lambda_function_memory_size_by_account.sql
+      type  = "column"
+      width = 4
+    }
+
+    chart {
+      title = "Functions Memory Size by Region(GB)"
+      sql   = query.aws_lambda_function_memory_size_by_region.sql
+      type  = "column"
+      width = 4
+    }
+
+    chart {
+      title = "Functions Memory Size by Runtime(GB)"
+      sql   = query.aws_lambda_function_memory_size_by_runtime.sql
+      type  = "column"
+      width = 4
     }
   }
 
@@ -475,5 +594,4 @@ dashboard "aws_lambda_function_dashboard" {
       width = 6
     }
   }
-
 }
