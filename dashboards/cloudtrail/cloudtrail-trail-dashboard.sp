@@ -159,29 +159,6 @@ query "aws_cloudtrail_trail_encryption_status" {
   EOQ
 }
 
-query "aws_cloudtrail_trail_encryption_status" {
-  sql = <<-EOQ
-    with trail_encryption_status as (
-      select
-        name as table_name,
-        case
-          when kms_key_id is null then 'Disabled'
-          else 'Enabled'
-        end as encryption_status
-      from
-        aws_cloudtrail_trail
-      where
-        home_region = region
-    )
-    select
-      encryption_status,
-      count(*) as table_count
-    from
-      trail_encryption_status
-    group by encryption_status;
-  EOQ
-}
-
 query "aws_cloudtrail_trail_logging_status" {
   sql = <<-EOQ
     with trail_logging_status as (
