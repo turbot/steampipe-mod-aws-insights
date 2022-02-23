@@ -1,16 +1,3 @@
-query "aws_redshift_cluster_logging_disabled_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Logging Disabled' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as "type"
-    from
-      aws_redshift_cluster
-    where
-      logging_status ->> 'LoggingEnabled' = 'false'
-  EOQ
-}
-
 dashboard "aws_redshift_cluster_logging_report" {
 
   title = "AWS Redshift Cluster Logging Report"
@@ -18,7 +5,16 @@ dashboard "aws_redshift_cluster_logging_report" {
   container {
 
     card {
-      sql = query.aws_redshift_cluster_logging_disabled_count.sql
+      sql = <<-EOQ
+        select
+          count(*) as value,
+          'Logging Disabled' as label,
+          case count(*) when 0 then 'ok' else 'alert' end as "type"
+        from
+          aws_redshift_cluster
+        where
+          logging_status ->> 'LoggingEnabled' = 'false'
+      EOQ
       width = 2
     }
 

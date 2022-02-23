@@ -1,16 +1,3 @@
-query "aws_sns_topic_unencrypted_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Unencrypted Topics' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as "type"
-    from
-      aws_sns_topic
-    where
-      kms_master_key_id is null
-  EOQ
-}
-
 dashboard "aws_sns_topic_encryption_report" {
 
   title = "AWS SNS Topic Encryption Report"
@@ -18,7 +5,16 @@ dashboard "aws_sns_topic_encryption_report" {
   container {
 
     card {
-      sql = query.aws_sns_topic_unencrypted_count.sql
+      sql = <<-EOQ
+        select
+          count(*) as value,
+          'Unencrypted Topics' as label,
+          case count(*) when 0 then 'ok' else 'alert' end as "type"
+        from
+          aws_sns_topic
+        where
+          kms_master_key_id is null
+      EOQ
       width = 2
     }
   }
