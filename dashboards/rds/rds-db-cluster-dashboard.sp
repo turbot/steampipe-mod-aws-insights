@@ -489,7 +489,7 @@ dashboard "aws_rds_db_cluster_dashboard" {
 
     #title = "Counts"
     chart {
-      title = "RDS DB Clusters by Account"
+      title = "Clusters by Account"
       sql   = query.aws_rds_db_cluster_by_account.sql
       type  = "column"
       width = 3
@@ -497,14 +497,14 @@ dashboard "aws_rds_db_cluster_dashboard" {
 
 
     chart {
-      title = "RDS DB Clusters by Region"
+      title = "Clusters by Region"
       sql   = query.aws_rds_db_cluster_by_region.sql
       type  = "column"
       width = 3
     }
 
     chart {
-      title = "RDS DB Clusters by State"
+      title = "Clusters by State"
       sql   = query.aws_rds_db_cluster_by_state.sql
       type  = "column"
       width = 3
@@ -518,7 +518,7 @@ dashboard "aws_rds_db_cluster_dashboard" {
     }
 
     chart {
-      title = "RDS DB Clusters by Type"
+      title = "Clusters by Type"
       sql   = query.aws_rds_db_cluster_by_engine_type.sql
       type  = "column"
       width = 3
