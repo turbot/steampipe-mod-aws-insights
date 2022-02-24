@@ -28,6 +28,22 @@ query "aws_inactive_kms_key_count" {
   EOQ
 }
 
+query "aws_kms_key_rotation_enabled_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'CMK Rotation Disabled' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
+    from
+      aws_kms_key
+    where
+      not key_rotation_enabled
+      and key_manager = 'CUSTOMER'
+  EOQ
+}
+
+# Assessments
+
 query "aws_inactive_kms_key_status" {
   sql = <<-EOQ
     select
@@ -49,19 +65,42 @@ query "aws_inactive_kms_key_status" {
   EOQ
 }
 
-query "aws_kms_key_rotation_enabled_count" {
+query "aws_kms_key_rotation_status" {
   sql = <<-EOQ
     select
-      count(*) as value,
-      'Rotation Disabled' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as "type"
-    from
-      aws_kms_key
-    where
-      not key_rotation_enabled
+      rotation_status,
+      count(*)
+    from (
+      select
+        case when key_rotation_enabled then
+          'Enabled'
+        else
+          'Disabled'
+        end rotation_status
+      from
+        aws_kms_key
+      where
+        key_manager = 'CUSTOMER') as t
+    group by
+      rotation_status
+    order by
+      rotation_status desc
   EOQ
 }
 
+query "aws_kms_key_usage_status" {
+  sql = <<-EOQ
+    select
+      key_usage,
+      count(key_usage)
+    from
+      aws_kms_key
+    group by
+      key_usage
+  EOQ
+}
+
+# Cost
 query "aws_kms_key_cost_per_month" {
   sql = <<-EOQ
     select
@@ -78,18 +117,48 @@ query "aws_kms_key_cost_per_month" {
   EOQ
 }
 
-query "aws_kms_key_by_origin" {
+query "aws_kms_monthly_forecast_table" {
   sql = <<-EOQ
+    with monthly_costs as (
+      select
+        period_start,
+        period_end,
+        case
+          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp) then 'Month to Date'
+          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month') then 'Previous Month'
+          else to_char (period_start, 'Month')
+        end as period_label,
+        period_end::date - period_start::date as days,
+        sum(unblended_cost_amount)::numeric::money as unblended_cost_amount,
+        (sum(unblended_cost_amount) / (period_end::date - period_start::date ) )::numeric::money as average_daily_cost,
+        date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval ) as days_in_month,
+        sum(unblended_cost_amount) / (period_end::date - period_start::date ) * date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval )::numeric::money  as forecast_amount
+      from
+        aws_cost_by_service_monthly as c
+
+      where
+        service = 'AWS Key Management Service'
+        and date_trunc('month', period_start) >= date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
+
+        group by
+        period_start,
+        period_end
+    )
     select
-      origin,
-      count(origin)
+      period_label as "Period",
+      unblended_cost_amount as "Cost",
+      average_daily_cost as "Daily Avg Cost"
     from
-      aws_kms_key
-    group by
-      origin
+      monthly_costs
+    union all
+    select
+      'This Month (Forecast)' as "Period",
+      (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
+      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
   EOQ
 }
 
+# Analysis
 query "aws_kms_key_by_account" {
 
   sql = <<-EOQ
@@ -129,39 +198,6 @@ query "aws_kms_key_by_state" {
       aws_kms_key
     group by
       key_state
-  EOQ
-}
-
-query "aws_kms_key_usage_status" {
-  sql = <<-EOQ
-    select
-      key_usage,
-      count(key_usage)
-    from
-      aws_kms_key
-    group by
-      key_usage
-  EOQ
-}
-
-query "aws_kms_key_rotation_status" {
-  sql = <<-EOQ
-    select
-      rotation_status,
-      count(*)
-    from (
-      select
-        case when key_rotation_enabled then
-          'Enabled'
-        else
-          'Disabled'
-        end rotation_status
-      from
-        aws_kms_key) as t
-    group by
-      rotation_status
-    order by
-      rotation_status desc
   EOQ
 }
 
@@ -207,47 +243,6 @@ query "aws_kms_key_by_creation_month" {
       left join keys_by_month on months.month = keys_by_month.creation_month
     order by
       months.month desc;
-  EOQ
-}
-
-query "aws_kms_monthly_forecast_table" {
-  sql = <<-EOQ
-    with monthly_costs as (
-      select
-        period_start,
-        period_end,
-        case
-          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp) then 'Month to Date'
-          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month') then 'Previous Month'
-          else to_char (period_start, 'Month')
-        end as period_label,
-        period_end::date - period_start::date as days,
-        sum(unblended_cost_amount)::numeric::money as unblended_cost_amount,
-        (sum(unblended_cost_amount) / (period_end::date - period_start::date ) )::numeric::money as average_daily_cost,
-        date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval ) as days_in_month,
-        sum(unblended_cost_amount) / (period_end::date - period_start::date ) * date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval )::numeric::money  as forecast_amount
-      from
-        aws_cost_by_service_monthly as c
-
-      where
-        service = 'AWS Key Management Service'
-        and date_trunc('month', period_start) >= date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
-
-        group by
-        period_start,
-        period_end
-    )
-    select
-      period_label as "Period",
-      unblended_cost_amount as "Cost",
-      average_daily_cost as "Daily Avg Cost"
-    from
-      monthly_costs
-    union all
-    select
-      'This Month (Forecast)' as "Period",
-      (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
-      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
   EOQ
 }
 
@@ -310,7 +305,7 @@ dashboard "aws_kms_key_dashboard" {
     }
 
     chart {
-      title = "Rotation Status"
+      title = "CMK Rotation Status"
       sql = query.aws_kms_key_rotation_status.sql
       type  = "donut"
       width = 4

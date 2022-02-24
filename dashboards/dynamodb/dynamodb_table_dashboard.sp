@@ -124,7 +124,7 @@ dashboard "aws_dynamodb_table_dashboard" {
       sql = <<-EOQ
         select
           count(*) as value,
-          'Unused Tables' as label,
+          'Unused' as label,
           case count(*) when 0 then 'ok' else 'alert' end as type
         from
           aws_dynamodb_table
@@ -147,7 +147,7 @@ dashboard "aws_dynamodb_table_dashboard" {
         )
         select
           count(*) as value,
-          'Tables with Autoscaling Disabled' as label,
+          'Autoscaling Disabled' as label,
           case count(*) when 0 then 'ok' else 'alert' end as type
         from
           aws_dynamodb_table as d
@@ -164,12 +164,12 @@ dashboard "aws_dynamodb_table_dashboard" {
       sql = <<-EOQ
         select
           count(*) as value,
-          'Tables with Continuous Backup' as label,
-          case count(*) when 0 then 'alert' else 'ok' end as type
+          'Continuous Backup Disabled' as label,
+          case count(*) when 0 then 'ok' else 'alert' end as type
         from
           aws_dynamodb_table
         where
-          continuous_backups_status = 'ENABLED';
+          not (continuous_backups_status = 'ENABLED');
       EOQ
       width = 2
     }
@@ -212,32 +212,6 @@ dashboard "aws_dynamodb_table_dashboard" {
   container {
     title = "Assessments"
     width = 6
-
-    chart {
-      title = "Encryption Status"
-      type  = "donut"
-      width = 4
-      sql   = <<-EOQ
-        with table_encryption_status as (
-          select
-            t.name as table_name,
-            case
-              when t.sse_description ->> 'SSEType' = 'KMS' and k.key_manager = 'AWS' then 'AWS Managed'
-              when t.sse_description ->> 'SSEType' = 'KMS' and k.key_manager = 'CUSTOMER' then 'Customer Managed'
-              else 'DEFAULT'
-            end as encryption_type
-          from
-            aws_dynamodb_table as t
-            left join aws_kms_key as k on t.sse_description ->> 'KMSMasterKeyArn' = k.arn
-        )
-        select
-          encryption_type,
-          count(*) as table_count
-        from
-          table_encryption_status
-        group by encryption_type;
-      EOQ
-    }
 
     chart {
       title = "Unused Table Status"
@@ -297,52 +271,77 @@ dashboard "aws_dynamodb_table_dashboard" {
     }
 
     chart {
-      title = "Continuous Backup Status"
-      type  = "donut"
-      width = 4
-      sql   = <<-EOQ
-        select
-          continuous_backups_status,
-          count(*)
-        from
-          aws_dynamodb_table
-        group by continuous_backups_status;
-      EOQ
-    }
+        title = "Encryption Status"
+        type  = "donut"
+        width = 4
+        sql   = <<-EOQ
+          with table_encryption_status as (
+            select
+              t.name as table_name,
+              case
+                when t.sse_description ->> 'SSEType' = 'KMS' and k.key_manager = 'AWS' then 'AWS Managed'
+                when t.sse_description ->> 'SSEType' = 'KMS' and k.key_manager = 'CUSTOMER' then 'Customer Managed'
+                else 'DEFAULT'
+              end as encryption_type
+            from
+              aws_dynamodb_table as t
+              left join aws_kms_key as k on t.sse_description ->> 'KMSMasterKeyArn' = k.arn
+          )
+          select
+            encryption_type,
+            count(*) as table_count
+          from
+            table_encryption_status
+          group by encryption_type;
+        EOQ
+      }
+      chart {
+        title = "Continuous Backup Status"
+        type  = "donut"
+        width = 4
+        sql   = <<-EOQ
+          select
+            continuous_backups_status,
+            count(*)
+          from
+            aws_dynamodb_table
+          group by continuous_backups_status;
+        EOQ
+      }
 
-    chart {
-      title = "Backup Plan Protection Status"
-      type  = "donut"
-      width = 4
-      sql   = <<-EOQ
-        with backup_protected_table as (
+      chart {
+        title = "Backup Plan Protection Status"
+        type  = "donut"
+        width = 4
+        sql   = <<-EOQ
+          with backup_protected_table as (
+            select
+              resource_arn as arn
+            from
+              aws_backup_protected_resource as b
+            where
+              resource_type = 'DynamoDB'
+          ),
+          table_backup_plan_protection_status as (
+            select
+              t.name as table_name,
+              case
+                when b.arn is not null then 'Protected'
+                else 'Unprotected'
+              end as backup_plan_protection_status
+            from
+              aws_dynamodb_table as t
+              left join backup_protected_table as b on t.arn = b.arn
+          )
           select
-            resource_arn as arn
+            backup_plan_protection_status,
+            count(*) as table_count
           from
-            aws_backup_protected_resource as b
-          where
-            resource_type = 'DynamoDB'
-        ),
-        table_backup_plan_protection_status as (
-          select
-            t.name as table_name,
-            case
-              when b.arn is not null then 'Protected'
-              else 'Unprotected'
-            end as backup_plan_protection_status
-          from
-            aws_dynamodb_table as t
-            left join backup_protected_table as b on t.arn = b.arn
-        )
-        select
-          backup_plan_protection_status,
-          count(*) as table_count
-        from
-          table_backup_plan_protection_status
-        group by backup_plan_protection_status;
-      EOQ
+            table_backup_plan_protection_status
+          group by backup_plan_protection_status;
+        EOQ
+      }
     }
-  }
 
   # Costs
   container {

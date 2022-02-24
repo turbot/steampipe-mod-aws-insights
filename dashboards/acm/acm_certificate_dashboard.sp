@@ -10,22 +10,22 @@ query "aws_acm_certificate_revoked_count" {
   EOQ
 }
 
-query "aws_acm_certificate_transparency_logging_disabled" {
+query "aws_acm_certificate_renewal_eligibility_ineligible" {
   sql = <<-EOQ
-    with transparency_logging_disabled as (
+    with renewal_eligibility_ineligible as (
       select
         certificate_arn
       from
         aws_acm_certificate
       where
-        certificate_transparency_logging_preference = 'DISABLED'
+        renewal_eligibility = 'INELIGIBLE'
     )
     select
       count(*) as value,
-      'Disabled Transparency Logging' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as "type"
+      'Ineligible for Renewal' as label
+      -- case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
-      transparency_logging_disabled
+      renewal_eligibility_ineligible
   EOQ
 }
 
@@ -48,25 +48,6 @@ query "aws_acm_certificate_invalid" {
   EOQ
 }
 
-query "aws_acm_certificate_renewal_eligibility_ineligible" {
-  sql = <<-EOQ
-    with renewal_eligibility_ineligible as (
-      select
-        certificate_arn
-      from
-        aws_acm_certificate
-      where
-        renewal_eligibility = 'INELIGIBLE'
-    )
-    select
-      count(*) as value,
-      'Ineligible for Renewal' as label
-      -- case count(*) when 0 then 'ok' else 'alert' end as "type"
-    from
-      renewal_eligibility_ineligible
-  EOQ
-}
-
 query "aws_acm_certificate_in_use_by" {
   sql = <<-EOQ
     with in_use_by as (
@@ -86,119 +67,26 @@ query "aws_acm_certificate_in_use_by" {
   EOQ
 }
 
-# Analysis
-
-query "aws_acm_certificate_by_account" {
+query "aws_acm_certificate_transparency_logging_disabled" {
   sql = <<-EOQ
-    select
-      a.title as "account",
-      count(v.*) as "certificates"
-    from
-      aws_acm_certificate as v,
-      aws_account as a
-    where
-      a.account_id = v.account_id
-    group by
-      account
-    order by
-      account
-  EOQ
-}
-
-query "aws_acm_certificate_by_type" {
-  sql = <<-EOQ
-    select
-      type as "type",
-      count(type) as "certificates"
-    from
-      aws_acm_certificate
-    group by
-      type
-    order by
-      type
-  EOQ
-}
-
-query "aws_acm_certificate_by_region" {
-  sql = <<-EOQ
-    select region as "Region", count(*) as "certificates" from aws_acm_certificate group by region order by region
-  EOQ
-}
-
-query "aws_acm_certificate_by_age" {
-  sql = <<-EOQ
-    with certificates as (
+    with transparency_logging_disabled as (
       select
-        title,
-        created_at,
-        to_char(created_at,
-          'YYYY-MM') as creation_month
+        certificate_arn
       from
         aws_acm_certificate
-    ),
-    months as (
-      select
-        to_char(d,
-          'YYYY-MM') as month
-      from
-        generate_series(date_trunc('month',
-            (
-              select
-                min(created_at)
-                from certificates)),
-            date_trunc('month',
-              current_date),
-            interval '1 month') as d
-    ),
-    certificates_by_month as (
-      select
-        creation_month,
-        count(*)
-      from
-        certificates
-      group by
-        creation_month
+      where
+        certificate_transparency_logging_preference = 'DISABLED'
     )
     select
-      months.month,
-      certificates_by_month.count
+      count(*) as value,
+      'Disabled Transparency Logging' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
-      months
-      left join certificates_by_month on months.month = certificates_by_month.creation_month
-    order by
-      months.month;
+      transparency_logging_disabled
   EOQ
 }
 
 # Assessments
-
-query "aws_acm_certificate_by_status" {
-  sql = <<-EOQ
-    select
-      status as "status",
-      count(status) as "certificates"
-    from
-      aws_acm_certificate
-    group by
-      status
-    order by
-      status
-  EOQ
-}
-
-query "aws_acm_certificate_by_transparency_logging_preference" {
-  sql = <<-EOQ
-    select
-      certificate_transparency_logging_preference as "preference",
-      count(certificate_transparency_logging_preference) as "certificates"
-    from
-      aws_acm_certificate
-    group by
-      certificate_transparency_logging_preference
-    order by
-      certificate_transparency_logging_preference
-  EOQ
-}
 
 query "aws_acm_certificate_by_eligibility" {
   sql = <<-EOQ
@@ -257,6 +145,117 @@ query "aws_acm_certificate_by_use" {
   EOQ
 }
 
+query "aws_acm_certificate_by_status" {
+  sql = <<-EOQ
+    select
+      status as "status",
+      count(status) as "certificates"
+    from
+      aws_acm_certificate
+    group by
+      status
+    order by
+      status
+  EOQ
+}
+
+query "aws_acm_certificate_by_transparency_logging_preference" {
+  sql = <<-EOQ
+    select
+      certificate_transparency_logging_preference as "preference",
+      count(certificate_transparency_logging_preference) as "certificates"
+    from
+      aws_acm_certificate
+    group by
+      certificate_transparency_logging_preference
+    order by
+      certificate_transparency_logging_preference
+  EOQ
+}
+
+# Analysis
+
+query "aws_acm_certificate_by_account" {
+  sql = <<-EOQ
+    select
+      a.title as "account",
+      count(v.*) as "certificates"
+    from
+      aws_acm_certificate as v,
+      aws_account as a
+    where
+      a.account_id = v.account_id
+    group by
+      account
+    order by
+      account
+  EOQ
+}
+
+query "aws_acm_certificate_by_region" {
+  sql = <<-EOQ
+    select region as "Region", count(*) as "certificates" from aws_acm_certificate group by region order by region
+  EOQ
+}
+
+query "aws_acm_certificate_by_type" {
+  sql = <<-EOQ
+    select
+      type as "type",
+      count(type) as "certificates"
+    from
+      aws_acm_certificate
+    group by
+      type
+    order by
+      type
+  EOQ
+}
+
+query "aws_acm_certificate_by_age" {
+  sql = <<-EOQ
+    with certificates as (
+      select
+        title,
+        created_at,
+        to_char(created_at,
+          'YYYY-MM') as creation_month
+      from
+        aws_acm_certificate
+    ),
+    months as (
+      select
+        to_char(d,
+          'YYYY-MM') as month
+      from
+        generate_series(date_trunc('month',
+            (
+              select
+                min(created_at)
+                from certificates)),
+            date_trunc('month',
+              current_date),
+            interval '1 month') as d
+    ),
+    certificates_by_month as (
+      select
+        creation_month,
+        count(*)
+      from
+        certificates
+      group by
+        creation_month
+    )
+    select
+      months.month,
+      certificates_by_month.count
+    from
+      months
+      left join certificates_by_month on months.month = certificates_by_month.creation_month
+    order by
+      months.month;
+  EOQ
+}
 
 dashboard "aws_acm_certificate_dashboard" {
 
@@ -275,7 +274,6 @@ dashboard "aws_acm_certificate_dashboard" {
     }
 
     card {
-      type  = "info"
       sql   = query.aws_acm_certificate_renewal_eligibility_ineligible.sql
       width = 2
     }

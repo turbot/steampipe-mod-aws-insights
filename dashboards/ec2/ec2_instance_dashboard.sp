@@ -39,13 +39,36 @@ query "aws_ec2_ebs_optimized_count" {
   EOQ
 }
 
-query "aws_ec2_instance_ebs_optimized_status" {
+query "aws_ec2_root_volume_unencrypted_instance_count" {
+  sql = <<-EOQ
+    with encrypted_instances as (
+      select
+        encrypted,
+        volume_id,
+        att -> 'InstanceId' as "instanceid",
+        att -> 'Device' as "device"
+      from
+        aws_ebs_volume,
+        jsonb_array_elements(attachments) as att  where not encrypted
+        and attachments is not null
+    )
+    select
+      count(*) as value,
+      'Root Volume Unencrypted' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
+    from
+      aws_ec2_instance as i left join encrypted_instances as e on ((e.instanceid)::text = i.instance_id) and (i.root_device_name = (e.device)::text)
+  EOQ
+}
+
+# Assessments
+query "aws_ec2_instance_by_public_ip" {
   sql = <<-EOQ
     with instances as (
       select
         case
-          when ebs_optimized then 'Enabled'
-          else 'Disabled'
+          when public_ip_address is null then 'Private'
+          else 'Public'
         end as visibility
       from
         aws_ec2_instance
@@ -60,12 +83,12 @@ query "aws_ec2_instance_ebs_optimized_status" {
   EOQ
 }
 
-query "aws_ec2_instance_detailed_monitoring_enabled" {
+query "aws_ec2_instance_ebs_optimized_status" {
   sql = <<-EOQ
     with instances as (
       select
         case
-          when monitoring_state = 'enabled' then 'Enabled'
+          when ebs_optimized then 'Enabled'
           else 'Disabled'
         end as visibility
       from
@@ -115,6 +138,28 @@ query "aws_ec2_instance_root_volume_encryption_status" {
   EOQ
 }
 
+query "aws_ec2_instance_detailed_monitoring_enabled" {
+  sql = <<-EOQ
+    with instances as (
+      select
+        case
+          when monitoring_state = 'enabled' then 'Enabled'
+          else 'Disabled'
+        end as visibility
+      from
+        aws_ec2_instance
+    )
+    select
+      visibility,
+      count(*)
+    from
+      instances
+    group by
+      visibility
+  EOQ
+}
+
+# COST
 query "aws_ec2_instance_cost_per_month" {
   sql = <<-EOQ
     select
@@ -132,28 +177,51 @@ query "aws_ec2_instance_cost_per_month" {
   EOQ
 }
 
-query "aws_ec2_unencrypted_instance_count" {
-  sql = <<-EOQ
-    with encrypted_instances as (
-      select
-        encrypted,
-        volume_id,
-        att -> 'InstanceId' as "instanceid",
-        att -> 'Device' as "device"
-      from
-        aws_ebs_volume,
-        jsonb_array_elements(attachments) as att  where not encrypted
-        and attachments is not null
-    )
-    select
-      count(*) as value,
-      'Root Volume Unencrypted' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as "type"
-    from
-      aws_ec2_instance as i left join encrypted_instances as e on ((e.instanceid)::text = i.instance_id) and (i.root_device_name = (e.device)::text)
-  EOQ
-}
+query "aws_ec2_monthly_forecast_table" {
 
+  sql = <<-EOQ
+    with monthly_costs as (
+      select
+        period_start,
+        period_end,
+        case
+          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp) then 'Month to Date'
+          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month') then 'Previous Month'
+          else to_char (period_start, 'Month')
+        end as period_label,
+        period_end::date - period_start::date as days,
+        sum(unblended_cost_amount)::numeric::money as unblended_cost_amount,
+        (sum(unblended_cost_amount) / (period_end::date - period_start::date ) )::numeric::money as average_daily_cost,
+        date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval ) as days_in_month,
+        sum(unblended_cost_amount) / (period_end::date - period_start::date ) * date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval )::numeric::money  as forecast_amount
+      from
+        aws_cost_by_service_monthly as c
+
+      where
+        service = 'Amazon Elastic Compute Cloud - Compute'
+        and date_trunc('month', period_start) >= date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
+
+        group by
+        period_start,
+        period_end
+    )
+
+    select
+      period_label as "Period",
+      unblended_cost_amount as "Cost",
+      average_daily_cost as "Daily Avg Cost"
+    from
+      monthly_costs
+
+    union all
+    select
+      'This Month (Forecast)' as "Period",
+      (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
+      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
+
+  EOQ
+
+}
 
 # query "aws_ec2_instance_cost_by_usage_types_12mo" {
 #   sql = <<-EOQ
@@ -238,6 +306,7 @@ query "aws_ec2_unencrypted_instance_count" {
 #   EOQ
 # }
 
+# Analysis
 query "aws_ec2_instance_by_account" {
   sql = <<-EOQ
     select
@@ -266,12 +335,6 @@ query "aws_ec2_instance_by_region" {
   EOQ
 }
 
-query "aws_ec2_instance_by_type" {
-  sql = <<-EOQ
-    select instance_type as "Type", count(*) as "instances" from aws_ec2_instance group by instance_type order by instance_type
-  EOQ
-}
-
 query "aws_ec2_instance_by_state" {
   sql = <<-EOQ
     select
@@ -281,42 +344,6 @@ query "aws_ec2_instance_by_state" {
       aws_ec2_instance
     group by
       instance_state
-  EOQ
-}
-
-
-query "aws_ec2_instance_by_public_ip" {
-  sql = <<-EOQ
-    with instances as (
-      select
-        case
-          when public_ip_address is null then 'Private'
-          else 'Public'
-        end as visibility
-      from
-        aws_ec2_instance
-    )
-    select
-      visibility,
-      count(*)
-    from
-      instances
-    group by
-      visibility
-  EOQ
-}
-
-query "aws_ec2_instance_with_public_ip" {
-  sql = <<-EOQ
-    select
-      instance_id,
-      public_ip_address,
-      account_id,
-      region
-    from
-      aws_ec2_instance
-    where
-      public_ip_address is not null
   EOQ
 }
 
@@ -362,6 +389,12 @@ query "aws_ec2_instance_by_creation_month" {
       left join instances_by_month on months.month = instances_by_month.creation_month
     order by
       months.month desc;
+  EOQ
+}
+
+query "aws_ec2_instance_by_type" {
+  sql = <<-EOQ
+    select instance_type as "Type", count(*) as "instances" from aws_ec2_instance group by instance_type order by instance_type
   EOQ
 }
 
@@ -432,55 +465,6 @@ query "aws_ec2_instance_by_cpu_utilization_category" {
   EOQ
 }
 
-
-
-query "aws_ec2_monthly_forecast_table" {
-
-  sql = <<-EOQ
-    with monthly_costs as (
-      select
-        period_start,
-        period_end,
-        case
-          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp) then 'Month to Date'
-          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month') then 'Previous Month'
-          else to_char (period_start, 'Month')
-        end as period_label,
-        period_end::date - period_start::date as days,
-        sum(unblended_cost_amount)::numeric::money as unblended_cost_amount,
-        (sum(unblended_cost_amount) / (period_end::date - period_start::date ) )::numeric::money as average_daily_cost,
-        date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval ) as days_in_month,
-        sum(unblended_cost_amount) / (period_end::date - period_start::date ) * date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval )::numeric::money  as forecast_amount
-      from
-        aws_cost_by_service_monthly as c
-
-      where
-        service = 'Amazon Elastic Compute Cloud - Compute'
-        and date_trunc('month', period_start) >= date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
-
-        group by
-        period_start,
-        period_end
-    )
-
-    select
-      period_label as "Period",
-      unblended_cost_amount as "Cost",
-      average_daily_cost as "Daily Avg Cost"
-    from
-      monthly_costs
-
-    union all
-    select
-      'This Month (Forecast)' as "Period",
-      (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
-      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
-
-  EOQ
-
-}
-
-
 dashboard "aws_ec2_instance_dashboard" {
 
   title = "AWS EC2 Instance Dashboard"
@@ -510,7 +494,7 @@ dashboard "aws_ec2_instance_dashboard" {
     }
 
      card {
-      sql   = query.aws_ec2_unencrypted_instance_count.sql
+      sql   = query.aws_ec2_root_volume_unencrypted_instance_count.sql
       width = 2
     }
 
@@ -534,7 +518,7 @@ dashboard "aws_ec2_instance_dashboard" {
   }
 
   container {
-    title = "Assesments"
+    title = "Assessments"
     width = 6
 
    chart {

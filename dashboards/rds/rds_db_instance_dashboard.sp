@@ -496,10 +496,6 @@ dashboard "aws_rds_db_instance_dashboard" {
       sql   = query.aws_rds_db_instance_public_status.sql
       type  = "donut"
       width = 4
-
-      series "Enabled" {
-        color = "green"
-      }
     }
 
     chart {

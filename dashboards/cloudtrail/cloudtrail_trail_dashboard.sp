@@ -25,8 +25,7 @@ query "aws_cloudtrail_trail_multi_region_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Multi-Region Trails' as label,
-      case count(*) when 0 then 'alert' else 'ok' end as type
+      'Multi-Region Trails' as label
     from
       aws_cloudtrail_trail
     where
@@ -39,16 +38,167 @@ query "aws_cloudtrail_trail_log_file_validation_enabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Log File Validation Enabled' as label,
-      case count(*) when 0 then 'alert' else 'ok' end as type
+      'Log File Validation Disabled' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_cloudtrail_trail
     where
       region = home_region
-      and log_file_validation_enabled;
+      and not log_file_validation_enabled;
   EOQ
 }
 
+query "aws_cloudtrail_trail_unencrypted_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Unencrypted' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
+    from
+      aws_cloudtrail_trail
+    where
+      home_region = region
+      and kms_key_id is null;
+  EOQ
+}
+
+# Assessments
+
+query "aws_cloudtrail_trail_log_file_validation_status" {
+  sql = <<-EOQ
+    select
+      log_file_validation_status,
+      count(*)
+    from (
+      select
+        case when log_file_validation_enabled then
+          'Enabled'
+        else
+          'Disabled'
+        end log_file_validation_status
+      from
+        aws_cloudtrail_trail
+      where
+        region = home_region) as t
+    group by
+      log_file_validation_status
+    order by
+      log_file_validation_status desc
+  EOQ
+}
+
+query "aws_cloudtrail_trail_encryption_status" {
+  sql = <<-EOQ
+    with trail_encryption_status as (
+      select
+        name as trail_name,
+        case
+          when kms_key_id is null then 'Disabled'
+          else 'Enabled'
+        end as encryption_status
+      from
+        aws_cloudtrail_trail
+      where
+        home_region = region
+    )
+    select
+      encryption_status,
+      count(*)
+    from
+      trail_encryption_status
+    group by encryption_status;
+  EOQ
+}
+
+query "aws_cloudtrail_trail_logging_status" {
+  sql = <<-EOQ
+    with trail_logging_status as (
+      select
+        name as trail_name,
+        case
+          when not is_logging then 'Disabled'
+          else 'Enabled'
+        end as logging_status
+      from
+        aws_cloudtrail_trail
+      where
+        home_region = region
+    )
+    select
+      logging_status,
+      count(*)
+    from
+      trail_logging_status
+    group by logging_status;
+  EOQ
+}
+
+query "aws_cloudtrail_trail_bucket_publicly_accessible" {
+  sql = <<-EOQ
+    with public_bucket_data as (
+      select
+        t.s3_bucket_name as name,
+        b.arn,
+        t.region,
+        t.account_id,
+        count(acl_grant) filter (where acl_grant -> 'Grantee' ->> 'URI' like '%acs.amazonaws.com/groups/global/AllUsers') as all_user_grants,
+        count(acl_grant) filter (where acl_grant -> 'Grantee' ->> 'URI' like '%acs.amazonaws.com/groups/global/AuthenticatedUsers') as auth_user_grants,
+        count(s) filter (where s ->> 'Effect' = 'Allow' and  p = '*' ) as anon_statements
+      from
+        aws_cloudtrail_trail as t
+      left join aws_s3_bucket as b on t.s3_bucket_name = b.name
+      left join jsonb_array_elements(acl -> 'Grants') as acl_grant on true
+      left join jsonb_array_elements(policy_std -> 'Statement') as s  on true
+      left join jsonb_array_elements_text(s -> 'Principal' -> 'AWS') as p  on true
+      where
+        t.region = t.home_region
+      group by
+        t.s3_bucket_name,
+        b.arn,
+        t.region,
+        t.account_id
+    ),
+    bucket_status as (
+      select
+        case
+          when all_user_grants > 0  or auth_user_grants > 0 or anon_statements > 0 then 'Public'
+          else 'Not Public'
+        end as bucket_publicly_accessible_status
+      from
+        public_bucket_data
+    )
+    select
+      bucket_publicly_accessible_status,
+      count(*) as table_count
+    from
+      bucket_status
+    group by bucket_publicly_accessible_status;
+  EOQ
+}
+
+query "aws_cloudtrail_trail_cloudwatch_log_integration_status" {
+  sql = <<-EOQ
+    with cloudwatch_log_integration_status as (
+      select
+        case
+          when log_group_arn != 'null' and ((latest_delivery_time) > current_date - 1) then 'Integrated'
+          else 'Not Integrated'
+        end as integration_status
+      from
+        aws_cloudtrail_trail
+      where
+        region = home_region
+    )
+    select
+      integration_status,
+      count(*) as trail_count
+    from
+      cloudwatch_log_integration_status
+    group by integration_status;
+  EOQ
+}
+
+# Analysis
 query "aws_cloudtrail_trail_count_per_account" {
   sql = <<-EOQ
     select
@@ -136,140 +286,6 @@ query "aws_cloudtrail_multi_region_trail_count_per_account" {
   EOQ
 }
 
-query "aws_cloudtrail_trail_encryption_status" {
-  sql = <<-EOQ
-    with trail_encryption_status as (
-      select
-        name as table_name,
-        case
-          when kms_key_id is null then 'Disabled'
-          else 'Enabled'
-        end as encryption_status
-      from
-        aws_cloudtrail_trail
-      where
-        home_region = region
-    )
-    select
-      encryption_status,
-      count(*) as table_count
-    from
-      trail_encryption_status
-    group by encryption_status;
-  EOQ
-}
-
-query "aws_cloudtrail_trail_logging_status" {
-  sql = <<-EOQ
-    with trail_logging_status as (
-      select
-        name as table_name,
-        case
-          when not is_logging then 'Disabled'
-          else 'Enabled'
-        end as logging_status
-      from
-        aws_cloudtrail_trail
-      where
-        home_region = region
-    )
-    select
-      logging_status,
-      count(*) as table_count
-    from
-      trail_logging_status
-    group by logging_status;
-  EOQ
-}
-
-query "aws_cloudtrail_trail_log_file_validation_status" {
-  sql = <<-EOQ
-    with trail_log_file_validation_status as (
-      select
-        name as table_name,
-        case
-          when not log_file_validation_enabled then 'Disabled'
-          else 'Enabled'
-        end as log_file_validation_status
-      from
-        aws_cloudtrail_trail
-      where
-        home_region = region
-    )
-    select
-      log_file_validation_status,
-      count(*) as table_count
-    from
-      trail_log_file_validation_status
-    group by log_file_validation_status;
-  EOQ
-}
-
-query "aws_cloudtrail_trail_bucket_publicly_accessible" {
-  sql = <<-EOQ
-    with public_bucket_data as (
-      select
-        t.s3_bucket_name as name,
-        b.arn,
-        t.region,
-        t.account_id,
-        count(acl_grant) filter (where acl_grant -> 'Grantee' ->> 'URI' like '%acs.amazonaws.com/groups/global/AllUsers') as all_user_grants,
-        count(acl_grant) filter (where acl_grant -> 'Grantee' ->> 'URI' like '%acs.amazonaws.com/groups/global/AuthenticatedUsers') as auth_user_grants,
-        count(s) filter (where s ->> 'Effect' = 'Allow' and  p = '*' ) as anon_statements
-      from
-        aws_cloudtrail_trail as t
-      left join aws_s3_bucket as b on t.s3_bucket_name = b.name
-      left join jsonb_array_elements(acl -> 'Grants') as acl_grant on true
-      left join jsonb_array_elements(policy_std -> 'Statement') as s  on true
-      left join jsonb_array_elements_text(s -> 'Principal' -> 'AWS') as p  on true
-      where
-        t.region = t.home_region
-      group by
-        t.s3_bucket_name,
-        b.arn,
-        t.region,
-        t.account_id
-    ),
-    bucket_status as (
-      select
-        case
-          when all_user_grants > 0  or auth_user_grants > 0 or anon_statements > 0 then 'Public'
-          else 'Not Public'
-        end as bucket_publicly_accessible_status
-      from
-        public_bucket_data
-    )
-    select
-      bucket_publicly_accessible_status,
-      count(*) as table_count
-    from
-      bucket_status
-    group by bucket_publicly_accessible_status;
-  EOQ
-}
-
-query "aws_cloudtrail_trail_cloudwatch_log_integration_status" {
-  sql = <<-EOQ
-    with cloudwatch_log_integration_status as (
-      select
-        case
-          when log_group_arn != 'null' and ((latest_delivery_time) > current_date - 1) then 'Integrated'
-          else 'Not Integrated'
-        end as integration_status
-      from
-        aws_cloudtrail_trail
-      where 
-        region = home_region
-    )
-    select
-      integration_status,
-      count(*) as trail_count
-    from
-      cloudwatch_log_integration_status
-    group by integration_status;
-  EOQ
-}
-
 query "aws_cloudtrail_trail_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
@@ -327,7 +343,7 @@ query "aws_cloudtrail_trail_cost_per_month" {
 
 dashboard "aws_cloudtrail_trail_dashboard" {
   title = "AWS CloudTrail Trail Dashboard"
-  
+
   container {
 
     # Analysis
@@ -351,6 +367,11 @@ dashboard "aws_cloudtrail_trail_dashboard" {
       width = 2
     }
 
+    card {
+      sql   = query.aws_cloudtrail_trail_unencrypted_count.sql
+      width = 2
+    }
+
     # Costs
     card {
       width = 2
@@ -367,22 +388,6 @@ dashboard "aws_cloudtrail_trail_dashboard" {
           and period_end > date_trunc('month', CURRENT_DATE::timestamp);
       EOQ
     }
-
-    card {
-      width = 2
-      type  = "info"
-      icon  = "currency-dollar"
-      sql   = <<-EOQ
-        select
-          'Cost - Previous Month' as label,
-          sum(unblended_cost_amount)::numeric::money as value
-        from
-          aws_cost_by_service_monthly
-        where
-          service = 'AWS CloudTrail'
-          and date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month');
-      EOQ
-    }
   }
 
   container {
@@ -395,7 +400,7 @@ dashboard "aws_cloudtrail_trail_dashboard" {
       width = 4
       sql   = query.aws_cloudtrail_trail_log_file_validation_status.sql
     }
-    
+
     chart {
       title = "Encryption Status"
       type  = "donut"

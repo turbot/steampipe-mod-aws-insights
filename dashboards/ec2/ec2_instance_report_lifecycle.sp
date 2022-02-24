@@ -26,9 +26,10 @@ dashboard "aws_ec2_instance_lifecycle_report" {
   table {
     sql = <<-EOQ
       select
-        title as "Instance",
-        instance_state as "Instance State",
-        instance_lifecycle as "Instance Lifecycle",
+        tags ->> 'Name' as "Name",
+        instance_id as "Instance ID",
+        instance_state as "State",
+        instance_lifecycle as "Lifecycle",
         account_id as "Account",
         region as "Region",
         arn as "ARN"

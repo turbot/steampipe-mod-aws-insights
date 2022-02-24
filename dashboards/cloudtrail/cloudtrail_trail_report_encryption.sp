@@ -26,7 +26,7 @@ dashboard "aws_cloudtrail_trail_encryption_dashboard" {
 
     sql = <<-EOQ
       select
-        t.title as "Volume",
+        t.title as "Trail",
         case when t.kms_key_id is not null then 'Enabled' else null end as "Encryption",
         a.title as "Account",
         t.account_id as "Account ID",

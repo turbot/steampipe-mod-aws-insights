@@ -43,6 +43,33 @@ query "aws_lambda_function_not_in_vpc_count" {
   EOQ
 }
 
+# Assessments
+
+query "aws_lambda_function_public_status" {
+  sql = <<-EOQ
+    with functions as (
+      select
+        case
+          when
+          policy_std -> 'Statement' ->> 'Effect' = 'Allow'
+          and ( policy_std -> 'Statement' ->> 'Prinipal' = '*'
+          or ( policy_std -> 'Principal' -> 'AWS' ) :: text = '*'
+        ) then 'Public'
+          else 'Private'
+        end as visibility
+      from
+        aws_lambda_function
+    )
+    select
+      visibility,
+      count(*)
+    from
+      functions
+    group by
+      visibility
+  EOQ
+}
+
 query "aws_lambda_function_by_encryption_status" {
   sql = <<-EOQ
     select
@@ -61,6 +88,27 @@ query "aws_lambda_function_by_encryption_status" {
       encryption_status
     order by
       encryption_status desc
+  EOQ
+}
+
+query "aws_lambda_function_vpc_status" {
+  sql = <<-EOQ
+    select
+      vpc_status,
+      count(*)
+    from (
+      select
+        case when vpc_id is not null then
+          'Enabled'
+        else
+          'Disabled'
+        end vpc_status
+      from
+        aws_lambda_function) as t
+    group by
+      vpc_status
+    order by
+      vpc_status desc
   EOQ
 }
 
@@ -106,27 +154,7 @@ query "aws_lambda_function_dead_letter_config_status" {
   EOQ
 }
 
-query "aws_lambda_function_vpc_status" {
-  sql = <<-EOQ
-    select
-      vpc_status,
-      count(*)
-    from (
-      select
-        case when vpc_id is not null then
-          'Enabled'
-        else
-          'Disabled'
-        end vpc_status
-      from
-        aws_lambda_function) as t
-    group by
-      vpc_status
-    order by
-      vpc_status desc
-  EOQ
-}
-
+# Cost
 query "aws_lambda_function_cost_per_month" {
   sql = <<-EOQ
     select
@@ -142,6 +170,51 @@ query "aws_lambda_function_cost_per_month" {
       period_start
   EOQ
 }
+
+query "aws_lambda_monthly_forecast_table" {
+  sql = <<-EOQ
+    with monthly_costs as (
+        select
+          period_start,
+          period_end,
+          case
+            when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp) then 'Month to Date'
+            when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month') then 'Previous Month'
+            else to_char (period_start, 'Month')
+          end as period_label,
+          period_end::date - period_start::date as days,
+          sum(unblended_cost_amount)::numeric::money as unblended_cost_amount,
+          (sum(unblended_cost_amount) / (period_end::date - period_start::date ) )::numeric::money as average_daily_cost,
+          date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval ) as days_in_month,
+          sum(unblended_cost_amount) / (period_end::date - period_start::date ) * date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval )::numeric::money  as forecast_amount
+        from
+          aws_cost_by_service_monthly as c
+
+        where
+          service = 'AWS Lambda'
+          and date_trunc('month', period_start) >= date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
+
+          group by
+          period_start,
+          period_end
+      )
+
+      select
+        period_label as "Period",
+        unblended_cost_amount as "Cost",
+        average_daily_cost as "Daily Avg Cost"
+      from
+        monthly_costs
+      union all
+      select
+        'This Month (Forecast)' as "Period",
+        (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
+        (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
+
+      EOQ
+}
+
+# Analysis
 
 query "aws_lambda_function_by_account" {
   sql = <<-EOQ
@@ -179,6 +252,97 @@ query "aws_lambda_function_by_runtime" {
       count(runtime)
     from
       aws_lambda_function
+    group by
+      runtime
+  EOQ
+}
+
+
+query "aws_lambda_function_memory_by_region" {
+  sql = <<-EOQ
+    select region as "Region", sum(memory_size) as "MB" from aws_lambda_function group by region order by region
+  EOQ
+}
+
+query "aws_lambda_function_code_size_by_account" {
+  sql = <<-EOQ
+    select
+      a.title as "account",
+      round(cast(sum(i.code_size)/1024/1024 as numeric), 1) as "MB"
+      --sum(code_size) as "total_Size",
+    from
+      aws_lambda_function as i,
+      aws_account as a
+    where
+      a.account_id = i.account_id
+    group by
+      account
+    order by
+      account
+  EOQ
+}
+
+query "aws_lambda_function_code_size_by_region" {
+  sql = <<-EOQ
+    select
+      region,
+      round(cast(sum(i.code_size)/1024/1024 as numeric), 1) as "MB"
+    from
+      aws_lambda_function as i
+    group by
+      region
+  EOQ
+}
+
+query "aws_lambda_function_code_size_by_runtime" {
+  sql = <<-EOQ
+    select
+      runtime,
+      round(cast(sum(i.code_size)/1024/1024 as numeric), 1) as "MB"
+    from
+      aws_lambda_function as i
+    group by
+      runtime
+  EOQ
+}
+
+query "aws_lambda_function_memory_size_by_account" {
+  sql = <<-EOQ
+    select
+      a.title as "account",
+      round(cast(sum(i.memory_size)/1024 as numeric), 1) as "GB"
+      --sum(code_size) as "total_Size",
+    from
+      aws_lambda_function as i,
+      aws_account as a
+    where
+      a.account_id = i.account_id
+    group by
+      account
+    order by
+      account
+  EOQ
+}
+
+query "aws_lambda_function_memory_size_by_region" {
+  sql = <<-EOQ
+    select
+      region,
+      round(cast(sum(i.memory_size)/1024 as numeric), 1) as "GB"
+    from
+      aws_lambda_function as i
+    group by
+      region
+  EOQ
+}
+
+query "aws_lambda_function_memory_size_by_runtime" {
+  sql = <<-EOQ
+    select
+      runtime,
+      round(cast(sum(i.memory_size)/1024 as numeric), 1) as "GB"
+    from
+      aws_lambda_function as i
     group by
       runtime
   EOQ
@@ -233,164 +397,6 @@ query "aws_lambda_function_invocation_rate" {
       and name in (select name from top_n)
     order by
       timestamp
-  EOQ
-}
-
-query "aws_lambda_function_public_status" {
-  sql = <<-EOQ
-    with functions as (
-      select
-        case
-          when
-          policy_std -> 'Statement' ->> 'Effect' = 'Allow'
-          and ( policy_std -> 'Statement' ->> 'Prinipal' = '*'
-          or ( policy_std -> 'Principal' -> 'AWS' ) :: text = '*'
-        ) then 'Public'
-          else 'Private'
-        end as visibility
-      from
-        aws_lambda_function
-    )
-    select
-      visibility,
-      count(*)
-    from
-      functions
-    group by
-      visibility
-  EOQ
-}
-
-query "aws_lambda_monthly_forecast_table" {
-  sql = <<-EOQ
-    with monthly_costs as (
-        select
-          period_start,
-          period_end,
-          case
-            when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp) then 'Month to Date'
-            when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month') then 'Previous Month'
-            else to_char (period_start, 'Month')
-          end as period_label,
-          period_end::date - period_start::date as days,
-          sum(unblended_cost_amount)::numeric::money as unblended_cost_amount,
-          (sum(unblended_cost_amount) / (period_end::date - period_start::date ) )::numeric::money as average_daily_cost,
-          date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval ) as days_in_month,
-          sum(unblended_cost_amount) / (period_end::date - period_start::date ) * date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval )::numeric::money  as forecast_amount
-        from
-          aws_cost_by_service_monthly as c
-
-        where
-          service = 'AWS Lambda'
-          and date_trunc('month', period_start) >= date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
-
-          group by
-          period_start,
-          period_end
-      )
-
-      select
-        period_label as "Period",
-        unblended_cost_amount as "Cost",
-        average_daily_cost as "Daily Avg Cost"
-      from
-        monthly_costs
-      union all
-      select
-        'This Month (Forecast)' as "Period",
-        (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
-        (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
-
-      EOQ
-}
-
-query "aws_lambda_function_memory_by_region" {
-  sql = <<-EOQ
-    select region as "Region", sum(memory_size) as "MB" from aws_lambda_function group by region order by region
-  EOQ
-}
-
-query "aws_lambda_function_code_size_by_account" {
-  sql = <<-EOQ
-    select
-      a.title as "account",
-      round(cast(sum(i.code_size)/1024/1024 as numeric), 1) as "Total Code Size(MB)"
-      --sum(code_size) as "total_Size",
-    from
-      aws_lambda_function as i,
-      aws_account as a
-    where
-      a.account_id = i.account_id
-    group by
-      account
-    order by
-      account
-  EOQ
-}
-
-query "aws_lambda_function_code_size_by_region" {
-  sql = <<-EOQ
-    select
-      region,
-      round(cast(sum(i.code_size)/1024/1024 as numeric), 1) as "Total Code Size(MB)"
-    from
-      aws_lambda_function as i
-    group by
-      region
-  EOQ
-}
-
-query "aws_lambda_function_code_size_by_runtime" {
-  sql = <<-EOQ
-    select
-      runtime,
-      round(cast(sum(i.code_size)/1024/1024 as numeric), 1) as "Total Code Size(MB)"
-    from
-      aws_lambda_function as i
-    group by
-      runtime
-  EOQ
-}
-
-query "aws_lambda_function_memory_size_by_account" {
-  sql = <<-EOQ
-    select
-      a.title as "account",
-      round(cast(sum(i.memory_size)/1024 as numeric), 1) as "Total Code Size(GB)"
-      --sum(code_size) as "total_Size",
-    from
-      aws_lambda_function as i,
-      aws_account as a
-    where
-      a.account_id = i.account_id
-    group by
-      account
-    order by
-      account
-  EOQ
-}
-
-query "aws_lambda_function_memory_size_by_region" {
-  sql = <<-EOQ
-    select
-      region,
-      round(cast(sum(i.memory_size)/1024 as numeric), 1) as "Total Code Size(GB)"
-    from
-      aws_lambda_function as i
-    group by
-      region
-  EOQ
-}
-
-query "aws_lambda_function_memory_size_by_runtime" {
-  sql = <<-EOQ
-    select
-      runtime,
-      round(cast(sum(i.memory_size)/1024 as numeric), 1) as "Total Code Size(GB)"
-    from
-      aws_lambda_function as i
-    group by
-      runtime
   EOQ
 }
 
@@ -461,10 +467,6 @@ dashboard "aws_lambda_function_dashboard" {
       sql   = query.aws_lambda_function_by_encryption_status.sql
       type  = "donut"
       width = 4
-
-      series "Enabled" {
-        color = "green"
-      }
     }
 
     chart {
@@ -534,17 +536,25 @@ dashboard "aws_lambda_function_dashboard" {
     }
 
     chart {
-      title = "Functions Code Size by Account(MB)"
+      title = "Functions Code Size by Account (MB)"
       sql   = query.aws_lambda_function_code_size_by_account.sql
       type  = "column"
       width = 4
+
+      series "MB" {
+        color = "tan"
+      }
     }
 
     chart {
-      title = "Functions Code Size by Region(MB)"
+      title = "Functions Code Size by Region (MB)"
       sql   = query.aws_lambda_function_code_size_by_region.sql
       type  = "column"
       width = 4
+
+      series "MB" {
+        color = "tan"
+      }
     }
 
     chart {
@@ -552,27 +562,43 @@ dashboard "aws_lambda_function_dashboard" {
       sql   = query.aws_lambda_function_code_size_by_runtime.sql
       type  = "column"
       width = 4
+
+      series "MB" {
+        color = "tan"
+      }
     }
 
     chart {
-      title = "Functions Memory Size by Account(GB)"
+      title = "Functions Memory Size by Account (GB)"
       sql   = query.aws_lambda_function_memory_size_by_account.sql
       type  = "column"
       width = 4
+
+      series "GB" {
+        color = "olive"
+      }
     }
 
     chart {
-      title = "Functions Memory Size by Region(GB)"
+      title = "Functions Memory Size by Region (GB)"
       sql   = query.aws_lambda_function_memory_size_by_region.sql
       type  = "column"
       width = 4
+
+      series "GB" {
+        color = "olive"
+      }
     }
 
     chart {
-      title = "Functions Memory Size by Runtime(GB)"
+      title = "Functions Memory Size by Runtime (GB)"
       sql   = query.aws_lambda_function_memory_size_by_runtime.sql
       type  = "column"
       width = 4
+
+      series "GB" {
+        color = "olive"
+      }
     }
   }
 

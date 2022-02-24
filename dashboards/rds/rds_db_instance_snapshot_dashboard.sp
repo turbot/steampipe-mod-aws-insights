@@ -232,7 +232,7 @@ query "aws_rds_db_instance_snapshot_monthly_forecast_table" {
 
 dashboard "aws_rds_db_instance_snapshot_dashboard" {
 
-  title = "AWS RDS DB Instance Snapshots Dashboard"
+  title = "AWS RDS DB Instance Snapshot Dashboard"
 
   container {
 
@@ -308,28 +308,28 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
   }
 
   container {
-    title = "Analysis"  
+    title = "Analysis"
 
     chart {
       title = "Snapshots by Account"
       sql   = query.aws_rds_db_instance_snapshot_by_account.sql
       type  = "column"
       width = 3
-    }  
+    }
 
     chart {
       title = "Snapshots by Region"
       sql   = query.aws_rds_db_instance_snapshot_by_region.sql
       type  = "column"
       width = 3
-    }  
+    }
 
     chart {
       title = "Snapshots by State"
       sql   = query.aws_rds_db_instance_snapshot_by_state.sql
       type  = "column"
       width = 3
-    }  
+    }
 
     chart {
       title = "Snapshots by Age"
@@ -337,13 +337,13 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
       type  = "column"
       width = 3
     }
-    
+
     chart {
       title = "Snapshots by Type"
       sql   = query.aws_rds_db_instance_snapshot_by_engine_type.sql
       type  = "column"
       width = 3
-    }  
+    }
 
   }
 
