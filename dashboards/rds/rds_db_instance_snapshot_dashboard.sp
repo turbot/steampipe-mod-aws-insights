@@ -232,7 +232,7 @@ query "aws_rds_db_instance_snapshot_monthly_forecast_table" {
 
 dashboard "aws_rds_db_instance_snapshot_dashboard" {
 
-  title = "AWS RDS DB Instance Snapshots Dashboard"
+  title = "AWS RDS DB Instance Snapshot Dashboard"
 
   container {
 

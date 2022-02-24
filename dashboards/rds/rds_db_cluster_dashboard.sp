@@ -47,7 +47,7 @@ query "aws_rds_db_cluster_no_deletion_protection_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'No Deleteion Protection' as label,
+      'No Deletion Protection' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_rds_db_cluster
@@ -197,13 +197,13 @@ query "aws_rds_db_cluster_deletion_protection_status" {
     group by name
  )
   select
-    'Enabled' as "Deletition Protection Status",
+    'Enabled' as "Deletion Protection Status",
     count(name) as "Total"
   from
     deletion_protection
 union
   select
-    'Disabled' as "Deletition Protection Status",
+    'Disabled' as "Deletion Protection Status",
     count( db_cluster_identifier) as "Total"
   from
     aws_rds_db_cluster as s where s.db_cluster_identifier not in (select name from deletion_protection)
@@ -421,7 +421,7 @@ dashboard "aws_rds_db_cluster_dashboard" {
       width = 4
     }
     chart {
-      title = "Deletition Protection Status"
+      title = "Deletion Protection Status"
       sql = query.aws_rds_db_cluster_deletion_protection_status.sql
       type  = "donut"
       width = 4
