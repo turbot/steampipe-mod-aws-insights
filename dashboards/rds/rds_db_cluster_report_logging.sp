@@ -3,6 +3,12 @@ dashboard "aws_rds_db_cluster_logging_dashboard" {
   title = "AWS RDS DB Cluster Logging Report"
 
   container {
+
+    card {
+      sql   = query.aws_rds_db_cluster_count.sql
+      width = 2
+    }
+
     card {
       sql = <<-EOQ
         with logging_stat as(
@@ -28,6 +34,7 @@ dashboard "aws_rds_db_cluster_logging_dashboard" {
       EOQ
       width = 2
     }
+
   }
 
   table {
@@ -58,5 +65,7 @@ dashboard "aws_rds_db_cluster_logging_dashboard" {
       where
         r.account_id = a.account_id
     EOQ
+
   }
+  
 }

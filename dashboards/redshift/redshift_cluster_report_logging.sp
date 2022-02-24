@@ -5,11 +5,16 @@ dashboard "aws_redshift_cluster_logging_report" {
   container {
 
     card {
+      sql = query.aws_redshift_cluster_count.sql
+      width = 2
+    }
+
+    card {
       sql = <<-EOQ
         select
           count(*) as value,
           'Logging Disabled' as label,
-          case count(*) when 0 then 'ok' else 'alert' end as "type"
+          case count(*) when 0 then 'ok' else 'alert' end as type
         from
           aws_redshift_cluster
         where
@@ -25,7 +30,7 @@ dashboard "aws_redshift_cluster_logging_report" {
     column "Account ID" {
       display = "none"
     }
-    
+
     sql = <<-EOQ
       select
         r.cluster_identifier as "Cluster",
@@ -44,6 +49,7 @@ dashboard "aws_redshift_cluster_logging_report" {
       where
         r.account_id = a.account_id
     EOQ
+    
   }
 
 }

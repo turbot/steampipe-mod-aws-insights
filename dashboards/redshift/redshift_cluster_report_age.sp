@@ -5,7 +5,6 @@ dashboard "aws_redshift_cluster_age_report" {
 
    container {
 
-    # Analysis
     card {
       sql   = query.aws_redshift_cluster_count.sql
       width = 2
@@ -96,7 +95,7 @@ dashboard "aws_redshift_cluster_age_report" {
         select
           v.title as "Cluster",
           -- date_trunc('day',age(now(),v.cluster_create_time))::text as "Age",
-          now()::date - v.create_time::date as "Age in Days",
+          now()::date - v.cluster_create_time::date as "Age in Days",
           v.cluster_create_time as "Create Time",
           v.cluster_status as "Status",
           a.title as "Account",
@@ -111,8 +110,10 @@ dashboard "aws_redshift_cluster_age_report" {
         order by
           v.cluster_create_time,
           v.title
-
       EOQ
+
     }
+
   }
+  
 }

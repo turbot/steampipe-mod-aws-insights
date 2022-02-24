@@ -4,7 +4,7 @@ dashboard "aws_iam_credential_report" {
 
   text {
     value = <<-EOT
-    ### Note 
+    ### Note
     This report requires an [AWS Credential Report](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_getting-report.html) for each account.
     You can generate a credential report via the AWS CLI:
     EOT
@@ -26,10 +26,10 @@ dashboard "aws_iam_credential_report" {
     # Analysis
     card {
       sql   = <<-EOQ
-        select 
+        select
           count(*) as value,
           'Total Entities' as label
-        from 
+        from
           aws_iam_credential_report
       EOQ
       width = 2
@@ -38,18 +38,19 @@ dashboard "aws_iam_credential_report" {
     # Assessments
     card {
       sql   = <<-EOQ
-        select 
+        select
           count(*) as value,
           'Console Access & No MFA' as label,
           case when count(*) = 0 then 'ok' else 'alert' end as type
-        from 
+        from
           aws_iam_credential_report
-          where 
-            password_enabled	 
+          where
+            password_enabled
             and not mfa_active
       EOQ
       width = 2
     }
+    
   }
 
   container {
@@ -102,13 +103,16 @@ dashboard "aws_iam_credential_report" {
 
           a.title as "Account",
           r.account_id as "Account ID"
-          
-        from 
+
+        from
           aws_iam_credential_report as r,
           aws_account as a
         where
           a.account_id = r.account_id
       EOQ
+
     }
+
   }
+
 }

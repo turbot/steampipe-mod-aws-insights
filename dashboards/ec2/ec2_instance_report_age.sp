@@ -4,10 +4,8 @@ dashboard "aws_ec2_instance_age_report" {
 
   title = "AWS EC2 Instance Age Report"
 
-
    container {
 
-    # Analysis
     card {
       sql   = query.aws_ec2_instance_count.sql
       width = 2
@@ -18,10 +16,10 @@ dashboard "aws_ec2_instance_age_report" {
         select
           count(*) as value,
           '< 24 hours' as label
-        from 
+        from
           aws_ec2_instance
-        where 
-          launch_time > now() - '1 days' :: interval 
+        where
+          launch_time > now() - '1 days' :: interval
       EOQ
       width = 2
       type = "info"
@@ -32,10 +30,10 @@ dashboard "aws_ec2_instance_age_report" {
         select
           count(*) as value,
           '1-30 Days' as label
-        from 
+        from
           aws_ec2_instance
-        where 
-          launch_time between symmetric now() - '1 days' :: interval and now() - '30 days' :: interval 
+        where
+          launch_time between symmetric now() - '1 days' :: interval and now() - '30 days' :: interval
       EOQ
       width = 2
       type = "info"
@@ -46,10 +44,10 @@ dashboard "aws_ec2_instance_age_report" {
         select
           count(*) as value,
           '30-90 Days' as label
-        from 
+        from
           aws_ec2_instance
-        where 
-          launch_time between symmetric now() - '30 days' :: interval and now() - '90 days' :: interval 
+        where
+          launch_time between symmetric now() - '30 days' :: interval and now() - '90 days' :: interval
       EOQ
       width = 2
       type = "info"
@@ -60,9 +58,9 @@ dashboard "aws_ec2_instance_age_report" {
         select
           count(*) as value,
           '90-365 Days' as label
-        from 
+        from
           aws_ec2_instance
-        where 
+        where
           launch_time between symmetric (now() - '90 days'::interval) and (now() - '365 days'::interval)
       EOQ
       width = 2
@@ -74,10 +72,10 @@ dashboard "aws_ec2_instance_age_report" {
         select
           count(*) as value,
           '> 1 Year' as label
-        from 
+        from
           aws_ec2_instance
-        where 
-          launch_time <= now() - '1 year' :: interval 
+        where
+          launch_time <= now() - '1 year' :: interval
       EOQ
       width = 2
       type = "info"
@@ -86,7 +84,6 @@ dashboard "aws_ec2_instance_age_report" {
   }
 
   container {
-
 
     table {
 
@@ -113,10 +110,9 @@ dashboard "aws_ec2_instance_age_report" {
         order by
           i.launch_time,
           i.title
-        
       EOQ
-    }
 
+    }
 
   }
 
@@ -125,8 +121,8 @@ dashboard "aws_ec2_instance_age_report" {
 
 /*
 
-select 
+select
   'value 1' as value,
   'value 2' as value
-  
+
 */

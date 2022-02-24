@@ -2,6 +2,7 @@ dashboard "aws_dynamodb_table_age_report" {
   title = "AWS DynamoDB Table Age Report"
 
    container {
+
     card {
       sql   = query.aws_dynamodb_table_count.sql
       width = 2
@@ -76,10 +77,13 @@ dashboard "aws_dynamodb_table_age_report" {
           creation_date_time <= now() - '1 year' :: interval;
       EOQ
     }
+    
   }
 
   container {
+
     table {
+
       column "Account ID" {
         display = "none"
       }
@@ -103,6 +107,9 @@ dashboard "aws_dynamodb_table_age_report" {
           v.creation_date_time,
           v.title;
       EOQ
+
     }
+
   }
+
 }

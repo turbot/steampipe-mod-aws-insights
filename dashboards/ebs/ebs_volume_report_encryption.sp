@@ -4,6 +4,11 @@ dashboard "aws_ebs_volume_encryption_dashboard" {
   container {
 
     card {
+      sql   = query.aws_ebs_volume_count.sql
+      width = 2
+    }
+
+    card {
       sql = <<-EOQ
         select
           count(*) as value,
@@ -16,9 +21,11 @@ dashboard "aws_ebs_volume_encryption_dashboard" {
       EOQ
       width = 2
     }
+    
   }
 
   table {
+
     column "Account ID" {
       display = "none"
     }
@@ -38,5 +45,7 @@ dashboard "aws_ebs_volume_encryption_dashboard" {
       where
         v.account_id = a.account_id;
     EOQ
+
   }
+
 }

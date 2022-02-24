@@ -1,24 +1,13 @@
-query "aws_lambda_function_public_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Public Lambda Functions' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as "type"
-    from
-      aws_lambda_function
-    where
-      policy_std -> 'Statement' ->> 'Effect' = 'Allow'
-    and (
-      policy_std -> 'Statement' ->> 'Prinipal' = '*'
-      or ( policy_std -> 'Principal' -> 'AWS' ) :: text = '*')
-  EOQ
-}
-
 dashboard "aws_lambda_function_public_access_report" {
 
   title = "AWS Lambda Function Public Access Report"
 
   container {
+
+    card {
+      sql   = query.aws_lambda_function_count.sql
+      width = 2
+    }
 
     card {
       sql = query.aws_lambda_function_public_count.sql
@@ -51,5 +40,7 @@ dashboard "aws_lambda_function_public_access_report" {
       where
         f.account_id = a.account_id
     EOQ
+
   }
+  
 }

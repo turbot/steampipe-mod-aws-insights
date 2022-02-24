@@ -25,8 +25,7 @@ query "aws_cloudtrail_trail_multi_region_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Multi-Region Trails' as label,
-      case count(*) when 0 then 'alert' else 'ok' end as type
+      'Multi-Region Trails' as label
     from
       aws_cloudtrail_trail
     where
@@ -35,104 +34,55 @@ query "aws_cloudtrail_trail_multi_region_count" {
   EOQ
 }
 
-query "aws_cloudtrail_trail_log_file_validation_enabled_count" {
+query "aws_cloudtrail_trail_log_file_validation_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Log File Validation Enabled' as label,
-      case count(*) when 0 then 'alert' else 'ok' end as type
+      'Log File Validation Disabled' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_cloudtrail_trail
     where
       region = home_region
-      and log_file_validation_enabled;
+      and not log_file_validation_enabled;
   EOQ
 }
 
-query "aws_cloudtrail_trail_count_per_account" {
+query "aws_cloudtrail_trail_unencrypted_count" {
   sql = <<-EOQ
     select
-      a.title as "account",
-      count(t.*) as "trails"
-    from
-      aws_cloudtrail_trail as t,
-      aws_account as a
-    where
-      a.account_id = t.account_id
-      and t.region = t.home_region
-    group by account
-    order by account;
-  EOQ
-}
-
-query "aws_cloudtrail_trail_count_per_region" {
-  sql = <<-EOQ
-    with trail_count as (
-      select
-        arn,
-        region
-      from
-        aws_cloudtrail_trail
-      where
-        region = home_region
-        and not is_multi_region_trail
-      union
-      select
-        arn,
-        region
-      from
-        aws_cloudtrail_trail
-      where
-        region = home_region
-        and is_multi_region_trail
-    )
-    select
-      region,
-      count(*) as "trails"
-    from
-      trail_count as t
-    group by region
-    order by region;
-  EOQ
-}
-
-query "aws_cloudtrail_regional_trail_count_per_region" {
-  sql = <<-EOQ
-    select
-      region,
-      count(*) as "trails"
+      count(*) as value,
+      'Unencrypted' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_cloudtrail_trail
     where
-      region = home_region
-      and not is_multi_region_trail
-    group by region
-    order by region;
+      home_region = region
+      and kms_key_id is null;
   EOQ
 }
 
-query "aws_cloudtrail_multi_region_trail_count_per_account" {
+# Assessments
+query "aws_cloudtrail_trail_log_file_validation_status" {
   sql = <<-EOQ
-    with multi_region_trails as (
+    select
+      log_file_validation_status,
+      count(*)
+    from (
       select
-        arn,
-        account_id
+        case when log_file_validation_enabled then
+          'Enabled'
+        else
+          'Disabled'
+        end log_file_validation_status
       from
         aws_cloudtrail_trail
       where
-        region = home_region
-        and is_multi_region_trail
-    )
-    select
-      a.title as "account",
-      count(t.*) as "trails"
-    from
-      multi_region_trails as t,
-      aws_account as a
-    where
-      a.account_id = t.account_id
-    group by account
-    order by account;
+        region = home_region) as t
+    group by
+      log_file_validation_status
+    order by
+      log_file_validation_status desc
   EOQ
 }
 
@@ -140,7 +90,7 @@ query "aws_cloudtrail_trail_encryption_status" {
   sql = <<-EOQ
     with trail_encryption_status as (
       select
-        name as table_name,
+        name as trail_name,
         case
           when kms_key_id is null then 'Disabled'
           else 'Enabled'
@@ -152,7 +102,7 @@ query "aws_cloudtrail_trail_encryption_status" {
     )
     select
       encryption_status,
-      count(*) as table_count
+      count(*)
     from
       trail_encryption_status
     group by encryption_status;
@@ -163,7 +113,7 @@ query "aws_cloudtrail_trail_logging_status" {
   sql = <<-EOQ
     with trail_logging_status as (
       select
-        name as table_name,
+        name as trail_name,
         case
           when not is_logging then 'Disabled'
           else 'Enabled'
@@ -175,33 +125,10 @@ query "aws_cloudtrail_trail_logging_status" {
     )
     select
       logging_status,
-      count(*) as table_count
+      count(*)
     from
       trail_logging_status
     group by logging_status;
-  EOQ
-}
-
-query "aws_cloudtrail_trail_log_file_validation_status" {
-  sql = <<-EOQ
-    with trail_log_file_validation_status as (
-      select
-        name as table_name,
-        case
-          when not log_file_validation_enabled then 'Disabled'
-          else 'Enabled'
-        end as log_file_validation_status
-      from
-        aws_cloudtrail_trail
-      where
-        home_region = region
-    )
-    select
-      log_file_validation_status,
-      count(*) as table_count
-    from
-      trail_log_file_validation_status
-    group by log_file_validation_status;
   EOQ
 }
 
@@ -258,7 +185,7 @@ query "aws_cloudtrail_trail_cloudwatch_log_integration_status" {
         end as integration_status
       from
         aws_cloudtrail_trail
-      where 
+      where
         region = home_region
     )
     select
@@ -270,6 +197,7 @@ query "aws_cloudtrail_trail_cloudwatch_log_integration_status" {
   EOQ
 }
 
+#Costs
 query "aws_cloudtrail_trail_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
@@ -325,12 +253,99 @@ query "aws_cloudtrail_trail_cost_per_month" {
   EOQ
 }
 
+# Analysis
+query "aws_cloudtrail_trail_count_per_account" {
+  sql = <<-EOQ
+    select
+      a.title as "Account",
+      count(t.*) as "Trails"
+    from
+      aws_cloudtrail_trail as t,
+      aws_account as a
+    where
+      a.account_id = t.account_id
+      and t.region = t.home_region
+    group by a.title
+    order by a.title;
+  EOQ
+}
+
+query "aws_cloudtrail_trail_count_per_region" {
+  sql = <<-EOQ
+    with trail_count as (
+      select
+        arn,
+        region
+      from
+        aws_cloudtrail_trail
+      where
+        region = home_region
+        and not is_multi_region_trail
+      union
+      select
+        arn,
+        region
+      from
+        aws_cloudtrail_trail
+      where
+        region = home_region
+        and is_multi_region_trail
+    )
+    select
+      region,
+      count(*) as "Trails"
+    from
+      trail_count as t
+    group by region
+    order by region;
+  EOQ
+}
+
+query "aws_cloudtrail_regional_trail_count_per_region" {
+  sql = <<-EOQ
+    select
+      region,
+      count(*) as "Trails"
+    from
+      aws_cloudtrail_trail
+    where
+      region = home_region
+      and not is_multi_region_trail
+    group by region
+    order by region;
+  EOQ
+}
+
+query "aws_cloudtrail_multi_region_trail_count_per_account" {
+  sql = <<-EOQ
+    with multi_region_trails as (
+      select
+        arn,
+        account_id
+      from
+        aws_cloudtrail_trail
+      where
+        region = home_region
+        and is_multi_region_trail
+    )
+    select
+      a.title as "Account",
+      count(t.*) as "Trails"
+    from
+      multi_region_trails as t,
+      aws_account as a
+    where
+      a.account_id = t.account_id
+    group by a.title
+    order by a.title;
+  EOQ
+}
+
 dashboard "aws_cloudtrail_trail_dashboard" {
   title = "AWS CloudTrail Trail Dashboard"
-  
+
   container {
 
-    # Analysis
     card {
       sql   = query.aws_cloudtrail_trail_count.sql
       width = 2
@@ -347,7 +362,12 @@ dashboard "aws_cloudtrail_trail_dashboard" {
     }
 
     card {
-      sql   = query.aws_cloudtrail_trail_log_file_validation_enabled_count.sql
+      sql   = query.aws_cloudtrail_trail_log_file_validation_disabled_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_cloudtrail_trail_unencrypted_count.sql
       width = 2
     }
 
@@ -368,21 +388,6 @@ dashboard "aws_cloudtrail_trail_dashboard" {
       EOQ
     }
 
-    card {
-      width = 2
-      type  = "info"
-      icon  = "currency-dollar"
-      sql   = <<-EOQ
-        select
-          'Cost - Previous Month' as label,
-          sum(unblended_cost_amount)::numeric::money as value
-        from
-          aws_cost_by_service_monthly
-        where
-          service = 'AWS CloudTrail'
-          and date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month');
-      EOQ
-    }
   }
 
   container {
@@ -395,7 +400,7 @@ dashboard "aws_cloudtrail_trail_dashboard" {
       width = 4
       sql   = query.aws_cloudtrail_trail_log_file_validation_status.sql
     }
-    
+
     chart {
       title = "Encryption Status"
       type  = "donut"
@@ -423,6 +428,7 @@ dashboard "aws_cloudtrail_trail_dashboard" {
       width = 4
       sql   = query.aws_cloudtrail_trail_cloudwatch_log_integration_status.sql
     }
+
   }
 
   container {
@@ -442,6 +448,7 @@ dashboard "aws_cloudtrail_trail_dashboard" {
       title = "Monthly Cost - 12 Months"
       sql   = query.aws_cloudtrail_trail_cost_per_month.sql
     }
+
   }
 
   container {
@@ -474,5 +481,7 @@ dashboard "aws_cloudtrail_trail_dashboard" {
       width = 3
       sql   = query.aws_cloudtrail_multi_region_trail_count_per_account.sql
     }
+
   }
+
 }

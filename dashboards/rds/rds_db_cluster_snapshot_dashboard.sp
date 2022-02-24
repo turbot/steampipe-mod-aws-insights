@@ -63,7 +63,6 @@ query "aws_rds_db_cluster_snapshot_by_account" {
   EOQ
 }
 
-
 query "aws_rds_db_cluster_snapshot_by_region" {
   sql = <<-EOQ
     select
@@ -75,7 +74,6 @@ query "aws_rds_db_cluster_snapshot_by_region" {
       region
   EOQ
 }
-
 
 query "aws_rds_db_cluster_snapshot_by_engine_type" {
   sql = <<-EOQ
@@ -267,6 +265,7 @@ dashboard "aws_rds_db_cluster_snapshot_dashboard" {
           and period_end > date_trunc('month', CURRENT_DATE::timestamp)
       EOQ
     }
+
   }
 
   container {
@@ -286,6 +285,7 @@ dashboard "aws_rds_db_cluster_snapshot_dashboard" {
       type  = "donut"
       width = 4
     }
+
   }
 
 
@@ -306,6 +306,7 @@ dashboard "aws_rds_db_cluster_snapshot_dashboard" {
       title = "Monthly Cost - 12 Months"
       sql   = query.aws_rds_db_cluster_snapshot_cost_per_month.sql
     }
+
   }
 
   container {
@@ -315,9 +316,8 @@ dashboard "aws_rds_db_cluster_snapshot_dashboard" {
       title = "Snapshots by Account"
       sql   = query.aws_rds_db_cluster_snapshot_by_account.sql
       type  = "column"
-      width = 3 
+      width = 3
     }
-
 
     chart {
       title = "Snapshots by Region"
@@ -330,7 +330,7 @@ dashboard "aws_rds_db_cluster_snapshot_dashboard" {
       title = "Snapshots by State"
       sql   = query.aws_rds_db_cluster_snapshot_by_state.sql
       type  = "column"
-      width = 3     
+      width = 3
     }
 
     chart {
@@ -338,7 +338,7 @@ dashboard "aws_rds_db_cluster_snapshot_dashboard" {
       sql   = query.aws_rds_db_cluster_snapshot_by_creation_month.sql
       type  = "column"
       width = 3
-    } 
+    }
 
     chart {
       title = "Snapshots by Type"
@@ -348,4 +348,5 @@ dashboard "aws_rds_db_cluster_snapshot_dashboard" {
     }
 
   }
+  
 }

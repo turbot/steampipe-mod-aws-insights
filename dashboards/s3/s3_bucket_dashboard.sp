@@ -4,6 +4,175 @@ query "aws_s3_bucket_count" {
   EOQ
 }
 
+query "aws_s3_bucket_public_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Public' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
+    from
+      aws_s3_bucket
+    where
+      not block_public_acls
+      or not block_public_policy
+      or not ignore_public_acls
+      or not restrict_public_buckets
+  EOQ
+}
+
+
+#Assessments
+query "aws_s3_bucket_versioning_status" {
+  sql = <<-EOQ
+    with versioning_status as(
+      select
+        case
+          when versioning_enabled then 'Enabled' else 'Disabled'
+        end as visibility
+      from
+        aws_s3_bucket
+    )
+    select
+      visibility,
+      count(*)
+    from
+      versioning_status
+    group by
+      visibility
+  EOQ
+}
+
+query "aws_s3_bucket_cross_region_replication_status" {
+  sql = <<-EOQ
+    with bucket_with_replication as (
+          select
+            name,
+            r ->> 'Status' as rep_status
+          from
+            aws_s3_bucket,
+            jsonb_array_elements(replication -> 'Rules' ) as r
+        ), tets as(
+            select
+              case
+                when b.name = r.name and r.rep_status = 'Enabled' then 'Enabled' else 'Disabled'
+              end as visibility
+            from
+              aws_s3_bucket b
+              left join bucket_with_replication r on b.name = r.name
+          )
+          select
+            visibility,
+            count(*)
+          from
+            tets
+          group by
+            visibility
+      EOQ
+}
+
+query "aws_s3_bucket_public_status" {
+  sql = <<-EOQ
+    with public_status as(
+      select
+        case
+          when
+            block_public_acls
+            and block_public_policy
+            and ignore_public_acls
+            and restrict_public_buckets
+          then 'Private' else 'Public'
+        end as visibility
+      from
+        aws_s3_bucket
+    )
+    select
+      visibility,
+      count(*)
+    from
+      public_status
+    group by
+      visibility
+  EOQ
+}
+
+query "aws_s3_bucket_versioning_mfa_status" {
+  sql = <<-EOQ
+    with versioning_mfa_status as(
+      select
+        case
+          when versioning_mfa_delete then 'Enabled' else 'Disabled'
+        end as visibility
+      from
+        aws_s3_bucket
+    )
+    select
+      visibility,
+      count(*)
+    from
+      versioning_mfa_status
+    group by
+      visibility
+  EOQ
+}
+
+query "aws_s3_bucket_logging_status" {
+  sql = <<-EOQ
+    with logging_status as(
+      select
+        case when logging -> 'TargetBucket' is not null then 'Enabled' else 'Disabled'
+        end as visibility
+      from
+        aws_s3_bucket
+    )
+    select
+      visibility,
+      count(*)
+    from
+      logging_status
+    group by
+      visibility
+      EOQ
+}
+
+#Costs
+query "aws_s3_monthly_forecast_table" {
+   sql = <<-EOQ
+    with monthly_costs as (
+      select
+        period_start,
+        period_end,
+        case
+          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp) then 'Month to Date'
+          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month') then 'Previous Month'
+          else to_char (period_start, 'Month')
+        end as period_label,
+        period_end::date - period_start::date as days,
+        sum(unblended_cost_amount)::numeric::money as unblended_cost_amount,
+        (sum(unblended_cost_amount) / (period_end::date - period_start::date ) )::numeric::money as average_daily_cost,
+        date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval ) as days_in_month,
+        sum(unblended_cost_amount) / (period_end::date - period_start::date ) * date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval )::numeric::money  as forecast_amount
+      from
+        aws_cost_by_service_monthly as c
+      where
+        service = 'Amazon Simple Storage Service'
+        and date_trunc('month', period_start) >= date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
+        group by
+          period_start, period_end
+    )
+    select
+      period_label as "Period",
+      unblended_cost_amount as "Cost",
+      average_daily_cost as "Daily Avg Cost"
+    from
+      monthly_costs
+    union all
+    select
+      'This Month (Forecast)' as "Period",
+      (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
+      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
+  EOQ
+}
+
 query "aws_s3_bucket_cost_per_month" {
   sql = <<-EOQ
     select
@@ -20,6 +189,26 @@ query "aws_s3_bucket_cost_per_month" {
   EOQ
 }
 
+query "aws_s3_bucket_by_default_encryption_status" {
+  sql = <<-EOQ
+    with default_encryption as(
+      select
+        case when server_side_encryption_configuration is not null then 'Enabled' else 'Disabled'
+        end as visibility
+      from
+        aws_s3_bucket
+    )
+    select
+      visibility,
+      count(*)
+    from
+      default_encryption
+    group by
+      visibility
+  EOQ
+}
+
+#Analysis
 query "aws_s3_bucket_by_account" {
   sql = <<-EOQ
     select
@@ -45,25 +234,6 @@ query "aws_s3_bucket_by_region" {
       aws_s3_bucket as i
     group by
       region
-  EOQ
-}
-
-query "aws_s3_bucket_by_default_encryption_status" {
-  sql = <<-EOQ
-    with default_encryption as(
-      select
-        case when server_side_encryption_configuration is not null then 'Enabled' else 'Disabled'
-        end as visibility
-      from
-        aws_s3_bucket
-    )
-    select
-      visibility,
-      count(*)
-    from
-      default_encryption
-    group by
-      visibility
   EOQ
 }
 
@@ -109,177 +279,6 @@ query "aws_s3_bucket_by_creation_month" {
       left join buckets_by_month on months.month = buckets_by_month.creation_month
     order by
       months.month desc;
-  EOQ
-}
-
-query "aws_s3_bucket_cross_region_replication_status" {
-  sql = <<-EOQ
-    with bucket_with_replication as (
-          select
-            name,
-            r ->> 'Status' as rep_status
-          from
-            aws_s3_bucket,
-            jsonb_array_elements(replication -> 'Rules' ) as r
-        ), tets as(
-            select
-              case
-                when b.name = r.name and r.rep_status = 'Enabled' then 'Enabled' else 'Disabled'
-              end as visibility
-            from
-              aws_s3_bucket b
-              left join bucket_with_replication r on b.name = r.name
-          )
-          select
-            visibility,
-            count(*)
-          from
-            tets
-          group by
-            visibility
-      EOQ
-}
-
-query "aws_s3_bucket_logging_status" {
-  sql = <<-EOQ
-    with logging_status as(
-      select
-        case when logging -> 'TargetBucket' is not null then 'Enabled' else 'Disabled'
-        end as visibility
-      from
-        aws_s3_bucket
-    )
-    select
-      visibility,
-      count(*)
-    from
-      logging_status
-    group by
-      visibility
-      EOQ
-}
-
-query "aws_s3_bucket_versioning_status" {
-  sql = <<-EOQ
-    with versioning_status as(
-      select
-        case
-          when versioning_enabled then 'Enabled' else 'Disabled'
-        end as visibility
-      from
-        aws_s3_bucket
-    )
-    select
-      visibility,
-      count(*)
-    from
-      versioning_status
-    group by
-      visibility
-  EOQ
-}
-
-query "aws_s3_bucket_versioning_mfa_status" {
-  sql = <<-EOQ
-    with versioning_mfa_status as(
-      select
-        case
-          when versioning_mfa_delete then 'Enabled' else 'Disabled'
-        end as visibility
-      from
-        aws_s3_bucket
-    )
-    select
-      visibility,
-      count(*)
-    from
-      versioning_mfa_status
-    group by
-      visibility
-  EOQ
-}
-
-query "aws_s3_bucket_public_status" {
-  sql = <<-EOQ
-    with public_status as(
-      select
-        case
-          when
-            block_public_acls
-            and block_public_policy
-            and ignore_public_acls
-            and restrict_public_buckets
-          then 'Private' else 'Public'
-        end as visibility
-      from
-        aws_s3_bucket
-    )
-    select
-      visibility,
-      count(*)
-    from
-      public_status
-    group by
-      visibility
-  EOQ
-}
-query "aws_s3_bucket_public_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Public' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as "type"
-    from
-      aws_s3_bucket
-    where
-      not block_public_acls
-      or not block_public_policy
-      or not ignore_public_acls
-      or not restrict_public_buckets
-  EOQ
-}
-
-query "aws_s3_monthly_forecast_table" {
-   sql = <<-EOQ
-  with monthly_costs as (
-      select
-        period_start,
-        period_end,
-        case
-          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp) then 'Month to Date'
-          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month') then 'Previous Month'
-          else to_char (period_start, 'Month')
-        end as period_label,
-        period_end::date - period_start::date as days,
-        sum(unblended_cost_amount)::numeric::money as unblended_cost_amount,
-        (sum(unblended_cost_amount) / (period_end::date - period_start::date ) )::numeric::money as average_daily_cost,
-        date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval ) as days_in_month,
-        sum(unblended_cost_amount) / (period_end::date - period_start::date ) * date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval )::numeric::money  as forecast_amount
-      from
-        aws_cost_by_service_monthly as c
-
-      where
-        service = 'Amazon Simple Storage Service'
-        and date_trunc('month', period_start) >= date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
-
-        group by
-        period_start,
-        period_end
-    )
-
-    select
-      period_label as "Period",
-      unblended_cost_amount as "Cost",
-      average_daily_cost as "Daily Avg Cost"
-    from
-      monthly_costs
-
-    union all
-    select
-      'This Month (Forecast)' as "Period",
-      (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
-      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
-
   EOQ
 }
 
@@ -379,13 +378,13 @@ dashboard "aws_s3_bucket_dashboard" {
       type  = "donut"
       width = 4
     }
+
   }
 
   container {
     title = "Cost"
     width = 6
 
-    # Costs
     table  {
       width = 6
       title = "Forecast"
@@ -398,6 +397,7 @@ dashboard "aws_s3_bucket_dashboard" {
       title = "Monthly Cost - 12 Months"
       sql   = query.aws_s3_bucket_cost_per_month.sql
     }
+
   }
 
   container {
@@ -423,6 +423,7 @@ dashboard "aws_s3_bucket_dashboard" {
       type  = "column"
       width = 3
     }
+
   }
 
 }

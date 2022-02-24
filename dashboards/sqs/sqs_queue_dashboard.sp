@@ -6,26 +6,47 @@ query "aws_sqs_queue_count" {
 
 query "aws_sqs_queue_unencrypted_count" {
   sql = <<-EOQ
-    select 
+    select
       count(*) as value,
-      'Unencrypted Queues' as label,
+      'Unencrypted' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
-    from 
-      aws_sqs_queue 
-    where 
+    from
+      aws_sqs_queue
+    where
       kms_master_key_id is null
+  EOQ
+}
+
+query "aws_sqs_queue_anonymous_access_count" {
+    sql = <<-EOQ
+      select
+        count(*) as value,
+        'Anonymous Access' as label,
+        case count(*) when 0 then 'ok' else 'alert' end as "type"
+      from
+        aws_sqs_queue,
+        jsonb_array_elements(policy_std -> 'Statement') as s,
+        jsonb_array_elements_text(s -> 'Principal' -> 'AWS') as p,
+        string_to_array(p, ':') as pa,
+        jsonb_array_elements_text(s -> 'Action') as a
+      where
+        s ->> 'Effect' = 'Allow'
+        and (
+          pa[5] != account_id
+          or p = '*'
+        )
   EOQ
 }
 
 query "aws_sqs_queue_by_account" {
   sql = <<-EOQ
-    select 
+    select
       a.title as "account",
       count(i.*) as "total"
-    from 
+    from
       aws_sqs_queue as i,
-      aws_account as a 
-    where 
+      aws_account as a
+    where
       a.account_id = i.account_id
     group by
       account
@@ -35,10 +56,10 @@ query "aws_sqs_queue_by_account" {
 
 query "aws_sqs_queue_by_region" {
   sql = <<-EOQ
-    select 
+    select
       region,
       count(i.*) as total
-    from 
+    from
       aws_sqs_queue as i
     group by
       region
@@ -47,16 +68,16 @@ query "aws_sqs_queue_by_region" {
 
 query "aws_sqs_queue_cost_per_month" {
   sql = <<-EOQ
-    select 
-       to_char(period_start, 'Mon-YY') as "Month", 
+    select
+       to_char(period_start, 'Mon-YY') as "Month",
        sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-    from 
-      aws_cost_by_service_usage_type_monthly 
-    where 
+    from
+      aws_cost_by_service_usage_type_monthly
+    where
       service = 'Amazon Simple Queue Service'
-    group by 
+    group by
       period_start
-    order by 
+    order by
       period_start
   EOQ
 }
@@ -126,6 +147,46 @@ query "aws_sqs_queue_by_encryption_status" {
   EOQ
 }
 
+query "aws_sqs_queue_anonymous_access_status" {
+  sql = <<-EOQ
+    with anonymous_access as (
+      select
+      title
+    from
+      aws_sqs_queue,
+      jsonb_array_elements(policy_std -> 'Statement') as s,
+      jsonb_array_elements_text(s -> 'Principal' -> 'AWS') as p,
+      string_to_array(p, ':') as pa,
+      jsonb_array_elements_text(s -> 'Action') as a
+    where
+      s ->> 'Effect' = 'Allow'
+      and (
+        pa[5] != account_id
+        or p = '*'
+      )
+    ), anonymous_access_status as(
+      select
+        case
+          when a.title is null or policy_std is null then  'OK'
+        else
+          'With Anonymous Access'
+        end anonymous_access_status
+      from
+        aws_sqs_queue as q
+        left join anonymous_access as a on q.title = a.title
+      )
+      select
+        anonymous_access_status,
+        count(*)
+      from
+        anonymous_access_status
+      group by
+        anonymous_access_status
+      order by
+        anonymous_access_status desc
+  EOQ
+}
+
 query "aws_sqs_queue_by_dlq_status" {
   sql = <<-EOQ
     select
@@ -150,6 +211,7 @@ query "aws_sqs_queue_by_dlq_status" {
 
 dashboard "aws_sqs_queue_dashboard" {
     title = "AWS SQS Queue Dashboard"
+
     container {
 
       card {
@@ -159,6 +221,11 @@ dashboard "aws_sqs_queue_dashboard" {
 
       card {
         sql   = query.aws_sqs_queue_unencrypted_count.sql
+        width = 2
+      }
+
+      card {
+        sql   = query.aws_sqs_queue_anonymous_access_count.sql
         width = 2
       }
 
@@ -177,6 +244,7 @@ dashboard "aws_sqs_queue_dashboard" {
             and period_end > date_trunc('month', CURRENT_DATE::timestamp)
         EOQ
       }
+
     }
 
     container {
@@ -188,11 +256,18 @@ dashboard "aws_sqs_queue_dashboard" {
         sql = query.aws_sqs_queue_by_encryption_status.sql
         type  = "donut"
         width = 4
-      } 
+      }
 
       chart {
         title = "DLQ Status"
         sql = query.aws_sqs_queue_by_dlq_status.sql
+        type  = "donut"
+        width = 4
+      }
+
+      chart {
+        title = "Anonymous Access Status"
+        sql = query.aws_sqs_queue_anonymous_access_status.sql
         type  = "donut"
         width = 4
       }
@@ -216,23 +291,25 @@ dashboard "aws_sqs_queue_dashboard" {
       title = "Monthly Cost - 12 Months"
       sql   = query.aws_sqs_queue_cost_per_month.sql
     }
+
   }
 
-    container {
-      title = "Analysis"
+  container {
+    title = "Analysis"
 
-      chart {
-        title = "Queues by Account"
-        sql   = query.aws_sqs_queue_by_account.sql
-        type  = "column"
-        width = 3
-      }
-      chart {
-        title = "Queues by Region"
-        sql   = query.aws_sqs_queue_by_region.sql
-        type  = "column"
-        width = 3
-      }
+    chart {
+      title = "Queues by Account"
+      sql   = query.aws_sqs_queue_by_account.sql
+      type  = "column"
+      width = 3
+    }
+    chart {
+      title = "Queues by Region"
+      sql   = query.aws_sqs_queue_by_region.sql
+      type  = "column"
+      width = 3
+    }
+    
   }
 
 }

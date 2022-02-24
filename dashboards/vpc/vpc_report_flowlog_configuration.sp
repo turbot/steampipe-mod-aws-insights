@@ -2,16 +2,22 @@ dashboard "aws_vpc_flow_log_configuration_dashboard" {
   title = "AWS VPC Flow Log Report"
 
   container {
+
+    card {
+      sql   = query.aws_vpc_count.sql
+      width = 2
+    }
+
     card {
       sql = <<-EOQ
         with vpc_logs as (
-          select 
+          select
             vpc_id,
             case
               when vpc_id in (select resource_id from aws_vpc_flow_log) then 'Configured'
               else 'Not Configured'
             end as flow_logs_configured
-          from 
+          from
             aws_vpc
         )
         select
@@ -25,9 +31,11 @@ dashboard "aws_vpc_flow_log_configuration_dashboard" {
       EOQ
       width = 2
     }
+
   }
 
   table {
+
     column "Account ID" {
       display = "none"
     }
@@ -50,5 +58,7 @@ dashboard "aws_vpc_flow_log_configuration_dashboard" {
       where
         v.account_id = a.account_id;
     EOQ
+
   }
+  
 }

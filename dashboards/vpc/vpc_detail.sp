@@ -12,10 +12,6 @@ query "aws_subnet_count_for_vpc" {
   EOQ
 }
 
-
-
-
-
 query "aws_vpc_is_default" {
   sql = <<-EOQ
     select
@@ -717,7 +713,7 @@ dashboard aws_vpc_detail {
       table {
         title = "Overview"
         type = "list"
-        width = 6 
+        width = 6
         sql   = <<-EOQ
           select
             title,

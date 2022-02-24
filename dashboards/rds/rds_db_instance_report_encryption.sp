@@ -18,6 +18,11 @@ dashboard "aws_rds_db_instance_encryption_dashboard" {
   container {
 
     card {
+      sql   = query.aws_rds_db_instance_count.sql
+      width = 2
+    }
+
+    card {
       sql = query.aws_rds_db_instance_unencrypted_count.sql
       width = 2
     }
@@ -26,7 +31,7 @@ dashboard "aws_rds_db_instance_encryption_dashboard" {
   table {
 
     column "Account ID" {
-        display = "none"
+      display = "none"
     }
 
     sql = <<-EOQ
@@ -43,5 +48,7 @@ dashboard "aws_rds_db_instance_encryption_dashboard" {
       where
         i.account_id = a.account_id
     EOQ
+
   }
+  
 }

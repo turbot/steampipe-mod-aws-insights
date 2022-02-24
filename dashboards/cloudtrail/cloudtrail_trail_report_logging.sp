@@ -16,13 +16,21 @@ dashboard "aws_cloudtrail_trail_logging_report" {
   title = "AWS CloudTrail Trail Logging Report"
 
   container {
+
+    card {
+      sql   = query.aws_cloudtrail_trail_count.sql
+      width = 2
+    }
+
     card {
       sql = query.aws_cloudtrail_trail_logging_disabled_count.sql
       width = 2
     }
+
   }
 
   table {
+
     column "Account ID" {
       display = "none"
     }
@@ -46,5 +54,7 @@ dashboard "aws_cloudtrail_trail_logging_report" {
         t.account_id = a.account_id
         and t.region = t.home_region;
     EOQ
+    
   }
+
 }

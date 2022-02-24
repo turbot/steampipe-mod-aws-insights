@@ -5,16 +5,12 @@ dashboard "aws_redshift_cluster_encryption_report" {
   container {
 
     card {
-      sql = <<-EOQ
-        select
-          count(*) as value,
-          'Unencrypted' as label,
-          case count(*) when 0 then 'ok' else 'alert' end as "type"
-        from
-          aws_redshift_cluster
-        where
-          not encrypted
-      EOQ
+      sql = query.aws_redshift_cluster_count.sql
+      width = 2
+    }
+
+    card {
+      sql = query.aws_redshift_cluster_unencrypted_count.sql
       width = 2
     }
   }
@@ -40,5 +36,7 @@ dashboard "aws_redshift_cluster_encryption_report" {
       where
         r.account_id = a.account_id
     EOQ
+    
   }
+
 }

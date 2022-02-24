@@ -18,6 +18,11 @@ dashboard "aws_ec2_instance_public_access_report" {
   container {
 
     card {
+      sql   = query.aws_ec2_instance_count.sql
+      width = 2
+    }
+
+    card {
       sql = query.aws_ec2_instance_public_access_count.sql
       width = 2
     }
@@ -27,7 +32,8 @@ dashboard "aws_ec2_instance_public_access_report" {
   table {
     sql = <<-EOQ
       select
-        title as "instance",
+        tags ->> 'Name' as "Name",
+        instance_id as "Instance ID",
         case when public_ip_address is null then 'Private' else 'Public' end as "Public/Private",
         account_id as "Account",
         region as "Region",

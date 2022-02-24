@@ -4,7 +4,6 @@ dashboard "aws_kms_key_age_report" {
 
    container {
 
-    # Analysis
     card {
       sql   = query.aws_kms_key_count.sql
       width = 2
@@ -97,6 +96,7 @@ dashboard "aws_kms_key_age_report" {
           now()::date - v.creation_date::date as "Age in Days",
           v.creation_date as "Create Time",
           v.key_state as "State",
+          v.key_manager as "Key Manager",
           a.title as "Account",
           v.account_id as "Account ID",
           v.region as "Region",
@@ -110,14 +110,9 @@ dashboard "aws_kms_key_age_report" {
           v.creation_date,
           v.title
       EOQ
+
     }
+
   }
+  
 }
-
-/*
-
-select
-  'value 1' as value,
-  'value 2' as value
-
-*/

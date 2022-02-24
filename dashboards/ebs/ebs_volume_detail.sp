@@ -19,10 +19,10 @@ dashboard "aws_ebs_volume_detail" {
       sql   = <<-EOQ
         select
           'Storage' as label,
-          size as value     
+          size as value
         from
           aws_ebs_volume
-        where 
+        where
           volume_id = 'vol-0a0434e8849c44d0b';
       EOQ
       width = 2
@@ -42,7 +42,7 @@ dashboard "aws_ebs_volume_detail" {
           end as "type"
         from
           aws_ebs_volume
-        where 
+        where
           volume_id = 'vol-0a0434e8849c44d0b';
       EOQ
       width = 2
@@ -52,10 +52,10 @@ dashboard "aws_ebs_volume_detail" {
       sql   = <<-EOQ
         select
           'IOPS' as label,
-          iops as value     
+          iops as value
         from
           aws_ebs_volume
-        where 
+        where
           volume_id = 'vol-0a0434e8849c44d0b';
       EOQ
       width = 2
@@ -89,7 +89,7 @@ dashboard "aws_ebs_volume_detail" {
               arn as "ARN"
             from
               aws_ebs_volume
-            where 
+            where
               volume_id = 'vol-0a0434e8849c44d0b';
           EOQ
         }
@@ -108,7 +108,7 @@ dashboard "aws_ebs_volume_detail" {
             from
               aws_ebs_volume,
               jsonb_array_elements(tags_src) as tag
-            where 
+            where
               volume_id = 'vol-0a0434e8849c44d0b';
           EOQ
         }
@@ -126,7 +126,7 @@ dashboard "aws_ebs_volume_detail" {
           from
             aws_ebs_volume as v,
             jsonb_array_elements(attachments) as attachment,
-            aws_ec2_instance as i 
+            aws_ec2_instance as i
           where
             i.instance_id = attachment ->> 'InstanceId'
             and volume_id = 'vol-0a0434e8849c44d0b'

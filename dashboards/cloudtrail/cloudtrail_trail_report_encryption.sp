@@ -4,6 +4,11 @@ dashboard "aws_cloudtrail_trail_encryption_dashboard" {
   container {
 
     card {
+      sql   = query.aws_cloudtrail_trail_count.sql
+      width = 2
+    }
+
+    card {
       sql = <<-EOQ
         select
           count(*) as value,
@@ -20,13 +25,14 @@ dashboard "aws_cloudtrail_trail_encryption_dashboard" {
   }
 
   table {
+
     column "Account ID" {
       display = "none"
     }
 
     sql = <<-EOQ
       select
-        t.title as "Volume",
+        t.title as "Trail",
         case when t.kms_key_id is not null then 'Enabled' else null end as "Encryption",
         a.title as "Account",
         t.account_id as "Account ID",
@@ -39,5 +45,7 @@ dashboard "aws_cloudtrail_trail_encryption_dashboard" {
         t.home_region = t.region
         and t.account_id = a.account_id;
     EOQ
+    
   }
+
 }

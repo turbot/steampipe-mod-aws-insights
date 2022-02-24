@@ -18,17 +18,24 @@ dashboard "aws_ec2_instance_lifecycle_report" {
   container {
 
     card {
+      sql   = query.aws_ec2_instance_count.sql
+      width = 2
+    }
+
+    card {
       sql = query.aws_ec2_stopped_instance_count.sql
       width = 2
     }
+
   }
 
   table {
     sql = <<-EOQ
       select
-        title as "Instance",
-        instance_state as "Instance State",
-        instance_lifecycle as "Instance Lifecycle",
+        tags ->> 'Name' as "Name",
+        instance_id as "Instance ID",
+        instance_state as "State",
+        instance_lifecycle as "Lifecycle",
         account_id as "Account",
         region as "Region",
         arn as "ARN"
@@ -36,4 +43,5 @@ dashboard "aws_ec2_instance_lifecycle_report" {
         aws_ec2_instance
     EOQ
   }
+  
 }

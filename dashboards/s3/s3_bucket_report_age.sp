@@ -2,7 +2,7 @@ dashboard "aws_s3_bucket_age_report" {
 
   title = "AWS S3 Bucket Age Report"
 
-   container {
+    container {
 
     # Analysis
     card {
@@ -109,8 +109,11 @@ dashboard "aws_s3_bucket_age_report" {
           v.creation_date,
           v.title
       EOQ
+
     }
+
   }
+  
 }
 
 /*

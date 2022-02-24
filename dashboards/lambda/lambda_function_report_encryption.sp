@@ -1,21 +1,13 @@
-query "aws_lambda_function_unencrypted_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Unencrypted' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as "type"
-    from
-      aws_lambda_function
-    where
-      kms_key_arn is null
-  EOQ
-}
-
 dashboard "aws_lambda_function_encryption_dashboard" {
 
   title = "AWS Lambda Function Encryption Report"
 
   container {
+
+    card {
+      sql   = query.aws_lambda_function_count.sql
+      width = 2
+    }
 
     card {
       sql = query.aws_lambda_function_unencrypted_count.sql
@@ -43,5 +35,7 @@ dashboard "aws_lambda_function_encryption_dashboard" {
       where
         f.account_id = a.account_id
     EOQ
+
   }
+  
 }

@@ -18,6 +18,11 @@ dashboard "aws_rds_db_instance_public_access_report" {
   container {
 
     card {
+      sql   = query.aws_rds_db_instance_count.sql
+      width = 2
+    }
+
+    card {
       sql = query.aws_rds_db_instance_public_count.sql
       width = 2
     }
@@ -45,5 +50,7 @@ dashboard "aws_rds_db_instance_public_access_report" {
       where
         i.account_id = a.account_id
     EOQ
+
   }
+
 }

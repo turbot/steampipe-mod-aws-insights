@@ -31,6 +31,11 @@ dashboard "aws_kms_key_lifecycle_dashboard" {
   container {
 
     card {
+      sql   = query.aws_kms_key_count.sql
+      width = 2
+    }
+
+    card {
       sql = query.aws_kms_key_rotation_disabled_count.sql
       width = 2
     }
@@ -64,6 +69,7 @@ dashboard "aws_kms_key_lifecycle_dashboard" {
       where
         v.account_id = a.account_id
     EOQ
+    
   }
 
 }

@@ -484,7 +484,8 @@ dashboard "aws_rds_db_instance_dashboard" {
         type = "info"
         icon = "currency-dollar"
         width = 2
-      }
+    }
+
   }
 
   container {
@@ -496,10 +497,6 @@ dashboard "aws_rds_db_instance_dashboard" {
       sql   = query.aws_rds_db_instance_public_status.sql
       type  = "donut"
       width = 4
-
-      series "Enabled" {
-        color = "green"
-      }
     }
 
     chart {
@@ -536,13 +533,13 @@ dashboard "aws_rds_db_instance_dashboard" {
       type  = "donut"
       width = 4
     }
+
   }
 
   container {
     title = "Cost"
     width = 6
 
-    # Costs
     table  {
       width = 6
       title = "Forecast"
@@ -555,6 +552,7 @@ dashboard "aws_rds_db_instance_dashboard" {
       title = "Monthly Cost - 12 Months"
       sql   = query.aws_rds_db_instance_cost_per_month.sql
     }
+
   }
 
   container {
@@ -621,5 +619,7 @@ dashboard "aws_rds_db_instance_dashboard" {
       type  = "column"
       width = 6
     }
+
   }
+
 }

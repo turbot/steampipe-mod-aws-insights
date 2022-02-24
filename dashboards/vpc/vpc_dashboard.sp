@@ -6,11 +6,11 @@ query "aws_vpc_count" {
 
 query "aws_vpc_no_subnet_count" {
  sql = <<-EOQ
-    select 
+    select
        count(*) as value,
        'VPCs With No Subnets' as label,
        case when count(*) = 0 then 'ok' else 'alert' end as type
-      from 
+      from
         aws_vpc as vpc
         left join aws_vpc_subnet as s on vpc.vpc_id = s.vpc_id
       where
@@ -18,6 +18,7 @@ query "aws_vpc_no_subnet_count" {
   EOQ
 }
 
+#Analysis
 query "aws_vpc_by_account" {
   sql = <<-EOQ
     select
@@ -37,44 +38,15 @@ query "aws_vpc_by_account" {
 
 query "aws_vpc_by_region" {
   sql = <<-EOQ
-    select 
+    select
       region as "Region",
       count(*) as "VPCs"
-    from 
+    from
       aws_vpc
     group by
       region
     order by
       region
-  EOQ
-}
-
-query "aws_vpc_by_rfc1918_range" {
-  sql = <<-EOQ
-    with cidr_buckets as (
-      select 
-        vpc_id,
-        title,
-        b ->> 'CidrBlock' as cidr,
-        case
-          when (b ->> 'CidrBlock')::cidr <<= '10.0.0.0/8'::cidr then '10.0.0.0/8'
-          when (b ->> 'CidrBlock')::cidr <<= '172.16.0.0/12'::cidr then '172.16.0.0/12'
-          when (b ->> 'CidrBlock')::cidr <<= '192.168.0.0/16'::cidr then '192.168.0.0/16'
-          else 'Public Range'
-        end as rfc1918_bucket
-      from
-        aws_vpc,
-        jsonb_array_elements(cidr_block_association_set) as b
-    )
-    select 
-      rfc1918_bucket,
-      count(*)
-    from 
-      cidr_buckets
-    group by 
-      rfc1918_bucket
-    order by
-      rfc1918_bucket
   EOQ
 }
 
@@ -84,8 +56,8 @@ query "aws_vpc_by_size" {
       select
         vpc_id,
         cidr_block,
-        concat( 
-          '/', masklen(cidr_block), 
+        concat(
+          '/', masklen(cidr_block),
           ' (', power(2, 32 - masklen(cidr_block :: cidr)), ')'
         ) as size
       from
@@ -101,105 +73,36 @@ query "aws_vpc_by_size" {
   EOQ
 }
 
-query "aws_vpc_cost_per_month" {
+query "aws_vpc_by_rfc1918_range" {
   sql = <<-EOQ
+    with cidr_buckets as (
+      select
+        vpc_id,
+        title,
+        b ->> 'CidrBlock' as cidr,
+        case
+          when (b ->> 'CidrBlock')::cidr <<= '10.0.0.0/8'::cidr then '10.0.0.0/8'
+          when (b ->> 'CidrBlock')::cidr <<= '172.16.0.0/12'::cidr then '172.16.0.0/12'
+          when (b ->> 'CidrBlock')::cidr <<= '192.168.0.0/16'::cidr then '192.168.0.0/16'
+          else 'Public Range'
+        end as rfc1918_bucket
+      from
+        aws_vpc,
+        jsonb_array_elements(cidr_block_association_set) as b
+    )
     select
-      to_char(period_start, 'Mon-YY') as "Month",
-      sum(unblended_cost_amount)::numeric as "Unblended Cost"
+      rfc1918_bucket,
+      count(*)
     from
-      aws_cost_by_service_usage_type_monthly
-    where
-      service = 'Amazon Virtual Private Cloud'
+      cidr_buckets
     group by
-      period_start
+      rfc1918_bucket
     order by
-      period_start
+      rfc1918_bucket
   EOQ
 }
 
-query "aws_vpc_cost_by_usage_types_12mo" {
-  sql = <<-EOQ
-    select
-       usage_type,
-       sum(unblended_cost_amount)::numeric as "Unblended Cost"
-       -- sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-
-    from
-      aws_cost_by_service_usage_type_monthly
-    where
-      service = 'Amazon Virtual Private Cloud'
-      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-    group by
-      usage_type
-    having
-      round(sum(unblended_cost_amount)::numeric,2) > 0
-    order by
-      sum(unblended_cost_amount) desc
-  EOQ
-}
-
-query "aws_vpc_cost_top_usage_types_mtd" {
-  sql = <<-EOQ
-    select
-       usage_type,
-       sum(unblended_cost_amount)::numeric as "Unblended Cost"
-       --        sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-
-    from
-      aws_cost_by_service_usage_type_monthly
-    where
-      service = 'Amazon Virtual Private Cloud'
-      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-    group by
-      period_start,
-      usage_type
-    having
-      round(sum(unblended_cost_amount)::numeric,2) > 0
-    order by
-      sum(unblended_cost_amount) desc
-  EOQ
-}
-
-query "aws_vpc_cost_by_account_mtd" {
-  sql = <<-EOQ
-    select
-       a.title as "account",
-       sum(unblended_cost_amount)::numeric as "Unblended Cost"
-       --        sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-    from
-      aws_cost_by_service_monthly as c,
-      aws_account as a
-    where
-      a.account_id = c.account_id
-      and service = 'Amazon Virtual Private Cloud'
-      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-    group by
-      account
-    order by
-      account
-  EOQ
-}
-
-query "aws_vpc_cost_by_account_12mo" {
-  sql = <<-EOQ
-    select
-       a.title as "account",
-       sum(unblended_cost_amount)::numeric as "Unblended Cost"
-       --        sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-    from
-      aws_cost_by_service_monthly as c,
-      aws_account as a
-    where
-      a.account_id = c.account_id
-      and service = 'Amazon Virtual Private Cloud'
-      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-    group by
-      account
-    order by
-      account
-  EOQ
-}
-
+#Costs
 query "aws_vpc_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
@@ -236,6 +139,22 @@ query "aws_vpc_monthly_forecast_table" {
       'This Month (Forecast)' as "Period",
       (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
       (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
+  EOQ
+}
+
+query "aws_vpc_cost_per_month" {
+  sql = <<-EOQ
+    select
+      to_char(period_start, 'Mon-YY') as "Month",
+      sum(unblended_cost_amount)::numeric as "Unblended Cost"
+    from
+      aws_cost_by_service_usage_type_monthly
+    where
+      service = 'Amazon Virtual Private Cloud'
+    group by
+      period_start
+    order by
+      period_start
   EOQ
 }
 
@@ -317,6 +236,7 @@ dashboard "aws_vpc_dashboard" {
       type  = "info"
       icon  = "currency-dollar"
     }
+
   }
 
   container {
@@ -347,13 +267,13 @@ dashboard "aws_vpc_dashboard" {
       width = 4
       sql   = <<-EOQ
         with vpc_logs as (
-          select 
+          select
             vpc_id,
             case
               when vpc_id in (select resource_id from aws_vpc_flow_log) then 'Configured'
               else 'Not Configured'
             end as flow_logs_configured
-          from 
+          from
             aws_vpc
         )
         select
@@ -372,10 +292,10 @@ dashboard "aws_vpc_dashboard" {
       width = 4
       sql   = <<-EOQ
         with by_empty as (
-          select 
+          select
             vpc.vpc_id,
             case when s.subnet_id is null then 'empty' else 'non-empty' end as status
-          from 
+          from
             aws_vpc as vpc
             left join aws_vpc_subnet as s on vpc.vpc_id = s.vpc_id
         )
@@ -388,6 +308,7 @@ dashboard "aws_vpc_dashboard" {
           status
       EOQ
     }
+
   }
 
   container {
@@ -407,6 +328,7 @@ dashboard "aws_vpc_dashboard" {
       title = "Monthly Cost - 12 Months"
       sql   = query.aws_vpc_cost_per_month.sql
     }
+
   }
 
   container {
@@ -442,6 +364,7 @@ dashboard "aws_vpc_dashboard" {
       type  = "column"
       width = 3
     }
+
   }
 
   #container {
@@ -459,7 +382,7 @@ dashboard "aws_vpc_dashboard" {
   #    type  = "donut"
   #    sql   = query.aws_vpc_cost_top_usage_types_mtd.sql
   #    width = 2
-  #  
+  #
   #    legend {
   #      position = "bottom"
   #    }
@@ -470,7 +393,7 @@ dashboard "aws_vpc_dashboard" {
   #    type  = "donut"
   #    sql   = query.aws_vpc_cost_by_usage_types_12mo.sql
   #    width = 2
-  #  
+  #
   #    legend {
   #      position = "right"
   #    }
@@ -491,12 +414,12 @@ dashboard "aws_vpc_dashboard" {
   #  }
   #}
 }
- 
+
 # container {
 #   title  = "Performance & Utilization"
-# 
+#
 #   No performance metrics for VPC?
-#   
+#
 # }
 
 # container {

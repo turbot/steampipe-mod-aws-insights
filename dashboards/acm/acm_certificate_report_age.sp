@@ -4,7 +4,6 @@ dashboard "acm_certificate_age_report" {
 
    container {
 
-    # Analysis
     card {
       sql   = query.aws_acm_certificate_count.sql
       width = 2
@@ -79,6 +78,7 @@ dashboard "acm_certificate_age_report" {
       width = 2
       type = "info"
     }
+    
   }
 
   container {
@@ -110,6 +110,7 @@ dashboard "acm_certificate_age_report" {
           v.created_at,
           v.title
       EOQ
+
     }
 
   }

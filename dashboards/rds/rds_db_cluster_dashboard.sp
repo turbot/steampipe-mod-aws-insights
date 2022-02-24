@@ -401,6 +401,7 @@ dashboard "aws_rds_db_cluster_dashboard" {
           and period_end > date_trunc('month', CURRENT_DATE::timestamp)
       EOQ
     }
+    
   }
 
   container {
@@ -432,7 +433,6 @@ dashboard "aws_rds_db_cluster_dashboard" {
       sql = query.aws_rds_db_cluster_multiple_az_status.sql
       type  = "donut"
       width = 4
-
     }
 
     chart {
@@ -440,8 +440,8 @@ dashboard "aws_rds_db_cluster_dashboard" {
       sql = query.aws_rds_db_cluster_with_no_snapshots.sql
       type  = "donut"
       width = 4
-
     }
+
   }
 
   container {
@@ -461,6 +461,7 @@ dashboard "aws_rds_db_cluster_dashboard" {
       title = "Monthly Cost - 12 Months"
       sql   = query.aws_rds_db_cluster_cost_per_month.sql
     }
+
   }
 
   # container {
@@ -486,8 +487,6 @@ dashboard "aws_rds_db_cluster_dashboard" {
   container {
     title = "Analysis"
 
-
-    #title = "Counts"
     chart {
       title = "Clusters by Account"
       sql   = query.aws_rds_db_cluster_by_account.sql
@@ -525,4 +524,5 @@ dashboard "aws_rds_db_cluster_dashboard" {
     }
 
   }
+
 }

@@ -28,6 +28,12 @@ dashboard "aws_rds_db_instance_logging_dashboard" {
   title = "AWS RDS DB Instance Logging Report"
 
   container {
+
+    card {
+      sql   = query.aws_rds_db_instance_count.sql
+      width = 2
+    }
+
     card {
       sql = query.aws_rds_db_instance_logging_disabled_count.sql
       width = 2
@@ -62,5 +68,7 @@ dashboard "aws_rds_db_instance_logging_dashboard" {
       where
         i.account_id = a.account_id
     EOQ
+
   }
+  
 }

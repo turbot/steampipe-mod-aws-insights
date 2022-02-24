@@ -18,17 +18,17 @@ EOQ
 }
 
 
-### 
+###
 query "aws_iam_user_mfa_for_user" {
   sql = <<-EOQ
     select
       case when mfa_enabled then 'Enabled' else 'Disabled' end as value,
       'MFA Status' as label,
       case when mfa_enabled then 'ok' else 'alert' end as type
-    from 
-      aws_iam_user  
+    from
+      aws_iam_user
     where
-      arn = 'arn:aws:iam::876515858155:user/jsmyth' --$1 
+      arn = 'arn:aws:iam::876515858155:user/jsmyth' --$1
   EOQ
 
   # param "arn" {
@@ -38,15 +38,15 @@ query "aws_iam_user_mfa_for_user" {
 
 
 
-### 
+###
 query "aws_iam_user_direct_attached_policy_count_for_user" {
   sql = <<-EOQ
     select
       jsonb_array_length(attached_policy_arns) as value,
       'Direct Attached Policies' as label,
       case when jsonb_array_length(attached_policy_arns) = 0 then 'ok' else 'alert' end as type
-    from 
-      aws_iam_user  
+    from
+      aws_iam_user
     where
       arn = 'arn:aws:iam::876515858155:user/jsmyth'
   EOQ
@@ -58,37 +58,34 @@ query "aws_iam_user_inline_policy_count_for_user" {
       jsonb_array_length(inline_policies) as value,
       'Inline Policies' as label,
       case when jsonb_array_length(inline_policies) = 0 then 'ok' else 'alert' end as type
-    from 
-      aws_iam_user  
+    from
+      aws_iam_user
     where
       arn = 'arn:aws:iam::876515858155:user/jsmyth'
   EOQ
-
 }
 
-
-### 
+###
 query "aws_iam_boundary_policy_for_user" {
   sql = <<-EOQ
     select
-      case 
-        when permissions_boundary_type is null then 'Not Set' 
-        when permissions_boundary_type = '' then 'Not Set' 
-        else substring(permissions_boundary_arn, 'arn:aws:iam::\d{12}:.+\/(.*)') 
+      case
+        when permissions_boundary_type is null then 'Not Set'
+        when permissions_boundary_type = '' then 'Not Set'
+        else substring(permissions_boundary_arn, 'arn:aws:iam::\d{12}:.+\/(.*)')
       end as value,
       'Boundary Policy' as label,
-      case 
+      case
         when permissions_boundary_type is null then 'alert'
-        when permissions_boundary_type = '' then 'alert'  
+        when permissions_boundary_type = '' then 'alert'
         else 'ok'
       end as type
-    from 
-      aws_iam_user  
+    from
+      aws_iam_user
     where
-      arn = 'arn:aws:iam::876515858155:user/jsmyth' --$1 
+      arn = 'arn:aws:iam::876515858155:user/jsmyth' --$1
       --arn = 'arn:aws:iam::876515858155:user/turbot/mike@turbot.com'
   EOQ
-
 }
 ###
 
@@ -167,10 +164,7 @@ query "aws_iam_all_policies_for_user" {
       jsonb_array_elements(inline_policies_std) as i
     where
       u.arn = 'arn:aws:iam::876515858155:user/jsmyth'
-
-
   EOQ
-
 }
 
 query "aws_iam_user_manage_policies_sankey" {
@@ -269,12 +263,8 @@ query "aws_iam_user_manage_policies_sankey" {
       jsonb_array_elements(inline_policies_std) as i
     where
       u.arn in (select iam_user_arn from args)
-
-
-EOQ
+  EOQ
 }
-
-
 
 dashboard "aws_iam_user_detail" {
   title = "AWS IAM User Detail"
@@ -310,11 +300,7 @@ dashboard "aws_iam_user_detail" {
       width = 2
     }
 
-    
   }
-
-
-
 
   container {
 
@@ -322,7 +308,7 @@ dashboard "aws_iam_user_detail" {
       title = "Overview"
 
       table {
-        width = 6 
+        width = 6
         sql   = <<-EOQ
           select
             name as "Name",
@@ -333,16 +319,14 @@ dashboard "aws_iam_user_detail" {
             account_id as "Account ID"
           from
             aws_iam_user
-          where 
+          where
            arn = 'arn:aws:iam::876515858155:user/jsmyth'
         EOQ
       }
 
-
-
       table {
         title = "Tags"
-        width = 6 
+        width = 6
 
         sql   = <<-EOQ
           select
@@ -351,22 +335,21 @@ dashboard "aws_iam_user_detail" {
           from
             aws_iam_user,
             jsonb_array_elements(tags_src) as tag
-          where 
+          where
             arn = 'arn:aws:iam::876515858155:user/jsmyth'
         EOQ
       }
+
     }
 
   }
-  
-
 
     container {
       title = "Credentials"
 
       table {
         title = "Console"
-        width = 4 
+        width = 4
         sql   = <<-EOQ
           select
             name as "Name",
@@ -375,7 +358,7 @@ dashboard "aws_iam_user_detail" {
             mfa_enabled as "MFA Enabled"
           from
             aws_iam_user
-          where 
+          where
            arn = 'arn:aws:iam::876515858155:user/jsmyth'
         EOQ
       }
@@ -387,13 +370,13 @@ dashboard "aws_iam_user_detail" {
           select
             k.access_key_id as "Access Key ID",
             k.status as "Status",
-            k.create_date as "Create Date"    
+            k.create_date as "Create Date"
           from
             aws_iam_user as u,
             aws_iam_access_key as k
-          where 
+          where
             u.name = k.user_name
-            and u.account_id = k.account_id 
+            and u.account_id = k.account_id
             and arn = 'arn:aws:iam::876515858155:user/jsmyth'
         EOQ
       }
@@ -409,7 +392,7 @@ dashboard "aws_iam_user_detail" {
           from
             aws_iam_user as u,
             jsonb_array_elements(mfa_devices) as mfa
-          where 
+          where
              arn = 'arn:aws:iam::876515858155:user/jsmyth'
         EOQ
       }
@@ -431,21 +414,19 @@ dashboard "aws_iam_user_detail" {
       }
     }
 
-
     table {
-      title = "Groups" 
+      title = "Groups"
       width = 6
       sql   = query.aws_iam_groups_for_user.sql
-      
+
     }
 
     table {
-      title = "Policies" 
+      title = "Policies"
       width = 6
       sql   = query.aws_iam_all_policies_for_user.sql
-
     }
-  }
 
+  }
 
 }

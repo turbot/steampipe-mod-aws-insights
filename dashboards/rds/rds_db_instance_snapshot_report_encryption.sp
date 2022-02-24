@@ -4,6 +4,11 @@ dashboard "aws_rds_db_instace_snapshot_encryption_dashboard" {
   container {
 
     card {
+      sql   = query.aws_rds_db_instance_snapshot_count.sql
+      width = 2
+    }
+
+    card {
       sql = <<-EOQ
         select
           count(*) as value,
@@ -35,6 +40,7 @@ dashboard "aws_rds_db_instace_snapshot_encryption_dashboard" {
       from
         aws_rds_db_snapshot;
     EOQ
+    
   }
 
 }

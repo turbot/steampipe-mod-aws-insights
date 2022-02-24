@@ -32,6 +32,11 @@ dashboard "aws_s3_bucket_lifecycle_report" {
   container {
 
     card {
+      sql   = query.aws_s3_bucket_count.sql
+      width = 2
+    }
+
+    card {
       sql   = query.aws_s3_bucket_versioning_disabled_count.sql
       width = 2
     }
@@ -64,6 +69,7 @@ dashboard "aws_s3_bucket_lifecycle_report" {
       where
         v.account_id = a.account_id
     EOQ
+    
   }
 
 }

@@ -86,6 +86,10 @@ dashboard "aws_db_instance_age_report" {
 
     table {
 
+      column "Account ID" {
+        display = "none"
+      }
+
       sql = <<-EOQ
         select
           v.db_instance_identifier as "Instance",
@@ -106,8 +110,11 @@ dashboard "aws_db_instance_age_report" {
           v.create_time,
           v.title
       EOQ
+
     }
+
   }
+  
 }
 
 /*
