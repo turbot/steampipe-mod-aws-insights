@@ -317,6 +317,7 @@ dashboard "aws_kms_key_dashboard" {
       type  = "donut"
       width = 4
     }
+
   }
 
   container {
@@ -336,6 +337,7 @@ dashboard "aws_kms_key_dashboard" {
       title = "Monthly Cost - 12 Months"
       sql   = query.aws_kms_key_cost_per_month.sql
     }
+
   }
 
   container {
@@ -368,5 +370,7 @@ dashboard "aws_kms_key_dashboard" {
       type  = "column"
       width = 3
     }
+
   }
+  
 }

@@ -5,6 +5,11 @@ dashboard "aws_redshift_cluster_encryption_report" {
   container {
 
     card {
+      sql = query.aws_redshift_cluster_count.sql
+      width = 2
+    }
+
+    card {
       sql = <<-EOQ
         select
           count(*) as value,
@@ -40,5 +45,7 @@ dashboard "aws_redshift_cluster_encryption_report" {
       where
         r.account_id = a.account_id
     EOQ
+    
   }
+
 }

@@ -5,6 +5,11 @@ dashboard "aws_sns_topic_encryption_report" {
   container {
 
     card {
+      sql   = query.aws_sns_topic_count.sql
+      width = 2
+    }
+
+    card {
       sql = <<-EOQ
         select
           count(*) as value,
@@ -17,6 +22,7 @@ dashboard "aws_sns_topic_encryption_report" {
       EOQ
       width = 2
     }
+
   }
 
   table {
@@ -40,5 +46,7 @@ dashboard "aws_sns_topic_encryption_report" {
       where
         r.account_id = a.account_id
     EOQ
+
   }
+  
 }

@@ -449,6 +449,7 @@ dashboard "aws_lambda_function_dashboard" {
       icon = "currency-dollar"
       width = 2
     }
+
   }
 
   container {
@@ -489,6 +490,7 @@ dashboard "aws_lambda_function_dashboard" {
       type  = "donut"
       width = 4
     }
+
   }
 
   container {
@@ -508,6 +510,7 @@ dashboard "aws_lambda_function_dashboard" {
       title = "Monthly Cost - 12 Months"
       sql   = query.aws_lambda_function_cost_per_month.sql
     }
+
   }
 
   container {
@@ -600,6 +603,7 @@ dashboard "aws_lambda_function_dashboard" {
         color = "olive"
       }
     }
+
   }
 
   container {
@@ -619,5 +623,7 @@ dashboard "aws_lambda_function_dashboard" {
       type  = "line"
       width = 6
     }
+
   }
+  
 }

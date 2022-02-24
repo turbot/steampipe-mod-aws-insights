@@ -3,6 +3,7 @@ variable "aws_iam_access_key_age_report_min_age" {
 }
 
 dashboard "aws_iam_access_key_age_report" {
+
   title = "AWS IAM Access Key Age Report"
 
   container {
@@ -12,15 +13,14 @@ dashboard "aws_iam_access_key_age_report" {
       width   = 2
       //default = "90"
     }
-        # #    # Assessments
   }
 
   container {
-  
+
     # Analysis
     card {
       sql   = <<-EOQ
-        select 
+        select
           count(*) as value,
           'Access Keys' as label
         from
@@ -117,7 +117,7 @@ dashboard "aws_iam_access_key_age_report" {
       }
 
       sql   = <<-EOQ
-        select 
+        select
           k.user_name as "User",
           k.access_key_id as "Access Key ID",
           k.status as "Status",
@@ -126,7 +126,7 @@ dashboard "aws_iam_access_key_age_report" {
           k.create_date as "Create Date",
           a.title as "Account",
           k.account_id as "Account ID"
-        from 
+        from
           aws_iam_access_key as k,
           aws_account as a
         where
@@ -135,6 +135,9 @@ dashboard "aws_iam_access_key_age_report" {
         order by
           create_date
       EOQ
+
     }
+
   }
+  
 }

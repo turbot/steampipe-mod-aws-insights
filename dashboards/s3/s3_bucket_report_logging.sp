@@ -19,6 +19,11 @@ dashboard "aws_s3_bucket_logging_report" {
   container {
 
     card {
+      sql   = query.aws_s3_bucket_count.sql
+      width = 2
+    }
+
+    card {
       sql   = query.aws_s3_bucket_logging_disabled_count.sql
       width = 2
     }
@@ -28,7 +33,7 @@ dashboard "aws_s3_bucket_logging_report" {
   table {
 
     column "Account ID" {
-       display = "none"
+      display = "none"
     }
 
     sql = <<-EOQ
@@ -47,6 +52,7 @@ dashboard "aws_s3_bucket_logging_report" {
       where
         v.account_id = a.account_id
     EOQ
+    
   }
 
 }

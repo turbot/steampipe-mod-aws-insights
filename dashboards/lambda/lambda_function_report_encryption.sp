@@ -18,6 +18,11 @@ dashboard "aws_lambda_function_encryption_dashboard" {
   container {
 
     card {
+      sql   = query.aws_lambda_function_count.sql
+      width = 2
+    }
+
+    card {
       sql = query.aws_lambda_function_unencrypted_count.sql
       width = 2
     }
@@ -43,5 +48,7 @@ dashboard "aws_lambda_function_encryption_dashboard" {
       where
         f.account_id = a.account_id
     EOQ
+
   }
+  
 }

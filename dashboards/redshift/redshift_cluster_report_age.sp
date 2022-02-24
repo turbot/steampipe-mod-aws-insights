@@ -111,8 +111,10 @@ dashboard "aws_redshift_cluster_age_report" {
         order by
           v.cluster_create_time,
           v.title
-
       EOQ
+
     }
+
   }
+  
 }

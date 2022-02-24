@@ -110,8 +110,9 @@ dashboard "acm_certificate_age_report" {
           v.created_at,
           v.title
       EOQ
-    }
 
+    }
+    
   }
 
 }

@@ -5,6 +5,11 @@ dashboard "aws_rds_db_cluster_encryption_dashboard" {
   container {
 
     card {
+      sql   = query.aws_rds_db_cluster_count.sql
+      width = 2
+    }
+
+    card {
       sql = <<-EOQ
         select
           count(*) as value,
@@ -40,5 +45,7 @@ dashboard "aws_rds_db_cluster_encryption_dashboard" {
       where
         r.account_id = a.account_id
     EOQ
+
   }
+
 }

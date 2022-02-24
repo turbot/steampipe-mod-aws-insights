@@ -63,7 +63,6 @@ query "aws_cloudtrail_trail_unencrypted_count" {
 }
 
 # Assessments
-
 query "aws_cloudtrail_trail_log_file_validation_status" {
   sql = <<-EOQ
     select
@@ -388,6 +387,7 @@ dashboard "aws_cloudtrail_trail_dashboard" {
           and period_end > date_trunc('month', CURRENT_DATE::timestamp);
       EOQ
     }
+
   }
 
   container {
@@ -428,6 +428,7 @@ dashboard "aws_cloudtrail_trail_dashboard" {
       width = 4
       sql   = query.aws_cloudtrail_trail_cloudwatch_log_integration_status.sql
     }
+
   }
 
   container {
@@ -447,6 +448,7 @@ dashboard "aws_cloudtrail_trail_dashboard" {
       title = "Monthly Cost - 12 Months"
       sql   = query.aws_cloudtrail_trail_cost_per_month.sql
     }
+
   }
 
   container {
@@ -479,5 +481,7 @@ dashboard "aws_cloudtrail_trail_dashboard" {
       width = 3
       sql   = query.aws_cloudtrail_multi_region_trail_count_per_account.sql
     }
+
   }
+
 }

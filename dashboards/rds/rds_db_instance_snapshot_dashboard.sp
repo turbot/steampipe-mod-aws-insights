@@ -286,6 +286,7 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
       type  = "donut"
       width = 4
     }
+
   }
 
   container {
@@ -305,6 +306,7 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
       title = "Monthly Cost - 12 Months"
       sql   = query.aws_rds_db_instance_snapshot_cost_per_month.sql
     }
+    
   }
 
   container {

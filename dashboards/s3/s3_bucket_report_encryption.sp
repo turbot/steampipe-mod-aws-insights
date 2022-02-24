@@ -50,6 +50,11 @@ dashboard "aws_s3_bucket_encryption_report" {
   container {
 
     card {
+      sql   = query.aws_s3_bucket_count.sql
+      width = 2
+    }
+
+    card {
       sql   = query.aws_s3_bucket_unencrypted_count.sql
       width = 2
     }
@@ -115,6 +120,7 @@ dashboard "aws_s3_bucket_encryption_report" {
         left join ssl_ok as ssl on b.arn = ssl.arn
         left join aws_account as a on b.account_id = a.account_id;
     EOQ
+    
   }
 
 }

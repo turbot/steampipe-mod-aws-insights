@@ -21,6 +21,11 @@ dashboard "aws_lambda_function_public_access_report" {
   container {
 
     card {
+      sql   = query.aws_lambda_function_count.sql
+      width = 2
+    }
+
+    card {
       sql = query.aws_lambda_function_public_count.sql
       width = 2
     }
@@ -51,5 +56,7 @@ dashboard "aws_lambda_function_public_access_report" {
       where
         f.account_id = a.account_id
     EOQ
+
   }
+  
 }

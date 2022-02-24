@@ -4,6 +4,11 @@ dashboard "aws_ebs_volume_public_access_dashboard" {
   container {
 
     card {
+      sql   = query.aws_ebs_volume_count.sql
+      width = 2
+    }
+
+    card {
       sql = <<-EOQ
         with public_snapshots as (
           select

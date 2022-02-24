@@ -16,6 +16,12 @@ dashboard "aws_cloudtrail_trail_log_file_validation_report" {
   title = "AWS CloudTrail Trail Log File Validation Report"
 
   container {
+
+    card {
+      sql   = query.aws_cloudtrail_trail_count.sql
+      width = 2
+    }
+
     card {
       sql = query.aws_cloudtrail_trail_log_file_validation_count.sql
       width = 2
@@ -23,6 +29,7 @@ dashboard "aws_cloudtrail_trail_log_file_validation_report" {
   }
 
   table {
+
     column "Account ID" {
       display = "none"
     }
@@ -43,4 +50,5 @@ dashboard "aws_cloudtrail_trail_log_file_validation_report" {
         and t.region = t.home_region;
     EOQ
   }
+  
 }

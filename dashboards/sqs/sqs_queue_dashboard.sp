@@ -211,6 +211,7 @@ query "aws_sqs_queue_by_dlq_status" {
 
 dashboard "aws_sqs_queue_dashboard" {
     title = "AWS SQS Queue Dashboard"
+
     container {
 
       card {
@@ -243,6 +244,7 @@ dashboard "aws_sqs_queue_dashboard" {
             and period_end > date_trunc('month', CURRENT_DATE::timestamp)
         EOQ
       }
+
     }
 
     container {
@@ -289,23 +291,25 @@ dashboard "aws_sqs_queue_dashboard" {
       title = "Monthly Cost - 12 Months"
       sql   = query.aws_sqs_queue_cost_per_month.sql
     }
+
   }
 
-    container {
-      title = "Analysis"
+  container {
+    title = "Analysis"
 
-      chart {
-        title = "Queues by Account"
-        sql   = query.aws_sqs_queue_by_account.sql
-        type  = "column"
-        width = 3
-      }
-      chart {
-        title = "Queues by Region"
-        sql   = query.aws_sqs_queue_by_region.sql
-        type  = "column"
-        width = 3
-      }
+    chart {
+      title = "Queues by Account"
+      sql   = query.aws_sqs_queue_by_account.sql
+      type  = "column"
+      width = 3
+    }
+    chart {
+      title = "Queues by Region"
+      sql   = query.aws_sqs_queue_by_region.sql
+      type  = "column"
+      width = 3
+    }
+    
   }
 
 }

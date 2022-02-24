@@ -6,11 +6,11 @@ query "aws_vpc_count" {
 
 query "aws_vpc_no_subnet_count" {
  sql = <<-EOQ
-    select 
+    select
        count(*) as value,
        'VPCs With No Subnets' as label,
        case when count(*) = 0 then 'ok' else 'alert' end as type
-      from 
+      from
         aws_vpc as vpc
         left join aws_vpc_subnet as s on vpc.vpc_id = s.vpc_id
       where
@@ -37,10 +37,10 @@ query "aws_vpc_by_account" {
 
 query "aws_vpc_by_region" {
   sql = <<-EOQ
-    select 
+    select
       region as "Region",
       count(*) as "VPCs"
-    from 
+    from
       aws_vpc
     group by
       region
@@ -52,7 +52,7 @@ query "aws_vpc_by_region" {
 query "aws_vpc_by_rfc1918_range" {
   sql = <<-EOQ
     with cidr_buckets as (
-      select 
+      select
         vpc_id,
         title,
         b ->> 'CidrBlock' as cidr,
@@ -66,12 +66,12 @@ query "aws_vpc_by_rfc1918_range" {
         aws_vpc,
         jsonb_array_elements(cidr_block_association_set) as b
     )
-    select 
+    select
       rfc1918_bucket,
       count(*)
-    from 
+    from
       cidr_buckets
-    group by 
+    group by
       rfc1918_bucket
     order by
       rfc1918_bucket
@@ -84,8 +84,8 @@ query "aws_vpc_by_size" {
       select
         vpc_id,
         cidr_block,
-        concat( 
-          '/', masklen(cidr_block), 
+        concat(
+          '/', masklen(cidr_block),
           ' (', power(2, 32 - masklen(cidr_block :: cidr)), ')'
         ) as size
       from
@@ -317,6 +317,7 @@ dashboard "aws_vpc_dashboard" {
       type  = "info"
       icon  = "currency-dollar"
     }
+
   }
 
   container {
@@ -347,13 +348,13 @@ dashboard "aws_vpc_dashboard" {
       width = 4
       sql   = <<-EOQ
         with vpc_logs as (
-          select 
+          select
             vpc_id,
             case
               when vpc_id in (select resource_id from aws_vpc_flow_log) then 'Configured'
               else 'Not Configured'
             end as flow_logs_configured
-          from 
+          from
             aws_vpc
         )
         select
@@ -372,10 +373,10 @@ dashboard "aws_vpc_dashboard" {
       width = 4
       sql   = <<-EOQ
         with by_empty as (
-          select 
+          select
             vpc.vpc_id,
             case when s.subnet_id is null then 'empty' else 'non-empty' end as status
-          from 
+          from
             aws_vpc as vpc
             left join aws_vpc_subnet as s on vpc.vpc_id = s.vpc_id
         )
@@ -388,6 +389,7 @@ dashboard "aws_vpc_dashboard" {
           status
       EOQ
     }
+
   }
 
   container {
@@ -407,6 +409,7 @@ dashboard "aws_vpc_dashboard" {
       title = "Monthly Cost - 12 Months"
       sql   = query.aws_vpc_cost_per_month.sql
     }
+
   }
 
   container {
@@ -442,6 +445,7 @@ dashboard "aws_vpc_dashboard" {
       type  = "column"
       width = 3
     }
+    
   }
 
   #container {
@@ -459,7 +463,7 @@ dashboard "aws_vpc_dashboard" {
   #    type  = "donut"
   #    sql   = query.aws_vpc_cost_top_usage_types_mtd.sql
   #    width = 2
-  #  
+  #
   #    legend {
   #      position = "bottom"
   #    }
@@ -470,7 +474,7 @@ dashboard "aws_vpc_dashboard" {
   #    type  = "donut"
   #    sql   = query.aws_vpc_cost_by_usage_types_12mo.sql
   #    width = 2
-  #  
+  #
   #    legend {
   #      position = "right"
   #    }
@@ -491,12 +495,12 @@ dashboard "aws_vpc_dashboard" {
   #  }
   #}
 }
- 
+
 # container {
 #   title  = "Performance & Utilization"
-# 
+#
 #   No performance metrics for VPC?
-#   
+#
 # }
 
 # container {

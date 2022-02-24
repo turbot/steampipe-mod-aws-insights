@@ -515,6 +515,7 @@ dashboard "aws_ec2_instance_dashboard" {
       EOQ
       width = 2
     }
+
   }
 
   container {
@@ -548,6 +549,7 @@ dashboard "aws_ec2_instance_dashboard" {
       type   = "donut"
       width = 4
     }
+
   }
 
   container {
@@ -567,6 +569,7 @@ dashboard "aws_ec2_instance_dashboard" {
       type  = "column"
       sql   = query.aws_ec2_instance_cost_per_month.sql
     }
+
   }
 
   container {
@@ -611,7 +614,6 @@ dashboard "aws_ec2_instance_dashboard" {
 
   container {
     title  = "Performance & Utilization"
-    //width = 6
 
     chart {
       title = "Top 10 CPU - Last 7 days"
@@ -625,8 +627,8 @@ dashboard "aws_ec2_instance_dashboard" {
       sql   = query.aws_ec2_instance_by_cpu_utilization_category.sql
       type  = "column"
       width = 3
-
     }
+    
   }
 
 }

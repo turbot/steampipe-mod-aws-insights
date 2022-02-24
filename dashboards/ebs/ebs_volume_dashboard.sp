@@ -355,6 +355,7 @@ dashboard "aws_ebs_volume_dashboard" {
           and period_end > date_trunc('month', CURRENT_DATE::timestamp)
       EOQ
     }
+
   }
 
   container {
@@ -374,6 +375,7 @@ dashboard "aws_ebs_volume_dashboard" {
       type  = "donut"
       width = 4
     }
+
   }
 
 
@@ -394,6 +396,7 @@ dashboard "aws_ebs_volume_dashboard" {
       title = "Monthly Cost - 12 Months"
       sql   = query.aws_ebs_volume_cost_per_month.sql
     }
+
   }
 
   container {
@@ -426,9 +429,11 @@ dashboard "aws_ebs_volume_dashboard" {
       type  = "column"
       width = 3
     }
+
   }
 
   container {
+
     chart {
       title = "Storage by Account (GB)"
       sql   = query.aws_ebs_volume_storage_by_account.sql
@@ -472,10 +477,12 @@ dashboard "aws_ebs_volume_dashboard" {
         color = "tan"
       }
     }
+
   }
 
   container {
     title  = "Performance & Utilization"
+
     chart {
       title = "Top 10 Average Read OPS - Last 7 days"
       type  = "line"
@@ -537,6 +544,7 @@ dashboard "aws_ebs_volume_dashboard" {
           and volume_id in (select volume_id from top_n)
       EOQ
     }
+    
   }
 
 }

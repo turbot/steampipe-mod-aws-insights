@@ -279,7 +279,6 @@ query "aws_s3_monthly_forecast_table" {
       'This Month (Forecast)' as "Period",
       (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
       (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
-
   EOQ
 }
 
@@ -379,13 +378,13 @@ dashboard "aws_s3_bucket_dashboard" {
       type  = "donut"
       width = 4
     }
+
   }
 
   container {
     title = "Cost"
     width = 6
 
-    # Costs
     table  {
       width = 6
       title = "Forecast"
@@ -398,6 +397,7 @@ dashboard "aws_s3_bucket_dashboard" {
       title = "Monthly Cost - 12 Months"
       sql   = query.aws_s3_bucket_cost_per_month.sql
     }
+
   }
 
   container {
@@ -423,6 +423,7 @@ dashboard "aws_s3_bucket_dashboard" {
       type  = "column"
       width = 3
     }
+
   }
 
 }

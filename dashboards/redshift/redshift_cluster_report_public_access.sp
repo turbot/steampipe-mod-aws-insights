@@ -4,13 +4,18 @@ dashboard "aws_redshift_cluster_public_access_dashboard" {
   container {
 
     card {
+      sql = query.aws_redshift_cluster_count.sql
+      width = 2
+    }
+
+    card {
       sql = <<-EOQ
         select count(*) as value,
         'Publicly Accessible Clusters' as label ,
         case count(*) when 0 then 'ok' else 'alert' end as "type"
-        from 
-          aws_redshift_cluster 
-        where 
+        from
+          aws_redshift_cluster
+        where
           publicly_accessible
       EOQ
       width = 2
@@ -39,6 +44,7 @@ dashboard "aws_redshift_cluster_public_access_dashboard" {
       where
         r.account_id = a.account_id
     EOQ
+    
   }
 
 }

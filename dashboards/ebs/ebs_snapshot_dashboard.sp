@@ -237,7 +237,6 @@ query "aws_ebs_snapshot_monthly_forecast_table" {
   EOQ
 }
 
-
 dashboard "aws_ebs_snapshot_dashboard" {
 
   title = "AWS EBS Snapshot Dashboard"
@@ -297,8 +296,8 @@ dashboard "aws_ebs_snapshot_dashboard" {
       type  = "donut"
       width = 4
     }
-  }
 
+  }
 
   container {
     title = "Cost"
@@ -317,6 +316,7 @@ dashboard "aws_ebs_snapshot_dashboard" {
       title = "Monthly Cost - 12 Months"
       sql   = query.aws_ebs_snapshot_cost_per_month.sql
     }
+
   }
 
   container {
@@ -342,9 +342,11 @@ dashboard "aws_ebs_snapshot_dashboard" {
       type  = "column"
       width = 4
     }
+
   }
 
-container {
+  container {
+
     chart {
       title = "Storage by Account (GB)"
       sql   = query.aws_ebs_snapshot_storage_by_account.sql
@@ -366,6 +368,7 @@ container {
         color = "tan"
       }
     }
-}
+
+  }
 
 }

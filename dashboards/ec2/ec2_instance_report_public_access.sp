@@ -18,6 +18,11 @@ dashboard "aws_ec2_instance_public_access_report" {
   container {
 
     card {
+      sql   = query.aws_ec2_instance_count.sql
+      width = 2
+    }
+
+    card {
       sql = query.aws_ec2_instance_public_access_count.sql
       width = 2
     }

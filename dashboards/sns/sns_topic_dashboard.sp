@@ -189,7 +189,7 @@ query "aws_sns_topic_by_subscription_status" {
 
 
 dashboard "aws_sns_topic_dashboard" {
-    title = "AWS SNS Topic Dashboard"
+  title = "AWS SNS Topic Dashboard"
 
   container {
 
@@ -223,6 +223,7 @@ dashboard "aws_sns_topic_dashboard" {
           and period_end > date_trunc('month', CURRENT_DATE::timestamp)
       EOQ
     }
+
   }
 
   container {
@@ -242,6 +243,7 @@ dashboard "aws_sns_topic_dashboard" {
       type  = "donut"
       width = 4
     }
+
   }
 
   container {
@@ -261,7 +263,9 @@ dashboard "aws_sns_topic_dashboard" {
       title = "Monthly Cost - 12 Months"
       sql   = query.aws_sns_topic_cost_per_month.sql
     }
+
   }
+
   container {
     title = "Analysis"
 
@@ -277,6 +281,7 @@ dashboard "aws_sns_topic_dashboard" {
       type  = "line"
       width = 6
     }
+    
   }
 
 }

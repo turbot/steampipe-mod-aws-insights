@@ -5,6 +5,11 @@ dashboard "aws_sqs_queue_encryption_report" {
   container {
 
     card {
+      sql   = query.aws_sqs_queue_count.sql
+      width = 2
+    }
+
+    card {
       sql = <<-EOQ
         select
           count(*) as value,
@@ -17,6 +22,7 @@ dashboard "aws_sqs_queue_encryption_report" {
       EOQ
       width = 2
     }
+
   }
 
   table {
@@ -39,5 +45,7 @@ dashboard "aws_sqs_queue_encryption_report" {
       where
         r.account_id = a.account_id
     EOQ
+
   }
+  
 }

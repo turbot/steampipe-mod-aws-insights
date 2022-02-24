@@ -4,6 +4,11 @@ dashboard "aws_cloudtrail_trail_encryption_dashboard" {
   container {
 
     card {
+      sql   = query.aws_cloudtrail_trail_count.sql
+      width = 2
+    }
+
+    card {
       sql = <<-EOQ
         select
           count(*) as value,
@@ -20,6 +25,7 @@ dashboard "aws_cloudtrail_trail_encryption_dashboard" {
   }
 
   table {
+
     column "Account ID" {
       display = "none"
     }
@@ -40,4 +46,5 @@ dashboard "aws_cloudtrail_trail_encryption_dashboard" {
         and t.account_id = a.account_id;
     EOQ
   }
+  
 }

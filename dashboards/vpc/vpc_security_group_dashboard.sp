@@ -2,6 +2,7 @@ dashboard "aws_vpc_security_group_dashboard" {
   title = "AWS VPC Security Group Dashboard"
 
   container {
+    
     card {
       sql = <<-EOQ
         select count(*) as "Security Groups" from aws_vpc_security_group;
@@ -55,6 +56,7 @@ dashboard "aws_vpc_security_group_dashboard" {
       EOQ
       width = 2
     }
+
   }
 
   container {
@@ -211,8 +213,9 @@ dashboard "aws_vpc_security_group_dashboard" {
         from
           sg_list
         group by is_associated;
-      EOQ 
+      EOQ
     }
+
   }
 
   container {
@@ -267,5 +270,7 @@ dashboard "aws_vpc_security_group_dashboard" {
       type  = "column"
       width = 4
     }
+
   }
+
 }

@@ -87,7 +87,6 @@ query "aws_acm_certificate_transparency_logging_disabled" {
 }
 
 # Assessments
-
 query "aws_acm_certificate_by_eligibility" {
   sql = <<-EOQ
     select
@@ -174,7 +173,6 @@ query "aws_acm_certificate_by_transparency_logging_preference" {
 }
 
 # Analysis
-
 query "aws_acm_certificate_by_account" {
   sql = <<-EOQ
     select
@@ -295,9 +293,7 @@ dashboard "aws_acm_certificate_dashboard" {
   }
 
   container {
-
     title = "Assessments"
-    # width = 12
 
     chart {
       title = "Certificate Status"
@@ -337,7 +333,6 @@ dashboard "aws_acm_certificate_dashboard" {
   }
 
   container {
-
     title = "Analysis"
 
     chart {

@@ -18,9 +18,15 @@ dashboard "aws_ec2_instance_lifecycle_report" {
   container {
 
     card {
+      sql   = query.aws_ec2_instance_count.sql
+      width = 2
+    }
+
+    card {
       sql = query.aws_ec2_stopped_instance_count.sql
       width = 2
     }
+
   }
 
   table {
@@ -37,4 +43,5 @@ dashboard "aws_ec2_instance_lifecycle_report" {
         aws_ec2_instance
     EOQ
   }
+  
 }

@@ -4,6 +4,11 @@ dashboard "aws_ebs_snapshot_age_report" {
 
    container {
 
+    card {
+      sql   = query.aws_ebs_snapshot_count.sql
+      width = 2
+    }
+
     # Analysis
     card {
       sql   = query.aws_ebs_snapshot_count.sql
@@ -112,6 +117,7 @@ dashboard "aws_ebs_snapshot_age_report" {
           v.start_time,
           v.title
       EOQ
+      
     }
 
   }

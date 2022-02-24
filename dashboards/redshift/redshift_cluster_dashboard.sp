@@ -6,39 +6,39 @@ query "aws_redshift_cluster_count" {
 
 query "aws_redshift_cluster_unencrypted_count" {
   sql = <<-EOQ
-    select 
+    select
       count(*) as value,
       'Unencrypted' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
-    from 
-      aws_redshift_cluster 
-    where 
+    from
+      aws_redshift_cluster
+    where
       not encrypted
   EOQ
 }
 
 query "aws_redshift_cluster_publicly_accessible" {
   sql = <<-EOQ
-    select 
+    select
       count(*) as value,
       'Publicly Accessible' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
-    from 
-      aws_redshift_cluster 
-    where 
+    from
+      aws_redshift_cluster
+    where
       publicly_accessible
   EOQ
 }
 
 query "aws_redshift_cluster_in_vpc" {
   sql = <<-EOQ
-    select 
+    select
       count(*) as value,
       'Clusters in VPC' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
-      aws_redshift_cluster 
-    where 
+      aws_redshift_cluster
+    where
       vpc_id is null
   EOQ
 }
@@ -250,7 +250,6 @@ dashboard "aws_redshift_cluster_dashboard" {
   container {
 
     # Analysis
-
     card {
       sql = query.aws_redshift_cluster_count.sql
       width = 2
@@ -287,8 +286,8 @@ dashboard "aws_redshift_cluster_dashboard" {
           and period_end > date_trunc('month', CURRENT_DATE::timestamp)
       EOQ
     }
-   }
-    # Assessments
+
+  }
 
   container {
     title = "Assessments"
@@ -306,14 +305,14 @@ dashboard "aws_redshift_cluster_dashboard" {
       sql = query.aws_redshift_cluster_by_publicly_accessible_status.sql
       type  = "donut"
       width = 4
-
     }
+
   }
 
   container {
     title = "Cost"
     width = 6
-    
+
     table  {
       width = 6
       title = "Forecast"
@@ -326,6 +325,7 @@ dashboard "aws_redshift_cluster_dashboard" {
       sql   = query.aws_redshift_cluster_cost_per_month.sql
       width = 6
     }
+
   }
 
   container {
@@ -358,6 +358,7 @@ dashboard "aws_redshift_cluster_dashboard" {
       type  = "column"
       width = 3
     }
+
   }
 
   container {
@@ -432,6 +433,7 @@ dashboard "aws_redshift_cluster_dashboard" {
           b.cpu_bucket
       EOQ
     }
+
   }
 
   container {
@@ -441,4 +443,5 @@ dashboard "aws_redshift_cluster_dashboard" {
       sql   = query.aws_redshift_cluster_with_no_snapshots.sql
     }
   }
+  
 }

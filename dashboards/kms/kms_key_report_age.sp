@@ -111,9 +111,13 @@ dashboard "aws_kms_key_age_report" {
           v.creation_date,
           v.title
       EOQ
+
     }
+
   }
+  
 }
+
 
 /*
 

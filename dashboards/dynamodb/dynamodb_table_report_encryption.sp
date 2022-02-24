@@ -2,6 +2,11 @@ dashboard "aws_dynamodb_table_encryption_report" {
   title = "AWS DynamoDB Table Encryption Report"
 
   container {
+    
+    card {
+      sql   = query.aws_dynamodb_table_count.sql
+      width = 2
+    }
     card {
       sql = <<-EOQ
         select
