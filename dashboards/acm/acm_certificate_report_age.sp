@@ -4,7 +4,6 @@ dashboard "acm_certificate_age_report" {
 
    container {
 
-    # Analysis
     card {
       sql   = query.aws_acm_certificate_count.sql
       width = 2

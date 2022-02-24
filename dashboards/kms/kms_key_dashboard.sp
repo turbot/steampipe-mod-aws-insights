@@ -162,17 +162,17 @@ query "aws_kms_key_by_account" {
 
   sql = <<-EOQ
     select
-      a.title as "account",
-      count(i.*) as "keys"
+      a.title as "Account",
+      count(i.*) as "Keys"
     from
       aws_kms_key as i,
       aws_account as a
     where
       a.account_id = i.account_id
     group by
-      account
+      a.title
     order by
-      account
+      a.title
   EOQ
 }
 
@@ -180,7 +180,7 @@ query "aws_kms_key_by_region" {
   sql = <<-EOQ
     select
       region,
-      count(i.*) as total
+      count(i.*) as "Keys"
     from
       aws_kms_key as i
     group by
@@ -251,7 +251,6 @@ dashboard "aws_kms_key_dashboard" {
 
   container {
 
-    # Analysis
     card {
       sql   = query.aws_kms_key_count.sql
       width = 2

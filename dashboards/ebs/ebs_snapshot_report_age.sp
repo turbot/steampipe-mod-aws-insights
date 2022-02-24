@@ -8,13 +8,7 @@ dashboard "aws_ebs_snapshot_age_report" {
       sql   = query.aws_ebs_snapshot_count.sql
       width = 2
     }
-
-    # Analysis
-    card {
-      sql   = query.aws_ebs_snapshot_count.sql
-      width = 2
-    }
-
+    
     card {
       sql = <<-EOQ
         select

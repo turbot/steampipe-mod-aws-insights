@@ -108,17 +108,17 @@ query "aws_redshift_cluster_cost_per_month" {
 query "aws_redshift_cluster_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
-      count(v.*) as "clusters"
+      a.title as "Account",
+      count(v.*) as "Clusters"
     from
       aws_redshift_cluster as v,
       aws_account as a
     where
       a.account_id = v.account_id
     group by
-      account
+      a.title
     order by
-      account
+      a.title
   EOQ
 }
 
@@ -272,7 +272,6 @@ dashboard "aws_redshift_cluster_dashboard" {
 
   container {
 
-    # Analysis
     card {
       sql = query.aws_redshift_cluster_count.sql
       width = 2

@@ -626,7 +626,7 @@ dashboard "aws_ec2_instance_dashboard" {
       title = "Average Max Daily CPU - Last 30 days"
       sql   = query.aws_ec2_instance_by_cpu_utilization_category.sql
       type  = "column"
-      width = 3
+      width = 6
     }
 
   }

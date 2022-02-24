@@ -6,7 +6,6 @@ dashboard "aws_ec2_instance_age_report" {
 
    container {
 
-    # Analysis
     card {
       sql   = query.aws_ec2_instance_count.sql
       width = 2

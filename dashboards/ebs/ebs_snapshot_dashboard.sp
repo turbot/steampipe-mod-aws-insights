@@ -15,20 +15,14 @@ query "aws_ebs_snapshot_storage_total" {
 
 query "aws_ebs_unencrypted_snapshot_count" {
   sql = <<-EOQ
-    with unencrypted_snapshots as (
-      select
-        arn
-      from
-        aws_ebs_snapshot
-      where
-        not encrypted
-    )
     select
       count(*) as value,
       'Unencrypted' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
-      unencrypted_snapshots
+       aws_ebs_snapshot
+    where
+       not encrypted
   EOQ
 }
 
@@ -108,7 +102,6 @@ query "aws_ebs_snapshot_monthly_forecast_table" {
       'This Month (Forecast)' as "Period",
       (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
       (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
-
   EOQ
 }
 
@@ -133,23 +126,23 @@ query "aws_ebs_snapshot_cost_per_month" {
 query "aws_ebs_snapshot_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
-      count(v.*) as "volumes"
+      a.title as "Account",
+      count(s.*) as "Snapshots"
     from
-      aws_ebs_snapshot as v,
+      aws_ebs_snapshot as s,
       aws_account as a
     where
-      a.account_id = v.account_id
+      a.account_id = s.account_id
     group by
-      account
+      a.title
     order by
-      account
+      a.title
   EOQ
 }
 
 query "aws_ebs_snapshot_by_region" {
   sql = <<-EOQ
-    select region as "Region", count(*) as "volumes" from aws_ebs_snapshot group by region order by region
+    select region as "Region", count(*) as "Snapshots" from aws_ebs_snapshot group by region order by region
   EOQ
 }
 
@@ -201,7 +194,7 @@ query "aws_ebs_snapshot_by_creation_month" {
 query "aws_ebs_snapshot_storage_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       sum(v.volume_size) as "GB"
     from
       aws_ebs_snapshot as v,
@@ -209,9 +202,9 @@ query "aws_ebs_snapshot_storage_by_account" {
     where
       a.account_id = v.account_id
     group by
-      account
+      a.title
     order by
-      account
+      a.title
   EOQ
 }
 
@@ -227,7 +220,6 @@ dashboard "aws_ebs_snapshot_dashboard" {
 
   container {
 
-    # Analysis
     card {
       sql   = query.aws_ebs_snapshot_count.sql
       width = 2
@@ -238,7 +230,6 @@ dashboard "aws_ebs_snapshot_dashboard" {
       width = 2
     }
 
-    # Assessments
     card {
       sql   = query.aws_ebs_unencrypted_snapshot_count.sql
       width = 2
@@ -325,7 +316,7 @@ dashboard "aws_ebs_snapshot_dashboard" {
       title = "Snapshots by Age"
       sql   = query.aws_ebs_snapshot_by_creation_month.sql
       type  = "column"
-      width = 4
+      width = 3
     }
 
   }
@@ -336,7 +327,7 @@ dashboard "aws_ebs_snapshot_dashboard" {
       title = "Storage by Account (GB)"
       sql   = query.aws_ebs_snapshot_storage_by_account.sql
       type  = "column"
-      width = 4
+      width = 3
 
       series "GB" {
         color = "tan"
@@ -347,7 +338,7 @@ dashboard "aws_ebs_snapshot_dashboard" {
       title = "Storage by Region (GB)"
       sql   = query.aws_ebs_snapshot_storage_by_region.sql
       type  = "column"
-      width = 4
+      width = 3
 
       series "GB" {
         color = "tan"

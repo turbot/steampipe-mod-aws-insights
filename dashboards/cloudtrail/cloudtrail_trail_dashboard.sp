@@ -34,7 +34,7 @@ query "aws_cloudtrail_trail_multi_region_count" {
   EOQ
 }
 
-query "aws_cloudtrail_trail_log_file_validation_enabled_count" {
+query "aws_cloudtrail_trail_log_file_validation_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -197,94 +197,6 @@ query "aws_cloudtrail_trail_cloudwatch_log_integration_status" {
   EOQ
 }
 
-# Analysis
-query "aws_cloudtrail_trail_count_per_account" {
-  sql = <<-EOQ
-    select
-      a.title as "account",
-      count(t.*) as "trails"
-    from
-      aws_cloudtrail_trail as t,
-      aws_account as a
-    where
-      a.account_id = t.account_id
-      and t.region = t.home_region
-    group by account
-    order by account;
-  EOQ
-}
-
-query "aws_cloudtrail_trail_count_per_region" {
-  sql = <<-EOQ
-    with trail_count as (
-      select
-        arn,
-        region
-      from
-        aws_cloudtrail_trail
-      where
-        region = home_region
-        and not is_multi_region_trail
-      union
-      select
-        arn,
-        region
-      from
-        aws_cloudtrail_trail
-      where
-        region = home_region
-        and is_multi_region_trail
-    )
-    select
-      region,
-      count(*) as "trails"
-    from
-      trail_count as t
-    group by region
-    order by region;
-  EOQ
-}
-
-query "aws_cloudtrail_regional_trail_count_per_region" {
-  sql = <<-EOQ
-    select
-      region,
-      count(*) as "trails"
-    from
-      aws_cloudtrail_trail
-    where
-      region = home_region
-      and not is_multi_region_trail
-    group by region
-    order by region;
-  EOQ
-}
-
-query "aws_cloudtrail_multi_region_trail_count_per_account" {
-  sql = <<-EOQ
-    with multi_region_trails as (
-      select
-        arn,
-        account_id
-      from
-        aws_cloudtrail_trail
-      where
-        region = home_region
-        and is_multi_region_trail
-    )
-    select
-      a.title as "account",
-      count(t.*) as "trails"
-    from
-      multi_region_trails as t,
-      aws_account as a
-    where
-      a.account_id = t.account_id
-    group by account
-    order by account;
-  EOQ
-}
-
 #Costs
 query "aws_cloudtrail_trail_monthly_forecast_table" {
   sql = <<-EOQ
@@ -341,12 +253,99 @@ query "aws_cloudtrail_trail_cost_per_month" {
   EOQ
 }
 
+# Analysis
+query "aws_cloudtrail_trail_count_per_account" {
+  sql = <<-EOQ
+    select
+      a.title as "Account",
+      count(t.*) as "Trails"
+    from
+      aws_cloudtrail_trail as t,
+      aws_account as a
+    where
+      a.account_id = t.account_id
+      and t.region = t.home_region
+    group by a.title
+    order by a.title;
+  EOQ
+}
+
+query "aws_cloudtrail_trail_count_per_region" {
+  sql = <<-EOQ
+    with trail_count as (
+      select
+        arn,
+        region
+      from
+        aws_cloudtrail_trail
+      where
+        region = home_region
+        and not is_multi_region_trail
+      union
+      select
+        arn,
+        region
+      from
+        aws_cloudtrail_trail
+      where
+        region = home_region
+        and is_multi_region_trail
+    )
+    select
+      region,
+      count(*) as "Trails"
+    from
+      trail_count as t
+    group by region
+    order by region;
+  EOQ
+}
+
+query "aws_cloudtrail_regional_trail_count_per_region" {
+  sql = <<-EOQ
+    select
+      region,
+      count(*) as "Trails"
+    from
+      aws_cloudtrail_trail
+    where
+      region = home_region
+      and not is_multi_region_trail
+    group by region
+    order by region;
+  EOQ
+}
+
+query "aws_cloudtrail_multi_region_trail_count_per_account" {
+  sql = <<-EOQ
+    with multi_region_trails as (
+      select
+        arn,
+        account_id
+      from
+        aws_cloudtrail_trail
+      where
+        region = home_region
+        and is_multi_region_trail
+    )
+    select
+      a.title as "Account",
+      count(t.*) as "Trails"
+    from
+      multi_region_trails as t,
+      aws_account as a
+    where
+      a.account_id = t.account_id
+    group by a.title
+    order by a.title;
+  EOQ
+}
+
 dashboard "aws_cloudtrail_trail_dashboard" {
   title = "AWS CloudTrail Trail Dashboard"
 
   container {
 
-    # Analysis
     card {
       sql   = query.aws_cloudtrail_trail_count.sql
       width = 2
@@ -363,7 +362,7 @@ dashboard "aws_cloudtrail_trail_dashboard" {
     }
 
     card {
-      sql   = query.aws_cloudtrail_trail_log_file_validation_enabled_count.sql
+      sql   = query.aws_cloudtrail_trail_log_file_validation_disabled_count.sql
       width = 2
     }
 

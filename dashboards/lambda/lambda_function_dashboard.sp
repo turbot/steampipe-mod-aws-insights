@@ -13,11 +13,11 @@ query "aws_lambda_function_memory_total" {
   EOQ
 }
 
-query "aws_public_lambda_function_count" {
+query "aws_lambda_function_public_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Public' as label,
+      'Public Lambda Functions' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_lambda_function
@@ -27,6 +27,19 @@ query "aws_public_lambda_function_count" {
       policy_std -> 'Statement' ->> 'Prinipal' = '*'
       or ( policy_std -> 'Principal' -> 'AWS' ) :: text = '*'
     )
+  EOQ
+}
+
+query "aws_lambda_function_unencrypted_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Unencrypted' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
+    from
+      aws_lambda_function
+    where
+      kms_key_arn is null
   EOQ
 }
 
@@ -419,7 +432,7 @@ dashboard "aws_lambda_function_dashboard" {
 
     # Assessments
     card {
-      sql   = query.aws_public_lambda_function_count.sql
+      sql   = query.aws_lambda_function_public_count.sql
       width = 2
     }
 

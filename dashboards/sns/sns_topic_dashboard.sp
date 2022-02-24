@@ -32,8 +32,6 @@ query "aws_sns_topic_by_subscription_count" {
 
 query "aws_sns_topic_by_account" {
   sql = <<-EOQ
-
-
     select
       a.title as "account",
       count(i.*) as "total"
@@ -255,7 +253,7 @@ dashboard "aws_sns_topic_dashboard" {
     chart {
       title = "Topics by Region"
       sql   = query.aws_sns_topic_by_region.sql
-      type  = "line"
+      type  = "column"
       width = 6
     }
 

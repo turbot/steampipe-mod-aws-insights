@@ -4,6 +4,7 @@ query "aws_dynamodb_table_count" {
   EOQ
 }
 
+# Cost
 query "aws_dynamodb_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (

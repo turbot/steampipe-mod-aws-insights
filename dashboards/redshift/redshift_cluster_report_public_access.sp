@@ -9,15 +9,7 @@ dashboard "aws_redshift_cluster_public_access_dashboard" {
     }
 
     card {
-      sql = <<-EOQ
-        select count(*) as value,
-        'Publicly Accessible Clusters' as label ,
-        case count(*) when 0 then 'ok' else 'alert' end as "type"
-        from
-          aws_redshift_cluster
-        where
-          publicly_accessible
-      EOQ
+      sql = query.aws_redshift_cluster_publicly_accessible.sql
       width = 2
     }
 

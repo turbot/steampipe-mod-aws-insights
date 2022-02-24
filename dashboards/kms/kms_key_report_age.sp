@@ -4,7 +4,6 @@ dashboard "aws_kms_key_age_report" {
 
    container {
 
-    # Analysis
     card {
       sql   = query.aws_kms_key_count.sql
       width = 2
@@ -117,12 +116,3 @@ dashboard "aws_kms_key_age_report" {
   }
   
 }
-
-
-/*
-
-select
-  'value 1' as value,
-  'value 2' as value
-
-*/
