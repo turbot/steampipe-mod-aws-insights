@@ -79,6 +79,7 @@ dashboard "aws_ebs_volume_age_report" {
       width = 2
       type = "info"
     }
+
   }
 
   container {
@@ -111,6 +112,7 @@ dashboard "aws_ebs_volume_age_report" {
           v.create_time,
           v.title
       EOQ
+      
     }
 
   }

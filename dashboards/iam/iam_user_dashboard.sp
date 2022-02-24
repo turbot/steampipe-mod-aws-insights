@@ -34,37 +34,33 @@ query "aws_iam_user_no_boundary_count" {
   EOQ
 }
 
-###
-query "aws_iam_users_by_account" {
+query "aws_iam_users_with_direct_attached_policy_count" {
   sql = <<-EOQ
     select
-      a.title,
-      count(*)
-    from
-      aws_iam_user as u,
-      aws_account as a
-    where
-      u.account_id = a.account_id
-    group by
-      a.title
-    order by
-      count desc
-  EOQ
-}
-
-query "aws_iam_user_by_path" {
-  sql = <<-EOQ
-    select
-      path,
-      count(name) as "total"
+      count(*) as value,
+       'Users with Attached Policies' as label,
+      case when count(*) = 0 then 'ok' else 'alert' end as type
     from
       aws_iam_user
-    group by
-      path
+    where
+      jsonb_array_length(attached_policy_arns) > 0
   EOQ
 }
 
-####
+query "aws_iam_users_with_inline_policy_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Users with Inline Policies' as label,
+      case when count(*) = 0 then 'ok' else 'alert' end as type
+    from
+      aws_iam_user
+    where
+      jsonb_array_length(inline_policies) > 0
+  EOQ
+}
+
+#Assessments
 
 query "aws_iam_users_by_mfa_enabled" {
   sql = <<-EOQ
@@ -96,32 +92,6 @@ query "aws_iam_users_by_boundary_policy" {
       aws_iam_user
     group by
       permissions_boundary_type
-  EOQ
-}
-
-query "aws_iam_users_with_direct_attached_policy_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-       'Users with Attached Policies' as label,
-      case when count(*) = 0 then 'ok' else 'alert' end as type
-    from
-      aws_iam_user
-    where
-      jsonb_array_length(attached_policy_arns) > 0
-  EOQ
-}
-
-query "aws_iam_users_with_inline_policy_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Users with Inline Policies' as label,
-      case when count(*) = 0 then 'ok' else 'alert' end as type
-    from
-      aws_iam_user
-    where
-      jsonb_array_length(inline_policies) > 0
   EOQ
 }
 
@@ -167,6 +137,36 @@ query "aws_iam_users_with_inline_policy" {
         inline_compliance
       group by
         has_inline
+  EOQ
+}
+
+#Analysis
+query "aws_iam_users_by_account" {
+  sql = <<-EOQ
+    select
+      a.title,
+      count(*)
+    from
+      aws_iam_user as u,
+      aws_account as a
+    where
+      u.account_id = a.account_id
+    group by
+      a.title
+    order by
+      count desc
+  EOQ
+}
+
+query "aws_iam_user_by_path" {
+  sql = <<-EOQ
+    select
+      path,
+      count(name) as "total"
+    from
+      aws_iam_user
+    group by
+      path
   EOQ
 }
 
@@ -246,6 +246,7 @@ dashboard "aws_iam_user_dashboard" {
       sql   = query.aws_iam_users_with_inline_policy_count.sql
       width = 2
     }
+
   }
 
   container {
@@ -287,6 +288,7 @@ dashboard "aws_iam_user_dashboard" {
       type  = "donut"
       width = 3
     }
+
   }
 
   container {
@@ -312,5 +314,7 @@ dashboard "aws_iam_user_dashboard" {
       type  = "column"
       width = 3
     }
+
   }
+  
 }

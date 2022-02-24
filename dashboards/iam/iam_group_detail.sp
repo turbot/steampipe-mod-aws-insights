@@ -3,7 +3,6 @@ variable "iam_detail_group_arn" {
   default = "arn:aws:iam::013122550996:group/demo-group"
 }
 
-
 query "aws_iam_group_input" {
   sql = <<EOQ
     select
@@ -13,7 +12,7 @@ query "aws_iam_group_input" {
       aws_iam_group
     order by
       title;
-EOQ
+  EOQ
 }
 
 query "aws_iam_group_direct_attached_policy_count_for_group" {
@@ -103,6 +102,7 @@ dashboard "aws_iam_group_detail" {
       sql   = query.aws_iam_group_direct_attached_policy_count_for_group.sql
       width = 2
     }
+
   }
 
   container {
@@ -125,7 +125,9 @@ dashboard "aws_iam_group_detail" {
            arn = 'arn:aws:iam::013122550996:group/demo-group'
         EOQ
       }
+
     }
+
   }
 
   container {
@@ -143,6 +145,7 @@ dashboard "aws_iam_group_detail" {
       width = 6
       sql   = query.aws_iam_all_policies_for_group.sql
     }
+    
   }
 
 }

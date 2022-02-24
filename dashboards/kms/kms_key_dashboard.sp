@@ -43,7 +43,6 @@ query "aws_kms_key_rotation_enabled_count" {
 }
 
 # Assessments
-
 query "aws_inactive_kms_key_status" {
   sql = <<-EOQ
     select
@@ -291,6 +290,7 @@ dashboard "aws_kms_key_dashboard" {
       EOQ
       width = 2
     }
+    
   }
 
   container {
@@ -372,5 +372,5 @@ dashboard "aws_kms_key_dashboard" {
     }
 
   }
-  
+
 }

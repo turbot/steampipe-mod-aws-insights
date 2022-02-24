@@ -328,17 +328,17 @@ dashboard "aws_dynamodb_table_dashboard" {
       }
     }
 
-  # Costs
-  container {
-    title = "Costs"
-    width = 6
-
     # Costs
-    table  {
+    container {
+      title = "Costs"
       width = 6
-      title = "Forecast"
-      sql   = query.aws_dynamodb_monthly_forecast_table.sql
-    }
+
+      # Costs
+      table  {
+        width = 6
+        title = "Forecast"
+        sql   = query.aws_dynamodb_monthly_forecast_table.sql
+      }
 
     chart {
       width = 6
@@ -346,6 +346,7 @@ dashboard "aws_dynamodb_table_dashboard" {
       title = "Monthly Cost - 12 Months"
       sql   = query.aws_dynamodb_table_cost_per_month.sql
     }
+
   }
 
   # Analysis
@@ -424,6 +425,7 @@ dashboard "aws_dynamodb_table_dashboard" {
       type  = "column"
       width = 2
     }
+
   }
 
   # Performance & Utilization
@@ -461,5 +463,7 @@ dashboard "aws_dynamodb_table_dashboard" {
         order by timestamp;
       EOQ
     }
+
   }
+
 }

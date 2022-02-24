@@ -401,6 +401,7 @@ dashboard "aws_rds_db_cluster_dashboard" {
           and period_end > date_trunc('month', CURRENT_DATE::timestamp)
       EOQ
     }
+    
   }
 
   container {
@@ -523,5 +524,5 @@ dashboard "aws_rds_db_cluster_dashboard" {
     }
 
   }
-  
+
 }

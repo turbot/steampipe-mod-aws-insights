@@ -110,6 +110,7 @@ dashboard "aws_iam_role_detail" {
       sql   = query.aws_iam_role_direct_attached_policy_count_for_role.sql
       width = 2
     }
+
   }
 
   container {
@@ -162,7 +163,9 @@ dashboard "aws_iam_role_detail" {
       width = 6
       sql   = query.aws_iam_all_policies_for_role.sql
     }
+
   }
+
 }
 
 query "aws_iam_all_policies_for_role" {

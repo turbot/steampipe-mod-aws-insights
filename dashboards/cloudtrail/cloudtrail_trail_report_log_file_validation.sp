@@ -26,6 +26,7 @@ dashboard "aws_cloudtrail_trail_log_file_validation_report" {
       sql = query.aws_cloudtrail_trail_log_file_validation_count.sql
       width = 2
     }
+
   }
 
   table {
@@ -49,6 +50,7 @@ dashboard "aws_cloudtrail_trail_log_file_validation_report" {
         t.account_id = a.account_id
         and t.region = t.home_region;
     EOQ
+    
   }
-  
+
 }

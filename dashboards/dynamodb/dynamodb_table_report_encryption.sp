@@ -2,11 +2,12 @@ dashboard "aws_dynamodb_table_encryption_report" {
   title = "AWS DynamoDB Table Encryption Report"
 
   container {
-    
+
     card {
       sql   = query.aws_dynamodb_table_count.sql
       width = 2
     }
+
     card {
       sql = <<-EOQ
         select
@@ -57,9 +58,11 @@ dashboard "aws_dynamodb_table_encryption_report" {
       width = 2
       type  = "info"
     }
+
   }
 
   table {
+
     column "Account ID" {
       display = "none"
     }
@@ -82,5 +85,7 @@ dashboard "aws_dynamodb_table_encryption_report" {
         left join aws_kms_key as k on t.sse_description ->> 'KMSMasterKeyArn' = k.arn
         join aws_account as a on t.account_id = a.account_id;
     EOQ
+
   }
+  
 }

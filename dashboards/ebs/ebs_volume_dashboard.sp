@@ -309,7 +309,6 @@ query "aws_ebs_monthly_forecast_table" {
   EOQ
 }
 
-
 dashboard "aws_ebs_volume_dashboard" {
 
   title = "AWS EBS Volume Dashboard"
@@ -544,7 +543,7 @@ dashboard "aws_ebs_volume_dashboard" {
           and volume_id in (select volume_id from top_n)
       EOQ
     }
-    
+
   }
 
 }

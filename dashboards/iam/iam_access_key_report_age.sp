@@ -105,6 +105,7 @@ dashboard "aws_iam_access_key_age_report" {
       width = 2
       type  = "info"
     }
+    
   }
 
   container {
@@ -139,5 +140,5 @@ dashboard "aws_iam_access_key_age_report" {
     }
 
   }
-  
+
 }

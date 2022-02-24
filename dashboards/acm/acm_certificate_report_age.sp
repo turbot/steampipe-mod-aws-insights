@@ -79,6 +79,7 @@ dashboard "acm_certificate_age_report" {
       width = 2
       type = "info"
     }
+    
   }
 
   container {
@@ -112,7 +113,7 @@ dashboard "acm_certificate_age_report" {
       EOQ
 
     }
-    
+
   }
 
 }

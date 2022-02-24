@@ -45,6 +45,7 @@ dashboard "aws_cloudtrail_trail_encryption_dashboard" {
         t.home_region = t.region
         and t.account_id = a.account_id;
     EOQ
+    
   }
-  
+
 }

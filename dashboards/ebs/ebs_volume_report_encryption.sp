@@ -21,6 +21,7 @@ dashboard "aws_ebs_volume_encryption_dashboard" {
       EOQ
       width = 2
     }
+    
   }
 
   table {
@@ -46,5 +47,5 @@ dashboard "aws_ebs_volume_encryption_dashboard" {
     EOQ
 
   }
-  
+
 }

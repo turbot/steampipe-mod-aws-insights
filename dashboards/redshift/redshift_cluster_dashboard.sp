@@ -34,12 +34,57 @@ query "aws_redshift_cluster_in_vpc" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Clusters in VPC' as label,
+      'Not In VPC' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_redshift_cluster
     where
       vpc_id is null
+  EOQ
+}
+
+#Costs
+query "aws_redshift_cluster_monthly_forecast_table" {
+  sql = <<-EOQ
+    with monthly_costs as (
+      select
+        period_start,
+        period_end,
+        case
+          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp) then 'Month to Date'
+          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month') then 'Previous Month'
+          else to_char (period_start, 'Month')
+        end as period_label,
+        period_end::date - period_start::date as days,
+        sum(unblended_cost_amount)::numeric::money as unblended_cost_amount,
+        (sum(unblended_cost_amount) / (period_end::date - period_start::date ) )::numeric::money as average_daily_cost,
+        date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval ) as days_in_month,
+        sum(unblended_cost_amount) / (period_end::date - period_start::date ) * date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval )::numeric::money  as forecast_amount
+      from
+        aws_cost_by_service_usage_type_monthly as c
+
+      where
+        service = 'Amazon Redshift'
+        and date_trunc('month', period_start) >= date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
+
+        group by
+        period_start,
+        period_end
+    )
+
+    select
+      period_label as "Period",
+      unblended_cost_amount as "Cost",
+      average_daily_cost as "Daily Avg Cost"
+    from
+      monthly_costs
+
+    union all
+    select
+      'This Month (Forecast)' as "Period",
+      (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
+      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
+
   EOQ
 }
 
@@ -59,6 +104,7 @@ query "aws_redshift_cluster_cost_per_month" {
   EOQ
 }
 
+#Analysis
 query "aws_redshift_cluster_by_account" {
   sql = <<-EOQ
     select
@@ -82,48 +128,6 @@ query "aws_redshift_cluster_by_region" {
   EOQ
 }
 
-query "aws_redshift_cluster_by_publicly_accessible_status" {
-  sql = <<-EOQ
-    select
-      publicly_accessible_status,
-      count(*)
-    from (
-      select publicly_accessible,
-        case when publicly_accessible then
-          'Public'
-        else
-          'Private'
-        end publicly_accessible_status
-      from
-        aws_redshift_cluster) as t
-    group by
-      publicly_accessible_status
-    order by
-      publicly_accessible_status desc
-  EOQ
-}
-
-query "aws_redshift_cluster_by_encryption_status" {
-  sql = <<-EOQ
-    select
-      encryption_status,
-      count(*)
-    from (
-      select encrypted,
-        case when encrypted then
-          'Enabled'
-        else
-          'Disabled'
-        end encryption_status
-      from
-        aws_redshift_cluster) as t
-    group by
-      encryption_status
-    order by
-      encryption_status desc
-  EOQ
-}
-
 query "aws_redshift_cluster_by_state" {
   sql = <<-EOQ
     select
@@ -133,24 +137,6 @@ query "aws_redshift_cluster_by_state" {
       aws_redshift_cluster
     group by
       cluster_status
-  EOQ
-}
-
-query "aws_redshift_cluster_with_no_snapshots" {
-  sql = <<-EOQ
-    select
-      v.cluster_identifier,
-      v.account_id,
-      v.region
-    from
-      aws_redshift_cluster as v
-    left join aws_redshift_snapshot as s on v.cluster_identifier = s.cluster_identifier
-    group by
-      v.account_id,
-      v.region,
-      v.cluster_identifier
-    having
-      count(s.snapshot_identifier) = 0
   EOQ
 }
 
@@ -199,47 +185,84 @@ query "aws_redshift_cluster_by_creation_month" {
   EOQ
 }
 
-query "aws_redshift_cluster_monthly_forecast_table" {
+#Assessments
+query "aws_redshift_cluster_by_encryption_status" {
   sql = <<-EOQ
-    with monthly_costs as (
-      select
-        period_start,
-        period_end,
-        case
-          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp) then 'Month to Date'
-          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month') then 'Previous Month'
-          else to_char (period_start, 'Month')
-        end as period_label,
-        period_end::date - period_start::date as days,
-        sum(unblended_cost_amount)::numeric::money as unblended_cost_amount,
-        (sum(unblended_cost_amount) / (period_end::date - period_start::date ) )::numeric::money as average_daily_cost,
-        date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval ) as days_in_month,
-        sum(unblended_cost_amount) / (period_end::date - period_start::date ) * date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval )::numeric::money  as forecast_amount
+    select
+      encryption_status,
+      count(*)
+    from (
+      select encrypted,
+        case when encrypted then
+          'Enabled'
+        else
+          'Disabled'
+        end encryption_status
       from
-        aws_cost_by_service_usage_type_monthly as c
+        aws_redshift_cluster) as t
+    group by
+      encryption_status
+    order by
+      encryption_status desc
+  EOQ
+}
 
-      where
-        service = 'Amazon Redshift'
-        and date_trunc('month', period_start) >= date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
-
-        group by
-        period_start,
-        period_end
-    )
-
+query "aws_redshift_cluster_by_publicly_accessible_status" {
+  sql = <<-EOQ
     select
-      period_label as "Period",
-      unblended_cost_amount as "Cost",
-      average_daily_cost as "Daily Avg Cost"
+      publicly_accessible_status,
+      count(*)
+    from (
+      select publicly_accessible,
+        case when publicly_accessible then
+          'Public'
+        else
+          'Private'
+        end publicly_accessible_status
+      from
+        aws_redshift_cluster) as t
+    group by
+      publicly_accessible_status
+    order by
+      publicly_accessible_status desc
+  EOQ
+}
+
+query "aws_redshift_cluster_in_vpc_status" {
+  sql = <<-EOQ
+    select
+      vpc_status,
+      count(*)
+    from (
+      select
+        case when vpc_id is not null then
+          'Enabled'
+        else
+          'Disabled'
+        end vpc_status
+      from
+        aws_redshift_cluster) as t
+    group by
+      vpc_status
+    order by
+      vpc_status desc
+  EOQ
+}
+query "aws_redshift_cluster_with_no_snapshots" {
+  sql = <<-EOQ
+    select
+      v.cluster_identifier,
+      v.account_id,
+      v.region
     from
-      monthly_costs
-
-    union all
-    select
-      'This Month (Forecast)' as "Period",
-      (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
-      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
-
+      aws_redshift_cluster as v
+    left join aws_redshift_snapshot as s on v.cluster_identifier = s.cluster_identifier
+    group by
+      v.account_id,
+      v.region,
+      v.cluster_identifier
+    having
+      count(s.snapshot_identifier) = 0
   EOQ
 }
 
@@ -301,8 +324,15 @@ dashboard "aws_redshift_cluster_dashboard" {
     }
 
     chart {
-      title = "Public Accessibility"
+      title = "Public Accessibility Status"
       sql = query.aws_redshift_cluster_by_publicly_accessible_status.sql
+      type  = "donut"
+      width = 4
+    }
+
+     chart {
+      title = "VPC Status"
+      sql = query.aws_redshift_cluster_in_vpc_status.sql
       type  = "donut"
       width = 4
     }
@@ -353,7 +383,7 @@ dashboard "aws_redshift_cluster_dashboard" {
     }
 
     chart {
-      title = "Cluster State"
+      title = "Cluster by State"
       sql = query.aws_redshift_cluster_by_state.sql
       type  = "column"
       width = 3
@@ -443,5 +473,5 @@ dashboard "aws_redshift_cluster_dashboard" {
       sql   = query.aws_redshift_cluster_with_no_snapshots.sql
     }
   }
-  
+
 }

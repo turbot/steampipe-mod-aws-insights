@@ -1,11 +1,9 @@
-# Analysis card
 query "aws_iam_role_count" {
   sql = <<-EOQ
     select count(*) as "Roles" from aws_iam_role
   EOQ
 }
 
-# Assessment card
 query "aws_iam_roles_with_inline_policy_count" {
   sql = <<-EOQ
     select
@@ -98,37 +96,6 @@ query "aws_iam_role_allows_assume_role_to_all_principal_count" {
   EOQ
 }
 
-# Analysis
-query "aws_iam_roles_by_account" {
-  sql = <<-EOQ
-    select
-      a.title as "account",
-      count(i.*) as "total"
-    from
-      aws_iam_role as i,
-      aws_account as a
-    where
-      a.account_id = i.account_id
-    group by
-      account
-    order by count(i.*) desc
-  EOQ
-}
-
-query "aws_iam_roles_by_path" {
-  sql = <<-EOQ
-    select
-      path,
-      count(name) as "total"
-    from
-      aws_iam_role
-    group by
-      path
-    order by
-      total desc
-  EOQ
-}
-
 # Assessment
 query "aws_iam_roles_with_inline_policy" {
   sql = <<-EOQ
@@ -149,6 +116,28 @@ query "aws_iam_roles_with_inline_policy" {
         roles_inline_compliance
       group by
         has_inline
+  EOQ
+}
+
+query "aws_iam_roles_with_direct_attached_policy" {
+  sql = <<-EOQ
+    with role_attached_compliance as (
+      select
+        arn,
+        case
+          when jsonb_array_length(attached_policy_arns) > 0 then 'With Attached Policies'
+          else 'Alert'
+        end as has_attached
+      from
+        aws_iam_role
+      )
+      select
+        has_attached,
+        count(*)
+      from
+        role_attached_compliance
+      group by
+        has_attached
   EOQ
 }
 
@@ -202,25 +191,34 @@ query "aws_iam_roles_by_boundary_policy" {
   EOQ
 }
 
-query "aws_iam_roles_with_direct_attached_policy" {
+# Analysis
+query "aws_iam_roles_by_account" {
   sql = <<-EOQ
-    with role_attached_compliance as (
-      select
-        arn,
-        case
-          when jsonb_array_length(attached_policy_arns) > 0 then 'With Attached Policies'
-          else 'Alert'
-        end as has_attached
-      from
-        aws_iam_role
-      )
-      select
-        has_attached,
-        count(*)
-      from
-        role_attached_compliance
-      group by
-        has_attached
+    select
+      a.title as "account",
+      count(i.*) as "total"
+    from
+      aws_iam_role as i,
+      aws_account as a
+    where
+      a.account_id = i.account_id
+    group by
+      account
+    order by count(i.*) desc
+  EOQ
+}
+
+query "aws_iam_roles_by_path" {
+  sql = <<-EOQ
+    select
+      path,
+      count(name) as "total"
+    from
+      aws_iam_role
+    group by
+      path
+    order by
+      total desc
   EOQ
 }
 
@@ -269,7 +267,6 @@ query "aws_iam_roles_by_creation_month" {
   EOQ
 }
 
-
 dashboard "aws_iam_role_dashboard" {
 
   title = "AWS IAM Role Dashboard"
@@ -308,6 +305,7 @@ dashboard "aws_iam_role_dashboard" {
       icon  = "shield-check"
       width = 2
     }
+
   }
 
   container {
@@ -340,6 +338,7 @@ dashboard "aws_iam_role_dashboard" {
       type  = "donut"
       width = 3
     }
+
   }
 
   container {
@@ -365,5 +364,7 @@ dashboard "aws_iam_role_dashboard" {
       type  = "column"
       width = 3
     }
+
   }
+  
 }

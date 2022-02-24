@@ -77,6 +77,7 @@ dashboard "aws_dynamodb_table_age_report" {
           creation_date_time <= now() - '1 year' :: interval;
       EOQ
     }
+    
   }
 
   container {

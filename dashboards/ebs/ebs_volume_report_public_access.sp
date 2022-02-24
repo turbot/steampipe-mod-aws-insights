@@ -39,6 +39,7 @@ dashboard "aws_ebs_volume_public_access_dashboard" {
   }
 
   table {
+
     column "Account ID" {
       display = "none"
     }
@@ -65,5 +66,7 @@ dashboard "aws_ebs_volume_public_access_dashboard" {
         left join public_snapshots as s on v.snapshot_id = s.snapshot_id
         left join aws_account as a on v.account_id = a.account_id;
     EOQ
+
   }
+  
 }

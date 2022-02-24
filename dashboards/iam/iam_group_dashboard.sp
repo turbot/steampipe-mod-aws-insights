@@ -1,50 +1,6 @@
-# Analysis
 query "aws_iam_group_count" {
   sql = <<-EOQ
     select count(*) as "Total Groups" from aws_iam_group
-  EOQ
-}
-
-query "aws_iam_groups_by_account" {
-  sql = <<-EOQ
-    select
-      a.title as "account",
-      count(g.*) as "total"
-    from
-      aws_iam_group as g,
-      aws_account as a
-    where
-      a.account_id = g.account_id
-    group by
-      account
-    order by count(g.*) desc
-  EOQ
-}
-
-query "aws_iam_groups_by_path" {
-  sql = <<-EOQ
-    select
-      path,
-      count(name) as "total"
-    from
-      aws_iam_group
-    group by
-      path
-  EOQ
-}
-
-# Assessments Cards
-
-query "aws_iam_groups_with_inline_policy_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Groups with Inline Policies' as label,
-      case when count(*) = 0 then 'ok' else 'alert' end as type
-    from
-      aws_iam_group
-    where
-      jsonb_array_length(inline_policies) > 0
   EOQ
 }
 
@@ -58,6 +14,19 @@ query "aws_iam_groups_without_users_count" {
       aws_iam_group
     where
       users is null
+  EOQ
+}
+
+query "aws_iam_groups_with_inline_policy_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Groups with Inline Policies' as label,
+      case when count(*) = 0 then 'ok' else 'alert' end as type
+    from
+      aws_iam_group
+    where
+      jsonb_array_length(inline_policies) > 0
   EOQ
 }
 
@@ -91,7 +60,7 @@ query "aws_iam_groups_with_administrator_policy_count" {
   EOQ
 }
 
-# Assessments Donut
+# Assessments
 query "aws_iam_groups_without_users" {
   sql = <<-EOQ
     with groups_without_users as (
@@ -165,7 +134,35 @@ query "aws_iam_groups_with_administrator_policy" {
   EOQ
 }
 
-# Resources by Age
+# Analysis
+query "aws_iam_groups_by_account" {
+  sql = <<-EOQ
+    select
+      a.title as "account",
+      count(g.*) as "total"
+    from
+      aws_iam_group as g,
+      aws_account as a
+    where
+      a.account_id = g.account_id
+    group by
+      account
+    order by count(g.*) desc
+  EOQ
+}
+
+query "aws_iam_groups_by_path" {
+  sql = <<-EOQ
+    select
+      path,
+      count(name) as "total"
+    from
+      aws_iam_group
+    group by
+      path
+  EOQ
+}
+
 query "aws_iam_groups_by_creation_month" {
   sql = <<-EOQ
     with groups as (
@@ -238,6 +235,7 @@ dashboard "aws_iam_group_dashboard" {
       sql   = query.aws_iam_groups_with_administrator_policy_count.sql
       width = 2
     }
+
   }
 
    container {
@@ -249,20 +247,22 @@ dashboard "aws_iam_group_dashboard" {
       type  = "donut"
       width = 3
     }
+
     chart {
       title = "Inline Policy"
       sql   = query.aws_iam_groups_with_inline_policy.sql
       type  = "donut"
       width = 3
     }
+
     chart {
       title = "Administrator Access Policy"
       sql   = query.aws_iam_groups_with_administrator_policy.sql
       type  = "donut"
       width = 3
     }
-  }
 
+  }
 
   container {
     title = "Analysis"
@@ -287,6 +287,7 @@ dashboard "aws_iam_group_dashboard" {
       type  = "column"
       width = 3
     }
+
   }
 
 }

@@ -54,6 +54,7 @@ dashboard "aws_cloudtrail_trail_logging_report" {
         t.account_id = a.account_id
         and t.region = t.home_region;
     EOQ
+    
   }
-  
+
 }

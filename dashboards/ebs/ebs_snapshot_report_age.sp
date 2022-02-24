@@ -84,6 +84,7 @@ dashboard "aws_ebs_snapshot_age_report" {
       width = 2
       type = "info"
     }
+    
   }
 
   container {
@@ -117,7 +118,7 @@ dashboard "aws_ebs_snapshot_age_report" {
           v.start_time,
           v.title
       EOQ
-      
+
     }
 
   }
