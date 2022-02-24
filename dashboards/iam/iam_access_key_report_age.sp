@@ -6,13 +6,11 @@ dashboard "aws_iam_access_key_age_report" {
 
   title = "AWS IAM Access Key Age Report"
 
-  container {
-    input "threshold_in_days" {
-      title = "Threshold (days)"
-      //type  = "text"
-      width   = 2
-      //default = "90"
-    }
+  input "threshold_in_days" {
+    title = "Threshold (days)"
+    //type  = "text"
+    width   = 2
+    //default = "90"
   }
 
   container {

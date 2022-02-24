@@ -6,14 +6,11 @@ dashboard "iam_user_excessive_privilege_report" {
 
   title = "AWS IAM User Excessive Privilege Report"
 
-  container {
-
-    input "threshold_in_days" {
-      title = "Threshold (days)"
-      //type  = "text"
-      width   = 2
-      //default = "90"
-    }
+  input "threshold_in_days" {
+    title = "Threshold (days)"
+    //type  = "text"
+    width   = 2
+    //default = "90"
   }
 
   container { 
