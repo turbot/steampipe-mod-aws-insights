@@ -1,16 +1,3 @@
-query "aws_sqs_queue_unencrypted_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Unencrypted Queues' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as "type"
-    from
-      aws_sqs_queue
-    where
-      kms_master_key_id is null
-  EOQ
-}
-
 dashboard "aws_sqs_queue_encryption_report" {
 
   title = "AWS SQS Queue Encryption Report"
@@ -18,7 +5,16 @@ dashboard "aws_sqs_queue_encryption_report" {
   container {
 
     card {
-      sql = query.aws_sqs_queue_unencrypted_count.sql
+      sql = <<-EOQ
+        select
+          count(*) as value,
+          'Unencrypted Queues' as label,
+          case count(*) when 0 then 'ok' else 'alert' end as "type"
+        from
+          aws_sqs_queue
+        where
+          kms_master_key_id is null
+      EOQ
       width = 2
     }
   }

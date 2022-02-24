@@ -1,16 +1,3 @@
-query "aws_rds_db_cluster_unencrypted_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Unencrypted' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as type
-    from
-      aws_rds_db_cluster
-    where
-      not storage_encrypted
-  EOQ
-}
-
 dashboard "aws_rds_db_cluster_encryption_dashboard" {
 
   title = "AWS RDS DB Cluster Encryption Report"
@@ -18,7 +5,16 @@ dashboard "aws_rds_db_cluster_encryption_dashboard" {
   container {
 
     card {
-      sql = query.aws_rds_db_cluster_unencrypted_count.sql
+      sql = <<-EOQ
+        select
+          count(*) as value,
+          'Unencrypted' as label,
+          case count(*) when 0 then 'ok' else 'alert' end as type
+        from
+          aws_rds_db_cluster
+        where
+          not storage_encrypted
+      EOQ
       width = 2
     }
   }

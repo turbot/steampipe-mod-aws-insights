@@ -360,7 +360,7 @@ dashboard "aws_dynamodb_table_dashboard" {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      sql   = query.aws_ebs_volume_cost_per_month.sql
+      sql   = query.aws_dynamodb_table_cost_per_month.sql
     }
   }
 

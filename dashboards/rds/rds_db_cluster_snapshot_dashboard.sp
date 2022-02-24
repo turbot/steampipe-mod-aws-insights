@@ -1,36 +1,36 @@
-query "aws_rds_db_instance_snapshot_count" {
+query "aws_rds_db_cluster_snapshot_count" {
   sql = <<-EOQ
-    select count(*) as "RDS DB Instance Snapshots" from aws_rds_db_snapshot
+    select count(*) as "RDS DB Cluster Snapshots" from aws_rds_db_cluster_snapshot
   EOQ
 }
 
-query "aws_rds_unencrypted_db_instance_snapshot_count" {
+query "aws_rds_unencrypted_db_cluster_snapshot_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Unencrypted Instance Snapshots' as label,
+      'Unencrypted Cluster Snapshots' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
-      aws_rds_db_snapshot
+      aws_rds_db_cluster_snapshot
     where
-      not encrypted
+      not storage_encrypted
   EOQ
 }
 
-query "aws_rds_db_instance_snapshot_not_in_vpc_count" {
+query "aws_rds_db_cluster_snapshot_not_in_vpc_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Instance Snapshots not in VPC' as label,
+      'Cluster Snapshots not in VPC' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
-      aws_rds_db_snapshot
+      aws_rds_db_cluster_snapshot
     where
       vpc_id is null
   EOQ
 }
 
-query "aws_rds_db_instance_snapshot_cost_per_month" {
+query "aws_rds_db_cluster_snapshot_cost_per_month" {
   sql = <<-EOQ
     select
        to_char(period_start, 'Mon-YY') as "Month",
@@ -46,13 +46,13 @@ query "aws_rds_db_instance_snapshot_cost_per_month" {
   EOQ
 }
 
-query "aws_rds_db_instance_snapshot_by_account" {
+query "aws_rds_db_cluster_snapshot_by_account" {
   sql = <<-EOQ
     select
       a.title as "account",
       count(i.*) as "total"
     from
-      aws_rds_db_snapshot as i,
+      aws_rds_db_cluster_snapshot as i,
       aws_account as a
     where
       a.account_id = i.account_id
@@ -64,32 +64,53 @@ query "aws_rds_db_instance_snapshot_by_account" {
 }
 
 
-query "aws_rds_db_instance_snapshot_by_region" {
+query "aws_rds_db_cluster_snapshot_by_region" {
   sql = <<-EOQ
     select
       region,
       count(i.*) as total
     from
-      aws_rds_db_snapshot as i
+      aws_rds_db_cluster_snapshot as i
     group by
       region
   EOQ
 }
 
 
-query "aws_rds_db_instance_snapshot_by_engine_type" {
+query "aws_rds_db_cluster_snapshot_by_engine_type" {
   sql = <<-EOQ
-    select engine as "Engine Type", count(*) as "Instance Snapshots" from aws_rds_db_snapshot group by engine order by engine
+    select engine as "Engine Type", count(*) as "Cluster Snapshots" from aws_rds_db_cluster_snapshot group by engine order by engine
   EOQ
 }
 
-query "aws_rds_db_instance_snapshot_iam_authentication_enabled" {
+query "aws_rds_db_cluster_snapshot_by_encryption_status" {
+  sql = <<-EOQ
+    select
+      encryption_status,
+      count(*)
+    from (
+      select storage_encrypted,
+        case when storage_encrypted then
+          'enabled'
+        else
+          'disabled'
+        end encryption_status
+      from
+        aws_rds_db_cluster_snapshot) as t
+    group by
+      encryption_status
+    order by
+      encryption_status desc
+  EOQ
+}
+
+query "aws_rds_db_cluster_snapshot_iam_authentication_enabled" {
   sql = <<-EOQ
     with iam_authentication_stat as (
     select
-      distinct db_instance_identifier as name
+      distinct db_cluster_identifier as name
     from
-      aws_rds_db_snapshot
+      aws_rds_db_cluster_snapshot
     where
       iam_database_authentication_enabled
     group by name
@@ -102,46 +123,25 @@ query "aws_rds_db_instance_snapshot_iam_authentication_enabled" {
   union
   select
     'Disabled' as "IAM Authentication Status",
-    count( db_instance_identifier) as "Total"
+    count( db_cluster_identifier) as "Total"
   from
-    aws_rds_db_snapshot as s where s.db_instance_identifier not in (select name from iam_authentication_stat)
+    aws_rds_db_cluster_snapshot as s where s.db_cluster_identifier not in (select name from iam_authentication_stat)
   EOQ
 }
 
-query "aws_rds_db_instance_snapshot_by_encryption_status" {
-  sql = <<-EOQ
-    select
-      encryption_status,
-      count(*)
-    from (
-      select encrypted,
-        case when encrypted then
-          'enabled'
-        else
-          'disabled'
-        end encryption_status
-      from
-        aws_rds_db_snapshot) as t
-    group by
-      encryption_status
-    order by
-      encryption_status desc
-  EOQ
-}
-
-query "aws_rds_db_instance_snapshot_by_state" {
+query "aws_rds_db_cluster_snapshot_by_state" {
   sql = <<-EOQ
     select
       status,
       count(status)
     from
-      aws_rds_db_snapshot
+      aws_rds_db_cluster_snapshot
     group by
       status
   EOQ
 }
 
-query "aws_rds_db_instance_snapshot_by_creation_month" {
+query "aws_rds_db_cluster_snapshot_by_creation_month" {
   sql = <<-EOQ
     with snapshots as (
       select
@@ -150,7 +150,7 @@ query "aws_rds_db_instance_snapshot_by_creation_month" {
         to_char(create_time,
           'YYYY-MM') as creation_month
       from
-        aws_rds_db_snapshot
+        aws_rds_db_cluster_snapshot
     ),
     months as (
       select
@@ -186,7 +186,7 @@ query "aws_rds_db_instance_snapshot_by_creation_month" {
   EOQ
 }
 
-query "aws_rds_db_instance_snapshot_monthly_forecast_table" {
+query "aws_rds_db_cluster_snapshot_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
       select
@@ -230,27 +230,28 @@ query "aws_rds_db_instance_snapshot_monthly_forecast_table" {
   EOQ
 }
 
-dashboard "aws_rds_db_instance_snapshot_dashboard" {
+dashboard "aws_rds_db_cluster_snapshot_dashboard" {
 
-  title = "AWS RDS DB Instance Snapshots Dashboard"
+  title = "AWS RDS DB Cluster Snapshot Dashboard"
 
   container {
 
     card {
-      sql   = query.aws_rds_db_instance_snapshot_count.sql
+      sql   = query.aws_rds_db_cluster_snapshot_count.sql
       width = 2
     }
 
     card {
-      sql   = query.aws_rds_unencrypted_db_instance_snapshot_count.sql
+      sql   = query.aws_rds_unencrypted_db_cluster_snapshot_count.sql
       width = 2
     }
 
     card {
-      sql   = query.aws_rds_db_instance_snapshot_not_in_vpc_count.sql
+      sql   = query.aws_rds_db_cluster_snapshot_not_in_vpc_count.sql
       width = 2
     }
 
+    # Costs
     card {
       type  = "info"
       icon  = "currency-dollar"
@@ -266,7 +267,6 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
           and period_end > date_trunc('month', CURRENT_DATE::timestamp)
       EOQ
     }
-
   }
 
   container {
@@ -275,18 +275,19 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
 
     chart {
       title = "Encryption Status"
-      sql   = query.aws_rds_db_instance_snapshot_by_encryption_status.sql
+      sql   = query.aws_rds_db_cluster_snapshot_by_encryption_status.sql
       type  = "donut"
       width = 4
     }
 
     chart {
-      title = "IAM Authentication Status"
-      sql   = query.aws_rds_db_instance_snapshot_iam_authentication_enabled.sql
+      title = "IAM Authentication State"
+      sql   = query.aws_rds_db_cluster_snapshot_iam_authentication_enabled.sql
       type  = "donut"
       width = 4
     }
   }
+
 
   container {
     title = "Cost"
@@ -296,55 +297,55 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
     table  {
       width = 6
       title = "Forecast"
-      sql   = query.aws_rds_db_instance_snapshot_monthly_forecast_table.sql
+      sql   = query.aws_rds_db_cluster_snapshot_forecast_table.sql
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      sql   = query.aws_rds_db_instance_snapshot_cost_per_month.sql
+      sql   = query.aws_rds_db_cluster_snapshot_cost_per_month.sql
     }
   }
 
   container {
-    title = "Analysis"  
+    title = "Analysis"
 
     chart {
-      title = "Instance Snapshots by Account"
-      sql   = query.aws_rds_db_instance_snapshot_by_account.sql
+      title = "Snapshots by Account"
+      sql   = query.aws_rds_db_cluster_snapshot_by_account.sql
+      type  = "column"
+      width = 3 
+    }
+
+
+    chart {
+      title = "Snapshots by Region"
+      sql   = query.aws_rds_db_cluster_snapshot_by_region.sql
       type  = "column"
       width = 3
-    }  
+    }
 
     chart {
-      title = "Instance Snapshots by Region"
-      sql   = query.aws_rds_db_instance_snapshot_by_region.sql
+      title = "Snapshots by State"
+      sql   = query.aws_rds_db_cluster_snapshot_by_state.sql
+      type  = "column"
+      width = 3     
+    }
+
+    chart {
+      title = "Snapshots by Age"
+      sql   = query.aws_rds_db_cluster_snapshot_by_creation_month.sql
       type  = "column"
       width = 3
-    }  
+    } 
 
     chart {
-      title = "Instance Snapshots by State"
-      sql   = query.aws_rds_db_instance_snapshot_by_state.sql
-      type  = "column"
-      width = 3
-    }  
-
-    chart {
-      title = "Instance Snapshots by Type"
-      sql   = query.aws_rds_db_instance_snapshot_by_engine_type.sql
-      type  = "column"
-      width = 3
-    }  
-
-    chart {
-      title = "Instance Snapshots by Age"
-      sql   = query.aws_rds_db_instance_snapshot_by_creation_month.sql
+      title = "Snapshots by Type"
+      sql   = query.aws_rds_db_cluster_snapshot_by_engine_type.sql
       type  = "column"
       width = 3
     }
 
   }
-
 }
