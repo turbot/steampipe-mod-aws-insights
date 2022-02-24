@@ -87,6 +87,20 @@ query "aws_acm_certificate_transparency_logging_disabled" {
 }
 
 # Assessments
+query "aws_acm_certificate_by_status" {
+  sql = <<-EOQ
+    select
+      status as "status",
+      count(status) as "certificates"
+    from
+      aws_acm_certificate
+    group by
+      status
+    order by
+      status
+  EOQ
+}
+
 query "aws_acm_certificate_by_eligibility" {
   sql = <<-EOQ
     select
@@ -141,20 +155,6 @@ query "aws_acm_certificate_by_use" {
       usage
     order by
       usage
-  EOQ
-}
-
-query "aws_acm_certificate_by_status" {
-  sql = <<-EOQ
-    select
-      status as "status",
-      count(status) as "certificates"
-    from
-      aws_acm_certificate
-    group by
-      status
-    order by
-      status
   EOQ
 }
 

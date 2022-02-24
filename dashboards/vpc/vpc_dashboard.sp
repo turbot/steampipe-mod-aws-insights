@@ -18,6 +18,7 @@ query "aws_vpc_no_subnet_count" {
   EOQ
 }
 
+#Analysis
 query "aws_vpc_by_account" {
   sql = <<-EOQ
     select
@@ -46,6 +47,29 @@ query "aws_vpc_by_region" {
       region
     order by
       region
+  EOQ
+}
+
+query "aws_vpc_by_size" {
+  sql = <<-EOQ
+    with vpc_size as (
+      select
+        vpc_id,
+        cidr_block,
+        concat(
+          '/', masklen(cidr_block),
+          ' (', power(2, 32 - masklen(cidr_block :: cidr)), ')'
+        ) as size
+      from
+        aws_vpc
+    )
+    select
+      size,
+      count(*)
+    from
+      vpc_size
+    group by
+      size
   EOQ
 }
 
@@ -78,128 +102,7 @@ query "aws_vpc_by_rfc1918_range" {
   EOQ
 }
 
-query "aws_vpc_by_size" {
-  sql = <<-EOQ
-    with vpc_size as (
-      select
-        vpc_id,
-        cidr_block,
-        concat(
-          '/', masklen(cidr_block),
-          ' (', power(2, 32 - masklen(cidr_block :: cidr)), ')'
-        ) as size
-      from
-        aws_vpc
-    )
-    select
-      size,
-      count(*)
-    from
-      vpc_size
-    group by
-      size
-  EOQ
-}
-
-query "aws_vpc_cost_per_month" {
-  sql = <<-EOQ
-    select
-      to_char(period_start, 'Mon-YY') as "Month",
-      sum(unblended_cost_amount)::numeric as "Unblended Cost"
-    from
-      aws_cost_by_service_usage_type_monthly
-    where
-      service = 'Amazon Virtual Private Cloud'
-    group by
-      period_start
-    order by
-      period_start
-  EOQ
-}
-
-query "aws_vpc_cost_by_usage_types_12mo" {
-  sql = <<-EOQ
-    select
-       usage_type,
-       sum(unblended_cost_amount)::numeric as "Unblended Cost"
-       -- sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-
-    from
-      aws_cost_by_service_usage_type_monthly
-    where
-      service = 'Amazon Virtual Private Cloud'
-      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-    group by
-      usage_type
-    having
-      round(sum(unblended_cost_amount)::numeric,2) > 0
-    order by
-      sum(unblended_cost_amount) desc
-  EOQ
-}
-
-query "aws_vpc_cost_top_usage_types_mtd" {
-  sql = <<-EOQ
-    select
-       usage_type,
-       sum(unblended_cost_amount)::numeric as "Unblended Cost"
-       --        sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-
-    from
-      aws_cost_by_service_usage_type_monthly
-    where
-      service = 'Amazon Virtual Private Cloud'
-      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-    group by
-      period_start,
-      usage_type
-    having
-      round(sum(unblended_cost_amount)::numeric,2) > 0
-    order by
-      sum(unblended_cost_amount) desc
-  EOQ
-}
-
-query "aws_vpc_cost_by_account_mtd" {
-  sql = <<-EOQ
-    select
-       a.title as "account",
-       sum(unblended_cost_amount)::numeric as "Unblended Cost"
-       --        sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-    from
-      aws_cost_by_service_monthly as c,
-      aws_account as a
-    where
-      a.account_id = c.account_id
-      and service = 'Amazon Virtual Private Cloud'
-      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-    group by
-      account
-    order by
-      account
-  EOQ
-}
-
-query "aws_vpc_cost_by_account_12mo" {
-  sql = <<-EOQ
-    select
-       a.title as "account",
-       sum(unblended_cost_amount)::numeric as "Unblended Cost"
-       --        sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-    from
-      aws_cost_by_service_monthly as c,
-      aws_account as a
-    where
-      a.account_id = c.account_id
-      and service = 'Amazon Virtual Private Cloud'
-      and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-    group by
-      account
-    order by
-      account
-  EOQ
-}
-
+#Costs
 query "aws_vpc_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
@@ -236,6 +139,22 @@ query "aws_vpc_monthly_forecast_table" {
       'This Month (Forecast)' as "Period",
       (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
       (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
+  EOQ
+}
+
+query "aws_vpc_cost_per_month" {
+  sql = <<-EOQ
+    select
+      to_char(period_start, 'Mon-YY') as "Month",
+      sum(unblended_cost_amount)::numeric as "Unblended Cost"
+    from
+      aws_cost_by_service_usage_type_monthly
+    where
+      service = 'Amazon Virtual Private Cloud'
+    group by
+      period_start
+    order by
+      period_start
   EOQ
 }
 
@@ -445,7 +364,7 @@ dashboard "aws_vpc_dashboard" {
       type  = "column"
       width = 3
     }
-    
+
   }
 
   #container {

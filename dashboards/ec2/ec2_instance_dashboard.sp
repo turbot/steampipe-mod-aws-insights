@@ -159,7 +159,7 @@ query "aws_ec2_instance_detailed_monitoring_enabled" {
   EOQ
 }
 
-# COST
+#Costs
 query "aws_ec2_instance_cost_per_month" {
   sql = <<-EOQ
     select
@@ -628,7 +628,7 @@ dashboard "aws_ec2_instance_dashboard" {
       type  = "column"
       width = 3
     }
-    
+
   }
 
 }

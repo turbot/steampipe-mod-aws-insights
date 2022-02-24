@@ -121,6 +121,7 @@ query "aws_sns_topic_monthly_forecast_table" {
   EOQ
 }
 
+#Assessments
 query "aws_sns_topic_by_encryption_status" {
   sql = <<-EOQ
     select
@@ -162,31 +163,6 @@ query "aws_sns_topic_by_subscription_status" {
       subscription_status desc
   EOQ
 }
-
-query "aws_sns_topic_by_subscription_status" {
-  sql = <<-EOQ
-    select
-        subscription_status,
-        count(*)
-      from (
-        select
-          case when
-            p = '*' and s ->> 'Effect' = 'Allow' then 'Enabled'
-          else
-            'Disabled'
-          end subscription_status
-        from
-          aws_sns_topic,
-          jsonb_array_elements(policy_std -> 'Statement') as s,
-          jsonb_array_elements_text(s -> 'Principal' -> 'AWS') as p,
-          jsonb_array_elements_text(s -> 'Action') as a) as t
-      group by
-        subscription_status
-      order by
-        subscription_status desc
-  EOQ
-}
-
 
 dashboard "aws_sns_topic_dashboard" {
   title = "AWS SNS Topic Dashboard"
@@ -275,13 +251,14 @@ dashboard "aws_sns_topic_dashboard" {
       type  = "column"
       width = 6
     }
+
     chart {
       title = "Topics by Region"
       sql   = query.aws_sns_topic_by_region.sql
       type  = "line"
       width = 6
     }
-    
+
   }
 
 }

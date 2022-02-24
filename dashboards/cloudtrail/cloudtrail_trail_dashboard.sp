@@ -285,6 +285,7 @@ query "aws_cloudtrail_multi_region_trail_count_per_account" {
   EOQ
 }
 
+#Costs
 query "aws_cloudtrail_trail_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
