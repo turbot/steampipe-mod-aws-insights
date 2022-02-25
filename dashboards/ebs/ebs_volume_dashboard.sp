@@ -1,3 +1,188 @@
+dashboard "aws_ebs_volume_dashboard" {
+
+  title = "AWS EBS Volume Dashboard"
+
+  tags = merge(local.ebs_common_tags, {
+    type = "Dashboard"
+  })
+
+  container {
+
+    # Analysis
+    card {
+      sql   = query.aws_ebs_volume_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_ebs_volume_storage_total.sql
+      width = 2
+    }
+
+    # Assessments
+    card {
+      sql   = query.aws_ebs_encrypted_volume_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_ebs_unattached_volume_count.sql
+      width = 2
+    }
+
+    # Costs
+    card {
+      type  = "info"
+      icon  = "currency-dollar"
+      width = 2
+      sql   = query.aws_ebs_volume_cost_mtd.sql
+    }
+
+  }
+
+  container {
+    title = "Assessments"
+    width = 6
+
+    chart {
+      title = "Encryption Status"
+      sql   = query.aws_ebs_volume_by_encryption_status.sql
+      type  = "donut"
+      width = 4
+    }
+
+    chart {
+      title = "Volume State"
+      sql   = query.aws_ebs_volume_by_state.sql
+      type  = "donut"
+      width = 4
+    }
+
+  }
+
+
+  container {
+    title = "Cost"
+    width = 6
+
+    # Costs
+    table  {
+      width = 6
+      title = "Forecast"
+      sql   = query.aws_ebs_monthly_forecast_table.sql
+    }
+
+    chart {
+      width = 6
+      type  = "column"
+      title = "Monthly Cost - 12 Months"
+      sql   = query.aws_ebs_volume_cost_per_month.sql
+    }
+
+  }
+
+  container {
+    title = "Analysis"
+
+    chart {
+      title = "Volumes by Account"
+      sql   = query.aws_ebs_volume_by_account.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Volumes by Region"
+      sql   = query.aws_ebs_volume_by_region.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Volumes by Type"
+      sql   = query.aws_ebs_volume_by_type.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Volumes by Age"
+      sql   = query.aws_ebs_volume_by_creation_month.sql
+      type  = "column"
+      width = 3
+    }
+
+  }
+
+  container {
+
+    chart {
+      title = "Storage by Account (GB)"
+      sql   = query.aws_ebs_volume_storage_by_account.sql
+      type  = "column"
+      width = 3
+
+      series "GB" {
+        color = "tan"
+      }
+    }
+
+    chart {
+      title = "Storage by Region (GB)"
+      sql   = query.aws_ebs_volume_storage_by_region.sql
+      type  = "column"
+      width = 3
+
+      series "GB" {
+        color = "tan"
+      }
+    }
+
+    chart {
+      title = "Storage by Type (GB)"
+      sql   = query.aws_ebs_volume_storage_by_type.sql
+      type  = "column"
+      width = 3
+
+      series "GB" {
+        color = "tan"
+      }
+    }
+
+    chart {
+      title = "Storage by Age (GB)"
+      sql   = query.aws_ebs_storage_by_creation_month.sql
+      type  = "column"
+      width = 3
+
+      series "GB" {
+        color = "tan"
+      }
+    }
+
+  }
+
+  container {
+    title  = "Performance & Utilization"
+
+    chart {
+      title = "Top 10 Average Read OPS - Last 7 days"
+      type  = "line"
+      width = 6
+      sql   = query.aws_ebs_volume_top_10_read_ops_avg.sql
+    }
+
+    chart {
+      title = "Top 10 Average write OPS - Last 7 days"
+      type  = "line"
+      width = 6
+      sql   = query.aws_ebs_volume_top_10_write_ops_avg.sql
+    }
+
+  }
+
+}
+
 query "aws_ebs_volume_count" {
   sql = <<-EOQ
     select count(*) as "Volumes" from aws_ebs_volume
@@ -36,6 +221,20 @@ query "aws_ebs_unattached_volume_count" {
       aws_ebs_volume
     where
       attachments is null
+  EOQ
+}
+
+query "aws_ebs_volume_cost_mtd" {
+  sql = <<-EOQ
+    select
+      'Cost - MTD' as label,
+      sum(unblended_cost_amount)::numeric::money as value
+    from
+      aws_cost_by_service_usage_type_monthly as c
+    where
+      service = 'EC2 - Other'
+      and usage_type like '%EBS:%'
+      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
   EOQ
 }
 
@@ -309,245 +508,58 @@ query "aws_ebs_monthly_forecast_table" {
   EOQ
 }
 
-dashboard "aws_ebs_volume_dashboard" {
+query "aws_ebs_volume_top_10_read_ops_avg" {
+  sql = <<-EOQ
+    with top_n as (
+      select
+        volume_id,
+        avg(average)
+      from
+        aws_ebs_volume_metric_read_ops_daily
+      where
+        timestamp  >= CURRENT_DATE - INTERVAL '7 day'
+      group by
+        volume_id
+      order by
+        avg desc
+      limit 10
+    )
+    select
+        timestamp,
+        volume_id,
+        average
+      from
+        aws_ebs_volume_metric_read_ops_hourly
+      where
+        timestamp  >= CURRENT_DATE - INTERVAL '7 day'
+        and volume_id in (select volume_id from top_n)
+  EOQ
+}
 
-  title = "AWS EBS Volume Dashboard"
-
-  tags = merge(local.ebs_common_tags, {
-    type = "Dashboard"
-  })
-
-  container {
-
-    # Analysis
-    card {
-      sql   = query.aws_ebs_volume_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_ebs_volume_storage_total.sql
-      width = 2
-    }
-
-    # Assessments
-    card {
-      sql   = query.aws_ebs_encrypted_volume_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_ebs_unattached_volume_count.sql
-      width = 2
-    }
-
-    # Costs
-    card {
-      type  = "info"
-      icon  = "currency-dollar"
-      width = 2
-      sql   = <<-EOQ
-        select
-          'Cost - MTD' as label,
-          sum(unblended_cost_amount)::numeric::money as value
-        from
-          aws_cost_by_service_usage_type_monthly as c
-        where
-          service = 'EC2 - Other'
-          and usage_type like '%EBS:%'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-      EOQ
-    }
-
-  }
-
-  container {
-    title = "Assessments"
-    width = 6
-
-    chart {
-      title = "Encryption Status"
-      sql   = query.aws_ebs_volume_by_encryption_status.sql
-      type  = "donut"
-      width = 4
-    }
-
-    chart {
-      title = "Volume State"
-      sql   = query.aws_ebs_volume_by_state.sql
-      type  = "donut"
-      width = 4
-    }
-
-  }
-
-
-  container {
-    title = "Cost"
-    width = 6
-
-    # Costs
-    table  {
-      width = 6
-      title = "Forecast"
-      sql   = query.aws_ebs_monthly_forecast_table.sql
-    }
-
-    chart {
-      width = 6
-      type  = "column"
-      title = "Monthly Cost - 12 Months"
-      sql   = query.aws_ebs_volume_cost_per_month.sql
-    }
-
-  }
-
-  container {
-    title = "Analysis"
-
-    chart {
-      title = "Volumes by Account"
-      sql   = query.aws_ebs_volume_by_account.sql
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Volumes by Region"
-      sql   = query.aws_ebs_volume_by_region.sql
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Volumes by Type"
-      sql   = query.aws_ebs_volume_by_type.sql
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Volumes by Age"
-      sql   = query.aws_ebs_volume_by_creation_month.sql
-      type  = "column"
-      width = 3
-    }
-
-  }
-
-  container {
-
-    chart {
-      title = "Storage by Account (GB)"
-      sql   = query.aws_ebs_volume_storage_by_account.sql
-      type  = "column"
-      width = 3
-
-      series "GB" {
-        color = "tan"
-      }
-    }
-
-    chart {
-      title = "Storage by Region (GB)"
-      sql   = query.aws_ebs_volume_storage_by_region.sql
-      type  = "column"
-      width = 3
-
-      series "GB" {
-        color = "tan"
-      }
-    }
-
-    chart {
-      title = "Storage by Type (GB)"
-      sql   = query.aws_ebs_volume_storage_by_type.sql
-      type  = "column"
-      width = 3
-
-      series "GB" {
-        color = "tan"
-      }
-    }
-
-    chart {
-      title = "Storage by Age (GB)"
-      sql   = query.aws_ebs_storage_by_creation_month.sql
-      type  = "column"
-      width = 3
-
-      series "GB" {
-        color = "tan"
-      }
-    }
-
-  }
-
-  container {
-    title  = "Performance & Utilization"
-
-    chart {
-      title = "Top 10 Average Read OPS - Last 7 days"
-      type  = "line"
-      width = 6
-      sql   = <<-EOQ
-        with top_n as (
-          select
-            volume_id,
-            avg(average)
-          from
-            aws_ebs_volume_metric_read_ops_daily
-          where
-            timestamp  >= CURRENT_DATE - INTERVAL '7 day'
-          group by
-            volume_id
-          order by
-            avg desc
-          limit 10
-        )
-        select
-            timestamp,
-            volume_id,
-            average
-          from
-            aws_ebs_volume_metric_read_ops_hourly
-          where
-            timestamp  >= CURRENT_DATE - INTERVAL '7 day'
-            and volume_id in (select volume_id from top_n)
-      EOQ
-    }
-
-    chart {
-      title = "Top 10 Average write OPS - Last 7 days"
-      type  = "line"
-      width = 6
-      sql   = <<-EOQ
-        with top_n as (
-          select
-            volume_id,
-            avg(average)
-          from
-            aws_ebs_volume_metric_write_ops_daily
-          where
-            timestamp  >= CURRENT_DATE - INTERVAL '7 day'
-          group by
-            volume_id
-          order by
-            avg desc
-          limit 10
-        )
-        select
-          timestamp,
-          volume_id,
-          average
-        from
-          aws_ebs_volume_metric_write_ops_hourly
-        where
-          timestamp  >= CURRENT_DATE - INTERVAL '7 day'
-          and volume_id in (select volume_id from top_n)
-      EOQ
-    }
-
-  }
-
+query "aws_ebs_volume_top_10_write_ops_avg" {
+  sql = <<-EOQ
+    with top_n as (
+      select
+        volume_id,
+        avg(average)
+      from
+        aws_ebs_volume_metric_write_ops_daily
+      where
+        timestamp  >= CURRENT_DATE - INTERVAL '7 day'
+      group by
+        volume_id
+      order by
+        avg desc
+      limit 10
+    )
+    select
+      timestamp,
+      volume_id,
+      average
+    from
+      aws_ebs_volume_metric_write_ops_hourly
+    where
+      timestamp  >= CURRENT_DATE - INTERVAL '7 day'
+      and volume_id in (select volume_id from top_n)
+  EOQ
 }
