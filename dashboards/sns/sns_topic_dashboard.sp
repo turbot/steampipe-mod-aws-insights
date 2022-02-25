@@ -1,6 +1,6 @@
 query "aws_sns_topic_count" {
   sql = <<-EOQ
-    select count(*) as "Topics" from aws_sns_topic
+    select count(*) as "Topics" from aws_sns_topic;
   EOQ
 }
 
@@ -13,7 +13,7 @@ query "aws_sns_topic_encrypted_count" {
     from
       aws_sns_topic
     where
-      kms_master_key_id is null
+      kms_master_key_id is null;
   EOQ
 }
 
@@ -26,7 +26,7 @@ query "aws_sns_topic_by_subscription_count" {
     from
       aws_sns_topic
     where
-      subscriptions_confirmed::int = 0
+      subscriptions_confirmed::int = 0;
   EOQ
 }
 
@@ -42,7 +42,7 @@ query "aws_sns_topic_by_account" {
       a.account_id = i.account_id
     group by
       account
-    order by count(i.*) desc
+    order by count(i.*) desc;
 
   EOQ
 }
@@ -55,7 +55,7 @@ query "aws_sns_topic_by_region" {
     from
       aws_sns_topic as i
     group by
-      region
+      region;
   EOQ
 }
 
@@ -71,7 +71,7 @@ query "aws_sns_topic_cost_per_month" {
     group by
       period_start
     order by
-      period_start
+      period_start;
   EOQ
 }
 
@@ -114,7 +114,7 @@ query "aws_sns_topic_monthly_forecast_table" {
     select
       'This Month (Forecast)' as "Period",
       (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
-      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
+      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost";
 
   EOQ
 }
@@ -137,7 +137,7 @@ query "aws_sns_topic_by_encryption_status" {
     group by
       encryption_status
     order by
-      encryption_status desc
+      encryption_status desc;
   EOQ
 }
 
@@ -158,7 +158,7 @@ query "aws_sns_topic_by_subscription_status" {
     group by
       subscription_status
     order by
-      subscription_status desc
+      subscription_status desc;
   EOQ
 }
 
@@ -194,7 +194,7 @@ dashboard "aws_sns_topic_dashboard" {
           aws_cost_by_service_usage_type_monthly as c
         where
           service = 'Amazon Simple Notification Service'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+          and period_end > date_trunc('month', CURRENT_DATE::timestamp);
       EOQ
     }
 
@@ -206,14 +206,14 @@ dashboard "aws_sns_topic_dashboard" {
 
     chart {
       title = "Encryption Status"
-      sql = query.aws_sns_topic_by_encryption_status.sql
+      sql   = query.aws_sns_topic_by_encryption_status.sql
       type  = "donut"
       width = 4
     }
 
     chart {
       title = "Subscription Status"
-      sql = query.aws_sns_topic_by_subscription_status.sql
+      sql   = query.aws_sns_topic_by_subscription_status.sql
       type  = "donut"
       width = 4
     }
@@ -225,7 +225,7 @@ dashboard "aws_sns_topic_dashboard" {
     width = 6
 
     # Costs
-    table  {
+    table {
       width = 6
       title = "Forecast"
       sql   = query.aws_sns_topic_monthly_forecast_table.sql

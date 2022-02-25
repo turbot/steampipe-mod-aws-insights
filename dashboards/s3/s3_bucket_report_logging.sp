@@ -7,7 +7,7 @@ query "aws_s3_bucket_logging_disabled_count" {
     from
       aws_s3_bucket
     where
-      logging -> 'TargetBucket' is null
+      logging -> 'TargetBucket' is null;
   EOQ
 }
 
@@ -50,9 +50,9 @@ dashboard "aws_s3_bucket_logging_report" {
         aws_s3_bucket as v,
         aws_account as a
       where
-        v.account_id = a.account_id
+        v.account_id = a.account_id;
     EOQ
-    
+
   }
 
 }

@@ -1,6 +1,6 @@
 query "aws_iam_group_count" {
   sql = <<-EOQ
-    select count(*) as "Total Groups" from aws_iam_group
+    select count(*) as "Total Groups" from aws_iam_group;
   EOQ
 }
 
@@ -13,7 +13,7 @@ query "aws_iam_groups_without_users_count" {
     from
       aws_iam_group
     where
-      users is null
+      users is null;
   EOQ
 }
 
@@ -26,7 +26,7 @@ query "aws_iam_groups_with_inline_policy_count" {
     from
       aws_iam_group
     where
-      jsonb_array_length(inline_policies) > 0
+      jsonb_array_length(inline_policies) > 0;
   EOQ
 }
 
@@ -56,7 +56,7 @@ query "aws_iam_groups_with_administrator_policy_count" {
     from
       groups_having_admin_access
     where
-      has_administrator_policy = 'With Administrator Policy'
+      has_administrator_policy = 'With Administrator Policy';
   EOQ
 }
 
@@ -79,7 +79,7 @@ query "aws_iam_groups_without_users" {
       from
         groups_without_users
       group by
-        has_users
+        has_users;
   EOQ
 }
 
@@ -101,7 +101,7 @@ query "aws_iam_groups_with_inline_policy" {
       from
         group_inline_compliance
       group by
-        has_inline
+        has_inline;
   EOQ
 }
 
@@ -130,7 +130,7 @@ query "aws_iam_groups_with_administrator_policy" {
     from
       groups_having_admin_access
     group by
-      has_administrator_policy
+      has_administrator_policy;
   EOQ
 }
 
@@ -147,7 +147,7 @@ query "aws_iam_groups_by_account" {
       a.account_id = g.account_id
     group by
       account
-    order by count(g.*) desc
+    order by count(g.*) desc;
   EOQ
 }
 
@@ -159,7 +159,7 @@ query "aws_iam_groups_by_path" {
     from
       aws_iam_group
     group by
-      path
+      path;
   EOQ
 }
 
@@ -204,7 +204,7 @@ query "aws_iam_groups_by_creation_month" {
       months
       left join groups_by_month on months.month = groups_by_month.creation_month
     order by
-      months.month desc;
+      months.month;
   EOQ
 }
 
@@ -238,7 +238,7 @@ dashboard "aws_iam_group_dashboard" {
 
   }
 
-   container {
+  container {
     title = "Assesments"
 
     chart {
@@ -271,21 +271,21 @@ dashboard "aws_iam_group_dashboard" {
       title = "Groups by Account"
       sql   = query.aws_iam_groups_by_account.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Groups by Path"
       sql   = query.aws_iam_groups_by_path.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Groups by Age"
       sql   = query.aws_iam_groups_by_creation_month.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
   }

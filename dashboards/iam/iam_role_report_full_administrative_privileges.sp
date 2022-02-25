@@ -29,7 +29,7 @@ query "roles_allow_all_actions" {
         roles_that_allow_all_actions as role,
         aws_account as a
       where
-        a.account_id = role.account_id
+        a.account_id = role.account_id;
   EOQ
 }
 
@@ -56,5 +56,5 @@ dashboard "aws_iam_role_full_administrative_privileges_report" {
     }
 
   }
-  
+
 }

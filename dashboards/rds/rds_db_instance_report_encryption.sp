@@ -46,9 +46,9 @@ dashboard "aws_rds_db_instance_encryption_dashboard" {
         aws_rds_db_instance as i,
         aws_account as a
       where
-        i.account_id = a.account_id
+        i.account_id = a.account_id;
     EOQ
 
   }
-  
+
 }

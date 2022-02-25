@@ -1,6 +1,6 @@
 query "aws_vpc_count" {
   sql = <<-EOQ
-    select count(*) as "VPCs" from aws_vpc
+    select count(*) as "VPCs" from aws_vpc;
   EOQ
 }
 
@@ -14,7 +14,7 @@ query "aws_vpc_no_subnet_count" {
         aws_vpc as vpc
         left join aws_vpc_subnet as s on vpc.vpc_id = s.vpc_id
       where
-        s.subnet_id is null
+        s.subnet_id is null;
   EOQ
 }
 
@@ -32,7 +32,7 @@ query "aws_vpc_by_account" {
     group by
       account
     order by
-      account
+      account;
   EOQ
 }
 
@@ -46,7 +46,7 @@ query "aws_vpc_by_region" {
     group by
       region
     order by
-      region
+      region;
   EOQ
 }
 
@@ -69,7 +69,7 @@ query "aws_vpc_by_size" {
     from
       vpc_size
     group by
-      size
+      size;
   EOQ
 }
 
@@ -138,7 +138,7 @@ query "aws_vpc_monthly_forecast_table" {
     select
       'This Month (Forecast)' as "Period",
       (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
-      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
+      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost";
   EOQ
 }
 
@@ -154,7 +154,7 @@ query "aws_vpc_cost_per_month" {
     group by
       period_start
     order by
-      period_start
+      period_start;
   EOQ
 }
 
@@ -179,7 +179,7 @@ dashboard "aws_vpc_dashboard" {
         from
           aws_vpc
         where
-          is_default
+          is_default;
       EOQ
       width = 2
     }
@@ -194,7 +194,7 @@ dashboard "aws_vpc_dashboard" {
             else 'alert'
           end as type
         from
-          aws_vpc
+          aws_vpc;
       EOQ
       width = 2
     }
@@ -214,7 +214,7 @@ dashboard "aws_vpc_dashboard" {
           aws_cost_by_service_monthly
         where
           service = 'Amazon Virtual Private Cloud'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+          and period_end > date_trunc('month', CURRENT_DATE::timestamp);
       EOQ
       width = 2
       type  = "info"
@@ -230,7 +230,7 @@ dashboard "aws_vpc_dashboard" {
           aws_cost_by_service_monthly
         where
           service = 'Amazon Virtual Private Cloud'
-          and date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
+          and date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month');
       EOQ
       width = 2
       type  = "info"
@@ -257,7 +257,7 @@ dashboard "aws_vpc_dashboard" {
         from
           aws_vpc
         group by
-          is_default
+          is_default;
       EOQ
     }
 
@@ -282,7 +282,7 @@ dashboard "aws_vpc_dashboard" {
         from
           vpc_logs
         group by
-          flow_logs_configured
+          flow_logs_configured;
       EOQ
     }
 
@@ -305,7 +305,7 @@ dashboard "aws_vpc_dashboard" {
         from
           by_empty
         group by
-          status
+          status;
       EOQ
     }
 

@@ -304,7 +304,7 @@ query "aws_ec2_instance_by_creation_month" {
       months
       left join instances_by_month on months.month = instances_by_month.creation_month
     order by
-      months.month desc;
+      months.month;
   EOQ
 }
 

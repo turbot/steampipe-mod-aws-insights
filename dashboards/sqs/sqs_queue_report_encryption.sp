@@ -34,9 +34,9 @@ dashboard "aws_sqs_queue_encryption_report" {
         aws_sqs_queue as r,
         aws_account as a
       where
-        r.account_id = a.account_id
+        r.account_id = a.account_id;
     EOQ
 
   }
-  
+
 }

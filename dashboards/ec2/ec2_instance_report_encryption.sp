@@ -7,7 +7,7 @@ query "aws_ec2_default_ebs_encryption_count" {
     from
       aws_ec2_regional_settings
     where
-      not default_ebs_encryption_enabled
+      not default_ebs_encryption_enabled;
   EOQ
 }
 
@@ -37,7 +37,7 @@ dashboard "aws_ec2_default_ebs_encryption_count" {
         case when default_ebs_encryption_enabled then 'Enabled' else 'Disabled' end as "Default EBS Encryption",
         default_ebs_encryption_key as "Default EBS Encryption Key"
       from
-        aws_ec2_regional_settings
+        aws_ec2_regional_settings;
     EOQ
   }
 }

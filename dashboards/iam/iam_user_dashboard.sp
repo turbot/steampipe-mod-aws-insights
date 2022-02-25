@@ -4,7 +4,7 @@ query "aws_iam_user_count" {
       count(*) as value,
       'Total Users' as label
     from
-      aws_iam_user
+      aws_iam_user;
   EOQ
 }
 
@@ -17,7 +17,7 @@ query "aws_iam_user_mfa_count" {
     from
       aws_iam_user
     where
-      not mfa_enabled
+      not mfa_enabled;
   EOQ
 }
 
@@ -30,7 +30,7 @@ query "aws_iam_user_no_boundary_count" {
     from
       aws_iam_user
     where
-      permissions_boundary_type is null or permissions_boundary_type = ''
+      permissions_boundary_type is null or permissions_boundary_type = '';
   EOQ
 }
 
@@ -43,7 +43,7 @@ query "aws_iam_users_with_direct_attached_policy_count" {
     from
       aws_iam_user
     where
-      jsonb_array_length(attached_policy_arns) > 0
+      jsonb_array_length(attached_policy_arns) > 0;
   EOQ
 }
 
@@ -56,7 +56,7 @@ query "aws_iam_users_with_inline_policy_count" {
     from
       aws_iam_user
     where
-      jsonb_array_length(inline_policies) > 0
+      jsonb_array_length(inline_policies) > 0;
   EOQ
 }
 
@@ -76,7 +76,7 @@ query "aws_iam_users_by_mfa_enabled" {
     from
       mfa
     group by
-      mfa_status
+      mfa_status;
   EOQ
 }
 
@@ -91,7 +91,7 @@ query "aws_iam_users_by_boundary_policy" {
     from
       aws_iam_user
     group by
-      permissions_boundary_type
+      permissions_boundary_type;
   EOQ
 }
 
@@ -113,8 +113,7 @@ query "aws_iam_users_with_direct_attached_policy" {
       from
         attached_compliance
       group by
-        has_attached
-
+        has_attached;
   EOQ
 }
 
@@ -136,7 +135,7 @@ query "aws_iam_users_with_inline_policy" {
       from
         inline_compliance
       group by
-        has_inline
+        has_inline;
   EOQ
 }
 
@@ -154,7 +153,7 @@ query "aws_iam_users_by_account" {
     group by
       a.title
     order by
-      count desc
+      count desc;
   EOQ
 }
 
@@ -166,7 +165,7 @@ query "aws_iam_user_by_path" {
     from
       aws_iam_user
     group by
-      path
+      path;
   EOQ
 }
 
@@ -298,23 +297,23 @@ dashboard "aws_iam_user_dashboard" {
       title = "Users by Account"
       sql   = query.aws_iam_users_by_account.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Users by Path"
       sql   = query.aws_iam_user_by_path.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Users by Age"
       sql   = query.aws_iam_user_by_creation_month.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
   }
-  
+
 }

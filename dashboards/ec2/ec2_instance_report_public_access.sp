@@ -7,7 +7,7 @@ query "aws_ec2_instance_public_access_count" {
     from
       aws_ec2_instance
     where
-      public_ip_address is not null
+      public_ip_address is not null;
   EOQ
 }
 
@@ -23,7 +23,7 @@ dashboard "aws_ec2_instance_public_access_report" {
     }
 
     card {
-      sql = query.aws_ec2_instance_public_access_count.sql
+      sql   = query.aws_ec2_instance_public_access_count.sql
       width = 2
     }
 
@@ -39,7 +39,7 @@ dashboard "aws_ec2_instance_public_access_report" {
         region as "Region",
         arn as "ARN"
       from
-        aws_ec2_instance
+        aws_ec2_instance;
     EOQ
   }
 

@@ -18,7 +18,7 @@ dashboard "aws_s3_bucket_age_report" {
         from
           aws_s3_bucket
         where
-          creation_date > now() - '1 days' :: interval
+          creation_date > now() - '1 days' :: interval;
       EOQ
       width = 2
       type = "info"
@@ -32,7 +32,7 @@ dashboard "aws_s3_bucket_age_report" {
         from
           aws_s3_bucket
         where
-          creation_date between symmetric now() - '1 days' :: interval and now() - '30 days' :: interval
+          creation_date between symmetric now() - '1 days' :: interval and now() - '30 days' :: interval;
       EOQ
       width = 2
       type = "info"
@@ -46,7 +46,7 @@ dashboard "aws_s3_bucket_age_report" {
         from
           aws_s3_bucket
         where
-          creation_date between symmetric now() - '30 days' :: interval and now() - '90 days' :: interval
+          creation_date between symmetric now() - '30 days' :: interval and now() - '90 days' :: interval;
       EOQ
       width = 2
       type = "info"
@@ -60,7 +60,7 @@ dashboard "aws_s3_bucket_age_report" {
         from
           aws_s3_bucket
         where
-          creation_date between symmetric (now() - '90 days'::interval) and (now() - '365 days'::interval)
+          creation_date between symmetric (now() - '90 days'::interval) and (now() - '365 days'::interval);
       EOQ
       width = 2
       type = "info"
@@ -74,7 +74,7 @@ dashboard "aws_s3_bucket_age_report" {
         from
           aws_s3_bucket
         where
-          creation_date <= now() - '1 year' :: interval
+          creation_date <= now() - '1 year' :: interval;
       EOQ
       width = 2
       type = "info"
@@ -107,13 +107,13 @@ dashboard "aws_s3_bucket_age_report" {
           v.account_id = a.account_id
         order by
           v.creation_date,
-          v.title
+          v.title;
       EOQ
 
     }
 
   }
-  
+
 }
 
 /*

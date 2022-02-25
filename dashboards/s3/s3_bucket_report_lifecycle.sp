@@ -7,7 +7,7 @@ query "aws_s3_bucket_versioning_disabled_count" {
     from
       aws_s3_bucket
     where
-      not versioning_enabled
+      not versioning_enabled;
   EOQ
 }
 
@@ -20,7 +20,7 @@ query "aws_s3_bucket_versioning_mfa_disabled_count" {
     from
       aws_s3_bucket
     where
-      not versioning_mfa_delete
+      not versioning_mfa_delete;
   EOQ
 }
 
@@ -67,9 +67,9 @@ dashboard "aws_s3_bucket_lifecycle_report" {
         aws_s3_bucket as v,
         aws_account as a
       where
-        v.account_id = a.account_id
+        v.account_id = a.account_id;
     EOQ
-    
+
   }
 
 }

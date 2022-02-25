@@ -18,7 +18,7 @@ dashboard "aws_db_instance_age_report" {
         from
           aws_rds_db_instance
         where
-          create_time > now() - '1 days' :: interval
+          create_time > now() - '1 days' :: interval;
       EOQ
       width = 2
       type = "info"
@@ -32,7 +32,7 @@ dashboard "aws_db_instance_age_report" {
         from
           aws_rds_db_instance
         where
-          create_time between symmetric now() - '1 days' :: interval and now() - '30 days' :: interval
+          create_time between symmetric now() - '1 days' :: interval and now() - '30 days' :: interval;
       EOQ
       width = 2
       type = "info"
@@ -46,7 +46,7 @@ dashboard "aws_db_instance_age_report" {
         from
           aws_rds_db_instance
         where
-          create_time between symmetric now() - '30 days' :: interval and now() - '90 days' :: interval
+          create_time between symmetric now() - '30 days' :: interval and now() - '90 days' :: interval;
       EOQ
       width = 2
       type = "info"
@@ -74,7 +74,7 @@ dashboard "aws_db_instance_age_report" {
         from
           aws_rds_db_instance
         where
-          create_time <= now() - '1 year' :: interval
+          create_time <= now() - '1 year' :: interval;
       EOQ
       width = 2
       type = "info"
@@ -108,13 +108,13 @@ dashboard "aws_db_instance_age_report" {
           v.account_id = a.account_id
         order by
           v.create_time,
-          v.title
+          v.title;
       EOQ
 
     }
 
   }
-  
+
 }
 
 /*
