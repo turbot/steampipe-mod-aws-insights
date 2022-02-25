@@ -1,24 +1,28 @@
-variable "iam_detail_user_arn" {
-  type    = string
-  default = "arn:aws:iam::876515858155:user/jsmyth"
-  # 'arn:aws:iam::876515858155:user/mike'
-}
-
-
 query "aws_iam_user_input" {
   sql = <<EOQ
     select
-      title as label,
+      arn as label,
       arn as value
     from
       aws_iam_user
     order by
-      title;
+      arn;
 EOQ
 }
 
+query "aws_iam_user_name_for_user" {
+  sql = <<-EOQ
+    select
+      name as "Username"
+    from
+      aws_iam_user
+    where
+      arn = $1
+  EOQ
 
-###
+  param "arn" {}
+}
+
 query "aws_iam_user_mfa_for_user" {
   sql = <<-EOQ
     select
@@ -28,44 +32,42 @@ query "aws_iam_user_mfa_for_user" {
     from
       aws_iam_user
     where
-      arn = 'arn:aws:iam::876515858155:user/jsmyth' --$1
+      arn = $1
   EOQ
 
-  # param "arn" {
-  #   default = var.iam_detail_user_arn
-  # }
+  param "arn" {}
 }
 
-
-
-###
 query "aws_iam_user_direct_attached_policy_count_for_user" {
   sql = <<-EOQ
     select
-      jsonb_array_length(attached_policy_arns) as value,
+      coalesce(jsonb_array_length(attached_policy_arns), 0) as value,
       'Direct Attached Policies' as label,
-      case when jsonb_array_length(attached_policy_arns) = 0 then 'ok' else 'alert' end as type
+      case when coalesce(jsonb_array_length(attached_policy_arns), 0) = 0 then 'ok' else 'alert' end as type
     from
       aws_iam_user
     where
-      arn = 'arn:aws:iam::876515858155:user/jsmyth'
+     arn = $1
   EOQ
+
+  param "arn" {}
 }
 
 query "aws_iam_user_inline_policy_count_for_user" {
   sql = <<-EOQ
     select
-      jsonb_array_length(inline_policies) as value,
+      coalesce(jsonb_array_length(inline_policies),0) as value,
       'Inline Policies' as label,
-      case when jsonb_array_length(inline_policies) = 0 then 'ok' else 'alert' end as type
+      case when coalesce(jsonb_array_length(inline_policies),0) = 0 then 'ok' else 'alert' end as type
     from
       aws_iam_user
     where
-      arn = 'arn:aws:iam::876515858155:user/jsmyth'
+      arn = $1
   EOQ
+
+  param "arn" {}
 }
 
-###
 query "aws_iam_boundary_policy_for_user" {
   sql = <<-EOQ
     select
@@ -77,33 +79,33 @@ query "aws_iam_boundary_policy_for_user" {
       'Boundary Policy' as label,
       case
         when permissions_boundary_type is null then 'alert'
-        when permissions_boundary_type = '' then 'alert'
+        when permissions_boundary_type = '' then 'alert' 
         else 'ok'
       end as type
     from
-      aws_iam_user
+      aws_iam_user 
     where
-      arn = 'arn:aws:iam::876515858155:user/jsmyth' --$1
-      --arn = 'arn:aws:iam::876515858155:user/turbot/mike@turbot.com'
+      arn = $1
   EOQ
-}
-###
 
+  param "arn" {}
+
+}
 
 query "aws_iam_groups_for_user" {
   sql   = <<-EOQ
     select
       g ->> 'GroupName' as "Name",
-      g ->> 'Arn' as "ARN",
-      g ->> 'GroupId' as "Group ID"
+      g ->> 'Arn' as "ARN"
     from
       aws_iam_user as u,
       jsonb_array_elements(groups) as g
     where
-      u.arn = 'arn:aws:iam::876515858155:user/jsmyth'
+      u.arn = $1
   EOQ
-}
 
+  param "arn" {}
+}
 
 query "aws_iam_all_policies_for_user" {
   sql = <<-EOQ
@@ -120,8 +122,7 @@ query "aws_iam_all_policies_for_user" {
       inner join aws_iam_group g on g.arn = user_groups ->> 'Arn'
     where
       g.attached_policy_arns :: jsonb ? p.arn
-      and u.arn = 'arn:aws:iam::876515858155:user/jsmyth'
-
+      and u.arn = $1
 
     -- Policies (inline from groups)
     union select
@@ -133,11 +134,9 @@ query "aws_iam_all_policies_for_user" {
       jsonb_array_elements(u.groups) as g,
       aws_iam_group as grp,
       jsonb_array_elements(grp.inline_policies_std) as i
-
     where
       grp.arn = g ->> 'Arn'
-      and u.arn = 'arn:aws:iam::876515858155:user/jsmyth'
-
+      and u.arn = $1
 
     -- Policies (attached to user)
     union select
@@ -151,8 +150,7 @@ query "aws_iam_all_policies_for_user" {
     where
       u.attached_policy_arns :: jsonb ? p.arn
       and pol_arn = p.arn
-      and u.arn = 'arn:aws:iam::876515858155:user/jsmyth'
-
+      and u.arn = $1
 
     -- Inline Policies (defined on user)
     union select
@@ -163,20 +161,20 @@ query "aws_iam_all_policies_for_user" {
       aws_iam_user as u,
       jsonb_array_elements(inline_policies_std) as i
     where
-      u.arn = 'arn:aws:iam::876515858155:user/jsmyth'
+      u.arn = $1
   EOQ
+
+  param "arn" {}
 }
 
 query "aws_iam_user_manage_policies_sankey" {
   sql = <<EOQ
 
     with args as (
-        --select 'arn:aws:iam::876515858155:user/mike' as iam_user_arn
-        --select 'arn:aws:iam::876515858155:user/smyth-steamcloud-test' as iam_user_arn
-        select 'arn:aws:iam::876515858155:user/jsmyth' as iam_user_arn
+        select $1 as iam_user_arn
     )
 
-    -- the user ...
+    -- User
     select
       null as parent,
       arn as id,
@@ -188,7 +186,7 @@ query "aws_iam_user_manage_policies_sankey" {
     where
       arn in (select iam_user_arn from args)
 
-    -- Groups..
+    -- Groups
     union select
       u.arn as parent,
       g ->> 'Arn' as id,
@@ -200,7 +198,6 @@ query "aws_iam_user_manage_policies_sankey" {
       jsonb_array_elements(groups) as g
     where
       u.arn in (select iam_user_arn from args)
-
 
     -- Policies (attached to groups)
     union select
@@ -234,7 +231,6 @@ query "aws_iam_user_manage_policies_sankey" {
       grp.arn = g ->> 'Arn'
       and u.arn in (select iam_user_arn from args)
 
-
     -- Policies (attached to user)
     union select
       u.arn as parent,
@@ -264,40 +260,66 @@ query "aws_iam_user_manage_policies_sankey" {
     where
       u.arn in (select iam_user_arn from args)
   EOQ
+
+  param "arn" {}
 }
 
 dashboard "aws_iam_user_detail" {
   title = "AWS IAM User Detail"
 
   input "user_arn" {
-    title = "User"
+    title = "Select a user:"
     sql   = query.aws_iam_user_input.sql
-    width = 2
+    width = 4
   }
 
   container {
 
     # Assessments
     card {
-      sql = query.aws_iam_user_mfa_for_user.sql
       width = 2
+
+      query = query.aws_iam_user_name_for_user
+      args  = {
+        arn = self.input.user_arn.value
+      }
     }
 
-
+    # Assessments
     card {
-      sql = query.aws_iam_boundary_policy_for_user.sql
       width = 2
+
+      query = query.aws_iam_user_mfa_for_user
+      args  = {
+        arn = self.input.user_arn.value
+      }
     }
 
-
     card {
-      sql = query.aws_iam_user_inline_policy_count_for_user.sql
+      query = query.aws_iam_boundary_policy_for_user
       width = 2
+
+      args = {
+        arn = self.input.user_arn.value
+      }
     }
 
     card {
-      sql = query.aws_iam_user_direct_attached_policy_count_for_user.sql
+      query = query.aws_iam_user_inline_policy_count_for_user
       width = 2
+
+      args = {
+        arn = self.input.user_arn.value
+      }
+    }
+
+    card {
+      query = query.aws_iam_user_direct_attached_policy_count_for_user
+      width = 2
+
+      args = {
+        arn = self.input.user_arn.value
+      }
     }
 
   }
@@ -305,11 +327,14 @@ dashboard "aws_iam_user_detail" {
   container {
 
     container {
-      title = "Overview"
+      width = 6
 
       table {
+        title = "Overview"
+        type  = "line"
         width = 6
-        sql   = <<-EOQ
+
+        sql = <<-EOQ
           select
             name as "Name",
             create_date as "Create Date",
@@ -320,15 +345,22 @@ dashboard "aws_iam_user_detail" {
           from
             aws_iam_user
           where
-           arn = 'arn:aws:iam::876515858155:user/jsmyth'
+           arn = $1
         EOQ
+
+        param "arn" {}
+
+        args = {
+          arn = self.input.user_arn.value
+        }
+
       }
 
       table {
         title = "Tags"
         width = 6
 
-        sql   = <<-EOQ
+        sql = <<-EOQ
           select
             tag ->> 'Key' as "Key",
             tag ->> 'Value' as "Value"
@@ -336,54 +368,67 @@ dashboard "aws_iam_user_detail" {
             aws_iam_user,
             jsonb_array_elements(tags_src) as tag
           where
-            arn = 'arn:aws:iam::876515858155:user/jsmyth'
+            arn = $1
         EOQ
-      }
 
+        param "arn" {}
+
+        args = {
+          arn = self.input.user_arn.value
+        }
+
+      }
     }
 
-  }
-
     container {
-      title = "Credentials"
+      width = 6
 
       table {
-        title = "Console"
-        width = 4
+        title = "Console Password"
         sql   = <<-EOQ
           select
             name as "Name",
-            create_date as "Create Date",
+           -- create_date as "Create Date",
             password_last_used as "Password Last Used",
             mfa_enabled as "MFA Enabled"
           from
             aws_iam_user
           where
-           arn = 'arn:aws:iam::876515858155:user/jsmyth'
+           arn  = $1
         EOQ
+
+        param "arn" {}
+
+        args = {
+          arn = self.input.user_arn.value
+        }
       }
 
       table {
         title = "Access Keys"
-        width = 4
         sql   = <<-EOQ
           select
             k.access_key_id as "Access Key ID",
             k.status as "Status",
-            k.create_date as "Create Date"
+            k.create_date as "Create Date"   
           from
             aws_iam_user as u,
             aws_iam_access_key as k
           where
             u.name = k.user_name
             and u.account_id = k.account_id
-            and arn = 'arn:aws:iam::876515858155:user/jsmyth'
+            and arn = $1
         EOQ
+
+        param "arn" {}
+
+        args = {
+          arn = self.input.user_arn.value
+        }
       }
 
       table {
         title = "MFA Devices"
-        width = 4
         sql   = <<-EOQ
           select
             mfa ->> 'SerialNumber' as "Serial Number",
@@ -393,21 +438,30 @@ dashboard "aws_iam_user_detail" {
             aws_iam_user as u,
             jsonb_array_elements(mfa_devices) as mfa
           where
-             arn = 'arn:aws:iam::876515858155:user/jsmyth'
+             arn = $1
         EOQ
+
+        param "arn" {}
+
+        args = {
+          arn = self.input.user_arn.value
+        }
       }
 
     }
 
+  }
 
   container {
     title = "AWS IAM User Policy Analysis"
 
-
     hierarchy {
       type  = "sankey"
       title = "Attached Policies"
-      sql = query.aws_iam_user_manage_policies_sankey.sql
+      query   = query.aws_iam_user_manage_policies_sankey
+      args  = {
+        arn = self.input.user_arn.value
+      }
 
       category "aws_iam_group" {
         color = "green"
@@ -417,16 +471,19 @@ dashboard "aws_iam_user_detail" {
     table {
       title = "Groups"
       width = 6
-      sql   = query.aws_iam_groups_for_user.sql
-
+      query   = query.aws_iam_groups_for_user
+      args  = {
+        arn = self.input.user_arn.value
+      }
     }
 
     table {
       title = "Policies"
       width = 6
-      sql   = query.aws_iam_all_policies_for_user.sql
+      query   = query.aws_iam_all_policies_for_user
+      args  = {
+        arn = self.input.user_arn.value
+      }
     }
-
   }
-
 }
