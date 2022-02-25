@@ -313,6 +313,10 @@ dashboard "aws_ebs_volume_dashboard" {
 
   title = "AWS EBS Volume Dashboard"
 
+  tags = merge(local.ebs_common_tags, {
+    type = "Dashboard"
+  })
+
   container {
 
     # Analysis

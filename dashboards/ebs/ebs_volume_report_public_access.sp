@@ -1,6 +1,11 @@
 dashboard "aws_ebs_volume_public_access_dashboard" {
   title = "AWS EBS Volume Public Access Report"
 
+  tags = merge(local.ebs_common_tags, {
+    type     = "Report"
+    category = "Public Access"
+  })
+
   container {
 
     card {

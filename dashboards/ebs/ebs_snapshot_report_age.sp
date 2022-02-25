@@ -2,13 +2,18 @@ dashboard "aws_ebs_snapshot_age_report" {
 
   title = "AWS EBS Snapshot Age Report"
 
-   container {
+  tags = merge(local.ebs_common_tags, {
+    type     = "Report"
+    category = "Age"
+  })
+
+  container {
 
     card {
       sql   = query.aws_ebs_snapshot_count.sql
       width = 2
     }
-    
+
     card {
       sql = <<-EOQ
         select
@@ -78,7 +83,7 @@ dashboard "aws_ebs_snapshot_age_report" {
       width = 2
       type = "info"
     }
-    
+
   }
 
   container {

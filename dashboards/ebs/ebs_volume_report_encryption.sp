@@ -1,6 +1,11 @@
 dashboard "aws_ebs_volume_encryption_dashboard" {
   title = "AWS EBS Volume Encryption Report"
 
+  tags = merge(local.ebs_common_tags, {
+    type     = "Report"
+    category = "Encryption"
+  })
+
   container {
 
     card {

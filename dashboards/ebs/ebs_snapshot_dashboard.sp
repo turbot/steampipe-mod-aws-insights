@@ -218,6 +218,10 @@ dashboard "aws_ebs_snapshot_dashboard" {
 
   title = "AWS EBS Snapshot Dashboard"
 
+  tags = merge(local.ebs_common_tags, {
+    type = "Dashboard"
+  })
+
   container {
 
     card {

@@ -1,6 +1,10 @@
 dashboard "aws_ebs_volume_detail" {
   title = "AWS EBS Volume Detail"
 
+  tags = merge(local.ebs_common_tags, {
+    type = "Detail"
+  })
+
   input "ebs_volume_id" {
     title = "Volume"
     type  = "select"

@@ -2,7 +2,12 @@ dashboard "aws_ebs_volume_age_report" {
 
   title = "AWS EBS Volume Age Report"
 
-   container {
+  tags = merge(local.ebs_common_tags, {
+    type     = "Report"
+    category = "Age"
+  })
+
+  container {
 
     # Analysis
     card {
