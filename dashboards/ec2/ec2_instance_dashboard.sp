@@ -67,8 +67,8 @@ query "aws_ec2_instance_by_public_ip" {
     with instances as (
       select
         case
-          when public_ip_address is null then 'Private'
-          else 'Public'
+          when public_ip_address is null then 'private'
+          else 'public'
         end as visibility
       from
         aws_ec2_instance
@@ -88,8 +88,8 @@ query "aws_ec2_instance_ebs_optimized_status" {
     with instances as (
       select
         case
-          when ebs_optimized then 'Enabled'
-          else 'Disabled'
+          when ebs_optimized then 'enabled'
+          else 'disabled'
         end as visibility
       from
         aws_ec2_instance
@@ -124,9 +124,9 @@ query "aws_ec2_instance_root_volume_encryption_status" {
     from (
       select
         case when e.encrypted then
-          'Enabled'
+          'enabled'
         else
-          'Disabled'
+          'disabled'
         end encryption_status
       from
         aws_ec2_instance as i left join encrypted_instances as e on ((e.instanceid)::text = i.instance_id) and (i.root_device_name = (e.device)::text)
@@ -143,8 +143,8 @@ query "aws_ec2_instance_detailed_monitoring_enabled" {
     with instances as (
       select
         case
-          when monitoring_state = 'enabled' then 'Enabled'
-          else 'Disabled'
+          when monitoring_state = 'enabled' then 'enabled'
+          else 'disabled'
         end as visibility
       from
         aws_ec2_instance
@@ -159,7 +159,7 @@ query "aws_ec2_instance_detailed_monitoring_enabled" {
   EOQ
 }
 
-#Costs
+# Costs
 query "aws_ec2_instance_cost_per_month" {
   sql = <<-EOQ
     select
@@ -178,7 +178,6 @@ query "aws_ec2_instance_cost_per_month" {
 }
 
 query "aws_ec2_monthly_forecast_table" {
-
   sql = <<-EOQ
     with monthly_costs as (
       select
@@ -222,89 +221,6 @@ query "aws_ec2_monthly_forecast_table" {
   EOQ
 
 }
-
-# query "aws_ec2_instance_cost_by_usage_types_12mo" {
-#   sql = <<-EOQ
-#     select
-#        usage_type,
-#        sum(unblended_cost_amount)::numeric as "Unblended Cost"
-#        -- sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-
-#     from
-#       aws_cost_by_service_usage_type_monthly
-#     where
-#       service = 'Amazon Elastic Compute Cloud - Compute'
-#       and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-#     group by
-#       usage_type
-#     having
-#       round(sum(unblended_cost_amount)::numeric,2) > 0
-#     order by
-#       sum(unblended_cost_amount) desc
-#   EOQ
-# }
-
-# query "aws_ec2_instance_cost_top_usage_types_mtd" {
-#   sql = <<-EOQ
-#     select
-#        usage_type,
-#        sum(unblended_cost_amount)::numeric as "Unblended Cost"
-#        --        sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-
-#     from
-#       aws_cost_by_service_usage_type_monthly
-#     where
-#       service = 'Amazon Elastic Compute Cloud - Compute'
-#       and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-#     group by
-#       period_start,
-#       usage_type
-#     having
-#       round(sum(unblended_cost_amount)::numeric,2) > 0
-#     order by
-#       sum(unblended_cost_amount) desc
-#   EOQ
-# }
-
-# query "aws_ec2_instance_cost_by_account_mtd" {
-#   sql = <<-EOQ
-#     select
-#        a.title as "account",
-#        sum(unblended_cost_amount)::numeric as "Unblended Cost"
-#        --        sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-#     from
-#       aws_cost_by_service_monthly as c,
-#       aws_account as a
-#     where
-#       a.account_id = c.account_id
-#       and service = 'Amazon Elastic Compute Cloud - Compute'
-#       and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-#     group by
-#       account
-#     order by
-#       account
-#   EOQ
-# }
-
-# query "aws_ec2_instance_cost_by_account_12mo" {
-#   sql = <<-EOQ
-#     select
-#        a.title as "account",
-#        sum(unblended_cost_amount)::numeric as "Unblended Cost"
-#        --        sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-#     from
-#       aws_cost_by_service_monthly as c,
-#       aws_account as a
-#     where
-#       a.account_id = c.account_id
-#       and service = 'Amazon Elastic Compute Cloud - Compute'
-#       and period_end >=  CURRENT_DATE - INTERVAL '1 year'
-#     group by
-#       account
-#     order by
-#       account
-#   EOQ
-# }
 
 # Analysis
 query "aws_ec2_instance_by_account" {
@@ -527,6 +443,15 @@ dashboard "aws_ec2_instance_dashboard" {
       sql   = query.aws_ec2_instance_by_public_ip.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "private" {
+          color = "green"
+        }
+        point "public" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -534,6 +459,15 @@ dashboard "aws_ec2_instance_dashboard" {
       sql   = query.aws_ec2_instance_ebs_optimized_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -541,6 +475,15 @@ dashboard "aws_ec2_instance_dashboard" {
       sql    = query.aws_ec2_instance_root_volume_encryption_status.sql
       type   = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -548,6 +491,15 @@ dashboard "aws_ec2_instance_dashboard" {
       sql    = query.aws_ec2_instance_detailed_monitoring_enabled.sql
       type   = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
   }
