@@ -33,9 +33,9 @@ dashboard "aws_lambda_function_encryption_dashboard" {
         aws_lambda_function as f,
         aws_account as a
       where
-        f.account_id = a.account_id
+        f.account_id = a.account_id;
     EOQ
 
   }
-  
+
 }

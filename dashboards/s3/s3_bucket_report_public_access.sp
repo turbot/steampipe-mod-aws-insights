@@ -7,7 +7,8 @@ query "aws_s3_bucket_public_policy_count" {
     from
       aws_s3_bucket
     where
-      bucket_policy_is_public
+    -- if true then bucket is public
+      bucket_policy_is_public;
   EOQ
 }
 
@@ -20,7 +21,7 @@ query "aws_s3_bucket_block_public_acls_disabled_count" {
     from
       aws_s3_bucket
     where
-      not block_public_acls
+      not block_public_acls;
   EOQ
 }
 
@@ -33,7 +34,7 @@ query "aws_s3_bucket_block_public_policy_disabled_count" {
     from
       aws_s3_bucket
     where
-      not block_public_policy
+      not block_public_policy;
   EOQ
 }
 
@@ -46,7 +47,7 @@ query "aws_s3_bucket_ignore_public_acls_disabled_count" {
     from
       aws_s3_bucket
     where
-      not ignore_public_acls
+      not ignore_public_acls;
   EOQ
 }
 
@@ -59,7 +60,7 @@ query "aws_s3_bucket_restrict_public_buckets_disabled_count" {
     from
       aws_s3_bucket
     where
-      not restrict_public_buckets
+      not restrict_public_buckets;
   EOQ
 }
 
@@ -123,9 +124,9 @@ dashboard "aws_s3_bucket_public_access_report" {
         aws_s3_bucket as v,
         aws_account as a
       where
-        v.account_id = a.account_id
+        v.account_id = a.account_id;
     EOQ
-    
+
   }
 
 }

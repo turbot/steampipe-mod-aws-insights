@@ -6,12 +6,12 @@ dashboard "aws_iam_root_access_report" {
     # Analysis
     card {
       sql   = <<-EOQ
-        select 
+        select
           sum(account_access_keys_present) as value,
           'Root Access Keys' as label,
           case when sum(account_access_keys_present) = 0 then 'ok' else 'alert' end as type
-        from 
-          aws_iam_account_summary
+        from
+          aws_iam_account_summary;
       EOQ
       width = 2
     }
@@ -19,12 +19,12 @@ dashboard "aws_iam_root_access_report" {
     # #    # Assessments
     card {
       sql   = <<-EOQ
-        select 
+        select
           count(*) filter (where not account_mfa_enabled) as value,
           'Accounts without Root MFA' as label,
           case when count(*) filter (where not account_mfa_enabled) = 0 then 'ok' else 'alert' end as type
-        from 
-          aws_iam_account_summary
+        from
+          aws_iam_account_summary;
       EOQ
       width = 2
     }
@@ -36,16 +36,16 @@ dashboard "aws_iam_root_access_report" {
       title = "Accounts with Root Access Keys"
 
       sql   = <<-EOQ
-        select 
+        select
           a.title as "Account",
           s.account_id as "Account ID",
           s.account_access_keys_present as "# Root Keys",
           account_mfa_enabled as "Root MFA Enabled"
-        from 
+        from
           aws_iam_account_summary as s,
           aws_account as a
         where
-          a.account_id = s.account_id
+          a.account_id = s.account_id;
       EOQ
     }
   }
@@ -57,7 +57,7 @@ To Do - find root logins in cloudtrail events??
   - join with cloudtrail table to find the log group?
   - bug:  https://github.com/turbot/steampipe-plugin-aws/issues/902
 
-select 
+select
   event_name,
   event_type,
   event_time,
@@ -68,11 +68,10 @@ select
   user_type,
   additional_event_data,
   response_elements,
-  jsonb_pretty(cloudtrail_event) 
-from 
-  aws_cloudtrail_trail_event 
-where 
+  jsonb_pretty(cloudtrail_event)
+from
+  aws_cloudtrail_trail_event
+where
   log_group_name = 'aws-cloudtrail-logs' and event_name = 'ConsoleLogin'
-
 
 */

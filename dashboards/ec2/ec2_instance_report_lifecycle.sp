@@ -7,7 +7,7 @@ query "aws_ec2_stopped_instance_count" {
     from
       aws_ec2_instance
     where
-      instance_state = 'stopped'
+      instance_state = 'stopped';
   EOQ
 }
 
@@ -23,7 +23,7 @@ dashboard "aws_ec2_instance_lifecycle_report" {
     }
 
     card {
-      sql = query.aws_ec2_stopped_instance_count.sql
+      sql   = query.aws_ec2_stopped_instance_count.sql
       width = 2
     }
 
@@ -40,8 +40,8 @@ dashboard "aws_ec2_instance_lifecycle_report" {
         region as "Region",
         arn as "ARN"
       from
-        aws_ec2_instance
+        aws_ec2_instance;
     EOQ
   }
-  
+
 }

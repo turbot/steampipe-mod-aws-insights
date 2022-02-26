@@ -35,9 +35,9 @@ dashboard "aws_sns_topic_encryption_report" {
         aws_sns_topic as r,
         aws_account as a
       where
-        r.account_id = a.account_id
+        r.account_id = a.account_id;
     EOQ
 
   }
-  
+
 }

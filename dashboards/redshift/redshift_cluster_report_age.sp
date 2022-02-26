@@ -18,7 +18,7 @@ dashboard "aws_redshift_cluster_age_report" {
         from
           aws_redshift_cluster
         where
-          cluster_create_time > now() - '1 days' :: interval
+          cluster_create_time > now() - '1 days' :: interval;
       EOQ
       width = 2
       type = "info"
@@ -32,7 +32,7 @@ dashboard "aws_redshift_cluster_age_report" {
         from
           aws_redshift_cluster
         where
-          cluster_create_time between symmetric now() - '1 days' :: interval and now() - '30 days' :: interval
+          cluster_create_time between symmetric now() - '1 days' :: interval and now() - '30 days' :: interval;
       EOQ
       width = 2
       type = "info"
@@ -46,7 +46,7 @@ dashboard "aws_redshift_cluster_age_report" {
         from
           aws_redshift_cluster
         where
-          cluster_create_time between symmetric now() - '30 days' :: interval and now() - '90 days' :: interval
+          cluster_create_time between symmetric now() - '30 days' :: interval and now() - '90 days' :: interval;
       EOQ
       width = 2
       type = "info"
@@ -60,7 +60,7 @@ dashboard "aws_redshift_cluster_age_report" {
         from
           aws_redshift_cluster
         where
-          cluster_create_time between symmetric (now() - '90 days'::interval) and (now() - '365 days'::interval)
+          cluster_create_time between symmetric (now() - '90 days'::interval) and (now() - '365 days'::interval);
       EOQ
       width = 2
       type = "info"
@@ -74,7 +74,7 @@ dashboard "aws_redshift_cluster_age_report" {
         from
           aws_redshift_cluster
         where
-          cluster_create_time <= now() - '1 year' :: interval
+          cluster_create_time <= now() - '1 year' :: interval;
       EOQ
       width = 2
       type = "info"
@@ -83,7 +83,6 @@ dashboard "aws_redshift_cluster_age_report" {
   }
 
   container {
-
 
     table {
 
@@ -109,11 +108,11 @@ dashboard "aws_redshift_cluster_age_report" {
           v.account_id = a.account_id
         order by
           v.cluster_create_time,
-          v.title
+          v.title;
       EOQ
 
     }
 
   }
-  
+
 }

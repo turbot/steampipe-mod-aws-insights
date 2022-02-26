@@ -14,7 +14,7 @@ dashboard "aws_ebs_volume_public_access_dashboard" {
     }
 
     card {
-      sql = <<-EOQ
+      sql   = <<-EOQ
         with public_snapshots as (
           select
             snapshot_id
@@ -73,5 +73,5 @@ dashboard "aws_ebs_volume_public_access_dashboard" {
     EOQ
 
   }
-  
+
 }

@@ -1,6 +1,6 @@
 query "aws_sqs_queue_count" {
   sql = <<-EOQ
-    select count(*) as "Queues" from aws_sqs_queue
+    select count(*) as "Queues" from aws_sqs_queue;
   EOQ
 }
 
@@ -13,7 +13,7 @@ query "aws_sqs_queue_unencrypted_count" {
     from
       aws_sqs_queue
     where
-      kms_master_key_id is null
+      kms_master_key_id is null;
   EOQ
 }
 
@@ -34,7 +34,7 @@ query "aws_sqs_queue_anonymous_access_count" {
         and (
           pa[5] != account_id
           or p = '*'
-        )
+        );
   EOQ
 }
 
@@ -50,7 +50,7 @@ query "aws_sqs_queue_by_account" {
       a.account_id = i.account_id
     group by
       account
-    order by count(i.*) desc
+    order by count(i.*) desc;
   EOQ
 }
 
@@ -62,7 +62,7 @@ query "aws_sqs_queue_by_region" {
     from
       aws_sqs_queue as i
     group by
-      region
+      region;
   EOQ
 }
 
@@ -78,7 +78,7 @@ query "aws_sqs_queue_cost_per_month" {
     group by
       period_start
     order by
-      period_start
+      period_start;
   EOQ
 }
 
@@ -100,16 +100,13 @@ query "aws_sqs_queue_monthly_forecast_table" {
         sum(unblended_cost_amount) / (period_end::date - period_start::date ) * date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval )::numeric::money  as forecast_amount
       from
         aws_cost_by_service_usage_type_monthly as c
-
       where
         service = 'Amazon Simple Queue Service'
         and date_trunc('month', period_start) >= date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
-
         group by
         period_start,
         period_end
     )
-
     select
       period_label as "Period",
       unblended_cost_amount as "Cost",
@@ -121,8 +118,7 @@ query "aws_sqs_queue_monthly_forecast_table" {
     select
       'This Month (Forecast)' as "Period",
       (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
-      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
-
+      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost";
   EOQ
 }
 
@@ -143,7 +139,7 @@ query "aws_sqs_queue_by_encryption_status" {
     group by
       encryption_status
     order by
-      encryption_status desc
+      encryption_status desc;
   EOQ
 }
 
@@ -183,7 +179,7 @@ query "aws_sqs_queue_anonymous_access_status" {
       group by
         anonymous_access_status
       order by
-        anonymous_access_status desc
+        anonymous_access_status desc;
   EOQ
 }
 
@@ -204,7 +200,7 @@ query "aws_sqs_queue_by_dlq_status" {
     group by
       redrive_policy_status
     order by
-      redrive_policy_status desc
+      redrive_policy_status desc;
   EOQ
 }
 
@@ -241,7 +237,7 @@ dashboard "aws_sqs_queue_dashboard" {
             aws_cost_by_service_usage_type_monthly as c
           where
             service = 'Amazon Simple Queue Service'
-            and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+            and period_end > date_trunc('month', CURRENT_DATE::timestamp);
         EOQ
       }
 
@@ -309,7 +305,7 @@ dashboard "aws_sqs_queue_dashboard" {
       type  = "column"
       width = 3
     }
-    
+
   }
 
 }

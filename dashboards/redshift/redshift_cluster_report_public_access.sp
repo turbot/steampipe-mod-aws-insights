@@ -34,9 +34,9 @@ dashboard "aws_redshift_cluster_public_access_dashboard" {
         aws_redshift_cluster as r,
         aws_account as a
       where
-        r.account_id = a.account_id
+        r.account_id = a.account_id;
     EOQ
-    
+
   }
 
 }
