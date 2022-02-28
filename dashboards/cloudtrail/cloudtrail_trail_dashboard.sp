@@ -191,7 +191,7 @@ query "aws_cloudtrail_trail_cloudwatch_log_integration_status" {
     )
     select
       integration_status,
-      count(*) as table_count
+      count(*)
     from
       cloudwatch_log_integration_status
     group by integration_status;
@@ -469,7 +469,7 @@ dashboard "aws_cloudtrail_trail_dashboard" {
       width = 4
       sql   = query.aws_cloudtrail_trail_cloudwatch_log_integration_status.sql
 
-      series "table_count" {
+      series "count" {
         point "enabled" {
           color = "green"
         }
