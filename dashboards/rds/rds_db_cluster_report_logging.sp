@@ -2,6 +2,11 @@ dashboard "aws_rds_db_cluster_logging_dashboard" {
 
   title = "AWS RDS DB Cluster Logging Report"
 
+  tags = merge(local.rds_common_tags, {
+    type     = "Report"
+    category = "Logging"
+  })
+
   container {
 
     card {

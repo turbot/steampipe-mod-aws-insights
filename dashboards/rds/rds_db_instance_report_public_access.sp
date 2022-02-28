@@ -15,6 +15,11 @@ dashboard "aws_rds_db_instance_public_access_report" {
 
   title = "AWS RDS DB Instance Public Access Report"
 
+  tags = merge(local.rds_common_tags, {
+    type     = "Report"
+    category = "Public Access"
+  })
+
   container {
 
     card {

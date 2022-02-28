@@ -6,6 +6,11 @@ dashboard "iam_user_excessive_privilege_report" {
 
   title = "AWS IAM User Excessive Privilege Report"
 
+  tags = merge(local.iam_common_tags, {
+    type     = "Report"
+    category = "Excessive Privilege"
+  })
+
   input "threshold_in_days" {
     title = "Threshold (days)"
     //type  = "text"

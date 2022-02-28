@@ -1,6 +1,11 @@
 dashboard "aws_dynamodb_table_encryption_report" {
   title = "AWS DynamoDB Table Encryption Report"
 
+  tags = merge(local.dynamodb_common_tags, {
+    type     = "Report"
+    category = "Encryption"
+  })
+
   container {
 
     card {

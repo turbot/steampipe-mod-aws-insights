@@ -212,6 +212,10 @@ dashboard "aws_iam_group_dashboard" {
 
   title = "AWS IAM Group Dashboard"
 
+  tags = merge(local.iam_common_tags, {
+    type = "Dashboard"
+  })
+
   container {
 
     # Analysis

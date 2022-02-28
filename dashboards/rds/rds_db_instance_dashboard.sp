@@ -437,6 +437,10 @@ dashboard "aws_rds_db_instance_dashboard" {
 
   title = "AWS RDS DB Instance Dashboard"
 
+  tags = merge(local.rds_common_tags, {
+    type = "Dashboard"
+  })
+
   container {
 
     # Analysis

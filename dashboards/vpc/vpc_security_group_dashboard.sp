@@ -1,5 +1,10 @@
 dashboard "aws_vpc_security_group_dashboard" {
+
   title = "AWS VPC Security Group Dashboard"
+
+  tags = merge(local.vpc_common_tags, {
+    type = "Dashboard"
+  })
 
   container {
 

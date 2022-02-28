@@ -47,6 +47,11 @@ dashboard "aws_s3_bucket_encryption_report" {
 
   title = "AWS S3 Bucket Encryption Report"
 
+  tags = merge(local.redshift_common_tags, {
+    type     = "Report"
+    category = "Encryption"
+  })
+
   container {
 
     card {

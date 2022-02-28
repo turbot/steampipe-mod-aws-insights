@@ -1,6 +1,12 @@
 dashboard "aws_iam_root_access_report" {
   title = "AWS IAM Root Access Report"
 
+  tags = merge(local.iam_common_tags, {
+    type     = "Report"
+    category = "Root Access"
+  })
+
+
   container {
 
     # Analysis

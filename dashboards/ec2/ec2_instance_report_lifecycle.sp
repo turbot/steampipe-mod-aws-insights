@@ -15,6 +15,11 @@ dashboard "aws_ec2_instance_lifecycle_report" {
 
   title = "AWS EC2 Instance Lifecycle Report"
 
+  tags = merge(local.ec2_common_tags, {
+    type     = "Report"
+    category = "Lifecycle"
+  })
+
   container {
 
     card {

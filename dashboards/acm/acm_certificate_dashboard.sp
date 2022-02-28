@@ -233,6 +233,10 @@ dashboard "aws_acm_certificate_dashboard" {
 
   title = "AWS ACM Certificate Dashboard"
 
+  tags = merge(local.acm_common_tags, {
+    type = "Dashboard"
+  })
+
   container {
 
     card {

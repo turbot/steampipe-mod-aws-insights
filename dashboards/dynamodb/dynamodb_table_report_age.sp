@@ -1,6 +1,11 @@
 dashboard "aws_dynamodb_table_age_report" {
   title = "AWS DynamoDB Table Age Report"
 
+  tags = merge(local.dynamodb_common_tags, {
+    type     = "Report"
+    category = "Age"
+  })
+
   container {
 
     card {

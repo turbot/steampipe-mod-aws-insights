@@ -2,6 +2,11 @@ dashboard "aws_lambda_function_encryption_dashboard" {
 
   title = "AWS Lambda Function Encryption Report"
 
+  tags = merge(local.lambda_common_tags, {
+    type     = "Report"
+    category = "Encryption"
+  })
+
   container {
 
     card {

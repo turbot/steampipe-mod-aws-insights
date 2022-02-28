@@ -271,6 +271,10 @@ dashboard "aws_iam_role_dashboard" {
 
   title = "AWS IAM Role Dashboard"
 
+  tags = merge(local.iam_common_tags, {
+    type = "Dashboard"
+  })
+
   container {
 
     # Analysis

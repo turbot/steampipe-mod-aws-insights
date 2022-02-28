@@ -1,5 +1,11 @@
 dashboard "aws_cloudtrail_trail_encryption_dashboard" {
+
   title = "AWS CloudTrail Trail Encryption Report"
+
+  tags = merge(local.cloudtrail_common_tags, {
+    type     = "Report"
+    category = "Encryption"
+  })
 
   container {
 

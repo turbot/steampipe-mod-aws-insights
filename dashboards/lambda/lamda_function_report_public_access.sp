@@ -2,6 +2,11 @@ dashboard "aws_lambda_function_public_access_report" {
 
   title = "AWS Lambda Function Public Access Report"
 
+  tags = merge(local.lambda_common_tags, {
+    type     = "Report"
+    category = "Public Access"
+  })
+
   container {
 
     card {

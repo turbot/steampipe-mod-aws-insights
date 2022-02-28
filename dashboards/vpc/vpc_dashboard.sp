@@ -159,7 +159,12 @@ query "aws_vpc_cost_per_month" {
 }
 
 dashboard "aws_vpc_dashboard" {
+
   title = "AWS VPC Dashboard"
+
+  tags = merge(local.vpc_common_tags, {
+    type = "Dashboard"
+  })
 
   container {
 

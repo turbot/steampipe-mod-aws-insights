@@ -1,5 +1,11 @@
 dashboard "aws_rds_db_instace_snapshot_encryption_dashboard" {
+
   title = "AWS RDS DB Instance Snapshot Encryption Report"
+
+  tags = merge(local.rds_common_tags, {
+    type     = "Report"
+    category = "Encryption"
+  })
 
   container {
 

@@ -113,6 +113,10 @@ query "aws_dynamodb_table_by_creation_month" {
 dashboard "aws_dynamodb_table_dashboard" {
   title = "AWS DynamoDB Table Dashboard"
 
+  tags = merge(local.dynamodb_common_tags, {
+    type = "Dashboard"
+  })
+
   # Top cards
   container {
     card {

@@ -2,6 +2,10 @@ dashboard "aws_rds_db_cluster_snapshot_age_report" {
 
   title = "AWS RDS DB Cluster Snapshot Age Report"
 
+  tags = merge(local.rds_common_tags, {
+    type     = "Report"
+    category = "Age"
+  })
 
   container {
 

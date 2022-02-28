@@ -2,6 +2,11 @@ dashboard "aws_db_instance_age_report" {
 
   title = "AWS RDS DB Instance Age Report"
 
+  tags = merge(local.rds_common_tags, {
+    type     = "Report"
+    category = "Age"
+  })
+
    container {
 
     # Analysis

@@ -15,6 +15,11 @@ dashboard "aws_ec2_default_ebs_encryption_count" {
 
   title = "AWS EC2 Default Encryption Report"
 
+  tags = merge(local.ec2_common_tags, {
+    type     = "Report"
+    category = "Encryption"
+  })
+
   container {
 
     card {

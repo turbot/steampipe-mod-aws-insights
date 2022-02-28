@@ -1,5 +1,10 @@
 dashboard "aws_vpc_security_group_detail" {
+
   title = "AWS VPC Security Group Detail"
+
+  tags = merge(local.vpc_common_tags, {
+    type = "Detail"
+  })
 
   input "security_group_id" {
     title = "Security Group"

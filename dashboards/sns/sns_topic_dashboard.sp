@@ -163,7 +163,12 @@ query "aws_sns_topic_by_subscription_status" {
 }
 
 dashboard "aws_sns_topic_dashboard" {
+
   title = "AWS SNS Topic Dashboard"
+
+  tags = merge(local.sns_common_tags, {
+    type = "Dashboard"
+  })
 
   container {
 

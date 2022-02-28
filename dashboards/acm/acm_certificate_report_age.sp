@@ -2,6 +2,11 @@ dashboard "acm_certificate_age_report" {
 
   title = "AWS ACM Certificate Age Report"
 
+  tags = merge(local.acm_common_tags, {
+    type     = "Report"
+    category = "Age"
+  })
+
    container {
 
     card {

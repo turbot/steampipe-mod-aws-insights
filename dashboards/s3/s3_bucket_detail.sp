@@ -1,5 +1,10 @@
 dashboard aws_s3_bucket_detail {
+
   title = "AWS S3 Bucket Detail"
+
+  tags = merge(local.s3_common_tags, {
+    type = "Detail"
+  })
 
   input "bucket_name" {
     title = "S3"

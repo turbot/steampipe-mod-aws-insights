@@ -288,6 +288,10 @@ dashboard "aws_s3_bucket_dashboard" {
 
   title = "AWS S3 Bucket Dashboard"
 
+  tags = merge(local.s3_common_tags, {
+    type = "Dashboard"
+  })
+
   container {
 
     # Analysis

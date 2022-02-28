@@ -15,6 +15,11 @@ dashboard "aws_ec2_instance_public_access_report" {
 
   title = "AWS EC2 Instance Public Access Report"
 
+  tags = merge(local.ec2_common_tags, {
+    type     = "Report"
+    category = "Public Access"
+  })
+
   container {
 
     card {

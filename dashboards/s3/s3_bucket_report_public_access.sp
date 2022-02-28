@@ -68,6 +68,11 @@ dashboard "aws_s3_bucket_public_access_report" {
 
   title = "AWS S3 Bucket Public Access Report"
 
+  tags = merge(local.s3_common_tags, {
+    type     = "Report"
+    category = "Public Access"
+  })
+
   container {
 
     card {

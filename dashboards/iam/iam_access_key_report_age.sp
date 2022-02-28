@@ -6,6 +6,11 @@ dashboard "aws_iam_access_key_age_report" {
 
   title = "AWS IAM Access Key Age Report"
 
+  tags = merge(local.iam_common_tags, {
+    type     = "Report"
+    category = "Age"
+  })
+
   input "threshold_in_days" {
     title = "Threshold (days)"
     //type  = "text"
