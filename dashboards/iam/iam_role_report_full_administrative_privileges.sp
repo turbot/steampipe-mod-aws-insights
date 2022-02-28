@@ -37,6 +37,11 @@ dashboard "aws_iam_role_full_administrative_privileges_report" {
 
   title = "AWS IAM Role Full Administrative Privileges Report"
 
+  tags = merge(local.iam_common_tags, {
+    type     = "Report"
+    category = "Full Administrative Privilege"
+  })
+
   container {
     card {
       sql   = query.aws_iam_roles_allow_all_action_count.sql

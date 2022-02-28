@@ -2,6 +2,11 @@ dashboard "aws_redshift_cluster_logging_report" {
 
   title = "AWS Redshift Cluster Logging Report"
 
+  tags = merge(local.redshift_common_tags, {
+    type     = "Report"
+    category = "Logging"
+  })
+
   container {
 
     card {

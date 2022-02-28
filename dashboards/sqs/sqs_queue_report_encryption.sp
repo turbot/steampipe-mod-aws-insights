@@ -2,6 +2,11 @@ dashboard "aws_sqs_queue_encryption_report" {
 
   title = "AWS SQS Queue Encryption Report"
 
+  tags = merge(local.sqs_common_tags, {
+    type     = "Report"
+    category = "Encryption"
+  })
+
   container {
 
     card {

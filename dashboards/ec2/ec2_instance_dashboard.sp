@@ -385,6 +385,10 @@ dashboard "aws_ec2_instance_dashboard" {
 
   title = "AWS EC2 Instance Dashboard"
 
+  tags = merge(local.ec2_common_tags, {
+    type = "Dashboard"
+  })
+
   container {
 
     # Analysis

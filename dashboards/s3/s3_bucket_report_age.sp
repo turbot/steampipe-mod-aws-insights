@@ -2,6 +2,11 @@ dashboard "aws_s3_bucket_age_report" {
 
   title = "AWS S3 Bucket Age Report"
 
+  tags = merge(local.s3_common_tags, {
+    type     = "Report"
+    category = "Age"
+  })
+
     container {
 
     # Analysis

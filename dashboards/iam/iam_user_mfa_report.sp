@@ -15,6 +15,11 @@ dashboard "aws_iam_user_mfa_report" {
 
   title = "AWS IAM User MFA Report"
 
+  tags = merge(local.iam_common_tags, {
+    type     = "Report"
+    category = "MFA"
+  })
+
   container {
 
     card {

@@ -2,6 +2,11 @@ dashboard "aws_sns_topic_encryption_report" {
 
   title = "AWS SNS Topic Encryption Report"
 
+  tags = merge(local.sns_common_tags, {
+    type     = "Report"
+    category = "Encryption"
+  })
+
   container {
 
     card {

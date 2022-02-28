@@ -2,6 +2,11 @@ dashboard "aws_redshift_cluster_encryption_report" {
 
   title = "AWS Redshift Cluster Encryption Report"
 
+  tags = merge(local.redshift_common_tags, {
+    type     = "Report"
+    category = "Encryption"
+  })
+
   container {
 
     card {

@@ -661,7 +661,12 @@ query "aws_vpc_peers_for_vpc_sankey" {
 
 
 dashboard aws_vpc_detail {
+
   title = "AWS VPC Detail"
+
+  tags = merge(local.vpc_common_tags, {
+    type = "Detail"
+  })
 
   input "vpc_id" {
     title = "VPC"

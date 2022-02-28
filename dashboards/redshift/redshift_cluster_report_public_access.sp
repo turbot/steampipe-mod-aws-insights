@@ -1,5 +1,11 @@
 dashboard "aws_redshift_cluster_public_access_dashboard" {
+
   title = "AWS Redshift Cluster Public Access Report"
+
+  tags = merge(local.redshift_common_tags, {
+    type     = "Report"
+    category = "Public Access"
+  })
 
   container {
 

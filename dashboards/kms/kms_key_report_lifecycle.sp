@@ -28,6 +28,11 @@ dashboard "aws_kms_key_lifecycle_dashboard" {
 
   title = "AWS KMS Key Lifecycle Report"
 
+  tags = merge(local.kms_common_tags, {
+    type     = "Report"
+    category = "Lifecycle"
+  })
+
   container {
 
     card {

@@ -217,6 +217,10 @@ query "aws_iam_user_by_creation_month" {
 dashboard "aws_iam_user_dashboard" {
   title = "AWS IAM User Dashboard"
 
+  tags = merge(local.iam_common_tags, {
+    type = "Dashboard"
+  })
+
   container {
 
     # Analysis

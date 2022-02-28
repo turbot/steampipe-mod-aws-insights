@@ -249,6 +249,10 @@ dashboard "aws_kms_key_dashboard" {
 
   title = "AWS KMS Key Dashboard"
 
+  tags = merge(local.kms_common_tags, {
+    type = "Dashboard"
+  })
+
   container {
 
     card {

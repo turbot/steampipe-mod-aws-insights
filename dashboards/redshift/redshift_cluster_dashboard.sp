@@ -270,6 +270,10 @@ dashboard "aws_redshift_cluster_dashboard" {
 
   title = "AWS Redshift Cluster Dashboard"
 
+  tags = merge(local.redshift_common_tags, {
+    type = "Dashboard"
+  })
+
   container {
 
     card {

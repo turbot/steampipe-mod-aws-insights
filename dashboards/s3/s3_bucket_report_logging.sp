@@ -16,6 +16,11 @@ dashboard "aws_s3_bucket_logging_report" {
 
   title = "AWS S3 Bucket Logging Report"
 
+  tags = merge(local.s3_common_tags, {
+    type     = "Report"
+    category = "Logging"
+  })
+
   container {
 
     card {

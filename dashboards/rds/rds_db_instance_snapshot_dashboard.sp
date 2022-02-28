@@ -231,6 +231,10 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
 
   title = "AWS RDS DB Instance Snapshot Dashboard"
 
+  tags = merge(local.rds_common_tags, {
+    type = "Dashboard"
+  })
+
   container {
 
     card {

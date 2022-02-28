@@ -2,6 +2,11 @@ dashboard "aws_kms_key_age_report" {
 
   title = "AWS KMS Key Age Report"
 
+  tags = merge(local.kms_common_tags, {
+    type     = "Report"
+    category = "Age"
+  })
+
    container {
 
     card {

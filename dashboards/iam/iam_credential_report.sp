@@ -2,6 +2,11 @@
 dashboard "aws_iam_credential_report" {
   title = "AWS IAM Credential Report"
 
+  tags = merge(local.iam_common_tags, {
+    type     = "Report"
+    # category = "Credential Report"
+  })
+
   text {
     value = <<-EOT
     ### Note

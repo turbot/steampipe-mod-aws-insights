@@ -82,7 +82,12 @@ query "aws_iam_all_policies_for_group" {
 }
 
 dashboard "aws_iam_group_detail" {
+
   title = "AWS IAM Group Detail"
+
+  tags = merge(local.iam_common_tags, {
+    type = "Detail"
+  })
 
   input "user_arn" {
     title = "User"

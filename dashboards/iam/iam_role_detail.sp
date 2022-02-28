@@ -85,7 +85,12 @@ query "aws_iam_role_detail_overview" {
 */
 
 dashboard "aws_iam_role_detail" {
+
   title = "AWS IAM Role Detail"
+
+  tags = merge(local.iam_common_tags, {
+    type = "Detail"
+  })
 
   input "role_arn" {
     title = "Role"

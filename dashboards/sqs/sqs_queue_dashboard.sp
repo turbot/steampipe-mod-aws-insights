@@ -206,106 +206,111 @@ query "aws_sqs_queue_by_dlq_status" {
 
 
 dashboard "aws_sqs_queue_dashboard" {
-    title = "AWS SQS Queue Dashboard"
 
-    container {
+  title = "AWS SQS Queue Dashboard"
 
-      card {
-        sql   = query.aws_sqs_queue_count.sql
-        width = 2
-      }
-
-      card {
-        sql   = query.aws_sqs_queue_unencrypted_count.sql
-        width = 2
-      }
-
-      card {
-        sql   = query.aws_sqs_queue_anonymous_access_count.sql
-        width = 2
-      }
-
-      card {
-        type  = "info"
-        icon  = "currency-dollar"
-        width = 2
-        sql   = <<-EOQ
-          select
-            'Cost - MTD' as label,
-            sum(unblended_cost_amount)::numeric::money as value
-          from
-            aws_cost_by_service_usage_type_monthly as c
-          where
-            service = 'Amazon Simple Queue Service'
-            and period_end > date_trunc('month', CURRENT_DATE::timestamp);
-        EOQ
-      }
-
-    }
-
-    container {
-      title = "Assessments"
-      width = 6
-
-      chart {
-        title = "Encryption Status"
-        sql = query.aws_sqs_queue_by_encryption_status.sql
-        type  = "donut"
-        width = 4
-      }
-
-      chart {
-        title = "DLQ Status"
-        sql = query.aws_sqs_queue_by_dlq_status.sql
-        type  = "donut"
-        width = 4
-      }
-
-      chart {
-        title = "Anonymous Access Status"
-        sql = query.aws_sqs_queue_anonymous_access_status.sql
-        type  = "donut"
-        width = 4
-      }
-
-    }
+  tags = merge(local.sqs_common_tags, {
+    type = "Dashboard"
+  })
 
   container {
-    title = "Cost"
+
+    card {
+      sql   = query.aws_sqs_queue_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_sqs_queue_unencrypted_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_sqs_queue_anonymous_access_count.sql
+      width = 2
+    }
+
+    card {
+      type  = "info"
+      icon  = "currency-dollar"
+      width = 2
+      sql   = <<-EOQ
+        select
+          'Cost - MTD' as label,
+          sum(unblended_cost_amount)::numeric::money as value
+        from
+          aws_cost_by_service_usage_type_monthly as c
+        where
+          service = 'Amazon Simple Queue Service'
+          and period_end > date_trunc('month', CURRENT_DATE::timestamp);
+      EOQ
+    }
+
+  }
+
+  container {
+    title = "Assessments"
     width = 6
 
-    # Costs
-    table  {
-      width = 6
-      title = "Forecast"
-      sql   = query.aws_sqs_queue_monthly_forecast_table.sql
+    chart {
+      title = "Encryption Status"
+      sql = query.aws_sqs_queue_by_encryption_status.sql
+      type  = "donut"
+      width = 4
     }
 
     chart {
-      width = 6
-      type  = "column"
-      title = "Monthly Cost - 12 Months"
-      sql   = query.aws_sqs_queue_cost_per_month.sql
+      title = "DLQ Status"
+      sql = query.aws_sqs_queue_by_dlq_status.sql
+      type  = "donut"
+      width = 4
+    }
+
+    chart {
+      title = "Anonymous Access Status"
+      sql = query.aws_sqs_queue_anonymous_access_status.sql
+      type  = "donut"
+      width = 4
     }
 
   }
 
-  container {
-    title = "Analysis"
+container {
+  title = "Cost"
+  width = 6
 
-    chart {
-      title = "Queues by Account"
-      sql   = query.aws_sqs_queue_by_account.sql
-      type  = "column"
-      width = 3
-    }
-    chart {
-      title = "Queues by Region"
-      sql   = query.aws_sqs_queue_by_region.sql
-      type  = "column"
-      width = 3
-    }
-
+  # Costs
+  table  {
+    width = 6
+    title = "Forecast"
+    sql   = query.aws_sqs_queue_monthly_forecast_table.sql
   }
+
+  chart {
+    width = 6
+    type  = "column"
+    title = "Monthly Cost - 12 Months"
+    sql   = query.aws_sqs_queue_cost_per_month.sql
+  }
+
+}
+
+container {
+  title = "Analysis"
+
+  chart {
+    title = "Queues by Account"
+    sql   = query.aws_sqs_queue_by_account.sql
+    type  = "column"
+    width = 3
+  }
+  chart {
+    title = "Queues by Region"
+    sql   = query.aws_sqs_queue_by_region.sql
+    type  = "column"
+    width = 3
+  }
+
+}
 
 }

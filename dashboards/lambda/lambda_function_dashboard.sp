@@ -414,6 +414,10 @@ dashboard "aws_lambda_function_dashboard" {
 
   title = "AWS Lambda Function Dashboard"
 
+  tags = merge(local.lambda_common_tags, {
+    type = "Dashboard"
+  })
+
   container {
 
     # Analysis

@@ -27,6 +27,11 @@ dashboard "aws_rds_db_instance_logging_dashboard" {
 
   title = "AWS RDS DB Instance Logging Report"
 
+  tags = merge(local.rds_common_tags, {
+    type     = "Report"
+    category = "Logging"
+  })
+
   container {
 
     card {
