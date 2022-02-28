@@ -193,6 +193,10 @@ query "aws_rds_db_instance_db_subnet_groups" {
 dashboard aws_rds_db_instance_detail {
   title = "AWS RDS DB Instance Detail"
 
+  tags = merge(local.rds_common_tags, {
+    type = "Detail"
+  })
+
   input "db_instance_arn" {
     title = "Select a DB instance:"
     sql   = query.aws_rds_db_instance_input.sql

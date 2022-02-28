@@ -192,6 +192,10 @@ query "aws_ec2_instance_cpu_cores" {
 dashboard aws_ec2_instance_detail {
   title = "AWS EC2 Instance Detail"
 
+  tags = merge(local.ec2_common_tags, {
+    type = "Detail"
+  })
+
   input "instance_arn" {
     title = "Select a instance:"
     sql   = query.aws_ec2_instance_input.sql

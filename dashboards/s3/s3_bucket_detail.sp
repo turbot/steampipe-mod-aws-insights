@@ -218,6 +218,10 @@ query "aws_s3_bucket_lifecycle_policy" {
 dashboard aws_s3_bucket_detail {
   title = "AWS S3 Bucket Detail"
 
+  tags = merge(local.s3_common_tags, {
+    type = "Details"
+  })
+
   input "bucket_arn" {
     title = "Select a bucket:"
     sql   = query.aws_s3_bucket_input.sql
