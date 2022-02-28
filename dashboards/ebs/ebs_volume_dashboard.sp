@@ -1,6 +1,6 @@
 query "aws_ebs_volume_count" {
   sql = <<-EOQ
-    select count(*) as "Volumes" from aws_ebs_volume
+    select count(*) as "Volumes" from aws_ebs_volume;
   EOQ
 }
 
@@ -9,7 +9,7 @@ query "aws_ebs_volume_storage_total" {
     select
       sum(size) as "Total Storage (GB)"
     from
-      aws_ebs_volume
+      aws_ebs_volume;
   EOQ
 }
 
@@ -22,7 +22,7 @@ query "aws_ebs_encrypted_volume_count" {
     from
       aws_ebs_volume
     where
-      not encrypted
+      not encrypted;
   EOQ
 }
 
@@ -35,7 +35,7 @@ query "aws_ebs_unattached_volume_count" {
     from
       aws_ebs_volume
     where
-      attachments is null
+      attachments is null;
   EOQ
 }
 
@@ -52,7 +52,7 @@ query "aws_ebs_volume_cost_per_month" {
     group by
       period_start
     order by
-      period_start
+      period_start;
   EOQ
 }
 
@@ -69,7 +69,7 @@ query "aws_ebs_volume_by_account" {
     group by
       account
     order by
-      account
+      account;
   EOQ
 }
 
@@ -86,7 +86,7 @@ query "aws_ebs_volume_storage_by_account" {
     group by
       account
     order by
-      account
+      account;
   EOQ
 }
 
@@ -100,25 +100,25 @@ query "aws_ebs_volume_storage_by_type" {
     group by
       volume_type
     order by
-      volume_type
+      volume_type;
   EOQ
 }
 
 query "aws_ebs_volume_by_region" {
   sql = <<-EOQ
-    select region as "Region", count(*) as "volumes" from aws_ebs_volume group by region order by region
+    select region as "Region", count(*) as "volumes" from aws_ebs_volume group by region order by region;
   EOQ
 }
 
 query "aws_ebs_volume_storage_by_region" {
   sql = <<-EOQ
-    select region as "Region", sum(size) as "GB" from aws_ebs_volume group by region order by region
+    select region as "Region", sum(size) as "GB" from aws_ebs_volume group by region order by region;
   EOQ
 }
 
 query "aws_ebs_volume_by_type" {
   sql = <<-EOQ
-    select volume_type as "Type", count(*) as "volumes" from aws_ebs_volume group by volume_type order by volume_type
+    select volume_type as "Type", count(*) as "volumes" from aws_ebs_volume group by volume_type order by volume_type;
   EOQ
 }
 
@@ -139,7 +139,7 @@ query "aws_ebs_volume_by_encryption_status" {
     group by
       encryption_status
     order by
-      encryption_status desc
+      encryption_status desc;
   EOQ
 }
 
@@ -151,7 +151,7 @@ query "aws_ebs_volume_by_state" {
     from
       aws_ebs_volume
     group by
-      state
+      state;
   EOQ
 }
 
@@ -169,7 +169,7 @@ query "aws_ebs_volume_with_no_snapshots" {
       v.region,
       v.volume_id
     having
-      count(s.snapshot_id) = 0
+      count(s.snapshot_id) = 0;
   EOQ
 }
 
@@ -304,8 +304,7 @@ query "aws_ebs_monthly_forecast_table" {
     select
       'This Month (Forecast)' as "Period",
       (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
-      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
-
+      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost";
   EOQ
 }
 
@@ -355,7 +354,7 @@ dashboard "aws_ebs_volume_dashboard" {
         where
           service = 'EC2 - Other'
           and usage_type like '%EBS:%'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+          and period_end > date_trunc('month', CURRENT_DATE::timestamp);
       EOQ
     }
 
@@ -381,13 +380,12 @@ dashboard "aws_ebs_volume_dashboard" {
 
   }
 
-
   container {
     title = "Cost"
     width = 6
 
     # Costs
-    table  {
+    table {
       width = 6
       title = "Forecast"
       sql   = query.aws_ebs_monthly_forecast_table.sql
@@ -484,7 +482,7 @@ dashboard "aws_ebs_volume_dashboard" {
   }
 
   container {
-    title  = "Performance & Utilization"
+    title = "Performance & Utilization"
 
     chart {
       title = "Top 10 Average Read OPS - Last 7 days"
@@ -513,7 +511,7 @@ dashboard "aws_ebs_volume_dashboard" {
             aws_ebs_volume_metric_read_ops_hourly
           where
             timestamp  >= CURRENT_DATE - INTERVAL '7 day'
-            and volume_id in (select volume_id from top_n)
+            and volume_id in (select volume_id from top_n);
       EOQ
     }
 
@@ -544,7 +542,7 @@ dashboard "aws_ebs_volume_dashboard" {
           aws_ebs_volume_metric_write_ops_hourly
         where
           timestamp  >= CURRENT_DATE - INTERVAL '7 day'
-          and volume_id in (select volume_id from top_n)
+          and volume_id in (select volume_id from top_n);
       EOQ
     }
 

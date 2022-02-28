@@ -7,7 +7,7 @@ query "aws_kms_key_rotation_disabled_count" {
     from
       aws_kms_key
     where
-      not key_rotation_enabled
+      not key_rotation_enabled;
   EOQ
 }
 
@@ -20,13 +20,18 @@ query "aws_kms_key_pending_deletion_count" {
     from
       aws_kms_key
     where
-      key_state = 'PendingDeletion'
+      key_state = 'PendingDeletion';
   EOQ
 }
 
 dashboard "aws_kms_key_lifecycle_dashboard" {
 
   title = "AWS KMS Key Lifecycle Report"
+
+  tags = merge(local.kms_common_tags, {
+    type     = "Report"
+    category = "Lifecycle"
+  })
 
   container {
 
@@ -67,9 +72,9 @@ dashboard "aws_kms_key_lifecycle_dashboard" {
         aws_kms_key as v,
         aws_account as a
       where
-        v.account_id = a.account_id
+        v.account_id = a.account_id;
     EOQ
-    
+
   }
 
 }

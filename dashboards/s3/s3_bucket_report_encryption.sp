@@ -7,7 +7,7 @@ query "aws_s3_bucket_unencrypted_count" {
     from
       aws_s3_bucket
     where
-      server_side_encryption_configuration is null
+      server_side_encryption_configuration is null;
   EOQ
 }
 
@@ -38,7 +38,7 @@ query "aws_s3_bucket_https_unenforced_count" {
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_s3_bucket as b
-      left join ssl_ok as ssl on ssl.arn != b.arn
+      left join ssl_ok as ssl on ssl.arn != b.arn;
   EOQ
 }
 
@@ -46,6 +46,11 @@ query "aws_s3_bucket_https_unenforced_count" {
 dashboard "aws_s3_bucket_encryption_report" {
 
   title = "AWS S3 Bucket Encryption Report"
+
+  tags = merge(local.redshift_common_tags, {
+    type     = "Report"
+    category = "Encryption"
+  })
 
   container {
 
@@ -120,7 +125,7 @@ dashboard "aws_s3_bucket_encryption_report" {
         left join ssl_ok as ssl on b.arn = ssl.arn
         left join aws_account as a on b.account_id = a.account_id;
     EOQ
-    
+
   }
 
 }

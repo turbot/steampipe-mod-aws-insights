@@ -2,6 +2,11 @@ dashboard "aws_lambda_function_public_access_report" {
 
   title = "AWS Lambda Function Public Access Report"
 
+  tags = merge(local.lambda_common_tags, {
+    type     = "Report"
+    category = "Public Access"
+  })
+
   container {
 
     card {
@@ -38,9 +43,9 @@ dashboard "aws_lambda_function_public_access_report" {
         aws_lambda_function as f,
         aws_account as a
       where
-        f.account_id = a.account_id
+        f.account_id = a.account_id;
     EOQ
 
   }
-  
+
 }

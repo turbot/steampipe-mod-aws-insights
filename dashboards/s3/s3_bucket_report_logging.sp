@@ -7,7 +7,7 @@ query "aws_s3_bucket_logging_disabled_count" {
     from
       aws_s3_bucket
     where
-      logging -> 'TargetBucket' is null
+      logging -> 'TargetBucket' is null;
   EOQ
 }
 
@@ -15,6 +15,11 @@ query "aws_s3_bucket_logging_disabled_count" {
 dashboard "aws_s3_bucket_logging_report" {
 
   title = "AWS S3 Bucket Logging Report"
+
+  tags = merge(local.s3_common_tags, {
+    type     = "Report"
+    category = "Logging"
+  })
 
   container {
 
@@ -50,9 +55,9 @@ dashboard "aws_s3_bucket_logging_report" {
         aws_s3_bucket as v,
         aws_account as a
       where
-        v.account_id = a.account_id
+        v.account_id = a.account_id;
     EOQ
-    
+
   }
 
 }

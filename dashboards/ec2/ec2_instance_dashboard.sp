@@ -315,7 +315,7 @@ query "aws_ec2_instance_by_creation_month" {
       months
       left join instances_by_month on months.month = instances_by_month.creation_month
     order by
-      months.month desc;
+      months.month;
   EOQ
 }
 
@@ -395,6 +395,10 @@ query "aws_ec2_instance_by_cpu_utilization_category" {
 dashboard "aws_ec2_instance_dashboard" {
 
   title = "AWS EC2 Instance Dashboard"
+
+  tags = merge(local.ec2_common_tags, {
+    type = "Dashboard"
+  })
 
   container {
 

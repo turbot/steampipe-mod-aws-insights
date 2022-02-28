@@ -344,6 +344,10 @@ query "aws_cloudtrail_multi_region_trail_count_per_account" {
 dashboard "aws_cloudtrail_trail_dashboard" {
   title = "AWS CloudTrail Trail Dashboard"
 
+  tags = merge(local.cloudtrail_common_tags, {
+    type = "Dashboard"
+  })
+
   container {
 
     card {

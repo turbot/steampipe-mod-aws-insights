@@ -2,8 +2,12 @@ dashboard "aws_rds_db_cluster_snapshot_age_report" {
 
   title = "AWS RDS DB Cluster Snapshot Age Report"
 
+  tags = merge(local.rds_common_tags, {
+    type     = "Report"
+    category = "Age"
+  })
 
-   container {
+  container {
 
     # Analysis
     card {
@@ -19,10 +23,10 @@ dashboard "aws_rds_db_cluster_snapshot_age_report" {
         from
           aws_rds_db_cluster_snapshot
         where
-          create_time > now() - '1 days' :: interval
+          create_time > now() - '1 days' :: interval;
       EOQ
       width = 2
-      type = "info"
+      type  = "info"
     }
 
     card {
@@ -33,10 +37,10 @@ dashboard "aws_rds_db_cluster_snapshot_age_report" {
         from
           aws_rds_db_cluster_snapshot
         where
-          create_time between symmetric now() - '1 days' :: interval and now() - '30 days' :: interval
+          create_time between symmetric now() - '1 days' :: interval and now() - '30 days' :: interval;
       EOQ
       width = 2
-      type = "info"
+      type  = "info"
     }
 
     card {
@@ -47,10 +51,10 @@ dashboard "aws_rds_db_cluster_snapshot_age_report" {
         from
           aws_rds_db_cluster_snapshot
         where
-          create_time between symmetric now() - '30 days' :: interval and now() - '90 days' :: interval
+          create_time between symmetric now() - '30 days' :: interval and now() - '90 days' :: interval;
       EOQ
       width = 2
-      type = "info"
+      type  = "info"
     }
 
     card {
@@ -61,10 +65,10 @@ dashboard "aws_rds_db_cluster_snapshot_age_report" {
         from
           aws_rds_db_cluster_snapshot
         where
-          create_time between symmetric (now() - '90 days'::interval) and (now() - '365 days'::interval)
+          create_time between symmetric (now() - '90 days'::interval) and (now() - '365 days'::interval);
       EOQ
       width = 2
-      type = "info"
+      type  = "info"
     }
 
     card {
@@ -75,10 +79,10 @@ dashboard "aws_rds_db_cluster_snapshot_age_report" {
         from
           aws_rds_db_cluster_snapshot
         where
-          create_time <= now() - '1 year' :: interval
+          create_time <= now() - '1 year' :: interval;
       EOQ
       width = 2
-      type = "info"
+      type  = "info"
     }
 
   }
@@ -110,11 +114,11 @@ dashboard "aws_rds_db_cluster_snapshot_age_report" {
           v.account_id = a.account_id
         order by
           v.create_time,
-          v.title
+          v.title;
       EOQ
 
     }
 
   }
-  
+
 }

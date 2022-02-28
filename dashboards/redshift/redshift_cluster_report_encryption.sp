@@ -2,6 +2,11 @@ dashboard "aws_redshift_cluster_encryption_report" {
 
   title = "AWS Redshift Cluster Encryption Report"
 
+  tags = merge(local.redshift_common_tags, {
+    type     = "Report"
+    category = "Encryption"
+  })
+
   container {
 
     card {
@@ -34,9 +39,9 @@ dashboard "aws_redshift_cluster_encryption_report" {
         aws_redshift_cluster as r,
         aws_account as a
       where
-        r.account_id = a.account_id
+        r.account_id = a.account_id;
     EOQ
-    
+
   }
 
 }

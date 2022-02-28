@@ -6,14 +6,19 @@ dashboard "iam_user_excessive_privilege_report" {
 
   title = "AWS IAM User Excessive Privilege Report"
 
+  tags = merge(local.iam_common_tags, {
+    type     = "Report"
+    category = "Excessive Privilege"
+  })
+
   input "threshold_in_days" {
     title = "Threshold (days)"
     //type  = "text"
-    width   = 2
+    width = 2
     //default = "90"
   }
 
-  container { 
+  container {
     card {
       sql   = <<-EOQ
         select
@@ -30,16 +35,17 @@ dashboard "iam_user_excessive_privilege_report" {
         select
           count(distinct principal_arn) as value,
           'Users with Excessive Permissions' as label,
-          case 
+          case
             when count(*) = 0 then 'ok'
             else 'alert'
           end as type
         from
           aws_iam_access_advisor,
           aws_iam_user
-        where 
+        where
           principal_arn = arn
-          and coalesce(last_authenticated, now() - '400 days' :: interval ) < now() - '${var.iam_user_excessive_privilege_report_threshold_in_days} days' :: interval  -- should use the threshold value...
+          and coalesce(last_authenticated, now() - '400 days' :: interval ) < now() - '${var.iam_user_excessive_privilege_report_threshold_in_days} days' :: interval;
+          -- should use the threshold value...
       EOQ
       width = 2
     }
@@ -49,27 +55,27 @@ dashboard "iam_user_excessive_privilege_report" {
         select
           count(*) as value,
           'Excessive Permissions' as label,
-          case 
+          case
             when count(*) = 0 then 'ok'
             else 'alert'
           end as type
         from
           aws_iam_access_advisor,
           aws_iam_user
-        where 
+        where
           principal_arn = arn
-          and coalesce(last_authenticated, now() - '400 days' :: interval ) < now() - '${var.iam_user_excessive_privilege_report_threshold_in_days} days' :: interval  -- should use the threshold value...
+          and coalesce(last_authenticated, now() - '400 days' :: interval ) < now() - '${var.iam_user_excessive_privilege_report_threshold_in_days} days' :: interval;  -- should use the threshold value...
       EOQ
       width = 2
     }
   }
 
-  container { 
+  container {
 
     # per, https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_access-advisor-view-data.html ,
     #  The tracking period for services is for the last 400 days.
     table {
-      sql   = <<-EOQ
+      sql = <<-EOQ
         select
           principal_arn as "Principal",
           service_name as "Service",
@@ -89,9 +95,9 @@ dashboard "iam_user_excessive_privilege_report" {
         from
           aws_iam_access_advisor,
           aws_iam_user
-        where 
+        where
           principal_arn = arn
-          and coalesce(last_authenticated, now() - '400 days' :: interval ) < now() - '${var.iam_user_excessive_privilege_report_threshold_in_days} days' :: interval  -- should use the threshold value...
+          and coalesce(last_authenticated, now() - '400 days' :: interval ) < now() - '${var.iam_user_excessive_privilege_report_threshold_in_days} days' :: interval;  -- should use the threshold value...
       EOQ
     }
   }

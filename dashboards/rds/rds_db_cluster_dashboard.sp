@@ -1,6 +1,6 @@
 query "aws_rds_db_cluster_count" {
   sql = <<-EOQ
-    select count(*) as "RDS DB Clusters" from aws_rds_db_cluster
+    select count(*) as "RDS DB Clusters" from aws_rds_db_cluster;
   EOQ
 }
 
@@ -13,7 +13,7 @@ query "aws_rds_unencrypted_db_cluster_count" {
     from
       aws_rds_db_cluster
     where
-      not storage_encrypted
+      not storage_encrypted;
   EOQ
 }
 
@@ -26,7 +26,7 @@ query "aws_rds_db_cluster_logging_disabled_count" {
     from
       aws_rds_db_cluster
     where
-      enabled_cloudwatch_logs_exports is null
+      enabled_cloudwatch_logs_exports is null;
   EOQ
 }
 
@@ -39,7 +39,7 @@ query "aws_rds_db_cluster_not_in_vpc_count" {
     from
       aws_rds_db_cluster
     where
-      vpc_security_groups is null
+      vpc_security_groups is null;
   EOQ
 }
 
@@ -52,7 +52,7 @@ query "aws_rds_db_cluster_no_deletion_protection_count" {
     from
       aws_rds_db_cluster
     where
-      not deletion_protection
+      not deletion_protection;
   EOQ
 }
 
@@ -68,7 +68,7 @@ query "aws_rds_db_cluster_cost_per_month" {
     group by
       period_start
     order by
-      period_start
+      period_start;
   EOQ
 }
 
@@ -86,7 +86,7 @@ query "aws_rds_db_cluster_by_account" {
       a.account_id = i.account_id
     group by
       account
-    order by count(i.*) desc
+    order by count(i.*) desc;
 
   EOQ
 }
@@ -100,14 +100,14 @@ query "aws_rds_db_cluster_by_region" {
     from
       aws_rds_db_cluster as i
     group by
-      region
+      region;
   EOQ
 }
 
 
 query "aws_rds_db_cluster_by_engine_type" {
   sql = <<-EOQ
-    select engine as "Engine Type", count(*) as "Clusters" from aws_rds_db_cluster group by engine order by engine
+    select engine as "Engine Type", count(*) as "Clusters" from aws_rds_db_cluster group by engine order by engine;
   EOQ
 }
 
@@ -128,7 +128,7 @@ query "aws_rds_db_cluster_by_encryption_status" {
     group by
       encryption_status
     order by
-      encryption_status desc
+      encryption_status desc;
   EOQ
 }
 
@@ -156,7 +156,7 @@ union
     'Disabled' as "Logging Status",
     count( db_cluster_identifier) as "Total"
   from
-    aws_rds_db_cluster as s where s.db_cluster_identifier not in (select db_cluster_identifier from logging_stat)
+    aws_rds_db_cluster as s where s.db_cluster_identifier not in (select db_cluster_identifier from logging_stat);
   EOQ
 }
 
@@ -181,7 +181,7 @@ union
     'Disabled' as "Multi-AZ Status",
     count( db_cluster_identifier) as "Total"
   from
-    aws_rds_db_cluster as s where s.db_cluster_identifier not in (select name from multiaz_stat)
+    aws_rds_db_cluster as s where s.db_cluster_identifier not in (select name from multiaz_stat);
   EOQ
 }
 
@@ -206,7 +206,7 @@ union
     'Disabled' as "Deletion Protection Status",
     count( db_cluster_identifier) as "Total"
   from
-    aws_rds_db_cluster as s where s.db_cluster_identifier not in (select name from deletion_protection)
+    aws_rds_db_cluster as s where s.db_cluster_identifier not in (select name from deletion_protection);
   EOQ
 }
 
@@ -232,7 +232,7 @@ query "aws_rds_db_cluster_iam_authentication_enabled" {
     'Disabled' as "IAM Authentication Status",
     count( db_cluster_identifier) as "Total"
   from
-    aws_rds_db_cluster as s where s.db_cluster_identifier not in (select name from iam_authentication_stat)
+    aws_rds_db_cluster as s where s.db_cluster_identifier not in (select name from iam_authentication_stat);
   EOQ
 }
 
@@ -244,7 +244,7 @@ query "aws_rds_db_cluster_by_state" {
     from
       aws_rds_db_cluster
     group by
-      status
+      status;
   EOQ
 }
 
@@ -262,7 +262,7 @@ query "aws_rds_db_cluster_with_no_snapshots" {
       v.region,
       v.db_cluster_identifier
     having
-      count(s.db_cluster_snapshot_attributes) = 0
+      count(s.db_cluster_snapshot_attributes) = 0;
   EOQ
 }
 
@@ -307,7 +307,7 @@ query "aws_rds_db_cluster_by_creation_month" {
       months
       left join clusters_by_month on months.month = clusters_by_month.creation_month
     order by
-      months.month desc
+      months.month;
   EOQ
 }
 
@@ -350,7 +350,7 @@ query "aws_rds_db_cluster_monthly_forecast_table" {
     select
       'This Month (Forecast)' as "Period",
       (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
-      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
+      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost";
 
   EOQ
 }
@@ -358,6 +358,10 @@ query "aws_rds_db_cluster_monthly_forecast_table" {
 dashboard "aws_rds_db_cluster_dashboard" {
 
   title = "AWS RDS DB Cluster Dashboard"
+
+  tags = merge(local.rds_common_tags, {
+    type = "Dashboard"
+  })
 
   container {
 
@@ -401,7 +405,7 @@ dashboard "aws_rds_db_cluster_dashboard" {
           and period_end > date_trunc('month', CURRENT_DATE::timestamp)
       EOQ
     }
-    
+
   }
 
   container {
@@ -410,34 +414,34 @@ dashboard "aws_rds_db_cluster_dashboard" {
 
     chart {
       title = "Encryption Status"
-      sql = query.aws_rds_db_cluster_by_encryption_status.sql
+      sql   = query.aws_rds_db_cluster_by_encryption_status.sql
       type  = "donut"
       width = 4
     }
 
     chart {
       title = "Logging Status"
-      sql = query.aws_rds_db_cluster_logging_status.sql
+      sql   = query.aws_rds_db_cluster_logging_status.sql
       type  = "donut"
       width = 4
     }
     chart {
       title = "Deletion Protection Status"
-      sql = query.aws_rds_db_cluster_deletion_protection_status.sql
+      sql   = query.aws_rds_db_cluster_deletion_protection_status.sql
       type  = "donut"
       width = 4
 
     }
     chart {
       title = "Multi-AZ Status"
-      sql = query.aws_rds_db_cluster_multiple_az_status.sql
+      sql   = query.aws_rds_db_cluster_multiple_az_status.sql
       type  = "donut"
       width = 4
     }
 
     chart {
       title = "Snapshot Status"
-      sql = query.aws_rds_db_cluster_with_no_snapshots.sql
+      sql   = query.aws_rds_db_cluster_with_no_snapshots.sql
       type  = "donut"
       width = 4
     }
@@ -449,7 +453,7 @@ dashboard "aws_rds_db_cluster_dashboard" {
     width = 6
 
     # Costs
-    table  {
+    table {
       width = 6
       title = "Forecast"
       sql   = query.aws_rds_db_cluster_monthly_forecast_table.sql
@@ -463,26 +467,6 @@ dashboard "aws_rds_db_cluster_dashboard" {
     }
 
   }
-
-  # container {
-
-
-  #   chart {
-  #     title = "Multi-AZ Status"
-  #     sql = query.aws_rds_db_cluster_multiple_az_status.sql
-  #     type  = "donut"
-  #     width = 4
-
-  #   }
-
-  #   chart {
-  #     title = "Snapshot Status"
-  #     sql = query.aws_rds_db_cluster_with_no_snapshots.sql
-  #     type  = "donut"
-  #     width = 4
-
-  #   }
-  # }
 
   container {
     title = "Analysis"

@@ -4,6 +4,11 @@ dashboard "aws_ec2_instance_age_report" {
 
   title = "AWS EC2 Instance Age Report"
 
+  tags = merge(local.ec2_common_tags, {
+    type     = "Report"
+    category = "Age"
+  })
+
    container {
 
     card {
@@ -19,7 +24,7 @@ dashboard "aws_ec2_instance_age_report" {
         from
           aws_ec2_instance
         where
-          launch_time > now() - '1 days' :: interval
+          launch_time > now() - '1 days' :: interval;
       EOQ
       width = 2
       type = "info"
@@ -33,7 +38,7 @@ dashboard "aws_ec2_instance_age_report" {
         from
           aws_ec2_instance
         where
-          launch_time between symmetric now() - '1 days' :: interval and now() - '30 days' :: interval
+          launch_time between symmetric now() - '1 days' :: interval and now() - '30 days' :: interval;
       EOQ
       width = 2
       type = "info"
@@ -47,7 +52,7 @@ dashboard "aws_ec2_instance_age_report" {
         from
           aws_ec2_instance
         where
-          launch_time between symmetric now() - '30 days' :: interval and now() - '90 days' :: interval
+          launch_time between symmetric now() - '30 days' :: interval and now() - '90 days' :: interval;
       EOQ
       width = 2
       type = "info"
@@ -61,7 +66,7 @@ dashboard "aws_ec2_instance_age_report" {
         from
           aws_ec2_instance
         where
-          launch_time between symmetric (now() - '90 days'::interval) and (now() - '365 days'::interval)
+          launch_time between symmetric (now() - '90 days'::interval) and (now() - '365 days'::interval);
       EOQ
       width = 2
       type = "info"
@@ -75,7 +80,7 @@ dashboard "aws_ec2_instance_age_report" {
         from
           aws_ec2_instance
         where
-          launch_time <= now() - '1 year' :: interval
+          launch_time <= now() - '1 year' :: interval;
       EOQ
       width = 2
       type = "info"
@@ -109,7 +114,7 @@ dashboard "aws_ec2_instance_age_report" {
           i.account_id = a.account_id
         order by
           i.launch_time,
-          i.title
+          i.title;
       EOQ
 
     }

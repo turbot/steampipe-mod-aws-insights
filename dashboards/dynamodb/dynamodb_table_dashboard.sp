@@ -42,7 +42,7 @@ query "aws_dynamodb_monthly_forecast_table" {
     select
       'This Month (Forecast)' as "Period",
       (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
-      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
+      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost";
 
   EOQ
 }
@@ -112,6 +112,10 @@ query "aws_dynamodb_table_by_creation_month" {
 
 dashboard "aws_dynamodb_table_dashboard" {
   title = "AWS DynamoDB Table Dashboard"
+
+  tags = merge(local.dynamodb_common_tags, {
+    type = "Dashboard"
+  })
 
   # Top cards
   container {

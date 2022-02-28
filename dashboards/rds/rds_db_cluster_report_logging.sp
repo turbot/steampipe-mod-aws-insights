@@ -2,6 +2,11 @@ dashboard "aws_rds_db_cluster_logging_dashboard" {
 
   title = "AWS RDS DB Cluster Logging Report"
 
+  tags = merge(local.rds_common_tags, {
+    type     = "Report"
+    category = "Logging"
+  })
+
   container {
 
     card {
@@ -30,7 +35,7 @@ dashboard "aws_rds_db_cluster_logging_dashboard" {
       from
         aws_rds_db_cluster
       where
-        db_cluster_identifier not in (select db_cluster_identifier from logging_stat)
+        db_cluster_identifier not in (select db_cluster_identifier from logging_stat);
       EOQ
       width = 2
     }
@@ -63,9 +68,9 @@ dashboard "aws_rds_db_cluster_logging_dashboard" {
         aws_rds_db_cluster as r,
         aws_account as a
       where
-        r.account_id = a.account_id
+        r.account_id = a.account_id;
     EOQ
 
   }
-  
+
 }

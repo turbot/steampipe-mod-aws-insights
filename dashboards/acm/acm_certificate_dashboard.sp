@@ -1,12 +1,12 @@
 query "aws_acm_certificate_count" {
   sql = <<-EOQ
-    select count(*) as "Certificates" from aws_acm_certificate
+    select count(*) as "Certificates" from aws_acm_certificate;
   EOQ
 }
 
 query "aws_acm_certificate_revoked_count" {
   sql = <<-EOQ
-    select count(*) as "Revoked Certificates" from aws_acm_certificate where revoked_at is not null
+    select count(*) as "Revoked Certificates" from aws_acm_certificate where revoked_at is not null;
   EOQ
 }
 
@@ -17,7 +17,7 @@ query "aws_acm_certificate_renewal_eligibility_ineligible" {
     from
       aws_acm_certificate
     where
-      renewal_eligibility = 'INELIGIBLE'
+      renewal_eligibility = 'INELIGIBLE';
   EOQ
 }
 
@@ -30,7 +30,7 @@ query "aws_acm_certificate_invalid" {
     from
       aws_acm_certificate
     where
-      not_after is null or not_after < now()
+      not_after is null or not_after < now();
   EOQ
 }
 
@@ -43,7 +43,7 @@ query "aws_acm_certificate_in_use_by" {
     from
       aws_acm_certificate
     where
-      jsonb_array_length(in_use_by) > 0
+      jsonb_array_length(in_use_by) > 0;
   EOQ
 }
 
@@ -56,7 +56,7 @@ query "aws_acm_certificate_transparency_logging_disabled" {
     from
       aws_acm_certificate
     where
-      certificate_transparency_logging_preference = 'DISABLED'
+      certificate_transparency_logging_preference = 'DISABLED';
   EOQ
 }
 
@@ -71,7 +71,7 @@ query "aws_acm_certificate_by_status" {
     group by
       status
     order by
-      status
+      status;
   EOQ
 }
 
@@ -85,7 +85,7 @@ query "aws_acm_certificate_by_eligibility" {
     group by
       renewal_eligibility
     order by
-      renewal_eligibility
+      renewal_eligibility;
   EOQ
 }
 
@@ -106,7 +106,7 @@ query "aws_acm_certificate_by_validity" {
     group by
       validity
     order by
-      validity
+      validity;
   EOQ
 }
 
@@ -128,7 +128,7 @@ query "aws_acm_certificate_by_use" {
     group by
       usage
     order by
-      usage
+      usage;
   EOQ
 }
 
@@ -142,7 +142,7 @@ query "aws_acm_certificate_by_transparency_logging_preference" {
     group by
       certificate_transparency_logging_preference
     order by
-      certificate_transparency_logging_preference
+      certificate_transparency_logging_preference;
   EOQ
 }
 
@@ -160,13 +160,13 @@ query "aws_acm_certificate_by_account" {
     group by
       a.title
     order by
-      a.title
+      a.title;
   EOQ
 }
 
 query "aws_acm_certificate_by_region" {
   sql = <<-EOQ
-    select region as "Region", count(*) as "Certificates" from aws_acm_certificate group by region order by region
+    select region as "Region", count(*) as "Certificates" from aws_acm_certificate group by region order by region;
   EOQ
 }
 
@@ -180,7 +180,7 @@ query "aws_acm_certificate_by_type" {
     group by
       type
     order by
-      type
+      type;
   EOQ
 }
 
@@ -232,6 +232,10 @@ query "aws_acm_certificate_by_age" {
 dashboard "aws_acm_certificate_dashboard" {
 
   title = "AWS ACM Certificate Dashboard"
+
+  tags = merge(local.acm_common_tags, {
+    type = "Dashboard"
+  })
 
   container {
 

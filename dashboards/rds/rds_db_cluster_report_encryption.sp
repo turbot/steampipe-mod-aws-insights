@@ -2,6 +2,11 @@ dashboard "aws_rds_db_cluster_encryption_dashboard" {
 
   title = "AWS RDS DB Cluster Encryption Report"
 
+  tags = merge(local.rds_common_tags, {
+    type     = "Report"
+    category = "Encryption"
+  })
+
   container {
 
     card {
@@ -18,7 +23,7 @@ dashboard "aws_rds_db_cluster_encryption_dashboard" {
         from
           aws_rds_db_cluster
         where
-          not storage_encrypted
+          not storage_encrypted;
       EOQ
       width = 2
     }
@@ -43,7 +48,7 @@ dashboard "aws_rds_db_cluster_encryption_dashboard" {
         aws_rds_db_cluster as r,
         aws_account as a
       where
-        r.account_id = a.account_id
+        r.account_id = a.account_id;
     EOQ
 
   }

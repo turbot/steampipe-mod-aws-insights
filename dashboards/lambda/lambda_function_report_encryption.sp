@@ -2,6 +2,11 @@ dashboard "aws_lambda_function_encryption_dashboard" {
 
   title = "AWS Lambda Function Encryption Report"
 
+  tags = merge(local.lambda_common_tags, {
+    type     = "Report"
+    category = "Encryption"
+  })
+
   container {
 
     card {
@@ -33,9 +38,9 @@ dashboard "aws_lambda_function_encryption_dashboard" {
         aws_lambda_function as f,
         aws_account as a
       where
-        f.account_id = a.account_id
+        f.account_id = a.account_id;
     EOQ
 
   }
-  
+
 }
