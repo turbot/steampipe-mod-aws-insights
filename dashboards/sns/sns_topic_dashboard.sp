@@ -128,9 +128,9 @@ query "aws_sns_topic_by_encryption_status" {
     from (
       select kms_master_key_id,
         case when kms_master_key_id is not null then
-          'Enabled'
+          'enabled'
         else
-          'Disabled'
+          'disabled'
         end encryption_status
       from
         aws_sns_topic) as t
@@ -149,9 +149,9 @@ query "aws_sns_topic_by_subscription_status" {
     from (
       select subscriptions_confirmed,
         case when subscriptions_confirmed::int = 0 then
-          'Disabled'
+          'disabled'
         else
-          'Enabled'
+          'enabled'
         end subscription_status
       from
         aws_sns_topic) as t
@@ -214,6 +214,15 @@ dashboard "aws_sns_topic_dashboard" {
       sql   = query.aws_sns_topic_by_encryption_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -221,6 +230,15 @@ dashboard "aws_sns_topic_dashboard" {
       sql   = query.aws_sns_topic_by_subscription_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
   }

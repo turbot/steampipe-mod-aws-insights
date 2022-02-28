@@ -255,8 +255,8 @@ dashboard "aws_vpc_dashboard" {
       sql   = <<-EOQ
         select
           case
-            when is_default then 'Default'
-            else 'Non-Default'
+            when is_default then 'default'
+            else 'non-default'
           end as default_status,
           count(*)
         from
@@ -264,6 +264,15 @@ dashboard "aws_vpc_dashboard" {
         group by
           is_default;
       EOQ
+
+      series "count" {
+        point "default" {
+          color = "green"
+        }
+        point "non-default" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -275,8 +284,8 @@ dashboard "aws_vpc_dashboard" {
           select
             vpc_id,
             case
-              when vpc_id in (select resource_id from aws_vpc_flow_log) then 'Configured'
-              else 'Not Configured'
+              when vpc_id in (select resource_id from aws_vpc_flow_log) then 'configured'
+              else 'not configured'
             end as flow_logs_configured
           from
             aws_vpc
@@ -289,6 +298,15 @@ dashboard "aws_vpc_dashboard" {
         group by
           flow_logs_configured;
       EOQ
+
+      series "count" {
+        point "configured" {
+          color = "green"
+        }
+        point "not configured" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -312,6 +330,15 @@ dashboard "aws_vpc_dashboard" {
         group by
           status;
       EOQ
+
+      series "count" {
+        point "non-empty" {
+          color = "green"
+        }
+        point "empty" {
+          color = "red"
+        }
+      }
     }
 
   }

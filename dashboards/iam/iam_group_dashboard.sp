@@ -180,13 +180,13 @@ query "aws_iam_groups_by_creation_month" {
           'YYYY-MM') as month
       from
         generate_series(date_trunc('month',
-            (
-              select
-                min(create_date)
-                from groups)),
-            date_trunc('month',
-              current_date),
-            interval '1 month') as d
+          (
+            select
+              min(create_date)
+              from groups)),
+          date_trunc('month',
+            current_date),
+          interval '1 month') as d
     ),
     groups_by_month as (
       select

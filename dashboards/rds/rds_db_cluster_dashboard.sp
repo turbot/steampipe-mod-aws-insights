@@ -147,14 +147,14 @@ query "aws_rds_db_cluster_logging_status" {
       ( engine like 'sqlserver%' and enabled_cloudwatch_logs_exports ?& array ['error','agent'] )
      )
   select
-    'Enabled' as "Logging Status",
-    count(db_cluster_identifier) as "Total"
+    'enabled' as "Logging Status",
+    count(db_cluster_identifier)
   from
     logging_stat
 union
   select
-    'Disabled' as "Logging Status",
-    count( db_cluster_identifier) as "Total"
+    'disabled' as "Logging Status",
+    count( db_cluster_identifier)
   from
     aws_rds_db_cluster as s where s.db_cluster_identifier not in (select db_cluster_identifier from logging_stat);
   EOQ
@@ -172,14 +172,14 @@ query "aws_rds_db_cluster_multiple_az_status" {
     group by name
  )
   select
-    'Enabled' as "Multi-AZ Status",
-    count(name) as "Total"
+    'enabled' as "Multi-AZ Status",
+    count(name)
   from
     multiaz_stat
 union
   select
-    'Disabled' as "Multi-AZ Status",
-    count( db_cluster_identifier) as "Total"
+    'disabled' as "Multi-AZ Status",
+    count( db_cluster_identifier)
   from
     aws_rds_db_cluster as s where s.db_cluster_identifier not in (select name from multiaz_stat);
   EOQ
@@ -197,14 +197,14 @@ query "aws_rds_db_cluster_deletion_protection_status" {
     group by name
  )
   select
-    'Enabled' as "Deletion Protection Status",
-    count(name) as "Total"
+    'enabled' as "Deletion Protection Status",
+    count(name)
   from
     deletion_protection
 union
   select
-    'Disabled' as "Deletion Protection Status",
-    count( db_cluster_identifier) as "Total"
+    'disabled' as "Deletion Protection Status",
+    count( db_cluster_identifier)
   from
     aws_rds_db_cluster as s where s.db_cluster_identifier not in (select name from deletion_protection);
   EOQ
@@ -417,6 +417,15 @@ dashboard "aws_rds_db_cluster_dashboard" {
       sql   = query.aws_rds_db_cluster_by_encryption_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -424,28 +433,48 @@ dashboard "aws_rds_db_cluster_dashboard" {
       sql   = query.aws_rds_db_cluster_logging_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
+
     chart {
       title = "Deletion Protection Status"
       sql   = query.aws_rds_db_cluster_deletion_protection_status.sql
       type  = "donut"
       width = 4
 
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
+
     chart {
       title = "Multi-AZ Status"
       sql   = query.aws_rds_db_cluster_multiple_az_status.sql
       type  = "donut"
       width = 4
-    }
 
-    chart {
-      title = "Snapshot Status"
-      sql   = query.aws_rds_db_cluster_with_no_snapshots.sql
-      type  = "donut"
-      width = 4
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
-
   }
 
   container {

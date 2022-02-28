@@ -51,9 +51,9 @@ query "aws_inactive_kms_key_status" {
     from (
       select
         case when enabled then
-          'Enabled'
+          'enabled'
         else
-          'Disabled'
+          'disabled'
         end inactive_status
       from
         aws_kms_key) as t
@@ -72,9 +72,9 @@ query "aws_kms_key_rotation_status" {
     from (
       select
         case when key_rotation_enabled then
-          'Enabled'
+          'enabled'
         else
-          'Disabled'
+          'disabled'
         end rotation_status
       from
         aws_kms_key
@@ -90,7 +90,7 @@ query "aws_kms_key_rotation_status" {
 query "aws_kms_key_usage_status" {
   sql = <<-EOQ
     select
-      key_usage,
+      lower(key_usage) as lower_key_usage,
       count(key_usage)
     from
       aws_kms_key
@@ -305,6 +305,15 @@ dashboard "aws_kms_key_dashboard" {
       sql   = query.aws_inactive_kms_key_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -312,6 +321,15 @@ dashboard "aws_kms_key_dashboard" {
       sql   = query.aws_kms_key_rotation_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {

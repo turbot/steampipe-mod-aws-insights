@@ -133,42 +133,65 @@ query "aws_rds_db_instance_logging_status" {
       ( engine like 'sqlserver%' and enabled_cloudwatch_logs_exports ?& array ['error','agent'] )
      )
   select
-    'Enabled' as "Logging Status",
-    count(db_instance_identifier) as "Total"
+    'enabled' as "Logging Status",
+    count(db_instance_identifier)
   from
     logging_stat
   union
   select
-    'Disabled' as "Logging Status",
-    count( db_instance_identifier) as "Total"
+    'disabled' as "Logging Status",
+    count( db_instance_identifier)
   from
     aws_rds_db_instance as s where s.db_instance_identifier not in (select db_instance_identifier from logging_stat);
   EOQ
 }
 
+# query "aws_rds_db_instance_multiple_az_status" {
+#   sql = <<-EOQ
+#     with multiaz_stat as (
+#     select
+#       distinct db_instance_identifier as name
+#     from
+#       aws_rds_db_instance
+#     where
+#       multi_az
+#       and not (engine ilike any (array ['%aurora-mysql%', '%aurora-postgres%']))
+#     group by name
+#  )
+#   select
+#     'Enabled' as "Multi-AZ Status",
+#     count(name) as "Total"
+#   from
+#     multiaz_stat
+#   union
+#   select
+#     'Disabled' as "Multi-AZ Status",
+#     count( db_instance_identifier) as "Total"
+#   from
+#     aws_rds_db_instance as s where s.db_instance_identifier not in (select name from multiaz_stat);
+#   EOQ
+# }
+
 query "aws_rds_db_instance_multiple_az_status" {
   sql = <<-EOQ
-    with multiaz_stat as (
+    with db_instances as (
+      select
+        case
+          when multi_az then 'enabled'
+          else 'diabled'
+        end as visibility
+      from
+        aws_rds_db_instance
+      where 
+        engine not ilike any (array ['%aurora-mysql%', '%aurora-postgres%'])
+    )
     select
-      distinct db_instance_identifier as name
+      visibility,
+      count(*)
     from
-      aws_rds_db_instance
-    where
-      multi_az
-      and not (engine ilike any (array ['%aurora-mysql%', '%aurora-postgres%']))
-    group by name
- )
-  select
-    'Enabled' as "Multi-AZ Status",
-    count(name) as "Total"
-  from
-    multiaz_stat
-  union
-  select
-    'Disabled' as "Multi-AZ Status",
-    count( db_instance_identifier) as "Total"
-  from
-    aws_rds_db_instance as s where s.db_instance_identifier not in (select name from multiaz_stat);
+      db_instances
+    group by
+      visibility;
   EOQ
 }
 
@@ -180,9 +203,9 @@ query "aws_rds_db_instance_in_vpc_status" {
     from (
       select
         case when vpc_id is not null then
-          'Enabled'
+          'enabled'
         else
-          'Disabled'
+          'disabled'
         end vpc_status
       from
         aws_rds_db_instance) as t
@@ -201,9 +224,9 @@ query "aws_rds_db_instance_by_encryption_status" {
     from (
       select
         case when storage_encrypted then
-          'Enabled'
+          'enabled'
         else
-          'Disabled'
+          'disabled'
         end encryption_status
       from
         aws_rds_db_instance) as t
@@ -373,8 +396,8 @@ query "aws_rds_db_instance_public_status" {
     with db_instances as (
       select
         case
-          when publicly_accessible is null then 'Private'
-          else 'Public'
+          when publicly_accessible is null then 'private'
+          else 'public'
         end as visibility
       from
         aws_rds_db_instance
@@ -500,6 +523,15 @@ dashboard "aws_rds_db_instance_dashboard" {
       sql   = query.aws_rds_db_instance_public_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "private" {
+          color = "green"
+        }
+        point "public" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -507,6 +539,15 @@ dashboard "aws_rds_db_instance_dashboard" {
       sql = query.aws_rds_db_instance_by_encryption_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -514,6 +555,15 @@ dashboard "aws_rds_db_instance_dashboard" {
       sql = query.aws_rds_db_instance_in_vpc_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -528,6 +578,15 @@ dashboard "aws_rds_db_instance_dashboard" {
       sql = query.aws_rds_db_instance_multiple_az_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {

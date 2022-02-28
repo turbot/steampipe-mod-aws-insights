@@ -94,14 +94,14 @@ query "aws_rds_db_instance_snapshot_iam_authentication_enabled" {
     group by name
   )
   select
-    'Enabled' as "IAM Authentication Status",
-    count(name) as "Total"
+    'enabled' as "IAM Authentication Status",
+    count(name)
   from
     iam_authentication_stat
   union
   select
-    'Disabled' as "IAM Authentication Status",
-    count( db_instance_identifier) as "Total"
+    'disabled' as "IAM Authentication Status",
+    count( db_instance_identifier)
   from
     aws_rds_db_snapshot as s where s.db_instance_identifier not in (select name from iam_authentication_stat);
   EOQ
@@ -279,6 +279,15 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
       sql   = query.aws_rds_db_instance_snapshot_by_encryption_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -286,6 +295,15 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
       sql   = query.aws_rds_db_instance_snapshot_iam_authentication_enabled.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
   }
