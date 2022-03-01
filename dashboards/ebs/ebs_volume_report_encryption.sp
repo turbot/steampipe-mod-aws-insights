@@ -1,4 +1,5 @@
 dashboard "aws_ebs_volume_encryption_dashboard" {
+
   title = "AWS EBS Volume Encryption Report"
 
   tags = merge(local.ebs_common_tags, {
@@ -14,43 +15,37 @@ dashboard "aws_ebs_volume_encryption_dashboard" {
     }
 
     card {
-      sql = <<-EOQ
-        select
-          count(*) as value,
-          'Unencrypted' as label,
-          case count(*) when 0 then 'ok' else 'alert' end as type
-        from
-          aws_ebs_volume
-        where
-          not encrypted;
-      EOQ
+      sql   = query.aws_ebs_volume_unencrypted_count.sql
       width = 2
     }
-    
+
   }
 
   table {
-
     column "Account ID" {
       display = "none"
     }
 
-    sql = <<-EOQ
-      select
-        v.tags ->> 'Name' as "Name",
-        v.volume_id as "Volume",
-        case when v.encrypted then 'Enabled' else null end as "Encryption",
-        a.title as "Account",
-        v.account_id as "Account ID",
-        v.region as "Region",
-        v.arn as "ARN"
-      from
-        aws_ebs_volume as v,
-        aws_account as a
-      where
-        v.account_id = a.account_id;
-    EOQ
-
+    sql = query.aws_ebs_volume_encryption_table.sql
   }
 
+}
+
+query "aws_ebs_volume_encryption_table" {
+  sql = <<-EOQ
+    select
+      v.tags ->> 'Name' as "Name",
+      v.volume_id as "Volume",
+      case when v.encrypted then 'Enabled' else null end as "Encryption",
+      v.kms_key_id as "KMS Key ID",
+      a.title as "Account",
+      v.account_id as "Account ID",
+      v.region as "Region",
+      v.arn as "ARN"
+    from
+      aws_ebs_volume as v,
+      aws_account as a
+    where
+      v.account_id = a.account_id;
+  EOQ
 }

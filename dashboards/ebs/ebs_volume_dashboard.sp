@@ -21,12 +21,12 @@ dashboard "aws_ebs_volume_dashboard" {
 
     # Assessments
     card {
-      sql   = query.aws_ebs_encrypted_volume_count.sql
+      sql   = query.aws_ebs_volume_unencrypted_count.sql
       width = 2
     }
 
     card {
-      sql   = query.aws_ebs_unattached_volume_count.sql
+      sql   = query.aws_ebs_volume_unattached_count.sql
       width = 2
     }
 
@@ -50,6 +50,15 @@ dashboard "aws_ebs_volume_dashboard" {
       sql   = query.aws_ebs_volume_by_encryption_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -69,7 +78,7 @@ dashboard "aws_ebs_volume_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      sql   = query.aws_ebs_monthly_forecast_table.sql
+      sql   = query.aws_ebs_volume_monthly_forecast_table.sql
     }
 
     chart {
@@ -152,7 +161,7 @@ dashboard "aws_ebs_volume_dashboard" {
 
     chart {
       title = "Storage by Age (GB)"
-      sql   = query.aws_ebs_storage_by_creation_month.sql
+      sql   = query.aws_ebs_volume_storage_by_creation_month.sql
       type  = "column"
       width = 3
 
@@ -205,7 +214,7 @@ query "aws_ebs_volume_storage_total" {
   EOQ
 }
 
-query "aws_ebs_encrypted_volume_count" {
+query "aws_ebs_volume_unencrypted_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -218,7 +227,7 @@ query "aws_ebs_encrypted_volume_count" {
   EOQ
 }
 
-query "aws_ebs_unattached_volume_count" {
+query "aws_ebs_volume_unattached_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -282,7 +291,7 @@ query "aws_ebs_volume_by_state" {
 
 # Cost Queries
 
-query "aws_ebs_monthly_forecast_table" {
+query "aws_ebs_volume_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
       select
@@ -476,7 +485,7 @@ query "aws_ebs_volume_by_creation_month" {
   EOQ
 }
 
-query "aws_ebs_storage_by_creation_month" {
+query "aws_ebs_volume_storage_by_creation_month" {
   sql = <<-EOQ
     with volumes as (
       select
