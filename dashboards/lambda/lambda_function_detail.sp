@@ -255,7 +255,7 @@ dashboard "aws_lambda_function_detail" {
         width = 6
 
         sql = <<-EOQ
-          WITH jsondata AS (
+          with jsondata as (
             select
               tags::json as tags
             from
@@ -277,7 +277,7 @@ dashboard "aws_lambda_function_detail" {
           arn = self.input.lambda_arn.value
         }
       }
-
+    }
     container {
       width = 6
 

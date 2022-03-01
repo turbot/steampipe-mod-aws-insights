@@ -550,7 +550,7 @@ dashboard "aws_vpc_security_group_detail" {
           arn = self.input.security_group_arn.value
         }
       }
-
+    }
     container {
       width = 6
 

@@ -106,7 +106,7 @@ query "aws_kms_key_aliases" {
       p ->> 'AliasArn'  as "Alias Arn",
       p ->> 'AliasName' as "Alias Name",
       p ->> 'CreationDate' as "Creation Date",
-      p ->> 'LastUpdatedDate' as "Last Update dDate",
+      p ->> 'LastUpdatedDate' as "Last Updated Date",
       p ->> 'TargetKeyId' as "Target Key Id"
     from
       aws_kms_key,
@@ -254,7 +254,7 @@ dashboard "aws_kms_key_detail" {
         }
       }
 
-
+    }
     container {
       width = 6
 

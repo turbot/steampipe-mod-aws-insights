@@ -836,7 +836,7 @@ dashboard "aws_vpc_detail" {
     chart {
       title = "Subnets by AZ"
       type  = "column"
-      width = 6
+      width = 4
       sql   = <<-EOQ
         select
           availability_zone,
@@ -860,7 +860,6 @@ dashboard "aws_vpc_detail" {
     }
 
     table {
-      title = "VPC Subnets"
       query = query.aws_vpc_subnets_for_vpc
       width = 6
       args = {

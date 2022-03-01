@@ -73,9 +73,9 @@ query "aws_s3_bucket_encryption_enabled" {
 query "aws_s3_bucket_logging" {
   sql = <<-EOQ
     select
-      logging -> 'TargetBucket' as "Target Bucket",
-      logging -> 'TargetPrefix' as "Target Prefix",
-      logging -> 'TargetPrefix' as "Target Grants"
+      logging ->> 'TargetBucket' as "Target Bucket",
+      logging ->> 'TargetPrefix' as "Target Prefix",
+      logging ->> 'TargetPrefix' as "Target Grants"
     from
       aws_s3_bucket
     where
@@ -180,10 +180,10 @@ query "aws_s3_bucket_policy" {
     select
       p -> 'Action'  as "Action",
       p -> 'Condition' as "Condition",
-      p -> 'Effect'  as "Effect",
+      p ->> 'Effect'  as "Effect",
       p -> 'Principal'  as "Principal",
       p -> 'Resource'  as "Resource",
-      p -> 'Sid'  as "Sid"
+      p ->> 'Sid'  as "Sid"
     from
       aws_s3_bucket,
       jsonb_array_elements(policy_std -> 'Statement') as p
@@ -197,14 +197,14 @@ query "aws_s3_bucket_policy" {
 query "aws_s3_bucket_lifecycle_policy" {
   sql = <<-EOQ
     select
-      r -> 'ID'  as "ID",
-      r -> 'AbortIncompleteMultipartUpload'  as "AbortIncompleteMultipartUpload",
-      r -> 'Expiration' as "Expiration",
-      r -> 'Filter'  as "Filter",
-      r -> 'NoncurrentVersionExpiration'  as "NoncurrentVersionExpiration",
-      r -> 'Prefix'  as "Prefix",
-      r -> 'Status'  as "Status",
-      r -> 'Transitions'  as "Transitions"
+      r ->> 'ID'  as "ID",
+      r ->> 'AbortIncompleteMultipartUpload'  as "AbortIncompleteMultipartUpload",
+      r ->> 'Expiration' as "Expiration",
+      r ->> 'Filter'  as "Filter",
+      r ->> 'NoncurrentVersionExpiration'  as "NoncurrentVersionExpiration",
+      r ->> 'Prefix'  as "Prefix",
+      r ->> 'Status'  as "Status",
+      r ->> 'Transitions'  as "Transitions"
     from
       aws_s3_bucket,
       jsonb_array_elements(lifecycle_rules) as r

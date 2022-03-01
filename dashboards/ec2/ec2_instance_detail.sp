@@ -101,7 +101,7 @@ query "aws_ec2_instance_detailed_monitoring" {
 query "aws_ec2_instance_block_device_mapping" {
   sql = <<-EOQ
     select
-      p ->> 'DeviceName' as "Device Name",
+      p ->> 'DeviceName'  as "Device Name",
       p -> 'Ebs' ->> 'AttachTime' as "Attach Time",
       p -> 'Ebs' ->> 'DeleteOnTermination' as "DeleteOnTermination",
       p -> 'Ebs' ->> 'Status'  as "Status",
@@ -152,8 +152,8 @@ query "aws_ec2_instance_network_intefaces" {
 query "aws_ec2_instance_cpu_cores" {
   sql = <<-EOQ
     select
-      cpu_options_core_count as "Cpu Options Core Count",
-      cpu_options_threads_per_core as "Cpu Options Threads Per Core"
+      cpu_options_core_count  as "Cpu Options Core Count",
+      cpu_options_threads_per_core  as "Cpu Options Threads Per Core"
     from
       aws_ec2_instance
     where
@@ -278,7 +278,7 @@ dashboard "aws_ec2_instance_detail" {
           arn = self.input.instance_arn.value
         }
       }
-
+    }
     container {
       width = 6
 

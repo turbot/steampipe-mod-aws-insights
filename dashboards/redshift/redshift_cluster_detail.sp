@@ -116,7 +116,7 @@ query "aws_redshift_cluster_nodes" {
 query "aws_redshift_cluster_parameter_groups" {
   sql = <<-EOQ
     select
-      p ->> 'ClusterParameterStatusList' as "Cluster Parameter Status List",
+      p -> 'ClusterParameterStatusList' as "Cluster Parameter Status List",
       p ->> 'ParameterApplyStatus' as "Parameter Apply Status",
       p ->> 'ParameterGroupName'  as "Parameter Group Name"
     from
@@ -137,7 +137,7 @@ query "aws_redshift_cluster_scheduled_actions" {
       p ->> 'NextInvocations'  as "Next Invocations",
       p ->> 'Schedule' as "Schedule",
       p ->> 'ScheduledActionDescription' as "Scheduled Action Description",
-      p -> 'ScheduledActionName' as "Scheduled Action Name",
+      p ->> 'ScheduledActionName' as "Scheduled Action Name",
       p ->> 'StartTime' as "Start Time",
       p ->> 'State' as "State",
       p ->> 'TargetAction' as "Target Action"
@@ -172,8 +172,8 @@ query "aws_redshift_cluster_logging" {
 query "aws_redshift_cluster_security_groups" {
   sql = <<-EOQ
     select
-      s ->> 'VpcSecurityGroupId' as "Vpc Security Group Id",
-      s ->> 'Status' as "Status"
+      s -> 'VpcSecurityGroupId' as "Vpc Security Group Id",
+      s -> 'Status' as "Status"
     from
       aws_redshift_cluster,
       jsonb_array_elements(vpc_security_groups) as s
