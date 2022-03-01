@@ -1,4 +1,4 @@
-query "roles_allow_all_actions" {
+query "aws_iam_roles_allow_all_actions" {
   sql = <<-EOQ
     with roles_that_allow_all_actions as (
       select
@@ -56,7 +56,7 @@ dashboard "aws_iam_role_full_administrative_privileges_report" {
       column "Account ID" {
         display = "none"
       }
-      sql = query.roles_allow_all_actions.sql
+      sql = query.aws_iam_roles_allow_all_actions.sql
 
     }
 
