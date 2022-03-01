@@ -100,9 +100,9 @@ query "aws_redshift_cluster_public" {
 query "aws_redshift_cluster_nodes" {
   sql = <<-EOQ
     select
-      p ->> 'NodeRole' as "NodeRole",
-      p ->> 'PrivateIPAddress'  as "PrivateIPAddress",
-      p ->> 'PublicIPAddress'  as "PublicIPAddress"
+      p ->> 'NodeRole' as "Node Role",
+      p ->> 'PrivateIPAddress' as "PrivateIP Address",
+      p ->> 'PublicIPAddress' as "PublicIP Address"
     from
       aws_redshift_cluster,
       jsonb_array_elements(cluster_nodes) as p
@@ -133,7 +133,7 @@ query "aws_redshift_cluster_scheduled_actions" {
   sql = <<-EOQ
     select
       p ->> 'EndTime' as "End Time",
-      p ->> 'IamRole' as "Iam Role",
+      p ->> 'IamRole' as "IAM Role",
       p ->> 'NextInvocations'  as "Next Invocations",
       p ->> 'Schedule' as "Schedule",
       p ->> 'ScheduledActionDescription' as "Scheduled Action Description",
@@ -172,7 +172,7 @@ query "aws_redshift_cluster_logging" {
 query "aws_redshift_cluster_security_groups" {
   sql = <<-EOQ
     select
-      s -> 'VpcSecurityGroupId' as "Vpc Security Group Id",
+      s -> 'VpcSecurityGroupId' as "VPC Security Group Id",
       s -> 'Status' as "Status"
     from
       aws_redshift_cluster,
@@ -268,7 +268,7 @@ dashboard "aws_redshift_cluster_detail" {
         sql   = <<-EOQ
             select
               cluster_identifier as "Cluster Identifier",
-              cluster_namespace_arn as "Cluster Namespace Arn",
+              cluster_namespace_arn as "Cluster Namespace ARN",
               db_name  as "DB Name",
               cluster_status  as "Cluster Status",
               vpc_id as "VPC Id",

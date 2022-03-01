@@ -670,7 +670,7 @@ dashboard "aws_vpc_detail" {
   })
 
   input "vpc_arn" {
-    title = "Select a vpc:"
+    title = "Select a VPC:"
     sql   = query.aws_vpc_input.sql
     width = 4
   }
