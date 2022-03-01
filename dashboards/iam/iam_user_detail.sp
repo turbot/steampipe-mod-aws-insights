@@ -1,12 +1,15 @@
 query "aws_iam_user_input" {
   sql = <<EOQ
     select
-      arn as label,
-      arn as value
+      title as label,
+      arn as value,
+      json_build_object(
+        'account_id', account_id
+      ) as tags
     from
       aws_iam_user
     order by
-      arn;
+      title;
 EOQ
 }
 

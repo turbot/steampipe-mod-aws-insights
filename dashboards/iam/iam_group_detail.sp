@@ -7,7 +7,10 @@ query "aws_iam_group_input" {
   sql = <<EOQ
     select
       title as label,
-      arn as value
+      arn as value,
+      json_build_object(
+        'account_id', account_id
+      ) as tags
     from
       aws_iam_group
     order by

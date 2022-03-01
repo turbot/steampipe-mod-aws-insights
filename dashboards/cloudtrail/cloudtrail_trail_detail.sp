@@ -1,14 +1,18 @@
 query "aws_cloudtrail_trail_input" {
   sql = <<EOQ
     select
-      arn as label,
-      arn as value
+      title as label,
+      arn as value,
+      json_build_object(
+        'account_id', account_id,
+        'region', region
+      ) as tags
     from
       aws_cloudtrail_trail
     where
       region = home_region
     order by
-      arn;
+      title;
   EOQ
 }
 

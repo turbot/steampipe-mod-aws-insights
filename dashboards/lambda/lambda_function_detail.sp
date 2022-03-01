@@ -1,12 +1,16 @@
 query "aws_lambda_function_input" {
   sql = <<EOQ
     select
-      arn as label,
-      arn as value
+      title as label,
+      arn as value,
+      json_build_object(
+        'account_id', account_id,
+        'region', region
+      ) as tags
     from
       aws_lambda_function
     order by
-      arn;
+      title;
   EOQ
 }
 

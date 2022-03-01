@@ -1,14 +1,18 @@
 query "aws_kms_key_input" {
   sql = <<-EOQ
     select
-      arn as label,
-      arn as value
+      title as label,
+      arn as value,
+      json_build_object(
+        'account_id', account_id,
+        'region', region
+      ) as tags
     from
       aws_kms_key
     where
       key_manager = 'CUSTOMER'
     order by
-      arn;
+      title;
   EOQ
 }
 

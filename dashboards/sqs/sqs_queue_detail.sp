@@ -1,12 +1,16 @@
 query "aws_sqs_queue_input" {
   sql = <<EOQ
     select
-      queue_arn as label,
-      queue_arn as value
+      title as label,
+      queue_arn as value,
+      json_build_object(
+        'account_id', account_id,
+        'region', region
+      ) as tags
     from
       aws_sqs_queue
     order by
-      queue_arn;
+      title;
   EOQ
 }
 
