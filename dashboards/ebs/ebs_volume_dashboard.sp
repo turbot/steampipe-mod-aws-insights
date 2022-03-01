@@ -41,6 +41,7 @@ dashboard "aws_ebs_volume_dashboard" {
   }
 
   container {
+
     title = "Assessments"
     width = 6
 
@@ -60,8 +61,8 @@ dashboard "aws_ebs_volume_dashboard" {
 
   }
 
-
   container {
+
     title = "Cost"
     width = 6
 
@@ -82,6 +83,7 @@ dashboard "aws_ebs_volume_dashboard" {
   }
 
   container {
+
     title = "Analysis"
 
     chart {
@@ -163,6 +165,7 @@ dashboard "aws_ebs_volume_dashboard" {
   }
 
   container {
+
     title  = "Performance & Utilization"
 
     chart {
@@ -182,6 +185,8 @@ dashboard "aws_ebs_volume_dashboard" {
   }
 
 }
+
+# Card Queries
 
 query "aws_ebs_volume_count" {
   sql = <<-EOQ
@@ -238,6 +243,88 @@ query "aws_ebs_volume_cost_mtd" {
   EOQ
 }
 
+# Assessment Queries
+
+query "aws_ebs_volume_by_encryption_status" {
+  sql = <<-EOQ
+    select
+      encryption_status,
+      count(*)
+    from (
+      select encrypted,
+        case when encrypted then
+          'enabled'
+        else
+          'disabled'
+        end encryption_status
+      from
+        aws_ebs_volume) as t
+    group by
+      encryption_status
+    order by
+      encryption_status desc
+  EOQ
+}
+
+query "aws_ebs_volume_by_state" {
+  sql = <<-EOQ
+    select
+      state,
+      count(state)
+    from
+      aws_ebs_volume
+    group by
+      state
+  EOQ
+}
+
+# Cost Queries
+
+query "aws_ebs_monthly_forecast_table" {
+  sql = <<-EOQ
+    with monthly_costs as (
+      select
+        period_start,
+        period_end,
+        case
+          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp) then 'Month to Date'
+          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month') then 'Previous Month'
+          else to_char (period_start, 'Month')
+        end as period_label,
+        period_end::date - period_start::date as days,
+        sum(unblended_cost_amount)::numeric::money as unblended_cost_amount,
+        (sum(unblended_cost_amount) / (period_end::date - period_start::date ) )::numeric::money as average_daily_cost,
+        date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval ) as days_in_month,
+        sum(unblended_cost_amount) / (period_end::date - period_start::date ) * date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval )::numeric::money  as forecast_amount
+      from
+        aws_cost_by_service_usage_type_monthly as c
+
+      where
+        service = 'EC2 - Other'
+        and usage_type like '%EBS:%'
+        and date_trunc('month', period_start) >= date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
+
+        group by
+        period_start,
+        period_end
+    )
+
+    select
+      period_label as "Period",
+      unblended_cost_amount as "Cost",
+      average_daily_cost as "Daily Avg Cost"
+    from
+      monthly_costs
+
+    union all
+    select
+      'This Month (Forecast)' as "Period",
+      (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
+      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
+
+  EOQ
+}
+
 query "aws_ebs_volume_cost_per_month" {
   sql = <<-EOQ
     select
@@ -254,6 +341,8 @@ query "aws_ebs_volume_cost_per_month" {
       period_start
   EOQ
 }
+
+# Analysis Queries
 
 query "aws_ebs_volume_by_account" {
   sql = <<-EOQ
@@ -289,6 +378,12 @@ query "aws_ebs_volume_storage_by_account" {
   EOQ
 }
 
+query "aws_ebs_volume_by_type" {
+  sql = <<-EOQ
+    select volume_type as "Type", count(*) as "volumes" from aws_ebs_volume group by volume_type order by volume_type
+  EOQ
+}
+
 query "aws_ebs_volume_storage_by_type" {
   sql = <<-EOQ
     select
@@ -312,63 +407,6 @@ query "aws_ebs_volume_by_region" {
 query "aws_ebs_volume_storage_by_region" {
   sql = <<-EOQ
     select region as "Region", sum(size) as "GB" from aws_ebs_volume group by region order by region
-  EOQ
-}
-
-query "aws_ebs_volume_by_type" {
-  sql = <<-EOQ
-    select volume_type as "Type", count(*) as "volumes" from aws_ebs_volume group by volume_type order by volume_type
-  EOQ
-}
-
-query "aws_ebs_volume_by_encryption_status" {
-  sql = <<-EOQ
-    select
-      encryption_status,
-      count(*)
-    from (
-      select encrypted,
-        case when encrypted then
-          'enabled'
-        else
-          'disabled'
-        end encryption_status
-      from
-        aws_ebs_volume) as t
-    group by
-      encryption_status
-    order by
-      encryption_status desc
-  EOQ
-}
-
-query "aws_ebs_volume_by_state" {
-  sql = <<-EOQ
-    select
-      state,
-      count(state)
-    from
-      aws_ebs_volume
-    group by
-      state
-  EOQ
-}
-
-query "aws_ebs_volume_with_no_snapshots" {
-  sql = <<-EOQ
-    select
-      v.volume_id,
-      v.account_id,
-      v.region
-    from
-      aws_ebs_volume as v
-    left join aws_ebs_snapshot as s on v.volume_id = s.volume_id
-    group by
-      v.account_id,
-      v.region,
-      v.volume_id
-    having
-      count(s.snapshot_id) = 0
   EOQ
 }
 
@@ -463,50 +501,7 @@ query "aws_ebs_storage_by_creation_month" {
   EOQ
 }
 
-query "aws_ebs_monthly_forecast_table" {
-  sql = <<-EOQ
-    with monthly_costs as (
-      select
-        period_start,
-        period_end,
-        case
-          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp) then 'Month to Date'
-          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month') then 'Previous Month'
-          else to_char (period_start, 'Month')
-        end as period_label,
-        period_end::date - period_start::date as days,
-        sum(unblended_cost_amount)::numeric::money as unblended_cost_amount,
-        (sum(unblended_cost_amount) / (period_end::date - period_start::date ) )::numeric::money as average_daily_cost,
-        date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval ) as days_in_month,
-        sum(unblended_cost_amount) / (period_end::date - period_start::date ) * date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval )::numeric::money  as forecast_amount
-      from
-        aws_cost_by_service_usage_type_monthly as c
-
-      where
-        service = 'EC2 - Other'
-        and usage_type like '%EBS:%'
-        and date_trunc('month', period_start) >= date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
-
-        group by
-        period_start,
-        period_end
-    )
-
-    select
-      period_label as "Period",
-      unblended_cost_amount as "Cost",
-      average_daily_cost as "Daily Avg Cost"
-    from
-      monthly_costs
-
-    union all
-    select
-      'This Month (Forecast)' as "Period",
-      (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
-      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
-
-  EOQ
-}
+# Performance Queries
 
 query "aws_ebs_volume_top_10_read_ops_avg" {
   sql = <<-EOQ
