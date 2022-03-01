@@ -1,6 +1,11 @@
 dashboard "aws_cloudtrail_trail_log_file_validation_report" {
   title = "AWS CloudTrail Trail Log File Validation Report"
 
+  tags = merge(local.cloudtrail_common_tags, {
+    type     = "Report"
+    category = "Log File Validation"
+  })
+
   container {
 
     card {

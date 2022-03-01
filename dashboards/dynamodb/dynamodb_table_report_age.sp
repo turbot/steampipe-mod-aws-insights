@@ -1,7 +1,12 @@
 dashboard "aws_dynamodb_table_age_report" {
   title = "AWS DynamoDB Table Age Report"
 
-   container {
+  tags = merge(local.dynamodb_common_tags, {
+    type     = "Report"
+    category = "Age"
+  })
+
+  container {
 
     card {
       sql   = query.aws_dynamodb_table_count.sql
@@ -77,7 +82,7 @@ dashboard "aws_dynamodb_table_age_report" {
           creation_date_time <= now() - '1 year' :: interval;
       EOQ
     }
-    
+
   }
 
   container {

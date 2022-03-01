@@ -1,6 +1,6 @@
 query "aws_iam_role_count" {
   sql = <<-EOQ
-    select count(*) as "Roles" from aws_iam_role
+    select count(*) as "Roles" from aws_iam_role;
   EOQ
 }
 
@@ -13,7 +13,7 @@ query "aws_iam_roles_with_inline_policy_count" {
     from
       aws_iam_role
     where
-      jsonb_array_length(inline_policies) > 0
+      jsonb_array_length(inline_policies) > 0;
   EOQ
 }
 
@@ -26,7 +26,7 @@ query "aws_iam_roles_without_direct_attached_policy_count" {
     from
       aws_iam_role
     where
-      attached_policy_arns is null
+      attached_policy_arns is null;
   EOQ
 }
 
@@ -55,7 +55,7 @@ query "aws_iam_roles_allow_all_action_count" {
       'Roles Allows All Actions' as label,
       case when count(*) > 0 then 'alert' else 'ok' end as type
     from
-      roles_allow_all_actions
+      roles_allow_all_actions;
   EOQ
 }
 
@@ -68,7 +68,7 @@ query "aws_iam_role_no_boundary_count" {
     from
       aws_iam_role
     where
-      permissions_boundary_type is null or permissions_boundary_type = ''
+      permissions_boundary_type is null or permissions_boundary_type = '';
   EOQ
 }
 
@@ -92,7 +92,7 @@ query "aws_iam_role_allows_assume_role_to_all_principal_count" {
       'Allows All Principals To Assume Role' as label,
       case when count(distinct name) > 0 then 'alert' else 'ok' end as type
     from
-      roles_can_be_assumed_anonymously
+      roles_can_be_assumed_anonymously;
   EOQ
 }
 
@@ -103,8 +103,8 @@ query "aws_iam_roles_with_inline_policy" {
       select
         arn,
         case
-          when jsonb_array_length(inline_policies) > 0 then 'With Inline Policies'
-          else 'OK'
+          when jsonb_array_length(inline_policies) > 0 then 'configured'
+          else 'unconfigured'
         end as has_inline
       from
         aws_iam_role
@@ -115,7 +115,7 @@ query "aws_iam_roles_with_inline_policy" {
       from
         roles_inline_compliance
       group by
-        has_inline
+        has_inline;
   EOQ
 }
 
@@ -125,8 +125,8 @@ query "aws_iam_roles_with_direct_attached_policy" {
       select
         arn,
         case
-          when jsonb_array_length(attached_policy_arns) > 0 then 'With Attached Policies'
-          else 'Alert'
+          when jsonb_array_length(attached_policy_arns) > 0 then 'attached'
+          else 'unattached'
         end as has_attached
       from
         aws_iam_role
@@ -137,7 +137,7 @@ query "aws_iam_roles_with_direct_attached_policy" {
       from
         role_attached_compliance
       group by
-        has_attached
+        has_attached;
   EOQ
 }
 
@@ -163,7 +163,7 @@ query "aws_iam_roles_allow_all_action" {
     )
     select
       a.title as "account",
-      count(role_name)::numeric as "Allows * Actions"
+      count(role_name)
     from
       roles_allow_all_actions as c,
       aws_account as a
@@ -172,7 +172,7 @@ query "aws_iam_roles_allow_all_action" {
     group by
       account
     order by
-      account
+      account;
   EOQ
 }
 
@@ -180,14 +180,14 @@ query "aws_iam_roles_by_boundary_policy" {
   sql = <<-EOQ
     select
       case
-        when permissions_boundary_type is null or permissions_boundary_type = '' then 'Not Configured'
-        else 'Configured'
+        when permissions_boundary_type is null or permissions_boundary_type = '' then 'unconfigured'
+        else 'configured'
       end as policy_type,
       count(*)
     from
       aws_iam_role
     group by
-      permissions_boundary_type
+      permissions_boundary_type;
   EOQ
 }
 
@@ -204,7 +204,7 @@ query "aws_iam_roles_by_account" {
       a.account_id = i.account_id
     group by
       account
-    order by count(i.*) desc
+    order by count(i.*) desc;
   EOQ
 }
 
@@ -218,7 +218,7 @@ query "aws_iam_roles_by_path" {
     group by
       path
     order by
-      total desc
+      total desc;
   EOQ
 }
 
@@ -263,13 +263,17 @@ query "aws_iam_roles_by_creation_month" {
       months
       left join roles_by_month on months.month = roles_by_month.creation_month
     order by
-      months.month desc;
+      months.month;
   EOQ
 }
 
 dashboard "aws_iam_role_dashboard" {
 
   title = "AWS IAM Role Dashboard"
+
+  tags = merge(local.iam_common_tags, {
+    type = "Dashboard"
+  })
 
   container {
 
@@ -316,6 +320,15 @@ dashboard "aws_iam_role_dashboard" {
       sql   = query.aws_iam_roles_with_inline_policy.sql
       type  = "donut"
       width = 3
+
+      series "count" {
+        point "unconfigured" {
+          color = "green"
+        }
+        point "configured" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -323,6 +336,15 @@ dashboard "aws_iam_role_dashboard" {
       sql   = query.aws_iam_roles_with_direct_attached_policy.sql
       type  = "donut"
       width = 3
+
+      series "count" {
+        point "attached" {
+          color = "green"
+        }
+        point "unattached" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -337,6 +359,15 @@ dashboard "aws_iam_role_dashboard" {
       sql   = query.aws_iam_roles_by_boundary_policy.sql
       type  = "donut"
       width = 3
+
+      series "count" {
+        point "configured" {
+          color = "green"
+        }
+        point "unconfigured" {
+          color = "red"
+        }
+      }
     }
 
   }
@@ -348,23 +379,23 @@ dashboard "aws_iam_role_dashboard" {
       title = "Roles by Account"
       sql   = query.aws_iam_roles_by_account.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Roles by Path"
       sql   = query.aws_iam_roles_by_path.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Roles by Age"
       sql   = query.aws_iam_roles_by_creation_month.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
   }
-  
+
 }

@@ -1,6 +1,6 @@
 query "aws_rds_db_instance_snapshot_count" {
   sql = <<-EOQ
-    select count(*) as "RDS DB Instance Snapshots" from aws_rds_db_snapshot
+    select count(*) as "RDS DB Instance Snapshots" from aws_rds_db_snapshot;
   EOQ
 }
 
@@ -8,12 +8,12 @@ query "aws_rds_unencrypted_db_instance_snapshot_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Unencrypted Instance Snapshots' as label,
+      'Unencrypted' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_rds_db_snapshot
     where
-      not encrypted
+      not encrypted;
   EOQ
 }
 
@@ -21,12 +21,12 @@ query "aws_rds_db_instance_snapshot_not_in_vpc_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Instance Snapshots not in VPC' as label,
+      'Not in VPC' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_rds_db_snapshot
     where
-      vpc_id is null
+      vpc_id is null;
   EOQ
 }
 
@@ -42,7 +42,7 @@ query "aws_rds_db_instance_snapshot_cost_per_month" {
     group by
       period_start
     order by
-      period_start
+      period_start;
   EOQ
 }
 
@@ -58,8 +58,7 @@ query "aws_rds_db_instance_snapshot_by_account" {
       a.account_id = i.account_id
     group by
       account
-    order by count(i.*) desc
-
+    order by count(i.*) desc;
   EOQ
 }
 
@@ -72,14 +71,14 @@ query "aws_rds_db_instance_snapshot_by_region" {
     from
       aws_rds_db_snapshot as i
     group by
-      region
+      region;
   EOQ
 }
 
 
 query "aws_rds_db_instance_snapshot_by_engine_type" {
   sql = <<-EOQ
-    select engine as "Engine Type", count(*) as "Instance Snapshots" from aws_rds_db_snapshot group by engine order by engine
+    select engine as "Engine Type", count(*) as "Instance Snapshots" from aws_rds_db_snapshot group by engine order by engine;
   EOQ
 }
 
@@ -95,18 +94,39 @@ query "aws_rds_db_instance_snapshot_iam_authentication_enabled" {
     group by name
   )
   select
-    'Enabled' as "IAM Authentication Status",
-    count(name) as "Total"
+    'enabled' as "IAM Authentication Status",
+    count(name)
   from
     iam_authentication_stat
   union
   select
-    'Disabled' as "IAM Authentication Status",
-    count( db_instance_identifier) as "Total"
+    'disabled' as "IAM Authentication Status",
+    count(db_instance_identifier)
   from
-    aws_rds_db_snapshot as s where s.db_instance_identifier not in (select name from iam_authentication_stat)
+    aws_rds_db_snapshot as s where s.db_instance_identifier not in (select name from iam_authentication_stat);
   EOQ
 }
+
+# query "aws_rds_db_instance_snapshot_iam_authentication_enabled" {
+#   sql = <<-EOQ
+#     with db_instance_snapshots as (
+#       select
+#         case
+#           when iam_database_authentication_enabled then 'enabled'
+#           else 'disabled'
+#         end as iam_authentication_status
+#       from
+#         aws_rds_db_snapshot
+#     )
+#     select
+#       iam_authentication_status,
+#       count(*)
+#     from
+#       db_instance_snapshots
+#     group by
+#       iam_authentication_status;
+#   EOQ
+# }
 
 query "aws_rds_db_instance_snapshot_by_encryption_status" {
   sql = <<-EOQ
@@ -125,7 +145,7 @@ query "aws_rds_db_instance_snapshot_by_encryption_status" {
     group by
       encryption_status
     order by
-      encryption_status desc
+      encryption_status desc;
   EOQ
 }
 
@@ -137,7 +157,7 @@ query "aws_rds_db_instance_snapshot_by_state" {
     from
       aws_rds_db_snapshot
     group by
-      status
+      status;
   EOQ
 }
 
@@ -182,7 +202,7 @@ query "aws_rds_db_instance_snapshot_by_creation_month" {
       months
       left join snapshots_by_month on months.month = snapshots_by_month.creation_month
     order by
-      months.month desc
+      months.month;
   EOQ
 }
 
@@ -213,7 +233,6 @@ query "aws_rds_db_instance_snapshot_monthly_forecast_table" {
         period_start,
         period_end
     )
-
     select
       period_label as "Period",
       unblended_cost_amount as "Cost",
@@ -225,14 +244,17 @@ query "aws_rds_db_instance_snapshot_monthly_forecast_table" {
     select
       'This Month (Forecast)' as "Period",
       (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
-      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
-
+      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost";
   EOQ
 }
 
 dashboard "aws_rds_db_instance_snapshot_dashboard" {
 
   title = "AWS RDS DB Instance Snapshot Dashboard"
+
+  tags = merge(local.rds_common_tags, {
+    type = "Dashboard"
+  })
 
   container {
 
@@ -263,7 +285,7 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
           aws_cost_by_service_usage_type_monthly as c
         where
           service = 'Amazon Relational Database Service'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+          and period_end > date_trunc('month', CURRENT_DATE::timestamp);
       EOQ
     }
 
@@ -278,6 +300,15 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
       sql   = query.aws_rds_db_instance_snapshot_by_encryption_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -285,6 +316,15 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
       sql   = query.aws_rds_db_instance_snapshot_iam_authentication_enabled.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
   }
@@ -306,7 +346,7 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
       title = "Monthly Cost - 12 Months"
       sql   = query.aws_rds_db_instance_snapshot_cost_per_month.sql
     }
-    
+
   }
 
   container {

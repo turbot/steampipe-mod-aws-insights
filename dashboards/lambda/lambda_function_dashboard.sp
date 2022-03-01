@@ -26,7 +26,7 @@ query "aws_lambda_function_public_count" {
     and (
       policy_std -> 'Statement' ->> 'Prinipal' = '*'
       or ( policy_std -> 'Principal' -> 'AWS' ) :: text = '*'
-    )
+    );
   EOQ
 }
 
@@ -39,7 +39,7 @@ query "aws_lambda_function_unencrypted_count" {
     from
       aws_lambda_function
     where
-      kms_key_arn is null
+      kms_key_arn is null;
   EOQ
 }
 
@@ -52,7 +52,7 @@ query "aws_lambda_function_not_in_vpc_count" {
     from
       aws_lambda_function
     where
-      vpc_id is null
+      vpc_id is null;
   EOQ
 }
 
@@ -67,8 +67,8 @@ query "aws_lambda_function_public_status" {
           policy_std -> 'Statement' ->> 'Effect' = 'Allow'
           and ( policy_std -> 'Statement' ->> 'Prinipal' = '*'
           or ( policy_std -> 'Principal' -> 'AWS' ) :: text = '*'
-        ) then 'Public'
-          else 'Private'
+        ) then 'public'
+          else 'private'
         end as visibility
       from
         aws_lambda_function
@@ -79,7 +79,7 @@ query "aws_lambda_function_public_status" {
     from
       functions
     group by
-      visibility
+      visibility;
   EOQ
 }
 
@@ -91,16 +91,16 @@ query "aws_lambda_function_by_encryption_status" {
     from (
       select
         case when kms_key_arn is not null then
-          'Enabled'
+          'enabled'
         else
-          'Disabled'
+          'disabled'
         end encryption_status
       from
         aws_lambda_function) as t
     group by
       encryption_status
     order by
-      encryption_status desc
+      encryption_status desc;
   EOQ
 }
 
@@ -112,16 +112,16 @@ query "aws_lambda_function_vpc_status" {
     from (
       select
         case when vpc_id is not null then
-          'Enabled'
+          'enabled'
         else
-          'Disabled'
+          'disabled'
         end vpc_status
       from
         aws_lambda_function) as t
     group by
       vpc_status
     order by
-      vpc_status desc
+      vpc_status desc;
   EOQ
 }
 
@@ -133,16 +133,16 @@ query "aws_lambda_function_use_latest_runtime_status" {
     from (
       select
         case when runtime not in ('nodejs14.x', 'nodejs12.x', 'nodejs10.x', 'python3.8', 'python3.7', 'python3.6', 'ruby2.5', 'ruby2.7', 'java11', 'java8', 'go1.x', 'dotnetcore2.1', 'dotnetcore3.1') then
-          'Disabled'
+          'disabled'
         else
-          'Enabled'
+          'enabled'
         end runtime_status
       from
         aws_lambda_function) as t
     group by
       runtime_status
     order by
-      runtime_status desc
+      runtime_status desc;
   EOQ
 }
 
@@ -152,18 +152,18 @@ query "aws_lambda_function_dead_letter_config_status" {
       dead_letter_config_status,
       count(*)
     from (
-        select
-          case when dead_letter_config_target_arn is not null then
-            'Enabled'
-          else
-            'Disabled'
-          end dead_letter_config_status
-        from
-          aws_lambda_function) as t
-        group by
-          dead_letter_config_status
-        order by
-          dead_letter_config_status desc
+      select
+        case when dead_letter_config_target_arn is not null then
+          'enabled'
+        else
+          'disabled'
+        end dead_letter_config_status
+      from
+        aws_lambda_function) as t
+      group by
+        dead_letter_config_status
+      order by
+        dead_letter_config_status desc;
   EOQ
 }
 
@@ -180,7 +180,7 @@ query "aws_lambda_function_cost_per_month" {
     group by
       period_start
     order by
-      period_start
+      period_start;
   EOQ
 }
 
@@ -211,7 +211,6 @@ query "aws_lambda_monthly_forecast_table" {
           period_start,
           period_end
       )
-
       select
         period_label as "Period",
         unblended_cost_amount as "Cost",
@@ -222,8 +221,7 @@ query "aws_lambda_monthly_forecast_table" {
       select
         'This Month (Forecast)' as "Period",
         (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
-        (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
-
+        (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost";
       EOQ
 }
 
@@ -242,7 +240,7 @@ query "aws_lambda_function_by_account" {
     group by
       account
     order by
-      account
+      account;
   EOQ
 }
 
@@ -254,7 +252,7 @@ query "aws_lambda_function_by_region" {
     from
       aws_lambda_function as i
     group by
-      region
+      region;
   EOQ
 }
 
@@ -266,10 +264,9 @@ query "aws_lambda_function_by_runtime" {
     from
       aws_lambda_function
     group by
-      runtime
+      runtime;
   EOQ
 }
-
 
 query "aws_lambda_function_memory_by_region" {
   sql = <<-EOQ
@@ -291,7 +288,7 @@ query "aws_lambda_function_code_size_by_account" {
     group by
       account
     order by
-      account
+      account;
   EOQ
 }
 
@@ -303,7 +300,7 @@ query "aws_lambda_function_code_size_by_region" {
     from
       aws_lambda_function as i
     group by
-      region
+      region;
   EOQ
 }
 
@@ -333,7 +330,7 @@ query "aws_lambda_function_memory_size_by_account" {
     group by
       account
     order by
-      account
+      account;
   EOQ
 }
 
@@ -345,7 +342,7 @@ query "aws_lambda_function_memory_size_by_region" {
     from
       aws_lambda_function as i
     group by
-      region
+      region;
   EOQ
 }
 
@@ -357,7 +354,7 @@ query "aws_lambda_function_memory_size_by_runtime" {
     from
       aws_lambda_function as i
     group by
-      runtime
+      runtime;
   EOQ
 }
 
@@ -365,8 +362,8 @@ query "aws_lambda_high_error_rate" {
   sql = <<-EOQ
     with error_rates as (
       select
-          errors.name as name,
-          sum(errors.sum)/sum(invocations.sum)*100 as error_rate
+        errors.name as name,
+        sum(errors.sum)/sum(invocations.sum)*100 as error_rate
       from
         aws_lambda_function_metric_errors_daily as errors , aws_lambda_function_metric_invocations_daily as invocations
       where
@@ -379,7 +376,7 @@ query "aws_lambda_high_error_rate" {
       error_rate
     from
       error_rates
-    where  error_rate >= 10
+    where  error_rate >= 10;
   EOQ
 }
 
@@ -409,13 +406,17 @@ query "aws_lambda_function_invocation_rate" {
       timestamp  >= CURRENT_DATE - INTERVAL '365 day'
       and name in (select name from top_n)
     order by
-      timestamp
+      timestamp;
   EOQ
 }
 
 dashboard "aws_lambda_function_dashboard" {
 
   title = "AWS Lambda Function Dashboard"
+
+  tags = merge(local.lambda_common_tags, {
+    type = "Dashboard"
+  })
 
   container {
 
@@ -448,7 +449,7 @@ dashboard "aws_lambda_function_dashboard" {
 
     # Costs
     card {
-      sql = <<-EOQ
+      sql   = <<-EOQ
         select
           'Cost - MTD' as label,
           sum(unblended_cost_amount)::numeric::money as value
@@ -456,10 +457,10 @@ dashboard "aws_lambda_function_dashboard" {
           aws_cost_by_service_monthly as c
         where
           service = 'AWS Lambda'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+          and period_end > date_trunc('month', CURRENT_DATE::timestamp);
       EOQ
-      type = "info"
-      icon = "currency-dollar"
+      type  = "info"
+      icon  = "currency-dollar"
       width = 2
     }
 
@@ -467,20 +468,38 @@ dashboard "aws_lambda_function_dashboard" {
 
   container {
     title = "Assessments"
-     width = 6
+    width = 6
 
     chart {
       title = "Public/Private Status"
       sql   = query.aws_lambda_function_public_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "private" {
+          color = "green"
+        }
+        point "public" {
+          color = "red"
+        }
+      }
     }
 
-     chart {
+    chart {
       title = "Encryption Status"
       sql   = query.aws_lambda_function_by_encryption_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -488,6 +507,15 @@ dashboard "aws_lambda_function_dashboard" {
       sql   = query.aws_lambda_function_vpc_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -495,6 +523,15 @@ dashboard "aws_lambda_function_dashboard" {
       sql   = query.aws_lambda_function_use_latest_runtime_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -502,8 +539,16 @@ dashboard "aws_lambda_function_dashboard" {
       sql   = query.aws_lambda_function_dead_letter_config_status.sql
       type  = "donut"
       width = 4
-    }
 
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
+    }
   }
 
   container {
@@ -511,7 +556,7 @@ dashboard "aws_lambda_function_dashboard" {
     width = 6
 
     # Costs
-    table  {
+    table {
       width = 6
       title = "Forecast"
       sql   = query.aws_lambda_monthly_forecast_table.sql
@@ -620,7 +665,7 @@ dashboard "aws_lambda_function_dashboard" {
   }
 
   container {
-    title  = "Performance & Utilization"
+    title = "Performance & Utilization"
     width = 12
 
     chart {
@@ -638,5 +683,5 @@ dashboard "aws_lambda_function_dashboard" {
     }
 
   }
-  
+
 }

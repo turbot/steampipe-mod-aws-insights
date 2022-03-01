@@ -1,6 +1,6 @@
 query "aws_kms_key_count" {
   sql = <<-EOQ
-    select count(*) as "Keys" from aws_kms_key
+    select count(*) as "Keys" from aws_kms_key;
   EOQ
 }
 
@@ -11,7 +11,7 @@ query "aws_kms_key_customer_managed_count" {
     from
       aws_kms_key
     where
-      key_manager = 'CUSTOMER'
+      key_manager = 'CUSTOMER';
   EOQ
 }
 
@@ -24,7 +24,7 @@ query "aws_inactive_kms_key_count" {
     from
       aws_kms_key
     where
-      not enabled
+      not enabled;
   EOQ
 }
 
@@ -38,7 +38,7 @@ query "aws_kms_key_rotation_enabled_count" {
       aws_kms_key
     where
       not key_rotation_enabled
-      and key_manager = 'CUSTOMER'
+      and key_manager = 'CUSTOMER';
   EOQ
 }
 
@@ -51,16 +51,16 @@ query "aws_inactive_kms_key_status" {
     from (
       select
         case when enabled then
-          'Enabled'
+          'enabled'
         else
-          'Disabled'
+          'disabled'
         end inactive_status
       from
         aws_kms_key) as t
     group by
       inactive_status
     order by
-      inactive_status desc
+      inactive_status desc;
   EOQ
 }
 
@@ -72,9 +72,9 @@ query "aws_kms_key_rotation_status" {
     from (
       select
         case when key_rotation_enabled then
-          'Enabled'
+          'enabled'
         else
-          'Disabled'
+          'disabled'
         end rotation_status
       from
         aws_kms_key
@@ -83,19 +83,19 @@ query "aws_kms_key_rotation_status" {
     group by
       rotation_status
     order by
-      rotation_status desc
+      rotation_status desc;
   EOQ
 }
 
 query "aws_kms_key_usage_status" {
   sql = <<-EOQ
     select
-      key_usage,
+      lower(key_usage) as lower_key_usage,
       count(key_usage)
     from
       aws_kms_key
     group by
-      key_usage
+      key_usage;
   EOQ
 }
 
@@ -112,7 +112,7 @@ query "aws_kms_key_cost_per_month" {
     group by
       period_start
     order by
-      period_start
+      period_start;
   EOQ
 }
 
@@ -153,7 +153,7 @@ query "aws_kms_monthly_forecast_table" {
     select
       'This Month (Forecast)' as "Period",
       (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
-      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
+      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost";
   EOQ
 }
 
@@ -172,7 +172,7 @@ query "aws_kms_key_by_account" {
     group by
       a.title
     order by
-      a.title
+      a.title;
   EOQ
 }
 
@@ -184,7 +184,7 @@ query "aws_kms_key_by_region" {
     from
       aws_kms_key as i
     group by
-      region
+      region;
   EOQ
 }
 
@@ -196,12 +196,12 @@ query "aws_kms_key_by_state" {
     from
       aws_kms_key
     group by
-      key_state
+      key_state;
   EOQ
 }
 
 query "aws_kms_key_by_creation_month" {
-    sql = <<-EOQ
+  sql = <<-EOQ
     with keys as (
       select
         title,
@@ -241,13 +241,17 @@ query "aws_kms_key_by_creation_month" {
       months
       left join keys_by_month on months.month = keys_by_month.creation_month
     order by
-      months.month desc;
+      months.month;
   EOQ
 }
 
 dashboard "aws_kms_key_dashboard" {
 
   title = "AWS KMS Key Dashboard"
+
+  tags = merge(local.kms_common_tags, {
+    type = "Dashboard"
+  })
 
   container {
 
@@ -274,10 +278,10 @@ dashboard "aws_kms_key_dashboard" {
 
     # Costs
     card {
-      type  = "info"
+      type = "info"
       icon = "currency-dollar"
 
-      sql = <<-EOQ
+      sql   = <<-EOQ
         select
           'Cost - MTD' as label,
           sum(unblended_cost_amount)::numeric::money as value
@@ -285,11 +289,11 @@ dashboard "aws_kms_key_dashboard" {
           aws_cost_by_service_monthly
         where
           service = 'AWS Key Management Service'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+          and period_end > date_trunc('month', CURRENT_DATE::timestamp);
       EOQ
       width = 2
     }
-    
+
   }
 
   container {
@@ -298,21 +302,39 @@ dashboard "aws_kms_key_dashboard" {
 
     chart {
       title = "Inactive/Active Status"
-      sql = query.aws_inactive_kms_key_status.sql
+      sql   = query.aws_inactive_kms_key_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
       title = "CMK Rotation Status"
-      sql = query.aws_kms_key_rotation_status.sql
+      sql   = query.aws_kms_key_rotation_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
       title = "Usage Status"
-      sql = query.aws_kms_key_usage_status.sql
+      sql   = query.aws_kms_key_usage_status.sql
       type  = "donut"
       width = 4
     }
@@ -324,7 +346,7 @@ dashboard "aws_kms_key_dashboard" {
     width = 6
 
     # Costs
-    table  {
+    table {
       width = 6
       title = "Forecast"
       sql   = query.aws_kms_monthly_forecast_table.sql

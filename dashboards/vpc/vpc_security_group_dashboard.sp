@@ -1,8 +1,13 @@
 dashboard "aws_vpc_security_group_dashboard" {
+
   title = "AWS VPC Security Group Dashboard"
 
+  tags = merge(local.vpc_common_tags, {
+    type = "Dashboard"
+  })
+
   container {
-    
+
     card {
       sql = <<-EOQ
         select count(*) as "Security Groups" from aws_vpc_security_group;
@@ -76,14 +81,23 @@ dashboard "aws_vpc_security_group_dashboard" {
         )
         select
           case
-            when is_default then 'Default'
-            else 'Non-Default'
+            when is_default then 'default'
+            else 'non-default'
           end as default_status,
           count(*)
         from
           default_sg
-        group by is_default
+        group by is_default;
       EOQ
+
+      series "count" {
+        point "default" {
+          color = "green"
+        }
+        point "non-default" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -124,14 +138,23 @@ dashboard "aws_vpc_security_group_dashboard" {
         )
         select
           case
-            when restricted then 'Restricted'
-            else 'Unrestricted'
+            when restricted then 'restricted'
+            else 'unrestricted'
           end as restrict_ingress_ssh_status,
           count(*)
         from
           sg_list
         group by restricted;
       EOQ
+
+      series "count" {
+        point "restricted" {
+          color = "green"
+        }
+        point "unrestricted" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -163,21 +186,30 @@ dashboard "aws_vpc_security_group_dashboard" {
             case
             when ingress_tcp_udp_rules.group_id is null then true
             else false
-          end as restricted
+            end as restricted
           from
             aws_vpc_security_group as sg
             left join ingress_tcp_udp_rules on sg.group_id = ingress_tcp_udp_rules.group_id
         )
         select
           case
-            when restricted then 'Restricted'
-            else 'Unrestricted'
+            when restricted then 'restricted'
+            else 'unrestricted'
           end as restrict_ingress_tcp_udp_status,
           count(*)
         from
           sg_list
         group by restricted;
       EOQ
+
+      series "count" {
+        point "restricted" {
+          color = "green"
+        }
+        point "unrestricted" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -206,14 +238,23 @@ dashboard "aws_vpc_security_group_dashboard" {
         )
         select
           case
-            when is_associated then 'Associated'
-            else 'Not-Associated'
+            when is_associated then 'associated'
+            else 'unassociated'
           end as sg_association_status,
-          count(*)
+            count(*)
         from
           sg_list
         group by is_associated;
       EOQ
+
+      series "count" {
+        point "associated" {
+          color = "green"
+        }
+        point "unassociated" {
+          color = "red"
+        }
+      }
     }
 
   }

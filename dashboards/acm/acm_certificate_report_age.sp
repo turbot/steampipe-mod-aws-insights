@@ -2,6 +2,11 @@ dashboard "acm_certificate_age_report" {
 
   title = "AWS ACM Certificate Age Report"
 
+  tags = merge(local.acm_common_tags, {
+    type     = "Report"
+    category = "Age"
+  })
+
    container {
 
     card {
@@ -17,7 +22,7 @@ dashboard "acm_certificate_age_report" {
         from
           aws_acm_certificate
         where
-          created_at > now() - '1 days' :: interval
+          created_at > now() - '1 days' :: interval;
       EOQ
       width = 2
       type = "info"
@@ -31,7 +36,7 @@ dashboard "acm_certificate_age_report" {
         from
           aws_acm_certificate
         where
-          created_at between symmetric now() - '1 days' :: interval and now() - '30 days' :: interval
+          created_at between symmetric now() - '1 days' :: interval and now() - '30 days' :: interval;
       EOQ
       width = 2
       type = "info"
@@ -45,7 +50,7 @@ dashboard "acm_certificate_age_report" {
         from
           aws_acm_certificate
         where
-          created_at between symmetric now() - '30 days' :: interval and now() - '90 days' :: interval
+          created_at between symmetric now() - '30 days' :: interval and now() - '90 days' :: interval;
       EOQ
       width = 2
       type = "info"
@@ -59,7 +64,7 @@ dashboard "acm_certificate_age_report" {
         from
           aws_acm_certificate
         where
-          created_at between symmetric (now() - '90 days'::interval) and (now() - '365 days'::interval)
+          created_at between symmetric (now() - '90 days'::interval) and (now() - '365 days'::interval);
       EOQ
       width = 2
       type = "info"
@@ -73,12 +78,12 @@ dashboard "acm_certificate_age_report" {
         from
           aws_acm_certificate
         where
-          created_at <= now() - '1 year' :: interval
+          created_at <= now() - '1 year' :: interval;
       EOQ
       width = 2
       type = "info"
     }
-    
+
   }
 
   container {
@@ -96,6 +101,7 @@ dashboard "acm_certificate_age_report" {
           v.title as "ID",
           now()::date - v.created_at::date as "Age in Days",
           v.created_at as "Create Time",
+          v.not_after as "Expiry Time",
           v.status as "Status",
           a.title as "Account",
           v.account_id as "Account ID",
@@ -108,7 +114,7 @@ dashboard "acm_certificate_age_report" {
           v.account_id = a.account_id
         order by
           v.created_at,
-          v.title
+          v.title;
       EOQ
 
     }

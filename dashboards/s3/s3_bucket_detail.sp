@@ -1,170 +1,28 @@
-dashboard aws_s3_bucket_detail {
-  title = "AWS S3 Bucket Detail"
-
-  input "bucket_name" {
-    title = "S3"
-    sql   = <<-EOQ
-      select
-        name
-      from
-        aws_s3_bucket
-    EOQ
-    width = 2
-  }
-
-  container {
-    # Analysis
-    card {
-      #title = "Size"
-      sql   = query.aws_s3_bucket_access_points_count.sql
-      width = 2
-    }
-
-    card {
-      #title = "Size"
-      sql   = query.aws_s3_bucket_versioning_enabled.sql
-      width = 2
-    }
-
-    card {
-      #title = "Size"
-      sql   = query.aws_s3_bucket_logging_enabled.sql
-      width = 2
-    }
-
-    card {
-      #title = "Size"
-      sql   = query.aws_s3_bucket_versioning_mfa_enabled.sql
-      width = 2
-    }
-
-    card {
-      #title = "Size"
-      sql   = query.aws_s3_bucket_encryption_enabled.sql
-      width = 2
-    }
-
-    card {
-      #title = "Size"
-      sql   = query.aws_s3_bucket_cross_region_replication.sql
-      width = 2
-    }
-
-    card {
-      #title = "Size"
-      sql   = query.aws_s3_bucket_https_enforce.sql
-      width = 2
-    }
-
-}
-
-container {
-    # title = "Overiew"
-
-    container {
-
-      table {
-        title = "Overview"
-        width = 6
-        sql   = <<-EOQ
-          select
-            name as "Name",
-            creation_date as "Creation Date",
-            title as "Title",
-            region as "Region",
-            account_id as "Account Id",
-            arn as "ARN"
-          from
-            aws_s3_bucket
-              where
-            name = 'aab-saea1-1t8oayt4mlkjv'
-        EOQ
-      }
-
-
-      table {
-        title = "Tags"
-        width = 6
-
-        sql   = <<-EOQ
-        select
-          tag ->> 'Key' as "Key",
-          tag ->> 'Value' as "Value"
-        from
-          aws_s3_bucket,
-          jsonb_array_elements(tags_src) as tag
-        where
-          name = 'aab-saea1-1t8oayt4mlkjv'
-        EOQ
-      }
-    }
-  }
-
-
-   container {
-
-    table {
-      title = "Server Side Encryption"
-      sql   = query.aws_s3_bucket_server_side_encryption.sql
-      width = 6
-    }
-
-    table {
-      title = "Public Access"
-      sql   = query.aws_s3_bucket_public_access.sql
-      width = 6
-    }
-  }
-
-  container {
-    table {
-      title = "Policy"
-      sql   = query.aws_s3_bucket_policy.sql
-      width = 12
-    }
-  }
-
-   container {
-    table {
-      title = "Lifecycle Rules"
-      sql   = query.aws_s3_bucket_lifecycle_policy.sql
-      width = 12
-    }
-  }
-
-  container {
-    table {
-      title = "Logging"
-      sql   = query.aws_s3_bucket_logging.sql
-      width = 6
-    }
-  }
-}
-
-query "aws_s3_bucket_access_points_count" {
-  sql = <<-EOQ
+query "aws_s3_bucket_input" {
+  sql = <<EOQ
     select
-      'Access Points' as label,
-      count(*) as value,
-      case when count(*) > 0 then 'ok' else 'alert' end as type
+      arn as label,
+      arn as value
     from
-      aws_s3_access_point
-    where
-      bucket_name = 'aws-cloudtrail-logs-533793682495-21293883'
+      aws_s3_bucket
+    order by
+      arn;
   EOQ
 }
 
 query "aws_s3_bucket_versioning_enabled" {
-    sql = <<-EOQ
-      select
-        'Versioning' as label,
-        case when versioning_enabled then 'Enabled' else 'Disabled' end as value,
-        case when versioning_enabled then 'ok' else 'alert' end as type
-      from
-        aws_s3_bucket
-      where
-        name = 'aab-saea1-1t8oayt4mlkjv'
+  sql = <<-EOQ
+    select
+      'Versioning' as label,
+      case when versioning_enabled then 'Enabled' else 'Disabled' end as value,
+      case when versioning_enabled then 'ok' else 'alert' end as type
+    from
+      aws_s3_bucket
+    where
+      arn = $1;
   EOQ
+
+  param "arn" {}
 }
 
 query "aws_s3_bucket_logging_enabled" {
@@ -176,8 +34,10 @@ query "aws_s3_bucket_logging_enabled" {
     from
       aws_s3_bucket
     where
-      name = 'aab-saea1-1t8oayt4mlkjv'
- EOQ
+      arn = $1;
+  EOQ
+
+  param "arn" {}
 }
 
 query "aws_s3_bucket_versioning_mfa_enabled" {
@@ -189,8 +49,10 @@ query "aws_s3_bucket_versioning_mfa_enabled" {
     from
       aws_s3_bucket
     where
-      name = 'aab-saea1-1t8oayt4mlkjv'
+      arn = $1;
   EOQ
+
+  param "arn" {}
 }
 
 query "aws_s3_bucket_encryption_enabled" {
@@ -202,21 +64,25 @@ query "aws_s3_bucket_encryption_enabled" {
     from
       aws_s3_bucket
     where
-      name = 'aab-saea1-1t8oayt4mlkjv'
+      arn = $1;
   EOQ
+
+  param "arn" {}
 }
 
 query "aws_s3_bucket_logging" {
   sql = <<-EOQ
     select
-      logging -> 'TargetBucket' as "Target Bucket",
-      logging -> 'TargetPrefix' as "Target Prefix",
-      logging -> 'TargetPrefix' as "Target Grants"
+      logging ->> 'TargetBucket' as "Target Bucket",
+      logging ->> 'TargetPrefix' as "Target Prefix",
+      logging ->> 'TargetPrefix' as "Target Grants"
     from
       aws_s3_bucket
     where
-      name = 'aab-saea1-1t8oayt4mlkjv'
+      arn = $1;
   EOQ
+
+  param "arn" {}
 }
 
 query "aws_s3_bucket_cross_region_replication" {
@@ -237,22 +103,26 @@ query "aws_s3_bucket_cross_region_replication" {
       aws_s3_bucket b
       left join bucket_with_replication r  on b.name = r.name
     where
-      b.name = 'aab-saea1-1t8oayt4mlkjv'
+      arn = $1;
   EOQ
+
+  param "arn" {}
 }
 
 query "aws_s3_bucket_server_side_encryption" {
   sql = <<-EOQ
     select
-      rules -> 'ApplyServerSideEncryptionByDefault' -> 'KMSMasterKeyID' as "KMSMasterKeyID",
-      rules -> 'ApplyServerSideEncryptionByDefault' -> 'SSEAlgorithm' as "SSEAlgorithm",
-      rules -> 'BucketKeyEnabled'  as "BucketKeyEnabled"
+      rules -> 'ApplyServerSideEncryptionByDefault' -> 'KMSMasterKeyID' as "KMS Master Key ID",
+      rules -> 'ApplyServerSideEncryptionByDefault' -> 'SSEAlgorithm' as "SSE Algorithm",
+      rules -> 'BucketKeyEnabled'  as "Bucket Key Enabled"
     from
       aws_s3_bucket,
       jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as rules
     where
-      name = 'cf-templates-wm0ztvc2sh3w-us-west-1'
+      arn = $1;
   EOQ
+
+  param "arn" {}
 }
 
 query "aws_s3_bucket_public_access" {
@@ -266,12 +136,14 @@ query "aws_s3_bucket_public_access" {
     from
       aws_s3_bucket
     where
-      name = 'cf-templates-wm0ztvc2sh3w-us-west-1'
+      arn = $1;
   EOQ
+
+  param "arn" {}
 }
 
 query "aws_s3_bucket_https_enforce" {
-    sql = <<-EOQ
+  sql = <<-EOQ
     with ssl_ok as (
       select
         distinct name
@@ -297,8 +169,10 @@ query "aws_s3_bucket_https_enforce" {
       aws_s3_bucket as b
       left join ssl_ok as s on s.name = b.name
     where
-      b.name = 'aab-saea1-1t8oayt4mlkjv'
+      arn = $1;
   EOQ
+
+  param "arn" {}
 }
 
 query "aws_s3_bucket_policy" {
@@ -306,33 +180,225 @@ query "aws_s3_bucket_policy" {
     select
       p -> 'Action'  as "Action",
       p -> 'Condition' as "Condition",
-      p -> 'Effect'  as "Effect",
+      p ->> 'Effect'  as "Effect",
       p -> 'Principal'  as "Principal",
       p -> 'Resource'  as "Resource",
-      p -> 'Sid'  as "Sid"
+      p ->> 'Sid'  as "Sid"
     from
       aws_s3_bucket,
       jsonb_array_elements(policy_std -> 'Statement') as p
     where
-      name = 'codepipeline-ap-south-1-237305900706'
+      arn = $1;
   EOQ
+
+  param "arn" {}
 }
 
 query "aws_s3_bucket_lifecycle_policy" {
   sql = <<-EOQ
     select
-      r -> 'ID'  as "ID",
-      r -> 'AbortIncompleteMultipartUpload'  as "AbortIncompleteMultipartUpload",
-      r -> 'Expiration' as "Expiration",
-      r -> 'Filter'  as "Filter",
-      r -> 'NoncurrentVersionExpiration'  as "NoncurrentVersionExpiration",
-      r -> 'Prefix'  as "Prefix",
-      r -> 'Status'  as "Status",
-      r -> 'Transitions'  as "Transitions"
+      r ->> 'ID'  as "ID",
+      r ->> 'AbortIncompleteMultipartUpload'  as "Abort Incomplete Multipart Upload",
+      r ->> 'Expiration' as "Expiration",
+      r ->> 'Filter'  as "Filter",
+      r ->> 'NoncurrentVersionExpiration'  as "Non current Version Expiration",
+      r ->> 'Prefix'  as "Prefix",
+      r ->> 'Status'  as "Status",
+      r ->> 'Transitions'  as "Transitions"
     from
       aws_s3_bucket,
       jsonb_array_elements(lifecycle_rules) as r
     where
-      name = 'aab-saea1-1t8oayt4mlkjv'
+      arn = $1;
   EOQ
+
+  param "arn" {}
 }
+
+dashboard "aws_s3_bucket_detail" {
+  title = "AWS S3 Bucket Detail"
+
+  tags = merge(local.s3_common_tags, {
+    type = "Detail"
+  })
+
+  input "bucket_arn" {
+    title = "Select a bucket:"
+    sql   = query.aws_s3_bucket_input.sql
+    width = 4
+  }
+
+  container {
+
+    # Assessments
+    card {
+      width = 2
+
+      query = query.aws_s3_bucket_versioning_enabled
+      args = {
+        arn = self.input.bucket_arn.value
+      }
+    }
+
+    card {
+      width = 2
+
+      query = query.aws_s3_bucket_versioning_mfa_enabled
+      args = {
+        arn = self.input.bucket_arn.value
+      }
+    }
+
+    card {
+      query = query.aws_s3_bucket_logging_enabled
+      width = 2
+
+      args = {
+        arn = self.input.bucket_arn.value
+      }
+    }
+
+    card {
+      width = 2
+
+      query = query.aws_s3_bucket_encryption_enabled
+      args = {
+        arn = self.input.bucket_arn.value
+      }
+    }
+
+    card {
+      width = 2
+
+      query = query.aws_s3_bucket_cross_region_replication
+      args = {
+        arn = self.input.bucket_arn.value
+      }
+    }
+
+    card {
+      width = 2
+
+      query = query.aws_s3_bucket_https_enforce
+      args = {
+        arn = self.input.bucket_arn.value
+      }
+    }
+
+  }
+
+  container {
+
+    container {
+      width = 6
+
+      table {
+        title = "Overview"
+        type  = "line"
+        width = 6
+        sql   = <<-EOQ
+            select
+              name as "Name",
+              creation_date as "Creation Date",
+              title as "Title",
+              region as "Region",
+              account_id as "Account Id",
+              arn as "ARN"
+            from
+              aws_s3_bucket
+            where
+              arn = $1
+          EOQ
+
+        param "arn" {}
+
+        args = {
+          arn = self.input.bucket_arn.value
+        }
+
+      }
+
+      table {
+        title = "Tags"
+        width = 6
+
+        sql = <<-EOQ
+          select
+            tag ->> 'Key' as "Key",
+            tag ->> 'Value' as "Value"
+          from
+            aws_s3_bucket,
+            jsonb_array_elements(tags_src) as tag
+          where
+            arn = $1
+          EOQ
+
+        param "arn" {}
+
+        args = {
+          arn = self.input.bucket_arn.value
+        }
+      }
+    }
+
+    container {
+      width = 6
+
+      table {
+        title = "Public Access"
+        query = query.aws_s3_bucket_public_access
+        args = {
+          arn = self.input.bucket_arn.value
+        }
+      }
+
+      table {
+        title = "Logging"
+        query = query.aws_s3_bucket_logging
+
+        args = {
+          arn = self.input.bucket_arn.value
+        }
+      }
+
+    }
+
+    container {
+      width = 12
+      table {
+        title = "Policy"
+        query = query.aws_s3_bucket_policy
+        args = {
+          arn = self.input.bucket_arn.value
+        }
+      }
+    }
+
+    container {
+      width = 12
+      table {
+        title = "Lifecycle Rules"
+        query = query.aws_s3_bucket_lifecycle_policy
+        args = {
+          arn = self.input.bucket_arn.value
+        }
+      }
+    }
+
+    container {
+      width = 12
+      table {
+        title = "Server Side Encryption"
+        query = query.aws_s3_bucket_server_side_encryption
+        args = {
+          arn = self.input.bucket_arn.value
+        }
+      }
+    }
+
+  }
+
+}
+
+
+

@@ -13,7 +13,7 @@ query "aws_rds_public_db_instances_count" {
     from
       aws_rds_db_instance
     where
-      publicly_accessible
+      publicly_accessible;
   EOQ
 }
 
@@ -26,7 +26,7 @@ query "aws_rds_unencrypted_db_instances_count" {
     from
       aws_rds_db_instance
     where
-      not storage_encrypted
+      not storage_encrypted;
   EOQ
 }
 
@@ -39,7 +39,7 @@ query "aws_rds_db_instance_not_in_vpc_count" {
     from
       aws_rds_db_instance
     where
-      vpc_id is null
+      vpc_id is null;
   EOQ
 }
 
@@ -64,7 +64,7 @@ query "aws_rds_db_instance_logging_count" {
     from
       aws_rds_db_instance as a
       left join logging_stat as b on a.db_instance_identifier = b.db_instance_identifier
-    where a.db_instance_identifier not in (select db_instance_identifier from logging_stat)
+    where a.db_instance_identifier not in (select db_instance_identifier from logging_stat);
   EOQ
 }
 
@@ -80,7 +80,7 @@ query "aws_rds_db_instance_cost_per_month" {
     group by
       period_start
     order by
-      period_start
+      period_start;
   EOQ
 }
 
@@ -96,7 +96,7 @@ query "aws_rds_db_instance_by_account" {
       a.account_id = i.account_id
     group by
       account
-    order by count(i.*) desc
+    order by count(i.*) desc;
   EOQ
 }
 
@@ -108,13 +108,13 @@ query "aws_rds_db_instance_by_region" {
     from
       aws_rds_db_instance as i
     group by
-      region
+      region;
   EOQ
 }
 
 query "aws_rds_db_instance_by_engine_type" {
   sql = <<-EOQ
-    select engine as "Engine Type", count(*) as "instances" from aws_rds_db_instance group by engine order by engine
+    select engine as "Engine Type", count(*) as "instances" from aws_rds_db_instance group by engine order by engine;
   EOQ
 }
 
@@ -133,42 +133,65 @@ query "aws_rds_db_instance_logging_status" {
       ( engine like 'sqlserver%' and enabled_cloudwatch_logs_exports ?& array ['error','agent'] )
      )
   select
-    'Enabled' as "Logging Status",
-    count(db_instance_identifier) as "Total"
+    'enabled' as "Logging Status",
+    count(db_instance_identifier)
   from
     logging_stat
   union
   select
-    'Disabled' as "Logging Status",
-    count( db_instance_identifier) as "Total"
+    'disabled' as "Logging Status",
+    count( db_instance_identifier)
   from
-    aws_rds_db_instance as s where s.db_instance_identifier not in (select db_instance_identifier from logging_stat)
+    aws_rds_db_instance as s where s.db_instance_identifier not in (select db_instance_identifier from logging_stat);
   EOQ
 }
 
+# query "aws_rds_db_instance_multiple_az_status" {
+#   sql = <<-EOQ
+#     with multiaz_stat as (
+#     select
+#       distinct db_instance_identifier as name
+#     from
+#       aws_rds_db_instance
+#     where
+#       multi_az
+#       and not (engine ilike any (array ['%aurora-mysql%', '%aurora-postgres%']))
+#     group by name
+#  )
+#   select
+#     'Enabled' as "Multi-AZ Status",
+#     count(name) as "Total"
+#   from
+#     multiaz_stat
+#   union
+#   select
+#     'Disabled' as "Multi-AZ Status",
+#     count( db_instance_identifier) as "Total"
+#   from
+#     aws_rds_db_instance as s where s.db_instance_identifier not in (select name from multiaz_stat);
+#   EOQ
+# }
+
 query "aws_rds_db_instance_multiple_az_status" {
   sql = <<-EOQ
-    with multiaz_stat as (
+    with db_instances as (
+      select
+        case
+          when multi_az then 'enabled'
+          else 'disabled'
+        end as visibility
+      from
+        aws_rds_db_instance
+      where 
+        engine not ilike any (array ['%aurora-mysql%', '%aurora-postgres%'])
+    )
     select
-      distinct db_instance_identifier as name
+      visibility,
+      count(*)
     from
-      aws_rds_db_instance
-    where
-      multi_az
-      and not (engine ilike any (array ['%aurora-mysql%', '%aurora-postgres%']))
-    group by name
- )
-  select
-    'Enabled' as "Multi-AZ Status",
-    count(name) as "Total"
-  from
-    multiaz_stat
-  union
-  select
-    'Disabled' as "Multi-AZ Status",
-    count( db_instance_identifier) as "Total"
-  from
-    aws_rds_db_instance as s where s.db_instance_identifier not in (select name from multiaz_stat);
+      db_instances
+    group by
+      visibility;
   EOQ
 }
 
@@ -180,9 +203,9 @@ query "aws_rds_db_instance_in_vpc_status" {
     from (
       select
         case when vpc_id is not null then
-          'Enabled'
+          'enabled'
         else
-          'Disabled'
+          'disabled'
         end vpc_status
       from
         aws_rds_db_instance) as t
@@ -201,16 +224,16 @@ query "aws_rds_db_instance_by_encryption_status" {
     from (
       select
         case when storage_encrypted then
-          'Enabled'
+          'enabled'
         else
-          'Disabled'
+          'disabled'
         end encryption_status
       from
         aws_rds_db_instance) as t
     group by
       encryption_status
     order by
-      encryption_status desc
+      encryption_status desc;
   EOQ
 }
 
@@ -240,7 +263,7 @@ query "aws_rds_db_instance_top10_cpu_past_week" {
       timestamp  >= CURRENT_DATE - INTERVAL '7 day'
       and db_instance_identifier in (select db_instance_identifier from top_n)
     order by
-      timestamp
+      timestamp;
   EOQ
 }
 
@@ -274,7 +297,7 @@ query "aws_rds_db_instance_by_cpu_utilization_category" {
       cpu_buckets as b
     left join max_averages as a on b.cpu_bucket = a.cpu_bucket
     group by
-      b.cpu_bucket
+      b.cpu_bucket;
   EOQ
 }
 
@@ -286,7 +309,7 @@ query "aws_rds_db_instance_by_state" {
     from
       aws_rds_db_instance
     group by
-      status
+      status;
   EOQ
 }
 
@@ -298,7 +321,7 @@ query "aws_rds_db_instance_by_class" {
     from
       aws_rds_db_instance
     group by
-      class
+      class;
   EOQ
 }
 
@@ -343,7 +366,7 @@ query "aws_rds_db_instance_by_creation_month" {
       months
       left join instances_by_month on months.month = instances_by_month.creation_month
     order by
-      months.month desc;
+      months.month;
   EOQ
 }
 
@@ -352,8 +375,8 @@ query "aws_rds_db_instance_deletion_protection_status" {
     with db_instances as (
       select
         case
-          when deletion_protection then 'Enabled'
-          else 'Disabled'
+          when deletion_protection then 'enabled'
+          else 'disabled'
         end as visibility
       from
         aws_rds_db_instance
@@ -364,7 +387,7 @@ query "aws_rds_db_instance_deletion_protection_status" {
     from
       db_instances
     group by
-      visibility
+      visibility;
   EOQ
 }
 
@@ -373,8 +396,8 @@ query "aws_rds_db_instance_public_status" {
     with db_instances as (
       select
         case
-          when publicly_accessible is null then 'Private'
-          else 'Public'
+          when publicly_accessible is null then 'private'
+          else 'public'
         end as visibility
       from
         aws_rds_db_instance
@@ -385,7 +408,7 @@ query "aws_rds_db_instance_public_status" {
     from
       db_instances
     group by
-      visibility
+      visibility;
   EOQ
 }
 
@@ -417,7 +440,6 @@ query "aws_rds_db_instance_monthly_forecast_table" {
         period_start,
         period_end
     )
-
     select
       period_label as "Period",
       unblended_cost_amount as "Cost",
@@ -429,7 +451,7 @@ query "aws_rds_db_instance_monthly_forecast_table" {
     select
       'This Month (Forecast)' as "Period",
       (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
-      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
+      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost";
 
   EOQ
 }
@@ -437,6 +459,10 @@ query "aws_rds_db_instance_monthly_forecast_table" {
 dashboard "aws_rds_db_instance_dashboard" {
 
   title = "AWS RDS DB Instance Dashboard"
+
+  tags = merge(local.rds_common_tags, {
+    type = "Dashboard"
+  })
 
   container {
 
@@ -479,7 +505,7 @@ dashboard "aws_rds_db_instance_dashboard" {
         where
           service = 'Amazon Relational Database Service'
           and usage_type like '%Instance%'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+          and period_end > date_trunc('month', CURRENT_DATE::timestamp);
       EOQ
         type = "info"
         icon = "currency-dollar"
@@ -497,6 +523,15 @@ dashboard "aws_rds_db_instance_dashboard" {
       sql   = query.aws_rds_db_instance_public_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "private" {
+          color = "green"
+        }
+        point "public" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -504,6 +539,15 @@ dashboard "aws_rds_db_instance_dashboard" {
       sql = query.aws_rds_db_instance_by_encryption_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -511,6 +555,15 @@ dashboard "aws_rds_db_instance_dashboard" {
       sql = query.aws_rds_db_instance_in_vpc_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -518,6 +571,15 @@ dashboard "aws_rds_db_instance_dashboard" {
       sql = query.aws_rds_db_instance_logging_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -525,6 +587,15 @@ dashboard "aws_rds_db_instance_dashboard" {
       sql = query.aws_rds_db_instance_multiple_az_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -532,6 +603,16 @@ dashboard "aws_rds_db_instance_dashboard" {
       sql = query.aws_rds_db_instance_deletion_protection_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
+  
     }
 
   }

@@ -1,6 +1,6 @@
 query "aws_ebs_snapshot_count" {
   sql = <<-EOQ
-    select count(*) as "Snapshots" from aws_ebs_snapshot
+    select count(*) as "Snapshots" from aws_ebs_snapshot;
   EOQ
 }
 
@@ -9,7 +9,7 @@ query "aws_ebs_snapshot_storage_total" {
     select
       sum(volume_size) as "Total Storage (GB)"
     from
-      aws_ebs_snapshot
+      aws_ebs_snapshot;
   EOQ
 }
 
@@ -22,7 +22,7 @@ query "aws_ebs_unencrypted_snapshot_count" {
     from
        aws_ebs_snapshot
     where
-       not encrypted
+       not encrypted;
   EOQ
 }
 
@@ -44,7 +44,7 @@ query "aws_ebs_snapshot_by_encryption_status" {
     group by
       encryption_status
     order by
-      encryption_status
+      encryption_status;
   EOQ
 }
 
@@ -101,7 +101,7 @@ query "aws_ebs_snapshot_monthly_forecast_table" {
     select
       'This Month (Forecast)' as "Period",
       (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
-      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
+      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost";
   EOQ
 }
 
@@ -118,7 +118,7 @@ query "aws_ebs_snapshot_cost_per_month" {
     group by
       period_start
     order by
-      period_start
+      period_start;
   EOQ
 }
 
@@ -136,7 +136,7 @@ query "aws_ebs_snapshot_by_account" {
     group by
       a.title
     order by
-      a.title
+      a.title;
   EOQ
 }
 
@@ -204,13 +204,13 @@ query "aws_ebs_snapshot_storage_by_account" {
     group by
       a.title
     order by
-      a.title
+      a.title;
   EOQ
 }
 
 query "aws_ebs_snapshot_storage_by_region" {
   sql = <<-EOQ
-    select region as "Region", sum(volume_size) as "GB" from aws_ebs_snapshot group by region order by region
+    select region as "Region", sum(volume_size) as "GB" from aws_ebs_snapshot group by region order by region;
   EOQ
 }
 
@@ -253,7 +253,7 @@ dashboard "aws_ebs_snapshot_dashboard" {
         where
           service = 'EC2 - Other'
           and usage_type like '%EBS:Snapshot%'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+          and period_end > date_trunc('month', CURRENT_DATE::timestamp);
       EOQ
     }
 
@@ -268,6 +268,15 @@ dashboard "aws_ebs_snapshot_dashboard" {
       sql   = query.aws_ebs_snapshot_by_encryption_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -284,7 +293,7 @@ dashboard "aws_ebs_snapshot_dashboard" {
     width = 6
 
     # Costs
-    table  {
+    table {
       width = 6
       title = "Forecast"
       sql   = query.aws_ebs_snapshot_monthly_forecast_table.sql

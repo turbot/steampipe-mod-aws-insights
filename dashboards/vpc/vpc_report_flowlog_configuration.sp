@@ -1,5 +1,11 @@
 dashboard "aws_vpc_flow_log_configuration_dashboard" {
+
   title = "AWS VPC Flow Log Report"
+
+  tags = merge(local.vpc_common_tags, {
+    type     = "Report"
+    category = "Flow Logs Configuration"
+  })
 
   container {
 

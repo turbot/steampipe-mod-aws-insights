@@ -2,6 +2,11 @@ dashboard "aws_sqs_queue_encryption_report" {
 
   title = "AWS SQS Queue Encryption Report"
 
+  tags = merge(local.sqs_common_tags, {
+    type     = "Report"
+    category = "Encryption"
+  })
+
   container {
 
     card {
@@ -34,9 +39,9 @@ dashboard "aws_sqs_queue_encryption_report" {
         aws_sqs_queue as r,
         aws_account as a
       where
-        r.account_id = a.account_id
+        r.account_id = a.account_id;
     EOQ
 
   }
-  
+
 }

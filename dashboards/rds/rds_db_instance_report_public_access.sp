@@ -7,13 +7,18 @@ query "aws_rds_db_instance_public_count" {
     from
       aws_rds_db_instance
     where
-      publicly_accessible
+      publicly_accessible;
   EOQ
 }
 
 dashboard "aws_rds_db_instance_public_access_report" {
 
   title = "AWS RDS DB Instance Public Access Report"
+
+  tags = merge(local.rds_common_tags, {
+    type     = "Report"
+    category = "Public Access"
+  })
 
   container {
 
@@ -48,7 +53,7 @@ dashboard "aws_rds_db_instance_public_access_report" {
         aws_rds_db_instance as i,
         aws_account as a
       where
-        i.account_id = a.account_id
+        i.account_id = a.account_id;
     EOQ
 
   }

@@ -265,7 +265,12 @@ query "aws_iam_user_manage_policies_sankey" {
 }
 
 dashboard "aws_iam_user_detail" {
+
   title = "AWS IAM User Detail"
+
+  tags = merge(local.iam_common_tags, {
+    type = "Detail"
+  })
 
   input "user_arn" {
     title = "Select a user:"

@@ -15,6 +15,11 @@ dashboard "aws_rds_db_instance_encryption_dashboard" {
 
   title = "AWS RDS DB Instance Encryption Report"
 
+  tags = merge(local.rds_common_tags, {
+    type     = "Report"
+    category = "Encryption"
+  })
+
   container {
 
     card {
@@ -46,9 +51,9 @@ dashboard "aws_rds_db_instance_encryption_dashboard" {
         aws_rds_db_instance as i,
         aws_account as a
       where
-        i.account_id = a.account_id
+        i.account_id = a.account_id;
     EOQ
 
   }
-  
+
 }

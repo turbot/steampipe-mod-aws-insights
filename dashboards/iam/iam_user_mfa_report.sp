@@ -7,7 +7,7 @@ query "aws_iam_user_mfa_not_enabled_count" {
     from
       aws_iam_user
     where
-      not mfa_enabled
+      not mfa_enabled;
   EOQ
 }
 
@@ -15,7 +15,18 @@ dashboard "aws_iam_user_mfa_report" {
 
   title = "AWS IAM User MFA Report"
 
+  tags = merge(local.iam_common_tags, {
+    type     = "Report"
+    category = "MFA"
+  })
+
   container {
+
+    card {
+      sql   = query.aws_iam_user_count.sql
+      width = 2
+    }
+
     card {
       sql   = query.aws_iam_user_mfa_not_enabled_count.sql
       width = 2
@@ -23,6 +34,7 @@ dashboard "aws_iam_user_mfa_report" {
   }
 
   container {
+
     table {
       column "Account ID" {
         display = "none"
@@ -41,7 +53,7 @@ dashboard "aws_iam_user_mfa_report" {
         u.account_id = a.account_id
       order by
         u.account_id,
-        u.mfa_enabled
+        u.mfa_enabled;
       EOQ
     }
   }

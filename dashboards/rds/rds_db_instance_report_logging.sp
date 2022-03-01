@@ -19,13 +19,18 @@ query "aws_rds_db_instance_logging_disabled_count" {
   from
     aws_rds_db_instance
   where
-    db_instance_identifier not in (select db_instance_identifier from logging_stat)
+    db_instance_identifier not in (select db_instance_identifier from logging_stat);
   EOQ
 }
 
 dashboard "aws_rds_db_instance_logging_dashboard" {
 
   title = "AWS RDS DB Instance Logging Report"
+
+  tags = merge(local.rds_common_tags, {
+    type     = "Report"
+    category = "Logging"
+  })
 
   container {
 
@@ -66,9 +71,9 @@ dashboard "aws_rds_db_instance_logging_dashboard" {
         aws_rds_db_instance as i,
         aws_account as a
       where
-        i.account_id = a.account_id
+        i.account_id = a.account_id;
     EOQ
 
   }
-  
+
 }

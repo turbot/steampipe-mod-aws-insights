@@ -1,4 +1,4 @@
-query "roles_allow_all_actions" {
+query "aws_iam_roles_allow_all_actions" {
   sql = <<-EOQ
     with roles_that_allow_all_actions as (
       select
@@ -29,13 +29,18 @@ query "roles_allow_all_actions" {
         roles_that_allow_all_actions as role,
         aws_account as a
       where
-        a.account_id = role.account_id
+        a.account_id = role.account_id;
   EOQ
 }
 
 dashboard "aws_iam_role_full_administrative_privileges_report" {
 
   title = "AWS IAM Role Full Administrative Privileges Report"
+
+  tags = merge(local.iam_common_tags, {
+    type     = "Report"
+    category = "Full Administrative Privilege"
+  })
 
   container {
     card {
@@ -51,10 +56,10 @@ dashboard "aws_iam_role_full_administrative_privileges_report" {
       column "Account ID" {
         display = "none"
       }
-      sql = query.roles_allow_all_actions.sql
+      sql = query.aws_iam_roles_allow_all_actions.sql
 
     }
 
   }
-  
+
 }

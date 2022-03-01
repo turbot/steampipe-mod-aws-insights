@@ -194,16 +194,16 @@ query "aws_redshift_cluster_by_encryption_status" {
     from (
       select encrypted,
         case when encrypted then
-          'Enabled'
+          'enabled'
         else
-          'Disabled'
+          'disabled'
         end encryption_status
       from
         aws_redshift_cluster) as t
     group by
       encryption_status
     order by
-      encryption_status desc
+      encryption_status desc;
   EOQ
 }
 
@@ -215,16 +215,16 @@ query "aws_redshift_cluster_by_publicly_accessible_status" {
     from (
       select publicly_accessible,
         case when publicly_accessible then
-          'Public'
+          'public'
         else
-          'Private'
+          'private'
         end publicly_accessible_status
       from
         aws_redshift_cluster) as t
     group by
       publicly_accessible_status
     order by
-      publicly_accessible_status desc
+      publicly_accessible_status desc;
   EOQ
 }
 
@@ -236,16 +236,16 @@ query "aws_redshift_cluster_in_vpc_status" {
     from (
       select
         case when vpc_id is not null then
-          'Enabled'
+          'enabled'
         else
-          'Disabled'
+          'disabled'
         end vpc_status
       from
         aws_redshift_cluster) as t
     group by
       vpc_status
     order by
-      vpc_status desc
+      vpc_status desc;
   EOQ
 }
 query "aws_redshift_cluster_with_no_snapshots" {
@@ -262,13 +262,17 @@ query "aws_redshift_cluster_with_no_snapshots" {
       v.region,
       v.cluster_identifier
     having
-      count(s.snapshot_identifier) = 0
+      count(s.snapshot_identifier) = 0;
   EOQ
 }
 
 dashboard "aws_redshift_cluster_dashboard" {
 
   title = "AWS Redshift Cluster Dashboard"
+
+  tags = merge(local.redshift_common_tags, {
+    type = "Dashboard"
+  })
 
   container {
 
@@ -305,7 +309,7 @@ dashboard "aws_redshift_cluster_dashboard" {
           aws_cost_by_service_usage_type_monthly as c
         where
           service = 'Amazon Redshift'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+          and period_end > date_trunc('month', CURRENT_DATE::timestamp);
       EOQ
     }
 
@@ -320,6 +324,15 @@ dashboard "aws_redshift_cluster_dashboard" {
       sql = query.aws_redshift_cluster_by_encryption_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -327,6 +340,15 @@ dashboard "aws_redshift_cluster_dashboard" {
       sql = query.aws_redshift_cluster_by_publicly_accessible_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "private" {
+          color = "green"
+        }
+        point "public" {
+          color = "red"
+        }
+      }
     }
 
      chart {
@@ -334,6 +356,15 @@ dashboard "aws_redshift_cluster_dashboard" {
       sql = query.aws_redshift_cluster_in_vpc_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
   }
@@ -422,7 +453,7 @@ dashboard "aws_redshift_cluster_dashboard" {
           timestamp  >= CURRENT_DATE - INTERVAL '7 day'
           and cluster_identifier in (select cluster_identifier from top_n)
         order by
-          timestamp
+          timestamp;
       EOQ
     }
 
@@ -459,7 +490,7 @@ dashboard "aws_redshift_cluster_dashboard" {
           cpu_buckets as b
         left join max_averages as a on b.cpu_bucket = a.cpu_bucket
         group by
-          b.cpu_bucket
+          b.cpu_bucket;
       EOQ
     }
 

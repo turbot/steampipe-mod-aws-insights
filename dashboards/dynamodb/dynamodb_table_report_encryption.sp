@@ -1,6 +1,11 @@
 dashboard "aws_dynamodb_table_encryption_report" {
   title = "AWS DynamoDB Table Encryption Report"
 
+  tags = merge(local.dynamodb_common_tags, {
+    type     = "Report"
+    category = "Encryption"
+  })
+
   container {
 
     card {
@@ -9,7 +14,7 @@ dashboard "aws_dynamodb_table_encryption_report" {
     }
 
     card {
-      sql = <<-EOQ
+      sql   = <<-EOQ
         select
           count(*) as value,
           'Encrypted with Default Key' as label
@@ -24,7 +29,7 @@ dashboard "aws_dynamodb_table_encryption_report" {
     }
 
     card {
-      sql = <<-EOQ
+      sql   = <<-EOQ
         select
           count(*) as value,
           'Encrypted with AWS Managed Key' as label
@@ -42,7 +47,7 @@ dashboard "aws_dynamodb_table_encryption_report" {
     }
 
     card {
-      sql = <<-EOQ
+      sql   = <<-EOQ
         select
           count(*) as value,
           'Encrypted with CMK' as label
@@ -87,5 +92,5 @@ dashboard "aws_dynamodb_table_encryption_report" {
     EOQ
 
   }
-  
+
 }

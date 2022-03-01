@@ -1,6 +1,6 @@
 query "aws_sqs_queue_count" {
   sql = <<-EOQ
-    select count(*) as "Queues" from aws_sqs_queue
+    select count(*) as "Queues" from aws_sqs_queue;
   EOQ
 }
 
@@ -13,7 +13,7 @@ query "aws_sqs_queue_unencrypted_count" {
     from
       aws_sqs_queue
     where
-      kms_master_key_id is null
+      kms_master_key_id is null;
   EOQ
 }
 
@@ -34,7 +34,7 @@ query "aws_sqs_queue_anonymous_access_count" {
         and (
           pa[5] != account_id
           or p = '*'
-        )
+        );
   EOQ
 }
 
@@ -50,7 +50,7 @@ query "aws_sqs_queue_by_account" {
       a.account_id = i.account_id
     group by
       account
-    order by count(i.*) desc
+    order by count(i.*) desc;
   EOQ
 }
 
@@ -62,7 +62,7 @@ query "aws_sqs_queue_by_region" {
     from
       aws_sqs_queue as i
     group by
-      region
+      region;
   EOQ
 }
 
@@ -78,7 +78,7 @@ query "aws_sqs_queue_cost_per_month" {
     group by
       period_start
     order by
-      period_start
+      period_start;
   EOQ
 }
 
@@ -100,16 +100,13 @@ query "aws_sqs_queue_monthly_forecast_table" {
         sum(unblended_cost_amount) / (period_end::date - period_start::date ) * date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval )::numeric::money  as forecast_amount
       from
         aws_cost_by_service_usage_type_monthly as c
-
       where
         service = 'Amazon Simple Queue Service'
         and date_trunc('month', period_start) >= date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
-
         group by
         period_start,
         period_end
     )
-
     select
       period_label as "Period",
       unblended_cost_amount as "Cost",
@@ -121,8 +118,7 @@ query "aws_sqs_queue_monthly_forecast_table" {
     select
       'This Month (Forecast)' as "Period",
       (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
-      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
-
+      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost";
   EOQ
 }
 
@@ -134,16 +130,16 @@ query "aws_sqs_queue_by_encryption_status" {
     from (
       select kms_master_key_id,
         case when kms_master_key_id is not null then
-          'Enabled'
+          'enabled'
         else
-          'Disabled'
+          'disabled'
         end encryption_status
       from
         aws_sqs_queue) as t
     group by
       encryption_status
     order by
-      encryption_status desc
+      encryption_status desc;
   EOQ
 }
 
@@ -167,9 +163,9 @@ query "aws_sqs_queue_anonymous_access_status" {
     ), anonymous_access_status as(
       select
         case
-          when a.title is null or policy_std is null then  'OK'
+          when a.title is null or policy_std is null then  'ok'
         else
-          'With Anonymous Access'
+          'alarm'
         end anonymous_access_status
       from
         aws_sqs_queue as q
@@ -183,7 +179,7 @@ query "aws_sqs_queue_anonymous_access_status" {
       group by
         anonymous_access_status
       order by
-        anonymous_access_status desc
+        anonymous_access_status desc;
   EOQ
 }
 
@@ -195,121 +191,153 @@ query "aws_sqs_queue_by_dlq_status" {
     from (
       select redrive_policy,
         case when redrive_policy is not null then
-          'Enabled'
+          'enabled'
         else
-          'Disabled'
+          'disabled'
         end redrive_policy_status
       from
         aws_sqs_queue) as t
     group by
       redrive_policy_status
     order by
-      redrive_policy_status desc
+      redrive_policy_status desc;
   EOQ
 }
 
 
 dashboard "aws_sqs_queue_dashboard" {
-    title = "AWS SQS Queue Dashboard"
 
-    container {
+  title = "AWS SQS Queue Dashboard"
 
-      card {
-        sql   = query.aws_sqs_queue_count.sql
-        width = 2
-      }
-
-      card {
-        sql   = query.aws_sqs_queue_unencrypted_count.sql
-        width = 2
-      }
-
-      card {
-        sql   = query.aws_sqs_queue_anonymous_access_count.sql
-        width = 2
-      }
-
-      card {
-        type  = "info"
-        icon  = "currency-dollar"
-        width = 2
-        sql   = <<-EOQ
-          select
-            'Cost - MTD' as label,
-            sum(unblended_cost_amount)::numeric::money as value
-          from
-            aws_cost_by_service_usage_type_monthly as c
-          where
-            service = 'Amazon Simple Queue Service'
-            and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-        EOQ
-      }
-
-    }
-
-    container {
-      title = "Assessments"
-      width = 6
-
-      chart {
-        title = "Encryption Status"
-        sql = query.aws_sqs_queue_by_encryption_status.sql
-        type  = "donut"
-        width = 4
-      }
-
-      chart {
-        title = "DLQ Status"
-        sql = query.aws_sqs_queue_by_dlq_status.sql
-        type  = "donut"
-        width = 4
-      }
-
-      chart {
-        title = "Anonymous Access Status"
-        sql = query.aws_sqs_queue_anonymous_access_status.sql
-        type  = "donut"
-        width = 4
-      }
-
-    }
+  tags = merge(local.sqs_common_tags, {
+    type = "Dashboard"
+  })
 
   container {
-    title = "Cost"
+
+    card {
+      sql   = query.aws_sqs_queue_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_sqs_queue_unencrypted_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_sqs_queue_anonymous_access_count.sql
+      width = 2
+    }
+
+    card {
+      type  = "info"
+      icon  = "currency-dollar"
+      width = 2
+      sql   = <<-EOQ
+        select
+          'Cost - MTD' as label,
+          sum(unblended_cost_amount)::numeric::money as value
+        from
+          aws_cost_by_service_usage_type_monthly as c
+        where
+          service = 'Amazon Simple Queue Service'
+          and period_end > date_trunc('month', CURRENT_DATE::timestamp);
+      EOQ
+    }
+
+  }
+
+  container {
+    title = "Assessments"
     width = 6
 
-    # Costs
-    table  {
-      width = 6
-      title = "Forecast"
-      sql   = query.aws_sqs_queue_monthly_forecast_table.sql
+    chart {
+      title = "Encryption Status"
+      sql = query.aws_sqs_queue_by_encryption_status.sql
+      type  = "donut"
+      width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
-      width = 6
-      type  = "column"
-      title = "Monthly Cost - 12 Months"
-      sql   = query.aws_sqs_queue_cost_per_month.sql
+      title = "DLQ Status"
+      sql = query.aws_sqs_queue_by_dlq_status.sql
+      type  = "donut"
+      width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
+    }
+
+    chart {
+      title = "Anonymous Access Status"
+      sql = query.aws_sqs_queue_anonymous_access_status.sql
+      type  = "donut"
+      width = 4
+
+      series "count" {
+        point "ok" {
+          color = "green"
+        }
+        point "alarm" {
+          color = "red"
+        }
+      }
     }
 
   }
 
-  container {
-    title = "Analysis"
+container {
+  title = "Cost"
+  width = 6
 
-    chart {
-      title = "Queues by Account"
-      sql   = query.aws_sqs_queue_by_account.sql
-      type  = "column"
-      width = 3
-    }
-    chart {
-      title = "Queues by Region"
-      sql   = query.aws_sqs_queue_by_region.sql
-      type  = "column"
-      width = 3
-    }
-    
+  # Costs
+  table  {
+    width = 6
+    title = "Forecast"
+    sql   = query.aws_sqs_queue_monthly_forecast_table.sql
   }
+
+  chart {
+    width = 6
+    type  = "column"
+    title = "Monthly Cost - 12 Months"
+    sql   = query.aws_sqs_queue_cost_per_month.sql
+  }
+
+}
+
+container {
+  title = "Analysis"
+
+  chart {
+    title = "Queues by Account"
+    sql   = query.aws_sqs_queue_by_account.sql
+    type  = "column"
+    width = 3
+  }
+  chart {
+    title = "Queues by Region"
+    sql   = query.aws_sqs_queue_by_region.sql
+    type  = "column"
+    width = 3
+  }
+
+}
 
 }
