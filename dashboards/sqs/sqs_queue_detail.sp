@@ -87,10 +87,10 @@ query "aws_sqs_queue_policy" {
   sql = <<-EOQ
     select
       p -> 'Action'  as "Action",
-      p -> 'Effect' as "Effect",
+      p ->> 'Effect' as "Effect",
       p -> 'Principal' as "Principal",
       p -> 'Resource' as "Resource",
-      p -> 'Sid' as "Sid"
+      p ->> 'Sid' as "Sid"
     from
       aws_sqs_queue,
       jsonb_array_elements(policy_std -> 'Statement') as p
@@ -130,7 +130,7 @@ query "aws_sqs_queue_encryption_details" {
   param "queue_arn" {}
 }
 
-dashboard aws_sqs_queue_detail {
+dashboard "aws_sqs_queue_detail" {
   title = "AWS SQS Queue Detail"
 
   tags = merge(local.sqs_common_tags, {
@@ -150,8 +150,8 @@ dashboard aws_sqs_queue_detail {
     card {
       width = 2
 
-      query   = query.aws_sqs_queue_encryption
-      args  = {
+      query = query.aws_sqs_queue_encryption
+      args = {
         queue_arn = self.input.queue_arn.value
       }
     }
@@ -159,8 +159,8 @@ dashboard aws_sqs_queue_detail {
     card {
       width = 2
 
-      query   = query.aws_sqs_queue_fifo
-      args  = {
+      query = query.aws_sqs_queue_fifo
+      args = {
         queue_arn = self.input.queue_arn.value
       }
     }
@@ -168,17 +168,8 @@ dashboard aws_sqs_queue_detail {
     card {
       width = 2
 
-      query   = query.aws_sqs_queue_content_based_deduplication
-      args  = {
-        queue_arn = self.input.queue_arn.value
-      }
-    }
-
-     card {
-      width = 2
-
-      query   = query.aws_sqs_queue_delay_seconds
-      args  = {
+      query = query.aws_sqs_queue_content_based_deduplication
+      args = {
         queue_arn = self.input.queue_arn.value
       }
     }
@@ -186,8 +177,17 @@ dashboard aws_sqs_queue_detail {
     card {
       width = 2
 
-      query   = query.aws_sqs_queue_message_retention_seconds
-      args  = {
+      query = query.aws_sqs_queue_delay_seconds
+      args = {
+        queue_arn = self.input.queue_arn.value
+      }
+    }
+
+    card {
+      width = 2
+
+      query = query.aws_sqs_queue_message_retention_seconds
+      args = {
         queue_arn = self.input.queue_arn.value
       }
     }
@@ -199,11 +199,11 @@ dashboard aws_sqs_queue_detail {
     container {
       width = 6
 
-        table {
-          title = "Overview"
-          type = "line"
-          width = 6
-          sql   = <<-EOQ
+      table {
+        title = "Overview"
+        type  = "line"
+        width = 6
+        sql   = <<-EOQ
             select
               queue_url as "Queue Url",
               title as "Title",
@@ -216,19 +216,19 @@ dashboard aws_sqs_queue_detail {
               queue_arn = $1
           EOQ
 
-          param "queue_arn" {}
+        param "queue_arn" {}
 
-          args  = {
-            queue_arn = self.input.queue_arn.value
-          }
-
+        args = {
+          queue_arn = self.input.queue_arn.value
         }
 
-        table {
-          title = "Tags"
-          width = 6
+      }
 
-          sql   = <<-EOQ
+      table {
+        title = "Tags"
+        width = 6
+
+        sql = <<-EOQ
           select
             js.key,
             js.value
@@ -239,12 +239,12 @@ dashboard aws_sqs_queue_detail {
             queue_arn = $1
           EOQ
 
-          param "queue_arn" {}
+        param "queue_arn" {}
 
-          args  = {
-            queue_arn = self.input.queue_arn.value
-          }
+        args = {
+          queue_arn = self.input.queue_arn.value
         }
+      }
     }
 
     container {
@@ -252,16 +252,16 @@ dashboard aws_sqs_queue_detail {
 
       table {
         title = "Message Details"
-        query   = query.aws_sqs_queue_message
-        args  = {
+        query = query.aws_sqs_queue_message
+        args = {
           queue_arn = self.input.queue_arn.value
         }
       }
 
       table {
         title = "Encryption Details"
-        query   = query.aws_sqs_queue_encryption_details
-        args  = {
+        query = query.aws_sqs_queue_encryption_details
+        args = {
           queue_arn = self.input.queue_arn.value
         }
       }
@@ -274,8 +274,8 @@ dashboard aws_sqs_queue_detail {
 
     table {
       title = "Policy"
-      query   = query.aws_sqs_queue_policy
-      args  = {
+      query = query.aws_sqs_queue_policy
+      args = {
         queue_arn = self.input.queue_arn.value
       }
     }

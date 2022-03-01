@@ -131,7 +131,7 @@ query "aws_vpc_security_group_assoc" {
   param "arn" {}
 
 }
- ## TODO: Add aws_rds_db_instance / db_security_groups, ELB, ALB, elasticache, etc....
+## TODO: Add aws_rds_db_instance / db_security_groups, ELB, ALB, elasticache, etc....
 
 query "aws_vpc_security_group_ingress_rule_sankey" {
 
@@ -438,7 +438,7 @@ dashboard "aws_vpc_security_group_detail" {
   title = "AWS VPC Security Group Detail"
 
   tags = merge(local.vpc_common_tags, {
-    type = "Details"
+    type = "Detail"
   })
 
   input "security_group_arn" {
@@ -453,8 +453,8 @@ dashboard "aws_vpc_security_group_detail" {
     card {
       width = 2
 
-      query   = query.aws_vpc_security_group_ingress_rules_count
-      args  = {
+      query = query.aws_vpc_security_group_ingress_rules_count
+      args = {
         arn = self.input.security_group_arn.value
       }
     }
@@ -462,8 +462,8 @@ dashboard "aws_vpc_security_group_detail" {
     card {
       width = 2
 
-      query   = query.aws_vpc_security_group_egress_rules_count
-      args  = {
+      query = query.aws_vpc_security_group_egress_rules_count
+      args = {
         arn = self.input.security_group_arn.value
       }
     }
@@ -471,8 +471,8 @@ dashboard "aws_vpc_security_group_detail" {
     card {
       width = 2
 
-      query   = query.aws_vpc_security_attached_enis_count
-      args  = {
+      query = query.aws_vpc_security_attached_enis_count
+      args = {
         arn = self.input.security_group_arn.value
       }
     }
@@ -480,8 +480,8 @@ dashboard "aws_vpc_security_group_detail" {
     card {
       width = 2
 
-      query   = query.aws_vpc_security_unrestricted_ingress
-      args  = {
+      query = query.aws_vpc_security_unrestricted_ingress
+      args = {
         arn = self.input.security_group_arn.value
       }
     }
@@ -489,8 +489,8 @@ dashboard "aws_vpc_security_group_detail" {
     card {
       width = 2
 
-      query   = query.aws_vpc_security_unrestricted_egress
-      args  = {
+      query = query.aws_vpc_security_unrestricted_egress
+      args = {
         arn = self.input.security_group_arn.value
       }
     }
@@ -501,11 +501,11 @@ dashboard "aws_vpc_security_group_detail" {
     container {
       width = 6
 
-        table {
-          title = "Overview"
-          type = "line"
-          width = 6
-          sql   = <<-EOQ
+      table {
+        title = "Overview"
+        type  = "line"
+        width = 6
+        sql   = <<-EOQ
             select
               group_name as "Group Name",
               group_id as "Group Id",
@@ -521,19 +521,19 @@ dashboard "aws_vpc_security_group_detail" {
               arn = $1
           EOQ
 
-          param "arn" {}
+        param "arn" {}
 
-          args  = {
-            arn = self.input.security_group_arn.value
-          }
-
+        args = {
+          arn = self.input.security_group_arn.value
         }
 
-        table {
-          title = "Tags"
-          width = 6
+      }
 
-          sql   = <<-EOQ
+      table {
+        title = "Tags"
+        width = 6
+
+        sql = <<-EOQ
           select
             tag ->> 'Key' as "Key",
             tag ->> 'Value' as "Value"
@@ -544,21 +544,20 @@ dashboard "aws_vpc_security_group_detail" {
             arn = $1
           EOQ
 
-          param "arn" {}
+        param "arn" {}
 
-          args  = {
-            arn = self.input.security_group_arn.value
-          }
+        args = {
+          arn = self.input.security_group_arn.value
         }
-    }
+      }
 
     container {
       width = 6
 
       table {
         title = "Associated To"
-        query  = query.aws_vpc_security_group_assoc
-        args  = {
+        query = query.aws_vpc_security_group_assoc
+        args = {
           arn = self.input.security_group_arn.value
         }
       }
@@ -572,8 +571,8 @@ dashboard "aws_vpc_security_group_detail" {
     hierarchy {
       type  = "sankey"
       title = "Ingress Analysis"
-      query   = query.aws_vpc_security_group_ingress_rule_sankey
-      args  = {
+      query = query.aws_vpc_security_group_ingress_rule_sankey
+      args = {
         arn = self.input.security_group_arn.value
       }
 
@@ -597,8 +596,8 @@ dashboard "aws_vpc_security_group_detail" {
 
     table {
       title = "Ingress Rules"
-      query   = query.aws_vpc_security_group_ingress_rules
-      args  = {
+      query = query.aws_vpc_security_group_ingress_rules
+      args = {
         arn = self.input.security_group_arn.value
       }
     }
@@ -610,8 +609,8 @@ dashboard "aws_vpc_security_group_detail" {
     hierarchy {
       type  = "sankey"
       title = "Egress Analysis"
-      query   = query.aws_vpc_security_group_egress_rule_sankey
-      args  = {
+      query = query.aws_vpc_security_group_egress_rule_sankey
+      args = {
         arn = self.input.security_group_arn.value
       }
 
@@ -635,8 +634,8 @@ dashboard "aws_vpc_security_group_detail" {
 
     table {
       title = "Egress Rules"
-      query   = query.aws_vpc_security_group_egress_rules
-      args  = {
+      query = query.aws_vpc_security_group_egress_rules
+      args = {
         arn = self.input.security_group_arn.value
       }
     }

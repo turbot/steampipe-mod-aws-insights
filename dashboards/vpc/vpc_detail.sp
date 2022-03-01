@@ -356,7 +356,7 @@ query "aws_vpc_gateways_for_vpc" {
 }
 
 query "aws_ingress_nacl_for_vpc_sankey" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     with nacl_data as (
       select
         title,
@@ -461,7 +461,7 @@ query "aws_ingress_nacl_for_vpc_sankey" {
 }
 
 query "aws_egress_nacl_for_vpc_sankey" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     with nacl_data as (
       select
         title,
@@ -564,7 +564,7 @@ query "aws_egress_nacl_for_vpc_sankey" {
 }
 
 query "aws_vpc_peers_for_vpc_sankey" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     with peers as (
       select
         -- distinct id, -- seems to be broken (EOF)
@@ -661,7 +661,7 @@ query "aws_vpc_peers_for_vpc_sankey" {
   param "arn" {}
 }
 
-dashboard aws_vpc_detail {
+dashboard "aws_vpc_detail" {
 
   title = "AWS VPC Detail"
 
@@ -677,12 +677,12 @@ dashboard aws_vpc_detail {
 
   container {
 
-     # Analysis
+    # Analysis
     card {
       #title = "Size"
-      query   = query.aws_vpc_num_ips_for_vpc
+      query = query.aws_vpc_num_ips_for_vpc
       width = 2
-      args  = {
+      args = {
         arn = self.input.vpc_arn.value
       }
     }
@@ -690,17 +690,17 @@ dashboard aws_vpc_detail {
     #    # Assessments
     card {
       #title = "Subnet Count"
-      query   = query.aws_subnet_count_for_vpc
+      query = query.aws_subnet_count_for_vpc
       width = 2
-      args  = {
+      args = {
         arn = self.input.vpc_arn.value
       }
     }
 
     card {
-      query   = query.aws_vpc_is_default
+      query = query.aws_vpc_is_default
       width = 2
-      args  = {
+      args = {
         arn = self.input.vpc_arn.value
       }
     }
@@ -708,7 +708,7 @@ dashboard aws_vpc_detail {
     card {
       query = query.aws_flowlogs_count_for_vpc
       width = 2
-      args  = {
+      args = {
         arn = self.input.vpc_arn.value
       }
     }
@@ -723,7 +723,7 @@ dashboard aws_vpc_detail {
 
       table {
         title = "Overview"
-        type = "line"
+        type  = "line"
         width = 6
         sql   = <<-EOQ
           select
@@ -740,7 +740,7 @@ dashboard aws_vpc_detail {
 
         param "arn" {}
 
-        args  = {
+        args = {
           arn = self.input.vpc_arn.value
         }
       }
@@ -749,7 +749,7 @@ dashboard aws_vpc_detail {
         title = "Tags"
         width = 6
 
-        sql   = <<-EOQ
+        sql = <<-EOQ
           select
             tag ->> 'Key' as "Key",
             tag ->> 'Value' as "Value"
@@ -762,7 +762,7 @@ dashboard aws_vpc_detail {
 
         param "arn" {}
 
-        args  = {
+        args = {
           arn = self.input.vpc_arn.value
         }
       }
@@ -774,7 +774,7 @@ dashboard aws_vpc_detail {
       table {
         title = "CIDR Blocks"
 
-        sql   = <<-EOQ
+        sql = <<-EOQ
           select
             b ->> 'CidrBlock' as cidr_block,
             power(2, 32 - masklen( (b ->> 'CidrBlock'):: cidr)) as num_ips
@@ -793,9 +793,9 @@ dashboard aws_vpc_detail {
           where
             arn = $1;
         EOQ
-         param "arn" {}
+        param "arn" {}
 
-        args  = {
+        args = {
           arn = self.input.vpc_arn.value
         }
       }
@@ -803,7 +803,7 @@ dashboard aws_vpc_detail {
       table {
         title = "DHCP Options"
 
-        sql   = <<-EOQ
+        sql = <<-EOQ
           select
             d.title,
             d.dhcp_options_id,
@@ -819,9 +819,9 @@ dashboard aws_vpc_detail {
             v.arn = $1
             and v.dhcp_options_id = d.dhcp_options_id;
        EOQ
-         param "arn" {}
+        param "arn" {}
 
-        args  = {
+        args = {
           arn = self.input.vpc_arn.value
         }
       }
@@ -836,7 +836,7 @@ dashboard aws_vpc_detail {
     chart {
       title = "Subnets by AZ"
       type  = "column"
-      width = 4
+      width = 6
       sql   = <<-EOQ
         select
           availability_zone,
@@ -853,16 +853,17 @@ dashboard aws_vpc_detail {
 
       param "arn" {}
 
-      args  = {
+      args = {
         arn = self.input.vpc_arn.value
       }
 
     }
 
     table {
-      query   = query.aws_vpc_subnets_for_vpc
+      title = "VPC Subnets"
+      query = query.aws_vpc_subnets_for_vpc
       width = 6
-      args  = {
+      args = {
         arn = self.input.vpc_arn.value
       }
     }
@@ -873,26 +874,26 @@ dashboard aws_vpc_detail {
     title = "Routing"
 
     hierarchy {
-      query   = query.aws_vpc_routes_for_vpc_sankey
-      args  = {
+      query = query.aws_vpc_routes_for_vpc_sankey
+      args = {
         arn = self.input.vpc_arn.value
       }
     }
 
     table {
       title = "Route Tables"
-      query   = query.aws_vpc_route_tables_for_vpc
+      query = query.aws_vpc_route_tables_for_vpc
       width = 6
-      args  = {
+      args = {
         arn = self.input.vpc_arn.value
       }
     }
 
     table {
       title = "Routes"
-      query   = query.aws_vpc_routes_for_vpc
+      query = query.aws_vpc_routes_for_vpc
       width = 6
-      args  = {
+      args = {
         arn = self.input.vpc_arn.value
       }
     }
@@ -909,8 +910,8 @@ dashboard aws_vpc_detail {
     hierarchy {
       title = "Peering Connections"
       width = 6
-      query   = query.aws_vpc_peers_for_vpc_sankey
-      args  = {
+      query = query.aws_vpc_peers_for_vpc_sankey
+      args = {
         arn = self.input.vpc_arn.value
       }
 
@@ -925,8 +926,8 @@ dashboard aws_vpc_detail {
 
     table {
       title = "Peering Connections"
-      query   = query.aws_vpc_peers_for_vpc
-      args  = {
+      query = query.aws_vpc_peers_for_vpc
+      args = {
         arn = self.input.vpc_arn.value
       }
     }
@@ -938,8 +939,8 @@ dashboard aws_vpc_detail {
     hierarchy {
       title = "Ingress NACLS"
       width = 6
-      query   = query.aws_ingress_nacl_for_vpc_sankey
-      args  = {
+      query = query.aws_ingress_nacl_for_vpc_sankey
+      args = {
         arn = self.input.vpc_arn.value
       }
 
@@ -955,8 +956,8 @@ dashboard aws_vpc_detail {
     hierarchy {
       title = "Egress NACLS"
       width = 6
-      query   = query.aws_egress_nacl_for_vpc_sankey
-      args  = {
+      query = query.aws_egress_nacl_for_vpc_sankey
+      args = {
         arn = self.input.vpc_arn.value
       }
 
@@ -976,18 +977,18 @@ dashboard aws_vpc_detail {
     table {
       title = "VPC Endpoints"
 
-      query   = query.aws_vpc_endpoints_for_vpc
+      query = query.aws_vpc_endpoints_for_vpc
       width = 6
-      args  = {
+      args = {
         arn = self.input.vpc_arn.value
       }
     }
 
     table {
       title = "Gateways"
-      query   = query.aws_vpc_gateways_for_vpc
+      query = query.aws_vpc_gateways_for_vpc
       width = 6
-      args  = {
+      args = {
         arn = self.input.vpc_arn.value
       }
     }
@@ -996,9 +997,9 @@ dashboard aws_vpc_detail {
   container {
     title = "Security Groups"
     table {
-      query   = query.aws_vpc_security_groups_for_vpc
+      query = query.aws_vpc_security_groups_for_vpc
       width = 12
-      args  = {
+      args = {
         arn = self.input.vpc_arn.value
       }
     }

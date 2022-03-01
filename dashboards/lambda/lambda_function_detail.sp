@@ -25,7 +25,7 @@ query "aws_lambda_function_memory" {
 }
 
 query "aws_lambda_function_runtime" {
-   sql = <<-EOQ
+  sql = <<-EOQ
     select
       'Rumtime' as label,
       'runtime' as value
@@ -112,10 +112,10 @@ query "aws_lambda_function_policy" {
   sql = <<-EOQ
     select
       p -> 'Action'  as "Action",
-      p -> 'Effect' as "Effect",
+      p ->> 'Effect' as "Effect",
       p -> 'Principal' as "Principal",
       p -> 'Resource' as "Resource",
-      p -> 'Sid' as "Sid"
+      p ->> 'Sid' as "Sid"
     from
       aws_lambda_function,
       jsonb_array_elements(policy_std -> 'Statement') as p
@@ -154,7 +154,7 @@ query "aws_lambda_function_subnet_ids" {
   param "arn" {}
 }
 
-dashboard aws_lambda_function_detail {
+dashboard "aws_lambda_function_detail" {
   title = "AWS Lambda Function Detail"
 
   tags = merge(local.lambda_common_tags, {
@@ -174,8 +174,8 @@ dashboard aws_lambda_function_detail {
     card {
       width = 2
 
-      query   = query.aws_lambda_function_memory
-      args  = {
+      query = query.aws_lambda_function_memory
+      args = {
         arn = self.input.lambda_arn.value
       }
     }
@@ -183,8 +183,8 @@ dashboard aws_lambda_function_detail {
     card {
       width = 2
 
-      query   = query.aws_lambda_function_runtime
-      args  = {
+      query = query.aws_lambda_function_runtime
+      args = {
         arn = self.input.lambda_arn.value
       }
     }
@@ -192,8 +192,8 @@ dashboard aws_lambda_function_detail {
     card {
       width = 2
 
-      query   = query.aws_lambda_function_public
-      args  = {
+      query = query.aws_lambda_function_public
+      args = {
         arn = self.input.lambda_arn.value
       }
     }
@@ -201,17 +201,17 @@ dashboard aws_lambda_function_detail {
     card {
       width = 2
 
-      query   = query.aws_lambda_function_encryption
-      args  = {
+      query = query.aws_lambda_function_encryption
+      args = {
         arn = self.input.lambda_arn.value
       }
     }
 
     card {
-      query   = query.aws_lambda_function_in_vpc
+      query = query.aws_lambda_function_in_vpc
       width = 2
 
-      args  = {
+      args = {
         arn = self.input.lambda_arn.value
       }
     }
@@ -223,11 +223,11 @@ dashboard aws_lambda_function_detail {
     container {
       width = 6
 
-        table {
-          title = "Overview"
-          type = "line"
-          width = 6
-          sql   = <<-EOQ
+      table {
+        title = "Overview"
+        type  = "line"
+        width = 6
+        sql   = <<-EOQ
             select
               'name' as "Name",
               state as "State",
@@ -242,44 +242,49 @@ dashboard aws_lambda_function_detail {
               arn = $1
           EOQ
 
-          param "arn" {}
+        param "arn" {}
 
-          args  = {
-            arn = self.input.lambda_arn.value
-          }
-
+        args = {
+          arn = self.input.lambda_arn.value
         }
 
-        table {
-          title = "Tags"
-          width = 6
+      }
 
-          sql   = <<-EOQ
+      table {
+        title = "Tags"
+        width = 6
+
+        sql = <<-EOQ
+          WITH jsondata AS (
+            select
+              tags::json as tags
+            from
+              aws_lambda_function
+            where
+              arn = $1
+          )
           select
-            js.key,
-            js.value
+            key as "Key",
+            value as "Value"
           from
-            aws_lambda_function,
-            jsonb_each(tags) as js
-          where
-            arn = $1
+            jsondata,
+            json_each_text(tags);
           EOQ
 
-          param "arn" {}
+        param "arn" {}
 
-          args  = {
-            arn = self.input.lambda_arn.value
-          }
+        args = {
+          arn = self.input.lambda_arn.value
         }
-    }
+      }
 
     container {
       width = 6
 
       table {
         title = "Last Update Status"
-        query   = query.aws_lambda_function_last_update_status
-        args  = {
+        query = query.aws_lambda_function_last_update_status
+        args = {
           arn = self.input.lambda_arn.value
         }
       }
@@ -292,8 +297,8 @@ dashboard aws_lambda_function_detail {
 
     table {
       title = "Policy"
-      query   = query.aws_lambda_function_policy
-      args  = {
+      query = query.aws_lambda_function_policy
+      args = {
         arn = self.input.lambda_arn.value
       }
     }
@@ -305,8 +310,8 @@ dashboard aws_lambda_function_detail {
 
     table {
       title = "Security Groups"
-      query   = query.aws_lambda_function_security_groups
-      args  = {
+      query = query.aws_lambda_function_security_groups
+      args = {
         arn = self.input.lambda_arn.value
       }
     }
@@ -318,8 +323,8 @@ dashboard aws_lambda_function_detail {
 
     table {
       title = "Subnets"
-      query   = query.aws_lambda_function_subnet_ids
-      args  = {
+      query = query.aws_lambda_function_subnet_ids
+      args = {
         arn = self.input.lambda_arn.value
       }
     }
