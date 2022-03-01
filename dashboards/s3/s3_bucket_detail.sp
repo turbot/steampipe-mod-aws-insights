@@ -73,9 +73,9 @@ query "aws_s3_bucket_encryption_enabled" {
 query "aws_s3_bucket_logging" {
   sql = <<-EOQ
     select
-      logging -> 'TargetBucket' as "Target Bucket",
-      logging -> 'TargetPrefix' as "Target Prefix",
-      logging -> 'TargetPrefix' as "Target Grants"
+      logging ->> 'TargetBucket' as "Target Bucket",
+      logging ->> 'TargetPrefix' as "Target Prefix",
+      logging ->> 'TargetPrefix' as "Target Grants"
     from
       aws_s3_bucket
     where
@@ -143,7 +143,7 @@ query "aws_s3_bucket_public_access" {
 }
 
 query "aws_s3_bucket_https_enforce" {
-    sql = <<-EOQ
+  sql = <<-EOQ
     with ssl_ok as (
       select
         distinct name
@@ -180,10 +180,10 @@ query "aws_s3_bucket_policy" {
     select
       p -> 'Action'  as "Action",
       p -> 'Condition' as "Condition",
-      p -> 'Effect'  as "Effect",
+      p ->> 'Effect'  as "Effect",
       p -> 'Principal'  as "Principal",
       p -> 'Resource'  as "Resource",
-      p -> 'Sid'  as "Sid"
+      p ->> 'Sid'  as "Sid"
     from
       aws_s3_bucket,
       jsonb_array_elements(policy_std -> 'Statement') as p
@@ -197,14 +197,14 @@ query "aws_s3_bucket_policy" {
 query "aws_s3_bucket_lifecycle_policy" {
   sql = <<-EOQ
     select
-      r -> 'ID'  as "ID",
-      r -> 'AbortIncompleteMultipartUpload'  as "AbortIncompleteMultipartUpload",
-      r -> 'Expiration' as "Expiration",
-      r -> 'Filter'  as "Filter",
-      r -> 'NoncurrentVersionExpiration'  as "NoncurrentVersionExpiration",
-      r -> 'Prefix'  as "Prefix",
-      r -> 'Status'  as "Status",
-      r -> 'Transitions'  as "Transitions"
+      r ->> 'ID'  as "ID",
+      r ->> 'AbortIncompleteMultipartUpload'  as "AbortIncompleteMultipartUpload",
+      r ->> 'Expiration' as "Expiration",
+      r ->> 'Filter'  as "Filter",
+      r ->> 'NoncurrentVersionExpiration'  as "NoncurrentVersionExpiration",
+      r ->> 'Prefix'  as "Prefix",
+      r ->> 'Status'  as "Status",
+      r ->> 'Transitions'  as "Transitions"
     from
       aws_s3_bucket,
       jsonb_array_elements(lifecycle_rules) as r
@@ -215,11 +215,11 @@ query "aws_s3_bucket_lifecycle_policy" {
   param "arn" {}
 }
 
-dashboard aws_s3_bucket_detail {
+dashboard "aws_s3_bucket_detail" {
   title = "AWS S3 Bucket Detail"
 
   tags = merge(local.s3_common_tags, {
-    type = "Details"
+    type = "Detail"
   })
 
   input "bucket_arn" {
@@ -234,8 +234,8 @@ dashboard aws_s3_bucket_detail {
     card {
       width = 2
 
-      query   = query.aws_s3_bucket_versioning_enabled
-      args  = {
+      query = query.aws_s3_bucket_versioning_enabled
+      args = {
         arn = self.input.bucket_arn.value
       }
     }
@@ -243,26 +243,17 @@ dashboard aws_s3_bucket_detail {
     card {
       width = 2
 
-      query   = query.aws_s3_bucket_versioning_mfa_enabled
-      args  = {
+      query = query.aws_s3_bucket_versioning_mfa_enabled
+      args = {
         arn = self.input.bucket_arn.value
       }
     }
 
     card {
-      query   = query.aws_s3_bucket_logging_enabled
+      query = query.aws_s3_bucket_logging_enabled
       width = 2
 
-      args  = {
-        arn = self.input.bucket_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query   = query.aws_s3_bucket_encryption_enabled
-      args  = {
+      args = {
         arn = self.input.bucket_arn.value
       }
     }
@@ -270,8 +261,8 @@ dashboard aws_s3_bucket_detail {
     card {
       width = 2
 
-      query   = query.aws_s3_bucket_cross_region_replication
-      args  = {
+      query = query.aws_s3_bucket_encryption_enabled
+      args = {
         arn = self.input.bucket_arn.value
       }
     }
@@ -279,8 +270,17 @@ dashboard aws_s3_bucket_detail {
     card {
       width = 2
 
-      query   = query.aws_s3_bucket_https_enforce
-      args  = {
+      query = query.aws_s3_bucket_cross_region_replication
+      args = {
+        arn = self.input.bucket_arn.value
+      }
+    }
+
+    card {
+      width = 2
+
+      query = query.aws_s3_bucket_https_enforce
+      args = {
         arn = self.input.bucket_arn.value
       }
     }
@@ -292,11 +292,11 @@ dashboard aws_s3_bucket_detail {
     container {
       width = 6
 
-        table {
-          title = "Overview"
-          type  = "line"
-          width = 6
-          sql   = <<-EOQ
+      table {
+        title = "Overview"
+        type  = "line"
+        width = 6
+        sql   = <<-EOQ
             select
               name as "Name",
               creation_date as "Creation Date",
@@ -310,19 +310,19 @@ dashboard aws_s3_bucket_detail {
               arn = $1
           EOQ
 
-          param "arn" {}
+        param "arn" {}
 
-          args  = {
-            arn = self.input.bucket_arn.value
-          }
-
+        args = {
+          arn = self.input.bucket_arn.value
         }
 
-        table {
-          title = "Tags"
-          width = 6
+      }
 
-          sql   = <<-EOQ
+      table {
+        title = "Tags"
+        width = 6
+
+        sql = <<-EOQ
           select
             tag ->> 'Key' as "Key",
             tag ->> 'Value' as "Value"
@@ -333,12 +333,12 @@ dashboard aws_s3_bucket_detail {
             arn = $1
           EOQ
 
-          param "arn" {}
+        param "arn" {}
 
-          args  = {
-            arn = self.input.bucket_arn.value
-          }
+        args = {
+          arn = self.input.bucket_arn.value
         }
+      }
     }
 
     container {
@@ -346,17 +346,17 @@ dashboard aws_s3_bucket_detail {
 
       table {
         title = "Public Access"
-        query   = query.aws_s3_bucket_public_access
-        args  = {
+        query = query.aws_s3_bucket_public_access
+        args = {
           arn = self.input.bucket_arn.value
         }
       }
 
-       table {
+      table {
         title = "Logging"
-        query   = query.aws_s3_bucket_logging
+        query = query.aws_s3_bucket_logging
 
-        args  = {
+        args = {
           arn = self.input.bucket_arn.value
         }
       }
@@ -367,8 +367,8 @@ dashboard aws_s3_bucket_detail {
       width = 12
       table {
         title = "Policy"
-        query   = query.aws_s3_bucket_policy
-        args  = {
+        query = query.aws_s3_bucket_policy
+        args = {
           arn = self.input.bucket_arn.value
         }
       }
@@ -378,8 +378,8 @@ dashboard aws_s3_bucket_detail {
       width = 12
       table {
         title = "Lifecycle Rules"
-        query   = query.aws_s3_bucket_lifecycle_policy
-        args  = {
+        query = query.aws_s3_bucket_lifecycle_policy
+        args = {
           arn = self.input.bucket_arn.value
         }
       }
@@ -387,14 +387,14 @@ dashboard aws_s3_bucket_detail {
 
     container {
       width = 12
-        table {
+      table {
         title = "Server Side Encryption"
-        query   = query.aws_s3_bucket_server_side_encryption
-        args  = {
+        query = query.aws_s3_bucket_server_side_encryption
+        args = {
           arn = self.input.bucket_arn.value
         }
       }
-  }
+    }
 
   }
 
