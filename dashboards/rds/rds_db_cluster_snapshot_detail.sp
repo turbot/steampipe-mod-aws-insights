@@ -58,8 +58,7 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
   title = "AWS RDS DB Cluster Snapshot Detail"
 
   tags = merge(local.rds_common_tags, {
-    type     = "Detail"
-    category = "Snapshot"
+    type = "Detail"
   })
 
   input "arn" {
@@ -116,6 +115,7 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
             db_cluster_snapshot_identifier as "Snapshot Name",
             db_cluster_identifier as "Cluster Name",
             create_time as "Create Date",
+            engine_version as "Engine Version",
             vpc_id as "VPC ID",
             status as "Status",
             type as "Type",
@@ -156,6 +156,32 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
           arn = self.input.arn.value
         }
 
+      }
+    }
+
+    container {
+      width = 6
+
+      table {
+        title = "Attributes"
+        width = 6
+
+        sql = <<-EOQ
+            select
+              attributes ->> 'AttributeName' as "Name",
+              attributes ->> 'AttributeValue' as "Value"
+            from
+              aws_rds_db_cluster_snapshot,
+              jsonb_array_elements(db_cluster_snapshot_attributes) as attributes
+            where
+              arn = $1;
+          EOQ
+
+        param "arn" {}
+
+        args = {
+          arn = self.input.arn.value
+        }
       }
     }
 

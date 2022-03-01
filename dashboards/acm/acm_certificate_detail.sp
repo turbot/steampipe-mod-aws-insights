@@ -203,6 +203,55 @@ dashboard "aws_acm_certificate_detail" {
         }
       }
 
+      table {
+        title = "Key Usages"
+        sql   = <<-EOQ
+          select
+            usage ->> 'Name' as "Usage Name",
+            usage ->> 'OID' as "Usage OID",
+            key_algorithm as "Key Algorithm"
+          from
+            aws_acm_certificate as c,
+            jsonb_array_elements(extended_key_usages) as usage
+          where
+           certificate_arn = $1;
+        EOQ
+
+        param "arn" {}
+
+        args = {
+          arn = self.input.certificate_arn.value
+        }
+      }
+
+    }
+
+    container {
+      width = 12
+
+      table {
+        title = "Domain Validation Options"
+        sql   = <<-EOQ
+          select
+            option ->> 'DomainName' as "Domain Name",
+            option ->> 'ResourceRecord' as "Resource Record",
+            option ->> 'ValidationDomain' as "Validation Domain",
+            option -> 'ValidationEmails' as "Validation Emails",
+            option ->> 'ValidationMethod' as "Validation Method",
+            option ->> 'ValidationStatus' as "Validation Status"
+          from
+            aws_acm_certificate as c,
+            jsonb_array_elements(domain_validation_options) as option
+          where
+           certificate_arn = $1;
+        EOQ
+
+        param "arn" {}
+
+        args = {
+          arn = self.input.certificate_arn.value
+        }
+      }
     }
 
   }

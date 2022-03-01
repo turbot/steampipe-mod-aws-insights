@@ -158,13 +158,12 @@ dashboard "aws_sns_topic_detail" {
       width = 6
 
       table {
-        title = "Policies"
+        title = "Subscriptions"
         sql   = <<-EOQ
           select
-            display_name as "Name",
-            policy_std ->> 'Id' as "Policy ID",
-            policy_std ->> 'Version' as "Policy Version",
-            jsonb_pretty(policy_std -> 'Statement') as "Policy Statement"
+            subscriptions_confirmed as "Confirmed",
+            subscriptions_deleted as "Deleted",
+            subscriptions_pending as "Pending"
           from
             aws_sns_topic
           where
@@ -178,6 +177,61 @@ dashboard "aws_sns_topic_detail" {
         }
       }
 
+    }
+
+    container {
+      width = 12
+
+      table {
+        title = "Effective Delivery Policy"
+        sql   = <<-EOQ
+          select
+            effective_delivery_policy -> 'http' -> 'defaultHealthyRetryPolicy' ->> 'numRetries' as "Retries",
+            effective_delivery_policy -> 'http' -> 'defaultHealthyRetryPolicy' ->> 'maxDelayTarget' as "Maximum Delay Target",
+            effective_delivery_policy -> 'http' -> 'defaultHealthyRetryPolicy' ->> 'minDelayTarget' as "Minimum Delay Target",
+            effective_delivery_policy -> 'http' -> 'defaultHealthyRetryPolicy' ->> 'backoffFunction' as "Backoff Function",
+            effective_delivery_policy -> 'http' -> 'defaultHealthyRetryPolicy' ->> 'numNoDelayRetries' as "No Delay Retries",
+            effective_delivery_policy -> 'http' -> 'defaultHealthyRetryPolicy' ->> 'numMaxDelayRetries' as "Maximum Delay Retries",
+            effective_delivery_policy -> 'http' -> 'defaultHealthyRetryPolicy' ->> 'numMinDelayRetries' as "Minimum Delay Retries",
+            (effective_delivery_policy -> 'http' -> 'disableSubscriptionOverrides')::boolean as "Disable Subscription Overrides"
+          from
+            aws_sns_topic
+          where
+           topic_arn = $1;
+        EOQ
+
+        param "arn" {}
+
+        args = {
+          arn = self.input.topic_arn.value
+        }
+      }
+
+      table {
+        title = "Policies"
+        sql   = <<-EOQ
+          select
+            policy_std ->> 'Id' as "ID",
+            policy_std ->> 'Version' as "Version",
+            statement ->> 'Sid' as "SID",
+            statement ->> 'Action' as "Action",
+            statement ->> 'Effect' as "Effect",
+            statement ->> 'Resource' as "Resource",
+            statement ->> 'Condition' as "Condition",
+            statement ->> 'Principal' as "Principal"
+          from
+            aws_sns_topic as t,
+            jsonb_array_elements(policy_std -> 'Statement') as statement
+          where
+           topic_arn = $1;
+        EOQ
+
+        param "arn" {}
+
+        args = {
+          arn = self.input.topic_arn.value
+        }
+      }
     }
 
   }

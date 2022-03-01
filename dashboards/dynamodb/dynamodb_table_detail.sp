@@ -201,6 +201,7 @@ dashboard "aws_dynamodb_table_detail" {
             creation_date_time as "Create Date",
             table_status as "Status",
             table_id as "Table ID",
+            billing_mode as "Billing Mode",
             arn as "ARN",
             account_id as "Account ID"
           from
@@ -222,15 +223,15 @@ dashboard "aws_dynamodb_table_detail" {
         width = 6
 
         sql = <<-EOQ
-          select
-            tag ->> 'Key' as "Key",
-            tag ->> 'Value' as "Value"
-          from
-            aws_dynamodb_table,
-            jsonb_array_elements(tags_src) as tag
-          where
-            arn = $1;
-        EOQ
+            select
+              tag ->> 'Key' as "Key",
+              tag ->> 'Value' as "Value"
+            from
+              aws_dynamodb_table,
+              jsonb_array_elements(tags_src) as tag
+            where
+              arn = $1;
+          EOQ
 
         param "arn" {}
 
@@ -248,15 +249,83 @@ dashboard "aws_dynamodb_table_detail" {
         title = "Backup Plan Protection"
         sql   = <<-EOQ
           select
-            t.name as table_name,
-            t.arn as arn,
-            last_backup_time
+            t.name as "Table Name",
+            t.arn as "ARN",
+            last_backup_time as "Last Backup Time"
           from
             aws_dynamodb_table as t
             left join aws_backup_protected_resource as b on t.arn = b.resource_arn
           where
             t.arn = $1 and b.resource_type = 'DynamoDB';
         EOQ
+
+        param "arn" {}
+
+        args = {
+          arn = self.input.table_arn.value
+        }
+      }
+
+      table {
+        title = "Point In Time Recovery"
+        sql   = <<-EOQ
+          select
+            point_in_time_recovery_description ->> 'EarliestRestorableDateTime' as "Earliest Restorable Date",
+            point_in_time_recovery_description ->> 'LatestRestorableDateTime' as "Latest Restorable Date",
+            point_in_time_recovery_description ->> 'PointInTimeRecoveryStatus' as "Status"
+          from
+            aws_dynamodb_table as t
+          where
+            t.arn = $1;
+        EOQ
+
+        param "arn" {}
+
+        args = {
+          arn = self.input.table_arn.value
+        }
+      }
+    }
+
+    container {
+      width = 6
+
+      table {
+        title = "Key Schema"
+        width = 6
+
+        sql = <<-EOQ
+            select
+              schema ->> 'AttributeName' as "Attribute Name",
+              schema ->> 'KeyType' as "Key Type"
+            from
+              aws_dynamodb_table,
+              jsonb_array_elements(key_schema) as schema
+            where
+              arn = $1;
+          EOQ
+
+        param "arn" {}
+
+        args = {
+          arn = self.input.table_arn.value
+        }
+      }
+
+      table {
+        title = "Read/Write Capacity"
+        width = 6
+
+        sql = <<-EOQ
+            select
+              read_capacity as "Read Capacity",
+              write_capacity as "Write Capacity"
+            from
+              aws_dynamodb_table,
+              jsonb_array_elements(key_schema) as schema
+            where
+              arn = $1;
+          EOQ
 
         param "arn" {}
 
