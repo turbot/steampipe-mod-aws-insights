@@ -4,9 +4,9 @@ query "aws_ec2_instance_input" {
       title as label,
       arn as value,
       json_build_object(
-          'account_id', account_id, 
-          'region', region,
-          'instance_id', instance_id
+        'account_id', account_id, 
+        'region', region,
+        'instance_id', instance_id
       ) as tags
     from
       aws_ec2_instance
