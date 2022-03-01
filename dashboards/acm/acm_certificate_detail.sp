@@ -137,8 +137,8 @@ dashboard "aws_acm_certificate_detail" {
           select
             domain_name as "Domain Name",
             created_at as "Create Date",
-            issuer as "issuer",
-            status as "status",
+            issuer as "Issuer",
+            status as "Status",
             type as "Type",
             certificate_arn as "ARN",
             account_id as "Account ID"
