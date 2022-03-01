@@ -53,10 +53,10 @@ dashboard "aws_ebs_volume_dashboard" {
 
       series "count" {
         point "enabled" {
-          color = "green"
+          color = "ok"
         }
         point "disabled" {
-          color = "red"
+          color = "alert"
         }
       }
     }
@@ -69,10 +69,10 @@ dashboard "aws_ebs_volume_dashboard" {
 
       series "count" {
         point "in-use" {
-          color = "green"
+          color = "ok"
         }
         point "available" {
-          color = "red"
+          color = "alert"
         }
       }
     }
