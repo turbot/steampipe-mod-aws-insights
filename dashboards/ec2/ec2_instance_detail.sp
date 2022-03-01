@@ -98,14 +98,40 @@ query "aws_ec2_instance_detailed_monitoring" {
   param "arn" {}
 }
 
+# query "aws_ec2_instance_root_volume_encryption" {
+#   sql = <<-EOQ
+#     with not_encrypted_instances as (
+#       select
+#         encrypted,
+#         volume_id,
+#         att ->> 'InstanceId' as "instanceid",
+#         att ->> 'Device' as "device"
+#       from
+#         aws_ebs_volume,
+#         jsonb_array_elements(attachments) as att  where not encrypted
+#         and attachments is not null
+#     )
+#     select
+#       'Root Volume Unencrypted' as label,
+#       case when e.instanceid is null then 'Enabled' else 'Disabled' end as value,
+#       case when e.instanceid is null then 'ok' else 'alert' end as type
+#     from
+#       aws_ec2_instance as i left join not_encrypted_instances as e on (e.instanceid = i.instance_id) and (i.root_device_name = e.device)
+#    where
+#      instance_id  = 'i-0d57b0adc7d38c7aa';
+#   EOQ
+
+#   param "arn" {}
+# }
+
 query "aws_ec2_instance_block_device_mapping" {
   sql = <<-EOQ
     select
-      p ->> 'DeviceName' as "Device Name",
-      p -> 'Ebs' ->> 'AttachTime' as "Attach Time",
-      p -> 'Ebs' ->> 'DeleteOnTermination' as "DeleteOnTermination",
-      p -> 'Ebs' ->> 'Status'  as "Status",
-      p -> 'Ebs' ->> 'VolumeId'  as "VolumeId"
+      p -> 'DeviceName'  as "Device Name",
+      p -> 'Ebs' -> 'AttachTime' as "Attach Time",
+      p -> 'Ebs' -> 'DeleteOnTermination' as "DeleteOnTermination",
+      p -> 'Ebs' -> 'Status'  as "Status",
+      p -> 'Ebs' -> 'VolumeId'  as "VolumeId"
     from
       aws_ec2_instance,
       jsonb_array_elements(block_device_mappings) as p
@@ -119,8 +145,8 @@ query "aws_ec2_instance_block_device_mapping" {
 query "aws_ec2_instance_security_groups" {
   sql = <<-EOQ
     select
-      p ->> 'GroupId'  as "Group Id",
-      p -> 'GroupName' ->> 'AttachTime' as "Group Name"
+      p -> 'GroupId'  as "Group Id",
+      p -> 'GroupName' -> 'AttachTime' as "Group Name"
     from
       aws_ec2_instance,
       jsonb_array_elements(security_groups) as p
@@ -134,11 +160,11 @@ query "aws_ec2_instance_security_groups" {
 query "aws_ec2_instance_network_intefaces" {
   sql = <<-EOQ
     select
-      p ->> 'NetworkInterfaceId'  as "Network Interface Id",
-      p ->> 'InterfaceType'  as "Interface Type",
-      p ->> 'Status'  as "Status",
-      p ->> 'SubnetId'  as "Subnet Id",
-      p ->> 'VpcId'  as "Vpc Id"
+      p -> 'NetworkInterfaceId'  as "Network Interface Id",
+      p -> 'InterfaceType'  as "Interface Type",
+      p -> 'Status'  as "Status",
+      p -> 'SubnetId'  as "Subnet Id",
+      p -> 'VpcId'  as "Vpc Id"
     from
       aws_ec2_instance,
       jsonb_array_elements(network_interfaces) as p
@@ -152,8 +178,8 @@ query "aws_ec2_instance_network_intefaces" {
 query "aws_ec2_instance_cpu_cores" {
   sql = <<-EOQ
     select
-      cpu_options_core_count as "Cpu Options Core Count",
-      cpu_options_threads_per_core as "Cpu Options Threads Per Core"
+      cpu_options_core_count  as "Cpu Options Core Count",
+      cpu_options_threads_per_core  as "Cpu Options Threads Per Core"
     from
       aws_ec2_instance
     where
@@ -163,7 +189,7 @@ query "aws_ec2_instance_cpu_cores" {
   param "arn" {}
 }
 
-dashboard "aws_ec2_instance_detail" {
+dashboard aws_ec2_instance_detail {
   title = "AWS EC2 Instance Detail"
 
   tags = merge(local.ec2_common_tags, {
@@ -182,8 +208,8 @@ dashboard "aws_ec2_instance_detail" {
     card {
       width = 2
 
-      query = query.aws_ec2_instance_status
-      args = {
+      query   = query.aws_ec2_instance_status
+      args  = {
         arn = self.input.instance_arn.value
       }
     }
@@ -191,8 +217,8 @@ dashboard "aws_ec2_instance_detail" {
     card {
       width = 2
 
-      query = query.aws_ec2_instance_type
-      args = {
+      query   = query.aws_ec2_instance_type
+      args  = {
         arn = self.input.instance_arn.value
       }
     }
@@ -200,8 +226,8 @@ dashboard "aws_ec2_instance_detail" {
     card {
       width = 2
 
-      query = query.aws_ec2_instance_total_cores_count
-      args = {
+      query   = query.aws_ec2_instance_total_cores_count
+      args  = {
         arn = self.input.instance_arn.value
       }
     }
@@ -209,20 +235,30 @@ dashboard "aws_ec2_instance_detail" {
     card {
       width = 2
 
-      query = query.aws_ec2_instance_public_access
-      args = {
+      query   = query.aws_ec2_instance_public_access
+      args  = {
         arn = self.input.instance_arn.value
       }
     }
 
     card {
-      query = query.aws_ec2_instance_ebs_optimized
+      query   = query.aws_ec2_instance_ebs_optimized
       width = 2
 
-      args = {
+      args  = {
         arn = self.input.instance_arn.value
       }
     }
+
+    # card {
+    #   query   = query.aws_ec2_instance_root_volume_encryption
+    #   width = 2
+
+    #   args  = {
+    #     arn = self.input.instance_arn.value
+    #   }
+    # }
+
   }
 
   container {
@@ -230,11 +266,11 @@ dashboard "aws_ec2_instance_detail" {
     container {
       width = 6
 
-      table {
-        title = "Overview"
-        type  = "line"
-        width = 6
-        sql   = <<-EOQ
+        table {
+          title = "Overview"
+          type = "line"
+          width = 6
+          sql   = <<-EOQ
             select
               tags ->> 'Name' as "Name",
               instance_id as "Instance Id",
@@ -249,19 +285,19 @@ dashboard "aws_ec2_instance_detail" {
               arn = $1
           EOQ
 
-        param "arn" {}
+          param "arn" {}
 
-        args = {
-          arn = self.input.instance_arn.value
+          args  = {
+            arn = self.input.instance_arn.value
+          }
+
         }
 
-      }
+        table {
+          title = "Tags"
+          width = 6
 
-      table {
-        title = "Tags"
-        width = 6
-
-        sql = <<-EOQ
+          sql   = <<-EOQ
           select
             tag ->> 'Key' as "Key",
             tag ->> 'Value' as "Value"
@@ -272,20 +308,21 @@ dashboard "aws_ec2_instance_detail" {
             arn = $1
           EOQ
 
-        param "arn" {}
+          param "arn" {}
 
-        args = {
-          arn = self.input.instance_arn.value
+          args  = {
+            arn = self.input.instance_arn.value
+          }
         }
-      }
+    }
 
     container {
       width = 6
 
       table {
         title = "Block Device Mappings"
-        query = query.aws_ec2_instance_block_device_mapping
-        args = {
+        query   = query.aws_ec2_instance_block_device_mapping
+        args  = {
           arn = self.input.instance_arn.value
         }
       }
@@ -298,8 +335,8 @@ dashboard "aws_ec2_instance_detail" {
 
     table {
       title = "Network Intefaces"
-      query = query.aws_ec2_instance_network_intefaces
-      args = {
+      query   = query.aws_ec2_instance_network_intefaces
+      args  = {
         arn = self.input.instance_arn.value
       }
     }
@@ -311,8 +348,8 @@ dashboard "aws_ec2_instance_detail" {
 
     table {
       title = "Security Groups"
-      query = query.aws_ec2_instance_security_groups
-      args = {
+      query   = query.aws_ec2_instance_security_groups
+      args  = {
         arn = self.input.instance_arn.value
       }
     }
@@ -324,8 +361,8 @@ dashboard "aws_ec2_instance_detail" {
 
     table {
       title = " CPU cores"
-      query = query.aws_ec2_instance_cpu_cores
-      args = {
+      query   = query.aws_ec2_instance_cpu_cores
+      args  = {
         arn = self.input.instance_arn.value
       }
     }
