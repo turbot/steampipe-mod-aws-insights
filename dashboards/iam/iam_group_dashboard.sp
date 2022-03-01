@@ -1,6 +1,6 @@
 query "aws_iam_group_count" {
   sql = <<-EOQ
-    select count(*) as "Total Groups" from aws_iam_group;
+    select count(*) as "Groups" from aws_iam_group;
   EOQ
 }
 
@@ -67,8 +67,8 @@ query "aws_iam_groups_without_users" {
       select
         arn,
         case
-          when users is null then 'group_without_users'
-          else 'ok'
+          when users is null then 'without_users'
+          else 'with_users'
         end as has_users
       from
         aws_iam_group
@@ -89,8 +89,8 @@ query "aws_iam_groups_with_inline_policy" {
       select
         arn,
         case
-          when jsonb_array_length(inline_policies) > 0 then 'with_inline_policies'
-          else 'ok'
+          when jsonb_array_length(inline_policies) > 0 then 'configured'
+          else 'unconfigured'
         end as has_inline
       from
         aws_iam_group
@@ -116,9 +116,9 @@ query "aws_iam_groups_with_administrator_policy" {
           when
             attached_policy_arns @> ('["arn:' || partition || ':iam::aws:policy/AdministratorAccess"]')::jsonb
           then
-            'with_administrator_policy'
+            'configured'
           else
-            'ok'
+            'unconfigured'
         end
         as has_administrator_policy
       from
@@ -252,10 +252,10 @@ dashboard "aws_iam_group_dashboard" {
       width = 3
 
       series "count" {
-        point "ok" {
+        point "with_users" {
           color = "green"
         }
-        point "group_without_users" {
+        point "without_users" {
           color = "red"
         }
       }
@@ -268,10 +268,10 @@ dashboard "aws_iam_group_dashboard" {
       width = 3
 
       series "count" {
-        point "ok" {
+        point "unconfigured" {
           color = "green"
         }
-        point "with_inline_policies" {
+        point "configured" {
           color = "red"
         }
       }
@@ -284,10 +284,10 @@ dashboard "aws_iam_group_dashboard" {
       width = 3
 
       series "count" {
-        point "ok" {
+        point "unconfigured" {
           color = "green"
         }
-        point "with_administrator_policy" {
+        point "configured" {
           color = "red"
         }
       }

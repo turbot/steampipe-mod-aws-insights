@@ -103,8 +103,8 @@ query "aws_iam_roles_with_inline_policy" {
       select
         arn,
         case
-          when jsonb_array_length(inline_policies) > 0 then 'with_inline_policies'
-          else 'ok'
+          when jsonb_array_length(inline_policies) > 0 then 'configured'
+          else 'unconfigured'
         end as has_inline
       from
         aws_iam_role
@@ -125,8 +125,8 @@ query "aws_iam_roles_with_direct_attached_policy" {
       select
         arn,
         case
-          when jsonb_array_length(attached_policy_arns) > 0 then 'with_attached_policies'
-          else 'alert'
+          when jsonb_array_length(attached_policy_arns) > 0 then 'attached'
+          else 'unattached'
         end as has_attached
       from
         aws_iam_role
@@ -180,7 +180,7 @@ query "aws_iam_roles_by_boundary_policy" {
   sql = <<-EOQ
     select
       case
-        when permissions_boundary_type is null or permissions_boundary_type = '' then 'not_configured'
+        when permissions_boundary_type is null or permissions_boundary_type = '' then 'unconfigured'
         else 'configured'
       end as policy_type,
       count(*)
@@ -322,10 +322,10 @@ dashboard "aws_iam_role_dashboard" {
       width = 3
 
       series "count" {
-        point "ok" {
+        point "unconfigured" {
           color = "green"
         }
-        point "with_inline_policies" {
+        point "configured" {
           color = "red"
         }
       }
@@ -338,10 +338,10 @@ dashboard "aws_iam_role_dashboard" {
       width = 3
 
       series "count" {
-        point "with_attached_policies" {
+        point "attached" {
           color = "green"
         }
-        point "alert" {
+        point "unattached" {
           color = "red"
         }
       }
@@ -364,7 +364,7 @@ dashboard "aws_iam_role_dashboard" {
         point "configured" {
           color = "green"
         }
-        point "not_configured" {
+        point "unconfigured" {
           color = "red"
         }
       }
