@@ -1,12 +1,17 @@
 query "aws_ec2_instance_input" {
   sql = <<EOQ
     select
-      arn as label,
-      arn as value
+      title as label,
+      arn as value,
+      json_build_object(
+          'account_id', account_id, 
+          'region', region,
+          'instance_id', instance_id
+      ) as tags
     from
       aws_ec2_instance
     order by
-      arn;
+      title;
   EOQ
 }
 
