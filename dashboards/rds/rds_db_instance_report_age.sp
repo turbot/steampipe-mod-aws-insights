@@ -1,4 +1,4 @@
-dashboard "aws_db_instance_age_report" {
+dashboard "aws_rds_db_instance_age_report" {
 
   title = "AWS RDS DB Instance Age Report"
 
