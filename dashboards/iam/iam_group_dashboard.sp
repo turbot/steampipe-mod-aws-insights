@@ -67,8 +67,8 @@ query "aws_iam_groups_without_users" {
       select
         arn,
         case
-          when users is null then 'Group without Users'
-          else 'OK'
+          when users is null then 'group_without_users'
+          else 'ok'
         end as has_users
       from
         aws_iam_group
@@ -89,8 +89,8 @@ query "aws_iam_groups_with_inline_policy" {
       select
         arn,
         case
-          when jsonb_array_length(inline_policies) > 0 then 'With Inline Policies'
-          else 'OK'
+          when jsonb_array_length(inline_policies) > 0 then 'with_inline_policies'
+          else 'ok'
         end as has_inline
       from
         aws_iam_group
@@ -116,9 +116,9 @@ query "aws_iam_groups_with_administrator_policy" {
           when
             attached_policy_arns @> ('["arn:' || partition || ':iam::aws:policy/AdministratorAccess"]')::jsonb
           then
-            'With Administrator Policy'
+            'with_administrator_policy'
           else
-            'OK'
+            'ok'
         end
         as has_administrator_policy
       from
@@ -250,6 +250,15 @@ dashboard "aws_iam_group_dashboard" {
       sql   = query.aws_iam_groups_without_users.sql
       type  = "donut"
       width = 3
+
+      series "count" {
+        point "ok" {
+          color = "green"
+        }
+        point "group_without_users" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -257,6 +266,15 @@ dashboard "aws_iam_group_dashboard" {
       sql   = query.aws_iam_groups_with_inline_policy.sql
       type  = "donut"
       width = 3
+
+      series "count" {
+        point "ok" {
+          color = "green"
+        }
+        point "with_inline_policies" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -264,6 +282,15 @@ dashboard "aws_iam_group_dashboard" {
       sql   = query.aws_iam_groups_with_administrator_policy.sql
       type  = "donut"
       width = 3
+
+      series "count" {
+        point "ok" {
+          color = "green"
+        }
+        point "with_administrator_policy" {
+          color = "red"
+        }
+      }
     }
 
   }
