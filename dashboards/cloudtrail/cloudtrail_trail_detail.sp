@@ -71,7 +71,7 @@ query "aws_cloudtrail_trail_unencrypted" {
 }
 
 query "aws_cloudtrail_trail_logging" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
       arn as "ARN",
       is_logging as "Logging"
@@ -85,7 +85,7 @@ query "aws_cloudtrail_trail_logging" {
 }
 
 query "aws_cloudtrail_trail_bucket" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
       arn as "ARN",
       s3_bucket_name as "S3 Bucket Name"

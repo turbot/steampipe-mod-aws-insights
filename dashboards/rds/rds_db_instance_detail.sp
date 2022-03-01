@@ -28,7 +28,7 @@ query "aws_rds_db_instance_class" {
   sql = <<-EOQ
     select
       'Class' as label,
-      class as  value
+      class as value
     from
       aws_rds_db_instance
     where
@@ -162,7 +162,7 @@ query "aws_rds_db_instance_logging" {
 query "aws_rds_db_instance_security_groups" {
   sql = <<-EOQ
     select
-      s ->> 'VpcSecurityGroupId' as "Vpc Security Group Id",
+      s ->> 'VpcSecurityGroupId' as "VPC Security Group Id",
       s ->> 'Status' as "Status"
     from
       aws_rds_db_instance,
@@ -178,7 +178,7 @@ query "aws_rds_db_instance_db_subnet_groups" {
   sql = <<-EOQ
     select
       db_subnet_group_name as "DB Subnet Group Name",
-      db_subnet_group_arn as "DB Subnet Group Arn",
+      db_subnet_group_arn as "DB Subnet Group ARN",
       db_subnet_group_status as "DB Subnet Group Status"
     from
       aws_rds_db_instance
@@ -197,7 +197,7 @@ dashboard "aws_rds_db_instance_detail" {
   })
 
   input "db_instance_arn" {
-    title = "Select a DB instance:"
+    title = "Select a DB Instance:"
     sql   = query.aws_rds_db_instance_input.sql
     width = 4
   }

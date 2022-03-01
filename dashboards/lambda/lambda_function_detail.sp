@@ -27,7 +27,7 @@ query "aws_lambda_function_memory" {
 query "aws_lambda_function_runtime" {
   sql = <<-EOQ
     select
-      'Rumtime' as label,
+      'Runtime' as label,
       'runtime' as value
     from
       aws_lambda_function
@@ -163,7 +163,7 @@ dashboard "aws_lambda_function_detail" {
 
 
   input "lambda_arn" {
-    title = "Select a lambda:"
+    title = "Select a lambda function:"
     sql   = query.aws_lambda_function_input.sql
     width = 4
   }
@@ -229,7 +229,7 @@ dashboard "aws_lambda_function_detail" {
         width = 6
         sql   = <<-EOQ
             select
-              'name' as "Name",
+              name as "Name",
               state as "State",
               vpc_id as "VPC Id",
               title as "Title",

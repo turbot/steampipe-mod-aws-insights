@@ -112,9 +112,9 @@ query "aws_s3_bucket_cross_region_replication" {
 query "aws_s3_bucket_server_side_encryption" {
   sql = <<-EOQ
     select
-      rules -> 'ApplyServerSideEncryptionByDefault' -> 'KMSMasterKeyID' as "KMSMasterKeyID",
-      rules -> 'ApplyServerSideEncryptionByDefault' -> 'SSEAlgorithm' as "SSEAlgorithm",
-      rules -> 'BucketKeyEnabled'  as "BucketKeyEnabled"
+      rules -> 'ApplyServerSideEncryptionByDefault' -> 'KMSMasterKeyID' as "KMS Master Key ID",
+      rules -> 'ApplyServerSideEncryptionByDefault' -> 'SSEAlgorithm' as "SSE Algorithm",
+      rules -> 'BucketKeyEnabled'  as "Bucket Key Enabled"
     from
       aws_s3_bucket,
       jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as rules
@@ -198,10 +198,10 @@ query "aws_s3_bucket_lifecycle_policy" {
   sql = <<-EOQ
     select
       r ->> 'ID'  as "ID",
-      r ->> 'AbortIncompleteMultipartUpload'  as "AbortIncompleteMultipartUpload",
+      r ->> 'AbortIncompleteMultipartUpload'  as "Abort Incomplete Multipart Upload",
       r ->> 'Expiration' as "Expiration",
       r ->> 'Filter'  as "Filter",
-      r ->> 'NoncurrentVersionExpiration'  as "NoncurrentVersionExpiration",
+      r ->> 'NoncurrentVersionExpiration'  as "Non current Version Expiration",
       r ->> 'Prefix'  as "Prefix",
       r ->> 'Status'  as "Status",
       r ->> 'Transitions'  as "Transitions"

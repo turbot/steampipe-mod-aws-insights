@@ -87,7 +87,7 @@ query "aws_ec2_instance_detailed_monitoring" {
   sql = <<-EOQ
     select
       'Detailed Monitoring' as label,
-      case when monitoring_state = 'enabled'  then 'Enabled' else 'Disabled' end as value,
+      case when monitoring_state = 'enabled' then 'Enabled' else 'Disabled' end as value,
       case when ebs_optimized then 'ok' else 'alert' end as type
     from
       aws_ec2_instance
@@ -103,9 +103,9 @@ query "aws_ec2_instance_block_device_mapping" {
     select
       p ->> 'DeviceName'  as "Device Name",
       p -> 'Ebs' ->> 'AttachTime' as "Attach Time",
-      p -> 'Ebs' ->> 'DeleteOnTermination' as "DeleteOnTermination",
+      p -> 'Ebs' ->> 'DeleteOnTermination' as "Delete On Termination",
       p -> 'Ebs' ->> 'Status'  as "Status",
-      p -> 'Ebs' ->> 'VolumeId'  as "VolumeId"
+      p -> 'Ebs' ->> 'VolumeId'  as "Volume Id"
     from
       aws_ec2_instance,
       jsonb_array_elements(block_device_mappings) as p
@@ -131,14 +131,14 @@ query "aws_ec2_instance_security_groups" {
   param "arn" {}
 }
 
-query "aws_ec2_instance_network_intefaces" {
+query "aws_ec2_instance_network_interfaces" {
   sql = <<-EOQ
     select
-      p ->> 'NetworkInterfaceId'  as "Network Interface Id",
-      p ->> 'InterfaceType'  as "Interface Type",
-      p ->> 'Status'  as "Status",
-      p ->> 'SubnetId'  as "Subnet Id",
-      p ->> 'VpcId'  as "Vpc Id"
+      p ->> 'NetworkInterfaceId' as "Network Interface Id",
+      p ->> 'InterfaceType' as "Interface Type",
+      p ->> 'Status' as "Status",
+      p ->> 'SubnetId' as "Subnet Id",
+      p ->> 'VpcId' as "Vpc Id"
     from
       aws_ec2_instance,
       jsonb_array_elements(network_interfaces) as p
@@ -152,8 +152,8 @@ query "aws_ec2_instance_network_intefaces" {
 query "aws_ec2_instance_cpu_cores" {
   sql = <<-EOQ
     select
-      cpu_options_core_count  as "Cpu Options Core Count",
-      cpu_options_threads_per_core  as "Cpu Options Threads Per Core"
+      cpu_options_core_count  as "CPU Options Core Count",
+      cpu_options_threads_per_core  as "CPU Options Threads Per Core"
     from
       aws_ec2_instance
     where
@@ -171,7 +171,7 @@ dashboard "aws_ec2_instance_detail" {
   })
 
   input "instance_arn" {
-    title = "Select a instance:"
+    title = "Select an instance:"
     sql   = query.aws_ec2_instance_input.sql
     width = 4
   }
@@ -235,19 +235,19 @@ dashboard "aws_ec2_instance_detail" {
         type  = "line"
         width = 6
         sql   = <<-EOQ
-            select
-              tags ->> 'Name' as "Name",
-              instance_id as "Instance Id",
-              launch_time as "Launch Time",
-              title as "Title",
-              region as "Region",
-              account_id as "Account Id",
-              arn as "ARN"
-            from
-              aws_ec2_instance
-            where
-              arn = $1
-          EOQ
+          select
+            tags ->> 'Name' as "Name",
+            instance_id as "Instance Id",
+            launch_time as "Launch Time",
+            title as "Title",
+            region as "Region",
+            account_id as "Account Id",
+            arn as "ARN"
+          from
+            aws_ec2_instance
+          where
+            arn = $1
+        EOQ
 
         param "arn" {}
 
@@ -297,8 +297,8 @@ dashboard "aws_ec2_instance_detail" {
     width = 12
 
     table {
-      title = "Network Intefaces"
-      query = query.aws_ec2_instance_network_intefaces
+      title = "Network Interfaces"
+      query = query.aws_ec2_instance_network_interfaces
       args = {
         arn = self.input.instance_arn.value
       }

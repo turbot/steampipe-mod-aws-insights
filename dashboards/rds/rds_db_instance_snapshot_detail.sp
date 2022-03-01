@@ -137,7 +137,7 @@ dashboard "aws_rds_db_snapshot_detail" {
   })
 
   input "db_snapshot_arn" {
-    title = "Select a DB snapshot:"
+    title = "Select a DB Snapshot:"
     sql   = query.aws_rds_db_snapshot_input.sql
     width = 4
   }

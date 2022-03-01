@@ -120,7 +120,7 @@ query "aws_sqs_queue_encryption_details" {
   sql = <<-EOQ
     select
        case when kms_master_key_id is not null then 'Enabled' else 'Disabled' end as "Encryption",
-       kms_master_key_id
+       kms_master_key_id as "KMS Master Key ID"
     from
       aws_sqs_queue
     where
@@ -139,7 +139,7 @@ dashboard "aws_sqs_queue_detail" {
 
 
   input "queue_arn" {
-    title = "Select a queue:"
+    title = "Select a Queue:"
     sql   = query.aws_sqs_queue_input.sql
     width = 4
   }
@@ -205,7 +205,7 @@ dashboard "aws_sqs_queue_detail" {
         width = 6
         sql   = <<-EOQ
             select
-              queue_url as "Queue Url",
+              queue_url as "Queue URL",
               title as "Title",
               region as "Region",
               account_id as "Account Id",
