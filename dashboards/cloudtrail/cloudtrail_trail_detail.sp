@@ -219,7 +219,7 @@ dashboard "aws_cloudtrail_trail_detail" {
       }
 
       table {
-        title = "Bucket Details"
+        title = "Associated S3 Bucket"
         query = query.aws_cloudtrail_trail_bucket
 
         args = {
