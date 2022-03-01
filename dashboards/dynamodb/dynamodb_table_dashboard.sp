@@ -288,9 +288,9 @@ dashboard "aws_dynamodb_table_dashboard" {
           select
             t.name as table_name,
             case
-              when t.sse_description ->> 'SSEType' = 'KMS' and k.key_manager = 'AWS' then 'AWS Managed'
-              when t.sse_description ->> 'SSEType' = 'KMS' and k.key_manager = 'CUSTOMER' then 'Customer Managed'
-              else 'DEFAULT'
+              when t.sse_description ->> 'SSEType' = 'KMS' and k.key_manager = 'AWS' then 'aws_managed'
+              when t.sse_description ->> 'SSEType' = 'KMS' and k.key_manager = 'CUSTOMER' then 'customer_managed'
+              else 'default'
             end as encryption_type
           from
             aws_dynamodb_table as t
