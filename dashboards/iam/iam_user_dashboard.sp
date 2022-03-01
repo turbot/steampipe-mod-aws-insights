@@ -25,7 +25,7 @@ query "aws_iam_user_no_boundary_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'No Boundary Policy' as label,
+      'No Boundary Policy Association' as label,
       case when count(*) = 0 then 'ok' else 'alert' end as type
     from
       aws_iam_user
@@ -64,17 +64,20 @@ query "aws_iam_users_with_inline_policy_count" {
 
 query "aws_iam_users_by_mfa_enabled" {
   sql = <<-EOQ
-    with mfa as (
+    with mfa_stat as (
       select
-        case when mfa_enabled then 'Enabled' else 'Disabled' end as mfa_status
+        case
+          when mfa_enabled then 'enabled'
+          else 'disabled'
+        end as mfa_status
       from
         aws_iam_user
     )
     select
       mfa_status,
-      count(mfa_status)
+      count(*)
     from
-      mfa
+      mfa_stat
     group by
       mfa_status;
   EOQ
@@ -84,8 +87,8 @@ query "aws_iam_users_by_boundary_policy" {
   sql = <<-EOQ
     select
       case
-        when permissions_boundary_type is null or permissions_boundary_type = '' then 'Not Configured'
-        else 'Configured'
+        when permissions_boundary_type is null or permissions_boundary_type = '' then 'unconfigured'
+        else 'configured'
       end as policy_type,
       count(*)
     from
@@ -101,8 +104,8 @@ query "aws_iam_users_with_direct_attached_policy" {
       select
         arn,
         case
-          when jsonb_array_length(attached_policy_arns) > 0 then 'With Attached Policies'
-          else 'OK'
+          when jsonb_array_length(attached_policy_arns) > 0 then 'attached_policies'
+          else 'unattached'
         end as has_attached
       from
         aws_iam_user
@@ -123,8 +126,8 @@ query "aws_iam_users_with_inline_policy" {
       select
         arn,
         case
-          when jsonb_array_length(inline_policies) > 0 then 'With Inline Policies'
-          else 'OK'
+          when jsonb_array_length(inline_policies) > 0 then 'associated'
+          else 'unassociated'
         end as has_inline
       from
         aws_iam_user
@@ -261,14 +264,14 @@ dashboard "aws_iam_user_dashboard" {
       type  = "donut"
       width = 3
 
-      # series "mfa_status" {
-      #   point "Enabled" {
-      #     color = "ok"
-      #   }
-      #   point "Disabled" {
-      #     color = "alert"
-      #   }
-      # }
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -276,6 +279,15 @@ dashboard "aws_iam_user_dashboard" {
       sql   = query.aws_iam_users_by_boundary_policy.sql
       type  = "donut"
       width = 3
+
+      series "count" {
+        point "configured" {
+          color = "green"
+        }
+        point "unconfigured" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -283,13 +295,31 @@ dashboard "aws_iam_user_dashboard" {
       sql   = query.aws_iam_users_with_direct_attached_policy.sql
       type  = "donut"
       width = 3
+
+      series "count" {
+        point "unattached" {
+          color = "green"
+        }
+        point "attached_policies" {
+          color = "red"
+        }
+      }
     }
 
     chart {
-      title = "Inline Policy"
+      title = "Inline Policy Association"
       sql   = query.aws_iam_users_with_inline_policy.sql
       type  = "donut"
       width = 3
+
+      series "count" {
+        point "unassociated" {
+          color = "green"
+        }
+        point "associated" {
+          color = "red"
+        }
+      }
     }
 
   }

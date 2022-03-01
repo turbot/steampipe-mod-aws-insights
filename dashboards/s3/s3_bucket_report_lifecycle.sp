@@ -29,7 +29,7 @@ dashboard "aws_s3_bucket_lifecycle_report" {
 
   title = "AWS S3 Bucket Lifecycle Report"
 
-  tags = merge(local.redshift_common_tags, {
+  tags = merge(local.s3_common_tags, {
     type     = "Report"
     category = "Lifecycle"
   })

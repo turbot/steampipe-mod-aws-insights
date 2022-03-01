@@ -8,7 +8,7 @@ query "aws_rds_unencrypted_db_instance_snapshot_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Unencrypted Instance Snapshots' as label,
+      'Unencrypted' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_rds_db_snapshot
@@ -21,7 +21,7 @@ query "aws_rds_db_instance_snapshot_not_in_vpc_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Instance Snapshots not in VPC' as label,
+      'Not in VPC' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_rds_db_snapshot
@@ -94,18 +94,39 @@ query "aws_rds_db_instance_snapshot_iam_authentication_enabled" {
     group by name
   )
   select
-    'Enabled' as "IAM Authentication Status",
-    count(name) as "Total"
+    'enabled' as "IAM Authentication Status",
+    count(name)
   from
     iam_authentication_stat
   union
   select
-    'Disabled' as "IAM Authentication Status",
-    count( db_instance_identifier) as "Total"
+    'disabled' as "IAM Authentication Status",
+    count(db_instance_identifier)
   from
     aws_rds_db_snapshot as s where s.db_instance_identifier not in (select name from iam_authentication_stat);
   EOQ
 }
+
+# query "aws_rds_db_instance_snapshot_iam_authentication_enabled" {
+#   sql = <<-EOQ
+#     with db_instance_snapshots as (
+#       select
+#         case
+#           when iam_database_authentication_enabled then 'enabled'
+#           else 'disabled'
+#         end as iam_authentication_status
+#       from
+#         aws_rds_db_snapshot
+#     )
+#     select
+#       iam_authentication_status,
+#       count(*)
+#     from
+#       db_instance_snapshots
+#     group by
+#       iam_authentication_status;
+#   EOQ
+# }
 
 query "aws_rds_db_instance_snapshot_by_encryption_status" {
   sql = <<-EOQ
@@ -279,6 +300,15 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
       sql   = query.aws_rds_db_instance_snapshot_by_encryption_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -286,6 +316,15 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
       sql   = query.aws_rds_db_instance_snapshot_iam_authentication_enabled.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
   }

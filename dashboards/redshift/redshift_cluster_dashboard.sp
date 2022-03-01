@@ -194,9 +194,9 @@ query "aws_redshift_cluster_by_encryption_status" {
     from (
       select encrypted,
         case when encrypted then
-          'Enabled'
+          'enabled'
         else
-          'Disabled'
+          'disabled'
         end encryption_status
       from
         aws_redshift_cluster) as t
@@ -215,9 +215,9 @@ query "aws_redshift_cluster_by_publicly_accessible_status" {
     from (
       select publicly_accessible,
         case when publicly_accessible then
-          'Public'
+          'public'
         else
-          'Private'
+          'private'
         end publicly_accessible_status
       from
         aws_redshift_cluster) as t
@@ -236,9 +236,9 @@ query "aws_redshift_cluster_in_vpc_status" {
     from (
       select
         case when vpc_id is not null then
-          'Enabled'
+          'enabled'
         else
-          'Disabled'
+          'disabled'
         end vpc_status
       from
         aws_redshift_cluster) as t
@@ -324,6 +324,15 @@ dashboard "aws_redshift_cluster_dashboard" {
       sql = query.aws_redshift_cluster_by_encryption_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -331,6 +340,15 @@ dashboard "aws_redshift_cluster_dashboard" {
       sql = query.aws_redshift_cluster_by_publicly_accessible_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "private" {
+          color = "green"
+        }
+        point "public" {
+          color = "red"
+        }
+      }
     }
 
      chart {
@@ -338,6 +356,15 @@ dashboard "aws_redshift_cluster_dashboard" {
       sql = query.aws_redshift_cluster_in_vpc_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
   }

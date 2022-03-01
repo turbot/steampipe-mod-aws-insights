@@ -67,8 +67,8 @@ query "aws_lambda_function_public_status" {
           policy_std -> 'Statement' ->> 'Effect' = 'Allow'
           and ( policy_std -> 'Statement' ->> 'Prinipal' = '*'
           or ( policy_std -> 'Principal' -> 'AWS' ) :: text = '*'
-        ) then 'Public'
-          else 'Private'
+        ) then 'public'
+          else 'private'
         end as visibility
       from
         aws_lambda_function
@@ -91,9 +91,9 @@ query "aws_lambda_function_by_encryption_status" {
     from (
       select
         case when kms_key_arn is not null then
-          'Enabled'
+          'enabled'
         else
-          'Disabled'
+          'disabled'
         end encryption_status
       from
         aws_lambda_function) as t
@@ -112,9 +112,9 @@ query "aws_lambda_function_vpc_status" {
     from (
       select
         case when vpc_id is not null then
-          'Enabled'
+          'enabled'
         else
-          'Disabled'
+          'disabled'
         end vpc_status
       from
         aws_lambda_function) as t
@@ -133,9 +133,9 @@ query "aws_lambda_function_use_latest_runtime_status" {
     from (
       select
         case when runtime not in ('nodejs14.x', 'nodejs12.x', 'nodejs10.x', 'python3.8', 'python3.7', 'python3.6', 'ruby2.5', 'ruby2.7', 'java11', 'java8', 'go1.x', 'dotnetcore2.1', 'dotnetcore3.1') then
-          'Disabled'
+          'disabled'
         else
-          'Enabled'
+          'enabled'
         end runtime_status
       from
         aws_lambda_function) as t
@@ -154,9 +154,9 @@ query "aws_lambda_function_dead_letter_config_status" {
     from (
       select
         case when dead_letter_config_target_arn is not null then
-          'Enabled'
+          'enabled'
         else
-          'Disabled'
+          'disabled'
         end dead_letter_config_status
       from
         aws_lambda_function) as t
@@ -475,6 +475,15 @@ dashboard "aws_lambda_function_dashboard" {
       sql   = query.aws_lambda_function_public_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "private" {
+          color = "green"
+        }
+        point "public" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -482,6 +491,15 @@ dashboard "aws_lambda_function_dashboard" {
       sql   = query.aws_lambda_function_by_encryption_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -489,6 +507,15 @@ dashboard "aws_lambda_function_dashboard" {
       sql   = query.aws_lambda_function_vpc_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -496,6 +523,15 @@ dashboard "aws_lambda_function_dashboard" {
       sql   = query.aws_lambda_function_use_latest_runtime_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -503,8 +539,16 @@ dashboard "aws_lambda_function_dashboard" {
       sql   = query.aws_lambda_function_dead_letter_config_status.sql
       type  = "donut"
       width = 4
-    }
 
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
+    }
   }
 
   container {

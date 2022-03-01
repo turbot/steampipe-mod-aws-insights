@@ -103,8 +103,8 @@ query "aws_iam_roles_with_inline_policy" {
       select
         arn,
         case
-          when jsonb_array_length(inline_policies) > 0 then 'With Inline Policies'
-          else 'OK'
+          when jsonb_array_length(inline_policies) > 0 then 'configured'
+          else 'unconfigured'
         end as has_inline
       from
         aws_iam_role
@@ -125,8 +125,8 @@ query "aws_iam_roles_with_direct_attached_policy" {
       select
         arn,
         case
-          when jsonb_array_length(attached_policy_arns) > 0 then 'With Attached Policies'
-          else 'Alert'
+          when jsonb_array_length(attached_policy_arns) > 0 then 'attached'
+          else 'unattached'
         end as has_attached
       from
         aws_iam_role
@@ -163,7 +163,7 @@ query "aws_iam_roles_allow_all_action" {
     )
     select
       a.title as "account",
-      count(role_name)::numeric as "Allows * Actions"
+      count(role_name)
     from
       roles_allow_all_actions as c,
       aws_account as a
@@ -180,8 +180,8 @@ query "aws_iam_roles_by_boundary_policy" {
   sql = <<-EOQ
     select
       case
-        when permissions_boundary_type is null or permissions_boundary_type = '' then 'Not Configured'
-        else 'Configured'
+        when permissions_boundary_type is null or permissions_boundary_type = '' then 'unconfigured'
+        else 'configured'
       end as policy_type,
       count(*)
     from
@@ -320,6 +320,15 @@ dashboard "aws_iam_role_dashboard" {
       sql   = query.aws_iam_roles_with_inline_policy.sql
       type  = "donut"
       width = 3
+
+      series "count" {
+        point "unconfigured" {
+          color = "green"
+        }
+        point "configured" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -327,6 +336,15 @@ dashboard "aws_iam_role_dashboard" {
       sql   = query.aws_iam_roles_with_direct_attached_policy.sql
       type  = "donut"
       width = 3
+
+      series "count" {
+        point "attached" {
+          color = "green"
+        }
+        point "unattached" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -341,6 +359,15 @@ dashboard "aws_iam_role_dashboard" {
       sql   = query.aws_iam_roles_by_boundary_policy.sql
       type  = "donut"
       width = 3
+
+      series "count" {
+        point "configured" {
+          color = "green"
+        }
+        point "unconfigured" {
+          color = "red"
+        }
+      }
     }
 
   }
