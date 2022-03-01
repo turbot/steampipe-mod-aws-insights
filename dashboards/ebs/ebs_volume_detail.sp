@@ -1,12 +1,208 @@
+dashboard "aws_ebs_volume_detail" {
+
+  title = "AWS EBS Volume Detail"
+
+  tags = merge(local.ebs_common_tags, {
+    type = "Detail"
+  })
+
+  input "volume_arn" {
+    title = "Select a volume:"
+    sql   = query.aws_ebs_volume_input.sql
+    width = 4
+  }
+
+  container {
+
+    card {
+      width = 2
+      query = query.aws_ebs_volume_storage
+      args  = {
+        arn = self.input.volume_arn.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_ebs_volume_iops
+      args  = {
+        arn = self.input.volume_arn.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_ebs_volume_type
+      args  = {
+        arn = self.input.volume_arn.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_ebs_volume_attached_instances
+      args  = {
+        arn = self.input.volume_arn.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_ebs_volume_encryption
+      args  = {
+        arn = self.input.volume_arn.value
+      }
+    }
+
+  }
+
+  container {
+
+    container {
+
+      width = 6
+
+      table {
+        title = "Overview"
+        type = "line"
+        width = 6
+
+        sql   = <<-EOQ
+          select
+            volume_id as "Volume ID",
+            auto_enable_io as "Auto Enabled IO",
+            snapshot_id as "Snapshot ID",
+            availability_zone as "Availability Zone",
+            title as "Title",
+            region as "Region",
+            account_id as "Account ID",
+            arn as "ARN"
+          from
+            aws_ebs_volume
+          where
+            arn = $1
+        EOQ
+
+        param "arn" {}
+
+        args  = {
+          arn = self.input.volume_arn.value
+        }
+      }
+
+      table {
+        title = "Tags"
+        width = 6
+
+        sql   = <<-EOQ
+          select
+            tag ->> 'Key' as "Key",
+            tag ->> 'Value' as "Value"
+          from
+            aws_ebs_volume,
+            jsonb_array_elements(tags_src) as tag
+          where
+            arn = $1
+        EOQ
+
+        param "arn" {}
+
+        args  = {
+          arn = self.input.volume_arn.value
+        }
+      }
+    }
+
+    container {
+
+      width = 6
+
+      table {
+        title = "Associated To"
+        query = query.aws_ebs_volume_association
+        args  = {
+          arn = self.input.volume_arn.value
+        }
+      }
+
+      table {
+        title = "Encryption Details"
+        query = query.aws_ebs_volume_encryption_status
+        args  = {
+          arn = self.input.volume_arn.value
+        }
+      }
+    }
+  }
+
+  container {
+
+    width = 12
+
+    chart {
+      title = "Read Throughput (IOPS) - Last 7 Days"
+      type  = "line"
+      width = 6
+      sql   =  <<-EOQ
+        select
+          timestamp,
+          (sum / 3600) as read_throughput_ops
+        from
+          aws_ebs_volume_metric_read_ops_hourly
+        where
+          timestamp >= current_date - interval '7 day'
+          and volume_id = reverse(split_part(reverse($1), '/', 1))
+        order by timestamp
+      EOQ
+
+      param "arn" {}
+
+      args  = {
+        arn = self.input.volume_arn.value
+      }
+    }
+
+    chart {
+      title = "Write Throughput (IOPS) - Last 7 Days"
+      type  = "line"
+      width = 6
+      sql   =  <<-EOQ
+        select
+          timestamp,
+          (sum / 300) as write_throughput_ops
+        from
+          aws_ebs_volume_metric_write_ops
+        where
+          timestamp >= current_date - interval '7 day'
+          and volume_id = reverse(split_part(reverse($1), '/', 1))
+        order by timestamp;
+        EOQ
+
+      param "arn" {}
+
+      args  = {
+        arn = self.input.volume_arn.value
+      }
+    }
+
+  }
+
+}
+
 query "aws_ebs_volume_input" {
   sql = <<EOQ
     select
-      arn as label,
-      arn as value
+      title as label,
+      arn as value,
+      json_build_object(
+        'account_id', account_id,
+        'region', region,
+        'volume_id', volume_id
+      ) as tags
     from
       aws_ebs_volume
     order by
-      arn;
+      title;
   EOQ
 }
 
@@ -105,11 +301,11 @@ query "aws_ebs_volume_encryption" {
 query "aws_ebs_volume_association" {
   sql = <<-EOQ
     select
-      i.instance_id,
-      i.arn,
-      i.instance_state,
-      attachment ->> 'AttachTime' as attachment_time,
-      (attachment ->> 'DeleteOnTermination')::boolean as delete_on_termination
+      i.instance_id as "Instance ID",
+      i.arn as "Instance ARN",
+      i.instance_state as "Instance State",
+      attachment ->> 'AttachTime' as "Attachment Time",
+      (attachment ->> 'DeleteOnTermination')::boolean as "Delete on Termination"
     from
       aws_ebs_volume as v,
       jsonb_array_elements(attachments) as attachment,
@@ -126,7 +322,7 @@ query "aws_ebs_volume_encryption_status" {
   sql = <<-EOQ
     select
       case when encrypted then 'Enabled' else 'Disabled' end as "Encryption",
-      kms_key_id as "KMS Key Id"
+      kms_key_id as "KMS Key ID"
     from
       aws_ebs_volume
     where
@@ -136,194 +332,3 @@ query "aws_ebs_volume_encryption_status" {
   param "arn" {}
 }
 
-dashboard "aws_ebs_volume_detail" {
-  title = "AWS EBS Volume Detail"
-
-  tags = merge(local.ebs_common_tags, {
-    type = "Detail"
-  })
-
-  input "volume_arn" {
-    title = "Select a volume:"
-    sql   = query.aws_ebs_volume_input.sql
-    width = 4
-  }
-
-  container {
-
-    card {
-      width = 2
-
-      query   = query.aws_ebs_volume_storage
-      args  = {
-        arn = self.input.volume_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query   = query.aws_ebs_volume_iops
-      args  = {
-        arn = self.input.volume_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query   = query.aws_ebs_volume_type
-      args  = {
-        arn = self.input.volume_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query   = query.aws_ebs_volume_attached_instances
-      args  = {
-        arn = self.input.volume_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query   = query.aws_ebs_volume_encryption
-      args  = {
-        arn = self.input.volume_arn.value
-      }
-    }
-
-  }
-
-  container {
-
-    container {
-      width = 6
-
-      table {
-        title = "Overview"
-        type = "line"
-        width = 6
-
-        sql   = <<-EOQ
-          select
-            volume_id as "Volume ID",
-            auto_enable_io as "Auto Enabled IO",
-            snapshot_id as "Snapshot ID",
-            availability_zone as "Availability Zone",
-            title as "Title",
-            region as "Region",
-            account_id as "Account ID",
-            arn as "ARN"
-          from
-            aws_ebs_volume
-          where
-            arn = $1
-        EOQ
-
-        param "arn" {}
-
-        args  = {
-          arn = self.input.volume_arn.value
-        }
-      }
-
-      table {
-        title = "Tags"
-        width = 6
-
-        sql   = <<-EOQ
-          select
-            tag ->> 'Key' as "Key",
-            tag ->> 'Value' as "Value"
-          from
-            aws_ebs_volume,
-            jsonb_array_elements(tags_src) as tag
-          where
-            arn = $1
-        EOQ
-
-        param "arn" {}
-
-        args  = {
-          arn = self.input.volume_arn.value
-        }
-      }
-    }
-
-    container {
-      width = 6
-      table {
-        title = "Associated To"
-        query   = query.aws_ebs_volume_association
-
-        args  = {
-          arn = self.input.volume_arn.value
-        }
-      }
-
-      table {
-        title = "Encrytion Details"
-        query   = query.aws_ebs_volume_encryption_status
-
-        args  = {
-          arn = self.input.volume_arn.value
-        }
-      }
-    }
-  }
-
-  container {
-    width = 12
-
-    chart {
-      title = "Read throughput (Ops/s) - Last 7 days"
-      type  = "line"
-      width = 6
-      sql   =  <<-EOQ
-        select
-          timestamp,
-          (sum / 3600) as read_throughput_ops
-        from
-          aws_ebs_volume_metric_read_ops_hourly
-        where
-          timestamp >= current_date - interval '7 day'
-          and volume_id = reverse(split_part(reverse($1), '/', 1))
-        order by timestamp
-      EOQ
-
-      param "arn" {}
-
-      args  = {
-        arn = self.input.volume_arn.value
-      }
-    }
-
-    chart {
-      title = "Write throughput (Ops/s) - Last 7 days"
-      type  = "line"
-      width = 6
-      sql   =  <<-EOQ
-        select
-          timestamp,
-          (sum / 300) as write_throughput_ops
-        from
-          aws_ebs_volume_metric_write_ops
-        where
-          timestamp >= current_date - interval '7 day'
-          and volume_id = reverse(split_part(reverse($1), '/', 1))
-        order by timestamp;
-        EOQ
-
-      param "arn" {}
-
-      args  = {
-        arn = self.input.volume_arn.value
-      }
-    }
-  }
-
-}

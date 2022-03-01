@@ -96,26 +96,23 @@ dashboard "aws_ebs_snapshot_age_report" {
 
       sql = <<-EOQ
         select
-          v.tags ->> 'Name' as "Name",
-          v.snapshot_id as "Snapshot",
-          v.volume_id as "Volume",
-          -- date_trunc('day',age(now(),v.start_time))::text as "Age",
-          now()::date - v.start_time::date as "Age in Days",
-          v.start_time as "Create Time",
-          v.state as "State",
-          -- a.account_aliases  ->> 0 as "Account Name",
+          s.tags ->> 'Name' as "Name",
+          s.snapshot_id as "Snapshot",
+          now()::date - s.start_time::date as "Age in Days",
+          s.start_time as "Create Time",
+          s.state as "State",
           a.title as "Account",
-          v.account_id as "Account ID",
-          v.region as "Region",
-          v.arn as "ARN"
+          s.account_id as "Account ID",
+          s.region as "Region",
+          s.arn as "ARN"
         from
-          aws_ebs_snapshot as v,
+          aws_ebs_snapshot as s,
           aws_account as a
         where
-          v.account_id = a.account_id
+          s.account_id = a.account_id
         order by
-          v.start_time,
-          v.title;
+          s.start_time,
+          s.title;
       EOQ
 
     }

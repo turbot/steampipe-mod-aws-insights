@@ -26,6 +26,19 @@ query "aws_ebs_unencrypted_snapshot_count" {
   EOQ
 }
 
+query "aws_ebs_snapshot_public_count" {
+  sql = <<-EOQ
+      select
+        count(*) as value,
+        'Publicly Accessible' as label,
+        case count(*) when 0 then 'ok' else 'alert' end as type
+      from
+        aws_ebs_snapshot
+      where
+        create_volume_permissions @> '[{"Group": "all"}]';
+  EOQ
+}
+
 #Assessments
 query "aws_ebs_snapshot_by_encryption_status" {
   sql = <<-EOQ
@@ -48,15 +61,24 @@ query "aws_ebs_snapshot_by_encryption_status" {
   EOQ
 }
 
-query "aws_ebs_snapshot_by_state" {
+query "aws_ebs_snapshot_by_public_status" {
   sql = <<-EOQ
+    with public_status as (
+      select
+        case when create_volume_permissions @> '[{"Group": "all"}]' then
+          'public'
+        else
+          'private'
+        end as visibility
+      from aws_ebs_snapshot
+    )
     select
-      state,
-      count(state)
+      visibility,
+      count(*)
     from
-      aws_ebs_snapshot
+      public_status
     group by
-      state
+      visibility;
   EOQ
 }
 
@@ -195,12 +217,12 @@ query "aws_ebs_snapshot_storage_by_account" {
   sql = <<-EOQ
     select
       a.title as "Account",
-      sum(v.volume_size) as "GB"
+      sum(s.volume_size) as "GB"
     from
-      aws_ebs_snapshot as v,
+      aws_ebs_snapshot as s,
       aws_account as a
     where
-      a.account_id = v.account_id
+      a.account_id = s.account_id
     group by
       a.title
     order by
@@ -236,6 +258,11 @@ dashboard "aws_ebs_snapshot_dashboard" {
 
     card {
       sql   = query.aws_ebs_unencrypted_snapshot_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_ebs_snapshot_public_count.sql
       width = 2
     }
 
@@ -280,10 +307,19 @@ dashboard "aws_ebs_snapshot_dashboard" {
     }
 
     chart {
-      title = "Snapshot State"
-      sql   = query.aws_ebs_snapshot_by_state.sql
+      title = "Public/Private"
+      sql   = query.aws_ebs_snapshot_by_public_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "private" {
+          color = "green"
+        }
+        point "public" {
+          color = "red"
+        }
+      }
     }
 
   }
