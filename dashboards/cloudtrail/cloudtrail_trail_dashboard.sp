@@ -38,7 +38,7 @@ query "aws_cloudtrail_trail_log_file_validation_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Log File Validation' as label,
+      'Log File Validation Disabled' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_cloudtrail_trail
