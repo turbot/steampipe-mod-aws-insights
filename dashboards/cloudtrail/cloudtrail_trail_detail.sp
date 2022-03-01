@@ -5,6 +5,8 @@ query "aws_cloudtrail_trail_input" {
       arn as value
     from
       aws_cloudtrail_trail
+    where
+      region = home_region
     order by
       arn;
   EOQ
@@ -13,12 +15,12 @@ query "aws_cloudtrail_trail_input" {
 query "aws_cloudtrail_trail_regional" {
   sql = <<-EOQ
     select
-      case when region = home_region and not is_multi_region_trail then 'True' else 'False' end as value,
+      case when not is_multi_region_trail then 'True' else 'False' end as value,
       'Regional' as label
     from
       aws_cloudtrail_trail
     where
-      arn = $1;
+      region = home_region and arn = $1;
   EOQ
 
   param "arn" {}
@@ -27,12 +29,12 @@ query "aws_cloudtrail_trail_regional" {
 query "aws_cloudtrail_trail_multi_region" {
   sql = <<-EOQ
     select
-      case when region = home_region and is_multi_region_trail then 'True' else 'False' end as value,
+      case when is_multi_region_trail then 'True' else 'False' end as value,
       'Multi-Region' as label
     from
       aws_cloudtrail_trail
     where
-      arn = $1;
+      region = home_region and arn = $1;
   EOQ
 
   param "arn" {}
@@ -41,13 +43,13 @@ query "aws_cloudtrail_trail_multi_region" {
 query "aws_cloudtrail_trail_log_file_validation" {
   sql = <<-EOQ
     select
-      case when region = home_region and log_file_validation_enabled then 'Enabled' else 'Disabled' end as value,
+      case when log_file_validation_enabled then 'Enabled' else 'Disabled' end as value,
       'Log File Validation' as label,
-      case when region = home_region and log_file_validation_enabled then 'ok' else 'alert' end as type
+      case when log_file_validation_enabled then 'ok' else 'alert' end as type
     from
       aws_cloudtrail_trail
     where
-      arn = $1;
+      region = home_region and arn = $1;
   EOQ
 
   param "arn" {}
@@ -62,7 +64,7 @@ query "aws_cloudtrail_trail_unencrypted" {
     from
       aws_cloudtrail_trail
     where
-      arn = $1;
+      region = home_region and arn = $1;
   EOQ
 
   param "arn" {}
@@ -76,7 +78,7 @@ query "aws_cloudtrail_trail_logging" {
     from
       aws_cloudtrail_trail
     where
-      arn = $1;
+      region = home_region and arn = $1;
   EOQ
 
   param "arn" {}
@@ -90,22 +92,7 @@ query "aws_cloudtrail_trail_bucket" {
     from
       aws_cloudtrail_trail
     where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-query "aws_cloudtrail_trail_storage" {
-  sql = <<-EOQ
-    select
-      db_snapshot_identifier as "DB Snapshot Identifier",
-      storage_type as "Storage Type",
-      allocated_storage as "Allocated Storage"
-    from
-      aws_cloudtrail_trail
-    where
-      arn = $1;
+      region = home_region and arn = $1;
   EOQ
 
   param "arn" {}
