@@ -34,7 +34,7 @@ query "aws_rds_db_cluster_not_in_vpc_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Clusters not in VPC' as label,
+      'Not in VPC' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_rds_db_cluster

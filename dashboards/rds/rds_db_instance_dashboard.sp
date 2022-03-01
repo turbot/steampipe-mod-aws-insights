@@ -178,7 +178,7 @@ query "aws_rds_db_instance_multiple_az_status" {
       select
         case
           when multi_az then 'enabled'
-          else 'diabled'
+          else 'disabled'
         end as visibility
       from
         aws_rds_db_instance
@@ -375,8 +375,8 @@ query "aws_rds_db_instance_deletion_protection_status" {
     with db_instances as (
       select
         case
-          when deletion_protection then 'Enabled'
-          else 'Disabled'
+          when deletion_protection then 'enabled'
+          else 'disabled'
         end as visibility
       from
         aws_rds_db_instance
@@ -571,6 +571,15 @@ dashboard "aws_rds_db_instance_dashboard" {
       sql = query.aws_rds_db_instance_logging_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -594,6 +603,16 @@ dashboard "aws_rds_db_instance_dashboard" {
       sql = query.aws_rds_db_instance_deletion_protection_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
+  
     }
 
   }

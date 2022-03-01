@@ -292,7 +292,7 @@ dashboard "aws_rds_db_cluster_snapshot_dashboard" {
     }
 
     chart {
-      title = "IAM Authentication State"
+      title = "IAM Authentication Status"
       sql   = query.aws_rds_db_cluster_snapshot_iam_authentication_enabled.sql
       type  = "donut"
       width = 4
