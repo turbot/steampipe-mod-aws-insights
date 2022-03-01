@@ -1,8 +1,8 @@
-variable "iam_user_excessive_privilege_report_threshold_in_days" {
+variable "aws_iam_user_excessive_privilege_report_threshold_in_days" {
   default = 90
 }
 
-dashboard "iam_user_excessive_privilege_report" {
+dashboard "aws_iam_user_excessive_privilege_report" {
 
   title = "AWS IAM User Excessive Privilege Report"
 
@@ -44,7 +44,7 @@ dashboard "iam_user_excessive_privilege_report" {
           aws_iam_user
         where
           principal_arn = arn
-          and coalesce(last_authenticated, now() - '400 days' :: interval ) < now() - '${var.iam_user_excessive_privilege_report_threshold_in_days} days' :: interval;
+          and coalesce(last_authenticated, now() - '400 days' :: interval ) < now() - '${var.aws_iam_user_excessive_privilege_report_threshold_in_days} days' :: interval;
           -- should use the threshold value...
       EOQ
       width = 2
@@ -64,7 +64,7 @@ dashboard "iam_user_excessive_privilege_report" {
           aws_iam_user
         where
           principal_arn = arn
-          and coalesce(last_authenticated, now() - '400 days' :: interval ) < now() - '${var.iam_user_excessive_privilege_report_threshold_in_days} days' :: interval;  -- should use the threshold value...
+          and coalesce(last_authenticated, now() - '400 days' :: interval ) < now() - '${var.aws_iam_user_excessive_privilege_report_threshold_in_days} days' :: interval;  -- should use the threshold value...
       EOQ
       width = 2
     }
@@ -97,7 +97,7 @@ dashboard "iam_user_excessive_privilege_report" {
           aws_iam_user
         where
           principal_arn = arn
-          and coalesce(last_authenticated, now() - '400 days' :: interval ) < now() - '${var.iam_user_excessive_privilege_report_threshold_in_days} days' :: interval;  -- should use the threshold value...
+          and coalesce(last_authenticated, now() - '400 days' :: interval ) < now() - '${var.aws_iam_user_excessive_privilege_report_threshold_in_days} days' :: interval;  -- should use the threshold value...
       EOQ
     }
   }
