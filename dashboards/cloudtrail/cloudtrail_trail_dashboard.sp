@@ -71,9 +71,9 @@ query "aws_cloudtrail_trail_log_file_validation_status" {
     from (
       select
         case when log_file_validation_enabled then
-          'Enabled'
+          'enabled'
         else
-          'Disabled'
+          'disabled'
         end log_file_validation_status
       from
         aws_cloudtrail_trail
@@ -92,8 +92,8 @@ query "aws_cloudtrail_trail_encryption_status" {
       select
         name as trail_name,
         case
-          when kms_key_id is null then 'Disabled'
-          else 'Enabled'
+          when kms_key_id is null then 'disabled'
+          else 'enabled'
         end as encryption_status
       from
         aws_cloudtrail_trail
@@ -115,8 +115,8 @@ query "aws_cloudtrail_trail_logging_status" {
       select
         name as trail_name,
         case
-          when not is_logging then 'Disabled'
-          else 'Enabled'
+          when not is_logging then 'disabled'
+          else 'enabled'
         end as logging_status
       from
         aws_cloudtrail_trail
@@ -160,18 +160,19 @@ query "aws_cloudtrail_trail_bucket_publicly_accessible" {
     bucket_status as (
       select
         case
-          when all_user_grants > 0  or auth_user_grants > 0 or anon_statements > 0 then 'Public'
-          else 'Not Public'
+          when all_user_grants > 0  or auth_user_grants > 0 or anon_statements > 0 then 'public'
+          else 'private'
         end as bucket_publicly_accessible_status
       from
         public_bucket_data
     )
     select
       bucket_publicly_accessible_status,
-      count(*) as table_count
+      count(*)
     from
       bucket_status
-    group by bucket_publicly_accessible_status;
+    group by 
+      bucket_publicly_accessible_status;
   EOQ
 }
 
@@ -180,8 +181,8 @@ query "aws_cloudtrail_trail_cloudwatch_log_integration_status" {
     with cloudwatch_log_integration_status as (
       select
         case
-          when log_group_arn != 'null' and ((latest_delivery_time) > current_date - 1) then 'Integrated'
-          else 'Not Integrated'
+          when log_group_arn != 'null' and ((latest_delivery_time) > current_date - 1) then 'enabled'
+          else 'disabled'
         end as integration_status
       from
         aws_cloudtrail_trail
@@ -190,7 +191,7 @@ query "aws_cloudtrail_trail_cloudwatch_log_integration_status" {
     )
     select
       integration_status,
-      count(*) as trail_count
+      count(*)
     from
       cloudwatch_log_integration_status
     group by integration_status;
@@ -403,6 +404,15 @@ dashboard "aws_cloudtrail_trail_dashboard" {
       type  = "donut"
       width = 4
       sql   = query.aws_cloudtrail_trail_log_file_validation_status.sql
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -410,6 +420,15 @@ dashboard "aws_cloudtrail_trail_dashboard" {
       type  = "donut"
       width = 4
       sql   = query.aws_cloudtrail_trail_encryption_status.sql
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -417,20 +436,47 @@ dashboard "aws_cloudtrail_trail_dashboard" {
       type  = "donut"
       width = 4
       sql   = query.aws_cloudtrail_trail_logging_status.sql
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
-      title = "Trail Bucket Public Access Status"
+      title = "Trail Bucket Public Access"
       type  = "donut"
       width = 4
       sql   = query.aws_cloudtrail_trail_bucket_publicly_accessible.sql
+
+      series "count" {
+        point "private" {
+          color = "green"
+        }
+        point "public" {
+          color = "red"
+        }
+      }
     }
 
     chart {
-      title = "Cloudwatch Log Integration Status"
+      title = "Log Group Status"
       type  = "donut"
       width = 4
       sql   = query.aws_cloudtrail_trail_cloudwatch_log_integration_status.sql
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
   }

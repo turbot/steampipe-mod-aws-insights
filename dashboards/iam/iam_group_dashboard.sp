@@ -1,6 +1,6 @@
 query "aws_iam_group_count" {
   sql = <<-EOQ
-    select count(*) as "Total Groups" from aws_iam_group;
+    select count(*) as "Groups" from aws_iam_group;
   EOQ
 }
 
@@ -67,8 +67,8 @@ query "aws_iam_groups_without_users" {
       select
         arn,
         case
-          when users is null then 'Group without Users'
-          else 'OK'
+          when users is null then 'without_users'
+          else 'with_users'
         end as has_users
       from
         aws_iam_group
@@ -89,8 +89,8 @@ query "aws_iam_groups_with_inline_policy" {
       select
         arn,
         case
-          when jsonb_array_length(inline_policies) > 0 then 'With Inline Policies'
-          else 'OK'
+          when jsonb_array_length(inline_policies) > 0 then 'configured'
+          else 'unconfigured'
         end as has_inline
       from
         aws_iam_group
@@ -116,9 +116,9 @@ query "aws_iam_groups_with_administrator_policy" {
           when
             attached_policy_arns @> ('["arn:' || partition || ':iam::aws:policy/AdministratorAccess"]')::jsonb
           then
-            'With Administrator Policy'
+            'configured'
           else
-            'OK'
+            'unconfigured'
         end
         as has_administrator_policy
       from
@@ -180,13 +180,13 @@ query "aws_iam_groups_by_creation_month" {
           'YYYY-MM') as month
       from
         generate_series(date_trunc('month',
-            (
-              select
-                min(create_date)
-                from groups)),
-            date_trunc('month',
-              current_date),
-            interval '1 month') as d
+          (
+            select
+              min(create_date)
+              from groups)),
+          date_trunc('month',
+            current_date),
+          interval '1 month') as d
     ),
     groups_by_month as (
       select
@@ -250,6 +250,15 @@ dashboard "aws_iam_group_dashboard" {
       sql   = query.aws_iam_groups_without_users.sql
       type  = "donut"
       width = 3
+
+      series "count" {
+        point "with_users" {
+          color = "green"
+        }
+        point "without_users" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -257,6 +266,15 @@ dashboard "aws_iam_group_dashboard" {
       sql   = query.aws_iam_groups_with_inline_policy.sql
       type  = "donut"
       width = 3
+
+      series "count" {
+        point "unconfigured" {
+          color = "green"
+        }
+        point "configured" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -264,6 +282,15 @@ dashboard "aws_iam_group_dashboard" {
       sql   = query.aws_iam_groups_with_administrator_policy.sql
       type  = "donut"
       width = 3
+
+      series "count" {
+        point "unconfigured" {
+          color = "green"
+        }
+        point "configured" {
+          color = "red"
+        }
+      }
     }
 
   }

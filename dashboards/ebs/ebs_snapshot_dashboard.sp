@@ -268,6 +268,15 @@ dashboard "aws_ebs_snapshot_dashboard" {
       sql   = query.aws_ebs_snapshot_by_encryption_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {

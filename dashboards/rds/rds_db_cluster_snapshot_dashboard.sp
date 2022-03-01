@@ -1,6 +1,6 @@
 query "aws_rds_db_cluster_snapshot_count" {
   sql = <<-EOQ
-    select count(*) as "RDS DB Cluster Snapshots" from aws_rds_db_cluster_snapshot;
+    select count(*) as "Cluster Snapshots" from aws_rds_db_cluster_snapshot;
   EOQ
 }
 
@@ -8,7 +8,7 @@ query "aws_rds_unencrypted_db_cluster_snapshot_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Unencrypted Cluster Snapshots' as label,
+      'Unencrypted' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_rds_db_cluster_snapshot
@@ -21,7 +21,7 @@ query "aws_rds_db_cluster_snapshot_not_in_vpc_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Cluster Snapshots not in VPC' as label,
+      'Not in VPC' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_rds_db_cluster_snapshot
@@ -114,14 +114,14 @@ query "aws_rds_db_cluster_snapshot_iam_authentication_enabled" {
     group by name
   )
   select
-    'Enabled' as "IAM Authentication Status",
-    count(name) as "Total"
+    'enabled' as "IAM Authentication Status",
+    count(name)
   from
     iam_authentication_stat
   union
   select
-    'Disabled' as "IAM Authentication Status",
-    count( db_cluster_identifier) as "Total"
+    'disabled' as "IAM Authentication Status",
+    count( db_cluster_identifier)
   from
     aws_rds_db_cluster_snapshot as s where s.db_cluster_identifier not in (select name from iam_authentication_stat);
   EOQ
@@ -280,13 +280,31 @@ dashboard "aws_rds_db_cluster_snapshot_dashboard" {
       sql   = query.aws_rds_db_cluster_snapshot_by_encryption_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
-      title = "IAM Authentication State"
+      title = "IAM Authentication Status"
       sql   = query.aws_rds_db_cluster_snapshot_iam_authentication_enabled.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
   }

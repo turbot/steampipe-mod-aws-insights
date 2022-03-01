@@ -29,7 +29,7 @@ query "aws_s3_bucket_versioning_status" {
     with versioning_status as(
       select
         case
-          when versioning_enabled then 'Enabled' else 'Disabled'
+          when versioning_enabled then 'enabled' else 'disabled'
         end as visibility
       from
         aws_s3_bucket
@@ -56,7 +56,7 @@ query "aws_s3_bucket_cross_region_replication_status" {
         ), tets as(
             select
               case
-                when b.name = r.name and r.rep_status = 'Enabled' then 'Enabled' else 'Disabled'
+                when b.name = r.name and r.rep_status = 'Enabled' then 'enabled' else 'disabled'
               end as visibility
             from
               aws_s3_bucket b
@@ -82,7 +82,7 @@ query "aws_s3_bucket_public_status" {
             and block_public_policy
             and ignore_public_acls
             and restrict_public_buckets
-          then 'Private' else 'Public'
+          then 'private' else 'public'
         end as visibility
       from
         aws_s3_bucket
@@ -102,7 +102,7 @@ query "aws_s3_bucket_versioning_mfa_status" {
     with versioning_mfa_status as(
       select
         case
-          when versioning_mfa_delete then 'Enabled' else 'Disabled'
+          when versioning_mfa_delete then 'enabled' else 'disabled'
         end as visibility
       from
         aws_s3_bucket
@@ -121,7 +121,7 @@ query "aws_s3_bucket_logging_status" {
   sql = <<-EOQ
     with logging_status as(
       select
-        case when logging -> 'TargetBucket' is not null then 'Enabled' else 'Disabled'
+        case when logging -> 'TargetBucket' is not null then 'enabled' else 'disabled'
         end as visibility
       from
         aws_s3_bucket
@@ -195,7 +195,7 @@ query "aws_s3_bucket_by_default_encryption_status" {
   sql = <<-EOQ
     with default_encryption as(
       select
-        case when server_side_encryption_configuration is not null then 'Enabled' else 'Disabled'
+        case when server_side_encryption_configuration is not null then 'enabled' else 'disabled'
         end as visibility
       from
         aws_s3_bucket
@@ -348,6 +348,15 @@ dashboard "aws_s3_bucket_dashboard" {
       sql   = query.aws_s3_bucket_versioning_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }      
     }
 
     chart {
@@ -355,6 +364,15 @@ dashboard "aws_s3_bucket_dashboard" {
       sql    = query.aws_s3_bucket_by_default_encryption_status.sql
       type   = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }  
     }
 
     chart {
@@ -362,6 +380,15 @@ dashboard "aws_s3_bucket_dashboard" {
       sql    = query.aws_s3_bucket_public_status.sql
       type   = "donut"
       width = 4
+
+      series "count" {
+        point "private" {
+          color = "green"
+        }
+        point "public" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -369,6 +396,15 @@ dashboard "aws_s3_bucket_dashboard" {
       sql   = query.aws_s3_bucket_logging_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -376,6 +412,15 @@ dashboard "aws_s3_bucket_dashboard" {
       sql   = query.aws_s3_bucket_versioning_mfa_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -383,6 +428,15 @@ dashboard "aws_s3_bucket_dashboard" {
       sql   = query.aws_s3_bucket_cross_region_replication_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
   }

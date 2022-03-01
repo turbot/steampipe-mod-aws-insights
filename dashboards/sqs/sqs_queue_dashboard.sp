@@ -130,9 +130,9 @@ query "aws_sqs_queue_by_encryption_status" {
     from (
       select kms_master_key_id,
         case when kms_master_key_id is not null then
-          'Enabled'
+          'enabled'
         else
-          'Disabled'
+          'disabled'
         end encryption_status
       from
         aws_sqs_queue) as t
@@ -163,9 +163,9 @@ query "aws_sqs_queue_anonymous_access_status" {
     ), anonymous_access_status as(
       select
         case
-          when a.title is null or policy_std is null then  'OK'
+          when a.title is null or policy_std is null then  'ok'
         else
-          'With Anonymous Access'
+          'alarm'
         end anonymous_access_status
       from
         aws_sqs_queue as q
@@ -191,9 +191,9 @@ query "aws_sqs_queue_by_dlq_status" {
     from (
       select redrive_policy,
         case when redrive_policy is not null then
-          'Enabled'
+          'enabled'
         else
-          'Disabled'
+          'disabled'
         end redrive_policy_status
       from
         aws_sqs_queue) as t
@@ -257,6 +257,15 @@ dashboard "aws_sqs_queue_dashboard" {
       sql = query.aws_sqs_queue_by_encryption_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -264,6 +273,15 @@ dashboard "aws_sqs_queue_dashboard" {
       sql = query.aws_sqs_queue_by_dlq_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "green"
+        }
+        point "disabled" {
+          color = "red"
+        }
+      }
     }
 
     chart {
@@ -271,6 +289,15 @@ dashboard "aws_sqs_queue_dashboard" {
       sql = query.aws_sqs_queue_anonymous_access_status.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "ok" {
+          color = "green"
+        }
+        point "alarm" {
+          color = "red"
+        }
+      }
     }
 
   }
