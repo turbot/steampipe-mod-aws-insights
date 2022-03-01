@@ -8,7 +8,7 @@ query "aws_rds_unencrypted_db_instance_snapshot_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Unencrypted Instance Snapshots' as label,
+      'Unencrypted' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_rds_db_snapshot
@@ -21,7 +21,7 @@ query "aws_rds_db_instance_snapshot_not_in_vpc_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Instance Snapshots not in VPC' as label,
+      'Not in VPC' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_rds_db_snapshot
@@ -314,7 +314,7 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
     chart {
       title = "IAM Authentication Status"
       sql   = query.aws_rds_db_instance_snapshot_iam_authentication_enabled.sql
-      type  = "pie"
+      type  = "donut"
       width = 4
 
       series "count" {

@@ -1,6 +1,6 @@
 query "aws_rds_db_cluster_count" {
   sql = <<-EOQ
-    select count(*) as "RDS DB Clusters" from aws_rds_db_cluster;
+    select count(*) as "DB Clusters" from aws_rds_db_cluster;
   EOQ
 }
 
@@ -47,7 +47,7 @@ query "aws_rds_db_cluster_no_deletion_protection_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'No Deletion Protection' as label,
+      'Deletion Protection Disabled' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_rds_db_cluster

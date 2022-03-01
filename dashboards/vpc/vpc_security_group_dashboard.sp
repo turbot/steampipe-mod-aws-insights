@@ -186,7 +186,7 @@ dashboard "aws_vpc_security_group_dashboard" {
             case
             when ingress_tcp_udp_rules.group_id is null then true
             else false
-          end as restricted
+            end as restricted
           from
             aws_vpc_security_group as sg
             left join ingress_tcp_udp_rules on sg.group_id = ingress_tcp_udp_rules.group_id
@@ -239,9 +239,9 @@ dashboard "aws_vpc_security_group_dashboard" {
         select
           case
             when is_associated then 'associated'
-            else 'not-associated'
+            else 'unassociated'
           end as sg_association_status,
-          count(*)
+            count(*)
         from
           sg_list
         group by is_associated;
@@ -251,7 +251,7 @@ dashboard "aws_vpc_security_group_dashboard" {
         point "associated" {
           color = "green"
         }
-        point "not-associated" {
+        point "unassociated" {
           color = "red"
         }
       }
