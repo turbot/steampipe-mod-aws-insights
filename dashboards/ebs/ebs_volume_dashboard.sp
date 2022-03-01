@@ -66,6 +66,15 @@ dashboard "aws_ebs_volume_dashboard" {
       sql   = query.aws_ebs_volume_by_state.sql
       type  = "donut"
       width = 4
+
+      series "count" {
+        point "in-use" {
+          color = "green"
+        }
+        point "available" {
+          color = "red"
+        }
+      }
     }
 
   }
