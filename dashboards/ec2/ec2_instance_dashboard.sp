@@ -39,17 +39,7 @@ dashboard "aws_ec2_instance_dashboard" {
    card {
       type  = "info"
       icon = "currency-dollar"
-
-      sql = <<-EOQ
-        select
-          'Cost - MTD' as label,
-          sum(unblended_cost_amount)::numeric::money as value
-        from
-          aws_cost_by_service_monthly
-        where
-          service = 'Amazon Elastic Compute Cloud - Compute'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-      EOQ
+      sql = query.aws_ec2_instance_cost_mtd.sql
       width = 2
     }
 
@@ -92,21 +82,21 @@ dashboard "aws_ec2_instance_dashboard" {
       }
     }
 
-    # chart {
-    #   title  = "Root Volume Encryption"
-    #   sql    = query.aws_ec2_instance_root_volume_encryption_status.sql
-    #   type   = "donut"
-    #   width = 4
+    chart {
+      title  = "Root Volume Encryption"
+      sql    = query.aws_ec2_instance_root_volume_encryption_status.sql
+      type   = "donut"
+      width = 4
 
-    #   series "count" {
-    #     point "enabled" {
-    #       color = "ok"
-    #     }
-    #     point "disabled" {
-    #       color = "alert"
-    #     }
-    #   }
-    # }
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
+          color = "alert"
+        }
+      }
+    }
 
     chart {
       title  = "Detailed Monitoring Status"
@@ -209,6 +199,8 @@ dashboard "aws_ec2_instance_dashboard" {
 
 }
 
+# Card Queries
+
 query "aws_ec2_instance_count" {
   sql = <<-EOQ
     select count(*) as "Instances" from aws_ec2_instance
@@ -267,11 +259,11 @@ query "aws_ec2_ebs_optimized_count" {
 #       select
 #         count(*) as value,
 #         'Root Volume Unencrypted' as label,
-#         case count(*) when 0 then 'ok' else 'alert' end as "type"
-#         i.instance_id as "i.instance_id",
-#         i.root_device_name as "iroot_device_name",
-#         e.instanceid as "e.instanceid",
-#         e.device as  "edevice",
+#         case count(*) when 0 then 'ok' else 'alert' end as "type",
+#         i.instance_id as "instance_id",
+#         i.root_device_name as "root_device_name",
+#         e.instanceid as "instanceid",
+#         e.device as  "device",
 #         e.encrypted ,
 #         case when i.root_device_name = e.device then
 #           'disabled'
@@ -279,11 +271,25 @@ query "aws_ec2_ebs_optimized_count" {
 #           'enabled'
 #         end encryption_status
 #       from
-#         aws_ec2_instance as i left join non_encrypted_instances as e on (e.instanceid = i.instance_id)
+#         aws_ec2_instance as i left join non_encrypted_instances as e on (e.instanceid = i.instance_id);
 #   EOQ
 # }
 
-# Assessments
+query "aws_ec2_instance_cost_mtd" {
+  sql = <<-EOQ
+    select
+      'Cost - MTD' as label,
+      sum(unblended_cost_amount)::numeric::money as value
+    from
+      aws_cost_by_service_monthly
+    where
+      service = 'Amazon Elastic Compute Cloud - Compute'
+      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+  EOQ
+}
+
+# Assessment Queries
+
 query "aws_ec2_instance_by_public_ip" {
   sql = <<-EOQ
     with instances as (
@@ -326,39 +332,39 @@ query "aws_ec2_instance_ebs_optimized_status" {
   EOQ
 }
 
-# query "aws_ec2_instance_root_volume_encryption_status" {
-#   sql = <<-EOQ
-#      with non_encrypted_instances as (
-#       select
-#         encrypted,
-#         volume_id,
-#         att ->> 'InstanceId' as "instanceid",
-#         att ->> 'Device' as "device"
-#       from
-#         aws_ebs_volume,
-#         jsonb_array_elements(attachments) as att
-#       where
-#         not encrypted and attachments is not null
-#     )
-#     select
-#       encryption_status,
-#       count(*)
-#     from (
-#       select
-#         e.encrypted ,
-#         case when i.root_device_name = e.device then
-#           'disabled'
-#         else
-#           'enabled'
-#         end encryption_status
-#       from
-#         aws_ec2_instance as i left join non_encrypted_instances as e on (e.instanceid = i.instance_id)) as t
-#     group by
-#       encryption_status
-#     order by
-#       encryption_status
-#   EOQ
-# }
+query "aws_ec2_instance_root_volume_encryption_status" {
+  sql = <<-EOQ
+     with non_encrypted_instances as (
+      select
+        encrypted,
+        volume_id,
+        att ->> 'InstanceId' as "instanceid",
+        att ->> 'Device' as "device"
+      from
+        aws_ebs_volume,
+        jsonb_array_elements(attachments) as att
+      where
+        not encrypted and attachments is not null
+    )
+    select
+      encryption_status,
+      count(*)
+    from (
+      select
+        e.encrypted ,
+        case when i.root_device_name = e.device then
+          'disabled'
+        else
+          'enabled'
+        end encryption_status
+      from
+        aws_ec2_instance as i left join non_encrypted_instances as e on (e.instanceid = i.instance_id)) as t
+    group by
+      encryption_status
+    order by
+      encryption_status
+  EOQ
+}
 
 query "aws_ec2_instance_detailed_monitoring_enabled" {
   sql = <<-EOQ
@@ -381,23 +387,7 @@ query "aws_ec2_instance_detailed_monitoring_enabled" {
   EOQ
 }
 
-# Costs
-query "aws_ec2_instance_cost_per_month" {
-  sql = <<-EOQ
-    select
-       to_char(period_start, 'Mon-YY') as "Month",
-       sum(unblended_cost_amount)::numeric as "Unblended Cost"
-       --        sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-    from
-      aws_cost_by_service_usage_type_monthly
-    where
-      service = 'Amazon Elastic Compute Cloud - Compute'
-    group by
-      period_start
-    order by
-      period_start
-  EOQ
-}
+# Cost Queries
 
 query "aws_ec2_monthly_forecast_table" {
   sql = <<-EOQ
@@ -441,10 +431,26 @@ query "aws_ec2_monthly_forecast_table" {
       (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
 
   EOQ
-
 }
 
-# Analysis
+query "aws_ec2_instance_cost_per_month" {
+  sql = <<-EOQ
+    select
+      to_char(period_start, 'Mon-YY') as "Month",
+      sum(unblended_cost_amount)::numeric as "Unblended Cost"
+    from
+      aws_cost_by_service_usage_type_monthly
+    where
+      service = 'Amazon Elastic Compute Cloud - Compute'
+    group by
+      period_start
+    order by
+      period_start
+  EOQ
+}
+
+# Analysis Queries
+
 query "aws_ec2_instance_by_account" {
   sql = <<-EOQ
     select
@@ -538,6 +544,9 @@ query "aws_ec2_instance_by_type" {
 
 # Note the CTE uses the dailt table to be efficient when filtering,
 # and the hourly table to show granular line chart
+
+# Performance Queries
+
 query "aws_ec2_top10_cpu_past_week" {
   sql = <<-EOQ
     with top_n as (

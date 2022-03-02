@@ -35,19 +35,10 @@ dashboard "aws_cloudtrail_trail_dashboard" {
 
     # Costs
     card {
-      width = 2
       type  = "info"
       icon  = "currency-dollar"
-      sql   = <<-EOQ
-        select
-          'Cost - MTD' as label,
-          sum(unblended_cost_amount)::numeric::money as value
-        from
-          aws_cost_by_service_monthly
-        where
-          service = 'AWS CloudTrail'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp);
-      EOQ
+      width = 2
+      sql   = query.aws_cloudtrail_trail_cost_mtd.sql
     }
 
   }
@@ -194,6 +185,8 @@ dashboard "aws_cloudtrail_trail_dashboard" {
   }
 }
 
+# Card Queries
+
 query "aws_cloudtrail_trail_count" {
   sql = <<-EOQ
     select
@@ -258,7 +251,8 @@ query "aws_cloudtrail_trail_unencrypted_count" {
   EOQ
 }
 
-# Assessments
+# Assessment Queries
+
 query "aws_cloudtrail_trail_log_file_validation_status" {
   sql = <<-EOQ
     select
@@ -394,7 +388,8 @@ query "aws_cloudtrail_trail_cloudwatch_log_integration_status" {
   EOQ
 }
 
-#Costs
+# Cost Queries
+
 query "aws_cloudtrail_trail_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
@@ -450,7 +445,21 @@ query "aws_cloudtrail_trail_cost_per_month" {
   EOQ
 }
 
-# Analysis
+query "aws_cloudtrail_trail_cost_mtd" {
+  sql = <<-EOQ
+    select
+      'Cost - MTD' as label,
+      sum(unblended_cost_amount)::numeric::money as value
+    from
+      aws_cost_by_service_usage_type_monthly as c
+    where
+      service = 'AWS CloudTrail'
+      and period_end > date_trunc('month', CURRENT_DATE::timestamp);
+  EOQ
+}
+
+# Analysis Queries
+
 query "aws_cloudtrail_trail_count_per_account" {
   sql = <<-EOQ
     select

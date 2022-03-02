@@ -33,17 +33,7 @@ dashboard "aws_ebs_snapshot_dashboard" {
       type  = "info"
       icon  = "currency-dollar"
       width = 2
-      sql   = <<-EOQ
-        select
-          'Cost - MTD' as label,
-          sum(unblended_cost_amount)::numeric::money as value
-        from
-          aws_cost_by_service_usage_type_monthly as c
-        where
-          service = 'EC2 - Other'
-          and usage_type like '%EBS:Snapshot%'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp);
-      EOQ
+      sql   = query.aws_ebs_snapshot_cost_mtd.sql
     }
 
   }
@@ -162,6 +152,8 @@ dashboard "aws_ebs_snapshot_dashboard" {
   }
 }
 
+# Card Queries
+
 query "aws_ebs_snapshot_count" {
   sql = <<-EOQ
     select count(*) as "Snapshots" from aws_ebs_snapshot;
@@ -203,7 +195,22 @@ query "aws_ebs_snapshot_public_count" {
   EOQ
 }
 
-#Assessments
+query "aws_ebs_snapshot_cost_mtd" {
+  sql = <<-EOQ
+    select
+      'Cost - MTD' as label,
+      sum(unblended_cost_amount)::numeric::money as value
+    from
+      aws_cost_by_service_usage_type_monthly as c
+    where
+      service = 'EC2 - Other'
+      and usage_type like '%EBS:Snapshot%'
+      and period_end > date_trunc('month', CURRENT_DATE::timestamp);
+  EOQ
+}
+
+# Assessment Queries
+
 query "aws_ebs_snapshot_by_encryption_status" {
   sql = <<-EOQ
     select
@@ -246,7 +253,8 @@ query "aws_ebs_snapshot_by_public_status" {
   EOQ
 }
 
-#Costs
+# Cost Queries
+
 query "aws_ebs_snapshot_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
@@ -308,7 +316,8 @@ query "aws_ebs_snapshot_cost_per_month" {
   EOQ
 }
 
-#Analysis
+# Analysis Queries
+
 query "aws_ebs_snapshot_by_account" {
   sql = <<-EOQ
     select

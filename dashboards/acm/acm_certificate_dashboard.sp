@@ -8,6 +8,7 @@ dashboard "aws_acm_certificate_dashboard" {
 
   container {
 
+    # Analysis
     card {
       sql   = query.aws_acm_certificate_count.sql
       width = 2
@@ -18,6 +19,7 @@ dashboard "aws_acm_certificate_dashboard" {
       width = 2
     }
 
+    # Assessments
     card {
       sql   = query.aws_acm_certificate_renewal_eligibility_ineligible.sql
       width = 2
@@ -150,6 +152,8 @@ dashboard "aws_acm_certificate_dashboard" {
   }
 }
 
+# Card Queries
+
 query "aws_acm_certificate_count" {
   sql = <<-EOQ
     select count(*) as "Certificates" from aws_acm_certificate;
@@ -212,7 +216,8 @@ query "aws_acm_certificate_transparency_logging_disabled" {
   EOQ
 }
 
-# Assessments
+# Assessment Queries
+
 query "aws_acm_certificate_by_status" {
   sql = <<-EOQ
     select
@@ -305,7 +310,8 @@ query "aws_acm_certificate_by_transparency_logging_preference" {
   EOQ
 }
 
-# Analysis
+# Analysis Queries
+
 query "aws_acm_certificate_by_account" {
   sql = <<-EOQ
     select
