@@ -1,4 +1,4 @@
-dashboard "aws_rds_db_instance_logging_dashboard" {
+dashboard "aws_rds_db_instance_logging_report" {
 
   title = "AWS RDS DB Instance Logging Report"
 
