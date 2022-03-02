@@ -1,4 +1,4 @@
-dashboard "aws_ebs_snapshot_public_access_dashboard" {
+dashboard "aws_ebs_snapshot_public_access_report" {
 
   title = "AWS EBS Snapshot Public Access Report"
 
