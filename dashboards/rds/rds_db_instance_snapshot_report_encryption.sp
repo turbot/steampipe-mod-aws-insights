@@ -1,4 +1,4 @@
-dashboard "aws_rds_db_instace_snapshot_encryption_dashboard" {
+dashboard "aws_rds_db_instace_snapshot_encryption_report" {
 
   title = "AWS RDS DB Instance Snapshot Encryption Report"
 
