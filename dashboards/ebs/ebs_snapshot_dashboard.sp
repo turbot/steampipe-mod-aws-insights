@@ -1,3 +1,167 @@
+dashboard "aws_ebs_snapshot_dashboard" {
+
+  title = "AWS EBS Snapshot Dashboard"
+
+  tags = merge(local.ebs_common_tags, {
+    type = "Dashboard"
+  })
+
+  container {
+
+    card {
+      sql   = query.aws_ebs_snapshot_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_ebs_snapshot_storage_total.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_ebs_unencrypted_snapshot_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_ebs_snapshot_public_count.sql
+      width = 2
+    }
+
+    # Costs
+    card {
+      type  = "info"
+      icon  = "currency-dollar"
+      width = 2
+      sql   = <<-EOQ
+        select
+          'Cost - MTD' as label,
+          sum(unblended_cost_amount)::numeric::money as value
+        from
+          aws_cost_by_service_usage_type_monthly as c
+        where
+          service = 'EC2 - Other'
+          and usage_type like '%EBS:Snapshot%'
+          and period_end > date_trunc('month', CURRENT_DATE::timestamp);
+      EOQ
+    }
+
+  }
+
+  container {
+
+    title = "Assessments"
+    width = 6
+
+    chart {
+      title = "Encryption Status"
+      sql   = query.aws_ebs_snapshot_by_encryption_status.sql
+      type  = "donut"
+      width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Public/Private"
+      sql   = query.aws_ebs_snapshot_by_public_status.sql
+      type  = "donut"
+      width = 4
+
+      series "count" {
+        point "private" {
+          color = "ok"
+        }
+        point "public" {
+          color = "alert"
+        }
+      }
+    }
+
+  }
+
+  container {
+
+    title = "Cost"
+    width = 6
+
+    # Costs
+    table {
+      width = 6
+      title = "Forecast"
+      sql   = query.aws_ebs_snapshot_monthly_forecast_table.sql
+    }
+
+    chart {
+      width = 6
+      type  = "column"
+      title = "Monthly Cost - 12 Months"
+      sql   = query.aws_ebs_snapshot_cost_per_month.sql
+    }
+
+  }
+
+  container {
+
+    title = "Analysis"
+
+    chart {
+      title = "Snapshots by Account"
+      sql   = query.aws_ebs_snapshot_by_account.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Snapshots by Region"
+      sql   = query.aws_ebs_snapshot_by_region.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Snapshots by Age"
+      sql   = query.aws_ebs_snapshot_by_creation_month.sql
+      type  = "column"
+      width = 3
+    }
+
+  }
+
+  container {
+
+    chart {
+      title = "Storage by Account (GB)"
+      sql   = query.aws_ebs_snapshot_storage_by_account.sql
+      type  = "column"
+      width = 3
+
+      series "GB" {
+        color = "tan"
+      }
+    }
+
+    chart {
+      title = "Storage by Region (GB)"
+      sql   = query.aws_ebs_snapshot_storage_by_region.sql
+      type  = "column"
+      width = 3
+
+      series "GB" {
+        color = "tan"
+      }
+    }
+
+  }
+}
+
 query "aws_ebs_snapshot_count" {
   sql = <<-EOQ
     select count(*) as "Snapshots" from aws_ebs_snapshot;
@@ -234,166 +398,4 @@ query "aws_ebs_snapshot_storage_by_region" {
   sql = <<-EOQ
     select region as "Region", sum(volume_size) as "GB" from aws_ebs_snapshot group by region order by region;
   EOQ
-}
-
-dashboard "aws_ebs_snapshot_dashboard" {
-
-  title = "AWS EBS Snapshot Dashboard"
-
-  tags = merge(local.ebs_common_tags, {
-    type = "Dashboard"
-  })
-
-  container {
-
-    card {
-      sql   = query.aws_ebs_snapshot_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_ebs_snapshot_storage_total.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_ebs_unencrypted_snapshot_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_ebs_snapshot_public_count.sql
-      width = 2
-    }
-
-    # Costs
-    card {
-      type  = "info"
-      icon  = "currency-dollar"
-      width = 2
-      sql   = <<-EOQ
-        select
-          'Cost - MTD' as label,
-          sum(unblended_cost_amount)::numeric::money as value
-        from
-          aws_cost_by_service_usage_type_monthly as c
-        where
-          service = 'EC2 - Other'
-          and usage_type like '%EBS:Snapshot%'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp);
-      EOQ
-    }
-
-  }
-
-  container {
-    title = "Assessments"
-    width = 6
-
-    chart {
-      title = "Encryption Status"
-      sql   = query.aws_ebs_snapshot_by_encryption_status.sql
-      type  = "donut"
-      width = 4
-
-      series "count" {
-        point "enabled" {
-          color = "green"
-        }
-        point "disabled" {
-          color = "red"
-        }
-      }
-    }
-
-    chart {
-      title = "Public/Private"
-      sql   = query.aws_ebs_snapshot_by_public_status.sql
-      type  = "donut"
-      width = 4
-
-      series "count" {
-        point "private" {
-          color = "green"
-        }
-        point "public" {
-          color = "red"
-        }
-      }
-    }
-
-  }
-
-  container {
-    title = "Cost"
-    width = 6
-
-    # Costs
-    table {
-      width = 6
-      title = "Forecast"
-      sql   = query.aws_ebs_snapshot_monthly_forecast_table.sql
-    }
-
-    chart {
-      width = 6
-      type  = "column"
-      title = "Monthly Cost - 12 Months"
-      sql   = query.aws_ebs_snapshot_cost_per_month.sql
-    }
-
-  }
-
-  container {
-    title = "Analysis"
-
-    chart {
-      title = "Snapshots by Account"
-      sql   = query.aws_ebs_snapshot_by_account.sql
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Snapshots by Region"
-      sql   = query.aws_ebs_snapshot_by_region.sql
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Snapshots by Age"
-      sql   = query.aws_ebs_snapshot_by_creation_month.sql
-      type  = "column"
-      width = 3
-    }
-
-  }
-
-  container {
-
-    chart {
-      title = "Storage by Account (GB)"
-      sql   = query.aws_ebs_snapshot_storage_by_account.sql
-      type  = "column"
-      width = 3
-
-      series "GB" {
-        color = "tan"
-      }
-    }
-
-    chart {
-      title = "Storage by Region (GB)"
-      sql   = query.aws_ebs_snapshot_storage_by_region.sql
-      type  = "column"
-      width = 3
-
-      series "GB" {
-        color = "tan"
-      }
-    }
-
-  }
-
 }
