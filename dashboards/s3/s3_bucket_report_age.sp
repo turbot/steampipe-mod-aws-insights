@@ -7,82 +7,41 @@ dashboard "aws_s3_bucket_age_report" {
     category = "Age"
   })
 
-    container {
+  container {
 
-    # Analysis
     card {
       sql   = query.aws_s3_bucket_count.sql
       width = 2
     }
 
     card {
-      sql   = <<-EOQ
-        select
-          count(*) as value,
-          '< 24 hours' as label
-        from
-          aws_s3_bucket
-        where
-          creation_date > now() - '1 days' :: interval;
-      EOQ
+      sql   = query.aws_s3_bucket_24_hours_count.sql
       width = 2
-      type = "info"
+      type  = "info"
     }
 
     card {
-      sql   = <<-EOQ
-        select
-          count(*) as value,
-          '1-30 Days' as label
-        from
-          aws_s3_bucket
-        where
-          creation_date between symmetric now() - '1 days' :: interval and now() - '30 days' :: interval;
-      EOQ
+      sql   = query.aws_s3_bucket_30_days_count.sql
       width = 2
-      type = "info"
+      type  = "info"
     }
 
     card {
-      sql   = <<-EOQ
-        select
-          count(*) as value,
-          '30-90 Days' as label
-        from
-          aws_s3_bucket
-        where
-          creation_date between symmetric now() - '30 days' :: interval and now() - '90 days' :: interval;
-      EOQ
+      sql   = query.aws_s3_bucket_30_90_days_count.sql
       width = 2
-      type = "info"
+      type  = "info"
     }
 
     card {
-      sql   = <<-EOQ
-        select
-          count(*) as value,
-          '90-365 Days' as label
-        from
-          aws_s3_bucket
-        where
-          creation_date between symmetric (now() - '90 days'::interval) and (now() - '365 days'::interval);
-      EOQ
+      sql   = query.aws_s3_bucket_90_365_days_count.sql
       width = 2
-      type = "info"
+      type  = "info"
     }
 
     card {
-      sql   = <<-EOQ
-        select
-          count(*) as value,
-          '> 1 Year' as label
-        from
-          aws_s3_bucket
-        where
-          creation_date <= now() - '1 year' :: interval;
-      EOQ
+      sql   = query.aws_s3_bucket_1_year_count.sql
       width = 2
-      type = "info"
+      type  = "info"
     }
 
   }
@@ -95,25 +54,7 @@ dashboard "aws_s3_bucket_age_report" {
         display = "none"
       }
 
-      sql = <<-EOQ
-        select
-          v.name as "Name",
-          --date_trunc('day',age(now(),v.creation_date))::text as "Age",
-          now()::date - v.creation_date::date as "Age in Days",
-          v.creation_date as "Create Time",
-          a.title as "Account",
-          v.account_id as "Account ID",
-          v.region as "Region",
-          v.arn as "ARN"
-        from
-          aws_s3_bucket as v,
-          aws_account as a
-        where
-          v.account_id = a.account_id
-        order by
-          v.creation_date,
-          v.title;
-      EOQ
+      sql = query.aws_s3_bucket_age_table.sql
 
     }
 
@@ -121,10 +62,87 @@ dashboard "aws_s3_bucket_age_report" {
 
 }
 
-/*
+query "aws_s3_bucket_24_hours_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      '< 24 hours' as label
+    from
+      aws_s3_bucket
+    where
+      creation_date > now() - '1 days' :: interval;
+  EOQ
+}
 
-select
-  'value 1' as value,
-  'value 2' as value
+query "aws_s3_bucket_30_days_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      '1-30 Days' as label
+    from
+      aws_s3_bucket
+    where
+      creation_date between symmetric now() - '1 days' :: interval
+      and now() - '30 days' :: interval;
+  EOQ
+}
 
-*/
+query "aws_s3_bucket_30_90_days_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      '30-90 Days' as label
+    from
+      aws_s3_bucket
+    where
+      creation_date between symmetric now() - '30 days' :: interval
+      and now() - '90 days' :: interval;
+  EOQ
+}
+
+query "aws_s3_bucket_90_365_days_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      '90-365 Days' as label
+    from
+      aws_s3_bucket
+    where
+      creation_date between symmetric (now() - '90 days'::interval)
+      and (now() - '365 days'::interval);
+  EOQ
+}
+
+query "aws_s3_bucket_1_year_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      '> 1 Year' as label
+    from
+      aws_s3_bucket
+    where
+      creation_date <= now() - '1 year' :: interval;
+  EOQ
+}
+
+query "aws_s3_bucket_age_table" {
+  sql = <<-EOQ
+    select
+      v.name as "Name",
+      --date_trunc('day',age(now(),v.creation_date))::text as "Age",
+      now()::date - v.creation_date::date as "Age in Days",
+      v.creation_date as "Create Time",
+      a.title as "Account",
+      v.account_id as "Account ID",
+      v.region as "Region",
+      v.arn as "ARN"
+    from
+      aws_s3_bucket as v,
+      aws_account as a
+    where
+      v.account_id = a.account_id
+    order by
+      v.creation_date,
+      v.title;
+  EOQ
+}
