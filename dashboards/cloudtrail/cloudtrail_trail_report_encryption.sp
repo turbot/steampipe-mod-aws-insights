@@ -1,4 +1,4 @@
-dashboard "aws_cloudtrail_trail_encryption_dashboard" {
+dashboard "aws_cloudtrail_trail_encryption_report" {
 
   title = "AWS CloudTrail Trail Encryption Report"
 

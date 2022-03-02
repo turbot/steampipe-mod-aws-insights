@@ -1,4 +1,4 @@
-dashboard "aws_lambda_function_encryption_dashboard" {
+dashboard "aws_lambda_function_encryption_report" {
 
   title = "AWS Lambda Function Encryption Report"
 

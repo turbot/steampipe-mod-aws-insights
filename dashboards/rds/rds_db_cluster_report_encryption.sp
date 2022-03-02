@@ -1,4 +1,4 @@
-dashboard "aws_rds_db_cluster_encryption_dashboard" {
+dashboard "aws_rds_db_cluster_encryption_report" {
 
   title = "AWS RDS DB Cluster Encryption Report"
 

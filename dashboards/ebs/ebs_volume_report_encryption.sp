@@ -1,4 +1,4 @@
-dashboard "aws_ebs_volume_encryption_dashboard" {
+dashboard "aws_ebs_volume_encryption_report" {
 
   title = "AWS EBS Volume Encryption Report"
 
