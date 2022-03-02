@@ -1,4 +1,4 @@
-dashboard "aws_rds_db_cluster_logging_dashboard" {
+dashboard "aws_rds_db_cluster_logging_report" {
 
   title = "AWS RDS DB Cluster Logging Report"
 
