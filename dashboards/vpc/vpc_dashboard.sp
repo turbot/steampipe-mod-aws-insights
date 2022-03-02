@@ -8,7 +8,7 @@ query "aws_vpc_no_subnet_count" {
  sql = <<-EOQ
     select
        count(*) as value,
-       'VPCs With No Subnets' as label,
+       'VPCs Without Subnets' as label,
        case when count(*) = 0 then 'ok' else 'alert' end as type
       from
         aws_vpc as vpc
@@ -249,7 +249,7 @@ dashboard "aws_vpc_dashboard" {
     width = 6
 
     chart {
-      title = "Default VPC"
+      title = "Default VPCs"
       type  = "donut"
       width = 4
       sql   = <<-EOQ
@@ -310,7 +310,7 @@ dashboard "aws_vpc_dashboard" {
     }
 
     chart {
-      title = "Empty VPC (No subnets)"
+      title = "Empty VPCs (No Subnets)"
       type  = "donut"
       width = 4
       sql   = <<-EOQ
