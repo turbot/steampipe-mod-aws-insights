@@ -1,3 +1,149 @@
+dashboard "aws_ec2_instance_detail" {
+
+  title = "AWS EC2 Instance Detail"
+
+  tags = merge(local.ec2_common_tags, {
+    type = "Detail"
+  })
+
+  input "instance_arn" {
+    title = "Select an instance:"
+    sql   = query.aws_ec2_instance_input.sql
+    width = 4
+  }
+
+  container {
+
+    card {
+      width = 2
+
+      query = query.aws_ec2_instance_status
+      args = {
+        arn = self.input.instance_arn.value
+      }
+    }
+
+    card {
+      width = 2
+
+      query = query.aws_ec2_instance_type
+      args = {
+        arn = self.input.instance_arn.value
+      }
+    }
+
+    card {
+      width = 2
+
+      query = query.aws_ec2_instance_total_cores_count
+      args = {
+        arn = self.input.instance_arn.value
+      }
+    }
+
+    card {
+      width = 2
+
+      query = query.aws_ec2_instance_public_access
+      args = {
+        arn = self.input.instance_arn.value
+      }
+    }
+
+    card {
+      query = query.aws_ec2_instance_ebs_optimized
+      width = 2
+
+      args = {
+        arn = self.input.instance_arn.value
+      }
+    }
+  }
+
+  container {
+
+    container {
+      width = 6
+
+      table {
+        title = "Overview"
+        type  = "line"
+        width = 6
+        sql   = query.aws_ec2_instance_overview.sql
+        param "arn" {}
+
+        args = {
+          arn = self.input.instance_arn.value
+        }
+
+      }
+
+      table {
+        title = "Tags"
+        width = 6
+        sql   = query.aws_ec2_instance_tags.sql
+        param "arn" {}
+
+        args = {
+          arn = self.input.instance_arn.value
+        }
+      }
+    }
+    container {
+      width = 6
+
+      table {
+        title = "Block Device Mappings"
+        query = query.aws_ec2_instance_block_device_mapping
+        args = {
+          arn = self.input.instance_arn.value
+        }
+      }
+    }
+
+  }
+
+  container {
+    width = 12
+
+    table {
+      title = "Network Interfaces"
+      query = query.aws_ec2_instance_network_interfaces
+      args = {
+        arn = self.input.instance_arn.value
+      }
+    }
+
+  }
+
+  container {
+    width = 6
+
+    table {
+      title = "Security Groups"
+      query = query.aws_ec2_instance_security_groups
+      args = {
+        arn = self.input.instance_arn.value
+      }
+    }
+
+  }
+
+  container {
+    width = 6
+
+    table {
+      title = " CPU cores"
+      query = query.aws_ec2_instance_cpu_cores
+      args = {
+        arn = self.input.instance_arn.value
+      }
+    }
+
+  }
+
+}
+
 query "aws_ec2_instance_input" {
   sql = <<EOQ
     select
@@ -88,19 +234,34 @@ query "aws_ec2_instance_ebs_optimized" {
   param "arn" {}
 }
 
-query "aws_ec2_instance_detailed_monitoring" {
+query "aws_ec2_instance_overview" {
   sql = <<-EOQ
     select
-      'Detailed Monitoring' as label,
-      case when monitoring_state = 'enabled' then 'Enabled' else 'Disabled' end as value,
-      case when ebs_optimized then 'ok' else 'alert' end as type
+      tags ->> 'Name' as "Name",
+      instance_id as "Instance Id",
+      launch_time as "Launch Time",
+      title as "Title",
+      region as "Region",
+      account_id as "Account Id",
+      arn as "ARN"
     from
       aws_ec2_instance
     where
-      arn = $1;
+      arn = $1
   EOQ
+}
 
-  param "arn" {}
+query "aws_ec2_instance_tags" {
+  sql = <<-EOQ
+    select
+      tag ->> 'Key' as "Key",
+      tag ->> 'Value' as "Value"
+    from
+      aws_ec2_instance,
+      jsonb_array_elements(tags_src) as tag
+    where
+      arn = $1
+    EOQ
 }
 
 query "aws_ec2_instance_block_device_mapping" {
@@ -167,175 +328,3 @@ query "aws_ec2_instance_cpu_cores" {
 
   param "arn" {}
 }
-
-dashboard "aws_ec2_instance_detail" {
-  title = "AWS EC2 Instance Detail"
-
-  tags = merge(local.ec2_common_tags, {
-    type = "Detail"
-  })
-
-  input "instance_arn" {
-    title = "Select an instance:"
-    sql   = query.aws_ec2_instance_input.sql
-    width = 4
-  }
-
-  container {
-    # Assessments
-
-    card {
-      width = 2
-
-      query = query.aws_ec2_instance_status
-      args = {
-        arn = self.input.instance_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query = query.aws_ec2_instance_type
-      args = {
-        arn = self.input.instance_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query = query.aws_ec2_instance_total_cores_count
-      args = {
-        arn = self.input.instance_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query = query.aws_ec2_instance_public_access
-      args = {
-        arn = self.input.instance_arn.value
-      }
-    }
-
-    card {
-      query = query.aws_ec2_instance_ebs_optimized
-      width = 2
-
-      args = {
-        arn = self.input.instance_arn.value
-      }
-    }
-  }
-
-  container {
-
-    container {
-      width = 6
-
-      table {
-        title = "Overview"
-        type  = "line"
-        width = 6
-        sql   = <<-EOQ
-          select
-            tags ->> 'Name' as "Name",
-            instance_id as "Instance Id",
-            launch_time as "Launch Time",
-            title as "Title",
-            region as "Region",
-            account_id as "Account Id",
-            arn as "ARN"
-          from
-            aws_ec2_instance
-          where
-            arn = $1
-        EOQ
-
-        param "arn" {}
-
-        args = {
-          arn = self.input.instance_arn.value
-        }
-
-      }
-
-      table {
-        title = "Tags"
-        width = 6
-
-        sql = <<-EOQ
-          select
-            tag ->> 'Key' as "Key",
-            tag ->> 'Value' as "Value"
-          from
-            aws_ec2_instance,
-            jsonb_array_elements(tags_src) as tag
-          where
-            arn = $1
-          EOQ
-
-        param "arn" {}
-
-        args = {
-          arn = self.input.instance_arn.value
-        }
-      }
-    }
-    container {
-      width = 6
-
-      table {
-        title = "Block Device Mappings"
-        query = query.aws_ec2_instance_block_device_mapping
-        args = {
-          arn = self.input.instance_arn.value
-        }
-      }
-    }
-
-  }
-
-  container {
-    width = 12
-
-    table {
-      title = "Network Interfaces"
-      query = query.aws_ec2_instance_network_interfaces
-      args = {
-        arn = self.input.instance_arn.value
-      }
-    }
-
-  }
-
-  container {
-    width = 6
-
-    table {
-      title = "Security Groups"
-      query = query.aws_ec2_instance_security_groups
-      args = {
-        arn = self.input.instance_arn.value
-      }
-    }
-
-  }
-
-  container {
-    width = 6
-
-    table {
-      title = " CPU cores"
-      query = query.aws_ec2_instance_cpu_cores
-      args = {
-        arn = self.input.instance_arn.value
-      }
-    }
-
-  }
-
-}
-

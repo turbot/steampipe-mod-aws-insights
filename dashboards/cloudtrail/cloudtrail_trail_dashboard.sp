@@ -1,3 +1,192 @@
+dashboard "aws_cloudtrail_trail_dashboard" {
+
+  title = "AWS CloudTrail Trail Dashboard"
+
+  tags = merge(local.cloudtrail_common_tags, {
+    type = "Dashboard"
+  })
+
+  container {
+
+    card {
+      sql   = query.aws_cloudtrail_trail_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_cloudtrail_regional_trail_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_cloudtrail_trail_multi_region_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_cloudtrail_trail_log_file_validation_disabled_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_cloudtrail_trail_unencrypted_count.sql
+      width = 2
+    }
+
+    # Costs
+    card {
+      type  = "info"
+      icon  = "currency-dollar"
+      width = 2
+      sql   = query.aws_cloudtrail_trail_cost_mtd.sql
+    }
+
+  }
+
+  container {
+
+    title = "Assessments"
+    width = 6
+
+    chart {
+      title = "Log File Validation Status"
+      type  = "donut"
+      width = 4
+      sql   = query.aws_cloudtrail_trail_log_file_validation_status.sql
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Encryption Status"
+      type  = "donut"
+      width = 4
+      sql   = query.aws_cloudtrail_trail_encryption_status.sql
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Logging Status"
+      type  = "donut"
+      width = 4
+      sql   = query.aws_cloudtrail_trail_logging_status.sql
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Trail Bucket Public Access"
+      type  = "donut"
+      width = 4
+      sql   = query.aws_cloudtrail_trail_bucket_publicly_accessible.sql
+
+      series "count" {
+        point "private" {
+          color = "ok"
+        }
+        point "public" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Log Group Status"
+      type  = "donut"
+      width = 4
+      sql   = query.aws_cloudtrail_trail_cloudwatch_log_integration_status.sql
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
+          color = "alert"
+        }
+      }
+    }
+
+  }
+
+  container {
+
+    title = "Cost"
+    width = 6
+
+    # Costs
+    table  {
+      width = 6
+      title = "Forecast"
+      sql   = query.aws_cloudtrail_trail_monthly_forecast_table.sql
+    }
+
+    chart {
+      width = 6
+      type  = "column"
+      title = "Monthly Cost - 12 Months"
+      sql   = query.aws_cloudtrail_trail_cost_per_month.sql
+    }
+
+  }
+
+  container {
+
+    title = "Analysis"
+
+    chart {
+      title = "Trails by Account"
+      type  = "column"
+      width = 3
+      sql   = query.aws_cloudtrail_trail_count_per_account.sql
+    }
+
+    chart {
+      title = "Trails by Region"
+      type  = "column"
+      width = 3
+      sql   = query.aws_cloudtrail_trail_count_per_region.sql
+    }
+
+    chart {
+      title = "Regional Trails by Region"
+      type  = "column"
+      width = 3
+      sql   = query.aws_cloudtrail_regional_trail_count_per_region.sql
+    }
+
+    chart {
+      title = "Multi-Region Trails by Account"
+      type  = "column"
+      width = 3
+      sql   = query.aws_cloudtrail_multi_region_trail_count_per_account.sql
+    }
+  }
+}
+
+# Card Queries
+
 query "aws_cloudtrail_trail_count" {
   sql = <<-EOQ
     select
@@ -62,7 +251,8 @@ query "aws_cloudtrail_trail_unencrypted_count" {
   EOQ
 }
 
-# Assessments
+# Assessment Queries
+
 query "aws_cloudtrail_trail_log_file_validation_status" {
   sql = <<-EOQ
     select
@@ -198,7 +388,8 @@ query "aws_cloudtrail_trail_cloudwatch_log_integration_status" {
   EOQ
 }
 
-#Costs
+# Cost Queries
+
 query "aws_cloudtrail_trail_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
@@ -254,7 +445,21 @@ query "aws_cloudtrail_trail_cost_per_month" {
   EOQ
 }
 
-# Analysis
+query "aws_cloudtrail_trail_cost_mtd" {
+  sql = <<-EOQ
+    select
+      'Cost - MTD' as label,
+      sum(unblended_cost_amount)::numeric::money as value
+    from
+      aws_cost_by_service_usage_type_monthly as c
+    where
+      service = 'AWS CloudTrail'
+      and period_end > date_trunc('month', CURRENT_DATE::timestamp);
+  EOQ
+}
+
+# Analysis Queries
+
 query "aws_cloudtrail_trail_count_per_account" {
   sql = <<-EOQ
     select
@@ -340,198 +545,4 @@ query "aws_cloudtrail_multi_region_trail_count_per_account" {
     group by a.title
     order by a.title;
   EOQ
-}
-
-dashboard "aws_cloudtrail_trail_dashboard" {
-  title = "AWS CloudTrail Trail Dashboard"
-
-  tags = merge(local.cloudtrail_common_tags, {
-    type = "Dashboard"
-  })
-
-  container {
-
-    card {
-      sql   = query.aws_cloudtrail_trail_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_cloudtrail_regional_trail_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_cloudtrail_trail_multi_region_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_cloudtrail_trail_log_file_validation_disabled_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_cloudtrail_trail_unencrypted_count.sql
-      width = 2
-    }
-
-    # Costs
-    card {
-      width = 2
-      type  = "info"
-      icon  = "currency-dollar"
-      sql   = <<-EOQ
-        select
-          'Cost - MTD' as label,
-          sum(unblended_cost_amount)::numeric::money as value
-        from
-          aws_cost_by_service_monthly
-        where
-          service = 'AWS CloudTrail'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp);
-      EOQ
-    }
-
-  }
-
-  container {
-    title = "Assessments"
-    width = 6
-
-    chart {
-      title = "Log File Validation Status"
-      type  = "donut"
-      width = 4
-      sql   = query.aws_cloudtrail_trail_log_file_validation_status.sql
-
-      series "count" {
-        point "enabled" {
-          color = "green"
-        }
-        point "disabled" {
-          color = "red"
-        }
-      }
-    }
-
-    chart {
-      title = "Encryption Status"
-      type  = "donut"
-      width = 4
-      sql   = query.aws_cloudtrail_trail_encryption_status.sql
-
-      series "count" {
-        point "enabled" {
-          color = "green"
-        }
-        point "disabled" {
-          color = "red"
-        }
-      }
-    }
-
-    chart {
-      title = "Logging Status"
-      type  = "donut"
-      width = 4
-      sql   = query.aws_cloudtrail_trail_logging_status.sql
-
-      series "count" {
-        point "enabled" {
-          color = "green"
-        }
-        point "disabled" {
-          color = "red"
-        }
-      }
-    }
-
-    chart {
-      title = "Trail Bucket Public Access"
-      type  = "donut"
-      width = 4
-      sql   = query.aws_cloudtrail_trail_bucket_publicly_accessible.sql
-
-      series "count" {
-        point "private" {
-          color = "green"
-        }
-        point "public" {
-          color = "red"
-        }
-      }
-    }
-
-    chart {
-      title = "Log Group Status"
-      type  = "donut"
-      width = 4
-      sql   = query.aws_cloudtrail_trail_cloudwatch_log_integration_status.sql
-
-      series "count" {
-        point "enabled" {
-          color = "green"
-        }
-        point "disabled" {
-          color = "red"
-        }
-      }
-    }
-
-  }
-
-  container {
-    title = "Cost"
-    width = 6
-
-    # Costs
-    table  {
-      width = 6
-      title = "Forecast"
-      sql   = query.aws_cloudtrail_trail_monthly_forecast_table.sql
-    }
-
-    chart {
-      width = 6
-      type  = "column"
-      title = "Monthly Cost - 12 Months"
-      sql   = query.aws_cloudtrail_trail_cost_per_month.sql
-    }
-
-  }
-
-  container {
-    title = "Analysis"
-
-    chart {
-      title = "Trails by Account"
-      type  = "column"
-      width = 3
-      sql   = query.aws_cloudtrail_trail_count_per_account.sql
-    }
-
-    chart {
-      title = "Trails by Region"
-      type  = "column"
-      width = 3
-      sql   = query.aws_cloudtrail_trail_count_per_region.sql
-    }
-
-    chart {
-      title = "Regional Trails by Region"
-      type  = "column"
-      width = 3
-      sql   = query.aws_cloudtrail_regional_trail_count_per_region.sql
-    }
-
-    chart {
-      title = "Multi-Region Trails by Account"
-      type  = "column"
-      width = 3
-      sql   = query.aws_cloudtrail_multi_region_trail_count_per_account.sql
-    }
-
-  }
-
 }

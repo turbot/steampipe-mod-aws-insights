@@ -1,3 +1,206 @@
+dashboard "aws_ec2_instance_dashboard" {
+
+  title = "AWS EC2 Instance Dashboard"
+
+  tags = merge(local.ec2_common_tags, {
+    type = "Dashboard"
+  })
+
+  container {
+
+    # Analysis
+    card {
+      sql   = query.aws_ec2_instance_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_ec2_instance_total_cores.sql
+      width = 2
+    }
+
+    # Assessments
+    card {
+      sql   = query.aws_ec2_public_instance_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_ec2_ebs_optimized_count.sql
+      width = 2
+    }
+
+    #  card {
+    #   sql   = query.aws_ec2_root_volume_unencrypted_instance_count.sql
+    #   width = 2
+    # }
+
+   # Costs
+   card {
+      type  = "info"
+      icon = "currency-dollar"
+      sql = query.aws_ec2_instance_cost_mtd.sql
+      width = 2
+    }
+
+  }
+
+  container {
+
+    title = "Assessments"
+    width = 6
+
+   chart {
+      title = "Public/Private"
+      sql   = query.aws_ec2_instance_by_public_ip.sql
+      type  = "donut"
+      width = 4
+
+      series "count" {
+        point "private" {
+          color = "ok"
+        }
+        point "public" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "EBS Optimized Status"
+      sql   = query.aws_ec2_instance_ebs_optimized_status.sql
+      type  = "donut"
+      width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title  = "Root Volume Encryption"
+      sql    = query.aws_ec2_instance_root_volume_encryption_status.sql
+      type   = "donut"
+      width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title  = "Detailed Monitoring Status"
+      sql    = query.aws_ec2_instance_detailed_monitoring_enabled.sql
+      type   = "donut"
+      width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
+          color = "alert"
+        }
+      }
+    }
+  }
+
+  container {
+
+    title = "Costs"
+    width = 6
+
+
+    table  {
+      width = 6
+      title = "Forecast"
+      sql = query.aws_ec2_monthly_forecast_table.sql
+    }
+
+    chart {
+      width = 6
+      title = "EC2 Compute Monthly Unblended Cost"
+      type  = "column"
+      sql   = query.aws_ec2_instance_cost_per_month.sql
+    }
+
+  }
+
+  container {
+
+    title = "Analysis"
+
+    chart {
+      title = "Instances by Account"
+      sql   = query.aws_ec2_instance_by_account.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Instances by Region"
+      sql   = query.aws_ec2_instance_by_region.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Instances by State"
+      sql   = query.aws_ec2_instance_by_state.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Instances by Age"
+      sql   = query.aws_ec2_instance_by_creation_month.sql
+      type  = "column"
+        width = 3
+    }
+
+    chart {
+      title = "Instances by Type"
+      sql   = query.aws_ec2_instance_by_type.sql
+      type  = "column"
+      width = 3
+    }
+
+  }
+
+  container {
+
+    title  = "Performance & Utilization"
+
+    chart {
+      title = "Top 10 CPU - Last 7 days"
+      sql   = query.aws_ec2_top10_cpu_past_week.sql
+      type  = "line"
+      width = 6
+    }
+
+    chart {
+      title = "Average Max Daily CPU - Last 30 days"
+      sql   = query.aws_ec2_instance_by_cpu_utilization_category.sql
+      type  = "column"
+      width = 6
+    }
+
+  }
+
+}
+
+# Card Queries
+
 query "aws_ec2_instance_count" {
   sql = <<-EOQ
     select count(*) as "Instances" from aws_ec2_instance
@@ -56,11 +259,11 @@ query "aws_ec2_ebs_optimized_count" {
 #       select
 #         count(*) as value,
 #         'Root Volume Unencrypted' as label,
-#         case count(*) when 0 then 'ok' else 'alert' end as "type"
-#         i.instance_id as "i.instance_id",
-#         i.root_device_name as "iroot_device_name",
-#         e.instanceid as "e.instanceid",
-#         e.device as  "edevice",
+#         case count(*) when 0 then 'ok' else 'alert' end as "type",
+#         i.instance_id as "instance_id",
+#         i.root_device_name as "root_device_name",
+#         e.instanceid as "instanceid",
+#         e.device as  "device",
 #         e.encrypted ,
 #         case when i.root_device_name = e.device then
 #           'disabled'
@@ -68,11 +271,25 @@ query "aws_ec2_ebs_optimized_count" {
 #           'enabled'
 #         end encryption_status
 #       from
-#         aws_ec2_instance as i left join non_encrypted_instances as e on (e.instanceid = i.instance_id)
+#         aws_ec2_instance as i left join non_encrypted_instances as e on (e.instanceid = i.instance_id);
 #   EOQ
 # }
 
-# Assessments
+query "aws_ec2_instance_cost_mtd" {
+  sql = <<-EOQ
+    select
+      'Cost - MTD' as label,
+      sum(unblended_cost_amount)::numeric::money as value
+    from
+      aws_cost_by_service_monthly
+    where
+      service = 'Amazon Elastic Compute Cloud - Compute'
+      and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+  EOQ
+}
+
+# Assessment Queries
+
 query "aws_ec2_instance_by_public_ip" {
   sql = <<-EOQ
     with instances as (
@@ -115,39 +332,39 @@ query "aws_ec2_instance_ebs_optimized_status" {
   EOQ
 }
 
-# query "aws_ec2_instance_root_volume_encryption_status" {
-#   sql = <<-EOQ
-#      with non_encrypted_instances as (
-#       select
-#         encrypted,
-#         volume_id,
-#         att ->> 'InstanceId' as "instanceid",
-#         att ->> 'Device' as "device"
-#       from
-#         aws_ebs_volume,
-#         jsonb_array_elements(attachments) as att
-#       where
-#         not encrypted and attachments is not null
-#     )
-#     select
-#       encryption_status,
-#       count(*)
-#     from (
-#       select
-#         e.encrypted ,
-#         case when i.root_device_name = e.device then
-#           'disabled'
-#         else
-#           'enabled'
-#         end encryption_status
-#       from
-#         aws_ec2_instance as i left join non_encrypted_instances as e on (e.instanceid = i.instance_id)) as t
-#     group by
-#       encryption_status
-#     order by
-#       encryption_status
-#   EOQ
-# }
+query "aws_ec2_instance_root_volume_encryption_status" {
+  sql = <<-EOQ
+     with non_encrypted_instances as (
+      select
+        encrypted,
+        volume_id,
+        att ->> 'InstanceId' as "instanceid",
+        att ->> 'Device' as "device"
+      from
+        aws_ebs_volume,
+        jsonb_array_elements(attachments) as att
+      where
+        not encrypted and attachments is not null
+    )
+    select
+      encryption_status,
+      count(*)
+    from (
+      select
+        e.encrypted ,
+        case when i.root_device_name = e.device then
+          'disabled'
+        else
+          'enabled'
+        end encryption_status
+      from
+        aws_ec2_instance as i left join non_encrypted_instances as e on (e.instanceid = i.instance_id)) as t
+    group by
+      encryption_status
+    order by
+      encryption_status
+  EOQ
+}
 
 query "aws_ec2_instance_detailed_monitoring_enabled" {
   sql = <<-EOQ
@@ -170,23 +387,7 @@ query "aws_ec2_instance_detailed_monitoring_enabled" {
   EOQ
 }
 
-# Costs
-query "aws_ec2_instance_cost_per_month" {
-  sql = <<-EOQ
-    select
-       to_char(period_start, 'Mon-YY') as "Month",
-       sum(unblended_cost_amount)::numeric as "Unblended Cost"
-       --        sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-    from
-      aws_cost_by_service_usage_type_monthly
-    where
-      service = 'Amazon Elastic Compute Cloud - Compute'
-    group by
-      period_start
-    order by
-      period_start
-  EOQ
-}
+# Cost Queries
 
 query "aws_ec2_monthly_forecast_table" {
   sql = <<-EOQ
@@ -230,10 +431,26 @@ query "aws_ec2_monthly_forecast_table" {
       (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
 
   EOQ
-
 }
 
-# Analysis
+query "aws_ec2_instance_cost_per_month" {
+  sql = <<-EOQ
+    select
+      to_char(period_start, 'Mon-YY') as "Month",
+      sum(unblended_cost_amount)::numeric as "Unblended Cost"
+    from
+      aws_cost_by_service_usage_type_monthly
+    where
+      service = 'Amazon Elastic Compute Cloud - Compute'
+    group by
+      period_start
+    order by
+      period_start
+  EOQ
+}
+
+# Analysis Queries
+
 query "aws_ec2_instance_by_account" {
   sql = <<-EOQ
     select
@@ -327,6 +544,9 @@ query "aws_ec2_instance_by_type" {
 
 # Note the CTE uses the dailt table to be efficient when filtering,
 # and the hourly table to show granular line chart
+
+# Performance Queries
+
 query "aws_ec2_top10_cpu_past_week" {
   sql = <<-EOQ
     with top_n as (
@@ -390,212 +610,4 @@ query "aws_ec2_instance_by_cpu_utilization_category" {
     group by
       b.cpu_bucket
   EOQ
-}
-
-dashboard "aws_ec2_instance_dashboard" {
-
-  title = "AWS EC2 Instance Dashboard"
-
-  tags = merge(local.ec2_common_tags, {
-    type = "Dashboard"
-  })
-
-  container {
-
-    # Analysis
-    card {
-      sql   = query.aws_ec2_instance_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_ec2_instance_total_cores.sql
-      width = 2
-    }
-
-    # Assessments
-    card {
-      sql   = query.aws_ec2_public_instance_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_ec2_ebs_optimized_count.sql
-      width = 2
-    }
-
-    #  card {
-    #   sql   = query.aws_ec2_root_volume_unencrypted_instance_count.sql
-    #   width = 2
-    # }
-
-   # Costs
-   card {
-      type  = "info"
-      icon = "currency-dollar"
-
-      sql = <<-EOQ
-        select
-          'Cost - MTD' as label,
-          sum(unblended_cost_amount)::numeric::money as value
-        from
-          aws_cost_by_service_monthly
-        where
-          service = 'Amazon Elastic Compute Cloud - Compute'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-      EOQ
-      width = 2
-    }
-
-  }
-
-  container {
-    title = "Assessments"
-    width = 6
-
-   chart {
-      title = "Public/Private"
-      sql   = query.aws_ec2_instance_by_public_ip.sql
-      type  = "donut"
-      width = 4
-
-      series "count" {
-        point "private" {
-          color = "green"
-        }
-        point "public" {
-          color = "red"
-        }
-      }
-    }
-
-    chart {
-      title = "EBS Optimized Status"
-      sql   = query.aws_ec2_instance_ebs_optimized_status.sql
-      type  = "donut"
-      width = 4
-
-      series "count" {
-        point "enabled" {
-          color = "green"
-        }
-        point "disabled" {
-          color = "red"
-        }
-      }
-    }
-
-    # chart {
-    #   title  = "Root Volume Encryption"
-    #   sql    = query.aws_ec2_instance_root_volume_encryption_status.sql
-    #   type   = "donut"
-    #   width = 4
-
-    #   series "count" {
-    #     point "enabled" {
-    #       color = "green"
-    #     }
-    #     point "disabled" {
-    #       color = "red"
-    #     }
-    #   }
-    # }
-
-    chart {
-      title  = "Detailed Monitoring Status"
-      sql    = query.aws_ec2_instance_detailed_monitoring_enabled.sql
-      type   = "donut"
-      width = 4
-
-      series "count" {
-        point "enabled" {
-          color = "green"
-        }
-        point "disabled" {
-          color = "red"
-        }
-      }
-    }
-
-  }
-
-  container {
-    title = "Costs"
-    width = 6
-
-
-    table  {
-      width = 6
-      title = "Forecast"
-      sql = query.aws_ec2_monthly_forecast_table.sql
-    }
-
-    chart {
-      width = 6
-      title = "EC2 Compute Monthly Unblended Cost"
-      type  = "column"
-      sql   = query.aws_ec2_instance_cost_per_month.sql
-    }
-
-  }
-
-  container {
-    title = "Analysis"
-
-    chart {
-      title = "Instances by Account"
-      sql   = query.aws_ec2_instance_by_account.sql
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Instances by Region"
-      sql   = query.aws_ec2_instance_by_region.sql
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Instances by State"
-      sql   = query.aws_ec2_instance_by_state.sql
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Instances by Age"
-      sql   = query.aws_ec2_instance_by_creation_month.sql
-      type  = "column"
-        width = 3
-    }
-
-    chart {
-      title = "Instances by Type"
-      sql   = query.aws_ec2_instance_by_type.sql
-      type  = "column"
-      width = 3
-    }
-
-  }
-
-  container {
-    title  = "Performance & Utilization"
-
-    chart {
-      title = "Top 10 CPU - Last 7 days"
-      sql   = query.aws_ec2_top10_cpu_past_week.sql
-      type  = "line"
-      width = 6
-    }
-
-    chart {
-      title = "Average Max Daily CPU - Last 30 days"
-      sql   = query.aws_ec2_instance_by_cpu_utilization_category.sql
-      type  = "column"
-      width = 6
-    }
-
-  }
-
 }

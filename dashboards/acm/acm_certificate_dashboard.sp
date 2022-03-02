@@ -1,3 +1,159 @@
+dashboard "aws_acm_certificate_dashboard" {
+
+  title = "AWS ACM Certificate Dashboard"
+
+  tags = merge(local.acm_common_tags, {
+    type = "Dashboard"
+  })
+
+  container {
+
+    # Analysis
+    card {
+      sql   = query.aws_acm_certificate_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_acm_certificate_revoked_count.sql
+      width = 2
+    }
+
+    # Assessments
+    card {
+      sql   = query.aws_acm_certificate_renewal_eligibility_ineligible.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_acm_certificate_invalid.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_acm_certificate_in_use_by.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_acm_certificate_transparency_logging_disabled.sql
+      width = 2
+    }
+  }
+
+  container {
+
+    title = "Assessments"
+
+    chart {
+      title = "Certificate Status"
+      sql   = query.aws_acm_certificate_by_status.sql
+      type  = "donut"
+      width = 2
+
+      series "count" {
+        point "issued" {
+          color = "ok"
+        }
+        point "failed" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Renewal Eligibilty"
+      sql   = query.aws_acm_certificate_by_eligibility.sql
+      type  = "donut"
+      width = 2
+    }
+
+    chart {
+      title = "Certificate Validity"
+      sql   = query.aws_acm_certificate_by_validity.sql
+      type  = "donut"
+      width = 2
+
+      series "count" {
+        point "valid" {
+          color = "ok"
+        }
+        point "invalid" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Certificate Usage Status"
+      sql   = query.aws_acm_certificate_by_use.sql
+      type  = "donut"
+      width = 2
+
+      series "count" {
+        point "in_use" {
+          color = "ok"
+        }
+        point "not_in_use" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Logging Status"
+      sql   = query.aws_acm_certificate_by_transparency_logging_preference.sql
+      type  = "donut"
+      width = 2
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
+          color = "alert"
+        }
+      }
+    }
+
+  }
+
+  container {
+
+    title = "Analysis"
+
+    chart {
+      title = "Certificates by Account"
+      sql   = query.aws_acm_certificate_by_account.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Certificates by Region"
+      sql   = query.aws_acm_certificate_by_region.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Certificates by Type"
+      sql   = query.aws_acm_certificate_by_type.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Certificates by Age"
+      sql   = query.aws_acm_certificate_by_age.sql
+      type  = "column"
+      width = 3
+    }
+  }
+}
+
+# Card Queries
+
 query "aws_acm_certificate_count" {
   sql = <<-EOQ
     select count(*) as "Certificates" from aws_acm_certificate;
@@ -60,7 +216,8 @@ query "aws_acm_certificate_transparency_logging_disabled" {
   EOQ
 }
 
-# Assessments
+# Assessment Queries
+
 query "aws_acm_certificate_by_status" {
   sql = <<-EOQ
     select
@@ -153,7 +310,8 @@ query "aws_acm_certificate_by_transparency_logging_preference" {
   EOQ
 }
 
-# Analysis
+# Analysis Queries
+
 query "aws_acm_certificate_by_account" {
   sql = <<-EOQ
     select
@@ -234,155 +392,4 @@ query "aws_acm_certificate_by_age" {
     order by
       months.month;
   EOQ
-}
-
-dashboard "aws_acm_certificate_dashboard" {
-
-  title = "AWS ACM Certificate Dashboard"
-
-  tags = merge(local.acm_common_tags, {
-    type = "Dashboard"
-  })
-
-  container {
-
-    card {
-      sql   = query.aws_acm_certificate_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_acm_certificate_revoked_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_acm_certificate_renewal_eligibility_ineligible.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_acm_certificate_invalid.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_acm_certificate_in_use_by.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_acm_certificate_transparency_logging_disabled.sql
-      width = 2
-    }
-  }
-
-  container {
-    title = "Assessments"
-
-    chart {
-      title = "Certificate Status"
-      sql   = query.aws_acm_certificate_by_status.sql
-      type  = "donut"
-      width = 2
-
-      series "count" {
-        point "issued" {
-          color = "green"
-        }
-        point "failed" {
-          color = "red"
-        }
-      }
-    }
-
-    chart {
-      title = "Renewal Eligibilty"
-      sql   = query.aws_acm_certificate_by_eligibility.sql
-      type  = "donut"
-      width = 2
-    }
-
-    chart {
-      title = "Certificate Validity"
-      sql   = query.aws_acm_certificate_by_validity.sql
-      type  = "donut"
-      width = 2
-
-      series "count" {
-        point "valid" {
-          color = "green"
-        }
-        point "invalid" {
-          color = "red"
-        }
-      }
-    }
-
-    chart {
-      title = "Certificate Usage Status"
-      sql   = query.aws_acm_certificate_by_use.sql
-      type  = "donut"
-      width = 2
-
-      series "count" {
-        point "in_use" {
-          color = "green"
-        }
-        point "not_in_use" {
-          color = "red"
-        }
-      }
-    }
-
-    chart {
-      title = "Logging Status"
-      sql   = query.aws_acm_certificate_by_transparency_logging_preference.sql
-      type  = "donut"
-      width = 2
-
-      series "count" {
-        point "enabled" {
-          color = "green"
-        }
-        point "disabled" {
-          color = "red"
-        }
-      }
-    }
-
-  }
-
-  container {
-    title = "Analysis"
-
-    chart {
-      title = "Certificates by Account"
-      sql   = query.aws_acm_certificate_by_account.sql
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Certificates by Region"
-      sql   = query.aws_acm_certificate_by_region.sql
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Certificates by Type"
-      sql   = query.aws_acm_certificate_by_type.sql
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Certificates by Age"
-      sql   = query.aws_acm_certificate_by_age.sql
-      type  = "column"
-      width = 3
-    }
-  }
-
 }
