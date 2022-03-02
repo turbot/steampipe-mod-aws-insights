@@ -1,4 +1,4 @@
-dashboard "aws_kms_key_lifecycle_dashboard" {
+dashboard "aws_kms_key_lifecycle_report" {
 
   title = "AWS KMS CMK Lifecycle Report"
 
