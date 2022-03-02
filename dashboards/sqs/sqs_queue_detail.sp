@@ -1,3 +1,119 @@
+dashboard "aws_sqs_queue_detail" {
+  title = "AWS SQS Queue Detail"
+
+  tags = merge(local.sqs_common_tags, {
+    type = "Detail"
+  })
+
+
+  input "queue_arn" {
+    title = "Select a Queue:"
+    sql   = query.aws_sqs_queue_input.sql
+    width = 4
+  }
+
+  container {
+
+    card {
+      width = 2
+
+      query = query.aws_sqs_queue_encryption
+      args = {
+        queue_arn = self.input.queue_arn.value
+      }
+    }
+
+    card {
+      width = 2
+
+      query = query.aws_sqs_queue_content_based_deduplication
+      args = {
+        queue_arn = self.input.queue_arn.value
+      }
+    }
+
+    card {
+      width = 2
+
+      query = query.aws_sqs_queue_delay_seconds
+      args = {
+        queue_arn = self.input.queue_arn.value
+      }
+    }
+
+    card {
+      width = 2
+
+      query = query.aws_sqs_queue_message_retention_seconds
+      args = {
+        queue_arn = self.input.queue_arn.value
+      }
+    }
+
+  }
+
+  container {
+
+    container {
+      width = 6
+
+      table {
+        title = "Overview"
+        type  = "line"
+        width = 6
+        query = query.aws_sqs_queue_overview
+        args = {
+          queue_arn = self.input.queue_arn.value
+        }
+
+      }
+
+      table {
+        title = "Tags"
+        width = 6
+        query = query.aws_sqs_queue_tags_detail
+        args = {
+          queue_arn = self.input.queue_arn.value
+        }
+      }
+    }
+
+    container {
+      width = 6
+
+      table {
+        title = "Message Details"
+        query = query.aws_sqs_queue_message
+        args = {
+          queue_arn = self.input.queue_arn.value
+        }
+      }
+
+      table {
+        title = "Encryption Details"
+        query = query.aws_sqs_queue_encryption_details
+        args = {
+          queue_arn = self.input.queue_arn.value
+        }
+      }
+    }
+
+  }
+
+  container {
+    width = 12
+
+    table {
+      title = "Policy"
+      query = query.aws_sqs_queue_policy
+      args = {
+        queue_arn = self.input.queue_arn.value
+      }
+    }
+
+  }
+
+}
 query "aws_sqs_queue_input" {
   sql = <<EOQ
     select
@@ -71,15 +187,31 @@ query "aws_sqs_queue_message_retention_seconds" {
   param "queue_arn" {}
 }
 
-
-query "aws_sqs_queue_fifo" {
+query "aws_sqs_queue_overview" {
   sql = <<-EOQ
     select
-      'Fifo' as label,
-      case when fifo_queue then 'Enabled' else 'Disabled' end as value,
-      case when fifo_queue then 'ok' else 'alert' end as "type"
+      queue_url as "Queue URL",
+      title as "Title",
+      region as "Region",
+      account_id as "Account Id",
+      queue_arn as "ARN"
     from
       aws_sqs_queue
+    where
+      queue_arn = $1;
+  EOQ
+
+  param "queue_arn" {}
+}
+
+query "aws_sqs_queue_tags_detail" {
+  sql = <<-EOQ
+    select
+      js.key,
+      js.value
+    from
+      aws_sqs_queue,
+      jsonb_each(tags) as js
     where
       queue_arn = $1;
   EOQ
@@ -133,158 +265,3 @@ query "aws_sqs_queue_encryption_details" {
 
   param "queue_arn" {}
 }
-
-dashboard "aws_sqs_queue_detail" {
-  title = "AWS SQS Queue Detail"
-
-  tags = merge(local.sqs_common_tags, {
-    type = "Detail"
-  })
-
-
-  input "queue_arn" {
-    title = "Select a Queue:"
-    sql   = query.aws_sqs_queue_input.sql
-    width = 4
-  }
-
-  container {
-    # Assessments
-
-    card {
-      width = 2
-
-      query = query.aws_sqs_queue_encryption
-      args = {
-        queue_arn = self.input.queue_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query = query.aws_sqs_queue_fifo
-      args = {
-        queue_arn = self.input.queue_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query = query.aws_sqs_queue_content_based_deduplication
-      args = {
-        queue_arn = self.input.queue_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query = query.aws_sqs_queue_delay_seconds
-      args = {
-        queue_arn = self.input.queue_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query = query.aws_sqs_queue_message_retention_seconds
-      args = {
-        queue_arn = self.input.queue_arn.value
-      }
-    }
-
-  }
-
-  container {
-
-    container {
-      width = 6
-
-      table {
-        title = "Overview"
-        type  = "line"
-        width = 6
-        sql   = <<-EOQ
-            select
-              queue_url as "Queue URL",
-              title as "Title",
-              region as "Region",
-              account_id as "Account Id",
-              queue_arn as "ARN"
-            from
-              aws_sqs_queue
-            where
-              queue_arn = $1
-          EOQ
-
-        param "queue_arn" {}
-
-        args = {
-          queue_arn = self.input.queue_arn.value
-        }
-
-      }
-
-      table {
-        title = "Tags"
-        width = 6
-
-        sql = <<-EOQ
-          select
-            js.key,
-            js.value
-          from
-            aws_sqs_queue,
-            jsonb_each(tags) as js
-          where
-            queue_arn = $1
-          EOQ
-
-        param "queue_arn" {}
-
-        args = {
-          queue_arn = self.input.queue_arn.value
-        }
-      }
-    }
-
-    container {
-      width = 6
-
-      table {
-        title = "Message Details"
-        query = query.aws_sqs_queue_message
-        args = {
-          queue_arn = self.input.queue_arn.value
-        }
-      }
-
-      table {
-        title = "Encryption Details"
-        query = query.aws_sqs_queue_encryption_details
-        args = {
-          queue_arn = self.input.queue_arn.value
-        }
-      }
-    }
-
-  }
-
-  container {
-    width = 12
-
-    table {
-      title = "Policy"
-      query = query.aws_sqs_queue_policy
-      args = {
-        queue_arn = self.input.queue_arn.value
-      }
-    }
-
-  }
-
-}
-

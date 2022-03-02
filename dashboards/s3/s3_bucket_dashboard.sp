@@ -1,6 +1,230 @@
+dashboard "aws_s3_bucket_dashboard" {
+
+  title = "AWS S3 Bucket Dashboard"
+
+  tags = merge(local.s3_common_tags, {
+    type = "Dashboard"
+  })
+
+  container {
+
+    # Analysis
+    card {
+      sql   = query.aws_s3_bucket_count.sql
+      width = 2
+    }
+
+    # Assessments
+    card {
+      sql   = query.aws_s3_bucket_versioning_disabled_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_s3_bucket_unencrypted_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_s3_bucket_public_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_s3_bucket_logging_disabled_count.sql
+      width = 2
+    }
+
+    # Costs
+    card {
+      sql   = query.aws_s3_bucket_cost_mtd.sql
+      type  = "info"
+      icon  = "currency-dollar"
+      width = 2
+    }
+  }
+
+  container {
+    title = "Assessments"
+    width = 6
+
+    chart {
+      title = "Versioning Status"
+      sql   = query.aws_s3_bucket_versioning_status.sql
+      type  = "donut"
+      width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Default Encryption Status"
+      sql   = query.aws_s3_bucket_by_default_encryption_status.sql
+      type  = "donut"
+      width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Public/Private"
+      sql   = query.aws_s3_bucket_public_status.sql
+      type  = "donut"
+      width = 4
+
+      series "count" {
+        point "private" {
+          color = "ok"
+        }
+        point "public" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Logging Status"
+      sql   = query.aws_s3_bucket_logging_status.sql
+      type  = "donut"
+      width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Versioning MFA Status"
+      sql   = query.aws_s3_bucket_versioning_mfa_status.sql
+      type  = "donut"
+      width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Cross-Region Replication"
+      sql   = query.aws_s3_bucket_cross_region_replication_status.sql
+      type  = "donut"
+      width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
+          color = "alert"
+        }
+      }
+    }
+
+  }
+
+  container {
+    title = "Cost"
+    width = 6
+
+    table {
+      width = 6
+      title = "Forecast"
+      sql   = query.aws_s3_monthly_forecast_table.sql
+    }
+
+    chart {
+      width = 6
+      type  = "column"
+      title = "Monthly Cost - 12 Months"
+      sql   = query.aws_s3_bucket_cost_per_month.sql
+    }
+
+  }
+
+  container {
+    title = "Analysis"
+
+    chart {
+      title = "Buckets by Account"
+      sql   = query.aws_s3_bucket_by_account.sql
+      type  = "column"
+      width = 4
+    }
+
+    chart {
+      title = "Buckets by Region"
+      sql   = query.aws_s3_bucket_by_region.sql
+      type  = "column"
+      width = 4
+    }
+
+    chart {
+      title = "Buckets by Age"
+      sql   = query.aws_s3_bucket_by_creation_month.sql
+      type  = "column"
+      width = 4
+    }
+
+  }
+
+}
+
+
+# Card Queries
+
 query "aws_s3_bucket_count" {
   sql = <<-EOQ
     select count(*) as "Buckets" from aws_s3_bucket;
+  EOQ
+}
+
+query "aws_s3_bucket_versioning_disabled_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Versioning Disabled' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
+    from
+      aws_s3_bucket
+    where
+      not versioning_enabled;
+  EOQ
+}
+
+query "aws_s3_bucket_unencrypted_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Unencrypted' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
+    from
+      aws_s3_bucket
+    where
+      server_side_encryption_configuration is null;
   EOQ
 }
 
@@ -22,8 +246,34 @@ query "aws_s3_bucket_public_count" {
   EOQ
 }
 
+query "aws_s3_bucket_logging_disabled_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Logging Disabled' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
+    from
+      aws_s3_bucket
+    where
+      logging -> 'TargetBucket' is null;
+  EOQ
+}
 
-#Assessments
+query "aws_s3_bucket_cost_mtd" {
+  sql = <<-EOQ
+        select
+          'Cost - MTD' as label,
+          sum(unblended_cost_amount)::numeric::money as value
+        from
+          aws_cost_by_service_monthly
+        where
+          service = 'Amazon Simple Storage Service'
+          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
+      EOQ
+}
+
+# Assessment Queries
+
 query "aws_s3_bucket_versioning_status" {
   sql = <<-EOQ
     with versioning_status as(
@@ -39,6 +289,89 @@ query "aws_s3_bucket_versioning_status" {
       count(*)
     from
       versioning_status
+    group by
+      visibility;
+  EOQ
+}
+
+query "aws_s3_bucket_by_default_encryption_status" {
+  sql = <<-EOQ
+    with default_encryption as(
+      select
+        case when server_side_encryption_configuration is not null then 'enabled' else 'disabled'
+        end as visibility
+      from
+        aws_s3_bucket
+    )
+    select
+      visibility,
+      count(*)
+    from
+      default_encryption
+    group by
+      visibility;
+  EOQ
+}
+
+query "aws_s3_bucket_public_status" {
+  sql = <<-EOQ
+    with public_status as(
+      select
+        case
+          when
+            block_public_acls
+            and block_public_policy
+            and ignore_public_acls
+            and restrict_public_buckets
+          then 'private' else 'public'
+        end as visibility
+      from
+        aws_s3_bucket
+    )
+    select
+      visibility,
+      count(*)
+    from
+      public_status
+    group by
+      visibility;
+  EOQ
+}
+
+query "aws_s3_bucket_logging_status" {
+  sql = <<-EOQ
+    with logging_status as(
+      select
+        case when logging -> 'TargetBucket' is not null then 'enabled' else 'disabled'
+        end as visibility
+      from
+        aws_s3_bucket
+    )
+    select
+      visibility,
+      count(*)
+    from
+      logging_status
+    group by
+      visibility;
+      EOQ
+}
+
+query "aws_s3_bucket_versioning_mfa_status" {
+  sql = <<-EOQ
+    with versioning_mfa_status as(
+      select
+        case
+          when versioning_mfa_delete then 'enabled' else 'disabled'
+        end as visibility
+      from
+        aws_s3_bucket
+    )
+    select
+      visibility,
+      count(*)
+    from
+      versioning_mfa_status
     group by
       visibility;
   EOQ
@@ -72,73 +405,10 @@ query "aws_s3_bucket_cross_region_replication_status" {
       EOQ
 }
 
-query "aws_s3_bucket_public_status" {
-  sql = <<-EOQ
-    with public_status as(
-      select
-        case
-          when
-            block_public_acls
-            and block_public_policy
-            and ignore_public_acls
-            and restrict_public_buckets
-          then 'private' else 'public'
-        end as visibility
-      from
-        aws_s3_bucket
-    )
-    select
-      visibility,
-      count(*)
-    from
-      public_status
-    group by
-      visibility;
-  EOQ
-}
+# Cost Queries
 
-query "aws_s3_bucket_versioning_mfa_status" {
-  sql = <<-EOQ
-    with versioning_mfa_status as(
-      select
-        case
-          when versioning_mfa_delete then 'enabled' else 'disabled'
-        end as visibility
-      from
-        aws_s3_bucket
-    )
-    select
-      visibility,
-      count(*)
-    from
-      versioning_mfa_status
-    group by
-      visibility;
-  EOQ
-}
-
-query "aws_s3_bucket_logging_status" {
-  sql = <<-EOQ
-    with logging_status as(
-      select
-        case when logging -> 'TargetBucket' is not null then 'enabled' else 'disabled'
-        end as visibility
-      from
-        aws_s3_bucket
-    )
-    select
-      visibility,
-      count(*)
-    from
-      logging_status
-    group by
-      visibility;
-      EOQ
-}
-
-#Costs
 query "aws_s3_monthly_forecast_table" {
-   sql = <<-EOQ
+  sql = <<-EOQ
     with monthly_costs as (
       select
         period_start,
@@ -191,26 +461,8 @@ query "aws_s3_bucket_cost_per_month" {
   EOQ
 }
 
-query "aws_s3_bucket_by_default_encryption_status" {
-  sql = <<-EOQ
-    with default_encryption as(
-      select
-        case when server_side_encryption_configuration is not null then 'enabled' else 'disabled'
-        end as visibility
-      from
-        aws_s3_bucket
-    )
-    select
-      visibility,
-      count(*)
-    from
-      default_encryption
-    group by
-      visibility;
-  EOQ
-}
+# Analysis Queries
 
-#Analysis
 query "aws_s3_bucket_by_account" {
   sql = <<-EOQ
     select
@@ -282,208 +534,4 @@ query "aws_s3_bucket_by_creation_month" {
     order by
       months.month;
   EOQ
-}
-
-dashboard "aws_s3_bucket_dashboard" {
-
-  title = "AWS S3 Bucket Dashboard"
-
-  tags = merge(local.s3_common_tags, {
-    type = "Dashboard"
-  })
-
-  container {
-
-    # Analysis
-    card {
-      sql   = query.aws_s3_bucket_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_s3_bucket_versioning_disabled_count.sql
-      width = 2
-    }
-
-    # Assessments
-    card {
-      sql   = query.aws_s3_bucket_unencrypted_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_s3_bucket_public_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_s3_bucket_logging_disabled_count.sql
-      width = 2
-    }
-
-    # Costs
-    card {
-      sql = <<-EOQ
-        select
-          'Cost - MTD' as label,
-          sum(unblended_cost_amount)::numeric::money as value
-        from
-          aws_cost_by_service_monthly
-        where
-          service = 'Amazon Simple Storage Service'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp)
-      EOQ
-      type = "info"
-      icon = "currency-dollar"
-      width = 2
-    }
-  }
-
-  container {
-    title = "Assessments"
-    width = 6
-
-    chart {
-      title = "Versioning Status"
-      sql   = query.aws_s3_bucket_versioning_status.sql
-      type  = "donut"
-      width = 4
-
-      series "count" {
-        point "enabled" {
-          color = "green"
-        }
-        point "disabled" {
-          color = "red"
-        }
-      }      
-    }
-
-    chart {
-      title  = "Default Encryption Status"
-      sql    = query.aws_s3_bucket_by_default_encryption_status.sql
-      type   = "donut"
-      width = 4
-
-      series "count" {
-        point "enabled" {
-          color = "green"
-        }
-        point "disabled" {
-          color = "red"
-        }
-      }  
-    }
-
-    chart {
-      title  = "Public/Private"
-      sql    = query.aws_s3_bucket_public_status.sql
-      type   = "donut"
-      width = 4
-
-      series "count" {
-        point "private" {
-          color = "green"
-        }
-        point "public" {
-          color = "red"
-        }
-      }
-    }
-
-    chart {
-      title = "Logging Status"
-      sql   = query.aws_s3_bucket_logging_status.sql
-      type  = "donut"
-      width = 4
-
-      series "count" {
-        point "enabled" {
-          color = "green"
-        }
-        point "disabled" {
-          color = "red"
-        }
-      }
-    }
-
-    chart {
-      title = "Versioning MFA Status"
-      sql   = query.aws_s3_bucket_versioning_mfa_status.sql
-      type  = "donut"
-      width = 4
-
-      series "count" {
-        point "enabled" {
-          color = "green"
-        }
-        point "disabled" {
-          color = "red"
-        }
-      }
-    }
-
-    chart {
-      title = "Cross-Region Replication"
-      sql   = query.aws_s3_bucket_cross_region_replication_status.sql
-      type  = "donut"
-      width = 4
-
-      series "count" {
-        point "enabled" {
-          color = "green"
-        }
-        point "disabled" {
-          color = "red"
-        }
-      }
-    }
-
-  }
-
-  container {
-    title = "Cost"
-    width = 6
-
-    table  {
-      width = 6
-      title = "Forecast"
-      sql   = query.aws_s3_monthly_forecast_table.sql
-    }
-
-    chart {
-      width = 6
-      type  = "column"
-      title = "Monthly Cost - 12 Months"
-      sql   = query.aws_s3_bucket_cost_per_month.sql
-    }
-
-  }
-
-  container {
-    title = "Analysis"
-
-    chart {
-      title = "Buckets by Account"
-      sql   = query.aws_s3_bucket_by_account.sql
-      type  = "column"
-      width = 4
-    }
-
-    chart {
-      title = "Buckets by Region"
-      sql   = query.aws_s3_bucket_by_region.sql
-      type  = "column"
-      width = 4
-    }
-
-    chart {
-      title = "Buckets by Age"
-      sql   = query.aws_s3_bucket_by_creation_month.sql
-      type  = "column"
-      width = 4
-    }
-
-  }
-
 }

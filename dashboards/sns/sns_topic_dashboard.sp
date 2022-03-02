@@ -1,3 +1,122 @@
+
+dashboard "aws_sns_topic_dashboard" {
+
+  title = "AWS SNS Topic Dashboard"
+
+  tags = merge(local.sns_common_tags, {
+    type = "Dashboard"
+  })
+
+  container {
+
+    # Analysis
+    card {
+      sql   = query.aws_sns_topic_count.sql
+      width = 2
+    }
+
+    # Assessments
+    card {
+      sql   = query.aws_sns_topic_encrypted_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_sns_topic_by_subscription_count.sql
+      width = 2
+    }
+
+    # Costs
+    card {
+      type  = "info"
+      icon  = "currency-dollar"
+      width = 2
+      sql   = query.aws_sns_topic_cost_mtd.sql
+    }
+
+  }
+
+  container {
+    title = "Assessments"
+    width = 6
+
+    chart {
+      title = "Encryption Status"
+      sql   = query.aws_sns_topic_by_encryption_status.sql
+      type  = "donut"
+      width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Subscription Status"
+      sql   = query.aws_sns_topic_by_subscription_status.sql
+      type  = "donut"
+      width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
+          color = "alert"
+        }
+      }
+    }
+
+  }
+
+  container {
+    title = "Cost"
+    width = 6
+
+    # Costs
+    table {
+      width = 6
+      title = "Forecast"
+      sql   = query.aws_sns_topic_monthly_forecast_table.sql
+    }
+
+    chart {
+      width = 6
+      type  = "column"
+      title = "Monthly Cost - 12 Months"
+      sql   = query.aws_sns_topic_cost_per_month.sql
+    }
+
+  }
+
+  container {
+    title = "Analysis"
+
+    chart {
+      title = "Topics by Account"
+      sql   = query.aws_sns_topic_by_account.sql
+      type  = "column"
+      width = 6
+    }
+
+    chart {
+      title = "Topics by Region"
+      sql   = query.aws_sns_topic_by_region.sql
+      type  = "column"
+      width = 6
+    }
+
+  }
+
+}
+
+# Card Queries
+
 query "aws_sns_topic_count" {
   sql = <<-EOQ
     select count(*) as "Topics" from aws_sns_topic;
@@ -30,48 +149,60 @@ query "aws_sns_topic_by_subscription_count" {
   EOQ
 }
 
-query "aws_sns_topic_by_account" {
+query "aws_sns_topic_cost_mtd" {
   sql = <<-EOQ
     select
-      a.title as "account",
-      count(i.*) as "total"
+      'Cost - MTD' as label,
+      sum(unblended_cost_amount)::numeric::money as value
     from
-      aws_sns_topic as i,
-      aws_account as a
-    where
-      a.account_id = i.account_id
-    group by
-      account
-    order by count(i.*) desc;
-
-  EOQ
-}
-
-query "aws_sns_topic_by_region" {
-  sql = <<-EOQ
-    select
-      region,
-      count(i.*) as total
-    from
-      aws_sns_topic as i
-    group by
-      region;
-  EOQ
-}
-
-query "aws_sns_topic_cost_per_month" {
-  sql = <<-EOQ
-    select
-       to_char(period_start, 'Mon-YY') as "Month",
-       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
-    from
-      aws_cost_by_service_usage_type_monthly
+      aws_cost_by_service_usage_type_monthly as c
     where
       service = 'Amazon Simple Notification Service'
+      and period_end > date_trunc('month', CURRENT_DATE::timestamp);
+  EOQ
+}
+
+# Assessment Queries
+
+query "aws_sns_topic_by_encryption_status" {
+  sql = <<-EOQ
+    select
+      encryption_status,
+      count(*)
+    from (
+      select kms_master_key_id,
+        case when kms_master_key_id is not null then
+          'enabled'
+        else
+          'disabled'
+        end encryption_status
+      from
+        aws_sns_topic) as t
     group by
-      period_start
+      encryption_status
     order by
-      period_start;
+      encryption_status desc;
+  EOQ
+}
+
+query "aws_sns_topic_by_subscription_status" {
+  sql = <<-EOQ
+    select
+      subscription_status,
+      count(*)
+    from (
+      select subscriptions_confirmed,
+        case when subscriptions_confirmed::int = 0 then
+          'disabled'
+        else
+          'enabled'
+        end subscription_status
+      from
+        aws_sns_topic) as t
+    group by
+      subscription_status
+    order by
+      subscription_status desc;
   EOQ
 }
 
@@ -119,167 +250,49 @@ query "aws_sns_topic_monthly_forecast_table" {
   EOQ
 }
 
-#Assessments
-query "aws_sns_topic_by_encryption_status" {
+query "aws_sns_topic_cost_per_month" {
   sql = <<-EOQ
     select
-      encryption_status,
-      count(*)
-    from (
-      select kms_master_key_id,
-        case when kms_master_key_id is not null then
-          'enabled'
-        else
-          'disabled'
-        end encryption_status
-      from
-        aws_sns_topic) as t
+       to_char(period_start, 'Mon-YY') as "Month",
+       sum(unblended_cost_amount)::numeric::money as "Unblended Cost"
+    from
+      aws_cost_by_service_usage_type_monthly
+    where
+      service = 'Amazon Simple Notification Service'
     group by
-      encryption_status
+      period_start
     order by
-      encryption_status desc;
+      period_start;
   EOQ
 }
 
-query "aws_sns_topic_by_subscription_status" {
+# Analysis Queries
+
+query "aws_sns_topic_by_account" {
   sql = <<-EOQ
     select
-      subscription_status,
-      count(*)
-    from (
-      select subscriptions_confirmed,
-        case when subscriptions_confirmed::int = 0 then
-          'disabled'
-        else
-          'enabled'
-        end subscription_status
-      from
-        aws_sns_topic) as t
+      a.title as "account",
+      count(i.*) as "total"
+    from
+      aws_sns_topic as i,
+      aws_account as a
+    where
+      a.account_id = i.account_id
     group by
-      subscription_status
-    order by
-      subscription_status desc;
+      account
+    order by count(i.*) desc;
+
   EOQ
 }
 
-dashboard "aws_sns_topic_dashboard" {
-
-  title = "AWS SNS Topic Dashboard"
-
-  tags = merge(local.sns_common_tags, {
-    type = "Dashboard"
-  })
-
-  container {
-
-    card {
-      sql   = query.aws_sns_topic_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_sns_topic_encrypted_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_sns_topic_by_subscription_count.sql
-      width = 2
-    }
-
-    card {
-      type  = "info"
-      icon  = "currency-dollar"
-      width = 2
-      sql   = <<-EOQ
-        select
-          'Cost - MTD' as label,
-          sum(unblended_cost_amount)::numeric::money as value
-        from
-          aws_cost_by_service_usage_type_monthly as c
-        where
-          service = 'Amazon Simple Notification Service'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp);
-      EOQ
-    }
-
-  }
-
-  container {
-    title = "Assessments"
-    width = 6
-
-    chart {
-      title = "Encryption Status"
-      sql   = query.aws_sns_topic_by_encryption_status.sql
-      type  = "donut"
-      width = 4
-
-      series "count" {
-        point "enabled" {
-          color = "green"
-        }
-        point "disabled" {
-          color = "red"
-        }
-      }
-    }
-
-    chart {
-      title = "Subscription Status"
-      sql   = query.aws_sns_topic_by_subscription_status.sql
-      type  = "donut"
-      width = 4
-
-      series "count" {
-        point "enabled" {
-          color = "green"
-        }
-        point "disabled" {
-          color = "red"
-        }
-      }
-    }
-
-  }
-
-  container {
-    title = "Cost"
-    width = 6
-
-    # Costs
-    table {
-      width = 6
-      title = "Forecast"
-      sql   = query.aws_sns_topic_monthly_forecast_table.sql
-    }
-
-    chart {
-      width = 6
-      type  = "column"
-      title = "Monthly Cost - 12 Months"
-      sql   = query.aws_sns_topic_cost_per_month.sql
-    }
-
-  }
-
-  container {
-    title = "Analysis"
-
-    chart {
-      title = "Topics by Account"
-      sql   = query.aws_sns_topic_by_account.sql
-      type  = "column"
-      width = 6
-    }
-
-    chart {
-      title = "Topics by Region"
-      sql   = query.aws_sns_topic_by_region.sql
-      type  = "column"
-      width = 6
-    }
-
-  }
-
+query "aws_sns_topic_by_region" {
+  sql = <<-EOQ
+    select
+      region,
+      count(i.*) as total
+    from
+      aws_sns_topic as i
+    group by
+      region;
+  EOQ
 }
