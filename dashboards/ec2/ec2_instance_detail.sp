@@ -13,7 +13,6 @@ dashboard "aws_ec2_instance_detail" {
   }
 
   container {
-    # Assessments
 
     card {
       width = 2
@@ -82,7 +81,7 @@ dashboard "aws_ec2_instance_detail" {
       table {
         title = "Tags"
         width = 6
-        sql = query.aws_ec2_instance_tags.sql
+        sql   = query.aws_ec2_instance_tags.sql
         param "arn" {}
 
         args = {
@@ -235,19 +234,34 @@ query "aws_ec2_instance_ebs_optimized" {
   param "arn" {}
 }
 
-query "aws_ec2_instance_detailed_monitoring" {
+query "aws_ec2_instance_overview" {
   sql = <<-EOQ
     select
-      'Detailed Monitoring' as label,
-      case when monitoring_state = 'enabled' then 'Enabled' else 'Disabled' end as value,
-      case when ebs_optimized then 'ok' else 'alert' end as type
+      tags ->> 'Name' as "Name",
+      instance_id as "Instance Id",
+      launch_time as "Launch Time",
+      title as "Title",
+      region as "Region",
+      account_id as "Account Id",
+      arn as "ARN"
     from
       aws_ec2_instance
     where
-      arn = $1;
+      arn = $1
   EOQ
+}
 
-  param "arn" {}
+query "aws_ec2_instance_tags" {
+  sql = <<-EOQ
+    select
+      tag ->> 'Key' as "Key",
+      tag ->> 'Value' as "Value"
+    from
+      aws_ec2_instance,
+      jsonb_array_elements(tags_src) as tag
+    where
+      arn = $1
+    EOQ
 }
 
 query "aws_ec2_instance_block_device_mapping" {
@@ -313,34 +327,4 @@ query "aws_ec2_instance_cpu_cores" {
   EOQ
 
   param "arn" {}
-}
-
-query "aws_ec2_instance_overview" {
-  sql = <<-EOQ
-    select
-      tags ->> 'Name' as "Name",
-      instance_id as "Instance Id",
-      launch_time as "Launch Time",
-      title as "Title",
-      region as "Region",
-      account_id as "Account Id",
-      arn as "ARN"
-    from
-      aws_ec2_instance
-    where
-      arn = $1
-  EOQ 
-}
-
-query "aws_ec2_instance_tags" {
-  sql = <<-EOQ
-    select
-      tag ->> 'Key' as "Key",
-      tag ->> 'Value' as "Value"
-    from
-      aws_ec2_instance,
-      jsonb_array_elements(tags_src) as tag
-    where
-      arn = $1
-    EOQ  
 }

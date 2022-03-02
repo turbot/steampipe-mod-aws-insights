@@ -13,7 +13,6 @@ dashboard "aws_cloudtrail_trail_detail" {
   }
 
   container {
-    # Assessments
 
     card {
       width = 2
@@ -96,7 +95,7 @@ dashboard "aws_cloudtrail_trail_detail" {
       }
 
       table {
-        title = "Associated S3 Bucket"
+        title = "Associated S3 Trail Buckets"
         query = query.aws_cloudtrail_trail_bucket
 
         args = {
@@ -186,6 +185,35 @@ query "aws_cloudtrail_trail_unencrypted" {
   param "arn" {}
 }
 
+query "aws_cloudtrail_trail_overview" {
+  sql = <<-EOQ
+    select
+      name as "Name",
+      is_organization_trail as "Organization Trail",
+      title as "Title",
+      home_region as "Home Region",
+      account_id as "Account Id",
+      arn as "ARN"
+    from
+      aws_cloudtrail_trail
+    where
+      arn = $1;
+  EOQ
+}
+
+query "aws_cloudtrail_trail_tags" {
+  sql = <<-EOQ
+    select
+      tag ->> 'Key' as "Key",
+      tag ->> 'Value' as "Value"
+    from
+      aws_cloudtrail_trail,
+      jsonb_array_elements(tags_src) as tag
+    where
+      arn = $1;
+  EOQ
+}
+
 query "aws_cloudtrail_trail_logging" {
   sql = <<-EOQ
     select
@@ -212,33 +240,4 @@ query "aws_cloudtrail_trail_bucket" {
   EOQ
 
   param "arn" {}
-}
-
-query "aws_cloudtrail_trail_overview" {
-  sql = <<-EOQ
-    select
-      name as "Name",
-      is_organization_trail as "Organization Trail",
-      title as "Title",
-      home_region as "Home Region",
-      account_id as "Account Id",
-      arn as "ARN"
-    from
-      aws_cloudtrail_trail
-    where
-      arn = $1;
-  EOQ 
-}
-
-query "aws_cloudtrail_trail_tags" {
-  sql = <<-EOQ
-    select
-      tag ->> 'Key' as "Key",
-      tag ->> 'Value' as "Value"
-    from
-      aws_cloudtrail_trail,
-      jsonb_array_elements(tags_src) as tag
-    where
-      arn = $1;
-  EOQ
 }
