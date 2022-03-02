@@ -1,4 +1,4 @@
-dashboard "aws_vpc_flow_log_configuration_dashboard" {
+dashboard "aws_vpc_flow_log_configuration_report" {
 
   title = "AWS VPC Flow Log Report"
 
