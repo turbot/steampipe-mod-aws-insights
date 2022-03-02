@@ -15,62 +15,47 @@ dashboard "aws_rds_db_cluster_logging_dashboard" {
     }
 
     card {
-      sql = <<-EOQ
-        with logging_stat as(
-          select
-            db_cluster_identifier
-          from
-            aws_rds_db_cluster
-          where
-            ( engine like any (array ['mariadb', '%mysql']) and enabled_cloudwatch_logs_exports ?& array ['audit','error','general','slowquery'] ) or
-            ( engine like any (array['%postgres%']) and enabled_cloudwatch_logs_exports ?& array ['postgresql','upgrade'] ) or
-            ( engine like 'oracle%' and enabled_cloudwatch_logs_exports ?& array ['alert','audit', 'trace','listener'] ) or
-            ( engine = 'sqlserver-ex' and enabled_cloudwatch_logs_exports ?& array ['error'] ) or
-            ( engine like 'sqlserver%' and enabled_cloudwatch_logs_exports ?& array ['error','agent'] )
-          )
-      select
-        count(*) as value,
-        'Logging Disabled' as label,
-        case count(*) when 0 then 'ok' else 'alert' end as type
-      from
-        aws_rds_db_cluster
-      where
-        db_cluster_identifier not in (select db_cluster_identifier from logging_stat);
-      EOQ
+      sql = query.aws_rds_db_cluster_logging_status.sql
       width = 2
     }
 
   }
 
-  table {
+  container {
 
-    column "Account ID" {
-      display = "none"
+    table {
+      column "Account ID" {
+        display = "none"
+      }
+
+      sql = query.aws_rds_db_cluster_logging_table.sql
     }
-
-    sql = <<-EOQ
-      select
-        r.db_cluster_identifier as "DB Cluster",
-        case
-          when
-            ( r.engine like any (array ['mariadb', '%mysql']) and r.enabled_cloudwatch_logs_exports ?& array ['audit','error','general','slowquery'] ) or ( r.engine like any (array['%postgres%']) and r.enabled_cloudwatch_logs_exports ?& array ['postgresql','upgrade'] ) or
-            ( r.engine like 'oracle%' and r.enabled_cloudwatch_logs_exports ?& array ['alert','audit', 'trace','listener'] ) or
-            ( r.engine = 'sqlserver-ex' and r.enabled_cloudwatch_logs_exports ?& array ['error'] ) or
-            ( r.engine like 'sqlserver%' and r.enabled_cloudwatch_logs_exports ?& array ['error','agent'] )
-          then  'Enabled' else null end as "Logging",
-        r.engine as "Engine",
-        r.enabled_cloudwatch_logs_exports as "Enabled CW Logs Exports",
-        a.title as "Account",
-        r.account_id as "Account ID",
-        r.region as "Region",
-        r.arn as "ARN"
-      from
-        aws_rds_db_cluster as r,
-        aws_account as a
-      where
-        r.account_id = a.account_id;
-    EOQ
 
   }
 
+}
+
+query "aws_rds_db_cluster_logging_table" {
+  sql = <<-EOQ
+    select
+      c.db_cluster_identifier as "DB Cluster",
+      case
+        when
+          ( c.engine like any (array ['mariadb', '%mysql']) and c.enabled_cloudwatch_logs_exports ?& array ['audit','error','general','slowquery'] ) or ( c.engine like any (array['%postgres%']) and c.enabled_cloudwatch_logs_exports ?& array ['postgresql','upgrade'] ) or
+          ( c.engine like 'oracle%' and c.enabled_cloudwatch_logs_exports ?& array ['alert','audit', 'trace','listener'] ) or
+          ( c.engine = 'sqlserver-ex' and c.enabled_cloudwatch_logs_exports ?& array ['error'] ) or
+          ( c.engine like 'sqlserver%' and c.enabled_cloudwatch_logs_exports ?& array ['error','agent'] )
+        then  'Enabled' else null end as "Logging",
+      c.engine as "Engine",
+      c.enabled_cloudwatch_logs_exports as "Enabled CW Logs Exports",
+      a.title as "Account",
+      c.account_id as "Account ID",
+      c.region as "Region",
+      c.arn as "ARN"
+    from
+      aws_rds_db_cluster as c,
+      aws_account as a
+    where
+      c.account_id = a.account_id;
+  EOQ
 }

@@ -1,3 +1,139 @@
+dashboard "aws_iam_role_dashboard" {
+
+  title = "AWS IAM Role Dashboard"
+
+  tags = merge(local.iam_common_tags, {
+    type = "Dashboard"
+  })
+
+  container {
+
+    # Analysis
+    card {
+      sql   = query.aws_iam_role_count.sql
+      width = 2
+    }
+
+    # Assessments
+    card {
+      sql   = query.aws_iam_roles_with_inline_policy_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_iam_roles_without_direct_attached_policy_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_iam_roles_allow_all_action_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_iam_role_no_boundary_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_iam_role_allows_assume_role_to_all_principal_count.sql
+      icon  = "shield-check"
+      width = 2
+    }
+
+  }
+
+  container {
+    title = "Assessments"
+
+    chart {
+      title = "Inline Policy"
+      sql   = query.aws_iam_roles_with_inline_policy.sql
+      type  = "donut"
+      width = 3
+
+      series "count" {
+        point "unconfigured" {
+          color = "ok"
+        }
+        point "configured" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Direct Attached Policy"
+      sql   = query.aws_iam_roles_with_direct_attached_policy.sql
+      type  = "donut"
+      width = 3
+
+      series "count" {
+        point "attached" {
+          color = "ok"
+        }
+        point "unattached" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Allow All Actions"
+      sql   = query.aws_iam_roles_allow_all_action.sql
+      type  = "donut"
+      width = 3
+    }
+
+    chart {
+      title = "Boundary Policy"
+      sql   = query.aws_iam_roles_by_boundary_policy.sql
+      type  = "donut"
+      width = 3
+
+      series "count" {
+        point "configured" {
+          color = "ok"
+        }
+        point "unconfigured" {
+          color = "alert"
+        }
+      }
+    }
+
+  }
+
+  container {
+
+    title = "Analysis"
+
+    chart {
+      title = "Roles by Account"
+      sql   = query.aws_iam_roles_by_account.sql
+      type  = "column"
+      width = 4
+    }
+
+    chart {
+      title = "Roles by Path"
+      sql   = query.aws_iam_roles_by_path.sql
+      type  = "column"
+      width = 4
+    }
+
+    chart {
+      title = "Roles by Age"
+      sql   = query.aws_iam_roles_by_creation_month.sql
+      type  = "column"
+      width = 4
+    }
+
+  }
+
+}
+
+# Card Queries
+
 query "aws_iam_role_count" {
   sql = <<-EOQ
     select count(*) as "Roles" from aws_iam_role;
@@ -96,7 +232,8 @@ query "aws_iam_role_allows_assume_role_to_all_principal_count" {
   EOQ
 }
 
-# Assessment
+# Assessment Queries
+
 query "aws_iam_roles_with_inline_policy" {
   sql = <<-EOQ
     with roles_inline_compliance as (
@@ -130,14 +267,14 @@ query "aws_iam_roles_with_direct_attached_policy" {
         end as has_attached
       from
         aws_iam_role
-      )
-      select
-        has_attached,
-        count(*)
-      from
-        role_attached_compliance
-      group by
-        has_attached;
+    )
+    select
+      has_attached,
+      count(*)
+    from
+      role_attached_compliance
+    group by
+      has_attached;
   EOQ
 }
 
@@ -191,7 +328,8 @@ query "aws_iam_roles_by_boundary_policy" {
   EOQ
 }
 
-# Analysis
+# Analysis Queries
+
 query "aws_iam_roles_by_account" {
   sql = <<-EOQ
     select
@@ -265,137 +403,4 @@ query "aws_iam_roles_by_creation_month" {
     order by
       months.month;
   EOQ
-}
-
-dashboard "aws_iam_role_dashboard" {
-
-  title = "AWS IAM Role Dashboard"
-
-  tags = merge(local.iam_common_tags, {
-    type = "Dashboard"
-  })
-
-  container {
-
-    # Analysis
-    card {
-      sql   = query.aws_iam_role_count.sql
-      width = 2
-    }
-
-    # Assessments
-    card {
-      sql   = query.aws_iam_roles_with_inline_policy_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_iam_roles_without_direct_attached_policy_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_iam_roles_allow_all_action_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_iam_role_no_boundary_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_iam_role_allows_assume_role_to_all_principal_count.sql
-      icon  = "shield-check"
-      width = 2
-    }
-
-  }
-
-  container {
-    title = "Assessments"
-
-    chart {
-      title = "Inline Policy"
-      sql   = query.aws_iam_roles_with_inline_policy.sql
-      type  = "donut"
-      width = 3
-
-      series "count" {
-        point "unconfigured" {
-          color = "green"
-        }
-        point "configured" {
-          color = "red"
-        }
-      }
-    }
-
-    chart {
-      title = "Direct Attached Policy"
-      sql   = query.aws_iam_roles_with_direct_attached_policy.sql
-      type  = "donut"
-      width = 3
-
-      series "count" {
-        point "attached" {
-          color = "green"
-        }
-        point "unattached" {
-          color = "red"
-        }
-      }
-    }
-
-    chart {
-      title = "Allow All Actions"
-      sql   = query.aws_iam_roles_allow_all_action.sql
-      type  = "donut"
-      width = 3
-    }
-
-    chart {
-      title = "Boundary Policy"
-      sql   = query.aws_iam_roles_by_boundary_policy.sql
-      type  = "donut"
-      width = 3
-
-      series "count" {
-        point "configured" {
-          color = "green"
-        }
-        point "unconfigured" {
-          color = "red"
-        }
-      }
-    }
-
-  }
-
-  container {
-    title = "Analysis"
-
-    chart {
-      title = "Roles by Account"
-      sql   = query.aws_iam_roles_by_account.sql
-      type  = "column"
-      width = 4
-    }
-
-    chart {
-      title = "Roles by Path"
-      sql   = query.aws_iam_roles_by_path.sql
-      type  = "column"
-      width = 4
-    }
-
-    chart {
-      title = "Roles by Age"
-      sql   = query.aws_iam_roles_by_creation_month.sql
-      type  = "column"
-      width = 4
-    }
-
-  }
-
 }

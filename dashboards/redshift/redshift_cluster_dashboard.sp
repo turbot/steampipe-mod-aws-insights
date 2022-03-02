@@ -1,3 +1,178 @@
+dashboard "aws_redshift_cluster_dashboard" {
+
+  title = "AWS Redshift Cluster Dashboard"
+
+  tags = merge(local.redshift_common_tags, {
+    type = "Dashboard"
+  })
+
+  container {
+
+    # Analysis
+    card {
+      sql = query.aws_redshift_cluster_count.sql
+      width = 2
+    }
+
+    # Assessments
+    card {
+      sql = query.aws_redshift_cluster_unencrypted_count.sql
+      width = 2
+    }
+
+    card {
+      sql = query.aws_redshift_cluster_publicly_accessible.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_redshift_cluster_not_in_vpc.sql
+      width = 2
+    }
+
+    # Costs
+    card {
+      type  = "info"
+      icon  = "currency-dollar"
+      width = 2
+      sql   = query.aws_redshift_cluster_cost_mtd.sql
+    }
+
+  }
+
+  container {
+
+    title = "Assessments"
+    width = 6
+
+    chart {
+      title = "Encryption Status"
+      sql = query.aws_redshift_cluster_by_encryption_status.sql
+      type  = "donut"
+      width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Public Accessibility Status"
+      sql = query.aws_redshift_cluster_by_publicly_accessible_status.sql
+      type  = "donut"
+      width = 4
+
+      series "count" {
+        point "private" {
+          color = "ok"
+        }
+        point "public" {
+          color = "alert"
+        }
+      }
+    }
+
+     chart {
+      title = "VPC Status"
+      sql = query.aws_redshift_cluster_in_vpc_status.sql
+      type  = "donut"
+      width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
+          color = "alert"
+        }
+      }
+    }
+
+  }
+
+  container {
+
+    title = "Cost"
+    width = 6
+
+    table  {
+      width = 6
+      title = "Forecast"
+      sql   = query.aws_redshift_cluster_monthly_forecast_table.sql
+    }
+
+    chart {
+      title = "Monthly Cost - 12 Months"
+      type  = "column"
+      sql   = query.aws_redshift_cluster_cost_per_month.sql
+      width = 6
+    }
+
+  }
+
+  container {
+
+    title = "Analysis"
+
+    chart {
+      title = "Clusters by Account"
+      sql = query.aws_redshift_cluster_by_account.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Clusters by Region"
+      sql = query.aws_redshift_cluster_by_region.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Clusters by State"
+      sql = query.aws_redshift_cluster_by_state.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Clusters by Age"
+      sql = query.aws_redshift_cluster_by_creation_month.sql
+      type  = "column"
+      width = 3
+    }
+
+  }
+
+  container {
+
+    title  = "Performance & Utilization"
+
+    chart {
+      title = "Top 10 CPU - Last 7 days"
+      type  = "line"
+      width = 6
+      sql = query.aws_redshift_cluster_top10_cpu_past_week.sql
+    }
+
+    chart {
+      title = "Average max daily CPU - Last 30 days"
+      type  = "line"
+      width = 6
+      sql = query.aws_redshift_cluster_by_cpu_utilization_category.sql
+    }
+
+  }
+
+}
+
+# Card Queries
+
 query "aws_redshift_cluster_count" {
   sql = <<-EOQ
     select count(*) as "Clusters" from aws_redshift_cluster
@@ -30,11 +205,11 @@ query "aws_redshift_cluster_publicly_accessible" {
   EOQ
 }
 
-query "aws_redshift_cluster_in_vpc" {
+query "aws_redshift_cluster_not_in_vpc" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Not In VPC' as label,
+      'Not in VPC' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_redshift_cluster
@@ -43,7 +218,86 @@ query "aws_redshift_cluster_in_vpc" {
   EOQ
 }
 
-#Costs
+query "aws_redshift_cluster_cost_mtd" {
+  sql = <<-EOQ
+    select
+      'Cost - MTD' as label,
+      sum(unblended_cost_amount)::numeric::money as value
+    from
+      aws_cost_by_service_usage_type_monthly as c
+    where
+      service = 'Amazon Redshift'
+      and period_end > date_trunc('month', CURRENT_DATE::timestamp);
+  EOQ
+}
+
+# Assessment Queries
+
+query "aws_redshift_cluster_by_encryption_status" {
+  sql = <<-EOQ
+    select
+      encryption_status,
+      count(*)
+    from (
+      select encrypted,
+        case when encrypted then
+          'enabled'
+        else
+          'disabled'
+        end encryption_status
+      from
+        aws_redshift_cluster) as t
+    group by
+      encryption_status
+    order by
+      encryption_status desc;
+  EOQ
+}
+
+query "aws_redshift_cluster_by_publicly_accessible_status" {
+  sql = <<-EOQ
+    select
+      publicly_accessible_status,
+      count(*)
+    from (
+      select publicly_accessible,
+        case when publicly_accessible then
+          'public'
+        else
+          'private'
+        end publicly_accessible_status
+      from
+        aws_redshift_cluster) as t
+    group by
+      publicly_accessible_status
+    order by
+      publicly_accessible_status desc;
+  EOQ
+}
+
+query "aws_redshift_cluster_in_vpc_status" {
+  sql = <<-EOQ
+    select
+      vpc_status,
+      count(*)
+    from (
+      select
+        case when vpc_id is not null then
+          'enabled'
+        else
+          'disabled'
+        end vpc_status
+      from
+        aws_redshift_cluster) as t
+    group by
+      vpc_status
+    order by
+      vpc_status desc;
+  EOQ
+}
+
+# Cost Queries
+
 query "aws_redshift_cluster_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
@@ -71,20 +325,17 @@ query "aws_redshift_cluster_monthly_forecast_table" {
         period_start,
         period_end
     )
-
     select
       period_label as "Period",
       unblended_cost_amount as "Cost",
       average_daily_cost as "Daily Avg Cost"
     from
       monthly_costs
-
     union all
     select
       'This Month (Forecast)' as "Period",
       (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
       (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost"
-
   EOQ
 }
 
@@ -104,7 +355,8 @@ query "aws_redshift_cluster_cost_per_month" {
   EOQ
 }
 
-#Analysis
+# Analysis Queries
+
 query "aws_redshift_cluster_by_account" {
   sql = <<-EOQ
     select
@@ -185,323 +437,68 @@ query "aws_redshift_cluster_by_creation_month" {
   EOQ
 }
 
-#Assessments
-query "aws_redshift_cluster_by_encryption_status" {
-  sql = <<-EOQ
-    select
-      encryption_status,
-      count(*)
-    from (
-      select encrypted,
-        case when encrypted then
-          'enabled'
-        else
-          'disabled'
-        end encryption_status
-      from
-        aws_redshift_cluster) as t
-    group by
-      encryption_status
-    order by
-      encryption_status desc;
-  EOQ
-}
+# Performance Queries
 
-query "aws_redshift_cluster_by_publicly_accessible_status" {
+query "aws_redshift_cluster_top10_cpu_past_week" {
   sql = <<-EOQ
-    select
-      publicly_accessible_status,
-      count(*)
-    from (
-      select publicly_accessible,
-        case when publicly_accessible then
-          'public'
-        else
-          'private'
-        end publicly_accessible_status
-      from
-        aws_redshift_cluster) as t
-    group by
-      publicly_accessible_status
-    order by
-      publicly_accessible_status desc;
-  EOQ
-}
-
-query "aws_redshift_cluster_in_vpc_status" {
-  sql = <<-EOQ
-    select
-      vpc_status,
-      count(*)
-    from (
+    with top_n as (
       select
-        case when vpc_id is not null then
-          'enabled'
-        else
-          'disabled'
-        end vpc_status
+        cluster_identifier,
+        avg(average)
       from
-        aws_redshift_cluster) as t
-    group by
-      vpc_status
-    order by
-      vpc_status desc;
-  EOQ
-}
-query "aws_redshift_cluster_with_no_snapshots" {
-  sql = <<-EOQ
+        aws_redshift_cluster_metric_cpu_utilization_daily
+      where
+        timestamp  >= CURRENT_DATE - INTERVAL '7 day'
+      group by
+        cluster_identifier
+      order by
+        avg desc
+      limit 10
+    )
     select
-      v.cluster_identifier,
-      v.account_id,
-      v.region
+      timestamp,
+      cluster_identifier,
+      maximum
     from
-      aws_redshift_cluster as v
-    left join aws_redshift_snapshot as s on v.cluster_identifier = s.cluster_identifier
-    group by
-      v.account_id,
-      v.region,
-      v.cluster_identifier
-    having
-      count(s.snapshot_identifier) = 0;
+      aws_redshift_cluster_metric_cpu_utilization_daily
+    where
+      timestamp  >= CURRENT_DATE - INTERVAL '7 day'
+      and cluster_identifier in (select cluster_identifier from top_n)
+    order by
+      timestamp;
   EOQ
 }
 
-dashboard "aws_redshift_cluster_dashboard" {
-
-  title = "AWS Redshift Cluster Dashboard"
-
-  tags = merge(local.redshift_common_tags, {
-    type = "Dashboard"
-  })
-
-  container {
-
-    card {
-      sql = query.aws_redshift_cluster_count.sql
-      width = 2
-    }
-
-    card {
-      sql = query.aws_redshift_cluster_unencrypted_count.sql
-      width = 2
-    }
-
-    card {
-      sql = query.aws_redshift_cluster_publicly_accessible.sql
-      width = 2
-    }
-
-    card {
-      sql = query.aws_redshift_cluster_in_vpc.sql
-      width = 2
-    }
-
-  # Costs
-    card {
-      type = "info"
-      icon = "currency-dollar"
-      width = 2
-      sql = <<-EOQ
-        select
-          'Cost - MTD' as label,
-          sum(unblended_cost_amount)::numeric::money as value
-        from
-          aws_cost_by_service_usage_type_monthly as c
-        where
-          service = 'Amazon Redshift'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp);
-      EOQ
-    }
-
-  }
-
-  container {
-    title = "Assessments"
-    width = 6
-
-    chart {
-      title = "Encryption Status"
-      sql = query.aws_redshift_cluster_by_encryption_status.sql
-      type  = "donut"
-      width = 4
-
-      series "count" {
-        point "enabled" {
-          color = "green"
-        }
-        point "disabled" {
-          color = "red"
-        }
-      }
-    }
-
-    chart {
-      title = "Public Accessibility Status"
-      sql = query.aws_redshift_cluster_by_publicly_accessible_status.sql
-      type  = "donut"
-      width = 4
-
-      series "count" {
-        point "private" {
-          color = "green"
-        }
-        point "public" {
-          color = "red"
-        }
-      }
-    }
-
-     chart {
-      title = "VPC Status"
-      sql = query.aws_redshift_cluster_in_vpc_status.sql
-      type  = "donut"
-      width = 4
-
-      series "count" {
-        point "enabled" {
-          color = "green"
-        }
-        point "disabled" {
-          color = "red"
-        }
-      }
-    }
-
-  }
-
-  container {
-    title = "Cost"
-    width = 6
-
-    table  {
-      width = 6
-      title = "Forecast"
-      sql   = query.aws_redshift_cluster_monthly_forecast_table.sql
-    }
-
-    chart {
-      title = "Monthly Cost - 12 Months"
-      type  = "column"
-      sql   = query.aws_redshift_cluster_cost_per_month.sql
-      width = 6
-    }
-
-  }
-
-  container {
-    title = "Analysis"
-
-    chart {
-      title = "Clusters by Account"
-      sql = query.aws_redshift_cluster_by_account.sql
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Clusters by Region"
-      sql = query.aws_redshift_cluster_by_region.sql
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Clusters by Age"
-      sql = query.aws_redshift_cluster_by_creation_month.sql
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Cluster by State"
-      sql = query.aws_redshift_cluster_by_state.sql
-      type  = "column"
-      width = 3
-    }
-
-  }
-
-  container {
-    title  = "Performance & Utilization"
-
-    chart {
-      title = "Top 10 CPU - Last 7 days"
-      type  = "line"
-      width = 6
-      sql = <<-EOQ
-        with top_n as (
-          select
-            cluster_identifier,
-            avg(average)
-          from
-            aws_redshift_cluster_metric_cpu_utilization_daily
-          where
-            timestamp  >= CURRENT_DATE - INTERVAL '7 day'
-          group by
-            cluster_identifier
-          order by
-            avg desc
-          limit 10
-        )
-        select
-          timestamp,
-          cluster_identifier,
-          maximum
-        from
-          aws_redshift_cluster_metric_cpu_utilization_daily
-        where
-          timestamp  >= CURRENT_DATE - INTERVAL '7 day'
-          and cluster_identifier in (select cluster_identifier from top_n)
-        order by
-          timestamp;
-      EOQ
-    }
-
-    chart {
-      title = "Average max daily CPU - Last 30 days"
-      type  = "line"
-      width = 6
-      sql = <<-EOQ
-        with cpu_buckets as (
-          select
+query "aws_redshift_cluster_by_cpu_utilization_category" {
+  sql = <<-EOQ
+    with cpu_buckets as (
+      select
         unnest(array ['Unused (<1%)','Underutilized (1-10%)','Right-sized (10-90%)', 'Overutilized (>90%)' ])     as cpu_bucket
-        ),
-        max_averages as (
-          select
-            cluster_identifier,
-            case
-              when max(average) <= 1 then 'Unused (<1%)'
-              when max(average) between 1 and 10 then 'Underutilized (1-10%)'
-              when max(average) between 10 and 90 then 'Right-sized (10-90%)'
-              when max(average) > 90 then 'Overutilized (>90%)'
-            end as cpu_bucket,
-            max(average) as max_avg
-          from
-            aws_redshift_cluster_metric_cpu_utilization_daily
-          where
-            date_part('day', now() - timestamp) <= 30
-          group by
-            cluster_identifier
-        )
-        select
-          b.cpu_bucket as "CPU Utilization",
-          count(a.*)
-        from
-          cpu_buckets as b
-        left join max_averages as a on b.cpu_bucket = a.cpu_bucket
-        group by
-          b.cpu_bucket;
-      EOQ
-    }
-
-  }
-
-  container {
-    title = "Clusters with no Snapshots"
-    table  {
-      width = 6
-      sql   = query.aws_redshift_cluster_with_no_snapshots.sql
-    }
-  }
-
+    ),
+    max_averages as (
+      select
+        cluster_identifier,
+        case
+          when max(average) <= 1 then 'Unused (<1%)'
+          when max(average) between 1 and 10 then 'Underutilized (1-10%)'
+          when max(average) between 10 and 90 then 'Right-sized (10-90%)'
+          when max(average) > 90 then 'Overutilized (>90%)'
+        end as cpu_bucket,
+        max(average) as max_avg
+      from
+        aws_redshift_cluster_metric_cpu_utilization_daily
+      where
+        date_part('day', now() - timestamp) <= 30
+      group by
+        cluster_identifier
+    )
+    select
+      b.cpu_bucket as "CPU Utilization",
+      count(a.*)
+    from
+      cpu_buckets as b
+    left join max_averages as a on b.cpu_bucket = a.cpu_bucket
+    group by
+      b.cpu_bucket;
+  EOQ
 }

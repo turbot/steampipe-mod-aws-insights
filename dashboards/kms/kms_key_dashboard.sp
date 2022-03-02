@@ -1,10 +1,156 @@
+dashboard "aws_kms_key_dashboard" {
+
+  title = "AWS KMS Key Dashboard"
+
+  tags = merge(local.kms_common_tags, {
+    type = "Dashboard"
+  })
+
+  container {
+
+    # Analysis
+    card {
+      sql   = query.aws_kms_key_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_kms_customer_managed_key_count.sql
+      width = 2
+    }
+
+    # Assessments
+    card {
+      sql   = query.aws_inactive_kms_key_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_kms_cmk_rotation_disabled_count.sql
+      width = 2
+    }
+
+    # Costs
+    card {
+      type  = "info"
+      icon  = "currency-dollar"
+      width = 2
+      sql   = query.aws_kms_key_cost_mtd.sql
+    }
+
+  }
+
+  container {
+
+    title = "Assessments"
+    width = 6
+
+    chart {
+      title = "Inactive/Active Status"
+      sql   = query.aws_inactive_kms_key_status.sql
+      type  = "donut"
+      width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "CMK Rotation Status"
+      sql   = query.aws_kms_key_rotation_status.sql
+      type  = "donut"
+      width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Usage Status"
+      sql   = query.aws_kms_key_usage_status.sql
+      type  = "donut"
+      width = 4
+    }
+
+  }
+
+  container {
+
+    title = "Cost"
+    width = 6
+
+    table {
+      width = 6
+      title = "Forecast"
+      sql   = query.aws_kms_monthly_forecast_table.sql
+    }
+
+    chart {
+      width = 6
+      type  = "column"
+      title = "Monthly Cost - 12 Months"
+      sql   = query.aws_kms_key_cost_per_month.sql
+    }
+
+  }
+
+  container {
+
+    title = "Analysis"
+
+    chart {
+      title = "Keys by Account"
+      sql   = query.aws_kms_key_by_account.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Keys by Region"
+      sql   = query.aws_kms_key_by_region.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Keys by State"
+      sql   = query.aws_kms_key_by_state.sql
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Keys by Age"
+      sql   = query.aws_kms_key_by_creation_month.sql
+      type  = "column"
+      width = 3
+    }
+
+  }
+
+}
+
+# Card Queries
+
 query "aws_kms_key_count" {
   sql = <<-EOQ
     select count(*) as "Keys" from aws_kms_key;
   EOQ
 }
 
-query "aws_kms_key_customer_managed_count" {
+query "aws_kms_customer_managed_key_count" {
   sql = <<-EOQ
     select
       count(*)as "Customer Managed Keys"
@@ -28,7 +174,7 @@ query "aws_inactive_kms_key_count" {
   EOQ
 }
 
-query "aws_kms_key_rotation_enabled_count" {
+query "aws_kms_cmk_rotation_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -42,7 +188,21 @@ query "aws_kms_key_rotation_enabled_count" {
   EOQ
 }
 
-# Assessments
+query "aws_kms_key_cost_mtd" {
+  sql = <<-EOQ
+    select
+      'Cost - MTD' as label,
+      sum(unblended_cost_amount)::numeric::money as value
+    from
+      aws_cost_by_service_monthly
+    where
+      service = 'AWS Key Management Service'
+      and period_end > date_trunc('month', CURRENT_DATE::timestamp);
+  EOQ
+}
+
+# Assessment Queries
+
 query "aws_inactive_kms_key_status" {
   sql = <<-EOQ
     select
@@ -99,22 +259,7 @@ query "aws_kms_key_usage_status" {
   EOQ
 }
 
-# Cost
-query "aws_kms_key_cost_per_month" {
-  sql = <<-EOQ
-    select
-      to_char(period_start, 'Mon-YY') as "Month",
-      sum(unblended_cost_amount) as "Unblended Cost"
-    from
-      aws_cost_by_service_usage_type_monthly
-    where
-      service = 'AWS Key Management Service'
-    group by
-      period_start
-    order by
-      period_start;
-  EOQ
-}
+# Cost Queries
 
 query "aws_kms_monthly_forecast_table" {
   sql = <<-EOQ
@@ -157,9 +302,25 @@ query "aws_kms_monthly_forecast_table" {
   EOQ
 }
 
-# Analysis
-query "aws_kms_key_by_account" {
+query "aws_kms_key_cost_per_month" {
+  sql = <<-EOQ
+    select
+      to_char(period_start, 'Mon-YY') as "Month",
+      sum(unblended_cost_amount) as "Unblended Cost"
+    from
+      aws_cost_by_service_usage_type_monthly
+    where
+      service = 'AWS Key Management Service'
+    group by
+      period_start
+    order by
+      period_start;
+  EOQ
+}
 
+# Analysis Queries
+
+query "aws_kms_key_by_account" {
   sql = <<-EOQ
     select
       a.title as "Account",
@@ -243,155 +404,4 @@ query "aws_kms_key_by_creation_month" {
     order by
       months.month;
   EOQ
-}
-
-dashboard "aws_kms_key_dashboard" {
-
-  title = "AWS KMS Key Dashboard"
-
-  tags = merge(local.kms_common_tags, {
-    type = "Dashboard"
-  })
-
-  container {
-
-    card {
-      sql   = query.aws_kms_key_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_kms_key_customer_managed_count.sql
-      width = 2
-    }
-
-    # Assessments
-    card {
-      sql   = query.aws_inactive_kms_key_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_kms_key_rotation_enabled_count.sql
-      width = 2
-    }
-
-    # Costs
-    card {
-      type = "info"
-      icon = "currency-dollar"
-
-      sql   = <<-EOQ
-        select
-          'Cost - MTD' as label,
-          sum(unblended_cost_amount)::numeric::money as value
-        from
-          aws_cost_by_service_monthly
-        where
-          service = 'AWS Key Management Service'
-          and period_end > date_trunc('month', CURRENT_DATE::timestamp);
-      EOQ
-      width = 2
-    }
-
-  }
-
-  container {
-    title = "Assessments"
-    width = 6
-
-    chart {
-      title = "Inactive/Active Status"
-      sql   = query.aws_inactive_kms_key_status.sql
-      type  = "donut"
-      width = 4
-
-      series "count" {
-        point "enabled" {
-          color = "green"
-        }
-        point "disabled" {
-          color = "red"
-        }
-      }
-    }
-
-    chart {
-      title = "CMK Rotation Status"
-      sql   = query.aws_kms_key_rotation_status.sql
-      type  = "donut"
-      width = 4
-
-      series "count" {
-        point "enabled" {
-          color = "green"
-        }
-        point "disabled" {
-          color = "red"
-        }
-      }
-    }
-
-    chart {
-      title = "Usage Status"
-      sql   = query.aws_kms_key_usage_status.sql
-      type  = "donut"
-      width = 4
-    }
-
-  }
-
-  container {
-    title = "Cost"
-    width = 6
-
-    # Costs
-    table {
-      width = 6
-      title = "Forecast"
-      sql   = query.aws_kms_monthly_forecast_table.sql
-    }
-
-    chart {
-      width = 6
-      type  = "column"
-      title = "Monthly Cost - 12 Months"
-      sql   = query.aws_kms_key_cost_per_month.sql
-    }
-
-  }
-
-  container {
-    title = "Analysis"
-
-    chart {
-      title = "Keys by Account"
-      sql   = query.aws_kms_key_by_account.sql
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Keys by Region"
-      sql   = query.aws_kms_key_by_region.sql
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Keys by State"
-      sql   = query.aws_kms_key_by_state.sql
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Keys by Age"
-      sql   = query.aws_kms_key_by_creation_month.sql
-      type  = "column"
-      width = 3
-    }
-
-  }
-
 }

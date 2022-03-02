@@ -1,14 +1,151 @@
+dashboard "aws_iam_user_dashboard" {
+  title = "AWS IAM User Dashboard"
+
+  tags = merge(local.iam_common_tags, {
+    type = "Dashboard"
+  })
+
+  container {
+
+    # Analysis
+    card {
+      sql   = query.aws_iam_user_count.sql
+      width = 2
+    }
+
+    # Assessments
+    card {
+      sql   = query.aws_iam_user_no_mfa_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_iam_user_no_boundary_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_iam_users_with_direct_attached_policy_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_iam_users_with_inline_policy_count.sql
+      width = 2
+    }
+
+  }
+
+  container {
+    title = "Assessments"
+
+    chart {
+      title = "MFA Status"
+      sql   = query.aws_iam_users_by_mfa_enabled.sql
+      type  = "donut"
+      width = 3
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Boundary Policy"
+      sql   = query.aws_iam_users_by_boundary_policy.sql
+      type  = "donut"
+      width = 3
+
+      series "count" {
+        point "configured" {
+          color = "ok"
+        }
+        point "unconfigured" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Direct Attached Policy"
+      sql   = query.aws_iam_users_with_direct_attached_policy.sql
+      type  = "donut"
+      width = 3
+
+      series "count" {
+        point "unattached" {
+          color = "ok"
+        }
+        point "attached_policies" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Inline Policy Association"
+      sql   = query.aws_iam_users_with_inline_policy.sql
+      type  = "donut"
+      width = 3
+
+      series "count" {
+        point "unassociated" {
+          color = "ok"
+        }
+        point "associated" {
+          color = "alert"
+        }
+      }
+    }
+
+  }
+
+  container {
+    title = "Analysis"
+
+    chart {
+      title = "Users by Account"
+      sql   = query.aws_iam_users_by_account.sql
+      type  = "column"
+      width = 4
+    }
+
+    chart {
+      title = "Users by Path"
+      sql   = query.aws_iam_user_by_path.sql
+      type  = "column"
+      width = 4
+    }
+
+    chart {
+      title = "Users by Age"
+      sql   = query.aws_iam_user_by_creation_month.sql
+      type  = "column"
+      width = 4
+    }
+
+  }
+
+}
+
+# Card Queries
+
 query "aws_iam_user_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Total Users' as label
+      'Users' as label
     from
       aws_iam_user;
   EOQ
 }
 
-query "aws_iam_user_mfa_count" {
+query "aws_iam_user_no_mfa_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -38,7 +175,7 @@ query "aws_iam_users_with_direct_attached_policy_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-       'Users with Attached Policies' as label,
+       'Users With Attached Policies' as label,
       case when count(*) = 0 then 'ok' else 'alert' end as type
     from
       aws_iam_user
@@ -51,7 +188,7 @@ query "aws_iam_users_with_inline_policy_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Users with Inline Policies' as label,
+      'Users With Inline Policies' as label,
       case when count(*) = 0 then 'ok' else 'alert' end as type
     from
       aws_iam_user
@@ -60,7 +197,7 @@ query "aws_iam_users_with_inline_policy_count" {
   EOQ
 }
 
-#Assessments
+# Assessment Queries
 
 query "aws_iam_users_by_mfa_enabled" {
   sql = <<-EOQ
@@ -109,14 +246,14 @@ query "aws_iam_users_with_direct_attached_policy" {
         end as has_attached
       from
         aws_iam_user
-      )
-      select
-        has_attached,
-        count(*)
-      from
-        attached_compliance
-      group by
-        has_attached;
+    )
+    select
+      has_attached,
+      count(*)
+    from
+      attached_compliance
+    group by
+      has_attached;
   EOQ
 }
 
@@ -131,18 +268,19 @@ query "aws_iam_users_with_inline_policy" {
         end as has_inline
       from
         aws_iam_user
-      )
-      select
-        has_inline,
-        count(*)
-      from
-        inline_compliance
-      group by
-        has_inline;
+    )
+    select
+      has_inline,
+      count(*)
+    from
+      inline_compliance
+    group by
+      has_inline;
   EOQ
 }
 
-#Analysis
+# Analysis Queries
+
 query "aws_iam_users_by_account" {
   sql = <<-EOQ
     select
@@ -215,139 +353,4 @@ query "aws_iam_user_by_creation_month" {
     order by
       months.month;
   EOQ
-}
-
-dashboard "aws_iam_user_dashboard" {
-  title = "AWS IAM User Dashboard"
-
-  tags = merge(local.iam_common_tags, {
-    type = "Dashboard"
-  })
-
-  container {
-
-    # Analysis
-    card {
-      sql   = query.aws_iam_user_count.sql
-      width = 2
-    }
-
-    # Assessments
-    card {
-      sql   = query.aws_iam_user_mfa_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_iam_user_no_boundary_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_iam_users_with_direct_attached_policy_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_iam_users_with_inline_policy_count.sql
-      width = 2
-    }
-
-  }
-
-  container {
-    title = "Assessments"
-
-    chart {
-      title = "MFA Status"
-      sql   = query.aws_iam_users_by_mfa_enabled.sql
-      type  = "donut"
-      width = 3
-
-      series "count" {
-        point "enabled" {
-          color = "green"
-        }
-        point "disabled" {
-          color = "red"
-        }
-      }
-    }
-
-    chart {
-      title = "Boundary Policy"
-      sql   = query.aws_iam_users_by_boundary_policy.sql
-      type  = "donut"
-      width = 3
-
-      series "count" {
-        point "configured" {
-          color = "green"
-        }
-        point "unconfigured" {
-          color = "red"
-        }
-      }
-    }
-
-    chart {
-      title = "Direct Attached Policy"
-      sql   = query.aws_iam_users_with_direct_attached_policy.sql
-      type  = "donut"
-      width = 3
-
-      series "count" {
-        point "unattached" {
-          color = "green"
-        }
-        point "attached_policies" {
-          color = "red"
-        }
-      }
-    }
-
-    chart {
-      title = "Inline Policy Association"
-      sql   = query.aws_iam_users_with_inline_policy.sql
-      type  = "donut"
-      width = 3
-
-      series "count" {
-        point "unassociated" {
-          color = "green"
-        }
-        point "associated" {
-          color = "red"
-        }
-      }
-    }
-
-  }
-
-  container {
-    title = "Analysis"
-
-    chart {
-      title = "Users by Account"
-      sql   = query.aws_iam_users_by_account.sql
-      type  = "column"
-      width = 4
-    }
-
-    chart {
-      title = "Users by Path"
-      sql   = query.aws_iam_user_by_path.sql
-      type  = "column"
-      width = 4
-    }
-
-    chart {
-      title = "Users by Age"
-      sql   = query.aws_iam_user_by_creation_month.sql
-      type  = "column"
-      width = 4
-    }
-
-  }
-
 }

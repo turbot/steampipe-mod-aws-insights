@@ -1,3 +1,122 @@
+dashboard "aws_iam_group_dashboard" {
+
+  title = "AWS IAM Group Dashboard"
+
+  tags = merge(local.iam_common_tags, {
+    type = "Dashboard"
+  })
+
+  container {
+
+    # Analysis
+    card {
+      sql   = query.aws_iam_group_count.sql
+      width = 2
+    }
+
+    # Assessments
+    card {
+      sql   = query.aws_iam_groups_without_users_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_iam_groups_with_inline_policy_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_iam_groups_with_administrator_policy_count.sql
+      width = 2
+    }
+
+  }
+
+  container {
+
+    title = "Assessments"
+
+    chart {
+      title = "Groups Without Users"
+      sql   = query.aws_iam_groups_without_users.sql
+      type  = "donut"
+      width = 3
+
+      series "count" {
+        point "with_users" {
+          color = "ok"
+        }
+        point "without_users" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Inline Policy"
+      sql   = query.aws_iam_groups_with_inline_policy.sql
+      type  = "donut"
+      width = 3
+
+      series "count" {
+        point "unconfigured" {
+          color = "ok"
+        }
+        point "configured" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Administrator Access Policy"
+      sql   = query.aws_iam_groups_with_administrator_policy.sql
+      type  = "donut"
+      width = 3
+
+      series "count" {
+        point "unconfigured" {
+          color = "ok"
+        }
+        point "configured" {
+          color = "alert"
+        }
+      }
+    }
+
+  }
+
+  container {
+
+    title = "Analysis"
+
+    chart {
+      title = "Groups by Account"
+      sql   = query.aws_iam_groups_by_account.sql
+      type  = "column"
+      width = 4
+    }
+
+    chart {
+      title = "Groups by Path"
+      sql   = query.aws_iam_groups_by_path.sql
+      type  = "column"
+      width = 4
+    }
+
+    chart {
+      title = "Groups by Age"
+      sql   = query.aws_iam_groups_by_creation_month.sql
+      type  = "column"
+      width = 4
+    }
+
+  }
+
+}
+
+# Card Queries
+
 query "aws_iam_group_count" {
   sql = <<-EOQ
     select count(*) as "Groups" from aws_iam_group;
@@ -8,7 +127,7 @@ query "aws_iam_groups_without_users_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Groups without Users' as label,
+      'Groups Without Users' as label,
       case when count(*) = 0 then 'ok' else 'alert' end as type
     from
       aws_iam_group
@@ -21,7 +140,7 @@ query "aws_iam_groups_with_inline_policy_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Groups with Inline Policies' as label,
+      'Groups With Inline Policies' as label,
       case when count(*) = 0 then 'ok' else 'alert' end as type
     from
       aws_iam_group
@@ -51,7 +170,7 @@ query "aws_iam_groups_with_administrator_policy_count" {
     )
     select
       count(*) as value,
-      'Groups with Administrator Policy' as label,
+      'Groups With Administrator Policy' as label,
       case when count(*) > 1 then 'alert' else 'ok' end as type
     from
       groups_having_admin_access
@@ -60,7 +179,8 @@ query "aws_iam_groups_with_administrator_policy_count" {
   EOQ
 }
 
-# Assessments
+# Assessment Queries
+
 query "aws_iam_groups_without_users" {
   sql = <<-EOQ
     with groups_without_users as (
@@ -134,7 +254,8 @@ query "aws_iam_groups_with_administrator_policy" {
   EOQ
 }
 
-# Analysis
+# Analysis Queries
+
 query "aws_iam_groups_by_account" {
   sql = <<-EOQ
     select
@@ -206,119 +327,4 @@ query "aws_iam_groups_by_creation_month" {
     order by
       months.month;
   EOQ
-}
-
-dashboard "aws_iam_group_dashboard" {
-
-  title = "AWS IAM Group Dashboard"
-
-  tags = merge(local.iam_common_tags, {
-    type = "Dashboard"
-  })
-
-  container {
-
-    # Analysis
-    card {
-      sql   = query.aws_iam_group_count.sql
-      width = 2
-    }
-
-    # Assessments
-    card {
-      sql   = query.aws_iam_groups_without_users_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_iam_groups_with_inline_policy_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_iam_groups_with_administrator_policy_count.sql
-      width = 2
-    }
-
-  }
-
-  container {
-    title = "Assesments"
-
-    chart {
-      title = "Groups without Users"
-      sql   = query.aws_iam_groups_without_users.sql
-      type  = "donut"
-      width = 3
-
-      series "count" {
-        point "with_users" {
-          color = "green"
-        }
-        point "without_users" {
-          color = "red"
-        }
-      }
-    }
-
-    chart {
-      title = "Inline Policy"
-      sql   = query.aws_iam_groups_with_inline_policy.sql
-      type  = "donut"
-      width = 3
-
-      series "count" {
-        point "unconfigured" {
-          color = "green"
-        }
-        point "configured" {
-          color = "red"
-        }
-      }
-    }
-
-    chart {
-      title = "Administrator Access Policy"
-      sql   = query.aws_iam_groups_with_administrator_policy.sql
-      type  = "donut"
-      width = 3
-
-      series "count" {
-        point "unconfigured" {
-          color = "green"
-        }
-        point "configured" {
-          color = "red"
-        }
-      }
-    }
-
-  }
-
-  container {
-    title = "Analysis"
-
-    chart {
-      title = "Groups by Account"
-      sql   = query.aws_iam_groups_by_account.sql
-      type  = "column"
-      width = 4
-    }
-
-    chart {
-      title = "Groups by Path"
-      sql   = query.aws_iam_groups_by_path.sql
-      type  = "column"
-      width = 4
-    }
-
-    chart {
-      title = "Groups by Age"
-      sql   = query.aws_iam_groups_by_creation_month.sql
-      type  = "column"
-      width = 4
-    }
-
-  }
-
 }
