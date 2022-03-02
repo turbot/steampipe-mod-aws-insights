@@ -1,4 +1,4 @@
-dashboard "aws_redshift_cluster_public_access_dashboard" {
+dashboard "aws_redshift_cluster_public_access_report" {
 
   title = "AWS Redshift Cluster Public Access Report"
 
