@@ -103,6 +103,8 @@ dashboard "aws_ebs_volume_detail" {
             jsonb_array_elements(tags_src) as tag
           where
             arn = $1
+          order by
+            tag ->> 'Key';
         EOQ
 
         param "arn" {}
@@ -176,7 +178,7 @@ dashboard "aws_ebs_volume_detail" {
           timestamp >= current_date - interval '7 day'
           and volume_id = reverse(split_part(reverse($1), '/', 1))
         order by timestamp;
-        EOQ
+      EOQ
 
       param "arn" {}
 
@@ -312,7 +314,9 @@ query "aws_ebs_volume_association" {
       aws_ec2_instance as i
     where
       i.instance_id = attachment ->> 'InstanceId'
-      and v.arn = $1;
+      and v.arn = $1
+    order by
+      i.instance_id;
   EOQ
 
   param "arn" {}

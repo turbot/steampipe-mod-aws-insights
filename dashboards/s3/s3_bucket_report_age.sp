@@ -128,21 +128,20 @@ query "aws_s3_bucket_1_year_count" {
 query "aws_s3_bucket_age_table" {
   sql = <<-EOQ
     select
-      v.name as "Name",
-      --date_trunc('day',age(now(),v.creation_date))::text as "Age",
-      now()::date - v.creation_date::date as "Age in Days",
-      v.creation_date as "Create Time",
+      b.name as "Name",
+      --date_trunc('day',age(now(),b.creation_date))::text as "Age",
+      now()::date - b.creation_date::date as "Age in Days",
+      b.creation_date as "Create Time",
       a.title as "Account",
-      v.account_id as "Account ID",
-      v.region as "Region",
-      v.arn as "ARN"
+      b.account_id as "Account ID",
+      b.region as "Region",
+      b.arn as "ARN"
     from
-      aws_s3_bucket as v,
+      aws_s3_bucket as b,
       aws_account as a
     where
-      v.account_id = a.account_id
+      b.account_id = a.account_id
     order by
-      v.creation_date,
-      v.title;
+      b.name;
   EOQ
 }

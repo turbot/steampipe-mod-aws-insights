@@ -54,17 +54,19 @@ query "aws_s3_bucket_versioning_mfa_disabled_count" {
 query "aws_s3_bucket_lifecycle_table" {
   sql = <<-EOQ
     select
-      v.name as "Name",
-      case when v.versioning_enabled then 'Enabled' else null end as "Versioning",
-      case when v.versioning_mfa_delete then 'Enabled' else null end as "Versioning MFA Delete",
+      b.name as "Name",
+      case when b.versioning_enabled then 'Enabled' else null end as "Versioning",
+      case when b.versioning_mfa_delete then 'Enabled' else null end as "Versioning MFA Delete",
       a.title as "Account",
-      v.account_id as "Account ID",
-      v.region as "Region",
-      v.arn as "ARN"
+      b.account_id as "Account ID",
+      b.region as "Region",
+      b.arn as "ARN"
     from
-      aws_s3_bucket as v,
+      aws_s3_bucket as b,
       aws_account as a
     where
-      v.account_id = a.account_id;
+      b.account_id = a.account_id
+    order by
+      b.name;
   EOQ
 }

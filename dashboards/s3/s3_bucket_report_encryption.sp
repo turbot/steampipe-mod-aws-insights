@@ -117,6 +117,8 @@ query "aws_s3_bucket_encryption_table" {
       aws_s3_bucket as b
       left join default_encryption as d on b.arn = d.arn
       left join ssl_ok as ssl on b.arn = ssl.arn
-      left join aws_account as a on b.account_id = a.account_id;
+      left join aws_account as a on b.account_id = a.account_id
+    order by
+      b.name;
   EOQ
 }

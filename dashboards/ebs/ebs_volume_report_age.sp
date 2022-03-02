@@ -141,7 +141,7 @@ query "aws_ebs_volume_age_table" {
     where
       v.account_id = a.account_id
     order by
-      v.create_time,
-      v.title;
+      v.tags ->> 'Name',
+      v.volume_id;
   EOQ
 }

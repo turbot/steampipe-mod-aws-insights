@@ -235,7 +235,7 @@ query "aws_s3_bucket_cross_region_replication" {
         jsonb_array_elements(replication -> 'Rules' ) as r
     )
     select
-      'Cross Region Replication' as label,
+      'Cross-Region Replication' as label,
       case when b.name = r.name and r.rep_status = 'Enabled' then 'Enabled' else 'Disabled' end as value,
       case when b.name = r.name and r.rep_status = 'Enabled' then 'ok' else 'alert' end as type
     from
@@ -309,6 +309,8 @@ query "aws_s3_bucket_tags_detail" {
       jsonb_array_elements(tags_src) as tag
     where
       arn = $1
+    order by
+      tag ->> 'Key';
   EOQ
 
   param "arn" {}
@@ -366,17 +368,18 @@ query "aws_s3_bucket_public_access" {
 query "aws_s3_bucket_policy" {
   sql = <<-EOQ
     select
-      p -> 'Action'  as "Action",
-      p -> 'Condition' as "Condition",
-      p ->> 'Effect'  as "Effect",
-      p -> 'Principal'  as "Principal",
-      p -> 'Resource'  as "Resource",
-      p ->> 'Sid'  as "Sid"
+      p ->> 'Sid' as "SID",
+      p -> 'Action' as "Action",
+      p ->> 'Effect' as "Effect",
+      p -> 'Principal' as "Principal",
+      p -> 'Resource' as "Resource",
+      p -> 'Condition' as "Condition"
     from
       aws_s3_bucket,
       jsonb_array_elements(policy_std -> 'Statement') as p
     where
-      arn = $1;
+      arn = $1
+    order by p ->> 'SID';
   EOQ
 
   param "arn" {}
@@ -385,19 +388,21 @@ query "aws_s3_bucket_policy" {
 query "aws_s3_bucket_lifecycle_policy" {
   sql = <<-EOQ
     select
-      r ->> 'ID'  as "ID",
-      r ->> 'AbortIncompleteMultipartUpload'  as "Abort Incomplete Multipart Upload",
+      r ->> 'ID' as "ID",
+      r ->> 'AbortIncompleteMultipartUpload' as "Abort Incomplete Multipart Upload",
       r ->> 'Expiration' as "Expiration",
-      r ->> 'Filter'  as "Filter",
-      r ->> 'NoncurrentVersionExpiration'  as "Non current Version Expiration",
-      r ->> 'Prefix'  as "Prefix",
-      r ->> 'Status'  as "Status",
-      r ->> 'Transitions'  as "Transitions"
+      r ->> 'Filter' as "Filter",
+      r ->> 'NoncurrentVersionExpiration' as "Non-current Version Expiration",
+      r ->> 'Prefix' as "Prefix",
+      r ->> 'Status' as "Status",
+      r ->> 'Transitions' as "Transitions"
     from
       aws_s3_bucket,
       jsonb_array_elements(lifecycle_rules) as r
     where
-      arn = $1;
+      arn = $1
+    order by
+      r ->> 'ID';
   EOQ
 
   param "arn" {}

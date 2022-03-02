@@ -46,6 +46,9 @@ query "aws_ebs_volume_encryption_table" {
       aws_ebs_volume as v,
       aws_account as a
     where
-      v.account_id = a.account_id;
+      v.account_id = a.account_id
+    order by
+      v.tags ->> 'Name',
+      v.volume_id;
   EOQ
 }

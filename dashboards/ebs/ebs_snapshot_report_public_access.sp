@@ -46,6 +46,8 @@ query "aws_ebs_snapshot_public_table" {
       aws_account as a
     where
       s.account_id = a.account_id
-
+    order by
+      s.tags ->> 'Name',
+      s.snapshot_id;
   EOQ
 }
