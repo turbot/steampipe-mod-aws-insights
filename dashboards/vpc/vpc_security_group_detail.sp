@@ -5,7 +5,8 @@ query "aws_vpc_security_group_input" {
       arn as value,
       json_build_object(
         'account_id', account_id,
-        'region', region
+        'region', region,
+        'group_id', group_id
       ) as tags
     from
       aws_vpc_security_group

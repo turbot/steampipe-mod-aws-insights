@@ -5,7 +5,8 @@ query "aws_vpc_input" {
       arn as value,
       json_build_object(
         'account_id', account_id,
-        'region', region
+        'region', region,
+        'vpc_id', vpc_id
       ) as tags
     from
       aws_vpc
