@@ -165,7 +165,7 @@ query "aws_sqs_queue_unencrypted_count" {
     from
       aws_sqs_queue
     where
-      kms_master_key_id is null;
+      kms_master_key_id is null and not sqs_managed_sse_enabled;
   EOQ
 }
 
@@ -212,7 +212,7 @@ query "aws_sqs_queue_by_encryption_status" {
       count(*)
     from (
       select kms_master_key_id,
-        case when kms_master_key_id is not null then
+        case when kms_master_key_id is not null or sqs_managed_sse_enabled then
           'enabled'
         else
           'disabled'
