@@ -3,6 +3,97 @@ variable "iam_detail_role_arn" {
   default = "arn:aws:iam::013122550996:role/turbot/admin"
 }
 
+dashboard "aws_iam_role_detail" {
+
+  title = "AWS IAM Role Detail"
+
+  tags = merge(local.iam_common_tags, {
+    type = "Detail"
+  })
+
+  input "role_arn" {
+    title = "Role"
+    sql   = query.aws_iam_role_input.sql
+    width = 2
+  }
+
+  container {
+
+    card {
+      sql   = query.aws_iam_boundary_policy_for_role.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_iam_role_inline_policy_count_for_role.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_iam_role_direct_attached_policy_count_for_role.sql
+      width = 2
+    }
+
+  }
+
+  container {
+
+    title = "Overview"
+
+    table {
+      sql   = query.aws_iam_role_detail_overview.sql
+      width = 6
+    }
+
+    table {
+      title = "Tags"
+      width = 6
+      sql   = <<-EOQ
+          select
+            tag ->> 'Key' as "Key",
+            tag ->> 'Value' as "Value"
+          from
+            aws_iam_role,
+            jsonb_array_elements(tags_src) as tag
+          where
+            arn = 'arn:aws:iam::013122550996:role/admin-role'
+        EOQ
+    }
+
+  }
+
+  container {
+
+    title = "AWS IAM Role Policy Analysis"
+
+
+    # hierarchy {
+    #   type  = "sankey"
+    #   title = "Attached Policies"
+    #   sql   = query.aws_iam_user_manage_policies_sankey.sql
+
+    #   category "aws_iam_group" {
+    #     color = "green"
+    #   }
+    # }
+
+
+    table {
+      title = "Groups"
+      width = 6
+      sql   = query.aws_iam_groups_for_user.sql
+    }
+
+    table {
+      title = "Policies"
+      width = 6
+      sql   = query.aws_iam_all_policies_for_role.sql
+    }
+
+  }
+
+}
+
 query "aws_iam_role_input" {
   sql = <<-EOQ
     select
@@ -18,7 +109,6 @@ query "aws_iam_role_input" {
   EOQ
 }
 
-### Assessments Cards
 query "aws_iam_boundary_policy_for_role" {
   sql = <<-EOQ
     select
@@ -66,7 +156,6 @@ query "aws_iam_role_direct_attached_policy_count_for_role" {
   EOQ
 }
 
-### Overview
 query "aws_iam_role_detail_overview" {
   sql = <<-EOQ
     select
@@ -83,99 +172,6 @@ query "aws_iam_role_detail_overview" {
   EOQ
 }
 
-/*
-
-*/
-
-dashboard "aws_iam_role_detail" {
-
-  title = "AWS IAM Role Detail"
-
-  tags = merge(local.iam_common_tags, {
-    type = "Detail"
-  })
-
-  input "role_arn" {
-    title = "Role"
-    sql   = query.aws_iam_role_input.sql
-    width = 2
-  }
-
-  container {
-
-    # Assessments
-    card {
-      sql   = query.aws_iam_boundary_policy_for_role.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_iam_role_inline_policy_count_for_role.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_iam_role_direct_attached_policy_count_for_role.sql
-      width = 2
-    }
-
-  }
-
-  container {
-    title = "Overview"
-
-    table {
-      sql   = query.aws_iam_role_detail_overview.sql
-      width = 6
-    }
-
-    table {
-      title = "Tags"
-      width = 6
-      sql   = <<-EOQ
-          select
-            tag ->> 'Key' as "Key",
-            tag ->> 'Value' as "Value"
-          from
-            aws_iam_role,
-            jsonb_array_elements(tags_src) as tag
-          where
-            arn = 'arn:aws:iam::013122550996:role/admin-role'
-        EOQ
-    }
-  }
-
-  container {
-    title = "AWS IAM Role Policy Analysis"
-
-
-    # hierarchy {
-    #   type  = "sankey"
-    #   title = "Attached Policies"
-    #   sql   = query.aws_iam_user_manage_policies_sankey.sql
-
-    #   category "aws_iam_group" {
-    #     color = "green"
-    #   }
-    # }
-
-
-    table {
-      title = "Groups"
-      width = 6
-      sql   = query.aws_iam_groups_for_user.sql
-    }
-
-    table {
-      title = "Policies"
-      width = 6
-      sql   = query.aws_iam_all_policies_for_role.sql
-    }
-
-  }
-
-}
-
 query "aws_iam_all_policies_for_role" {
   sql = <<-EOQ
     -- Policies (attached to groups)
@@ -188,8 +184,6 @@ query "aws_iam_all_policies_for_role" {
       jsonb_array_elements_text(r.attached_policy_arns) as policy_arn
     where
       r.arn = 'arn:aws:iam::013122550996:role/turbot/admin'
-
-
     -- Inline Policies (defined on role)
     union select
       i ->> 'PolicyName' as "Policy",

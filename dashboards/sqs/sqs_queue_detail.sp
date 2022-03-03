@@ -1,4 +1,5 @@
 dashboard "aws_sqs_queue_detail" {
+
   title = "AWS SQS Queue Detail"
 
   tags = merge(local.sqs_common_tags, {
@@ -16,7 +17,6 @@ dashboard "aws_sqs_queue_detail" {
 
     card {
       width = 2
-
       query = query.aws_sqs_queue_encryption
       args = {
         queue_arn = self.input.queue_arn.value
@@ -25,7 +25,6 @@ dashboard "aws_sqs_queue_detail" {
 
     card {
       width = 2
-
       query = query.aws_sqs_queue_content_based_deduplication
       args = {
         queue_arn = self.input.queue_arn.value
@@ -34,7 +33,6 @@ dashboard "aws_sqs_queue_detail" {
 
     card {
       width = 2
-
       query = query.aws_sqs_queue_delay_seconds
       args = {
         queue_arn = self.input.queue_arn.value
@@ -43,7 +41,6 @@ dashboard "aws_sqs_queue_detail" {
 
     card {
       width = 2
-
       query = query.aws_sqs_queue_message_retention_seconds
       args = {
         queue_arn = self.input.queue_arn.value
@@ -55,6 +52,7 @@ dashboard "aws_sqs_queue_detail" {
   container {
 
     container {
+
       width = 6
 
       table {
@@ -76,9 +74,11 @@ dashboard "aws_sqs_queue_detail" {
           queue_arn = self.input.queue_arn.value
         }
       }
+
     }
 
     container {
+
       width = 6
 
       table {
@@ -96,11 +96,13 @@ dashboard "aws_sqs_queue_detail" {
           queue_arn = self.input.queue_arn.value
         }
       }
+
     }
 
   }
 
   container {
+
     width = 12
 
     table {
@@ -114,8 +116,9 @@ dashboard "aws_sqs_queue_detail" {
   }
 
 }
+
 query "aws_sqs_queue_input" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
       title as label,
       queue_arn as value,
