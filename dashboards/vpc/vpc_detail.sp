@@ -60,7 +60,7 @@ dashboard "aws_vpc_detail" {
         width = 6
         sql   = <<-EOQ
           select
-            vpc_id as "VPC Id",
+            vpc_id as "VPC ID",
             title as "Title",
             region as "Region",
             account_id as "Account ID",

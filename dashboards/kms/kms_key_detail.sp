@@ -74,11 +74,11 @@ dashboard "aws_kms_key_detail" {
         width = 6
         sql   = <<-EOQ
           select
-            'id' as "Id",
+            'id' as "ID",
             creation_date as "Creation Date",
             title as "Title",
             region as "Region",
-            account_id as "Account Id",
+            account_id as "Account ID",
             arn as "ARN"
           from
             aws_kms_key
@@ -278,7 +278,7 @@ query "aws_kms_key_aliases" {
       p ->> 'AliasName' as "Alias Name",
       p ->> 'CreationDate' as "Creation Date",
       p ->> 'LastUpdatedDate' as "Last Updated Date",
-      p ->> 'TargetKeyId' as "Target Key Id"
+      p ->> 'TargetKeyId' as "Target Key ID"
     from
       aws_kms_key,
       jsonb_array_elements(aliases) as p

@@ -234,11 +234,11 @@ query "aws_ec2_instance_overview" {
   sql = <<-EOQ
     select
       tags ->> 'Name' as "Name",
-      instance_id as "Instance Id",
+      instance_id as "Instance ID",
       launch_time as "Launch Time",
       title as "Title",
       region as "Region",
-      account_id as "Account Id",
+      account_id as "Account ID",
       arn as "ARN"
     from
       aws_ec2_instance
@@ -273,7 +273,7 @@ query "aws_ec2_instance_block_device_mapping" {
       p -> 'Ebs' ->> 'AttachTime' as "Attach Time",
       p -> 'Ebs' ->> 'DeleteOnTermination' as "Delete On Termination",
       p -> 'Ebs' ->> 'Status'  as "Status",
-      p -> 'Ebs' ->> 'VolumeId'  as "Volume Id"
+      p -> 'Ebs' ->> 'VolumeId'  as "Volume ID"
     from
       aws_ec2_instance,
       jsonb_array_elements(block_device_mappings) as p
@@ -287,7 +287,7 @@ query "aws_ec2_instance_block_device_mapping" {
 query "aws_ec2_instance_security_groups" {
   sql = <<-EOQ
     select
-      p ->> 'GroupId'  as "Group Id",
+      p ->> 'GroupId'  as "Group ID",
       p -> 'GroupName' ->> 'AttachTime' as "Group Name"
     from
       aws_ec2_instance,
@@ -302,11 +302,11 @@ query "aws_ec2_instance_security_groups" {
 query "aws_ec2_instance_network_interfaces" {
   sql = <<-EOQ
     select
-      p ->> 'NetworkInterfaceId' as "Network Interface Id",
+      p ->> 'NetworkInterfaceId' as "Network Interface ID",
       p ->> 'InterfaceType' as "Interface Type",
       p ->> 'Status' as "Status",
-      p ->> 'SubnetId' as "Subnet Id",
-      p ->> 'VpcId' as "Vpc Id"
+      p ->> 'SubnetId' as "Subnet ID",
+      p ->> 'VpcId' as "VPC ID"
     from
       aws_ec2_instance,
       jsonb_array_elements(network_interfaces) as p

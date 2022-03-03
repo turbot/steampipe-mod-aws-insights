@@ -88,7 +88,7 @@ dashboard "aws_rds_db_snapshot_detail" {
               port as "Port",
               title as "Title",
               region as "Region",
-              account_id as "Account Id",
+              account_id as "Account ID",
               arn as "ARN"
             from
               aws_rds_db_snapshot
