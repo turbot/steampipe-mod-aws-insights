@@ -42,6 +42,7 @@ dashboard "aws_sqs_queue_dashboard" {
   }
 
   container {
+
     title = "Assessments"
     width = 6
 
@@ -96,10 +97,10 @@ dashboard "aws_sqs_queue_dashboard" {
   }
 
   container {
+
     title = "Cost"
     width = 6
 
-    # Costs
     table {
       width = 6
       title = "Forecast"
@@ -116,6 +117,7 @@ dashboard "aws_sqs_queue_dashboard" {
   }
 
   container {
+
     title = "Analysis"
 
     chart {
@@ -124,6 +126,7 @@ dashboard "aws_sqs_queue_dashboard" {
       type  = "column"
       width = 3
     }
+    
     chart {
       title = "Queues by Region"
       sql   = query.aws_sqs_queue_by_region.sql

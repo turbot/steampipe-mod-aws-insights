@@ -37,6 +37,7 @@ dashboard "aws_sns_topic_dashboard" {
   }
 
   container {
+
     title = "Assessments"
     width = 6
 
@@ -75,10 +76,10 @@ dashboard "aws_sns_topic_dashboard" {
   }
 
   container {
+
     title = "Cost"
     width = 6
 
-    # Costs
     table {
       width = 6
       title = "Forecast"
@@ -95,6 +96,7 @@ dashboard "aws_sns_topic_dashboard" {
   }
 
   container {
+
     title = "Analysis"
 
     chart {
@@ -233,7 +235,6 @@ query "aws_sns_topic_monthly_forecast_table" {
         period_start,
         period_end
     )
-
     select
       period_label as "Period",
       unblended_cost_amount as "Cost",

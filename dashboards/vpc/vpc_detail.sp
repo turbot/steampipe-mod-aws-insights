@@ -1,5 +1,353 @@
+dashboard "aws_vpc_detail" {
+
+  title = "AWS VPC Detail"
+
+  tags = merge(local.vpc_common_tags, {
+    type = "Detail"
+  })
+
+  input "vpc_arn" {
+    title = "Select a VPC:"
+    sql   = query.aws_vpc_input.sql
+    width = 4
+  }
+
+  container {
+
+    card {
+      query = query.aws_vpc_num_ips_for_vpc
+      width = 2
+      args = {
+        arn = self.input.vpc_arn.value
+      }
+    }
+
+    card {
+      query = query.aws_subnet_count_for_vpc
+      width = 2
+      args = {
+        arn = self.input.vpc_arn.value
+      }
+    }
+
+    card {
+      query = query.aws_vpc_is_default
+      width = 2
+      args = {
+        arn = self.input.vpc_arn.value
+      }
+    }
+
+    card {
+      query = query.aws_flowlogs_count_for_vpc
+      width = 2
+      args = {
+        arn = self.input.vpc_arn.value
+      }
+    }
+
+  }
+
+  container {
+
+    container {
+
+      width = 6
+
+      table {
+        title = "Overview"
+        type  = "line"
+        width = 6
+        sql   = <<-EOQ
+          select
+            vpc_id as "VPC Id",
+            title as "Title",
+            region as "Region",
+            account_id as "Account ID",
+            arn as "ARN"
+          from
+            aws_vpc
+          where
+            arn = $1
+        EOQ
+
+        param "arn" {}
+
+        args = {
+          arn = self.input.vpc_arn.value
+        }
+      }
+
+      table {
+        title = "Tags"
+        width = 6
+
+        sql = <<-EOQ
+          select
+            tag ->> 'Key' as "Key",
+            tag ->> 'Value' as "Value"
+          from
+            aws_vpc,
+            jsonb_array_elements(tags_src) as tag
+          where
+            arn = $1
+        EOQ
+
+        param "arn" {}
+
+        args = {
+          arn = self.input.vpc_arn.value
+        }
+      }
+
+    }
+
+    container {
+
+      width = 6
+
+      table {
+        title = "CIDR Blocks"
+        sql = <<-EOQ
+          select
+            b ->> 'CidrBlock' as cidr_block,
+            power(2, 32 - masklen( (b ->> 'CidrBlock'):: cidr)) as num_ips
+          from
+            aws_vpc,
+            jsonb_array_elements(cidr_block_association_set) as b
+          where
+            arn = $1
+          union all
+          select
+            b ->> 'Ipv6CidrBlock' as cidr_block,
+            power(2, 128 - masklen( (b ->> 'Ipv6CidrBlock'):: cidr)) as num_ips
+          from
+            aws_vpc,
+            jsonb_array_elements(ipv6_cidr_block_association_set) as b
+          where
+            arn = $1;
+        EOQ
+        param "arn" {}
+
+        args = {
+          arn = self.input.vpc_arn.value
+        }
+      }
+
+      table {
+        title = "DHCP Options"
+        sql = <<-EOQ
+          select
+            d.title,
+            d.dhcp_options_id,
+            d.domain_name,
+            d.domain_name_servers,
+            d.netbios_name_servers,
+            d.netbios_node_type,
+            d.ntp_servers
+          from
+            aws_vpc as v,
+            aws_vpc_dhcp_options as d
+          where
+            v.arn = $1
+            and v.dhcp_options_id = d.dhcp_options_id;
+       EOQ
+        param "arn" {}
+
+        args = {
+          arn = self.input.vpc_arn.value
+        }
+      }
+
+    }
+
+  }
+
+  container {
+
+    title = "Subnets"
+
+    chart {
+      title = "Subnets by AZ"
+      type  = "column"
+      width = 4
+      sql   = <<-EOQ
+        select
+          availability_zone,
+          count(*)
+        from
+          aws_vpc_subnet
+        where
+          vpc_id = reverse(split_part(reverse($1), '/', 1))
+        group by
+          availability_zone
+        order by
+          availability_zone
+      EOQ
+
+      param "arn" {}
+
+      args = {
+        arn = self.input.vpc_arn.value
+      }
+
+    }
+
+    table {
+      query = query.aws_vpc_subnets_for_vpc
+      width = 6
+      args = {
+        arn = self.input.vpc_arn.value
+      }
+    }
+
+  }
+
+  container {
+
+    title = "Routing"
+
+    hierarchy {
+      query = query.aws_vpc_routes_for_vpc_sankey
+      args = {
+        arn = self.input.vpc_arn.value
+      }
+    }
+
+    table {
+      title = "Route Tables"
+      query = query.aws_vpc_route_tables_for_vpc
+      width = 6
+      args = {
+        arn = self.input.vpc_arn.value
+      }
+    }
+
+    table {
+      title = "Routes"
+      query = query.aws_vpc_routes_for_vpc
+      width = 6
+      args = {
+        arn = self.input.vpc_arn.value
+      }
+    }
+
+  }
+
+  container {
+
+    title = "Peering Connections"
+
+    hierarchy {
+      title = "Peering Connections"
+      width = 6
+      query = query.aws_vpc_peers_for_vpc_sankey
+      args = {
+        arn = self.input.vpc_arn.value
+      }
+
+      category "failed" {
+        color = "red"
+      }
+
+      category "active" {
+        color = "green"
+      }
+    }
+
+    table {
+      title = "Peering Connections"
+      query = query.aws_vpc_peers_for_vpc
+      args = {
+        arn = self.input.vpc_arn.value
+      }
+    }
+
+  }
+
+  container {
+
+    title = "NACLs"
+
+    hierarchy {
+      title = "Ingress NACLS"
+      width = 6
+      query = query.aws_ingress_nacl_for_vpc_sankey
+      args = {
+        arn = self.input.vpc_arn.value
+      }
+
+      category "deny" {
+        color = "red"
+      }
+
+      category "allow" {
+        color = "green"
+      }
+    }
+
+    hierarchy {
+      title = "Egress NACLS"
+      width = 6
+      query = query.aws_egress_nacl_for_vpc_sankey
+      args = {
+        arn = self.input.vpc_arn.value
+      }
+
+      category "deny" {
+        color = "red"
+      }
+
+      category "allow" {
+        color = "green"
+      }
+    }
+
+  }
+
+  container {
+
+    title = "Gateways & Endpoints"
+
+    table {
+      title = "VPC Endpoints"
+
+      query = query.aws_vpc_endpoints_for_vpc
+      width = 6
+      args = {
+        arn = self.input.vpc_arn.value
+      }
+    }
+
+    table {
+      title = "Gateways"
+      query = query.aws_vpc_gateways_for_vpc
+      width = 6
+      args = {
+        arn = self.input.vpc_arn.value
+      }
+    }
+
+  }
+
+  container {
+
+    title = "Security Groups"
+
+    table {
+      query = query.aws_vpc_security_groups_for_vpc
+      width = 12
+      args = {
+        arn = self.input.vpc_arn.value
+      }
+    }
+
+  }
+
+}
+
 query "aws_vpc_input" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
       title as label,
       arn as value,
@@ -47,7 +395,6 @@ query "aws_vpc_is_default" {
 
 query "aws_vpc_num_ips_for_vpc" {
   sql = <<-EOQ
-
     with cidrs as (
       select
         b ->> 'CidrBlock' as cidr_block,
@@ -147,8 +494,6 @@ query "aws_vpc_route_tables_for_vpc" {
     select
       title,
       route_table_id
-      -- jsonb_pretty(associations),
-      -- jsonb_pretty(routes)
     from
       aws_vpc_route_table
     where
@@ -160,74 +505,72 @@ query "aws_vpc_route_tables_for_vpc" {
 
 query "aws_vpc_routes_for_vpc_sankey" {
   sql = <<-EOQ
-
-  with routes as (
-   select
-      route_table_id,
-      vpc_id,
-      -- jsonb_pretty(a),
-      -- jsonb_pretty(routes),
-      r ->> 'State' as state,
-      case
-        when r ->> 'GatewayId' is not null then r ->> 'GatewayId'
-        when r ->> 'InstanceId' is not null then r ->> 'InstanceId'
-        when r ->> 'NatGatewayId' is not null then r ->> 'NatGatewayId'
-        when r ->> 'LocalGatewayId' is not null then r ->> 'LocalGatewayId'
-        when r ->> 'CarrierGatewayId' is not null then r ->> 'CarrierGatewayId'
-        when r ->> 'TransitGatewayId' is not null then r ->> 'TransitGatewayId'
-        when r ->> 'VpcPeeringConnectionId' is not null then r ->> 'VpcPeeringConnectionId'
-        when r ->> 'DestinationPrefixListId' is not null then r ->> 'DestinationPrefixListId'
-        when r ->> 'DestinationIpv6CidrBlock' is not null then r ->> 'DestinationIpv6CidrBlock'
-        when r ->> 'EgressOnlyInternetGatewayId' is not null then r ->> 'EgressOnlyInternetGatewayId'
-        when r ->> 'NetworkInterfaceId' is not null then r ->> 'NetworkInterfaceId'
-        when r ->> 'CoreNetworkArn' is not null then r ->> 'CoreNetworkArn'
-        when r ->> 'InstanceOwnerId' is not null then r ->> 'InstanceOwnerId'
-      end as gateway,
-      case
-        when r ->> 'DestinationCidrBlock' is not null then r ->> 'DestinationCidrBlock'
-        when r ->> 'DestinationIpv6CidrBlock' is not null then r ->> 'DestinationIpv6CidrBlock'
-        else '???'
-      end as destination_cidr,
-      case
-        when a ->> 'Main' = 'true' then vpc_id
-        when a ->> 'SubnetId' is not null then  a->> 'SubnetId'
-        else '??'
-      end as associated_to
-
-    from
-      aws_vpc_route_table,
-      jsonb_array_elements(routes) as r,
-      jsonb_array_elements(associations) as a
-    where
-      vpc_id = reverse(split_part(reverse($1), '/', 1))
-  )
+    with routes as (
     select
-      null as parent,
-      associated_to as id,
-      associated_to as name,
-      'aws_vpc_route_table' as category,
-      0 as depth
-    from
-      routes
-    union
-      select
-        associated_to as parent,
-        destination_cidr as id,
-        destination_cidr as name,
-        'vpc_or_subnet' as category,
-        1 as depth
-      from
-        routes
-    union
-      select
-        destination_cidr as parent,
-        gateway as id,
-        gateway as name,
-        'gateway' as category,
-        2 as depth
-      from
-        routes
+        route_table_id,
+        vpc_id,
+        -- jsonb_pretty(a),
+        -- jsonb_pretty(routes),
+        r ->> 'State' as state,
+        case
+          when r ->> 'GatewayId' is not null then r ->> 'GatewayId'
+          when r ->> 'InstanceId' is not null then r ->> 'InstanceId'
+          when r ->> 'NatGatewayId' is not null then r ->> 'NatGatewayId'
+          when r ->> 'LocalGatewayId' is not null then r ->> 'LocalGatewayId'
+          when r ->> 'CarrierGatewayId' is not null then r ->> 'CarrierGatewayId'
+          when r ->> 'TransitGatewayId' is not null then r ->> 'TransitGatewayId'
+          when r ->> 'VpcPeeringConnectionId' is not null then r ->> 'VpcPeeringConnectionId'
+          when r ->> 'DestinationPrefixListId' is not null then r ->> 'DestinationPrefixListId'
+          when r ->> 'DestinationIpv6CidrBlock' is not null then r ->> 'DestinationIpv6CidrBlock'
+          when r ->> 'EgressOnlyInternetGatewayId' is not null then r ->> 'EgressOnlyInternetGatewayId'
+          when r ->> 'NetworkInterfaceId' is not null then r ->> 'NetworkInterfaceId'
+          when r ->> 'CoreNetworkArn' is not null then r ->> 'CoreNetworkArn'
+          when r ->> 'InstanceOwnerId' is not null then r ->> 'InstanceOwnerId'
+        end as gateway,
+        case
+          when r ->> 'DestinationCidrBlock' is not null then r ->> 'DestinationCidrBlock'
+          when r ->> 'DestinationIpv6CidrBlock' is not null then r ->> 'DestinationIpv6CidrBlock'
+          else '???'
+        end as destination_cidr,
+        case
+          when a ->> 'Main' = 'true' then vpc_id
+          when a ->> 'SubnetId' is not null then  a->> 'SubnetId'
+          else '??'
+        end as associated_to
 
+      from
+        aws_vpc_route_table,
+        jsonb_array_elements(routes) as r,
+        jsonb_array_elements(associations) as a
+      where
+        vpc_id = reverse(split_part(reverse($1), '/', 1))
+    )
+      select
+        null as parent,
+        associated_to as id,
+        associated_to as name,
+        'aws_vpc_route_table' as category,
+        0 as depth
+      from
+        routes
+      union
+        select
+          associated_to as parent,
+          destination_cidr as id,
+          destination_cidr as name,
+          'vpc_or_subnet' as category,
+          1 as depth
+        from
+          routes
+      union
+        select
+          destination_cidr as parent,
+          gateway as id,
+          gateway as name,
+          'gateway' as category,
+          2 as depth
+        from
+          routes
   EOQ
 
   param "arn" {}
@@ -260,21 +603,17 @@ query "aws_vpc_routes_for_vpc" {
         when a ->> 'SubnetId' is not null then  a->> 'SubnetId'
         else '??'
       end as associated_to
-
     from
       aws_vpc_route_table,
       jsonb_array_elements(routes) as r,
       jsonb_array_elements(associations) as a
     where
       vpc_id = reverse(split_part(reverse($1), '/', 1))
-
     order by
       route_table_id,
       associated_to,
       destination_cidr,
       gateway
-
-
   EOQ
 
   param "arn" {}
@@ -283,7 +622,6 @@ query "aws_vpc_routes_for_vpc" {
 query "aws_vpc_peers_for_vpc" {
   sql = <<-EOQ
     select
-      -- distinct id, -- seems to be broken (EOF)
       id,
       status_code,
       requester_owner_id,
@@ -311,50 +649,43 @@ query "aws_vpc_gateways_for_vpc" {
       internet_gateway_id as id,
       'aws_vpc_internet_gateway' as type,
       a ->> 'State' as state
-      -- ip_address
     from
       aws_vpc_internet_gateway,
       jsonb_array_elements(attachments) as a
      where
       a ->> 'VpcId' = reverse(split_part(reverse($1), '/', 1))
-
-
-    union all select
+    union all
+    select
       title,
       id,
       'aws_vpc_egress_only_internet_gateway' as type,
       a ->> 'State' as state
-      -- ip_address
     from
       aws_vpc_egress_only_internet_gateway,
       jsonb_array_elements(attachments) as a
      where
       a ->> 'VpcId' = reverse(split_part(reverse($1), '/', 1))
-
-
-    union all select
+    union all
+    select
       title,
       vpn_gateway_id as id,
       'aws_vpc_vpn_gateway' as type,
       a ->> 'State' as state
-      -- ip_address
     from
       aws_vpc_vpn_gateway,
       jsonb_array_elements(vpc_attachments) as a
      where
       a ->> 'VpcId' = reverse(split_part(reverse($1), '/', 1))
-
-    union all select
+    union all
+    select
       title,
       nat_gateway_id as id,
       'aws_vpc_nat_gateway' as type,
       state
-      -- ip_address
     from
       aws_vpc_nat_gateway
      where
        vpc_id = reverse(split_part(reverse($1), '/', 1))
-
   EOQ
 
   param "arn" {}
@@ -374,7 +705,6 @@ query "aws_ingress_nacl_for_vpc_sankey" {
       where
         vpc_id = reverse(split_part(reverse($1), '/', 1))
     )
-
     -- CIDRS
     select
       concat(network_acl_id, '_'::text, e ->> 'RuleNumber', '_port_proto') as parent,
@@ -387,13 +717,10 @@ query "aws_ingress_nacl_for_vpc_sankey" {
       jsonb_array_elements(entries) as e
     where
       not (e ->> 'Egress')::boolean
-
-
     -- Port - protcol
     union all select
       concat(network_acl_id, '_', to_char((e->>'RuleNumber')::numeric, 'fm00000'))  as parent,
       concat(network_acl_id, '_'::text, e ->> 'RuleNumber', '_port_proto') as id,
-
       case when e ->> 'RuleAction' = 'allow' then 'Allow ' else 'Deny ' end ||
       case
         when e->>'Protocol' = '-1' then 'All Traffic'
@@ -426,9 +753,8 @@ query "aws_ingress_nacl_for_vpc_sankey" {
       jsonb_array_elements(entries) as e
     where
       not (e ->> 'Egress')::boolean
-
-
-   union all select
+    union all
+    select
       network_acl_id as parent,
       concat(network_acl_id, '_', to_char( (e->>'RuleNumber')::numeric, 'fm00000')) as id,
       concat('Rule #', e ->> 'RuleNumber')  as name,
@@ -439,27 +765,23 @@ query "aws_ingress_nacl_for_vpc_sankey" {
       jsonb_array_elements(entries) as e
     where
       not (e ->> 'Egress')::boolean
-    -- order by
-    --   e -> 'RuleNumber'
-
-    union all select
-      null as parent,
-      network_acl_id as id,
-      network_acl_id as name,
-      3 as depth,
-      'aws_vpc_network_acl' as category
-    from
-      nacl_data
-
-    union all select
-      a->>'NetworkAclId' as parent,
-      a->>'SubnetId' as id,
-      a->>'SubnetId' as name,
-      4 as depth,
-      'aws_vpc_subnet' as category
-    from
-      nacl_data,
-      jsonb_array_elements(associations) as a
+      union all select
+        null as parent,
+        network_acl_id as id,
+        network_acl_id as name,
+        3 as depth,
+        'aws_vpc_network_acl' as category
+      from
+        nacl_data
+      union all select
+        a->>'NetworkAclId' as parent,
+        a->>'SubnetId' as id,
+        a->>'SubnetId' as name,
+        4 as depth,
+        'aws_vpc_subnet' as category
+      from
+        nacl_data,
+        jsonb_array_elements(associations) as a
   EOQ
 
   param "arn" {}
@@ -479,7 +801,6 @@ query "aws_egress_nacl_for_vpc_sankey" {
       where
         vpc_id = reverse(split_part(reverse($1), '/', 1))
     )
-
     select
       a->>'NetworkAclId' as parent,
       a->>'SubnetId' as id,
@@ -489,7 +810,6 @@ query "aws_egress_nacl_for_vpc_sankey" {
     from
       nacl_data,
       jsonb_array_elements(associations) as a
-
     union all select
       null as parent,
       network_acl_id as id,
@@ -515,8 +835,6 @@ query "aws_egress_nacl_for_vpc_sankey" {
     union all select
       concat(network_acl_id, '_', to_char((e->>'RuleNumber')::numeric, 'fm00000'))  as parent,
       concat(network_acl_id, '_'::text, e ->> 'RuleNumber', '_port_proto') as id,
-
-
       case when e ->> 'RuleAction' = 'allow' then 'Allow ' else 'Deny ' end ||
       case
         when e->>'Protocol' = '-1' then 'All Traffic'
@@ -562,7 +880,6 @@ query "aws_egress_nacl_for_vpc_sankey" {
       jsonb_array_elements(entries) as e
     where
       (e ->> 'Egress')::boolean
-
   EOQ
 
   param "arn" {}
@@ -572,7 +889,6 @@ query "aws_vpc_peers_for_vpc_sankey" {
   sql = <<-EOQ
     with peers as (
       select
-        -- distinct id, -- seems to be broken (EOF)
         id,
         status_code,
         requester_owner_id,
@@ -598,7 +914,6 @@ query "aws_vpc_peers_for_vpc_sankey" {
       status_code as category
     from
       peers
-
     union select
       concat('requestor_', requester_region) as parent,
       --null as parent,
@@ -608,9 +923,7 @@ query "aws_vpc_peers_for_vpc_sankey" {
       'account' as category
     from
       peers
-
     union select
-      -- concat('requestor_', requester_cidr_block) as parent,
       id as parent,
       concat('requestor_', requester_region) as id,
       requester_region as name,
@@ -618,11 +931,7 @@ query "aws_vpc_peers_for_vpc_sankey" {
       'region' as category
     from
       peers
-
-
-
     union select
-      --concat('requestor_', requester_owner_id)  as parent,
       null as parent,
       id,
       id as name,
@@ -630,9 +939,7 @@ query "aws_vpc_peers_for_vpc_sankey" {
       status_code as category
     from
       peers
-
     union select
-      -- concat('acceptor_', accepter_owner_id) as parent,
       id as parent,
       concat('acceptor_', accepter_region) as id,
       accepter_region as name,
@@ -640,9 +947,7 @@ query "aws_vpc_peers_for_vpc_sankey" {
       'region' as category
     from
       peers
-
     union select
-      -- id as parent,
       concat('acceptor_', accepter_region) as parent,
       concat('acceptor_', accepter_owner_id) as id,
       accepter_owner_id as name,
@@ -650,8 +955,6 @@ query "aws_vpc_peers_for_vpc_sankey" {
       'account' as category
     from
       peers
-
-
     union  select
       concat('acceptor_', accepter_owner_id) as parent,
       concat('acceptor_', accepter_cidr_block) as id,
@@ -660,352 +963,7 @@ query "aws_vpc_peers_for_vpc_sankey" {
       status_code as category
     from
       peers
-
   EOQ
 
   param "arn" {}
-}
-
-dashboard "aws_vpc_detail" {
-
-  title = "AWS VPC Detail"
-
-  tags = merge(local.vpc_common_tags, {
-    type = "Detail"
-  })
-
-  input "vpc_arn" {
-    title = "Select a VPC:"
-    sql   = query.aws_vpc_input.sql
-    width = 4
-  }
-
-  container {
-
-    # Analysis
-    card {
-      #title = "Size"
-      query = query.aws_vpc_num_ips_for_vpc
-      width = 2
-      args = {
-        arn = self.input.vpc_arn.value
-      }
-    }
-
-    #    # Assessments
-    card {
-      #title = "Subnet Count"
-      query = query.aws_subnet_count_for_vpc
-      width = 2
-      args = {
-        arn = self.input.vpc_arn.value
-      }
-    }
-
-    card {
-      query = query.aws_vpc_is_default
-      width = 2
-      args = {
-        arn = self.input.vpc_arn.value
-      }
-    }
-
-    card {
-      query = query.aws_flowlogs_count_for_vpc
-      width = 2
-      args = {
-        arn = self.input.vpc_arn.value
-      }
-    }
-
-  }
-
-  container {
-    # title = "Overiew"
-
-    container {
-      width = 6
-
-      table {
-        title = "Overview"
-        type  = "line"
-        width = 6
-        sql   = <<-EOQ
-          select
-            vpc_id as "VPC Id",
-            title as "Title",
-            region as "Region",
-            account_id as "Account ID",
-            arn as "ARN"
-          from
-            aws_vpc
-          where
-            arn = $1
-        EOQ
-
-        param "arn" {}
-
-        args = {
-          arn = self.input.vpc_arn.value
-        }
-      }
-
-      table {
-        title = "Tags"
-        width = 6
-
-        sql = <<-EOQ
-          select
-            tag ->> 'Key' as "Key",
-            tag ->> 'Value' as "Value"
-          from
-            aws_vpc,
-            jsonb_array_elements(tags_src) as tag
-          where
-            arn = $1
-        EOQ
-
-        param "arn" {}
-
-        args = {
-          arn = self.input.vpc_arn.value
-        }
-      }
-    }
-
-    container {
-      width = 6
-
-      table {
-        title = "CIDR Blocks"
-
-        sql = <<-EOQ
-          select
-            b ->> 'CidrBlock' as cidr_block,
-            power(2, 32 - masklen( (b ->> 'CidrBlock'):: cidr)) as num_ips
-          from
-            aws_vpc,
-            jsonb_array_elements(cidr_block_association_set) as b
-          where
-            arn = $1
-
-          union all select
-            b ->> 'Ipv6CidrBlock' as cidr_block,
-            power(2, 128 - masklen( (b ->> 'Ipv6CidrBlock'):: cidr)) as num_ips
-          from
-            aws_vpc,
-            jsonb_array_elements(ipv6_cidr_block_association_set) as b
-          where
-            arn = $1;
-        EOQ
-        param "arn" {}
-
-        args = {
-          arn = self.input.vpc_arn.value
-        }
-      }
-
-      table {
-        title = "DHCP Options"
-
-        sql = <<-EOQ
-          select
-            d.title,
-            d.dhcp_options_id,
-            d.domain_name,
-            d.domain_name_servers,
-            d.netbios_name_servers,
-            d.netbios_node_type,
-            d.ntp_servers
-          from
-            aws_vpc as v,
-            aws_vpc_dhcp_options as d
-          where
-            v.arn = $1
-            and v.dhcp_options_id = d.dhcp_options_id;
-       EOQ
-        param "arn" {}
-
-        args = {
-          arn = self.input.vpc_arn.value
-        }
-      }
-
-    }
-
-  }
-
-  container {
-    title = "Subnets"
-
-    chart {
-      title = "Subnets by AZ"
-      type  = "column"
-      width = 4
-      sql   = <<-EOQ
-        select
-          availability_zone,
-          count(*)
-        from
-          aws_vpc_subnet
-        where
-          vpc_id = reverse(split_part(reverse($1), '/', 1))
-        group by
-          availability_zone
-        order by
-          availability_zone
-      EOQ
-
-      param "arn" {}
-
-      args = {
-        arn = self.input.vpc_arn.value
-      }
-
-    }
-
-    table {
-      query = query.aws_vpc_subnets_for_vpc
-      width = 6
-      args = {
-        arn = self.input.vpc_arn.value
-      }
-    }
-
-  }
-
-  container {
-    title = "Routing"
-
-    hierarchy {
-      query = query.aws_vpc_routes_for_vpc_sankey
-      args = {
-        arn = self.input.vpc_arn.value
-      }
-    }
-
-    table {
-      title = "Route Tables"
-      query = query.aws_vpc_route_tables_for_vpc
-      width = 6
-      args = {
-        arn = self.input.vpc_arn.value
-      }
-    }
-
-    table {
-      title = "Routes"
-      query = query.aws_vpc_routes_for_vpc
-      width = 6
-      args = {
-        arn = self.input.vpc_arn.value
-      }
-    }
-
-  }
-
-  container {
-    title = "Peering Connections"
-
-    # table {
-    #   sql = query.aws_vpc_peers_for_vpc_sankey.sql
-    # }
-
-    hierarchy {
-      title = "Peering Connections"
-      width = 6
-      query = query.aws_vpc_peers_for_vpc_sankey
-      args = {
-        arn = self.input.vpc_arn.value
-      }
-
-      category "failed" {
-        color = "red"
-      }
-
-      category "active" {
-        color = "green"
-      }
-    }
-
-    table {
-      title = "Peering Connections"
-      query = query.aws_vpc_peers_for_vpc
-      args = {
-        arn = self.input.vpc_arn.value
-      }
-    }
-  }
-
-  container {
-    title = "NACLs"
-
-    hierarchy {
-      title = "Ingress NACLS"
-      width = 6
-      query = query.aws_ingress_nacl_for_vpc_sankey
-      args = {
-        arn = self.input.vpc_arn.value
-      }
-
-      category "deny" {
-        color = "red"
-      }
-
-      category "allow" {
-        color = "green"
-      }
-    }
-
-    hierarchy {
-      title = "Egress NACLS"
-      width = 6
-      query = query.aws_egress_nacl_for_vpc_sankey
-      args = {
-        arn = self.input.vpc_arn.value
-      }
-
-      category "deny" {
-        color = "red"
-      }
-
-      category "allow" {
-        color = "green"
-      }
-    }
-
-  }
-
-  container {
-    title = "Gateways & Endpoints"
-    table {
-      title = "VPC Endpoints"
-
-      query = query.aws_vpc_endpoints_for_vpc
-      width = 6
-      args = {
-        arn = self.input.vpc_arn.value
-      }
-    }
-
-    table {
-      title = "Gateways"
-      query = query.aws_vpc_gateways_for_vpc
-      width = 6
-      args = {
-        arn = self.input.vpc_arn.value
-      }
-    }
-  }
-
-  container {
-    title = "Security Groups"
-    table {
-      query = query.aws_vpc_security_groups_for_vpc
-      width = 12
-      args = {
-        arn = self.input.vpc_arn.value
-      }
-    }
-  }
 }

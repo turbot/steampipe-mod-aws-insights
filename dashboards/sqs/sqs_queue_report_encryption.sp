@@ -31,6 +31,7 @@ dashboard "aws_sqs_queue_encryption_report" {
   }
 
 }
+
 query "aws_sqs_queue_encryption_table" {
   sql = <<-EOQ
     select
