@@ -250,7 +250,7 @@ query "aws_rds_db_instance_class" {
 query "aws_rds_db_instance_public" {
   sql = <<-EOQ
     select
-      'Public' as label,
+      'Public Access' as label,
       case when not publicly_accessible then 'Disabled' else 'Enabled' end as value,
       case when not  publicly_accessible then 'ok' else 'alert' end as type
     from

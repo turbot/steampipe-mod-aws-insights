@@ -252,7 +252,7 @@ query "aws_rds_db_instance_public_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Public' as label,
+      'Publicly Accessible' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_rds_db_instance
@@ -289,7 +289,7 @@ query "aws_rds_db_instance_not_in_vpc_count" {
 
 query "aws_rds_db_instance_logging_disabled_count" {
   sql = <<-EOQ
-    with logging_stat as(
+    with logging_stat as (
       select
         db_instance_identifier
       from
@@ -393,7 +393,7 @@ query "aws_rds_db_instance_in_vpc_status" {
 
 query "aws_rds_db_instance_logging_status" {
   sql = <<-EOQ
-  with logging_stat as(
+  with logging_stat as (
     select
       db_instance_identifier
     from

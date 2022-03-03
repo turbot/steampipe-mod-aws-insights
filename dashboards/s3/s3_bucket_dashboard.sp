@@ -16,7 +16,7 @@ dashboard "aws_s3_bucket_dashboard" {
 
     # Assessments
     card {
-      sql   = query.aws_s3_bucket_public_count.sql
+      sql   = query.aws_s3_bucket_public_block_count.sql
       width = 2
     }
 
@@ -49,16 +49,16 @@ dashboard "aws_s3_bucket_dashboard" {
     width = 6
 
     chart {
-      title = "Public/Private"
-      sql   = query.aws_s3_bucket_public_status.sql
+      title = "Public Access Blocked"
+      sql   = query.aws_s3_bucket_public_access_blocked.sql
       type  = "donut"
       width = 4
 
       series "count" {
-        point "private" {
+        point "blocked" {
           color = "ok"
         }
-        point "public" {
+        point "not blocked" {
           color = "alert"
         }
       }
@@ -228,11 +228,11 @@ query "aws_s3_bucket_unencrypted_count" {
   EOQ
 }
 
-query "aws_s3_bucket_public_count" {
+query "aws_s3_bucket_public_block_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Public' as label,
+      'Public Access Not Blocked' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_s3_bucket
@@ -240,9 +240,7 @@ query "aws_s3_bucket_public_count" {
       not block_public_acls
       or not block_public_policy
       or not ignore_public_acls
-      or not restrict_public_buckets
-      -- bucket_policy_is_publicy if true then bucket is public
-      or bucket_policy_is_public;
+      or not restrict_public_buckets;
   EOQ
 }
 
@@ -276,7 +274,7 @@ query "aws_s3_bucket_cost_mtd" {
 
 query "aws_s3_bucket_versioning_status" {
   sql = <<-EOQ
-    with versioning_status as(
+    with versioning_status as (
       select
         case
           when versioning_enabled then 'enabled' else 'disabled'
@@ -296,7 +294,7 @@ query "aws_s3_bucket_versioning_status" {
 
 query "aws_s3_bucket_by_default_encryption_status" {
   sql = <<-EOQ
-    with default_encryption as(
+    with default_encryption as (
       select
         case when server_side_encryption_configuration is not null then 'enabled' else 'disabled'
         end as visibility
@@ -313,9 +311,9 @@ query "aws_s3_bucket_by_default_encryption_status" {
   EOQ
 }
 
-query "aws_s3_bucket_public_status" {
+query "aws_s3_bucket_public_access_blocked" {
   sql = <<-EOQ
-    with public_status as(
+    with public_block_status as (
       select
         case
           when
@@ -323,24 +321,24 @@ query "aws_s3_bucket_public_status" {
             and block_public_policy
             and ignore_public_acls
             and restrict_public_buckets
-          then 'private' else 'public'
-        end as visibility
+          then 'blocked' else 'not blocked'
+        end as block_status
       from
         aws_s3_bucket
     )
     select
-      visibility,
+      block_status,
       count(*)
     from
-      public_status
+      public_block_status
     group by
-      visibility;
+      block_status;
   EOQ
 }
 
 query "aws_s3_bucket_logging_status" {
   sql = <<-EOQ
-    with logging_status as(
+    with logging_status as (
       select
         case when logging -> 'TargetBucket' is not null then 'enabled' else 'disabled'
         end as visibility
@@ -359,7 +357,7 @@ query "aws_s3_bucket_logging_status" {
 
 query "aws_s3_bucket_versioning_mfa_status" {
   sql = <<-EOQ
-    with versioning_mfa_status as(
+    with versioning_mfa_status as (
       select
         case
           when versioning_mfa_delete then 'enabled' else 'disabled'
@@ -386,7 +384,7 @@ query "aws_s3_bucket_cross_region_replication_status" {
           from
             aws_s3_bucket,
             jsonb_array_elements(replication -> 'Rules' ) as r
-        ), tets as(
+        ), tets as (
             select
               case
                 when b.name = r.name and r.rep_status = 'Enabled' then 'enabled' else 'disabled'

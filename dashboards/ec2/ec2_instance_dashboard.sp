@@ -199,7 +199,7 @@ query "aws_ec2_public_instance_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Public' as label,
+      'Publicly Accessible' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_ec2_instance

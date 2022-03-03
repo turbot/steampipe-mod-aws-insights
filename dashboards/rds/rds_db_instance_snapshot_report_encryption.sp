@@ -15,7 +15,8 @@ dashboard "aws_rds_db_instace_snapshot_encryption_report" {
     }
 
     card {
-      sql = query.aws_rds_db_instance_snapshot_unencrypted_count.sql
+      sql   = query.aws_rds_db_instance_snapshot_unencrypted_count.sql
+      width = 2
     }
 
   }

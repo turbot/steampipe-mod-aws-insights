@@ -203,7 +203,7 @@ query "aws_ec2_instance_total_cores_count" {
 query "aws_ec2_instance_public_access" {
   sql = <<-EOQ
     select
-      'Public' as label,
+      'Public Access' as label,
       case when public_ip_address is null then 'Disabled' else 'Enabled' end as value,
       case when public_ip_address is null then 'ok' else 'alert' end as type
     from

@@ -269,7 +269,7 @@ query "aws_redshift_cluster_encryption" {
 query "aws_redshift_cluster_public" {
   sql = <<-EOQ
     select
-      'Public' as label,
+      'Public Access' as label,
       case when publicly_accessible then 'Disabled' else 'Enabled' end as value,
       case when not publicly_accessible then 'ok' else 'alert' end as "type"
     from

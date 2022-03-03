@@ -58,16 +58,16 @@ dashboard "aws_sns_topic_dashboard" {
     }
 
     chart {
-      title = "Subscription Status"
+      title = "Subscription Count"
       sql   = query.aws_sns_topic_by_subscription_status.sql
       type  = "donut"
       width = 4
 
       series "count" {
         point "enabled" {
-          color = "ok"
+          color = "1+"
         }
-        point "disabled" {
+        point "0" {
           color = "alert"
         }
       }
@@ -142,7 +142,7 @@ query "aws_sns_topic_by_subscription_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'No Subscription' as label,
+      'No Subscriptions' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_sns_topic
@@ -195,9 +195,9 @@ query "aws_sns_topic_by_subscription_status" {
     from (
       select subscriptions_confirmed,
         case when subscriptions_confirmed::int = 0 then
-          'disabled'
+          '0'
         else
-          'enabled'
+          '1+'
         end subscription_status
       from
         aws_sns_topic) as t

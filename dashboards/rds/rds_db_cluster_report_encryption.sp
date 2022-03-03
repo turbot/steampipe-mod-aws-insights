@@ -39,9 +39,9 @@ query "aws_rds_db_cluster_encryption_table" {
   sql = <<-EOQ
     select
       c.db_cluster_identifier as "DB Cluster",
-      case when r.storage_encrypted then 'Enabled' else null end as "Encryption",
+      case when c.storage_encrypted then 'Enabled' else null end as "Encryption",
       c.kms_key_id as "KMS Key ID",
-      a.title as "Account"
+      a.title as "Account",
       c.account_id as "Account ID",
       c.region as "Region",
       c.arn as "ARN"
@@ -50,7 +50,7 @@ query "aws_rds_db_cluster_encryption_table" {
       aws_account as a
     where
       c.account_id = a.account_id
-    order by 
+    order by
       c.db_cluster_identifier;
   EOQ
 }

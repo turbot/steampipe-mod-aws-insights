@@ -8,24 +8,24 @@ dashboard "aws_dynamodb_table_dashboard" {
 
   # Top cards
   container {
+
+    # Analysis
     card {
       sql   = query.aws_dynamodb_table_count.sql
       width = 2
     }
 
-    # Unused Table
+    # Assessments
     card {
       sql = query.aws_dynamodb_table_unused_count.sql
       width = 2
     }
 
-    # Autoscaling
     card {
       sql = query.aws_dynamodb_table_autoscaling_disabled_count.sql
       width = 2
     }
 
-    # Continuous Backup
     card {
       sql = query.aws_dynamodb_table_continuous_backup_count.sql
       width = 2

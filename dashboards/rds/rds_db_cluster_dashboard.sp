@@ -277,7 +277,7 @@ query "aws_rds_db_cluster_by_encryption_status" {
 
 query "aws_rds_db_cluster_logging_status" {
   sql = <<-EOQ
-    with logging_stat as(
+    with logging_stat as (
       select
         db_cluster_identifier
       from

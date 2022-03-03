@@ -351,10 +351,10 @@ query "aws_s3_bucket_public_access" {
   sql = <<-EOQ
     select
       bucket_policy_is_public as "Has Public Bucket Policy",
-      block_public_acls as "New Public ACLs Allowed",
-      block_public_policy as "New Public Bucket Policies Allowed",
-      ignore_public_acls as "Public ACLs Not Ignored",
-      restrict_public_buckets as "Unrestricted Public Bucket Policies"
+      block_public_acls as "Block New Public ACLs",
+      block_public_policy as "Block New Public Bucket Policies",
+      ignore_public_acls as "Public ACLs Ignored",
+      restrict_public_buckets as "Public Bucket Policies Restricted"
     from
       aws_s3_bucket
     where

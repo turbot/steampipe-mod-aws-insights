@@ -157,7 +157,7 @@ dashboard "aws_lambda_function_dashboard" {
     }
 
     chart {
-      title = "Functions Code Size by Account (MB)"
+      title = "Function Code Size by Account (MB)"
       sql   = query.aws_lambda_function_code_size_by_account.sql
       type  = "column"
       width = 4
@@ -168,7 +168,7 @@ dashboard "aws_lambda_function_dashboard" {
     }
 
     chart {
-      title = "Functions Code Size by Region (MB)"
+      title = "Function Code Size by Region (MB)"
       sql   = query.aws_lambda_function_code_size_by_region.sql
       type  = "column"
       width = 4
@@ -179,7 +179,7 @@ dashboard "aws_lambda_function_dashboard" {
     }
 
     chart {
-      title = "Functions Code Size by Runtime"
+      title = "Function Code Size by Runtime"
       sql   = query.aws_lambda_function_code_size_by_runtime.sql
       type  = "column"
       width = 4
@@ -190,7 +190,7 @@ dashboard "aws_lambda_function_dashboard" {
     }
 
     chart {
-      title = "Functions Memory Size by Account (GB)"
+      title = "Function Memory Usage by Account (GB)"
       sql   = query.aws_lambda_function_memory_size_by_account.sql
       type  = "column"
       width = 4
@@ -201,7 +201,7 @@ dashboard "aws_lambda_function_dashboard" {
     }
 
     chart {
-      title = "Functions Memory Size by Region (GB)"
+      title = "Function Memory Usage by Region (GB)"
       sql   = query.aws_lambda_function_memory_size_by_region.sql
       type  = "column"
       width = 4
@@ -212,7 +212,7 @@ dashboard "aws_lambda_function_dashboard" {
     }
 
     chart {
-      title = "Functions Memory Size by Runtime (GB)"
+      title = "Function Memory Usage by Runtime (GB)"
       sql   = query.aws_lambda_function_memory_size_by_runtime.sql
       type  = "column"
       width = 4
@@ -258,7 +258,7 @@ query "aws_lambda_function_count" {
 query "aws_lambda_function_memory_total" {
   sql = <<-EOQ
     select
-      round(cast(sum(memory_size)/1024 as numeric), 1) as "Total Memory (GB)"
+      round(cast(sum(memory_size)/1024.0 as numeric), 2) as "Total Memory Usage (GB)"
     from
       aws_lambda_function
   EOQ
@@ -268,7 +268,7 @@ query "aws_lambda_function_public_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Public' as label,
+      'Publicly Accessible' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_lambda_function
@@ -544,7 +544,7 @@ query "aws_lambda_function_memory_size_by_account" {
   sql = <<-EOQ
     select
       a.title as "account",
-      round(cast(sum(i.memory_size)/1024 as numeric), 1) as "GB"
+      round(cast(sum(i.memory_size)/1024.0 as numeric), 2) as "GB"
     from
       aws_lambda_function as i,
       aws_account as a
@@ -561,7 +561,7 @@ query "aws_lambda_function_memory_size_by_region" {
   sql = <<-EOQ
     select
       region,
-      round(cast(sum(i.memory_size)/1024 as numeric), 1) as "GB"
+      round(cast(sum(i.memory_size)/1024.0 as numeric), 2) as "GB"
     from
       aws_lambda_function as i
     group by
@@ -573,7 +573,7 @@ query "aws_lambda_function_memory_size_by_runtime" {
   sql = <<-EOQ
     select
       runtime,
-      round(cast(sum(i.memory_size)/1024 as numeric), 1) as "GB"
+      round(cast(sum(i.memory_size)/1024.0 as numeric), 2) as "GB"
     from
       aws_lambda_function as i
     group by
