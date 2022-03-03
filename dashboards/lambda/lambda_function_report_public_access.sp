@@ -54,6 +54,8 @@ query "aws_lambda_function_public_access_table" {
       aws_lambda_function as f,
       aws_account as a
     where
-      f.account_id = a.account_id;
+      f.account_id = a.account_id
+    order by 
+      f.name;
   EOQ
 }

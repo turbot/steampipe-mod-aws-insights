@@ -125,24 +125,22 @@ query "aws_acm_certificate_1_year_count" {
 query "aws_acm_certificate_age_table" {
   sql = <<-EOQ
     select
-      v.tags ->> 'Name' as "Name",
-      v.domain_name as "Domain Name",
-      v.title as "ID",
-      now()::date - v.created_at::date as "Age in Days",
-      v.created_at as "Create Time",
-      v.not_after as "Expiry Time",
-      v.status as "Status",
+      c.domain_name as "Domain Name",
+      c.title as "ID",
+      now()::date - c.created_at::date as "Age in Days",
+      c.created_at as "Create Time",
+      c.not_after as "Expiry Time",
+      c.status as "Status",
       a.title as "Account",
-      v.account_id as "Account ID",
-      v.region as "Region",
-      v.certificate_arn as "ARN"
+      c.account_id as "Account ID",
+      c.region as "Region",
+      c.certificate_arn as "ARN"
     from
-      aws_acm_certificate as v,
+      aws_acm_certificate as c,
       aws_account as a
     where
-      v.account_id = a.account_id
+      c.account_id = a.account_id
     order by
-      v.created_at,
-      v.title;
+      c.domain_name;
   EOQ
 }

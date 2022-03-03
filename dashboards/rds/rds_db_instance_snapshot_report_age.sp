@@ -138,7 +138,6 @@ query "aws_rds_db_instance_snapshot_age_table" {
     where
       s.account_id = a.account_id
     order by
-      s.create_time,
       s.title;
   EOQ
 }

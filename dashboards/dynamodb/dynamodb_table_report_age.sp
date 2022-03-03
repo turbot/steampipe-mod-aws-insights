@@ -123,21 +123,20 @@ query "aws_dynamodb_table_1_year_count" {
 query "aws_dynamodb_table_age_table" {
   sql = <<-EOQ
     select
-      v.name as "Name",
-      now()::date - v.creation_date_time::date as "Age in Days",
-      v.creation_date_time as "Create Time",
-      v.table_status as "State",
+      d.name as "Name",
+      now()::date - d.creation_date_time::date as "Age in Days",
+      d.creation_date_time as "Create Time",
+      d.table_status as "State",
       a.title as "Account",
-      v.account_id as "Account ID",
-      v.region as "Region",
-      v.arn as "ARN"
+      d.account_id as "Account ID",
+      d.region as "Region",
+      d.arn as "ARN"
     from
-      aws_dynamodb_table as v,
+      aws_dynamodb_table as d,
       aws_account as a
     where
-      v.account_id = a.account_id
+      d.account_id = a.account_id
     order by
-      v.creation_date_time,
-      v.title;
+      d.title;
   EOQ
 }

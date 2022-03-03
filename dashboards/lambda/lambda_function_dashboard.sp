@@ -279,7 +279,7 @@ query "aws_lambda_function_count" {
 query "aws_lambda_function_memory_total" {
   sql = <<-EOQ
     select
-      round(cast(sum(memory_size)/1024 as numeric), 1) as "Total Memory(GB)"
+      round(cast(sum(memory_size)/1024 as numeric), 1) as "Total Memory (GB)"
     from
       aws_lambda_function
   EOQ

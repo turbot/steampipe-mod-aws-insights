@@ -86,7 +86,7 @@ dashboard "aws_rds_db_instance_detail" {
               create_time as "Create Time",
               title as "Title",
               region as "Region",
-              account_id as "Account Id",
+              account_id as "Account ID",
               arn as "ARN"
             from
               aws_rds_db_instance
@@ -114,6 +114,8 @@ dashboard "aws_rds_db_instance_detail" {
             jsonb_array_elements(tags_src) as tag
           where
             arn = $1
+          order by
+            tag ->> 'Key';
           EOQ
 
         param "arn" {}
@@ -369,7 +371,7 @@ query "aws_rds_db_instance_logging" {
 query "aws_rds_db_instance_security_groups" {
   sql = <<-EOQ
     select
-      s ->> 'VpcSecurityGroupId' as "VPC Security Group Id",
+      s ->> 'VpcSecurityGroupId' as "VPC Security Group ID",
       s ->> 'Status' as "Status"
     from
       aws_rds_db_instance,

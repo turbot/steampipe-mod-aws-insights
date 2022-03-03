@@ -288,7 +288,7 @@ query "aws_s3_bucket_overview" {
       creation_date as "Creation Date",
       title as "Title",
       region as "Region",
-      account_id as "Account Id",
+      account_id as "Account ID",
       arn as "ARN"
     from
       aws_s3_bucket

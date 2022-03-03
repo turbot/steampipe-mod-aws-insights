@@ -103,6 +103,8 @@ query "aws_dynamodb_table_encryption_table" {
     from
       aws_dynamodb_table as t
       left join aws_kms_key as k on t.sse_description ->> 'KMSMasterKeyArn' = k.arn
-      join aws_account as a on t.account_id = a.account_id;
+      join aws_account as a on t.account_id = a.account_id
+    order by
+      t.name;
   EOQ
 }

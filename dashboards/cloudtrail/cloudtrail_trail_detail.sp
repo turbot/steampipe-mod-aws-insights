@@ -60,7 +60,7 @@ dashboard "aws_cloudtrail_trail_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        sql   = query.aws_cloudtrail_trail_overview.sql
+        query   = query.aws_cloudtrail_trail_overview
         args = {
           arn = self.input.trail_arn.value
         }
@@ -70,7 +70,7 @@ dashboard "aws_cloudtrail_trail_detail" {
       table {
         title = "Tags"
         width = 6
-        sql = query.aws_cloudtrail_trail_tags.sql
+        query = query.aws_cloudtrail_trail_tags
         args = {
           arn = self.input.trail_arn.value
         }
@@ -188,7 +188,7 @@ query "aws_cloudtrail_trail_overview" {
       is_organization_trail as "Organization Trail",
       title as "Title",
       home_region as "Home Region",
-      account_id as "Account Id",
+      account_id as "Account ID",
       arn as "ARN"
     from
       aws_cloudtrail_trail
@@ -208,7 +208,9 @@ query "aws_cloudtrail_trail_tags" {
       aws_cloudtrail_trail,
       jsonb_array_elements(tags_src) as tag
     where
-      arn = $1;
+      arn = $1
+    order by
+      tag ->> 'Key';
   EOQ
 
   param "arn" {}

@@ -30,11 +30,6 @@ dashboard "aws_ec2_instance_dashboard" {
       width = 2
     }
 
-    #  card {
-    #   sql   = query.aws_ec2_root_volume_unencrypted_instance_count.sql
-    #   width = 2
-    # }
-
    # Costs
    card {
       type  = "info"
@@ -70,22 +65,6 @@ dashboard "aws_ec2_instance_dashboard" {
       title = "EBS Optimized Status"
       sql   = query.aws_ec2_instance_ebs_optimized_status.sql
       type  = "donut"
-      width = 4
-
-      series "count" {
-        point "enabled" {
-          color = "ok"
-        }
-        point "disabled" {
-          color = "alert"
-        }
-      }
-    }
-
-    chart {
-      title  = "Root Volume Encryption"
-      sql    = query.aws_ec2_instance_root_volume_encryption_status.sql
-      type   = "donut"
       width = 4
 
       series "count" {
@@ -242,39 +221,6 @@ query "aws_ec2_ebs_optimized_count" {
   EOQ
 }
 
-# query "aws_ec2_root_volume_unencrypted_instance_count" {
-#   sql = <<-EOQ
-#     with non_encrypted_instances as (
-#       select
-#           encrypted,
-#           volume_id,
-#           att ->> 'InstanceId' as "instanceid",
-#           att ->> 'Device' as "device"
-#         from
-#           aws_ebs_volume,
-#           jsonb_array_elements(attachments) as att
-#         where
-#           not encrypted and attachments is not null
-#       )
-#       select
-#         count(*) as value,
-#         'Root Volume Unencrypted' as label,
-#         case count(*) when 0 then 'ok' else 'alert' end as "type",
-#         i.instance_id as "instance_id",
-#         i.root_device_name as "root_device_name",
-#         e.instanceid as "instanceid",
-#         e.device as  "device",
-#         e.encrypted ,
-#         case when i.root_device_name = e.device then
-#           'disabled'
-#         else
-#           'enabled'
-#         end encryption_status
-#       from
-#         aws_ec2_instance as i left join non_encrypted_instances as e on (e.instanceid = i.instance_id);
-#   EOQ
-# }
-
 query "aws_ec2_instance_cost_mtd" {
   sql = <<-EOQ
     select
@@ -329,40 +275,6 @@ query "aws_ec2_instance_ebs_optimized_status" {
       instances
     group by
       visibility
-  EOQ
-}
-
-query "aws_ec2_instance_root_volume_encryption_status" {
-  sql = <<-EOQ
-     with non_encrypted_instances as (
-      select
-        encrypted,
-        volume_id,
-        att ->> 'InstanceId' as "instanceid",
-        att ->> 'Device' as "device"
-      from
-        aws_ebs_volume,
-        jsonb_array_elements(attachments) as att
-      where
-        not encrypted and attachments is not null
-    )
-    select
-      encryption_status,
-      count(*)
-    from (
-      select
-        e.encrypted ,
-        case when i.root_device_name = e.device then
-          'disabled'
-        else
-          'enabled'
-        end encryption_status
-      from
-        aws_ec2_instance as i left join non_encrypted_instances as e on (e.instanceid = i.instance_id)) as t
-    group by
-      encryption_status
-    order by
-      encryption_status
   EOQ
 }
 

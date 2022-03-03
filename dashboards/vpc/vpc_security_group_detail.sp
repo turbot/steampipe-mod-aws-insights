@@ -68,12 +68,12 @@ dashboard "aws_vpc_security_group_detail" {
         sql   = <<-EOQ
           select
             group_name as "Group Name",
-            group_id as "Group Id",
+            group_id as "Group ID",
             description as "Description",
-            vpc_id as  "VPC Id",
+            vpc_id as  "VPC ID",
             title as "Title",
             region as "Region",
-            account_id as "Account Id",
+            account_id as "Account ID",
             arn as "ARN"
           from
             aws_vpc_security_group
@@ -101,6 +101,8 @@ dashboard "aws_vpc_security_group_detail" {
             jsonb_array_elements(tags_src) as tag
           where
             arn = $1
+          order by
+            tag ->> 'Key';
           EOQ
 
         param "arn" {}

@@ -1,8 +1,3 @@
-variable "iam_detail_role_arn" {
-  type    = string
-  default = "arn:aws:iam::013122550996:role/turbot/admin"
-}
-
 dashboard "aws_iam_role_detail" {
 
   title = "AWS IAM Role Detail"
@@ -12,7 +7,7 @@ dashboard "aws_iam_role_detail" {
   })
 
   input "role_arn" {
-    title = "Role"
+    title = "Select a role:"
     sql   = query.aws_iam_role_input.sql
     width = 2
   }
@@ -20,18 +15,27 @@ dashboard "aws_iam_role_detail" {
   container {
 
     card {
-      sql   = query.aws_iam_boundary_policy_for_role.sql
+      query   = query.aws_iam_boundary_policy_for_role
       width = 2
+      args  = {
+        arn = self.input.role_arn.value
+      }
     }
 
     card {
-      sql   = query.aws_iam_role_inline_policy_count_for_role.sql
+      query   = query.aws_iam_role_inline_policy_count_for_role
       width = 2
+      args  = {
+        arn = self.input.role_arn.value
+      }
     }
 
     card {
-      sql   = query.aws_iam_role_direct_attached_policy_count_for_role.sql
+      query   = query.aws_iam_role_direct_attached_policy_count_for_role
       width = 2
+      args  = {
+        arn = self.input.role_arn.value
+      }
     }
 
   }
@@ -41,23 +45,32 @@ dashboard "aws_iam_role_detail" {
     title = "Overview"
 
     table {
-      sql   = query.aws_iam_role_detail_overview.sql
+      query   = query.aws_iam_role_detail_overview
       width = 6
+      args  = {
+        arn = self.input.role_arn.value
+      }
     }
 
     table {
       title = "Tags"
+      type = "line"
       width = 6
       sql   = <<-EOQ
-          select
-            tag ->> 'Key' as "Key",
-            tag ->> 'Value' as "Value"
-          from
-            aws_iam_role,
-            jsonb_array_elements(tags_src) as tag
-          where
-            arn = 'arn:aws:iam::013122550996:role/admin-role'
-        EOQ
+        select
+          tag ->> 'Key' as "Key",
+          tag ->> 'Value' as "Value"
+        from
+          aws_iam_role,
+          jsonb_array_elements(tags_src) as tag
+        where
+          arn = $1
+      EOQ
+
+      param "arn" {}
+      args  = {
+        arn = self.input.role_arn.value
+      }
     }
 
   }
@@ -81,13 +94,19 @@ dashboard "aws_iam_role_detail" {
     table {
       title = "Groups"
       width = 6
-      sql   = query.aws_iam_groups_for_user.sql
+      query   = query.aws_iam_groups_for_user
+      args  = {
+        arn = self.input.role_arn.value
+      }
     }
 
     table {
       title = "Policies"
       width = 6
-      sql   = query.aws_iam_all_policies_for_role.sql
+      query   = query.aws_iam_all_policies_for_role
+      args  = {
+        arn = self.input.role_arn.value
+      }
     }
 
   }
@@ -126,8 +145,10 @@ query "aws_iam_boundary_policy_for_role" {
     from
       aws_iam_role
     where
-      arn = 'arn:aws:iam::013122550996:role/turbot/admin' --$1
+      arn = $1
   EOQ
+
+  param "arn" {}
 }
 
 query "aws_iam_role_inline_policy_count_for_role" {
@@ -139,8 +160,10 @@ query "aws_iam_role_inline_policy_count_for_role" {
     from
       aws_iam_role
     where
-      arn = 'arn:aws:iam::013122550996:role/turbot/admin'
+      arn = $1
   EOQ
+
+  param "arn" {}
 }
 
 query "aws_iam_role_direct_attached_policy_count_for_role" {
@@ -152,8 +175,10 @@ query "aws_iam_role_direct_attached_policy_count_for_role" {
     from
       aws_iam_role
     where
-      arn = 'arn:aws:iam::013122550996:role/turbot/admin' -- $1
+      arn = $1
   EOQ
+
+  param "arn" {}
 }
 
 query "aws_iam_role_detail_overview" {
@@ -168,8 +193,10 @@ query "aws_iam_role_detail_overview" {
     from
       aws_iam_role
     where
-      arn = 'arn:aws:iam::013122550996:role/turbot/admin' -- $1
+      arn = $1
   EOQ
+
+  param "arn" {}
 }
 
 query "aws_iam_all_policies_for_role" {
@@ -193,6 +220,8 @@ query "aws_iam_all_policies_for_role" {
       aws_iam_role as r,
       jsonb_array_elements(inline_policies_std) as i
     where
-      r.arn = 'arn:aws:iam::013122550996:role/turbot/admin'
+      arn = $1
   EOQ
+
+  param "arn" {}
 }
