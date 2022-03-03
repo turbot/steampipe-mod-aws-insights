@@ -66,6 +66,8 @@ query "aws_cloudtrail_trail_logging_table" {
       aws_account as a
     where
       t.account_id = a.account_id
-      and t.region = t.home_region;
+      and t.region = t.home_region
+    order by
+      t.name;
   EOQ  
 }

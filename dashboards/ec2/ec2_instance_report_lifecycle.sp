@@ -47,18 +47,21 @@ query "aws_ec2_stopped_instance_count" {
 query "aws_ec2_instance_lifecycle_table" {
   sql = <<-EOQ
     select
-      v.tags ->> 'Name' as "Name",
-      v.instance_id as "Instance ID",
-      v.instance_state as "State",
-      v.instance_lifecycle as "Lifecycle",
+      i.tags ->> 'Name' as "Name",
+      i.instance_id as "Instance ID",
+      i.instance_state as "State",
+      i.instance_lifecycle as "Lifecycle",
       a.title as "Account",
-      v.account_id as "Account ID",
-      v.region as "Region",
-      v.arn as "ARN"
+      i.account_id as "Account ID",
+      i.region as "Region",
+      i.arn as "ARN"
     from
-      aws_ec2_instance as v,
+      aws_ec2_instance as i,
       aws_account as a
     where
-      v.account_id = a.account_id;
+      i.account_id = a.account_id
+    order by
+      i.tags ->> 'Name',
+      i.instance_id;
   EOQ
 }
