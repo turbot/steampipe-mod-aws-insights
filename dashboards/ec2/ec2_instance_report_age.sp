@@ -1,5 +1,3 @@
-
-
 dashboard "aws_ec2_instance_age_report" {
 
   title = "AWS EC2 Instance Age Report"
