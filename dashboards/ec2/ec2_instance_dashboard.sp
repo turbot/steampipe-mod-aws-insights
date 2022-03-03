@@ -30,11 +30,6 @@ dashboard "aws_ec2_instance_dashboard" {
       width = 2
     }
 
-    #  card {
-    #   sql   = query.aws_ec2_root_volume_unencrypted_instance_count.sql
-    #   width = 2
-    # }
-
    # Costs
    card {
       type  = "info"
@@ -241,39 +236,6 @@ query "aws_ec2_ebs_optimized_count" {
       not ebs_optimized
   EOQ
 }
-
-# query "aws_ec2_root_volume_unencrypted_instance_count" {
-#   sql = <<-EOQ
-#     with non_encrypted_instances as (
-#       select
-#           encrypted,
-#           volume_id,
-#           att ->> 'InstanceId' as "instanceid",
-#           att ->> 'Device' as "device"
-#         from
-#           aws_ebs_volume,
-#           jsonb_array_elements(attachments) as att
-#         where
-#           not encrypted and attachments is not null
-#       )
-#       select
-#         count(*) as value,
-#         'Root Volume Unencrypted' as label,
-#         case count(*) when 0 then 'ok' else 'alert' end as "type",
-#         i.instance_id as "instance_id",
-#         i.root_device_name as "root_device_name",
-#         e.instanceid as "instanceid",
-#         e.device as  "device",
-#         e.encrypted ,
-#         case when i.root_device_name = e.device then
-#           'disabled'
-#         else
-#           'enabled'
-#         end encryption_status
-#       from
-#         aws_ec2_instance as i left join non_encrypted_instances as e on (e.instanceid = i.instance_id);
-#   EOQ
-# }
 
 query "aws_ec2_instance_cost_mtd" {
   sql = <<-EOQ
