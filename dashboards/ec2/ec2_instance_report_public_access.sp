@@ -47,17 +47,20 @@ query "aws_ec2_instance_public_access_count" {
 query "aws_ec2_instance_public_access_table" {
   sql = <<-EOQ
     select
-      v.tags ->> 'Name' as "Name",
-      v.instance_id as "Instance ID",
+      i.tags ->> 'Name' as "Name",
+      i.instance_id as "Instance ID",
       case when public_ip_address is null then 'Private' else 'Public' end as "Public/Private",
       a.title as "Account",
-      v.account_id as "Account ID",
-      v.region as "Region",
-      v.arn as "ARN"
+      i.account_id as "Account ID",
+      i.region as "Region",
+      i.arn as "ARN"
     from
-      aws_ec2_instance as v,
+      aws_ec2_instance as i,
       aws_account as a
     where
-      v.account_id = a.account_id;
+      i.account_id = a.account_id
+    order by
+      i.tags ->> 'Name',
+      i.instance_id;
   EOQ
 }

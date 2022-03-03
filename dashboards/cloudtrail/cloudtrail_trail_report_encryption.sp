@@ -46,6 +46,8 @@ query "aws_cloudtrail_trail_encryption_table" {
       aws_account as a
     where
       t.home_region = t.region
-      and t.account_id = a.account_id;
+      and t.account_id = a.account_id
+    order by
+      t.title;
   EOQ
 }
