@@ -188,7 +188,7 @@ query "aws_cloudtrail_trail_overview" {
       is_organization_trail as "Organization Trail",
       title as "Title",
       home_region as "Home Region",
-      account_id as "Account Id",
+      account_id as "Account ID",
       arn as "ARN"
     from
       aws_cloudtrail_trail

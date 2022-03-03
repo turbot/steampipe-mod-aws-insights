@@ -125,7 +125,6 @@ query "aws_acm_certificate_1_year_count" {
 query "aws_acm_certificate_age_table" {
   sql = <<-EOQ
     select
-      c.tags ->> 'Name' as "Name",
       c.domain_name as "Domain Name",
       c.title as "ID",
       now()::date - c.created_at::date as "Age in Days",
@@ -142,7 +141,6 @@ query "aws_acm_certificate_age_table" {
     where
       c.account_id = a.account_id
     order by
-      c.tags ->> 'Name',
       c.domain_name;
   EOQ
 }

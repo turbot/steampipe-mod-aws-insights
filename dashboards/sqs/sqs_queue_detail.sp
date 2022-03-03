@@ -196,7 +196,7 @@ query "aws_sqs_queue_overview" {
       queue_url as "Queue URL",
       title as "Title",
       region as "Region",
-      account_id as "Account Id",
+      account_id as "Account ID",
       queue_arn as "ARN"
     from
       aws_sqs_queue

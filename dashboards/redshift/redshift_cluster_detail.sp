@@ -80,10 +80,10 @@ dashboard "aws_redshift_cluster_detail" {
             cluster_namespace_arn as "Cluster Namespace ARN",
             db_name  as "DB Name",
             cluster_status  as "Cluster Status",
-            vpc_id as "VPC Id",
+            vpc_id as "VPC ID",
             title as "Title",
             region as "Region",
-            account_id as "Account Id",
+            account_id as "Account ID",
             arn as "ARN"
           from
             aws_redshift_cluster
@@ -356,7 +356,7 @@ query "aws_redshift_cluster_logging" {
 query "aws_redshift_cluster_security_groups" {
   sql = <<-EOQ
     select
-      s -> 'VpcSecurityGroupId' as "VPC Security Group Id",
+      s -> 'VpcSecurityGroupId' as "VPC Security Group ID",
       s -> 'Status' as "Status"
     from
       aws_redshift_cluster,

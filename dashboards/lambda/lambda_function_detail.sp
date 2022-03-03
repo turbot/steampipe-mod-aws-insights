@@ -76,10 +76,10 @@ dashboard "aws_lambda_function_detail" {
           select
             name as "Name",
             state as "State",
-            vpc_id as "VPC Id",
+            vpc_id as "VPC ID",
             title as "Title",
             region as "Region",
-            account_id as "Account Id",
+            account_id as "Account ID",
             arn as "ARN"
           from
             aws_lambda_function
@@ -307,7 +307,7 @@ query "aws_lambda_function_policy" {
       p ->> 'Effect' as "Effect",
       p -> 'Principal' as "Principal",
       p -> 'Resource' as "Resource",
-      p ->> 'Sid' as "Sid"
+      p ->> 'Sid' as "SID"
     from
       aws_lambda_function,
       jsonb_array_elements(policy_std -> 'Statement') as p
@@ -321,7 +321,7 @@ query "aws_lambda_function_policy" {
 query "aws_lambda_function_security_groups" {
   sql = <<-EOQ
     select
-      p as "Id"
+      p as "ID"
     from
       aws_lambda_function,
       jsonb_array_elements(vpc_security_group_ids) as p
@@ -335,7 +335,7 @@ query "aws_lambda_function_security_groups" {
 query "aws_lambda_function_subnet_ids" {
   sql = <<-EOQ
     select
-      p as "Id"
+      p as "ID"
     from
       aws_lambda_function,
       jsonb_array_elements(vpc_subnet_ids) as p
