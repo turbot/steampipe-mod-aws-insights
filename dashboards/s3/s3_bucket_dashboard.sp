@@ -16,7 +16,7 @@ dashboard "aws_s3_bucket_dashboard" {
 
     # Assessments
     card {
-      sql   = query.aws_s3_bucket_versioning_disabled_count.sql
+      sql   = query.aws_s3_bucket_public_count.sql
       width = 2
     }
 
@@ -26,12 +26,12 @@ dashboard "aws_s3_bucket_dashboard" {
     }
 
     card {
-      sql   = query.aws_s3_bucket_public_count.sql
+      sql   = query.aws_s3_bucket_logging_disabled_count.sql
       width = 2
     }
 
     card {
-      sql   = query.aws_s3_bucket_logging_disabled_count.sql
+      sql   = query.aws_s3_bucket_versioning_disabled_count.sql
       width = 2
     }
 
@@ -49,16 +49,16 @@ dashboard "aws_s3_bucket_dashboard" {
     width = 6
 
     chart {
-      title = "Versioning Status"
-      sql   = query.aws_s3_bucket_versioning_status.sql
+      title = "Public/Private"
+      sql   = query.aws_s3_bucket_public_status.sql
       type  = "donut"
       width = 4
 
       series "count" {
-        point "enabled" {
+        point "private" {
           color = "ok"
         }
-        point "disabled" {
+        point "public" {
           color = "alert"
         }
       }
@@ -81,24 +81,24 @@ dashboard "aws_s3_bucket_dashboard" {
     }
 
     chart {
-      title = "Public/Private"
-      sql   = query.aws_s3_bucket_public_status.sql
+      title = "Logging Status"
+      sql   = query.aws_s3_bucket_logging_status.sql
       type  = "donut"
       width = 4
 
       series "count" {
-        point "private" {
+        point "enabled" {
           color = "ok"
         }
-        point "public" {
+        point "disabled" {
           color = "alert"
         }
       }
     }
 
     chart {
-      title = "Logging Status"
-      sql   = query.aws_s3_bucket_logging_status.sql
+      title = "Versioning Status"
+      sql   = query.aws_s3_bucket_versioning_status.sql
       type  = "donut"
       width = 4
 

@@ -51,15 +51,6 @@ dashboard "aws_lambda_function_detail" {
       }
     }
 
-    card {
-      query = query.aws_lambda_function_in_vpc
-      width = 2
-
-      args = {
-        arn = self.input.lambda_arn.value
-      }
-    }
-
   }
 
   container {
@@ -75,8 +66,10 @@ dashboard "aws_lambda_function_detail" {
         sql   = <<-EOQ
           select
             name as "Name",
-            state as "State",
-            vpc_id as "VPC ID",
+            case
+              when vpc_id is not null and vpc_id != '' then vpc_id
+              else 'N/A'
+            end as "VPC ID",
             title as "Title",
             region as "Region",
             account_id as "Account ID",
@@ -205,7 +198,7 @@ query "aws_lambda_function_input" {
 query "aws_lambda_function_memory" {
   sql = <<-EOQ
     select
-      'Memory' as label,
+      'Memory (GB)' as label,
        round(cast(memory_size/1024 as numeric), 1) as value
     from
       aws_lambda_function
@@ -220,7 +213,7 @@ query "aws_lambda_function_runtime" {
   sql = <<-EOQ
     select
       'Runtime' as label,
-      'runtime' as value
+      runtime as value
     from
       aws_lambda_function
     where
@@ -233,7 +226,7 @@ query "aws_lambda_function_runtime" {
 query "aws_lambda_function_public" {
   sql = <<-EOQ
     select
-      'Public' as label,
+      'Public Access' as label,
       case when
         policy_std -> 'Statement' ->> 'Effect' = 'Allow'
           and ( policy_std -> 'Statement' ->> 'Prinipal' = '*'
@@ -260,21 +253,6 @@ query "aws_lambda_function_encryption" {
       'Encryption' as label,
       case when kms_key_arn is not null then 'Enabled' else 'Disabled' end as value,
       case when kms_key_arn is not null then 'ok' else 'alert' end as type
-    from
-      aws_lambda_function
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-query "aws_lambda_function_in_vpc" {
-  sql = <<-EOQ
-    select
-      'In VPC' as label,
-      case when vpc_id is not null then 'Enabled' else 'Disabled' end as value,
-      case when vpc_id is not null then 'ok' else 'alert' end as type
     from
       aws_lambda_function
     where
