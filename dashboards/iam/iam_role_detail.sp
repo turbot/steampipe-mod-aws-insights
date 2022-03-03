@@ -54,6 +54,7 @@ dashboard "aws_iam_role_detail" {
 
     table {
       title = "Tags"
+      type = "line"
       width = 6
       sql   = <<-EOQ
         select

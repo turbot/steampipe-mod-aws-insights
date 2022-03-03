@@ -61,7 +61,7 @@ dashboard "aws_iam_user_detail" {
     container {
 
       width = 6
-      
+
       table {
         title = "Overview"
         type  = "line"

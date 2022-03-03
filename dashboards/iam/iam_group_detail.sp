@@ -15,17 +15,17 @@ dashboard "aws_iam_group_detail" {
   container {
 
     card {
-      query   = query.aws_iam_group_inline_policy_count_for_group
+      query = query.aws_iam_group_inline_policy_count_for_group
       width = 2
-      args  = {
+      args = {
         arn = self.input.group_arn.value
       }
     }
 
     card {
-      query   = query.aws_iam_group_direct_attached_policy_count_for_group
+      query = query.aws_iam_group_direct_attached_policy_count_for_group
       width = 2
-      args  = {
+      args = {
         arn = self.input.group_arn.value
       }
     }
@@ -39,22 +39,11 @@ dashboard "aws_iam_group_detail" {
       title = "Overview"
 
       table {
+        type = "line"
         width = 6
-        sql   = <<-EOQ
-          select
-            name as "Name",
-            create_date as "Create Date",
-            group_id as "Group ID",
-            arn as "ARN",
-            account_id as "Account ID"
-          from
-            aws_iam_group
-          where
-           arn = $1
-        EOQ
+        query = query.aws_iam_group_overview
 
-        param "arn" {}
-        args  = {
+        args = {
           arn = self.input.group_arn.value
         }
 
@@ -71,8 +60,8 @@ dashboard "aws_iam_group_detail" {
     table {
       title = "Users"
       width = 6
-      query   = query.aws_iam_users_for_group
-      args  = {
+      query = query.aws_iam_users_for_group
+      args = {
         arn = self.input.group_arn.value
       }
 
@@ -81,8 +70,8 @@ dashboard "aws_iam_group_detail" {
     table {
       title = "Policies"
       width = 6
-      query   = query.aws_iam_all_policies_for_group
-      args  = {
+      query = query.aws_iam_all_policies_for_group
+      args = {
         arn = self.input.group_arn.value
       }
     }
@@ -136,6 +125,23 @@ query "aws_iam_group_direct_attached_policy_count_for_group" {
   param "arn" {}
 }
 
+query "aws_iam_group_overview" {
+  sql = <<-EOQ
+    select
+      name as "Name",
+      create_date as "Create Date",
+      group_id as "Group ID",
+      arn as "ARN",
+      account_id as "Account ID"
+    from
+      aws_iam_group
+    where
+      arn = $1
+  EOQ
+
+  param "arn" {}
+}
+
 query "aws_iam_users_for_group" {
   sql = <<-EOQ
     select
@@ -179,4 +185,3 @@ query "aws_iam_all_policies_for_group" {
 
   param "arn" {}
 }
-

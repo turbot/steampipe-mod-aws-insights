@@ -69,7 +69,7 @@ dashboard "aws_ec2_instance_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        sql   = query.aws_ec2_instance_overview.sql
+        query   = query.aws_ec2_instance_overview
         args = {
           arn = self.input.instance_arn.value
         }
@@ -79,7 +79,7 @@ dashboard "aws_ec2_instance_detail" {
       table {
         title = "Tags"
         width = 6
-        sql   = query.aws_ec2_instance_tags.sql
+        query   = query.aws_ec2_instance_tags
         args = {
           arn = self.input.instance_arn.value
         }

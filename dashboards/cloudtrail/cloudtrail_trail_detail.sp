@@ -60,7 +60,7 @@ dashboard "aws_cloudtrail_trail_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        sql   = query.aws_cloudtrail_trail_overview.sql
+        query   = query.aws_cloudtrail_trail_overview
         args = {
           arn = self.input.trail_arn.value
         }
@@ -70,7 +70,7 @@ dashboard "aws_cloudtrail_trail_detail" {
       table {
         title = "Tags"
         width = 6
-        sql = query.aws_cloudtrail_trail_tags.sql
+        query = query.aws_cloudtrail_trail_tags
         args = {
           arn = self.input.trail_arn.value
         }
