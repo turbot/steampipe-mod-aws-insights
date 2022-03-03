@@ -61,8 +61,6 @@ dashboard "aws_cloudtrail_trail_detail" {
         type  = "line"
         width = 6
         sql   = query.aws_cloudtrail_trail_overview.sql
-        param "arn" {}
-
         args = {
           arn = self.input.trail_arn.value
         }
@@ -73,8 +71,6 @@ dashboard "aws_cloudtrail_trail_detail" {
         title = "Tags"
         width = 6
         sql = query.aws_cloudtrail_trail_tags.sql
-        param "arn" {}
-
         args = {
           arn = self.input.trail_arn.value
         }
@@ -199,6 +195,8 @@ query "aws_cloudtrail_trail_overview" {
     where
       arn = $1;
   EOQ
+
+  param "arn" {}
 }
 
 query "aws_cloudtrail_trail_tags" {
@@ -212,6 +210,8 @@ query "aws_cloudtrail_trail_tags" {
     where
       arn = $1;
   EOQ
+
+  param "arn" {}
 }
 
 query "aws_cloudtrail_trail_logging" {

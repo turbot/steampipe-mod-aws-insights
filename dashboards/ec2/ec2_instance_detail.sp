@@ -70,8 +70,6 @@ dashboard "aws_ec2_instance_detail" {
         type  = "line"
         width = 6
         sql   = query.aws_ec2_instance_overview.sql
-        param "arn" {}
-
         args = {
           arn = self.input.instance_arn.value
         }
@@ -82,8 +80,6 @@ dashboard "aws_ec2_instance_detail" {
         title = "Tags"
         width = 6
         sql   = query.aws_ec2_instance_tags.sql
-        param "arn" {}
-
         args = {
           arn = self.input.instance_arn.value
         }
@@ -249,6 +245,8 @@ query "aws_ec2_instance_overview" {
     where
       arn = $1
   EOQ
+
+  param "arn" {}
 }
 
 query "aws_ec2_instance_tags" {
@@ -262,6 +260,8 @@ query "aws_ec2_instance_tags" {
     where
       arn = $1
     EOQ
+
+    param "arn" {}
 }
 
 query "aws_ec2_instance_block_device_mapping" {
