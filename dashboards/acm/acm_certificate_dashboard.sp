@@ -31,11 +31,6 @@ dashboard "aws_acm_certificate_dashboard" {
     }
 
     card {
-      sql   = query.aws_acm_certificate_in_use_by.sql
-      width = 2
-    }
-
-    card {
       sql   = query.aws_acm_certificate_transparency_logging_disabled.sql
       width = 2
     }
@@ -44,29 +39,6 @@ dashboard "aws_acm_certificate_dashboard" {
   container {
 
     title = "Assessments"
-
-    chart {
-      title = "Certificate Status"
-      sql   = query.aws_acm_certificate_by_status.sql
-      type  = "donut"
-      width = 2
-
-      series "count" {
-        point "issued" {
-          color = "ok"
-        }
-        point "failed" {
-          color = "alert"
-        }
-      }
-    }
-
-    chart {
-      title = "Renewal Eligibilty"
-      sql   = query.aws_acm_certificate_by_eligibility.sql
-      type  = "donut"
-      width = 2
-    }
 
     chart {
       title = "Certificate Validity"
@@ -85,23 +57,7 @@ dashboard "aws_acm_certificate_dashboard" {
     }
 
     chart {
-      title = "Certificate Usage Status"
-      sql   = query.aws_acm_certificate_by_use.sql
-      type  = "donut"
-      width = 2
-
-      series "count" {
-        point "in_use" {
-          color = "ok"
-        }
-        point "not_in_use" {
-          color = "alert"
-        }
-      }
-    }
-
-    chart {
-      title = "Logging Status"
+      title = "Transparency Logging Status"
       sql   = query.aws_acm_certificate_by_transparency_logging_preference.sql
       type  = "donut"
       width = 2
@@ -190,24 +146,11 @@ query "aws_acm_certificate_invalid" {
   EOQ
 }
 
-query "aws_acm_certificate_in_use_by" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Certificates In Use' as label,
-      case count(*) when 0 then 'alert' else 'ok' end as type
-    from
-      aws_acm_certificate
-    where
-      jsonb_array_length(in_use_by) > 0;
-  EOQ
-}
-
 query "aws_acm_certificate_transparency_logging_disabled" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Logging Disabled' as label,
+      'Transparency Logging Disabled' as label,
       case count(*) when 0 then 'ok' else 'alert' end as type
     from
       aws_acm_certificate
@@ -217,34 +160,6 @@ query "aws_acm_certificate_transparency_logging_disabled" {
 }
 
 # Assessment Queries
-
-query "aws_acm_certificate_by_status" {
-  sql = <<-EOQ
-    select
-      lower(status),
-      count(status)
-    from
-      aws_acm_certificate
-    group by
-      status
-    order by
-      status;
-  EOQ
-}
-
-query "aws_acm_certificate_by_eligibility" {
-  sql = <<-EOQ
-    select
-      lower(renewal_eligibility),
-      count(renewal_eligibility) as "Certificates"
-    from
-      aws_acm_certificate
-    group by
-      renewal_eligibility
-    order by
-      renewal_eligibility;
-  EOQ
-}
 
 query "aws_acm_certificate_by_validity" {
   sql = <<-EOQ
@@ -264,28 +179,6 @@ query "aws_acm_certificate_by_validity" {
       validity
     order by
       validity;
-  EOQ
-}
-
-query "aws_acm_certificate_by_use" {
-  sql = <<-EOQ
-    select
-       usage,
-      count(*)
-    from (
-      select
-        in_use_by,
-        case when jsonb_array_length(in_use_by) > 0 then
-          'in_use'
-        else
-          'not_in_use'
-        end usage
-      from
-        aws_acm_certificate) as t
-    group by
-      usage
-    order by
-      usage;
   EOQ
 }
 
