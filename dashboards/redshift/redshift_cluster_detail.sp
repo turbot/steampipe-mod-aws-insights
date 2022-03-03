@@ -1,3 +1,182 @@
+dashboard "aws_redshift_cluster_detail" {
+
+  title = "AWS Redshift Cluster Detail"
+
+  tags = merge(local.redshift_common_tags, {
+    type = "Detail"
+  })
+
+  input "cluster_arn" {
+    title = "Select a Cluster:"
+    sql   = query.aws_redshift_cluster_input.sql
+    width = 4
+  }
+
+  container {
+
+    card {
+      width = 2
+      query = query.aws_redshift_cluster_status
+      args = {
+        arn = self.input.cluster_arn.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_redshift_cluster_version
+      args = {
+        arn = self.input.cluster_arn.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_redshift_cluster_node_type
+      args = {
+        arn = self.input.cluster_arn.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_redshift_cluster_number_of_nodes
+      args = {
+        arn = self.input.cluster_arn.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_redshift_cluster_public
+      args = {
+        arn = self.input.cluster_arn.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_redshift_cluster_encryption
+      args = {
+        arn = self.input.cluster_arn.value
+      }
+    }
+
+  }
+
+  container {
+
+    container {
+
+      width = 6
+
+      table {
+        title = "Overview"
+        type  = "line"
+        width = 6
+        sql   = <<-EOQ
+          select
+            cluster_identifier as "Cluster Identifier",
+            cluster_namespace_arn as "Cluster Namespace ARN",
+            db_name  as "DB Name",
+            cluster_status  as "Cluster Status",
+            vpc_id as "VPC Id",
+            title as "Title",
+            region as "Region",
+            account_id as "Account Id",
+            arn as "ARN"
+          from
+            aws_redshift_cluster
+          where
+            arn = $1
+          EOQ
+
+        param "arn" {}
+
+        args = {
+          arn = self.input.cluster_arn.value
+        }
+
+      }
+
+      table {
+        title = "Tags"
+        width = 6
+        sql = <<-EOQ
+          select
+            tag ->> 'Key' as "Key",
+            tag ->> 'Value' as "Value"
+          from
+            aws_redshift_cluster,
+            jsonb_array_elements(tags_src) as tag
+          where
+            arn = $1
+          EOQ
+
+        param "arn" {}
+
+        args = {
+          arn = self.input.cluster_arn.value
+        }
+      }
+
+    }
+
+    container {
+
+      width = 6
+
+      table {
+        title = "Cluster Nodes"
+        query = query.aws_rds_db_instance_subnets
+        args = {
+          arn = self.input.cluster_arn.value
+        }
+      }
+
+      table {
+        title = "Cluster Parameter Groups"
+        query = query.aws_rds_db_instance_parameter_groups
+        args = {
+          arn = self.input.cluster_arn.value
+        }
+      }
+
+    }
+
+    container {
+
+      width = 12
+
+      table {
+
+        title = "Logging"
+        query = query.aws_redshift_cluster_logging
+        args = {
+          arn = self.input.cluster_arn.value
+        }
+      }
+
+    }
+
+    container {
+
+      width = 12
+
+      table {
+        title = "Scheduled Actions"
+        query = query.aws_redshift_cluster_scheduled_actions
+        args = {
+          arn = self.input.cluster_arn.value
+        }
+      }
+
+    }
+
+  }
+
+}
+
 query "aws_redshift_cluster_input" {
   sql = <<-EOQ
     select
@@ -41,7 +220,6 @@ query "aws_redshift_cluster_version" {
 
   param "arn" {}
 }
-
 
 query "aws_redshift_cluster_node_type" {
   sql = <<-EOQ
@@ -187,188 +365,3 @@ query "aws_redshift_cluster_security_groups" {
 
   param "arn" {}
 }
-
-dashboard "aws_redshift_cluster_detail" {
-  title = "AWS Redshift Cluster Detail"
-
-  tags = merge(local.redshift_common_tags, {
-    type = "Detail"
-  })
-
-  input "cluster_arn" {
-    title = "Select a Cluster:"
-    sql   = query.aws_redshift_cluster_input.sql
-    width = 4
-  }
-
-  container {
-    # Assessments
-
-    card {
-      width = 2
-
-      query = query.aws_redshift_cluster_status
-      args = {
-        arn = self.input.cluster_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query = query.aws_redshift_cluster_version
-      args = {
-        arn = self.input.cluster_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query = query.aws_redshift_cluster_node_type
-      args = {
-        arn = self.input.cluster_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query = query.aws_redshift_cluster_number_of_nodes
-      args = {
-        arn = self.input.cluster_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query = query.aws_redshift_cluster_public
-      args = {
-        arn = self.input.cluster_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query = query.aws_redshift_cluster_encryption
-      args = {
-        arn = self.input.cluster_arn.value
-      }
-    }
-
-  }
-
-  container {
-
-    container {
-      width = 6
-
-      table {
-        title = "Overview"
-        type  = "line"
-        width = 6
-        sql   = <<-EOQ
-            select
-              cluster_identifier as "Cluster Identifier",
-              cluster_namespace_arn as "Cluster Namespace ARN",
-              db_name  as "DB Name",
-              cluster_status  as "Cluster Status",
-              vpc_id as "VPC Id",
-              title as "Title",
-              region as "Region",
-              account_id as "Account Id",
-              arn as "ARN"
-            from
-              aws_redshift_cluster
-            where
-              arn = $1
-          EOQ
-
-        param "arn" {}
-
-        args = {
-          arn = self.input.cluster_arn.value
-        }
-
-      }
-
-      table {
-        title = "Tags"
-        width = 6
-
-        sql = <<-EOQ
-          select
-            tag ->> 'Key' as "Key",
-            tag ->> 'Value' as "Value"
-          from
-            aws_redshift_cluster,
-            jsonb_array_elements(tags_src) as tag
-          where
-            arn = $1
-          EOQ
-
-        param "arn" {}
-
-        args = {
-          arn = self.input.cluster_arn.value
-        }
-      }
-
-    }
-
-    container {
-      width = 6
-
-      table {
-        title = "Cluster Nodes"
-        query = query.aws_rds_db_instance_subnets
-
-        args = {
-          arn = self.input.cluster_arn.value
-        }
-      }
-
-      table {
-        title = "Cluster Parameter Groups"
-        query = query.aws_rds_db_instance_parameter_groups
-        args = {
-          arn = self.input.cluster_arn.value
-        }
-      }
-    }
-
-    container {
-      width = 12
-
-      table {
-
-        title = "Logging"
-        query = query.aws_redshift_cluster_logging
-        args = {
-          arn = self.input.cluster_arn.value
-        }
-      }
-
-    }
-
-    container {
-      width = 12
-
-      table {
-        title = "Scheduled Actions"
-        query = query.aws_redshift_cluster_scheduled_actions
-        args = {
-          arn = self.input.cluster_arn.value
-        }
-      }
-
-    }
-
-  }
-
-}
-
-
-

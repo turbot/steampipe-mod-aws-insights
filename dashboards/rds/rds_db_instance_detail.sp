@@ -1,5 +1,208 @@
+dashboard "aws_rds_db_instance_detail" {
+
+  title = "AWS RDS DB Instance Detail"
+
+  tags = merge(local.rds_common_tags, {
+    type = "Detail"
+  })
+
+  input "db_instance_arn" {
+    title = "Select a DB Instance:"
+    sql   = query.aws_rds_db_instance_input.sql
+    width = 4
+  }
+
+  container {
+
+    card {
+      width = 2
+
+      query = query.aws_rds_db_instance_engine_type
+      args = {
+        arn = self.input.db_instance_arn.value
+      }
+    }
+
+    card {
+      width = 2
+
+      query = query.aws_rds_db_instance_class
+      args = {
+        arn = self.input.db_instance_arn.value
+      }
+    }
+
+    card {
+      width = 2
+
+      query = query.aws_rds_db_instance_public
+      args = {
+        arn = self.input.db_instance_arn.value
+      }
+    }
+
+    card {
+      width = 2
+
+      query = query.aws_rds_db_instance_unencrypted
+      args = {
+        arn = self.input.db_instance_arn.value
+      }
+    }
+
+    card {
+      width = 2
+
+      query = query.aws_rds_db_instance_deletion_protection
+      args = {
+        arn = self.input.db_instance_arn.value
+      }
+    }
+
+    card {
+      query = query.aws_rds_db_instance_in_vpc
+      width = 2
+
+      args = {
+        arn = self.input.db_instance_arn.value
+      }
+    }
+
+  }
+
+  container {
+
+    container {
+
+      width = 6
+
+      table {
+        title = "Overview"
+        type  = "line"
+        width = 6
+        sql   = <<-EOQ
+            select
+              db_instance_identifier as "DB Instance Identifier",
+              create_time as "Create Time",
+              title as "Title",
+              region as "Region",
+              account_id as "Account Id",
+              arn as "ARN"
+            from
+              aws_rds_db_instance
+            where
+              arn = $1
+          EOQ
+
+        param "arn" {}
+
+        args = {
+          arn = self.input.db_instance_arn.value
+        }
+      }
+
+      table {
+        title = "Tags"
+        width = 6
+
+        sql = <<-EOQ
+          select
+            tag ->> 'Key' as "Key",
+            tag ->> 'Value' as "Value"
+          from
+            aws_rds_db_instance,
+            jsonb_array_elements(tags_src) as tag
+          where
+            arn = $1
+          EOQ
+
+        param "arn" {}
+
+        args = {
+          arn = self.input.db_instance_arn.value
+        }
+      }
+
+
+    }
+
+    container {
+
+      width = 6
+
+      table {
+        title = "DB Parameter Groups"
+        query = query.aws_rds_db_instance_parameter_groups
+        args = {
+          arn = self.input.db_instance_arn.value
+        }
+      }
+
+      table {
+        title = "Subnets"
+        query = query.aws_rds_db_instance_subnets
+
+        args = {
+          arn = self.input.db_instance_arn.value
+        }
+      }
+
+    }
+
+    container {
+
+      width = 12
+
+      table {
+        width = 6
+        title = "Storage"
+        query = query.aws_rds_db_instance_storage
+        args = {
+          arn = self.input.db_instance_arn.value
+        }
+      }
+
+      table {
+        width = 6
+        title = "Logging"
+        query = query.aws_rds_db_instance_logging
+        args = {
+          arn = self.input.db_instance_arn.value
+        }
+      }
+
+    }
+
+    container {
+
+      width = 12
+
+      table {
+        width = 6
+        title = "Security Groups"
+        query = query.aws_rds_db_instance_security_groups
+        args = {
+          arn = self.input.db_instance_arn.value
+        }
+      }
+
+      table {
+        width = 6
+        title = "DB Subnet Groups"
+        query = query.aws_rds_db_instance_db_subnet_groups
+        args = {
+          arn = self.input.db_instance_arn.value
+        }
+      }
+
+    }
+
+  }
+
+}
+
 query "aws_rds_db_instance_input" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
       title as label,
       arn as value,
@@ -191,206 +394,6 @@ query "aws_rds_db_instance_db_subnet_groups" {
   EOQ
 
   param "arn" {}
-}
-
-dashboard "aws_rds_db_instance_detail" {
-  title = "AWS RDS DB Instance Detail"
-
-  tags = merge(local.rds_common_tags, {
-    type = "Detail"
-  })
-
-  input "db_instance_arn" {
-    title = "Select a DB Instance:"
-    sql   = query.aws_rds_db_instance_input.sql
-    width = 4
-  }
-
-  container {
-    # Assessments
-
-    card {
-      width = 2
-
-      query = query.aws_rds_db_instance_engine_type
-      args = {
-        arn = self.input.db_instance_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query = query.aws_rds_db_instance_class
-      args = {
-        arn = self.input.db_instance_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query = query.aws_rds_db_instance_public
-      args = {
-        arn = self.input.db_instance_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query = query.aws_rds_db_instance_unencrypted
-      args = {
-        arn = self.input.db_instance_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query = query.aws_rds_db_instance_deletion_protection
-      args = {
-        arn = self.input.db_instance_arn.value
-      }
-    }
-
-    card {
-      query = query.aws_rds_db_instance_in_vpc
-      width = 2
-
-      args = {
-        arn = self.input.db_instance_arn.value
-      }
-    }
-
-  }
-
-  container {
-
-    container {
-      width = 6
-
-      table {
-        title = "Overview"
-        type  = "line"
-        width = 6
-        sql   = <<-EOQ
-            select
-              db_instance_identifier as "DB Instance Identifier",
-              create_time as "Create Time",
-              title as "Title",
-              region as "Region",
-              account_id as "Account Id",
-              arn as "ARN"
-            from
-              aws_rds_db_instance
-            where
-              arn = $1
-          EOQ
-
-        param "arn" {}
-
-        args = {
-          arn = self.input.db_instance_arn.value
-        }
-
-      }
-
-      table {
-        title = "Tags"
-        width = 6
-
-        sql = <<-EOQ
-          select
-            tag ->> 'Key' as "Key",
-            tag ->> 'Value' as "Value"
-          from
-            aws_rds_db_instance,
-            jsonb_array_elements(tags_src) as tag
-          where
-            arn = $1
-          EOQ
-
-        param "arn" {}
-
-        args = {
-          arn = self.input.db_instance_arn.value
-        }
-      }
-
-
-    }
-
-    container {
-      width = 6
-
-      table {
-        title = "DB Parameter Groups"
-        query = query.aws_rds_db_instance_parameter_groups
-        args = {
-          arn = self.input.db_instance_arn.value
-        }
-      }
-
-      table {
-        title = "Subnets"
-        query = query.aws_rds_db_instance_subnets
-
-        args = {
-          arn = self.input.db_instance_arn.value
-        }
-      }
-
-    }
-
-    container {
-      width = 12
-
-      table {
-        width = 6
-        title = "Storage"
-        query = query.aws_rds_db_instance_storage
-        args = {
-          arn = self.input.db_instance_arn.value
-        }
-      }
-
-      table {
-        width = 6
-        title = "Logging"
-        query = query.aws_rds_db_instance_logging
-        args = {
-          arn = self.input.db_instance_arn.value
-        }
-      }
-
-    }
-
-    container {
-      width = 12
-
-      table {
-        width = 6
-        title = "Security Groups"
-        query = query.aws_rds_db_instance_security_groups
-        args = {
-          arn = self.input.db_instance_arn.value
-        }
-      }
-
-      table {
-        width = 6
-        title = "DB Subnet Groups"
-        query = query.aws_rds_db_instance_db_subnet_groups
-        args = {
-          arn = self.input.db_instance_arn.value
-        }
-      }
-
-    }
-
-  }
-
 }
 
 

@@ -1,5 +1,191 @@
+dashboard "aws_lambda_function_detail" {
+
+  title = "AWS Lambda Function Detail"
+
+  tags = merge(local.lambda_common_tags, {
+    type = "Detail"
+  })
+
+
+  input "lambda_arn" {
+    title = "Select a lambda function:"
+    sql   = query.aws_lambda_function_input.sql
+    width = 4
+  }
+
+  container {
+
+    card {
+      width = 2
+
+      query = query.aws_lambda_function_memory
+      args = {
+        arn = self.input.lambda_arn.value
+      }
+    }
+
+    card {
+      width = 2
+
+      query = query.aws_lambda_function_runtime
+      args = {
+        arn = self.input.lambda_arn.value
+      }
+    }
+
+    card {
+      width = 2
+
+      query = query.aws_lambda_function_public
+      args = {
+        arn = self.input.lambda_arn.value
+      }
+    }
+
+    card {
+      width = 2
+
+      query = query.aws_lambda_function_encryption
+      args = {
+        arn = self.input.lambda_arn.value
+      }
+    }
+
+    card {
+      query = query.aws_lambda_function_in_vpc
+      width = 2
+
+      args = {
+        arn = self.input.lambda_arn.value
+      }
+    }
+
+  }
+
+  container {
+
+    container {
+
+      width = 6
+
+      table {
+        title = "Overview"
+        type  = "line"
+        width = 6
+        sql   = <<-EOQ
+          select
+            name as "Name",
+            state as "State",
+            vpc_id as "VPC Id",
+            title as "Title",
+            region as "Region",
+            account_id as "Account Id",
+            arn as "ARN"
+          from
+            aws_lambda_function
+          where
+            arn = $1
+          EOQ
+
+        param "arn" {}
+
+        args = {
+          arn = self.input.lambda_arn.value
+        }
+
+      }
+
+      table {
+        title = "Tags"
+        width = 6
+
+        sql = <<-EOQ
+          with jsondata as (
+            select
+              tags::json as tags
+            from
+              aws_lambda_function
+            where
+              arn = $1
+          )
+          select
+            key as "Key",
+            value as "Value"
+          from
+            jsondata,
+            json_each_text(tags);
+          EOQ
+
+        param "arn" {}
+
+        args = {
+          arn = self.input.lambda_arn.value
+        }
+      }
+
+    }
+
+    container {
+
+      width = 6
+
+      table {
+        title = "Last Update Status"
+        query = query.aws_lambda_function_last_update_status
+        args = {
+          arn = self.input.lambda_arn.value
+        }
+      }
+    }
+
+  }
+
+  container {
+
+    width = 12
+
+    table {
+      title = "Policy"
+      query = query.aws_lambda_function_policy
+      args = {
+        arn = self.input.lambda_arn.value
+      }
+    }
+
+  }
+
+  container {
+
+    width = 6
+
+    table {
+      title = "Security Groups"
+      query = query.aws_lambda_function_security_groups
+      args = {
+        arn = self.input.lambda_arn.value
+      }
+    }
+
+  }
+
+  container {
+
+    width = 6
+
+    table {
+      title = "Subnets"
+      query = query.aws_lambda_function_subnet_ids
+      args = {
+        arn = self.input.lambda_arn.value
+      }
+    }
+
+  }
+
+}
+
 query "aws_lambda_function_input" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
       title as label,
       arn as value,
@@ -158,182 +344,4 @@ query "aws_lambda_function_subnet_ids" {
   param "arn" {}
 }
 
-dashboard "aws_lambda_function_detail" {
-  title = "AWS Lambda Function Detail"
-
-  tags = merge(local.lambda_common_tags, {
-    type = "Detail"
-  })
-
-
-  input "lambda_arn" {
-    title = "Select a lambda function:"
-    sql   = query.aws_lambda_function_input.sql
-    width = 4
-  }
-
-  container {
-    # Assessments
-
-    card {
-      width = 2
-
-      query = query.aws_lambda_function_memory
-      args = {
-        arn = self.input.lambda_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query = query.aws_lambda_function_runtime
-      args = {
-        arn = self.input.lambda_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query = query.aws_lambda_function_public
-      args = {
-        arn = self.input.lambda_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query = query.aws_lambda_function_encryption
-      args = {
-        arn = self.input.lambda_arn.value
-      }
-    }
-
-    card {
-      query = query.aws_lambda_function_in_vpc
-      width = 2
-
-      args = {
-        arn = self.input.lambda_arn.value
-      }
-    }
-
-  }
-
-  container {
-
-    container {
-      width = 6
-
-      table {
-        title = "Overview"
-        type  = "line"
-        width = 6
-        sql   = <<-EOQ
-            select
-              name as "Name",
-              state as "State",
-              vpc_id as "VPC Id",
-              title as "Title",
-              region as "Region",
-              account_id as "Account Id",
-              arn as "ARN"
-            from
-              aws_lambda_function
-            where
-              arn = $1
-          EOQ
-
-        param "arn" {}
-
-        args = {
-          arn = self.input.lambda_arn.value
-        }
-
-      }
-
-      table {
-        title = "Tags"
-        width = 6
-
-        sql = <<-EOQ
-          with jsondata as (
-            select
-              tags::json as tags
-            from
-              aws_lambda_function
-            where
-              arn = $1
-          )
-          select
-            key as "Key",
-            value as "Value"
-          from
-            jsondata,
-            json_each_text(tags);
-          EOQ
-
-        param "arn" {}
-
-        args = {
-          arn = self.input.lambda_arn.value
-        }
-      }
-    }
-    container {
-      width = 6
-
-      table {
-        title = "Last Update Status"
-        query = query.aws_lambda_function_last_update_status
-        args = {
-          arn = self.input.lambda_arn.value
-        }
-      }
-    }
-
-  }
-
-  container {
-    width = 12
-
-    table {
-      title = "Policy"
-      query = query.aws_lambda_function_policy
-      args = {
-        arn = self.input.lambda_arn.value
-      }
-    }
-
-  }
-
-  container {
-    width = 6
-
-    table {
-      title = "Security Groups"
-      query = query.aws_lambda_function_security_groups
-      args = {
-        arn = self.input.lambda_arn.value
-      }
-    }
-
-  }
-
-  container {
-    width = 6
-
-    table {
-      title = "Subnets"
-      query = query.aws_lambda_function_subnet_ids
-      args = {
-        arn = self.input.lambda_arn.value
-      }
-    }
-
-  }
-
-}
 

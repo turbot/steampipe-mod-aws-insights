@@ -1,5 +1,217 @@
+dashboard "aws_vpc_security_group_detail" {
+
+  title = "AWS VPC Security Group Detail"
+
+  tags = merge(local.vpc_common_tags, {
+    type = "Detail"
+  })
+
+  input "security_group_arn" {
+    title = "Select a security group:"
+    sql   = query.aws_vpc_security_group_input.sql
+    width = 4
+  }
+
+  container {
+
+    card {
+      width = 2
+      query = query.aws_vpc_security_group_ingress_rules_count
+      args = {
+        arn = self.input.security_group_arn.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_vpc_security_group_egress_rules_count
+      args = {
+        arn = self.input.security_group_arn.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_vpc_security_attached_enis_count
+      args = {
+        arn = self.input.security_group_arn.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_vpc_security_unrestricted_ingress
+      args = {
+        arn = self.input.security_group_arn.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_vpc_security_unrestricted_egress
+      args = {
+        arn = self.input.security_group_arn.value
+      }
+    }
+
+  }
+
+  container {
+
+    container {
+      width = 6
+
+      table {
+        title = "Overview"
+        type  = "line"
+        width = 6
+        sql   = <<-EOQ
+          select
+            group_name as "Group Name",
+            group_id as "Group Id",
+            description as "Description",
+            vpc_id as  "VPC Id",
+            title as "Title",
+            region as "Region",
+            account_id as "Account Id",
+            arn as "ARN"
+          from
+            aws_vpc_security_group
+          where
+            arn = $1
+          EOQ
+
+        param "arn" {}
+
+        args = {
+          arn = self.input.security_group_arn.value
+        }
+      }
+
+      table {
+        title = "Tags"
+        width = 6
+
+        sql = <<-EOQ
+          select
+            tag ->> 'Key' as "Key",
+            tag ->> 'Value' as "Value"
+          from
+            aws_vpc_security_group,
+            jsonb_array_elements(tags_src) as tag
+          where
+            arn = $1
+          EOQ
+
+        param "arn" {}
+
+        args = {
+          arn = self.input.security_group_arn.value
+        }
+      }
+
+    }
+
+    container {
+
+      width = 6
+
+      table {
+        title = "Associated To"
+        query = query.aws_vpc_security_group_assoc
+        args = {
+          arn = self.input.security_group_arn.value
+        }
+      }
+
+    }
+
+  }
+
+  container {
+
+    width = 6
+
+    hierarchy {
+      type  = "sankey"
+      title = "Ingress Analysis"
+      query = query.aws_vpc_security_group_ingress_rule_sankey
+      args = {
+        arn = self.input.security_group_arn.value
+      }
+
+      category "aws_ec2_isntance" {
+        color = "orange"
+      }
+
+      category "aws_lambda_function" {
+        color = "yellow"
+      }
+
+      category "alert" {
+        color = "red"
+      }
+
+      category "ok" {
+        color = "green"
+      }
+
+    }
+
+    table {
+      title = "Ingress Rules"
+      query = query.aws_vpc_security_group_ingress_rules
+      args = {
+        arn = self.input.security_group_arn.value
+      }
+    }
+
+  }
+
+  container {
+
+    width = 6
+
+    hierarchy {
+      type  = "sankey"
+      title = "Egress Analysis"
+      query = query.aws_vpc_security_group_egress_rule_sankey
+      args = {
+        arn = self.input.security_group_arn.value
+      }
+
+      category "aws_ec2_isntance" {
+        color = "orange"
+      }
+
+      category "aws_lambda_function" {
+        color = "yellow"
+      }
+
+      category "alert" {
+        color = "red"
+      }
+
+      category "ok" {
+        color = "green"
+      }
+
+    }
+
+    table {
+      title = "Egress Rules"
+      query = query.aws_vpc_security_group_egress_rules
+      args = {
+        arn = self.input.security_group_arn.value
+      }
+    }
+
+  }
+
+}
+
 query "aws_vpc_security_group_input" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
       title as label,
       arn as value,
@@ -201,7 +413,6 @@ query "aws_vpc_security_group_ingress_rule_sankey" {
       group_id = reverse(split_part(reverse($1), '/', 1))
       and type = 'ingress'
       ),
-
   analysis as (
     select
       port_proto as parent,
@@ -259,7 +470,6 @@ query "aws_vpc_security_group_ingress_rule_sankey" {
 }
 
 query "aws_vpc_security_group_egress_rule_sankey" {
-
   sql = <<-EOQ
     with associations as (
       select
@@ -321,7 +531,6 @@ query "aws_vpc_security_group_egress_rule_sankey" {
         group_id = reverse(split_part(reverse($1), '/', 1))
         and is_egress
         ),
-
     analysis as (
       select
           group_id as parent,
@@ -333,9 +542,8 @@ query "aws_vpc_security_group_egress_rule_sankey" {
           associations
         where
         group_id = reverse(split_part(reverse($1), '/', 1))
-
-
-      union select
+      union
+      select
         null as parent,
         sg.group_id as id,
         sg.group_name as name,
@@ -344,8 +552,8 @@ query "aws_vpc_security_group_egress_rule_sankey" {
       from
         aws_vpc_security_group sg
         inner join rules sgr on sg.group_id = sgr.group_id
-
-      union select
+      union
+      select
         group_id as parent,
         port_proto as id,
         port_proto as name,
@@ -353,8 +561,8 @@ query "aws_vpc_security_group_egress_rule_sankey" {
         category
       from
         rules
-
-      union select
+      union
+      select
         port_proto as parent,
         destination as id,
         destination as name,
@@ -397,7 +605,6 @@ query "aws_vpc_security_group_ingress_rules" {
           to_port
         )
       end as ports
-
     from
       aws_vpc_security_group_rule
     where
@@ -437,214 +644,4 @@ query "aws_vpc_security_group_egress_rules" {
   EOQ
 
   param "arn" {}
-}
-
-dashboard "aws_vpc_security_group_detail" {
-  title = "AWS VPC Security Group Detail"
-
-  tags = merge(local.vpc_common_tags, {
-    type = "Detail"
-  })
-
-  input "security_group_arn" {
-    title = "Select a security group:"
-    sql   = query.aws_vpc_security_group_input.sql
-    width = 4
-  }
-
-  container {
-    # Assessments
-
-    card {
-      width = 2
-
-      query = query.aws_vpc_security_group_ingress_rules_count
-      args = {
-        arn = self.input.security_group_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query = query.aws_vpc_security_group_egress_rules_count
-      args = {
-        arn = self.input.security_group_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query = query.aws_vpc_security_attached_enis_count
-      args = {
-        arn = self.input.security_group_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query = query.aws_vpc_security_unrestricted_ingress
-      args = {
-        arn = self.input.security_group_arn.value
-      }
-    }
-
-    card {
-      width = 2
-
-      query = query.aws_vpc_security_unrestricted_egress
-      args = {
-        arn = self.input.security_group_arn.value
-      }
-    }
-  }
-
-  container {
-
-    container {
-      width = 6
-
-      table {
-        title = "Overview"
-        type  = "line"
-        width = 6
-        sql   = <<-EOQ
-            select
-              group_name as "Group Name",
-              group_id as "Group Id",
-              description as "Description",
-              vpc_id as  "VPC Id",
-              title as "Title",
-              region as "Region",
-              account_id as "Account Id",
-              arn as "ARN"
-            from
-              aws_vpc_security_group
-            where
-              arn = $1
-          EOQ
-
-        param "arn" {}
-
-        args = {
-          arn = self.input.security_group_arn.value
-        }
-
-      }
-
-      table {
-        title = "Tags"
-        width = 6
-
-        sql = <<-EOQ
-          select
-            tag ->> 'Key' as "Key",
-            tag ->> 'Value' as "Value"
-          from
-            aws_vpc_security_group,
-            jsonb_array_elements(tags_src) as tag
-          where
-            arn = $1
-          EOQ
-
-        param "arn" {}
-
-        args = {
-          arn = self.input.security_group_arn.value
-        }
-      }
-    }
-    container {
-      width = 6
-
-      table {
-        title = "Associated To"
-        query = query.aws_vpc_security_group_assoc
-        args = {
-          arn = self.input.security_group_arn.value
-        }
-      }
-    }
-
-  }
-
-  container {
-    width = 6
-
-    hierarchy {
-      type  = "sankey"
-      title = "Ingress Analysis"
-      query = query.aws_vpc_security_group_ingress_rule_sankey
-      args = {
-        arn = self.input.security_group_arn.value
-      }
-
-      category "aws_ec2_isntance" {
-        color = "orange"
-      }
-
-      category "aws_lambda_function" {
-        color = "yellow"
-      }
-
-      category "alert" {
-        color = "red"
-      }
-
-      category "ok" {
-        color = "green"
-      }
-
-    }
-
-    table {
-      title = "Ingress Rules"
-      query = query.aws_vpc_security_group_ingress_rules
-      args = {
-        arn = self.input.security_group_arn.value
-      }
-    }
-  }
-
-  container {
-    width = 6
-
-    hierarchy {
-      type  = "sankey"
-      title = "Egress Analysis"
-      query = query.aws_vpc_security_group_egress_rule_sankey
-      args = {
-        arn = self.input.security_group_arn.value
-      }
-
-      category "aws_ec2_isntance" {
-        color = "orange"
-      }
-
-      category "aws_lambda_function" {
-        color = "yellow"
-      }
-
-      category "alert" {
-        color = "red"
-      }
-
-      category "ok" {
-        color = "green"
-      }
-
-    }
-
-    table {
-      title = "Egress Rules"
-      query = query.aws_vpc_security_group_egress_rules
-      args = {
-        arn = self.input.security_group_arn.value
-      }
-    }
-
-  }
-
 }
