@@ -78,22 +78,6 @@ dashboard "aws_ec2_instance_dashboard" {
     }
 
     chart {
-      title  = "Root Volume Encryption"
-      sql    = query.aws_ec2_instance_root_volume_encryption_status.sql
-      type   = "donut"
-      width = 4
-
-      series "count" {
-        point "enabled" {
-          color = "ok"
-        }
-        point "disabled" {
-          color = "alert"
-        }
-      }
-    }
-
-    chart {
       title  = "Detailed Monitoring Status"
       sql    = query.aws_ec2_instance_detailed_monitoring_enabled.sql
       type   = "donut"
@@ -291,40 +275,6 @@ query "aws_ec2_instance_ebs_optimized_status" {
       instances
     group by
       visibility
-  EOQ
-}
-
-query "aws_ec2_instance_root_volume_encryption_status" {
-  sql = <<-EOQ
-     with non_encrypted_instances as (
-      select
-        encrypted,
-        volume_id,
-        att ->> 'InstanceId' as "instanceid",
-        att ->> 'Device' as "device"
-      from
-        aws_ebs_volume,
-        jsonb_array_elements(attachments) as att
-      where
-        not encrypted and attachments is not null
-    )
-    select
-      encryption_status,
-      count(*)
-    from (
-      select
-        e.encrypted ,
-        case when i.root_device_name = e.device then
-          'disabled'
-        else
-          'enabled'
-        end encryption_status
-      from
-        aws_ec2_instance as i left join non_encrypted_instances as e on (e.instanceid = i.instance_id)) as t
-    group by
-      encryption_status
-    order by
-      encryption_status
   EOQ
 }
 
