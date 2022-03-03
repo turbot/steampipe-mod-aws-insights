@@ -1,4 +1,4 @@
-dashboard "aws_ec2_default_ebs_encryption_count" {
+dashboard "aws_ec2_default_ebs_encryption_report" {
 
   title = "AWS EC2 Default Encryption Report"
 
