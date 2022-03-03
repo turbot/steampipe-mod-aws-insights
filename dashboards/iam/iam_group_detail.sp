@@ -1,8 +1,3 @@
-variable "iam_detail_group_arn" {
-  type    = string
-  default = "arn:aws:iam::013122550996:group/demo-group"
-}
-
 dashboard "aws_iam_group_detail" {
 
   title = "AWS IAM Group Detail"
@@ -11,23 +6,28 @@ dashboard "aws_iam_group_detail" {
     type = "Detail"
   })
 
-  input "user_arn" {
-    title = "User"
-    sql   = query.aws_iam_user_input.sql
+  input "group_arn" {
+    title = "Select a group:"
+    sql   = query.aws_iam_group_input.sql
     width = 2
   }
 
   container {
 
-    # Assessments
     card {
-      sql   = query.aws_iam_group_inline_policy_count_for_group.sql
+      query   = query.aws_iam_group_inline_policy_count_for_group
       width = 2
+      args  = {
+        arn = self.input.group_arn.value
+      }
     }
 
     card {
-      sql   = query.aws_iam_group_direct_attached_policy_count_for_group.sql
+      query   = query.aws_iam_group_direct_attached_policy_count_for_group
       width = 2
+      args  = {
+        arn = self.input.group_arn.value
+      }
     }
 
   }
@@ -35,6 +35,7 @@ dashboard "aws_iam_group_detail" {
   container {
 
     container {
+
       title = "Overview"
 
       table {
@@ -49,8 +50,14 @@ dashboard "aws_iam_group_detail" {
           from
             aws_iam_group
           where
-           arn = 'arn:aws:iam::013122550996:group/demo-group'
+           arn = $1
         EOQ
+
+        param "arn" {}
+        args  = {
+          arn = self.input.group_arn.value
+        }
+
       }
 
     }
@@ -58,27 +65,34 @@ dashboard "aws_iam_group_detail" {
   }
 
   container {
+
     title = "AWS IAM Group Analysis"
 
     table {
       title = "Users"
       width = 6
-      sql   = query.aws_iam_users_for_group.sql
+      query   = query.aws_iam_users_for_group
+      args  = {
+        arn = self.input.group_arn.value
+      }
 
     }
 
     table {
       title = "Policies"
       width = 6
-      sql   = query.aws_iam_all_policies_for_group.sql
+      query   = query.aws_iam_all_policies_for_group
+      args  = {
+        arn = self.input.group_arn.value
+      }
     }
-    
+
   }
 
 }
 
 query "aws_iam_group_input" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
       title as label,
       arn as value,
@@ -92,6 +106,21 @@ query "aws_iam_group_input" {
   EOQ
 }
 
+query "aws_iam_group_inline_policy_count_for_group" {
+  sql = <<-EOQ
+    select
+      case when inline_policies is null then 0 else jsonb_array_length(inline_policies) end as value,
+      'Inline Policies' as label,
+      case when (inline_policies is null) or (jsonb_array_length(inline_policies) = 0)  then 'ok' else 'alert' end as type
+    from
+      aws_iam_group
+    where
+      arn = $1
+  EOQ
+
+  param "arn" {}
+}
+
 query "aws_iam_group_direct_attached_policy_count_for_group" {
   sql = <<-EOQ
     select
@@ -101,21 +130,10 @@ query "aws_iam_group_direct_attached_policy_count_for_group" {
     from
       aws_iam_group
     where
-      arn = 'arn:aws:iam::013122550996:group/demo-group'
+      arn = $1
   EOQ
-}
 
-query "aws_iam_group_inline_policy_count_for_group" {
-  sql = <<-EOQ
-    select
-      jsonb_array_length(inline_policies) as value,
-      'Inline Policies' as label,
-      case when jsonb_array_length(inline_policies) = 0 then 'ok' else 'alert' end as type
-    from
-      aws_iam_group
-    where
-      arn = 'arn:aws:iam::013122550996:group/demo-group'
-  EOQ
+  param "arn" {}
 }
 
 query "aws_iam_users_for_group" {
@@ -128,8 +146,10 @@ query "aws_iam_users_for_group" {
       aws_iam_group as g,
       jsonb_array_elements(users) as u
     where
-      g.arn = 'arn:aws:iam::013122550996:group/demo-group'
+      arn = $1
   EOQ
+
+  param "arn" {}
 }
 
 query "aws_iam_all_policies_for_group" {
@@ -154,7 +174,9 @@ query "aws_iam_all_policies_for_group" {
       aws_iam_group as grp,
       jsonb_array_elements(grp.inline_policies_std) as i
     where
-      grp.arn = 'arn:aws:iam::013122550996:group/demo-group'
+      arn = $1
   EOQ
+
+  param "arn" {}
 }
 
