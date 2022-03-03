@@ -208,7 +208,9 @@ query "aws_cloudtrail_trail_tags" {
       aws_cloudtrail_trail,
       jsonb_array_elements(tags_src) as tag
     where
-      arn = $1;
+      arn = $1
+    order by
+      tag ->> 'Key';
   EOQ
 
   param "arn" {}

@@ -35,17 +35,19 @@ dashboard "aws_sns_topic_encryption_report" {
 query "aws_sns_topic_encryption_table" {
   sql = <<-EOQ
     select
-      r.title as "Topic",
+      t.title as "Topic",
       case when kms_master_key_id is not null then 'Enabled' else null end as "Encryption",
-      r.kms_master_key_id as "KMS Key ID",
+      t.kms_master_key_id as "KMS Key ID",
       a.title as "Account",
-      r.account_id as "Account ID",
-      r.region as "Region",
-      r.topic_arn as "ARN"
+      t.account_id as "Account ID",
+      t.region as "Region",
+      t.topic_arn as "ARN"
     from
-      aws_sns_topic as r,
+      aws_sns_topic as t,
       aws_account as a
     where
-      r.account_id = a.account_id;
+      t.account_id = a.account_id
+    order by
+      t.title;
   EOQ
 }

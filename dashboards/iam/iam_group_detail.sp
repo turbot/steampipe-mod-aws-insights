@@ -3,6 +3,80 @@ variable "iam_detail_group_arn" {
   default = "arn:aws:iam::013122550996:group/demo-group"
 }
 
+dashboard "aws_iam_group_detail" {
+
+  title = "AWS IAM Group Detail"
+
+  tags = merge(local.iam_common_tags, {
+    type = "Detail"
+  })
+
+  input "user_arn" {
+    title = "User"
+    sql   = query.aws_iam_user_input.sql
+    width = 2
+  }
+
+  container {
+
+    # Assessments
+    card {
+      sql   = query.aws_iam_group_inline_policy_count_for_group.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.aws_iam_group_direct_attached_policy_count_for_group.sql
+      width = 2
+    }
+
+  }
+
+  container {
+
+    container {
+      title = "Overview"
+
+      table {
+        width = 6
+        sql   = <<-EOQ
+          select
+            name as "Name",
+            create_date as "Create Date",
+            group_id as "Group ID",
+            arn as "ARN",
+            account_id as "Account ID"
+          from
+            aws_iam_group
+          where
+           arn = 'arn:aws:iam::013122550996:group/demo-group'
+        EOQ
+      }
+
+    }
+
+  }
+
+  container {
+    title = "AWS IAM Group Analysis"
+
+    table {
+      title = "Users"
+      width = 6
+      sql   = query.aws_iam_users_for_group.sql
+
+    }
+
+    table {
+      title = "Policies"
+      width = 6
+      sql   = query.aws_iam_all_policies_for_group.sql
+    }
+    
+  }
+
+}
+
 query "aws_iam_group_input" {
   sql = <<EOQ
     select
@@ -84,76 +158,3 @@ query "aws_iam_all_policies_for_group" {
   EOQ
 }
 
-dashboard "aws_iam_group_detail" {
-
-  title = "AWS IAM Group Detail"
-
-  tags = merge(local.iam_common_tags, {
-    type = "Detail"
-  })
-
-  input "user_arn" {
-    title = "User"
-    sql   = query.aws_iam_user_input.sql
-    width = 2
-  }
-
-  container {
-
-    # Assessments
-    card {
-      sql   = query.aws_iam_group_inline_policy_count_for_group.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.aws_iam_group_direct_attached_policy_count_for_group.sql
-      width = 2
-    }
-
-  }
-
-  container {
-
-    container {
-      title = "Overview"
-
-      table {
-        width = 6
-        sql   = <<-EOQ
-          select
-            name as "Name",
-            create_date as "Create Date",
-            group_id as "Group ID",
-            arn as "ARN",
-            account_id as "Account ID"
-          from
-            aws_iam_group
-          where
-           arn = 'arn:aws:iam::013122550996:group/demo-group'
-        EOQ
-      }
-
-    }
-
-  }
-
-  container {
-    title = "AWS IAM Group Analysis"
-
-    table {
-      title = "Users"
-      width = 6
-      sql   = query.aws_iam_users_for_group.sql
-
-    }
-
-    table {
-      title = "Policies"
-      width = 6
-      sql   = query.aws_iam_all_policies_for_group.sql
-    }
-    
-  }
-
-}

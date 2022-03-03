@@ -209,14 +209,22 @@ query "aws_sqs_queue_overview" {
 
 query "aws_sqs_queue_tags_detail" {
   sql = <<-EOQ
+    with jsondata as (
+      select
+        tags::json as tags
+      from
+        aws_sqs_queue
+      where
+        queue_arn = $1
+    )
     select
-      js.key,
-      js.value
+      key as "Key",
+      value as "Value"
     from
-      aws_sqs_queue,
-      jsonb_each(tags) as js
-    where
-      queue_arn = $1;
+      jsondata,
+      json_each_text(tags)
+    order by
+      key;
   EOQ
 
   param "queue_arn" {}

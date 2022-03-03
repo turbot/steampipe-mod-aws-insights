@@ -38,12 +38,18 @@ dashboard "aws_rds_db_instace_snapshot_encryption_report" {
 query "aws_rds_db_instance_snapshot_encryption_table" {
   sql = <<-EOQ
     select
-      title as "Snapshot",
+      s.title as "Snapshot",
       case when encrypted then 'Enabled' else null end as "Encryption",
-      account_id as "Account",
-      region as "Region",
-      arn as "ARN"
+      a.title as "Account",
+      s.account_id as "Account ID",
+      s.region as "Region",
+      s.arn as "ARN"
     from
-      aws_rds_db_snapshot;
+      aws_rds_db_snapshot as s,
+      aws_account as a
+    where
+      s.account_id = a.account_id
+    order by
+      s.title;
   EOQ
 }

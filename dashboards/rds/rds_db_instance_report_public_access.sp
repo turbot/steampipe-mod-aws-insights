@@ -50,6 +50,8 @@ query "aws_rds_db_instance_public_access_table" {
       aws_rds_db_instance as i,
       aws_account as a
     where
-      i.account_id = a.account_id;
+      i.account_id = a.account_id
+    order by 
+      i.db_instance_identifier;
   EOQ
 }

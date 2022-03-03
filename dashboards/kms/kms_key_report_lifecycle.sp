@@ -86,6 +86,8 @@ query "aws_kms_cmk_lifecycle_table" {
       aws_account as a
     where
       k.account_id = a.account_id
-      and k.key_manager = 'CUSTOMER';
+      and k.key_manager = 'CUSTOMER'
+    order by
+      k.id;
   EOQ
 }

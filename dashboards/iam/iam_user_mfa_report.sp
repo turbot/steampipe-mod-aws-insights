@@ -48,7 +48,7 @@ query "aws_iam_user_mfa_table" {
     where
       u.account_id = a.account_id
     order by
-      u.account_id,
-      u.mfa_enabled;
+      u.name,
+      u.account_id;
   EOQ
 }

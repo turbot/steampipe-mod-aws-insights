@@ -49,6 +49,8 @@ query "aws_rds_db_cluster_encryption_table" {
       aws_rds_db_cluster as c,
       aws_account as a
     where
-      c.account_id = a.account_id;
+      c.account_id = a.account_id
+    order by 
+      c.db_cluster_identifier;
   EOQ
 }

@@ -84,7 +84,7 @@ dashboard "aws_lambda_function_detail" {
           from
             aws_lambda_function
           where
-            arn = $1
+            arn = $1;
           EOQ
 
         param "arn" {}
@@ -113,7 +113,9 @@ dashboard "aws_lambda_function_detail" {
             value as "Value"
           from
             jsondata,
-            json_each_text(tags);
+            json_each_text(tags)
+          order by
+            key;
           EOQ
 
         param "arn" {}
