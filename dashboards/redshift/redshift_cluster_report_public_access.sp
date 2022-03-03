@@ -50,6 +50,8 @@ query "aws_redshift_cluster_publicly_accessible_table" {
       aws_redshift_cluster as r,
       aws_account as a
     where
-      r.account_id = a.account_id;
+      r.account_id = a.account_id
+    order by
+      r.title ;
   EOQ
 }

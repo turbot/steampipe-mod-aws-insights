@@ -259,6 +259,8 @@ query "aws_ec2_instance_tags" {
       jsonb_array_elements(tags_src) as tag
     where
       arn = $1
+    order by
+      tag ->> 'Key';
     EOQ
 
     param "arn" {}

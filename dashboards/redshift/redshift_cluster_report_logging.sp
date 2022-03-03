@@ -64,6 +64,8 @@ query "aws_redshift_cluster_logging_table" {
       aws_redshift_cluster as r,
       aws_account as a
     where
-      r.account_id = a.account_id;
+      r.account_id = a.account_id
+    order by
+      r.cluster_identifier;
   EOQ
 }

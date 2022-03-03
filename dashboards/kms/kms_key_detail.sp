@@ -106,6 +106,8 @@ dashboard "aws_kms_key_detail" {
             jsonb_array_elements(tags_src) as tag
           where
             arn = $1
+          order by
+            tag ->> 'Key';
           EOQ
 
         param "arn" {}

@@ -60,6 +60,8 @@ query "aws_iam_roles_allow_all_actions" {
       roles_that_allow_all_actions as role,
       aws_account as a
     where
-      a.account_id = role.account_id;
+      a.account_id = role.account_id
+    order by
+      role.role_name;
   EOQ
 }

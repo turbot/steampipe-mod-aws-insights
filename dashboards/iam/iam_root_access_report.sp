@@ -66,7 +66,9 @@ query "aws_iam_root_access_keys_table" {
       aws_iam_account_summary as s,
       aws_account as a
     where
-      a.account_id = s.account_id;
+      a.account_id = s.account_id
+    order by
+      a.title;
   EOQ
 }
 

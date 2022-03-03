@@ -4,6 +4,7 @@ dashboard "aws_iam_credential_report" {
 
   tags = merge(local.iam_common_tags, {
     type     = "Report"
+    category = "Credential Report"
   })
 
   text {

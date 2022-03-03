@@ -136,7 +136,6 @@ query "aws_rds_db_cluster_age_table" {
     where
       c.account_id = a.account_id
     order by
-      c.create_time,
       c.title;
   EOQ
 }
