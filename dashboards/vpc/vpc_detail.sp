@@ -15,33 +15,33 @@ dashboard "aws_vpc_detail" {
   container {
 
     card {
+      width = 2
       query = query.aws_vpc_num_ips_for_vpc
-      width = 2
-      args = {
+      args  = {
         arn = self.input.vpc_arn.value
       }
     }
 
     card {
+      width = 2
       query = query.aws_subnet_count_for_vpc
-      width = 2
-      args = {
+      args  = {
         arn = self.input.vpc_arn.value
       }
     }
 
     card {
+      width = 2
       query = query.aws_vpc_is_default
-      width = 2
-      args = {
+      args  = {
         arn = self.input.vpc_arn.value
       }
     }
 
     card {
-      query = query.aws_flowlogs_count_for_vpc
       width = 2
-      args = {
+      query = query.aws_flowlogs_count_for_vpc
+      args  = {
         arn = self.input.vpc_arn.value
       }
     }
@@ -58,22 +58,8 @@ dashboard "aws_vpc_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        sql   = <<-EOQ
-          select
-            vpc_id as "VPC ID",
-            title as "Title",
-            region as "Region",
-            account_id as "Account ID",
-            arn as "ARN"
-          from
-            aws_vpc
-          where
-            arn = $1
-        EOQ
-
-        param "arn" {}
-
-        args = {
+        query = query.aws_vpc_overview
+        args  = {
           arn = self.input.vpc_arn.value
         }
       }
@@ -81,23 +67,8 @@ dashboard "aws_vpc_detail" {
       table {
         title = "Tags"
         width = 6
-
-        sql = <<-EOQ
-          select
-            tag ->> 'Key' as "Key",
-            tag ->> 'Value' as "Value"
-          from
-            aws_vpc,
-            jsonb_array_elements(tags_src) as tag
-          where
-            arn = $1
-          order by
-            tag ->> 'Key';
-        EOQ
-
-        param "arn" {}
-
-        args = {
+        query = query.aws_vpc_tags
+        args  = {
           arn = self.input.vpc_arn.value
         }
       }
@@ -110,53 +81,16 @@ dashboard "aws_vpc_detail" {
 
       table {
         title = "CIDR Blocks"
-        sql = <<-EOQ
-          select
-            b ->> 'CidrBlock' as cidr_block,
-            power(2, 32 - masklen( (b ->> 'CidrBlock'):: cidr)) as num_ips
-          from
-            aws_vpc,
-            jsonb_array_elements(cidr_block_association_set) as b
-          where
-            arn = $1
-          union all
-          select
-            b ->> 'Ipv6CidrBlock' as cidr_block,
-            power(2, 128 - masklen( (b ->> 'Ipv6CidrBlock'):: cidr)) as num_ips
-          from
-            aws_vpc,
-            jsonb_array_elements(ipv6_cidr_block_association_set) as b
-          where
-            arn = $1;
-        EOQ
-        param "arn" {}
-
-        args = {
+        query = query.aws_vpc_cidr_block
+        args  = {
           arn = self.input.vpc_arn.value
         }
       }
 
       table {
         title = "DHCP Options"
-        sql = <<-EOQ
-          select
-            d.title,
-            d.dhcp_options_id,
-            d.domain_name,
-            d.domain_name_servers,
-            d.netbios_name_servers,
-            d.netbios_node_type,
-            d.ntp_servers
-          from
-            aws_vpc as v,
-            aws_vpc_dhcp_options as d
-          where
-            v.arn = $1
-            and v.dhcp_options_id = d.dhcp_options_id;
-       EOQ
-        param "arn" {}
-
-        args = {
+        query = query.aws_vpc_dhcp_options
+        args  = {
           arn = self.input.vpc_arn.value
         }
       }
@@ -173,22 +107,7 @@ dashboard "aws_vpc_detail" {
       title = "Subnets by AZ"
       type  = "column"
       width = 4
-      sql   = <<-EOQ
-        select
-          availability_zone,
-          count(*)
-        from
-          aws_vpc_subnet
-        where
-          vpc_id = reverse(split_part(reverse($1), '/', 1))
-        group by
-          availability_zone
-        order by
-          availability_zone
-      EOQ
-
-      param "arn" {}
-
+      query = query.aws_vpc_subnet_by_az
       args = {
         arn = self.input.vpc_arn.value
       }
@@ -965,6 +884,103 @@ query "aws_vpc_peers_for_vpc_sankey" {
       status_code as category
     from
       peers
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_vpc_overview" {
+  sql = <<-EOQ
+    select
+      vpc_id as "VPC ID",
+      title as "Title",
+      region as "Region",
+      account_id as "Account ID",
+      arn as "ARN"
+    from
+      aws_vpc
+    where
+      arn = $1
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_vpc_tags" {
+  sql = <<-EOQ
+    select
+      tag ->> 'Key' as "Key",
+      tag ->> 'Value' as "Value"
+    from
+      aws_vpc,
+      jsonb_array_elements(tags_src) as tag
+    where
+      arn = $1
+    order by
+      tag ->> 'Key';
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_vpc_cidr_block" {
+  sql = <<-EOQ
+    select
+      b ->> 'CidrBlock' as cidr_block,
+      power(2, 32 - masklen( (b ->> 'CidrBlock'):: cidr)) as num_ips
+    from
+      aws_vpc,
+      jsonb_array_elements(cidr_block_association_set) as b
+    where
+      arn = $1
+    union all
+    select
+      b ->> 'Ipv6CidrBlock' as cidr_block,
+      power(2, 128 - masklen( (b ->> 'Ipv6CidrBlock'):: cidr)) as num_ips
+    from
+      aws_vpc,
+      jsonb_array_elements(ipv6_cidr_block_association_set) as b
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}  
+}
+
+query "aws_vpc_dhcp_options" {
+  sql = <<-EOQ
+    select
+      d.title,
+      d.dhcp_options_id,
+      d.domain_name,
+      d.domain_name_servers,
+      d.netbios_name_servers,
+      d.netbios_node_type,
+      d.ntp_servers
+    from
+      aws_vpc as v,
+      aws_vpc_dhcp_options as d
+    where
+      v.arn = $1
+      and v.dhcp_options_id = d.dhcp_options_id;
+  EOQ
+
+  param "arn" {} 
+}
+
+query "aws_vpc_subnet_by_az" {
+  sql   = <<-EOQ
+    select
+      availability_zone,
+      count(*)
+    from
+      aws_vpc_subnet
+    where
+      vpc_id = reverse(split_part(reverse($1), '/', 1))
+    group by
+      availability_zone
+    order by
+      availability_zone
   EOQ
 
   param "arn" {}

@@ -16,45 +16,40 @@ dashboard "aws_rds_db_instance_detail" {
 
     card {
       width = 2
-
       query = query.aws_rds_db_instance_engine_type
-      args = {
+      args  = {
         arn = self.input.db_instance_arn.value
       }
     }
 
     card {
       width = 2
-
       query = query.aws_rds_db_instance_class
-      args = {
+      args  = {
         arn = self.input.db_instance_arn.value
       }
     }
 
     card {
       width = 2
-
       query = query.aws_rds_db_instance_public
-      args = {
+      args  = {
         arn = self.input.db_instance_arn.value
       }
     }
 
     card {
       width = 2
-
       query = query.aws_rds_db_instance_unencrypted
-      args = {
+      args  = {
         arn = self.input.db_instance_arn.value
       }
     }
 
     card {
       width = 2
-
       query = query.aws_rds_db_instance_deletion_protection
-      args = {
+      args  = {
         arn = self.input.db_instance_arn.value
       }
     }
@@ -71,27 +66,8 @@ dashboard "aws_rds_db_instance_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        sql   = <<-EOQ
-          select
-            db_instance_identifier as "DB Instance Identifier",
-            case
-              when vpc_id is not null and vpc_id != '' then vpc_id
-              else 'N/A'
-            end as "VPC ID",
-            create_time as "Create Time",
-            title as "Title",
-            region as "Region",
-            account_id as "Account ID",
-            arn as "ARN"
-          from
-            aws_rds_db_instance
-          where
-            arn = $1
-          EOQ
-
-        param "arn" {}
-
-        args = {
+        query = query.aws_rds_db_instance_overview
+        args  = {
           arn = self.input.db_instance_arn.value
         }
       }
@@ -99,23 +75,8 @@ dashboard "aws_rds_db_instance_detail" {
       table {
         title = "Tags"
         width = 6
-
-        sql = <<-EOQ
-          select
-            tag ->> 'Key' as "Key",
-            tag ->> 'Value' as "Value"
-          from
-            aws_rds_db_instance,
-            jsonb_array_elements(tags_src) as tag
-          where
-            arn = $1
-          order by
-            tag ->> 'Key';
-          EOQ
-
-        param "arn" {}
-
-        args = {
+        query = query.aws_rds_db_instance_tags
+        args  = {
           arn = self.input.db_instance_arn.value
         }
       }
@@ -130,7 +91,7 @@ dashboard "aws_rds_db_instance_detail" {
       table {
         title = "DB Parameter Groups"
         query = query.aws_rds_db_instance_parameter_groups
-        args = {
+        args  = {
           arn = self.input.db_instance_arn.value
         }
       }
@@ -138,8 +99,7 @@ dashboard "aws_rds_db_instance_detail" {
       table {
         title = "Subnets"
         query = query.aws_rds_db_instance_subnets
-
-        args = {
+        args  = {
           arn = self.input.db_instance_arn.value
         }
       }
@@ -154,7 +114,7 @@ dashboard "aws_rds_db_instance_detail" {
         width = 6
         title = "Storage"
         query = query.aws_rds_db_instance_storage
-        args = {
+        args  = {
           arn = self.input.db_instance_arn.value
         }
       }
@@ -163,7 +123,7 @@ dashboard "aws_rds_db_instance_detail" {
         width = 6
         title = "Logging"
         query = query.aws_rds_db_instance_logging
-        args = {
+        args  = {
           arn = self.input.db_instance_arn.value
         }
       }
@@ -178,7 +138,7 @@ dashboard "aws_rds_db_instance_detail" {
         width = 6
         title = "Security Groups"
         query = query.aws_rds_db_instance_security_groups
-        args = {
+        args  = {
           arn = self.input.db_instance_arn.value
         }
       }
@@ -187,7 +147,7 @@ dashboard "aws_rds_db_instance_detail" {
         width = 6
         title = "DB Subnet Groups"
         query = query.aws_rds_db_instance_db_subnet_groups
-        args = {
+        args  = {
           arn = self.input.db_instance_arn.value
         }
       }
@@ -378,5 +338,41 @@ query "aws_rds_db_instance_db_subnet_groups" {
   param "arn" {}
 }
 
+query "aws_rds_db_instance_overview" {
+  sql = <<-EOQ
+    select
+      db_instance_identifier as "DB Instance Identifier",
+      case
+        when vpc_id is not null and vpc_id != '' then vpc_id
+        else 'N/A'
+      end as "VPC ID",
+      create_time as "Create Time",
+      title as "Title",
+      region as "Region",
+      account_id as "Account ID",
+      arn as "ARN"
+    from
+      aws_rds_db_instance
+    where
+      arn = $1;
+  EOQ
 
+  param "arn" {}
+}
 
+query "aws_rds_db_instance_tags" {
+  sql = <<-EOQ
+    select
+      tag ->> 'Key' as "Key",
+      tag ->> 'Value' as "Value"
+    from
+      aws_rds_db_instance,
+      jsonb_array_elements(tags_src) as tag
+    where
+      arn = $1
+    order by
+      tag ->> 'Key';
+    EOQ
+
+  param "arn" {}
+}

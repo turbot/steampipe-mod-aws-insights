@@ -19,6 +19,11 @@ dashboard "aws_cloudtrail_trail_logging_report" {
       width = 2
     }
 
+    card {
+      sql = query.aws_cloudtrail_trail_log_file_validation_disabled_count.sql
+      width = 2
+    }
+
   }
 
   container {
@@ -28,7 +33,7 @@ dashboard "aws_cloudtrail_trail_logging_report" {
         display = "none"
       }
 
-      sql = query.aws_cloudtrail_trail_logging_table.sql    
+      sql = query.aws_cloudtrail_trail_logging_table.sql
     }
   }
 
@@ -52,9 +57,10 @@ query "aws_cloudtrail_trail_logging_table" {
   sql = <<-EOQ
     select
       t.name as "Name",
-      case when is_logging then 'Enabled' else 'Disabled' end as "Logging",
+      case when is_logging then 'Enabled' else null end as "Logging",
       t.s3_bucket_name as "S3 Bucket Name",
       t.s3_key_prefix as "S3 Key Prefix",
+      case when t.log_file_validation_enabled then 'Enabled' else null end as "Log File Validation",
       t.start_logging_time as "Start Logging Time",
       t.stop_logging_time as "Stop Logging Time",
       a.title as "Account",
@@ -69,5 +75,5 @@ query "aws_cloudtrail_trail_logging_table" {
       and t.region = t.home_region
     order by
       t.name;
-  EOQ  
+  EOQ
 }

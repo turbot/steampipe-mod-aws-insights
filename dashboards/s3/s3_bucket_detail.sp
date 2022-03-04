@@ -149,7 +149,7 @@ dashboard "aws_s3_bucket_detail" {
 
 }
 query "aws_s3_bucket_input" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
       title as label,
       arn as value,
