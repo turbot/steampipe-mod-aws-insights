@@ -46,16 +46,20 @@ dashboard "aws_ebs_volume_age_report" {
 
   }
 
-  container {
-
-    table {
-      column "Account ID" {
-        display = "none"
-      }
-
-      sql = query.aws_ebs_volume_age_table.sql
+  table {
+    column "Account ID" {
+      display = "none"
     }
 
+    column "ARN" {
+      display = "none"
+    }
+
+    column "Volume ID" {
+      href = "/aws_insights.dashboard.aws_ebs_volume_detail?input.volume_arn={{.row.ARN|@uri}}"
+    }
+
+    sql = query.aws_ebs_volume_age_table.sql
   }
 
 }
@@ -126,8 +130,8 @@ query "aws_ebs_volume_1_year_count" {
 query "aws_ebs_volume_age_table" {
   sql = <<-EOQ
     select
-      v.tags ->> 'Name' as "Name",
       v.volume_id as "Volume ID",
+      v.tags ->> 'Name' as "Name",
       now()::date - v.create_time::date as "Age in Days",
       v.create_time as "Create Time",
       v.state as "State",
@@ -141,7 +145,6 @@ query "aws_ebs_volume_age_table" {
     where
       v.account_id = a.account_id
     order by
-      v.tags ->> 'Name',
       v.volume_id;
   EOQ
 }

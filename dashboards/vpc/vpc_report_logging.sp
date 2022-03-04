@@ -26,6 +26,14 @@ dashboard "aws_vpc_logging_report" {
       display = "none"
     }
 
+    column "ARN" {
+      display = "none"
+    }
+
+    column "VPC ID" {
+      href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_arn={{.row.ARN|@uri}}"
+    }
+
     sql = query.aws_vpc_logging_table.sql
   }
 
@@ -44,8 +52,8 @@ query "aws_vpc_logging_table" {
         aws_vpc_flow_log
     )
     select
+      v.vpc_id as "VPC ID",
       v.tags ->> 'Name' as "Name",
-      v.vpc_id as "VPC",
       case
         when vpc_id in (select resource_id from aws_vpc_flow_log) then 'Enabled'
         else null
@@ -63,7 +71,6 @@ query "aws_vpc_logging_table" {
       left join flow_logs as f on f.resource_id = v.vpc_id
       left join aws_account as a on v.account_id = a.account_id
     order by
-      v.tags ->> 'Name',
       v.vpc_id;
   EOQ
 }

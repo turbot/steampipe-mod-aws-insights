@@ -46,18 +46,20 @@ dashboard "aws_s3_bucket_age_report" {
 
   }
 
-  container {
-
-    table {
-
-      column "Account ID" {
-        display = "none"
-      }
-
-      sql = query.aws_s3_bucket_age_table.sql
-
+  table {
+    column "Account ID" {
+      display = "none"
     }
 
+    column "ARN" {
+      display = "none"
+    }
+
+    column "Name" {
+      href = "/aws_insights.dashboard.aws_s3_bucket_detail?input.bucket_arn={{.row.ARN|@uri}}"
+    }
+
+    sql = query.aws_s3_bucket_age_table.sql
   }
 
 }
@@ -129,7 +131,6 @@ query "aws_s3_bucket_age_table" {
   sql = <<-EOQ
     select
       b.name as "Name",
-      --date_trunc('day',age(now(),b.creation_date))::text as "Age",
       now()::date - b.creation_date::date as "Age in Days",
       b.creation_date as "Create Time",
       a.title as "Account",

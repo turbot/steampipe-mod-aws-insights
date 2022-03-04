@@ -46,18 +46,20 @@ dashboard "aws_ec2_instance_age_report" {
 
   }
 
-  container {
-
-    table {
-
-      column "Account ID" {
-        display = "none"
-      }
-
-      sql = query.aws_ec2_instance_age_table.sql
-
+  table {
+    column "Account ID" {
+      display = "none"
     }
 
+    column "ARN" {
+      display = "none"
+    }
+
+    column "Instance ID" {
+      href = "/aws_insights.dashboard.aws_ec2_instance_detail?input.instance_arn={{.row.ARN|@uri}}"
+    }
+
+    sql = query.aws_ec2_instance_age_table.sql
   }
 
 }
@@ -125,8 +127,8 @@ query "aws_ec2_instance_1_year_count" {
 query "aws_ec2_instance_age_table" {
   sql = <<-EOQ
     select
-      i.tags ->> 'Name' as "Name",
       i.instance_id as "Instance ID",
+      i.tags ->> 'Name' as "Name",
       now()::date - i.launch_time::date as "Age in Days",
       i.launch_time as "Launch Time",
       i.instance_state as "State",
@@ -140,6 +142,6 @@ query "aws_ec2_instance_age_table" {
     where
       i.account_id = a.account_id
     order by
-      i.title;
+      i.instance_id;
   EOQ
 }

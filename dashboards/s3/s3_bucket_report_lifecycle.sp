@@ -27,13 +27,19 @@ dashboard "aws_s3_bucket_lifecycle_report" {
   }
 
   table {
-
     column "Account ID" {
       display = "none"
     }
 
-    sql = query.aws_s3_bucket_lifecycle_table.sql
+    column "ARN" {
+      display = "none"
+    }
 
+    column "Name" {
+      href = "/aws_insights.dashboard.aws_s3_bucket_detail?input.bucket_arn={{.row.ARN|@uri}}"
+    }
+
+    sql = query.aws_s3_bucket_lifecycle_table.sql
   }
 
 }

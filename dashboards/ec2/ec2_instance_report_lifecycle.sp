@@ -26,6 +26,14 @@ dashboard "aws_ec2_instance_lifecycle_report" {
       display = "none"
     }
 
+    column "ARN" {
+      display = "none"
+    }
+
+    column "Instance ID" {
+      href = "/aws_insights.dashboard.aws_ec2_instance_detail?input.instance_arn={{.row.ARN|@uri}}"
+    }
+
     sql = query.aws_ec2_instance_lifecycle_table.sql
   }
 
@@ -35,7 +43,7 @@ query "aws_ec2_stopped_instance_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Stopped Instance' as label,
+      'Stopped' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_ec2_instance
@@ -47,10 +55,9 @@ query "aws_ec2_stopped_instance_count" {
 query "aws_ec2_instance_lifecycle_table" {
   sql = <<-EOQ
     select
-      i.tags ->> 'Name' as "Name",
       i.instance_id as "Instance ID",
+      i.tags ->> 'Name' as "Name",
       i.instance_state as "State",
-      i.instance_lifecycle as "Lifecycle",
       a.title as "Account",
       i.account_id as "Account ID",
       i.region as "Region",
@@ -61,7 +68,6 @@ query "aws_ec2_instance_lifecycle_table" {
     where
       i.account_id = a.account_id
     order by
-      i.tags ->> 'Name',
       i.instance_id;
   EOQ
 }

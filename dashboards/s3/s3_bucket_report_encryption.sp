@@ -27,13 +27,19 @@ dashboard "aws_s3_bucket_encryption_report" {
   }
 
   table {
-
     column "Account ID" {
       display = "none"
     }
 
-    sql = query.aws_s3_bucket_encryption_table.sql
+    column "ARN" {
+      display = "none"
+    }
 
+    column "Name" {
+      href = "/aws_insights.dashboard.aws_s3_bucket_detail?input.bucket_arn={{.row.ARN|@uri}}"
+    }
+
+    sql = query.aws_s3_bucket_encryption_table.sql
   }
 
 }
@@ -104,7 +110,7 @@ query "aws_s3_bucket_encryption_table" {
         and ssl :: bool = false
     )
     select
-      b.name as "Bucket",
+      b.name as "Name",
       case when ssl.status = 'ok' then 'Enabled' else null end as "HTTPS Enforced",
       case when b.server_side_encryption_configuration is not null then 'Enabled' else null end as "Default Encryption",
       d.bucket_key_enabled as "Bucket Key Enabled",

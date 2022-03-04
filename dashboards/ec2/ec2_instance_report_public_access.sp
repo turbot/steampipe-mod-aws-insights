@@ -26,6 +26,14 @@ dashboard "aws_ec2_instance_public_access_report" {
       display = "none"
     }
 
+    column "ARN" {
+      display = "none"
+    }
+
+    column "Instance ID" {
+      href = "/aws_insights.dashboard.aws_ec2_instance_detail?input.instance_arn={{.row.ARN|@uri}}"
+    }
+
     sql = query.aws_ec2_instance_public_access_table.sql
   }
 
@@ -35,7 +43,7 @@ query "aws_ec2_instance_public_access_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Public Instances' as label,
+      'Publicly Accessible' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_ec2_instance
@@ -47,8 +55,8 @@ query "aws_ec2_instance_public_access_count" {
 query "aws_ec2_instance_public_access_table" {
   sql = <<-EOQ
     select
-      i.tags ->> 'Name' as "Name",
       i.instance_id as "Instance ID",
+      i.tags ->> 'Name' as "Name",
       case when public_ip_address is null then 'Private' else 'Public' end as "Public/Private",
       a.title as "Account",
       i.account_id as "Account ID",
@@ -60,7 +68,6 @@ query "aws_ec2_instance_public_access_table" {
     where
       i.account_id = a.account_id
     order by
-      i.tags ->> 'Name',
       i.instance_id;
   EOQ
 }

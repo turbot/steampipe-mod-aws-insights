@@ -26,6 +26,14 @@ dashboard "aws_ebs_volume_encryption_report" {
       display = "none"
     }
 
+    column "ARN" {
+      display = "none"
+    }
+
+    column "Volume ID" {
+      href = "/aws_insights.dashboard.aws_ebs_volume_detail?input.volume_arn={{.row.ARN|@uri}}"
+    }
+
     sql = query.aws_ebs_volume_encryption_table.sql
   }
 
@@ -34,8 +42,8 @@ dashboard "aws_ebs_volume_encryption_report" {
 query "aws_ebs_volume_encryption_table" {
   sql = <<-EOQ
     select
-      v.tags ->> 'Name' as "Name",
       v.volume_id as "Volume ID",
+      v.tags ->> 'Name' as "Name",
       case when v.encrypted then 'Enabled' else null end as "Encryption",
       v.kms_key_id as "KMS Key ID",
       a.title as "Account",
@@ -48,7 +56,6 @@ query "aws_ebs_volume_encryption_table" {
     where
       v.account_id = a.account_id
     order by
-      v.tags ->> 'Name',
       v.volume_id;
   EOQ
 }
