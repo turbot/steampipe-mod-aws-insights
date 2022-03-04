@@ -52,10 +52,10 @@ dashboard "aws_vpc_dashboard" {
       sql   = query.aws_vpc_default_status.sql
 
       series "count" {
-        point "default" {
+        point "non-default" {
           color = "ok"
         }
-        point "non-default" {
+        point "default" {
           color = "alert"
         }
       }

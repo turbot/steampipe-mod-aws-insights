@@ -25,14 +25,6 @@ dashboard "aws_kms_key_detail" {
 
     card {
       width = 2
-      query = query.aws_kms_key_enabled
-      args  = {
-        arn = self.input.key_arn.value
-      }
-    }
-
-    card {
-      width = 2
       query = query.aws_kms_key_state
       args  = {
         arn = self.input.key_arn.value
@@ -177,21 +169,6 @@ query "aws_kms_key_origin" {
   param "arn" {}
 }
 
-query "aws_kms_key_enabled" {
-  sql = <<-EOQ
-    select
-      'Enabled' as label,
-      case when enabled then 'Enabled' else 'Disabled' end as value,
-      case when enabled then 'ok' else 'alert' end as "type"
-    from
-      aws_kms_key
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
 query "aws_kms_key_state" {
   sql = <<-EOQ
     select
@@ -258,12 +235,12 @@ query "aws_kms_key_aliases" {
 query "aws_kms_key_policy" {
   sql = <<-EOQ
     select
-      p -> 'Action'  as "Action",
-      p -> 'Condition' as "Condition",
+      p ->> 'Sid' as "Sid",
       p ->> 'Effect' as "Effect",
       p -> 'Principal' as "Principal",
+      p -> 'Action'  as "Action",
       p -> 'Resource' as "Resource",
-      p ->> 'Sid' as "Sid"
+      p -> 'Condition' as "Condition"
     from
       aws_kms_key,
       jsonb_array_elements(policy_std -> 'Statement') as p

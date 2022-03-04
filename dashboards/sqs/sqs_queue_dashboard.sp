@@ -63,32 +63,32 @@ dashboard "aws_sqs_queue_dashboard" {
     }
 
     chart {
-      title = "DLQ Status"
+      title = "DLQ Configuration"
       sql   = query.aws_sqs_queue_by_dlq_status.sql
       type  = "donut"
       width = 4
 
       series "count" {
-        point "enabled" {
+        point "configured" {
           color = "ok"
         }
-        point "disabled" {
+        point "not configured" {
           color = "alert"
         }
       }
     }
 
     chart {
-      title = "Anonymous Access Status"
-      sql   = query.aws_sqs_queue_anonymous_access_status.sql
+      title = "Public/Private Status"
+      sql   = query.aws_sqs_queue_public_access_status.sql
       type  = "donut"
       width = 4
 
       series "count" {
-        point "ok" {
+        point "private" {
           color = "ok"
         }
-        point "has_access" {
+        point "public" {
           color = "alert"
         }
       }
@@ -126,7 +126,7 @@ dashboard "aws_sqs_queue_dashboard" {
       type  = "column"
       width = 3
     }
-    
+
     chart {
       title = "Queues by Region"
       sql   = query.aws_sqs_queue_by_region.sql
@@ -176,7 +176,7 @@ query "aws_sqs_queue_anonymous_access_count" {
   sql = <<-EOQ
       select
         count(*) as value,
-        'Anonymous Access' as label,
+        'Publicly Accessible' as label,
         case count(*) when 0 then 'ok' else 'alert' end as "type"
       from
         aws_sqs_queue,
@@ -237,9 +237,9 @@ query "aws_sqs_queue_by_dlq_status" {
     from (
       select redrive_policy,
         case when redrive_policy is not null then
-          'enabled'
+          'configured'
         else
-          'disabled'
+          'not configured'
         end redrive_policy_status
       from
         aws_sqs_queue) as t
@@ -250,9 +250,9 @@ query "aws_sqs_queue_by_dlq_status" {
   EOQ
 }
 
-query "aws_sqs_queue_anonymous_access_status" {
+query "aws_sqs_queue_public_access_status" {
   sql = <<-EOQ
-    with anonymous_access as (
+    with public_access as (
       select
       title
     from
@@ -268,26 +268,26 @@ query "aws_sqs_queue_anonymous_access_status" {
         or p = '*'
       )
     ),
-    anonymous_access_status as (
+    public_access_status as (
       select
         case
-          when a.title is null or policy_std is null then  'ok'
+          when a.title is null or policy_std is null then 'private'
         else
-          'has_access'
-        end anonymous_access_status
+          'public'
+        end public_access_status
       from
         aws_sqs_queue as q
-        left join anonymous_access as a on q.title = a.title
+        left join public_access as a on q.title = a.title
       )
       select
-        anonymous_access_status,
+        public_access_status,
         count(*)
       from
-        anonymous_access_status
+        public_access_status
       group by
-        anonymous_access_status
+        public_access_status
       order by
-        anonymous_access_status desc;
+        public_access_status desc;
   EOQ
 }
 

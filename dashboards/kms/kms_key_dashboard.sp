@@ -21,7 +21,7 @@ dashboard "aws_kms_key_dashboard" {
 
     # Assessments
     card {
-      sql   = query.aws_inactive_kms_key_count.sql
+      sql   = query.aws_kms_key_disabled_count.sql
       width = 2
     }
 
@@ -46,8 +46,8 @@ dashboard "aws_kms_key_dashboard" {
     width = 6
 
     chart {
-      title = "Inactive/Active Status"
-      sql   = query.aws_inactive_kms_key_status.sql
+      title = "Enabled/Disabled Status"
+      sql   = query.aws_kms_key_disabled_status.sql
       type  = "donut"
       width = 4
 
@@ -75,13 +75,6 @@ dashboard "aws_kms_key_dashboard" {
           color = "alert"
         }
       }
-    }
-
-    chart {
-      title = "Usage Status"
-      sql   = query.aws_kms_key_usage_status.sql
-      type  = "donut"
-      width = 4
     }
 
   }
@@ -161,11 +154,11 @@ query "aws_kms_customer_managed_key_count" {
   EOQ
 }
 
-query "aws_inactive_kms_key_count" {
+query "aws_kms_key_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Inactive' as label,
+      'Disabled' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_kms_key
@@ -203,10 +196,10 @@ query "aws_kms_key_cost_mtd" {
 
 # Assessment Queries
 
-query "aws_inactive_kms_key_status" {
+query "aws_kms_key_disabled_status" {
   sql = <<-EOQ
     select
-      inactive_status,
+      disabled_status,
       count(*)
     from (
       select
@@ -214,13 +207,13 @@ query "aws_inactive_kms_key_status" {
           'enabled'
         else
           'disabled'
-        end inactive_status
+        end disabled_status
       from
         aws_kms_key) as t
     group by
-      inactive_status
+      disabled_status
     order by
-      inactive_status desc;
+      disabled_status desc;
   EOQ
 }
 
@@ -244,18 +237,6 @@ query "aws_kms_key_rotation_status" {
       rotation_status
     order by
       rotation_status desc;
-  EOQ
-}
-
-query "aws_kms_key_usage_status" {
-  sql = <<-EOQ
-    select
-      lower(key_usage) as lower_key_usage,
-      count(key_usage)
-    from
-      aws_kms_key
-    group by
-      key_usage;
   EOQ
 }
 

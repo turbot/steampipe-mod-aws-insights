@@ -30,11 +30,6 @@ dashboard "aws_rds_db_cluster_dashboard" {
       width = 2
     }
 
-    card {
-      sql   = query.aws_rds_db_cluster_not_in_vpc_count.sql
-      width = 2
-    }
-
     # Costs
     card {
       type  = "info"
@@ -226,19 +221,6 @@ query "aws_rds_db_cluster_no_deletion_protection_count" {
   EOQ
 }
 
-query "aws_rds_db_cluster_not_in_vpc_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Not in VPC' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as "type"
-    from
-      aws_rds_db_cluster
-    where
-      vpc_security_groups is null;
-  EOQ
-}
-
 query "aws_rds_db_cluster_cost_mtd" {
   sql = <<-EOQ
     select
@@ -277,54 +259,47 @@ query "aws_rds_db_cluster_by_encryption_status" {
 
 query "aws_rds_db_cluster_logging_status" {
   sql = <<-EOQ
-    with logging_stat as (
+    select
+      logging_status,
+      count(*)
+    from (
       select
-        db_cluster_identifier
-      from
-        aws_rds_db_cluster
-      where
-        (engine like any (array ['mariadb', '%mysql']) and enabled_cloudwatch_logs_exports ?& array ['audit','error','general','slowquery'] )or
+        case when      (engine like any (array ['mariadb', '%mysql']) and enabled_cloudwatch_logs_exports ?& array ['audit','error','general','slowquery'] )or
         ( engine like any (array['%postgres%']) and enabled_cloudwatch_logs_exports ?& array ['postgresql','upgrade'] ) or
         ( engine like 'oracle%' and enabled_cloudwatch_logs_exports ?& array ['alert','audit', 'trace','listener'] ) or
         ( engine = 'sqlserver-ex' and enabled_cloudwatch_logs_exports ?& array ['error'] ) or
         ( engine like 'sqlserver%' and enabled_cloudwatch_logs_exports ?& array ['error','agent'] )
-      )
-    select
-      'enabled' as "Logging Status",
-      count(db_cluster_identifier)
-    from
-      logging_stat
-    union
-    select
-      'disabled' as "Logging Status",
-      count( db_cluster_identifier)
-    from
-      aws_rds_db_cluster as s where s.db_cluster_identifier not in (select db_cluster_identifier from logging_stat);
+      then 'enabled'
+        else
+          'disabled'
+        end logging_status
+      from
+        aws_rds_db_cluster) as t
+    group by
+      logging_status
+    order by
+      logging_status desc;
   EOQ
 }
 
 query "aws_rds_db_cluster_deletion_protection_status" {
   sql = <<-EOQ
-    with deletion_protection as (
     select
-      distinct db_cluster_identifier as name
-    from
-      aws_rds_db_cluster
-    where
-      deletion_protection
-    group by name
-  )
-  select
-    'enabled' as "Deletion Protection Status",
-    count(name)
-  from
-    deletion_protection
-  union
-  select
-    'disabled' as "Deletion Protection Status",
-    count( db_cluster_identifier)
-  from
-    aws_rds_db_cluster as s where s.db_cluster_identifier not in (select name from deletion_protection);
+      deletion_protection_status,
+      count(*)
+    from (
+      select
+        case when deletion_protection then
+          'enabled'
+        else
+          'disabled'
+        end deletion_protection_status
+      from
+        aws_rds_db_cluster) as t
+    group by
+      deletion_protection_status
+    order by
+      deletion_protection_status desc;
   EOQ
 }
 
