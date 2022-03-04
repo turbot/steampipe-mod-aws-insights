@@ -71,7 +71,7 @@ dashboard "aws_vpc_dashboard" {
         point "configured" {
           color = "ok"
         }
-        point "unconfigured" {
+        point "not configured" {
           color = "alert"
         }
       }
@@ -240,7 +240,7 @@ query "aws_vpc_flow_logs_status" {
         vpc_id,
         case
           when vpc_id in (select resource_id from aws_vpc_flow_log) then 'configured'
-          else 'unconfigured'
+          else 'not configured'
         end as flow_logs_configured
       from
         aws_vpc

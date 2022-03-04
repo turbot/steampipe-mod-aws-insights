@@ -81,7 +81,7 @@ dashboard "aws_vpc_detail" {
 
       table {
         title = "CIDR Blocks"
-        query = query.aws_vpc_cidr_block
+        query = query.aws_vpc_cidr_blocks
         args  = {
           arn = self.input.vpc_arn.value
         }
@@ -168,11 +168,11 @@ dashboard "aws_vpc_detail" {
       }
 
       category "failed" {
-        color = "red"
+        color = "alert"
       }
 
       category "active" {
-        color = "green"
+        color = "ok"
       }
     }
 
@@ -191,7 +191,7 @@ dashboard "aws_vpc_detail" {
     title = "NACLs"
 
     hierarchy {
-      title = "Ingress NACLS"
+      title = "Ingress NACLs"
       width = 6
       query = query.aws_ingress_nacl_for_vpc_sankey
       args = {
@@ -199,16 +199,16 @@ dashboard "aws_vpc_detail" {
       }
 
       category "deny" {
-        color = "red"
+        color = "alert"
       }
 
       category "allow" {
-        color = "green"
+        color = "ok"
       }
     }
 
     hierarchy {
-      title = "Egress NACLS"
+      title = "Egress NACLs"
       width = 6
       query = query.aws_egress_nacl_for_vpc_sankey
       args = {
@@ -216,11 +216,11 @@ dashboard "aws_vpc_detail" {
       }
 
       category "deny" {
-        color = "red"
+        color = "alert"
       }
 
       category "allow" {
-        color = "green"
+        color = "ok"
       }
     }
 
@@ -354,8 +354,8 @@ query "aws_vpc_subnets_for_vpc" {
   sql = <<-EOQ
     with subnets as (
       select
-        title,
-        subnet_id ,
+        subnet_id,
+        tags,
         cidr_block,
         availability_zone,
         available_ip_address_count,
@@ -366,8 +366,8 @@ query "aws_vpc_subnets_for_vpc" {
         vpc_id = reverse(split_part(reverse($1), '/', 1))
     )
     select
-      title as "Title",
       subnet_id as "Subnet ID",
+      tags ->> 'Name' as "Name",
       cidr_block as "CIDR Block",
       availability_zone as "Availbility Zone",
       available_ip_address_count as "Available IPs",
@@ -375,6 +375,8 @@ query "aws_vpc_subnets_for_vpc" {
       round(100 * (available_ip_address_count / (raw_size))::numeric, 2) as "% Free"
     from
       subnets
+    order by
+      subnet_id;
   EOQ
 
   param "arn" {}
@@ -383,9 +385,9 @@ query "aws_vpc_subnets_for_vpc" {
 query "aws_vpc_security_groups_for_vpc" {
   sql = <<-EOQ
     select
-      group_name,
-      group_id,
-      description
+      group_name as "Group Name",
+      group_id as "Group ID",
+      description as "Description"
     from
       aws_vpc_security_group
     where
@@ -398,13 +400,15 @@ query "aws_vpc_security_groups_for_vpc" {
 query "aws_vpc_endpoints_for_vpc" {
   sql = <<-EOQ
     select
-      vpc_endpoint_id,
-      title,
-      service_name
+      vpc_endpoint_id as "VPC Endpoint ID",
+      tags ->> 'Name' as "Name",
+      service_name as "Service Name"
     from
       aws_vpc_endpoint
     where
       vpc_id = reverse(split_part(reverse($1), '/', 1))
+    order by
+      vpc_endpoint_id;
   EOQ
 
   param "arn" {}
@@ -413,12 +417,14 @@ query "aws_vpc_endpoints_for_vpc" {
 query "aws_vpc_route_tables_for_vpc" {
   sql = <<-EOQ
     select
-      title,
-      route_table_id
+      route_table_id as "Route Table ID",
+      tags ->> 'Name' as "Name"
     from
       aws_vpc_route_table
     where
       vpc_id = reverse(split_part(reverse($1), '/', 1))
+    order by
+      route_table_id;
   EOQ
 
   param "arn" {}
@@ -430,8 +436,6 @@ query "aws_vpc_routes_for_vpc_sankey" {
     select
         route_table_id,
         vpc_id,
-        -- jsonb_pretty(a),
-        -- jsonb_pretty(routes),
         r ->> 'State' as state,
         case
           when r ->> 'GatewayId' is not null then r ->> 'GatewayId'
@@ -500,8 +504,9 @@ query "aws_vpc_routes_for_vpc_sankey" {
 query "aws_vpc_routes_for_vpc" {
   sql = <<-EOQ
     select
-      route_table_id,
-      r ->> 'State' as state,
+      route_table_id as "Route Table ID",
+      tags ->> 'Name' as "Name",
+      r ->> 'State' as "State",
       case
         when r ->> 'GatewayId' is not null then r ->> 'GatewayId'
         when r ->> 'InstanceId' is not null then r ->> 'InstanceId'
@@ -516,14 +521,13 @@ query "aws_vpc_routes_for_vpc" {
         when r ->> 'NetworkInterfaceId' is not null then r ->> 'NetworkInterfaceId'
         when r ->> 'CoreNetworkArn' is not null then r ->> 'CoreNetworkArn'
         when r ->> 'InstanceOwnerId' is not null then r ->> 'InstanceOwnerId'
-
-      end as gateway,
-      r ->> 'DestinationCidrBlock' as destination_cidr,
+      end as "Gateway",
+      r ->> 'DestinationCidrBlock' as "Destination CIDR",
       case
         when a ->> 'Main' = 'true' then vpc_id
         when a ->> 'SubnetId' is not null then  a->> 'SubnetId'
         else '??'
-      end as associated_to
+      end as "Associated To"
     from
       aws_vpc_route_table,
       jsonb_array_elements(routes) as r,
@@ -532,9 +536,7 @@ query "aws_vpc_routes_for_vpc" {
       vpc_id = reverse(split_part(reverse($1), '/', 1))
     order by
       route_table_id,
-      associated_to,
-      destination_cidr,
-      gateway
+      "Associated To"
   EOQ
 
   param "arn" {}
@@ -543,21 +545,24 @@ query "aws_vpc_routes_for_vpc" {
 query "aws_vpc_peers_for_vpc" {
   sql = <<-EOQ
     select
-      id,
-      status_code,
-      requester_owner_id,
-      requester_region,
-      requester_vpc_id,
-      requester_cidr_block,
-      accepter_owner_id,
-      accepter_region,
-      accepter_vpc_id,
-      accepter_cidr_block
+      id as "ID",
+      tags ->> 'Name' as "Name",
+      status_code as "Status Code",
+      requester_owner_id as "Request Owner ID",
+      requester_region as "Requester Region",
+      requester_vpc_id as "Requester VPC ID",
+      requester_cidr_block as "Requester CIDR Block",
+      accepter_owner_id "Accepter Owner ID",
+      accepter_region "Accepter Region",
+      accepter_vpc_id "Accepter VPC ID",
+      accepter_cidr_block as "Accepter CIDR Block"
     from
       aws_vpc_peering_connection
     where
       requester_vpc_id = reverse(split_part(reverse($1), '/', 1))
       or accepter_vpc_id = reverse(split_part(reverse($1), '/', 1))
+    order by
+      id
   EOQ
 
   param "arn" {}
@@ -566,10 +571,10 @@ query "aws_vpc_peers_for_vpc" {
 query "aws_vpc_gateways_for_vpc" {
   sql = <<-EOQ
     select
-      title,
-      internet_gateway_id as id,
-      'aws_vpc_internet_gateway' as type,
-      a ->> 'State' as state
+      internet_gateway_id as "ID",
+      tags ->> 'Name' as "Name",
+      'aws_vpc_internet_gateway' as "Type",
+      a ->> 'State' as "State"
     from
       aws_vpc_internet_gateway,
       jsonb_array_elements(attachments) as a
@@ -577,10 +582,10 @@ query "aws_vpc_gateways_for_vpc" {
       a ->> 'VpcId' = reverse(split_part(reverse($1), '/', 1))
     union all
     select
-      title,
-      id,
-      'aws_vpc_egress_only_internet_gateway' as type,
-      a ->> 'State' as state
+      id as "ID",
+      tags ->> 'Name' as "Name",
+      'aws_vpc_egress_only_internet_gateway' as "Type",
+      a ->> 'State' as "State"
     from
       aws_vpc_egress_only_internet_gateway,
       jsonb_array_elements(attachments) as a
@@ -588,10 +593,10 @@ query "aws_vpc_gateways_for_vpc" {
       a ->> 'VpcId' = reverse(split_part(reverse($1), '/', 1))
     union all
     select
-      title,
-      vpn_gateway_id as id,
-      'aws_vpc_vpn_gateway' as type,
-      a ->> 'State' as state
+      vpn_gateway_id as "ID",
+      tags ->> 'Name' as "Name",
+      'aws_vpc_vpn_gateway' as "Type",
+      a ->> 'State' as "State"
     from
       aws_vpc_vpn_gateway,
       jsonb_array_elements(vpc_attachments) as a
@@ -599,10 +604,10 @@ query "aws_vpc_gateways_for_vpc" {
       a ->> 'VpcId' = reverse(split_part(reverse($1), '/', 1))
     union all
     select
-      title,
-      nat_gateway_id as id,
-      'aws_vpc_nat_gateway' as type,
-      state
+      nat_gateway_id as "ID",
+      tags ->> 'Name' as "Name",
+      'aws_vpc_nat_gateway' as "Type",
+      state as "State"
     from
       aws_vpc_nat_gateway
      where
@@ -827,7 +832,6 @@ query "aws_vpc_peers_for_vpc_sankey" {
         or accepter_vpc_id = reverse(split_part(reverse($1), '/', 1))
     )
     select
-      -- null as parent,
       concat('requestor_', requester_owner_id) as parent,
       concat('requestor_', requester_cidr_block) as id,
       requester_cidr_block::text as name,
@@ -837,7 +841,6 @@ query "aws_vpc_peers_for_vpc_sankey" {
       peers
     union select
       concat('requestor_', requester_region) as parent,
-      --null as parent,
       concat('requestor_', requester_owner_id) as id,
       requester_owner_id as name,
       1 as depth,
@@ -923,11 +926,11 @@ query "aws_vpc_tags" {
   param "arn" {}
 }
 
-query "aws_vpc_cidr_block" {
+query "aws_vpc_cidr_blocks" {
   sql = <<-EOQ
     select
-      b ->> 'CidrBlock' as cidr_block,
-      power(2, 32 - masklen( (b ->> 'CidrBlock'):: cidr)) as num_ips
+      b ->> 'CidrBlock' as "CIDR Block",
+      power(2, 32 - masklen( (b ->> 'CidrBlock'):: cidr)) as "Total IPs"
     from
       aws_vpc,
       jsonb_array_elements(cidr_block_association_set) as b
@@ -944,28 +947,30 @@ query "aws_vpc_cidr_block" {
       arn = $1;
   EOQ
 
-  param "arn" {}  
+  param "arn" {}
 }
 
 query "aws_vpc_dhcp_options" {
   sql = <<-EOQ
     select
-      d.title,
-      d.dhcp_options_id,
-      d.domain_name,
-      d.domain_name_servers,
-      d.netbios_name_servers,
-      d.netbios_node_type,
-      d.ntp_servers
+      d.dhcp_options_id as "DHCP Options ID",
+      d.tags ->> 'Name' as "Name",
+      d.domain_name as "Domain Name",
+      d.domain_name_servers as "Domain Name Servers",
+      d.netbios_name_servers as "NetBIOS Name Servers",
+      d.netbios_node_type "NetBIOS Node Type",
+      d.ntp_servers as "NTP Servers"
     from
       aws_vpc as v,
       aws_vpc_dhcp_options as d
     where
       v.arn = $1
-      and v.dhcp_options_id = d.dhcp_options_id;
+      and v.dhcp_options_id = d.dhcp_options_id
+    order by
+      d.dhcp_options_id;
   EOQ
 
-  param "arn" {} 
+  param "arn" {}
 }
 
 query "aws_vpc_subnet_by_az" {

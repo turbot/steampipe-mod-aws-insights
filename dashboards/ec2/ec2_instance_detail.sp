@@ -264,11 +264,11 @@ query "aws_ec2_instance_tags" {
 query "aws_ec2_instance_block_device_mapping" {
   sql = <<-EOQ
     select
+      p -> 'Ebs' ->> 'VolumeId'  as "Volume ID",
       p ->> 'DeviceName'  as "Device Name",
       p -> 'Ebs' ->> 'AttachTime' as "Attach Time",
       p -> 'Ebs' ->> 'DeleteOnTermination' as "Delete On Termination",
-      p -> 'Ebs' ->> 'Status'  as "Status",
-      p -> 'Ebs' ->> 'VolumeId'  as "Volume ID"
+      p -> 'Ebs' ->> 'Status'  as "Status"
     from
       aws_ec2_instance,
       jsonb_array_elements(block_device_mappings) as p

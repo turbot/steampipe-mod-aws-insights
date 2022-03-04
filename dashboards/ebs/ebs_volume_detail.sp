@@ -40,7 +40,7 @@ dashboard "aws_ebs_volume_detail" {
 
     card {
       width = 2
-      query = query.aws_ebs_volume_attached_instances
+      query = query.aws_ebs_volume_attached_instances_count
       args  = {
         arn = self.input.volume_arn.value
       }
@@ -87,10 +87,18 @@ dashboard "aws_ebs_volume_detail" {
       width = 6
 
       table {
-        title = "Associated To"
-        query = query.aws_ebs_volume_association
+        title = "Attached To"
+        query = query.aws_ebs_volume_attached_instances
         args  = {
           arn = self.input.volume_arn.value
+        }
+
+        column "Instance ARN" {
+          display = "none"
+        }
+
+        column "Instance ID" {
+          href = "/aws_insights.dashboard.aws_ec2_instance_detail?input.instance_arn={{.row.\"Instance ARN\"|@uri}}"
         }
       }
 
@@ -231,7 +239,7 @@ query "aws_ebs_volume_state" {
   param "arn" {}
 }
 
-query "aws_ebs_volume_attached_instances" {
+query "aws_ebs_volume_attached_instances_count" {
   sql = <<-EOQ
     select
       'Attached Instances' as label,
@@ -267,10 +275,11 @@ query "aws_ebs_volume_encryption" {
   param "arn" {}
 }
 
-query "aws_ebs_volume_association" {
+query "aws_ebs_volume_attached_instances" {
   sql = <<-EOQ
     select
       i.instance_id as "Instance ID",
+      i.Tags ->> 'Name' as "Name",
       i.arn as "Instance ARN",
       i.instance_state as "Instance State",
       attachment ->> 'AttachTime' as "Attachment Time",
