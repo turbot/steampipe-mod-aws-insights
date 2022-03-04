@@ -17,7 +17,7 @@ dashboard "aws_vpc_security_group_detail" {
     card {
       width = 2
       query = query.aws_vpc_security_group_ingress_rules_count
-      args = {
+      args  = {
         arn = self.input.security_group_arn.value
       }
     }
@@ -25,7 +25,7 @@ dashboard "aws_vpc_security_group_detail" {
     card {
       width = 2
       query = query.aws_vpc_security_group_egress_rules_count
-      args = {
+      args  = {
         arn = self.input.security_group_arn.value
       }
     }
@@ -33,7 +33,7 @@ dashboard "aws_vpc_security_group_detail" {
     card {
       width = 2
       query = query.aws_vpc_security_attached_enis_count
-      args = {
+      args  = {
         arn = self.input.security_group_arn.value
       }
     }
@@ -41,7 +41,7 @@ dashboard "aws_vpc_security_group_detail" {
     card {
       width = 2
       query = query.aws_vpc_security_unrestricted_ingress
-      args = {
+      args  = {
         arn = self.input.security_group_arn.value
       }
     }
@@ -49,7 +49,7 @@ dashboard "aws_vpc_security_group_detail" {
     card {
       width = 2
       query = query.aws_vpc_security_unrestricted_egress
-      args = {
+      args  = {
         arn = self.input.security_group_arn.value
       }
     }
@@ -65,25 +65,8 @@ dashboard "aws_vpc_security_group_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        sql   = <<-EOQ
-          select
-            group_name as "Group Name",
-            group_id as "Group ID",
-            description as "Description",
-            vpc_id as  "VPC ID",
-            title as "Title",
-            region as "Region",
-            account_id as "Account ID",
-            arn as "ARN"
-          from
-            aws_vpc_security_group
-          where
-            arn = $1
-          EOQ
-
-        param "arn" {}
-
-        args = {
+        query = query.aws_vpc_security_group_overview
+        args  = {
           arn = self.input.security_group_arn.value
         }
       }
@@ -91,23 +74,8 @@ dashboard "aws_vpc_security_group_detail" {
       table {
         title = "Tags"
         width = 6
-
-        sql = <<-EOQ
-          select
-            tag ->> 'Key' as "Key",
-            tag ->> 'Value' as "Value"
-          from
-            aws_vpc_security_group,
-            jsonb_array_elements(tags_src) as tag
-          where
-            arn = $1
-          order by
-            tag ->> 'Key';
-          EOQ
-
-        param "arn" {}
-
-        args = {
+        query = query.aws_vpc_security_group_tags
+        args  = {
           arn = self.input.security_group_arn.value
         }
       }
@@ -121,7 +89,7 @@ dashboard "aws_vpc_security_group_detail" {
       table {
         title = "Associated To"
         query = query.aws_vpc_security_group_assoc
-        args = {
+        args  = {
           arn = self.input.security_group_arn.value
         }
       }
@@ -138,7 +106,7 @@ dashboard "aws_vpc_security_group_detail" {
       type  = "sankey"
       title = "Ingress Analysis"
       query = query.aws_vpc_security_group_ingress_rule_sankey
-      args = {
+      args  = {
         arn = self.input.security_group_arn.value
       }
 
@@ -163,7 +131,7 @@ dashboard "aws_vpc_security_group_detail" {
     table {
       title = "Ingress Rules"
       query = query.aws_vpc_security_group_ingress_rules
-      args = {
+      args  = {
         arn = self.input.security_group_arn.value
       }
     }
@@ -178,7 +146,7 @@ dashboard "aws_vpc_security_group_detail" {
       type  = "sankey"
       title = "Egress Analysis"
       query = query.aws_vpc_security_group_egress_rule_sankey
-      args = {
+      args  = {
         arn = self.input.security_group_arn.value
       }
 
@@ -647,3 +615,41 @@ query "aws_vpc_security_group_egress_rules" {
 
   param "arn" {}
 }
+
+query "aws_vpc_security_group_overview" {
+  sql   = <<-EOQ
+    select
+      group_name as "Group Name",
+      group_id as "Group ID",
+      description as "Description",
+      vpc_id as  "VPC ID",
+      title as "Title",
+      region as "Region",
+      account_id as "Account ID",
+      arn as "ARN"
+    from
+      aws_vpc_security_group
+    where
+      arn = $1
+    EOQ
+
+  param "arn" {}
+}
+
+query "aws_vpc_security_group_tags" {
+  sql = <<-EOQ
+    select
+      tag ->> 'Key' as "Key",
+      tag ->> 'Value' as "Value"
+    from
+      aws_vpc_security_group,
+      jsonb_array_elements(tags_src) as tag
+    where
+      arn = $1
+    order by
+      tag ->> 'Key';
+    EOQ
+
+  param "arn" {}
+}
+
