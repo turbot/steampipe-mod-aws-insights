@@ -142,14 +142,14 @@ dashboard "aws_dynamodb_table_dashboard" {
     chart {
       title = "Tables by Account"
       type  = "column"
-      width = 3
+      width = 4
       sql   = query.aws_dynamodb_table_by_account.sql
     }
 
     chart {
       title = "Tables by Region"
       type  = "column"
-      width = 3
+      width = 4
       sql   = query.aws_dynamodb_table_by_region.sql
     }
 
@@ -157,7 +157,7 @@ dashboard "aws_dynamodb_table_dashboard" {
       title = "Tables by Age"
       sql   = query.aws_dynamodb_table_by_creation_month.sql
       type  = "column"
-      width = 3
+      width = 4
     }
   }
 
@@ -166,7 +166,7 @@ dashboard "aws_dynamodb_table_dashboard" {
     chart {
       title = "Table Item Count by Account"
       type  = "column"
-      width = 3
+      width = 4
       sql   = query.aws_dynamodb_table_item_count_by_account.sql
 
       series "GB" {
@@ -177,7 +177,7 @@ dashboard "aws_dynamodb_table_dashboard" {
     chart {
       title = "Table Item Count by Region"
       type  = "column"
-      width = 3
+      width = 4
       sql   = query.aws_dynamodb_table_item_count_by_region.sql
 
       series "GB" {
@@ -225,7 +225,7 @@ query "aws_dynamodb_table_unused_count" {
     where
       item_count = 0;
   EOQ
-} 
+}
 
 query "aws_dynamodb_table_autoscaling_disabled_count" {
   sql = <<-EOQ
@@ -248,7 +248,7 @@ query "aws_dynamodb_table_autoscaling_disabled_count" {
       t.resource_id is null
       or t.count < 2;
   EOQ
-} 
+}
 
 query "aws_dynamodb_table_continuous_backup_count" {
   sql = <<-EOQ
@@ -261,7 +261,7 @@ query "aws_dynamodb_table_continuous_backup_count" {
     where
       not (continuous_backups_status = 'ENABLED');
   EOQ
-} 
+}
 
 query "aws_dynamodb_table_cost_mtd" {
   sql = <<-EOQ
@@ -470,7 +470,7 @@ query "aws_dynamodb_table_by_account" {
       a.account_id = t.account_id
     group by account
     order by account;
-  EOQ 
+  EOQ
 }
 
 query "aws_dynamodb_table_by_region" {

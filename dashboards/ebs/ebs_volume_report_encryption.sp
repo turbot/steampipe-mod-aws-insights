@@ -35,7 +35,7 @@ query "aws_ebs_volume_encryption_table" {
   sql = <<-EOQ
     select
       v.tags ->> 'Name' as "Name",
-      v.volume_id as "Volume",
+      v.volume_id as "Volume Id",
       case when v.encrypted then 'Enabled' else null end as "Encryption",
       v.kms_key_id as "KMS Key ID",
       a.title as "Account",

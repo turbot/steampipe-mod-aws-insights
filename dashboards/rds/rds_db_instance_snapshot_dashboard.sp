@@ -20,11 +20,6 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
       width = 2
     }
 
-    card {
-      sql   = query.aws_rds_db_instance_snapshot_not_in_vpc_count.sql
-      width = 2
-    }
-
     # Costs
     card {
       type  = "info"
@@ -155,19 +150,6 @@ query "aws_rds_db_instance_snapshot_unencrypted_count" {
       aws_rds_db_snapshot
     where
       not encrypted;
-  EOQ
-}
-
-query "aws_rds_db_instance_snapshot_not_in_vpc_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Not in VPC' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as "type"
-    from
-      aws_rds_db_snapshot
-    where
-      vpc_id is null;
   EOQ
 }
 

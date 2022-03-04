@@ -124,7 +124,7 @@ query "aws_ebs_snapshot_age_table" {
   sql = <<-EOQ
     select
       s.tags ->> 'Name' as "Name",
-      s.snapshot_id as "Snapshot",
+      s.snapshot_id as "Snapshot ID",
       now()::date - s.start_time::date as "Age in Days",
       s.start_time as "Create Time",
       s.state as "State",

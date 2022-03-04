@@ -44,7 +44,7 @@ dashboard "aws_acm_certificate_dashboard" {
       title = "Certificate Validity"
       sql   = query.aws_acm_certificate_by_validity.sql
       type  = "donut"
-      width = 2
+      width = 3
 
       series "count" {
         point "valid" {
@@ -60,7 +60,7 @@ dashboard "aws_acm_certificate_dashboard" {
       title = "Transparency Logging Status"
       sql   = query.aws_acm_certificate_by_transparency_logging_preference.sql
       type  = "donut"
-      width = 2
+      width = 3
 
       series "count" {
         point "enabled" {
@@ -189,7 +189,7 @@ query "aws_acm_certificate_by_transparency_logging_preference" {
       count(*)
     from (
       select certificate_transparency_logging_preference,
-        case when certificate_transparency_logging_preference = 'ENABLED' then 
+        case when certificate_transparency_logging_preference = 'ENABLED' then
           'enabled'
         else
           'disabled'

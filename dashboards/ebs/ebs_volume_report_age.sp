@@ -127,7 +127,7 @@ query "aws_ebs_volume_age_table" {
   sql = <<-EOQ
     select
       v.tags ->> 'Name' as "Name",
-      v.volume_id as "Volume",
+      v.volume_id as "Volume ID",
       now()::date - v.create_time::date as "Age in Days",
       v.create_time as "Create Time",
       v.state as "State",

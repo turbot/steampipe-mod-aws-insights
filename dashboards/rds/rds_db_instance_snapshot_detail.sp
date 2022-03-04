@@ -59,15 +59,6 @@ dashboard "aws_rds_db_snapshot_detail" {
       }
     }
 
-    card {
-      query = query.aws_rds_db_snapshot_in_vpc
-      width = 2
-
-      args = {
-        arn = self.input.db_snapshot_arn.value
-      }
-    }
-
   }
 
   container {
@@ -80,20 +71,24 @@ dashboard "aws_rds_db_snapshot_detail" {
         type  = "line"
         width = 6
         sql   = <<-EOQ
-            select
-              db_snapshot_identifier as "DB Snapshot Identifier",
-              create_time as "Create Time",
-              license_model as "License Model",
-              engine_version as "Engine Version",
-              port as "Port",
-              title as "Title",
-              region as "Region",
-              account_id as "Account ID",
-              arn as "ARN"
-            from
-              aws_rds_db_snapshot
-            where
-              arn = $1;
+          select
+            db_snapshot_identifier as "DB Snapshot Identifier",
+            case
+              when vpc_id is not null and vpc_id != '' then vpc_id
+              else 'N/A'
+            end as "VPC ID",
+            create_time as "Create Time",
+            license_model as "License Model",
+            engine_version as "Engine Version",
+            port as "Port",
+            title as "Title",
+            region as "Region",
+            account_id as "Account ID",
+            arn as "ARN"
+          from
+            aws_rds_db_snapshot
+          where
+            arn = $1;
           EOQ
 
         param "arn" {}
@@ -238,21 +233,6 @@ query "aws_rds_db_snapshot_iam_database_authentication_enabled" {
       'IAM Database Authentication' as label,
       case when iam_database_authentication_enabled then 'Enabled' else 'Disabled' end as value,
       case when iam_database_authentication_enabled then 'ok' else 'alert' end as type
-    from
-      aws_rds_db_snapshot
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-query "aws_rds_db_snapshot_in_vpc" {
-  sql = <<-EOQ
-    select
-      'In VPC' as label,
-      case when vpc_id is not null then 'Enabled' else 'Disabled' end as value,
-      case when vpc_id is not null then 'ok' else 'alert' end as type
     from
       aws_rds_db_snapshot
     where

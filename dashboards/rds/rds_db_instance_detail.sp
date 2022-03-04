@@ -59,15 +59,6 @@ dashboard "aws_rds_db_instance_detail" {
       }
     }
 
-    card {
-      query = query.aws_rds_db_instance_in_vpc
-      width = 2
-
-      args = {
-        arn = self.input.db_instance_arn.value
-      }
-    }
-
   }
 
   container {
@@ -81,17 +72,21 @@ dashboard "aws_rds_db_instance_detail" {
         type  = "line"
         width = 6
         sql   = <<-EOQ
-            select
-              db_instance_identifier as "DB Instance Identifier",
-              create_time as "Create Time",
-              title as "Title",
-              region as "Region",
-              account_id as "Account ID",
-              arn as "ARN"
-            from
-              aws_rds_db_instance
-            where
-              arn = $1
+          select
+            db_instance_identifier as "DB Instance Identifier",
+            case
+              when vpc_id is not null and vpc_id != '' then vpc_id
+              else 'N/A'
+            end as "VPC ID",
+            create_time as "Create Time",
+            title as "Title",
+            region as "Region",
+            account_id as "Account ID",
+            arn as "ARN"
+          from
+            aws_rds_db_instance
+          where
+            arn = $1
           EOQ
 
         param "arn" {}
@@ -283,21 +278,6 @@ query "aws_rds_db_instance_deletion_protection" {
       'Deletion Protection' as label,
       case when deletion_protection then 'Enabled' else 'Disabled' end as value,
       case when deletion_protection then 'ok' else 'alert' end as type
-    from
-      aws_rds_db_instance
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-query "aws_rds_db_instance_in_vpc" {
-  sql = <<-EOQ
-    select
-      'In VPC' as label,
-      case when vpc_id is not null then 'Enabled' else 'Disabled' end as value,
-      case when vpc_id is not null then 'ok' else 'alert' end as type
     from
       aws_rds_db_instance
     where

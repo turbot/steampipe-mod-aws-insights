@@ -25,11 +25,6 @@ dashboard "aws_redshift_cluster_dashboard" {
       width = 2
     }
 
-    card {
-      sql   = query.aws_redshift_cluster_not_in_vpc.sql
-      width = 2
-    }
-
     # Costs
     card {
       type  = "info"
@@ -72,22 +67,6 @@ dashboard "aws_redshift_cluster_dashboard" {
           color = "ok"
         }
         point "public" {
-          color = "alert"
-        }
-      }
-    }
-
-     chart {
-      title = "VPC Status"
-      sql = query.aws_redshift_cluster_in_vpc_status.sql
-      type  = "donut"
-      width = 4
-
-      series "count" {
-        point "enabled" {
-          color = "ok"
-        }
-        point "disabled" {
           color = "alert"
         }
       }
@@ -205,19 +184,6 @@ query "aws_redshift_cluster_publicly_accessible" {
   EOQ
 }
 
-query "aws_redshift_cluster_not_in_vpc" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Not in VPC' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as "type"
-    from
-      aws_redshift_cluster
-    where
-      vpc_id is null
-  EOQ
-}
-
 query "aws_redshift_cluster_cost_mtd" {
   sql = <<-EOQ
     select
@@ -272,27 +238,6 @@ query "aws_redshift_cluster_by_publicly_accessible_status" {
       publicly_accessible_status
     order by
       publicly_accessible_status desc;
-  EOQ
-}
-
-query "aws_redshift_cluster_in_vpc_status" {
-  sql = <<-EOQ
-    select
-      vpc_status,
-      count(*)
-    from (
-      select
-        case when vpc_id is not null then
-          'enabled'
-        else
-          'disabled'
-        end vpc_status
-      from
-        aws_redshift_cluster) as t
-    group by
-      vpc_status
-    order by
-      vpc_status desc;
   EOQ
 }
 

@@ -80,7 +80,10 @@ dashboard "aws_redshift_cluster_detail" {
             cluster_namespace_arn as "Cluster Namespace ARN",
             db_name  as "DB Name",
             cluster_status  as "Cluster Status",
-            vpc_id as "VPC ID",
+            case
+              when vpc_id is not null and vpc_id != '' then vpc_id
+              else 'N/A'
+            end as "VPC ID",
             title as "Title",
             region as "Region",
             account_id as "Account ID",
