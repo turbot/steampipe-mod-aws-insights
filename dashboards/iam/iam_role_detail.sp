@@ -15,24 +15,24 @@ dashboard "aws_iam_role_detail" {
   container {
 
     card {
-      query   = query.aws_iam_boundary_policy_for_role
       width = 2
+      query = query.aws_iam_boundary_policy_for_role
       args  = {
         arn = self.input.role_arn.value
       }
     }
 
     card {
-      query   = query.aws_iam_role_inline_policy_count_for_role
       width = 2
+      query = query.aws_iam_role_inline_policy_count_for_role
       args  = {
         arn = self.input.role_arn.value
       }
     }
 
     card {
-      query   = query.aws_iam_role_direct_attached_policy_count_for_role
       width = 2
+      query = query.aws_iam_role_direct_attached_policy_count_for_role
       args  = {
         arn = self.input.role_arn.value
       }
@@ -42,73 +42,65 @@ dashboard "aws_iam_role_detail" {
 
   container {
 
-    title = "Overview"
+    container {
 
-    table {
-      query   = query.aws_iam_role_detail_overview
       width = 6
-      args  = {
-        arn = self.input.role_arn.value
+
+      table {
+        title = "Overview"
+        type  = "line"
+        width = 6
+        query = query.aws_iam_role_overview
+        args  = {
+          arn = self.input.role_arn.value
+        }
+      }
+
+      table {
+        title = "Tags"
+        width = 6
+        query = query.aws_iam_role_tags
+        args  = {
+          arn = self.input.role_arn.value
+        }
       }
     }
 
-    table {
-      title = "Tags"
-      type = "line"
-      width = 6
-      sql   = <<-EOQ
-        select
-          tag ->> 'Key' as "Key",
-          tag ->> 'Value' as "Value"
-        from
-          aws_iam_role,
-          jsonb_array_elements(tags_src) as tag
-        where
-          arn = $1
-      EOQ
+    container {
 
-      param "arn" {}
-      args  = {
-        arn = self.input.role_arn.value
+      title = "AWS IAM Role Policy Analysis"
+
+
+      # hierarchy {
+      #   type  = "sankey"
+      #   title = "Attached Policies"
+      #   sql   = query.aws_iam_user_manage_policies_sankey.sql
+
+      #   category "aws_iam_group" {
+      #     color = "green"
+      #   }
+      # }
+
+
+      table {
+        title = "Groups"
+        width = 6
+        query = query.aws_iam_groups_for_user
+        args  = {
+          arn = self.input.role_arn.value
+        }
       }
-    }
 
-  }
-
-  container {
-
-    title = "AWS IAM Role Policy Analysis"
-
-
-    # hierarchy {
-    #   type  = "sankey"
-    #   title = "Attached Policies"
-    #   sql   = query.aws_iam_user_manage_policies_sankey.sql
-
-    #   category "aws_iam_group" {
-    #     color = "green"
-    #   }
-    # }
-
-
-    table {
-      title = "Groups"
-      width = 6
-      query   = query.aws_iam_groups_for_user
-      args  = {
-        arn = self.input.role_arn.value
+      table {
+        title = "Policies"
+        width = 6
+        query = query.aws_iam_all_policies_for_role
+        args  = {
+          arn = self.input.role_arn.value
+        }
       }
-    }
 
-    table {
-      title = "Policies"
-      width = 6
-      query   = query.aws_iam_all_policies_for_role
-      args  = {
-        arn = self.input.role_arn.value
-      }
     }
-
   }
 
 }
@@ -181,7 +173,7 @@ query "aws_iam_role_direct_attached_policy_count_for_role" {
   param "arn" {}
 }
 
-query "aws_iam_role_detail_overview" {
+query "aws_iam_role_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -224,4 +216,21 @@ query "aws_iam_all_policies_for_role" {
   EOQ
 
   param "arn" {}
+}
+
+query "aws_iam_role_tags" {
+  sql = <<-EOQ
+    select
+      tag ->> 'Key' as "Key",
+      tag ->> 'Value' as "Value"
+    from
+      aws_iam_role,
+      jsonb_array_elements(tags_src) as tag
+    where
+      arn = $1
+    order by
+      tag ->> 'Key'
+  EOQ
+
+  param "arn" {} 
 }

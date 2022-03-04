@@ -969,3 +969,11 @@ query "aws_vpc_peers_for_vpc_sankey" {
 
   param "arn" {}
 }
+
+# query "aws_vpc_overview" {
+
+# }
+
+# query "aws_vpc_tags" {
+
+# }

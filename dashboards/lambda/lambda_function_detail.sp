@@ -17,36 +17,32 @@ dashboard "aws_lambda_function_detail" {
 
     card {
       width = 2
-
       query = query.aws_lambda_function_memory
-      args = {
+      args  = {
         arn = self.input.lambda_arn.value
       }
     }
 
     card {
       width = 2
-
       query = query.aws_lambda_function_runtime
-      args = {
+      args  = {
         arn = self.input.lambda_arn.value
       }
     }
 
     card {
       width = 2
-
       query = query.aws_lambda_function_public
-      args = {
+      args  = {
         arn = self.input.lambda_arn.value
       }
     }
 
     card {
       width = 2
-
       query = query.aws_lambda_function_encryption
-      args = {
+      args  = {
         arn = self.input.lambda_arn.value
       }
     }
@@ -63,26 +59,8 @@ dashboard "aws_lambda_function_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        sql   = <<-EOQ
-          select
-            name as "Name",
-            case
-              when vpc_id is not null and vpc_id != '' then vpc_id
-              else 'N/A'
-            end as "VPC ID",
-            title as "Title",
-            region as "Region",
-            account_id as "Account ID",
-            arn as "ARN"
-          from
-            aws_lambda_function
-          where
-            arn = $1;
-          EOQ
-
-        param "arn" {}
-
-        args = {
+        query = query.aws_lambda_function_overview
+        args  = {
           arn = self.input.lambda_arn.value
         }
 
@@ -91,29 +69,8 @@ dashboard "aws_lambda_function_detail" {
       table {
         title = "Tags"
         width = 6
-
-        sql = <<-EOQ
-          with jsondata as (
-            select
-              tags::json as tags
-            from
-              aws_lambda_function
-            where
-              arn = $1
-          )
-          select
-            key as "Key",
-            value as "Value"
-          from
-            jsondata,
-            json_each_text(tags)
-          order by
-            key;
-          EOQ
-
-        param "arn" {}
-
-        args = {
+        query = query.aws_lambda_function_tags
+        args  = {
           arn = self.input.lambda_arn.value
         }
       }
@@ -127,7 +84,7 @@ dashboard "aws_lambda_function_detail" {
       table {
         title = "Last Update Status"
         query = query.aws_lambda_function_last_update_status
-        args = {
+        args  = {
           arn = self.input.lambda_arn.value
         }
       }
@@ -142,7 +99,7 @@ dashboard "aws_lambda_function_detail" {
     table {
       title = "Policy"
       query = query.aws_lambda_function_policy
-      args = {
+      args  = {
         arn = self.input.lambda_arn.value
       }
     }
@@ -156,7 +113,7 @@ dashboard "aws_lambda_function_detail" {
     table {
       title = "Security Groups"
       query = query.aws_lambda_function_security_groups
-      args = {
+      args  = {
         arn = self.input.lambda_arn.value
       }
     }
@@ -170,7 +127,7 @@ dashboard "aws_lambda_function_detail" {
     table {
       title = "Subnets"
       query = query.aws_lambda_function_subnet_ids
-      args = {
+      args  = {
         arn = self.input.lambda_arn.value
       }
     }
@@ -324,4 +281,46 @@ query "aws_lambda_function_subnet_ids" {
   param "arn" {}
 }
 
+query "aws_lambda_function_overview" {
+  sql = <<-EOQ
+    select
+      name as "Name",
+      case
+        when vpc_id is not null and vpc_id != '' then vpc_id
+        else 'N/A'
+      end as "VPC ID",
+      title as "Title",
+      region as "Region",
+      account_id as "Account ID",
+      arn as "ARN"
+    from
+      aws_lambda_function
+    where
+      arn = $1;
+    EOQ
 
+  param "arn" {}
+}
+
+query "aws_lambda_function_tags" {
+  sql = <<-EOQ
+    with jsondata as (
+      select
+        tags::json as tags
+      from
+        aws_lambda_function
+      where
+        arn = $1
+    )
+    select
+      key as "Key",
+      value as "Value"
+    from
+      jsondata,
+      json_each_text(tags)
+    order by
+      key;
+    EOQ
+
+  param "arn" {}
+}
