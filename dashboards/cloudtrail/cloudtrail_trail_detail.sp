@@ -60,8 +60,8 @@ dashboard "aws_cloudtrail_trail_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query   = query.aws_cloudtrail_trail_overview
-        args = {
+        query = query.aws_cloudtrail_trail_overview
+        args  = {
           arn = self.input.trail_arn.value
         }
 

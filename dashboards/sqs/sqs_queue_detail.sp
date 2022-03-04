@@ -18,7 +18,7 @@ dashboard "aws_sqs_queue_detail" {
     card {
       width = 2
       query = query.aws_sqs_queue_encryption
-      args = {
+      args  = {
         queue_arn = self.input.queue_arn.value
       }
     }
@@ -26,7 +26,7 @@ dashboard "aws_sqs_queue_detail" {
     card {
       width = 2
       query = query.aws_sqs_queue_content_based_deduplication
-      args = {
+      args  = {
         queue_arn = self.input.queue_arn.value
       }
     }
@@ -34,7 +34,7 @@ dashboard "aws_sqs_queue_detail" {
     card {
       width = 2
       query = query.aws_sqs_queue_delay_seconds
-      args = {
+      args  = {
         queue_arn = self.input.queue_arn.value
       }
     }
@@ -42,7 +42,7 @@ dashboard "aws_sqs_queue_detail" {
     card {
       width = 2
       query = query.aws_sqs_queue_message_retention_seconds
-      args = {
+      args  = {
         queue_arn = self.input.queue_arn.value
       }
     }
@@ -60,7 +60,7 @@ dashboard "aws_sqs_queue_detail" {
         type  = "line"
         width = 6
         query = query.aws_sqs_queue_overview
-        args = {
+        args  = {
           queue_arn = self.input.queue_arn.value
         }
 
@@ -70,7 +70,7 @@ dashboard "aws_sqs_queue_detail" {
         title = "Tags"
         width = 6
         query = query.aws_sqs_queue_tags_detail
-        args = {
+        args  = {
           queue_arn = self.input.queue_arn.value
         }
       }
@@ -84,7 +84,7 @@ dashboard "aws_sqs_queue_detail" {
       table {
         title = "Message Details"
         query = query.aws_sqs_queue_message
-        args = {
+        args  = {
           queue_arn = self.input.queue_arn.value
         }
       }
@@ -92,7 +92,7 @@ dashboard "aws_sqs_queue_detail" {
       table {
         title = "Encryption Details"
         query = query.aws_sqs_queue_encryption_details
-        args = {
+        args  = {
           queue_arn = self.input.queue_arn.value
         }
       }
@@ -108,7 +108,7 @@ dashboard "aws_sqs_queue_detail" {
     table {
       title = "Policy"
       query = query.aws_sqs_queue_policy
-      args = {
+      args  = {
         queue_arn = self.input.queue_arn.value
       }
     }

@@ -31,25 +31,25 @@ dashboard "aws_iam_user_detail" {
     }
 
     card {
+      width = 2
       query = query.aws_iam_boundary_policy_for_user
-      width = 2
-      args = {
+      args  = {
         arn = self.input.user_arn.value
       }
     }
 
     card {
+      width = 2
       query = query.aws_iam_user_inline_policy_count_for_user
-      width = 2
-      args = {
+      args  = {
         arn = self.input.user_arn.value
       }
     }
 
     card {
-      query = query.aws_iam_user_direct_attached_policy_count_for_user
       width = 2
-      args = {
+      query = query.aws_iam_user_direct_attached_policy_count_for_user
+      args  = {
         arn = self.input.user_arn.value
       }
     }
@@ -67,7 +67,7 @@ dashboard "aws_iam_user_detail" {
         type  = "line"
         width = 6
         query = query.aws_iam_user_overview
-        args = {
+        args  = {
           arn = self.input.user_arn.value
         }
       }
@@ -75,8 +75,8 @@ dashboard "aws_iam_user_detail" {
       table {
         title = "Tags"
         width = 6
-        query  = query.aws_iam_user_tags
-        args = {
+        query = query.aws_iam_user_tags
+        args  = {
           arn = self.input.user_arn.value
         }
       }
@@ -89,24 +89,24 @@ dashboard "aws_iam_user_detail" {
 
       table {
         title = "Console Password"
-        query   = query.aws_iam_user_console_password
-        args = {
+        query = query.aws_iam_user_console_password
+        args  = {
           arn = self.input.user_arn.value
         }
       }
 
       table {
         title = "Access Keys"
-        query   = query.aws_iam_user_access_keys
-        args = {
+        query = query.aws_iam_user_access_keys
+        args  = {
           arn = self.input.user_arn.value
         }
       }
 
       table {
         title = "MFA Devices"
-        query   = query.aws_iam_user_mfa_devices
-        args = {
+        query = query.aws_iam_user_mfa_devices
+        args  = {
           arn = self.input.user_arn.value
         }
       }
@@ -122,7 +122,7 @@ dashboard "aws_iam_user_detail" {
     hierarchy {
       type  = "sankey"
       title = "Attached Policies"
-      query   = query.aws_iam_user_manage_policies_sankey
+      query = query.aws_iam_user_manage_policies_sankey
       args  = {
         arn = self.input.user_arn.value
       }
@@ -135,7 +135,7 @@ dashboard "aws_iam_user_detail" {
     table {
       title = "Groups"
       width = 6
-      query   = query.aws_iam_groups_for_user
+      query = query.aws_iam_groups_for_user
       args  = {
         arn = self.input.user_arn.value
       }
@@ -144,7 +144,7 @@ dashboard "aws_iam_user_detail" {
     table {
       title = "Policies"
       width = 6
-      query   = query.aws_iam_all_policies_for_user
+      query = query.aws_iam_all_policies_for_user
       args  = {
         arn = self.input.user_arn.value
       }
@@ -155,7 +155,7 @@ dashboard "aws_iam_user_detail" {
 }
 
 query "aws_iam_user_input" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
       title as label,
       arn as value,
@@ -279,6 +279,8 @@ query "aws_iam_user_tags" {
       jsonb_array_elements(tags_src) as tag
     where
       arn = $1
+    order by
+      tag ->> 'Key'
   EOQ
 
   param "arn" {}
@@ -333,7 +335,7 @@ query "aws_iam_user_mfa_devices" {
 }
 
 query "aws_iam_user_manage_policies_sankey" {
-  sql = <<EOQ
+  sql = <<-EOQ
 
     with args as (
         select $1 as iam_user_arn

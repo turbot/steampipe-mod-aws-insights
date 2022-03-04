@@ -15,17 +15,17 @@ dashboard "aws_iam_group_detail" {
   container {
 
     card {
-      query = query.aws_iam_group_inline_policy_count_for_group
       width = 2
-      args = {
+      query = query.aws_iam_group_inline_policy_count_for_group
+      args  = {
         arn = self.input.group_arn.value
       }
     }
 
     card {
-      query = query.aws_iam_group_direct_attached_policy_count_for_group
       width = 2
-      args = {
+      query = query.aws_iam_group_direct_attached_policy_count_for_group
+      args  = {
         arn = self.input.group_arn.value
       }
     }
@@ -39,11 +39,10 @@ dashboard "aws_iam_group_detail" {
       title = "Overview"
 
       table {
-        type = "line"
+        type  = "line"
         width = 6
         query = query.aws_iam_group_overview
-
-        args = {
+        args  = {
           arn = self.input.group_arn.value
         }
 
@@ -61,7 +60,7 @@ dashboard "aws_iam_group_detail" {
       title = "Users"
       width = 6
       query = query.aws_iam_users_for_group
-      args = {
+      args  = {
         arn = self.input.group_arn.value
       }
 
@@ -71,7 +70,7 @@ dashboard "aws_iam_group_detail" {
       title = "Policies"
       width = 6
       query = query.aws_iam_all_policies_for_group
-      args = {
+      args  = {
         arn = self.input.group_arn.value
       }
     }
