@@ -17,45 +17,40 @@ dashboard "aws_kms_key_detail" {
 
     card {
       width = 2
-
       query = query.aws_kms_key_type
-      args = {
+      args  = {
         arn = self.input.key_arn.value
       }
     }
 
     card {
       width = 2
-
       query = query.aws_kms_key_enabled
-      args = {
+      args  = {
         arn = self.input.key_arn.value
       }
     }
 
     card {
       width = 2
-
       query = query.aws_kms_key_state
-      args = {
+      args  = {
         arn = self.input.key_arn.value
       }
     }
 
     card {
       width = 2
-
       query = query.aws_kms_key_rotation_enabled
-      args = {
+      args  = {
         arn = self.input.key_arn.value
       }
     }
 
     card {
-      query = query.aws_kms_key_origin
       width = 2
-
-      args = {
+      query = query.aws_kms_key_origin
+      args  = {
         arn = self.input.key_arn.value
       }
     }
@@ -72,23 +67,8 @@ dashboard "aws_kms_key_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        sql   = <<-EOQ
-          select
-            'id' as "ID",
-            creation_date as "Creation Date",
-            title as "Title",
-            region as "Region",
-            account_id as "Account ID",
-            arn as "ARN"
-          from
-            aws_kms_key
-          where
-            arn = $1
-          EOQ
-
-        param "arn" {}
-
-        args = {
+        query = query.aws_kms_key_overview
+        args  = {
           arn = self.input.key_arn.value
         }
 
@@ -97,22 +77,8 @@ dashboard "aws_kms_key_detail" {
       table {
         title = "Tags"
         width = 6
-        sql = <<-EOQ
-          select
-            tag ->> 'Key' as "Key",
-            tag ->> 'Value' as "Value"
-          from
-            aws_kms_key,
-            jsonb_array_elements(tags_src) as tag
-          where
-            arn = $1
-          order by
-            tag ->> 'Key';
-          EOQ
-
-        param "arn" {}
-
-        args = {
+        query = query.aws_kms_key_tags
+        args  = {
           arn = self.input.key_arn.value
         }
       }
@@ -126,7 +92,7 @@ dashboard "aws_kms_key_detail" {
       table {
         title = "Key Age"
         query = query.aws_kms_key_age
-        args = {
+        args  = {
           arn = self.input.key_arn.value
         }
       }
@@ -142,7 +108,7 @@ dashboard "aws_kms_key_detail" {
     table {
       title = "Policy"
       query = query.aws_kms_key_policy
-      args = {
+      args  = {
         arn = self.input.key_arn.value
       }
     }
@@ -156,7 +122,7 @@ dashboard "aws_kms_key_detail" {
     table {
       title = "Key Aliases"
       query = query.aws_kms_key_aliases
-      args = {
+      args  = {
         arn = self.input.key_arn.value
       }
     }
@@ -304,6 +270,41 @@ query "aws_kms_key_policy" {
     where
       arn = $1;
   EOQ
+
+  param "arn" {}
+}
+
+query "aws_kms_key_overview" {
+  sql = <<-EOQ
+    select
+      'id' as "ID",
+      creation_date as "Creation Date",
+      title as "Title",
+      region as "Region",
+      account_id as "Account ID",
+      arn as "ARN"
+    from
+      aws_kms_key
+    where
+      arn = $1
+    EOQ
+
+  param "arn" {}
+}
+
+query "aws_kms_key_tags" {
+  sql = <<-EOQ
+    select
+      tag ->> 'Key' as "Key",
+      tag ->> 'Value' as "Value"
+    from
+      aws_kms_key,
+      jsonb_array_elements(tags_src) as tag
+    where
+      arn = $1
+    order by
+      tag ->> 'Key';
+    EOQ
 
   param "arn" {}
 }

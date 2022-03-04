@@ -16,45 +16,40 @@ dashboard "aws_ec2_instance_detail" {
 
     card {
       width = 2
-
       query = query.aws_ec2_instance_status
-      args = {
+      args  = {
         arn = self.input.instance_arn.value
       }
     }
 
     card {
       width = 2
-
       query = query.aws_ec2_instance_type
-      args = {
+      args  = {
         arn = self.input.instance_arn.value
       }
     }
 
     card {
       width = 2
-
       query = query.aws_ec2_instance_total_cores_count
-      args = {
+      args  = {
         arn = self.input.instance_arn.value
       }
     }
 
     card {
       width = 2
-
       query = query.aws_ec2_instance_public_access
-      args = {
+      args  = {
         arn = self.input.instance_arn.value
       }
     }
 
     card {
-      query = query.aws_ec2_instance_ebs_optimized
       width = 2
-
-      args = {
+      query = query.aws_ec2_instance_ebs_optimized
+      args  = {
         arn = self.input.instance_arn.value
       }
     }
@@ -69,7 +64,7 @@ dashboard "aws_ec2_instance_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query   = query.aws_ec2_instance_overview
+        query = query.aws_ec2_instance_overview
         args = {
           arn = self.input.instance_arn.value
         }
@@ -79,8 +74,8 @@ dashboard "aws_ec2_instance_detail" {
       table {
         title = "Tags"
         width = 6
-        query   = query.aws_ec2_instance_tags
-        args = {
+        query = query.aws_ec2_instance_tags
+        args  = {
           arn = self.input.instance_arn.value
         }
       }
@@ -91,7 +86,7 @@ dashboard "aws_ec2_instance_detail" {
       table {
         title = "Block Device Mappings"
         query = query.aws_ec2_instance_block_device_mapping
-        args = {
+        args  = {
           arn = self.input.instance_arn.value
         }
       }
@@ -105,7 +100,7 @@ dashboard "aws_ec2_instance_detail" {
     table {
       title = "Network Interfaces"
       query = query.aws_ec2_instance_network_interfaces
-      args = {
+      args  = {
         arn = self.input.instance_arn.value
       }
     }
@@ -118,7 +113,7 @@ dashboard "aws_ec2_instance_detail" {
     table {
       title = "Security Groups"
       query = query.aws_ec2_instance_security_groups
-      args = {
+      args  = {
         arn = self.input.instance_arn.value
       }
     }
@@ -131,7 +126,7 @@ dashboard "aws_ec2_instance_detail" {
     table {
       title = " CPU cores"
       query = query.aws_ec2_instance_cpu_cores
-      args = {
+      args  = {
         arn = self.input.instance_arn.value
       }
     }
@@ -141,7 +136,7 @@ dashboard "aws_ec2_instance_detail" {
 }
 
 query "aws_ec2_instance_input" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
       title as label,
       arn as value,

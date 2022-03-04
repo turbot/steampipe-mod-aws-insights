@@ -64,27 +64,9 @@ dashboard "aws_ebs_volume_detail" {
 
       table {
         title = "Overview"
-        type = "line"
+        type  = "line"
         width = 6
-
-        sql   = <<-EOQ
-          select
-            volume_id as "Volume ID",
-            auto_enable_io as "Auto Enabled IO",
-            snapshot_id as "Snapshot ID",
-            availability_zone as "Availability Zone",
-            title as "Title",
-            region as "Region",
-            account_id as "Account ID",
-            arn as "ARN"
-          from
-            aws_ebs_volume
-          where
-            arn = $1
-        EOQ
-
-        param "arn" {}
-
+        query = query.aws_ebs_volume_overview
         args  = {
           arn = self.input.volume_arn.value
         }
@@ -93,22 +75,7 @@ dashboard "aws_ebs_volume_detail" {
       table {
         title = "Tags"
         width = 6
-
-        sql   = <<-EOQ
-          select
-            tag ->> 'Key' as "Key",
-            tag ->> 'Value' as "Value"
-          from
-            aws_ebs_volume,
-            jsonb_array_elements(tags_src) as tag
-          where
-            arn = $1
-          order by
-            tag ->> 'Key';
-        EOQ
-
-        param "arn" {}
-
+        query = query.aws_ebs_volume_tags
         args  = {
           arn = self.input.volume_arn.value
         }
@@ -192,7 +159,7 @@ dashboard "aws_ebs_volume_detail" {
 }
 
 query "aws_ebs_volume_input" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
       title as label,
       arn as value,
@@ -336,3 +303,39 @@ query "aws_ebs_volume_encryption_status" {
   param "arn" {}
 }
 
+query "aws_ebs_volume_overview" {
+  sql = <<-EOQ
+    select
+      volume_id as "Volume ID",
+      auto_enable_io as "Auto Enabled IO",
+      snapshot_id as "Snapshot ID",
+      availability_zone as "Availability Zone",
+      title as "Title",
+      region as "Region",
+      account_id as "Account ID",
+      arn as "ARN"
+    from
+      aws_ebs_volume
+    where
+      arn = $1
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_ebs_volume_tags" {
+  sql = <<-EOQ
+    select
+      tag ->> 'Key' as "Key",
+      tag ->> 'Value' as "Value"
+    from
+      aws_ebs_volume,
+      jsonb_array_elements(tags_src) as tag
+    where
+      arn = $1
+    order by
+      tag ->> 'Key';
+  EOQ
+
+  param "arn" {}
+}
