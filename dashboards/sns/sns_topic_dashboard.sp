@@ -64,8 +64,8 @@ dashboard "aws_sns_topic_dashboard" {
       width = 4
 
       series "count" {
-        point "enabled" {
-          color = "1+"
+        point "1+" {
+          color = "ok"
         }
         point "0" {
           color = "alert"
