@@ -25,14 +25,6 @@ dashboard "aws_kms_key_detail" {
 
     card {
       width = 2
-      query = query.aws_kms_key_origin
-      args  = {
-        arn = self.input.key_arn.value
-      }
-    }
-
-    card {
-      width = 2
       query = query.aws_kms_key_state
       args  = {
         arn = self.input.key_arn.value
@@ -42,6 +34,14 @@ dashboard "aws_kms_key_detail" {
     card {
       width = 2
       query = query.aws_kms_key_rotation_enabled
+      args  = {
+        arn = self.input.key_arn.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_kms_key_origin
       args  = {
         arn = self.input.key_arn.value
       }
@@ -93,20 +93,32 @@ dashboard "aws_kms_key_detail" {
 
   }
 
-  table {
-    title = "Policy"
-    query = query.aws_kms_key_policy
-    args  = {
-      arn = self.input.key_arn.value
+  container {
+
+    width = 12
+
+    table {
+      title = "Policy"
+      query = query.aws_kms_key_policy
+      args  = {
+        arn = self.input.key_arn.value
+      }
     }
+
   }
 
-  table {
-    title = "Key Aliases"
-    query = query.aws_kms_key_aliases
-    args  = {
-      arn = self.input.key_arn.value
+  container {
+
+    width = 12
+
+    table {
+      title = "Key Aliases"
+      query = query.aws_kms_key_aliases
+      args  = {
+        arn = self.input.key_arn.value
+      }
     }
+
   }
 
 }
@@ -122,6 +134,8 @@ query "aws_kms_key_input" {
       ) as tags
     from
       aws_kms_key
+    where
+      key_manager = 'CUSTOMER'
     order by
       title;
   EOQ
@@ -174,10 +188,8 @@ query "aws_kms_key_rotation_enabled" {
   sql = <<-EOQ
     select
       'Key Rotation' as label,
-      case
-        when key_rotation_enabled is null then 'N/A'
-        when key_rotation_enabled then 'Enabled' else 'Disabled' end as value,
-      case when key_rotation_enabled or key_rotation_enabled is null then 'ok' else 'alert' end as type
+      case when key_rotation_enabled then 'Enabled' else 'Disabled' end as value,
+      case when key_rotation_enabled then 'ok' else 'alert' end as type
     from
       aws_kms_key
     where
@@ -190,7 +202,7 @@ query "aws_kms_key_rotation_enabled" {
 query "aws_kms_key_age" {
   sql = <<-EOQ
     select
-      creation_date as "Creation Date",
+      creation_date  as "Creation Date",
       deletion_date as "Deletion Date",
       extract(day from deletion_date - current_date)::int as "Deleting After Days"
     from
@@ -205,8 +217,9 @@ query "aws_kms_key_age" {
 query "aws_kms_key_aliases" {
   sql = <<-EOQ
     select
-      p ->> 'AliasArn' as "Alias Arn",
+      p ->> 'AliasArn'  as "Alias Arn",
       p ->> 'AliasName' as "Alias Name",
+      p ->> 'CreationDate' as "Creation Date",
       p ->> 'LastUpdatedDate' as "Last Updated Date",
       p ->> 'TargetKeyId' as "Target Key ID"
     from
@@ -225,7 +238,7 @@ query "aws_kms_key_policy" {
       p ->> 'Sid' as "Sid",
       p ->> 'Effect' as "Effect",
       p -> 'Principal' as "Principal",
-      p -> 'Action' as "Action",
+      p -> 'Action'  as "Action",
       p -> 'Resource' as "Resource",
       p -> 'Condition' as "Condition"
     from
@@ -241,7 +254,8 @@ query "aws_kms_key_policy" {
 query "aws_kms_key_overview" {
   sql = <<-EOQ
     select
-      id as "ID",
+      'id' as "ID",
+      creation_date as "Creation Date",
       title as "Title",
       region as "Region",
       account_id as "Account ID",

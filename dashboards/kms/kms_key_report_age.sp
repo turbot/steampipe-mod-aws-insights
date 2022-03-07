@@ -46,21 +46,17 @@ dashboard "aws_kms_key_age_report" {
 
   }
 
+  container {
+
     table {
       column "Account ID" {
         display = "none"
       }
 
-      column "ARN" {
-        display = "none"
-      }
-
-      column "Key ID" {
-        href = "/aws_insights.dashboard.aws_kms_key_detail?input.key_arn={{.row.ARN|@uri}}"
-      }
-
       sql = query.aws_kms_key_age_table.sql
     }
+
+  }
 
 }
 
@@ -127,10 +123,10 @@ query "aws_kms_key_1_year_count" {
 query "aws_kms_key_age_table" {
   sql = <<-EOQ
     select
-      k.id as "Key ID",
+      k.id as "Key",
       now()::date - k.creation_date::date as "Age in Days",
-      k.creation_date as "Creation Date",
-      k.key_state as "Key State",
+      k.creation_date as "Create Time",
+      k.key_state as "State",
       k.key_manager as "Key Manager",
       a.title as "Account",
       k.account_id as "Account ID",
@@ -142,6 +138,7 @@ query "aws_kms_key_age_table" {
     where
       k.account_id = a.account_id
     order by
+      k.title,
       k.id;
   EOQ
 }
