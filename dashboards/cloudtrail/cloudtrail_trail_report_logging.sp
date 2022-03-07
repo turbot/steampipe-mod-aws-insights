@@ -39,10 +39,6 @@ dashboard "aws_cloudtrail_trail_logging_report" {
       href = "/aws_insights.dashboard.aws_cloudtrail_trail_detail?input.trail_arn={{.row.ARN|@uri}}"
     }
 
-    column "S3 Bucket Name" {
-      href = "/aws_insights.dashboard.aws_s3_bucket_detail?input.bucket_arn={{.row.ARN|@uri}}"
-    }
-
     sql = query.aws_cloudtrail_trail_logging_table.sql
   
   }
