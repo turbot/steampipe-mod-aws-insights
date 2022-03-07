@@ -26,6 +26,10 @@ dashboard "aws_ebs_snapshot_public_access_report" {
       display = "none"
     }
 
+    column "ARN" {
+      display = "none"
+    }
+
     sql = query.aws_ebs_snapshot_public_table.sql
   }
 
@@ -34,8 +38,8 @@ dashboard "aws_ebs_snapshot_public_access_report" {
 query "aws_ebs_snapshot_public_table" {
   sql = <<-EOQ
     select
-      s.tags ->> 'Name' as "Name",
       s.snapshot_id as "Snapshot",
+      s.tags ->> 'Name' as "Name",
       case when s.create_volume_permissions @> '[{"Group": "all"}]' then 'Enabled' else null end as "Public Access",
       a.title as "Account",
       s.account_id as "Account ID",
@@ -47,7 +51,6 @@ query "aws_ebs_snapshot_public_table" {
     where
       s.account_id = a.account_id
     order by
-      s.tags ->> 'Name',
       s.snapshot_id;
   EOQ
 }
