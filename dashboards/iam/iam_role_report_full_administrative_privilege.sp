@@ -1,6 +1,6 @@
-dashboard "aws_iam_role_full_administrative_privileges_report" {
+dashboard "aws_iam_role_full_administrative_privilege_report" {
 
-  title = "AWS IAM Role Full Administrative Privileges Report"
+  title = "AWS IAM Role Full Administrative Privilege Report"
 
   tags = merge(local.iam_common_tags, {
     type     = "Report"
@@ -8,23 +8,25 @@ dashboard "aws_iam_role_full_administrative_privileges_report" {
   })
 
   container {
+
+    card {
+      sql   = query.aws_iam_role_count.sql
+      width = 2
+    }
+
     card {
       sql   = query.aws_iam_roles_allow_all_action_count.sql
       width = 2
     }
+
   }
 
-  container {
-
-    table {
-
-      column "Account ID" {
-        display = "none"
-      }
-
-      sql = query.aws_iam_roles_allow_all_actions.sql
+  table {
+    column "Account ID" {
+      display = "none"
     }
 
+    sql = query.aws_iam_roles_allow_all_actions.sql
   }
 
 }

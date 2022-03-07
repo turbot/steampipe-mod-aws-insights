@@ -20,16 +20,20 @@ dashboard "aws_iam_user_mfa_report" {
     }
   }
 
-  container {
-
-    table {
-      column "Account ID" {
-        display = "none"
-      }
-
-      sql = query.aws_iam_user_mfa_table.sql
+  table {
+    column "Account ID" {
+      display = "none"
     }
 
+    column "ARN" {
+      display = "none"
+    }
+
+    column "User Name" {
+      href = "/aws_insights.dashboard.aws_iam_user_detail?input.user_arn={{.row.ARN|@uri}}"
+    }
+
+    sql = query.aws_iam_user_mfa_table.sql
   }
 
 }
@@ -37,7 +41,7 @@ dashboard "aws_iam_user_mfa_report" {
 query "aws_iam_user_mfa_table" {
   sql = <<-EOQ
     select
-      u.name as "User",
+      u.name as "User Name",
       u.mfa_enabled as "MFA Active",
       a.title as "Account",
       a.account_id as "Account ID",
@@ -48,7 +52,6 @@ query "aws_iam_user_mfa_table" {
     where
       u.account_id = a.account_id
     order by
-      u.name,
-      u.account_id;
+      u.name;
   EOQ
 }

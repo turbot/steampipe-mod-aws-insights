@@ -162,7 +162,7 @@ query "aws_iam_role_direct_attached_policy_count_for_role" {
   sql = <<-EOQ
     select
       jsonb_array_length(attached_policy_arns) as value,
-      'Direct Attached Policies' as label,
+      'Directly Attached Policies' as label,
       case when jsonb_array_length(attached_policy_arns) > 0 then 'ok' else 'alert' end as type
     from
       aws_iam_role
@@ -202,7 +202,7 @@ query "aws_iam_all_policies_for_role" {
       aws_iam_role as r,
       jsonb_array_elements_text(r.attached_policy_arns) as policy_arn
     where
-      r.arn = 'arn:aws:iam::013122550996:role/turbot/admin'
+      r.arn = $1
     -- Inline Policies (defined on role)
     union select
       i ->> 'PolicyName' as "Policy",

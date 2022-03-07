@@ -144,7 +144,7 @@ query "aws_iam_roles_with_inline_policy_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Roles with Inline Policies' as label,
+      'With Inline Policies' as label,
       case when count(*) = 0 then 'ok' else 'alert' end as type
     from
       aws_iam_role
@@ -157,7 +157,7 @@ query "aws_iam_roles_without_direct_attached_policy_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-       'Roles without Attached Policies' as label,
+       'Without Attached Policies' as label,
       case when count(*) > 0 then 'alert' else 'ok' end as type
     from
       aws_iam_role
@@ -188,7 +188,7 @@ query "aws_iam_roles_allow_all_action_count" {
     )
     select
       count(role_name)::numeric as value,
-      'Roles Allows All Actions' as label,
+      'Allows All Actions' as label,
       case when count(*) > 0 then 'alert' else 'ok' end as type
     from
       roles_allow_all_actions;
@@ -199,7 +199,7 @@ query "aws_iam_role_no_boundary_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Roles with No Boundary Policy' as label,
+      'No Boundary Policy' as label,
       case when count(*) = 0 then 'ok' else 'alert' end as type
     from
       aws_iam_role

@@ -112,9 +112,9 @@ query "aws_iam_group_inline_policy_count_for_group" {
 query "aws_iam_group_direct_attached_policy_count_for_group" {
   sql = <<-EOQ
     select
-      case when inline_policies is null then 0 else jsonb_array_length(inline_policies) end as value,
-      'Inline Policies' as label,
-      case when (inline_policies is null) or (jsonb_array_length(inline_policies) = 0)  then 'ok' else 'alert' end as type
+      case when attached_policy_arns is null then 0 else jsonb_array_length(attached_policy_arns) end as value,
+      'Directly Attached Policies' as label,
+      case when (attached_policy_arns is null) or (jsonb_array_length(attached_policy_arns) = 0)  then 'ok' else 'alert' end as type
     from
       aws_iam_group
     where
@@ -168,7 +168,7 @@ query "aws_iam_all_policies_for_group" {
       aws_iam_group as g,
       jsonb_array_elements_text(g.attached_policy_arns) as policy_arn
     where
-      g.arn = 'arn:aws:iam::013122550996:group/demo-group'
+      g.arn = $1
 
     -- Policies (inline from groups)
     union select

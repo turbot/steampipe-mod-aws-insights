@@ -43,10 +43,10 @@ dashboard "aws_iam_group_dashboard" {
       width = 3
 
       series "count" {
-        point "with_users" {
+        point "with users" {
           color = "ok"
         }
-        point "without_users" {
+        point "without users" {
           color = "alert"
         }
       }
@@ -127,7 +127,7 @@ query "aws_iam_groups_without_users_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Groups Without Users' as label,
+      'Without Users' as label,
       case when count(*) = 0 then 'ok' else 'alert' end as type
     from
       aws_iam_group
@@ -140,7 +140,7 @@ query "aws_iam_groups_with_inline_policy_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Groups With Inline Policies' as label,
+      'With Inline Policies' as label,
       case when count(*) = 0 then 'ok' else 'alert' end as type
     from
       aws_iam_group
@@ -170,7 +170,7 @@ query "aws_iam_groups_with_administrator_policy_count" {
     )
     select
       count(*) as value,
-      'Groups With Administrator Policy' as label,
+      'With Administrator Policy' as label,
       case when count(*) > 1 then 'alert' else 'ok' end as type
     from
       groups_having_admin_access
@@ -187,8 +187,8 @@ query "aws_iam_groups_without_users" {
       select
         arn,
         case
-          when users is null then 'without_users'
-          else 'with_users'
+          when users is null then 'without users'
+          else 'with users'
         end as has_users
       from
         aws_iam_group

@@ -81,7 +81,7 @@ dashboard "aws_iam_user_dashboard" {
         point "unattached" {
           color = "ok"
         }
-        point "attached_policies" {
+        point "attached" {
           color = "alert"
         }
       }
@@ -175,7 +175,7 @@ query "aws_iam_users_with_direct_attached_policy_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-       'Users With Attached Policies' as label,
+       'With Attached Policies' as label,
       case when count(*) = 0 then 'ok' else 'alert' end as type
     from
       aws_iam_user
@@ -188,7 +188,7 @@ query "aws_iam_users_with_inline_policy_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Users With Inline Policies' as label,
+      'With Inline Policies' as label,
       case when count(*) = 0 then 'ok' else 'alert' end as type
     from
       aws_iam_user
@@ -241,7 +241,7 @@ query "aws_iam_users_with_direct_attached_policy" {
       select
         arn,
         case
-          when jsonb_array_length(attached_policy_arns) > 0 then 'attached_policies'
+          when jsonb_array_length(attached_policy_arns) > 0 then 'attached'
           else 'unattached'
         end as has_attached
       from
