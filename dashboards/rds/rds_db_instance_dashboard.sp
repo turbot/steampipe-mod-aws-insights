@@ -299,7 +299,7 @@ query "aws_rds_db_instance_public_status" {
     with db_instances as (
       select
         case
-          when publicly_accessible is null then 'private'
+          when publicly_accessible is null or (not publicly_accessible) then 'private'
           else 'public'
         end as visibility
       from

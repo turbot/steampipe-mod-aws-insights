@@ -49,7 +49,7 @@ query "aws_redshift_cluster_encryption_table" {
       aws_account as a
     where
       r.account_id = a.account_id
-    order by 
+    order by
       r.cluster_identifier;
   EOQ
 }

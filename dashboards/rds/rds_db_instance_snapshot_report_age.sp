@@ -46,17 +46,21 @@ dashboard "aws_rds_db_instance_snapshot_age_report" {
 
   }
 
-  container {
+  table {
 
-    table {
-
-      column "Account ID" {
-        display = "none"
-      }
-
-      sql = query.aws_rds_db_instance_snapshot_age_table.sql
+    column "Account ID" {
+      display = "none"
     }
 
+    column "ARN" {
+      display = "none"
+    }
+
+    column "DB Snapshot Identifier" {
+      href = "/aws_insights.dashboard.aws_rds_db_snapshot_detail?input.db_snapshot_arn={{.row.ARN|@uri}}"
+    }
+
+    sql = query.aws_rds_db_instance_snapshot_age_table.sql
   }
 
 }
@@ -124,7 +128,7 @@ query "aws_rds_db_instance_snapshot_1_year_count" {
 query "aws_rds_db_instance_snapshot_age_table" {
   sql = <<-EOQ
     select
-      s.title as "Snapshot",
+      s.db_snapshot_identifier as "DB Snapshot Identifier",
       now()::date - s.create_time::date as "Age in Days",
       s.create_time as "Create Time",
       s.status as "Status",
@@ -138,6 +142,6 @@ query "aws_rds_db_instance_snapshot_age_table" {
     where
       s.account_id = a.account_id
     order by
-      s.title;
+      s.db_snapshot_identifier;
   EOQ
 }

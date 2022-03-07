@@ -1,5 +1,5 @@
 dashboard "aws_rds_db_snapshot_detail" {
-  title = "AWS RDS DB Snapshot Detail"
+  title = "AWS RDS DB Instance Snapshot Detail"
 
   tags = merge(local.rds_common_tags, {
     type = "Detail"
@@ -154,7 +154,7 @@ dashboard "aws_rds_db_snapshot_detail" {
 
 # Card Queries
 query "aws_rds_db_snapshot_input" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
       title as label,
       arn as value,
