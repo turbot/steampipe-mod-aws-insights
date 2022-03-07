@@ -46,16 +46,16 @@ dashboard "aws_dynamodb_table_age_report" {
 
   }
 
-  container {
-
-    table {
-      column "Account ID" {
-        display = "none"
-      }
-
-      sql = query.aws_dynamodb_table_age_table.sql
+  table {
+    column "Account ID" {
+      display = "none"
     }
 
+    column "ARN" {
+      display = "none"
+    }
+
+    sql = query.aws_dynamodb_table_age_table.sql
   }
 
 }
@@ -137,6 +137,6 @@ query "aws_dynamodb_table_age_table" {
     where
       d.account_id = a.account_id
     order by
-      d.title;
+      d.name;
   EOQ
 }

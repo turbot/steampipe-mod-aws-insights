@@ -36,6 +36,10 @@ dashboard "aws_dynamodb_table_encryption_report" {
       display = "none"
     }
 
+    column "ARN" {
+      display = "none"
+    }
+
     sql = query.aws_dynamodb_table_encryption_table.sql
   }
 
