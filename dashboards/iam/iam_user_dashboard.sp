@@ -81,7 +81,7 @@ dashboard "aws_iam_user_dashboard" {
         point "unattached" {
           color = "ok"
         }
-        point "attached_policies" {
+        point "attached" {
           color = "alert"
         }
       }

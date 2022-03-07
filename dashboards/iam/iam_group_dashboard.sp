@@ -43,10 +43,10 @@ dashboard "aws_iam_group_dashboard" {
       width = 3
 
       series "count" {
-        point "with_users" {
+        point "with users" {
           color = "ok"
         }
-        point "without_users" {
+        point "without users" {
           color = "alert"
         }
       }
