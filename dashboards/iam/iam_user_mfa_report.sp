@@ -4,7 +4,7 @@ dashboard "aws_iam_user_mfa_report" {
 
   tags = merge(local.iam_common_tags, {
     type     = "Report"
-    category = "MFA"
+    category = "Security"
   })
 
   container {

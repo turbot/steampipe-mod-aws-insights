@@ -149,6 +149,18 @@ dashboard "aws_ebs_snapshot_dashboard" {
       }
     }
 
+    chart {
+      title = "Storage by Age (GB)"
+      sql   = query.aws_ebs_snapshot_storage_by_age.sql
+      type  = "column"
+      width = 3
+
+      series "GB" {
+        color = "tan"
+      }
+    }
+
+
   }
 }
 
@@ -405,6 +417,60 @@ query "aws_ebs_snapshot_storage_by_account" {
 
 query "aws_ebs_snapshot_storage_by_region" {
   sql = <<-EOQ
-    select region as "Region", sum(volume_size) as "GB" from aws_ebs_snapshot group by region order by region;
+    select
+      region as "Region",
+      sum(volume_size) as "GB"
+    from
+      aws_ebs_snapshot
+    group by
+      region
+    order by
+      region;
+  EOQ
+}
+
+query "aws_ebs_snapshot_storage_by_age" {
+  sql = <<-EOQ
+    with snapshots as (
+      select
+        title,
+        volume_size,
+        start_time,
+        to_char(start_time,
+          'YYYY-MM') as creation_month
+      from
+        aws_ebs_snapshot
+    ),
+    months as (
+      select
+        to_char(d,
+          'YYYY-MM') as month
+      from
+        generate_series(date_trunc('month',
+            (
+              select
+                min(start_time)
+                from snapshots)),
+            date_trunc('month',
+              current_date),
+            interval '1 month') as d
+    ),
+    snapshots_by_month as (
+      select
+        creation_month,
+        sum(volume_size) as size
+      from
+        snapshots
+      group by
+        creation_month
+    )
+    select
+      months.month,
+      snapshots_by_month.size as "GB"
+    from
+      months
+      left join snapshots_by_month on months.month = snapshots_by_month.creation_month
+    order by
+      months.month;
   EOQ
 }

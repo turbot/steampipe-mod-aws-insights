@@ -4,7 +4,7 @@ dashboard "aws_iam_root_access_report" {
 
   tags = merge(local.iam_common_tags, {
     type     = "Report"
-    category = "Root Access"
+    category = "Credential Report"
   })
 
   container {

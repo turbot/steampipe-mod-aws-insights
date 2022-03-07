@@ -240,7 +240,7 @@ query "aws_ebs_volume_unattached_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Unattached' as label,
+      'Not In-Use' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_ebs_volume

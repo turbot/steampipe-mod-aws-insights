@@ -8,7 +8,7 @@ dashboard "aws_iam_user_excessive_privilege_report" {
 
   tags = merge(local.iam_common_tags, {
     type     = "Report"
-    category = "Excessive Privilege"
+    category = "Permissions"
   })
 
   # input "threshold_in_days" {

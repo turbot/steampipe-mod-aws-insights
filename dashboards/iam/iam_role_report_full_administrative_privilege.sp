@@ -4,7 +4,7 @@ dashboard "aws_iam_role_full_administrative_privilege_report" {
 
   tags = merge(local.iam_common_tags, {
     type     = "Report"
-    category = "Full Administrative Privilege"
+    category = "Permissions"
   })
 
   container {
