@@ -14,11 +14,6 @@ dashboard "aws_lambda_function_dashboard" {
       width = 2
     }
 
-    card {
-      sql   = query.aws_lambda_function_memory_total.sql
-      width = 2
-    }
-
     # Assessments
     card {
       sql   = query.aws_lambda_function_public_count.sql
@@ -252,15 +247,6 @@ dashboard "aws_lambda_function_dashboard" {
 query "aws_lambda_function_count" {
   sql = <<-EOQ
     select count(*) as "Functions" from aws_lambda_function
-  EOQ
-}
-
-query "aws_lambda_function_memory_total" {
-  sql = <<-EOQ
-    select
-      round(cast(sum(memory_size)/1024.0 as numeric), 2) as "Total Memory Usage (GB)"
-    from
-      aws_lambda_function
   EOQ
 }
 

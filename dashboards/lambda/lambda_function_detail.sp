@@ -188,13 +188,13 @@ query "aws_lambda_function_public" {
         policy_std -> 'Statement' ->> 'Effect' = 'Allow'
           and ( policy_std -> 'Statement' ->> 'Prinipal' = '*'
           or ( policy_std -> 'Principal' -> 'AWS' ) :: text = '*'
-        )  then 'Enabled' else 'Disabled' end as value,
+        ) then 'Enabled' else 'Disabled' end as value,
       case
       when
         policy_std -> 'Statement' ->> 'Effect' = 'Allow'
           and ( policy_std -> 'Statement' ->> 'Prinipal' = '*'
           or ( policy_std -> 'Principal' -> 'AWS' ) :: text = '*'
-        )  then 'ok' else 'alert' end as type
+        ) then 'ok' else 'alert' end as type
     from
       aws_lambda_function
     where
@@ -222,7 +222,7 @@ query "aws_lambda_function_encryption" {
 query "aws_lambda_function_last_update_status" {
   sql = <<-EOQ
     select
-      last_modified  as "Last Modified",
+      last_modified as "Last Modified",
       last_update_status as "Last Update Status",
       last_update_status_reason as "Last Update Status Reason",
       last_update_status_reason_code as "Last Update Status Reason Code"
@@ -238,11 +238,11 @@ query "aws_lambda_function_last_update_status" {
 query "aws_lambda_function_policy" {
   sql = <<-EOQ
     select
-      p -> 'Action'  as "Action",
+      p ->> 'Sid' as "Sid",
       p ->> 'Effect' as "Effect",
       p -> 'Principal' as "Principal",
-      p -> 'Resource' as "Resource",
-      p ->> 'Sid' as "SID"
+      p -> 'Action' as "Action",
+      p -> 'Resource' as "Resource"
     from
       aws_lambda_function,
       jsonb_array_elements(policy_std -> 'Statement') as p
