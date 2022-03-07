@@ -77,28 +77,10 @@ dashboard "aws_lambda_function_detail" {
 
     }
 
-    container {
-
+    table {
       width = 6
-
-      table {
-        title = "Last Update Status"
-        query = query.aws_lambda_function_last_update_status
-        args  = {
-          arn = self.input.lambda_arn.value
-        }
-      }
-    }
-
-  }
-
-  container {
-
-    width = 12
-
-    table {
-      title = "Policy"
-      query = query.aws_lambda_function_policy
+      title = "Last Update Status"
+      query = query.aws_lambda_function_last_update_status
       args  = {
         arn = self.input.lambda_arn.value
       }
@@ -106,32 +88,30 @@ dashboard "aws_lambda_function_detail" {
 
   }
 
-  container {
+  table {
+    title = "Policy"
+    query = query.aws_lambda_function_policy
+    args  = {
+      arn = self.input.lambda_arn.value
+    }
+  }
 
+  table {
     width = 6
-
-    table {
-      title = "Security Groups"
-      query = query.aws_lambda_function_security_groups
-      args  = {
-        arn = self.input.lambda_arn.value
-      }
+    title = "Security Groups"
+    query = query.aws_lambda_function_security_groups
+    args  = {
+      arn = self.input.lambda_arn.value
     }
-
   }
 
-  container {
-
+  table {
     width = 6
-
-    table {
-      title = "Subnets"
-      query = query.aws_lambda_function_subnet_ids
-      args  = {
-        arn = self.input.lambda_arn.value
-      }
+    title = "Subnets"
+    query = query.aws_lambda_function_subnet_ids
+    args  = {
+      arn = self.input.lambda_arn.value
     }
-
   }
 
 }
