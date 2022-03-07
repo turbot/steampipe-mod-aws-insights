@@ -241,7 +241,7 @@ query "aws_iam_users_with_direct_attached_policy" {
       select
         arn,
         case
-          when jsonb_array_length(attached_policy_arns) > 0 then 'attached_policies'
+          when jsonb_array_length(attached_policy_arns) > 0 then 'attached'
           else 'unattached'
         end as has_attached
       from

@@ -187,8 +187,8 @@ query "aws_iam_groups_without_users" {
       select
         arn,
         case
-          when users is null then 'without_users'
-          else 'with_users'
+          when users is null then 'without users'
+          else 'with users'
         end as has_users
       from
         aws_iam_group

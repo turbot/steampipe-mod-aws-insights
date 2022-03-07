@@ -162,7 +162,7 @@ query "aws_iam_role_direct_attached_policy_count_for_role" {
   sql = <<-EOQ
     select
       jsonb_array_length(attached_policy_arns) as value,
-      'Direct Attached Policies' as label,
+      'Directly Attached Policies' as label,
       case when jsonb_array_length(attached_policy_arns) > 0 then 'ok' else 'alert' end as type
     from
       aws_iam_role

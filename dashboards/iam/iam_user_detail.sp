@@ -16,14 +16,6 @@ dashboard "aws_iam_user_detail" {
 
     card {
       width = 2
-      query = query.aws_iam_user_name_for_user
-      args  = {
-        arn = self.input.user_arn.value
-      }
-    }
-
-    card {
-      width = 2
       query = query.aws_iam_user_mfa_for_user
       args  = {
         arn = self.input.user_arn.value
@@ -169,19 +161,6 @@ query "aws_iam_user_input" {
   EOQ
 }
 
-query "aws_iam_user_name_for_user" {
-  sql = <<-EOQ
-    select
-      name as "User Name"
-    from
-      aws_iam_user
-    where
-      arn = $1
-  EOQ
-
-  param "arn" {}
-}
-
 query "aws_iam_user_mfa_for_user" {
   sql = <<-EOQ
     select
@@ -240,7 +219,7 @@ query "aws_iam_user_direct_attached_policy_count_for_user" {
   sql = <<-EOQ
     select
       coalesce(jsonb_array_length(attached_policy_arns), 0) as value,
-      'Direct Attached Policies' as label,
+      'Directly Attached Policies' as label,
       case when coalesce(jsonb_array_length(attached_policy_arns), 0) = 0 then 'ok' else 'alert' end as type
     from
       aws_iam_user

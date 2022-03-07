@@ -133,6 +133,6 @@ query "aws_iam_credential_entities_root_access_keys_table" {
     where
       a.account_id = r.account_id
     order by
-      user_name
+      user_name;
   EOQ
 }

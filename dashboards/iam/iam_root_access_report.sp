@@ -27,7 +27,6 @@ dashboard "aws_iam_root_access_report" {
       display = "none"
     }
 
-    title = "Accounts with Root Access Keys"
     sql   = query.aws_iam_root_access_keys_table.sql
   }
 
@@ -60,7 +59,7 @@ query "aws_iam_root_access_keys_table" {
     select
       a.title as "Account",
       s.account_id as "Account ID",
-      s.account_access_keys_present as "# Root Keys",
+      s.account_access_keys_present as "Root Keys",
       account_mfa_enabled as "Root MFA Enabled"
     from
       aws_iam_account_summary as s,
