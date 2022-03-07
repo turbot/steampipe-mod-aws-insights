@@ -25,6 +25,14 @@ dashboard "aws_kms_key_detail" {
 
     card {
       width = 2
+      query = query.aws_kms_key_origin
+      args  = {
+        arn = self.input.key_arn.value
+      }
+    }
+
+    card {
+      width = 2
       query = query.aws_kms_key_state
       args  = {
         arn = self.input.key_arn.value
@@ -34,14 +42,6 @@ dashboard "aws_kms_key_detail" {
     card {
       width = 2
       query = query.aws_kms_key_rotation_enabled
-      args  = {
-        arn = self.input.key_arn.value
-      }
-    }
-
-    card {
-      width = 2
-      query = query.aws_kms_key_origin
       args  = {
         arn = self.input.key_arn.value
       }

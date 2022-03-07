@@ -46,16 +46,20 @@ dashboard "aws_redshift_cluster_age_report" {
 
   }
 
-  container {
-
-    table {
-      column "Account ID" {
-        display = "none"
-      }
-
-      sql = query.aws_redshift_cluster_age_table.sql
+  table {
+    column "Account ID" {
+      display = "none"
     }
 
+    column "ARN" {
+      display = "none"
+    }
+
+    column "Cluster Identifier" {
+      href = "/aws_insights.dashboard.aws_redshift_cluster_detail?input.cluster_arn={{.row.ARN|@uri}}"
+    }
+
+    sql = query.aws_redshift_cluster_age_table.sql
   }
 
 }
@@ -123,7 +127,7 @@ query "aws_redshift_cluster_1_year_count" {
 query "aws_redshift_cluster_age_table" {
   sql = <<-EOQ
     select
-      c.title as "Cluster",
+      c.cluster_identifier as "Cluster Identifier",
       now()::date - c.cluster_create_time::date as "Age in Days",
       c.cluster_create_time as "Create Time",
       c.cluster_status as "Status",
@@ -137,6 +141,6 @@ query "aws_redshift_cluster_age_table" {
     where
       c.account_id = a.account_id
     order by
-      c.title;
+      c.cluster_identifier
   EOQ
 }

@@ -127,7 +127,7 @@ query "aws_kms_key_1_year_count" {
 query "aws_kms_key_age_table" {
   sql = <<-EOQ
     select
-      k.id as "Key Id",
+      k.id as "Key ID",
       now()::date - k.creation_date::date as "Age in Days",
       k.creation_date as "Creation Date",
       k.key_state as "Key State",
