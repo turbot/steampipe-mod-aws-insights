@@ -27,6 +27,14 @@ dashboard "aws_rds_db_instance_encryption_report" {
       display = "none"
     }
 
+    column "ARN" {
+      display = "none"
+    }
+
+    column "DB Instance Identifier" {
+      href = "/aws_insights.dashboard.aws_rds_db_instance_detail?input.db_instance_arnn={{.row.ARN|@uri}}"
+    }
+
     sql = query.aws_rds_db_instance_encryption_table.sql
   }
 

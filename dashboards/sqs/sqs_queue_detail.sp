@@ -233,11 +233,12 @@ query "aws_sqs_queue_tags_detail" {
 query "aws_sqs_queue_policy" {
   sql = <<-EOQ
     select
-      p -> 'Action'  as "Action",
+      p ->> 'Sid' as "SID",
       p ->> 'Effect' as "Effect",
       p -> 'Principal' as "Principal",
-      p -> 'Resource' as "Resource",
-      p ->> 'Sid' as "Sid"
+      p -> 'Action'  as "Action",
+      p -> 'Resource' as "Resource"
+
     from
       aws_sqs_queue,
       jsonb_array_elements(policy_std -> 'Statement') as p

@@ -20,17 +20,21 @@ dashboard "aws_rds_db_instance_public_access_report" {
     }
   }
 
-  container {
+  table {
 
-    table {
-
-      column "Account ID" {
-        display = "none"
-      }
-
-      sql = query.aws_rds_db_instance_public_access_table.sql
+    column "Account ID" {
+      display = "none"
     }
 
+    column "ARN" {
+      display = "none"
+    }
+
+    column "DB Instance Identifier" {
+      href = "/aws_insights.dashboard.aws_rds_db_instance_detail?input.db_instance_arnn={{.row.ARN|@uri}}"
+    }
+
+    sql = query.aws_rds_db_instance_public_access_table.sql
   }
 
 }
@@ -51,7 +55,7 @@ query "aws_rds_db_instance_public_access_table" {
       aws_account as a
     where
       i.account_id = a.account_id
-    order by 
+    order by
       i.db_instance_identifier;
   EOQ
 }

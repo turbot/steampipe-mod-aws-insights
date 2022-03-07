@@ -21,17 +21,21 @@ dashboard "aws_rds_db_instance_logging_report" {
 
   }
 
-  container {
+  table {
 
-    table {
-
-      column "Account ID" {
-        display = "none"
-      }
-
-      sql = query.aws_rds_db_instance_logging_table.sql
+    column "Account ID" {
+      display = "none"
     }
-    
+
+    column "ARN" {
+      display = "none"
+    }
+
+    column "DB Instance Identifier" {
+      href = "/aws_insights.dashboard.aws_rds_db_instance_detail?input.db_instance_arnn={{.row.ARN|@uri}}"
+    }
+
+    sql = query.aws_rds_db_instance_logging_table.sql
   }
 
 }

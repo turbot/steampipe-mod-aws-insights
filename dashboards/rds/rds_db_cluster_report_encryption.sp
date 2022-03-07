@@ -21,16 +21,16 @@ dashboard "aws_rds_db_cluster_encryption_report" {
 
   }
 
-  container {
-
-    table {
-      column "Account ID" {
-        display = "none"
-      }
-
-      sql = query.aws_rds_db_cluster_encryption_table.sql
+  table {
+    column "Account ID" {
+      display = "none"
     }
 
+    column "ARN" {
+      display = "none"
+    }
+
+    sql = query.aws_rds_db_cluster_encryption_table.sql
   }
 
 }
@@ -38,7 +38,8 @@ dashboard "aws_rds_db_cluster_encryption_report" {
 query "aws_rds_db_cluster_encryption_table" {
   sql = <<-EOQ
     select
-      c.db_cluster_identifier as "DB Cluster",
+      c.resource_id as "Resource ID",
+      c.db_cluster_identifier as "DB Cluster Identifier",
       case when c.storage_encrypted then 'Enabled' else null end as "Encryption",
       c.kms_key_id as "KMS Key ID",
       a.title as "Account",
@@ -51,6 +52,6 @@ query "aws_rds_db_cluster_encryption_table" {
     where
       c.account_id = a.account_id
     order by
-      c.db_cluster_identifier;
+      c.resource_id;
   EOQ
 }

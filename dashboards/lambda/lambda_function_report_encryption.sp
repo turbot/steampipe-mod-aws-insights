@@ -18,20 +18,24 @@ dashboard "aws_lambda_function_encryption_report" {
       sql = query.aws_lambda_function_unencrypted_count.sql
       width = 2
     }
-    
+
   }
 
-  container {
+  table {
 
-    table {
-
-      column "Account ID" {
-        display = "none"
-      }
-
-      sql = query.aws_lambda_function_encryption_table.sql
+    column "Account ID" {
+      display = "none"
     }
 
+    column "ARN" {
+      display = "none"
+    }
+
+    column "Name" {
+      href = "/aws_insights.dashboard.aws_lambda_function_detail?input.lambda_arn={{.row.ARN|@uri}}"
+    }
+
+    sql = query.aws_lambda_function_encryption_table.sql
   }
 
 }

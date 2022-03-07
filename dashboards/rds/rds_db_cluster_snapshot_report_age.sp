@@ -53,6 +53,10 @@ dashboard "aws_rds_db_cluster_snapshot_age_report" {
         display = "none"
       }
 
+      column "ARN" {
+        display = "none"
+      }
+
       sql = query.aws_rds_db_cluster_snapshot_age_table.sql
     }
 
@@ -123,7 +127,7 @@ query "aws_rds_db_cluster_snapshot_1_year_count" {
 query "aws_rds_db_cluster_snapshot_age_table" {
   sql = <<-EOQ
     select
-      s.title as "Snapshot",
+      s.db_cluster_snapshot_identifier as "DB Cluster Snapshot Identifier",
       now()::date - s.create_time::date as "Age in Days",
       s.create_time as "Create Time",
       s.status as "Status",
@@ -137,6 +141,6 @@ query "aws_rds_db_cluster_snapshot_age_table" {
     where
       s.account_id = a.account_id
     order by
-      s.title;
+      s.db_cluster_snapshot_identifier;
   EOQ
 }

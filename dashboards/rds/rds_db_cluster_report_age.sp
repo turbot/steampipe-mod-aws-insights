@@ -46,16 +46,16 @@ dashboard "aws_rds_db_cluster_age_report" {
 
   }
 
-  container {
-
-    table {
-      column "Account ID" {
-        display = "none"
-      }
-
-      sql = query.aws_rds_db_cluster_age_table.sql
+  table {
+    column "Account ID" {
+      display = "none"
     }
 
+    column "ARN" {
+      display = "none"
+    }
+
+    sql = query.aws_rds_db_cluster_age_table.sql
   }
 
 }
@@ -123,7 +123,8 @@ query "aws_rds_db_cluster_1_year_count" {
 query "aws_rds_db_cluster_age_table" {
   sql = <<-EOQ
     select
-      c.title as "Cluster",
+      c.resource_id as "Resource ID",
+      c.db_cluster_identifier as "DB Cluster Identifier",
       now()::date - c.create_time::date as "Age in Days",
       c.create_time as "Create Time",
       a.title as "Account",
@@ -136,6 +137,6 @@ query "aws_rds_db_cluster_age_table" {
     where
       c.account_id = a.account_id
     order by
-      c.title;
+      c.resource_id;
   EOQ
 }

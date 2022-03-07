@@ -27,6 +27,10 @@ dashboard "aws_rds_db_cluster_snapshot_encryption_report" {
       display = "none"
     }
 
+    column "ARN" {
+      display = "none"
+    }
+
     sql = query.aws_rds_db_cluster_snapshot_encryption_table.sql
   }
 
@@ -35,7 +39,7 @@ dashboard "aws_rds_db_cluster_snapshot_encryption_report" {
 query "aws_rds_db_cluster_snapshot_encryption_table" {
   sql = <<-EOQ
     select
-      s.title as "Snapshot",
+      s.db_cluster_snapshot_identifier as "DB Cluster Snapshot Identifier",
       case when storage_encrypted then 'Enabled' else null end as "Encryption",
       a.title as "Account",
       s.account_id as "Account ID",
@@ -47,6 +51,6 @@ query "aws_rds_db_cluster_snapshot_encryption_table" {
     where
       s.account_id = a.account_id
     order by
-      s.title;
+      s.db_cluster_snapshot_identifier;
   EOQ
 }
