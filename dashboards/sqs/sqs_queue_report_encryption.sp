@@ -27,6 +27,14 @@ dashboard "aws_sqs_queue_encryption_report" {
       display = "none"
     }
 
+    column "ARN" {
+      display = "none"
+    }
+
+    column "Queue" {
+      href = "/aws_insights.dashboard.aws_sqs_queue_detail?input.queue_arn={{.row.ARN|@uri}}"
+    }
+
     sql = query.aws_sqs_queue_encryption_table.sql
   }
 
@@ -41,7 +49,8 @@ query "aws_sqs_queue_encryption_table" {
       q.sqs_managed_sse_enabled as "SQS Managed SSE",
       a.title as "Account",
       q.account_id as "Account ID",
-      q.region as "Region"
+      q.region as "Region",
+      q.queue_arn as "ARN"
     from
       aws_sqs_queue as q,
       aws_account as a
