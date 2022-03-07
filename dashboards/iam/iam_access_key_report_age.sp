@@ -1,7 +1,3 @@
-variable "aws_iam_access_key_age_report_min_age" {
-  default = 90
-}
-
 dashboard "aws_iam_access_key_age_report" {
 
   title = "AWS IAM Access Key Age Report"
@@ -10,11 +6,6 @@ dashboard "aws_iam_access_key_age_report" {
     type     = "Report"
     category = "Age"
   })
-
-  # input "threshold_in_days" {
-  #   title = "Threshold (days)"
-  #   width = 2
-  # }
 
   container {
 
@@ -71,9 +62,7 @@ query "aws_iam_access_count" {
       count(*) as value,
       'Access Keys' as label
     from
-      aws_iam_access_key
-    where
-      create_date < now() - '${var.aws_iam_access_key_age_report_min_age} days' :: interval;-- should use the threshold value...
+      aws_iam_access_key;
   EOQ
 }
 
@@ -85,8 +74,7 @@ query "aws_iam_access_key_24_hours_count" {
     from
       aws_iam_access_key
     where
-      create_date > now() - '1 days' :: interval
-      and create_date < now() - '${var.aws_iam_access_key_age_report_min_age} days' :: interval;  -- should use the threshold value...
+      create_date > now() - '1 days' :: interval;
   EOQ
 }
 
@@ -98,8 +86,7 @@ query "aws_iam_access_key_30_days_count" {
       from
         aws_iam_access_key
       where
-        create_date between symmetric now() - '1 days' :: interval and now() - '30 days' :: interval
-        and create_date < now() - '${var.aws_iam_access_key_age_report_min_age} days' :: interval;  -- should use the threshold value...
+        create_date between symmetric now() - '1 days' :: interval and now() - '30 days' :: interval;
   EOQ
 }
 
@@ -111,8 +98,7 @@ query "aws_iam_access_key_30_90_days_count" {
     from
       aws_iam_access_key
     where
-      create_date between symmetric now() - '30 days' :: interval and now() - '${var.aws_iam_access_key_age_report_min_age} days' :: interval
-      and create_date < now() - '${var.aws_iam_access_key_age_report_min_age} days' :: interval;  -- should use the threshold value...
+      create_date between symmetric now() - '30 days' :: interval;
   EOQ
 }
 
@@ -124,8 +110,7 @@ query "aws_iam_access_key_90_365_days_count" {
     from
       aws_iam_access_key
     where
-      create_date between symmetric (now() - '90 days'::interval) and (now() - '365 days'::interval)
-      and create_date < now() - '${var.aws_iam_access_key_age_report_min_age} days' :: interval;  -- should use the threshold value...
+      create_date between symmetric (now() - '90 days'::interval) and (now() - '365 days'::interval);
   EOQ
 }
 
@@ -137,8 +122,7 @@ query "aws_iam_access_key_1_year_count" {
     from
       aws_iam_access_key
     where
-      create_date <= now() - '1 year' :: interval
-      and create_date < now() - '${var.aws_iam_access_key_age_report_min_age} days' :: interval;  -- should use the threshold value...
+      create_date <= now() - '1 year' :: interval;
   EOQ
 }
 
@@ -157,7 +141,6 @@ query "aws_iam_access_key_age_table" {
       aws_account as a
     where
       a.account_id = k.account_id
-      and k.create_date < now() - '${var.aws_iam_access_key_age_report_min_age} days' :: interval  -- should use the threshold value...
     order by
       k.user_name;
   EOQ
