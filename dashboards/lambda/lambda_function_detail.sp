@@ -18,7 +18,7 @@ dashboard "aws_lambda_function_detail" {
     card {
       width = 2
       query = query.aws_lambda_function_memory
-      args  = {
+      args = {
         arn = self.input.lambda_arn.value
       }
     }
@@ -26,15 +26,7 @@ dashboard "aws_lambda_function_detail" {
     card {
       width = 2
       query = query.aws_lambda_function_runtime
-      args  = {
-        arn = self.input.lambda_arn.value
-      }
-    }
-
-    card {
-      width = 2
-      query = query.aws_lambda_function_public
-      args  = {
+      args = {
         arn = self.input.lambda_arn.value
       }
     }
@@ -42,7 +34,15 @@ dashboard "aws_lambda_function_detail" {
     card {
       width = 2
       query = query.aws_lambda_function_encryption
-      args  = {
+      args = {
+        arn = self.input.lambda_arn.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_lambda_function_public
+      args = {
         arn = self.input.lambda_arn.value
       }
     }
@@ -60,7 +60,7 @@ dashboard "aws_lambda_function_detail" {
         type  = "line"
         width = 6
         query = query.aws_lambda_function_overview
-        args  = {
+        args = {
           arn = self.input.lambda_arn.value
         }
 
@@ -70,7 +70,7 @@ dashboard "aws_lambda_function_detail" {
         title = "Tags"
         width = 6
         query = query.aws_lambda_function_tags
-        args  = {
+        args = {
           arn = self.input.lambda_arn.value
         }
       }
@@ -81,7 +81,7 @@ dashboard "aws_lambda_function_detail" {
       width = 6
       title = "Last Update Status"
       query = query.aws_lambda_function_last_update_status
-      args  = {
+      args = {
         arn = self.input.lambda_arn.value
       }
     }
@@ -91,7 +91,7 @@ dashboard "aws_lambda_function_detail" {
   table {
     title = "Policy"
     query = query.aws_lambda_function_policy
-    args  = {
+    args = {
       arn = self.input.lambda_arn.value
     }
   }
@@ -100,7 +100,7 @@ dashboard "aws_lambda_function_detail" {
     width = 6
     title = "Security Groups"
     query = query.aws_lambda_function_security_groups
-    args  = {
+    args = {
       arn = self.input.lambda_arn.value
     }
   }
@@ -109,7 +109,7 @@ dashboard "aws_lambda_function_detail" {
     width = 6
     title = "Subnets"
     query = query.aws_lambda_function_subnet_ids
-    args  = {
+    args = {
       arn = self.input.lambda_arn.value
     }
   }

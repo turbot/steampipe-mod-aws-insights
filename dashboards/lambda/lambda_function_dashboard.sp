@@ -16,16 +16,16 @@ dashboard "aws_lambda_function_dashboard" {
 
     # Assessments
     card {
-      sql   = query.aws_lambda_function_public_count.sql
-      width = 2
-    }
-
-    card {
       sql   = query.aws_lambda_function_unencrypted_count.sql
       width = 2
     }
 
-     # Costs
+    card {
+      sql   = query.aws_lambda_function_public_count.sql
+      width = 2
+    }
+
+    # Costs
     card {
       type  = "info"
       icon  = "currency-dollar"
@@ -41,22 +41,6 @@ dashboard "aws_lambda_function_dashboard" {
     width = 6
 
     chart {
-      title = "Public/Private Status"
-      sql   = query.aws_lambda_function_public_status.sql
-      type  = "donut"
-      width = 4
-
-      series "count" {
-        point "private" {
-          color = "ok"
-        }
-        point "public" {
-          color = "alert"
-        }
-      }
-    }
-
-    chart {
       title = "Encryption Status"
       sql   = query.aws_lambda_function_by_encryption_status.sql
       type  = "donut"
@@ -67,6 +51,22 @@ dashboard "aws_lambda_function_dashboard" {
           color = "ok"
         }
         point "disabled" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Public/Private Status"
+      sql   = query.aws_lambda_function_public_status.sql
+      type  = "donut"
+      width = 4
+
+      series "count" {
+        point "private" {
+          color = "ok"
+        }
+        point "public" {
           color = "alert"
         }
       }
@@ -250,6 +250,19 @@ query "aws_lambda_function_count" {
   EOQ
 }
 
+query "aws_lambda_function_unencrypted_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Unencrypted' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
+    from
+      aws_lambda_function
+    where
+      kms_key_arn is null;
+  EOQ
+}
+
 query "aws_lambda_function_public_count" {
   sql = <<-EOQ
     select
@@ -267,19 +280,6 @@ query "aws_lambda_function_public_count" {
   EOQ
 }
 
-query "aws_lambda_function_unencrypted_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Unencrypted' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as "type"
-    from
-      aws_lambda_function
-    where
-      kms_key_arn is null;
-  EOQ
-}
-
 query "aws_lambda_function_cost_mtd" {
   sql = <<-EOQ
     select
@@ -294,6 +294,27 @@ query "aws_lambda_function_cost_mtd" {
 }
 
 # Assessment Queries
+
+query "aws_lambda_function_by_encryption_status" {
+  sql = <<-EOQ
+    select
+      encryption_status,
+      count(*)
+    from (
+      select
+        case when kms_key_arn is not null then
+          'enabled'
+        else
+          'disabled'
+        end encryption_status
+      from
+        aws_lambda_function) as t
+    group by
+      encryption_status
+    order by
+      encryption_status desc;
+  EOQ
+}
 
 query "aws_lambda_function_public_status" {
   sql = <<-EOQ
@@ -317,27 +338,6 @@ query "aws_lambda_function_public_status" {
       functions
     group by
       visibility;
-  EOQ
-}
-
-query "aws_lambda_function_by_encryption_status" {
-  sql = <<-EOQ
-    select
-      encryption_status,
-      count(*)
-    from (
-      select
-        case when kms_key_arn is not null then
-          'enabled'
-        else
-          'disabled'
-        end encryption_status
-      from
-        aws_lambda_function) as t
-    group by
-      encryption_status
-    order by
-      encryption_status desc;
   EOQ
 }
 
