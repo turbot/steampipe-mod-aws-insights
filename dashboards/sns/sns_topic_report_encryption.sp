@@ -27,6 +27,10 @@ dashboard "aws_sns_topic_encryption_report" {
       display = "none"
     }
 
+    column "ARN" {
+      display = "none"
+    }
+
     sql = query.aws_sns_topic_encryption_table.sql
   }
 
