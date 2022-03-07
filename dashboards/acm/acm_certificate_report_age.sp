@@ -46,15 +46,16 @@ dashboard "acm_certificate_age_report" {
 
   }
 
-  container {
-
-    table {
-      column "Account ID" {
-        display = "none"
-      }
-
-      sql = query.aws_acm_certificate_age_table.sql
+  table {
+    column "Account ID" {
+      display = "none"
     }
+  
+    column "ARN" {
+      display = "none"
+    }
+
+    sql = query.aws_acm_certificate_age_table.sql
 
   }
 

@@ -141,7 +141,7 @@ query "aws_cloudtrail_trail_multi_region" {
   sql = <<-EOQ
     select
       case when is_multi_region_trail then 'True' else 'False' end as value,
-      'Multi-Region' as label
+      'Multi-Regional' as label
     from
       aws_cloudtrail_trail
     where

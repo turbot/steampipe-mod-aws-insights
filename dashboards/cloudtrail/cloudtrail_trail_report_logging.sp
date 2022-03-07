@@ -26,15 +26,25 @@ dashboard "aws_cloudtrail_trail_logging_report" {
 
   }
 
-  container {
-
-    table {
-      column "Account ID" {
-        display = "none"
-      }
-
-      sql = query.aws_cloudtrail_trail_logging_table.sql
+  table {
+    column "Account ID" {
+      display = "none"
     }
+
+    column "ARN" {
+      display = "none"
+    }
+
+    column "Name" {
+      href = "/aws_insights.dashboard.aws_cloudtrail_trail_detail?input.trail_arn={{.row.ARN|@uri}}"
+    }
+
+    column "S3 Bucket Name" {
+      href = "/aws_insights.dashboard.aws_s3_bucket_detail?input.bucket_arn={{.row.ARN|@uri}}"
+    }
+
+    sql = query.aws_cloudtrail_trail_logging_table.sql
+  
   }
 
 }
@@ -57,7 +67,7 @@ query "aws_cloudtrail_trail_logging_table" {
   sql = <<-EOQ
     select
       t.name as "Name",
-      case when is_logging then 'Enabled' else null end as "Logging",
+      case when t.is_logging then 'Enabled' else null end as "Logging",
       t.s3_bucket_name as "S3 Bucket Name",
       t.s3_key_prefix as "S3 Key Prefix",
       case when t.log_file_validation_enabled then 'Enabled' else null end as "Log File Validation",
