@@ -35,7 +35,7 @@ dashboard "aws_kms_key_lifecycle_report" {
         display = "none"
       }
 
-      column "Key Id" {
+      column "Key ID" {
         href = "/aws_insights.dashboard.aws_kms_key_detail?input.key_arn={{.row.ARN|@uri}}"
       }
 
@@ -75,7 +75,7 @@ query "aws_kms_cmk_pending_deletion_count" {
 query "aws_kms_cmk_lifecycle_table" {
   sql = <<-EOQ
     select
-      k.id as "Key Id",
+      k.id as "Key ID",
       case when k.key_rotation_enabled then 'Enabled' else null end as "Key Rotation",
       k.key_state as "Key State",
       k.key_manager as "Key Manager",

@@ -93,32 +93,20 @@ dashboard "aws_kms_key_detail" {
 
   }
 
-  container {
-
-    width = 12
-
-    table {
-      title = "Policy"
-      query = query.aws_kms_key_policy
-      args  = {
-        arn = self.input.key_arn.value
-      }
+  table {
+    title = "Policy"
+    query = query.aws_kms_key_policy
+    args  = {
+      arn = self.input.key_arn.value
     }
-
   }
 
-  container {
-
-    width = 12
-
-    table {
-      title = "Key Aliases"
-      query = query.aws_kms_key_aliases
-      args  = {
-        arn = self.input.key_arn.value
-      }
+  table {
+    title = "Key Aliases"
+    query = query.aws_kms_key_aliases
+    args  = {
+      arn = self.input.key_arn.value
     }
-
   }
 
 }
