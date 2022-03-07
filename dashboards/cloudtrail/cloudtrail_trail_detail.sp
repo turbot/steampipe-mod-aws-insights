@@ -35,7 +35,7 @@ dashboard "aws_cloudtrail_trail_detail" {
     card {
       width = 2
 
-      query = query.aws_cloudtrail_trail_log_file_validation
+      query = query.aws_cloudtrail_trail_unencrypted
       args = {
         arn = self.input.trail_arn.value
       }
@@ -44,11 +44,12 @@ dashboard "aws_cloudtrail_trail_detail" {
     card {
       width = 2
 
-      query = query.aws_cloudtrail_trail_unencrypted
+      query = query.aws_cloudtrail_trail_log_file_validation
       args = {
         arn = self.input.trail_arn.value
       }
     }
+
   }
 
   container {
@@ -61,7 +62,7 @@ dashboard "aws_cloudtrail_trail_detail" {
         type  = "line"
         width = 6
         query = query.aws_cloudtrail_trail_overview
-        args  = {
+        args = {
           arn = self.input.trail_arn.value
         }
 
@@ -141,22 +142,7 @@ query "aws_cloudtrail_trail_multi_region" {
   sql = <<-EOQ
     select
       case when is_multi_region_trail then 'True' else 'False' end as value,
-      'Multi-Region' as label
-    from
-      aws_cloudtrail_trail
-    where
-      region = home_region and arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-query "aws_cloudtrail_trail_log_file_validation" {
-  sql = <<-EOQ
-    select
-      case when log_file_validation_enabled then 'Enabled' else 'Disabled' end as value,
-      'Log File Validation' as label,
-      case when log_file_validation_enabled then 'ok' else 'alert' end as type
+      'Multi-Regional' as label
     from
       aws_cloudtrail_trail
     where
@@ -172,6 +158,21 @@ query "aws_cloudtrail_trail_unencrypted" {
       'Encryption' as label,
       case when kms_key_id is not null then 'Enabled' else 'Disabled' end as value,
       case when kms_key_id is not null then 'ok' else 'alert' end as type
+    from
+      aws_cloudtrail_trail
+    where
+      region = home_region and arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_cloudtrail_trail_log_file_validation" {
+  sql = <<-EOQ
+    select
+      case when log_file_validation_enabled then 'Enabled' else 'Disabled' end as value,
+      'Log File Validation' as label,
+      case when log_file_validation_enabled then 'ok' else 'alert' end as type
     from
       aws_cloudtrail_trail
     where

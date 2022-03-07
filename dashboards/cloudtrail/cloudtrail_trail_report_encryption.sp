@@ -15,27 +15,34 @@ dashboard "aws_cloudtrail_trail_encryption_report" {
     }
 
     card {
-      sql = query.aws_cloudtrail_trail_unencrypted_count.sql
+      sql   = query.aws_cloudtrail_trail_unencrypted_count.sql
       width = 2
     }
   }
 
-  container {
+  table {
+    column "Account ID" {
+      display = "none"
+    }
 
-    table {
-      column "Account ID" {
-        display = "none"
-      }
+    column "ARN" {
+      display = "none"
+    }
 
-      sql = query.aws_cloudtrail_trail_encryption_table.sql    
-    }   
+    column "Name" {
+      href = "/aws_insights.dashboard.aws_cloudtrail_trail_detail?input.trail_arn={{.row.ARN|@uri}}"
+    }
+
+    sql = query.aws_cloudtrail_trail_encryption_table.sql  
+
   }
+
 }
 
 query "aws_cloudtrail_trail_encryption_table" {
   sql = <<-EOQ
     select
-      t.title as "Trail",
+      t.name as "Name",
       case when t.kms_key_id is not null then 'Enabled' else null end as "Encryption",
       a.title as "Account",
       t.account_id as "Account ID",
@@ -48,6 +55,6 @@ query "aws_cloudtrail_trail_encryption_table" {
       t.home_region = t.region
       and t.account_id = a.account_id
     order by
-      t.title;
+      t.name;
   EOQ
 }
