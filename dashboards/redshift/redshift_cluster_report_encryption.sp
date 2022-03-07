@@ -20,21 +20,16 @@ dashboard "aws_redshift_cluster_encryption_report" {
     }
   }
 
+  container {
 
-  table {
-    column "Account ID" {
-      display = "none"
+    table {
+      column "Account ID" {
+        display = "none"
+      }
+
+      sql = query.aws_redshift_cluster_encryption_table.sql
     }
 
-    column "ARN" {
-      display = "none"
-    }
-
-    column "Cluster Identifier" {
-      href = "/aws_insights.dashboard.aws_redshift_cluster_detail?input.cluster_arn={{.row.ARN|@uri}}"
-    }
-
-    sql = query.aws_redshift_cluster_encryption_table.sql
   }
 
 }
@@ -42,19 +37,19 @@ dashboard "aws_redshift_cluster_encryption_report" {
 query "aws_redshift_cluster_encryption_table" {
   sql = <<-EOQ
     select
-      c.cluster_identifier as "Cluster Identifier",
+      r.cluster_identifier as "Cluster",
       case when encrypted then 'Enabled' else null end as "Encryption",
-      c.kms_key_id as "KMS Key ID",
+      r.kms_key_id as "KMS Key ID",
       a.title as "Account",
-      c.account_id as "Account ID",
-      c.region as "Region",
-      c.arn as "ARN"
+      r.account_id as "Account ID",
+      r.region as "Region",
+      r.arn as "ARN"
     from
-      aws_redshift_cluster as c,
+      aws_redshift_cluster as r,
       aws_account as a
     where
-      c.account_id = a.account_id
+      r.account_id = a.account_id
     order by
-      c.cluster_identifier;
+      r.cluster_identifier;
   EOQ
 }

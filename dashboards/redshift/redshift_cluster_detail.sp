@@ -78,6 +78,7 @@ dashboard "aws_redshift_cluster_detail" {
         args  = {
           arn = self.input.cluster_arn.value
         }
+
       }
 
       table {
@@ -113,21 +114,33 @@ dashboard "aws_redshift_cluster_detail" {
 
     }
 
-    table {
+    container {
 
-      title = "Logging"
-      query = query.aws_redshift_cluster_logging
-      args  = {
-        arn = self.input.cluster_arn.value
+      width = 12
+
+      table {
+
+        title = "Logging"
+        query = query.aws_redshift_cluster_logging
+        args  = {
+          arn = self.input.cluster_arn.value
+        }
       }
+
     }
 
-    table {
-      title = "Scheduled Actions"
-      query = query.aws_redshift_cluster_scheduled_actions
-      args  = {
-        arn = self.input.cluster_arn.value
+    container {
+
+      width = 12
+
+      table {
+        title = "Scheduled Actions"
+        query = query.aws_redshift_cluster_scheduled_actions
+        args  = {
+          arn = self.input.cluster_arn.value
+        }
       }
+
     }
 
   }
@@ -209,7 +222,7 @@ query "aws_redshift_cluster_number_of_nodes" {
 query "aws_redshift_cluster_encryption" {
   sql = <<-EOQ
     select
-      'Encryption' as label,
+      'Unencrypted' as label,
       case when encrypted then 'Enabled' else 'Disabled' end as value,
       case when encrypted then 'ok' else 'alert' end as "type"
     from
@@ -225,7 +238,7 @@ query "aws_redshift_cluster_public" {
   sql = <<-EOQ
     select
       'Public Access' as label,
-      case when publicly_accessible then 'Enabled' else 'Disabled' end as value,
+      case when publicly_accessible then 'Disabled' else 'Enabled' end as value,
       case when not publicly_accessible then 'ok' else 'alert' end as "type"
     from
       aws_redshift_cluster
@@ -329,8 +342,8 @@ query "aws_redshift_cluster_overview" {
       cluster_identifier as "Cluster Identifier",
       cluster_namespace_arn as "Cluster Namespace ARN",
       db_name  as "DB Name",
+      cluster_status  as "Cluster Status",
       vpc_id as "VPC ID",
-      kms_key_id as "KMS Key ID",
       title as "Title",
       region as "Region",
       account_id as "Account ID",
