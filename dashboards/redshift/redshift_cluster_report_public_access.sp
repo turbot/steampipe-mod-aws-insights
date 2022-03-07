@@ -21,17 +21,20 @@ dashboard "aws_redshift_cluster_public_access_report" {
 
   }
 
-  container {
-
-    table {
-
-      column "Account ID" {
-        display = "none"
-      }
-
-      sql = query.aws_redshift_cluster_publicly_accessible_table.sql
+  table {
+    column "Account ID" {
+      display = "none"
     }
 
+    column "ARN" {
+    display = "none"
+    }
+
+    column "Cluster Identifier" {
+      href = "/aws_insights.dashboard.aws_redshift_cluster_detail?input.cluster_arn={{.row.ARN|@uri}}"
+    }
+
+    sql = query.aws_redshift_cluster_publicly_accessible_table.sql
   }
 
 }
@@ -39,19 +42,19 @@ dashboard "aws_redshift_cluster_public_access_report" {
 query "aws_redshift_cluster_publicly_accessible_table" {
   sql = <<-EOQ
    select
-      r.title as "Cluster",
+      c.cluster_identifier as "Cluster Identifier",
       case when publicly_accessible then 'Public' else 'Not public' end as "Public Access State",
-      r.cluster_status as "Cluster Status",
+      c.cluster_status as "Cluster Status",
       a.title as "Account",
-      r.account_id as "Account ID",
-      r.region as "Region",
-      r.arn as "ARN"
+      c.account_id as "Account ID",
+      c.region as "Region",
+      c.arn as "ARN"
     from
-      aws_redshift_cluster as r,
+      aws_redshift_cluster as c,
       aws_account as a
     where
-      r.account_id = a.account_id
+      c.account_id = a.account_id
     order by
-      r.title ;
+      c.cluster_identifier;
   EOQ
 }

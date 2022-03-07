@@ -26,18 +26,21 @@ dashboard "aws_kms_key_lifecycle_report" {
 
   }
 
-  container {
-
     table {
-
       column "Account ID" {
         display = "none"
       }
 
+      column "ARN" {
+        display = "none"
+      }
+
+      column "Key ID" {
+        href = "/aws_insights.dashboard.aws_kms_key_detail?input.key_arn={{.row.ARN|@uri}}"
+      }
+
       sql = query.aws_kms_cmk_lifecycle_table.sql
     }
-
-  }
 
 }
 
@@ -72,8 +75,8 @@ query "aws_kms_cmk_pending_deletion_count" {
 query "aws_kms_cmk_lifecycle_table" {
   sql = <<-EOQ
     select
-      k.id as "Key",
-      case when k.key_rotation_enabled then 'Enabled' else null end as "Rotation",
+      k.id as "Key ID",
+      case when k.key_rotation_enabled then 'Enabled' else null end as "Key Rotation",
       k.key_state as "Key State",
       k.key_manager as "Key Manager",
       k.deletion_date as "Deletion Date",

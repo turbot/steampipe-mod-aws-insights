@@ -21,15 +21,21 @@ dashboard "aws_redshift_cluster_logging_report" {
 
   }
 
-  container {
 
-    table {
-      column "Account ID" {
-        display = "none"
-      }
-
-      sql = query.aws_redshift_cluster_logging_table.sql
+  table {
+    column "Account ID" {
+      display = "none"
     }
+
+    column "ARN" {
+      display = "none"
+    }
+
+    column "Cluster Identifier" {
+      href = "/aws_insights.dashboard.aws_redshift_cluster_detail?input.cluster_arn={{.row.ARN|@uri}}"
+    }
+
+    sql = query.aws_redshift_cluster_logging_table.sql
   }
 
 }
@@ -50,22 +56,22 @@ query "aws_redshift_cluster_logging_status" {
 query "aws_redshift_cluster_logging_table" {
   sql = <<-EOQ
     select
-      r.cluster_identifier as "Cluster",
+      c.cluster_identifier as "Cluster Identifier",
       case when logging_status ->> 'LoggingEnabled' = 'true' then 'Enabled' else null end as "Logging",
-      r.logging_status ->> 'BucketName' as "S3 Bucket Name",
-      r.logging_status ->> 'S3KeyPrefix' as "S3 Key Prefix",
-      r.logging_status ->> 'LastFailureTime' as "Last Failure Time",
-      r.logging_status ->> 'LastSuccessfulDeliveryTime' as "Last Successful Delivery Time",
+      c.logging_status ->> 'BucketName' as "S3 Bucket Name",
+      c.logging_status ->> 'S3KeyPrefix' as "S3 Key Prefix",
+      c.logging_status ->> 'LastFailureTime' as "Last Failure Time",
+      c.logging_status ->> 'LastSuccessfulDeliveryTime' as "Last Successful Delivery Time",
       a.title as "Account",
-      r.account_id as "Account ID",
-      r.region as "Region",
-      r.arn as "ARN"
+      c.account_id as "Account ID",
+      c.region as "Region",
+      c.arn as "ARN"
     from
-      aws_redshift_cluster as r,
+      aws_redshift_cluster as c,
       aws_account as a
     where
-      r.account_id = a.account_id
+      c.account_id = a.account_id
     order by
-      r.cluster_identifier;
+      c.cluster_identifier;
   EOQ
 }
