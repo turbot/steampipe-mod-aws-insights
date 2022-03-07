@@ -18,7 +18,7 @@ dashboard "aws_lambda_function_detail" {
     card {
       width = 2
       query = query.aws_lambda_function_memory
-      args  = {
+      args = {
         arn = self.input.lambda_arn.value
       }
     }
@@ -26,15 +26,7 @@ dashboard "aws_lambda_function_detail" {
     card {
       width = 2
       query = query.aws_lambda_function_runtime
-      args  = {
-        arn = self.input.lambda_arn.value
-      }
-    }
-
-    card {
-      width = 2
-      query = query.aws_lambda_function_public
-      args  = {
+      args = {
         arn = self.input.lambda_arn.value
       }
     }
@@ -42,7 +34,15 @@ dashboard "aws_lambda_function_detail" {
     card {
       width = 2
       query = query.aws_lambda_function_encryption
-      args  = {
+      args = {
+        arn = self.input.lambda_arn.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_lambda_function_public
+      args = {
         arn = self.input.lambda_arn.value
       }
     }
@@ -60,7 +60,7 @@ dashboard "aws_lambda_function_detail" {
         type  = "line"
         width = 6
         query = query.aws_lambda_function_overview
-        args  = {
+        args = {
           arn = self.input.lambda_arn.value
         }
 
@@ -70,68 +70,48 @@ dashboard "aws_lambda_function_detail" {
         title = "Tags"
         width = 6
         query = query.aws_lambda_function_tags
-        args  = {
+        args = {
           arn = self.input.lambda_arn.value
         }
       }
 
     }
 
-    container {
-
+    table {
       width = 6
-
-      table {
-        title = "Last Update Status"
-        query = query.aws_lambda_function_last_update_status
-        args  = {
-          arn = self.input.lambda_arn.value
-        }
-      }
-    }
-
-  }
-
-  container {
-
-    width = 12
-
-    table {
-      title = "Policy"
-      query = query.aws_lambda_function_policy
-      args  = {
+      title = "Last Update Status"
+      query = query.aws_lambda_function_last_update_status
+      args = {
         arn = self.input.lambda_arn.value
       }
     }
 
   }
 
-  container {
+  table {
+    title = "Policy"
+    query = query.aws_lambda_function_policy
+    args = {
+      arn = self.input.lambda_arn.value
+    }
+  }
 
+  table {
     width = 6
-
-    table {
-      title = "Security Groups"
-      query = query.aws_lambda_function_security_groups
-      args  = {
-        arn = self.input.lambda_arn.value
-      }
+    title = "Security Groups"
+    query = query.aws_lambda_function_security_groups
+    args = {
+      arn = self.input.lambda_arn.value
     }
-
   }
 
-  container {
-
+  table {
     width = 6
-
-    table {
-      title = "Subnets"
-      query = query.aws_lambda_function_subnet_ids
-      args  = {
-        arn = self.input.lambda_arn.value
-      }
+    title = "Subnets"
+    query = query.aws_lambda_function_subnet_ids
+    args = {
+      arn = self.input.lambda_arn.value
     }
-
   }
 
 }
@@ -188,13 +168,13 @@ query "aws_lambda_function_public" {
         policy_std -> 'Statement' ->> 'Effect' = 'Allow'
           and ( policy_std -> 'Statement' ->> 'Prinipal' = '*'
           or ( policy_std -> 'Principal' -> 'AWS' ) :: text = '*'
-        )  then 'Enabled' else 'Disabled' end as value,
+        ) then 'Enabled' else 'Disabled' end as value,
       case
       when
         policy_std -> 'Statement' ->> 'Effect' = 'Allow'
           and ( policy_std -> 'Statement' ->> 'Prinipal' = '*'
           or ( policy_std -> 'Principal' -> 'AWS' ) :: text = '*'
-        )  then 'ok' else 'alert' end as type
+        ) then 'ok' else 'alert' end as type
     from
       aws_lambda_function
     where
@@ -222,7 +202,7 @@ query "aws_lambda_function_encryption" {
 query "aws_lambda_function_last_update_status" {
   sql = <<-EOQ
     select
-      last_modified  as "Last Modified",
+      last_modified as "Last Modified",
       last_update_status as "Last Update Status",
       last_update_status_reason as "Last Update Status Reason",
       last_update_status_reason_code as "Last Update Status Reason Code"
@@ -238,11 +218,11 @@ query "aws_lambda_function_last_update_status" {
 query "aws_lambda_function_policy" {
   sql = <<-EOQ
     select
-      p -> 'Action'  as "Action",
+      p ->> 'Sid' as "Sid",
       p ->> 'Effect' as "Effect",
       p -> 'Principal' as "Principal",
-      p -> 'Resource' as "Resource",
-      p ->> 'Sid' as "SID"
+      p -> 'Action' as "Action",
+      p -> 'Resource' as "Resource"
     from
       aws_lambda_function,
       jsonb_array_elements(policy_std -> 'Statement') as p
