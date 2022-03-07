@@ -78,13 +78,6 @@ dashboard "aws_dynamodb_table_dashboard" {
     }
 
     chart {
-      title = "Encryption Status"
-      type  = "donut"
-      width = 4
-      sql   = query.aws_dynamodb_table_encryption_status.sql
-    }
-
-    chart {
       title = "Continuous Backup"
       type  = "donut"
       width = 4
@@ -326,29 +319,6 @@ query "aws_dynamodb_table_autoscaling_status" {
     from
       table_autoscaling_status
     group by autoscaling_status;
-  EOQ
-}
-
-query "aws_dynamodb_table_encryption_status" {
-  sql = <<-EOQ
-    with table_encryption_status as (
-      select
-        t.name as table_name,
-        case
-          when t.sse_description ->> 'SSEType' = 'KMS' and k.key_manager = 'AWS' then 'aws_managed'
-          when t.sse_description ->> 'SSEType' = 'KMS' and k.key_manager = 'CUSTOMER' then 'customer_managed'
-          else 'default'
-        end as encryption_type
-      from
-        aws_dynamodb_table as t
-        left join aws_kms_key as k on t.sse_description ->> 'KMSMasterKeyArn' = k.arn
-    )
-    select
-      encryption_type,
-      count(*) as table_count
-    from
-      table_encryption_status
-    group by encryption_type;
   EOQ
 }
 
