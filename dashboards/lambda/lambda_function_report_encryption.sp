@@ -36,7 +36,7 @@ dashboard "aws_lambda_function_encryption_report" {
     }
 
     sql = query.aws_lambda_function_encryption_table.sql
-    }
+  }
 
 }
 
