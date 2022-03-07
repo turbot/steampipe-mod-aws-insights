@@ -1,6 +1,7 @@
 dashboard "aws_ebs_volume_age_report" {
 
-  title = "AWS EBS Volume Age Report"
+  title         = "AWS EBS Volume Age Report"
+  documentation = file("./dashboards/ebs/docs/ebs_volume_report_age.md")
 
   tags = merge(local.ebs_common_tags, {
     type     = "Report"

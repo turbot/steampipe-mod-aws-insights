@@ -1,6 +1,7 @@
 dashboard "aws_ebs_snapshot_age_report" {
 
-  title = "AWS EBS Snapshot Age Report"
+  title         = "AWS EBS Snapshot Age Report"
+  documentation = file("./dashboards/ebs/docs/ebs_snapshot_report_age.md")
 
   tags = merge(local.ebs_common_tags, {
     type     = "Report"

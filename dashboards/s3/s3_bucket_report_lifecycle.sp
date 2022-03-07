@@ -1,6 +1,7 @@
 dashboard "aws_s3_bucket_lifecycle_report" {
 
-  title = "AWS S3 Bucket Lifecycle Report"
+  title         = "AWS S3 Bucket Lifecycle Report"
+  documentation = file("./dashboards/s3/docs/s3_bucket_report_lifecycle.md")
 
   tags = merge(local.s3_common_tags, {
     type     = "Report"

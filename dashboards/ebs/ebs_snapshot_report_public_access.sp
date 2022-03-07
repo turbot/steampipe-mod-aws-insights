@@ -1,6 +1,7 @@
 dashboard "aws_ebs_snapshot_public_access_report" {
 
-  title = "AWS EBS Snapshot Public Access Report"
+  title         = "AWS EBS Snapshot Public Access Report"
+  documentation = file("./dashboards/ebs/docs/ebs_snapshot_report_public_access.md")
 
   tags = merge(local.ebs_common_tags, {
     type     = "Report"

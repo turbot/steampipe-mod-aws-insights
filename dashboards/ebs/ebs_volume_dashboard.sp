@@ -1,6 +1,7 @@
 dashboard "aws_ebs_volume_dashboard" {
 
-  title = "AWS EBS Volume Dashboard"
+  title         = "AWS EBS Volume Dashboard"
+  documentation = file("./dashboards/ebs/docs/ebs_volume_dashboard.md")
 
   tags = merge(local.ebs_common_tags, {
     type = "Dashboard"

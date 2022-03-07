@@ -1,6 +1,7 @@
 dashboard "aws_ebs_volume_encryption_report" {
 
-  title = "AWS EBS Volume Encryption Report"
+  title         = "AWS EBS Volume Encryption Report"
+  documentation = file("./dashboards/ebs/docs/ebs_volume_report_encryption.md")
 
   tags = merge(local.ebs_common_tags, {
     type     = "Report"

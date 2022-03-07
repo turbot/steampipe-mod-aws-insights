@@ -1,6 +1,7 @@
 dashboard "aws_s3_bucket_logging_report" {
 
-  title = "AWS S3 Bucket Logging Report"
+  title         = "AWS S3 Bucket Logging Report"
+  documentation = file("./dashboards/s3/docs/s3_bucket_report_logging.md")
 
   tags = merge(local.s3_common_tags, {
     type     = "Report"

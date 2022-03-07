@@ -1,6 +1,7 @@
 dashboard "aws_ebs_snapshot_dashboard" {
 
-  title = "AWS EBS Snapshot Dashboard"
+  title         = "AWS EBS Snapshot Dashboard"
+  documentation = file("./dashboards/ebs/docs/ebs_snapshot_dashboard.md")
 
   tags = merge(local.ebs_common_tags, {
     type = "Dashboard"
