@@ -46,16 +46,16 @@ dashboard "aws_ebs_snapshot_age_report" {
 
   }
 
-  container {
-
-    table {
-      column "Account ID" {
-        display = "none"
-      }
-
-      sql = query.aws_ebs_snapshot_age_table.sql
+  table {
+    column "Account ID" {
+      display = "none"
     }
 
+    column "ARN" {
+      display = "none"
+    }
+
+    sql = query.aws_ebs_snapshot_age_table.sql
   }
 
 }
@@ -123,8 +123,8 @@ query "aws_ebs_snapshot_1_year_count" {
 query "aws_ebs_snapshot_age_table" {
   sql = <<-EOQ
     select
-      s.tags ->> 'Name' as "Name",
       s.snapshot_id as "Snapshot ID",
+      s.tags ->> 'Name' as "Name",
       now()::date - s.start_time::date as "Age in Days",
       s.start_time as "Create Time",
       s.state as "State",
@@ -138,7 +138,6 @@ query "aws_ebs_snapshot_age_table" {
     where
       s.account_id = a.account_id
     order by
-      s.tags ->> 'Name',
       s.snapshot_id;
   EOQ
 }
