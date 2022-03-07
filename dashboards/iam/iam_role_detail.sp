@@ -202,7 +202,7 @@ query "aws_iam_all_policies_for_role" {
       aws_iam_role as r,
       jsonb_array_elements_text(r.attached_policy_arns) as policy_arn
     where
-      r.arn = 'arn:aws:iam::013122550996:role/turbot/admin'
+      r.arn = $1
     -- Inline Policies (defined on role)
     union select
       i ->> 'PolicyName' as "Policy",

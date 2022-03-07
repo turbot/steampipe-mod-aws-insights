@@ -21,14 +21,14 @@ dashboard "aws_iam_root_access_report" {
 
   }
 
-  container {
+  table {
 
-    table {
-
-      title = "Accounts with Root Access Keys"
-      sql   = query.aws_iam_root_access_keys_table.sql
+    column "Account ID" {
+      display = "none"
     }
 
+    title = "Accounts with Root Access Keys"
+    sql   = query.aws_iam_root_access_keys_table.sql
   }
 
 }

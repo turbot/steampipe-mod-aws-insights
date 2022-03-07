@@ -20,16 +20,16 @@ dashboard "aws_iam_user_mfa_report" {
     }
   }
 
-  container {
-
-    table {
-      column "Account ID" {
-        display = "none"
-      }
-
-      sql = query.aws_iam_user_mfa_table.sql
+  table {
+    column "Account ID" {
+      display = "none"
     }
 
+    column "ARN" {
+      display = "none"
+    }
+
+    sql = query.aws_iam_user_mfa_table.sql
   }
 
 }

@@ -42,18 +42,18 @@ dashboard "aws_iam_credential_report" {
 
   }
 
-  container {
+  table {
+    title = "Accounts with Root Access Keys"
 
-   table {
-      title = "Accounts with Root Access Keys"
-
-      column "Account ID" {
-        display = "none"
-      }
-      
-      sql = query.aws_iam_credential_entities_root_access_keys_table.sql
+    column "Account ID" {
+      display = "none"
     }
 
+    column "User ARN" {
+      display = "none"
+    }
+    
+    sql = query.aws_iam_credential_entities_root_access_keys_table.sql
   }
 
 }
@@ -87,7 +87,7 @@ query "aws_iam_credential_entities_console_access_with_no_mfa_count" {
 query "aws_iam_credential_entities_root_access_keys_table" {
   sql = <<-EOQ
     select
-      user_name as "Username",
+      user_name as "User Name",
       user_arn as "User ARN",
 
       password_enabled as "Password Enabled",
@@ -131,6 +131,8 @@ query "aws_iam_credential_entities_root_access_keys_table" {
       aws_iam_credential_report as r,
       aws_account as a
     where
-      a.account_id = r.account_id;
+      a.account_id = r.account_id
+    order by
+      user_name
   EOQ
 }

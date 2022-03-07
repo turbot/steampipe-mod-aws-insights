@@ -168,7 +168,7 @@ query "aws_iam_all_policies_for_group" {
       aws_iam_group as g,
       jsonb_array_elements_text(g.attached_policy_arns) as policy_arn
     where
-      g.arn = 'arn:aws:iam::013122550996:group/demo-group'
+      g.arn = $1
 
     -- Policies (inline from groups)
     union select

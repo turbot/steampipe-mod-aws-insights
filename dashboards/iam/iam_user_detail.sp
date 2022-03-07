@@ -172,7 +172,7 @@ query "aws_iam_user_input" {
 query "aws_iam_user_name_for_user" {
   sql = <<-EOQ
     select
-      name as "Username"
+      name as "User Name"
     from
       aws_iam_user
     where
@@ -323,7 +323,7 @@ query "aws_iam_user_mfa_devices" {
     select
       mfa ->> 'SerialNumber' as "Serial Number",
       mfa ->> 'EnableDate' as "Enable Date",
-      mfa ->> 'UserName' as "Username"
+      mfa ->> 'UserName' as "User Name"
     from
       aws_iam_user as u,
       jsonb_array_elements(mfa_devices) as mfa

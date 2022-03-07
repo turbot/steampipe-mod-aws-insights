@@ -11,10 +11,10 @@ dashboard "aws_iam_user_excessive_privilege_report" {
     category = "Excessive Privilege"
   })
 
-  input "threshold_in_days" {
-    title = "Threshold (days)"
-    width = 2
-  }
+  # input "threshold_in_days" {
+  #   title = "Threshold (days)"
+  #   width = 2
+  # }
 
   container {
 
@@ -34,14 +34,10 @@ dashboard "aws_iam_user_excessive_privilege_report" {
     }
   }
 
-  container {
-
     # per, https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_access-advisor-view-data.html ,
     #  The tracking period for services is for the last 400 days.
-    table {
-      sql = query.aws_iam_user_excessive_permissions_table.sql
-    }
-
+  table {
+    sql = query.aws_iam_user_excessive_permissions_table.sql
   }
 
 }
@@ -56,8 +52,8 @@ query "aws_iam_users_with_excessive_permissions" {
         else 'alert'
       end as type
     from
-      default_aab.aws_iam_access_advisor,
-      default_aab.aws_iam_user
+      aws_iam_access_advisor,
+      aws_iam_user
     where
       principal_arn = arn
       and coalesce(last_authenticated, now() - '400 days' :: interval ) < now() - '${var.aws_iam_user_excessive_privilege_report_threshold_in_days} days' :: interval;
@@ -75,8 +71,8 @@ query "aws_iam_excessive_permissions_count" {
         else 'alert'
       end as type
     from
-      default_aab.aws_iam_access_advisor,
-      default_aab.aws_iam_user
+      aws_iam_access_advisor,
+      aws_iam_user
     where
       principal_arn = arn
       and coalesce(last_authenticated, now() - '400 days' :: interval ) < now() - '${var.aws_iam_user_excessive_privilege_report_threshold_in_days} days' :: interval;  -- should use the threshold value...

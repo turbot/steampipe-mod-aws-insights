@@ -11,10 +11,10 @@ dashboard "aws_iam_access_key_age_report" {
     category = "Age"
   })
 
-  input "threshold_in_days" {
-    title = "Threshold (days)"
-    width = 2
-  }
+  # input "threshold_in_days" {
+  #   title = "Threshold (days)"
+  #   width = 2
+  # }
 
   container {
 
@@ -55,16 +55,12 @@ dashboard "aws_iam_access_key_age_report" {
 
   }
 
-  container {
-
-    table {
-      column "Account ID" {
-        display = "none"
-      }
-
-      sql = query.aws_iam_access_key_age_table.sql
+  table {
+    column "Account ID" {
+      display = "none"
     }
 
+    sql = query.aws_iam_access_key_age_table.sql
   }
 
 }
@@ -163,6 +159,6 @@ query "aws_iam_access_key_age_table" {
       a.account_id = k.account_id
       and k.create_date < now() - '${var.aws_iam_access_key_age_report_min_age} days' :: interval  -- should use the threshold value...
     order by
-      create_date;
+      k.user_name;
   EOQ
 }
