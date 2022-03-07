@@ -21,7 +21,6 @@ dashboard "aws_redshift_cluster_logging_report" {
 
   }
 
-
   table {
     column "Account ID" {
       display = "none"

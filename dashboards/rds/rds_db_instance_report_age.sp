@@ -46,16 +46,20 @@ dashboard "aws_rds_db_instance_age_report" {
 
   }
 
-  container {
-
-    table {
-      column "Account ID" {
-        display = "none"
-      }
-
-      sql = query.aws_rds_db_instance_age_table.sql
+  table {
+    column "Account ID" {
+      display = "none"
     }
 
+    column "ARN" {
+      display = "none"
+    }
+
+    column "DB Instance Identifier" {
+      href = "/aws_insights.dashboard.aws_rds_db_instance_detail?input.db_instance_arnn={{.row.ARN|@uri}}"
+    }
+
+    sql = query.aws_rds_db_instance_age_table.sql
   }
 
 }
@@ -123,7 +127,7 @@ query "aws_rds_db_instance_1_year_count" {
 query "aws_rds_db_instance_age_table" {
   sql = <<-EOQ
     select
-      i.db_instance_identifier as "Instance",
+      i.db_instance_identifier as "DB Instance Identifier",
       now()::date - i.create_time::date as "Age in Days",
       i.create_time as "Create Time",
       i.status as "Status",
@@ -137,6 +141,6 @@ query "aws_rds_db_instance_age_table" {
     where
       i.account_id = a.account_id
     order by
-      i.title;
+      i.db_instance_identifier;
   EOQ
 }

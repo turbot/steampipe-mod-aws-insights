@@ -306,13 +306,13 @@ query "aws_rds_db_cluster_deletion_protection_status" {
 query "aws_rds_db_cluster_multiple_az_status" {
   sql = <<-EOQ
     with multiaz_stat as (
-    select
-      distinct db_cluster_identifier as name
-    from
-      aws_rds_db_cluster
-    where
-      multi_az
-    group by name
+      select
+        distinct db_cluster_identifier as name
+      from
+        aws_rds_db_cluster
+      where
+        multi_az
+      group by name
   )
   select
     'enabled' as "Multi-AZ Status",
@@ -322,7 +322,7 @@ query "aws_rds_db_cluster_multiple_az_status" {
   union
   select
     'disabled' as "Multi-AZ Status",
-    count( db_cluster_identifier)
+    count(db_cluster_identifier)
   from
     aws_rds_db_cluster as s where s.db_cluster_identifier not in (select name from multiaz_stat);
   EOQ

@@ -21,16 +21,16 @@ dashboard "aws_rds_db_cluster_logging_report" {
 
   }
 
-  container {
-
-    table {
-      column "Account ID" {
-        display = "none"
-      }
-
-      sql = query.aws_rds_db_cluster_logging_table.sql
+  table {
+    column "Account ID" {
+      display = "none"
     }
 
+    column "ARN" {
+      display = "none"
+    }
+
+    sql = query.aws_rds_db_cluster_logging_table.sql
   }
 
 }
@@ -38,7 +38,8 @@ dashboard "aws_rds_db_cluster_logging_report" {
 query "aws_rds_db_cluster_logging_table" {
   sql = <<-EOQ
     select
-      c.db_cluster_identifier as "DB Cluster",
+      c.resource_id as "Resource ID",
+      c.db_cluster_identifier as "DB Cluster Identifier",
       case
         when
           ( c.engine like any (array ['mariadb', '%mysql']) and c.enabled_cloudwatch_logs_exports ?& array ['audit','error','general','slowquery'] ) or ( c.engine like any (array['%postgres%']) and c.enabled_cloudwatch_logs_exports ?& array ['postgresql','upgrade'] ) or
@@ -58,6 +59,6 @@ query "aws_rds_db_cluster_logging_table" {
     where
       c.account_id = a.account_id
     order by
-      c.db_cluster_identifier;
+      c.resource_id;
   EOQ
 }
