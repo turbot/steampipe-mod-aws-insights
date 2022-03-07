@@ -1,4 +1,4 @@
-dashboard "aws_iam_role_full_administrative_privileges_report" {
+dashboard "aws_iam_role_full_administrative_privilege_report" {
 
   title = "AWS IAM Role Full Administrative Privilege Report"
 

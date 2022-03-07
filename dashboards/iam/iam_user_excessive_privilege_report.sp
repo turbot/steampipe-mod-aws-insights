@@ -37,6 +37,18 @@ dashboard "aws_iam_user_excessive_privilege_report" {
     # per, https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_access-advisor-view-data.html ,
     #  The tracking period for services is for the last 400 days.
   table {
+    column "Account ID" {
+      display = "none"
+    }
+
+    column "ARN" {
+      display = "none"
+    }
+
+    column "User Name" {
+      href = "/aws_insights.dashboard.aws_iam_user_detail?input.user_arn={{.row.ARN|@uri}}"
+    }
+
     sql = query.aws_iam_user_excessive_permissions_table.sql
   }
 
@@ -82,6 +94,7 @@ query "aws_iam_excessive_permissions_count" {
 query "aws_iam_user_excessive_permissions_table" {
   sql = <<-EOQ
     select
+      name as "User Name",
       principal_arn as "Principal",
       service_name as "Service",
       service_namespace as "Service Namespace",
@@ -91,12 +104,15 @@ query "aws_iam_user_excessive_permissions_table" {
       end as "Last Authenticated (Days)",
       last_authenticated as "Last Authenticated Timestamp",
       last_authenticated_entity as "Last Authenticated Entity",
-      last_authenticated_region as "Last Authenticated Region"
+      last_authenticated_region as "Last Authenticated Region",
+      arn as "ARN"
     from
       aws_iam_access_advisor,
       aws_iam_user
     where
       principal_arn = arn
-      and coalesce(last_authenticated, now() - '400 days' :: interval ) < now() - '${var.aws_iam_user_excessive_privilege_report_threshold_in_days} days' :: interval;  -- should use the threshold value...
+      and coalesce(last_authenticated, now() - '400 days' :: interval ) < now() - '${var.aws_iam_user_excessive_privilege_report_threshold_in_days} days' :: interval  -- should use the threshold value...
+    order by
+      name;
   EOQ
 }
