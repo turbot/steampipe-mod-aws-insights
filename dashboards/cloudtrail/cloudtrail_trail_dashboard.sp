@@ -24,12 +24,12 @@ dashboard "aws_cloudtrail_trail_dashboard" {
     }
 
     card {
-      sql   = query.aws_cloudtrail_trail_log_file_validation_disabled_count.sql
+      sql   = query.aws_cloudtrail_trail_unencrypted_count.sql
       width = 2
     }
 
     card {
-      sql   = query.aws_cloudtrail_trail_unencrypted_count.sql
+      sql   = query.aws_cloudtrail_trail_log_file_validation_disabled_count.sql
       width = 2
     }
 
@@ -49,10 +49,10 @@ dashboard "aws_cloudtrail_trail_dashboard" {
     width = 6
 
     chart {
-      title = "Log File Validation Status"
+      title = "Encryption Status"
       type  = "donut"
       width = 4
-      sql   = query.aws_cloudtrail_trail_log_file_validation_status.sql
+      sql   = query.aws_cloudtrail_trail_encryption_status.sql
 
       series "count" {
         point "enabled" {
@@ -65,10 +65,10 @@ dashboard "aws_cloudtrail_trail_dashboard" {
     }
 
     chart {
-      title = "Encryption Status"
+      title = "Log File Validation Status"
       type  = "donut"
       width = 4
-      sql   = query.aws_cloudtrail_trail_encryption_status.sql
+      sql   = query.aws_cloudtrail_trail_log_file_validation_status.sql
 
       series "count" {
         point "enabled" {
@@ -253,29 +253,6 @@ query "aws_cloudtrail_trail_unencrypted_count" {
 
 # Assessment Queries
 
-query "aws_cloudtrail_trail_log_file_validation_status" {
-  sql = <<-EOQ
-    select
-      log_file_validation_status,
-      count(*)
-    from (
-      select
-        case when log_file_validation_enabled then
-          'enabled'
-        else
-          'disabled'
-        end log_file_validation_status
-      from
-        aws_cloudtrail_trail
-      where
-        region = home_region) as t
-    group by
-      log_file_validation_status
-    order by
-      log_file_validation_status desc
-  EOQ
-}
-
 query "aws_cloudtrail_trail_encryption_status" {
   sql = <<-EOQ
     with trail_encryption_status as (
@@ -296,6 +273,29 @@ query "aws_cloudtrail_trail_encryption_status" {
     from
       trail_encryption_status
     group by encryption_status;
+  EOQ
+}
+
+query "aws_cloudtrail_trail_log_file_validation_status" {
+  sql = <<-EOQ
+    select
+      log_file_validation_status,
+      count(*)
+    from (
+      select
+        case when log_file_validation_enabled then
+          'enabled'
+        else
+          'disabled'
+        end log_file_validation_status
+      from
+        aws_cloudtrail_trail
+      where
+        region = home_region) as t
+    group by
+      log_file_validation_status
+    order by
+      log_file_validation_status desc
   EOQ
 }
 
@@ -361,7 +361,7 @@ query "aws_cloudtrail_trail_bucket_publicly_accessible" {
       count(*)
     from
       bucket_status
-    group by 
+    group by
       bucket_publicly_accessible_status;
   EOQ
 }
