@@ -35,10 +35,6 @@ dashboard "aws_sqs_queue_encryption_report" {
       href = "/aws_insights.dashboard.aws_sqs_queue_detail?input.queue_arn={{.row.ARN|@uri}}"
     }
 
-    # column "KMS Key ID" {
-    #   href = "/aws_insights.dashboard.aws_kms_key_detail?input.key_arn={{.row.ARN|@uri}}"
-    # }
-
     sql = query.aws_sqs_queue_encryption_table.sql
   }
 
