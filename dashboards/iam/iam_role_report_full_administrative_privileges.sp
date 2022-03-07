@@ -8,6 +8,12 @@ dashboard "aws_iam_role_full_administrative_privileges_report" {
   })
 
   container {
+
+    card {
+      sql   = query.aws_iam_role_count.sql
+      width = 2
+    }
+
     card {
       sql   = query.aws_iam_roles_allow_all_action_count.sql
       width = 2
