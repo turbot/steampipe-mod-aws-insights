@@ -8,5 +8,5 @@ This dashboard answers the following questions for each VPC:
 - How the route tables are configured?
 - What are the peering connections associated?
 - How are NACLs configured?
-- What gateways and endpoints are configured?
+- How gateways and endpoints are configured?
 - How security groups are configured?
