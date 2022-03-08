@@ -119,6 +119,30 @@ dashboard "aws_iam_user_detail" {
         arn = self.input.user_arn.value
       }
 
+      # category "user" {
+      #   color = "ok"
+      # }
+      # category "group" {
+      #   color = "ok"
+      # }
+      # category "managed_policy" {
+      #   color = "ok"
+      # }
+      # category "inline_policy" {
+      #   color = "alert"
+      # }
+
+
+    }
+
+    flow {
+      type  = "sankey"
+      title = "Attached Policies"
+      query = query.aws_iam_user_manage_policies_sankey_DELETEME
+      args  = {
+        arn = self.input.user_arn.value
+      }
+
       category "aws_iam_group" {
         color = "green"
       }
@@ -310,7 +334,7 @@ query "aws_iam_user_mfa_devices" {
   param "arn" {}
 }
 
-query "aws_iam_user_manage_policies_sankey" {
+query "aws_iam_user_manage_policies_sankey_DELETEME" {
   sql = <<-EOQ
 
     with args as (
@@ -407,6 +431,217 @@ query "aws_iam_user_manage_policies_sankey" {
   param "arn" {}
 }
 
+
+
+
+query "aws_iam_user_manage_policies_sankey" {
+  sql = <<-EOQ
+
+    with args as (
+        select $1 as iam_user_arn
+    )
+
+    --  User Nodes
+    select
+      null as from_id,
+      null as to_id,
+      arn as id,
+      title,
+      0 as depth,
+      'user' as category
+    from
+      aws_iam_user
+    where
+      arn in (select iam_user_arn from args)
+
+    -- Group Nodes
+    union select
+      null from_id,
+      null as to_id,
+      g ->> 'Arn' as id,
+      g ->> 'GroupName' as title,
+      1 as depth,
+      'group' as category
+    from
+      aws_iam_user as u,
+      jsonb_array_elements(groups) as g
+    where
+      u.arn in (select iam_user_arn from args)
+
+    -- Managed Policy Nodes (Direct Attached)
+    union select
+      null as from_id,
+      null as to_id,
+      p.arn as id,
+      p.title as title,
+      2 as depth,
+      'managed_policy' as category
+    from
+      aws_iam_user as u,
+      jsonb_array_elements_text(u.attached_policy_arns) as pol_arn,
+      aws_iam_policy as p
+    where
+      u.attached_policy_arns :: jsonb ? p.arn
+      and pol_arn = p.arn
+      and u.arn in (select iam_user_arn from args)
+
+    -- Managed Policy Nodes (attached to groups)
+    union select
+      null as from_id,
+      null as to_id,
+      p.arn as id,
+      p.title as title,
+      2 as depth,
+      'managed_policy' as category
+    from
+      aws_iam_user as u,
+      aws_iam_policy as p,
+      jsonb_array_elements(u.groups) as user_groups
+      inner join aws_iam_group g on g.arn = user_groups ->> 'Arn'
+    where
+      g.attached_policy_arns :: jsonb ? p.arn
+      and u.arn in (select iam_user_arn from args)
+
+    -- Inline Policies (from groups)
+    union select
+      null as from_id,
+      null as to_id,
+      concat(grp.group_id, '_' , i ->> 'PolicyName') as id,
+      concat(i ->> 'PolicyName', ' (inline)') as title,
+      2 as depth,
+      'inline_policy' as category
+    from
+      aws_iam_user as u,
+      jsonb_array_elements(u.groups) as g,
+      aws_iam_group as grp,
+      jsonb_array_elements(grp.inline_policies_std) as i
+    where
+      grp.arn = g ->> 'Arn'
+      and u.arn in (select iam_user_arn from args)
+
+
+    -- Inline Policies (defined on user)
+    union select
+      null as from_id,
+      null as to_id,
+      concat('inline_', i ->> 'PolicyName') as id,
+      concat(i ->> 'PolicyName', ' (inline)') as title,
+      2 as depth,
+      'inline_policy' as category
+    from
+      aws_iam_user as u,
+      jsonb_array_elements(inline_policies_std) as i
+    where
+      u.arn in (select iam_user_arn from args)
+
+
+
+  -- EDGES
+
+
+    -- Groups members
+    union select
+      u.arn as from_id,
+      g ->> 'Arn' as to_id,
+      null as id,
+      null as title,
+      null as depth,
+      'attached_group' as category
+    from
+      aws_iam_user as u,
+      jsonb_array_elements(groups) as g
+    where
+      u.arn in (select iam_user_arn from args)
+
+    -- Groups members
+    union select
+      u.arn as from_id,
+      g ->> 'Arn' as to_id,
+      null as id,
+      null as title,
+      null as depth,
+      'attached_group' as category
+    from
+      aws_iam_user as u,
+      jsonb_array_elements(groups) as g
+    where
+      u.arn in (select iam_user_arn from args)
+
+    -- Policies (attached to groups)
+    union select
+      g.arn as from_id,
+      p.arn as to_id,
+      null as id,
+      null as title,
+      null as depth,
+      'aws_iam_policy' as category
+    from
+      aws_iam_user as u,
+      aws_iam_policy as p,
+      jsonb_array_elements(u.groups) as user_groups
+      inner join aws_iam_group g on g.arn = user_groups ->> 'Arn'
+    where
+      g.attached_policy_arns :: jsonb ? p.arn
+      and u.arn in (select iam_user_arn from args)
+
+    -- Policies (inline from groups)
+    union select
+      grp.arn as from_id,
+      concat(grp.group_id, '_' , i ->> 'PolicyName') as to_id,
+      null as id,
+      null as title,
+      null as depth,
+      'inline_policy' as category
+    from
+      aws_iam_user as u,
+      jsonb_array_elements(u.groups) as g,
+      aws_iam_group as grp,
+      jsonb_array_elements(grp.inline_policies_std) as i
+    where
+      grp.arn = g ->> 'Arn'
+      and u.arn in (select iam_user_arn from args)
+
+    -- Policies (attached to user)
+    union select
+      u.arn as from_id,
+      p.arn as to_id,
+      null as id,
+      null as title,
+      null as depth,
+      'aws_iam_policy' as category
+    from
+      aws_iam_user as u,
+      jsonb_array_elements_text(u.attached_policy_arns) as pol_arn,
+      aws_iam_policy as p
+    where
+      u.attached_policy_arns :: jsonb ? p.arn
+      and pol_arn = p.arn
+      and u.arn in (select iam_user_arn from args)
+
+    -- Inline Policies (defined on user)
+    union select
+      u.arn as from_id,
+      concat('inline_', i ->> 'PolicyName') as to_id,
+      null as id,
+      null as title,
+      null as depth,
+      'inline_policy' as category
+    from
+      aws_iam_user as u,
+      jsonb_array_elements(inline_policies_std) as i
+    where
+      u.arn in (select iam_user_arn from args)
+
+  EOQ
+
+  param "arn" {}
+}
+
+
+/*
+
+   
+      */
 query "aws_iam_groups_for_user" {
   sql   = <<-EOQ
     select
