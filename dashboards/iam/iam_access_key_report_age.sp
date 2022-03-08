@@ -98,7 +98,7 @@ query "aws_iam_access_key_30_90_days_count" {
     from
       aws_iam_access_key
     where
-      create_date between symmetric now() - '30 days' :: interval;
+      create_date between symmetric now() - '30 days' :: interval and now() - '90 days' :: interval;
   EOQ
 }
 
