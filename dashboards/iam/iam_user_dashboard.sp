@@ -65,7 +65,7 @@ dashboard "aws_iam_user_dashboard" {
         point "configured" {
           color = "ok"
         }
-        point "unconfigured" {
+        point "not configured" {
           color = "alert"
         }
       }
@@ -94,7 +94,7 @@ dashboard "aws_iam_user_dashboard" {
       width = 3
 
       series "count" {
-        point "unassociated" {
+        point "not associated" {
           color = "ok"
         }
         point "associated" {
@@ -224,7 +224,7 @@ query "aws_iam_users_by_boundary_policy" {
   sql = <<-EOQ
     select
       case
-        when permissions_boundary_type is null or permissions_boundary_type = '' then 'unconfigured'
+        when permissions_boundary_type is null or permissions_boundary_type = '' then 'not configured'
         else 'configured'
       end as policy_type,
       count(*)
@@ -264,7 +264,7 @@ query "aws_iam_users_with_inline_policy" {
         arn,
         case
           when jsonb_array_length(inline_policies) > 0 then 'associated'
-          else 'unassociated'
+          else 'not associated'
         end as has_inline
       from
         aws_iam_user

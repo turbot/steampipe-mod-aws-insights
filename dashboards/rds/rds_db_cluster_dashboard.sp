@@ -139,35 +139,35 @@ dashboard "aws_rds_db_cluster_dashboard" {
       title = "Clusters by Account"
       sql   = query.aws_rds_db_cluster_by_account.sql
       type  = "column"
-      width = 3
+      width = 2
     }
 
     chart {
       title = "Clusters by Region"
       sql   = query.aws_rds_db_cluster_by_region.sql
       type  = "column"
-      width = 3
+      width = 2
     }
 
     chart {
       title = "Clusters by State"
       sql   = query.aws_rds_db_cluster_by_state.sql
       type  = "column"
-      width = 3
+      width = 2
     }
 
     chart {
       title = "Clusters by Age"
       sql   = query.aws_rds_db_cluster_by_creation_month.sql
       type  = "column"
-      width = 3
+      width = 2
     }
 
     chart {
       title = "Clusters by Type"
       sql   = query.aws_rds_db_cluster_by_engine_type.sql
       type  = "column"
-      width = 3
+      width = 2
     }
 
   }
@@ -264,7 +264,7 @@ query "aws_rds_db_cluster_logging_status" {
       count(*)
     from (
       select
-        case when      (engine like any (array ['mariadb', '%mysql']) and enabled_cloudwatch_logs_exports ?& array ['audit','error','general','slowquery'] )or
+        case when  (engine like any (array ['mariadb', '%mysql']) and enabled_cloudwatch_logs_exports ?& array ['audit','error','general','slowquery'] )or
         ( engine like any (array['%postgres%']) and enabled_cloudwatch_logs_exports ?& array ['postgresql','upgrade'] ) or
         ( engine like 'oracle%' and enabled_cloudwatch_logs_exports ?& array ['alert','audit', 'trace','listener'] ) or
         ( engine = 'sqlserver-ex' and enabled_cloudwatch_logs_exports ?& array ['error'] ) or
@@ -305,7 +305,7 @@ query "aws_rds_db_cluster_deletion_protection_status" {
 
 query "aws_rds_db_cluster_multiple_az_status" {
   sql = <<-EOQ
-    with multiaz_stat as (
+    with multiaz_enabled as (
       select
         distinct db_cluster_identifier as name
       from
@@ -313,18 +313,23 @@ query "aws_rds_db_cluster_multiple_az_status" {
       where
         multi_az
       group by name
-  )
-  select
-    'enabled' as "Multi-AZ Status",
-    count(name)
-  from
-    multiaz_stat
-  union
-  select
-    'disabled' as "Multi-AZ Status",
-    count(db_cluster_identifier)
-  from
-    aws_rds_db_cluster as s where s.db_cluster_identifier not in (select name from multiaz_stat);
+    ),
+    multiaz_status as (
+      select
+        case
+          when c.name is not null  then 'enabled'
+          else 'disabled' end as multiaz_stat
+      from
+        aws_rds_db_cluster as r
+        left join multiaz_enabled as c on r.db_cluster_identifier = c.name
+    )
+    select
+      multiaz_stat,
+      count(*)
+    from
+      multiaz_status
+    group by
+      multiaz_stat;
   EOQ
 }
 

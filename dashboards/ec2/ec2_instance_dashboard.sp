@@ -124,35 +124,35 @@ dashboard "aws_ec2_instance_dashboard" {
       title = "Instances by Account"
       sql   = query.aws_ec2_instance_by_account.sql
       type  = "column"
-      width = 3
+      width = 2
     }
 
     chart {
       title = "Instances by Region"
       sql   = query.aws_ec2_instance_by_region.sql
       type  = "column"
-      width = 3
+      width = 2
     }
 
     chart {
       title = "Instances by State"
       sql   = query.aws_ec2_instance_by_state.sql
       type  = "column"
-      width = 3
+      width = 2
     }
 
     chart {
       title = "Instances by Age"
       sql   = query.aws_ec2_instance_by_creation_month.sql
       type  = "column"
-        width = 3
+        width = 2
     }
 
     chart {
       title = "Instances by Type"
       sql   = query.aws_ec2_instance_by_type.sql
       type  = "column"
-      width = 3
+      width = 2
     }
 
   }

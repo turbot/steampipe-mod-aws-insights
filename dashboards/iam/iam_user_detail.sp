@@ -268,8 +268,6 @@ query "aws_iam_user_tags" {
 query "aws_iam_user_console_password" {
   sql = <<-EOQ
     select
-      name as "Name",
-      -- create_date as "Create Date",
       password_last_used as "Password Last Used",
       mfa_enabled as "MFA Enabled"
     from
@@ -284,14 +282,13 @@ query "aws_iam_user_console_password" {
 query "aws_iam_user_access_keys" {
   sql = <<-EOQ
     select
-      name as "Name",
-      -- create_date as "Create Date",
-      password_last_used as "Password Last Used",
-      mfa_enabled as "MFA Enabled"
+      access_key_id  as "Access Key ID",
+      a.status as "Status",
+      a.create_date as "Create Date"
     from
-      aws_iam_user
+      aws_iam_access_key as a left join aws_iam_user as u on u.name = a.user_name
     where
-      arn  = $1
+      u.arn  = $1
   EOQ
 
   param "arn" {}
@@ -302,7 +299,7 @@ query "aws_iam_user_mfa_devices" {
     select
       mfa ->> 'SerialNumber' as "Serial Number",
       mfa ->> 'EnableDate' as "Enable Date",
-      mfa ->> 'UserName' as "User Name"
+      path as "User Path"
     from
       aws_iam_user as u,
       jsonb_array_elements(mfa_devices) as mfa

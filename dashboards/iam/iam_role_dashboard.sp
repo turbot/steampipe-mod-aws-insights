@@ -53,7 +53,7 @@ dashboard "aws_iam_role_dashboard" {
       width = 3
 
       series "count" {
-        point "unconfigured" {
+        point "not configured" {
           color = "ok"
         }
         point "configured" {
@@ -63,7 +63,7 @@ dashboard "aws_iam_role_dashboard" {
     }
 
     chart {
-      title = "Direct Attached Policy"
+      title = "Directly Attached Policy"
       sql   = query.aws_iam_roles_with_direct_attached_policy.sql
       type  = "donut"
       width = 3
@@ -79,10 +79,19 @@ dashboard "aws_iam_role_dashboard" {
     }
 
     chart {
-      title = "Allow All Actions"
+      title = "Allows All Actions"
       sql   = query.aws_iam_roles_allow_all_action.sql
       type  = "donut"
       width = 3
+
+      series "count" {
+        point "limited actions" {
+          color = "ok"
+        }
+        point "allow all actions" {
+          color = "alert"
+        }
+      }
     }
 
     chart {
@@ -95,7 +104,7 @@ dashboard "aws_iam_role_dashboard" {
         point "configured" {
           color = "ok"
         }
-        point "unconfigured" {
+        point "not configured" {
           color = "alert"
         }
       }
@@ -241,7 +250,7 @@ query "aws_iam_roles_with_inline_policy" {
         arn,
         case
           when jsonb_array_length(inline_policies) > 0 then 'configured'
-          else 'unconfigured'
+          else 'not configured'
         end as has_inline
       from
         aws_iam_role
@@ -297,19 +306,22 @@ query "aws_iam_roles_allow_all_action" {
         and action = '*'
       order by
         r.name
+    ), all_action as (
+    select
+      case
+        when c.role_name is not null then 'allow all actions'
+        else 'limited actions' end as allow_all_action
+    from
+      aws_iam_role as r
+      left join roles_allow_all_actions as c on c.role_name = r.name
     )
     select
-      a.title as "account",
-      count(role_name)
+      allow_all_action,
+      count(*)
     from
-      roles_allow_all_actions as c,
-      aws_account as a
-    where
-      a.account_id = c.account_id
+      all_action
     group by
-      account
-    order by
-      account;
+      allow_all_action;
   EOQ
 }
 
@@ -317,7 +329,7 @@ query "aws_iam_roles_by_boundary_policy" {
   sql = <<-EOQ
     select
       case
-        when permissions_boundary_type is null or permissions_boundary_type = '' then 'unconfigured'
+        when permissions_boundary_type is null or permissions_boundary_type = '' then 'not configured'
         else 'configured'
       end as policy_type,
       count(*)

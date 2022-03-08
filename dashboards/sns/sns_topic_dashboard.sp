@@ -104,14 +104,14 @@ dashboard "aws_sns_topic_dashboard" {
       title = "Topics by Account"
       sql   = query.aws_sns_topic_by_account.sql
       type  = "column"
-      width = 6
+      width = 4
     }
 
     chart {
       title = "Topics by Region"
       sql   = query.aws_sns_topic_by_region.sql
       type  = "column"
-      width = 6
+      width = 4
     }
 
   }

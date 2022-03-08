@@ -32,7 +32,7 @@ dashboard "aws_vpc_logging_report" {
     }
 
     column "VPC ID" {
-      href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_arn={{.row.ARN|@uri}}"
+      href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_arn={{.ARN|@uri}}"
     }
 
     sql = query.aws_vpc_logging_table.sql
