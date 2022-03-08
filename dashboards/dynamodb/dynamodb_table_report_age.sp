@@ -1,6 +1,7 @@
 dashboard "aws_dynamodb_table_age_report" {
 
-  title = "AWS DynamoDB Table Age Report"
+  title         = "AWS DynamoDB Table Age Report"
+  documentation = file("./dashboards/dynamodb/docs/dynamodb_table_report_age.md")
 
   tags = merge(local.dynamodb_common_tags, {
     type     = "Report"

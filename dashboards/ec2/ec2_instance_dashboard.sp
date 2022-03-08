@@ -1,6 +1,7 @@
 dashboard "aws_ec2_instance_dashboard" {
 
-  title = "AWS EC2 Instance Dashboard"
+  title         = "AWS EC2 Instance Dashboard"
+  documentation = file("./dashboards/ec2/docs/ec2_instance_dashboard.md")
 
   tags = merge(local.ec2_common_tags, {
     type = "Dashboard"

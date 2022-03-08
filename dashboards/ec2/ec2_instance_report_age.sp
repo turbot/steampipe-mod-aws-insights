@@ -1,6 +1,7 @@
 dashboard "aws_ec2_instance_age_report" {
 
-  title = "AWS EC2 Instance Age Report"
+  title         = "AWS EC2 Instance Age Report"
+  documentation = file("./dashboards/ec2/docs/ec2_instance_report_age.md")
 
   tags = merge(local.ec2_common_tags, {
     type     = "Report"

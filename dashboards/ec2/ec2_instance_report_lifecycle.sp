@@ -1,6 +1,7 @@
 dashboard "aws_ec2_instance_lifecycle_report" {
 
-  title = "AWS EC2 Instance Lifecycle Report"
+  title         = "AWS EC2 Instance Lifecycle Report"
+  documentation = file("./dashboards/ec2/docs/ec2_instance_report_lifecycle.md")
 
   tags = merge(local.ec2_common_tags, {
     type     = "Report"

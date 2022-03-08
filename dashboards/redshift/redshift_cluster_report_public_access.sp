@@ -1,6 +1,7 @@
 dashboard "aws_redshift_cluster_public_access_report" {
 
   title = "AWS Redshift Cluster Public Access Report"
+  documentation = file("./dashboards/redshift/docs/redshift_cluster_report_public_access.md")
 
   tags = merge(local.redshift_common_tags, {
     type     = "Report"

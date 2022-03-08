@@ -1,6 +1,7 @@
 dashboard "aws_redshift_cluster_dashboard" {
 
-  title = "AWS Redshift Cluster Dashboard"
+  title         = "AWS Redshift Cluster Dashboard"
+  documentation = file("./dashboards/redshift/docs/redshift_cluster_dashboard.md")
 
   tags = merge(local.redshift_common_tags, {
     type = "Dashboard"

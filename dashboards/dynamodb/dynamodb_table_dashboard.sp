@@ -1,6 +1,7 @@
 dashboard "aws_dynamodb_table_dashboard" {
 
-  title = "AWS DynamoDB Table Dashboard"
+  title         = "AWS DynamoDB Table Dashboard"
+  documentation = file("./dashboards/dynamodb/docs/dynamodb_table_dashboard.md")
 
   tags = merge(local.dynamodb_common_tags, {
     type = "Dashboard"

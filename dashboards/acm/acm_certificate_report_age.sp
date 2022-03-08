@@ -1,6 +1,7 @@
 dashboard "acm_certificate_age_report" {
 
-  title = "AWS ACM Certificate Age Report"
+  title         = "AWS ACM Certificate Age Report"
+  documentation = file("./dashboards/acm/docs/acm_certificate_report_age.md")
 
   tags = merge(local.acm_common_tags, {
     type     = "Report"
