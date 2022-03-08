@@ -99,7 +99,7 @@ dashboard "aws_ebs_volume_detail" {
         }
 
         column "Instance ID" {
-          href = "/aws_insights.dashboard.aws_ec2_instance_detail?input.instance_arn={{..\"Instance ARN\"|@uri}}"
+          href = "/aws_insights.dashboard.aws_ec2_instance_detail?input.instance_arn={{.\"Instance ARN\"|@uri}}"
         }
       }
 
