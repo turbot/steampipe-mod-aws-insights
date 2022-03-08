@@ -83,6 +83,15 @@ dashboard "aws_iam_role_dashboard" {
       sql   = query.aws_iam_roles_allow_all_action.sql
       type  = "donut"
       width = 3
+
+      series "count" {
+        point "limited actions" {
+          color = "ok"
+        }
+        point "allow all actions" {
+          color = "alert"
+        }
+      }
     }
 
     chart {
@@ -297,19 +306,22 @@ query "aws_iam_roles_allow_all_action" {
         and action = '*'
       order by
         r.name
+    ), all_action as (
+    select
+      case
+        when c.role_name is not null then 'allow all actions'
+        else 'limited actions' end as allow_all_action
+    from
+      aws_iam_role as r
+      left join roles_allow_all_actions as c on c.role_name = r.name
     )
     select
-      a.title as "account",
-      count(role_name)
+      allow_all_action,
+      count(*)
     from
-      roles_allow_all_actions as c,
-      aws_account as a
-    where
-      a.account_id = c.account_id
+      all_action
     group by
-      account
-    order by
-      account;
+      allow_all_action;
   EOQ
 }
 
