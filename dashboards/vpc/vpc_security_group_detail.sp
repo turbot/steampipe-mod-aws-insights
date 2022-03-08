@@ -1,6 +1,7 @@
 dashboard "aws_vpc_security_group_detail" {
 
   title = "AWS VPC Security Group Detail"
+  documentation = file("./dashboards/vpc/docs/vpc_security_group_detail.md")
 
   tags = merge(local.vpc_common_tags, {
     type = "Detail"
