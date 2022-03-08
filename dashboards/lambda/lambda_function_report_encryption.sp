@@ -1,6 +1,7 @@
 dashboard "aws_lambda_function_encryption_report" {
 
-  title = "AWS Lambda Function Encryption Report"
+  title         = "AWS Lambda Function Encryption Report"
+  documentation = file("./dashboards/lambda/docs/lambda_function_report_encryption.md")
 
   tags = merge(local.lambda_common_tags, {
     type     = "Report"
