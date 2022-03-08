@@ -59,7 +59,7 @@ dashboard "aws_iam_group_dashboard" {
       width = 3
 
       series "count" {
-        point "unconfigured" {
+        point "not configured" {
           color = "ok"
         }
         point "configured" {
@@ -75,7 +75,7 @@ dashboard "aws_iam_group_dashboard" {
       width = 3
 
       series "count" {
-        point "unconfigured" {
+        point "not configured" {
           color = "ok"
         }
         point "configured" {
@@ -210,7 +210,7 @@ query "aws_iam_groups_with_inline_policy" {
         arn,
         case
           when jsonb_array_length(inline_policies) > 0 then 'configured'
-          else 'unconfigured'
+          else 'not configured'
         end as has_inline
       from
         aws_iam_group
@@ -238,7 +238,7 @@ query "aws_iam_groups_with_administrator_policy" {
           then
             'configured'
           else
-            'unconfigured'
+            'not configured'
         end
         as has_administrator_policy
       from

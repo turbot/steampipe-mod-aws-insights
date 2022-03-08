@@ -156,42 +156,42 @@ dashboard "aws_rds_db_instance_dashboard" {
       title = "Instances by Account"
       sql   = query.aws_rds_db_instance_by_account.sql
       type  = "column"
-      width = 3
+      width = 2
     }
 
     chart {
       title = "Instances by Region"
       sql   = query.aws_rds_db_instance_by_region.sql
       type  = "column"
-      width = 3
+      width = 2
     }
 
     chart {
       title = "Instances by State"
       sql   = query.aws_rds_db_instance_by_state.sql
       type  = "column"
-      width = 3
+      width = 2
     }
 
     chart {
       title = "Instances by Age"
       sql   = query.aws_rds_db_instance_by_creation_month.sql
       type  = "column"
-      width = 3
+      width = 2
     }
 
     chart {
       title = "Instances by Engine Type"
       sql   = query.aws_rds_db_instance_by_engine_type.sql
       type  = "column"
-      width = 3
+      width = 2
     }
 
     chart {
       title = "Instances by Class"
       sql   = query.aws_rds_db_instance_by_class.sql
       type  = "column"
-      width = 3
+      width = 2
     }
 
   }

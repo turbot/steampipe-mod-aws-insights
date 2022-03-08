@@ -53,9 +53,9 @@ dashboard "aws_iam_credential_report" {
     }
 
     column "User Name" {
-      href = "/aws_insights.dashboard.aws_iam_user_detail?input.user_arn={{.ARN|@uri}}"
+      href = "/aws_insights.dashboard.aws_iam_user_detail?input.user_arn={{.\"User ARN\"|@uri}}"
     }
-    
+
     sql = query.aws_iam_credential_entities_root_access_keys_table.sql
   }
 
