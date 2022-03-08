@@ -28,7 +28,7 @@ dashboard "aws_dynamodb_table_dashboard" {
     }
 
     card {
-      sql = query.aws_dynamodb_table_continuous_backup_count.sql
+      sql = query.aws_dynamodb_table_continuous_backups_count.sql
       width = 2
     }
 
@@ -82,7 +82,7 @@ dashboard "aws_dynamodb_table_dashboard" {
       title = "Continuous Backups"
       type  = "donut"
       width = 4
-      sql   = query.aws_dynamodb_table_continuous_backup_status.sql
+      sql   = query.aws_dynamodb_table_continuous_backups_status.sql
 
       series "count" {
         point "enabled" {
@@ -178,6 +178,19 @@ dashboard "aws_dynamodb_table_dashboard" {
         color = "tan"
       }
     }
+
+    chart {
+      title = "Table Item Count by Age"
+      type  = "column"
+      width = 4
+      sql   = query.aws_dynamodb_table_item_count_by_creation_month.sql
+
+      series "GB" {
+        color = "tan"
+      }
+    }
+
+
   }
 
   container {
@@ -244,11 +257,11 @@ query "aws_dynamodb_table_autoscaling_disabled_count" {
   EOQ
 }
 
-query "aws_dynamodb_table_continuous_backup_count" {
+query "aws_dynamodb_table_continuous_backups_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Continuous Backup Disabled' as label,
+      'Continuous Backups Disabled' as label,
       case count(*) when 0 then 'ok' else 'alert' end as type
     from
       aws_dynamodb_table
@@ -323,7 +336,7 @@ query "aws_dynamodb_table_autoscaling_status" {
   EOQ
 }
 
-query "aws_dynamodb_table_continuous_backup_status" {
+query "aws_dynamodb_table_continuous_backups_status" {
   sql = <<-EOQ
     select
       case
@@ -529,6 +542,55 @@ query "aws_dynamodb_table_item_count_by_region" {
     order by region;
   EOQ
 }
+
+query "aws_dynamodb_table_item_count_by_creation_month" {
+  sql = <<-EOQ
+    with volumes as (
+      select
+        title,
+        item_count,
+        creation_date_time,
+        to_char(creation_date_time,
+          'YYYY-MM') as creation_month
+      from
+        aws_dynamodb_table
+    ),
+    months as (
+      select
+        to_char(d,
+          'YYYY-MM') as month
+      from
+        generate_series(date_trunc('month',
+            (
+              select
+                min(creation_date_time)
+              from
+                volumes
+            )),
+            date_trunc('month',
+              current_date),
+            interval '1 month') as d
+    ),
+    tables_by_month as (
+      select
+        creation_month,
+        sum(item_count) as item_count
+      from
+        volumes
+      group by
+        creation_month
+    )
+    select
+      months.month,
+      tables_by_month.item_count as "Count"
+    from
+      months
+      left join tables_by_month on months.month = tables_by_month.creation_month
+    order by
+      months.month;
+  EOQ
+}
+
 
 # Performance Queries
 
