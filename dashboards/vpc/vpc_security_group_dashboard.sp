@@ -1,6 +1,7 @@
 dashboard "aws_vpc_security_group_dashboard" {
 
   title = "AWS VPC Security Group Dashboard"
+  documentation = file("./dashboards/vpc/docs/vpc_security_group_dashboard.md")
 
   tags = merge(local.vpc_common_tags, {
     type = "Dashboard"
@@ -26,7 +27,7 @@ dashboard "aws_vpc_security_group_dashboard" {
   }
 
   container {
-    
+
     title = "Assessment"
 
     chart {
