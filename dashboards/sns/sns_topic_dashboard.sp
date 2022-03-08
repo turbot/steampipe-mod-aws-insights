@@ -1,7 +1,8 @@
 
 dashboard "aws_sns_topic_dashboard" {
 
-  title = "AWS SNS Topic Dashboard"
+  title         = "AWS SNS Topic Dashboard"
+  documentation = file("./dashboards/sns/docs/sns_topic_dashboard.md")
 
   tags = merge(local.sns_common_tags, {
     type = "Dashboard"
