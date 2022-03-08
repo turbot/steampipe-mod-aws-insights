@@ -32,7 +32,7 @@ dashboard "aws_s3_bucket_logging_report" {
     }
 
     column "Name" {
-      href = "/aws_insights.dashboard.aws_s3_bucket_detail?input.bucket_arn={{.ARN|@uri}}"
+      href = "/aws_insights.dashboard.aws_s3_bucket_detail?input.bucket_arn={{.ARN | @uri}}"
     }
 
     sql = query.aws_s3_bucket_logging_table.sql

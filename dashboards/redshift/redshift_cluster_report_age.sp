@@ -57,7 +57,7 @@ dashboard "aws_redshift_cluster_age_report" {
     }
 
     column "Cluster Identifier" {
-      href = "/aws_insights.dashboard.aws_redshift_cluster_detail?input.cluster_arn={{.ARN|@uri}}"
+      href = "/aws_insights.dashboard.aws_redshift_cluster_detail?input.cluster_arn={{.ARN | @uri}}"
     }
 
     sql = query.aws_redshift_cluster_age_table.sql

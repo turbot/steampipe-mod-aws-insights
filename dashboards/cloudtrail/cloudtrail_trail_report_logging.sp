@@ -37,7 +37,7 @@ dashboard "aws_cloudtrail_trail_logging_report" {
     }
 
     column "Name" {
-      href = "/aws_insights.dashboard.aws_cloudtrail_trail_detail?input.trail_arn={{.ARN|@uri}}"
+      href = "/aws_insights.dashboard.aws_cloudtrail_trail_detail?input.trail_arn={{.ARN | @uri}}"
     }
 
     sql = query.aws_cloudtrail_trail_logging_table.sql

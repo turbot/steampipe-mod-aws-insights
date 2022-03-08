@@ -32,7 +32,7 @@ dashboard "aws_rds_db_instace_snapshot_encryption_report" {
     }
 
     column "DB Snapshot Identifier" {
-      href = "/aws_insights.dashboard.aws_rds_db_snapshot_detail?input.db_snapshot_arn={{.ARN|@uri}}"
+      href = "/aws_insights.dashboard.aws_rds_db_snapshot_detail?input.db_snapshot_arn={{.ARN | @uri}}"
     }
 
     sql = query.aws_rds_db_instance_snapshot_encryption_table.sql

@@ -56,7 +56,7 @@ dashboard "aws_kms_key_age_report" {
       }
 
       column "Key ID" {
-        href = "/aws_insights.dashboard.aws_kms_key_detail?input.key_arn={{.ARN|@uri}}"
+        href = "/aws_insights.dashboard.aws_kms_key_detail?input.key_arn={{.ARN | @uri}}"
       }
 
       sql = query.aws_kms_key_age_table.sql

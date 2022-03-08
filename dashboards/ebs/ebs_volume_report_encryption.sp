@@ -32,7 +32,7 @@ dashboard "aws_ebs_volume_encryption_report" {
     }
 
     column "Volume ID" {
-      href = "/aws_insights.dashboard.aws_ebs_volume_detail?input.volume_arn={{.ARN|@uri}}"
+      href = "/aws_insights.dashboard.aws_ebs_volume_detail?input.volume_arn={{.ARN | @uri}}"
     }
 
     sql = query.aws_ebs_volume_encryption_table.sql

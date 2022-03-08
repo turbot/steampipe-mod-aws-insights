@@ -32,7 +32,7 @@ dashboard "aws_ec2_instance_public_access_report" {
     }
 
     column "Instance ID" {
-      href = "/aws_insights.dashboard.aws_ec2_instance_detail?input.instance_arn={{.ARN|@uri}}"
+      href = "/aws_insights.dashboard.aws_ec2_instance_detail?input.instance_arn={{.ARN | @uri}}"
     }
 
     sql = query.aws_ec2_instance_public_access_table.sql
