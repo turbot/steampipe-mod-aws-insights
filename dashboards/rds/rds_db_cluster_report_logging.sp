@@ -15,7 +15,7 @@ dashboard "aws_rds_db_cluster_logging_report" {
     }
 
     card {
-      sql = query.aws_rds_db_cluster_logging_status.sql
+      sql = query.aws_rds_db_cluster_logging_disabled_count.sql
       width = 2
     }
 

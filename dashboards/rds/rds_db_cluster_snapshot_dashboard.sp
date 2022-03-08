@@ -191,7 +191,7 @@ query "aws_rds_db_cluster_snapshot_by_encryption_status" {
 
 query "aws_rds_db_cluster_snapshot_iam_authentication_enabled" {
   sql = <<-EOQ
-    with iam_authentication_stat as (
+    with iam_authentication_enabled as (
       select
         distinct db_cluster_identifier as name
       from
@@ -199,18 +199,23 @@ query "aws_rds_db_cluster_snapshot_iam_authentication_enabled" {
       where
         iam_database_authentication_enabled
       group by name
+    ),
+    iam_authentication_status as (
+      select
+        case
+          when e.name is not null  then 'enabled'
+          else 'disabled' end as iam_authentication_status
+      from
+        aws_rds_db_cluster as c
+        left join iam_authentication_enabled as e on c.db_cluster_identifier = e.name
     )
     select
-      'enabled' as "IAM Authentication Status",
-      count(name)
+      iam_authentication_status,
+      count(*)
     from
-      iam_authentication_stat
-    union
-    select
-      'disabled' as "IAM Authentication Status",
-      count( db_cluster_identifier)
-    from
-      aws_rds_db_cluster_snapshot as s where s.db_cluster_identifier not in (select name from iam_authentication_stat);
+      iam_authentication_status
+    group by
+      iam_authentication_status;
   EOQ
 }
 
