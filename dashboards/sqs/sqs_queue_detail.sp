@@ -1,6 +1,7 @@
 dashboard "aws_sqs_queue_detail" {
 
-  title = "AWS SQS Queue Detail"
+  title         = "AWS SQS Queue Detail"
+  documentation = file("./dashboards/sqs/docs/sqs_queue_detail.md")
 
   tags = merge(local.sqs_common_tags, {
     type = "Detail"

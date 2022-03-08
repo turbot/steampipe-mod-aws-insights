@@ -1,6 +1,7 @@
 dashboard "aws_lambda_function_public_access_report" {
 
-  title = "AWS Lambda Function Public Access Report"
+  title         = "AWS Lambda Function Public Access Report"
+  documentation = file("./dashboards/lambda/docs/lambda_function_report_public_access.md")
 
   tags = merge(local.lambda_common_tags, {
     type     = "Report"

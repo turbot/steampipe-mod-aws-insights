@@ -1,6 +1,7 @@
 dashboard "aws_vpc_logging_report" {
 
   title = "AWS VPC Logging Report"
+  documentation = file("./dashboards/vpc/docs/vpc_report_logging.md")
 
   tags = merge(local.vpc_common_tags, {
     type     = "Report"

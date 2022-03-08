@@ -1,6 +1,7 @@
 dashboard "aws_redshift_cluster_detail" {
 
-  title = "AWS Redshift Cluster Detail"
+  title         = "AWS Redshift Cluster Detail"
+  documentation = file("./dashboards/redshift/docs/redshift_cluster_detail.md")
 
   tags = merge(local.redshift_common_tags, {
     type = "Detail"
@@ -97,7 +98,7 @@ dashboard "aws_redshift_cluster_detail" {
 
       table {
         title = "Cluster Nodes"
-        query = query.aws_rds_db_instance_subnets
+        query = query.aws_redshift_cluster_nodes
         args  = {
           arn = self.input.cluster_arn.value
         }
@@ -105,7 +106,7 @@ dashboard "aws_redshift_cluster_detail" {
 
       table {
         title = "Cluster Parameter Groups"
-        query = query.aws_rds_db_instance_parameter_groups
+        query = query.aws_redshift_cluster_parameter_groups
         args  = {
           arn = self.input.cluster_arn.value
         }

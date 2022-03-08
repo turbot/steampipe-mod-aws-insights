@@ -1,6 +1,7 @@
 dashboard "aws_vpc_dashboard" {
 
   title = "AWS VPC Dashboard"
+  documentation = file("./dashboards/vpc/docs/vpc_dashboard.md")
 
   tags = merge(local.vpc_common_tags, {
     type = "Dashboard"

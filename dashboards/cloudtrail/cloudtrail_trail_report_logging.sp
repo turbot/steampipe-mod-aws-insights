@@ -1,6 +1,7 @@
 dashboard "aws_cloudtrail_trail_logging_report" {
 
-  title = "AWS CloudTrail Trail Logging Report"
+  title         = "AWS CloudTrail Trail Logging Report"
+  documentation = file("./dashboards/cloudtrail/docs/cloudtrail_trail_report_logging.md")
 
   tags = merge(local.cloudtrail_common_tags, {
     type     = "Report"

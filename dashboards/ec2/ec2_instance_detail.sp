@@ -1,6 +1,7 @@
 dashboard "aws_ec2_instance_detail" {
 
-  title = "AWS EC2 Instance Detail"
+  title         = "AWS EC2 Instance Detail"
+  documentation = file("./dashboards/ec2/docs/ec2_instance_detail.md")
 
   tags = merge(local.ec2_common_tags, {
     type = "Detail"

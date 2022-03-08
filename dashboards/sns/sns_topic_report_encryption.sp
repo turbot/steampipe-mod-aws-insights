@@ -1,6 +1,7 @@
 dashboard "aws_sns_topic_encryption_report" {
 
-  title = "AWS SNS Topic Encryption Report"
+  title         = "AWS SNS Topic Encryption Report"
+  documentation = file("./dashboards/sns/docs/sns_topic_report_encryption.md")
 
   tags = merge(local.sns_common_tags, {
     type     = "Report"

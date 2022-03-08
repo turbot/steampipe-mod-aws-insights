@@ -1,6 +1,7 @@
 dashboard "aws_redshift_cluster_age_report" {
 
   title = "AWS Redshift Cluster Age Report"
+  documentation = file("./dashboards/redshift/docs/redshift_cluster_report_age.md")
 
   tags = merge(local.redshift_common_tags, {
     type     = "Report"

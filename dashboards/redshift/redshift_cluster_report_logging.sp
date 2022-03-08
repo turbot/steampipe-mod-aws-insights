@@ -1,6 +1,7 @@
 dashboard "aws_redshift_cluster_logging_report" {
 
   title = "AWS Redshift Cluster Logging Report"
+  documentation = file("./dashboards/redshift/docs/redshift_cluster_report_logging.md")
 
   tags = merge(local.redshift_common_tags, {
     type     = "Report"

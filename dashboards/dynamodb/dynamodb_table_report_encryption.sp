@@ -1,6 +1,7 @@
 dashboard "aws_dynamodb_table_encryption_report" {
   
-  title = "AWS DynamoDB Table Encryption Report"
+  title         = "AWS DynamoDB Table Encryption Report"
+  documentation = file("./dashboards/dynamodb/docs/dynamodb_table_report_encryption.md")
 
   tags = merge(local.dynamodb_common_tags, {
     type     = "Report"

@@ -1,6 +1,7 @@
 dashboard "aws_cloudtrail_trail_dashboard" {
 
-  title = "AWS CloudTrail Trail Dashboard"
+  title         = "AWS CloudTrail Trail Dashboard"
+  documentation = file("./dashboards/cloudtrail/docs/cloudtrail_trail_dashboard.md")
 
   tags = merge(local.cloudtrail_common_tags, {
     type = "Dashboard"

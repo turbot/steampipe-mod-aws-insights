@@ -1,6 +1,7 @@
 dashboard "aws_vpc_detail" {
 
   title = "AWS VPC Detail"
+  documentation = file("./dashboards/vpc/docs/vpc_detail.md")
 
   tags = merge(local.vpc_common_tags, {
     type = "Detail"

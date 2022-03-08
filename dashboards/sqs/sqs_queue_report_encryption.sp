@@ -1,6 +1,7 @@
 dashboard "aws_sqs_queue_encryption_report" {
 
   title = "AWS SQS Queue Encryption Report"
+  documentation = file("./dashboards/sqs/docs/sqs_queue_report_encryption.md")
 
   tags = merge(local.sqs_common_tags, {
     type     = "Report"
