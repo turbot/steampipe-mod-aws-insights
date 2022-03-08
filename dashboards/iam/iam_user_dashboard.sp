@@ -72,7 +72,7 @@ dashboard "aws_iam_user_dashboard" {
     }
 
     chart {
-      title = "Direct Attached Policy"
+      title = "Directly Attached Policies"
       sql   = query.aws_iam_users_with_direct_attached_policy.sql
       type  = "donut"
       width = 3
@@ -88,7 +88,7 @@ dashboard "aws_iam_user_dashboard" {
     }
 
     chart {
-      title = "Inline Policy Association"
+      title = "Inline Policies"
       sql   = query.aws_iam_users_with_inline_policy.sql
       type  = "donut"
       width = 3
@@ -162,7 +162,7 @@ query "aws_iam_user_no_boundary_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'No Boundary Policy Association' as label,
+      'No Boundary Policy' as label,
       case when count(*) = 0 then 'ok' else 'alert' end as type
     from
       aws_iam_user

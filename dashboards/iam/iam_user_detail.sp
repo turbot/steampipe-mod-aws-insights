@@ -180,8 +180,8 @@ query "aws_iam_boundary_policy_for_user" {
   sql = <<-EOQ
     select
       case
-        when permissions_boundary_type is null then 'Not Set'
-        when permissions_boundary_type = '' then 'Not Set'
+        when permissions_boundary_type is null then 'Not set'
+        when permissions_boundary_type = '' then 'Not set'
         else substring(permissions_boundary_arn, 'arn:aws:iam::\d{12}:.+\/(.*)')
       end as value,
       'Boundary Policy' as label,

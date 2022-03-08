@@ -25,11 +25,6 @@ dashboard "aws_iam_group_dashboard" {
       width = 2
     }
 
-    card {
-      sql   = query.aws_iam_groups_with_administrator_policy_count.sql
-      width = 2
-    }
-
   }
 
   container {
@@ -53,24 +48,8 @@ dashboard "aws_iam_group_dashboard" {
     }
 
     chart {
-      title = "Inline Policy"
+      title = "Inline Policies"
       sql   = query.aws_iam_groups_with_inline_policy.sql
-      type  = "donut"
-      width = 3
-
-      series "count" {
-        point "not configured" {
-          color = "ok"
-        }
-        point "configured" {
-          color = "alert"
-        }
-      }
-    }
-
-    chart {
-      title = "Administrator Access Policy"
-      sql   = query.aws_iam_groups_with_administrator_policy.sql
       type  = "donut"
       width = 3
 
@@ -149,36 +128,6 @@ query "aws_iam_groups_with_inline_policy_count" {
   EOQ
 }
 
-query "aws_iam_groups_with_administrator_policy_count" {
-  sql = <<-EOQ
-    with groups_having_admin_access as
-    (
-      select
-        name,
-        attached_policy_arns,
-        case
-          when
-            attached_policy_arns @> ('["arn:' || partition || ':iam::aws:policy/AdministratorAccess"]')::jsonb
-          then
-            'With Administrator Policy'
-          else
-            'OK'
-        end
-        as has_administrator_policy
-      from
-        aws_iam_group
-    )
-    select
-      count(*) as value,
-      'With Administrator Policy' as label,
-      case when count(*) > 1 then 'alert' else 'ok' end as type
-    from
-      groups_having_admin_access
-    where
-      has_administrator_policy = 'With Administrator Policy';
-  EOQ
-}
-
 # Assessment Queries
 
 query "aws_iam_groups_without_users" {
@@ -222,35 +171,6 @@ query "aws_iam_groups_with_inline_policy" {
         group_inline_compliance
       group by
         has_inline;
-  EOQ
-}
-
-query "aws_iam_groups_with_administrator_policy" {
-  sql = <<-EOQ
-    with groups_having_admin_access as
-    (
-      select
-        name,
-        attached_policy_arns,
-        case
-          when
-            attached_policy_arns @> ('["arn:' || partition || ':iam::aws:policy/AdministratorAccess"]')::jsonb
-          then
-            'configured'
-          else
-            'not configured'
-        end
-        as has_administrator_policy
-      from
-        aws_iam_group
-    )
-    select
-      has_administrator_policy,
-      count(*)
-    from
-      groups_having_admin_access
-    group by
-      has_administrator_policy;
   EOQ
 }
 

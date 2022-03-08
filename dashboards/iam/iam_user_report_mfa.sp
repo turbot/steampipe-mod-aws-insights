@@ -42,7 +42,7 @@ query "aws_iam_user_mfa_table" {
   sql = <<-EOQ
     select
       u.name as "User Name",
-      u.mfa_enabled as "MFA Active",
+      case when u.mfa_enabled then 'Active' else null end as "MFA Status",
       a.title as "Account",
       a.account_id as "Account ID",
       u.arn as "ARN"

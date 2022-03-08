@@ -9,7 +9,7 @@ dashboard "aws_iam_credential_report" {
 
   text {
     value = <<-EOT
-    ### Note
+    ## Note
     This report requires an [AWS Credential Report](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_getting-report.html) for each account.
     You can generate a credential report via the AWS CLI:
     EOT
@@ -22,24 +22,6 @@ dashboard "aws_iam_credential_report" {
     aws iam generate-credential-report
     ```
     EOT
-  }
-
-  container {
-
-    // TO DO - either add more cards (with password and no mfa, password never used, keys over 90 days. etc)
-    // or get rid of the cards altogether (they don't work unless there is a cred report for EVERY account in the aggregator)
-    # Analysis
-    card {
-      width = 2
-      sql   = query.aws_iam_credential_entities_count.sql
-    }
-
-    # Assessments
-    card {
-      width = 2
-      sql   = query.aws_iam_credential_entities_console_access_with_no_mfa_count.sql
-    }
-
   }
 
   table {
@@ -96,7 +78,7 @@ query "aws_iam_credential_entities_root_access_keys_table" {
       password_enabled as "Password Enabled",
       mfa_active as "MFA Active",
       password_status as "Password Status",
-      date_trunc('day',age(now(),password_last_changed))::text as "Password Age",
+      now()::date - password_last_changed::date as "Password Age in Days",
       password_last_changed as "Password Changed Timestamp",
       date_trunc('day',age(now(),password_last_used))::text as "Password Last Used",
       password_last_used as "Password Last Used Timestamp",
@@ -104,7 +86,7 @@ query "aws_iam_credential_entities_root_access_keys_table" {
       password_next_rotation "Next Password Rotation Timestamp",
 
       access_key_1_active as "Access Key 1 Active",
-      date_trunc('day',age(now(),access_key_1_last_rotated))::text as "Key 1 Age",
+      now()::date - access_key_1_last_rotated::date as "Key 1 Age in Days",
       access_key_1_last_rotated as "Key 1 Last Rotated",
       date_trunc('day',age(now(),access_key_1_last_used_date))::text as  "Key 1 Last Used",
       access_key_1_last_used_date as "Key 1 Last Used Timestamp",
@@ -112,7 +94,7 @@ query "aws_iam_credential_entities_root_access_keys_table" {
       access_key_1_last_used_service as "Key 1 Last Used Service",
 
       access_key_2_active as "Access Key 2 Active",
-      date_trunc('day',age(now(),access_key_2_last_rotated))::text as "Key 2 Age",
+      now()::date - access_key_2_last_rotated::date as "Key 2 Age in Days",
       access_key_2_last_rotated as "Key 2 Last Rotated Timestamp",
       date_trunc('day',age(now(),access_key_2_last_used_date))::text as  "Key 2 Last Used",
       access_key_2_last_used_date as "Key 2 Last Used Timestamp",
@@ -120,11 +102,11 @@ query "aws_iam_credential_entities_root_access_keys_table" {
       access_key_2_last_used_service as "Key 2 Last Used Service",
 
       cert_1_active as "Cert 1 Active",
-      date_trunc('day',age(now(),cert_1_last_rotated))::text as "Cert 1 Age",
+      now()::date - cert_1_last_rotated::date as "Cert 1 Age in Days",
       cert_1_last_rotated "Cert 1 Last Rotated",
 
-      cert_2_active,
-      date_trunc('day',age(now(),cert_2_last_rotated))::text as "Cert 2 Age",
+      cert_2_active as "Cert 2 Active",
+      now()::date - cert_2_last_rotated::date as "Cert 2 Age in Days",
       cert_2_last_rotated as "Cert 2 Last Rotated",
 
       a.title as "Account",

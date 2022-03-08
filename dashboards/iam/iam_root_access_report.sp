@@ -16,7 +16,7 @@ dashboard "aws_iam_root_access_report" {
 
     card {
       width = 2
-      sql   =  query.aws_iam_accounts_without_root_mfa.sql
+      sql   = query.aws_iam_accounts_without_root_mfa.sql
     }
 
   }
@@ -72,9 +72,9 @@ query "aws_iam_root_access_keys_table" {
 }
 
 /*
-To Do - find root logins in cloudtrail events??
+ TODO: Can we find root logins in cloudtrail events??
   - join with cloudtrail table to find the log group?
-  - bug:  https://github.com/turbot/steampipe-plugin-aws/issues/902
+  - bug: https://github.com/turbot/steampipe-plugin-aws/issues/902
 
 select
   event_name,
@@ -92,5 +92,4 @@ from
   aws_cloudtrail_trail_event
 where
   log_group_name = 'aws-cloudtrail-logs' and event_name = 'ConsoleLogin'
-
 */

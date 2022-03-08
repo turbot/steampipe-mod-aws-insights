@@ -37,7 +37,6 @@ dashboard "aws_iam_role_dashboard" {
 
     card {
       sql   = query.aws_iam_role_allows_assume_role_to_all_principal_count.sql
-      icon  = "shield-check"
       width = 2
     }
 
@@ -234,7 +233,7 @@ query "aws_iam_role_allows_assume_role_to_all_principal_count" {
     )
     select
       count(distinct name) as value,
-      'Allows All Principals To Assume Role' as label,
+      'Allows All Principals to Assume Role' as label,
       case when count(distinct name) > 0 then 'alert' else 'ok' end as type
     from
       roles_can_be_assumed_anonymously;
