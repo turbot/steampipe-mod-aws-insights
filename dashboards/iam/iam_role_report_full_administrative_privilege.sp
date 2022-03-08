@@ -38,7 +38,8 @@ query "aws_iam_roles_allow_all_actions" {
         r.name as "role_name",
         r.create_date,
         p.name as "policy_name",
-        r.account_id
+        r.account_id,
+        r.arn as "role_arn"
       from
         aws_iam_role as r,
         jsonb_array_elements_text(r.attached_policy_arns) as policy_arn,
@@ -57,7 +58,8 @@ query "aws_iam_roles_allow_all_actions" {
       role.create_date as "Created Date",
       role.policy_name as "Policy",
       a.title as "Account",
-      role.account_id as "Account ID"
+      role.account_id as "Account ID",
+      role.role_arn as "Role ARN"
     from
       roles_that_allow_all_actions as role,
       aws_account as a

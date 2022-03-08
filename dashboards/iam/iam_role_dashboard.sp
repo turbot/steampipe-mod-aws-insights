@@ -63,7 +63,7 @@ dashboard "aws_iam_role_dashboard" {
     }
 
     chart {
-      title = "Direct Attached Policy"
+      title = "Directly Attached Policy"
       sql   = query.aws_iam_roles_with_direct_attached_policy.sql
       type  = "donut"
       width = 3
@@ -79,7 +79,7 @@ dashboard "aws_iam_role_dashboard" {
     }
 
     chart {
-      title = "Allow All Actions"
+      title = "Allows All Actions"
       sql   = query.aws_iam_roles_allow_all_action.sql
       type  = "donut"
       width = 3

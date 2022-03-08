@@ -43,7 +43,6 @@ dashboard "aws_iam_credential_report" {
   }
 
   table {
-    title = "Accounts with Root Access Keys"
 
     column "Account ID" {
       display = "none"
@@ -51,6 +50,10 @@ dashboard "aws_iam_credential_report" {
 
     column "User ARN" {
       display = "none"
+    }
+
+    column "User Name" {
+      href = "/aws_insights.dashboard.aws_iam_user_detail?input.user_arn={{.ARN|@uri}}"
     }
     
     sql = query.aws_iam_credential_entities_root_access_keys_table.sql
@@ -74,7 +77,7 @@ query "aws_iam_credential_entities_console_access_with_no_mfa_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Console Access & No MFA' as label,
+      'Console Access and No MFA' as label,
       case when count(*) = 0 then 'ok' else 'alert' end as type
     from
       aws_iam_credential_report
