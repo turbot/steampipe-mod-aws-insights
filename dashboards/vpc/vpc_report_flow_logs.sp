@@ -1,7 +1,7 @@
-dashboard "aws_vpc_logging_report" {
+dashboard "aws_vpc_flow_logs_report" {
 
-  title = "AWS VPC Logging Report"
-  documentation = file("./dashboards/vpc/docs/vpc_report_logging.md")
+  title = "AWS VPC Flow Logs Report"
+  documentation = file("./dashboards/vpc/docs/vpc_report_flow_logs.md")
 
   tags = merge(local.vpc_common_tags, {
     type     = "Report"
@@ -35,12 +35,12 @@ dashboard "aws_vpc_logging_report" {
       href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_vpc_logging_table.sql
+    sql = query.aws_vpc_flow_logs_table.sql
   }
 
 }
 
-query "aws_vpc_logging_table" {
+query "aws_vpc_flow_logs_table" {
   sql = <<-EOQ
     with flow_logs as (
       select

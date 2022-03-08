@@ -69,10 +69,10 @@ dashboard "aws_vpc_dashboard" {
       sql   = query.aws_vpc_flow_logs_status.sql
 
       series "count" {
-        point "configured" {
+        point "enabled" {
           color = "ok"
         }
-        point "not configured" {
+        point "disabled" {
           color = "alert"
         }
       }
@@ -180,7 +180,7 @@ query "aws_vpc_no_flow_logs_count" {
   sql = <<-EOQ
     select
       count(*) filter(where vpc_id not in (select resource_id from aws_vpc_flow_log)) as value,
-      'Flow Logs Not Configured' as label,
+      'Flow Logs Disabled' as label,
       case count(*) filter(where vpc_id not in (select resource_id from aws_vpc_flow_log))
         when 0 then 'ok'
         else 'alert'
@@ -240,8 +240,8 @@ query "aws_vpc_flow_logs_status" {
       select
         vpc_id,
         case
-          when vpc_id in (select resource_id from aws_vpc_flow_log) then 'configured'
-          else 'not configured'
+          when vpc_id in (select resource_id from aws_vpc_flow_log) then 'enabled'
+          else 'disabled'
         end as flow_logs_configured
       from
         aws_vpc

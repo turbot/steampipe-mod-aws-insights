@@ -41,7 +41,7 @@ dashboard "aws_vpc_detail" {
 
     card {
       width = 2
-      query = query.aws_flowlogs_count_for_vpc
+      query = query.aws_flow_logs_count_for_vpc
       args  = {
         arn = self.input.vpc_arn.value
       }
@@ -337,7 +337,7 @@ query "aws_vpc_num_ips_for_vpc" {
   param "arn" {}
 }
 
-query "aws_flowlogs_count_for_vpc" {
+query "aws_flow_logs_count_for_vpc" {
   sql = <<-EOQ
     select
       'Flow Logs' as label,
