@@ -1,6 +1,7 @@
 dashboard "aws_lambda_function_encryption_report" {
 
-  title = "AWS Lambda Function Encryption Report"
+  title         = "AWS Lambda Function Encryption Report"
+  documentation = file("./dashboards/lambda/docs/lambda_function_report_encryption.md")
 
   tags = merge(local.lambda_common_tags, {
     type     = "Report"
@@ -45,6 +46,7 @@ query "aws_lambda_function_encryption_table" {
     select
       f.name as "Name",
       case when f.kms_key_arn is not null then 'Enabled' else null end as "Encryption",
+      f.kms_key_arn as "KMS Key ARN",
       a.title as "Account",
       f.account_id as "Account ID",
       f.region as "Region",

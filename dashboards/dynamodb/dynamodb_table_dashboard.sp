@@ -1,6 +1,7 @@
 dashboard "aws_dynamodb_table_dashboard" {
 
-  title = "AWS DynamoDB Table Dashboard"
+  title         = "AWS DynamoDB Table Dashboard"
+  documentation = file("./dashboards/dynamodb/docs/dynamodb_table_dashboard.md")
 
   tags = merge(local.dynamodb_common_tags, {
     type = "Dashboard"
@@ -78,7 +79,7 @@ dashboard "aws_dynamodb_table_dashboard" {
     }
 
     chart {
-      title = "Continuous Backup"
+      title = "Continuous Backups"
       type  = "donut"
       width = 4
       sql   = query.aws_dynamodb_table_continuous_backup_status.sql

@@ -1,6 +1,7 @@
 dashboard "aws_ec2_instance_public_access_report" {
 
-  title = "AWS EC2 Instance Public Access Report"
+  title         = "AWS EC2 Instance Public Access Report"
+  documentation = file("./dashboards/ec2/docs/ec2_instance_report_public_access.md")
 
   tags = merge(local.ec2_common_tags, {
     type     = "Report"

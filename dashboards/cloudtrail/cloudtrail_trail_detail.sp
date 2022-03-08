@@ -1,6 +1,7 @@
 dashboard "aws_cloudtrail_trail_detail" {
 
-  title = "AWS CloudTrail Trail Detail"
+  title         = "AWS CloudTrail Trail Detail"
+  documentation = file("./dashboards/cloudtrail/docs/cloudtrail_trail_detail.md")
 
   tags = merge(local.cloudtrail_common_tags, {
     type = "Detail"
@@ -107,7 +108,7 @@ dashboard "aws_cloudtrail_trail_detail" {
 }
 
 query "aws_cloudtrail_trail_input" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
       title as label,
       arn as value,

@@ -1,6 +1,7 @@
 dashboard "aws_cloudtrail_trail_encryption_report" {
 
-  title = "AWS CloudTrail Trail Encryption Report"
+  title         = "AWS CloudTrail Trail Encryption Report"
+  documentation = file("./dashboards/cloudtrail/docs/cloudtrail_trail_report_encryption.md")
 
   tags = merge(local.cloudtrail_common_tags, {
     type     = "Report"
