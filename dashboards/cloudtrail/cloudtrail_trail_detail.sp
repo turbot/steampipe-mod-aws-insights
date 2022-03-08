@@ -107,7 +107,7 @@ dashboard "aws_cloudtrail_trail_detail" {
 }
 
 query "aws_cloudtrail_trail_input" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
       title as label,
       arn as value,
