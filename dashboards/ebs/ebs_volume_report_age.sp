@@ -57,7 +57,7 @@ dashboard "aws_ebs_volume_age_report" {
     }
 
     column "Volume ID" {
-      href = "/aws_insights.dashboard.aws_ebs_volume_detail?input.volume_arn={{.row.ARN|@uri}}"
+      href = "/aws_insights.dashboard.aws_ebs_volume_detail?input.volume_arn={{.ARN|@uri}}"
     }
 
     sql = query.aws_ebs_volume_age_table.sql

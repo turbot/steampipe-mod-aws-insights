@@ -57,7 +57,7 @@ dashboard "aws_rds_db_instance_snapshot_age_report" {
     }
 
     column "DB Snapshot Identifier" {
-      href = "/aws_insights.dashboard.aws_rds_db_snapshot_detail?input.db_snapshot_arn={{.row.ARN|@uri}}"
+      href = "/aws_insights.dashboard.aws_rds_db_snapshot_detail?input.db_snapshot_arn={{.ARN|@uri}}"
     }
 
     sql = query.aws_rds_db_instance_snapshot_age_table.sql

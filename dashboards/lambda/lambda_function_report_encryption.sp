@@ -32,7 +32,7 @@ dashboard "aws_lambda_function_encryption_report" {
     }
 
     column "Name" {
-      href = "/aws_insights.dashboard.aws_lambda_function_detail?input.lambda_arn={{.row.ARN|@uri}}"
+      href = "/aws_insights.dashboard.aws_lambda_function_detail?input.lambda_arn={{.ARN|@uri}}"
     }
 
     sql = query.aws_lambda_function_encryption_table.sql
