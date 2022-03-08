@@ -79,7 +79,7 @@ dashboard "aws_dynamodb_table_dashboard" {
     }
 
     chart {
-      title = "Continuous Backup"
+      title = "Continuous Backups"
       type  = "donut"
       width = 4
       sql   = query.aws_dynamodb_table_continuous_backup_status.sql
