@@ -103,7 +103,7 @@ dashboard "aws_vpc_security_group_detail" {
 
     width = 6
 
-    hierarchy {
+    flow {
       type  = "sankey"
       title = "Ingress Analysis"
       query = query.aws_vpc_security_group_ingress_rule_sankey
@@ -143,7 +143,7 @@ dashboard "aws_vpc_security_group_detail" {
 
     width = 6
 
-    hierarchy {
+    flow {
       type  = "sankey"
       title = "Egress Analysis"
       query = query.aws_vpc_security_group_egress_rule_sankey
@@ -386,9 +386,9 @@ query "aws_vpc_security_group_ingress_rule_sankey" {
       ),
   analysis as (
     select
-      port_proto as parent,
+      port_proto as from_id,
       source as id,
-      source as name,
+      source as title,
       0 as depth,
       category
     from
@@ -396,9 +396,9 @@ query "aws_vpc_security_group_ingress_rule_sankey" {
 
     union
     select
-      group_id as parent,
+      group_id as from_id,
       port_proto as id,
-      port_proto as name,
+      port_proto as title,
       1 as depth,
       category
     from
@@ -406,9 +406,9 @@ query "aws_vpc_security_group_ingress_rule_sankey" {
 
     union
     select
-      null as parent,
+      null as from_id,
       sg.group_id as id,
-      sg.group_name as name,
+      sg.group_name as title,
       2 as depth,
       'aws_vpc_security_group' as category
     from
@@ -417,9 +417,9 @@ query "aws_vpc_security_group_ingress_rule_sankey" {
 
     union
     select
-        group_id as parent,
+        group_id as from_id,
         arn as id,
-        title || '(' || category || ')' as name, -- TODO: Should this be arn instead?
+        title || '(' || category || ')' as title, -- TODO: Should this be arn instead?
         3 as depth,
         category
       from
@@ -504,9 +504,9 @@ query "aws_vpc_security_group_egress_rule_sankey" {
         ),
     analysis as (
       select
-          group_id as parent,
+          group_id as from_id,
           arn as id,
-          title || '(' || category || ')' as name, -- TODO: Should this be arn instead?
+          title || '(' || category || ')' as title, -- TODO: Should this be arn instead?
           0 as depth,
           category
         from
@@ -515,9 +515,9 @@ query "aws_vpc_security_group_egress_rule_sankey" {
         group_id = reverse(split_part(reverse($1), '/', 1))
       union
       select
-        null as parent,
+        null as from_id,
         sg.group_id as id,
-        sg.group_name as name,
+        sg.group_name as title,
         1 as depth,
         'aws_vpc_security_group' as category
       from
@@ -525,18 +525,18 @@ query "aws_vpc_security_group_egress_rule_sankey" {
         inner join rules sgr on sg.group_id = sgr.group_id
       union
       select
-        group_id as parent,
+        group_id as from_id,
         port_proto as id,
-        port_proto as name,
+        port_proto as title,
         2 as depth,
         category
       from
         rules
       union
       select
-        port_proto as parent,
+        port_proto as from_id,
         destination as id,
-        destination as name,
+        destination as title,
         3 as depth,
         category
       from

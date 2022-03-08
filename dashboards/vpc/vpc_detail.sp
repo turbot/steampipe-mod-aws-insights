@@ -129,7 +129,7 @@ dashboard "aws_vpc_detail" {
 
     title = "Routing"
 
-    hierarchy {
+    flow {
       query = query.aws_vpc_routes_for_vpc_sankey
       args = {
         arn = self.input.vpc_arn.value
@@ -160,7 +160,7 @@ dashboard "aws_vpc_detail" {
 
     title = "Peering Connections"
 
-    hierarchy {
+    flow {
       title = "Peering Connections"
       width = 6
       query = query.aws_vpc_peers_for_vpc_sankey
@@ -191,7 +191,7 @@ dashboard "aws_vpc_detail" {
 
     title = "NACLs"
 
-    hierarchy {
+    flow {
       title = "Ingress NACLs"
       width = 6
       query = query.aws_ingress_nacl_for_vpc_sankey
@@ -208,7 +208,7 @@ dashboard "aws_vpc_detail" {
       }
     }
 
-    hierarchy {
+    flow {
       title = "Egress NACLs"
       width = 6
       query = query.aws_egress_nacl_for_vpc_sankey
@@ -472,27 +472,27 @@ query "aws_vpc_routes_for_vpc_sankey" {
         vpc_id = reverse(split_part(reverse($1), '/', 1))
     )
       select
-        null as parent,
+        null as from_id,
         associated_to as id,
-        associated_to as name,
+        associated_to as title,
         'aws_vpc_route_table' as category,
         0 as depth
       from
         routes
       union
         select
-          associated_to as parent,
+          associated_to as from_id,
           destination_cidr as id,
-          destination_cidr as name,
+          destination_cidr as title,
           'vpc_or_subnet' as category,
           1 as depth
         from
           routes
       union
         select
-          destination_cidr as parent,
+          destination_cidr as from_id,
           gateway as id,
-          gateway as name,
+          gateway as title,
           'gateway' as category,
           2 as depth
         from
@@ -634,9 +634,9 @@ query "aws_ingress_nacl_for_vpc_sankey" {
     )
     -- CIDRS
     select
-      concat(network_acl_id, '_'::text, e ->> 'RuleNumber', '_port_proto') as parent,
+      concat(network_acl_id, '_'::text, e ->> 'RuleNumber', '_port_proto') as from_id,
       e ->> 'CidrBlock' as id,
-      e ->> 'CidrBlock' as name,
+      e ->> 'CidrBlock' as title,
       0 as depth,
       e ->> 'RuleAction' as category
     from
@@ -646,7 +646,7 @@ query "aws_ingress_nacl_for_vpc_sankey" {
       not (e ->> 'Egress')::boolean
     -- Port - protcol
     union all select
-      concat(network_acl_id, '_', to_char((e->>'RuleNumber')::numeric, 'fm00000'))  as parent,
+      concat(network_acl_id, '_', to_char((e->>'RuleNumber')::numeric, 'fm00000'))  as from_id,
       concat(network_acl_id, '_'::text, e ->> 'RuleNumber', '_port_proto') as id,
       case when e ->> 'RuleAction' = 'allow' then 'Allow ' else 'Deny ' end ||
       case
@@ -672,7 +672,7 @@ query "aws_ingress_nacl_for_vpc_sankey" {
         when e->>'Protocol' = '17' and e->'PortRange'->>'From' <> e->'PortRange'->>'To'
           then  concat(e->'PortRange'->>'To', '-', e->'PortRange'->>'From', '/UDP')
         else concat('Procotol: ', e->>'Protocol')
-      end as name,
+      end as title,
       1 as depth,
       e ->> 'RuleAction' as category
     from
@@ -682,9 +682,9 @@ query "aws_ingress_nacl_for_vpc_sankey" {
       not (e ->> 'Egress')::boolean
     union all
     select
-      network_acl_id as parent,
+      network_acl_id as from_id,
       concat(network_acl_id, '_', to_char( (e->>'RuleNumber')::numeric, 'fm00000')) as id,
-      concat('Rule #', e ->> 'RuleNumber')  as name,
+      concat('Rule #', e ->> 'RuleNumber')  as title,
       2 as depth,
       e ->> 'RuleAction' as category
     from
@@ -693,17 +693,17 @@ query "aws_ingress_nacl_for_vpc_sankey" {
     where
       not (e ->> 'Egress')::boolean
       union all select
-        null as parent,
+        null as from_id,
         network_acl_id as id,
-        network_acl_id as name,
+        network_acl_id as title,
         3 as depth,
         'aws_vpc_network_acl' as category
       from
         nacl_data
       union all select
-        a->>'NetworkAclId' as parent,
+        a->>'NetworkAclId' as from_id,
         a->>'SubnetId' as id,
-        a->>'SubnetId' as name,
+        a->>'SubnetId' as title,
         4 as depth,
         'aws_vpc_subnet' as category
       from
@@ -729,27 +729,27 @@ query "aws_egress_nacl_for_vpc_sankey" {
         vpc_id = reverse(split_part(reverse($1), '/', 1))
     )
     select
-      a->>'NetworkAclId' as parent,
+      a->>'NetworkAclId' as from_id,
       a->>'SubnetId' as id,
-      a->>'SubnetId' as name,
+      a->>'SubnetId' as title,
       0 as depth,
       'aws_vpc_subnet' as category
     from
       nacl_data,
       jsonb_array_elements(associations) as a
     union all select
-      null as parent,
+      null as from_id,
       network_acl_id as id,
-      network_acl_id as name,
+      network_acl_id as title,
       1 as depth,
       'aws_vpc_network_acl' as category
     from
       nacl_data
 
    union all select
-      network_acl_id as parent,
+      network_acl_id as from_id,
       concat(network_acl_id, '_', to_char( (e->>'RuleNumber')::numeric, 'fm00000')) as id,
-      concat('Rule #', e ->> 'RuleNumber')  as name,
+      concat('Rule #', e ->> 'RuleNumber')  as title,
       2 as depth,
       e ->> 'RuleAction' as category
     from
@@ -760,7 +760,7 @@ query "aws_egress_nacl_for_vpc_sankey" {
 
   -- Port - protcol
     union all select
-      concat(network_acl_id, '_', to_char((e->>'RuleNumber')::numeric, 'fm00000'))  as parent,
+      concat(network_acl_id, '_', to_char((e->>'RuleNumber')::numeric, 'fm00000'))  as from_id,
       concat(network_acl_id, '_'::text, e ->> 'RuleNumber', '_port_proto') as id,
       case when e ->> 'RuleAction' = 'allow' then 'Allow ' else 'Deny ' end ||
       case
@@ -786,7 +786,7 @@ query "aws_egress_nacl_for_vpc_sankey" {
         when e->>'Protocol' = '17' and e->'PortRange'->>'From' <> e->'PortRange'->>'To'
           then  concat(e->'PortRange'->>'To', '-', e->'PortRange'->>'From', '/UDP')
         else concat('Procotol: ', e->>'Protocol')
-      end as name,
+      end as title,
       3 as depth,
       e ->> 'RuleAction' as category
     from
@@ -797,9 +797,9 @@ query "aws_egress_nacl_for_vpc_sankey" {
 
     -- CIDRS
     union all select
-      concat(network_acl_id, '_'::text, e ->> 'RuleNumber', '_port_proto') as parent,
+      concat(network_acl_id, '_'::text, e ->> 'RuleNumber', '_port_proto') as from_id,
       e ->> 'CidrBlock' as id,
-      e ->> 'CidrBlock' as name,
+      e ->> 'CidrBlock' as title,
       4 as depth,
       e ->> 'RuleAction' as category
     from
@@ -833,57 +833,57 @@ query "aws_vpc_peers_for_vpc_sankey" {
         or accepter_vpc_id = reverse(split_part(reverse($1), '/', 1))
     )
     select
-      concat('requestor_', requester_owner_id) as parent,
+      concat('requestor_', requester_owner_id) as from_id,
       concat('requestor_', requester_cidr_block) as id,
-      requester_cidr_block::text as name,
+      requester_cidr_block::text as title,
       0 as depth,
       status_code as category
     from
       peers
     union select
-      concat('requestor_', requester_region) as parent,
+      concat('requestor_', requester_region) as from_id,
       concat('requestor_', requester_owner_id) as id,
-      requester_owner_id as name,
+      requester_owner_id as title,
       1 as depth,
       'account' as category
     from
       peers
     union select
-      id as parent,
+      id as from_id,
       concat('requestor_', requester_region) as id,
-      requester_region as name,
+      requester_region as title,
       2 as depth,
       'region' as category
     from
       peers
     union select
-      null as parent,
+      null as from_id,
       id,
-      id as name,
+      id as title,
       3 as depth,
       status_code as category
     from
       peers
     union select
-      id as parent,
+      id as from_id,
       concat('acceptor_', accepter_region) as id,
-      accepter_region as name,
+      accepter_region as title,
       4 as depth,
       'region' as category
     from
       peers
     union select
-      concat('acceptor_', accepter_region) as parent,
+      concat('acceptor_', accepter_region) as from_id,
       concat('acceptor_', accepter_owner_id) as id,
-      accepter_owner_id as name,
+      accepter_owner_id as title,
       5 as depth,
       'account' as category
     from
       peers
     union  select
-      concat('acceptor_', accepter_owner_id) as parent,
+      concat('acceptor_', accepter_owner_id) as from_id,
       concat('acceptor_', accepter_cidr_block) as id,
-      accepter_cidr_block::text as name,
+      accepter_cidr_block::text as title,
       6 as depth,
       status_code as category
     from
