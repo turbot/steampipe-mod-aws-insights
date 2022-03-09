@@ -252,12 +252,8 @@ dashboard "aws_vpc_detail" {
         arn = self.input.vpc_arn.value
       }
 
-      column "arn" {
-        display = "none"
-      }
-
       column "Group Name" {
-        href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_arn={{.arn | @uri}}"
+        href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.'Group ID' | @uri}}"
       }
     }
 
@@ -403,8 +399,7 @@ query "aws_vpc_security_groups_for_vpc" {
     select
       group_name as "Group Name",
       group_id as "Group ID",
-      description as "Description",
-      arn
+      description as "Description"
     from
       aws_vpc_security_group
     where
