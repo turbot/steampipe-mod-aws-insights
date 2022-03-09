@@ -93,6 +93,15 @@ dashboard "aws_vpc_security_group_detail" {
         args  = {
           group_id = self.input.security_group_id.value
         }
+
+        column "link" {
+          display = "none"
+        }
+
+        column "Title" {
+          href = "{{ .link }}"
+        }
+
       }
 
     }
@@ -279,20 +288,25 @@ query "aws_vpc_security_unrestricted_egress" {
 
 query "aws_vpc_security_group_assoc" {
   sql = <<-EOQ
+
+    -- EC2 instances
     select
-      title,
-      'aws_ec2_instance' as type,
-      arn
+      title as "Title",
+      'aws_ec2_instance' as "Type",
+      arn as "ARN",
+      '${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn=' || arn as link
      from
        aws_ec2_instance,
        jsonb_array_elements(security_groups) as sg
      where
       sg ->> 'GroupId' = $1
 
+    -- Lambda functions
     union all select
-      title,
-      'aws_lambda_function' as type,
-      arn
+      title as "Title",
+      'aws_lambda_function' as "Type",
+      arn as "ARN",
+      '${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn=' || arn as link
     from
        aws_lambda_function,
        jsonb_array_elements_text(vpc_security_group_ids) as sg
@@ -302,36 +316,167 @@ query "aws_vpc_security_group_assoc" {
 
     -- attached ELBs
     union all select
-        title,
-        arn,
-        'aws_ec2_classic_load_balancer' as type
-      from
-        aws_ec2_classic_load_balancer,
-        jsonb_array_elements_text(security_groups) as sg
-      where
-        sg = $1
+      title as "Title",
+      'aws_ec2_classic_load_balancer' as "Type",
+      arn as "ARN",
+      null as link
+    from
+      aws_ec2_classic_load_balancer,
+      jsonb_array_elements_text(security_groups) as sg
+    where
+      sg = $1
 
     -- attached ALBs
     union all select
-        title,
-        arn,
-        'aws_ec2_application_load_balancer' as type
+      title as "Title",
+      'aws_ec2_application_load_balancer' as "Type",
+      arn as "ARN",
+      null as link
+    from
+      aws_ec2_application_load_balancer,
+      jsonb_array_elements_text(security_groups) as sg
+    where
+      sg = $1
+
+    -- attached NLBs
+    union all select
+      title as "Title",
+      'aws_ec2_network_load_balancer' as "Type",
+      arn as "ARN",
+      null as link
+    from
+      aws_ec2_network_load_balancer,
+      jsonb_array_elements_text(security_groups) as sg
+    where
+      sg = $1
+
+
+    -- attached GWLBs
+    union all select
+        title as "Title",
+        'aws_ec2_gateway_load_balancer' as "Type",
+        arn as "ARN",
+        null as link
       from
-        aws_ec2_application_load_balancer,
+        aws_ec2_gateway_load_balancer,
         jsonb_array_elements_text(security_groups) as sg
       where
         sg = $1
 
-    -- attached NLBs
+
+    -- attached aws_ec2_launch_configuration
     union all select
-        title,
-        arn,
-        'aws_ec2_network_load_balancer' as type
+        title as "Title",
+        'aws_ec2_launch_configuration' as "Type",
+        launch_configuration_arn as "ARN",
+        null as link
       from
-        aws_ec2_network_load_balancer,
+        aws_ec2_launch_configuration,
         jsonb_array_elements_text(security_groups) as sg
       where
         sg = $1
+
+
+    -- attached DAX Cluster
+    union all select
+        title as "Title",
+        'aws_dax_cluster' as "Type",
+        arn as "ARN",
+        null as link
+      from
+        aws_dax_cluster,
+        jsonb_array_elements_text(security_groups) as sg
+      where
+        sg = $1
+          
+
+    -- attached aws_dms_replication_instance
+    union all select
+        title as "Title",
+        'aws_dms_replication_instance' as "Type",
+        arn as "ARN",
+        null as link
+      from
+        aws_dms_replication_instance,
+        jsonb_array_elements_text(vpc_security_groups) as sg
+      where
+        sg = $1
+
+    -- attached aws_efs_mount_target
+    union all select
+        title as "Title",
+        'aws_efs_mount_target' as "Type",
+        mount_target_id as "ARN",
+        null as link
+      from
+        aws_efs_mount_target,
+        jsonb_array_elements_text(security_groups) as sg
+      where
+        sg = $1
+
+    -- attached aws_elasticache_cluster
+    union all select
+        title as "Title",
+        'aws_elasticache_cluster' as "Type",
+        arn as "ARN",
+        null as link
+      from
+        aws_elasticache_cluster,
+        jsonb_array_elements_text(security_groups) as sg
+      where
+        sg = $1
+
+
+    -- attached aws_rds_db_cluster
+    union all select
+        title as "Title",
+        'aws_rds_db_cluster' as "Type",
+        arn as "ARN",
+        null as link
+      from
+        aws_rds_db_cluster,
+        jsonb_array_elements_text(vpc_security_groups) as sg
+      where
+        sg = $1
+
+    -- attached aws_rds_db_instance
+    union all select
+        title as "Title",
+        'aws_rds_db_instance' as "Type",
+        arn as "ARN",
+      '${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn=' || arn as link
+      from
+        aws_rds_db_instance,
+        jsonb_array_elements_text(vpc_security_groups) as sg
+      where
+        sg = $1
+
+
+    -- attached aws_redshift_cluster
+    union all select
+        title as "Title",
+        'aws_redshift_cluster' as "Type",
+        arn as "ARN",
+      '${dashboard.aws_redshift_cluster_detail.url_path}?input.cluster_arn=' || arn as link
+      from
+        aws_redshift_cluster,
+        jsonb_array_elements_text(vpc_security_groups) as sg
+      where
+        sg = $1
+
+
+    -- attached aws_sagemaker_notebook_instance
+    union all select
+        title as "Title",
+        'aws_sagemaker_notebook_instance' as "Type",
+        arn as "ARN",
+        null as link
+      from
+        aws_sagemaker_notebook_instance,
+        jsonb_array_elements_text(security_groups) as sg
+      where
+        sg = $1
+
 
   EOQ
 
@@ -370,7 +515,7 @@ query "aws_vpc_security_group_ingress_rule_sankey" {
         where
           sg = $1
 
-      -- attached ELBs
+      -- attached Classic ELBs
       union all select
           title,
           arn,
@@ -432,8 +577,108 @@ query "aws_vpc_security_group_ingress_rule_sankey" {
         where
           sg = $1
 
+
+
+      -- attached DAX Cluster
+      union all select
+          title,
+          arn,
+          'aws_dax_cluster' as category,
+          sg
+        from
+          aws_dax_cluster,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = $1
             
-          -- TODO: Add aws_rds_db_instance / db_security_groups, etc.
+
+      -- attached aws_dms_replication_instance
+      union all select
+          title,
+          arn,
+          'aws_dms_replication_instance' as category,
+          sg
+        from
+          aws_dms_replication_instance,
+          jsonb_array_elements_text(vpc_security_groups) as sg
+        where
+          sg = $1
+
+      -- attached aws_efs_mount_target
+      union all select
+          title,
+          mount_target_id,
+          'aws_efs_mount_target' as category,
+          sg
+        from
+          aws_efs_mount_target,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = $1
+
+      -- attached aws_elasticache_cluster
+      union all select
+          title,
+          arn,
+          'aws_elasticache_cluster' as category,
+          sg
+        from
+          aws_elasticache_cluster,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = $1
+
+
+      -- attached aws_rds_db_cluster
+      union all select
+          title,
+          arn,
+          'aws_rds_db_cluster' as category,
+          sg
+        from
+          aws_rds_db_cluster,
+          jsonb_array_elements_text(vpc_security_groups) as sg
+        where
+          sg = $1
+
+      -- attached aws_rds_db_instance
+      union all select
+          title,
+          arn,
+          'aws_rds_db_instance' as category,
+          sg
+        from
+          aws_rds_db_instance,
+          jsonb_array_elements_text(vpc_security_groups) as sg
+        where
+          sg = $1
+
+
+      -- attached aws_redshift_cluster
+      union all select
+          title,
+          arn,
+          'aws_redshift_cluster' as category,
+          sg
+        from
+          aws_redshift_cluster,
+          jsonb_array_elements_text(vpc_security_groups) as sg
+        where
+          sg = $1
+
+
+      -- attached aws_sagemaker_notebook_instance
+      union all select
+          title,
+          arn,
+          'aws_sagemaker_notebook_instance' as category,
+          sg
+        from
+          aws_sagemaker_notebook_instance,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = $1
+
       ),
       rules as (
         select
@@ -455,7 +700,6 @@ query "aws_vpc_security_group_ingress_rule_sankey" {
           end as port_proto,
           type,
           case
-            when ip_protocol = '-1' then 'alert'
             when ( cidr_ipv4 = '0.0.0.0/0' or cidr_ipv6 = '::/0')
                 and ip_protocol <> 'icmp'
                 and (
@@ -547,6 +791,7 @@ query "aws_vpc_security_group_ingress_rule_sankey" {
 query "aws_vpc_security_group_egress_rule_sankey" {
   sql = <<-EOQ
 
+    
     with associations as (
 
       -- attached ec2 instances
@@ -574,7 +819,7 @@ query "aws_vpc_security_group_egress_rule_sankey" {
         where
           sg = $1
 
-      -- attached ELBs
+      -- attached Classic ELBs
       union all select
           title,
           arn,
@@ -636,8 +881,108 @@ query "aws_vpc_security_group_egress_rule_sankey" {
         where
           sg = $1
 
+
+
+      -- attached DAX Cluster
+      union all select
+          title,
+          arn,
+          'aws_dax_cluster' as category,
+          sg
+        from
+          aws_dax_cluster,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = $1
             
-          -- TODO: Add aws_rds_db_instance / db_security_groups, etc.
+
+      -- attached aws_dms_replication_instance
+      union all select
+          title,
+          arn,
+          'aws_dms_replication_instance' as category,
+          sg
+        from
+          aws_dms_replication_instance,
+          jsonb_array_elements_text(vpc_security_groups) as sg
+        where
+          sg = $1
+
+      -- attached aws_efs_mount_target
+      union all select
+          title,
+          mount_target_id,
+          'aws_efs_mount_target' as category,
+          sg
+        from
+          aws_efs_mount_target,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = $1
+
+      -- attached aws_elasticache_cluster
+      union all select
+          title,
+          arn,
+          'aws_elasticache_cluster' as category,
+          sg
+        from
+          aws_elasticache_cluster,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = $1
+
+
+      -- attached aws_rds_db_cluster
+      union all select
+          title,
+          arn,
+          'aws_rds_db_cluster' as category,
+          sg
+        from
+          aws_rds_db_cluster,
+          jsonb_array_elements_text(vpc_security_groups) as sg
+        where
+          sg = $1
+
+      -- attached aws_rds_db_instance
+      union all select
+          title,
+          arn,
+          'aws_rds_db_instance' as category,
+          sg
+        from
+          aws_rds_db_instance,
+          jsonb_array_elements_text(vpc_security_groups) as sg
+        where
+          sg = $1
+
+
+      -- attached aws_redshift_cluster
+      union all select
+          title,
+          arn,
+          'aws_redshift_cluster' as category,
+          sg
+        from
+          aws_redshift_cluster,
+          jsonb_array_elements_text(vpc_security_groups) as sg
+        where
+          sg = $1
+
+
+      -- attached aws_sagemaker_notebook_instance
+      union all select
+          title,
+          arn,
+          'aws_sagemaker_notebook_instance' as category,
+          sg
+        from
+          aws_sagemaker_notebook_instance,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = $1
+
       ),
       rules as (
         select
@@ -659,7 +1004,6 @@ query "aws_vpc_security_group_egress_rule_sankey" {
           end as port_proto,
           type,
           case
-            when ip_protocol = '-1' then 'alert'
             when ( cidr_ipv4 = '0.0.0.0/0' or cidr_ipv6 = '::/0')
                 and ip_protocol <> 'icmp'
                 and (
@@ -748,159 +1092,6 @@ query "aws_vpc_security_group_egress_rule_sankey" {
 }
 
 
-query "aws_vpc_security_group_egress_rule_sankey_DELETEME" {
-  sql = <<-EOQ
-    with associations as (
-      select
-          title,
-          arn,
-          'aws_ec2_instance' as category,
-          sg ->> 'GroupId' as group_id
-        from
-          aws_ec2_instance,
-          jsonb_array_elements(security_groups) as sg
-        where
-        sg ->> 'GroupId' = $1
-
-      union all select
-          title,
-          arn,
-          'aws_lambda_function' as category,
-          sg
-        from
-          aws_lambda_function,
-          jsonb_array_elements_text(vpc_security_group_ids) as sg
-        where
-        sg = $1
-
-
-      -- attached ELBs
-      union all select
-          title,
-          arn,
-          'aws_ec2_classic_load_balancer' as category,
-          sg
-        from
-          aws_ec2_classic_load_balancer,
-          jsonb_array_elements_text(security_groups) as sg
-        where
-          sg = $1
-
-      -- attached ALBs
-      union all select
-          title,
-          arn,
-          'aws_ec2_application_load_balancer' as category,
-          sg
-        from
-          aws_ec2_application_load_balancer,
-          jsonb_array_elements_text(security_groups) as sg
-        where
-          sg = $1
-
-      -- attached NLBs
-      union all select
-          title,
-          arn,
-          'aws_ec2_network_load_balancer' as category,
-          sg
-        from
-          aws_ec2_network_load_balancer,
-          jsonb_array_elements_text(security_groups) as sg
-        where
-          sg = $1
-
-        -- TODO: Add aws_rds_db_instance / db_security_groups, etc.
-    ),
-    rules as (
-      select
-        concat(text(cidr_ipv4), text(cidr_ipv6), referenced_group_id, referenced_vpc_id,prefix_list_id) as destination,
-        security_group_rule_id,
-        case
-          when ip_protocol = '-1' then 'All Traffic'
-          when ip_protocol = 'icmp' then 'All ICMP'
-          when from_port is not null
-          and to_port is not null
-          and from_port = to_port then concat(from_port, '/', ip_protocol)
-          else concat(
-            from_port,
-            '-',
-            to_port,
-            '/',
-            ip_protocol
-          )
-        end as port_proto,
-        type,
-        case
-          when ip_protocol = '-1' then 'alert'
-          when ( cidr_ipv4 = '0.0.0.0/0' or cidr_ipv6 = '::/0')
-              and ip_protocol <> 'icmp'
-              and (
-                from_port = -1
-                or (from_port = 0 and to_port = 65535)
-              ) then 'alert'
-          else 'ok'
-        end as category,
-        group_id
-      from
-        aws_vpc_security_group_rule
-      where
-        group_id = $1
-        and is_egress
-        ),
-    analysis as (
-      select
-          group_id as from_id,
-          arn as id,
-          title || '(' || category || ')' as title, -- TODO: Should this be arn instead?
-          0 as depth,
-          category
-        from
-          associations
-        where
-        group_id = $1
-      union
-      select
-        null as from_id,
-        sg.group_id as id,
-        sg.group_name as title,
-        1 as depth,
-        'aws_vpc_security_group' as category
-      from
-        aws_vpc_security_group sg
-        inner join rules sgr on sg.group_id = sgr.group_id
-      union
-      select
-        group_id as from_id,
-        port_proto as id,
-        port_proto as title,
-        2 as depth,
-        category
-      from
-        rules
-      union
-      select
-        port_proto as from_id,
-        destination as id,
-        destination as title,
-        3 as depth,
-        category
-      from
-        rules
-      )
-    select
-      *
-    from
-      analysis
-    order by
-      depth,
-      category,
-      id;
-  EOQ
-
-  param "group_id" {}
-}
-
 query "aws_vpc_security_group_ingress_rules" {
   sql = <<-EOQ
     select
@@ -966,11 +1157,11 @@ query "aws_vpc_security_group_egress_rules" {
 query "aws_vpc_security_group_overview" {
   sql   = <<-EOQ
     select
+      title as "Title",
       group_name as "Group Name",
       group_id as "Group ID",
       description as "Description",
       vpc_id as  "VPC ID",
-      title as "Title",
       region as "Region",
       account_id as "Account ID",
       arn as "ARN"
