@@ -1,6 +1,7 @@
 dashboard "aws_rds_db_cluster_dashboard" {
 
-  title = "AWS RDS DB Cluster Dashboard"
+  title         = "AWS RDS DB Cluster Dashboard"
+  documentation = file("./dashboards/rds/docs/rds_db_cluster_dashboard.md")
 
   tags = merge(local.rds_common_tags, {
     type = "Dashboard"

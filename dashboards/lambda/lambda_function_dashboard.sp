@@ -1,6 +1,7 @@
 dashboard "aws_lambda_function_dashboard" {
 
-  title = "AWS Lambda Function Dashboard"
+  title         = "AWS Lambda Function Dashboard"
+  documentation = file("./dashboards/lambda/docs/lambda_function_dashboard.md")
 
   tags = merge(local.lambda_common_tags, {
     type = "Dashboard"
@@ -73,7 +74,7 @@ dashboard "aws_lambda_function_dashboard" {
     }
 
     chart {
-      title = "Runtime Environment"
+      title = "Runtime Version"
       sql   = query.aws_lambda_function_uses_latest_runtime_status.sql
       type  = "donut"
       width = 4
@@ -225,14 +226,14 @@ dashboard "aws_lambda_function_dashboard" {
     width = 12
 
     chart {
-      title = "Functions with high error rate (> 10 In Last 1 Month)"
+      title = "High Error Rate (> 10 In Last 1 Month)"
       sql   = query.aws_lambda_high_error_rate.sql
       type  = "line"
       width = 6
     }
 
     chart {
-      title = "Functions Invocation Rate"
+      title = "Top 10 Average Invocation Rate"
       sql   = query.aws_lambda_function_invocation_rate.sql
       type  = "line"
       width = 6
@@ -578,9 +579,9 @@ query "aws_lambda_high_error_rate" {
       from
         aws_lambda_function_metric_errors_daily as errors , aws_lambda_function_metric_invocations_daily as invocations
       where
-          errors.name = invocations.name
+        errors.name = invocations.name
       group by
-          errors.name
+        errors.name
     )
     select
       name,

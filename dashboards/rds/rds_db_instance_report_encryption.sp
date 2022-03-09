@@ -1,6 +1,7 @@
 dashboard "aws_rds_db_instance_encryption_report" {
 
-  title = "AWS RDS DB Instance Encryption Report"
+  title         = "AWS RDS DB Instance Encryption Report"
+  documentation = file("./dashboards/rds/docs/rds_db_instance_report_encryption.md")
 
   tags = merge(local.rds_common_tags, {
     type     = "Report"
@@ -45,6 +46,7 @@ query "aws_rds_db_instance_encryption_table" {
     select
       i.db_instance_identifier as "DB Instance Identifier",
       case when i.storage_encrypted then 'Enabled' else null end as "Encryption",
+      i.kms_key_id as "KMS Key ID",
       a.title as "Account",
       i.account_id as "Account ID",
       i.region as "Region",

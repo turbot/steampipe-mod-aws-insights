@@ -1,6 +1,7 @@
 dashboard "aws_rds_db_cluster_encryption_report" {
 
-  title = "AWS RDS DB Cluster Encryption Report"
+  title         = "AWS RDS DB Cluster Encryption Report"
+  documentation = file("./dashboards/rds/docs/rds_db_cluster_report_encryption.md")
 
   tags = merge(local.rds_common_tags, {
     type     = "Report"
@@ -38,7 +39,6 @@ dashboard "aws_rds_db_cluster_encryption_report" {
 query "aws_rds_db_cluster_encryption_table" {
   sql = <<-EOQ
     select
-      c.resource_id as "Resource ID",
       c.db_cluster_identifier as "DB Cluster Identifier",
       case when c.storage_encrypted then 'Enabled' else null end as "Encryption",
       c.kms_key_id as "KMS Key ID",
@@ -52,6 +52,6 @@ query "aws_rds_db_cluster_encryption_table" {
     where
       c.account_id = a.account_id
     order by
-      c.resource_id;
+      c.db_cluster_identifier;
   EOQ
 }

@@ -1,5 +1,7 @@
 dashboard "aws_rds_db_snapshot_detail" {
-  title = "AWS RDS DB Instance Snapshot Detail"
+
+  title         = "AWS RDS DB Instance Snapshot Detail"
+  documentation = file("./dashboards/rds/docs/rds_db_instance_snapshot_detail.md")
 
   tags = merge(local.rds_common_tags, {
     type = "Detail"

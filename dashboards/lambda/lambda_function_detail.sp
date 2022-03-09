@@ -1,6 +1,7 @@
 dashboard "aws_lambda_function_detail" {
 
-  title = "AWS Lambda Function Detail"
+  title         = "AWS Lambda Function Detail"
+  documentation = file("./dashboards/lambda/docs/lambda_function_detail.md")
 
   tags = merge(local.lambda_common_tags, {
     type = "Detail"

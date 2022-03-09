@@ -1,6 +1,7 @@
 dashboard "aws_kms_key_detail" {
 
-  title = "AWS KMS Key Detail"
+  title         = "AWS KMS Key Detail"
+  documentation = file("./dashboards/kms/docs/kms_key_detail.md")
 
   tags = merge(local.kms_common_tags, {
     type = "Detail"

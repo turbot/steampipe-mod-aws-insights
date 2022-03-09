@@ -1,6 +1,7 @@
 dashboard "aws_rds_db_instance_dashboard" {
 
-  title = "AWS RDS DB Instance Dashboard"
+  title         = "AWS RDS DB Instance Dashboard"
+  documentation = file("./dashboards/rds/docs/rds_db_instance_dashboard.md")
 
   tags = merge(local.rds_common_tags, {
     type = "Dashboard"
@@ -459,6 +460,7 @@ query "aws_rds_db_instance_cost_per_month" {
       aws_cost_by_service_usage_type_monthly
     where
       service = 'Amazon Relational Database Service'
+      and usage_type like '%Instance%'
     group by
       period_start
     order by

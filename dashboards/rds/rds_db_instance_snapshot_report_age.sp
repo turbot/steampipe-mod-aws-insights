@@ -1,6 +1,7 @@
 dashboard "aws_rds_db_instance_snapshot_age_report" {
 
-  title = "AWS RDS DB Instance Snapshot Age Report"
+  title         = "AWS RDS DB Instance Snapshot Age Report"
+  documentation = file("./dashboards/rds/docs/rds_db_instance_snapshot_report_age.md")
 
   tags = merge(local.rds_common_tags, {
     type     = "Report"
