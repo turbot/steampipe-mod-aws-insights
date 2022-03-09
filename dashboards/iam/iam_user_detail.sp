@@ -133,7 +133,10 @@ dashboard "aws_iam_user_detail" {
       }
 
       column "Name" {
-         href = "${dashboard.aws_iam_group_detail.url_path}?input.group_arn={{.'ARN' | @uri}}"
+        // cyclic dependency.. harcode for now
+        //href = "${dashboard.aws_iam_group_detail.url_path}?input.group_arn={{.'ARN' | @uri}}"
+        href = "http://localhost:9194/aws_insights.dashboard.aws_iam_group_detail?input.group_arn={{.'ARN'}}"
+
       }
     }
 
