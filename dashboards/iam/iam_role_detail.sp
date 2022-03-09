@@ -70,12 +70,11 @@ dashboard "aws_iam_role_detail" {
 
       title = "AWS IAM Role Policy Analysis"
 
-
       hierarchy {
         type  = "tree"
         width = 6
         title = "Attached Policies"
-        query   = query.aws_iam_user_manage_policies_hierarchy
+        query = query.aws_iam_user_manage_policies_hierarchy
         args  = {
           arn = self.input.role_arn.value
         }
@@ -86,7 +85,7 @@ dashboard "aws_iam_role_detail" {
         category "managed_policy" {
           color = "ok"
         }
-        
+
       }
 
 
@@ -237,8 +236,6 @@ query "aws_iam_role_tags" {
   param "arn" {} 
 }
 
-
-
 query "aws_iam_user_manage_policies_hierarchy" {
     sql = <<-EOQ
     select
@@ -272,16 +269,7 @@ query "aws_iam_user_manage_policies_hierarchy" {
       jsonb_array_elements(inline_policies_std) as i
     where
       arn = $1
-
   EOQ
 
   param "arn" {}
-
 }
-
-
-
-/*
-
-
-      */
