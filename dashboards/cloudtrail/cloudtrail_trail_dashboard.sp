@@ -147,33 +147,12 @@ dashboard "aws_cloudtrail_trail_dashboard" {
       sql   = query.aws_cloudtrail_trail_per_account.sql
     }
 
-    # chart {
-    #   title = "Trails by Region"
-    #   type  = "column"
-    #   width = 3
-    #   sql   = query.aws_cloudtrail_trail_count_per_region.sql
-    # }
-
-    # chart {
-    #   title = "Regional Trails by Region"
-    #   type  = "column"
-    #   width = 3
-    #   sql   = query.aws_cloudtrail_regional_trail_count_per_region.sql
-    # }
-
     chart {
       title = "Trails by Region"
       type  = "column"
       width = 3
       sql   = query.aws_cloudtrail_trail_per_region.sql
     }
-
-    # chart {
-    #   title = "Multi-Region Trails by Account"
-    #   type  = "column"
-    #   width = 3
-    #   sql   = query.aws_cloudtrail_multi_region_trail_count_per_account.sql
-    # }
 
   }
 }
@@ -431,69 +410,6 @@ query "aws_cloudtrail_trail_cost_mtd" {
 
 # Analysis Queries
 
-#  query "aws_cloudtrail_trail_count_per_account" {
-#   sql = <<-EOQ
-#     select
-#       a.title as "Account",
-#       count(t.*) as "Trails"
-#     from
-#       aws_cloudtrail_trail as t,
-#       aws_account as a
-#     where
-#       a.account_id = t.account_id
-#       and t.region = t.home_region
-#     group by a.title
-#     order by a.title;
-#   EOQ
-# }
-
-# query "aws_cloudtrail_trail_count_per_region" {
-#   sql = <<-EOQ
-#     with trail_count as (
-#       select
-#         arn,
-#         region
-#       from
-#         aws_cloudtrail_trail
-#       where
-#         region = home_region
-#         and not is_multi_region_trail
-#       union
-#       select
-#         arn,
-#         region
-#       from
-#         aws_cloudtrail_trail
-#       where
-#         region = home_region
-#         and is_multi_region_trail
-#     )
-#     select
-#       region,
-#       count(*) as "Trails"
-#     from
-#       trail_count as t
-#     group by region
-#     order by region;
-#   EOQ
-# }
-
-# query "aws_cloudtrail_regional_trail_count_per_region" {
-#   sql = <<-EOQ
-#     select
-#       region,
-#       count(*) as "Trails"
-#     from
-#       aws_cloudtrail_trail
-#     where
-#       region = home_region
-#       and not is_multi_region_trail
-#     group by region
-#     order by region;
-#   EOQ
-# }
-
-
 query "aws_cloudtrail_trail_per_account" {
   sql = <<-EOQ
     select
@@ -521,28 +437,3 @@ query "aws_cloudtrail_trail_per_region" {
     group by region, status
   EOQ
 }
-
-# query "aws_cloudtrail_multi_region_trail_count_per_account" {
-#   sql = <<-EOQ
-#     with multi_region_trails as (
-#       select
-#         arn,
-#         account_id
-#       from
-#         aws_cloudtrail_trail
-#       where
-#         region = home_region
-#         and is_multi_region_trail
-#     )
-#     select
-#       a.title as "Account",
-#       count(t.*) as "Trails"
-#     from
-#       multi_region_trails as t,
-#       aws_account as a
-#     where
-#       a.account_id = t.account_id
-#     group by a.title
-#     order by a.title;
-#   EOQ
-# }
