@@ -30,7 +30,7 @@ dashboard "aws_iam_user_mfa_report" {
     }
 
     column "User Name" {
-      href = "/aws_insights.dashboard.aws_iam_user_detail?input.user_arn={{.ARN | @uri}}"
+      href = "${dashboard.aws_iam_user_detail.url_path}?input.user_arn={{.ARN | @uri}}"
     }
 
     sql = query.aws_iam_user_mfa_table.sql

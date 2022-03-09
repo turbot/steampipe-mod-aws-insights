@@ -135,8 +135,8 @@ query "aws_lambda_function_input" {
 query "aws_lambda_function_memory" {
   sql = <<-EOQ
     select
-      'Memory (GB)' as label,
-       round(cast(memory_size/1024.0 as numeric), 2) as value
+      'Memory (MB)' as label,
+      memory_size as value
     from
       aws_lambda_function
     where

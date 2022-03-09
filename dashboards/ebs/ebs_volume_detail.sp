@@ -99,12 +99,15 @@ dashboard "aws_ebs_volume_detail" {
         }
 
         column "Instance ID" {
-          href = "/aws_insights.dashboard.aws_ec2_instance_detail?input.instance_arn={{.'Instance ARN'  | @uri}}"
+          href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.'Instance ARN' | @uri}}"
         }
       }
 
       table {
         title = "Encryption Details"
+        column "KMS Key ID" {
+          href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.'KMS Key ID' | @uri}}"
+        }
         query = query.aws_ebs_volume_encryption_status
         args  = {
           arn = self.input.volume_arn.value

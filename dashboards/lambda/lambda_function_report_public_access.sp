@@ -33,7 +33,8 @@ dashboard "aws_lambda_function_public_access_report" {
     }
 
     column "Name" {
-      href = "/aws_insights.dashboard.aws_lambda_function_detail?input.lambda_arn={{.ARN | @uri}}"
+      href = "${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn={{.ARN | @uri}}"
+      
     }
 
     sql = query.aws_lambda_function_public_access_table.sql

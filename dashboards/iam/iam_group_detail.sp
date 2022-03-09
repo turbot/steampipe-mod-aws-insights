@@ -59,6 +59,10 @@ dashboard "aws_iam_group_detail" {
     table {
       title = "Users"
       width = 6
+      column "User Name" {
+        href = "${dashboard.aws_iam_user_detail.url_path}?input.user_arn={{.'User ARN' | @uri}}"
+      }
+
       query = query.aws_iam_users_for_group
       args  = {
         arn = self.input.group_arn.value
@@ -144,8 +148,8 @@ query "aws_iam_group_overview" {
 query "aws_iam_users_for_group" {
   sql = <<-EOQ
     select
-      u ->> 'UserName' as "Name",
-      u ->> 'Arn' as "ARN",
+      u ->> 'UserName' as "User Name",
+      u ->> 'Arn' as "User ARN",
       u ->> 'UserId' as "User ID"
     from
       aws_iam_group as g,

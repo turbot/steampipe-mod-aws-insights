@@ -32,7 +32,7 @@ dashboard "aws_rds_db_instance_encryption_report" {
     }
 
     column "DB Instance Identifier" {
-      href = "/aws_insights.dashboard.aws_rds_db_instance_detail?input.db_instance_arnn={{.ARN | @uri}}"
+      href = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn={{.ARN | @uri}}"
     }
 
     sql = query.aws_rds_db_instance_encryption_table.sql

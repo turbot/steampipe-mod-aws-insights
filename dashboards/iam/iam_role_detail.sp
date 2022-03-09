@@ -83,17 +83,7 @@ dashboard "aws_iam_role_detail" {
 
 
       table {
-        title = "Groups"
-        width = 6
-        query = query.aws_iam_groups_for_user
-        args  = {
-          arn = self.input.role_arn.value
-        }
-      }
-
-      table {
         title = "Policies"
-        width = 6
         query = query.aws_iam_all_policies_for_role
         args  = {
           arn = self.input.role_arn.value
@@ -124,8 +114,8 @@ query "aws_iam_boundary_policy_for_role" {
   sql = <<-EOQ
     select
       case
-        when permissions_boundary_type is null then 'Not set'
-        when permissions_boundary_type = '' then 'Not set'
+        when permissions_boundary_type is null then 'Not Set'
+        when permissions_boundary_type = '' then 'Not Set'
         else substring(permissions_boundary_arn, 'arn:aws:iam::\d{12}:.+\/(.*)')
       end as value,
       'Boundary Policy' as label,
@@ -232,5 +222,5 @@ query "aws_iam_role_tags" {
       tag ->> 'Key'
   EOQ
 
-  param "arn" {} 
+  param "arn" {}
 }

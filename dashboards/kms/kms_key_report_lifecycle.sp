@@ -36,7 +36,7 @@ dashboard "aws_kms_key_lifecycle_report" {
       }
 
       column "Key ID" {
-        href = "/aws_insights.dashboard.aws_kms_key_detail?input.key_arn={{.ARN | @uri}}"
+        href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.ARN | @uri}}"
       }
 
       sql = query.aws_kms_cmk_lifecycle_table.sql
