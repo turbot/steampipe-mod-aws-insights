@@ -59,6 +59,7 @@ query "aws_ec2_instance_public_access_table" {
       i.instance_id as "Instance ID",
       i.tags ->> 'Name' as "Name",
       case when public_ip_address is null then 'Private' else 'Public' end as "Public/Private",
+      i.public_ip_address as "Public IP Address",
       a.title as "Account",
       i.account_id as "Account ID",
       i.region as "Region",
