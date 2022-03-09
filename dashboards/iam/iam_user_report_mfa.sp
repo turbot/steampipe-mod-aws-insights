@@ -1,6 +1,7 @@
 dashboard "aws_iam_user_mfa_report" {
 
   title = "AWS IAM User MFA Report"
+  documentation = file("./dashboards/iam/docs/iam_user_report_mfa.md")
 
   tags = merge(local.iam_common_tags, {
     type     = "Report"

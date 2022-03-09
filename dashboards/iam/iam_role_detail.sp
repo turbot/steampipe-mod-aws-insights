@@ -1,6 +1,7 @@
 dashboard "aws_iam_role_detail" {
 
   title = "AWS IAM Role Detail"
+  documentation = file("./dashboards/iam/docs/iam_role_detail.md")
 
   tags = merge(local.iam_common_tags, {
     type = "Detail"

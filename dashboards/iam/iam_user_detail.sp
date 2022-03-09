@@ -1,6 +1,7 @@
 dashboard "aws_iam_user_detail" {
 
   title = "AWS IAM User Detail"
+  documentation = file("./dashboards/iam/docs/iam_user_detail.md")
 
   tags = merge(local.iam_common_tags, {
     type = "Detail"

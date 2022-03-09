@@ -1,6 +1,7 @@
 dashboard "aws_iam_access_key_age_report" {
 
   title = "AWS IAM Access Key Age Report"
+  documentation = file("./dashboards/iam/docs/iam_access_key_report_age.md")
 
   tags = merge(local.iam_common_tags, {
     type     = "Report"
