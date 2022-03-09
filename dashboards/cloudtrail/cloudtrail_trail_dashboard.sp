@@ -113,22 +113,6 @@ dashboard "aws_cloudtrail_trail_dashboard" {
       }
     }
 
-    chart {
-      title = "Log Group Status"
-      type  = "donut"
-      width = 4
-      sql   = query.aws_cloudtrail_trail_cloudwatch_log_integration_status.sql
-
-      series "count" {
-        point "enabled" {
-          color = "ok"
-        }
-        point "disabled" {
-          color = "alert"
-        }
-      }
-    }
-
   }
 
   container {
@@ -372,28 +356,6 @@ query "aws_cloudtrail_trail_bucket_publicly_accessible" {
       bucket_status
     group by
       bucket_publicly_accessible_status;
-  EOQ
-}
-
-query "aws_cloudtrail_trail_cloudwatch_log_integration_status" {
-  sql = <<-EOQ
-    with cloudwatch_log_integration_status as (
-      select
-        case
-          when log_group_arn != 'null' and ((latest_delivery_time) > current_date - 1) then 'enabled'
-          else 'disabled'
-        end as integration_status
-      from
-        aws_cloudtrail_trail
-      where
-        region = home_region
-    )
-    select
-      integration_status,
-      count(*)
-    from
-      cloudwatch_log_integration_status
-    group by integration_status;
   EOQ
 }
 
