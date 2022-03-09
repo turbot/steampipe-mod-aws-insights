@@ -92,6 +92,7 @@ dashboard "aws_iam_role_detail" {
 
       table {
         title = "Policies"
+        width = 6
         query = query.aws_iam_all_policies_for_role
         args  = {
           arn = self.input.role_arn.value

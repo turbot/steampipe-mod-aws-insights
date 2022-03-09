@@ -723,6 +723,7 @@ query "aws_ingress_nacl_for_vpc_sankey" {
       null as to_id
     from aces 
 
+    -- Subnet node
     union select
       distinct subnet_id as id,
       subnet_id as title,
