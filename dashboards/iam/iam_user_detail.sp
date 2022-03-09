@@ -226,7 +226,7 @@ query "aws_iam_user_direct_attached_policy_count_for_user" {
   sql = <<-EOQ
     select
       coalesce(jsonb_array_length(attached_policy_arns), 0) as value,
-      'Directly Attached Policies' as label,
+      'Attached Policies' as label,
       case when coalesce(jsonb_array_length(attached_policy_arns), 0) = 0 then 'ok' else 'alert' end as type
     from
       aws_iam_user

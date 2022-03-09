@@ -122,8 +122,8 @@ query "aws_iam_boundary_policy_for_role" {
   sql = <<-EOQ
     select
       case
-        when permissions_boundary_type is null then 'Not Set'
-        when permissions_boundary_type = '' then 'Not Set'
+        when permissions_boundary_type is null then 'Not set'
+        when permissions_boundary_type = '' then 'Not set'
         else substring(permissions_boundary_arn, 'arn:aws:iam::\d{12}:.+\/(.*)')
       end as value,
       'Boundary Policy' as label,
@@ -160,7 +160,7 @@ query "aws_iam_role_direct_attached_policy_count_for_role" {
   sql = <<-EOQ
     select
       jsonb_array_length(attached_policy_arns) as value,
-      'Directly Attached Policies' as label,
+      'Attached Policies' as label,
       case when jsonb_array_length(attached_policy_arns) > 0 then 'ok' else 'alert' end as type
     from
       aws_iam_role

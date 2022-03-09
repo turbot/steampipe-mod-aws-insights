@@ -59,16 +59,16 @@ dashboard "aws_sns_topic_dashboard" {
     }
 
     chart {
-      title = "Subscription Count"
+      title = "Subscriptions Status"
       sql   = query.aws_sns_topic_by_subscription_status.sql
       type  = "donut"
       width = 4
 
       series "count" {
-        point "1+" {
+        point "with subscriptions" {
           color = "ok"
         }
-        point "0" {
+        point "no subscriptions" {
           color = "alert"
         }
       }
@@ -196,9 +196,9 @@ query "aws_sns_topic_by_subscription_status" {
     from (
       select subscriptions_confirmed,
         case when subscriptions_confirmed::int = 0 then
-          '0'
+          'no subscriptions'
         else
-          '1+'
+          'with subscriptions'
         end subscription_status
       from
         aws_sns_topic) as t

@@ -117,7 +117,7 @@ query "aws_iam_group_direct_attached_policy_count_for_group" {
   sql = <<-EOQ
     select
       case when attached_policy_arns is null then 0 else jsonb_array_length(attached_policy_arns) end as value,
-      'Directly Attached Policies' as label,
+      'Attached Policies' as label,
       case when (attached_policy_arns is null) or (jsonb_array_length(attached_policy_arns) = 0)  then 'ok' else 'alert' end as type
     from
       aws_iam_group
