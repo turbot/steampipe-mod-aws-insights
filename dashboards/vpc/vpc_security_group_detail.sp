@@ -72,9 +72,9 @@ dashboard "aws_vpc_security_group_detail" {
         }
 
         column "VPC ID" {
-          // Currently, this causes a cyclic dependency error, so hardocde for now..
+          // cyclic dependency prevents use of url_path, hardcode for now
           // href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.'VPC ID' | @uri}}"
-          href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.'VPC ID'}}"
+          href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.'VPC ID' | @uri}}"
 
         }
 
@@ -1197,4 +1197,3 @@ query "aws_vpc_security_group_tags" {
 
   param "group_id" {}
 }
-
