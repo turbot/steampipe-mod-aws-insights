@@ -96,7 +96,7 @@ dashboard "aws_vpc_security_group_detail" {
       width = 6
 
       table {
-        title = "Associated To"
+        title = "Associated to"
         query = query.aws_vpc_security_group_assoc
         args  = {
           group_id = self.input.security_group_id.value
@@ -247,7 +247,7 @@ query "aws_vpc_security_attached_enis_count" {
 query "aws_vpc_security_unrestricted_ingress" {
   sql = <<-EOQ
     select
-      'Unrestricted Ingress (excludes ICMP)' as label,
+      'Unrestricted Ingress (Excludes ICMP)' as label,
       count(*) as value,
       case
         when count(*) = 0 then 'ok'
@@ -272,7 +272,7 @@ query "aws_vpc_security_unrestricted_ingress" {
 query "aws_vpc_security_unrestricted_egress" {
   sql = <<-EOQ
     select
-      'Unrestricted Egress  (excludes ICMP)' as label,
+      'Unrestricted Egress  (Excludes ICMP)' as label,
       count(*) as value,
       case
         when count(*) = 0 then 'ok'
@@ -396,7 +396,6 @@ query "aws_vpc_security_group_assoc" {
         jsonb_array_elements_text(security_groups) as sg
       where
         sg = $1
-          
 
     -- attached aws_dms_replication_instance
     union all select
@@ -598,7 +597,6 @@ query "aws_vpc_security_group_ingress_rule_sankey" {
           jsonb_array_elements_text(security_groups) as sg
         where
           sg = $1
-            
 
       -- attached aws_dms_replication_instance
       union all select
@@ -766,10 +764,9 @@ query "aws_vpc_security_group_ingress_rule_sankey" {
           3 as depth,
           category,
           group_id as from_id,
-          null as to_id    
+          null as to_id
         from
           associations
-      
 
       -- Edges  ---------
       union select
@@ -799,7 +796,7 @@ query "aws_vpc_security_group_ingress_rule_sankey" {
 query "aws_vpc_security_group_egress_rule_sankey" {
   sql = <<-EOQ
 
-    
+
     with associations as (
 
       -- attached ec2 instances
@@ -902,7 +899,6 @@ query "aws_vpc_security_group_egress_rule_sankey" {
           jsonb_array_elements_text(security_groups) as sg
         where
           sg = $1
-            
 
       -- attached aws_dms_replication_instance
       union all select
@@ -1070,10 +1066,9 @@ query "aws_vpc_security_group_egress_rule_sankey" {
           0 as depth,
           category,
           group_id as from_id,
-          null as to_id    
+          null as to_id
         from
           associations
-      
 
       -- Edges  ---------
       union select
@@ -1103,13 +1098,13 @@ query "aws_vpc_security_group_egress_rule_sankey" {
 query "aws_vpc_security_group_ingress_rules" {
   sql = <<-EOQ
     select
-      concat(text(cidr_ipv4), text(cidr_ipv6), referenced_group_id, referenced_vpc_id,prefix_list_id) as source,
-      security_group_rule_id,
+      concat(text(cidr_ipv4), text(cidr_ipv6), referenced_group_id, referenced_vpc_id,prefix_list_id) as "Source",
+      security_group_rule_id as "Security Group Rule ID",
       case
         when ip_protocol = '-1' then 'All Traffic'
         when ip_protocol = 'icmp' then 'All ICMP'
         else ip_protocol
-      end as protocol,
+      end as "Protocol",
       case
         when from_port = -1 then 'All'
         when from_port is not null
@@ -1120,7 +1115,7 @@ query "aws_vpc_security_group_ingress_rules" {
           '-',
           to_port
         )
-      end as ports
+      end as "Ports"
     from
       aws_vpc_security_group_rule
     where
@@ -1134,13 +1129,13 @@ query "aws_vpc_security_group_ingress_rules" {
 query "aws_vpc_security_group_egress_rules" {
   sql = <<-EOQ
     select
-      concat(text(cidr_ipv4), text(cidr_ipv6), referenced_group_id, referenced_vpc_id,prefix_list_id) as destination,
-      security_group_rule_id,
+      concat(text(cidr_ipv4), text(cidr_ipv6), referenced_group_id, referenced_vpc_id,prefix_list_id) as "Destination",
+      security_group_rule_id as "Security Group Rule ID",
       case
         when ip_protocol = '-1' then 'All Traffic'
         when ip_protocol = 'icmp' then 'All ICMP'
         else ip_protocol
-      end as protocol,
+      end as "Protocol",
       case
         when from_port = -1 then 'All'
         when from_port is not null
@@ -1151,7 +1146,7 @@ query "aws_vpc_security_group_egress_rules" {
           '-',
           to_port
         )
-      end as ports
+      end as "Ports"
     from
       aws_vpc_security_group_rule
     where

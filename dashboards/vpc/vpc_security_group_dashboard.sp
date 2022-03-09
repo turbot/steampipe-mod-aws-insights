@@ -47,7 +47,7 @@ dashboard "aws_vpc_security_group_dashboard" {
     }
 
     chart {
-      title = "Security Group with unrestricted ingress SSH"
+      title = "With Unrestricted Ingress SSH"
       type  = "donut"
       width = 3
       sql   = query.aws_vpc_security_group_unrestricted_ingress_ssh.sql
@@ -63,7 +63,7 @@ dashboard "aws_vpc_security_group_dashboard" {
     }
 
     chart {
-      title = "Security Group with unrestricted ingress TCP and UDP"
+      title = "With Unrestricted Ingress TCP and UDP"
       type  = "donut"
       width = 3
       sql   = query.aws_vpc_security_group_unrestricted_ingress_tcp_udp.sql
@@ -79,7 +79,7 @@ dashboard "aws_vpc_security_group_dashboard" {
     }
 
     chart {
-      title = "Unassociated Security Group"
+      title = "Association Status"
       type  = "donut"
       width = 3
       sql   = query.aws_vpc_security_group_unassociated_status.sql
