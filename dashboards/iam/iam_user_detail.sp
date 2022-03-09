@@ -133,9 +133,9 @@ dashboard "aws_iam_user_detail" {
       }
 
       column "Name" {
-        // cyclic dependency.. harcode for now
+        // cyclic dependency prevents use of url_path, hardcode for now
         //href = "${dashboard.aws_iam_group_detail.url_path}?input.group_arn={{.'ARN' | @uri}}"
-        href = "/aws_insights.dashboard.aws_iam_group_detail?input.group_arn={{.'ARN'}}"
+        href = "/aws_insights.dashboard.aws_iam_group_detail?input.group_arn={{.'ARN' | @uri}}"
 
       }
     }
@@ -413,9 +413,6 @@ query "aws_iam_user_manage_policies_sankey" {
 
   param "arn" {}
 }
-
-
-
 
 query "aws_iam_groups_for_user" {
   sql   = <<-EOQ
