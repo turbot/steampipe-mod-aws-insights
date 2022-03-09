@@ -7,7 +7,7 @@ dashboard "aws_vpc_detail" {
     type = "Detail"
   })
 
-  input "vpc_arn" {
+  input "vpc_id" {
     title = "Select a VPC:"
     sql   = query.aws_vpc_input.sql
     width = 4
@@ -19,7 +19,7 @@ dashboard "aws_vpc_detail" {
       width = 2
       query = query.aws_vpc_num_ips_for_vpc
       args  = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
     }
 
@@ -27,7 +27,7 @@ dashboard "aws_vpc_detail" {
       width = 2
       query = query.aws_subnet_count_for_vpc
       args  = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
     }
 
@@ -35,7 +35,7 @@ dashboard "aws_vpc_detail" {
       width = 2
       query = query.aws_vpc_is_default
       args  = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
     }
 
@@ -43,7 +43,7 @@ dashboard "aws_vpc_detail" {
       width = 2
       query = query.aws_flow_logs_count_for_vpc
       args  = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
     }
 
@@ -61,7 +61,7 @@ dashboard "aws_vpc_detail" {
         width = 6
         query = query.aws_vpc_overview
         args  = {
-          arn = self.input.vpc_arn.value
+          vpc_id = self.input.vpc_id.value
         }
       }
 
@@ -70,7 +70,7 @@ dashboard "aws_vpc_detail" {
         width = 6
         query = query.aws_vpc_tags
         args  = {
-          arn = self.input.vpc_arn.value
+          vpc_id = self.input.vpc_id.value
         }
       }
 
@@ -84,7 +84,7 @@ dashboard "aws_vpc_detail" {
         title = "CIDR Blocks"
         query = query.aws_vpc_cidr_blocks
         args  = {
-          arn = self.input.vpc_arn.value
+          vpc_id = self.input.vpc_id.value
         }
       }
 
@@ -92,7 +92,7 @@ dashboard "aws_vpc_detail" {
         title = "DHCP Options"
         query = query.aws_vpc_dhcp_options
         args  = {
-          arn = self.input.vpc_arn.value
+          vpc_id = self.input.vpc_id.value
         }
       }
 
@@ -110,7 +110,7 @@ dashboard "aws_vpc_detail" {
       width = 4
       query = query.aws_vpc_subnet_by_az
       args = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
 
     }
@@ -119,7 +119,7 @@ dashboard "aws_vpc_detail" {
       query = query.aws_vpc_subnets_for_vpc
       width = 6
       args = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
     }
 
@@ -132,7 +132,7 @@ dashboard "aws_vpc_detail" {
     flow {
       query = query.aws_vpc_routes_for_vpc_sankey
       args = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
     }
 
@@ -141,7 +141,7 @@ dashboard "aws_vpc_detail" {
       query = query.aws_vpc_route_tables_for_vpc
       width = 6
       args = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
     }
 
@@ -150,7 +150,7 @@ dashboard "aws_vpc_detail" {
       query = query.aws_vpc_routes_for_vpc
       width = 6
       args = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
     }
 
@@ -165,7 +165,7 @@ dashboard "aws_vpc_detail" {
       width = 6
       query = query.aws_vpc_peers_for_vpc_sankey
       args = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
 
       category "failed" {
@@ -181,7 +181,7 @@ dashboard "aws_vpc_detail" {
       title = "Peering Connections"
       query = query.aws_vpc_peers_for_vpc
       args = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
     }
 
@@ -198,7 +198,7 @@ dashboard "aws_vpc_detail" {
       width = 6
       query = query.aws_ingress_nacl_for_vpc_sankey
       args = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
     }
 
@@ -209,7 +209,7 @@ dashboard "aws_vpc_detail" {
       width = 6
       query = query.aws_egress_nacl_for_vpc_sankey
       args = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
     }
 
@@ -226,7 +226,7 @@ dashboard "aws_vpc_detail" {
       query = query.aws_vpc_endpoints_for_vpc
       width = 6
       args = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
     }
 
@@ -235,7 +235,7 @@ dashboard "aws_vpc_detail" {
       query = query.aws_vpc_gateways_for_vpc
       width = 6
       args = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
     }
 
@@ -249,7 +249,7 @@ dashboard "aws_vpc_detail" {
       query = query.aws_vpc_security_groups_for_vpc
       width = 12
       args = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
 
       column "Group Name" {
@@ -283,7 +283,7 @@ query "aws_vpc_input" {
   sql = <<-EOQ
     select
       title as label,
-      arn as value,
+      vpc_id as value,
       json_build_object(
         'account_id', account_id,
         'region', region,
@@ -305,10 +305,10 @@ query "aws_subnet_count_for_vpc" {
     from
       aws_vpc_subnet
     where
-      vpc_id = reverse(split_part(reverse($1), '/', 1));
+      vpc_id = $1
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_is_default" {
@@ -320,10 +320,10 @@ query "aws_vpc_is_default" {
     from
       aws_vpc
     where
-      arn = $1;
+      vpc_id = $1;
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_num_ips_for_vpc" {
@@ -336,7 +336,7 @@ query "aws_vpc_num_ips_for_vpc" {
       from
         aws_vpc,
         jsonb_array_elements(cidr_block_association_set) as b
-      where arn = $1
+      where vpc_id = $1
     )
     select
       sum(num_ips) as "IP Addresses"
@@ -345,7 +345,7 @@ query "aws_vpc_num_ips_for_vpc" {
 
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_flow_logs_count_for_vpc" {
@@ -359,7 +359,7 @@ query "aws_flow_logs_count_for_vpc" {
     where resource_id = reverse(split_part(reverse($1), '/', 1));
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_subnets_for_vpc" {
@@ -375,7 +375,7 @@ query "aws_vpc_subnets_for_vpc" {
       from
         aws_vpc_subnet
       where
-        vpc_id = reverse(split_part(reverse($1), '/', 1))
+        vpc_id = $1
     )
     select
       subnet_id as "Subnet ID",
@@ -391,7 +391,7 @@ query "aws_vpc_subnets_for_vpc" {
       subnet_id;
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_security_groups_for_vpc" {
@@ -403,10 +403,10 @@ query "aws_vpc_security_groups_for_vpc" {
     from
       aws_vpc_security_group
     where
-      vpc_id = reverse(split_part(reverse($1), '/', 1))
+      vpc_id = $1
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_endpoints_for_vpc" {
@@ -418,12 +418,12 @@ query "aws_vpc_endpoints_for_vpc" {
     from
       aws_vpc_endpoint
     where
-      vpc_id = reverse(split_part(reverse($1), '/', 1))
+      vpc_id = $1
     order by
       vpc_endpoint_id;
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_route_tables_for_vpc" {
@@ -434,12 +434,12 @@ query "aws_vpc_route_tables_for_vpc" {
     from
       aws_vpc_route_table
     where
-      vpc_id = reverse(split_part(reverse($1), '/', 1))
+      vpc_id = $1
     order by
       route_table_id;
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_routes_for_vpc_sankey" {
@@ -480,7 +480,7 @@ query "aws_vpc_routes_for_vpc_sankey" {
         jsonb_array_elements(routes) as r,
         jsonb_array_elements(associations) as a
       where
-        vpc_id = reverse(split_part(reverse($1), '/', 1))
+        vpc_id = $1
     )
       select
         null as from_id,
@@ -510,7 +510,7 @@ query "aws_vpc_routes_for_vpc_sankey" {
           routes
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_routes_for_vpc" {
@@ -545,13 +545,13 @@ query "aws_vpc_routes_for_vpc" {
       jsonb_array_elements(routes) as r,
       jsonb_array_elements(associations) as a
     where
-      vpc_id = reverse(split_part(reverse($1), '/', 1))
+      vpc_id = $1
     order by
       route_table_id,
       "Associated To"
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_peers_for_vpc" {
@@ -571,13 +571,13 @@ query "aws_vpc_peers_for_vpc" {
     from
       aws_vpc_peering_connection
     where
-      requester_vpc_id = reverse(split_part(reverse($1), '/', 1))
-      or accepter_vpc_id = reverse(split_part(reverse($1), '/', 1))
+      requester_vpc_id = $1
+      or accepter_vpc_id = $1
     order by
       id
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_gateways_for_vpc" {
@@ -623,10 +623,10 @@ query "aws_vpc_gateways_for_vpc" {
     from
       aws_vpc_nat_gateway
      where
-       vpc_id = reverse(split_part(reverse($1), '/', 1))
+       vpc_id = $1
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 
@@ -691,7 +691,7 @@ query "aws_ingress_nacl_for_vpc_sankey" {
         jsonb_array_elements(entries) as e,
         jsonb_array_elements(associations) as a
       where
-        vpc_id = reverse(split_part(reverse($1), '/', 1))
+        vpc_id = $1
         and not (e -> 'Egress')::boolean
 
     )
@@ -760,7 +760,7 @@ query "aws_ingress_nacl_for_vpc_sankey" {
 
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 
@@ -824,7 +824,7 @@ query "aws_egress_nacl_for_vpc_sankey" {
         jsonb_array_elements(entries) as e,
         jsonb_array_elements(associations) as a
       where
-        vpc_id = reverse(split_part(reverse($1), '/', 1))
+        vpc_id = $1
         and (e -> 'Egress')::boolean
     )
 
@@ -901,7 +901,7 @@ query "aws_egress_nacl_for_vpc_sankey" {
 
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 query "aws_vpc_peers_for_vpc_sankey" {
   sql = <<-EOQ
@@ -920,8 +920,8 @@ query "aws_vpc_peers_for_vpc_sankey" {
       from
         aws_vpc_peering_connection
       where
-        requester_vpc_id = reverse(split_part(reverse($1), '/', 1))
-        or accepter_vpc_id = reverse(split_part(reverse($1), '/', 1))
+        requester_vpc_id = $1
+        or accepter_vpc_id = $1
     )
     select
       concat('requestor_', requester_owner_id) as from_id,
@@ -981,7 +981,7 @@ query "aws_vpc_peers_for_vpc_sankey" {
       peers
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_overview" {
@@ -995,10 +995,10 @@ query "aws_vpc_overview" {
     from
       aws_vpc
     where
-      arn = $1
+      vpc_id = $1
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_tags" {
@@ -1010,12 +1010,12 @@ query "aws_vpc_tags" {
       aws_vpc,
       jsonb_array_elements(tags_src) as tag
     where
-      arn = $1
+      vpc_id = $1
     order by
       tag ->> 'Key';
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_cidr_blocks" {
@@ -1027,7 +1027,7 @@ query "aws_vpc_cidr_blocks" {
       aws_vpc,
       jsonb_array_elements(cidr_block_association_set) as b
     where
-      arn = $1
+      vpc_id = $1
     union all
     select
       b ->> 'Ipv6CidrBlock' as cidr_block,
@@ -1036,10 +1036,10 @@ query "aws_vpc_cidr_blocks" {
       aws_vpc,
       jsonb_array_elements(ipv6_cidr_block_association_set) as b
     where
-      arn = $1;
+      vpc_id = $1;
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_dhcp_options" {
@@ -1056,13 +1056,13 @@ query "aws_vpc_dhcp_options" {
       aws_vpc as v,
       aws_vpc_dhcp_options as d
     where
-      v.arn = $1
+      v.vpc_id = $1
       and v.dhcp_options_id = d.dhcp_options_id
     order by
       d.dhcp_options_id;
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_subnet_by_az" {
@@ -1073,12 +1073,12 @@ query "aws_vpc_subnet_by_az" {
     from
       aws_vpc_subnet
     where
-      vpc_id = reverse(split_part(reverse($1), '/', 1))
+      vpc_id = $1
     group by
       availability_zone
     order by
       availability_zone
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }

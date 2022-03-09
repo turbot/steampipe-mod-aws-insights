@@ -131,6 +131,10 @@ dashboard "aws_iam_user_detail" {
       args  = {
         arn = self.input.user_arn.value
       }
+
+      column "Name" {
+         href = "${dashboard.aws_iam_group_detail.url_path}?input.group_arn={{.'ARN' | @uri}}"
+      }
     }
 
     table {

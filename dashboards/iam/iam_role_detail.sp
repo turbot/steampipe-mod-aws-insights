@@ -71,15 +71,23 @@ dashboard "aws_iam_role_detail" {
       title = "AWS IAM Role Policy Analysis"
 
 
-      # hierarchy {
-      #   type  = "sankey"
-      #   title = "Attached Policies"
-      #   sql   = query.aws_iam_user_manage_policies_sankey.sql
+      hierarchy {
+        type  = "tree"
+        width = 6
+        title = "Attached Policies"
+        query   = query.aws_iam_user_manage_policies_hierarchy
+        args  = {
+          arn = self.input.role_arn.value
+        }
 
-      #   category "aws_iam_group" {
-      #     color = "green"
-      #   }
-      # }
+        category "inline_policy" {
+          color = "alert"
+        }
+        category "managed_policy" {
+          color = "ok"
+        }
+        
+      }
 
 
       table {
@@ -185,14 +193,17 @@ query "aws_iam_all_policies_for_role" {
   sql = <<-EOQ
     -- Policies (attached to groups)
     select
-      split_part(policy_arn, '/','2') as "Policy",
+      p.name as "Policy",
       policy_arn as "ARN",
       'Attached to Role' as "Via"
     from
       aws_iam_role as r,
-      jsonb_array_elements_text(r.attached_policy_arns) as policy_arn
+      jsonb_array_elements_text(r.attached_policy_arns) as policy_arn,
+      aws_iam_policy as p
     where
-      r.arn = $1
+      p.arn = policy_arn
+      and r.arn = $1
+
     -- Inline Policies (defined on role)
     union select
       i ->> 'PolicyName' as "Policy",
@@ -222,5 +233,54 @@ query "aws_iam_role_tags" {
       tag ->> 'Key'
   EOQ
 
-  param "arn" {}
+  param "arn" {} 
 }
+
+
+
+query "aws_iam_user_manage_policies_hierarchy" {
+    sql = <<-EOQ
+    select
+      $1 as id,
+      $1 as title,
+      'role' as category,
+      null as from_id
+
+    -- Policies (attached to groups)
+    union select
+      policy_arn as id,
+      p.name as title,
+      'managed_policy' as category,
+      r.arn as from_id
+    from
+      aws_iam_role as r,
+      jsonb_array_elements_text(r.attached_policy_arns) as policy_arn,
+      aws_iam_policy as p
+    where
+      p.arn = policy_arn
+      and r.arn = $1
+
+    -- Inline Policies (defined on role)
+    union select
+      concat('inline_', i ->> 'PolicyName') as id,
+      i ->> 'PolicyName' as title,
+      'inline_policy' as category,
+      r.arn as from_id
+    from
+      aws_iam_role as r,
+      jsonb_array_elements(inline_policies_std) as i
+    where
+      arn = $1
+
+  EOQ
+
+  param "arn" {}
+
+}
+
+
+
+/*
+
+
+      */

@@ -70,6 +70,14 @@ dashboard "aws_vpc_security_group_detail" {
         args  = {
           group_id = self.input.security_group_id.value
         }
+
+        column "VPC ID" {
+          // Currently, this causes a cyclic dependency error, so hardocde for now..
+          // href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.'VPC ID' | @uri}}"
+          href = "http://localhost:9194/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.'VPC ID'}}"
+
+        }
+
       }
 
       table {
@@ -1157,7 +1165,6 @@ query "aws_vpc_security_group_egress_rules" {
 query "aws_vpc_security_group_overview" {
   sql   = <<-EOQ
     select
-      title as "Title",
       group_name as "Group Name",
       group_id as "Group ID",
       description as "Description",
