@@ -7,7 +7,7 @@ dashboard "aws_vpc_detail" {
     type = "Detail"
   })
 
-  input "vpc_arn" {
+  input "vpc_id" {
     title = "Select a VPC:"
     sql   = query.aws_vpc_input.sql
     width = 4
@@ -19,7 +19,7 @@ dashboard "aws_vpc_detail" {
       width = 2
       query = query.aws_vpc_num_ips_for_vpc
       args  = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
     }
 
@@ -27,7 +27,7 @@ dashboard "aws_vpc_detail" {
       width = 2
       query = query.aws_subnet_count_for_vpc
       args  = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
     }
 
@@ -35,7 +35,7 @@ dashboard "aws_vpc_detail" {
       width = 2
       query = query.aws_vpc_is_default
       args  = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
     }
 
@@ -43,7 +43,7 @@ dashboard "aws_vpc_detail" {
       width = 2
       query = query.aws_flow_logs_count_for_vpc
       args  = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
     }
 
@@ -61,7 +61,7 @@ dashboard "aws_vpc_detail" {
         width = 6
         query = query.aws_vpc_overview
         args  = {
-          arn = self.input.vpc_arn.value
+          vpc_id = self.input.vpc_id.value
         }
       }
 
@@ -70,7 +70,7 @@ dashboard "aws_vpc_detail" {
         width = 6
         query = query.aws_vpc_tags
         args  = {
-          arn = self.input.vpc_arn.value
+          vpc_id = self.input.vpc_id.value
         }
       }
 
@@ -84,7 +84,7 @@ dashboard "aws_vpc_detail" {
         title = "CIDR Blocks"
         query = query.aws_vpc_cidr_blocks
         args  = {
-          arn = self.input.vpc_arn.value
+          vpc_id = self.input.vpc_id.value
         }
       }
 
@@ -92,7 +92,7 @@ dashboard "aws_vpc_detail" {
         title = "DHCP Options"
         query = query.aws_vpc_dhcp_options
         args  = {
-          arn = self.input.vpc_arn.value
+          vpc_id = self.input.vpc_id.value
         }
       }
 
@@ -110,7 +110,7 @@ dashboard "aws_vpc_detail" {
       width = 4
       query = query.aws_vpc_subnet_by_az
       args = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
 
     }
@@ -119,7 +119,7 @@ dashboard "aws_vpc_detail" {
       query = query.aws_vpc_subnets_for_vpc
       width = 6
       args = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
     }
 
@@ -129,10 +129,10 @@ dashboard "aws_vpc_detail" {
 
     title = "Routing"
 
-    hierarchy {
+    flow {
       query = query.aws_vpc_routes_for_vpc_sankey
       args = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
     }
 
@@ -141,7 +141,7 @@ dashboard "aws_vpc_detail" {
       query = query.aws_vpc_route_tables_for_vpc
       width = 6
       args = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
     }
 
@@ -150,7 +150,7 @@ dashboard "aws_vpc_detail" {
       query = query.aws_vpc_routes_for_vpc
       width = 6
       args = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
     }
 
@@ -160,12 +160,12 @@ dashboard "aws_vpc_detail" {
 
     title = "Peering Connections"
 
-    hierarchy {
+    flow {
       title = "Peering Connections"
       width = 6
       query = query.aws_vpc_peers_for_vpc_sankey
       args = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
 
       category "failed" {
@@ -181,7 +181,7 @@ dashboard "aws_vpc_detail" {
       title = "Peering Connections"
       query = query.aws_vpc_peers_for_vpc
       args = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
     }
 
@@ -191,39 +191,28 @@ dashboard "aws_vpc_detail" {
 
     title = "NACLs"
 
-    hierarchy {
+
+    flow {
+      base = flow.nacl_flow
       title = "Ingress NACLs"
       width = 6
       query = query.aws_ingress_nacl_for_vpc_sankey
       args = {
-        arn = self.input.vpc_arn.value
-      }
-
-      category "deny" {
-        color = "alert"
-      }
-
-      category "allow" {
-        color = "ok"
+        vpc_id = self.input.vpc_id.value
       }
     }
 
-    hierarchy {
+
+    flow {
+      base = flow.nacl_flow
       title = "Egress NACLs"
       width = 6
       query = query.aws_egress_nacl_for_vpc_sankey
       args = {
-        arn = self.input.vpc_arn.value
-      }
-
-      category "deny" {
-        color = "alert"
-      }
-
-      category "allow" {
-        color = "ok"
+        vpc_id = self.input.vpc_id.value
       }
     }
+
 
   }
 
@@ -237,7 +226,7 @@ dashboard "aws_vpc_detail" {
       query = query.aws_vpc_endpoints_for_vpc
       width = 6
       args = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
     }
 
@@ -246,7 +235,7 @@ dashboard "aws_vpc_detail" {
       query = query.aws_vpc_gateways_for_vpc
       width = 6
       args = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
       }
     }
 
@@ -260,10 +249,32 @@ dashboard "aws_vpc_detail" {
       query = query.aws_vpc_security_groups_for_vpc
       width = 12
       args = {
-        arn = self.input.vpc_arn.value
+        vpc_id = self.input.vpc_id.value
+      }
+
+      column "Group Name" {
+        href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.'Group ID' | @uri}}"
       }
     }
 
+  }
+
+}
+
+
+
+
+flow "nacl_flow" {
+  width = 6
+  type  = "sankey"
+
+
+  category "deny" {
+    color = "red"
+  }
+
+  category "allow" {
+    color = "green"
   }
 
 }
@@ -272,7 +283,7 @@ query "aws_vpc_input" {
   sql = <<-EOQ
     select
       title as label,
-      arn as value,
+      vpc_id as value,
       json_build_object(
         'account_id', account_id,
         'region', region,
@@ -294,10 +305,10 @@ query "aws_subnet_count_for_vpc" {
     from
       aws_vpc_subnet
     where
-      vpc_id = reverse(split_part(reverse($1), '/', 1));
+      vpc_id = $1
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_is_default" {
@@ -309,10 +320,10 @@ query "aws_vpc_is_default" {
     from
       aws_vpc
     where
-      arn = $1;
+      vpc_id = $1;
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_num_ips_for_vpc" {
@@ -325,7 +336,7 @@ query "aws_vpc_num_ips_for_vpc" {
       from
         aws_vpc,
         jsonb_array_elements(cidr_block_association_set) as b
-      where arn = $1
+      where vpc_id = $1
     )
     select
       sum(num_ips) as "IP Addresses"
@@ -334,7 +345,7 @@ query "aws_vpc_num_ips_for_vpc" {
 
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_flow_logs_count_for_vpc" {
@@ -348,7 +359,7 @@ query "aws_flow_logs_count_for_vpc" {
     where resource_id = reverse(split_part(reverse($1), '/', 1));
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_subnets_for_vpc" {
@@ -364,7 +375,7 @@ query "aws_vpc_subnets_for_vpc" {
       from
         aws_vpc_subnet
       where
-        vpc_id = reverse(split_part(reverse($1), '/', 1))
+        vpc_id = $1
     )
     select
       subnet_id as "Subnet ID",
@@ -380,7 +391,7 @@ query "aws_vpc_subnets_for_vpc" {
       subnet_id;
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_security_groups_for_vpc" {
@@ -392,10 +403,10 @@ query "aws_vpc_security_groups_for_vpc" {
     from
       aws_vpc_security_group
     where
-      vpc_id = reverse(split_part(reverse($1), '/', 1))
+      vpc_id = $1
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_endpoints_for_vpc" {
@@ -407,12 +418,12 @@ query "aws_vpc_endpoints_for_vpc" {
     from
       aws_vpc_endpoint
     where
-      vpc_id = reverse(split_part(reverse($1), '/', 1))
+      vpc_id = $1
     order by
       vpc_endpoint_id;
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_route_tables_for_vpc" {
@@ -423,12 +434,12 @@ query "aws_vpc_route_tables_for_vpc" {
     from
       aws_vpc_route_table
     where
-      vpc_id = reverse(split_part(reverse($1), '/', 1))
+      vpc_id = $1
     order by
       route_table_id;
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_routes_for_vpc_sankey" {
@@ -469,37 +480,37 @@ query "aws_vpc_routes_for_vpc_sankey" {
         jsonb_array_elements(routes) as r,
         jsonb_array_elements(associations) as a
       where
-        vpc_id = reverse(split_part(reverse($1), '/', 1))
+        vpc_id = $1
     )
       select
-        null as parent,
+        null as from_id,
         associated_to as id,
-        associated_to as name,
+        associated_to as title,
         'aws_vpc_route_table' as category,
         0 as depth
       from
         routes
       union
         select
-          associated_to as parent,
+          associated_to as from_id,
           destination_cidr as id,
-          destination_cidr as name,
+          destination_cidr as title,
           'vpc_or_subnet' as category,
           1 as depth
         from
           routes
       union
         select
-          destination_cidr as parent,
+          destination_cidr as from_id,
           gateway as id,
-          gateway as name,
+          gateway as title,
           'gateway' as category,
           2 as depth
         from
           routes
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_routes_for_vpc" {
@@ -534,13 +545,13 @@ query "aws_vpc_routes_for_vpc" {
       jsonb_array_elements(routes) as r,
       jsonb_array_elements(associations) as a
     where
-      vpc_id = reverse(split_part(reverse($1), '/', 1))
+      vpc_id = $1
     order by
       route_table_id,
       "Associated To"
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_peers_for_vpc" {
@@ -560,13 +571,13 @@ query "aws_vpc_peers_for_vpc" {
     from
       aws_vpc_peering_connection
     where
-      requester_vpc_id = reverse(split_part(reverse($1), '/', 1))
-      or accepter_vpc_id = reverse(split_part(reverse($1), '/', 1))
+      requester_vpc_id = $1
+      or accepter_vpc_id = $1
     order by
       id
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_gateways_for_vpc" {
@@ -612,206 +623,287 @@ query "aws_vpc_gateways_for_vpc" {
     from
       aws_vpc_nat_gateway
      where
-       vpc_id = reverse(split_part(reverse($1), '/', 1))
+       vpc_id = $1
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
+
+
+
 
 query "aws_ingress_nacl_for_vpc_sankey" {
   sql = <<-EOQ
-    with nacl_data as (
+
+    with aces as (
       select
+        arn,
         title,
         network_acl_id,
         is_default,
-        entries,
-        associations
+        e -> 'Protocol' as protocol_number,
+        e ->> 'CidrBlock' as ipv4_cidr_block,
+        e ->> 'Ipv6CidrBlock' as ipv6_cidr_block,
+        coalesce(e ->> 'CidrBlock', e ->> 'Ipv6CidrBlock') as cidr_block,
+        e -> 'PortRange' -> 'To' as to_port,
+        e -> 'PortRange' -> 'From' as from_port,
+        e ->> 'RuleAction' as rule_action,
+        e -> 'RuleNumber' as rule_number,
+        to_char((e->>'RuleNumber')::numeric, 'fm00000')  as rule_num_padded,
+
+        -- e -> 'IcmpTypeCode' as icmp_type_code,
+        e -> 'IcmpTypeCode' -> 'Code' as icmp_code,
+        e -> 'IcmpTypeCode' -> 'Type' as icmp_type,    
+
+        e -> 'Protocol' as protocol_number,
+        e -> 'Egress' as is_egress,
+
+        case when e ->> 'RuleAction' = 'allow' then 'Allow ' else 'Deny ' end ||
+          case
+              when e->>'Protocol' = '-1' then 'All Traffic'
+              when e->>'Protocol' = '1'  and e->'IcmpTypeCode' is null then 'All ICMP'
+              when e->>'Protocol' = '58'  and e->'IcmpTypeCode' is null then 'All ICMPv6'
+              when e->>'Protocol' = '6'  and e->'PortRange' is null then 'All TCP'
+              when e->>'Protocol' = '17' and e->'PortRange' is null then 'All UDP'
+              when e->>'Protocol' = '6' and e->'PortRange'->>'From' = '0' and e->'PortRange'->>'To' = '65535'
+                then 'All TCP'
+              when e->>'Protocol' = '17' and e->'PortRange'->>'From' = '0' and e->'PortRange'->>'To' = '65535'
+                then  'All UDP'
+              when e->>'Protocol' = '1'  and e->'IcmpTypeCode' is not null
+                then concat('ICMP Type ', e->'IcmpTypeCode'->>'Type', ', Code ',  e->'IcmpTypeCode'->>'Code')
+              when e->>'Protocol' = '58'  and e->'IcmpTypeCode' is not null
+                then concat('ICMPv6 Type ', e->'IcmpTypeCode'->>'Type', ', Code ',  e->'IcmpTypeCode'->>'Code')
+              when e->>'Protocol' = '6' and e->'PortRange'->>'To'  = e->'PortRange'->>'From'
+                then  concat(e->'PortRange'->>'To', '/TCP')
+              when e->>'Protocol' = '17' and e->'PortRange'->>'To'  = e->'PortRange'->>'From'
+                then  concat(e->'PortRange'->>'To', '/UDP')
+              when e->>'Protocol' = '6' and e->'PortRange'->>'From' <> e->'PortRange' ->> 'To'
+                then  concat(e->'PortRange'->>'To', '-', e->'PortRange'->>'From', '/TCP')
+              when e->>'Protocol' = '17' and e->'PortRange'->>'From' <> e->'PortRange'->>'To'
+                then  concat(e->'PortRange'->>'To', '-', e->'PortRange'->>'From', '/UDP')
+              else concat('Procotol: ', e->>'Protocol')
+        end as rule_description,
+
+        a ->> 'SubnetId' as subnet_id,
+        a ->> 'NetworkAclAssociationId' as nacl_association_id
       from
-        aws_vpc_network_acl
-      where
-        vpc_id = reverse(split_part(reverse($1), '/', 1))
-    )
-    -- CIDRS
-    select
-      concat(network_acl_id, '_'::text, e ->> 'RuleNumber', '_port_proto') as parent,
-      e ->> 'CidrBlock' as id,
-      e ->> 'CidrBlock' as name,
-      0 as depth,
-      e ->> 'RuleAction' as category
-    from
-      nacl_data,
-      jsonb_array_elements(entries) as e
-    where
-      not (e ->> 'Egress')::boolean
-    -- Port - protcol
-    union all select
-      concat(network_acl_id, '_', to_char((e->>'RuleNumber')::numeric, 'fm00000'))  as parent,
-      concat(network_acl_id, '_'::text, e ->> 'RuleNumber', '_port_proto') as id,
-      case when e ->> 'RuleAction' = 'allow' then 'Allow ' else 'Deny ' end ||
-      case
-        when e->>'Protocol' = '-1' then 'All Traffic'
-        when e->>'Protocol' = '1'  and e->'IcmpTypeCode' is null then 'All ICMP'
-        when e->>'Protocol' = '58'  and e->'IcmpTypeCode' is null then 'All ICMPv6'
-        when e->>'Protocol' = '6'  and e->'PortRange' is null then 'All TCP'
-        when e->>'Protocol' = '17' and e->'PortRange' is null then 'All UDP'
-        when e->>'Protocol' = '6' and e->'PortRange'->>'From' = '0' and e->'PortRange'->>'To' = '65535'
-          then 'All TCP'
-        when e->>'Protocol' = '17' and e->'PortRange'->>'From' = '0' and e->'PortRange'->>'To' = '65535'
-          then  'All UDP'
-        when e->>'Protocol' = '1'  and e->'IcmpTypeCode' is not null
-          then concat('ICMP Type ', e->'IcmpTypeCode'->>'Type', ', Code ',  e->'IcmpTypeCode'->>'Code')
-        when e->>'Protocol' = '58'  and e->'IcmpTypeCode' is not null
-          then concat('ICMPv6 Type ', e->'IcmpTypeCode'->>'Type', ', Code ',  e->'IcmpTypeCode'->>'Code')
-        when e->>'Protocol' = '6' and e->'PortRange'->>'To'  = e->'PortRange'->>'From'
-          then  concat(e->'PortRange'->>'To', '/TCP')
-        when e->>'Protocol' = '17' and e->'PortRange'->>'To'  = e->'PortRange'->>'From'
-          then  concat(e->'PortRange'->>'To', '/UDP')
-        when e->>'Protocol' = '6' and e->'PortRange'->>'From' <> e->'PortRange' ->> 'To'
-          then  concat(e->'PortRange'->>'To', '-', e->'PortRange'->>'From', '/TCP')
-        when e->>'Protocol' = '17' and e->'PortRange'->>'From' <> e->'PortRange'->>'To'
-          then  concat(e->'PortRange'->>'To', '-', e->'PortRange'->>'From', '/UDP')
-        else concat('Procotol: ', e->>'Protocol')
-      end as name,
-      1 as depth,
-      e ->> 'RuleAction' as category
-    from
-      nacl_data,
-      jsonb_array_elements(entries) as e
-    where
-      not (e ->> 'Egress')::boolean
-    union all
-    select
-      network_acl_id as parent,
-      concat(network_acl_id, '_', to_char( (e->>'RuleNumber')::numeric, 'fm00000')) as id,
-      concat('Rule #', e ->> 'RuleNumber')  as name,
-      2 as depth,
-      e ->> 'RuleAction' as category
-    from
-      nacl_data,
-      jsonb_array_elements(entries) as e
-    where
-      not (e ->> 'Egress')::boolean
-      union all select
-        null as parent,
-        network_acl_id as id,
-        network_acl_id as name,
-        3 as depth,
-        'aws_vpc_network_acl' as category
-      from
-        nacl_data
-      union all select
-        a->>'NetworkAclId' as parent,
-        a->>'SubnetId' as id,
-        a->>'SubnetId' as name,
-        4 as depth,
-        'aws_vpc_subnet' as category
-      from
-        nacl_data,
+        aws_vpc_network_acl,
+        jsonb_array_elements(entries) as e,
         jsonb_array_elements(associations) as a
+      where
+        vpc_id = $1
+        and not (e -> 'Egress')::boolean
+
+    )
+
+    -- CIDR Nodes
+    select 
+      distinct cidr_block as id,
+      cidr_block as title,
+      'cidr_block' as category,
+      null as from_id,
+      null as to_id
+    from aces
+
+    -- Rule Nodes
+    union select 
+      concat(network_acl_id, '_', rule_num_padded) as id,
+      concat(rule_number, ': ', rule_description) as title,
+      'rule' as category,
+      null as from_id,
+      null as to_id
+    from aces
+
+    -- ACL Nodes
+    union select 
+      distinct network_acl_id as id,
+      network_acl_id as title,
+      'nacl' as category,
+      null as from_id,
+      null as to_id
+    from aces 
+
+    -- Subnet node
+    union select
+      distinct subnet_id as id,
+      subnet_id as title,
+      'subnet' as category,
+      null as from_id,
+      null as to_id
+    from aces
+
+    -- ip -> rule edge
+    union select 
+      null as id,
+      null as title,
+      rule_action as category,
+      cidr_block as from_id,
+      concat(network_acl_id, '_', rule_num_padded) as to_id
+    from aces
+
+    -- rule -> NACL edge
+    union select 
+      null as id,
+      null as title,
+      rule_action as category,
+      concat(network_acl_id, '_', rule_num_padded) as from_id,
+      network_acl_id as to_id
+    from aces
+
+    -- nacl -> subnet edge
+    union select 
+      null as id,
+      null as title,
+      'attached' as category,
+      network_acl_id as from_id,
+      subnet_id as to_id
+    from aces
+
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
+
+
 
 query "aws_egress_nacl_for_vpc_sankey" {
   sql = <<-EOQ
-    with nacl_data as (
+
+    with aces as (
       select
+        arn,
         title,
         network_acl_id,
         is_default,
-        entries,
-        associations
+        e -> 'Protocol' as protocol_number,
+        e ->> 'CidrBlock' as ipv4_cidr_block,
+        e ->> 'Ipv6CidrBlock' as ipv6_cidr_block,
+        coalesce(e ->> 'CidrBlock', e ->> 'Ipv6CidrBlock') as cidr_block,
+        e -> 'PortRange' -> 'To' as to_port,
+        e -> 'PortRange' -> 'From' as from_port,
+        e ->> 'RuleAction' as rule_action,
+        e -> 'RuleNumber' as rule_number,
+        to_char((e->>'RuleNumber')::numeric, 'fm00000')  as rule_num_padded,
+
+        -- e -> 'IcmpTypeCode' as icmp_type_code,
+        e -> 'IcmpTypeCode' -> 'Code' as icmp_code,
+        e -> 'IcmpTypeCode' -> 'Type' as icmp_type,    
+
+        e -> 'Protocol' as protocol_number,
+        e -> 'Egress' as is_egress,
+
+        case when e ->> 'RuleAction' = 'allow' then 'Allow ' else 'Deny ' end ||
+          case
+              when e->>'Protocol' = '-1' then 'All Traffic'
+              when e->>'Protocol' = '1'  and e->'IcmpTypeCode' is null then 'All ICMP'
+              when e->>'Protocol' = '58'  and e->'IcmpTypeCode' is null then 'All ICMPv6'
+              when e->>'Protocol' = '6'  and e->'PortRange' is null then 'All TCP'
+              when e->>'Protocol' = '17' and e->'PortRange' is null then 'All UDP'
+              when e->>'Protocol' = '6' and e->'PortRange'->>'From' = '0' and e->'PortRange'->>'To' = '65535'
+                then 'All TCP'
+              when e->>'Protocol' = '17' and e->'PortRange'->>'From' = '0' and e->'PortRange'->>'To' = '65535'
+                then  'All UDP'
+              when e->>'Protocol' = '1'  and e->'IcmpTypeCode' is not null
+                then concat('ICMP Type ', e->'IcmpTypeCode'->>'Type', ', Code ',  e->'IcmpTypeCode'->>'Code')
+              when e->>'Protocol' = '58'  and e->'IcmpTypeCode' is not null
+                then concat('ICMPv6 Type ', e->'IcmpTypeCode'->>'Type', ', Code ',  e->'IcmpTypeCode'->>'Code')
+              when e->>'Protocol' = '6' and e->'PortRange'->>'To'  = e->'PortRange'->>'From'
+                then  concat(e->'PortRange'->>'To', '/TCP')
+              when e->>'Protocol' = '17' and e->'PortRange'->>'To'  = e->'PortRange'->>'From'
+                then  concat(e->'PortRange'->>'To', '/UDP')
+              when e->>'Protocol' = '6' and e->'PortRange'->>'From' <> e->'PortRange' ->> 'To'
+                then  concat(e->'PortRange'->>'To', '-', e->'PortRange'->>'From', '/TCP')
+              when e->>'Protocol' = '17' and e->'PortRange'->>'From' <> e->'PortRange'->>'To'
+                then  concat(e->'PortRange'->>'To', '-', e->'PortRange'->>'From', '/UDP')
+              else concat('Procotol: ', e->>'Protocol')
+        end as rule_description,
+
+        a ->> 'SubnetId' as subnet_id,
+        a ->> 'NetworkAclAssociationId' as nacl_association_id
       from
-        aws_vpc_network_acl
+        aws_vpc_network_acl,
+        jsonb_array_elements(entries) as e,
+        jsonb_array_elements(associations) as a
       where
-        vpc_id = reverse(split_part(reverse($1), '/', 1))
+        vpc_id = $1
+        and (e -> 'Egress')::boolean
     )
+
+    -- Subnet Nodes
     select
-      a->>'NetworkAclId' as parent,
-      a->>'SubnetId' as id,
-      a->>'SubnetId' as name,
-      0 as depth,
-      'aws_vpc_subnet' as category
-    from
-      nacl_data,
-      jsonb_array_elements(associations) as a
-    union all select
-      null as parent,
-      network_acl_id as id,
-      network_acl_id as name,
-      1 as depth,
-      'aws_vpc_network_acl' as category
-    from
-      nacl_data
+      distinct subnet_id as id,
+      subnet_id as title,
+      'subnet' as category,
+      null as from_id,
+      null as to_id,
+      0 as depth
+    from aces
 
-   union all select
-      network_acl_id as parent,
-      concat(network_acl_id, '_', to_char( (e->>'RuleNumber')::numeric, 'fm00000')) as id,
-      concat('Rule #', e ->> 'RuleNumber')  as name,
-      2 as depth,
-      e ->> 'RuleAction' as category
-    from
-      nacl_data,
-      jsonb_array_elements(entries) as e
-    where
-      (e ->> 'Egress')::boolean
+    -- ACL Nodes
+    union select 
+      distinct network_acl_id as id,
+      network_acl_id as title,
+      'nacl' as category,
+      null as from_id,
+      null as to_id,
+      1 as depth
 
-  -- Port - protcol
-    union all select
-      concat(network_acl_id, '_', to_char((e->>'RuleNumber')::numeric, 'fm00000'))  as parent,
-      concat(network_acl_id, '_'::text, e ->> 'RuleNumber', '_port_proto') as id,
-      case when e ->> 'RuleAction' = 'allow' then 'Allow ' else 'Deny ' end ||
-      case
-        when e->>'Protocol' = '-1' then 'All Traffic'
-        when e->>'Protocol' = '1'  and e->'IcmpTypeCode' is null then 'All ICMP'
-        when e->>'Protocol' = '58'  and e->'IcmpTypeCode' is null then 'All ICMPv6'
-        when e->>'Protocol' = '6'  and e->'PortRange' is null then 'All TCP'
-        when e->>'Protocol' = '17' and e->'PortRange' is null then 'All UDP'
-        when e->>'Protocol' = '6' and e->'PortRange'->>'From' = '0' and e->'PortRange'->>'To' = '65535'
-          then 'All TCP'
-        when e->>'Protocol' = '17' and e->'PortRange'->>'From' = '0' and e->'PortRange'->>'To' = '65535'
-          then  'All UDP'
-        when e->>'Protocol' = '1'  and e->'IcmpTypeCode' is not null
-          then concat('ICMP Type ', e->'IcmpTypeCode'->>'Type', ', Code ',  e->'IcmpTypeCode'->>'Code')
-        when e->>'Protocol' = '58'  and e->'IcmpTypeCode' is not null
-          then concat('ICMPv6 Type ', e->'IcmpTypeCode'->>'Type', ', Code ',  e->'IcmpTypeCode'->>'Code')
-        when e->>'Protocol' = '6' and e->'PortRange'->>'To'  = e->'PortRange'->>'From'
-          then  concat(e->'PortRange'->>'To', '/TCP')
-        when e->>'Protocol' = '17' and e->'PortRange'->>'To'  = e->'PortRange'->>'From'
-          then  concat(e->'PortRange'->>'To', '/UDP')
-        when e->>'Protocol' = '6' and e->'PortRange'->>'From' <> e->'PortRange' ->> 'To'
-          then  concat(e->'PortRange'->>'To', '-', e->'PortRange'->>'From', '/TCP')
-        when e->>'Protocol' = '17' and e->'PortRange'->>'From' <> e->'PortRange'->>'To'
-          then  concat(e->'PortRange'->>'To', '-', e->'PortRange'->>'From', '/UDP')
-        else concat('Procotol: ', e->>'Protocol')
-      end as name,
-      3 as depth,
-      e ->> 'RuleAction' as category
-    from
-      nacl_data,
-      jsonb_array_elements(entries) as e
-    where
-      (e ->> 'Egress')::boolean
+    from aces 
 
-    -- CIDRS
-    union all select
-      concat(network_acl_id, '_'::text, e ->> 'RuleNumber', '_port_proto') as parent,
-      e ->> 'CidrBlock' as id,
-      e ->> 'CidrBlock' as name,
-      4 as depth,
-      e ->> 'RuleAction' as category
-    from
-      nacl_data,
-      jsonb_array_elements(entries) as e
-    where
-      (e ->> 'Egress')::boolean
+    -- Rule Nodes
+    union select 
+      concat(network_acl_id, '_', rule_num_padded) as id,
+      concat(rule_number, ': ', rule_description) as title,
+      'rule' as category,
+      null as from_id,
+      null as to_id,
+      2 as depth
+    from aces
+
+    -- CIDR Nodes
+    union select 
+      distinct cidr_block as id,
+      cidr_block as title,
+      'cidr_block' as category,
+      null as from_id,
+      null as to_id,
+      3 as depth
+    from aces
+    
+    -- nacl -> subnet edge
+    union select 
+      null as id,
+      null as title,
+      'attached' as category,
+      network_acl_id as from_id,
+      subnet_id as to_id, 
+      null as depth
+    from aces
+
+    -- rule -> NACL edge
+    union select 
+      null as id,
+      null as title,
+      rule_action as category,
+      concat(network_acl_id, '_', rule_num_padded) as from_id,
+      network_acl_id as to_id,
+      null as depth
+    from aces
+
+    -- ip -> rule edge
+    union select 
+      null as id,
+      null as title,
+      rule_action as category,
+      cidr_block as from_id,
+      concat(network_acl_id, '_', rule_num_padded) as to_id,
+      null as depth
+    from aces
+
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
-
 query "aws_vpc_peers_for_vpc_sankey" {
   sql = <<-EOQ
     with peers as (
@@ -829,68 +921,68 @@ query "aws_vpc_peers_for_vpc_sankey" {
       from
         aws_vpc_peering_connection
       where
-        requester_vpc_id = reverse(split_part(reverse($1), '/', 1))
-        or accepter_vpc_id = reverse(split_part(reverse($1), '/', 1))
+        requester_vpc_id = $1
+        or accepter_vpc_id = $1
     )
     select
-      concat('requestor_', requester_owner_id) as parent,
+      concat('requestor_', requester_owner_id) as from_id,
       concat('requestor_', requester_cidr_block) as id,
-      requester_cidr_block::text as name,
+      requester_cidr_block::text as title,
       0 as depth,
       status_code as category
     from
       peers
     union select
-      concat('requestor_', requester_region) as parent,
+      concat('requestor_', requester_region) as from_id,
       concat('requestor_', requester_owner_id) as id,
-      requester_owner_id as name,
+      requester_owner_id as title,
       1 as depth,
       'account' as category
     from
       peers
     union select
-      id as parent,
+      id as from_id,
       concat('requestor_', requester_region) as id,
-      requester_region as name,
+      requester_region as title,
       2 as depth,
       'region' as category
     from
       peers
     union select
-      null as parent,
+      null as from_id,
       id,
-      id as name,
+      id as title,
       3 as depth,
       status_code as category
     from
       peers
     union select
-      id as parent,
+      id as from_id,
       concat('acceptor_', accepter_region) as id,
-      accepter_region as name,
+      accepter_region as title,
       4 as depth,
       'region' as category
     from
       peers
     union select
-      concat('acceptor_', accepter_region) as parent,
+      concat('acceptor_', accepter_region) as from_id,
       concat('acceptor_', accepter_owner_id) as id,
-      accepter_owner_id as name,
+      accepter_owner_id as title,
       5 as depth,
       'account' as category
     from
       peers
     union  select
-      concat('acceptor_', accepter_owner_id) as parent,
+      concat('acceptor_', accepter_owner_id) as from_id,
       concat('acceptor_', accepter_cidr_block) as id,
-      accepter_cidr_block::text as name,
+      accepter_cidr_block::text as title,
       6 as depth,
       status_code as category
     from
       peers
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_overview" {
@@ -904,10 +996,10 @@ query "aws_vpc_overview" {
     from
       aws_vpc
     where
-      arn = $1
+      vpc_id = $1
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_tags" {
@@ -919,12 +1011,12 @@ query "aws_vpc_tags" {
       aws_vpc,
       jsonb_array_elements(tags_src) as tag
     where
-      arn = $1
+      vpc_id = $1
     order by
       tag ->> 'Key';
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_cidr_blocks" {
@@ -936,7 +1028,7 @@ query "aws_vpc_cidr_blocks" {
       aws_vpc,
       jsonb_array_elements(cidr_block_association_set) as b
     where
-      arn = $1
+      vpc_id = $1
     union all
     select
       b ->> 'Ipv6CidrBlock' as cidr_block,
@@ -945,10 +1037,10 @@ query "aws_vpc_cidr_blocks" {
       aws_vpc,
       jsonb_array_elements(ipv6_cidr_block_association_set) as b
     where
-      arn = $1;
+      vpc_id = $1;
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_dhcp_options" {
@@ -965,13 +1057,13 @@ query "aws_vpc_dhcp_options" {
       aws_vpc as v,
       aws_vpc_dhcp_options as d
     where
-      v.arn = $1
+      v.vpc_id = $1
       and v.dhcp_options_id = d.dhcp_options_id
     order by
       d.dhcp_options_id;
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
 
 query "aws_vpc_subnet_by_az" {
@@ -982,12 +1074,12 @@ query "aws_vpc_subnet_by_az" {
     from
       aws_vpc_subnet
     where
-      vpc_id = reverse(split_part(reverse($1), '/', 1))
+      vpc_id = $1
     group by
       availability_zone
     order by
       availability_zone
   EOQ
 
-  param "arn" {}
+  param "vpc_id" {}
 }
