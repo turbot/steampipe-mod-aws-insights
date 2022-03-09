@@ -1,6 +1,7 @@
 dashboard "aws_rds_db_cluster_age_report" {
 
-  title = "AWS RDS DB Cluster Age Report"
+  title         = "AWS RDS DB Cluster Age Report"
+  documentation = file("./dashboards/rds/docs/rds_db_cluster_report_age.md")
 
   tags = merge(local.rds_common_tags, {
     type     = "Report"
@@ -123,13 +124,12 @@ query "aws_rds_db_cluster_1_year_count" {
 query "aws_rds_db_cluster_age_table" {
   sql = <<-EOQ
     select
-      c.resource_id as "Resource ID",
       c.db_cluster_identifier as "DB Cluster Identifier",
       now()::date - c.create_time::date as "Age in Days",
       c.create_time as "Create Time",
+      c.status as "Status",
       a.title as "Account",
       c.account_id as "Account ID",
-      c.status as "Status",
       c.arn as "ARN"
     from
       aws_rds_db_cluster as c,
@@ -137,6 +137,6 @@ query "aws_rds_db_cluster_age_table" {
     where
       c.account_id = a.account_id
     order by
-      c.resource_id;
+      c.db_cluster_identifier;
   EOQ
 }

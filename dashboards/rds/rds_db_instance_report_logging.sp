@@ -1,6 +1,7 @@
 dashboard "aws_rds_db_instance_logging_report" {
 
-  title = "AWS RDS DB Instance Logging Report"
+  title         = "AWS RDS DB Instance Logging Report"
+  documentation = file("./dashboards/rds/docs/rds_db_instance_report_logging.md")
 
   tags = merge(local.rds_common_tags, {
     type     = "Report"

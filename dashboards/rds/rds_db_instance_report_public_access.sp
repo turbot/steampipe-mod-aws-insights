@@ -1,6 +1,7 @@
 dashboard "aws_rds_db_instance_public_access_report" {
 
-  title = "AWS RDS DB Instance Public Access Report"
+  title         = "AWS RDS DB Instance Public Access Report"
+  documentation = file("./dashboards/rds/docs/rds_db_instance_report_public_access.md")
 
   tags = merge(local.rds_common_tags, {
     type     = "Report"

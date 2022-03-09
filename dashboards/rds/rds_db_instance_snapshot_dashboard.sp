@@ -1,6 +1,7 @@
 dashboard "aws_rds_db_instance_snapshot_dashboard" {
 
-  title = "AWS RDS DB Instance Snapshot Dashboard"
+  title         = "AWS RDS DB Instance Snapshot Dashboard"
+  documentation = file("./dashboards/rds/docs/rds_db_instance_snapshot_dashboard.md")
 
   tags = merge(local.rds_common_tags, {
     type = "Dashboard"
