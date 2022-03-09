@@ -94,6 +94,10 @@ dashboard "aws_cloudtrail_trail_detail" {
 
       table {
         title = "Associated S3 Trail Buckets"
+        column "S3 Bucket ARN" {
+          href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.'S3 Bucket ARN' | @uri}}"
+        }
+
         query = query.aws_cloudtrail_trail_bucket
 
         args = {
@@ -235,12 +239,12 @@ query "aws_cloudtrail_trail_logging" {
 query "aws_cloudtrail_trail_bucket" {
   sql = <<-EOQ
     select
-      arn as "ARN",
-      s3_bucket_name as "S3 Bucket Name"
+      s3_bucket_name as "S3 Bucket Name",
+      s.arn as "S3 Bucket ARN"
     from
-      aws_cloudtrail_trail
+      aws_cloudtrail_trail as t left join aws_s3_bucket as s on s.name = t.s3_bucket_name
     where
-      region = home_region and arn = $1;
+      t.region = home_region and t.arn = $1;
   EOQ
 
   param "arn" {}

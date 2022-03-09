@@ -37,7 +37,7 @@ dashboard "aws_s3_bucket_lifecycle_report" {
     }
 
     column "Name" {
-      href = "/aws_insights.dashboard.aws_s3_bucket_detail?input.bucket_arn={{.ARN | @uri}}"
+      href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.ARN | @uri}}"
     }
 
     sql = query.aws_s3_bucket_lifecycle_table.sql

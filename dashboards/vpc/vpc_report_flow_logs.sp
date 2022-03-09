@@ -32,7 +32,7 @@ dashboard "aws_vpc_flow_logs_report" {
     }
 
     column "VPC ID" {
-      href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_arn={{.ARN | @uri}}"
+      href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_arn={{.ARN | @uri}}"
     }
 
     sql = query.aws_vpc_flow_logs_table.sql

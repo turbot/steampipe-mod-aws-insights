@@ -33,7 +33,7 @@ dashboard "aws_sqs_queue_encryption_report" {
     }
 
     column "Queue" {
-      href = "/aws_insights.dashboard.aws_sqs_queue_detail?input.queue_arn={{.ARN | @uri}}"
+      href = "${dashboard.aws_sqs_queue_detail.url_path}?input.queue_arn={{.ARN | @uri}}"
     }
 
     sql = query.aws_sqs_queue_encryption_table.sql

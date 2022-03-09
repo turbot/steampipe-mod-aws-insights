@@ -57,7 +57,7 @@ dashboard "aws_ec2_instance_age_report" {
     }
 
     column "Instance ID" {
-      href = "/aws_insights.dashboard.aws_ec2_instance_detail?input.instance_arn={{.ARN | @uri}}"
+      href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.ARN | @uri}}"
     }
 
     sql = query.aws_ec2_instance_age_table.sql

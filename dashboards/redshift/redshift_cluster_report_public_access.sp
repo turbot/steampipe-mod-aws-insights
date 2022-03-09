@@ -32,7 +32,7 @@ dashboard "aws_redshift_cluster_public_access_report" {
     }
 
     column "Cluster Identifier" {
-      href = "/aws_insights.dashboard.aws_redshift_cluster_detail?input.cluster_arn={{.ARN | @uri}}"
+      href = "${dashboard.aws_redshift_cluster_detail.url_path}?input.cluster_arn={{.ARN | @uri}}"
     }
 
     sql = query.aws_redshift_cluster_publicly_accessible_table.sql
