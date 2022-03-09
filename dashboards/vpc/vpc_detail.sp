@@ -191,39 +191,28 @@ dashboard "aws_vpc_detail" {
 
     title = "NACLs"
 
+
     flow {
+      base = flow.nacl_flow
       title = "Ingress NACLs"
       width = 6
       query = query.aws_ingress_nacl_for_vpc_sankey
       args = {
         arn = self.input.vpc_arn.value
       }
-
-      category "deny" {
-        color = "alert"
-      }
-
-      category "allow" {
-        color = "ok"
-      }
     }
 
+
     flow {
+      base = flow.nacl_flow
       title = "Egress NACLs"
       width = 6
       query = query.aws_egress_nacl_for_vpc_sankey
       args = {
         arn = self.input.vpc_arn.value
       }
-
-      category "deny" {
-        color = "alert"
-      }
-
-      category "allow" {
-        color = "ok"
-      }
     }
+
 
   }
 
@@ -262,8 +251,34 @@ dashboard "aws_vpc_detail" {
       args = {
         arn = self.input.vpc_arn.value
       }
+
+      column "arn" {
+        display = "none"
+      }
+
+      column "Group Name" {
+        href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_arn={{.arn | @uri}}"
+      }
     }
 
+  }
+
+}
+
+
+
+
+flow "nacl_flow" {
+  width = 6
+  type  = "sankey"
+
+
+  category "deny" {
+    color = "red"
+  }
+
+  category "allow" {
+    color = "green"
   }
 
 }
@@ -388,7 +403,8 @@ query "aws_vpc_security_groups_for_vpc" {
     select
       group_name as "Group Name",
       group_id as "Group ID",
-      description as "Description"
+      description as "Description",
+      arn
     from
       aws_vpc_security_group
     where
@@ -618,200 +634,280 @@ query "aws_vpc_gateways_for_vpc" {
   param "arn" {}
 }
 
+
+
+
 query "aws_ingress_nacl_for_vpc_sankey" {
   sql = <<-EOQ
-    with nacl_data as (
+
+    with aces as (
       select
+        arn,
         title,
         network_acl_id,
         is_default,
-        entries,
-        associations
+        e -> 'Protocol' as protocol_number,
+        e ->> 'CidrBlock' as ipv4_cidr_block,
+        e ->> 'Ipv6CidrBlock' as ipv6_cidr_block,
+        coalesce(e ->> 'CidrBlock', e ->> 'Ipv6CidrBlock') as cidr_block,
+        e -> 'PortRange' -> 'To' as to_port,
+        e -> 'PortRange' -> 'From' as from_port,
+        e ->> 'RuleAction' as rule_action,
+        e -> 'RuleNumber' as rule_number,
+        to_char((e->>'RuleNumber')::numeric, 'fm00000')  as rule_num_padded,
+
+        -- e -> 'IcmpTypeCode' as icmp_type_code,
+        e -> 'IcmpTypeCode' -> 'Code' as icmp_code,
+        e -> 'IcmpTypeCode' -> 'Type' as icmp_type,    
+
+        e -> 'Protocol' as protocol_number,
+        e -> 'Egress' as is_egress,
+
+        case when e ->> 'RuleAction' = 'allow' then 'Allow ' else 'Deny ' end ||
+          case
+              when e->>'Protocol' = '-1' then 'All Traffic'
+              when e->>'Protocol' = '1'  and e->'IcmpTypeCode' is null then 'All ICMP'
+              when e->>'Protocol' = '58'  and e->'IcmpTypeCode' is null then 'All ICMPv6'
+              when e->>'Protocol' = '6'  and e->'PortRange' is null then 'All TCP'
+              when e->>'Protocol' = '17' and e->'PortRange' is null then 'All UDP'
+              when e->>'Protocol' = '6' and e->'PortRange'->>'From' = '0' and e->'PortRange'->>'To' = '65535'
+                then 'All TCP'
+              when e->>'Protocol' = '17' and e->'PortRange'->>'From' = '0' and e->'PortRange'->>'To' = '65535'
+                then  'All UDP'
+              when e->>'Protocol' = '1'  and e->'IcmpTypeCode' is not null
+                then concat('ICMP Type ', e->'IcmpTypeCode'->>'Type', ', Code ',  e->'IcmpTypeCode'->>'Code')
+              when e->>'Protocol' = '58'  and e->'IcmpTypeCode' is not null
+                then concat('ICMPv6 Type ', e->'IcmpTypeCode'->>'Type', ', Code ',  e->'IcmpTypeCode'->>'Code')
+              when e->>'Protocol' = '6' and e->'PortRange'->>'To'  = e->'PortRange'->>'From'
+                then  concat(e->'PortRange'->>'To', '/TCP')
+              when e->>'Protocol' = '17' and e->'PortRange'->>'To'  = e->'PortRange'->>'From'
+                then  concat(e->'PortRange'->>'To', '/UDP')
+              when e->>'Protocol' = '6' and e->'PortRange'->>'From' <> e->'PortRange' ->> 'To'
+                then  concat(e->'PortRange'->>'To', '-', e->'PortRange'->>'From', '/TCP')
+              when e->>'Protocol' = '17' and e->'PortRange'->>'From' <> e->'PortRange'->>'To'
+                then  concat(e->'PortRange'->>'To', '-', e->'PortRange'->>'From', '/UDP')
+              else concat('Procotol: ', e->>'Protocol')
+        end as rule_description,
+
+        a ->> 'SubnetId' as subnet_id,
+        a ->> 'NetworkAclAssociationId' as nacl_association_id
       from
-        aws_vpc_network_acl
+        aws_vpc_network_acl,
+        jsonb_array_elements(entries) as e,
+        jsonb_array_elements(associations) as a
       where
         vpc_id = reverse(split_part(reverse($1), '/', 1))
+        and not (e -> 'Egress')::boolean
+
     )
-    -- CIDRS
-    select
-      concat(network_acl_id, '_'::text, e ->> 'RuleNumber', '_port_proto') as from_id,
-      e ->> 'CidrBlock' as id,
-      e ->> 'CidrBlock' as title,
-      0 as depth,
-      e ->> 'RuleAction' as category
-    from
-      nacl_data,
-      jsonb_array_elements(entries) as e
-    where
-      not (e ->> 'Egress')::boolean
-    -- Port - protcol
-    union all select
-      concat(network_acl_id, '_', to_char((e->>'RuleNumber')::numeric, 'fm00000'))  as from_id,
-      concat(network_acl_id, '_'::text, e ->> 'RuleNumber', '_port_proto') as id,
-      case when e ->> 'RuleAction' = 'allow' then 'Allow ' else 'Deny ' end ||
-      case
-        when e->>'Protocol' = '-1' then 'All Traffic'
-        when e->>'Protocol' = '1'  and e->'IcmpTypeCode' is null then 'All ICMP'
-        when e->>'Protocol' = '58'  and e->'IcmpTypeCode' is null then 'All ICMPv6'
-        when e->>'Protocol' = '6'  and e->'PortRange' is null then 'All TCP'
-        when e->>'Protocol' = '17' and e->'PortRange' is null then 'All UDP'
-        when e->>'Protocol' = '6' and e->'PortRange'->>'From' = '0' and e->'PortRange'->>'To' = '65535'
-          then 'All TCP'
-        when e->>'Protocol' = '17' and e->'PortRange'->>'From' = '0' and e->'PortRange'->>'To' = '65535'
-          then  'All UDP'
-        when e->>'Protocol' = '1'  and e->'IcmpTypeCode' is not null
-          then concat('ICMP Type ', e->'IcmpTypeCode'->>'Type', ', Code ',  e->'IcmpTypeCode'->>'Code')
-        when e->>'Protocol' = '58'  and e->'IcmpTypeCode' is not null
-          then concat('ICMPv6 Type ', e->'IcmpTypeCode'->>'Type', ', Code ',  e->'IcmpTypeCode'->>'Code')
-        when e->>'Protocol' = '6' and e->'PortRange'->>'To'  = e->'PortRange'->>'From'
-          then  concat(e->'PortRange'->>'To', '/TCP')
-        when e->>'Protocol' = '17' and e->'PortRange'->>'To'  = e->'PortRange'->>'From'
-          then  concat(e->'PortRange'->>'To', '/UDP')
-        when e->>'Protocol' = '6' and e->'PortRange'->>'From' <> e->'PortRange' ->> 'To'
-          then  concat(e->'PortRange'->>'To', '-', e->'PortRange'->>'From', '/TCP')
-        when e->>'Protocol' = '17' and e->'PortRange'->>'From' <> e->'PortRange'->>'To'
-          then  concat(e->'PortRange'->>'To', '-', e->'PortRange'->>'From', '/UDP')
-        else concat('Procotol: ', e->>'Protocol')
-      end as title,
-      1 as depth,
-      e ->> 'RuleAction' as category
-    from
-      nacl_data,
-      jsonb_array_elements(entries) as e
-    where
-      not (e ->> 'Egress')::boolean
-    union all
-    select
+
+    -- CIDR Nodes
+    select 
+      distinct cidr_block as id,
+      cidr_block as title,
+      'cidr_block' as category,
+      null as from_id,
+      null as to_id
+    from aces
+
+    -- Rule Nodes
+    union select 
+      concat(network_acl_id, '_', rule_num_padded) as id,
+      concat(rule_number, ': ', rule_description) as title,
+      'rule' as category,
+      null as from_id,
+      null as to_id
+    from aces
+
+    -- ACL Nodes
+    union select 
+      distinct network_acl_id as id,
+      network_acl_id as title,
+      'nacl' as category,
+      null as from_id,
+      null as to_id
+    from aces 
+
+    union select
+      distinct subnet_id as id,
+      subnet_id as title,
+      'subnet' as category,
+      null as from_id,
+      null as to_id
+    from aces
+
+    -- ip -> rule edge
+    union select 
+      null as id,
+      null as title,
+      rule_action as category,
+      cidr_block as from_id,
+      concat(network_acl_id, '_', rule_num_padded) as to_id
+    from aces
+
+    -- rule -> NACL edge
+    union select 
+      null as id,
+      null as title,
+      rule_action as category,
+      concat(network_acl_id, '_', rule_num_padded) as from_id,
+      network_acl_id as to_id
+    from aces
+
+    -- nacl -> subnet edge
+    union select 
+      null as id,
+      null as title,
+      'attached' as category,
       network_acl_id as from_id,
-      concat(network_acl_id, '_', to_char( (e->>'RuleNumber')::numeric, 'fm00000')) as id,
-      concat('Rule #', e ->> 'RuleNumber')  as title,
-      2 as depth,
-      e ->> 'RuleAction' as category
-    from
-      nacl_data,
-      jsonb_array_elements(entries) as e
-    where
-      not (e ->> 'Egress')::boolean
-      union all select
-        null as from_id,
-        network_acl_id as id,
-        network_acl_id as title,
-        3 as depth,
-        'aws_vpc_network_acl' as category
-      from
-        nacl_data
-      union all select
-        a->>'NetworkAclId' as from_id,
-        a->>'SubnetId' as id,
-        a->>'SubnetId' as title,
-        4 as depth,
-        'aws_vpc_subnet' as category
-      from
-        nacl_data,
-        jsonb_array_elements(associations) as a
+      subnet_id as to_id
+    from aces
+
   EOQ
 
   param "arn" {}
 }
+
+
 
 query "aws_egress_nacl_for_vpc_sankey" {
   sql = <<-EOQ
-    with nacl_data as (
+
+    with aces as (
       select
+        arn,
         title,
         network_acl_id,
         is_default,
-        entries,
-        associations
+        e -> 'Protocol' as protocol_number,
+        e ->> 'CidrBlock' as ipv4_cidr_block,
+        e ->> 'Ipv6CidrBlock' as ipv6_cidr_block,
+        coalesce(e ->> 'CidrBlock', e ->> 'Ipv6CidrBlock') as cidr_block,
+        e -> 'PortRange' -> 'To' as to_port,
+        e -> 'PortRange' -> 'From' as from_port,
+        e ->> 'RuleAction' as rule_action,
+        e -> 'RuleNumber' as rule_number,
+        to_char((e->>'RuleNumber')::numeric, 'fm00000')  as rule_num_padded,
+
+        -- e -> 'IcmpTypeCode' as icmp_type_code,
+        e -> 'IcmpTypeCode' -> 'Code' as icmp_code,
+        e -> 'IcmpTypeCode' -> 'Type' as icmp_type,    
+
+        e -> 'Protocol' as protocol_number,
+        e -> 'Egress' as is_egress,
+
+        case when e ->> 'RuleAction' = 'allow' then 'Allow ' else 'Deny ' end ||
+          case
+              when e->>'Protocol' = '-1' then 'All Traffic'
+              when e->>'Protocol' = '1'  and e->'IcmpTypeCode' is null then 'All ICMP'
+              when e->>'Protocol' = '58'  and e->'IcmpTypeCode' is null then 'All ICMPv6'
+              when e->>'Protocol' = '6'  and e->'PortRange' is null then 'All TCP'
+              when e->>'Protocol' = '17' and e->'PortRange' is null then 'All UDP'
+              when e->>'Protocol' = '6' and e->'PortRange'->>'From' = '0' and e->'PortRange'->>'To' = '65535'
+                then 'All TCP'
+              when e->>'Protocol' = '17' and e->'PortRange'->>'From' = '0' and e->'PortRange'->>'To' = '65535'
+                then  'All UDP'
+              when e->>'Protocol' = '1'  and e->'IcmpTypeCode' is not null
+                then concat('ICMP Type ', e->'IcmpTypeCode'->>'Type', ', Code ',  e->'IcmpTypeCode'->>'Code')
+              when e->>'Protocol' = '58'  and e->'IcmpTypeCode' is not null
+                then concat('ICMPv6 Type ', e->'IcmpTypeCode'->>'Type', ', Code ',  e->'IcmpTypeCode'->>'Code')
+              when e->>'Protocol' = '6' and e->'PortRange'->>'To'  = e->'PortRange'->>'From'
+                then  concat(e->'PortRange'->>'To', '/TCP')
+              when e->>'Protocol' = '17' and e->'PortRange'->>'To'  = e->'PortRange'->>'From'
+                then  concat(e->'PortRange'->>'To', '/UDP')
+              when e->>'Protocol' = '6' and e->'PortRange'->>'From' <> e->'PortRange' ->> 'To'
+                then  concat(e->'PortRange'->>'To', '-', e->'PortRange'->>'From', '/TCP')
+              when e->>'Protocol' = '17' and e->'PortRange'->>'From' <> e->'PortRange'->>'To'
+                then  concat(e->'PortRange'->>'To', '-', e->'PortRange'->>'From', '/UDP')
+              else concat('Procotol: ', e->>'Protocol')
+        end as rule_description,
+
+        a ->> 'SubnetId' as subnet_id,
+        a ->> 'NetworkAclAssociationId' as nacl_association_id
       from
-        aws_vpc_network_acl
+        aws_vpc_network_acl,
+        jsonb_array_elements(entries) as e,
+        jsonb_array_elements(associations) as a
       where
         vpc_id = reverse(split_part(reverse($1), '/', 1))
+        and (e -> 'Egress')::boolean
     )
+
+    -- Subnet Nodes
     select
-      a->>'NetworkAclId' as from_id,
-      a->>'SubnetId' as id,
-      a->>'SubnetId' as title,
-      0 as depth,
-      'aws_vpc_subnet' as category
-    from
-      nacl_data,
-      jsonb_array_elements(associations) as a
-    union all select
+      distinct subnet_id as id,
+      subnet_id as title,
+      'subnet' as category,
       null as from_id,
-      network_acl_id as id,
+      null as to_id,
+      0 as depth
+    from aces
+
+    -- ACL Nodes
+    union select 
+      distinct network_acl_id as id,
       network_acl_id as title,
-      1 as depth,
-      'aws_vpc_network_acl' as category
-    from
-      nacl_data
+      'nacl' as category,
+      null as from_id,
+      null as to_id,
+      1 as depth
 
-   union all select
+    from aces 
+
+    -- Rule Nodes
+    union select 
+      concat(network_acl_id, '_', rule_num_padded) as id,
+      concat(rule_number, ': ', rule_description) as title,
+      'rule' as category,
+      null as from_id,
+      null as to_id,
+      2 as depth
+    from aces
+
+    -- CIDR Nodes
+    union select 
+      distinct cidr_block as id,
+      cidr_block as title,
+      'cidr_block' as category,
+      null as from_id,
+      null as to_id,
+      3 as depth
+    from aces
+    
+    -- nacl -> subnet edge
+    union select 
+      null as id,
+      null as title,
+      'attached' as category,
       network_acl_id as from_id,
-      concat(network_acl_id, '_', to_char( (e->>'RuleNumber')::numeric, 'fm00000')) as id,
-      concat('Rule #', e ->> 'RuleNumber')  as title,
-      2 as depth,
-      e ->> 'RuleAction' as category
-    from
-      nacl_data,
-      jsonb_array_elements(entries) as e
-    where
-      (e ->> 'Egress')::boolean
+      subnet_id as to_id, 
+      null as depth
+    from aces
 
-  -- Port - protcol
-    union all select
-      concat(network_acl_id, '_', to_char((e->>'RuleNumber')::numeric, 'fm00000'))  as from_id,
-      concat(network_acl_id, '_'::text, e ->> 'RuleNumber', '_port_proto') as id,
-      case when e ->> 'RuleAction' = 'allow' then 'Allow ' else 'Deny ' end ||
-      case
-        when e->>'Protocol' = '-1' then 'All Traffic'
-        when e->>'Protocol' = '1'  and e->'IcmpTypeCode' is null then 'All ICMP'
-        when e->>'Protocol' = '58'  and e->'IcmpTypeCode' is null then 'All ICMPv6'
-        when e->>'Protocol' = '6'  and e->'PortRange' is null then 'All TCP'
-        when e->>'Protocol' = '17' and e->'PortRange' is null then 'All UDP'
-        when e->>'Protocol' = '6' and e->'PortRange'->>'From' = '0' and e->'PortRange'->>'To' = '65535'
-          then 'All TCP'
-        when e->>'Protocol' = '17' and e->'PortRange'->>'From' = '0' and e->'PortRange'->>'To' = '65535'
-          then  'All UDP'
-        when e->>'Protocol' = '1'  and e->'IcmpTypeCode' is not null
-          then concat('ICMP Type ', e->'IcmpTypeCode'->>'Type', ', Code ',  e->'IcmpTypeCode'->>'Code')
-        when e->>'Protocol' = '58'  and e->'IcmpTypeCode' is not null
-          then concat('ICMPv6 Type ', e->'IcmpTypeCode'->>'Type', ', Code ',  e->'IcmpTypeCode'->>'Code')
-        when e->>'Protocol' = '6' and e->'PortRange'->>'To'  = e->'PortRange'->>'From'
-          then  concat(e->'PortRange'->>'To', '/TCP')
-        when e->>'Protocol' = '17' and e->'PortRange'->>'To'  = e->'PortRange'->>'From'
-          then  concat(e->'PortRange'->>'To', '/UDP')
-        when e->>'Protocol' = '6' and e->'PortRange'->>'From' <> e->'PortRange' ->> 'To'
-          then  concat(e->'PortRange'->>'To', '-', e->'PortRange'->>'From', '/TCP')
-        when e->>'Protocol' = '17' and e->'PortRange'->>'From' <> e->'PortRange'->>'To'
-          then  concat(e->'PortRange'->>'To', '-', e->'PortRange'->>'From', '/UDP')
-        else concat('Procotol: ', e->>'Protocol')
-      end as title,
-      3 as depth,
-      e ->> 'RuleAction' as category
-    from
-      nacl_data,
-      jsonb_array_elements(entries) as e
-    where
-      (e ->> 'Egress')::boolean
+    -- rule -> NACL edge
+    union select 
+      null as id,
+      null as title,
+      rule_action as category,
+      concat(network_acl_id, '_', rule_num_padded) as from_id,
+      network_acl_id as to_id,
+      null as depth
+    from aces
 
-    -- CIDRS
-    union all select
-      concat(network_acl_id, '_'::text, e ->> 'RuleNumber', '_port_proto') as from_id,
-      e ->> 'CidrBlock' as id,
-      e ->> 'CidrBlock' as title,
-      4 as depth,
-      e ->> 'RuleAction' as category
-    from
-      nacl_data,
-      jsonb_array_elements(entries) as e
-    where
-      (e ->> 'Egress')::boolean
+    -- ip -> rule edge
+    union select 
+      null as id,
+      null as title,
+      rule_action as category,
+      cidr_block as from_id,
+      concat(network_acl_id, '_', rule_num_padded) as to_id,
+      null as depth
+    from aces
+
   EOQ
 
   param "arn" {}
 }
-
 query "aws_vpc_peers_for_vpc_sankey" {
   sql = <<-EOQ
     with peers as (

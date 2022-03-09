@@ -104,30 +104,14 @@ dashboard "aws_vpc_security_group_detail" {
     width = 6
 
     flow {
-      type  = "sankey"
+      base = flow.security_group_rules_sankey
       title = "Ingress Analysis"
       query = query.aws_vpc_security_group_ingress_rule_sankey
       args  = {
         arn = self.input.security_group_arn.value
       }
-
-      category "aws_ec2_isntance" {
-        color = "orange"
-      }
-
-      category "aws_lambda_function" {
-        color = "yellow"
-      }
-
-      category "alert" {
-        color = "red"
-      }
-
-      category "ok" {
-        color = "green"
-      }
-
     }
+
 
     table {
       title = "Ingress Rules"
@@ -144,29 +128,12 @@ dashboard "aws_vpc_security_group_detail" {
     width = 6
 
     flow {
-      type  = "sankey"
+      base = flow.security_group_rules_sankey
       title = "Egress Analysis"
       query = query.aws_vpc_security_group_egress_rule_sankey
       args  = {
         arn = self.input.security_group_arn.value
       }
-
-      category "aws_ec2_isntance" {
-        color = "orange"
-      }
-
-      category "aws_lambda_function" {
-        color = "yellow"
-      }
-
-      category "alert" {
-        color = "red"
-      }
-
-      category "ok" {
-        color = "green"
-      }
-
     }
 
     table {
@@ -180,6 +147,22 @@ dashboard "aws_vpc_security_group_detail" {
   }
 
 }
+
+
+
+ flow "security_group_rules_sankey" {
+      type  = "sankey"
+
+      category "alert" {
+        color = "red"
+      }
+
+      category "ok" {
+        color = "green"
+      }
+
+    }
+
 
 query "aws_vpc_security_group_input" {
   sql = <<-EOQ
@@ -305,6 +288,7 @@ query "aws_vpc_security_group_assoc" {
        jsonb_array_elements(security_groups) as sg
      where
       sg ->> 'GroupId' = (reverse(split_part(reverse($1), '/', 1)))
+
     union all select
       title,
       'aws_lambda_function' as type,
@@ -313,7 +297,42 @@ query "aws_vpc_security_group_assoc" {
        aws_lambda_function,
        jsonb_array_elements_text(vpc_security_group_ids) as sg
     where
-      sg = (reverse(split_part(reverse($1), '/', 1)));
+      sg = (reverse(split_part(reverse($1), '/', 1)))
+
+
+    -- attached ELBs
+    union all select
+        title,
+        arn,
+        'aws_ec2_classic_load_balancer' as type
+      from
+        aws_ec2_classic_load_balancer,
+        jsonb_array_elements_text(security_groups) as sg
+      where
+        sg = reverse(split_part(reverse($1), '/', 1))
+
+    -- attached ALBs
+    union all select
+        title,
+        arn,
+        'aws_ec2_application_load_balancer' as type
+      from
+        aws_ec2_application_load_balancer,
+        jsonb_array_elements_text(security_groups) as sg
+      where
+        sg = reverse(split_part(reverse($1), '/', 1))
+
+    -- attached NLBs
+    union all select
+        title,
+        arn,
+        'aws_ec2_network_load_balancer' as type
+      from
+        aws_ec2_network_load_balancer,
+        jsonb_array_elements_text(security_groups) as sg
+      where
+        sg = reverse(split_part(reverse($1), '/', 1))
+
   EOQ
 
   param "arn" {}
@@ -325,6 +344,8 @@ query "aws_vpc_security_group_ingress_rule_sankey" {
 
   sql = <<-EOQ
   with associations as (
+
+    -- attached ec2 instances
     select
         title,
         arn,
@@ -334,8 +355,9 @@ query "aws_vpc_security_group_ingress_rule_sankey" {
         aws_ec2_instance,
         jsonb_array_elements(security_groups) as sg
       where
-      sg ->> 'GroupId' = reverse(split_part(reverse($1), '/', 1))
+        sg ->> 'GroupId' = reverse(split_part(reverse($1), '/', 1))
 
+    -- attached lambda functions
     union all select
         title,
         arn,
@@ -345,7 +367,71 @@ query "aws_vpc_security_group_ingress_rule_sankey" {
         aws_lambda_function,
         jsonb_array_elements_text(vpc_security_group_ids) as sg
       where
-      sg = reverse(split_part(reverse($1), '/', 1))
+        sg = reverse(split_part(reverse($1), '/', 1))
+
+    -- attached ELBs
+    union all select
+        title,
+        arn,
+        'aws_ec2_classic_load_balancer' as category,
+        sg
+      from
+        aws_ec2_classic_load_balancer,
+        jsonb_array_elements_text(security_groups) as sg
+      where
+        sg = reverse(split_part(reverse($1), '/', 1))
+
+    -- attached ALBs
+    union all select
+        title,
+        arn,
+        'aws_ec2_application_load_balancer' as category,
+        sg
+      from
+        aws_ec2_application_load_balancer,
+        jsonb_array_elements_text(security_groups) as sg
+      where
+        sg = reverse(split_part(reverse($1), '/', 1))
+
+    -- attached NLBs
+    union all select
+        title,
+        arn,
+        'aws_ec2_network_load_balancer' as category,
+        sg
+      from
+        aws_ec2_network_load_balancer,
+        jsonb_array_elements_text(security_groups) as sg
+      where
+        sg = reverse(split_part(reverse($1), '/', 1))
+
+
+    -- attached GWLBs
+    union all select
+        title,
+        arn,
+        'aws_ec2_gateway_load_balancer' as category,
+        sg
+      from
+        aws_ec2_gateway_load_balancer,
+        jsonb_array_elements_text(security_groups) as sg
+      where
+        sg = reverse(split_part(reverse($1), '/', 1))
+
+
+    -- attached aws_ec2_launch_configuration
+    union all select
+        title,
+        launch_configuration_arn,
+        'aws_ec2_launch_configuration' as category,
+        sg
+      from
+        aws_ec2_launch_configuration,
+        jsonb_array_elements_text(security_groups) as sg
+      where
+        sg = reverse(split_part(reverse($1), '/', 1))
+
+        
       -- TODO: Add aws_rds_db_instance / db_security_groups, etc.
   ),
   rules as (
@@ -440,6 +526,7 @@ query "aws_vpc_security_group_ingress_rule_sankey" {
   param "arn" {}
 }
 
+
 query "aws_vpc_security_group_egress_rule_sankey" {
   sql = <<-EOQ
     with associations as (
@@ -464,6 +551,44 @@ query "aws_vpc_security_group_egress_rule_sankey" {
           jsonb_array_elements_text(vpc_security_group_ids) as sg
         where
         sg = reverse(split_part(reverse($1), '/', 1))
+
+
+      -- attached ELBs
+      union all select
+          title,
+          arn,
+          'aws_ec2_classic_load_balancer' as category,
+          sg
+        from
+          aws_ec2_classic_load_balancer,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = reverse(split_part(reverse($1), '/', 1))
+
+      -- attached ALBs
+      union all select
+          title,
+          arn,
+          'aws_ec2_application_load_balancer' as category,
+          sg
+        from
+          aws_ec2_application_load_balancer,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = reverse(split_part(reverse($1), '/', 1))
+
+      -- attached NLBs
+      union all select
+          title,
+          arn,
+          'aws_ec2_network_load_balancer' as category,
+          sg
+        from
+          aws_ec2_network_load_balancer,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = reverse(split_part(reverse($1), '/', 1))
+
         -- TODO: Add aws_rds_db_instance / db_security_groups, etc.
     ),
     rules as (
