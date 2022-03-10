@@ -1,6 +1,7 @@
 dashboard "aws_iam_credential_report" {
 
   title = "AWS IAM Credential Report"
+  documentation = file("./dashboards/iam/docs/iam_credential_report.md")
 
   tags = merge(local.iam_common_tags, {
     type     = "Report"

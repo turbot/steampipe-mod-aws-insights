@@ -1,6 +1,8 @@
 dashboard "aws_iam_group_dashboard" {
 
   title = "AWS IAM Group Dashboard"
+  documentation = file("./dashboards/iam/docs/iam_group_dashboard.md")
+
 
   tags = merge(local.iam_common_tags, {
     type = "Dashboard"

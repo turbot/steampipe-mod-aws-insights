@@ -1,6 +1,7 @@
 dashboard "aws_iam_root_access_report" {
 
   title = "AWS IAM Root Access Report"
+  documentation = file("./dashboards/iam/docs/iam_root_access_report.md")
 
   tags = merge(local.iam_common_tags, {
     type     = "Report"
