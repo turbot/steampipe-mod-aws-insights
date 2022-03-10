@@ -12,4 +12,10 @@ mod "aws_insights" {
     description = "Create dashboards and reports for your AWS resources using Steampipe."
     image       = "/images/mods/turbot/aws-insights-social-graphic.png"
   }
+
+  requires {
+    plugin "aws" {
+      version = "0.50.1"
+    }
+  }
 }
