@@ -270,11 +270,11 @@ flow "nacl_flow" {
 
 
   category "deny" {
-    color = "red"
+    color = "alert"
   }
 
   category "allow" {
-    color = "green"
+    color = "ok"
   }
 
 }

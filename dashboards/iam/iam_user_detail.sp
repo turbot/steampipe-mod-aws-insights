@@ -120,7 +120,7 @@ dashboard "aws_iam_user_detail" {
       }
 
       category "aws_iam_group" {
-        color = "green"
+        color = "ok"
       }
     }
 

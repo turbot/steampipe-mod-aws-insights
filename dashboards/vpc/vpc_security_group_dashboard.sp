@@ -70,10 +70,10 @@ dashboard "aws_vpc_security_group_dashboard" {
 
       series "count" {
         point "restricted" {
-          color = "green"
+          color = "ok"
         }
         point "unrestricted" {
-          color = "red"
+          color = "alert"
         }
       }
     }

@@ -171,11 +171,11 @@ dashboard "aws_vpc_security_group_detail" {
       type  = "sankey"
 
       category "alert" {
-        color = "red"
+        color = "alert"
       }
 
       category "ok" {
-        color = "green"
+        color = "ok"
       }
 
     }
