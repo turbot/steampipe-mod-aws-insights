@@ -68,8 +68,6 @@ By default, the dashboard interface will then be launched in a new browser windo
 
 From here, you can view all of your dashboards and reports.
 
-If there's a conflict on the default port 9194, the port can be changed with the `--dashboard-port` flag, e.g.,
-
 ## Contributing
 
 If you have an idea for additional dashboards or reports, or just want to help maintain and extend this mod ([or others](https://github.com/topics/steampipe-mod)) we would love you to join the community and start contributing.

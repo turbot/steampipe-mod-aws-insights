@@ -81,12 +81,6 @@ By default, the dashboard interface will then be launched in a new browser windo
 
 From here, you can view all of your dashboards and reports.
 
-If there's a conflict on the default port 9194, the port can be changed with the `--dashboard-port` flag, e.g.,
-
-```sh
-steampipe dashboard --dashboard-port 9000
-```
-
 ### Credentials
 
 This mod uses the credentials configured in the [Steampipe AWS plugin](https://hub.steampipe.io/plugins/turbot/aws).
