@@ -1,9 +1,8 @@
 This dashboard answers the following questions for each IAM user:
 
-- How is the IAM user entity configured?
+- How is the user configured?
 - What tags are applied?
-- When was the last console login?
-- How many IAM access keys the user has?
-- What is the MFA status of IAM user?
-- Which IAM groups are associated with the user?
-- What are the IAM policies associated with IAM user?
+- How many access keys does the user have?
+- How is the MFA configured?
+- What groups are associated with the user?
+- What are the AWS managed policies associated with user?

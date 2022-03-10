@@ -1,5 +1,7 @@
 This dashboard answers the following questions for each IAM role:
 
-- How is the IAM role configured?
+- How is the role configured?
 - What tags are applied?
-- Which IAM policies are associated with the IAM role?
+- What policies are directly attached to the role?
+- What inline policies are associated with the role?
+- What boundary policies are set on the role?
