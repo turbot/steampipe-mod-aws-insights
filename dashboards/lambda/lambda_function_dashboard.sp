@@ -175,7 +175,7 @@ dashboard "aws_lambda_function_dashboard" {
     }
 
     chart {
-      title = "Function Code Size by Runtime"
+      title = "Function Code Size by Runtime (MB)"
       sql   = query.aws_lambda_function_code_size_by_runtime.sql
       type  = "column"
       width = 4
