@@ -1,6 +1,6 @@
-----
--repository: "https://github.com/turbot/steampipe-mod-aws-insights"
-----
+---
+repository: "https://github.com/turbot/steampipe-mod-aws-insights"
+---
 
 # AWS Insights Mod
 
