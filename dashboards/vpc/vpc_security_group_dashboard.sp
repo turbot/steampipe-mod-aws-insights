@@ -30,11 +30,6 @@ dashboard "aws_vpc_security_group_dashboard" {
       width = 2
     }
 
-    card {
-      sql = query.aws_vpc_default_security_group_unrestricted.sql
-      width = 2
-    }
-
   }
 
   container {
@@ -78,22 +73,6 @@ dashboard "aws_vpc_security_group_dashboard" {
       type  = "donut"
       width = 3
       sql   = query.aws_vpc_security_group_unrestricted_egress_status.sql
-
-      series "count" {
-        point "restricted" {
-          color = "ok"
-        }
-        point "unrestricted" {
-          color = "alert"
-        }
-      }
-    }
-
-     chart {
-      title = "With Unrestricted Default Security Group"
-      type  = "donut"
-      width = 3
-      sql   = query.aws_vpc_security_group_unrestricted_default_security_group_status.sql
 
       series "count" {
         point "restricted" {
@@ -244,29 +223,6 @@ query "aws_vpc_security_unrestricted_egress_count" {
   EOQ
 }
 
-query "aws_vpc_default_security_group_unrestricted" {
-  sql = <<-EOQ
-    with default_sg_with_inbound_outbound_traffic as (
-      select
-        group_name
-      from
-        aws_vpc_security_group
-      where
-        group_name = 'default'
-        and (
-          ip_permissions is not null
-          or ip_permissions_egress is not null
-        )
-    )
-    select
-      count(*) as value,
-      'Unrestricted Default Security Groups' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as type
-    from
-      default_sg_with_inbound_outbound_traffic;
-  EOQ
-}
-
 # Assessment Queries
 
 query "aws_vpc_security_group_unassociated_status" {
@@ -356,33 +312,6 @@ query "aws_vpc_security_group_unrestricted_egress_status" {
       aws_vpc_security_group as sg left join egress_sg as esg on sg.group_id = esg.group_id
     group by
       status;
-  EOQ
-}
-
-query "aws_vpc_security_group_unrestricted_default_security_group_status" {
-  sql = <<-EOQ
-    with unrestricted_default_security_group as (
-      select
-        group_name,
-        group_id
-      from
-        aws_vpc_security_group
-      where
-        group_name = 'default'
-        and (
-          ip_permissions is not null
-          or ip_permissions_egress is not null
-      )
-    )
-    select
-      case when dsg.group_id is not null then 'unrestricted' else 'restricted' end as status,
-      count(*)
-    from
-      aws_vpc_security_group as sg left join unrestricted_default_security_group as dsg on sg.group_id = dsg.group_id
-      where
-        sg.group_name = 'default'
-      group by
-        status;
   EOQ
 }
 

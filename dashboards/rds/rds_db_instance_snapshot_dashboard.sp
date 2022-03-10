@@ -192,26 +192,31 @@ query "aws_rds_db_instance_snapshot_by_encryption_status" {
 
 query "aws_rds_db_instance_snapshot_iam_authentication_enabled" {
   sql = <<-EOQ
-    with iam_authentication_stat as (
+    with iam_authentication_enabled as (
+      select
+        distinct db_instance_identifier as name
+      from
+        aws_rds_db_snapshot
+      where
+        iam_database_authentication_enabled
+      group by name
+    ),
+    iam_authentication_status as (
+      select
+        case
+          when e.name is not null then 'enabled'
+          else 'disabled' end as iam_database_authentication
+      from
+        aws_rds_db_snapshot as c
+        left join iam_authentication_enabled as e on c.db_instance_identifier = e.name
+    )
     select
-      distinct db_instance_identifier as name
+      iam_database_authentication,
+      count(*)
     from
-      aws_rds_db_snapshot
-    where
-      iam_database_authentication_enabled
-    group by name
-  )
-  select
-    'enabled' as "IAM Authentication Status",
-    count(name)
-  from
-    iam_authentication_stat
-  union
-  select
-    'disabled' as "IAM Authentication Status",
-    count(db_instance_identifier)
-  from
-    aws_rds_db_snapshot as s where s.db_instance_identifier not in (select name from iam_authentication_stat);
+      iam_authentication_status
+    group by
+      iam_database_authentication;
   EOQ
 }
 
