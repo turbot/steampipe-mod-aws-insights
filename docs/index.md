@@ -24,21 +24,7 @@ Dashboards can help answer questions like:
 - Is versioning enabled?
 - What are the relationships between closely connected resources like IAM users, groups, and policies?
 
-Dashboards are available for the following services:
-
-- ACM
-- CloudTrail
-- DynamoDB
-- EBS
-- EC2
-- IAM
-- KMS
-- Lambda
-- RDS
-- Redshift
-- S3
-- VPC
-- And more!
+Dashboards are available for 15+ services, including CloudTrail, EC2, IAM, RDS, S3, VPC, and more!
 
 ## References
 
@@ -88,5 +74,4 @@ This mod uses the credentials configured in the [Steampipe AWS plugin](https://h
 ## Get involved
 
 * Contribute: [GitHub Repo](https://github.com/turbot/steampipe-mod-aws-insights)
-
 * Community: [Slack Channel](https://steampipe.io/community/join)

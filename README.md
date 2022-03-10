@@ -13,21 +13,7 @@ Dashboards can help answer questions like:
 - Is versioning enabled?
 - What are the relationships between closely connected resources like IAM users, groups, and policies?
 
-Dashboards are available for the following services:
-
-- ACM
-- CloudTrail
-- DynamoDB
-- EBS
-- EC2
-- IAM
-- KMS
-- Lambda
-- RDS
-- Redshift
-- S3
-- VPC
-- And more!
+Dashboards are available for 15+ services, including CloudTrail, EC2, IAM, RDS, S3, VPC, and more!
 
 ## Getting started
 
@@ -76,6 +62,7 @@ If you have an idea for additional dashboards or reports, or just want to help m
 
 Please see the [contribution guidelines](https://github.com/turbot/steampipe/blob/main/CONTRIBUTING.md) and our [code of conduct](https://github.com/turbot/steampipe/blob/main/CODE_OF_CONDUCT.md). All contributions are subject to the [Apache 2.0 open source license](https://github.com/turbot/steampipe-mod-aws-insights/blob/main/LICENSE).
 
-`help wanted` issues:
+Want to help but not sure where to start? Pick up one of the `help wanted` issues:
+
 - [Steampipe](https://github.com/turbot/steampipe/labels/help%20wanted)
 - [AWS Insights Mod](https://github.com/turbot/steampipe-mod-aws-insights/labels/help%20wanted)
