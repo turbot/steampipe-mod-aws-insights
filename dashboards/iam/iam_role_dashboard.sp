@@ -55,7 +55,7 @@ dashboard "aws_iam_role_dashboard" {
         point "no inline policies" {
           color = "ok"
         }
-        point "with policies" {
+        point "with inline policies" {
           color = "alert"
         }
       }
