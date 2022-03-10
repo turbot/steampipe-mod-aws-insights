@@ -2,7 +2,7 @@
 
 An AWS dashboarding tool that can be used to view dashboards and reports across all of your AWS accounts.
 
-![image](https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/release/v0.1/docs/images/aws_s3_dashboard.png)
+![image](https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/release/v0.1/docs/images/aws_s3_bucket_dashboard.png)
 
 Dashboards can help answer questions like:
 
