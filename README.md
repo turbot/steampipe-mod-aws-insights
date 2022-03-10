@@ -2,7 +2,22 @@
 
 An AWS dashboarding tool that can be used to view dashboards and reports across all of your AWS accounts.
 
-**NOTE: This mod is a work in progress and may not work with your current Steampipe version**
+![image](https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/release/v0.1/docs/aws-insights-console-graphic.png)
+
+Includes dashboards for:
+
+- CloudTrail
+- DynamoDB
+- EBS
+- EC2
+- IAM
+- KMS
+- Lambda
+- RDS
+- Redshift
+- S3
+- VPC
+- And more!
 
 ## Getting started
 
