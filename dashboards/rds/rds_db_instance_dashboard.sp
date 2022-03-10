@@ -157,42 +157,42 @@ dashboard "aws_rds_db_instance_dashboard" {
       title = "Instances by Account"
       sql   = query.aws_rds_db_instance_by_account.sql
       type  = "column"
-      width = 2
+      width = 4
     }
 
     chart {
       title = "Instances by Region"
       sql   = query.aws_rds_db_instance_by_region.sql
       type  = "column"
-      width = 2
+      width = 4
     }
 
     chart {
       title = "Instances by State"
       sql   = query.aws_rds_db_instance_by_state.sql
       type  = "column"
-      width = 2
+      width = 4
     }
 
     chart {
       title = "Instances by Age"
       sql   = query.aws_rds_db_instance_by_creation_month.sql
       type  = "column"
-      width = 2
+      width = 4
     }
 
     chart {
       title = "Instances by Engine Type"
       sql   = query.aws_rds_db_instance_by_engine_type.sql
       type  = "column"
-      width = 2
+      width = 4
     }
 
     chart {
       title = "Instances by Class"
       sql   = query.aws_rds_db_instance_by_class.sql
       type  = "column"
-      width = 2
+      width = 4
     }
 
   }
@@ -339,29 +339,34 @@ query "aws_rds_db_instance_by_encryption_status" {
 
 query "aws_rds_db_instance_logging_status" {
   sql = <<-EOQ
-  with logging_stat as (
+    with logging_enabled as (
+      select
+        db_instance_identifier as name
+      from
+        aws_rds_db_instance
+      where
+        (engine like any (array ['mariadb', '%mysql']) and enabled_cloudwatch_logs_exports ?& array ['audit','error','general','slowquery'] )or
+        ( engine like any (array['%postgres%']) and enabled_cloudwatch_logs_exports ?& array ['postgresql','upgrade'] ) or
+        ( engine like 'oracle%' and enabled_cloudwatch_logs_exports ?& array ['alert','audit', 'trace','listener'] ) or
+        ( engine = 'sqlserver-ex' and enabled_cloudwatch_logs_exports ?& array ['error'] ) or
+        ( engine like 'sqlserver%' and enabled_cloudwatch_logs_exports ?& array ['error','agent'] )
+    ),
+    logging_status as (
+      select
+        case
+          when l.name is not null  then 'enabled'
+          else 'disabled' end as db_instance_logging_status
+      from
+        aws_rds_db_instance as i
+        left join logging_enabled as l on i.db_instance_identifier = l.name
+    )
     select
-      db_instance_identifier
+      db_instance_logging_status,
+      count(*)
     from
-      aws_rds_db_instance
-    where
-      (engine like any (array ['mariadb', '%mysql']) and enabled_cloudwatch_logs_exports ?& array ['audit','error','general','slowquery'] )or
-      ( engine like any (array['%postgres%']) and enabled_cloudwatch_logs_exports ?& array ['postgresql','upgrade'] ) or
-      ( engine like 'oracle%' and enabled_cloudwatch_logs_exports ?& array ['alert','audit', 'trace','listener'] ) or
-      ( engine = 'sqlserver-ex' and enabled_cloudwatch_logs_exports ?& array ['error'] ) or
-      ( engine like 'sqlserver%' and enabled_cloudwatch_logs_exports ?& array ['error','agent'] )
-     )
-  select
-    'enabled' as "Logging Status",
-    count(db_instance_identifier)
-  from
-    logging_stat
-  union
-  select
-    'disabled' as "Logging Status",
-    count( db_instance_identifier)
-  from
-    aws_rds_db_instance as s where s.db_instance_identifier not in (select db_instance_identifier from logging_stat);
+      logging_status
+    group by
+      db_instance_logging_status;
   EOQ
 }
 

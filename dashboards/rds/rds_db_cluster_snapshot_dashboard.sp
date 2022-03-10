@@ -98,35 +98,35 @@ dashboard "aws_rds_db_cluster_snapshot_dashboard" {
       title = "Snapshots by Account"
       sql   = query.aws_rds_db_cluster_snapshot_by_account.sql
       type  = "column"
-      width = 2
+      width = 4
     }
 
     chart {
       title = "Snapshots by Region"
       sql   = query.aws_rds_db_cluster_snapshot_by_region.sql
       type  = "column"
-      width = 2
+      width = 4
     }
 
     chart {
       title = "Snapshots by State"
       sql   = query.aws_rds_db_cluster_snapshot_by_state.sql
       type  = "column"
-      width = 2
+      width = 4
     }
 
     chart {
       title = "Snapshots by Age"
       sql   = query.aws_rds_db_cluster_snapshot_by_creation_month.sql
       type  = "column"
-      width = 2
+      width = 4
     }
 
     chart {
       title = "Snapshots by Engine Type"
       sql   = query.aws_rds_db_cluster_snapshot_by_engine_type.sql
       type  = "column"
-      width = 2
+      width = 4
     }
 
   }
@@ -207,7 +207,7 @@ query "aws_rds_db_cluster_snapshot_iam_authentication_enabled" {
           when e.name is not null  then 'enabled'
           else 'disabled' end as iam_authentication_status
       from
-        aws_rds_db_cluster as c
+        aws_rds_db_cluster_snapshot as c
         left join iam_authentication_enabled as e on c.db_cluster_identifier = e.name
     )
     select

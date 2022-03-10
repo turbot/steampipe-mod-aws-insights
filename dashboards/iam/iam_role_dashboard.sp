@@ -56,7 +56,7 @@ dashboard "aws_iam_role_dashboard" {
         point "no inline policies" {
           color = "ok"
         }
-        point "with policies" {
+        point "with inline policies" {
           color = "alert"
         }
       }
@@ -358,20 +358,6 @@ query "aws_iam_roles_by_account" {
   EOQ
 }
 
-query "aws_iam_roles_by_path" {
-  sql = <<-EOQ
-    select
-      path,
-      count(name) as "total"
-    from
-      aws_iam_role
-    group by
-      path
-    order by
-      total desc;
-  EOQ
-}
-
 query "aws_iam_roles_by_creation_month" {
   sql = <<-EOQ
     with roles as (
@@ -416,3 +402,19 @@ query "aws_iam_roles_by_creation_month" {
       months.month;
   EOQ
 }
+
+query "aws_iam_roles_by_path" {
+  sql = <<-EOQ
+    select
+      case when path = '/' then '/*'
+      else '/' || (split_part(path, '/', 2)) || '/*' end as path_status,
+      count(*) as "total"
+    from
+      aws_iam_role
+    group by
+      path_status
+    order by
+      total desc;
+  EOQ
+}
+

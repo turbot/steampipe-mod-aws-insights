@@ -140,35 +140,35 @@ dashboard "aws_rds_db_cluster_dashboard" {
       title = "Clusters by Account"
       sql   = query.aws_rds_db_cluster_by_account.sql
       type  = "column"
-      width = 2
+      width = 4
     }
 
     chart {
       title = "Clusters by Region"
       sql   = query.aws_rds_db_cluster_by_region.sql
       type  = "column"
-      width = 2
+      width = 4
     }
 
     chart {
       title = "Clusters by State"
       sql   = query.aws_rds_db_cluster_by_state.sql
       type  = "column"
-      width = 2
+      width = 4
     }
 
     chart {
       title = "Clusters by Age"
       sql   = query.aws_rds_db_cluster_by_creation_month.sql
       type  = "column"
-      width = 2
+      width = 4
     }
 
     chart {
       title = "Clusters by Type"
       sql   = query.aws_rds_db_cluster_by_engine_type.sql
       type  = "column"
-      width = 2
+      width = 4
     }
 
   }

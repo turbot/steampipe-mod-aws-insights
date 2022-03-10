@@ -95,11 +95,10 @@ dashboard "aws_cloudtrail_trail_detail" {
       table {
         title = "Associated S3 Trail Buckets"
         column "S3 Bucket ARN" {
-          href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.'S3 Bucket ARN' | @uri}}"
+          href = "{{ if .'S3 Bucket ARN' == null then null else '${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn=' + (.'S3 Bucket ARN' | @uri) end }}"
         }
 
         query = query.aws_cloudtrail_trail_bucket
-
         args = {
           arn = self.input.trail_arn.value
         }
