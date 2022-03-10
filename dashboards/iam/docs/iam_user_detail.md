@@ -1,4 +1,4 @@
-This dashboard answers the following questions for each IAM user:
+This dashboard answers the following questions for each user:
 
 - How is the user configured?
 - What tags are applied?
