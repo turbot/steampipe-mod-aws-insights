@@ -7,7 +7,7 @@ dashboard "aws_vpc_security_group_detail" {
     type = "Detail"
   })
 
-  input "security_group_arn" {
+  input "security_group_id" {
     title = "Select a security group:"
     sql   = query.aws_vpc_security_group_input.sql
     width = 4
@@ -19,7 +19,7 @@ dashboard "aws_vpc_security_group_detail" {
       width = 2
       query = query.aws_vpc_security_group_ingress_rules_count
       args  = {
-        arn = self.input.security_group_arn.value
+        group_id = self.input.security_group_id.value
       }
     }
 
@@ -27,7 +27,7 @@ dashboard "aws_vpc_security_group_detail" {
       width = 2
       query = query.aws_vpc_security_group_egress_rules_count
       args  = {
-        arn = self.input.security_group_arn.value
+        group_id = self.input.security_group_id.value
       }
     }
 
@@ -35,7 +35,7 @@ dashboard "aws_vpc_security_group_detail" {
       width = 2
       query = query.aws_vpc_security_attached_enis_count
       args  = {
-        arn = self.input.security_group_arn.value
+        group_id = self.input.security_group_id.value
       }
     }
 
@@ -43,7 +43,7 @@ dashboard "aws_vpc_security_group_detail" {
       width = 2
       query = query.aws_vpc_security_unrestricted_ingress
       args  = {
-        arn = self.input.security_group_arn.value
+        group_id = self.input.security_group_id.value
       }
     }
 
@@ -51,7 +51,7 @@ dashboard "aws_vpc_security_group_detail" {
       width = 2
       query = query.aws_vpc_security_unrestricted_egress
       args  = {
-        arn = self.input.security_group_arn.value
+        group_id = self.input.security_group_id.value
       }
     }
 
@@ -68,8 +68,16 @@ dashboard "aws_vpc_security_group_detail" {
         width = 6
         query = query.aws_vpc_security_group_overview
         args  = {
-          arn = self.input.security_group_arn.value
+          group_id = self.input.security_group_id.value
         }
+
+        column "VPC ID" {
+          // cyclic dependency prevents use of url_path, hardcode for now
+          // href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.'VPC ID' | @uri}}"
+          href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.'VPC ID' | @uri}}"
+
+        }
+
       }
 
       table {
@@ -77,7 +85,7 @@ dashboard "aws_vpc_security_group_detail" {
         width = 6
         query = query.aws_vpc_security_group_tags
         args  = {
-          arn = self.input.security_group_arn.value
+          group_id = self.input.security_group_id.value
         }
       }
 
@@ -88,11 +96,20 @@ dashboard "aws_vpc_security_group_detail" {
       width = 6
 
       table {
-        title = "Associated To"
+        title = "Associated to"
         query = query.aws_vpc_security_group_assoc
         args  = {
-          arn = self.input.security_group_arn.value
+          group_id = self.input.security_group_id.value
         }
+
+        column "link" {
+          display = "none"
+        }
+
+        column "Title" {
+          href = "{{ .link }}"
+        }
+
       }
 
     }
@@ -103,37 +120,21 @@ dashboard "aws_vpc_security_group_detail" {
 
     width = 6
 
-    hierarchy {
-      type  = "sankey"
+    flow {
+      base = flow.security_group_rules_sankey
       title = "Ingress Analysis"
       query = query.aws_vpc_security_group_ingress_rule_sankey
       args  = {
-        arn = self.input.security_group_arn.value
+        group_id = self.input.security_group_id.value
       }
-
-      category "aws_ec2_isntance" {
-        color = "orange"
-      }
-
-      category "aws_lambda_function" {
-        color = "yellow"
-      }
-
-      category "alert" {
-        color = "red"
-      }
-
-      category "ok" {
-        color = "green"
-      }
-
     }
+
 
     table {
       title = "Ingress Rules"
       query = query.aws_vpc_security_group_ingress_rules
       args  = {
-        arn = self.input.security_group_arn.value
+        group_id = self.input.security_group_id.value
       }
     }
 
@@ -143,37 +144,20 @@ dashboard "aws_vpc_security_group_detail" {
 
     width = 6
 
-    hierarchy {
-      type  = "sankey"
+    flow {
+      base = flow.security_group_rules_sankey
       title = "Egress Analysis"
       query = query.aws_vpc_security_group_egress_rule_sankey
       args  = {
-        arn = self.input.security_group_arn.value
+        group_id = self.input.security_group_id.value
       }
-
-      category "aws_ec2_isntance" {
-        color = "orange"
-      }
-
-      category "aws_lambda_function" {
-        color = "yellow"
-      }
-
-      category "alert" {
-        color = "red"
-      }
-
-      category "ok" {
-        color = "green"
-      }
-
     }
 
     table {
       title = "Egress Rules"
       query = query.aws_vpc_security_group_egress_rules
       args = {
-        arn = self.input.security_group_arn.value
+        group_id = self.input.security_group_id.value
       }
     }
 
@@ -181,11 +165,27 @@ dashboard "aws_vpc_security_group_detail" {
 
 }
 
+
+
+ flow "security_group_rules_sankey" {
+      type  = "sankey"
+
+      category "alert" {
+        color = "alert"
+      }
+
+      category "ok" {
+        color = "ok"
+      }
+
+    }
+
+
 query "aws_vpc_security_group_input" {
   sql = <<-EOQ
     select
       title as label,
-      arn as value,
+      group_id as value,
       json_build_object(
         'account_id', account_id,
         'region', region,
@@ -207,10 +207,10 @@ query "aws_vpc_security_group_ingress_rules_count" {
       aws_vpc_security_group_rule
     where
       not is_egress
-      and group_id = reverse(split_part(reverse($1), '/', 1))
+      and group_id = $1
   EOQ
 
-  param "arn" {}
+  param "group_id" {}
 }
 
 query "aws_vpc_security_group_egress_rules_count" {
@@ -222,10 +222,10 @@ query "aws_vpc_security_group_egress_rules_count" {
       aws_vpc_security_group_rule
     where
       is_egress
-      and group_id = reverse(split_part(reverse($1), '/', 1));
+      and group_id = $1;
   EOQ
 
-  param "arn" {}
+  param "group_id" {}
 }
 
 query "aws_vpc_security_attached_enis_count" {
@@ -238,16 +238,16 @@ query "aws_vpc_security_attached_enis_count" {
       aws_ec2_network_interface,
       jsonb_array_elements(groups) as sg
     where
-      sg ->> 'GroupId' = reverse(split_part(reverse('hdhbhha/ahdsh'), '/', 1));
+      sg ->> 'GroupId' = $1;
   EOQ
 
-  param "arn" {}
+  param "group_id" {}
 }
 
 query "aws_vpc_security_unrestricted_ingress" {
   sql = <<-EOQ
     select
-      'Unrestricted Ingress (excludes ICMP)' as label,
+      'Unrestricted Ingress (Excludes ICMP)' as label,
       count(*) as value,
       case
         when count(*) = 0 then 'ok'
@@ -263,16 +263,16 @@ query "aws_vpc_security_unrestricted_ingress" {
         or (from_port = 0 and to_port = 65535)
       )
       and not is_egress
-      and group_id = reverse(split_part(reverse($1), '/', 1));
+      and group_id = $1;
   EOQ
 
-  param "arn" {}
+  param "group_id" {}
 }
 
 query "aws_vpc_security_unrestricted_egress" {
   sql = <<-EOQ
     select
-      'Unrestricted Egress  (excludes ICMP)' as label,
+      'Unrestricted Egress  (Excludes ICMP)' as label,
       count(*) as value,
       case
         when count(*) = 0 then 'ok'
@@ -288,161 +288,216 @@ query "aws_vpc_security_unrestricted_egress" {
         or (from_port = 0 and to_port = 65535)
       )
       and is_egress
-      and group_id = reverse(split_part(reverse($1), '/', 1));
+      and group_id = $1;
   EOQ
 
-  param "arn" {}
+  param "group_id" {}
 }
 
 query "aws_vpc_security_group_assoc" {
   sql = <<-EOQ
+
+    -- EC2 instances
     select
-      title,
-      'aws_ec2_instance' as type,
-      arn
+      title as "Title",
+      'aws_ec2_instance' as "Type",
+      arn as "ARN",
+      '${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn=' || arn as link
      from
        aws_ec2_instance,
        jsonb_array_elements(security_groups) as sg
      where
-      sg ->> 'GroupId' = (reverse(split_part(reverse($1), '/', 1)))
+      sg ->> 'GroupId' = $1
+
+    -- Lambda functions
     union all select
-      title,
-      'aws_lambda_function' as type,
-      arn
+      title as "Title",
+      'aws_lambda_function' as "Type",
+      arn as "ARN",
+      '${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn=' || arn as link
     from
        aws_lambda_function,
        jsonb_array_elements_text(vpc_security_group_ids) as sg
     where
-      sg = (reverse(split_part(reverse($1), '/', 1)));
+      sg = $1
+
+
+    -- attached ELBs
+    union all select
+      title as "Title",
+      'aws_ec2_classic_load_balancer' as "Type",
+      arn as "ARN",
+      null as link
+    from
+      aws_ec2_classic_load_balancer,
+      jsonb_array_elements_text(security_groups) as sg
+    where
+      sg = $1
+
+    -- attached ALBs
+    union all select
+      title as "Title",
+      'aws_ec2_application_load_balancer' as "Type",
+      arn as "ARN",
+      null as link
+    from
+      aws_ec2_application_load_balancer,
+      jsonb_array_elements_text(security_groups) as sg
+    where
+      sg = $1
+
+    -- attached NLBs
+    union all select
+      title as "Title",
+      'aws_ec2_network_load_balancer' as "Type",
+      arn as "ARN",
+      null as link
+    from
+      aws_ec2_network_load_balancer,
+      jsonb_array_elements_text(security_groups) as sg
+    where
+      sg = $1
+
+
+    -- attached GWLBs
+    union all select
+        title as "Title",
+        'aws_ec2_gateway_load_balancer' as "Type",
+        arn as "ARN",
+        null as link
+      from
+        aws_ec2_gateway_load_balancer,
+        jsonb_array_elements_text(security_groups) as sg
+      where
+        sg = $1
+
+
+    -- attached aws_ec2_launch_configuration
+    union all select
+        title as "Title",
+        'aws_ec2_launch_configuration' as "Type",
+        launch_configuration_arn as "ARN",
+        null as link
+      from
+        aws_ec2_launch_configuration,
+        jsonb_array_elements_text(security_groups) as sg
+      where
+        sg = $1
+
+
+    -- attached DAX Cluster
+    union all select
+        title as "Title",
+        'aws_dax_cluster' as "Type",
+        arn as "ARN",
+        null as link
+      from
+        aws_dax_cluster,
+        jsonb_array_elements_text(security_groups) as sg
+      where
+        sg = $1
+
+    -- attached aws_dms_replication_instance
+    union all select
+        title as "Title",
+        'aws_dms_replication_instance' as "Type",
+        arn as "ARN",
+        null as link
+      from
+        aws_dms_replication_instance,
+        jsonb_array_elements_text(vpc_security_groups) as sg
+      where
+        sg = $1
+
+    -- attached aws_efs_mount_target
+    union all select
+        title as "Title",
+        'aws_efs_mount_target' as "Type",
+        mount_target_id as "ARN",
+        null as link
+      from
+        aws_efs_mount_target,
+        jsonb_array_elements_text(security_groups) as sg
+      where
+        sg = $1
+
+    -- attached aws_elasticache_cluster
+    union all select
+        title as "Title",
+        'aws_elasticache_cluster' as "Type",
+        arn as "ARN",
+        null as link
+      from
+        aws_elasticache_cluster,
+        jsonb_array_elements_text(security_groups) as sg
+      where
+        sg = $1
+
+
+    -- attached aws_rds_db_cluster
+    union all select
+        title as "Title",
+        'aws_rds_db_cluster' as "Type",
+        arn as "ARN",
+        null as link
+      from
+        aws_rds_db_cluster,
+        jsonb_array_elements_text(vpc_security_groups) as sg
+      where
+        sg = $1
+
+    -- attached aws_rds_db_instance
+    union all select
+        title as "Title",
+        'aws_rds_db_instance' as "Type",
+        arn as "ARN",
+      '${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn=' || arn as link
+      from
+        aws_rds_db_instance,
+        jsonb_array_elements_text(vpc_security_groups) as sg
+      where
+        sg = $1
+
+
+    -- attached aws_redshift_cluster
+    union all select
+        title as "Title",
+        'aws_redshift_cluster' as "Type",
+        arn as "ARN",
+      '${dashboard.aws_redshift_cluster_detail.url_path}?input.cluster_arn=' || arn as link
+      from
+        aws_redshift_cluster,
+        jsonb_array_elements_text(vpc_security_groups) as sg
+      where
+        sg = $1
+
+
+    -- attached aws_sagemaker_notebook_instance
+    union all select
+        title as "Title",
+        'aws_sagemaker_notebook_instance' as "Type",
+        arn as "ARN",
+        null as link
+      from
+        aws_sagemaker_notebook_instance,
+        jsonb_array_elements_text(security_groups) as sg
+      where
+        sg = $1
+
+
   EOQ
 
-  param "arn" {}
+  param "group_id" {}
 
 }
 ## TODO: Add aws_rds_db_instance / db_security_groups, ELB, ALB, elasticache, etc....
 
 query "aws_vpc_security_group_ingress_rule_sankey" {
-
   sql = <<-EOQ
-  with associations as (
-    select
-        title,
-        arn,
-        'aws_ec2_instance' as category,
-        sg ->> 'GroupId' as group_id
-      from
-        aws_ec2_instance,
-        jsonb_array_elements(security_groups) as sg
-      where
-      sg ->> 'GroupId' = reverse(split_part(reverse($1), '/', 1))
 
-    union all select
-        title,
-        arn,
-        'aws_lambda_function' as category,
-        sg
-      from
-        aws_lambda_function,
-        jsonb_array_elements_text(vpc_security_group_ids) as sg
-      where
-      sg = reverse(split_part(reverse($1), '/', 1))
-      -- TODO: Add aws_rds_db_instance / db_security_groups, etc.
-  ),
-  rules as (
-    select
-      concat(text(cidr_ipv4), text(cidr_ipv6), referenced_group_id, referenced_vpc_id,prefix_list_id) as source,
-      security_group_rule_id,
-      case
-        when ip_protocol = '-1' then 'All Traffic'
-        when ip_protocol = 'icmp' then 'All ICMP'
-        when from_port is not null
-        and to_port is not null
-        and from_port = to_port then concat(from_port, '/', ip_protocol)
-        else concat(
-          from_port,
-          '-',
-          to_port,
-          '/',
-          ip_protocol
-        )
-      end as port_proto,
-      type,
-      case
-        when ip_protocol = '-1' then 'alert'
-        when ( cidr_ipv4 = '0.0.0.0/0' or cidr_ipv6 = '::/0')
-            and ip_protocol <> 'icmp'
-            and (
-              from_port = -1
-              or (from_port = 0 and to_port = 65535)
-            ) then 'alert'
-        else 'ok'
-      end as category,
-      group_id
-    from
-      aws_vpc_security_group_rule
-    where
-      group_id = reverse(split_part(reverse($1), '/', 1))
-      and type = 'ingress'
-      ),
-  analysis as (
-    select
-      port_proto as parent,
-      source as id,
-      source as name,
-      0 as depth,
-      category
-    from
-      rules
-
-    union
-    select
-      group_id as parent,
-      port_proto as id,
-      port_proto as name,
-      1 as depth,
-      category
-    from
-      rules
-
-    union
-    select
-      null as parent,
-      sg.group_id as id,
-      sg.group_name as name,
-      2 as depth,
-      'aws_vpc_security_group' as category
-    from
-      aws_vpc_security_group sg
-      inner join rules sgr on sg.group_id = sgr.group_id
-
-    union
-    select
-        group_id as parent,
-        arn as id,
-        title || '(' || category || ')' as name, -- TODO: Should this be arn instead?
-        3 as depth,
-        category
-      from
-        associations
-      where
-      group_id = reverse(split_part(reverse($1), '/', 1))
-    )
-  select
-    *
-  from
-    analysis
-  order by
-    depth,
-    category,
-    id;
-  EOQ
-
-  param "arn" {}
-}
-
-query "aws_vpc_security_group_egress_rule_sankey" {
-  sql = <<-EOQ
     with associations as (
+
+      -- attached ec2 instances
       select
           title,
           arn,
@@ -451,9 +506,11 @@ query "aws_vpc_security_group_egress_rule_sankey" {
         from
           aws_ec2_instance,
           jsonb_array_elements(security_groups) as sg
-        where
-        sg ->> 'GroupId' = reverse(split_part(reverse($1), '/', 1))
+      where
+        sg ->> 'GroupId' = $1
 
+
+      -- attached lambda functions
       union all select
           title,
           arn,
@@ -463,108 +520,591 @@ query "aws_vpc_security_group_egress_rule_sankey" {
           aws_lambda_function,
           jsonb_array_elements_text(vpc_security_group_ids) as sg
         where
-        sg = reverse(split_part(reverse($1), '/', 1))
-        -- TODO: Add aws_rds_db_instance / db_security_groups, etc.
-    ),
-    rules as (
-      select
-        concat(text(cidr_ipv4), text(cidr_ipv6), referenced_group_id, referenced_vpc_id,prefix_list_id) as destination,
-        security_group_rule_id,
-        case
-          when ip_protocol = '-1' then 'All Traffic'
-          when ip_protocol = 'icmp' then 'All ICMP'
-          when from_port is not null
-          and to_port is not null
-          and from_port = to_port then concat(from_port, '/', ip_protocol)
-          else concat(
-            from_port,
-            '-',
-            to_port,
-            '/',
-            ip_protocol
-          )
-        end as port_proto,
-        type,
-        case
-          when ip_protocol = '-1' then 'alert'
-          when ( cidr_ipv4 = '0.0.0.0/0' or cidr_ipv6 = '::/0')
-              and ip_protocol <> 'icmp'
-              and (
-                from_port = -1
-                or (from_port = 0 and to_port = 65535)
-              ) then 'alert'
-          else 'ok'
-        end as category,
-        group_id
-      from
-        aws_vpc_security_group_rule
-      where
-        group_id = reverse(split_part(reverse($1), '/', 1))
-        and is_egress
-        ),
-    analysis as (
-      select
-          group_id as parent,
-          arn as id,
-          title || '(' || category || ')' as name, -- TODO: Should this be arn instead?
-          0 as depth,
-          category
+          sg = $1
+
+      -- attached Classic ELBs
+      union all select
+          title,
+          arn,
+          'aws_ec2_classic_load_balancer' as category,
+          sg
         from
-          associations
+          aws_ec2_classic_load_balancer,
+          jsonb_array_elements_text(security_groups) as sg
         where
-        group_id = reverse(split_part(reverse($1), '/', 1))
+          sg = $1
+
+      -- attached ALBs
+      union all select
+          title,
+          arn,
+          'aws_ec2_application_load_balancer' as category,
+          sg
+        from
+          aws_ec2_application_load_balancer,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = $1
+
+      -- attached NLBs
+      union all select
+          title,
+          arn,
+          'aws_ec2_network_load_balancer' as category,
+          sg
+        from
+          aws_ec2_network_load_balancer,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = $1
+
+
+      -- attached GWLBs
+      union all select
+          title,
+          arn,
+          'aws_ec2_gateway_load_balancer' as category,
+          sg
+        from
+          aws_ec2_gateway_load_balancer,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = $1
+
+
+      -- attached aws_ec2_launch_configuration
+      union all select
+          title,
+          launch_configuration_arn,
+          'aws_ec2_launch_configuration' as category,
+          sg
+        from
+          aws_ec2_launch_configuration,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = $1
+
+
+
+      -- attached DAX Cluster
+      union all select
+          title,
+          arn,
+          'aws_dax_cluster' as category,
+          sg
+        from
+          aws_dax_cluster,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = $1
+
+      -- attached aws_dms_replication_instance
+      union all select
+          title,
+          arn,
+          'aws_dms_replication_instance' as category,
+          sg
+        from
+          aws_dms_replication_instance,
+          jsonb_array_elements_text(vpc_security_groups) as sg
+        where
+          sg = $1
+
+      -- attached aws_efs_mount_target
+      union all select
+          title,
+          mount_target_id,
+          'aws_efs_mount_target' as category,
+          sg
+        from
+          aws_efs_mount_target,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = $1
+
+      -- attached aws_elasticache_cluster
+      union all select
+          title,
+          arn,
+          'aws_elasticache_cluster' as category,
+          sg
+        from
+          aws_elasticache_cluster,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = $1
+
+
+      -- attached aws_rds_db_cluster
+      union all select
+          title,
+          arn,
+          'aws_rds_db_cluster' as category,
+          sg
+        from
+          aws_rds_db_cluster,
+          jsonb_array_elements_text(vpc_security_groups) as sg
+        where
+          sg = $1
+
+      -- attached aws_rds_db_instance
+      union all select
+          title,
+          arn,
+          'aws_rds_db_instance' as category,
+          sg
+        from
+          aws_rds_db_instance,
+          jsonb_array_elements_text(vpc_security_groups) as sg
+        where
+          sg = $1
+
+
+      -- attached aws_redshift_cluster
+      union all select
+          title,
+          arn,
+          'aws_redshift_cluster' as category,
+          sg
+        from
+          aws_redshift_cluster,
+          jsonb_array_elements_text(vpc_security_groups) as sg
+        where
+          sg = $1
+
+
+      -- attached aws_sagemaker_notebook_instance
+      union all select
+          title,
+          arn,
+          'aws_sagemaker_notebook_instance' as category,
+          sg
+        from
+          aws_sagemaker_notebook_instance,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = $1
+
+      ),
+      rules as (
+        select
+          concat(text(cidr_ipv4), text(cidr_ipv6), referenced_group_id, referenced_vpc_id,prefix_list_id) as source,
+          security_group_rule_id,
+          case
+            when ip_protocol = '-1' then 'All Traffic'
+            when ip_protocol = 'icmp' then 'All ICMP'
+            when from_port is not null
+            and to_port is not null
+            and from_port = to_port then concat(from_port, '/', ip_protocol)
+            else concat(
+              from_port,
+              '-',
+              to_port,
+              '/',
+              ip_protocol
+            )
+          end as port_proto,
+          type,
+          case
+            when ( cidr_ipv4 = '0.0.0.0/0' or cidr_ipv6 = '::/0')
+                and ip_protocol <> 'icmp'
+                and (
+                  from_port = -1
+                  or (from_port = 0 and to_port = 65535)
+                ) then 'alert'
+            else 'ok'
+          end as category,
+          group_id
+        from
+          aws_vpc_security_group_rule
+        where
+          group_id = $1
+          and type = 'ingress'
+          )
+
+      -- Nodes  ---------
+
+      select
+        distinct concat('src_',source) as id,
+        source as title,
+        0 as depth,
+        'source' as category,
+        null as from_id,
+        null as to_id
+      from
+        rules
+
       union
       select
-        null as parent,
-        sg.group_id as id,
-        sg.group_name as name,
+        distinct port_proto as id,
+        port_proto as title,
         1 as depth,
-        'aws_vpc_security_group' as category
+        'port_proto' as category,
+        null as from_id,
+        null as to_id
+      from
+        rules
+
+      union
+      select
+        distinct sg.group_id as id,
+        sg.group_name as title,
+        2 as depth,
+        'security_group' as category,
+        null as from_id,
+        null as to_id
       from
         aws_vpc_security_group sg
         inner join rules sgr on sg.group_id = sgr.group_id
+
       union
       select
-        group_id as parent,
-        port_proto as id,
-        port_proto as name,
-        2 as depth,
-        category
+          distinct arn as id,
+          title || '(' || category || ')' as title, -- TODO: Should this be arn instead?
+          3 as depth,
+          category,
+          group_id as from_id,
+          null as to_id
+        from
+          associations
+
+      -- Edges  ---------
+      union select
+        null as id,
+        null as title,
+        null as depth,
+        category,
+        concat('src_',source) as from_id,
+        port_proto as to_id
       from
         rules
-      union
-      select
-        port_proto as parent,
-        destination as id,
-        destination as name,
-        3 as depth,
-        category
+
+      union select
+        null as id,
+        null as title,
+        null as depth,
+        category,
+        port_proto as from_id,
+        group_id as to_id
       from
         rules
-      )
-    select
-      *
-    from
-      analysis
-    order by
-      depth,
-      category,
-      id;
   EOQ
 
-  param "arn" {}
+  param "group_id" {}
 }
+
+query "aws_vpc_security_group_egress_rule_sankey" {
+  sql = <<-EOQ
+
+
+    with associations as (
+
+      -- attached ec2 instances
+      select
+          title,
+          arn,
+          'aws_ec2_instance' as category,
+          sg ->> 'GroupId' as group_id
+        from
+          aws_ec2_instance,
+          jsonb_array_elements(security_groups) as sg
+      where
+        sg ->> 'GroupId' = $1
+
+
+      -- attached lambda functions
+      union all select
+          title,
+          arn,
+          'aws_lambda_function' as category,
+          sg
+        from
+          aws_lambda_function,
+          jsonb_array_elements_text(vpc_security_group_ids) as sg
+        where
+          sg = $1
+
+      -- attached Classic ELBs
+      union all select
+          title,
+          arn,
+          'aws_ec2_classic_load_balancer' as category,
+          sg
+        from
+          aws_ec2_classic_load_balancer,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = $1
+
+      -- attached ALBs
+      union all select
+          title,
+          arn,
+          'aws_ec2_application_load_balancer' as category,
+          sg
+        from
+          aws_ec2_application_load_balancer,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = $1
+
+      -- attached NLBs
+      union all select
+          title,
+          arn,
+          'aws_ec2_network_load_balancer' as category,
+          sg
+        from
+          aws_ec2_network_load_balancer,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = $1
+
+
+      -- attached GWLBs
+      union all select
+          title,
+          arn,
+          'aws_ec2_gateway_load_balancer' as category,
+          sg
+        from
+          aws_ec2_gateway_load_balancer,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = $1
+
+
+      -- attached aws_ec2_launch_configuration
+      union all select
+          title,
+          launch_configuration_arn,
+          'aws_ec2_launch_configuration' as category,
+          sg
+        from
+          aws_ec2_launch_configuration,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = $1
+
+
+
+      -- attached DAX Cluster
+      union all select
+          title,
+          arn,
+          'aws_dax_cluster' as category,
+          sg
+        from
+          aws_dax_cluster,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = $1
+
+      -- attached aws_dms_replication_instance
+      union all select
+          title,
+          arn,
+          'aws_dms_replication_instance' as category,
+          sg
+        from
+          aws_dms_replication_instance,
+          jsonb_array_elements_text(vpc_security_groups) as sg
+        where
+          sg = $1
+
+      -- attached aws_efs_mount_target
+      union all select
+          title,
+          mount_target_id,
+          'aws_efs_mount_target' as category,
+          sg
+        from
+          aws_efs_mount_target,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = $1
+
+      -- attached aws_elasticache_cluster
+      union all select
+          title,
+          arn,
+          'aws_elasticache_cluster' as category,
+          sg
+        from
+          aws_elasticache_cluster,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = $1
+
+
+      -- attached aws_rds_db_cluster
+      union all select
+          title,
+          arn,
+          'aws_rds_db_cluster' as category,
+          sg
+        from
+          aws_rds_db_cluster,
+          jsonb_array_elements_text(vpc_security_groups) as sg
+        where
+          sg = $1
+
+      -- attached aws_rds_db_instance
+      union all select
+          title,
+          arn,
+          'aws_rds_db_instance' as category,
+          sg
+        from
+          aws_rds_db_instance,
+          jsonb_array_elements_text(vpc_security_groups) as sg
+        where
+          sg = $1
+
+
+      -- attached aws_redshift_cluster
+      union all select
+          title,
+          arn,
+          'aws_redshift_cluster' as category,
+          sg
+        from
+          aws_redshift_cluster,
+          jsonb_array_elements_text(vpc_security_groups) as sg
+        where
+          sg = $1
+
+
+      -- attached aws_sagemaker_notebook_instance
+      union all select
+          title,
+          arn,
+          'aws_sagemaker_notebook_instance' as category,
+          sg
+        from
+          aws_sagemaker_notebook_instance,
+          jsonb_array_elements_text(security_groups) as sg
+        where
+          sg = $1
+
+      ),
+      rules as (
+        select
+          concat(text(cidr_ipv4), text(cidr_ipv6), referenced_group_id, referenced_vpc_id,prefix_list_id) as source,
+          security_group_rule_id,
+          case
+            when ip_protocol = '-1' then 'All Traffic'
+            when ip_protocol = 'icmp' then 'All ICMP'
+            when from_port is not null
+            and to_port is not null
+            and from_port = to_port then concat(from_port, '/', ip_protocol)
+            else concat(
+              from_port,
+              '-',
+              to_port,
+              '/',
+              ip_protocol
+            )
+          end as port_proto,
+          type,
+          case
+            when ( cidr_ipv4 = '0.0.0.0/0' or cidr_ipv6 = '::/0')
+                and ip_protocol <> 'icmp'
+                and (
+                  from_port = -1
+                  or (from_port = 0 and to_port = 65535)
+                ) then 'alert'
+            else 'ok'
+          end as category,
+          group_id
+        from
+          aws_vpc_security_group_rule
+        where
+          group_id = $1
+          and type = 'egress'
+          )
+
+      -- Nodes  ---------
+
+      select
+        distinct concat('src_',source) as id,
+        source as title,
+        3 as depth,
+        'source' as category,
+        null as from_id,
+        null as to_id
+      from
+        rules
+
+      union
+      select
+        distinct port_proto as id,
+        port_proto as title,
+        2 as depth,
+        'port_proto' as category,
+        null as from_id,
+        null as to_id
+      from
+        rules
+
+      union
+      select
+        distinct sg.group_id as id,
+        sg.group_name as title,
+        1 as depth,
+        'security_group' as category,
+        null as from_id,
+        null as to_id
+      from
+        aws_vpc_security_group sg
+        inner join rules sgr on sg.group_id = sgr.group_id
+
+      union
+      select
+          distinct arn as id,
+          title || '(' || category || ')' as title, -- TODO: Should this be arn instead?
+          0 as depth,
+          category,
+          group_id as from_id,
+          null as to_id
+        from
+          associations
+
+      -- Edges  ---------
+      union select
+        null as id,
+        null as title,
+        null as depth,
+        category,
+        concat('src_',source) as from_id,
+        port_proto as to_id
+      from
+        rules
+
+      union select
+        null as id,
+        null as title,
+        null as depth,
+        category,
+        port_proto as from_id,
+        group_id as to_id
+      from
+        rules
+  EOQ
+    param "group_id" {}
+}
+
 
 query "aws_vpc_security_group_ingress_rules" {
   sql = <<-EOQ
     select
-      concat(text(cidr_ipv4), text(cidr_ipv6), referenced_group_id, referenced_vpc_id,prefix_list_id) as source,
-      security_group_rule_id,
+      concat(text(cidr_ipv4), text(cidr_ipv6), referenced_group_id, referenced_vpc_id,prefix_list_id) as "Source",
+      security_group_rule_id as "Security Group Rule ID",
       case
         when ip_protocol = '-1' then 'All Traffic'
         when ip_protocol = 'icmp' then 'All ICMP'
         else ip_protocol
-      end as protocol,
+      end as "Protocol",
       case
         when from_port = -1 then 'All'
         when from_port is not null
@@ -575,27 +1115,27 @@ query "aws_vpc_security_group_ingress_rules" {
           '-',
           to_port
         )
-      end as ports
+      end as "Ports"
     from
       aws_vpc_security_group_rule
     where
-      group_id = reverse(split_part(reverse($1), '/', 1))
+      group_id = $1
       and not is_egress
   EOQ
 
-  param "arn" {}
+  param "group_id" {}
 }
 
 query "aws_vpc_security_group_egress_rules" {
   sql = <<-EOQ
     select
-      concat(text(cidr_ipv4), text(cidr_ipv6), referenced_group_id, referenced_vpc_id,prefix_list_id) as destination,
-      security_group_rule_id,
+      concat(text(cidr_ipv4), text(cidr_ipv6), referenced_group_id, referenced_vpc_id,prefix_list_id) as "Destination",
+      security_group_rule_id as "Security Group Rule ID",
       case
         when ip_protocol = '-1' then 'All Traffic'
         when ip_protocol = 'icmp' then 'All ICMP'
         else ip_protocol
-      end as protocol,
+      end as "Protocol",
       case
         when from_port = -1 then 'All'
         when from_port is not null
@@ -606,15 +1146,15 @@ query "aws_vpc_security_group_egress_rules" {
           '-',
           to_port
         )
-      end as ports
+      end as "Ports"
     from
       aws_vpc_security_group_rule
     where
-      group_id = reverse(split_part(reverse($1), '/', 1))
+      group_id = $1
       and is_egress
   EOQ
 
-  param "arn" {}
+  param "group_id" {}
 }
 
 query "aws_vpc_security_group_overview" {
@@ -624,17 +1164,16 @@ query "aws_vpc_security_group_overview" {
       group_id as "Group ID",
       description as "Description",
       vpc_id as  "VPC ID",
-      title as "Title",
       region as "Region",
       account_id as "Account ID",
       arn as "ARN"
     from
       aws_vpc_security_group
     where
-      arn = $1
+      group_id = $1
     EOQ
 
-  param "arn" {}
+  param "group_id" {}
 }
 
 query "aws_vpc_security_group_tags" {
@@ -646,11 +1185,10 @@ query "aws_vpc_security_group_tags" {
       aws_vpc_security_group,
       jsonb_array_elements(tags_src) as tag
     where
-      arn = $1
+      group_id = $1
     order by
       tag ->> 'Key';
     EOQ
 
-  param "arn" {}
+  param "group_id" {}
 }
-

@@ -112,7 +112,7 @@ dashboard "aws_iam_user_detail" {
 
     title = "AWS IAM User Policy Analysis"
 
-    hierarchy {
+    flow {
       type  = "sankey"
       title = "Attached Policies"
       query = query.aws_iam_user_manage_policies_sankey
@@ -121,7 +121,7 @@ dashboard "aws_iam_user_detail" {
       }
 
       category "aws_iam_group" {
-        color = "green"
+        color = "ok"
       }
     }
 
@@ -131,6 +131,13 @@ dashboard "aws_iam_user_detail" {
       query = query.aws_iam_groups_for_user
       args  = {
         arn = self.input.user_arn.value
+      }
+
+      column "Name" {
+        // cyclic dependency prevents use of url_path, hardcode for now
+        //href = "${dashboard.aws_iam_group_detail.url_path}?input.group_arn={{.'ARN' | @uri}}"
+        href = "/aws_insights.dashboard.aws_iam_group_detail?input.group_arn={{.'ARN' | @uri}}"
+
       }
     }
 
@@ -220,7 +227,7 @@ query "aws_iam_user_direct_attached_policy_count_for_user" {
   sql = <<-EOQ
     select
       coalesce(jsonb_array_length(attached_policy_arns), 0) as value,
-      'Directly Attached Policies' as label,
+      'Attached Policies' as label,
       case when coalesce(jsonb_array_length(attached_policy_arns), 0) = 0 then 'ok' else 'alert' end as type
     from
       aws_iam_user
@@ -320,9 +327,9 @@ query "aws_iam_user_manage_policies_sankey" {
 
     -- User
     select
-      null as parent,
+      null as from_id,
       arn as id,
-      title as name,
+      title,
       0 as depth,
       'aws_iam_user' as category
     from
@@ -332,9 +339,9 @@ query "aws_iam_user_manage_policies_sankey" {
 
     -- Groups
     union select
-      u.arn as parent,
+      u.arn as from_id,
       g ->> 'Arn' as id,
-      g ->> 'GroupName' as name,
+      g ->> 'GroupName' as title,
       1 as depth,
       'aws_iam_group' as category
     from
@@ -345,9 +352,9 @@ query "aws_iam_user_manage_policies_sankey" {
 
     -- Policies (attached to groups)
     union select
-      g.arn as parent,
+      g.arn as from_id,
       p.arn as id,
-      p.title as name,
+      p.title as title,
       2 as depth,
       'aws_iam_policy' as category
     from
@@ -361,9 +368,9 @@ query "aws_iam_user_manage_policies_sankey" {
 
     -- Policies (inline from groups)
     union select
-      grp.arn as parent,
+      grp.arn as from_id,
       concat(grp.group_id, '_' , i ->> 'PolicyName') as id,
-      concat(i ->> 'PolicyName', ' (inline)') as name,
+      concat(i ->> 'PolicyName', ' (inline)') as title,
       2 as depth,
       'inline_policy' as category
     from
@@ -377,9 +384,9 @@ query "aws_iam_user_manage_policies_sankey" {
 
     -- Policies (attached to user)
     union select
-      u.arn as parent,
+      u.arn as from_id,
       p.arn as id,
-      p.title as name,
+      p.title as title,
       2 as depth,
       'aws_iam_policy' as category
     from
@@ -393,9 +400,9 @@ query "aws_iam_user_manage_policies_sankey" {
 
     -- Inline Policies (defined on user)
     union select
-      u.arn as parent,
+      u.arn as from_id,
       concat('inline_', i ->> 'PolicyName') as id,
-      concat(i ->> 'PolicyName', ' (inline)') as name,
+      concat(i ->> 'PolicyName', ' (inline)') as title,
       2 as depth,
       'inline_policy' as category
     from

@@ -74,16 +74,16 @@ dashboard "aws_iam_user_dashboard" {
     }
 
     chart {
-      title = "Directly Attached Policies"
+      title = "Attached Policies"
       sql   = query.aws_iam_users_with_direct_attached_policy.sql
       type  = "donut"
       width = 3
 
       series "count" {
-        point "unattached" {
+        point "no policies" {
           color = "ok"
         }
-        point "attached" {
+        point "with policies" {
           color = "alert"
         }
       }
@@ -96,10 +96,10 @@ dashboard "aws_iam_user_dashboard" {
       width = 3
 
       series "count" {
-        point "not associated" {
+        point "no inline policies" {
           color = "ok"
         }
-        point "associated" {
+        point "with inline policies" {
           color = "alert"
         }
       }
@@ -243,8 +243,8 @@ query "aws_iam_users_with_direct_attached_policy" {
       select
         arn,
         case
-          when jsonb_array_length(attached_policy_arns) > 0 then 'attached'
-          else 'unattached'
+          when jsonb_array_length(attached_policy_arns) > 0 then 'with policies'
+          else 'no policies'
         end as has_attached
       from
         aws_iam_user
@@ -265,8 +265,8 @@ query "aws_iam_users_with_inline_policy" {
       select
         arn,
         case
-          when jsonb_array_length(inline_policies) > 0 then 'associated'
-          else 'not associated'
+          when jsonb_array_length(inline_policies) > 0 then 'with inline policies'
+          else 'no inline policies'
         end as has_inline
       from
         aws_iam_user

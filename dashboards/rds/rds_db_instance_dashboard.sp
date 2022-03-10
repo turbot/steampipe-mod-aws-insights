@@ -118,10 +118,10 @@ dashboard "aws_rds_db_instance_dashboard" {
 
       series "count" {
         point "enabled" {
-          color = "green"
+          color = "ok"
         }
         point "disabled" {
-          color = "red"
+          color = "alert"
         }
       }
 

@@ -71,20 +71,28 @@ dashboard "aws_iam_role_detail" {
 
       title = "AWS IAM Role Policy Analysis"
 
+      hierarchy {
+        type  = "tree"
+        width = 6
+        title = "Attached Policies"
+        query = query.aws_iam_user_manage_policies_hierarchy
+        args  = {
+          arn = self.input.role_arn.value
+        }
 
-      # hierarchy {
-      #   type  = "sankey"
-      #   title = "Attached Policies"
-      #   sql   = query.aws_iam_user_manage_policies_sankey.sql
+        category "inline_policy" {
+          color = "alert"
+        }
+        category "managed_policy" {
+          color = "ok"
+        }
 
-      #   category "aws_iam_group" {
-      #     color = "green"
-      #   }
-      # }
+      }
 
 
       table {
         title = "Policies"
+        width = 6
         query = query.aws_iam_all_policies_for_role
         args  = {
           arn = self.input.role_arn.value
@@ -115,8 +123,8 @@ query "aws_iam_boundary_policy_for_role" {
   sql = <<-EOQ
     select
       case
-        when permissions_boundary_type is null then 'Not Set'
-        when permissions_boundary_type = '' then 'Not Set'
+        when permissions_boundary_type is null then 'Not set'
+        when permissions_boundary_type = '' then 'Not set'
         else substring(permissions_boundary_arn, 'arn:aws:iam::\d{12}:.+\/(.*)')
       end as value,
       'Boundary Policy' as label,
@@ -153,7 +161,7 @@ query "aws_iam_role_direct_attached_policy_count_for_role" {
   sql = <<-EOQ
     select
       jsonb_array_length(attached_policy_arns) as value,
-      'Directly Attached Policies' as label,
+      'Attached Policies' as label,
       case when jsonb_array_length(attached_policy_arns) > 0 then 'ok' else 'alert' end as type
     from
       aws_iam_role
@@ -186,14 +194,17 @@ query "aws_iam_all_policies_for_role" {
   sql = <<-EOQ
     -- Policies (attached to groups)
     select
-      split_part(policy_arn, '/','2') as "Policy",
+      p.name as "Policy",
       policy_arn as "ARN",
       'Attached to Role' as "Via"
     from
       aws_iam_role as r,
-      jsonb_array_elements_text(r.attached_policy_arns) as policy_arn
+      jsonb_array_elements_text(r.attached_policy_arns) as policy_arn,
+      aws_iam_policy as p
     where
-      r.arn = $1
+      p.arn = policy_arn
+      and r.arn = $1
+
     -- Inline Policies (defined on role)
     union select
       i ->> 'PolicyName' as "Policy",
@@ -221,6 +232,44 @@ query "aws_iam_role_tags" {
       arn = $1
     order by
       tag ->> 'Key'
+  EOQ
+
+  param "arn" {} 
+}
+
+query "aws_iam_user_manage_policies_hierarchy" {
+    sql = <<-EOQ
+    select
+      $1 as id,
+      $1 as title,
+      'role' as category,
+      null as from_id
+
+    -- Policies (attached to groups)
+    union select
+      policy_arn as id,
+      p.name as title,
+      'managed_policy' as category,
+      r.arn as from_id
+    from
+      aws_iam_role as r,
+      jsonb_array_elements_text(r.attached_policy_arns) as policy_arn,
+      aws_iam_policy as p
+    where
+      p.arn = policy_arn
+      and r.arn = $1
+
+    -- Inline Policies (defined on role)
+    union select
+      concat('inline_', i ->> 'PolicyName') as id,
+      i ->> 'PolicyName' as title,
+      'inline_policy' as category,
+      r.arn as from_id
+    from
+      aws_iam_role as r,
+      jsonb_array_elements(inline_policies_std) as i
+    where
+      arn = $1
   EOQ
 
   param "arn" {}

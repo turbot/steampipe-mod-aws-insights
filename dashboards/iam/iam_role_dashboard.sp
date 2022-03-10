@@ -47,32 +47,32 @@ dashboard "aws_iam_role_dashboard" {
     title = "Assessments"
 
     chart {
-      title = "Inline Policy"
+      title = "Inline Policies"
       sql   = query.aws_iam_roles_with_inline_policy.sql
       type  = "donut"
       width = 3
 
       series "count" {
-        point "not configured" {
+        point "no inline policies" {
           color = "ok"
         }
-        point "configured" {
+        point "with policies" {
           color = "alert"
         }
       }
     }
 
     chart {
-      title = "Directly Attached Policy"
+      title = "Attached Policies"
       sql   = query.aws_iam_roles_with_direct_attached_policy.sql
       type  = "donut"
       width = 3
 
       series "count" {
-        point "attached" {
+        point "with policies" {
           color = "ok"
         }
-        point "unattached" {
+        point "no policies" {
           color = "alert"
         }
       }
@@ -88,7 +88,7 @@ dashboard "aws_iam_role_dashboard" {
         point "limited actions" {
           color = "ok"
         }
-        point "allow all actions" {
+        point "allows all actions" {
           color = "alert"
         }
       }
@@ -249,8 +249,8 @@ query "aws_iam_roles_with_inline_policy" {
       select
         arn,
         case
-          when jsonb_array_length(inline_policies) > 0 then 'configured'
-          else 'not configured'
+          when jsonb_array_length(inline_policies) > 0 then 'with inline policies'
+          else 'no inline policies'
         end as has_inline
       from
         aws_iam_role
@@ -271,8 +271,8 @@ query "aws_iam_roles_with_direct_attached_policy" {
       select
         arn,
         case
-          when jsonb_array_length(attached_policy_arns) > 0 then 'attached'
-          else 'unattached'
+          when jsonb_array_length(attached_policy_arns) > 0 then 'with policies'
+          else 'no policies'
         end as has_attached
       from
         aws_iam_role
@@ -309,7 +309,7 @@ query "aws_iam_roles_allow_all_action" {
     ), all_action as (
     select
       case
-        when c.role_name is not null then 'allow all actions'
+        when c.role_name is not null then 'allows all actions'
         else 'limited actions' end as allow_all_action
     from
       aws_iam_role as r

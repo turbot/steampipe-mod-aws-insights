@@ -107,21 +107,21 @@ dashboard "aws_ebs_snapshot_dashboard" {
       title = "Snapshots by Account"
       sql   = query.aws_ebs_snapshot_by_account.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Snapshots by Region"
       sql   = query.aws_ebs_snapshot_by_region.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Snapshots by Age"
       sql   = query.aws_ebs_snapshot_by_creation_month.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
   }
@@ -132,7 +132,7 @@ dashboard "aws_ebs_snapshot_dashboard" {
       title = "Storage by Account (GB)"
       sql   = query.aws_ebs_snapshot_storage_by_account.sql
       type  = "column"
-      width = 3
+      width = 4
 
       series "GB" {
         color = "tan"
@@ -143,7 +143,7 @@ dashboard "aws_ebs_snapshot_dashboard" {
       title = "Storage by Region (GB)"
       sql   = query.aws_ebs_snapshot_storage_by_region.sql
       type  = "column"
-      width = 3
+      width = 4
 
       series "GB" {
         color = "tan"
@@ -154,7 +154,7 @@ dashboard "aws_ebs_snapshot_dashboard" {
       title = "Storage by Age (GB)"
       sql   = query.aws_ebs_snapshot_storage_by_age.sql
       type  = "column"
-      width = 3
+      width = 4
 
       series "GB" {
         color = "tan"

@@ -43,7 +43,7 @@ dashboard "aws_iam_group_dashboard" {
         point "with users" {
           color = "ok"
         }
-        point "without users" {
+        point "no users" {
           color = "alert"
         }
       }
@@ -56,10 +56,10 @@ dashboard "aws_iam_group_dashboard" {
       width = 3
 
       series "count" {
-        point "not configured" {
+        point "no inline policies" {
           color = "ok"
         }
-        point "configured" {
+        point "with inline policies" {
           color = "alert"
         }
       }
@@ -138,7 +138,7 @@ query "aws_iam_groups_without_users" {
       select
         arn,
         case
-          when users is null then 'without users'
+          when users is null then 'no users'
           else 'with users'
         end as has_users
       from
@@ -160,8 +160,8 @@ query "aws_iam_groups_with_inline_policy" {
       select
         arn,
         case
-          when jsonb_array_length(inline_policies) > 0 then 'configured'
-          else 'not configured'
+          when jsonb_array_length(inline_policies) > 0 then 'with inline policies'
+          else 'no inline policies'
         end as has_inline
       from
         aws_iam_group
