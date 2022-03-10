@@ -143,14 +143,14 @@ dashboard "aws_cloudtrail_trail_dashboard" {
     chart {
       title = "Trails by Account"
       type  = "column"
-      width = 3
+      width = 4
       sql   = query.aws_cloudtrail_trail_per_account.sql
     }
 
     chart {
       title = "Trails by Region"
       type  = "column"
-      width = 3
+      width = 4
       sql   = query.aws_cloudtrail_trail_per_region.sql
     }
 

@@ -272,7 +272,7 @@ query "aws_vpc_security_unrestricted_ingress" {
 query "aws_vpc_security_unrestricted_egress" {
   sql = <<-EOQ
     select
-      'Unrestricted Egress  (Excludes ICMP)' as label,
+      'Unrestricted Egress (Excludes ICMP)' as label,
       count(*) as value,
       case
         when count(*) = 0 then 'ok'

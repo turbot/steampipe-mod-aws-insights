@@ -125,21 +125,21 @@ dashboard "aws_sqs_queue_dashboard" {
       title = "Queues by Account"
       sql   = query.aws_sqs_queue_by_account.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Queues by Region"
       sql   = query.aws_sqs_queue_by_region.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Queues by Type"
       sql   = query.aws_sqs_queue_by_type.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
   }
