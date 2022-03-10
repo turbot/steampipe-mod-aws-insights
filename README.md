@@ -2,7 +2,7 @@
 
 An AWS dashboarding tool that can be used to view dashboards and reports across all of your AWS accounts.
 
-![image](https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/release/v0.1/docs/images/aws_insights_console_graphic.png)
+![image](https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/release/v0.1/docs/images/aws_s3_dashboard.png)
 
 Dashboards can help answer questions like:
 
@@ -64,13 +64,11 @@ Start your dashboard server to get started:
 steampipe dashboard
 ```
 
-The dashboard interface will then be opened in a new browser window at https://localhost:9194 by default. From here, you can view all of your dashboards and reports.
+By default, the dashboard interface will then be launched in a new browser window at https://localhost:9194.
 
-If there's a conflict on the default port 9194, the port can be modified with the `--dashboard-port` flag, e.g.,
+From here, you can view all of your dashboards and reports.
 
-```sh
-steampipe dashboard --dashboard-port 9000
-```
+If there's a conflict on the default port 9194, the port can be changed with the `--dashboard-port` flag, e.g.,
 
 ## Contributing
 

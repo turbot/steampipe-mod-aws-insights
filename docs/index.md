@@ -1,12 +1,19 @@
----
-repository: "https://github.com/turbot/steampipe-mod-aws-insights"
----
+----
+-repository: "https://github.com/turbot/steampipe-mod-aws-insights"
+----
 
 # AWS Insights Mod
 
 Create dashboards and reports for your AWS resources using Steampipe.
 
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/release/v0.1/docs/images/aws_insights_console_graphic.png" width="100%" type="thumbnail"/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/release/v0.1/docs/images/aws_s3_bucket_dashboard.png" width="50%" type="thumbnail"/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/release/v0.1/docs/images/aws_ebs_snapshot_age.png" width="50%" type="thumbnail"/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/release/v0.1/docs/images/aws_ebs_volume_encryption.png" width="50%" type="thumbnail"/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/release/v0.1/docs/images/aws_ec2_instance_public_access.png" width="50%" type="thumbnail"/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/release/v0.1/docs/images/aws_iam_role_detail.png" width="50%" type="thumbnail"/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/release/v0.1/docs/images/aws_vpc_security_group_detail.png" width="50%" type="thumbnail"/>
+
+## Overview
 
 Dashboards can help answer questions like:
 
@@ -32,15 +39,6 @@ Dashboards are available for the following services:
 - S3
 - VPC
 - And more!
-
-## Example Dashboards
-
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/release/v0.1/docs/images/aws_ebs_snapshot_age.png" width="50%" type="thumbnail"/>
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/release/v0.1/docs/images/aws_ebs_volume_encryption.png" width="50%" type="thumbnail"/>
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/release/v0.1/docs/images/aws_ec2_instance_public_access.png" width="50%" type="thumbnail"/>
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/release/v0.1/docs/images/aws_iam_role_detail.png" width="50%" type="thumbnail"/>
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/release/v0.1/docs/images/aws_s3_dashboard.png" width="50%" type="thumbnail"/>
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/release/v0.1/docs/images/aws_vpc_security_group_detail.png" width="50%" type="thumbnail"/>
 
 ## References
 
@@ -79,9 +77,11 @@ Start your dashboard server to get started:
 steampipe dashboard
 ```
 
-The dashboard interface will then be launched in a new browser window at https://localhost:9194 by default. From here, you can view all of your dashboards and reports.
+By default, the dashboard interface will then be launched in a new browser window at https://localhost:9194.
 
-If there's a conflict on the default port 9194, the port can be modified with the `--dashboard-port` flag, e.g.,
+From here, you can view all of your dashboards and reports.
+
+If there's a conflict on the default port 9194, the port can be changed with the `--dashboard-port` flag, e.g.,
 
 ```sh
 steampipe dashboard --dashboard-port 9000
