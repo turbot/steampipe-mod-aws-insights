@@ -50,7 +50,7 @@ Dashboards are available for the following services:
 
 ## Documentation
 
-- **[Benchmarks and controls →](https://hub.steampipe.io/mods/turbot/aws_insights/controls)**
+- **[Dashboards →](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards)**
 
 ## Getting started
 
