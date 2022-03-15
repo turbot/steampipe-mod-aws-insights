@@ -112,7 +112,7 @@ query "aws_sns_topic_encryption_status" {
   sql = <<-EOQ
     select
       case when kms_master_key_id is not null then 'Enabled' else 'Disabled' end as value,
-      'Encryption Status' as label,
+      'Encryption' as label,
       case when kms_master_key_id is not null then 'ok' else 'alert' end as "type"
     from
       aws_sns_topic
@@ -141,11 +141,13 @@ query "aws_sns_topic_subscriptions_confirmed_count" {
 query "aws_sns_topic_overview" {
   sql = <<-EOQ
     select
-      display_name as "Name",
+      display_name as "Display Name",
       owner as "Owner",
       kms_master_key_id as "KMS Key ID",
-      topic_arn as "ARN",
-      account_id as "Account ID"
+      title as "Title",
+      region as "Region",
+      account_id as "Account ID",
+      topic_arn as "ARN"
     from
       aws_sns_topic
     where
