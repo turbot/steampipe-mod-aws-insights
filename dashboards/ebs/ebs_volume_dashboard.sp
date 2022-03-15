@@ -24,6 +24,7 @@ dashboard "aws_ebs_volume_dashboard" {
     card {
       sql   = query.aws_ebs_volume_unencrypted_count.sql
       width = 2
+      href  = dashboard.aws_ebs_volume_encryption_report.url_path
     }
 
     card {

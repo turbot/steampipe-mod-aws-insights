@@ -24,6 +24,7 @@ dashboard "aws_ec2_instance_dashboard" {
     card {
       sql   = query.aws_ec2_public_instance_count.sql
       width = 2
+      href  = dashboard.aws_ec2_instance_public_access_report.url_path
     }
 
     card {

@@ -27,6 +27,7 @@ dashboard "aws_ebs_snapshot_dashboard" {
     card {
       sql   = query.aws_ebs_snapshot_public_count.sql
       width = 2
+      href  = dashboard.aws_ebs_snapshot_public_access_report.url_path
     }
 
     # Costs

@@ -27,11 +27,13 @@ dashboard "aws_cloudtrail_trail_dashboard" {
     card {
       sql   = query.aws_cloudtrail_trail_unencrypted_count.sql
       width = 2
+      href  = dashboard.aws_cloudtrail_trail_encryption_report.url_path
     }
 
     card {
       sql   = query.aws_cloudtrail_trail_log_file_validation_disabled_count.sql
       width = 2
+      href  = dashboard.aws_cloudtrail_trail_logging_report.url_path
     }
 
     # Costs
