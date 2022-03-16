@@ -29,6 +29,7 @@ dashboard "aws_kms_key_dashboard" {
     card {
       sql   = query.aws_kms_cmk_rotation_disabled_count.sql
       width = 2
+      href  = dashboard.aws_kms_key_lifecycle_report.url_path
     }
 
     # Costs

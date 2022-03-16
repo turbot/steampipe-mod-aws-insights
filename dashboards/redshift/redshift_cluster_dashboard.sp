@@ -19,11 +19,13 @@ dashboard "aws_redshift_cluster_dashboard" {
     card {
       sql = query.aws_redshift_cluster_unencrypted_count.sql
       width = 2
+      href  = dashboard.aws_redshift_cluster_encryption_report.url_path
     }
 
     card {
       sql = query.aws_redshift_cluster_publicly_accessible.sql
       width = 2
+      href  = dashboard.aws_redshift_cluster_public_access_report.url_path
     }
 
     # Costs

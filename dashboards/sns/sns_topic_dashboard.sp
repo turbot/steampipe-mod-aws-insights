@@ -20,6 +20,7 @@ dashboard "aws_sns_topic_dashboard" {
     card {
       sql   = query.aws_sns_topic_encrypted_count.sql
       width = 2
+      href  = dashboard.aws_sns_topic_encryption_report.url_path
     }
 
     card {

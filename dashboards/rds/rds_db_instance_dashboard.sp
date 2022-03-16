@@ -19,16 +19,19 @@ dashboard "aws_rds_db_instance_dashboard" {
     card {
       sql   = query.aws_rds_db_instance_public_count.sql
       width = 2
+      href  = dashboard.aws_rds_db_instance_public_access_report.url_path
     }
 
     card {
       sql   = query.aws_rds_db_instance_unencrypted_count.sql
       width = 2
+      href  = dashboard.aws_rds_db_instance_encryption_report.url_path
     }
 
     card {
       sql   = query.aws_rds_db_instance_logging_disabled_count.sql
       width = 2
+      href  = dashboard.aws_rds_db_instance_logging_report.url_path
     }
 
     # Costs
