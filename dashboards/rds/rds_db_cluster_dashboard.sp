@@ -19,11 +19,13 @@ dashboard "aws_rds_db_cluster_dashboard" {
     card {
       sql   = query.aws_rds_db_cluster_unencrypted_count.sql
       width = 2
+      href  = dashboard.aws_rds_db_cluster_encryption_report.url_path
     }
 
     card {
       sql   = query.aws_rds_db_cluster_logging_disabled_count.sql
       width = 2
+      href  = dashboard.aws_rds_db_cluster_logging_report.url_path
     }
 
     card {
