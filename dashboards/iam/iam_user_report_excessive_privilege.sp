@@ -45,7 +45,7 @@ dashboard "aws_iam_user_excessive_privilege_report" {
     }
 
     card {
-      query = query.aws_iam_excessive_permissions_count
+      query = query.aws_iam_user_excessive_permissions_count
       width = 2
 
       args  = {
@@ -98,7 +98,7 @@ query "aws_iam_user_with_excessive_permissions_count" {
   param "threshold_in_days" {}
 }
 
-query "aws_iam_excessive_permissions_count" {
+query "aws_iam_user_excessive_permissions_count" {
   sql = <<-EOQ
     select
       count(*) as value,
