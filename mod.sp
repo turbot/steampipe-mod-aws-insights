@@ -13,7 +13,7 @@ mod "aws_insights" {
     image       = "/images/mods/turbot/aws-insights-social-graphic.png"
   }
 
-  requires {
+  require {
     plugin "aws" {
       version = "0.50.1"
     }
