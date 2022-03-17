@@ -8,28 +8,35 @@ dashboard "aws_iam_user_excessive_privilege_report" {
   })
 
    input "threshold_in_days" {
-     title = "Threshold"
+     title = "Last Authenticated Threshold"
      width = 2
+
      option "30" {
-       label = "30 days"
+       label = "More than 30 days ago"
      }
      option "60" {
-       label = "60 days"
+       label = "More than 60 days ago"
      }
      option "90" {
-       label = "90 days"
+       label = "More than 90 days ago"
+     }
+     option "180" {
+       label = "More than 180 days ago"
+     }
+     option "360" {
+       label = "More than 360 days ago"
      }
    }
 
   container {
 
     card {
-      sql   = query.aws_iam_user_count.sql
+      query = query.aws_iam_user_count
       width = 2
     }
 
     card {
-      sql   = query.aws_iam_user_with_excessive_permissions_count.sql
+      query = query.aws_iam_user_with_excessive_permissions_count
       width = 2
 
       args  = {
@@ -38,7 +45,7 @@ dashboard "aws_iam_user_excessive_privilege_report" {
     }
 
     card {
-      sql   = query.aws_iam_excessive_permissions_count.sql
+      query = query.aws_iam_excessive_permissions_count
       width = 2
 
       args  = {
@@ -62,7 +69,7 @@ dashboard "aws_iam_user_excessive_privilege_report" {
       href = "/aws_insights.dashboard.aws_iam_user_detail?input.user_arn={{.row.ARN | @uri}}"
     }
 
-    sql = query.aws_iam_user_excessive_permissions_report.sql
+    query = query.aws_iam_user_excessive_permissions_report
 
     args  = {
       threshold_in_days = self.input.threshold_in_days.value
@@ -85,7 +92,7 @@ query "aws_iam_user_with_excessive_permissions_count" {
       aws_iam_user
     where
       principal_arn = arn
-      and coalesce(last_authenticated, now() - '400 days' :: interval ) < now() - '$1 days' :: interval;
+      and coalesce(last_authenticated, now() - '400 days' :: interval ) < now() - ($1 || ' days') :: interval;
   EOQ
 
   param "threshold_in_days" {}
@@ -105,7 +112,7 @@ query "aws_iam_excessive_permissions_count" {
       aws_iam_user
     where
       principal_arn = arn
-      and coalesce(last_authenticated, now() - '400 days' :: interval ) < now() - '$1 days' :: interval;
+      and coalesce(last_authenticated, now() - '400 days' :: interval ) < now() - ($1 || ' days') :: interval;
   EOQ
 
   param "threshold_in_days" {}
@@ -135,7 +142,7 @@ query "aws_iam_user_excessive_permissions_report" {
     where
       u.account_id = a.account_id
       and aa.principal_arn = u.arn
-      and coalesce(aa.last_authenticated, now() - '400 days' :: interval ) < now() - '$1 days' :: interval
+      and coalesce(aa.last_authenticated, now() - '400 days' :: interval ) < now() - ($1 || ' days') :: interval
     order by
       u.name;
   EOQ
