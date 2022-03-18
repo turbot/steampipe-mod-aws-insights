@@ -1,5 +1,9 @@
 ## v0.2 [2022-03-18]
 
+_Dependencies_
+
+- Steampipe v0.13.1 is now required
+
 _What's new?_
 
 - Added: IAM User Excessive Privilege Report
