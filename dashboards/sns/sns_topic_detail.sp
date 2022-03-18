@@ -64,7 +64,7 @@ dashboard "aws_sns_topic_detail" {
       width = 6
 
       table {
-        title = "Subscriptions"
+        title = "Subscription Counts"
         query = query.aws_sns_topic_subscriptions
         args = {
           arn = self.input.topic_arn.value
@@ -216,7 +216,8 @@ query "aws_sns_topic_policy_standard" {
       statement ->> 'Effect' as "Effect",
       statement ->> 'Principal' as "Principal",
       statement ->> 'Action' as "Action",
-      statement ->> 'Resource' as "Resource"
+      statement ->> 'Resource' as "Resource",
+      statement ->> 'Condition' as "Condition"
     from
       aws_sns_topic as t,
       jsonb_array_elements(policy_std -> 'Statement') as statement
