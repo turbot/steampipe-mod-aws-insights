@@ -2,7 +2,7 @@
 
 _Dependencies_
 
-- Steampipe v0.13.1 is now required ([#66](https://github.com/turbot/steampipe-mod-aws-insights/pull/66))
+- Steampipe v0.13.1 or higher is now required ([#66](https://github.com/turbot/steampipe-mod-aws-insights/pull/66))
 
 _What's new?_
 
