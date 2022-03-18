@@ -19,6 +19,7 @@ dashboard "aws_iam_user_dashboard" {
     card {
       sql   = query.aws_iam_user_no_mfa_count.sql
       width = 2
+      href  = dashboard.aws_iam_user_mfa_report.url_path
     }
 
     card {

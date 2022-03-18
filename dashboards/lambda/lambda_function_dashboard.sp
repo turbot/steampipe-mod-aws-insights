@@ -19,11 +19,13 @@ dashboard "aws_lambda_function_dashboard" {
     card {
       sql   = query.aws_lambda_function_unencrypted_count.sql
       width = 2
+      href  = dashboard.aws_lambda_function_encryption_report.url_path
     }
 
     card {
       sql   = query.aws_lambda_function_public_count.sql
       width = 2
+      href  = dashboard.aws_lambda_function_public_access_report.url_path
     }
 
     # Costs

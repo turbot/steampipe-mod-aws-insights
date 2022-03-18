@@ -19,6 +19,7 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
     card {
       sql   = query.aws_rds_db_instance_snapshot_unencrypted_count.sql
       width = 2
+      href  = dashboard.aws_rds_db_instace_snapshot_encryption_report.url_path
     }
 
     # Costs

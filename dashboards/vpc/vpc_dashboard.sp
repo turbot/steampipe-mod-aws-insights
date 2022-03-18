@@ -24,6 +24,7 @@ dashboard "aws_vpc_dashboard" {
     card {
       sql = query.aws_vpc_no_flow_logs_count.sql
       width = 2
+      href  = dashboard.aws_vpc_flow_logs_report.url_path
     }
 
     card {

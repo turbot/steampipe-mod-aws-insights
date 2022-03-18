@@ -25,6 +25,7 @@ dashboard "aws_sqs_queue_dashboard" {
     card {
       sql   = query.aws_sqs_queue_unencrypted_count.sql
       width = 2
+      href  = dashboard.aws_sqs_queue_encryption_report.url_path
     }
 
     card {

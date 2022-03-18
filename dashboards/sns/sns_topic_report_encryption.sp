@@ -32,6 +32,10 @@ dashboard "aws_sns_topic_encryption_report" {
       display = "none"
     }
 
+    column "Topic" {
+      href = "${dashboard.aws_sns_topic_detail.url_path}?input.topic_arn={{.ARN | @uri}}"
+    }
+
     sql = query.aws_sns_topic_encryption_table.sql
   }
 
