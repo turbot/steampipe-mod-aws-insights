@@ -1,6 +1,7 @@
 dashboard "aws_s3_bucket_detail" {
 
-  title = "AWS S3 Bucket Detail"
+  title         = "AWS S3 Bucket Detail"
+  documentation = file("./dashboards/s3/docs/s3_bucket_detail.md")
 
   tags = merge(local.s3_common_tags, {
     type = "Detail"
