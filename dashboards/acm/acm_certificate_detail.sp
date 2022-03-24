@@ -122,7 +122,11 @@ query "aws_acm_certificate_input" {
   sql = <<EOQ
     select
       certificate_arn as label,
-      certificate_arn as value
+      certificate_arn as value,
+      json_build_object(
+        'account_id', account_id,
+        'region', region
+      ) as tags
     from
       aws_acm_certificate
     order by
