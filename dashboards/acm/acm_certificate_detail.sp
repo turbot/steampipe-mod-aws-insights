@@ -162,7 +162,7 @@ query "aws_acm_certificate_validity" {
   sql = <<-EOQ
     select
       case when not_after is null or not_after < now() then 'Invalid' else 'Valid' end as value,
-      'Status' as label,
+      'Validity' as label,
       case when not_after is null or not_after < now() then 'alert' else 'ok' end as type
     from
       aws_acm_certificate
