@@ -16,14 +16,6 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
   container {
 
     card {
-      width = 2
-      query = query.aws_rds_db_cluster_snapshot_name
-      args = {
-        arn = self.input.snapshot_arn.value
-      }
-    }
-
-    card {
       query = query.aws_rds_db_cluster_snapshot_encryption_status
       width = 2
       args = {
@@ -94,20 +86,6 @@ query "aws_rds_db_cluster_snapshot_input" {
     order by
       arn;
   EOQ
-}
-
-query "aws_rds_db_cluster_snapshot_name" {
-  sql = <<-EOQ
-    select
-      db_cluster_snapshot_identifier as value,
-      'Snapshot' as label
-    from
-      aws_rds_db_cluster_snapshot
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
 }
 
 query "aws_rds_db_cluster_snapshot_encryption_status" {
