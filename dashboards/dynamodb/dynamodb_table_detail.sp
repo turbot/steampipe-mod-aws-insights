@@ -16,14 +16,6 @@ dashboard "aws_dynamodb_table_detail" {
   container {
 
     card {
-      width = 2
-      query = query.aws_dynamodb_table_name
-      args = {
-        arn = self.input.table_arn.value
-      }
-    }
-
-    card {
       query = query.aws_dynamodb_table_items_count
       width = 2
       args = {
@@ -143,19 +135,6 @@ query "aws_dynamodb_table_input" {
     order by
       arn;
   EOQ
-}
-
-query "aws_dynamodb_table_name" {
-  sql = <<-EOQ
-    select
-      name as "Table Name"
-    from
-      aws_dynamodb_table
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
 }
 
 query "aws_dynamodb_table_items_count" {

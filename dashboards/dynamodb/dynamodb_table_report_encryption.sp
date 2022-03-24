@@ -1,5 +1,5 @@
 dashboard "aws_dynamodb_table_encryption_report" {
-  
+
   title         = "AWS DynamoDB Table Encryption Report"
   documentation = file("./dashboards/dynamodb/docs/dynamodb_table_report_encryption.md")
 
@@ -39,6 +39,10 @@ dashboard "aws_dynamodb_table_encryption_report" {
 
     column "ARN" {
       display = "none"
+    }
+
+    column "Name" {
+      href = "${dashboard.aws_dynamodb_table_detail.url_path}?input.table_arn={{.ARN | @uri}}"
     }
 
     sql = query.aws_dynamodb_table_encryption_table.sql
