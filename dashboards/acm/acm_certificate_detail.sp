@@ -16,22 +16,13 @@ dashboard "acm_certificate_detail" {
   container {
 
     card {
-      width = 2
-      query = query.aws_acm_certificate_domain_name
-      args = {
-        arn = self.input.certificate_arn.value
-      }
-    }
-
-    card {
-      query = query.aws_acm_certificate_transparency_logging_status
+      query = query.aws_acm_certificate_key_algorithm
       width = 2
       args = {
         arn = self.input.certificate_arn.value
       }
     }
-
-    card {
+      card {
       query = query.aws_acm_certificate_renewal_eligibility_status
       width = 2
       args = {
@@ -41,6 +32,14 @@ dashboard "acm_certificate_detail" {
 
     card {
       query = query.aws_acm_certificate_validity
+      width = 2
+      args = {
+        arn = self.input.certificate_arn.value
+      }
+    }
+
+    card {
+      query = query.aws_acm_certificate_transparency_logging_status
       width = 2
       args = {
         arn = self.input.certificate_arn.value
@@ -94,6 +93,13 @@ dashboard "acm_certificate_detail" {
         }
       }
 
+      table {
+        title = "Revocation Details"
+        query = query.aws_acm_certificate_revocation_detail
+        args = {
+          arn = self.input.certificate_arn.value
+        }
+      }
     }
 
     container {
@@ -124,10 +130,40 @@ query "aws_acm_certificate_input" {
   EOQ
 }
 
-query "aws_acm_certificate_domain_name" {
+query "aws_acm_certificate_key_algorithm" {
   sql = <<-EOQ
     select
-      domain_name as "Domain Name"
+      'Key Algorithm' as label,
+      key_algorithm as value
+    from
+      aws_acm_certificate
+    where
+      certificate_arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_acm_certificate_renewal_eligibility_status" {
+  sql = <<-EOQ
+    select
+      case when renewal_eligibility = 'INELIGIBLE' then 'Ineligible' else 'Eligible' end as value,
+      'Renewal Eligibility Status' as label
+    from
+      aws_acm_certificate
+    where
+      certificate_arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_acm_certificate_validity" {
+  sql = <<-EOQ
+    select
+      case when not_after is null or not_after < now() then 'Invalid' else 'Valid' end as value,
+      'Status' as label,
+      case when not_after is null or not_after < now() then 'alert' else 'ok' end as type
     from
       aws_acm_certificate
     where
@@ -152,45 +188,15 @@ query "aws_acm_certificate_transparency_logging_status" {
   param "arn" {}
 }
 
-query "aws_acm_certificate_renewal_eligibility_status" {
-  sql = <<-EOQ
-    select
-      case when renewal_eligibility = 'INELIGIBLE' then 'Ineligible' else 'Eligible' end as value,
-      'Renewal Eligibility Status' as label,
-      case when renewal_eligibility = 'INELIGIBLE' then 'alert' else 'ok' end as "type"
-    from
-      aws_acm_certificate
-    where
-      certificate_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-query "aws_acm_certificate_validity" {
-  sql = <<-EOQ
-    select
-      case when not_after is null or not_after < now() then 'Invalid' else 'Valid' end as value,
-      'Validity' as label,
-      case when not_after is null or not_after < now() then 'alert' else 'ok' end as type
-    from
-      aws_acm_certificate
-    where
-      certificate_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
 query "aws_acm_certificate_overview" {
   sql = <<-EOQ
     select
       domain_name as "Domain Name",
+      title as "Title",
       created_at as "Create Date",
       issuer as "Issuer",
       status as "Status",
       type as "Type",
-      title as "Title",
       region as "Region",
       account_id as "Account ID",
       certificate_arn as "ARN"
@@ -235,11 +241,24 @@ query "aws_acm_certificate_in_use_by" {
   param "arn" {}
 }
 
+query "aws_acm_certificate_revocation_detail" {
+  sql = <<EOQ
+    select
+      revocation_reason as "Revocation Reason",
+      revoked_at as "Revoked At"
+    from
+      aws_acm_certificate
+    where
+      certificate_arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
 query "aws_acm_certificate_key_usage" {
   sql = <<EOQ
     select
       usage ->> 'Name' as "Usage Name",
-      usage ->> 'OID' as "Usage OID",
       key_algorithm as "Key Algorithm"
     from
       aws_acm_certificate as c,

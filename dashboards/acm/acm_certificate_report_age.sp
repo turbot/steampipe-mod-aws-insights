@@ -51,9 +51,13 @@ dashboard "acm_certificate_age_report" {
     column "Account ID" {
       display = "none"
     }
-  
+
     column "ARN" {
       display = "none"
+    }
+
+    column "Domain Name" {
+      href = "${dashboard.acm_certificate_detail.url_path}?input.certificate_arn={{.ARN | @uri}}"
     }
 
     sql = query.aws_acm_certificate_age_table.sql
