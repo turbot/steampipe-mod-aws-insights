@@ -16,7 +16,7 @@ dashboard "aws_dynamodb_table_detail" {
   container {
 
     card {
-      query = query.aws_dynamodb_table_items_count
+      query = query.aws_dynamodb_table_backup_count
       width = 2
       args = {
         arn = self.input.table_arn.value
@@ -128,25 +128,29 @@ dashboard "aws_dynamodb_table_detail" {
 query "aws_dynamodb_table_input" {
   sql = <<EOQ
     select
-      arn as label,
-      arn as value
+      title as label,
+      arn as value,
+      json_build_object(
+        'account_id', account_id,
+        'region', region,
+        'table_id', table_id
+      ) as tags
     from
       aws_dynamodb_table
     order by
-      arn;
+      title;
   EOQ
 }
 
-query "aws_dynamodb_table_items_count" {
+query "aws_dynamodb_table_backup_count" {
   sql = <<-EOQ
     select
-      item_count as value,
-      'Items' as label,
-      case item_count when 0 then 'alert' else 'ok' end as type
+      count(name) as value,
+      'Backup(s)' as label
     from
-      aws_dynamodb_table
+      aws_dynamodb_backup
     where
-      arn = $1;
+      table_arn = $1;
   EOQ
 
   param "arn" {}
@@ -184,7 +188,7 @@ query "aws_dynamodb_table_continuous_backup_status" {
   sql = <<-EOQ
     select
       case when continuous_backups_status = 'ENABLED' then 'Enabled' else 'Disabled' end as value,
-      'Continuous Backup Status' as label,
+      'Continuous Backup' as label,
       case when continuous_backups_status = 'ENABLED' then 'ok' else 'alert' end as type
     from
       aws_dynamodb_table
@@ -207,7 +211,7 @@ query "aws_dynamodb_table_autoscaling_state" {
     )
     select
       case when t.resource_id is null or t.count < 2 then 'Disabled' else 'Enabled' end as value,
-      'Autoscaling Status' as label,
+      'Autoscaling' as label,
       case when t.resource_id is null or t.count < 2 then 'alert' else 'ok' end as type
     from
       aws_dynamodb_table as d
@@ -223,10 +227,10 @@ query "aws_dynamodb_table_overview" {
   sql = <<-EOQ
     select
       name as "Name",
+      table_id as "Table ID",
       creation_date_time as "Create Date",
       table_status as "Status",
-      table_id as "Table ID",
-      billing_mode as "Billing Mode",
+      billing_mode as "Billing Mode", -- Represented as Capacity mode in AWS console
       title as "Title",
       region as "Region",
       account_id as "Account ID",
@@ -306,9 +310,10 @@ query "aws_dynamodb_table_backup_plan_protection" {
 query "aws_dynamodb_table_point_in_time_recovery" {
   sql = <<EOQ
     select
+      point_in_time_recovery_description ->> 'PointInTimeRecoveryStatus' as "Status",
       point_in_time_recovery_description ->> 'EarliestRestorableDateTime' as "Earliest Restorable Date",
-      point_in_time_recovery_description ->> 'LatestRestorableDateTime' as "Latest Restorable Date",
-      point_in_time_recovery_description ->> 'PointInTimeRecoveryStatus' as "Status"
+      point_in_time_recovery_description ->> 'LatestRestorableDateTime' as "Latest Restorable Date"
+
     from
       aws_dynamodb_table
     where
