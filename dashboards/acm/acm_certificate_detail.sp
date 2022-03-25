@@ -121,7 +121,7 @@ dashboard "acm_certificate_detail" {
 query "aws_acm_certificate_input" {
   sql = <<EOQ
     select
-      certificate_arn as label,
+      title as label,
       certificate_arn as value,
       json_build_object(
         'account_id', account_id,
