@@ -237,7 +237,6 @@ query "aws_dynamodb_table_overview" {
       name as "Name",
       table_id as "Table ID",
       creation_date_time as "Create Date",
-      table_status as "Status",
       billing_mode as "Billing Mode", -- Represented as Capacity mode in AWS console
       title as "Title",
       region as "Region",
