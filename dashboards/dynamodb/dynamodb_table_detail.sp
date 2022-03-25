@@ -150,6 +150,20 @@ query "aws_dynamodb_table_status" {
   param "arn" {}
 }
 
+query "aws_dynamodb_table_size" {
+  sql = <<-EOQ
+    select
+      table_size_bytes as value,
+      'Size (Bytes)' as label
+    from
+      aws_dynamodb_table
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
 query "aws_dynamodb_table_backup_count" {
   sql = <<-EOQ
     select
@@ -238,7 +252,6 @@ query "aws_dynamodb_table_overview" {
       table_id as "Table ID",
       creation_date_time as "Create Date",
       billing_mode as "Billing Mode", -- Represented as Capacity mode in AWS console
-      title as "Title",
       region as "Region",
       account_id as "Account ID",
       arn as "ARN"
