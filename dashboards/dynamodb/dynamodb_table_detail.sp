@@ -16,6 +16,14 @@ dashboard "aws_dynamodb_table_detail" {
   container {
 
     card {
+      query = query.aws_dynamodb_table_status
+      width = 2
+      args = {
+        arn = self.input.table_arn.value
+      }
+    }
+
+    card {
       query = query.aws_dynamodb_table_backup_count
       width = 2
       args = {
@@ -80,15 +88,6 @@ dashboard "aws_dynamodb_table_detail" {
       width = 6
 
       table {
-        title = "Key Schema"
-        width = 6
-        query = query.aws_dynamodb_table_key_schema
-        args = {
-          arn = self.input.table_arn.value
-        }
-      }
-
-      table {
         title = "Read/Write Capacity"
         width = 6
         query = query.aws_dynamodb_table_read_write_capacity
@@ -97,15 +96,10 @@ dashboard "aws_dynamodb_table_detail" {
         }
       }
 
-    }
-
-    container {
-      width = 12
-
       table {
-        title = "Backup Plan Protection"
+        title = "Primary Key Schema"
         width = 6
-        query = query.aws_dynamodb_table_backup_plan_protection
+        query = query.aws_dynamodb_table_key_schema
         args = {
           arn = self.input.table_arn.value
         }
@@ -113,7 +107,7 @@ dashboard "aws_dynamodb_table_detail" {
 
       table {
         title = "Point In Time Recovery"
-        width = 6
+        width = 12
         query = query.aws_dynamodb_table_point_in_time_recovery
         args = {
           arn = self.input.table_arn.value
@@ -140,6 +134,20 @@ query "aws_dynamodb_table_input" {
     order by
       title;
   EOQ
+}
+
+query "aws_dynamodb_table_status" {
+  sql = <<-EOQ
+    select
+      initcap(table_status) as value,
+      'Status' as label
+    from
+      aws_dynamodb_table
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
 }
 
 query "aws_dynamodb_table_backup_count" {
@@ -291,29 +299,12 @@ query "aws_dynamodb_table_read_write_capacity" {
   param "arn" {}
 }
 
-query "aws_dynamodb_table_backup_plan_protection" {
-  sql = <<EOQ
-    select
-      t.name as "Table Name",
-      t.arn as "ARN",
-      last_backup_time as "Last Backup Time"
-    from
-      aws_dynamodb_table as t
-      left join aws_backup_protected_resource as b on t.arn = b.resource_arn
-    where
-      t.arn = $1 and b.resource_type = 'DynamoDB';
-  EOQ
-
-  param "arn" {}
-}
-
 query "aws_dynamodb_table_point_in_time_recovery" {
   sql = <<EOQ
     select
       point_in_time_recovery_description ->> 'PointInTimeRecoveryStatus' as "Status",
       point_in_time_recovery_description ->> 'EarliestRestorableDateTime' as "Earliest Restorable Date",
       point_in_time_recovery_description ->> 'LatestRestorableDateTime' as "Latest Restorable Date"
-
     from
       aws_dynamodb_table
     where

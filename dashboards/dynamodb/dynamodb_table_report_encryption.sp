@@ -102,7 +102,7 @@ query "aws_dynamodb_table_encryption_table" {
       case
         when t.sse_description ->> 'SSEType' = 'KMS' and k.key_manager = 'AWS' then 'AWS Managed'
         when t.sse_description ->> 'SSEType' = 'KMS' and k.key_manager = 'CUSTOMER' then 'Customer Managed'
-        else 'DEFAULT'
+        else 'Default'
       end as "Type",
       t.sse_description ->> 'KMSMasterKeyArn' as "Key ARN",
       a.title as "Account",
