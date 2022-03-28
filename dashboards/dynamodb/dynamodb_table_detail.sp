@@ -24,6 +24,14 @@ dashboard "aws_dynamodb_table_detail" {
     }
 
     card {
+      query = query.aws_dynamodb_table_class
+      width = 2
+      args = {
+        arn = self.input.table_arn.value
+      }
+    }
+
+    card {
       query = query.aws_dynamodb_table_backup_count
       width = 2
       args = {
@@ -150,6 +158,8 @@ query "aws_dynamodb_table_status" {
   param "arn" {}
 }
 
+
+
 query "aws_dynamodb_table_size" {
   sql = <<-EOQ
     select
@@ -201,6 +211,20 @@ query "aws_dynamodb_table_encryption_type" {
     from
       table_encryption_status
       group by encryption_type;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_dynamodb_table_class" {
+  sql = <<-EOQ
+    select
+      case when table_class is null then 'Standard' else initcap(table_class) end as value,
+      'Class' as label
+    from
+      aws_dynamodb_table
+    where
+      arn = $1;
   EOQ
 
   param "arn" {}
