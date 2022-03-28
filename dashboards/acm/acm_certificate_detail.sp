@@ -198,6 +198,7 @@ query "aws_acm_certificate_overview" {
       domain_name as "Domain Name",
       title as "Title",
       created_at as "Create Date",
+      not_after as "Expiry Time",
       issuer as "Issuer",
       status as "Status",
       type as "Type",
