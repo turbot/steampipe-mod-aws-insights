@@ -114,7 +114,7 @@ dashboard "aws_dynamodb_table_detail" {
       }
 
       table {
-        title = "Point In Time Recovery"
+        title = "Point-in-time Recovery (PITR)"
         width = 12
         query = query.aws_dynamodb_table_point_in_time_recovery
         args = {
@@ -206,8 +206,8 @@ query "aws_dynamodb_table_encryption_type" {
     )
     select
       encryption_type as value,
-      'Encryption Type' as label,
-      case when encryption_type is not null then 'ok' else 'alert' end as type
+      'Encryption Type' as label
+      -- case when encryption_type is not null then 'ok' else 'alert' end as type
     from
       table_encryption_status
       group by encryption_type;
