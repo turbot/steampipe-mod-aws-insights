@@ -152,7 +152,7 @@ query "aws_acm_certificate_renewal_eligibility_status" {
   sql = <<-EOQ
     select
       case when renewal_eligibility = 'INELIGIBLE' then 'Ineligible' else 'Eligible' end as value,
-      'Renewal Eligibility Status' as label
+      'Renewal Eligibility' as label
     from
       aws_acm_certificate
     where
@@ -181,7 +181,7 @@ query "aws_acm_certificate_transparency_logging_status" {
   sql = <<-EOQ
     select
       case when certificate_transparency_logging_preference = 'ENABLED' then 'Enabled' else 'Disabled' end as value,
-      'Transparency Logging Status' as label,
+      'Transparency Logging' as label,
       case when certificate_transparency_logging_preference = 'ENABLED' then 'ok' else 'alert' end as "type"
     from
       aws_acm_certificate
