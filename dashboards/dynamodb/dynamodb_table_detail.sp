@@ -48,7 +48,7 @@ dashboard "aws_dynamodb_table_detail" {
     }
 
     card {
-      query = query.aws_dynamodb_table_continuous_backup_status
+      query = query.aws_dynamodb_table_continuous_backups
       width = 2
       args = {
         arn = self.input.table_arn.value
@@ -114,7 +114,7 @@ dashboard "aws_dynamodb_table_detail" {
       }
 
       table {
-        title = "Point-in-time Recovery (PITR)"
+        title = "Point-in-Time Recovery (PITR)"
         width = 12
         query = query.aws_dynamodb_table_point_in_time_recovery
         args = {
@@ -230,11 +230,11 @@ query "aws_dynamodb_table_class" {
   param "arn" {}
 }
 
-query "aws_dynamodb_table_continuous_backup_status" {
+query "aws_dynamodb_table_continuous_backups" {
   sql = <<-EOQ
     select
       case when continuous_backups_status = 'ENABLED' then 'Enabled' else 'Disabled' end as value,
-      'Continuous Backup' as label,
+      'Continuous Backups' as label,
       case when continuous_backups_status = 'ENABLED' then 'ok' else 'alert' end as type
     from
       aws_dynamodb_table
@@ -257,7 +257,7 @@ query "aws_dynamodb_table_autoscaling_state" {
     )
     select
       case when t.resource_id is null or t.count < 2 then 'Disabled' else 'Enabled' end as value,
-      'Autoscaling' as label,
+      'Auto Scaling' as label,
       case when t.resource_id is null or t.count < 2 then 'alert' else 'ok' end as type
     from
       aws_dynamodb_table as d
