@@ -158,8 +158,6 @@ query "aws_dynamodb_table_status" {
   param "arn" {}
 }
 
-
-
 query "aws_dynamodb_table_size" {
   sql = <<-EOQ
     select
