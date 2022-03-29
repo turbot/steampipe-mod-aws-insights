@@ -16,6 +16,14 @@ dashboard "acm_certificate_detail" {
   container {
 
     card {
+      query = query.aws_acm_certificate_status
+      width = 2
+      args = {
+        arn = self.input.certificate_arn.value
+      }
+    }
+
+    card {
       query = query.aws_acm_certificate_key_algorithm
       width = 2
       args = {
@@ -134,6 +142,20 @@ query "aws_acm_certificate_input" {
   EOQ
 }
 
+query "aws_acm_certificate_status" {
+  sql = <<-EOQ
+    select
+      'Status' as label,
+      initcap(status) as value
+    from
+      aws_acm_certificate
+    where
+      certificate_arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
 query "aws_acm_certificate_key_algorithm" {
   sql = <<-EOQ
     select
@@ -200,7 +222,6 @@ query "aws_acm_certificate_overview" {
       created_at as "Create Date",
       not_after as "Expiry Time",
       issuer as "Issuer",
-      status as "Status",
       type as "Type",
       region as "Region",
       account_id as "Account ID",
