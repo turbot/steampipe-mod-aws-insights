@@ -323,11 +323,10 @@ query "aws_dynamodb_table_key_schema" {
 query "aws_dynamodb_table_read_write_capacity" {
   sql = <<EOQ
     select
-      read_capacity as "Read Capacity",
-      write_capacity as "Write Capacity"
+      case when read_capacity = 0 then 'On-demand' else read_capacity::text end as "Read Capacity",
+      case when write_capacity = 0 then 'On-demand' else write_capacity::text end as "Write Capacity"
     from
-      aws_dynamodb_table,
-      jsonb_array_elements(key_schema) as schema
+      aws_dynamodb_table
     where
       arn = $1;
   EOQ
