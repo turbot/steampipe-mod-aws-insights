@@ -128,7 +128,7 @@ dashboard "aws_dynamodb_table_detail" {
 }
 
 query "aws_dynamodb_table_input" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
       title as label,
       arn as value,
@@ -273,7 +273,7 @@ query "aws_dynamodb_table_overview" {
       name as "Name",
       table_id as "Table ID",
       creation_date_time as "Create Date",
-      billing_mode as "Billing Mode", -- Represented as Capacity mode in AWS console
+      billing_mode as "Billing Mode",
       region as "Region",
       account_id as "Account ID",
       arn as "ARN"
@@ -304,7 +304,7 @@ query "aws_dynamodb_table_tags" {
 }
 
 query "aws_dynamodb_table_key_schema" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
       schema ->> 'AttributeName' as "Attribute Name",
       schema ->> 'KeyType' as "Key Type"
@@ -319,7 +319,7 @@ query "aws_dynamodb_table_key_schema" {
 }
 
 query "aws_dynamodb_table_read_write_capacity" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
       case when read_capacity = 0 then 'On-demand' else read_capacity::text end as "Read Capacity",
       case when write_capacity = 0 then 'On-demand' else write_capacity::text end as "Write Capacity"
@@ -333,7 +333,7 @@ query "aws_dynamodb_table_read_write_capacity" {
 }
 
 query "aws_dynamodb_table_point_in_time_recovery" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
       point_in_time_recovery_description ->> 'PointInTimeRecoveryStatus' as "Status",
       point_in_time_recovery_description ->> 'EarliestRestorableDateTime' as "Earliest Restorable Date",
