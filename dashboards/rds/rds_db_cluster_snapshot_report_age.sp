@@ -58,10 +58,6 @@ dashboard "aws_rds_db_cluster_snapshot_age_report" {
         display = "none"
       }
 
-      column "DB Cluster Snapshot Identifier" {
-        href = "${dashboard.aws_rds_db_cluster_snapshot_detail.url_path}?input.snapshot_arn={{.ARN | @uri}}"
-      }
-
       sql = query.aws_rds_db_cluster_snapshot_age_table.sql
     }
 

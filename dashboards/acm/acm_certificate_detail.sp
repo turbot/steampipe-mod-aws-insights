@@ -127,7 +127,7 @@ dashboard "acm_certificate_detail" {
 }
 
 query "aws_acm_certificate_input" {
-  sql = <<-EOQ
+  sql = <<EOQ
     select
       title as label,
       certificate_arn as value,
@@ -253,7 +253,7 @@ query "aws_acm_certificate_tags" {
 }
 
 query "aws_acm_certificate_in_use_by" {
-  sql = <<-EOQ
+  sql = <<EOQ
     select
       c.certificate_arn as "ARN",
       in_use as "In Use By"
@@ -268,7 +268,7 @@ query "aws_acm_certificate_in_use_by" {
 }
 
 query "aws_acm_certificate_revocation_detail" {
-  sql = <<-EOQ
+  sql = <<EOQ
     select
       revocation_reason as "Revocation Reason",
       revoked_at as "Revoked At"
@@ -282,7 +282,7 @@ query "aws_acm_certificate_revocation_detail" {
 }
 
 query "aws_acm_certificate_key_usage" {
-  sql = <<-EOQ
+  sql = <<EOQ
     select
       usage ->> 'Name' as "Usage Name",
       key_algorithm as "Key Algorithm"
@@ -297,7 +297,7 @@ query "aws_acm_certificate_key_usage" {
 }
 
 query "aws_acm_certificate_domain_validation_options" {
-  sql = <<-EOQ
+  sql = <<EOQ
     select
       option ->> 'DomainName' as "Domain Name",
       option ->> 'ResourceRecord' as "Resource Record",
