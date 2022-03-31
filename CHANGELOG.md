@@ -1,3 +1,20 @@
+## v0.3 [2022-03-31]
+
+_Dependencies_
+
+- AWS plugin `v0.53.0` or higher is now required ([#79](https://github.com/turbot/steampipe-mod-aws-insights/pull/66))
+
+_What's new?_
+
+- New dashboards added:
+  - [ACM Certificate Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/dashboard.acm_certificate_detail) ([#75](https://github.com/turbot/steampipe-mod-aws-insights/pull/75))
+  - [DynamoDB Table Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/dashboard.aws_dynamodb_table_detail) ([#76](https://github.com/turbot/steampipe-mod-aws-insights/pull/76))
+  - [RDS DB Cluster Snapshot Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/dashboard.aws_rds_db_cluster_snapshot_detail) ([#77](https://github.com/turbot/steampipe-mod-aws-insights/pull/77))
+
+_Bug fixes_
+
+- Added the missing document references for S3 dashboards ([#74](https://github.com/turbot/steampipe-mod-aws-insights/pull/74))
+
 ## v0.2 [2022-03-18]
 
 _Dependencies_
