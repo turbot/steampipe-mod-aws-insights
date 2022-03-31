@@ -16,7 +16,7 @@ dashboard "aws_rds_db_cluster_snapshot_encryption_report" {
     }
 
     card {
-      sql = query.aws_rds_db_cluster_snapshot_unencrypted_count.sql
+      sql   = query.aws_rds_db_cluster_snapshot_unencrypted_count.sql
       width = 2
     }
 
@@ -30,6 +30,10 @@ dashboard "aws_rds_db_cluster_snapshot_encryption_report" {
 
     column "ARN" {
       display = "none"
+    }
+
+    column "DB Cluster Snapshot Identifier" {
+      href = "${dashboard.aws_rds_db_cluster_snapshot_detail.url_path}?input.snapshot_arn={{.ARN | @uri}}"
     }
 
     sql = query.aws_rds_db_cluster_snapshot_encryption_table.sql
