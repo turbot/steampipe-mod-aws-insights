@@ -32,6 +32,14 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
     }
 
     card {
+      query = query.aws_rds_db_cluster_snapshot_allocated_storage
+      width = 2
+      args = {
+        arn = self.input.snapshot_arn.value
+      }
+    }
+
+    card {
       query = query.aws_rds_db_cluster_snapshot_status
       width = 2
       args = {
@@ -101,7 +109,7 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
 }
 
 query "aws_rds_db_cluster_snapshot_input" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
       title as label,
       arn as value,
@@ -135,6 +143,20 @@ query "aws_rds_db_cluster_snapshot_engine" {
     select
       'Engine' as label,
       engine as  value
+    from
+      aws_rds_db_cluster_snapshot
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_rds_db_cluster_snapshot_allocated_storage" {
+  sql = <<-EOQ
+    select
+      'Size (GB)' as label,
+      allocated_storage as  value
     from
       aws_rds_db_cluster_snapshot
     where
@@ -229,9 +251,8 @@ query "aws_rds_db_cluster_snapshot_tags" {
 }
 
 query "aws_rds_db_cluster_snapshot_attributes" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
-      db_cluster_snapshot_identifier as "DB Cluster Snapshot Identifier",
       attributes ->> 'AttributeName' as "Name",
       attributes ->> 'AttributeValue' as "Value",
       source_db_cluster_snapshot_arn as "DB Cluster Source Snapshot ARN"
@@ -244,18 +265,3 @@ query "aws_rds_db_cluster_snapshot_attributes" {
 
   param "arn" {}
 }
-
-# query "aws_rds_db_cluster_snapshot_storage" {
-#   sql = <<-EOQ
-#     select
-#       db_cluster_snapshot_identifier as "DB Cluster Snapshot Identifier",
-#       storage_type as "Storage Type",
-#       allocated_storage as "Allocated Storage"
-#     from
-#       aws_rds_db_snapshot
-#     where
-#       arn = $1;
-#   EOQ
-
-#   param "arn" {}
-# }

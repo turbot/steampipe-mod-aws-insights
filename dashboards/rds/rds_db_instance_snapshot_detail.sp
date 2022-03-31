@@ -72,29 +72,7 @@ dashboard "aws_rds_db_snapshot_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        sql   = <<-EOQ
-          select
-            db_snapshot_identifier as "DB Snapshot Identifier",
-            case
-              when vpc_id is not null and vpc_id != '' then vpc_id
-              else 'N/A'
-            end as "VPC ID",
-            create_time as "Create Time",
-            license_model as "License Model",
-            engine_version as "Engine Version",
-            port as "Port",
-            title as "Title",
-            region as "Region",
-            account_id as "Account ID",
-            arn as "ARN"
-          from
-            aws_rds_db_snapshot
-          where
-            arn = $1;
-          EOQ
-
-        param "arn" {}
-
+        query = query.aws_rds_db_snapshot_overview
         args = {
           arn = self.input.db_snapshot_arn.value
         }
@@ -104,27 +82,11 @@ dashboard "aws_rds_db_snapshot_detail" {
       table {
         title = "Tags"
         width = 6
-
-        sql = <<-EOQ
-          select
-            tag ->> 'Key' as "Key",
-            tag ->> 'Value' as "Value"
-          from
-            aws_rds_db_snapshot,
-            jsonb_array_elements(tags_src) as tag
-          where
-            arn = $1
-          order by
-            tag ->> 'Key';
-          EOQ
-
-        param "arn" {}
-
+        query = query.aws_rds_db_snapshot_tag
         args = {
           arn = self.input.db_snapshot_arn.value
         }
       }
-
 
     }
 
@@ -244,10 +206,51 @@ query "aws_rds_db_snapshot_iam_database_authentication_enabled" {
   param "arn" {}
 }
 
-query "aws_rds_db_snapshot_attribute" {
+query "aws_rds_db_snapshot_overview" {
   sql = <<-EOQ
     select
       db_snapshot_identifier as "DB Snapshot Identifier",
+      case
+        when vpc_id is not null and vpc_id != '' then vpc_id
+        else 'N/A'
+      end as "VPC ID",
+      create_time as "Create Time",
+      license_model as "License Model",
+      engine_version as "Engine Version",
+      port as "Port",
+      title as "Title",
+      region as "Region",
+      account_id as "Account ID",
+      arn as "ARN"
+    from
+      aws_rds_db_snapshot
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_rds_db_snapshot_tag" {
+  sql = <<-EOQ
+    select
+      tag ->> 'Key' as "Key",
+      tag ->> 'Value' as "Value"
+    from
+      aws_rds_db_snapshot,
+      jsonb_array_elements(tags_src) as tag
+    where
+      arn = $1
+    order by
+      tag ->> 'Key';
+    EOQ
+
+  param "arn" {}
+}
+
+query "aws_rds_db_snapshot_attribute" {
+  sql = <<-EOQ
+    select
       a ->> 'AttributeName' as "Attribute Name",
       a ->> 'AttributeValues' as "Attribute Values"
     from
@@ -263,7 +266,6 @@ query "aws_rds_db_snapshot_attribute" {
 query "aws_rds_db_snapshot_storage" {
   sql = <<-EOQ
     select
-      db_snapshot_identifier as "DB Snapshot Identifier",
       storage_type as "Storage Type",
       allocated_storage as "Allocated Storage"
     from
