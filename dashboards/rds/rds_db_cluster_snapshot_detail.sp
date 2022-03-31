@@ -101,7 +101,7 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
 }
 
 query "aws_rds_db_cluster_snapshot_input" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
       title as label,
       arn as value,
@@ -229,7 +229,7 @@ query "aws_rds_db_cluster_snapshot_tags" {
 }
 
 query "aws_rds_db_cluster_snapshot_attributes" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
       db_cluster_snapshot_identifier as "DB Cluster Snapshot Identifier",
       attributes ->> 'AttributeName' as "Name",
