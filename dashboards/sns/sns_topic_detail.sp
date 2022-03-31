@@ -97,7 +97,7 @@ dashboard "aws_sns_topic_detail" {
 }
 
 query "aws_sns_topic_input" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
       topic_arn as label,
       topic_arn as value
@@ -175,7 +175,7 @@ query "aws_sns_topic_tags" {
 }
 
 query "aws_sns_topic_subscriptions" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
       subscriptions_confirmed as "Confirmed",
       subscriptions_deleted as "Deleted",
@@ -190,7 +190,7 @@ query "aws_sns_topic_subscriptions" {
 }
 
 query "aws_sns_topic_delivery_policy" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
       effective_delivery_policy -> 'http' -> 'defaultHealthyRetryPolicy' ->> 'numRetries' as "Retries",
       effective_delivery_policy -> 'http' -> 'defaultHealthyRetryPolicy' ->> 'maxDelayTarget' as "Maximum Delay Target",
@@ -210,7 +210,7 @@ query "aws_sns_topic_delivery_policy" {
 }
 
 query "aws_sns_topic_policy_standard" {
-  sql = <<EOQ
+  sql = <<-EOQ
     select
       statement ->> 'Sid' as "SID",
       statement ->> 'Effect' as "Effect",

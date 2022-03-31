@@ -1,6 +1,7 @@
 dashboard "aws_s3_bucket_dashboard" {
 
-  title = "AWS S3 Bucket Dashboard"
+  title         = "AWS S3 Bucket Dashboard"
+  documentation = file("./dashboards/s3/docs/s3_bucket_dashboard.md")
 
   tags = merge(local.s3_common_tags, {
     type = "Dashboard"

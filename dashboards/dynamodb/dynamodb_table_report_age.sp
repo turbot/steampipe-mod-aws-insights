@@ -56,13 +56,17 @@ dashboard "aws_dynamodb_table_age_report" {
       display = "none"
     }
 
+    column "Name" {
+      href = "${dashboard.aws_dynamodb_table_detail.url_path}?input.table_arn={{.ARN | @uri}}"
+    }
+
     sql = query.aws_dynamodb_table_age_table.sql
   }
 
 }
 
 query "aws_dynamodb_table_24_hours_count" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       count(*) as value,
       '< 24 hours' as label
@@ -74,7 +78,7 @@ query "aws_dynamodb_table_24_hours_count" {
 }
 
 query "aws_dynamodb_table_30_days_count" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       count(*) as value,
       '1-30 Days' as label
@@ -86,7 +90,7 @@ query "aws_dynamodb_table_30_days_count" {
 }
 
 query "aws_dynamodb_table_30_90_days_count" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       count(*) as value,
       '30-90 Days' as label
@@ -98,7 +102,7 @@ query "aws_dynamodb_table_30_90_days_count" {
 }
 
 query "aws_dynamodb_table_90_365_days_count" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       count(*) as value,
       '90-365 Days' as label
@@ -110,7 +114,7 @@ query "aws_dynamodb_table_90_365_days_count" {
 }
 
 query "aws_dynamodb_table_1_year_count" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       count(*) as value,
       '> 1 Year' as label

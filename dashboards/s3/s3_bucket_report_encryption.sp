@@ -1,6 +1,7 @@
 dashboard "aws_s3_bucket_encryption_report" {
 
-  title = "AWS S3 Bucket Encryption Report"
+  title         = "AWS S3 Bucket Encryption Report"
+  documentation = file("./dashboards/s3/docs/s3_bucket_report_encryption.md")
 
   tags = merge(local.s3_common_tags, {
     type     = "Report"

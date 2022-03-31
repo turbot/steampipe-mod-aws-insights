@@ -1,6 +1,7 @@
 dashboard "aws_s3_bucket_age_report" {
 
-  title = "AWS S3 Bucket Age Report"
+  title         = "AWS S3 Bucket Age Report"
+  documentation = file("./dashboards/s3/docs/s3_bucket_report_age.md")
 
   tags = merge(local.s3_common_tags, {
     type     = "Report"
