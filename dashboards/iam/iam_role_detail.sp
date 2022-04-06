@@ -160,9 +160,9 @@ query "aws_iam_role_inline_policy_count_for_role" {
 query "aws_iam_role_direct_attached_policy_count_for_role" {
   sql = <<-EOQ
     select
-      jsonb_array_length(attached_policy_arns) as value,
+      case when attached_policy_arns is null then 0 else jsonb_array_length(attached_policy_arns) end as value,
       'Attached Policies' as label,
-      case when jsonb_array_length(attached_policy_arns) > 0 then 'ok' else 'alert' end as type
+      case when attached_policy_arns is null or jsonb_array_length(attached_policy_arns) = 0 then 'alert' else 'ok' end as type
     from
       aws_iam_role
     where
