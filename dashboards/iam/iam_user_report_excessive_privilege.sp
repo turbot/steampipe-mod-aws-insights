@@ -66,7 +66,7 @@ dashboard "aws_iam_user_excessive_privilege_report" {
     }
 
     column "User Name" {
-      href = "/aws_insights.dashboard.aws_iam_user_detail?input.user_arn={{.row.ARN | @uri}}"
+      href = "/aws_insights.dashboard.aws_iam_user_detail?input.user_arn={{.ARN | @uri}}"
     }
 
     query = query.aws_iam_user_excessive_permissions_report
