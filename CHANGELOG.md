@@ -1,9 +1,13 @@
 ## v0.4 [2022-05-04]
 
+_Enhancements_
+
+- Simplified the jq expression in `AWS IAM User Detail` dashboard ([#94](https://github.com/turbot/steampipe-mod-aws-insights/pull/94))
+
 _Bug fixes_
 
-- Fixed the `aws_vpc_empty_status` query in `AWS VPC Dashboard` to remove duplicate results. ([#90](https://github.com/turbot/steampipe-mod-aws-insights/pull/90))
-- Fixed the `aws_iam_group_direct_attached_policy_count_for_group` and `aws_iam_role_inline_policy_count_for_role` card queries in `AWS IAM Group Detail` and `AWS IAM Role Detail` dashboards respectively to show `null` if there are no attached policies. ([#89](https://github.com/turbot/steampipe-mod-aws-insights/pull/89))
+- Fixed the `aws_vpc_empty_status` query in `AWS VPC Dashboard` dashboard to remove duplicate results. ([#90](https://github.com/turbot/steampipe-mod-aws-insights/pull/90))
+- Fixed the `aws_iam_group_direct_attached_policy_count_for_group` and `aws_iam_role_inline_policy_count_for_role` card queries in `AWS IAM Group Detail` and `AWS IAM Role Detail` dashboards respectively to show `0` instead of `null` if there are no attached policies. ([#89](https://github.com/turbot/steampipe-mod-aws-insights/pull/89))
 - Fixed the invalid jq expression in the `IAM User Excessive Privilege Report` dashboard. ([#92](https://github.com/turbot/steampipe-mod-aws-insights/pull/92))
 
 ## v0.3 [2022-03-31]
