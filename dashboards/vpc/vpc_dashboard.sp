@@ -261,7 +261,7 @@ query "aws_vpc_empty_status" {
   sql = <<-EOQ
     with by_empty as (
       select
-        vpc.vpc_id,
+        distinct vpc.vpc_id,
         case when s.subnet_id is null then 'empty' else 'non-empty' end as status
       from
         aws_vpc as vpc
