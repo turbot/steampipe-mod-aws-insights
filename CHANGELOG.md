@@ -2,7 +2,7 @@
 
 _Enhancements_
 
-- Simplified the jq expression in `AWS IAM User Detail` dashboard ([#94](https://github.com/turbot/steampipe-mod-aws-insights/pull/94))
+- Simplified the jq expression in `AWS IAM User Detail` dashboard. ([#94](https://github.com/turbot/steampipe-mod-aws-insights/pull/94))
 
 _Bug fixes_
 
