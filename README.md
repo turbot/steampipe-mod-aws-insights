@@ -55,9 +55,7 @@ Start your dashboard server to get started:
 steampipe dashboard
 ```
 
-By default, the dashboard interface will then be launched in a new browser
-window at https://localhost:9194. From here, you can run benchmarks by
-selecting one or searching for a specific one.
+By default, the dashboard interface will then be launched in a new browser window at https://localhost:9194. From here, you can view dashboards and reports.
 
 ### Credentials
 
