@@ -21,23 +21,20 @@ Dashboards are available for 15+ services, including CloudTrail, EC2, IAM, RDS, 
 
 ### Installation
 
-1) Download and install Steampipe (https://steampipe.io/downloads). Or use Brew:
+Download and install Steampipe (https://steampipe.io/downloads). Or use Brew:
 
-```shell
+```sh
 brew tap turbot/tap
 brew install steampipe
-
-steampipe -v
-steampipe version 0.13.0
 ```
 
-2) Install the AWS plugin:
+Install the AWS plugin with [Steampipe](https://steampipe.io):
 
-```shell
+```sh
 steampipe plugin install aws
 ```
 
-3) Clone this repo:
+Clone:
 
 ```sh
 git clone https://github.com/turbot/steampipe-mod-aws-insights.git
@@ -46,19 +43,31 @@ cd steampipe-mod-aws-insights
 
 ### Usage
 
+Before running any dashboards, it's recommended to generate your AWS credential report:
+
+```sh
+aws iam generate-credential-report
+```
+
 Start your dashboard server to get started:
 
-```shell
+```sh
 steampipe dashboard
 ```
 
-By default, the dashboard interface will then be launched in a new browser window at https://localhost:9194.
+By default, the dashboard interface will then be launched in a new browser window at https://localhost:9194. From here, you can view dashboards and reports.
 
-From here, you can view all of your dashboards and reports.
+### Credentials
+
+This mod uses the credentials configured in the [Steampipe AWS plugin](https://hub.steampipe.io/plugins/turbot/aws).
+
+### Configuration
+
+No extra configuration is required.
 
 ## Contributing
 
-If you have an idea for additional dashboards or reports, or just want to help maintain and extend this mod ([or others](https://github.com/topics/steampipe-mod)) we would love you to join the community and start contributing.
+If you have an idea for additional dashboards or just want to help maintain and extend this mod ([or others](https://github.com/topics/steampipe-mod)) we would love you to join the community and start contributing.
 
 - **[Join our Slack community →](https://steampipe.io/community/join)** and hang out with other Mod developers.
 
