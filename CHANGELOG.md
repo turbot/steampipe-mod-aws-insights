@@ -1,4 +1,4 @@
-## v0.5 [2022-05-10]
+## v0.5 [2022-05-09]
 
 - Updated docs/index.md and README with new dashboard screenshots and latest format. ([#97](https://github.com/turbot/steampipe-mod-aws-insights/pull/97))
 
