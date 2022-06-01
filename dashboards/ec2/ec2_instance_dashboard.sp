@@ -32,11 +32,11 @@ dashboard "aws_ec2_instance_dashboard" {
       width = 2
     }
 
-   # Costs
-   card {
+    # Costs
+    card {
       type  = "info"
-      icon = "currency-dollar"
-      sql = query.aws_ec2_instance_cost_mtd.sql
+      icon  = "currency-dollar"
+      sql   = query.aws_ec2_instance_cost_mtd.sql
       width = 2
     }
 
@@ -47,7 +47,7 @@ dashboard "aws_ec2_instance_dashboard" {
     title = "Assessments"
     width = 6
 
-   chart {
+    chart {
       title = "Public/Private"
       sql   = query.aws_ec2_instance_by_public_ip.sql
       type  = "donut"
@@ -80,9 +80,9 @@ dashboard "aws_ec2_instance_dashboard" {
     }
 
     chart {
-      title  = "Detailed Monitoring Status"
-      sql    = query.aws_ec2_instance_detailed_monitoring_enabled.sql
-      type   = "donut"
+      title = "Detailed Monitoring Status"
+      sql   = query.aws_ec2_instance_detailed_monitoring_enabled.sql
+      type  = "donut"
       width = 4
 
       series "count" {
@@ -102,10 +102,10 @@ dashboard "aws_ec2_instance_dashboard" {
     width = 6
 
 
-    table  {
+    table {
       width = 6
       title = "Forecast"
-      sql = query.aws_ec2_monthly_forecast_table.sql
+      sql   = query.aws_ec2_monthly_forecast_table.sql
     }
 
     chart {
@@ -160,7 +160,7 @@ dashboard "aws_ec2_instance_dashboard" {
 
   container {
 
-    title  = "Performance & Utilization"
+    title = "Performance & Utilization"
 
     chart {
       title = "Top 10 CPU - Last 7 days"
