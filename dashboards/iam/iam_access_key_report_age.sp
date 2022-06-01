@@ -52,6 +52,14 @@ dashboard "aws_iam_access_key_age_report" {
       display = "none"
     }
 
+    column "User ARN" {
+      display = "none"
+    }
+
+    column "User" {
+      href = "${dashboard.aws_iam_user_detail.url_path}?input.user_arn={{.'User ARN' | @uri}}"
+    }
+
     sql = query.aws_iam_access_key_age_table.sql
   }
 
@@ -129,20 +137,36 @@ query "aws_iam_access_key_1_year_count" {
 
 query "aws_iam_access_key_age_table" {
   sql = <<-EOQ
-    select
-      k.user_name as "User",
-      k.access_key_id as "Access Key ID",
-      k.status as "Status",
-      now()::date - k.create_date::date as "Age in Days",
-      k.create_date as "Create Date",
-      a.title as "Account",
-      k.account_id as "Account ID"
-    from
-      aws_iam_access_key as k,
-      aws_account as a
-    where
-      a.account_id = k.account_id
-    order by
-      k.user_name;
+    with access_key as (
+      select
+        k.user_name as user,
+        u.arn as user_arn,
+        k.access_key_id as access_key_id,
+        k.status as status,
+        now()::date - k.create_date::date as age_in_days,
+        k.create_date as create_date,
+        k.account_id as account_id
+      from
+        aws_iam_access_key as k,
+        aws_iam_user as u
+      where
+        u.name = k.user_name   
+      )
+      select
+        ak.user as "User",
+        ak.user_arn as "User ARN",
+        ak.access_key_id as "Access Key ID",
+        ak.status as "Status",
+        ak.age_in_days as "Age in Days",
+        ak.create_date as "Create Date",
+        a.title as "Account",
+        ak.account_id as "Account ID"
+      from
+        access_key as ak,
+        aws_account as a
+      where
+        a.account_id = ak.account_id
+      order by
+        ak.user;
   EOQ
 }
