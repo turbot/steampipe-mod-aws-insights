@@ -2,8 +2,8 @@
 
 _Enhancements_
 
-- Add link to `AWS EBS Volume Detail` and `AWS VPC Security Group Detail` dashboards in `AWS EC2 Instance Detail` dashboard. ([#102](https://github.com/turbot/steampipe-mod-aws-insights/pull/102))
-- Add link to `AWS IAM User Detail` dashboard in `AWS IAM Access Key Age Report` dashboard. ([#103](https://github.com/turbot/steampipe-mod-aws-insights/pull/103))
+- Added links in `AWS EC2 Instance Detail` dashboard to `AWS EBS Volume Detail` and `AWS VPC Security Group Detail` dashboards. ([#102](https://github.com/turbot/steampipe-mod-aws-insights/pull/102))
+- Added a link in `AWS IAM Access Key Age Report` dashboard to `AWS IAM User Detail` dashboard. ([#103](https://github.com/turbot/steampipe-mod-aws-insights/pull/103))
 
 ## v0.5 [2022-05-09]
 
