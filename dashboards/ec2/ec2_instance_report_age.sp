@@ -8,7 +8,7 @@ dashboard "aws_ec2_instance_age_report" {
     category = "Age"
   })
 
-   container {
+  container {
 
     card {
       sql   = query.aws_ec2_instance_count.sql
@@ -66,7 +66,7 @@ dashboard "aws_ec2_instance_age_report" {
 }
 
 query "aws_ec2_instance_24_hours_count" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       count(*) as value,
       '< 24 hours' as label
@@ -78,7 +78,7 @@ query "aws_ec2_instance_24_hours_count" {
 }
 
 query "aws_ec2_instance_30_days_count" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       count(*) as value,
       '1-30 Days' as label
@@ -90,7 +90,7 @@ query "aws_ec2_instance_30_days_count" {
 }
 
 query "aws_ec2_instance_30_90_days_count" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       count(*) as value,
       '30-90 Days' as label
@@ -102,7 +102,7 @@ query "aws_ec2_instance_30_90_days_count" {
 }
 
 query "aws_ec2_instance_90_365_days_count" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       count(*) as value,
       '90-365 Days' as label
@@ -114,7 +114,7 @@ query "aws_ec2_instance_90_365_days_count" {
 }
 
 query "aws_ec2_instance_1_year_count" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       count(*) as value,
       '> 1 Year' as label

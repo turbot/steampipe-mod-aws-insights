@@ -18,7 +18,7 @@ dashboard "aws_ec2_instance_detail" {
     card {
       width = 2
       query = query.aws_ec2_instance_status
-      args  = {
+      args = {
         arn = self.input.instance_arn.value
       }
     }
@@ -26,7 +26,7 @@ dashboard "aws_ec2_instance_detail" {
     card {
       width = 2
       query = query.aws_ec2_instance_type
-      args  = {
+      args = {
         arn = self.input.instance_arn.value
       }
     }
@@ -34,7 +34,7 @@ dashboard "aws_ec2_instance_detail" {
     card {
       width = 2
       query = query.aws_ec2_instance_total_cores_count
-      args  = {
+      args = {
         arn = self.input.instance_arn.value
       }
     }
@@ -42,7 +42,7 @@ dashboard "aws_ec2_instance_detail" {
     card {
       width = 2
       query = query.aws_ec2_instance_public_access
-      args  = {
+      args = {
         arn = self.input.instance_arn.value
       }
     }
@@ -50,7 +50,7 @@ dashboard "aws_ec2_instance_detail" {
     card {
       width = 2
       query = query.aws_ec2_instance_ebs_optimized
-      args  = {
+      args = {
         arn = self.input.instance_arn.value
       }
     }
@@ -76,7 +76,7 @@ dashboard "aws_ec2_instance_detail" {
         title = "Tags"
         width = 6
         query = query.aws_ec2_instance_tags
-        args  = {
+        args = {
           arn = self.input.instance_arn.value
         }
       }
@@ -87,8 +87,17 @@ dashboard "aws_ec2_instance_detail" {
       table {
         title = "Block Device Mappings"
         query = query.aws_ec2_instance_block_device_mapping
-        args  = {
+        args = {
           arn = self.input.instance_arn.value
+        }
+
+        column "Volume ARN" {
+          display = "none"
+        }
+
+        column "Volume ID" {
+          // cyclic dependency prevents use of url_path, hardcode for now
+          href = "/aws_insights.dashboard.aws_ebs_volume_detail?input.volume_arn={{.'Volume ARN' | @uri}}"
         }
       }
     }
@@ -101,7 +110,7 @@ dashboard "aws_ec2_instance_detail" {
     table {
       title = "Network Interfaces"
       query = query.aws_ec2_instance_network_interfaces
-      args  = {
+      args = {
         arn = self.input.instance_arn.value
       }
     }
@@ -114,8 +123,13 @@ dashboard "aws_ec2_instance_detail" {
     table {
       title = "Security Groups"
       query = query.aws_ec2_instance_security_groups
-      args  = {
+      args = {
         arn = self.input.instance_arn.value
+      }
+
+      column "Group ID" {
+        // cyclic dependency prevents use of url_path, hardcode for now
+        href = "/aws_insights.dashboard.aws_vpc_security_group_detail?input.security_group_id={{.'Group ID' | @uri}}"
       }
     }
 
@@ -127,7 +141,7 @@ dashboard "aws_ec2_instance_detail" {
     table {
       title = " CPU cores"
       query = query.aws_ec2_instance_cpu_cores
-      args  = {
+      args = {
         arn = self.input.instance_arn.value
       }
     }
@@ -259,22 +273,37 @@ query "aws_ec2_instance_tags" {
       tag ->> 'Key';
     EOQ
 
-    param "arn" {}
+  param "arn" {}
 }
 
 query "aws_ec2_instance_block_device_mapping" {
   sql = <<-EOQ
+    with volume_details as (
     select
       p -> 'Ebs' ->> 'VolumeId'  as "Volume ID",
       p ->> 'DeviceName'  as "Device Name",
       p -> 'Ebs' ->> 'AttachTime' as "Attach Time",
       p -> 'Ebs' ->> 'DeleteOnTermination' as "Delete On Termination",
-      p -> 'Ebs' ->> 'Status'  as "Status"
+      p -> 'Ebs' ->> 'Status'  as "Status",
+      arn
     from
       aws_ec2_instance,
       jsonb_array_elements(block_device_mappings) as p
     where
-      arn = $1;
+      arn = $1
+    )
+    select
+      "Volume ID",
+      "Device Name",
+      "Attach Time",
+      "Delete On Termination",
+      "Status",
+      v.arn as "Volume ARN"
+    from
+      volume_details as vd
+      left join aws_ebs_volume v on v.volume_id = vd."Volume ID"
+    where
+      v.volume_id in (select "Volume ID" from volume_details)
   EOQ
 
   param "arn" {}
