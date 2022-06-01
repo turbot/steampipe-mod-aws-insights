@@ -52,6 +52,14 @@ dashboard "aws_iam_access_key_age_report" {
       display = "none"
     }
 
+    column "User ARN" {
+      display = "none"
+    }
+
+    column "User" {
+      href = "${dashboard.aws_iam_user_detail.url_path}?input.user_arn={{.'User ARN' | @uri}}"
+    }
+
     sql = query.aws_iam_access_key_age_table.sql
   }
 
@@ -131,6 +139,7 @@ query "aws_iam_access_key_age_table" {
   sql = <<-EOQ
     select
       k.user_name as "User",
+      u.arn as "User ARN",
       k.access_key_id as "Access Key ID",
       k.status as "Status",
       now()::date - k.create_date::date as "Age in Days",
@@ -139,9 +148,11 @@ query "aws_iam_access_key_age_table" {
       k.account_id as "Account ID"
     from
       aws_iam_access_key as k,
-      aws_account as a
+      aws_account as a  ,
+      aws_iam_user as u
     where
-      a.account_id = k.account_id
+      a.account_id = k.account_id and 
+      u.name = k.user_name
     order by
       k.user_name;
   EOQ
