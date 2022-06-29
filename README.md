@@ -1,4 +1,4 @@
-# AWS Insights
+# AWS Insights Mod for Steampipe
 
 An AWS dashboarding tool that can be used to view dashboards and reports across all of your AWS accounts.
 
