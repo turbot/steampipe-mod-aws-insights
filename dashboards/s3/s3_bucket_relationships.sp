@@ -13,21 +13,13 @@ dashboard "aws_s3_bucket_relationships" {
   
   graph {
     type  = "graph"
-    title = "Things I use..."
+    title = "Things that use me..."
     query = query.aws_s3_bucket_graph_to_instance
     args = {
       bucket = self.input.s3_bucket.value
     }
   }
-#  
-#  graph {
-#    type  = "graph"
-#    title = "Things that use me..."
-#    query = query.aws_ec2_instance_graph_to_instance
-#    args = {
-#      arn = self.input.instance_arn.value
-#    }
-#  }
+
 }
 
 query "aws_s3_bucket_graph_to_instance"{
@@ -59,7 +51,8 @@ query "aws_s3_bucket_graph_to_instance"{
       jsonb_build_object(
         'ARN', trail.arn,
         'Account ID', trail.account_id,
-        'Region', trail.region
+        'Region', trail.region,
+        'Log Prefix', trail.s3_key_prefix
       ) as metadata
     from
       aws_cloudtrail_trail as trail,
@@ -73,7 +66,7 @@ query "aws_s3_bucket_graph_to_instance"{
       trail.arn as from_id,
       b.arn as to_id,
       null as id,
-      null as title,
+      'Logs to' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', trail.arn,
@@ -112,8 +105,8 @@ query "aws_s3_bucket_graph_to_instance"{
       buckets.arn as from_id,
       aws_s3_bucket.arn as to_id,
       null as id,
-      null as title,
-      'logs_to' as category,
+      'Logs to' as title,
+      'uses' as category,
       jsonb_build_object(
         'Name', aws_s3_bucket.name,
         'ARN', aws_s3_bucket.arn,
@@ -149,11 +142,11 @@ query "aws_s3_bucket_graph_to_instance"{
     -- Buckets that log to me - nodes
     union all 
     select
-      buckets.arn as from_id,
       aws_s3_bucket.arn as to_id,
+      buckets.arn as from_id,
       null as id,
-      null as title,
-      'logs_to' as category,
+      'Logs to' as title,
+      'uses' as category,
       jsonb_build_object(
         'Name', aws_s3_bucket.name,
         'ARN', aws_s3_bucket.arn,
@@ -171,38 +164,136 @@ query "aws_s3_bucket_graph_to_instance"{
     select
       null as from_id,
       null as to_id,
-      arn as id,
-      title as title,
+      alb.arn as id,
+      alb.title as title,
       'aws_ec2_application_load_balancer' as category,
       jsonb_build_object(
-        'Name', name,
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
+        'Name', alb.name,
+        'ARN', alb.arn,
+        'Account ID', alb.account_id,
+        'Region', alb.region,
+        'Log to', attributes->>'Value'
       ) as properties
     from
-      aws_ec2_application_load_balancer
+      aws_ec2_application_load_balancer alb,
+      jsonb_array_elements(alb.load_balancer_attributes) as attributes,
+      buckets
     where 
-      load_balancer_attributes->'access_logs'->'s3'->>'bucket' = $1
+      attributes->>'Key' = 'access_logs.s3.bucket' 
+      and attributes->>'Value' = buckets.name
 
     -- ALBs that log to me - edges
     union all 
     select
-      arn as from_id,
-      $1 as to_id,
+      alb.arn as from_id,
+      buckets.arn as to_id,
       null as id,
       'Logs to' as title,
-      'logs_to' as category,
+      'uses' as category,
       jsonb_build_object(
-        'Logging Enabled', load_balancer_attributes->'access_logs'->'s3'->'enabled',
-        'Logging Bucket', load_balancer_attributes->'access_logs'->'s3'->'bucket',
-        'Key Prefix', load_balancer_attributes->'access_logs'->'s3'->'prefix'
+        'Name', alb.name,
+        'ARN', alb.arn,
+        'Account ID', alb.account_id,
+        'Region', alb.region,
+        'Log to', attributes->>'Value'
       ) as properties
     from
-      aws_ec2_application_load_balancer
+      aws_ec2_application_load_balancer alb,
+      jsonb_array_elements(alb.load_balancer_attributes) as attributes,
+      buckets
     where 
-      load_balancer_attributes->'access_logs'->'s3'->>'bucket' = $1
+      attributes->>'Key' = 'access_logs.s3.bucket' 
+      and attributes->>'Value' = buckets.name
 
+    -- NLBs that log to me - nodes
+    union all 
+    select
+      null as from_id,
+      null as to_id,
+      nlb.arn as id,
+      nlb.title as title,
+      'aws_ec2_network_load_balancer' as category,
+      jsonb_build_object(
+        'Name', nlb.name,
+        'ARN', nlb.arn,
+        'Account ID', nlb.account_id,
+        'Region', nlb.region,
+        'Log to', attributes->>'Value'
+      ) as properties
+    from
+      aws_ec2_network_load_balancer nlb,
+      jsonb_array_elements(nlb.load_balancer_attributes) as attributes,
+      buckets
+    where 
+      attributes->>'Key' = 'access_logs.s3.bucket' 
+      and attributes->>'Value' = buckets.name
+
+    -- NLBs that log to me - edges
+    union all
+    select
+      nlb.arn as from_id,
+      buckets.arn as to_id,
+      null as id,
+      'Logs to' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'Name', nlb.name,
+        'ARN', nlb.arn,
+        'Account ID', nlb.account_id,
+        'Region', nlb.region,
+        'Log to', attributes->>'Value'
+      ) as properties
+    from
+      aws_ec2_network_load_balancer nlb,
+      jsonb_array_elements(nlb.load_balancer_attributes) as attributes,
+      buckets
+    where 
+      attributes->>'Key' = 'access_logs.s3.bucket' 
+      and attributes->>'Value' = buckets.name
+
+    -- CLBs that log to me - nodes
+    union all 
+    select
+      null as from_id,
+      null as to_id,
+      clb.arn as id,
+      clb.title as title,
+      'aws_ec2_classic_load_balancer' as category,
+      jsonb_build_object(
+        'Name', clb.name,
+        'ARN', clb.arn,
+        'Account ID', clb.account_id,
+        'Region', clb.region,
+        'Log Prefix', clb.access_log_s3_bucket_prefix
+      ) as properties
+    from
+      aws_ec2_classic_load_balancer clb,
+      buckets
+    where 
+      clb.access_log_s3_bucket_name = buckets.name
+
+    -- CLBs that log to me - edges
+    union all 
+    select
+      clb.arn as from_id,
+      buckets.arn as to_id,
+      null as id,
+      'Logs to' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'Name', clb.name,
+        'ARN', clb.arn,
+        'Account ID', clb.account_id,
+        'Region', clb.region,
+        'Log Prefix', clb.access_log_s3_bucket_prefix
+      ) as properties
+    from
+      aws_ec2_classic_load_balancer clb,
+      buckets
+    where 
+      clb.access_log_s3_bucket_name = buckets.name
+
+    order by category,id,from_id,to_id
   EOQ
   
   param "bucket" {}
