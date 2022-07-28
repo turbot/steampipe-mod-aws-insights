@@ -36,7 +36,7 @@ query "aws_s3_bucket_graph_to_instance"{
         'Account ID', account_id,
         'Region', region,
         'Logging', logging
-      ) as metadata
+      ) as properties
     from
       buckets
       
@@ -53,7 +53,7 @@ query "aws_s3_bucket_graph_to_instance"{
         'Account ID', trail.account_id,
         'Region', trail.region,
         'Log Prefix', trail.s3_key_prefix
-      ) as metadata
+      ) as properties
     from
       aws_cloudtrail_trail as trail,
       buckets as b
@@ -72,7 +72,7 @@ query "aws_s3_bucket_graph_to_instance"{
         'ARN', trail.arn,
         'Account ID', trail.account_id,
         'Region', trail.region
-      ) as metadata
+      ) as properties
     from
       aws_cloudtrail_trail as trail,
       buckets as b
@@ -292,6 +292,48 @@ query "aws_s3_bucket_graph_to_instance"{
       buckets
     where 
       clb.access_log_s3_bucket_name = buckets.name
+
+    -- Access Point that come to me - nodes
+    union all 
+    select
+      null as from_id,
+      null as to_id,
+      ap.access_point_arn as id,
+      ap.title as title,
+      'aws_s3_access_point' as category,
+      jsonb_build_object(
+        'Name', ap.name,
+        'ARN', ap.access_point_arn,
+        'Account ID', ap.account_id,
+        'Region', ap.region,
+        'Bucket', ap.bucket_name
+      ) as properties
+    from
+      aws_s3_access_point ap,
+      buckets
+    where 
+      ap.bucket_name = buckets.name
+
+    -- Access Point that come to me - edges
+    union all 
+    select
+      ap.access_point_arn as from_id,
+      buckets.arn as to_id,
+      null as id,
+      'Accesses' as title,
+      'accesses' as category,
+      jsonb_build_object(
+        'Name', ap.name,
+        'ARN', ap.access_point_arn,
+        'Account ID', ap.account_id,
+        'Region', ap.region,
+        'Bucket', ap.bucket_name
+      ) as properties
+    from
+      aws_s3_access_point ap,
+      buckets
+    where 
+      ap.bucket_name = buckets.name
 
     order by category,id,from_id,to_id
   EOQ
