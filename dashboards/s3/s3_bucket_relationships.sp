@@ -1,7 +1,7 @@
 dashboard "aws_s3_bucket_relationships" {
   title         = "AWS S3 Bucket Relationships"
   #documentation = file("./dashboards/ec2/docs/s3_bucket_relationships.md")
-  tags = merge(local.ec2_common_tags, {
+  tags = merge(local.s3_common_tags, {
     type = "Relationships"
   })
   
@@ -313,6 +313,7 @@ query "aws_s3_bucket_graph_to_instance"{
       buckets
     where 
       ap.bucket_name = buckets.name
+      and ap.region = buckets.region
 
     -- Access Point that come to me - edges
     union all 
@@ -334,6 +335,7 @@ query "aws_s3_bucket_graph_to_instance"{
       buckets
     where 
       ap.bucket_name = buckets.name
+      and ap.region = buckets.region
 
     order by category,id,from_id,to_id
   EOQ
