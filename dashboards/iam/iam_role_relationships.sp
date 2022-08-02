@@ -21,28 +21,7 @@ dashboard "aws_iam_role_relationships" {
     category "aws_iam_role" {
       color = "orange"
       href  = "${dashboard.aws_iam_role_detail.url_path}?input.role_arn={{.properties.ARN | @uri}}"
-
-      icon = {}
-      
-      properties {
-        property "Name" {
-          
-        }
-
-        property "Account ID" {
-          
-        } 
-
-        property  "ARN" {
-          display = "none"
-        }
-
-        order = [
-          'Name', 
-          'ARN',
-          'Account ID'
-        ]
-      }
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_iam_role.svg"))
     }
     
     category "aws_iam_user" {
@@ -74,11 +53,13 @@ dashboard "aws_iam_role_relationships" {
     category "aws_iam_role" {
       color = "orange"
       href  = "${dashboard.aws_iam_role_detail.url_path}?input.role_arn={{.properties.ARN | @uri}}"
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_iam_role.svg"))
     }
 
     category "aws_ec2_instance" {
       color = "blue"
       href  = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_id={{.properties.'Instance ID' | @uri}}"
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_ec2_instance.svg"))
     }
 
     category "uses" {

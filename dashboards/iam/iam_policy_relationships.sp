@@ -34,6 +34,7 @@ dashboard "aws_iam_policy_relationships" {
     category "aws_iam_role" {
       color = "yellow"
       href  = "${dashboard.aws_iam_role_detail.url_path}?input.role_arn={{.properties.ARN | @uri}}"
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_iam_role.svg"))
     }
 
     category "aws_iam_user" {
