@@ -25,24 +25,24 @@ dashboard "aws_alb_relationships" {
     }
 
     category "aws_vpc" {
+      href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'VPC ID' | @uri}}"
       icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/vpc.svg"))
     }
 
-    category "ec2_network_interface" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/eni.svg"))
-    }
-
     category "aws_s3_bucket" {
+      href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
       icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/s3_bucket.svg"))
     }
 
     category "aws_vpc_security_group"{
+      href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.properties.'Group ID' | @uri}}"
       icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/alb.svg"))
     }
     
     category "aws_ec2_target_group"{
       icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/nlb.svg"))
     }
+    
   }
 
 }
@@ -159,8 +159,8 @@ query "aws_alb_graph_to_instance"{
       buckets.title as title,
       'aws_s3_bucket' as category,
       jsonb_build_object(
-        'Name', alb.name,
-        'ARN', alb.arn,
+        'Name', buckets.name,
+        'ARN', buckets.arn,
         'Account ID', alb.account_id,
         'Region', alb.region,
         'Logs to', attributes->>'Value'
@@ -182,8 +182,8 @@ query "aws_alb_graph_to_instance"{
       'Logs to' as title,
       'aws_s3_bucket' as category,
       jsonb_build_object(
-        'Name', alb.name,
-        'ARN', alb.arn,
+        'Name', buckets.name,
+        'ARN', buckets.arn,
         'Account ID', alb.account_id,
         'Region', alb.region,
         'Logs to', attributes->>'Value'
@@ -235,48 +235,6 @@ query "aws_alb_graph_to_instance"{
       alb
     where
       alb.vpc_id = vpc.vpc_id
-    
-    -- eni on the same VPC - nodes
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      eni.network_interface_id as id,
-      eni.title as title,
-      'ec2_network_interface' as category,
-      jsonb_build_object(
-        'Account ID', eni.account_id,
-        'Region', eni.region,
-        'Type', eni.interface_type,
-        'VPC', eni.vpc_id
-      ) as properties
-    from 
-      aws_ec2_network_interface eni,
-      alb
-    where
-      eni.vpc_id = alb.vpc_id
-    
-    -- eni on the same VPC - edges
-    union all
-    select
-      eni.network_interface_id as from_id,
-      eni.vpc_id as to_id,
-      null as id,
-      'uses' as title,
-      'uses' as category,
-      jsonb_build_object(
-        'Account ID', eni.account_id,
-        'Region', eni.region,
-        'Type', eni.interface_type,
-        'VPC', eni.vpc_id
-      ) as properties
-    from 
-      aws_ec2_network_interface eni,
-      alb
-    where
-      eni.vpc_id = alb.vpc_id
-    
-
     order by category,from_id,to_id
   EOQ
   
