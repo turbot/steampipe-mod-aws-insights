@@ -34,6 +34,10 @@ dashboard "aws_sns_topic_relationships" {
         href  = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
       }
 
+      category "aws_sns_topic_subscription" {
+        color = "green"
+      }
+
     }
 
    graph {
@@ -128,6 +132,41 @@ query "aws_sns_topic_graph_from_topic" {
       left join aws_kms_key as k on k.id = split_part(q.kms_master_key_id, '/', 2)
     where
       k.region = q.region
+
+    -- Subscription topic Nodes
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      subscription_arn as id,
+      title as title,
+      'aws_sns_topic_subscription' as category,
+      jsonb_build_object(
+        'ARN', subscription_arn,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_sns_topic_subscription
+    where topic_arn = 'arn:aws:sns:us-east-1:533793682495:aws-cis-handling'
+
+    -- Subscription topic Edges
+    union all
+    select
+      s.subscription_arn as from_id,
+      q.topic_arn as to_id,
+      null as id,
+      'Subscibe To' as title,
+      'subscibe_to' as category,
+      jsonb_build_object(
+        'ARN', q.topic_arn,
+        'Account ID', q.account_id,
+        'Region', q.region
+      ) as properties
+    from
+      topic as q
+    left join aws_sns_topic_subscription as s on s.topic_arn = q.topic_arn
+
   EOQ
   param "arn" {}
 }
