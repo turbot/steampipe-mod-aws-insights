@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 64 (93537) - https://sketch.com -->
-    <title>Icon-Architecture/16/Arch_Amazon-Virtual-Private-Cloud_16</title>
+    <title>Icon-Architecture/16/aws_vpc</title>
     <desc>Created with Sketch.</desc>
     <defs>
         <linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="linearGradient-1">
@@ -9,7 +9,7 @@
             <stop stop-color="#A166FF" offset="100%"></stop>
         </linearGradient>
     </defs>
-    <g id="Icon-Architecture/16/Arch_Amazon-Virtual-Private-Cloud_16" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+    <g id="Icon-Architecture/16/aws_vpc" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
         <g id="Icon-Architecture-BG/16/Networking-Content-Delivery" fill="url(#linearGradient-1)">
             <rect id="Rectangle" x="0" y="0" width="24" height="24"></rect>
         </g>

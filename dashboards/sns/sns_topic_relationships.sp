@@ -23,14 +23,14 @@ dashboard "aws_sns_topic_relationships" {
     }
 
       category "aws_sns_topic" {
-        icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/Res_Amazon-Simple-Notification-Service_Topic_48_Dark.svg"))
+        icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_sns_topic.svg"))
         color = "blue"
         href  = "${dashboard.aws_sns_topic_detail.url_path}?input.topic_arn={{.properties.'ARN' | @uri}}"
       }
 
       category "aws_kms_key" {
         color = "orange"
-        icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/Arch_AWS-Key-Management-Service_16.svg"))
+        icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_kms_key.svg"))
         href  = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
       }
 
@@ -49,13 +49,13 @@ dashboard "aws_sns_topic_relationships" {
     }
 
     category "aws_sns_topic" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/Res_Amazon-Simple-Notification-Service_Topic_48_Dark.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_sns_topic.svg"))
       color = "blue"
       href  = "${dashboard.aws_sns_topic_detail.url_path}?input.topic_arn={{.properties.'ARN' | @uri}}"
     }
 
     category "aws_s3_bucket" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/Res_Amazon-Simple-Storage-Service_Bucket_48_Dark.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_s3_bucket.svg"))
       color = "orange"
       href  = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
     }
@@ -95,7 +95,7 @@ query "aws_sns_topic_graph_from_topic" {
     from
       topic
 
- -- Kms key Nodes
+    -- Kms key Nodes
     union all
     select
       null as from_id,
