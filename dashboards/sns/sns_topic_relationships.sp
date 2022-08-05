@@ -117,8 +117,8 @@ query "aws_sns_topic_graph_from_topic" {
     -- Kms key Edges
     union all
     select
-      k.arn as from_id,
-      q.topic_arn as to_id,
+      q.topic_arn as from_id,
+      k.arn as to_id,
       null as id,
       'Encrypted With' as title,
       'encrypted_with' as category,
@@ -153,8 +153,8 @@ query "aws_sns_topic_graph_from_topic" {
     -- Subscription topic Edges
     union all
     select
-      s.subscription_arn as from_id,
-      q.topic_arn as to_id,
+      q.topic_arn as from_id,
+      s.subscription_arn as to_id,
       null as id,
       'Subscibe To' as title,
       'subscibe_to' as category,
@@ -174,7 +174,8 @@ query "aws_sns_topic_graph_from_topic" {
 query "aws_sns_topic_graph_to_topic" {
   sql = <<-EOQ
     with topic as (select * from aws_sns_topic where topic_arn = 'arn:aws:sns:us-east-1:533793682495:aws-cis-handling')
-    -- queue node
+
+    -- topic node
     select
       null as from_id,
       null as to_id,

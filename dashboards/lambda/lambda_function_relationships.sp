@@ -133,8 +133,8 @@ query "aws_lambda_function_graph_from_function" {
     -- VPC Edges
     union all
     select
-      v.arn as from_id,
-      l.arn as to_id,
+      l.arn as from_id,
+      v.arn as to_id,
       null as id,
       'Uses' as title,
       'Uses' as category,
@@ -168,8 +168,8 @@ query "aws_lambda_function_graph_from_function" {
     -- Security Group Edges
     union all
     select
-      sg.arn as from_id,
-      l.arn as to_id,
+      l.arn as from_id,
+      sg.arn as to_id,
       null as id,
       'Uses' as title,
       'Uses' as category,
@@ -203,8 +203,8 @@ query "aws_lambda_function_graph_from_function" {
     -- Kms key Edges
     union all
     select
-      k.arn as from_id,
-      l.arn as to_id,
+      l.arn as from_id,
+      k.arn as to_id,
       null as id,
       'Encrypted With' as title,
       'encrypted_with' as category,
@@ -238,8 +238,8 @@ query "aws_lambda_function_graph_from_function" {
     -- IAM Role Edges
     union all
     select
-      r.arn as from_id,
-      l.arn as to_id,
+      l.arn as from_id,
+      r.arn as to_id,
       null as id,
       'Attached To' as title,
       'attached_to' as category,
