@@ -19,6 +19,11 @@ dashboard "aws_ec2_keys_relationships" {
     args = {
       key_name = self.input.key_name.value
     }
+    
+    category "aws_ec2_instance" {
+      href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ebs_volume.svg"))
+    }
   }
 }
 
