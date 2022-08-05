@@ -31,16 +31,7 @@ dashboard "aws_alb_relationships" {
 
     category "aws_s3_bucket" {
       href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/s3_bucket.svg"))
-    }
-
-    category "aws_vpc_security_group"{
-      href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.properties.'Group ID' | @uri}}"
       icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/alb.svg"))
-    }
-    
-    category "aws_ec2_target_group"{
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/nlb.svg"))
     }
     
   }
@@ -91,8 +82,8 @@ query "aws_alb_graph_to_instance"{
     -- security groups - edges
     union all 
     select
-      sg.arn as from_id,
-      alb.arn as to_id,
+      alb.arn as from_id,
+      sg.arn as to_id,
       null as id,
       'Security Group' as title,
       'uses' as category,
@@ -133,8 +124,8 @@ query "aws_alb_graph_to_instance"{
     -- target groups - edges
     union all 
     select
-      tg.target_group_arn as to_id,
       alb.arn as from_id,
+      tg.target_group_arn as to_id,
       null as id,
       'uses' as title,
       'aws_ec2_target_group' as category,
@@ -219,8 +210,8 @@ query "aws_alb_graph_to_instance"{
     -- vpc - edges
     union all
     select
-      vpc.vpc_id as from_id,
-      alb.arn as to_id,
+      alb.arn as from_id,
+      vpc.vpc_id as to_id,
       null as id,
       'uses' as title,
       'aws_vpc' as category,

@@ -19,6 +19,25 @@ dashboard "aws_ec2_instance_relationships" {
     args = {
       arn = self.input.instance_arn.value
     }
+    
+    category "aws_ec2_instance" {
+      href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ebs_volume.svg"))
+    }
+
+    category "aws_ebs_volume" {
+      href = "${dashboard.aws_ebs_volume_detail.url_path}?input.volume_arn={{.properties.'ARN' | @uri}}"
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2.svg"))
+    }
+    
+    category "aws_ec2_network_interface" {
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/eni.svg"))
+    }
+    
+    category "aws_ec2_ami" {
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ami.svg"))
+    }
+    
   }
   
   graph {
@@ -28,13 +47,31 @@ dashboard "aws_ec2_instance_relationships" {
     args = {
       arn = self.input.instance_arn.value
     }
+    
+    category "aws_ec2_instance" {
+      href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ebs_volume.svg"))
+    }
+
+    category "aws_ebs_volume" {
+      href = "${dashboard.aws_ebs_volume_detail.url_path}?input.volume_arn={{.properties.'ARN' | @uri}}"
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2.svg"))
+    }
+
+    category "aws_ec2_network_interface" {
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/eni.svg"))
+    }
+    
+    category "aws_ec2_ami" {
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ami.svg"))
+    }
+    
   }
 }
 
-
 query "aws_ec2_instance_graph_from_instance" {
   sql = <<-EOQ
-    with instances as (select * from aws_ec2_instance where arn = $1)
+    with instances as (select arn,instance_id,tags,account_id,region,block_device_mappings,security_groups,subnet_id,iam_instance_profile_arn,iam_instance_profile_id,image_id,key_name from aws_ec2_instance where arn = $1)
     select
       null as from_id,
       null as to_id,
@@ -47,7 +84,7 @@ query "aws_ec2_instance_graph_from_instance" {
         'ARN', arn,
         'Account ID', account_id,
         'Region', region
-      ) as metadata
+      ) as properties
     from
       instances
 
@@ -63,7 +100,7 @@ query "aws_ec2_instance_graph_from_instance" {
         'Volume ID', bd -> 'Ebs' ->> 'VolumeId',
         'Account ID', account_id,
         'Region', region
-      ) as metadata
+      ) as properties
     from
       instances,
       jsonb_array_elements(block_device_mappings) as bd
@@ -82,55 +119,10 @@ query "aws_ec2_instance_graph_from_instance" {
         'Status', bd -> 'Ebs' ->> 'Status',
         'Attach Time', bd -> 'Ebs' ->> 'AttachTime',
         'Delete On Termination', bd -> 'Ebs' ->> 'DeleteOnTermination'        
-      ) as metadata
+      ) as properties
     from
       instances,
       jsonb_array_elements(block_device_mappings) as bd
-
-
-    -- EBS Volume Snapshots - nodes
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      snap.arn as id,
-      snap.snapshot_id as title,
-      'aws_ebs_snapshot' as category,
-      jsonb_build_object(
-        'Name', snap.tags ->> 'Name',
-        'Description', snap.description,
-        'Snapshot ID', snap.snapshot_id,
-        'ARN', snap.arn,
-        'Account ID', snap.account_id,
-        'Region', snap.region
-      ) as metadata
-    from
-      instances,
-      jsonb_array_elements(block_device_mappings) as bd,
-      aws_ebs_snapshot as snap
-    where
-      snap.volume_id =  bd -> 'Ebs' ->> 'VolumeId'
-
-    -- EBS Volume Snapshots - Edges
-    union all
-    select
-      bd -> 'Ebs' ->> 'VolumeId' as from_id,
-      snap.arn as to_id,
-      null as id,
-      'uses' as title,
-      'uses' as category,
-      jsonb_build_object(
-        'Start Time', snap.start_time,
-        'State', snap.state,
-        'Progress', snap.progress,
-        'State Message', snap.state_message
-      ) as metadata
-    from
-      instances,
-      jsonb_array_elements(block_device_mappings) as bd,
-      aws_ebs_snapshot as snap
-    where
-      snap.volume_id =  bd -> 'Ebs' ->> 'VolumeId'
 
     -- ENIs - nodes
     union all
@@ -151,7 +143,7 @@ query "aws_ec2_instance_graph_from_instance" {
         'MAC Address', eni.mac_address,
         'Account ID', eni.account_id,
         'Region', eni.region
-      ) as metadata
+      ) as properties
     from
       instances as i,
       aws_ec2_network_interface as eni
@@ -173,7 +165,7 @@ query "aws_ec2_instance_graph_from_instance" {
         'Attachment Time', attachment_time,
         'Delete on Instance Termination', delete_on_instance_termination,
         'Device Index', device_index
-      ) as metadata
+      ) as properties
     from
       instances as i,
       aws_ec2_network_interface as eni
@@ -193,7 +185,7 @@ query "aws_ec2_instance_graph_from_instance" {
         'Name', sg ->> 'GroupName',
         'Account ID', account_id,
         'Region', region
-      ) as metadata
+      ) as properties
     from
       instances,
       jsonb_array_elements(security_groups) as sg
@@ -211,7 +203,7 @@ query "aws_ec2_instance_graph_from_instance" {
         'Name', sg ->> 'GroupName',
         'Account ID', account_id,
         'Region', region
-      ) as metadata
+      ) as properties
     from
       instances,
       jsonb_array_elements(security_groups) as sg
@@ -232,7 +224,7 @@ query "aws_ec2_instance_graph_from_instance" {
         'AZ', subnet.availability_zone,
         'Account ID', subnet.account_id,
         'Region', subnet.region
-      ) as metadata
+      ) as properties
     from
       instances as i,
       aws_vpc_subnet as subnet
@@ -251,7 +243,7 @@ query "aws_ec2_instance_graph_from_instance" {
         'Name', subnet.tags ->> 'Name',
         'Subnet ID', subnet.subnet_id,
         'State', subnet.state 
-      ) as metadata
+      ) as properties
     from
       instances as i,
       aws_vpc_subnet as subnet
@@ -270,7 +262,7 @@ query "aws_ec2_instance_graph_from_instance" {
       jsonb_build_object(
         'Instance Profile ARN', iam_instance_profile_arn,
         'Instance Profile ID', iam_instance_profile_id
-      ) as metadata
+      ) as properties
     from
       instances
 
@@ -285,7 +277,7 @@ query "aws_ec2_instance_graph_from_instance" {
       jsonb_build_object(
         'Instance Profile ARN', iam_instance_profile_arn,
         'Instance Profile ID', iam_instance_profile_id
-      ) as metadata
+      ) as properties
     from
       instances
 
@@ -303,7 +295,7 @@ query "aws_ec2_instance_graph_from_instance" {
         'Description', r.description,
         'ARN', r.arn ,
         'Account ID', r.account_id
-      ) as metadata
+      ) as properties
     from
       instances as i,
       aws_iam_role as r,
@@ -323,7 +315,7 @@ query "aws_ec2_instance_graph_from_instance" {
         'Role ARN', r.arn,
         'Instance Profile ARN', i.iam_instance_profile_arn,
         'Account ID', r.account_id
-      ) as metadata
+      ) as properties
     from
       instances as i,
       aws_iam_role as r,
@@ -332,7 +324,6 @@ query "aws_ec2_instance_graph_from_instance" {
       instance_profile = i.iam_instance_profile_arn
 
     -- AMI- nodes
-    -- Could get more info if someone addressed https://github.com/turbot/steampipe-plugin-aws/issues/845
     union all
     select
       null as from_id,
@@ -342,7 +333,7 @@ query "aws_ec2_instance_graph_from_instance" {
       'aws_ec2_ami' as category,
       jsonb_build_object(
         'Image ID', image_id
-      ) as metadata
+      ) as properties
     from
       instances as i
 
@@ -357,7 +348,7 @@ query "aws_ec2_instance_graph_from_instance" {
       jsonb_build_object(
         'Image ID', image_id,
         'Instance ID', instance_id
-      ) as metadata
+      ) as properties
     from
       instances as i
       
@@ -374,7 +365,7 @@ query "aws_ec2_instance_graph_from_instance" {
         'Name', k.key_name,
         'ID', k.key_pair_id,
         'Fingerprint', key_fingerprint
-      ) as metadata
+      ) as properties
     from
       instances as i,
       aws_ec2_key_pair as k
@@ -394,7 +385,7 @@ query "aws_ec2_instance_graph_from_instance" {
       jsonb_build_object(
         'Name', key_name,
         'Instance ID', instance_id
-      ) as metadata
+      ) as properties
     from
       instances as i
       
@@ -420,7 +411,7 @@ query "aws_ec2_instance_graph_to_instance" {
         'ARN', arn,
         'Account ID', account_id,
         'Region', region
-      ) as metadata
+      ) as properties
     from
       instances
 
@@ -432,7 +423,7 @@ query "aws_ec2_instance_graph_to_instance" {
       k.autoscaling_group_arn as id,
       k.name as title,
       'aws_ec2_autoscaling_group' as category,
-      jsonb_build_object('instance', group_instance->>'InstanceId','i', instances.instance_id, 'asg', group_instance) as metadata
+      jsonb_build_object('instance', group_instance->>'InstanceId','i', instances.instance_id, 'asg', group_instance) as properties
     from
       aws_ec2_autoscaling_group as k,
       jsonb_array_elements(k.instances) as group_instance,
@@ -449,7 +440,7 @@ query "aws_ec2_instance_graph_to_instance" {
       null as id,
       'uses' as title,
       'uses' as category,
-      jsonb_build_object() as metadata
+      jsonb_build_object() as properties
     from
       aws_ec2_autoscaling_group as k,
       jsonb_array_elements(k.instances) as group_instance,
@@ -465,7 +456,7 @@ query "aws_ec2_instance_graph_to_instance" {
       k.arn as id,
       k.name as title,
       'aws_ec2_classic_load_balancer' as category,
-      jsonb_build_object('instance', group_instance->>'InstanceId','i', instances.instance_id, 'clb', group_instance) as metadata
+      jsonb_build_object('instance', group_instance->>'InstanceId','i', instances.instance_id, 'clb', group_instance) as properties
     from
       aws_ec2_classic_load_balancer as k,
       jsonb_array_elements(k.instances) as group_instance,
@@ -481,7 +472,7 @@ query "aws_ec2_instance_graph_to_instance" {
       null as id,
       'uses' as title,
       'uses' as category,
-      jsonb_build_object('instance', group_instance->>'InstanceId','i', instances.instance_id, 'clb', group_instance) as metadata
+      jsonb_build_object('instance', group_instance->>'InstanceId','i', instances.instance_id, 'clb', group_instance) as properties
     from
       aws_ec2_classic_load_balancer as k,
       jsonb_array_elements(k.instances) as group_instance,

@@ -1,6 +1,6 @@
 dashboard "aws_nlb_relationships" {
   title         = "AWS EC2 Network Loadbalancer Relationships"
-  #documentation = file("./dashboards/lb/docs/alb_relationships.md")
+  #documentation = file("./dashboards/lb/docs/nlb_relationships.md")
   
   tags = merge(local.ec2_common_tags, {
     type = "Relationships"
@@ -25,19 +25,13 @@ dashboard "aws_nlb_relationships" {
     }
 
     category "aws_vpc" {
+      href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'VPC ID' | @uri}}"
       icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/vpc.svg"))
     }
 
     category "aws_s3_bucket" {
+      href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
       icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/s3_bucket.svg"))
-    }
-
-    category "aws_vpc_security_group"{
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/alb.svg"))
-    }
-    
-    category "aws_ec2_target_group"{
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/nlb.svg"))
     }
     
   }
@@ -47,21 +41,21 @@ dashboard "aws_nlb_relationships" {
 
 query "aws_nlb_graph_to_instance"{
   sql = <<-EOQ
-    with alb as (select arn,name,account_id,region,title,security_groups,vpc_id,load_balancer_attributes from aws_ec2_network_load_balancer where arn = $1)
+    with nlb as (select arn,name,account_id,region,title,security_groups,vpc_id,load_balancer_attributes from aws_ec2_network_load_balancer where arn = $1)
     select
       null as from_id,
       null as to_id,
       arn as id,
       name as title,
-      'aws_ec2_application_load_balancer' as category,
+      'aws_ec2_network_load_balancer' as category,
       jsonb_build_object(
         'ARN', arn,
         'Account ID', account_id,
         'Region', region,
-        'Security Groups', alb.security_groups
+        'Security Groups', nlb.security_groups
       ) as properties
     from
-      alb
+      nlb
 
     -- security groups - nodes
     union all 
@@ -81,15 +75,15 @@ query "aws_nlb_graph_to_instance"{
       ) as properties
     from
       aws_vpc_security_group sg,
-      alb
+      nlb
     where 
-      sg.group_id in (select jsonb_array_elements_text(alb.security_groups))
+      sg.group_id in (select jsonb_array_elements_text(nlb.security_groups))
 
     -- security groups - edges
     union all 
     select
-      sg.arn as from_id,
-      alb.arn as to_id,
+      nlb.arn as from_id,
+      sg.arn as to_id,
       null as id,
       'Security Group' as title,
       'uses' as category,
@@ -103,9 +97,9 @@ query "aws_nlb_graph_to_instance"{
       ) as properties
     from
       aws_vpc_security_group sg,
-      alb
+      nlb
     where 
-      sg.group_id in (select jsonb_array_elements_text(alb.security_groups))
+      sg.group_id in (select jsonb_array_elements_text(nlb.security_groups))
 
     -- target groups - nodes
     union all 
@@ -123,15 +117,15 @@ query "aws_nlb_graph_to_instance"{
       ) as properties
     from
       aws_ec2_target_group tg,
-      alb
+      nlb
     where 
-      alb.arn in (select jsonb_array_elements_text(tg.load_balancer_arns))
+      nlb.arn in (select jsonb_array_elements_text(tg.load_balancer_arns))
 
     -- target groups - edges
     union all 
     select
+      nlb.arn as from_id,
       tg.target_group_arn as to_id,
-      alb.arn as from_id,
       null as id,
       'uses' as title,
       'aws_ec2_target_group' as category,
@@ -143,9 +137,9 @@ query "aws_nlb_graph_to_instance"{
       ) as properties
     from
       aws_ec2_target_group tg,
-      alb
+      nlb
     where 
-      alb.arn in (select jsonb_array_elements_text(tg.load_balancer_arns))
+      nlb.arn in (select jsonb_array_elements_text(tg.load_balancer_arns))
 
     -- S3 bucket I log to - nodes
     union all 
@@ -156,16 +150,16 @@ query "aws_nlb_graph_to_instance"{
       buckets.title as title,
       'aws_s3_bucket' as category,
       jsonb_build_object(
-        'Name', alb.name,
-        'ARN', alb.arn,
-        'Account ID', alb.account_id,
-        'Region', alb.region,
+        'Name', nlb.name,
+        'ARN', nlb.arn,
+        'Account ID', nlb.account_id,
+        'Region', nlb.region,
         'Logs to', attributes->>'Value'
       ) as properties
     from
       aws_s3_bucket buckets,
-      alb,
-      jsonb_array_elements(alb.load_balancer_attributes) attributes
+      nlb,
+      jsonb_array_elements(nlb.load_balancer_attributes) attributes
     where 
       attributes->>'Key' = 'access_logs.s3.bucket' 
       and buckets.name = attributes->>'Value'
@@ -173,22 +167,22 @@ query "aws_nlb_graph_to_instance"{
     -- S3 bucket I log to - edges
     union all 
     select
-      alb.arn as from_id,
+      nlb.arn as from_id,
       buckets.arn as to_id,
       null as id,
       'Logs to' as title,
       'aws_s3_bucket' as category,
       jsonb_build_object(
-        'Name', alb.name,
-        'ARN', alb.arn,
-        'Account ID', alb.account_id,
-        'Region', alb.region,
+        'Name', nlb.name,
+        'ARN', nlb.arn,
+        'Account ID', nlb.account_id,
+        'Region', nlb.region,
         'Logs to', attributes->>'Value'
       ) as properties
     from
       aws_s3_bucket buckets,
-      alb,
-      jsonb_array_elements(alb.load_balancer_attributes) attributes
+      nlb,
+      jsonb_array_elements(nlb.load_balancer_attributes) attributes
     where 
       attributes->>'Key' = 'access_logs.s3.bucket' 
       and buckets.name = attributes->>'Value'
@@ -209,15 +203,15 @@ query "aws_nlb_graph_to_instance"{
       ) as properties
     from 
       aws_vpc vpc,
-      alb
+      nlb
     where
-      alb.vpc_id = vpc.vpc_id
+      nlb.vpc_id = vpc.vpc_id
     
     -- vpc - edges
     union all
     select
-      vpc.vpc_id as from_id,
-      alb.arn as to_id,
+      nlb.arn as from_id,
+      vpc.vpc_id as to_id,
       null as id,
       'uses' as title,
       'aws_vpc' as category,
@@ -229,9 +223,9 @@ query "aws_nlb_graph_to_instance"{
       ) as properties
     from 
       aws_vpc vpc,
-      alb
+      nlb
     where
-      alb.vpc_id = vpc.vpc_id
+      nlb.vpc_id = vpc.vpc_id
 
     order by category,from_id,to_id
   EOQ
