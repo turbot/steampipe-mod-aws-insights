@@ -1,16 +1,16 @@
 dashboard "aws_clb_relationships" {
   title         = "AWS EC2 Classic Loadbalancer Relationships"
-  #documentation = file("./dashboards/lb/docs/alb_relationships.md")
+  #documentation = file("./dashboards/lb/docs/clb_relationships.md")
   
   tags = merge(local.ec2_common_tags, {
     type = "Relationships"
   })
   
-input "clb" {
-  title = "Select a Classic Loadbalancer:"
-  sql   = query.aws_clb_input.sql
-  width = 4
-}
+  input "clb" {
+    title = "Select a Classic Loadbalancer:"
+    sql   = query.aws_clb_input.sql
+    width = 4
+  }
   
   graph {
     type  = "graph"
@@ -23,34 +23,22 @@ input "clb" {
     category "aws_ec2_classic_load_balancer" {
       icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/clb.svg"))
     }
-
+    
     category "aws_vpc" {
+      href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'VPC ID' | @uri}}"
       icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/vpc.svg"))
     }
 
-    category "ec2_network_interface" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/eni.svg"))
-    }
-
     category "aws_s3_bucket" {
+      href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
       icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/s3_bucket.svg"))
     }
-
-    category "aws_vpc_security_group"{
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/alb.svg"))
-    }
-    
-    category "aws_ec2_target_group"{
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/nlb.svg"))
-    }
   }
-
 }
 
-
-query "aws_clb_graph_to_instance"{
+query "aws_clb_graph_to_instance" {
   sql = <<-EOQ
-    with alb as (select arn,name,account_id,region,title,access_log_s3_bucket_name,security_groups,vpc_id from aws_ec2_classic_load_balancer where arn = $1)
+    with clb as (select arn,name,account_id,region,title,access_log_s3_bucket_name,security_groups,vpc_id from aws_ec2_classic_load_balancer where arn = $1)
     select
       null as from_id,
       null as to_id,
@@ -61,13 +49,13 @@ query "aws_clb_graph_to_instance"{
         'ARN', arn,
         'Account ID', account_id,
         'Region', region,
-        'Security Groups', alb.security_groups
+        'Security Groups', clb.security_groups
       ) as properties
     from
-      alb
+      clb
 
     -- security groups - nodes
-    union all 
+    union all
     select
       null as from_id,
       null as to_id,
@@ -84,15 +72,15 @@ query "aws_clb_graph_to_instance"{
       ) as properties
     from
       aws_vpc_security_group sg,
-      alb
+      clb
     where 
-      sg.group_id in (select jsonb_array_elements_text(alb.security_groups))
+      sg.group_id in (select jsonb_array_elements_text(clb.security_groups))
 
     -- security groups - edges
     union all 
     select
-      sg.arn as from_id,
-      alb.arn as to_id,
+      clb.arn as from_id,
+      sg.arn as to_id,
       null as id,
       'Security Group' as title,
       'uses' as category,
@@ -106,9 +94,9 @@ query "aws_clb_graph_to_instance"{
       ) as properties
     from
       aws_vpc_security_group sg,
-      alb
+      clb
     where 
-      sg.group_id in (select jsonb_array_elements_text(alb.security_groups))
+      sg.group_id in (select jsonb_array_elements_text(clb.security_groups))
 
     -- target groups - nodes
     union all 
@@ -126,15 +114,15 @@ query "aws_clb_graph_to_instance"{
       ) as properties
     from
       aws_ec2_target_group tg,
-      alb
+      clb
     where 
-      alb.arn in (select jsonb_array_elements_text(tg.load_balancer_arns))
+      clb.arn in (select jsonb_array_elements_text(tg.load_balancer_arns))
 
     -- target groups - edges
     union all 
     select
+      clb.arn as from_id,
       tg.target_group_arn as to_id,
-      alb.arn as from_id,
       null as id,
       'uses' as title,
       'aws_ec2_target_group' as category,
@@ -146,9 +134,9 @@ query "aws_clb_graph_to_instance"{
       ) as properties
     from
       aws_ec2_target_group tg,
-      alb
+      clb
     where 
-      alb.arn in (select jsonb_array_elements_text(tg.load_balancer_arns))
+      clb.arn in (select jsonb_array_elements_text(tg.load_balancer_arns))
 
     -- S3 bucket I log to - nodes
     union all 
@@ -159,38 +147,38 @@ query "aws_clb_graph_to_instance"{
       buckets.title as title,
       'aws_s3_bucket' as category,
       jsonb_build_object(
-        'Name', alb.name,
-        'ARN', alb.arn,
-        'Account ID', alb.account_id,
-        'Region', alb.region,
-        'Logs to', alb.access_log_s3_bucket_name
+        'Name', clb.name,
+        'ARN', clb.arn,
+        'Account ID', clb.account_id,
+        'Region', clb.region,
+        'Logs to', clb.access_log_s3_bucket_name
       ) as properties
     from
       aws_s3_bucket buckets,
-      alb
+      clb
     where 
-      buckets.name = alb.access_log_s3_bucket_name
+      buckets.name = clb.access_log_s3_bucket_name
 
     -- S3 bucket I log to - edges
     union all 
     select
-      alb.arn as from_id,
+      clb.arn as from_id,
       buckets.arn as to_id,
       null as id,
       'Logs to' as title,
       'aws_s3_bucket' as category,
       jsonb_build_object(
-        'Name', alb.name,
-        'ARN', alb.arn,
-        'Account ID', alb.account_id,
-        'Region', alb.region,
-        'Logs to', alb.access_log_s3_bucket_name
+        'Name', clb.name,
+        'ARN', clb.arn,
+        'Account ID', clb.account_id,
+        'Region', clb.region,
+        'Logs to', clb.access_log_s3_bucket_name
       ) as properties
     from
       aws_s3_bucket buckets,
-      alb
+      clb
     where 
-      buckets.name = alb.access_log_s3_bucket_name
+      buckets.name = clb.access_log_s3_bucket_name
     
     -- vpc - nodes
     union all
@@ -208,15 +196,15 @@ query "aws_clb_graph_to_instance"{
       ) as properties
     from 
       aws_vpc vpc,
-      alb
+      clb
     where
-      alb.vpc_id = vpc.vpc_id
+      clb.vpc_id = vpc.vpc_id
     
     -- vpc - edges
     union all
     select
-      vpc.vpc_id as from_id,
-      alb.arn as to_id,
+      clb.arn as from_id,
+      vpc.vpc_id as to_id,
       null as id,
       'uses' as title,
       'aws_vpc' as category,
@@ -228,50 +216,9 @@ query "aws_clb_graph_to_instance"{
       ) as properties
     from 
       aws_vpc vpc,
-      alb
+      clb
     where
-      alb.vpc_id = vpc.vpc_id
-    
-    -- eni on the same VPC - nodes
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      eni.network_interface_id as id,
-      eni.title as title,
-      'ec2_network_interface' as category,
-      jsonb_build_object(
-        'Account ID', eni.account_id,
-        'Region', eni.region,
-        'Type', eni.interface_type,
-        'VPC', eni.vpc_id
-      ) as properties
-    from 
-      aws_ec2_network_interface eni,
-      alb
-    where
-      eni.vpc_id = alb.vpc_id
-    
-    -- eni on the same VPC - edges
-    union all
-    select
-      eni.network_interface_id as from_id,
-      eni.vpc_id as to_id,
-      null as id,
-      'uses' as title,
-      'ec2_network_interface' as category,
-      jsonb_build_object(
-        'Account ID', eni.account_id,
-        'Region', eni.region,
-        'Type', eni.interface_type,
-        'VPC', eni.vpc_id
-      ) as properties
-    from 
-      aws_ec2_network_interface eni,
-      alb
-    where
-      eni.vpc_id = alb.vpc_id
-    
+      clb.vpc_id = vpc.vpc_id
 
     order by category,from_id,to_id
   EOQ
