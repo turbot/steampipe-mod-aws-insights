@@ -78,7 +78,7 @@ EOQ
 
 query "aws_sns_topic_graph_from_topic" {
   sql = <<-EOQ
-    with topic as (select * from aws_sns_topic where topic_arn = 'arn:aws:sns:us-east-1:533793682495:aws-cis-handling')
+    with topic as (select * from aws_sns_topic where topic_arn = $1)
 
     -- topic node
     select
@@ -148,7 +148,7 @@ query "aws_sns_topic_graph_from_topic" {
       ) as properties
     from
       aws_sns_topic_subscription
-    where topic_arn = 'arn:aws:sns:us-east-1:533793682495:aws-cis-handling'
+    where topic_arn = $1
 
     -- Subscription topic Edges
     union all
@@ -173,7 +173,7 @@ query "aws_sns_topic_graph_from_topic" {
 
 query "aws_sns_topic_graph_to_topic" {
   sql = <<-EOQ
-    with topic as (select * from aws_sns_topic where topic_arn = 'arn:aws:sns:us-east-1:533793682495:aws-cis-handling')
+    with topic as (select * from aws_sns_topic where topic_arn = $1)
 
     -- topic node
     select
@@ -212,13 +212,13 @@ query "aws_sns_topic_graph_to_topic" {
         )
         as t
     where
-      t ->> 'TopicArn'  = 'arn:aws:sns:us-east-1:533793682495:aws-cis-handling'
+      t ->> 'TopicArn'  = $1
 
     -- Buckets that use me - edges
     union all
     select
       arn as from_id,
-      'arn:aws:sns:us-east-1:533793682495:aws-cis-handling' as to_id,
+      $1 as to_id,
       null as id,
       'Used By' as title,
       'used_by' as category,
@@ -236,7 +236,7 @@ query "aws_sns_topic_graph_to_topic" {
         )
         as t
     where
-      t ->> 'TopicArn'  = 'arn:aws:sns:us-east-1:533793682495:aws-cis-handling'
+      t ->> 'TopicArn'  = $1
 
   EOQ
   param "arn" {}

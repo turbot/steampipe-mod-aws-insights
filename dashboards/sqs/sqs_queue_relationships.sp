@@ -98,7 +98,7 @@ query "aws_sqs_queue" {
 
 query "aws_sqs_queue_graph_from_queue" {
   sql = <<-EOQ
-    with queue as (select * from aws_sqs_queue where queue_arn = 'arn:aws:sqs:us-east-1:533793682495:test56')
+    with queue as (select * from aws_sqs_queue where queue_arn = $1)
 
     -- queue node
     select
@@ -130,7 +130,7 @@ query "aws_sqs_queue_graph_from_queue" {
       ) as properties
     from
       aws_sns_topic_subscription
-    where endpoint = 'arn:aws:sqs:us-east-1:533793682495:test56'
+    where endpoint = $1
 
     -- Subscription queue Edges
     union all

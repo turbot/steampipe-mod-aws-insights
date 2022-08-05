@@ -96,7 +96,7 @@ query "aws_lambda_function" {
 
 query "aws_lambda_function_graph_from_function" {
   sql = <<-EOQ
-    with lambda as (select * from aws_lambda_function where arn = 'arn:aws:lambda:us-east-1:533793682495:function:tets')
+    with lambda as (select * from aws_lambda_function where arn = $1)
 
     -- lambda node
     select
@@ -258,7 +258,7 @@ query "aws_lambda_function_graph_from_function" {
 
 query "aws_lambda_function_graph_to_function" {
   sql = <<-EOQ
-    with lambda as (select * from aws_lambda_function where arn = 'arn:aws:lambda:us-east-1:533793682495:function:tets')
+    with lambda as (select * from aws_lambda_function where arn = $1)
 
     -- lambda node
     select
@@ -297,13 +297,13 @@ query "aws_lambda_function_graph_to_function" {
         )
         as t
     where
-      t ->> 'LambdaFunctionArn'  = 'arn:aws:lambda:us-east-1:533793682495:function:tets'
+      t ->> 'LambdaFunctionArn'  = $1
 
     -- Buckets that use me - edges
     union all
     select
       arn as from_id,
-      'arn:aws:lambda:us-east-1:533793682495:function:tets' as to_id,
+      $1 as to_id,
       null as id,
       'Used By' as title,
       'used_by' as category,
@@ -321,7 +321,7 @@ query "aws_lambda_function_graph_to_function" {
         )
         as t
     where
-      t ->> 'LambdaFunctionArn'  = 'arn:aws:lambda:us-east-1:533793682495:function:tets'
+      t ->> 'LambdaFunctionArn'  = $1
 
   EOQ
   param "arn" {}
