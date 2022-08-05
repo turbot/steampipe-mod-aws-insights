@@ -122,6 +122,7 @@ query "aws_lambda_function_graph_from_function" {
       v.title as title,
       'aws_vpc' as category,
       jsonb_build_object(
+        'ARN', v.arn,
         'ID', v.vpc_id,
         'Account ID', v.account_id,
         'Region', v.region
@@ -156,6 +157,7 @@ query "aws_lambda_function_graph_from_function" {
       sg.group_id as title,
       'aws_vpc_security_group' as category,
       jsonb_build_object(
+        'ARN', sg.arn,
         'ID', sg.group_id,
         'Account ID', sg.account_id,
         'Region', sg.region
