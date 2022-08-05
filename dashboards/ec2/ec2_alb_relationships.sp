@@ -38,7 +38,6 @@ dashboard "aws_alb_relationships" {
 
 }
 
-
 query "aws_alb_graph_to_instance"{
   sql = <<-EOQ
     with alb as (select arn,name,account_id,region,title,security_groups,vpc_id,load_balancer_attributes from aws_ec2_application_load_balancer where arn = $1)
