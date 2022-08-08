@@ -188,7 +188,8 @@ query "aws_s3_bucket_graph_use_me"{
         'ARN', alb.arn,
         'Account ID', alb.account_id,
         'Region', alb.region,
-        'Log to', attributes->>'Value'
+        'Log to', attributes->>'Value',
+        'Log Prefix', (select a->>'Value' from jsonb_array_elements(alb.load_balancer_attributes) as a where a->>'Key' = 'access_logs.s3.prefix' )
       ) as properties
     from
       aws_ec2_application_load_balancer alb,
@@ -234,7 +235,8 @@ query "aws_s3_bucket_graph_use_me"{
         'ARN', nlb.arn,
         'Account ID', nlb.account_id,
         'Region', nlb.region,
-        'Logs to', attributes->>'Value'
+        'Logs to', attributes->>'Value',
+        'Log Prefix', (select a->>'Value' from jsonb_array_elements(nlb.load_balancer_attributes) as a where a->>'Key' = 'access_logs.s3.prefix' )
       ) as properties
     from
       aws_ec2_network_load_balancer nlb,
