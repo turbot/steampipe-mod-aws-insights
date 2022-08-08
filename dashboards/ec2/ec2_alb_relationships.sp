@@ -33,6 +33,10 @@ dashboard "aws_alb_relationships" {
       href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
       icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/alb.svg"))
     }
+
+    category "aws_vpc_security_group" {
+      href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.properties.'Group ID' | @uri}}"
+    }
     
   }
 
@@ -40,7 +44,7 @@ dashboard "aws_alb_relationships" {
 
 query "aws_alb_graph_to_instance"{
   sql = <<-EOQ
-    with alb as (select arn,name,account_id,region,title,security_groups,vpc_id,load_balancer_attributes from aws_ec2_application_load_balancer where arn = $1)
+    with alb as (select dns_name,arn,name,account_id,region,title,security_groups,vpc_id,load_balancer_attributes from aws_ec2_application_load_balancer where arn = $1)
     select
       null as from_id,
       null as to_id,
@@ -51,7 +55,7 @@ query "aws_alb_graph_to_instance"{
         'ARN', arn,
         'Account ID', account_id,
         'Region', region,
-        'Security Groups', alb.security_groups
+        'DNS Name', alb.dns_name
       ) as properties
     from
       alb
@@ -176,7 +180,8 @@ query "aws_alb_graph_to_instance"{
         'ARN', buckets.arn,
         'Account ID', alb.account_id,
         'Region', alb.region,
-        'Logs to', attributes->>'Value'
+        'Logs to', attributes->>'Value',
+        'Log Prefix', (select a->>'Value' from jsonb_array_elements(alb.load_balancer_attributes) as a where a->>'Key' = 'access_logs.s3.prefix' )
       ) as properties
     from
       aws_s3_bucket buckets,
