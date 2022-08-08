@@ -34,7 +34,11 @@ dashboard "aws_s3_bucket_relationships" {
 
     category "aws_s3_bucket" {
       href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/alb.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/s3_bucket.svg"))
+    }
+
+    category "aws_s3_access_point" {
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/s3_access_point.svg"))
     }
   }
   
@@ -48,7 +52,7 @@ dashboard "aws_s3_bucket_relationships" {
 
     category "aws_s3_bucket" {
       href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/alb.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/s3_bucket.svg"))
     }
 
   }
@@ -62,7 +66,7 @@ query "aws_s3_bucket_graph_use_me"{
       null as from_id,
       null as to_id,
       arn as id,
-      name as title,
+      title as title,
       'aws_s3_bucket' as category,
       jsonb_build_object(
         'ARN', arn,
@@ -79,13 +83,12 @@ query "aws_s3_bucket_graph_use_me"{
       null as from_id,
       null as to_id,
       trail.arn as id,
-      trail.name as title,
+      trail.title as title,
       'aws_cloudtrail_trail' as category,
       jsonb_build_object(
         'ARN', trail.arn,
         'Account ID', trail.account_id,
-        'Region', trail.region,
-        'Log Prefix', trail.s3_key_prefix
+        'Region', trail.region
       ) as properties
     from
       aws_cloudtrail_trail as trail,
@@ -104,7 +107,8 @@ query "aws_s3_bucket_graph_use_me"{
       jsonb_build_object(
         'ARN', trail.arn,
         'Account ID', trail.account_id,
-        'Region', trail.region
+        'Region', trail.region,
+        'Log Prefix', trail.s3_key_prefix
       ) as properties
     from
       aws_cloudtrail_trail as trail,
@@ -118,7 +122,7 @@ query "aws_s3_bucket_graph_use_me"{
       null as from_id,
       null as to_id,
       aws_s3_bucket.arn as id,
-      aws_s3_bucket.name as title,
+      aws_s3_bucket.title as title,
       'aws_s3_bucket' as category,
       jsonb_build_object(
         'Name', aws_s3_bucket.name,
@@ -132,7 +136,7 @@ query "aws_s3_bucket_graph_use_me"{
     where 
       aws_s3_bucket.logging ->> 'TargetBucket' = buckets.name
 
-    -- Buckets that log to me - nodes
+    -- Buckets that log to me - edges
     union all 
     select
       aws_s3_bucket.arn as to_id,
@@ -164,8 +168,7 @@ query "aws_s3_bucket_graph_use_me"{
         'Name', alb.name,
         'ARN', alb.arn,
         'Account ID', alb.account_id,
-        'Region', alb.region,
-        'Log to', attributes->>'Value'
+        'Region', alb.region
       ) as properties
     from
       aws_ec2_application_load_balancer alb,
@@ -300,8 +303,7 @@ query "aws_s3_bucket_graph_use_me"{
         'Name', ap.name,
         'ARN', ap.access_point_arn,
         'Account ID', ap.account_id,
-        'Region', ap.region,
-        'Bucket', ap.bucket_name
+        'Region', ap.region
       ) as properties
     from
       aws_s3_access_point ap,
@@ -322,8 +324,7 @@ query "aws_s3_bucket_graph_use_me"{
         'Name', ap.name,
         'ARN', ap.access_point_arn,
         'Account ID', ap.account_id,
-        'Region', ap.region,
-        'Bucket', ap.bucket_name
+        'Region', ap.region
       ) as properties
     from
       aws_s3_access_point ap,
@@ -345,7 +346,7 @@ query "aws_s3_bucket_graph_i_use"{
       null as from_id,
       null as to_id,
       arn as id,
-      name as title,
+      title as title,
       'aws_s3_bucket' as category,
       jsonb_build_object(
         'ARN', arn,
@@ -362,7 +363,7 @@ query "aws_s3_bucket_graph_i_use"{
       null as from_id,
       null as to_id,
       aws_s3_bucket.arn as id,
-      aws_s3_bucket.name as title,
+      aws_s3_bucket.title as title,
       'aws_s3_bucket' as category,
       jsonb_build_object(
         'Name', aws_s3_bucket.name,
