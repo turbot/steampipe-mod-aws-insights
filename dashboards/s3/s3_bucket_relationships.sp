@@ -1,6 +1,7 @@
 dashboard "aws_s3_bucket_relationships" {
   title         = "AWS S3 Bucket Relationships"
-  #documentation = file("./dashboards/ec2/docs/s3_bucket_relationships.md")
+  documentation = file("./dashboards/s3/docs/s3_bucket_relationships.md")
+
   tags = merge(local.s3_common_tags, {
     type = "Relationships"
   })
@@ -25,6 +26,10 @@ dashboard "aws_s3_bucket_relationships" {
     
     category "aws_ec2_network_load_balancer" {
       icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/nlb.svg"))
+    }
+    
+    category "aws_ec2_classic_load_balancer" {
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/clb.svg"))
     }
 
     category "aws_s3_bucket" {
@@ -229,7 +234,7 @@ query "aws_s3_bucket_graph_use_me"{
         'ARN', nlb.arn,
         'Account ID', nlb.account_id,
         'Region', nlb.region,
-        'Log to', attributes->>'Value'
+        'Logs to', attributes->>'Value'
       ) as properties
     from
       aws_ec2_network_load_balancer nlb,
