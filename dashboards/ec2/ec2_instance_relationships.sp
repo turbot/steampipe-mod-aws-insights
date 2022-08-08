@@ -22,12 +22,12 @@ dashboard "aws_ec2_instance_relationships" {
     
     category "aws_ec2_instance" {
       href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ebs_volume.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2.svg"))
     }
 
     category "aws_ebs_volume" {
       href = "${dashboard.aws_ebs_volume_detail.url_path}?input.volume_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ebs_volume.svg"))
     }
     
     category "aws_ec2_network_interface" {
