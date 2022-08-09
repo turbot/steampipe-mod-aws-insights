@@ -92,7 +92,8 @@ query "aws_s3_bucket_graph_use_me"{
       jsonb_build_object(
         'ARN', trail.arn,
         'Account ID', trail.account_id,
-        'Region', trail.region
+        'Region', trail.region,
+        'Latest Delivery Time', trail.latest_delivery_time
       ) as properties
     from
       aws_cloudtrail_trail as trail,
@@ -112,7 +113,8 @@ query "aws_s3_bucket_graph_use_me"{
         'ARN', trail.arn,
         'Account ID', trail.account_id,
         'Region', trail.region,
-        'Log Prefix', trail.s3_key_prefix
+        'Log Prefix', trail.s3_key_prefix,
+        'Latest Delivery Time', trail.latest_delivery_time
       ) as properties
     from
       aws_cloudtrail_trail as trail,
