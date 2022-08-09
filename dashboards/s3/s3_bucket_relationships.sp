@@ -325,7 +325,7 @@ query "aws_s3_bucket_graph_use_me"{
       buckets.arn as to_id,
       null as id,
       'Accesses' as title,
-      'accesses' as category,
+      'uses' as category,
       jsonb_build_object(
         'Name', ap.name,
         'ARN', ap.access_point_arn,
