@@ -13,23 +13,6 @@ dashboard "aws_kms_key_relationships" {
   
   graph {
     type  = "graph"
-    title = "Things I use..."
-    query = query.aws_kms_key_graph_from_key
-    args = {
-      arn = self.input.key_arn.value
-    }
-    category "aws_kms_key" {
-      color = "orange"
-      href  = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.ARN | @uri}}"
-    }
-  
-    category "uses" {
-      color = "green"
-    }
-  }
-  
-  graph {
-    type  = "graph"
     title = "Things that use me..."
     query = query.aws_kms_key_graph_to_key
     args = {
@@ -38,38 +21,49 @@ dashboard "aws_kms_key_relationships" {
     category "aws_kms_key" {
       color = "orange"
       href  = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.ARN | @uri}}"
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_kms_key.svg"))
     }
 
-    category "aws_ec2_instance" {
+    category "aws_cloudtrail_trail" {
       color = "blue"
-      href  = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_id={{.properties.'Instance ID' | @uri}}"
+      href  = "${dashboard.aws_cloudtrail_trail_detail.url_path}?input.trail_arn={{.properties.ARN | @uri}}"
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_cloudtrail_trail.svg"))
+    }
+
+    category "aws_ebs_volume" {
+      color = "blue"
+      href  = "${dashboard.aws_ebs_volume_detail.url_path}?input.volume_arn={{.properties.ARN | @uri}}"
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_ebs_volume.svg"))
+    }
+
+    category "aws_rds_db_cluster_snapshot" {
+      color = "blue"
+      href  = "${dashboard.aws_rds_db_cluster_snapshot_detail.url_path}?input.snapshot_arn={{.properties.ARN | @uri}}"
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_rds_db_cluster.svg"))
+    }
+
+    category "aws_rds_db_instance" {
+      color = "blue"
+      href  = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn={{.properties.ARN | @uri}}"
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_rds_db_instance.svg"))
+    }
+
+    category "aws_rds_db_snapshot" {
+      color = "blue"
+      href  = "${dashboard.aws_rds_db_snapshot_detail.url_path}?input.db_snapshot_arn={{.properties.ARN | @uri}}"
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_rds_db_instance.svg"))
+    }
+
+    category "aws_redshift_cluster" {
+      color = "blue"
+      href  = "${dashboard.aws_redshift_cluster_detail.url_path}?input.cluster_arn={{.properties.ARN | @uri}}"
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_redshift_cluster.svg"))
     }
 
     category "uses" {
       color = "green"
     }
   }
-}
-
-query "aws_kms_key_graph_from_key" {
-  sql = <<-EOQ
-    select
-      null as from_id,
-      null as to_id,
-      id as id,
-      id as title,
-      'aws_kms_key' as category,
-      jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_kms_key
-    where
-      arn = $1
-  EOQ
-  
-  param "arn" {}
 }
 
 query "aws_kms_key_graph_to_key" {
@@ -94,19 +88,36 @@ query "aws_kms_key_graph_to_key" {
     select
       null as from_id,
       null as to_id,
-      arn as id,
-      name as title,
+      t.arn as id,
+      t.name as title,
       'aws_cloudtrail_trail' as category,
       jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
+        'ARN', t.arn,
+        'Account ID', t.account_id,
         'Home Region', home_region
+      ) as properties
+    from
+      aws_cloudtrail_trail as t
+    where
+      t.kms_key_id = $1
+
+    -- Cloud Trail  - Edges
+    union all
+    select
+      t.arn as from_id,
+      k.id as to_id,
+      null as id,
+      'uses' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'Account ID', t.account_id
       ) as properties
     from
       aws_cloudtrail_trail as t,
       aws_kms_key as k
     where
-      t.kms_key_id = k.id and k.arn = $1  
+      t.kms_key_id = k.arn and k.arn = $1 
+
 
     -- EBS Volume - nodes
     union all
@@ -117,15 +128,32 @@ query "aws_kms_key_graph_to_key" {
       volume_id as title,
       'aws_ebs_volume' as category,
       jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
+        'ARN', v.arn,
+        'Account ID', v.account_id,
+        'Region', v.region
+      ) as properties
+    from
+      aws_ebs_volume as v
+    where
+      v.kms_key_id = $1 
+
+    -- EBS Volume  - Edges
+    union all
+    select
+      volume_id as from_id,
+      k.id as to_id,
+      null as id,
+      'uses' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'Account ID', v.account_id
       ) as properties
     from
       aws_ebs_volume as v,
       aws_kms_key as k
     where
-      v.kms_key_id = k.id and k.arn = $1 
+      v.kms_key_id = k.arn and k.arn = $1 
+
 
     -- RDS DB Cluster Snapshot - nodes
     union all
@@ -136,15 +164,31 @@ query "aws_kms_key_graph_to_key" {
       db_cluster_snapshot_identifier as title,
       'aws_rds_db_cluster_snapshot' as category,
       jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
+        'ARN', s.arn,
+        'Account ID', s.account_id,
+        'Region', s.region
+      ) as properties
+    from
+      aws_rds_db_cluster_snapshot as s
+    where
+      s.kms_key_id = $1   
+    
+    -- RDS DB Cluster Snapshot  - Edges
+    union all
+    select
+      db_cluster_snapshot_identifier as from_id,
+      k.id as to_id,
+      null as id,
+      'uses' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'Account ID', s.account_id
       ) as properties
     from
       aws_rds_db_cluster_snapshot as s,
       aws_kms_key as k
     where
-      s.kms_key_id = k.id and k.arn = $1   
+      s.kms_key_id = k.arn and k.arn = $1    
 
     -- RDS DB Cluster - nodes
     union all
@@ -155,15 +199,31 @@ query "aws_kms_key_graph_to_key" {
       db_cluster_identifier as title,
       'aws_rds_db_cluster' as category,
       jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
+        'ARN', c.arn,
+        'Account ID', c.account_id,
+        'Region', c.region
+      ) as properties
+    from
+      aws_rds_db_cluster as c
+    where
+      c.kms_key_id = $1  
+    
+    -- RDS DB Cluster - Edges
+    union all
+    select
+      db_cluster_identifier as from_id,
+      k.id as to_id,
+      null as id,
+      'uses' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'Account ID', c.account_id
       ) as properties
     from
       aws_rds_db_cluster as c,
       aws_kms_key as k
     where
-      c.kms_key_id = k.id and k.arn = $1  
+      c.kms_key_id = k.arn and k.arn = $1   
 
     -- RDS DB Instance - nodes
     union all
@@ -174,15 +234,31 @@ query "aws_kms_key_graph_to_key" {
       db_instance_identifier as title,
       'aws_rds_db_instance' as category,
       jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
+        'ARN', i.arn,
+        'Account ID', i.account_id,
+        'Region', i.region
+      ) as properties
+    from
+      aws_rds_db_instance as i
+    where
+      i.kms_key_id = $1 
+    
+    -- RDS DB Instance - Edges
+    union all
+    select
+      db_instance_identifier as from_id,
+      k.id as to_id,
+      null as id,
+      'uses' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'Account ID', i.account_id
       ) as properties
     from
       aws_rds_db_instance as i,
       aws_kms_key as k
     where
-      i.kms_key_id = k.id and k.arn = $1 
+      i.kms_key_id = k.arn and k.arn = $1  
 
     -- RDS DB Instance Snapshot - nodes
     union all
@@ -193,15 +269,31 @@ query "aws_kms_key_graph_to_key" {
       db_snapshot_identifier as title,
       'aws_rds_db_snapshot' as category,
       jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
+        'ARN', s.arn,
+        'Account ID', s.account_id,
+        'Region', s.region
+      ) as properties
+    from
+      aws_rds_db_snapshot as s
+    where
+      s.kms_key_id = $1  
+    
+    -- RDS DB Instance Snapshot - Edges
+    union all
+    select
+      db_snapshot_identifier as from_id,
+      k.id as to_id,
+      null as id,
+      'uses' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'Account ID', s.account_id
       ) as properties
     from
       aws_rds_db_snapshot as s,
       aws_kms_key as k
     where
-      s.kms_key_id = k.id and k.arn = $1  
+      s.kms_key_id = k.arn and k.arn = $1   
 
     -- Redshift Cluster - nodes
     union all
@@ -212,94 +304,31 @@ query "aws_kms_key_graph_to_key" {
       cluster_identifier as title,
       'aws_redshift_cluster' as category,
       jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
+        'ARN', c.arn,
+        'Account ID', c.account_id,
+        'Region', c.region
+      ) as properties
+    from
+      aws_redshift_cluster as c
+    where
+      c.kms_key_id = $1  
+    
+    -- Redshift Cluster - Edges
+    union all
+    select
+      cluster_identifier as from_id,
+      k.id as to_id,
+      null as id,
+      'uses' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'Account ID', c.account_id
       ) as properties
     from
       aws_redshift_cluster as c,
       aws_kms_key as k
     where
-      c.kms_key_id = k.id and k.arn = $1  
-
-     -- Redshift Cluster - nodes
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      cluster_identifier as id,
-      cluster_identifier as title,
-      'aws_redshift_cluster' as category,
-      jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_redshift_cluster as c,
-      aws_kms_key as k
-    where
-      c.kms_key_id = k.id and k.arn = $1    
-
-
-     -- Instance Profile  - Edges
-    union all
-    select
-      key_id as from_id,
-      kms_instance_profile_arn as to_id,
-      null as id,
-      'uses' as title,
-      'uses' as category,
-      jsonb_build_object(
-        'Instance Profile ARN', kms_instance_profile_arn
-      ) as properties
-    from
-      aws_kms_key,
-      jsonb_array_elements_text(instance_profile_arns) as kms_instance_profile_arn
-    where 
-      arn = $1 
-    
-    -- Instance for Instance Profile - nodes
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      i.instance_id as id,
-      i.instance_id as title,
-      'aws_ec2_instance' as category,
-      jsonb_build_object(
-        'Name', i.tags ->> 'Name',
-        'Instance ID', instance_id,
-        'ARN', i.arn,
-        'Account ID', i.account_id,
-        'Region', i.region
-      ) as properties
-    from
-      aws_ec2_instance as i,
-      aws_kms_key as r,
-      jsonb_array_elements_text(instance_profile_arns) as instance_profile
-    where
-      r.arn = $1 and instance_profile = i.kms_instance_profile_arn
-    
-    -- Instance for Instance Profile  - Edges
-    union all
-    select
-      i.kms_instance_profile_arn as from_id,
-      i.instance_id as to_id,
-      null as id,
-      'uses' as title,
-      'uses' as category,
-      jsonb_build_object(
-        'Instance ARN', i.arn,
-        'Instance Profile ARN', i.kms_instance_profile_arn,
-        'Account ID', i.account_id
-      ) as properties
-    from
-      aws_ec2_instance as i,
-      aws_kms_key as r,
-      jsonb_array_elements_text(instance_profile_arns) as instance_profile
-    where
-      r.arn = $1 and instance_profile = i.kms_instance_profile_arn  
+      c.kms_key_id = k.arn and k.arn = $1 
     order by 
       category,from_id,to_id
   EOQ
