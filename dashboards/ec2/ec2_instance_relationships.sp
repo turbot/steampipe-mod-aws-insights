@@ -15,27 +15,36 @@ dashboard "aws_ec2_instance_relationships" {
   graph {
     type  = "graph"
     title = "Things I use..."
-    query = query.aws_ec2_instance_graph_from_instance
+    query = query.aws_ec2_instance_graph_i_use
     args = {
       arn = self.input.instance_arn.value
     }
     
     category "aws_ec2_instance" {
       href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2_instance_light.svg"))
     }
 
     category "aws_ebs_volume" {
       href = "${dashboard.aws_ebs_volume_detail.url_path}?input.volume_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ebs_volume.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ebs_volume_light.svg"))
     }
     
     category "aws_ec2_network_interface" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/eni.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2_network_interface_light.svg"))
     }
     
     category "aws_ec2_ami" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ami.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2_ami_light.svg"))
+    }
+
+    category "aws_vpc_security_group" {
+      href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.properties.'ID' | @uri}}"
+    }
+    
+    category "aws_vpc" {
+      href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'ID' | @uri}}"
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
     }
     
   }
@@ -50,28 +59,28 @@ dashboard "aws_ec2_instance_relationships" {
     
     category "aws_ec2_instance" {
       href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ebs_volume.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2_instance_light.svg"))
     }
 
     category "aws_ebs_volume" {
       href = "${dashboard.aws_ebs_volume_detail.url_path}?input.volume_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ebs_volume_light.svg"))
     }
 
     category "aws_ec2_network_interface" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/eni.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2_network_interface_light.svg"))
     }
     
     category "aws_ec2_ami" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ami.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2_ami_light.svg"))
     }
-    
+ 
   }
 }
 
-query "aws_ec2_instance_graph_from_instance" {
+query "aws_ec2_instance_graph_i_use" {
   sql = <<-EOQ
-    with instances as (select arn,instance_id,tags,account_id,region,block_device_mappings,security_groups,subnet_id,iam_instance_profile_arn,iam_instance_profile_id,image_id,key_name from aws_ec2_instance where arn = $1)
+    with instances as (select arn,instance_id,tags,account_id,region,block_device_mappings,security_groups,vpc_id,subnet_id,iam_instance_profile_arn,iam_instance_profile_id,image_id,key_name from aws_ec2_instance where arn = $1)
     select
       null as from_id,
       null as to_id,
@@ -207,8 +216,51 @@ query "aws_ec2_instance_graph_from_instance" {
     from
       instances,
       jsonb_array_elements(security_groups) as sg
+      
+    -- VPC - nodes
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      vpc.vpc_id as id,
+      vpc.tags ->> 'Name' as title,
+      'aws_vpc' as category,
+      jsonb_build_object(
+        'ID', vpc.vpc_id,
+        'Name', vpc.tags ->> 'Name',
+        'CIDR Block', vpc.cidr_block,
+        'Account ID', vpc.account_id,
+        'Owner ID', vpc.owner_id,
+        'Region', vpc.region
+      ) as properties
+    from
+      instances,
+      aws_vpc as vpc
+    where 
+      instances.vpc_id = vpc.vpc_id
+      
+    -- VPC - edges
+    union all
+    select
+      instances.instance_id as from_id,
+      vpc.vpc_id as to_id,
+      null as id,
+      'uses' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'ID', vpc.vpc_id,
+        'Name', vpc.tags ->> 'Name',
+        'CIDR Block', vpc.cidr_block,
+        'Account ID', vpc.account_id,
+        'Owner ID', vpc.owner_id,
+        'Region', vpc.region
+      ) as properties
+    from
+      instances,
+      aws_vpc as vpc
+    where 
+      instances.vpc_id = vpc.vpc_id
 
-   
     -- Subnet - nodes
     union all
     select
@@ -250,7 +302,6 @@ query "aws_ec2_instance_graph_from_instance" {
     where 
       i.subnet_id = subnet.subnet_id
 
-
     -- Instance Profile - nodes
     union all
     select
@@ -280,7 +331,6 @@ query "aws_ec2_instance_graph_from_instance" {
       ) as properties
     from
       instances
-
 
     -- Role for Instance Profile - nodes
     union all
@@ -351,7 +401,6 @@ query "aws_ec2_instance_graph_from_instance" {
       ) as properties
     from
       instances as i
-      
 
     -- Key Pairs - nodes
     union all
@@ -388,7 +437,7 @@ query "aws_ec2_instance_graph_from_instance" {
       ) as properties
     from
       instances as i
-      
+
     order by category,from_id,to_id
       
   EOQ
@@ -479,6 +528,49 @@ query "aws_ec2_instance_graph_to_instance" {
       instances
     where 
       group_instance->>'InstanceId' = instances.instance_id
+
+    -- aws_ec2_target_group - nodes
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      target.target_group_arn as id,
+      target.target_group_name as title,
+      'aws_ec2_target_group' as category,
+      jsonb_build_object(
+        'Name', target.target_group_name,
+        'ARN', target.target_group_arn,
+        'Region', target.region,
+        'Account ID', target.account_id
+      ) as properties
+    from
+      instances as i,
+      aws_ec2_target_group as target,
+      jsonb_array_elements(target.target_health_descriptions) as health_descriptions
+    where
+      health_descriptions -> 'Target' ->> 'Id' = i.instance_id
+
+    -- aws_ec2_target_group - edges
+    union all
+    select
+      target.target_group_arn as from_id,
+      i.instance_id as to_id,
+      null as id,
+      null as title,
+      'uses' as category,
+      jsonb_build_object(
+        'Name', target.target_group_name,
+        'ARN', target.target_group_arn,
+        'Region', target.region,
+        'Account ID', target.account_id,
+        'Health Check Enabled', target.health_check_enabled
+      ) as properties
+    from
+      instances as i,
+      aws_ec2_target_group as target,
+      jsonb_array_elements(target.target_health_descriptions) as health_descriptions
+    where
+      health_descriptions -> 'Target' ->> 'Id' = i.instance_id
       
     order by category,from_id,to_id
   EOQ
