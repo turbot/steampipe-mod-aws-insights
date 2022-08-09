@@ -1,6 +1,6 @@
 dashboard "aws_iam_group_relationships" {
-  title = "AWS IAM Group Relationships"
-  #documentation = file("./dashboards/iam/docs/iam_group_relationships.md")
+  title         = "AWS IAM Group Relationships"
+  documentation = file("./dashboards/iam/docs/iam_group_relationships.md")
   tags = merge(local.iam_common_tags, {
     type = "Relationships"
   })
@@ -15,7 +15,7 @@ dashboard "aws_iam_group_relationships" {
     type  = "graph"
     title = "Things I use..."
     query = query.aws_iam_group_graph_from_group
-    args = {
+    args  = {
       arn = self.input.group_arn.value
     }
     category "aws_iam_group" {
@@ -35,7 +35,7 @@ dashboard "aws_iam_group_relationships" {
     type  = "graph"
     title = "Things that use me..."
     query = query.aws_iam_group_graph_to_group
-    args = {
+    args  = {
       arn = self.input.group_arn.value
     }
     category "aws_iam_group" {
@@ -81,8 +81,8 @@ query "aws_iam_group_graph_from_group" {
       'aws_iam_policy' as category,
       jsonb_build_object(
         'ARN', arn,
-        'AWS Managed', is_aws_managed,
-        'Attached', is_attached,
+        'AWS Managed', is_aws_managed::text,
+        'Attached', is_attached::text,
         'Create Date', create_date,
         'Account ID', account_id
       ) as properties
@@ -148,7 +148,7 @@ query "aws_iam_group_graph_to_group" {
         'ARN', u.arn,
         'path', Path,
         'Create Date', create_date,
-        'MFA Enabled', mfa_enabled,
+        'MFA Enabled', mfa_enabled::text,
         'Account ID', u.account_id
       ) as properties
     from

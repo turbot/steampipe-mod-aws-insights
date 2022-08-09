@@ -1,6 +1,6 @@
 dashboard "aws_iam_policy_relationships" {
-  title = "AWS IAM Policy Relationships"
-  #documentation = file("./dashboards/iam/docs/iam_policy_relationships.md")
+  title         = "AWS IAM Policy Relationships"
+  documentation = file("./dashboards/iam/docs/iam_policy_relationships.md")
   tags = merge(local.iam_common_tags, {
     type = "Relationships"
   })
@@ -15,7 +15,7 @@ dashboard "aws_iam_policy_relationships" {
     type  = "graph"
     title = "Things that use me..."
     query = query.aws_iam_policy_graph_to_policy
-    args = {
+    args  = {
       arn = self.input.policy_arn.value
     }
     category "aws_iam_policy" {
@@ -25,7 +25,7 @@ dashboard "aws_iam_policy_relationships" {
     category "aws_iam_role" {
       color = "yellow"
       href  = "${dashboard.aws_iam_role_detail.url_path}?input.role_arn={{.properties.ARN | @uri}}"
-      icon  = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_iam_role.svg"))
+      icon  = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/iam_role_dark.svg"))
     }
 
     category "aws_iam_user" {
@@ -69,8 +69,8 @@ query "aws_iam_policy_graph_to_policy" {
       'aws_iam_policy' as category,
       jsonb_build_object(
         'ARN', arn,
-        'AWS Managed', is_aws_managed,
-        'Attached', is_attached,
+        'AWS Managed', is_aws_managed::text,
+        'Attached', is_attached::text,
         'Create Date', create_date,
         'Account ID', account_id
       ) as properties
@@ -130,7 +130,7 @@ query "aws_iam_policy_graph_to_policy" {
         'ARN', u.arn,
         'path', Path,
         'Create Date', create_date,
-        'MFA Enabled', mfa_enabled,
+        'MFA Enabled', mfa_enabled::text,
         'Account ID', u.account_id
       ) as properties
     from

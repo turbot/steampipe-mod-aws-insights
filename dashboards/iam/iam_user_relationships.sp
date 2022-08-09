@@ -1,6 +1,6 @@
 dashboard "aws_iam_user_relationships" {
-  title = "AWS IAM User Relationships"
-  #documentation = file("./dashboards/iam/docs/iam_user_relationships.md")
+  title         = "AWS IAM User Relationships"
+  documentation = file("./dashboards/iam/docs/iam_user_relationships.md")
   tags = merge(local.iam_common_tags, {
     type = "Relationships"
   })
@@ -15,7 +15,7 @@ dashboard "aws_iam_user_relationships" {
     type  = "graph"
     title = "Things I use..."
     query = query.aws_iam_user_graph_from_user
-    args = {
+    args  = {
       arn = self.input.user_arn.value
     }
     category "aws_iam_user" {
@@ -49,7 +49,7 @@ query "aws_iam_user_graph_from_user" {
         'ARN', arn,
         'Path', path,
         'Create Date', create_date,
-        'MFA Enabled', mfa_enabled,
+        'MFA Enabled', mfa_enabled::text,
         'Account ID', account_id
       ) as properties
     from
@@ -105,8 +105,8 @@ query "aws_iam_user_graph_from_user" {
       'aws_iam_policy' as category,
       jsonb_build_object(
         'ARN', arn,
-        'AWS Managed', is_aws_managed,
-        'Attached', is_attached,
+        'AWS Managed', is_aws_managed::text,
+        'Attached', is_attached::text,
         'Create Date', create_date,
         'Account ID', account_id
       ) as properties
