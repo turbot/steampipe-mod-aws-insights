@@ -20,25 +20,29 @@ dashboard "aws_s3_bucket_relationships" {
       bucket = self.input.s3_bucket.value
     }
     
+    category "aws_cloudtrail_trail" {
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/cloudtrail_trail_light.svg"))
+    }
+    
     category "aws_ec2_application_load_balancer" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/alb.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2_application_load_balancer_light.svg"))
     }
     
     category "aws_ec2_network_load_balancer" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/nlb.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2_application_load_balancer_light.svg"))
     }
     
     category "aws_ec2_classic_load_balancer" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/clb.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2_classic_load_balancer_light.svg"))
     }
 
     category "aws_s3_bucket" {
       href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/s3_bucket.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/s3_bucket_light.svg"))
     }
 
     category "aws_s3_access_point" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/s3_access_point.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/s3_access_point_light.svg"))
     }
   }
   
@@ -52,7 +56,7 @@ dashboard "aws_s3_bucket_relationships" {
 
     category "aws_s3_bucket" {
       href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/s3_bucket.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/s3_bucket_light.svg"))
     }
 
   }
@@ -69,14 +73,14 @@ query "aws_s3_bucket_graph_use_me"{
       title as title,
       'aws_s3_bucket' as category,
       jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region,
-        'Logging', logging
+        'Name', buckets.name,
+        'ARN', buckets.arn,
+        'Account ID', buckets.account_id,
+        'Region', buckets.region
       ) as properties
     from
       buckets
-      
+
     -- Cloudtrail - nodes
     union all
     select
