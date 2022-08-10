@@ -1,10 +1,10 @@
 dashboard "aws_sqs_queue_relationships" {
 
   title         = "AWS SQS Queue Relationships"
-  #documentation = file("./dashboards/sqs/docs/sqs_queue_detail.md")
+  documentation = file("./dashboards/sqs/docs/sqs_queue_relationships.md")
 
   tags = merge(local.sqs_common_tags, {
-    type = "Detail"
+    type = "Relationships"
   })
 
 
