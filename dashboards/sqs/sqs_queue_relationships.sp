@@ -23,7 +23,7 @@ dashboard "aws_sqs_queue_relationships" {
     }
 
       category "aws_sqs_queue" {
-        icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_sqs_queue.svg"))
+        icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/sqs_queue_light.svg"))
         color = "blue"
         href  = "${dashboard.aws_sqs_queue_detail.url_path}?input.queue_arn={{.properties.'ARN' | @uri}}"
       }
@@ -35,7 +35,7 @@ dashboard "aws_sqs_queue_relationships" {
 
       category "aws_kms_key" {
         color = "orange"
-        icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_kms_key.svg"))
+        icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/kms_key_light.svg"))
         href  = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
       }
 
@@ -54,24 +54,24 @@ dashboard "aws_sqs_queue_relationships" {
     }
 
     category "aws_sqs_queue" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_sqs_queue.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/sqs_queue_light.svg"))
       color = "blue"
       href  = "${dashboard.aws_sqs_queue_detail.url_path}?input.queue_arn={{.properties.'ARN' | @uri}}"
     }
 
     category "aws_s3_bucket" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_s3_bucket.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/s3_bucket_light.svg"))
       color = "orange"
       href  = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
     }
 
     category "aws_vpc_endpoint" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_vpc_endpoint.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/vpc_endpoint_light.svg"))
       color = "orange"
     }
 
     category "aws_vpc" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_vpc.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
       color = "orange"
       href  = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'ID' | @uri}}"
     }

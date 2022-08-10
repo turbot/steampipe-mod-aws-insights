@@ -23,7 +23,7 @@ dashboard "aws_vpc_relationships" {
     }
 
     category "aws_vpc" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_vpc.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
       color = "orange"
       href  = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'ID' | @uri}}"
     }
@@ -40,7 +40,7 @@ dashboard "aws_vpc_relationships" {
     }
 
     category "aws_vpc" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_vpc.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
       color = "orange"
       href  = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'ID' | @uri}}"
     }

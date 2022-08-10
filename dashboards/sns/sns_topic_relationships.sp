@@ -23,14 +23,14 @@ dashboard "aws_sns_topic_relationships" {
     }
 
       category "aws_sns_topic" {
-        icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_sns_topic.svg"))
+        icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/sns_topic_light.svg"))
         color = "blue"
         href  = "${dashboard.aws_sns_topic_detail.url_path}?input.topic_arn={{.properties.'ARN' | @uri}}"
       }
 
       category "aws_kms_key" {
         color = "orange"
-        icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_kms_key.svg"))
+        icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/kms_key_light.svg"))
         href  = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
       }
 
@@ -49,25 +49,25 @@ dashboard "aws_sns_topic_relationships" {
     }
 
     category "aws_sns_topic" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_sns_topic.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/sns_topic_light.svg"))
       color = "blue"
       href  = "${dashboard.aws_sns_topic_detail.url_path}?input.topic_arn={{.properties.'ARN' | @uri}}"
     }
 
     category "aws_s3_bucket" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_s3_bucket.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/s3_bucket_light.svg"))
       color = "orange"
       href  = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
     }
 
      category "aws_rds_db_instance" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_rds_db_instance.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/rds_db_instance_light.svg"))
       color = "orange"
       href  = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn={{.properties.'ARN' | @uri}}"
     }
 
      category "aws_redshift_cluster" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_redshift_cluster.svg"))
+      # icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_redshift_cluster.svg"))
       color = "orange"
       href  = "${dashboard.aws_redshift_cluster_detail.url_path}?input.cluster_arn={{.properties.'ARN' | @uri}}"
     }
@@ -79,12 +79,12 @@ dashboard "aws_sns_topic_relationships" {
     }
 
     category "aws_cloudformation_stack" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_cloudformation_stack.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/cloudformation_stack_light.svg"))
       color = "green"
     }
 
     category "aws_elasticache_cluster" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_elasticache_for_redis.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/elasticache_for_redis_light.svg"))
       color = "blue"
     }
 
