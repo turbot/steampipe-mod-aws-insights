@@ -1,10 +1,10 @@
 dashboard "lambda_function_relationships" {
 
   title         = "AWS Lambda Function Relationships"
-  #documentation = file("./dashboards/lambda/docs/lambda_function_detail.md")
+  documentation = file("./dashboards/lambda/docs/lambda_function_relationships.md")
 
   tags = merge(local.lambda_common_tags, {
-    type = "Detail"
+    type = "Relationships"
   })
 
 
