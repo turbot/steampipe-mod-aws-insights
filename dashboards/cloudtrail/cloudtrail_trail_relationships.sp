@@ -11,7 +11,7 @@ dashboard "aws_cloudtrail_trail_relationships" {
     width = 4
   }
 
-  /* graph {
+  graph {
     type  = "graph"
     title = "Things that use me..."
     query = query.aws_cloudtrail_trail_graph_use_me
@@ -19,19 +19,15 @@ dashboard "aws_cloudtrail_trail_relationships" {
       bucket = self.input.cloudtrail_trail.value
     }
 
-    category "aws_ec2_application_load_balancer" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/alb.svg"))
-    }
-
-    category "aws_ec2_network_load_balancer" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/nlb.svg"))
-    }
-
     category "aws_cloudtrail_trail" {
-      href = "${dashboard.aws_cloudtrail_trail_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/alb.svg"))
+      href = "${dashboard.aws_cloudtrail_trail_detail.url_path}?input.trail_arn={{.properties.'ARN' | @uri}}"
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ctt.svg"))
     }
-  } */
+
+    category "aws_guardduty_detector" {
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/guardduty.svg"))
+    }
+  }
 
   graph {
     type  = "graph"
@@ -71,7 +67,65 @@ dashboard "aws_cloudtrail_trail_relationships" {
 
 query "aws_cloudtrail_trail_graph_use_me" {
   sql = <<-EOQ
-    with trails as (select * from aws_cloudtrail_trail where arn = 'arn:aws:cloudtrail:us-east-1:533793682495:trail/test-relationships-trail')
+    with trails as (select * from aws_cloudtrail_trail where arn = $1)
+    select
+      null as from_id,
+      null as to_id,
+      arn as id,
+      name as title,
+      'aws_cloudtrail_trail' as category,
+      jsonb_build_object(
+        'ARN', arn,
+        'Account ID', account_id,
+        'Region', region,
+        'Logging', is_logging::text,
+        'Latest notification time', latest_notification_time
+      ) as properties
+    from
+      trails
+
+    -- GuardDuty - nodes
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      detector.arn as id,
+      detector.detector_id as title,
+      'aws_guardduty_detector' as category,
+      jsonb_build_object(
+        'ARN', detector.arn,
+        'Account ID', detector.account_id,
+        'Region', detector.region,
+        'Status', detector.status
+      ) as properties
+    from
+      aws_guardduty_detector as detector,
+      trails as t
+    where 
+      detector.status = 'ENABLED'
+      and detector.data_sources is not null
+      and detector.data_sources -> 'CloudTrail' ->> 'Status' = 'ENABLED'
+      
+    -- S3 Buckets - edges
+    union all
+    select
+      detector.arn as from_id,
+      t.arn as to_id,
+      null as id,
+      'Uses' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'ARN', t.arn,
+        'Account ID', t.account_id,
+        'Region', t.region
+      ) as properties
+    from
+      aws_guardduty_detector as detector,
+      trails as t
+    where 
+      detector.status = 'ENABLED'
+      and detector.data_sources is not null
+      and detector.data_sources -> 'CloudTrail' ->> 'Status' = 'ENABLED'
   EOQ
 
   param "bucket" {}
@@ -79,7 +133,7 @@ query "aws_cloudtrail_trail_graph_use_me" {
 
 query "aws_cloudtrail_trail_graph_i_use" {
   sql = <<-EOQ
-    with trails as (select * from aws_cloudtrail_trail where arn = 'arn:aws:cloudtrail:us-east-1:533793682495:trail/test-relationships-trail')
+    with trails as (select * from aws_cloudtrail_trail where arn = $1)
     select
       null as from_id,
       null as to_id,
