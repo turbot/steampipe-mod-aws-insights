@@ -23,20 +23,21 @@ dashboard "aws_ebs_volume_relationships" {
 
     category "aws_kms_key" {
       href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/kms_key_light.svg"))
     }
 
     category "aws_ebs_volume" {
       href = "${dashboard.aws_ebs_volume_detail.url_path}?input.volume_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ebs_volume_light.svg"))
     }
     
     category "aws_ec2_instance" {
       href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ebs_volume.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2_instance_light.svg"))
     }
 
     category "aws_ebs_snapshot" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ebs_snapshot.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ebs_snapshot_light.svg"))
     }
 
   }
@@ -51,12 +52,12 @@ dashboard "aws_ebs_volume_relationships" {
 
     category "aws_ebs_volume" {
       href = "${dashboard.aws_ebs_volume_detail.url_path}?input.volume_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ebs_volume_light.svg"))
     }
     
     category "aws_ec2_instance" {
       href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ebs_volume.svg"))
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2_instance_light.svg"))
     }
   }
   
@@ -213,11 +214,11 @@ query "aws_ebs_volume_graph_use_me" {
     -- instances - edges
     union all
     select
-      instances.arn as from_id,
-      volumes.arn as to_id,
+      volumes.arn as from_id,
+      instances.arn as to_id,
       null as id,
       'uses' as title,
-      'aws_ec2_instance' as category,
+      'uses' as category,
       jsonb_build_object(
         'Name', instances.tags ->> 'Name',
         'Instance ID', instance_id,
