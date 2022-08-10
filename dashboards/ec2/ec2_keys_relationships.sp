@@ -46,6 +46,7 @@ query "aws_ec2_ec2_keypair_graph_to_instance"{
     from
       keypair
       
+    -- Instances - nodes
     union all
     select
       null as from_id,
@@ -64,13 +65,14 @@ query "aws_ec2_ec2_keypair_graph_to_instance"{
     where
       instances.key_name = keypair.key_name
       
+    -- Instances - edges
     union all
     select
       instances.arn as from_id,
       keypair.key_pair_id as to_id,
       null as id,
-      'uses' as title,
-      'aws_ec2_instance' as category,
+      'Uses' as title,
+      'uses' as category,
       jsonb_build_object(
         'ARN', instances.arn,
         'Account ID', instances.account_id,
