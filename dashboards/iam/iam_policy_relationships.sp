@@ -15,7 +15,7 @@ dashboard "aws_iam_policy_relationships" {
     type  = "graph"
     title = "Things that use me..."
     query = query.aws_iam_policy_graph_to_policy
-    args  = {
+    args = {
       arn = self.input.policy_arn.value
     }
     category "aws_iam_policy" {
@@ -23,14 +23,13 @@ dashboard "aws_iam_policy_relationships" {
     }
 
     category "aws_iam_role" {
-      color = "yellow"
-      href  = "${dashboard.aws_iam_role_detail.url_path}?input.role_arn={{.properties.ARN | @uri}}"
-      icon  = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/iam_role_dark.svg"))
+      href = "${dashboard.aws_iam_role_detail.url_path}?input.role_arn={{.properties.ARN | @uri}}"
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/iam_role_dark.svg"))
     }
 
     category "aws_iam_user" {
-      color = "blue"
-      href  = "${dashboard.aws_iam_user_detail.url_path}?input.user_arn={{.properties.ARN | @uri}}"
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/iam_user_light.svg"))
+      href = "${dashboard.aws_iam_user_detail.url_path}?input.user_arn={{.properties.ARN | @uri}}"
     }
 
     category "aws_iam_group" {

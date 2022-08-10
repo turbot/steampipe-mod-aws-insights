@@ -15,7 +15,7 @@ dashboard "aws_iam_group_relationships" {
     type  = "graph"
     title = "Things I use..."
     query = query.aws_iam_group_graph_from_group
-    args  = {
+    args = {
       arn = self.input.group_arn.value
     }
     category "aws_iam_group" {
@@ -35,7 +35,7 @@ dashboard "aws_iam_group_relationships" {
     type  = "graph"
     title = "Things that use me..."
     query = query.aws_iam_group_graph_to_group
-    args  = {
+    args = {
       arn = self.input.group_arn.value
     }
     category "aws_iam_group" {
@@ -44,6 +44,7 @@ dashboard "aws_iam_group_relationships" {
 
     category "aws_iam_user" {
       href = "${dashboard.aws_iam_user_detail.url_path}?input.user_arn={{.properties.ARN | @uri}}"
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/iam_user_light.svg"))
     }
 
     category "uses" {

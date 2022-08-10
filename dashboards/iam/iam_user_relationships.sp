@@ -15,11 +15,12 @@ dashboard "aws_iam_user_relationships" {
     type  = "graph"
     title = "Things I use..."
     query = query.aws_iam_user_graph_from_user
-    args  = {
+    args = {
       arn = self.input.user_arn.value
     }
     category "aws_iam_user" {
       href = "${dashboard.aws_iam_user_detail.url_path}?input.user_arn={{.properties.ARN | @uri}}"
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/iam_user_dark.svg"))
     }
 
     category "aws_iam_group" {
