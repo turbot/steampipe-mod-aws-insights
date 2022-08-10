@@ -72,10 +72,20 @@ dashboard "aws_sns_topic_relationships" {
       href  = "${dashboard.aws_redshift_cluster_detail.url_path}?input.cluster_arn={{.properties.'ARN' | @uri}}"
     }
 
-      category "aws_cloudtrail_trail" {
+    category "aws_cloudtrail_trail" {
       # icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_s3_bucket.svg"))
       color = "red"
       href  = "${dashboard.aws_cloudtrail_trail_detail.url_path}?input.trail_arn={{.properties.'ARN' | @uri}}"
+    }
+
+    category "aws_cloudformation_stack" {
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_cloudformation_stack.svg"))
+      color = "green"
+    }
+
+    category "aws_elasticache_cluster" {
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_elasticache_for_redis.svg"))
+      color = "blue"
     }
 
   }
@@ -446,6 +456,43 @@ query "aws_sns_topic_graph_to_topic" {
       ) n
     where
       t.topic_arn = trim((n::text ), '""')
+
+    --  ElastiCache Cluster that use me - nodes
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      c.arn as id,
+      c.title as title,
+      'aws_elasticache_cluster' as category,
+      jsonb_build_object(
+        'ARN', c.arn,
+        'Account ID', c.account_id,
+        'Region', c.region
+      ) as properties
+    from
+      aws_elasticache_cluster as c
+    where
+      c.notification_configuration ->> 'TopicArn' = $1
+
+     -- ElastiCache Cluster  that use me - edges
+    union all
+    select
+      c.arn as from_id,
+      t.topic_arn as to_id,
+      null as id,
+      'Used By' as title,
+      'used_by' as category,
+      jsonb_build_object(
+        'ARN', t.topic_arn,
+        'Account ID', t.account_id,
+        'Region', t.region
+      ) as properties
+    from
+      topic as t,
+      aws_elasticache_cluster as c
+    where
+      t.topic_arn = (c.notification_configuration ->> 'TopicArn')
 
   EOQ
   param "arn" {}
