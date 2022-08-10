@@ -47,7 +47,7 @@ query "aws_rds_db_instance_graph_from_instance" {
       'aws_rds_db_instance' as category,
       jsonb_build_object(
         'ARN', arn,
-        'DB Name', db_name,
+        'DB Name', db_instance_identifier,
         'Public Access', publicly_accessible::text,
         'Availability Zone', availability_zone,
         'Create Time', create_time,
