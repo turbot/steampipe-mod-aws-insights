@@ -272,6 +272,7 @@ query "aws_ec2_instance_graph_i_use" {
       jsonb_build_object(
         'Name', subnet.tags ->> 'Name',
         'Subnet ID', subnet.subnet_id ,
+        'VPC ID', subnet.vpc_id ,
         'CIDR Block', subnet.cidr_block,
         'AZ', subnet.availability_zone,
         'Account ID', subnet.account_id,
@@ -286,7 +287,7 @@ query "aws_ec2_instance_graph_i_use" {
    -- Subnet - edges
     union all
     select
-      i.instance_id as from_id,
+      subnet.vpc_id as from_id,
       subnet.subnet_id as to_id,
       null as id,
       'uses' as title,
