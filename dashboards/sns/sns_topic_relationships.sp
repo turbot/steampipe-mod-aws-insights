@@ -1,12 +1,11 @@
 dashboard "aws_sns_topic_relationships" {
 
   title         = "AWS SNS Topic Relationships"
-  #documentation = file("./dashboards/sns/docs/sns_queue_detail.md")
+  documentation = file("./dashboards/sns/docs/sns_topic_relationships.md")
 
   tags = merge(local.sns_common_tags, {
-    type = "Detail"
+    type = "Relationships"
   })
-
 
   input "topic_arn" {
     title = "Select a topic:"
