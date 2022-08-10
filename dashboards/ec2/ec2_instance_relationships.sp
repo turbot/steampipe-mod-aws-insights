@@ -216,50 +216,6 @@ query "aws_ec2_instance_graph_i_use" {
     from
       instances,
       jsonb_array_elements(security_groups) as sg
-      
-    -- VPC - nodes
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      vpc.vpc_id as id,
-      vpc.tags ->> 'Name' as title,
-      'aws_vpc' as category,
-      jsonb_build_object(
-        'ID', vpc.vpc_id,
-        'Name', vpc.tags ->> 'Name',
-        'CIDR Block', vpc.cidr_block,
-        'Account ID', vpc.account_id,
-        'Owner ID', vpc.owner_id,
-        'Region', vpc.region
-      ) as properties
-    from
-      instances,
-      aws_vpc as vpc
-    where 
-      instances.vpc_id = vpc.vpc_id
-      
-    -- VPC - edges
-    union all
-    select
-      instances.instance_id as from_id,
-      vpc.vpc_id as to_id,
-      null as id,
-      'uses' as title,
-      'uses' as category,
-      jsonb_build_object(
-        'ID', vpc.vpc_id,
-        'Name', vpc.tags ->> 'Name',
-        'CIDR Block', vpc.cidr_block,
-        'Account ID', vpc.account_id,
-        'Owner ID', vpc.owner_id,
-        'Region', vpc.region
-      ) as properties
-    from
-      instances,
-      aws_vpc as vpc
-    where 
-      instances.vpc_id = vpc.vpc_id
 
     -- Subnet - nodes
     union all
@@ -287,8 +243,8 @@ query "aws_ec2_instance_graph_i_use" {
    -- Subnet - edges
     union all
     select
-      subnet.vpc_id as from_id,
-      subnet.subnet_id as to_id,
+      i.instance_id as from_id,
+      i.subnet_id as to_id,
       null as id,
       'uses' as title,
       'uses' as category,
@@ -302,6 +258,50 @@ query "aws_ec2_instance_graph_i_use" {
       aws_vpc_subnet as subnet
     where 
       i.subnet_id = subnet.subnet_id
+      
+    -- VPC - nodes
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      vpc.vpc_id as id,
+      vpc.tags ->> 'Name' as title,
+      'aws_vpc' as category,
+      jsonb_build_object(
+        'ID', vpc.vpc_id,
+        'Name', vpc.tags ->> 'Name',
+        'CIDR Block', vpc.cidr_block,
+        'Account ID', vpc.account_id,
+        'Owner ID', vpc.owner_id,
+        'Region', vpc.region
+      ) as properties
+    from
+      instances,
+      aws_vpc as vpc
+    where 
+      instances.vpc_id = vpc.vpc_id
+      
+    -- VPC - edges
+    union all
+    select
+      instances.subnet_id as from_id,
+      vpc.vpc_id as to_id,
+      null as id,
+      'uses' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'ID', vpc.vpc_id,
+        'Name', vpc.tags ->> 'Name',
+        'CIDR Block', vpc.cidr_block,
+        'Account ID', vpc.account_id,
+        'Owner ID', vpc.owner_id,
+        'Region', vpc.region
+      ) as properties
+    from
+      instances,
+      aws_vpc as vpc
+    where 
+      instances.vpc_id = vpc.vpc_id
 
     -- Instance Profile - nodes
     union all
