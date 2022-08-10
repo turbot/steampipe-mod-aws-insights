@@ -214,8 +214,8 @@ query "aws_ebs_volume_graph_use_me" {
     -- instances - edges
     union all
     select
-      volumes.arn as from_id,
-      instances.arn as to_id,
+      instances.arn as from_id,
+      volumes.arn as to_id,
       null as id,
       'uses' as title,
       'uses' as category,
