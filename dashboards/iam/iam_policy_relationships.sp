@@ -107,8 +107,7 @@ query "aws_iam_policy_graph_to_policy" {
       'uses' as title,
       'uses' as category,
       jsonb_build_object(
-        'Role Name', r.name,
-        'ARN', r.arn
+        'Account ID', r.account_id
       ) as properties
     from
       aws_iam_role as r,
@@ -147,7 +146,6 @@ query "aws_iam_policy_graph_to_policy" {
       'uses' as title,
       'uses' as category,
       jsonb_build_object(
-        'ARN', u.arn,
         'Account ID', u.account_id
       ) as properties
     from
@@ -187,7 +185,6 @@ query "aws_iam_policy_graph_to_policy" {
       'uses' as title,
       'uses' as category,
       jsonb_build_object(
-        'ARN', g.arn,
         'Account ID', g.account_id
       ) as properties
     from

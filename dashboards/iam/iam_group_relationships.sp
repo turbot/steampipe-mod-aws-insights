@@ -101,8 +101,6 @@ query "aws_iam_group_graph_from_group" {
       'uses' as title,
       'uses' as category,
       jsonb_build_object(
-        'Policy Name', p.name,
-        'Policy ID', policy_id,
         'Account ID', p.account_id
       ) as properties
     from
@@ -167,7 +165,6 @@ query "aws_iam_group_graph_to_group" {
       'uses' as title,
       'uses' as category,
       jsonb_build_object(
-        'ARN', u.arn,
         'Account ID', u.account_id
       ) as properties
     from

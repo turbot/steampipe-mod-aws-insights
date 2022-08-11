@@ -87,7 +87,6 @@ query "aws_iam_user_graph_from_user" {
       'uses' as title,
       'uses' as category,
       jsonb_build_object(
-        'ARN', g.arn,
         'Account ID', g.account_id
       ) as properties
     from
@@ -125,8 +124,7 @@ query "aws_iam_user_graph_from_user" {
       'uses' as title,
       'uses' as category,
       jsonb_build_object(
-        'Policy Name', p.name,
-        'AWS Managed', p.is_aws_managed
+        'Account ID', p.account_id
       ) as properties
     from
       aws_iam_user as r,
