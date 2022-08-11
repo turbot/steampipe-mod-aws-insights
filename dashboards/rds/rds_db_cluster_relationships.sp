@@ -34,6 +34,11 @@ dashboard "rds_db_cluster_relationships" {
       href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.ARN | @uri}}"
       icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kms_key_dark.svg"))
     }
+
+    category "aws_vpc_security_group" {
+      href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.properties.\"Security Group ID\" | @uri}}"
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
+    }
   }
 
 }
@@ -169,6 +174,48 @@ query "aws_rds_db_cluster_graph_from_cluster" {
     from
       aws_rds_db_cluster as c
       left join aws_kms_key as k on c.kms_key_id = k.arn
+    where
+      c.arn = $1
+
+    -- NODE Security Group
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      sg.group_id as id,
+      sg.title,
+      'aws_vpc_security_group' as category,
+      jsonb_build_object(
+        'Security Group ID', sg.group_id,
+        'VPC ID', sg.vpc_id,
+        'Account ID', sg.account_id,
+        'Region', sg.region
+      ) as properties
+    from
+      aws_rds_db_cluster as c
+      cross join jsonb_array_elements(c.vpc_security_groups) as csg
+      left join aws_vpc_security_group as sg on sg.group_id = csg ->> 'VpcSecurityGroupId'
+    where
+      c.arn = $1
+
+    -- Edge Security Group
+    union all
+    select
+      c.db_cluster_identifier as from_id,
+      sg.group_id as to_id,
+      null as id,
+      'uses security group' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'Security Group ID', sg.group_id,
+        'VPC ID', sg.vpc_id,
+        'Account ID', sg.account_id,
+        'Region', sg.region
+      ) as properties
+    from
+      aws_rds_db_cluster as c
+      cross join jsonb_array_elements(c.vpc_security_groups) as csg
+      left join aws_vpc_security_group as sg on sg.group_id = csg ->> 'VpcSecurityGroupId'
     where
       c.arn = $1
   EOQ
