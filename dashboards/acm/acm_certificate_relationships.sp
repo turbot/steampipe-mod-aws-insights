@@ -20,23 +20,23 @@ dashboard "aws_acm_certificate_relationships" {
     }
     category "aws_acm_certificate" {
       href = "${dashboard.acm_certificate_detail.url_path}?input.certificate_arn={{.properties.ARN | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/acm_certificate_dark.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/acm_certificate_dark.svg"))
     }
 
     category "aws_cloudfront_distribution" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/cloudfront_distribution_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/cloudfront_distribution_light.svg"))
     }
 
     category "aws_ec2_classic_load_balancer" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2_classic_load_balancer_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_classic_load_balancer_light.svg"))
     }
 
     category "aws_ec2_application_load_balancer" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2_application_load_balancer_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_application_load_balancer_light.svg"))
     }
 
     category "aws_ec2_network_load_balancer" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2_network_load_balancer_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_network_load_balancer_light.svg"))
     }
 
     category "uses" {
