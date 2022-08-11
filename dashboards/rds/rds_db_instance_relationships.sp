@@ -32,11 +32,15 @@ dashboard "aws_rds_db_instance_relationships" {
 
     category "aws_vpc_security_group" {
       href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.properties.\"Security Group ID\" | @uri}}"
-      # icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/vpc_security_group.svg"))
     }
 
     category "db_parameter_group" {
 
+    }
+
+    category "kms_key" {
+      href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.\"ARN\" | @uri}}"
+      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/kms_key_dark.svg"))
     }
 
     # category "aws_vpc_subnet" {
@@ -145,7 +149,7 @@ query "aws_rds_db_instance_graph_from_instance" {
       di.arn = $1
       and v.vpc_id = di.vpc_id
 
-    -- DB Parameter Group
+    -- DB Parameter Group Node
     union all
     select
       null as from_id,
@@ -161,6 +165,26 @@ query "aws_rds_db_instance_graph_from_instance" {
     from
       aws_rds_db_instance as rdb,
       jsonb_array_elements(db_parameter_groups) as db_parameter_group
+    where
+      rdb.arn = $1
+
+    -- KMS KEY Node
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      k.id as id,
+      COALESCE(k.aliases #>> '{0,AliasName}', k.id) as title,
+      'kms_key' as category,
+      jsonb_build_object(
+        'ARN', k.arn,
+        'Rotation Enable', k.key_rotation_enabled::text,
+        'Account ID', k.account_id,
+        'Region', k.region
+      ) as properties
+    from
+      aws_rds_db_instance as rdb
+      left join aws_kms_key as k on rdb.kms_key_id = k.arn
     where
       rdb.arn = $1
 
@@ -267,6 +291,26 @@ query "aws_rds_db_instance_graph_from_instance" {
     from
       aws_rds_db_instance as rdb,
       jsonb_array_elements(db_parameter_groups) as db_parameter_group
+    where
+      rdb.arn = $1
+
+    -- KMS KEY Edge
+    union all
+    select
+      rdb.db_instance_identifier as from_id,
+      k.id as to_id,
+      null as id,
+      'uses' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'ARN', k.arn,
+        'DB Identifier', rdb.db_instance_identifier,
+        'Account ID', k.account_id,
+        'Region', k.region
+      ) as properties
+    from
+      aws_rds_db_instance as rdb
+      left join aws_kms_key as k on rdb.kms_key_id = k.arn
     where
       rdb.arn = $1
   EOQ
