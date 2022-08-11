@@ -29,6 +29,11 @@ dashboard "rds_db_cluster_relationships" {
       href = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn={{.properties.ARN | @uri}}"
       icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/rds_db_instance_dark.svg"))
     }
+
+    category "kms_key" {
+      href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.\"ARN\" | @uri}}"
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kms_key_dark.svg"))
+    }
   }
 
 }
@@ -97,6 +102,73 @@ query "aws_rds_db_cluster_graph_from_cluster" {
       aws_rds_db_cluster as c
       cross join jsonb_array_elements(members) as ci
       left join aws_rds_db_instance i on i.db_cluster_identifier = c.db_cluster_identifier and i.db_instance_identifier = ci ->> 'DBInstanceIdentifier'
+    where
+      c.arn = $1
+
+    -- Edge RDS Cluster Instances
+    union all
+    select
+      c.db_cluster_identifier as from_id,
+      i.db_instance_identifier as to_id,
+      null as id,
+      'has_instance' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'ARN', i.arn,
+        'Status', i.status,
+        'Public Access', i.publicly_accessible::text,
+        'Availability Zone', i.availability_zone,
+        'Create Time', i.create_time,
+        'Is Multi AZ', i.multi_az::text,
+        'Class', i.class,
+        'Account ID', i.account_id,
+        'Region', i.region
+      ) as properties
+    from
+      aws_rds_db_cluster as c
+      cross join jsonb_array_elements(members) as ci
+      left join aws_rds_db_instance i on i.db_cluster_identifier = c.db_cluster_identifier and i.db_instance_identifier = ci ->> 'DBInstanceIdentifier'
+    where
+      c.arn = $1
+
+
+    -- Node KMS Key
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      k.id as id,
+      COALESCE(k.aliases #>> '{0,AliasName}', k.id) as title,
+      'kms_key' as category,
+      jsonb_build_object(
+        'ARN', k.arn,
+        'Rotation Enabled', k.key_rotation_enabled::text,
+        'Account ID', k.account_id,
+        'Region', k.region
+      ) as properties
+    from
+      aws_rds_db_cluster as c
+      left join aws_kms_key as k on c.kms_key_id = k.arn
+    where
+      c.arn = $1
+
+    -- Edge Cluster to KMS Key
+    union all
+    select
+      c.db_cluster_identifier as from_id,
+      k.id as to_id,
+      null as id,
+      'Encrypted with' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'ARN', k.arn,
+        'Rotation Enabled', k.key_rotation_enabled::text,
+        'Account ID', k.account_id,
+        'Region', k.region
+      ) as properties
+    from
+      aws_rds_db_cluster as c
+      left join aws_kms_key as k on c.kms_key_id = k.arn
     where
       c.arn = $1
   EOQ

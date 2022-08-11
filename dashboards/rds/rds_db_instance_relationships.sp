@@ -197,7 +197,7 @@ query "aws_rds_db_instance_graph_from_instance" {
       'kms_key' as category,
       jsonb_build_object(
         'ARN', k.arn,
-        'Rotation Enable', k.key_rotation_enabled::text,
+        'Rotation Enabled', k.key_rotation_enabled::text,
         'Account ID', k.account_id,
         'Region', k.region
       ) as properties
