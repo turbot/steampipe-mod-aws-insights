@@ -22,12 +22,12 @@ dashboard "aws_rds_db_instance_relationships" {
     }
     category "aws_rds_db_instance" {
       href = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn={{.properties.ARN | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/rds_db_instance_dark.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/rds_db_instance_dark.svg"))
     }
 
     category "aws_vpc" {
       href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.\"VPC ID\" | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/vpc_dark.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_dark.svg"))
     }
 
     category "aws_vpc_security_group" {
@@ -40,16 +40,33 @@ dashboard "aws_rds_db_instance_relationships" {
 
     category "kms_key" {
       href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.\"ARN\" | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/kms_key_dark.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kms_key_dark.svg"))
     }
 
-    # category "aws_vpc_subnet" {
-    #   # href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.\"VPC ID\" | @uri}}"
-    #   # icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/vpc_subnet_dark.svg"))
-    # }
+    category "aws_vpc_subnet" {
+      color = "red"
+    }
 
     category "uses" {
       color = "green"
+    }
+  }
+
+  graph {
+    type  = "graph"
+    title = "Things that use me..."
+    query = query.aws_rds_db_instance_to_instance
+    args = {
+      arn = self.input.db_instance_arn.value
+    }
+
+    category "aws_rds_db_instance" {
+      href = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn={{.properties.ARN | @uri}}"
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/rds_db_instance_dark.svg"))
+    }
+
+    category "aws_rds_db_cluster" {
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/rds_db_cluster_dark.svg"))
     }
   }
 }
@@ -65,6 +82,7 @@ query "aws_rds_db_instance_graph_from_instance" {
       'aws_rds_db_instance' as category,
       jsonb_build_object(
         'ARN', arn,
+        'Status', status,
         'Public Access', publicly_accessible::text,
         'Availability Zone', availability_zone,
         'Create Time', create_time,
@@ -300,7 +318,7 @@ query "aws_rds_db_instance_graph_from_instance" {
       rdb.db_instance_identifier as from_id,
       k.id as to_id,
       null as id,
-      'uses' as title,
+      'uses_kms_key' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', k.arn,
@@ -318,4 +336,76 @@ query "aws_rds_db_instance_graph_from_instance" {
   param "arn" {}
 }
 
+query "aws_rds_db_instance_to_instance" {
+  sql = <<-EOQ
+    -- RDS DB Instance NODE
+    select
+      null as from_id,
+      null as to_id,
+      db_instance_identifier as id,
+      title,
+      'aws_rds_db_instance' as category,
+      jsonb_build_object(
+        'ARN', arn,
+        'Status', status,
+        'Public Access', publicly_accessible::text,
+        'Availability Zone', availability_zone,
+        'Create Time', create_time,
+        'Is Multi AZ', multi_az::text,
+        'Class', class,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_rds_db_instance
+    where
+      arn = $1
+
+    -- RDS DB Cluster NODE
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      c.db_cluster_identifier as id,
+      c.title as title,
+      'aws_rds_db_cluster' as category,
+      jsonb_build_object(
+        'ARN', c.arn,
+        'Status', c.status,
+        'Public Access', publicly_accessible::text,
+        'Availability Zones', c.availability_zones::text,
+        'Create Time', c.create_time,
+        'Is Multi AZ', c.multi_az::text,
+        'Account ID', c.account_id,
+        'Region', c.region
+      ) as properties
+    from
+      aws_rds_db_instance as i
+      left join aws_rds_db_cluster as c on i.db_cluster_identifier = c.db_cluster_identifier
+    where
+      i.arn = $1
+
+    -- Edge Cluster to DB
+    union all
+    select
+      c.db_cluster_identifier as from_id,
+      i.db_instance_identifier as to_id,
+      null as id,
+      'uses' as title,
+      'uses' as title,
+      jsonb_build_object(
+        'Cluster', c.title,
+        'Instance', c.title,
+        'Account ID', c.account_id,
+        'Region', c.region
+      ) as properties
+    from
+      aws_rds_db_instance as i
+      left join aws_rds_db_cluster as c on i.db_cluster_identifier = c.db_cluster_identifier
+    where
+      i.arn = $1
+  EOQ
+
+  param "arn" {}
+}
 
