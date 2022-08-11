@@ -233,6 +233,8 @@ query "aws_ebs_volume_graph_use_me" {
     where
       bdm -> 'Ebs' ->> 'VolumeId' in (select volume_id from volumes) 
 
+
+
   EOQ
   
   param "arn" {}
