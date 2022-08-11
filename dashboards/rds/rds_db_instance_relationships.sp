@@ -300,7 +300,7 @@ query "aws_rds_db_instance_graph_from_instance" {
       rdb.db_instance_identifier as from_id,
       db_parameter_group ->> 'DBParameterGroupName' as to_id,
       null as id,
-      'uses' as title,
+      'uses_parameter_group' as title,
       'uses' as category,
       jsonb_build_object(
         'DB Parameter Group Apply Status', db_parameter_group ->> 'ParameterApplyStatus',
@@ -319,7 +319,7 @@ query "aws_rds_db_instance_graph_from_instance" {
       rdb.db_instance_identifier as from_id,
       k.id as to_id,
       null as id,
-      'uses_kms_key' as title,
+      'encrypted_with' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', k.arn,
