@@ -7,7 +7,6 @@ dashboard "lambda_function_relationships" {
     type = "Relationships"
   })
 
-
   input "lambda_arn" {
     title = "Select a lambda function:"
     sql   = query.aws_lambda_function.sql
@@ -113,7 +112,7 @@ query "aws_lambda_function_graph_from_function" {
     from
       lambda
 
-     -- VPC  Nodes
+    -- VPC  Nodes
     union all
     select
       null as from_id,
@@ -140,9 +139,9 @@ query "aws_lambda_function_graph_from_function" {
       'Uses' as title,
       'Uses' as category,
       jsonb_build_object(
-        'ARN', l.arn,
-        'Account ID', l.account_id,
-        'Region', l.region
+        'ARN', v.arn,
+        'Account ID', v.account_id,
+        'Region', v.region
       ) as properties
     from
       lambda as l
@@ -176,9 +175,9 @@ query "aws_lambda_function_graph_from_function" {
       'Uses' as title,
       'Uses' as category,
       jsonb_build_object(
-        'ARN', l.arn,
-        'Account ID', l.account_id,
-        'Region', l.region
+        'ARN', sg.arn,
+        'Account ID', sg.account_id,
+        'Region', sg.region
       ) as properties
     from
       lambda as l,
@@ -211,9 +210,9 @@ query "aws_lambda_function_graph_from_function" {
       'Encrypted With' as title,
       'encrypted_with' as category,
       jsonb_build_object(
-        'ARN', l.arn,
-        'Account ID', l.account_id,
-        'Region', l.region
+        'ARN', k.arn,
+        'Account ID', k.account_id,
+        'Region', k.region
       ) as properties
     from
       lambda as l
@@ -229,9 +228,8 @@ query "aws_lambda_function_graph_from_function" {
       r.title as title,
       'aws_iam_role' as category,
       jsonb_build_object(
-        'ARN', l.arn,
-        'Account ID', l.account_id,
-        'Region', l.region
+        'ARN', r.arn,
+        'Account ID', r.account_id
       ) as properties
     from
       lambda as l
@@ -246,9 +244,8 @@ query "aws_lambda_function_graph_from_function" {
       'Attached To' as title,
       'attached_to' as category,
       jsonb_build_object(
-        'ARN', l.arn,
-        'Account ID', l.account_id,
-        'Region', l.region
+        'ARN', r.arn,
+        'Account ID', r.account_id
       ) as properties
     from
       lambda as l
@@ -312,6 +309,8 @@ query "aws_lambda_function_graph_to_function" {
       jsonb_build_object(
         'ARN', arn,
         'Account ID', account_id,
+        'Event Notification Configuration ID', t ->> 'Id',
+        'Events Configured', t -> 'Events',
         'Region', region
       ) as properties
     from
