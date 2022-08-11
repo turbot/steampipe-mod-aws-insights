@@ -57,7 +57,6 @@ query "aws_rds_db_instance_graph_from_instance" {
       'aws_rds_db_instance' as category,
       jsonb_build_object(
         'ARN', arn,
-        'DB Name', db_instance_identifier,
         'Public Access', publicly_accessible::text,
         'Availability Zone', availability_zone,
         'Create Time', create_time,
@@ -108,7 +107,8 @@ query "aws_rds_db_instance_graph_from_instance" {
       jsonb_build_object(
         'Security Group ID', sg.group_id,
         'VPC ID', sg.vpc_id,
-        'Name', sg.group_name
+        'Account ID', sg.account_id,
+        'Region', sg.region
       ) as properties
     from
       aws_rds_db_instance as di
@@ -129,7 +129,6 @@ query "aws_rds_db_instance_graph_from_instance" {
       jsonb_build_object(
         'VPC ID', v.vpc_id,
         'ARN', v.arn,
-        'Name', v.title,
         'CIDR Block', cidr_block,
         'Is Default', is_default::text,
         'Account ID', v.account_id,
