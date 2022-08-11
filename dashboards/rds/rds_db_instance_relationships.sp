@@ -35,6 +35,10 @@ dashboard "aws_rds_db_instance_relationships" {
       # icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/vpc_security_group.svg"))
     }
 
+    category "db_parameter_group" {
+
+    }
+
     # category "aws_vpc_subnet" {
     #   # href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.\"VPC ID\" | @uri}}"
     #   # icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/vpc_subnet_dark.svg"))
@@ -141,6 +145,25 @@ query "aws_rds_db_instance_graph_from_instance" {
       di.arn = $1
       and v.vpc_id = di.vpc_id
 
+    -- DB Parameter Group
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      db_parameter_group ->> 'DBParameterGroupName' as id,
+      db_parameter_group ->> 'DBParameterGroupName' as title,
+      'db_parameter_group' as category,
+      jsonb_build_object(
+        'DB Parameter Group Apply Status', db_parameter_group ->> 'ParameterApplyStatus',
+        'Account ID', rdb.account_id,
+        'Region', rdb.region
+      ) as properties
+    from
+      aws_rds_db_instance as rdb,
+      jsonb_array_elements(db_parameter_groups) as db_parameter_group
+    where
+      rdb.arn = $1
+
     -- SUBNET TO VPC -- EDGE
     union all
     select
@@ -227,6 +250,25 @@ query "aws_rds_db_instance_graph_from_instance" {
     where
       di.arn = $1
       and di.vpc_id = sg.vpc_id
+
+    -- DB Parameter Group EDGE
+    union all
+    select
+      rdb.db_instance_identifier as from_id,
+      db_parameter_group ->> 'DBParameterGroupName' as to_id,
+      null as id,
+      'uses' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'DB Parameter Group Apply Status', db_parameter_group ->> 'ParameterApplyStatus',
+        'Account ID', rdb.account_id,
+        'Region', rdb.region
+      ) as properties
+    from
+      aws_rds_db_instance as rdb,
+      jsonb_array_elements(db_parameter_groups) as db_parameter_group
+    where
+      rdb.arn = $1
   EOQ
 
   param "arn" {}
