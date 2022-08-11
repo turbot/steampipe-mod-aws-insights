@@ -19,21 +19,18 @@ dashboard "aws_kms_key_relationships" {
       arn = self.input.key_arn.value
     }
     category "aws_kms_key" {
-      color = "orange"
-      href  = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.ARN | @uri}}"
-      icon  = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/kms_key_dark.svg"))
+      href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.ARN | @uri}}"
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kms_key_dark.svg"))
     }
 
     category "aws_cloudtrail_trail" {
-      color = "blue"
-      href  = "${dashboard.aws_cloudtrail_trail_detail.url_path}?input.trail_arn={{.properties.ARN | @uri}}"
-      icon  = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/cloudtrail_trail_dark.svg"))
+      href = "${dashboard.aws_cloudtrail_trail_detail.url_path}?input.trail_arn={{.properties.ARN | @uri}}"
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/cloudtrail_trail_dark.svg"))
     }
 
     category "aws_ebs_volume" {
-      color = "blue"
-      href  = "${dashboard.aws_ebs_volume_detail.url_path}?input.volume_arn={{.properties.ARN | @uri}}"
-      icon  = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ebs_volume_dark.svg"))
+      href = "${dashboard.aws_ebs_volume_detail.url_path}?input.volume_arn={{.properties.ARN | @uri}}"
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ebs_volume_dark.svg"))
     }
 
     category "aws_rds_db_cluster_snapshot" {
@@ -42,9 +39,8 @@ dashboard "aws_kms_key_relationships" {
     }
 
     category "aws_rds_db_instance" {
-      color = "blue"
-      href  = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn={{.properties.ARN | @uri}}"
-      icon  = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/rds_db_instance_dark.svg"))
+      href = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn={{.properties.ARN | @uri}}"
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/rds_db_instance_dark.svg"))
     }
 
     category "aws_rds_db_snapshot" {
@@ -53,9 +49,8 @@ dashboard "aws_kms_key_relationships" {
     }
 
     category "aws_redshift_cluster" {
-      color = "blue"
-      href  = "${dashboard.aws_redshift_cluster_detail.url_path}?input.cluster_arn={{.properties.ARN | @uri}}"
-      icon  = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/redshift_cluster_dark.svg"))
+      href = "${dashboard.aws_redshift_cluster_detail.url_path}?input.cluster_arn={{.properties.ARN | @uri}}"
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/redshift_cluster_dark.svg"))
     }
 
     category "uses" {
@@ -94,8 +89,8 @@ query "aws_kms_key_graph_to_key" {
       'aws_cloudtrail_trail' as category,
       jsonb_build_object(
         'ARN', t.arn,
-        'Multi Region Trail', is_multi_region_trail,
-        'Logging', is_logging,
+        'Multi Region Trail', is_multi_region_trail::text,
+        'Logging', is_logging::text,
         'Account ID', t.account_id,
         'Home Region', home_region
       ) as properties
