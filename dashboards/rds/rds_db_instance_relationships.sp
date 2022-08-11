@@ -32,6 +32,7 @@ dashboard "aws_rds_db_instance_relationships" {
 
     category "aws_vpc_security_group" {
       href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.properties.\"Security Group ID\" | @uri}}"
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
     }
 
     category "db_parameter_group" {
@@ -44,7 +45,7 @@ dashboard "aws_rds_db_instance_relationships" {
     }
 
     category "aws_vpc_subnet" {
-      color = "red"
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
     }
 
     category "uses" {
