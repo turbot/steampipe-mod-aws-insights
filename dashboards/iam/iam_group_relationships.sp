@@ -44,7 +44,7 @@ dashboard "aws_iam_group_relationships" {
 
     category "aws_iam_user" {
       href = "${dashboard.aws_iam_user_detail.url_path}?input.user_arn={{.properties.ARN | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/iam_user_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/iam_user_light.svg"))
     }
 
     category "uses" {
