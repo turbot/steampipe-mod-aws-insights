@@ -40,7 +40,7 @@ dashboard "aws_rds_db_instance_relationships" {
     }
 
     category "kms_key" {
-      href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.\"ARN\" | @uri}}"
+      href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.ARN | @uri}}"
       icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kms_key_dark.svg"))
     }
 
