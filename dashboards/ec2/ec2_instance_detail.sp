@@ -561,10 +561,10 @@ query "aws_ec2_instance_relationships_graph" {
     -- From EC2 AMIs (edge)
     union all
     select
-      image_id as from_id,
-      instance_id as to_id,
+      instance_id as from_id,
+      image_id as to_id,
       null as id,
-      'created from' as title,
+      'launched from' as title,
       'uses' as category,
       jsonb_build_object('Image ID', image_id, 'Instance ID', instance_id) as properties
     from
