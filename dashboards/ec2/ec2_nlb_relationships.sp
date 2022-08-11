@@ -1,5 +1,5 @@
 dashboard "aws_nlb_relationships" {
-  title         = "AWS EC2 Network Loadbalancer Relationships"
+  title         = "AWS EC2 Network Load balancer Relationships"
   #documentation = file("./dashboards/lb/docs/nlb_relationships.md")
   
   tags = merge(local.ec2_common_tags, {
@@ -7,7 +7,7 @@ dashboard "aws_nlb_relationships" {
   })
   
   input "nlb" {
-    title = "Select a Network Loadbalancer:"
+    title = "Select a Network Load balancer:"
     sql   = query.aws_nlb_input.sql
     width = 4
   }
@@ -21,17 +21,17 @@ dashboard "aws_nlb_relationships" {
     }    
     
     category "aws_ec2_network_load_balancer" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/nlb.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_network_load_balancer_light.svg"))
     }
 
     category "aws_vpc" {
       href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'VPC ID' | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/vpc.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
     }
 
     category "aws_s3_bucket" {
       href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/s3_bucket.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/s3_bucket_light.svg"))
     }
     
     category "aws_vpc_security_group" {
@@ -131,8 +131,8 @@ query "aws_nlb_graph_to_instance"{
       nlb.arn as from_id,
       tg.target_group_arn as to_id,
       null as id,
-      'uses' as title,
-      'aws_ec2_target_group' as category,
+      'Targets' as title,
+      'uses' as category,
       jsonb_build_object(
         'Group Name', tg.target_group_name,
         'ARN', tg.target_group_arn,
@@ -175,7 +175,7 @@ query "aws_nlb_graph_to_instance"{
       buckets.arn as to_id,
       null as id,
       'Logs to' as title,
-      'aws_s3_bucket' as category,
+      'uses' as category,
       jsonb_build_object(
         'Name', nlb.name,
         'ARN', nlb.arn,
@@ -217,8 +217,8 @@ query "aws_nlb_graph_to_instance"{
       nlb.arn as from_id,
       vpc.vpc_id as to_id,
       null as id,
-      'uses' as title,
-      'aws_vpc' as category,
+      'VPC' as title,
+      'uses' as category,
       jsonb_build_object(
         'VPC ID', vpc.vpc_id,
         'Account ID', vpc.account_id,
@@ -230,6 +230,47 @@ query "aws_nlb_graph_to_instance"{
       nlb
     where
       nlb.vpc_id = vpc.vpc_id
+    
+    -- lb listener - nodes
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      lblistener.arn as id,
+      lblistener.title as title,
+      'aws_ec2_load_balancer_listener' as category,
+      jsonb_build_object(
+        'ARN', lblistener.arn,
+        'Account ID', lblistener.account_id,
+        'Region', lblistener.region,
+        'Protocol', lblistener.protocol,
+        'Port', lblistener.port,
+        'SSL Policy', COALESCE(lblistener.ssl_policy,'None')
+      ) as properties
+    from 
+      aws_ec2_load_balancer_listener lblistener,
+      nlb
+    where
+      nlb.arn = lblistener.load_balancer_arn
+    
+    -- lb listener - nodes
+    union all
+    select
+      nlb.arn as from_id,
+      lblistener.arn as to_id,
+      null as id,
+      'Listens on' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'ARN', lblistener.arn,
+        'Account ID', lblistener.account_id,
+        'Region', lblistener.region
+      ) as properties
+    from 
+      aws_ec2_load_balancer_listener lblistener,
+      nlb
+    where
+      nlb.arn = lblistener.load_balancer_arn
 
     order by category,from_id,to_id
   EOQ
