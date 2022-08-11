@@ -22,20 +22,20 @@ dashboard "aws_ec2_instance_relationships" {
     
     category "aws_ec2_instance" {
       href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2_instance_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_instance_light.svg"))
     }
 
     category "aws_ebs_volume" {
       href = "${dashboard.aws_ebs_volume_detail.url_path}?input.volume_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ebs_volume_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ebs_volume_light.svg"))
     }
     
     category "aws_ec2_network_interface" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2_network_interface_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_network_interface_light.svg"))
     }
     
     category "aws_ec2_ami" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2_ami_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_ami_light.svg"))
     }
 
     category "aws_vpc_security_group" {
@@ -44,7 +44,7 @@ dashboard "aws_ec2_instance_relationships" {
     
     category "aws_vpc" {
       href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'ID' | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
     }
     
   }
@@ -59,20 +59,20 @@ dashboard "aws_ec2_instance_relationships" {
     
     category "aws_ec2_instance" {
       href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2_instance_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_instance_light.svg"))
     }
 
     category "aws_ebs_volume" {
       href = "${dashboard.aws_ebs_volume_detail.url_path}?input.volume_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ebs_volume_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ebs_volume_light.svg"))
     }
 
     category "aws_ec2_network_interface" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2_network_interface_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_network_interface_light.svg"))
     }
     
     category "aws_ec2_ami" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2_ami_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_ami_light.svg"))
     }
  
   }
@@ -120,7 +120,7 @@ query "aws_ec2_instance_graph_i_use" {
       instance_id as from_id,
       bd -> 'Ebs' ->> 'VolumeId' as to_id,
       null as id,
-      'uses' as title,
+      'Mounts' as title,
       'uses' as category,
       jsonb_build_object(
         'Volume ID', bd -> 'Ebs' ->> 'VolumeId',
