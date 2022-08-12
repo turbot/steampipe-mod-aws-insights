@@ -68,6 +68,7 @@ dashboard "aws_iam_user_detail" {
 
       category "aws_iam_policy" {
         color = "blue"
+        href  = "/aws_insights.dashboard.aws_iam_policy_detail?input.policy_arn={{.properties.'ARN' | @uri}}"
       }
 
       category "uses" {
@@ -279,7 +280,7 @@ query "aws_iam_user_relationships_graph" {
     where
       arn = $1
 
-    -- To IAM Groups - (node)
+    -- To IAM Groups (node)
     union all
     select
       null as from_id,
@@ -294,7 +295,7 @@ query "aws_iam_user_relationships_graph" {
     where
       u ->> 'Arn' = $1
 
-    -- To IAM Groups - (edge)
+    -- To IAM Groups (edge)
     union all
     select
       u ->> 'UserId' as from_id,
@@ -309,7 +310,7 @@ query "aws_iam_user_relationships_graph" {
     where
       u ->> 'Arn' = $1
 
-    -- To IAM Policies - (node)
+    -- To IAM Policies (node)
     union all
     select
       null as from_id,
@@ -331,7 +332,7 @@ query "aws_iam_user_relationships_graph" {
           arn = $1
       )
 
-    -- To IAM Policies - (Edge)
+    -- To IAM Policies (Edge)
     union all
     select
       r.user_id as from_id,

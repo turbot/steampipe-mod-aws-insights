@@ -56,28 +56,29 @@ dashboard "aws_iam_role_detail" {
 
       category "aws_iam_policy" {
         color = "blue"
+        href  = "/aws_insights.dashboard.aws_iam_policy_detail?input.policy_arn={{.properties.'ARN' | @uri}}"
       }
 
       category "aws_ec2_instance" {
         href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_id={{.properties.'Instance ID' | @uri}}"
-        icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2_instance_light.svg"))
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_instance_light.svg"))
       }
 
       category "aws_lambda_function" {
         href = "${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn={{.properties.ARN | @uri}}"
-        icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/lambda_function_light.svg"))
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/lambda_function_light.svg"))
       }
 
       category "aws_guardduty_detector" {
-        icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/guardduty_detector_light.svg"))
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/guardduty_detector_light.svg"))
       }
 
       category "aws_emr_cluster" {
-        icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/emr_cluster_light.svg"))
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/emr_cluster_light.svg"))
       }
 
       category "aws_kinesisanalyticsv2_application" {
-        icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/kinesis_analytics_application_light.svg"))
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kinesis_analytics_application_light.svg"))
       }
 
       category "uses" {
@@ -232,7 +233,7 @@ query "aws_iam_role_relationships_graph" {
     where
       arn = $1
 
-    -- To IAM Policies - (node)
+    -- To IAM Policies (node)
     union all
     select
       null as from_id,
@@ -254,7 +255,7 @@ query "aws_iam_role_relationships_graph" {
           arn = $1
       )
 
-    -- To IAM Policies - (edge)
+    -- To IAM Policies (edge)
     union all
     select
       r.role_id as from_id,
@@ -272,7 +273,7 @@ query "aws_iam_role_relationships_graph" {
     where
       r.arn = $1
 
-    -- From Kinesis Applications - (node)
+    -- From Kinesis Applications (node)
     union all
     select
       null as from_id,
@@ -286,7 +287,7 @@ query "aws_iam_role_relationships_graph" {
     where
       service_execution_role = $1
 
-    -- From Kinesis Applications - (edge)
+    -- From Kinesis Applications (edge)
     union all
     select
       application_arn as from_id,
@@ -302,7 +303,7 @@ query "aws_iam_role_relationships_graph" {
       r.arn = $1
       and r.arn = a.service_execution_role
 
-    -- From EMR Clusters - (node)
+    -- From EMR Clusters (node)
     union all
     select
       null as from_id,
@@ -324,7 +325,7 @@ query "aws_iam_role_relationships_graph" {
           arn = $1
       )
 
-    -- From EMR Clusters - (edge)
+    -- From EMR Clusters (edge)
     union all
     select
       c.id as from_id,
@@ -340,7 +341,7 @@ query "aws_iam_role_relationships_graph" {
       r.arn = $1
       and r.name = c.service_role
 
-    -- From GuardDuty Detectors - (node)
+    -- From GuardDuty Detectors (node)
     union all
     select
       null as from_id,
@@ -354,7 +355,7 @@ query "aws_iam_role_relationships_graph" {
     where
       service_role = $1
 
-    -- From GuardDuty Detectors - (edge)
+    -- From GuardDuty Detectors (edge)
     union all
     select
       detector_id as from_id,
@@ -370,7 +371,7 @@ query "aws_iam_role_relationships_graph" {
       r.arn = $1
       and r.arn = d.service_role
 
-    -- From Lambda Functions - (node)
+    -- From Lambda Functions (node)
     union all
     select
       null as from_id,
@@ -384,7 +385,7 @@ query "aws_iam_role_relationships_graph" {
     where
       role = $1
 
-    -- From Lambda Functions  - (edge)
+    -- From Lambda Functions (edge)
     union all
     select
       f.arn as from_id,
@@ -400,7 +401,7 @@ query "aws_iam_role_relationships_graph" {
       r.arn = $1
       and r.arn = f.role
 
-    -- From Instance Profiles - (node)
+    -- From Instance Profiles (node)
     union all
     select
       null as from_id,
@@ -415,7 +416,7 @@ query "aws_iam_role_relationships_graph" {
     where
       arn = $1
 
-     -- From Instance Profiles  - (edge)
+     -- From Instance Profiles (edge)
     union all
     select
       iam_instance_profile_arn as from_id,
@@ -430,7 +431,7 @@ query "aws_iam_role_relationships_graph" {
     where
       arn = $1
 
-    -- From EC2 Instances - (node)
+    -- From EC2 Instances (node)
     union all
     select
       null as from_id,
@@ -447,7 +448,7 @@ query "aws_iam_role_relationships_graph" {
       r.arn = $1
       and instance_profile = i.iam_instance_profile_arn
 
-    -- From EC2 Instances - (edge)
+    -- From EC2 Instances (edge)
     union all
     select
       i.instance_id as from_id,

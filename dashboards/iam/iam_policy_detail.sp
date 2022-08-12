@@ -72,7 +72,7 @@ query "aws_iam_policy_relationships_graph" {
     where
       arn = $1
 
-    -- To IAM Role - (node)
+    -- To IAM Role (node)
     union all
     select
       null as from_id,
@@ -87,7 +87,7 @@ query "aws_iam_policy_relationships_graph" {
     where
       arns = $1
 
-    -- To IAM Role - (edge)
+    -- To IAM Role (edge)
     union all
     select
       r.role_id as from_id,
@@ -105,7 +105,7 @@ query "aws_iam_policy_relationships_graph" {
     where
       p.arn = $1
 
-     -- To IAM User - (node)
+     -- To IAM User (node)
     union all
     select
       null as from_id,
@@ -120,7 +120,7 @@ query "aws_iam_policy_relationships_graph" {
     where
       arns = $1
 
-    -- To IAM User - (edge)
+    -- To IAM User (edge)
     union all
     select
       u.name as from_id,
@@ -138,7 +138,7 @@ query "aws_iam_policy_relationships_graph" {
       and p.arn = $1
 
 
-    -- To IAM Group - (node)
+    -- To IAM Group (node)
     union all
     select
       null as from_id,
@@ -153,7 +153,7 @@ query "aws_iam_policy_relationships_graph" {
     where
       arns = $1
 
-    -- To IAM Group - (edge)
+    -- To IAM Group (edge)
     union all
     select
       g.name as from_id,
@@ -173,7 +173,7 @@ query "aws_iam_policy_relationships_graph" {
     order by
       category,
       from_id,
-      to_id
+      to_id;
   EOQ
 
   param "arn" {}
