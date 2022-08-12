@@ -888,3 +888,4 @@ query "aws_vpc_graph_to_vpc" {
   EOQ
   param "vpc_id" {}
 }
+
