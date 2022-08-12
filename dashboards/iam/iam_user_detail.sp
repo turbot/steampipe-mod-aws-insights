@@ -1,6 +1,6 @@
 dashboard "aws_iam_user_detail" {
 
-  title = "AWS IAM User Detail"
+  title         = "AWS IAM User Detail"
   documentation = file("./dashboards/iam/docs/iam_user_detail.md")
 
   tags = merge(local.iam_common_tags, {
@@ -18,7 +18,7 @@ dashboard "aws_iam_user_detail" {
     card {
       width = 2
       query = query.aws_iam_user_mfa_for_user
-      args  = {
+      args = {
         arn = self.input.user_arn.value
       }
     }
@@ -26,7 +26,7 @@ dashboard "aws_iam_user_detail" {
     card {
       width = 2
       query = query.aws_iam_boundary_policy_for_user
-      args  = {
+      args = {
         arn = self.input.user_arn.value
       }
     }
@@ -34,7 +34,7 @@ dashboard "aws_iam_user_detail" {
     card {
       width = 2
       query = query.aws_iam_user_inline_policy_count_for_user
-      args  = {
+      args = {
         arn = self.input.user_arn.value
       }
     }
@@ -42,11 +42,38 @@ dashboard "aws_iam_user_detail" {
     card {
       width = 2
       query = query.aws_iam_user_direct_attached_policy_count_for_user
-      args  = {
+      args = {
         arn = self.input.user_arn.value
       }
     }
 
+  }
+
+  container {
+
+    graph {
+      type  = "graph"
+      title = "Relationships"
+      query = query.aws_iam_user_relationships_graph
+      args = {
+        arn = self.input.user_arn.value
+      }
+      category "aws_iam_user" {
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/iam_user_light.svg"))
+      }
+
+      category "aws_iam_group" {
+        href = "/aws_insights.dashboard.aws_iam_group_detail?input.group_arn={{.properties.'ARN' | @uri}}"
+      }
+
+      category "aws_iam_policy" {
+        color = "blue"
+      }
+
+      category "uses" {
+        color = "green"
+      }
+    }
   }
 
   container {
@@ -60,7 +87,7 @@ dashboard "aws_iam_user_detail" {
         type  = "line"
         width = 6
         query = query.aws_iam_user_overview
-        args  = {
+        args = {
           arn = self.input.user_arn.value
         }
       }
@@ -69,7 +96,7 @@ dashboard "aws_iam_user_detail" {
         title = "Tags"
         width = 6
         query = query.aws_iam_user_tags
-        args  = {
+        args = {
           arn = self.input.user_arn.value
         }
       }
@@ -83,7 +110,7 @@ dashboard "aws_iam_user_detail" {
       table {
         title = "Console Password"
         query = query.aws_iam_user_console_password
-        args  = {
+        args = {
           arn = self.input.user_arn.value
         }
       }
@@ -91,7 +118,7 @@ dashboard "aws_iam_user_detail" {
       table {
         title = "Access Keys"
         query = query.aws_iam_user_access_keys
-        args  = {
+        args = {
           arn = self.input.user_arn.value
         }
       }
@@ -99,7 +126,7 @@ dashboard "aws_iam_user_detail" {
       table {
         title = "MFA Devices"
         query = query.aws_iam_user_mfa_devices
-        args  = {
+        args = {
           arn = self.input.user_arn.value
         }
       }
@@ -116,7 +143,7 @@ dashboard "aws_iam_user_detail" {
       type  = "sankey"
       title = "Attached Policies"
       query = query.aws_iam_user_manage_policies_sankey
-      args  = {
+      args = {
         arn = self.input.user_arn.value
       }
 
@@ -129,7 +156,7 @@ dashboard "aws_iam_user_detail" {
       title = "Groups"
       width = 6
       query = query.aws_iam_groups_for_user
-      args  = {
+      args = {
         arn = self.input.user_arn.value
       }
 
@@ -145,7 +172,7 @@ dashboard "aws_iam_user_detail" {
       title = "Policies"
       width = 6
       query = query.aws_iam_all_policies_for_user
-      args  = {
+      args = {
         arn = self.input.user_arn.value
       }
     }
@@ -233,6 +260,99 @@ query "aws_iam_user_direct_attached_policy_count_for_user" {
       aws_iam_user
     where
      arn = $1
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_iam_user_relationships_graph" {
+  sql = <<-EOQ
+    select
+      null as from_id,
+      null as to_id,
+      user_id as id,
+      name as title,
+      'aws_iam_user' as category,
+      jsonb_build_object( 'ARN', arn, 'Path', path, 'Create Date', create_date, 'MFA Enabled', mfa_enabled::text, 'Account ID', account_id ) as properties
+    from
+      aws_iam_user
+    where
+      arn = $1
+
+    -- To IAM Groups - (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      g.name as id,
+      g.name as title,
+      'aws_iam_group' as category,
+      jsonb_build_object( 'ARN', arn, 'Path', path, 'Create Date', create_date, 'Account ID', account_id ) as properties
+    from
+      aws_iam_group as g,
+      jsonb_array_elements(users) as u
+    where
+      u ->> 'Arn' = $1
+
+    -- To IAM Groups - (edge)
+    union all
+    select
+      u ->> 'UserId' as from_id,
+      g.name as to_id,
+      null as id,
+      'uses' as title,
+      'uses' as category,
+      jsonb_build_object( 'Account ID', g.account_id ) as properties
+    from
+      aws_iam_group as g,
+      jsonb_array_elements(users) as u
+    where
+      u ->> 'Arn' = $1
+
+    -- To IAM Policies - (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      policy_id as id,
+      name as title,
+      'aws_iam_policy' as category,
+      jsonb_build_object( 'ARN', arn, 'AWS Managed', is_aws_managed::text, 'Attached', is_attached::text, 'Create Date', create_date, 'Account ID', account_id ) as properties
+    from
+      aws_iam_policy
+    where
+      arn in
+      (
+        select
+          jsonb_array_elements_text(attached_policy_arns)
+        from
+          aws_iam_user
+        where
+          arn = $1
+      )
+
+    -- To IAM Policies - (Edge)
+    union all
+    select
+      r.user_id as from_id,
+      p.policy_id as to_id,
+      null as id,
+      'uses' as title,
+      'uses' as category,
+      jsonb_build_object( 'Account ID', p.account_id ) as properties
+    from
+      aws_iam_user as r,
+      jsonb_array_elements_text(attached_policy_arns) as arns
+      left join
+        aws_iam_policy as p
+        on p.arn = arns
+    where
+      r.arn = $1
+
+    order by
+      category,
+      from_id,
+      to_id;
   EOQ
 
   param "arn" {}
@@ -416,7 +536,7 @@ query "aws_iam_user_manage_policies_sankey" {
 }
 
 query "aws_iam_groups_for_user" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       g ->> 'GroupName' as "Name",
       g ->> 'Arn' as "ARN"
