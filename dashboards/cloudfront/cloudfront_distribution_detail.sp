@@ -76,7 +76,7 @@ query "aws_cloudfront_distribution_relationships_graph" {
     where
       arn = $1
 
-    -- To ACM Certificates - (node)
+    -- To ACM Certificates (node)
     union all
     select
       null as from_id,
@@ -98,7 +98,7 @@ query "aws_cloudfront_distribution_relationships_graph" {
           arn = $1
       )
 
-    -- To ACM Certificates - (edge)
+    -- To ACM Certificates (edge)
     union all
     select
       d.id as from_id,
@@ -115,7 +115,7 @@ query "aws_cloudfront_distribution_relationships_graph" {
     where
       d.arn = $1
 
-    -- From S3 buckets - (node)
+    -- From S3 buckets (node)
     union all
     select
       null as from_id,
@@ -139,7 +139,7 @@ query "aws_cloudfront_distribution_relationships_graph" {
           and arn = $1
       )
 
-    -- From S3 Buckets - (edge)
+    -- From S3 Buckets (edge)
     union all
     select
       b.arn as from_id,
@@ -157,7 +157,7 @@ query "aws_cloudfront_distribution_relationships_graph" {
     where
       d.arn = $1
 
-    -- From EC2 Application Load Balancers - (node)
+    -- From EC2 Application Load Balancers (node)
     union all
     select
       null as from_id,
@@ -180,7 +180,7 @@ query "aws_cloudfront_distribution_relationships_graph" {
           arn = $1
       )
 
-    -- From EC2 Application Load Balancers - (edge)
+    -- From EC2 Application Load Balancers (edge)
     union all
     select
       b.arn as from_id,
@@ -198,7 +198,7 @@ query "aws_cloudfront_distribution_relationships_graph" {
     where
       d.arn = $1
 
-    -- From Media Store Containers - (node)
+    -- From Media Store Containers (node)
     union all
     select
       null as from_id,
@@ -221,7 +221,7 @@ query "aws_cloudfront_distribution_relationships_graph" {
           arn = $1
       )
 
-    -- From Media Store Containers - (edge)
+    -- From Media Store Containers (edge)
     union all
     select
       c.arn as from_id,
