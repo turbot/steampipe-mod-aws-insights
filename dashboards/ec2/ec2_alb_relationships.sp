@@ -34,6 +34,11 @@ dashboard "aws_alb_relationships" {
       icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/s3_bucket_light.svg"))
     }
 
+    category "aws_ec2_instance" {
+      href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_instance_light.svg"))
+    }
+
     category "aws_vpc_security_group" {
       href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.properties.'Group ID' | @uri}}"
     }
@@ -144,6 +149,55 @@ query "aws_alb_graph_to_instance"{
     where 
       alb.arn in (select jsonb_array_elements_text(tg.load_balancer_arns))
 
+    -- target group instances - nodes
+    union all 
+    select
+      null as from_id,
+      null as to_id,
+      instance.instance_id as id,
+      instance.title as title,
+      'aws_ec2_instance' as category,
+      jsonb_build_object(
+        'Instance ID', instance.instance_id,
+        'ARN', instance.arn,
+        'Account ID', instance.account_id,
+        'Region', instance.region
+      ) as properties
+    from
+      aws_ec2_target_group tg,
+      aws_ec2_instance instance,
+      jsonb_array_elements(tg.target_health_descriptions) thd,
+      alb
+    where 
+      instance.instance_id = thd->'Target'->>'Id'
+      and alb.arn in (select jsonb_array_elements_text(tg.load_balancer_arns))
+
+    -- target group instances - edges
+    union all 
+    select
+      tg.target_group_arn as from_id,
+      instance.instance_id as to_id,
+      null as id,
+      'Instance' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'Instance ID', instance.instance_id,
+        'ARN', instance.arn,
+        'Account ID', instance.account_id,
+        'Region', instance.region,
+        'Health Check Port', thd['HealthCheckPort'],
+        'Health Check State', thd['TargetHealth']['State'],
+        'health',tg.target_health_descriptions
+      ) as properties
+    from
+      aws_ec2_target_group tg,
+      aws_ec2_instance instance,
+      jsonb_array_elements(tg.target_health_descriptions) thd,
+      alb
+    where 
+      instance.instance_id = thd->'Target'->>'Id'
+      and alb.arn in (select jsonb_array_elements_text(tg.load_balancer_arns))
+
     -- S3 bucket I log to - nodes
     union all 
     select
@@ -253,7 +307,7 @@ query "aws_alb_graph_to_instance"{
     where
       alb.arn = lblistener.load_balancer_arn
     
-    -- lb listener - nodes
+    -- lb listener - edges
     union all
     select
       alb.arn as from_id,
@@ -266,6 +320,36 @@ query "aws_alb_graph_to_instance"{
         'Account ID', lblistener.account_id,
         'Region', lblistener.region
       ) as properties
+    from 
+      aws_ec2_load_balancer_listener lblistener,
+      alb
+    where
+      alb.arn = lblistener.load_balancer_arn
+    
+    -- lb listener port - nodes
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      (lblistener.arn || lblistener.port) as id,
+      ('Port ' || lblistener.port) as title,
+      'aws_ec2_load_balancer_listener_port' as category,
+      jsonb_build_object() as properties
+    from 
+      aws_ec2_load_balancer_listener lblistener,
+      alb
+    where
+      alb.arn = lblistener.load_balancer_arn
+    
+    -- lb listener port - edges
+    union all
+    select
+      lblistener.arn as from_id,
+      (lblistener.arn || lblistener.port) as to_id,
+      null as id,
+      'Inbound Port' as title,
+      'uses' as category,
+      jsonb_build_object() as properties
     from 
       aws_ec2_load_balancer_listener lblistener,
       alb

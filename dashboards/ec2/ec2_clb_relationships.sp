@@ -43,7 +43,7 @@ dashboard "aws_clb_relationships" {
 
 query "aws_clb_graph_to_instance" {
   sql = <<-EOQ
-    with clb as (select arn,name,account_id,region,title,access_log_s3_bucket_name,security_groups,vpc_id from aws_ec2_classic_load_balancer where arn = $1)
+    with clb as (select backend_server_descriptions,scheme,arn,name,account_id,region,title,access_log_s3_bucket_name,access_log_s3_bucket_prefix,security_groups,vpc_id from aws_ec2_classic_load_balancer where arn = $1)
     select
       null as from_id,
       null as to_id,
@@ -54,7 +54,9 @@ query "aws_clb_graph_to_instance" {
         'ARN', arn,
         'Account ID', account_id,
         'Region', region,
-        'Security Groups', clb.security_groups
+        'Security Groups', clb.security_groups,
+        'Scheme', clb.scheme,
+        'backend', clb.backend_server_descriptions
       ) as properties
     from
       clb
@@ -143,6 +145,55 @@ query "aws_clb_graph_to_instance" {
     where 
       clb.arn in (select jsonb_array_elements_text(tg.load_balancer_arns))
 
+    -- target group instances - nodes
+    union all 
+    select
+      null as from_id,
+      null as to_id,
+      instance.instance_id as id,
+      instance.title as title,
+      'aws_ec2_instance' as category,
+      jsonb_build_object(
+        'Instance ID', instance.instance_id,
+        'ARN', instance.arn,
+        'Account ID', instance.account_id,
+        'Region', instance.region
+      ) as properties
+    from
+      aws_ec2_target_group tg,
+      aws_ec2_instance instance,
+      jsonb_array_elements(tg.target_health_descriptions) thd,
+      clb
+    where 
+      instance.instance_id = thd->'Target'->>'Id'
+      and clb.arn in (select jsonb_array_elements_text(tg.load_balancer_arns))
+
+    -- target group instances - edges
+    union all 
+    select
+      tg.target_group_arn as from_id,
+      instance.instance_id as to_id,
+      null as id,
+      'Instance' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'Instance ID', instance.instance_id,
+        'ARN', instance.arn,
+        'Account ID', instance.account_id,
+        'Region', instance.region,
+        'Health Check Port', thd['HealthCheckPort'],
+        'Health Check State', thd['TargetHealth']['State'],
+        'health',tg.target_health_descriptions
+      ) as properties
+    from
+      aws_ec2_target_group tg,
+      aws_ec2_instance instance,
+      jsonb_array_elements(tg.target_health_descriptions) thd,
+      clb
+    where 
+      instance.instance_id = thd->'Target'->>'Id'
+      and clb.arn in (select jsonb_array_elements_text(tg.load_balancer_arns))
+
     -- S3 bucket I log to - nodes
     union all 
     select
@@ -177,7 +228,8 @@ query "aws_clb_graph_to_instance" {
         'ARN', clb.arn,
         'Account ID', clb.account_id,
         'Region', clb.region,
-        'Logs to', clb.access_log_s3_bucket_name
+        'Logs to', clb.access_log_s3_bucket_name,
+        'Log Prefix', clb.access_log_s3_bucket_prefix
       ) as properties
     from
       aws_s3_bucket buckets,
@@ -247,7 +299,7 @@ query "aws_clb_graph_to_instance" {
     where
       clb.arn = lblistener.load_balancer_arn
     
-    -- lb listener - nodes
+    -- lb listener - edges
     union all
     select
       clb.arn as from_id,
@@ -260,6 +312,36 @@ query "aws_clb_graph_to_instance" {
         'Account ID', lblistener.account_id,
         'Region', lblistener.region
       ) as properties
+    from 
+      aws_ec2_load_balancer_listener lblistener,
+      clb
+    where
+      clb.arn = lblistener.load_balancer_arn
+    
+    -- lb listener port - nodes
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      (lblistener.arn || lblistener.port) as id,
+      ('Port ' || lblistener.port) as title,
+      'aws_ec2_load_balancer_listener_port' as category,
+      jsonb_build_object() as properties
+    from 
+      aws_ec2_load_balancer_listener lblistener,
+      clb
+    where
+      clb.arn = lblistener.load_balancer_arn
+    
+    -- lb listener port - edges
+    union all
+    select
+      lblistener.arn as from_id,
+      (lblistener.arn || lblistener.port) as to_id,
+      null as id,
+      'Inbound Port' as title,
+      'uses' as category,
+      jsonb_build_object() as properties
     from 
       aws_ec2_load_balancer_listener lblistener,
       clb

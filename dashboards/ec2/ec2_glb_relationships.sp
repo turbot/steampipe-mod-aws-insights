@@ -141,6 +141,55 @@ query "aws_glb_graph_to_instance"{
     where 
       glb.arn in (select jsonb_array_elements_text(tg.load_balancer_arns))
 
+    -- target group instances - nodes
+    union all 
+    select
+      null as from_id,
+      null as to_id,
+      instance.instance_id as id,
+      instance.title as title,
+      'aws_ec2_instance' as category,
+      jsonb_build_object(
+        'Instance ID', instance.instance_id,
+        'ARN', instance.arn,
+        'Account ID', instance.account_id,
+        'Region', instance.region
+      ) as properties
+    from
+      aws_ec2_target_group tg,
+      aws_ec2_instance instance,
+      jsonb_array_elements(tg.target_health_descriptions) thd,
+      glb
+    where 
+      instance.instance_id = thd->'Target'->>'Id'
+      and glb.arn in (select jsonb_array_elements_text(tg.load_balancer_arns))
+
+    -- target group instances - edges
+    union all 
+    select
+      tg.target_group_arn as from_id,
+      instance.instance_id as to_id,
+      null as id,
+      'Instance' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'Instance ID', instance.instance_id,
+        'ARN', instance.arn,
+        'Account ID', instance.account_id,
+        'Region', instance.region,
+        'Health Check Port', thd['HealthCheckPort'],
+        'Health Check State', thd['TargetHealth']['State'],
+        'health',tg.target_health_descriptions
+      ) as properties
+    from
+      aws_ec2_target_group tg,
+      aws_ec2_instance instance,
+      jsonb_array_elements(tg.target_health_descriptions) thd,
+      glb
+    where 
+      instance.instance_id = thd->'Target'->>'Id'
+      and glb.arn in (select jsonb_array_elements_text(tg.load_balancer_arns))
+
     -- S3 bucket I log to - nodes
     union all 
     select
