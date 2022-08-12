@@ -433,7 +433,7 @@ query "aws_rds_db_instance_tags" {
 
 query "aws_rds_db_instance_relationships_graph" {
   sql = <<-EOQ
-    -- RDS DB INSTANCE NODE
+    -- RDS DB instance (node)
     select
       null as from_id,
       null as to_id,
@@ -456,7 +456,108 @@ query "aws_rds_db_instance_relationships_graph" {
     where
       arn = $1
 
-    -- SUBNET NODE
+    -- To DB Parameter groups (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      db_parameter_group ->> 'DBParameterGroupName' as id,
+      db_parameter_group ->> 'DBParameterGroupName' as title,
+      'db_parameter_group' as category,
+      jsonb_build_object(
+        'DB Parameter Group Apply Status', db_parameter_group ->> 'ParameterApplyStatus',
+        'Account ID', rdb.account_id,
+        'Region', rdb.region
+      ) as properties
+    from
+      aws_rds_db_instance as rdb,
+      jsonb_array_elements(db_parameter_groups) as db_parameter_group
+    where
+      rdb.arn = $1
+
+    -- To DB parameter groups (edge)
+    union all
+    select
+      rdb.db_instance_identifier as from_id,
+      db_parameter_group ->> 'DBParameterGroupName' as to_id,
+      null as id,
+      'uses_parameter_group' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'DB Parameter Group Apply Status', db_parameter_group ->> 'ParameterApplyStatus',
+        'Account ID', rdb.account_id,
+        'Region', rdb.region
+      ) as properties
+    from
+      aws_rds_db_instance as rdb,
+      jsonb_array_elements(db_parameter_groups) as db_parameter_group
+    where
+      rdb.arn = $1
+
+    -- To KMS Keys (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      k.id as id,
+      COALESCE(k.aliases #>> '{0,AliasName}', k.id) as title,
+      'kms_key' as category,
+      jsonb_build_object(
+        'ARN', k.arn,
+        'Rotation Enabled', k.key_rotation_enabled::text,
+        'Account ID', k.account_id,
+        'Region', k.region
+      ) as properties
+    from
+      aws_rds_db_instance as rdb
+      left join aws_kms_key as k on rdb.kms_key_id = k.arn
+    where
+      rdb.arn = $1
+
+    -- To KMS keys (edge)
+    union all
+    select
+      rdb.db_instance_identifier as from_id,
+      k.id as to_id,
+      null as id,
+      'encrypted_with' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'ARN', k.arn,
+        'DB Identifier', rdb.db_instance_identifier,
+        'Account ID', k.account_id,
+        'Region', k.region
+      ) as properties
+    from
+      aws_rds_db_instance as rdb
+      left join aws_kms_key as k on rdb.kms_key_id = k.arn
+    where
+      rdb.arn = $1
+
+    -- To VPC vpcs (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      v.vpc_id as id,
+      v.title,
+      'aws_vpc' as category,
+      jsonb_build_object(
+        'VPC ID', v.vpc_id,
+        'ARN', v.arn,
+        'CIDR Block', cidr_block,
+        'Is Default', is_default::text,
+        'Account ID', v.account_id,
+        'Region', v.region
+      ) as properties
+    from
+      aws_vpc as v,
+      aws_rds_db_instance as di
+    where
+      di.arn = $1
+      and v.vpc_id = di.vpc_id
+
+    -- To VPC subnets (node)
     union all
     select
       null as from_id,
@@ -482,7 +583,30 @@ query "aws_rds_db_instance_relationships_graph" {
       vs.availability_zone is not null
       and rdb.arn = $1
 
-    -- SECURITY GROUP NODE
+    -- To VPC subnets (edge)
+    union all
+    select
+      rdb.db_instance_identifier as from_id,
+      vs.subnet_id as to_id,
+      null as id,
+      'uses subnet' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'DB Identifier', rdb.db_instance_identifier,
+        'Subnet Id', vs.subnet_id,
+        'Subnet CIDR Block', vs.cidr_block,
+        'Account ID', vs.account_id,
+        'Region', vs.region
+      ) as properties
+    from
+      aws_rds_db_instance as rdb
+      cross join jsonb_array_elements(subnets) as subnet
+      left join aws_vpc_subnet as vs on subnet ->> 'SubnetIdentifier' = vs.subnet_id and vs.availability_zone = rdb.availability_zone
+    where
+      vs.availability_zone is not null
+      and rdb.arn = $1
+
+    -- To VPC security groups (node)
     union all
     select
       null as from_id,
@@ -504,120 +628,13 @@ query "aws_rds_db_instance_relationships_graph" {
       di.arn = $1
       and di.vpc_id = sg.vpc_id
 
-    -- VPC NODE
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      v.vpc_id as id,
-      v.title,
-      'aws_vpc' as category,
-      jsonb_build_object(
-        'VPC ID', v.vpc_id,
-        'ARN', v.arn,
-        'CIDR Block', cidr_block,
-        'Is Default', is_default::text,
-        'Account ID', v.account_id,
-        'Region', v.region
-      ) as properties
-    from
-      aws_vpc as v,
-      aws_rds_db_instance as di
-    where
-      di.arn = $1
-      and v.vpc_id = di.vpc_id
-
-    -- DB Parameter Group Node
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      db_parameter_group ->> 'DBParameterGroupName' as id,
-      db_parameter_group ->> 'DBParameterGroupName' as title,
-      'db_parameter_group' as category,
-      jsonb_build_object(
-        'DB Parameter Group Apply Status', db_parameter_group ->> 'ParameterApplyStatus',
-        'Account ID', rdb.account_id,
-        'Region', rdb.region
-      ) as properties
-    from
-      aws_rds_db_instance as rdb,
-      jsonb_array_elements(db_parameter_groups) as db_parameter_group
-    where
-      rdb.arn = $1
-
-    -- KMS KEY Node
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      k.id as id,
-      COALESCE(k.aliases #>> '{0,AliasName}', k.id) as title,
-      'kms_key' as category,
-      jsonb_build_object(
-        'ARN', k.arn,
-        'Rotation Enabled', k.key_rotation_enabled::text,
-        'Account ID', k.account_id,
-        'Region', k.region
-      ) as properties
-    from
-      aws_rds_db_instance as rdb
-      left join aws_kms_key as k on rdb.kms_key_id = k.arn
-    where
-      rdb.arn = $1
-
-    -- SUBNET TO VPC -- EDGE
-    union all
-    select
-      vs.subnet_id as from_id,
-      vs.vpc_id as to_id,
-      null as id,
-      'uses' as title,
-      'uses' as category,
-      jsonb_build_object(
-        'Subnet Id', vs.subnet_id,
-        'VPC ID', vs.vpc_id,
-        'Subnet CIDR Block', vs.cidr_block,
-        'Availability Zone', vs.availability_zone
-      ) as properties
-    from
-      aws_rds_db_instance as rdb
-      cross join jsonb_array_elements(subnets) as subnet
-      left join aws_vpc_subnet as vs on subnet ->> 'SubnetIdentifier' = vs.subnet_id and vs.availability_zone = rdb.availability_zone
-    where
-      vs.availability_zone is not null
-      and rdb.arn = $1
-
-    -- DB INSTANCE TO SUBNET -- EDGE
-    union all
-    select
-      rdb.db_instance_identifier as from_id,
-      vs.subnet_id as to_id,
-      null as id,
-      'uses' as title,
-      'uses' as category,
-      jsonb_build_object(
-        'DB Identifier', rdb.db_instance_identifier,
-        'Subnet Id', vs.subnet_id,
-        'Subnet CIDR Block', vs.cidr_block,
-        'Account ID', vs.account_id,
-        'Region', vs.region
-      ) as properties
-    from
-      aws_rds_db_instance as rdb
-      cross join jsonb_array_elements(subnets) as subnet
-      left join aws_vpc_subnet as vs on subnet ->> 'SubnetIdentifier' = vs.subnet_id and vs.availability_zone = rdb.availability_zone
-    where
-      vs.availability_zone is not null
-      and rdb.arn = $1
-
-    -- DB TO SECURITY GROUP EDGE
+    -- To VPC security groups (edge)
     union all
     select
       di.db_instance_identifier as from_id,
       sg.group_id as to_id,
       null as id,
-      'uses' as title,
+      'uses security group' as title,
       'uses' as category,
       jsonb_build_object(
         'DB Identifier', di.db_instance_identifier,
@@ -633,17 +650,41 @@ query "aws_rds_db_instance_relationships_graph" {
       di.arn = $1
       and di.vpc_id = sg.vpc_id
 
-    -- SECURITY GROUP TO VPC EDGE
+    -- To VPC subnets - vpcs (edge)
+    union all
+    select
+      vs.subnet_id as from_id,
+      vs.vpc_id as to_id,
+      null as id,
+      'is in' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'Subnet Id', vs.subnet_id,
+        'VPC ID', vs.vpc_id,
+        'Subnet CIDR Block', vs.cidr_block,
+        'Availability Zone', vs.availability_zone
+      ) as properties
+    from
+      aws_rds_db_instance as rdb
+      cross join jsonb_array_elements(subnets) as subnet
+      left join aws_vpc_subnet as vs on subnet ->> 'SubnetIdentifier' = vs.subnet_id and vs.availability_zone = rdb.availability_zone
+    where
+      vs.availability_zone is not null
+      and rdb.arn = $1
+
+    -- To VPC security groups - vpcs (edge)
     union all
     select
       sg.group_id as from_id,
       sg.vpc_id as to_id,
       null as id,
-      'uses' as title,
+      'is in' as title,
       'uses' as category,
       jsonb_build_object(
         'Security Group ID', sg.group_id,
-        'VPC ID', sg.vpc_id
+        'VPC ID', sg.vpc_id,
+        'Account ID', sg.account_id,
+        'Region', sg.region
       ) as properties
     from
       aws_rds_db_instance as di
@@ -653,46 +694,9 @@ query "aws_rds_db_instance_relationships_graph" {
       di.arn = $1
       and di.vpc_id = sg.vpc_id
 
-    -- DB Parameter Group EDGE
-    union all
-    select
-      rdb.db_instance_identifier as from_id,
-      db_parameter_group ->> 'DBParameterGroupName' as to_id,
-      null as id,
-      'uses_parameter_group' as title,
-      'uses' as category,
-      jsonb_build_object(
-        'DB Parameter Group Apply Status', db_parameter_group ->> 'ParameterApplyStatus',
-        'Account ID', rdb.account_id,
-        'Region', rdb.region
-      ) as properties
-    from
-      aws_rds_db_instance as rdb,
-      jsonb_array_elements(db_parameter_groups) as db_parameter_group
-    where
-      rdb.arn = $1
 
-    -- KMS KEY Edge
-    union all
-    select
-      rdb.db_instance_identifier as from_id,
-      k.id as to_id,
-      null as id,
-      'encrypted_with' as title,
-      'uses' as category,
-      jsonb_build_object(
-        'ARN', k.arn,
-        'DB Identifier', rdb.db_instance_identifier,
-        'Account ID', k.account_id,
-        'Region', k.region
-      ) as properties
-    from
-      aws_rds_db_instance as rdb
-      left join aws_kms_key as k on rdb.kms_key_id = k.arn
-    where
-      rdb.arn = $1
-
-    -- RDS DB Cluster NODE
+    -- THINGS THAT USE ME
+    -- From DB Cluster (node)
     union all
     select
       null as from_id,
@@ -716,14 +720,14 @@ query "aws_rds_db_instance_relationships_graph" {
     where
       i.arn = $1
 
-    -- Edge Cluster to DB
+    -- From DB Cluster (edge)
     union all
     select
       c.db_cluster_identifier as from_id,
       i.db_instance_identifier as to_id,
       null as id,
-      'uses' as title,
-      'uses' as title,
+      'has instance' as title,
+      'uses' as category,
       jsonb_build_object(
         'Cluster', c.title,
         'Instance', c.title,
@@ -735,6 +739,11 @@ query "aws_rds_db_instance_relationships_graph" {
       left join aws_rds_db_cluster as c on i.db_cluster_identifier = c.db_cluster_identifier
     where
       i.arn = $1
+
+    order by
+      category,
+      from_id,
+      to_id;
   EOQ
 
   param "arn" {}

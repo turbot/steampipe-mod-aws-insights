@@ -418,6 +418,11 @@ query "aws_rds_db_cluster_relationships_graph" {
       left join aws_vpc_security_group as sg on sg.group_id = csg ->> 'VpcSecurityGroupId'
     where
       c.arn = $1
+
+    order by
+      category,
+      from_id,
+      to_id;
   EOQ
 
   param "arn" {}
