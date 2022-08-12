@@ -516,7 +516,7 @@ query "aws_rds_db_instance_relationships_graph" {
       ) as properties
     from
       aws_rds_db_instance rdb
-      left join aws_rds_db_subnet_group as rdsg on rdb.db_subnet_group_name = rdsg.name
+      join aws_rds_db_subnet_group as rdsg on rdb.db_subnet_group_name = rdsg.name
       and rdb.region = rdsg.region and
       rdb.account_id = rdsg.account_id
     where
@@ -537,7 +537,7 @@ query "aws_rds_db_instance_relationships_graph" {
       ) as properties
     from
       aws_rds_db_instance rdb
-      left join aws_rds_db_subnet_group as rdsg on rdb.db_subnet_group_name = rdsg.name
+      join aws_rds_db_subnet_group as rdsg on rdb.db_subnet_group_name = rdsg.name
       and rdb.region = rdsg.region and
       rdb.account_id = rdsg.account_id
     where
@@ -559,7 +559,7 @@ query "aws_rds_db_instance_relationships_graph" {
       ) as properties
     from
       aws_rds_db_instance as rdb
-      left join aws_kms_key as k on rdb.kms_key_id = k.arn
+      join aws_kms_key as k on rdb.kms_key_id = k.arn
     where
       rdb.arn = $1
 
@@ -579,7 +579,7 @@ query "aws_rds_db_instance_relationships_graph" {
       ) as properties
     from
       aws_rds_db_instance as rdb
-      left join aws_kms_key as k on rdb.kms_key_id = k.arn
+      join aws_kms_key as k on rdb.kms_key_id = k.arn
     where
       rdb.arn = $1
 
@@ -627,7 +627,7 @@ query "aws_rds_db_instance_relationships_graph" {
     from
       aws_rds_db_instance as rdb
       cross join jsonb_array_elements(subnets) as subnet
-      left join aws_vpc_subnet as vs on subnet ->> 'SubnetIdentifier' = vs.subnet_id
+      join aws_vpc_subnet as vs on subnet ->> 'SubnetIdentifier' = vs.subnet_id
     where
       rdb.arn = $1
 
@@ -649,7 +649,7 @@ query "aws_rds_db_instance_relationships_graph" {
     from
       aws_rds_db_instance as rdb
       cross join jsonb_array_elements(subnets) as subnet
-      left join aws_vpc_subnet as vs on subnet ->> 'SubnetIdentifier' = vs.subnet_id
+      join aws_vpc_subnet as vs on subnet ->> 'SubnetIdentifier' = vs.subnet_id
     where
       rdb.arn = $1
 
@@ -670,7 +670,7 @@ query "aws_rds_db_instance_relationships_graph" {
     from
       aws_rds_db_instance as di
       cross join jsonb_array_elements(di.vpc_security_groups) as dsg
-      left join aws_vpc_security_group as sg on sg.group_id = dsg ->> 'VpcSecurityGroupId'
+      join aws_vpc_security_group as sg on sg.group_id = dsg ->> 'VpcSecurityGroupId'
     where
       di.arn = $1
       and di.vpc_id = sg.vpc_id
@@ -692,7 +692,7 @@ query "aws_rds_db_instance_relationships_graph" {
     from
       aws_rds_db_instance as di
       cross join jsonb_array_elements(di.vpc_security_groups) as dsg
-      left join aws_vpc_security_group as sg on sg.group_id = dsg ->> 'VpcSecurityGroupId'
+      join aws_vpc_security_group as sg on sg.group_id = dsg ->> 'VpcSecurityGroupId'
     where
       di.arn = $1
       and di.vpc_id = sg.vpc_id
@@ -703,7 +703,7 @@ query "aws_rds_db_instance_relationships_graph" {
       vs.subnet_id as from_id,
       vs.vpc_id as to_id,
       null as id,
-      'is in' as title,
+      'in vpc' as title,
       'uses' as category,
       jsonb_build_object(
         'Subnet Id', vs.subnet_id,
@@ -714,7 +714,7 @@ query "aws_rds_db_instance_relationships_graph" {
     from
       aws_rds_db_instance as rdb
       cross join jsonb_array_elements(subnets) as subnet
-      left join aws_vpc_subnet as vs on subnet ->> 'SubnetIdentifier' = vs.subnet_id
+      join aws_vpc_subnet as vs on subnet ->> 'SubnetIdentifier' = vs.subnet_id
     where
       rdb.arn = $1
 
@@ -724,7 +724,7 @@ query "aws_rds_db_instance_relationships_graph" {
       sg.group_id as from_id,
       sg.vpc_id as to_id,
       null as id,
-      'is in' as title,
+      'is vpc' as title,
       'uses' as category,
       jsonb_build_object(
         'Security Group ID', sg.group_id,
@@ -735,7 +735,7 @@ query "aws_rds_db_instance_relationships_graph" {
     from
       aws_rds_db_instance as di
       cross join jsonb_array_elements(di.vpc_security_groups) as dsg
-      left join aws_vpc_security_group as sg on sg.group_id = dsg ->> 'VpcSecurityGroupId'
+      join aws_vpc_security_group as sg on sg.group_id = dsg ->> 'VpcSecurityGroupId'
     where
       di.arn = $1
       and di.vpc_id = sg.vpc_id
@@ -762,7 +762,7 @@ query "aws_rds_db_instance_relationships_graph" {
       ) as properties
     from
       aws_rds_db_instance as i
-      left join aws_rds_db_cluster as c on i.db_cluster_identifier = c.db_cluster_identifier
+      join aws_rds_db_cluster as c on i.db_cluster_identifier = c.db_cluster_identifier
     where
       i.arn = $1
 
@@ -782,7 +782,7 @@ query "aws_rds_db_instance_relationships_graph" {
       ) as properties
     from
       aws_rds_db_instance as i
-      left join aws_rds_db_cluster as c on i.db_cluster_identifier = c.db_cluster_identifier
+      join aws_rds_db_cluster as c on i.db_cluster_identifier = c.db_cluster_identifier
     where
       i.arn = $1
 
