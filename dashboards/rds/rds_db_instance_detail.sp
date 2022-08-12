@@ -76,7 +76,13 @@ dashboard "aws_rds_db_instance_detail" {
         icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/rds_db_cluster_dark.svg"))
       }
 
-      category "db_parameter_group" {}
+      category "db_parameter_group" {
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/rds_db_parameter_group_dark.svg"))
+      }
+
+      category "db_subnet_group" {
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
+      }
 
       category "aws_vpc" {
         # cyclic dependency prevents use of url_path, hardcode for now
@@ -494,6 +500,49 @@ query "aws_rds_db_instance_relationships_graph" {
     where
       rdb.arn = $1
 
+    -- To RDS DB subnet group (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      rdsg.name as id,
+      rdsg.title as title,
+      'db_subnet_group' as category,
+      jsonb_build_object(
+        'Status', rdsg.status,
+        'VPC ID', rdsg.vpc_id,
+        'Account ID', rdsg.account_id,
+        'Region', rdsg.region
+      ) as properties
+    from
+      aws_rds_db_instance rdb
+      left join aws_rds_db_subnet_group as rdsg on rdb.db_subnet_group_name = rdsg.name
+      and rdb.region = rdsg.region and
+      rdb.account_id = rdsg.account_id
+    where
+      rdb.arn = $1
+
+    -- To RDS DB subnet group (edge)
+    union all
+    select
+      rdb.db_instance_identifier as from_id,
+      rdsg.name as to_id,
+      null as id,
+      'uses subnet group' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'Status', rdsg.status,
+        'Account ID', rdsg.account_id,
+        'Region', rdsg.region
+      ) as properties
+    from
+      aws_rds_db_instance rdb
+      left join aws_rds_db_subnet_group as rdsg on rdb.db_subnet_group_name = rdsg.name
+      and rdb.region = rdsg.region and
+      rdb.account_id = rdsg.account_id
+    where
+      rdb.arn = $1
+
     -- To KMS Keys (node)
     union all
     select
@@ -578,15 +627,14 @@ query "aws_rds_db_instance_relationships_graph" {
     from
       aws_rds_db_instance as rdb
       cross join jsonb_array_elements(subnets) as subnet
-      left join aws_vpc_subnet as vs on subnet ->> 'SubnetIdentifier' = vs.subnet_id and vs.availability_zone = rdb.availability_zone
+      left join aws_vpc_subnet as vs on subnet ->> 'SubnetIdentifier' = vs.subnet_id
     where
-      vs.availability_zone is not null
-      and rdb.arn = $1
+      rdb.arn = $1
 
     -- To VPC subnets (edge)
     union all
     select
-      rdb.db_instance_identifier as from_id,
+      rdb.db_subnet_group_name as from_id,
       vs.subnet_id as to_id,
       null as id,
       'uses subnet' as title,
@@ -601,10 +649,9 @@ query "aws_rds_db_instance_relationships_graph" {
     from
       aws_rds_db_instance as rdb
       cross join jsonb_array_elements(subnets) as subnet
-      left join aws_vpc_subnet as vs on subnet ->> 'SubnetIdentifier' = vs.subnet_id and vs.availability_zone = rdb.availability_zone
+      left join aws_vpc_subnet as vs on subnet ->> 'SubnetIdentifier' = vs.subnet_id
     where
-      vs.availability_zone is not null
-      and rdb.arn = $1
+      rdb.arn = $1
 
     -- To VPC security groups (node)
     union all
@@ -667,10 +714,9 @@ query "aws_rds_db_instance_relationships_graph" {
     from
       aws_rds_db_instance as rdb
       cross join jsonb_array_elements(subnets) as subnet
-      left join aws_vpc_subnet as vs on subnet ->> 'SubnetIdentifier' = vs.subnet_id and vs.availability_zone = rdb.availability_zone
+      left join aws_vpc_subnet as vs on subnet ->> 'SubnetIdentifier' = vs.subnet_id
     where
-      vs.availability_zone is not null
-      and rdb.arn = $1
+      rdb.arn = $1
 
     -- To VPC security groups - vpcs (edge)
     union all

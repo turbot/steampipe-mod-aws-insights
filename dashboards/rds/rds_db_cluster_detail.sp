@@ -116,19 +116,6 @@ dashboard "aws_rds_db_cluster_detail" {
       }
     }
 
-    container {
-      width = 6
-
-      table {
-        title = "Attributes"
-        # query = query.aws_rds_db_cluster_attributes
-        args = {
-          arn = self.input.db_cluster_arn.value
-        }
-      }
-
-    }
-
   }
 }
 
@@ -239,22 +226,6 @@ query "aws_rds_db_cluster_tags" {
       arn = $1
     order by
       tag ->> 'Key';
-  EOQ
-
-  param "arn" {}
-}
-
-query "aws_rds_db_cluster_attributes" {
-  sql = <<-EOQ
-    select
-      attributes ->> 'AttributeName' as "Name",
-      attributes ->> 'AttributeValue' as "Value",
-      source_db_cluster_arn as "DB Cluster Source Snapshot ARN"
-    from
-      aws_rds_db_cluster,
-      jsonb_array_elements(db_cluster_attributes) as attributes
-    where
-      arn = $1;
   EOQ
 
   param "arn" {}
