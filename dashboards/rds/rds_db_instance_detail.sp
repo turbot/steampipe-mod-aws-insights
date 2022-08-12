@@ -69,7 +69,6 @@ dashboard "aws_rds_db_instance_detail" {
       }
 
       category "aws_rds_db_instance" {
-        # href = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn={{.properties.ARN | @uri}}"
         icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/rds_db_instance_dark.svg"))
       }
 
@@ -91,7 +90,7 @@ dashboard "aws_rds_db_instance_detail" {
       }
 
       category "aws_vpc_security_group" {
-        // cyclic dependency prevents use of url_path, hardcode for now
+        # cyclic dependency prevents use of url_path, hardcode for now
         # href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.properties.\"Security Group ID\" | @uri}}"
 
         href = "/aws_insights.dashboard.aws_vpc_security_group_detail?input.security_group_id={{.properties.\"Security Group ID\" | @uri}}"
@@ -99,7 +98,7 @@ dashboard "aws_rds_db_instance_detail" {
       }
 
       category "kms_key" {
-        // cyclic dependency prevents use of url_path, hardcode for now
+        # cyclic dependency prevents use of url_path, hardcode for now
         # href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.ARN | @uri}}"
 
         href = "/aws_insights.dashboard.aws_kms_key_detail.url_path?input.key_arn={{.properties.ARN | @uri}}"
