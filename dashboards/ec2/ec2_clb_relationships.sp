@@ -15,7 +15,7 @@ dashboard "aws_clb_relationships" {
   graph {
     type  = "graph"
     title = "Things I use..."
-    query = query.aws_clb_graph_to_instance
+    query = query.aws_clb_graph_relationships
     args = {
       arn = self.input.clb.value
     }
@@ -41,7 +41,7 @@ dashboard "aws_clb_relationships" {
   }
 }
 
-query "aws_clb_graph_to_instance" {
+query "aws_clb_graph_relationships" {
   sql = <<-EOQ
     with clb as (select backend_server_descriptions,scheme,arn,name,account_id,region,title,access_log_s3_bucket_name,access_log_s3_bucket_prefix,security_groups,vpc_id from aws_ec2_classic_load_balancer where arn = $1)
     select

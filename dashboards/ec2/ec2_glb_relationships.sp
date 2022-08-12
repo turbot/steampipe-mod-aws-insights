@@ -15,7 +15,7 @@ dashboard "aws_glb_relationships" {
   graph {
     type  = "graph"
     title = "Things I use..."
-    query = query.aws_glb_graph_to_instance
+    query = query.aws_glb_graph_relationships
     args = {
       arn = self.input.glb.value
     }    
@@ -39,7 +39,7 @@ dashboard "aws_glb_relationships" {
 }
 
 
-query "aws_glb_graph_to_instance"{
+query "aws_glb_graph_relationships"{
   sql = <<-EOQ
     with glb as (select arn,name,account_id,region,title,security_groups,vpc_id,load_balancer_attributes from aws_ec2_gateway_load_balancer where arn = $1)
     select
@@ -127,7 +127,7 @@ query "aws_glb_graph_to_instance"{
       glb.arn as from_id,
       tg.target_group_arn as to_id,
       null as id,
-      'Targets' as title,
+      'targets' as title,
       'uses' as category,
       jsonb_build_object(
         'Group Name', tg.target_group_name,
@@ -170,7 +170,7 @@ query "aws_glb_graph_to_instance"{
       tg.target_group_arn as from_id,
       instance.instance_id as to_id,
       null as id,
-      'Instance' as title,
+      'forwards to' as title,
       'uses' as category,
       jsonb_build_object(
         'Instance ID', instance.instance_id,
@@ -219,7 +219,7 @@ query "aws_glb_graph_to_instance"{
       glb.arn as from_id,
       buckets.arn as to_id,
       null as id,
-      'Logs to' as title,
+      'logs to' as title,
       'uses' as category,
       jsonb_build_object(
         'Name', glb.name,
@@ -262,7 +262,7 @@ query "aws_glb_graph_to_instance"{
       glb.arn as from_id,
       vpc.vpc_id as to_id,
       null as id,
-      'VPC' as title,
+      'resides in' as title,
       'uses' as category,
       jsonb_build_object(
         'VPC ID', vpc.vpc_id,
@@ -298,13 +298,13 @@ query "aws_glb_graph_to_instance"{
     where
       glb.arn = lblistener.load_balancer_arn
     
-    -- lb listener - nodes
+    -- lb listener - edges
     union all
     select
       glb.arn as from_id,
       lblistener.arn as to_id,
       null as id,
-      'Listens on' as title,
+      'listens on' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', lblistener.arn,
