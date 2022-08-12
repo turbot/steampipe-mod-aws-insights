@@ -23,7 +23,7 @@ dashboard "aws_vpc_relationships" {
     }
 
     category "aws_vpc" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
       color = "orange"
       href  = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'ID' | @uri}}"
     }
@@ -37,32 +37,32 @@ dashboard "aws_vpc_relationships" {
     }
 
     category "aws_vpc_internet_gateway" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/vpc_internet_gateway_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_internet_gateway_light.svg"))
       color = "orange"
     }
 
     category "aws_vpc_route_table" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/vpc_router_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_router_light.svg"))
       color = "orange"
     }
 
     category "aws_ec2_transit_gateway" {
-      # icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/vpc_router_light.svg"))
+      # icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_router_light.svg"))
       color = "blue"
     }
 
     category "aws_vpc_endpoint" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/vpc_endpoint_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_endpoint_light.svg"))
       color = "orange"
     }
 
     category "aws_vpc_nat_gateway" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/vpc_nat_gateway_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_nat_gateway_light.svg"))
       color = "orange"
     }
 
     category "aws_vpc_vpn_gateway" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/vpc_vpn_gateway_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_vpn_gateway_light.svg"))
       color = "orange"
     }
   }
@@ -76,67 +76,67 @@ dashboard "aws_vpc_relationships" {
     }
 
     category "aws_vpc" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
       color = "orange"
       href  = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'ID' | @uri}}"
     }
 
     category "aws_ec2_instance" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2_instance_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_instance_light.svg"))
       color = "orange"
       href  = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
     }
 
     category "aws_lambda_function" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/lambda_function_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/lambda_function_light.svg"))
       color = "blue"
       href  = "${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn={{.properties.'ARN' | @uri}}"
     }
 
     category "aws_ec2_application_load_balancer" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2_application_load_balancer_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_application_load_balancer_light.svg"))
       color = "green"
     }
 
     category "aws_ec2_network_load_balancer" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2_network_load_balancer_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_network_load_balancer_light.svg"))
       color = "red"
     }
 
     category "aws_ec2_classic_load_balancer" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2_classic_load_balancer_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_classic_load_balancer_light.svg"))
       color = "red"
     }
 
     category "aws_ec2_gateway_load_balancer" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/ec2_gateway_load_balancer_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_gateway_load_balancer_light.svg"))
       color = "red"
     }
 
     category "aws_rds_db_instance" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/rds_db_instance_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/rds_db_instance_light.svg"))
       color = "orange"
       href  = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn={{.properties.'ARN' | @uri}}"
     }
 
     category "aws_redshift_cluster" {
-      # icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_redshift_cluster.svg"))
+      # icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/aws_redshift_cluster.svg"))
       color = "orange"
       href  = "${dashboard.aws_redshift_cluster_detail.url_path}?input.cluster_arn={{.properties.'ARN' | @uri}}"
     }
 
     category "aws_ec2_target_group" {
-      # icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_redshift_cluster.svg"))
+      # icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/aws_redshift_cluster.svg"))
       color = "red"
     }
 
     category "aws_fsx_file_system" {
-      # icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/aws_redshift_cluster.svg"))
+      # icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/aws_redshift_cluster.svg"))
       color = "orange"
     }
 
     category "aws_s3_access_point" {
-      icon = format("%s,%s", "image://data:image/svg+xml;base64", filebase64("./icons/s3_access_point_light.svg"))
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/s3_access_point_light.svg"))
       color = "orange"
     }
 
@@ -210,9 +210,9 @@ query "aws_vpc_graph_from_vpc" {
       'uses' as title,
       'uses' as category,
       jsonb_build_object(
-        'ARN', v.arn,
-        'Account ID', v.account_id,
-        'Region', v.region
+        'ARN', s.subnet_arn,
+        'Account ID', s.account_id,
+        'Region', s.region
       ) as properties
     from
       vpc as v
@@ -247,9 +247,9 @@ query "aws_vpc_graph_from_vpc" {
       'uses' as title,
       'uses' as category,
       jsonb_build_object(
-        'ARN', v.arn,
-        'Account ID', v.account_id,
-        'Region', v.region
+        'ID', i.internet_gateway_id,
+        'Account ID', i.account_id,
+        'Region', i.region
       ) as properties
     from
       vpc as v,
@@ -285,9 +285,9 @@ query "aws_vpc_graph_from_vpc" {
       'uses' as title,
       'uses' as category,
       jsonb_build_object(
-        'ARN', v.arn,
-        'Account ID', v.account_id,
-        'Region', v.region
+        'ID', rt.route_table_id,
+        'Account ID', rt.account_id,
+        'Region', rt.region
       ) as properties
     from
       vpc as v
@@ -320,9 +320,9 @@ query "aws_vpc_graph_from_vpc" {
       'uses' as title,
       'uses' as category,
       jsonb_build_object(
-        'ARN', v.arn,
-        'Account ID', v.account_id,
-        'Region', v.region
+        'ID', e.vpc_endpoint_id,
+        'Account ID', e.account_id,
+        'Region', e.region
       ) as properties
     from
       vpc as v
@@ -359,9 +359,9 @@ query "aws_vpc_graph_from_vpc" {
       'uses' as title,
       'uses' as category,
       jsonb_build_object(
-        'ARN', v.arn,
-        'Account ID', v.account_id,
-        'Region', v.region
+        'ID', a.transit_gateway_id,
+        'Account ID', a.account_id,
+        'Region', a.region
       ) as properties
     from
       vpc as v
@@ -395,9 +395,9 @@ query "aws_vpc_graph_from_vpc" {
       'uses' as title,
       'uses' as category,
       jsonb_build_object(
-        'ARN', v.arn,
-        'Account ID', v.account_id,
-        'Region', v.region
+        'ID', n.nat_gateway_id,
+        'Account ID', n.account_id,
+        'Region', n.region
       ) as properties
     from
       vpc as v
@@ -431,9 +431,8 @@ query "aws_vpc_graph_from_vpc" {
       'uses' as title,
       'uses' as category,
       jsonb_build_object(
-        'ARN', v.arn,
-        'Account ID', v.account_id,
-        'Region', v.region
+        'Account ID', g.account_id,
+        'Region', g.region
       ) as properties
     from
       vpc as v,
@@ -470,9 +469,9 @@ query "aws_vpc_graph_from_vpc" {
       'uses' as title,
       'uses' as category,
       jsonb_build_object(
-        'ARN', v.arn,
-        'Account ID', v.account_id,
-        'Region', v.region
+        'ARN', sg.arn,
+        'Account ID', sg.account_id,
+        'Region', sg.region
       ) as properties
     from
       vpc as v
@@ -528,9 +527,9 @@ query "aws_vpc_graph_to_vpc" {
       'Used By' as title,
       'used_by' as category,
       jsonb_build_object(
-        'ARN', v.arn,
-        'Account ID', v.account_id,
-        'Region', v.region
+        'ARN', i.arn,
+        'Account ID', i.account_id,
+        'Region', i.region
       ) as properties
     from
       vpc as v
@@ -563,9 +562,9 @@ query "aws_vpc_graph_to_vpc" {
       'Used By' as title,
       'used_by' as category,
       jsonb_build_object(
-        'ARN', v.arn,
-        'Account ID', v.account_id,
-        'Region', v.region
+        'ARN', l.arn,
+        'Account ID', l.account_id,
+        'Region', l.region
       ) as properties
     from
       vpc as v
@@ -598,9 +597,9 @@ query "aws_vpc_graph_to_vpc" {
       'Used By' as title,
       'used_by' as category,
       jsonb_build_object(
-        'ARN', v.arn,
-        'Account ID', v.account_id,
-        'Region', v.region
+        'ARN', a.arn,
+        'Account ID', a.account_id,
+        'Region', a.region
       ) as properties
     from
       vpc as v
@@ -633,9 +632,9 @@ query "aws_vpc_graph_to_vpc" {
       'Used By' as title,
       'used_by' as category,
       jsonb_build_object(
-        'ARN', v.arn,
-        'Account ID', v.account_id,
-        'Region', v.region
+        'ARN', n.arn,
+        'Account ID', n.account_id,
+        'Region', n.region
       ) as properties
     from
       vpc as v
@@ -668,9 +667,9 @@ query "aws_vpc_graph_to_vpc" {
       'Used By' as title,
       'used_by' as category,
       jsonb_build_object(
-        'ARN', v.arn,
-        'Account ID', v.account_id,
-        'Region', v.region
+        'ARN', c.arn,
+        'Account ID', c.account_id,
+        'Region', c.region
       ) as properties
     from
       vpc as v
@@ -703,9 +702,9 @@ query "aws_vpc_graph_to_vpc" {
       'Used By' as title,
       'used_by' as category,
       jsonb_build_object(
-        'ARN', v.arn,
-        'Account ID', v.account_id,
-        'Region', v.region
+        'ARN', g.arn,
+        'Account ID', g.account_id,
+        'Region', g.region
       ) as properties
     from
       vpc as v
@@ -738,9 +737,9 @@ query "aws_vpc_graph_to_vpc" {
       'Used By' as title,
       'used_by' as category,
       jsonb_build_object(
-        'ARN', v.arn,
-        'Account ID', v.account_id,
-        'Region', v.region
+        'ARN', i.arn,
+        'Account ID', i.account_id,
+        'Region', i.region
       ) as properties
     from
       vpc as v
@@ -773,9 +772,9 @@ query "aws_vpc_graph_to_vpc" {
       'Used By' as title,
       'used_by' as category,
       jsonb_build_object(
-        'ARN', v.arn,
-        'Account ID', v.account_id,
-        'Region', v.region
+        'ARN', c.arn,
+        'Account ID', c.account_id,
+        'Region', c.region
       ) as properties
     from
       vpc as v
@@ -808,9 +807,9 @@ query "aws_vpc_graph_to_vpc" {
       'Used By' as title,
       'used_by' as category,
       jsonb_build_object(
-        'ARN', v.arn,
-        'Account ID', v.account_id,
-        'Region', v.region
+        'ARN', t.target_group_arn,
+        'Account ID', t.account_id,
+        'Region', t.region
       ) as properties
     from
       vpc as v
@@ -843,9 +842,9 @@ query "aws_vpc_graph_to_vpc" {
       'Used By' as title,
       'used_by' as category,
       jsonb_build_object(
-        'ARN', v.arn,
-        'Account ID', v.account_id,
-        'Region', v.region
+        'ARN', f.arn,
+        'Account ID', f.account_id,
+        'Region', f.region
       ) as properties
     from
       vpc as v
@@ -878,9 +877,9 @@ query "aws_vpc_graph_to_vpc" {
       'Used By' as title,
       'used_by' as category,
       jsonb_build_object(
-        'ARN', v.arn,
-        'Account ID', v.account_id,
-        'Region', v.region
+        'ARN', a.access_point_arn,
+        'Account ID', a.account_id,
+        'Region', a.region
       ) as properties
     from
       vpc as v
