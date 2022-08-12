@@ -469,7 +469,7 @@ query "aws_redshift_cluster_relationship_graph" {
         'Region', s.region,
         'Description', s.description,
         'Status', s.subnet_group_status,
-        'Vpc Id', s.vpc_id
+        'Vpc ID', s.vpc_id
       ) as properties
     from
       cluster as c
@@ -491,7 +491,7 @@ query "aws_redshift_cluster_relationship_graph" {
         'Region', s.region,
         'Description', s.description,
         'Status', s.subnet_group_status,
-        'Vpc Id', s.vpc_id
+        'Vpc ID', s.vpc_id
       ) as properties
     from
       cluster as c
@@ -512,7 +512,7 @@ query "aws_redshift_cluster_relationship_graph" {
         'Account ID', s.account_id,
         'Region', s.region,
         'Subnet Status', subnet ->> 'SubnetStatus',
-        'Vpc Id', s.vpc_id
+        'Vpc ID', s.vpc_id
       ) as properties
     from
       cluster as c
@@ -535,7 +535,7 @@ query "aws_redshift_cluster_relationship_graph" {
         'Region', s.region,
         'Description', s.description,
         'Status', s.subnet_group_status,
-        'Vpc Id', s.vpc_id
+        'Vpc ID', s.vpc_id
       ) as properties
     from
       cluster as c
@@ -693,7 +693,7 @@ query "aws_redshift_cluster_relationship_graph" {
       'aws_iam_role' as category,
       jsonb_build_object(
         'ARN', r.arn,
-        'Role Id', r.role_id,
+        'Role ID', r.role_id,
         'Account ID', r.account_id,
         'Description', r.description
       ) as properties
@@ -712,7 +712,7 @@ query "aws_redshift_cluster_relationship_graph" {
       'attached_to' as category,
       jsonb_build_object(
         'ARN', r.arn,
-        'Role Id', r.role_id,
+        'Role ID', r.role_id,
         'Account ID', r.account_id
       ) as properties
     from
