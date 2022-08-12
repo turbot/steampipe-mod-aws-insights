@@ -262,7 +262,7 @@ query "aws_acm_certificate_relationships_graph" {
     where
       certificate_arn = $1
 
-    -- From Cloudfront Distributions - (node)
+    -- From Cloudfront Distributions (node)
     union all
     select
       null as from_id,
@@ -284,7 +284,7 @@ query "aws_acm_certificate_relationships_graph" {
           certificate_arn = $1
       )
 
-    -- From Cloudfront Distributions - (edge)
+    -- From Cloudfront Distributions (edge)
     union all
     select
       d.id as from_id,
@@ -302,7 +302,7 @@ query "aws_acm_certificate_relationships_graph" {
     where
       certificate_arn = $1
 
-    -- From EC2 Classic Load Balancers - (node)
+    -- From EC2 Classic Load Balancers (node)
     union all
     select
       null as from_id,
@@ -324,7 +324,7 @@ query "aws_acm_certificate_relationships_graph" {
           certificate_arn = $1
       )
 
-    -- From EC2 Classic Load Balancers - (edge)
+    -- From EC2 Classic Load Balancers (edge)
     union all
     select
       b.arn as from_id,
@@ -342,7 +342,7 @@ query "aws_acm_certificate_relationships_graph" {
     where
       certificate_arn = $1
 
-    -- From EC2 Application Load Balancers - (node)
+    -- From EC2 Application Load Balancers (node)
     union all
     select
       null as from_id,
@@ -365,7 +365,7 @@ query "aws_acm_certificate_relationships_graph" {
           certificate_arn = $1
       )
 
-    -- From EC2 Application Load Balancers - (edge)
+    -- From EC2 Application Load Balancers (edge)
     union all
     select
       lb.arn as from_id,
@@ -384,7 +384,7 @@ query "aws_acm_certificate_relationships_graph" {
       certificate_arn = $1
       and lb.arn like '%loadbalancer/app%'
 
-    -- From EC2 Network Load Balancers - (node)
+    -- From EC2 Network Load Balancers (node)
     union all
     select
       null as from_id,
@@ -406,7 +406,7 @@ query "aws_acm_certificate_relationships_graph" {
           certificate_arn = $1
       )
 
-    -- From EC2 Network Load Balancers - (edge)
+    -- From EC2 Network Load Balancers (edge)
     union all
     select
       b.arn as from_id,
