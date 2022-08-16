@@ -12,6 +12,26 @@ dashboard "aws_ebs_snapshot_detail" {
     sql   = query.aws_ebs_snapshot_input.sql
     width = 4
   }
+
+  container {
+
+    card {
+      width = 2
+      query = query.aws_ebs_snapshot_storage
+      args  = {
+        arn = self.input.snapshot_arn.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_ebs_snapshot_age
+      args  = {
+        arn = self.input.snapshot_arn.value
+      }
+    }
+    
+  }
   
   container {
     graph {
@@ -28,6 +48,8 @@ dashboard "aws_ebs_snapshot_detail" {
       }
 
       category "aws_ebs_volume" {
+        # vol -> snapshot -> vol cyclic dependency prevents usage of interpolation here
+        href = "/aws_insights.dashboard.aws_ebs_volume_detail?input.volume_arn={{.properties.'ARN' | @uri}}"
         icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ebs_volume_light.svg"))
       }
       
@@ -39,6 +61,10 @@ dashboard "aws_ebs_snapshot_detail" {
       category "aws_ebs_snapshot" {
         icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ebs_snapshot_light.svg"))
       }
+      
+      category "aws_ec2_ami" {
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_ami_light.svg"))
+      }
 
     }
   }
@@ -48,7 +74,7 @@ query "aws_ebs_snapshot_input" {
   sql = <<-EOQ
     select
       title as label,
-      snpshot_id as value,
+      arn as value,
       json_build_object(
         'account_id', account_id,
         'region', region,
@@ -60,6 +86,34 @@ query "aws_ebs_snapshot_input" {
     order by
       title;
   EOQ
+}
+
+query "aws_ebs_snapshot_storage" {
+  sql = <<-EOQ
+    select
+      'Storage (GB)' as label,
+      volume_size as value
+    from
+      aws_ebs_snapshot
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_ebs_snapshot_age" {
+  sql = <<-EOQ
+    select
+      'Age (days)' as label,
+      (EXTRACT(epoch FROM (SELECT (NOW() - start_time)))/86400)::int as value
+    from
+      aws_ebs_snapshot
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
 }
 
 query "aws_ebs_snapshot_relationships" {
@@ -92,6 +146,7 @@ query "aws_ebs_snapshot_relationships" {
       'aws_ebs_volume' as category,
       jsonb_build_object(
         'Volume ID', volumes.volume_id,
+        'ARN', volumes.arn,
         'Account ID', volumes.account_id,
         'Region', volumes.region
       ) as properties
@@ -161,6 +216,86 @@ query "aws_ebs_snapshot_relationships" {
     where
       bdm -> 'Ebs' is not null
       and bdm -> 'Ebs' ->> 'SnapshotId' = snapshot.snapshot_id
+      
+    -- Launch Config - nodes
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      launch_config.launch_configuration_arn as id,
+      launch_config.name as title,
+      'aws_ec2_launch_configuration' as category,
+      jsonb_build_object(
+        'ARN', launch_config.launch_configuration_arn,
+        'Account ID', launch_config.account_id,
+        'Region', launch_config.region
+      ) as properties
+    from
+      aws_ec2_launch_configuration as launch_config,
+      jsonb_array_elements(launch_config.block_device_mappings) as bdm,
+      snapshot
+    where
+      bdm -> 'Ebs' ->> 'SnapshotId' = snapshot.snapshot_id
+      
+    -- Launch Config - edges
+    union all
+    select
+      snapshot.snapshot_id as from_id,
+      launch_config.launch_configuration_arn as to_id,
+      null as id,
+      'mounts' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'ARN', launch_config.launch_configuration_arn,
+        'Account ID', launch_config.account_id,
+        'Region', launch_config.region
+      ) as properties
+    from
+      aws_ec2_launch_configuration as launch_config,
+      jsonb_array_elements(launch_config.block_device_mappings) as bdm,
+      snapshot
+    where
+      bdm -> 'Ebs' ->> 'SnapshotId' = snapshot.snapshot_id
+
+    -- kms - nodes
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      kms_keys.arn as id,
+      kms_keys.title as title,
+      'aws_kms_key' as category,
+      jsonb_build_object(
+        'ARN', kms_keys.arn,
+        'Account ID',kms_keys.account_id,
+        'Region', kms_keys.region,
+        'Key Manager', kms_keys.key_manager
+      ) as properties
+    from
+      aws_kms_key as kms_keys,
+      snapshot
+    where
+      snapshot.kms_key_id = kms_keys.arn
+
+    -- kms - nodes
+    union all
+    select
+      snapshot.snapshot_id as from_id,
+      kms_keys.arn as to_id,
+      null as id,
+      'secures with' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'ARN', kms_keys.arn,
+        'Account ID',kms_keys.account_id,
+        'Region', kms_keys.region,
+        'Key Manager', kms_keys.key_manager
+      ) as properties
+    from
+      aws_kms_key as kms_keys,
+      snapshot
+    where
+      snapshot.kms_key_id = kms_keys.arn
 
 
   EOQ

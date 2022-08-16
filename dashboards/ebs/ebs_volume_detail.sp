@@ -81,6 +81,7 @@ dashboard "aws_ebs_volume_detail" {
       }
 
       category "aws_ebs_snapshot" {
+        href = "${dashboard.aws_ebs_snapshot_detail.url_path}?input.snapshot_arn={{.properties.'ARN' | @uri}}"
         icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ebs_snapshot_light.svg"))
       }
 
