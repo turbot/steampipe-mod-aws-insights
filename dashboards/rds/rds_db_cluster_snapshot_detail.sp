@@ -67,6 +67,22 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
 
   container {
 
+    graph {
+      type  = "graph"
+      title = "Relationships"
+      query = query.aws_rds_db_cluster_snapshot_relationships_graph
+      args = {
+        arn = self.input.aws_rds_db_cluster_snapshot_input.value
+      }
+
+      category "db_cluster_snapshot" {
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ebs_snapshot_dark.svg"))
+      }
+    }
+  }
+
+  container {
+
     container {
       width = 6
 
@@ -261,6 +277,35 @@ query "aws_rds_db_cluster_snapshot_attributes" {
       jsonb_array_elements(db_cluster_snapshot_attributes) as attributes
     where
       arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+
+query "aws_rds_db_cluster_snapshot_relationships_graph" {
+  sql = <<-EOQ
+    -- RDS DB cluster snapshot (node)
+    select
+      null as from_id,
+      null as to_id,
+      db_cluster_snapshot_identifier as id,
+      title,
+      'db_cluster_snapshot' as category,
+      jsonb_build_object(
+        'ARN', arn,
+        'Status', status,
+        'Type', type,
+        'DB Cluster Identifier', db_cluster_identifier,
+        'Create Time', create_time,
+        'Encrypted', storage_encrypted::text,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_rds_db_cluster_snapshot
+    where
+      arn = $1
   EOQ
 
   param "arn" {}

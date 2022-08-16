@@ -77,6 +77,11 @@ dashboard "aws_rds_db_snapshot_detail" {
         icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ebs_snapshot_dark.svg"))
       }
 
+      category "aws_rds_db_instance" {
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/rds_db_instance_dark.svg"))
+        href = "/aws_insights.dashboard.aws_rds_db_instance_detail.url_path?input.db_instance_arn={{.properties.ARN | @uri}}"
+      }
+
       category "kms_key" {
         href = "/aws_insights.dashboard.aws_kms_key_detail.url_path?input.key_arn={{.properties.ARN | @uri}}"
         icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kms_key_dark.svg"))
@@ -339,30 +344,79 @@ query "aws_rds_db_snapshot_relationships_graph" {
         'Region', k.region
       ) as properties
     from
-      aws_rds_db_snapshot as rdb
-      join aws_kms_key as k on rdb.kms_key_id = k.arn
+      aws_rds_db_snapshot as s
+      join aws_kms_key as k on s.kms_key_id = k.arn
     where
-      rdb.arn = $1
+      s.arn = $1
 
     -- To KMS keys (edge)
     union all
     select
-      rdb.db_snapshot_identifier as from_id,
+      s.db_snapshot_identifier as from_id,
       k.id as to_id,
       null as id,
       'encrypted_with' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', k.arn,
-        'DB Snapshot Identifier', rdb.db_snapshot_identifier,
+        'DB Snapshot Identifier', s.db_snapshot_identifier,
         'Account ID', k.account_id,
         'Region', k.region
       ) as properties
     from
-      aws_rds_db_snapshot as rdb
-      join aws_kms_key as k on rdb.kms_key_id = k.arn
+      aws_rds_db_snapshot as s
+      join aws_kms_key as k on s.kms_key_id = k.arn
     where
-      rdb.arn = $1
+      s.arn = $1
+
+    -- From RDS DB instance (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      s.db_instance_identifier as id,
+      s.title as title,
+      'aws_rds_db_instance' as category,
+      jsonb_build_object(
+        'ARN', i.arn,
+        'Status', i.status,
+        'Public Access', i.publicly_accessible::text,
+        'Availability Zone', i.availability_zone,
+        'Create Time', i.create_time,
+        'Is Multi AZ', i.multi_az::text,
+        'Class', i.class,
+        'Account ID', i.account_id,
+        'Region', i.region
+      ) as properties
+    from
+      aws_rds_db_snapshot as s
+      join aws_rds_db_instance as i on s.db_instance_identifier = i.db_instance_identifier
+        and s.account_id = i.account_id
+        and s.region = i.region
+    where
+      s.arn = $1
+
+    -- From RDS DB instance (edge)
+    union all
+    select
+      i.db_instance_identifier as from_id,
+      s.db_snapshot_identifier as to_id,
+      null as id,
+      'has snapshot' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'DB Instance Identifier', i.db_instance_identifier,
+        'DB Snapshot Identifier', s.db_snapshot_identifier,
+        'Account ID', s.account_id,
+        'Region', s.region
+      ) as properties
+    from
+      aws_rds_db_snapshot as s
+      join aws_rds_db_instance as i on s.db_instance_identifier = i.db_instance_identifier
+        and s.account_id = i.account_id
+        and s.region = i.region
+    where
+      s.arn = $1
   EOQ
 
   param "arn" {}
