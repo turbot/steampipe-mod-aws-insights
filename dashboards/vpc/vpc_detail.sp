@@ -1454,6 +1454,42 @@ query "aws_vpc_relationships_graph" {
     where
       a ->> 'VpcId' = v.vpc_id
 
+  -- To Security Groups (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      arn as id,
+      title as title,
+      'aws_vpc_security_group' as category,
+      jsonb_build_object(
+        'ARN', arn,
+        'ID', group_id,
+        'Region', region,
+        'Account ID', account_id
+      ) as properties
+    from
+      aws_vpc_security_group
+    where
+      vpc_id = $1
+
+    -- To Security Groups (edges)
+    union all
+    select
+      v.vpc_id as from_id,
+      sg.arn as to_id,
+      null as id,
+      'uses' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'ARN', sg.arn,
+        'Account ID', sg.account_id,
+        'Region', sg.region
+      ) as properties
+    from
+      vpc as v
+      left join aws_vpc_security_group as sg on sg.vpc_id = v.vpc_id
+
     -- From EC2 Instances (node)
     union all
     select
