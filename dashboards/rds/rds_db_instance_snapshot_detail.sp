@@ -65,6 +65,28 @@ dashboard "aws_rds_db_snapshot_detail" {
 
   container {
 
+    graph {
+      type  = "graph"
+      title = "Relationships"
+      query = query.aws_rds_db_snapshot_relationships_graph
+      args = {
+        arn = self.input.db_snapshot_arn.value
+      }
+
+      category "rds_db_snapshot" {
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ebs_snapshot_dark.svg"))
+      }
+
+      category "kms_key" {
+        href = "/aws_insights.dashboard.aws_kms_key_detail.url_path?input.key_arn={{.properties.ARN | @uri}}"
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kms_key_dark.svg"))
+      }
+
+    }
+  }
+
+  container {
+
     container {
       width = 6
 
@@ -272,6 +294,75 @@ query "aws_rds_db_snapshot_storage" {
       aws_rds_db_snapshot
     where
       arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+
+query "aws_rds_db_snapshot_relationships_graph" {
+  sql = <<-EOQ
+    -- RDS DB instance snapshot (node)
+    select
+      null as from_id,
+      null as to_id,
+      db_snapshot_identifier as id,
+      title,
+      'rds_db_snapshot' as category,
+      jsonb_build_object(
+        'ARN', arn,
+        'Status', status,
+        'Availability Zone', availability_zone,
+        'DB Instance Identifier', db_instance_identifier,
+        'Create Time', create_time,
+        'Encrypted', encrypted::text,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_rds_db_snapshot
+    where
+      arn = $1
+
+    -- To KMS Keys (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      k.id as id,
+      COALESCE(k.aliases #>> '{0,AliasName}', k.id) as title,
+      'kms_key' as category,
+      jsonb_build_object(
+        'ARN', k.arn,
+        'Rotation Enabled', k.key_rotation_enabled::text,
+        'Account ID', k.account_id,
+        'Region', k.region
+      ) as properties
+    from
+      aws_rds_db_snapshot as rdb
+      join aws_kms_key as k on rdb.kms_key_id = k.arn
+    where
+      rdb.arn = $1
+
+    -- To KMS keys (edge)
+    union all
+    select
+      rdb.db_snapshot_identifier as from_id,
+      k.id as to_id,
+      null as id,
+      'encrypted_with' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'ARN', k.arn,
+        'DB Snapshot Identifier', rdb.db_snapshot_identifier,
+        'Account ID', k.account_id,
+        'Region', k.region
+      ) as properties
+    from
+      aws_rds_db_snapshot as rdb
+      join aws_kms_key as k on rdb.kms_key_id = k.arn
+    where
+      rdb.arn = $1
   EOQ
 
   param "arn" {}
