@@ -359,8 +359,6 @@ dashboard "aws_vpc_detail" {
 }
 
 
-
-
 flow "nacl_flow" {
   width = 6
   type  = "sankey"
@@ -725,9 +723,6 @@ query "aws_vpc_gateways_for_vpc" {
 
   param "vpc_id" {}
 }
-
-
-
 
 query "aws_ingress_nacl_for_vpc_sankey" {
   sql = <<-EOQ
@@ -1262,7 +1257,7 @@ query "aws_vpc_relationships_graph" {
       v.vpc_id as from_id,
       i.internet_gateway_id as to_id,
       null as id,
-      'uses' as title,
+      'attached to' as title,
       'uses' as category,
       jsonb_build_object(
         'ID', i.internet_gateway_id,
@@ -1300,7 +1295,7 @@ query "aws_vpc_relationships_graph" {
       v.vpc_id as from_id,
       rt.route_table_id as to_id,
       null as id,
-      'uses' as title,
+      'attached to' as title,
       'uses' as category,
       jsonb_build_object(
         'ID', rt.route_table_id,
@@ -1374,7 +1369,7 @@ query "aws_vpc_relationships_graph" {
       v.vpc_id as from_id,
       a.transit_gateway_id as to_id,
       null as id,
-      'uses' as title,
+      'attached to' as title,
       'uses' as category,
       jsonb_build_object(
         'ID', a.transit_gateway_id,
@@ -1410,7 +1405,7 @@ query "aws_vpc_relationships_graph" {
       v.vpc_id as from_id,
       n.arn as to_id,
       null as id,
-      'uses' as title,
+      'attached to' as title,
       'uses' as category,
       jsonb_build_object(
         'ID', n.nat_gateway_id,
@@ -1446,7 +1441,7 @@ query "aws_vpc_relationships_graph" {
       v.vpc_id as from_id,
       g.vpn_gateway_id as to_id,
       null as id,
-      'uses' as title,
+      'attached to' as title,
       'uses' as category,
       jsonb_build_object(
         'Account ID', g.account_id,
@@ -1458,42 +1453,6 @@ query "aws_vpc_relationships_graph" {
       jsonb_array_elements(vpc_attachments) as a
     where
       a ->> 'VpcId' = v.vpc_id
-
-    -- To Security Groups (node)
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      arn as id,
-      title as title,
-      'aws_vpc_security_group' as category,
-      jsonb_build_object(
-        'ARN', arn,
-        'ID', group_id,
-        'Region', region,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_vpc_security_group
-    where
-      vpc_id = $1
-
-    -- To Security Groups (edges)
-    union all
-    select
-      v.vpc_id as from_id,
-      sg.arn as to_id,
-      null as id,
-      'uses' as title,
-      'uses' as category,
-      jsonb_build_object(
-        'ARN', sg.arn,
-        'Account ID', sg.account_id,
-        'Region', sg.region
-      ) as properties
-    from
-      vpc as v
-      left join aws_vpc_security_group as sg on sg.vpc_id = v.vpc_id
 
     -- From EC2 Instances (node)
     union all
@@ -1517,9 +1476,9 @@ query "aws_vpc_relationships_graph" {
     union all
     select
       i.arn as from_id,
-      v.arn as to_id,
+      v.vpc_id as to_id,
       null as id,
-      'uses' as title,
+      'attached to' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', i.arn,
@@ -1552,9 +1511,9 @@ query "aws_vpc_relationships_graph" {
     union all
     select
       l.arn as from_id,
-      v.arn as to_id,
+      v.vpc_id as to_id,
       null as id,
-      'uses' as title,
+      'attached to' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', l.arn,
@@ -1587,9 +1546,9 @@ query "aws_vpc_relationships_graph" {
     union all
     select
       a.arn as from_id,
-      v.arn as to_id,
+      v.vpc_id as to_id,
       null as id,
-      'uses' as title,
+      'attached to' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', a.arn,
@@ -1622,9 +1581,9 @@ query "aws_vpc_relationships_graph" {
     union all
     select
       n.arn as from_id,
-      v.arn as to_id,
+      v.vpc_id as to_id,
       null as id,
-      'uses' as title,
+      'attached to' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', n.arn,
@@ -1657,9 +1616,9 @@ query "aws_vpc_relationships_graph" {
     union all
     select
       c.arn as from_id,
-      v.arn as to_id,
+      v.vpc_id as to_id,
       null as id,
-      'uses' as title,
+      'attached to' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', c.arn,
@@ -1692,9 +1651,9 @@ query "aws_vpc_relationships_graph" {
     union all
     select
       g.arn as from_id,
-      v.arn as to_id,
+      v.vpc_id as to_id,
       null as id,
-      'uses' as title,
+      'attached to' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', g.arn,
@@ -1727,9 +1686,9 @@ query "aws_vpc_relationships_graph" {
     union all
     select
       i.arn as from_id,
-      v.arn as to_id,
+      v.vpc_id as to_id,
       null as id,
-      'uses' as title,
+      'attached to' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', i.arn,
@@ -1762,9 +1721,9 @@ query "aws_vpc_relationships_graph" {
     union all
     select
       c.arn as from_id,
-      v.arn as to_id,
+      v.vpc_id as to_id,
       null as id,
-      'uses' as title,
+      'attached to' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', c.arn,
@@ -1797,9 +1756,9 @@ query "aws_vpc_relationships_graph" {
     union all
     select
       t.target_group_arn as from_id,
-      v.arn as to_id,
+      v.vpc_id as to_id,
       null as id,
-      'uses' as title,
+      'attached to' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', t.target_group_arn,
@@ -1832,9 +1791,9 @@ query "aws_vpc_relationships_graph" {
     union all
     select
       f.arn as from_id,
-      v.arn as to_id,
+      v.vpc_id as to_id,
       null as id,
-      'uses' as title,
+      'attached to' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', f.arn,
@@ -1867,9 +1826,9 @@ query "aws_vpc_relationships_graph" {
     union all
     select
       a.access_point_arn as from_id,
-      v.arn as to_id,
+      v.vpc_id as to_id,
       null as id,
-      'uses' as title,
+      'attached to' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', a.access_point_arn,
