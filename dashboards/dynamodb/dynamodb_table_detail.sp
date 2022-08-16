@@ -65,6 +65,31 @@ dashboard "aws_dynamodb_table_detail" {
 
   }
 
+  container{
+
+    graph {
+    type  = "graph"
+    title = "Relationships"
+    query = query.aws_dynamodb_table_graph_from_table
+    args = {
+      arn = self.input.table_arn.value
+    }
+    category "aws_dynamodb_table" {
+      icon  = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/dynamodb_table_light.svg"))
+    }
+
+    category "aws_kms_key" {
+      href  = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.ARN | @uri}}"
+      icon  = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kms_key_dark.svg"))
+    }
+
+    category "uses" {
+      color = "green"
+    }
+  }
+
+  }
+
   container {
 
     container {
@@ -262,6 +287,66 @@ query "aws_dynamodb_table_autoscaling_state" {
       left join table_with_autoscaling as t on concat('table/', d.name) = t.resource_id
     where
       d.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_dynamodb_table_graph_from_table" {
+  sql = <<-EOQ
+    select
+      null as from_id,
+      null as to_id,
+      table_id as id,
+      name as title,
+      'aws_dynamodb_table' as category,
+      jsonb_build_object( 'ARN', arn, 'Creation Date', creation_date_time, 'Table Status', table_status, 'Account ID', account_id ) as properties
+    from
+      aws_dynamodb_table
+    where
+      arn = $1
+
+    --To KMS Keys (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      id as id,
+      id as title,
+      'aws_kms_key' as category,
+      jsonb_build_object( 'ARN', arn, 'Key Manager', key_manager, 'Creation Date', creation_date, 'Enabled', enabled, 'Account ID', account_id ) as properties
+    from
+      aws_kms_key
+    where
+      arn in
+      (
+        select
+          sse_description ->> 'KMSMasterKeyArn'
+        from
+          aws_dynamodb_table
+        where
+          arn = $1
+      )
+
+    --To KMS Keys (edge)
+    union all
+    select
+      table_id as from_id,
+      k.id as to_id,
+      null as id,
+      'uses' as title,
+      'uses' as category,
+      jsonb_build_object( 'Account ID', t.account_id ) as properties
+    from
+      aws_dynamodb_table as t,
+      aws_kms_key as k
+    where
+      sse_description ->> 'KMSMasterKeyArn' = k.arn
+      and t.arn = $1
+    order by
+      category,
+      from_id,
+      to_id
   EOQ
 
   param "arn" {}
