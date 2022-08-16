@@ -1,9 +1,9 @@
 dashboard "aws_alb_relationships" {
-  title         = "AWS EC2 Application Load balancer Relationships"
+  title         = "AWS EC2 Application Load balancer Details"
   #documentation = file("./dashboards/lb/docs/alb_relationships.md")
   
   tags = merge(local.ec2_common_tags, {
-    type = "Relationships"
+    type = "Details"
   })
   
   input "alb" {
@@ -14,7 +14,7 @@ dashboard "aws_alb_relationships" {
   
   graph {
     type  = "graph"
-    title = "Things I use..."
+    title = "Relationships"
     query = query.aws_alb_graph_relationships
     args = {
       arn = self.input.alb.value
