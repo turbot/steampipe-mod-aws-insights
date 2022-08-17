@@ -1,14 +1,14 @@
 dashboard "aws_vpc_subnet_detail" {
 
   title         = "AWS VPC Subnet Detail"
-  #documentation = file("./dashboards/vpc/docs/vpc_subnet_relationships.md")
+  documentation = file("./dashboards/vpc/docs/vpc_subnet_detail.md")
 
   tags = merge(local.vpc_common_tags, {
     type = "Detail"
   })
 
   input "subnet_id" {
-    title = "Select a Subnet:"
+    title = "Select a subnet:"
     sql   = query.aws_vpc_subnet_input.sql
     width = 4
   }
@@ -29,7 +29,7 @@ dashboard "aws_vpc_subnet_detail" {
 
       category "aws_vpc" {
         icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
-        href  = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'ID' | @uri}}"
+        href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'ID' | @uri}}"
       }
 
       category "aws_vpc_network_acl" {
@@ -38,17 +38,17 @@ dashboard "aws_vpc_subnet_detail" {
 
       category "aws_rds_db_instance" {
         icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/rds_db_instance_light.svg"))
-        href  = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn={{.properties.'ARN' | @uri}}"
+        href = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn={{.properties.'ARN' | @uri}}"
       }
 
       category "aws_ec2_instance" {
         icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_instance_light.svg"))
-        href  = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
+        href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
       }
 
       category "aws_lambda_function" {
         icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/lambda_function_light.svg"))
-        href  = "${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn={{.properties.'ARN' | @uri}}"
+        href = "${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn={{.properties.'ARN' | @uri}}"
       }
 
     }
@@ -163,7 +163,7 @@ query "aws_vpc_subnet_relationships_graph" {
     where
       a ->> 'SubnetId' = $1
 
-    -- To Network Acls (node)
+    -- To Network ACLs (node)
     union all
     select
       null as from_id,
@@ -182,7 +182,7 @@ query "aws_vpc_subnet_relationships_graph" {
     where
       a ->> 'SubnetId' = $1
 
-    --  To Network Acls (edge)
+    -- To Network ACLs (edge)
     union all
     select
       $1 as from_id,

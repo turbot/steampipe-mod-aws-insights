@@ -1,7 +1,7 @@
 dashboard "aws_vpc_flow_log_detail" {
 
   title         = "AWS VPC Flow Logs Detail"
-  #documentation = file("./dashboards/vpc/docs/vpc_subnet_relationships.md")
+  documentation = file("./dashboards/vpc/docs/vpc_flow_log_detail.md")
 
   tags = merge(local.vpc_common_tags, {
     type = "Detail"
@@ -19,7 +19,7 @@ dashboard "aws_vpc_flow_log_detail" {
       type  = "graph"
       title = "Relationships"
       query = query.aws_vpc_flow_log_relationships_graph
-      args = {
+      args  = {
         flow_log_id = self.input.flow_log_id.value
       }
 
@@ -29,7 +29,7 @@ dashboard "aws_vpc_flow_log_detail" {
 
       category "aws_vpc" {
         icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
-        href  = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'ID' | @uri}}"
+        href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'ID' | @uri}}"
       }
 
       category "aws_vpc_network_acl" {
@@ -38,12 +38,12 @@ dashboard "aws_vpc_flow_log_detail" {
 
       category "aws_iam_role" {
         icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/iam_role_light.svg"))
-         href  = "${dashboard.aws_iam_role_detail.url_path}?input.role_arn={{.properties.'ARN' | @uri}}"
+        href = "${dashboard.aws_iam_role_detail.url_path}?input.role_arn={{.properties.'ARN' | @uri}}"
       }
 
       category "aws_s3_bucket" {
         icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/s3_bucket_light.svg"))
-         href  = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
+        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
       }
 
       category "aws_cloudwatch_log_group" {
@@ -78,7 +78,6 @@ query "aws_vpc_flow_log_input" {
 
 query "aws_vpc_flow_log_relationships_graph" {
   sql = <<-EOQ
-
   with flow_log as (select * from aws_vpc_flow_log where flow_log_id = $1)
 
     select
@@ -96,7 +95,7 @@ query "aws_vpc_flow_log_relationships_graph" {
     from
       flow_log
 
-    -- To S3 Bucket  (node)
+    -- To S3 Buckets (node)
     union all
     select
       null as from_id,
@@ -115,14 +114,14 @@ query "aws_vpc_flow_log_relationships_graph" {
     where
       f.log_destination_type = 's3'
 
-    -- To S3 Bucket  (edge)
+    -- To S3 Buckets (edge)
     union all
     select
       f.flow_log_id as from_id,
       s.arn as to_id,
       null as id,
-      'uses' as title,
-      'uses' as category,
+      'log destination' as title,
+      'log destination' as category,
       jsonb_build_object(
         'ARN', s.arn,
         'Account ID', s.account_id,
@@ -134,7 +133,7 @@ query "aws_vpc_flow_log_relationships_graph" {
     where
       f.log_destination_type = 's3'
 
-    -- To cloud-watch-logs   (node)
+    -- To CloudWatch Logs (node)
     union all
     select
       null as from_id,
@@ -154,14 +153,14 @@ query "aws_vpc_flow_log_relationships_graph" {
       f.log_destination_type = 'cloud-watch-logs'
       and f.region = c.region
 
-    -- To cloud-watch-logs (edge)
+    -- To Cloudwatch Logs (edge)
     union all
     select
-      f.flow_log_id  as from_id,
+      f.flow_log_id as from_id,
       c.arn as to_id,
       null as id,
       'logs to' as title,
-      'uses' as category,
+      'logs to' as category,
       jsonb_build_object(
         'ARN', c.arn,
         'Account ID', c.account_id,
@@ -174,7 +173,7 @@ query "aws_vpc_flow_log_relationships_graph" {
       f.log_destination_type = 'cloud-watch-logs'
       and f.region = c.region
 
-    -- To IAM Role (node)
+    -- To IAM Roles (node)
     union all
     select
       null as from_id,
@@ -190,10 +189,10 @@ query "aws_vpc_flow_log_relationships_graph" {
       flow_log as f
       left join aws_iam_role as r on f.deliver_logs_permission_arn = r.arn
 
-    -- To IAM Role  (edge)
+    -- To IAM Roles (edge)
     union all
     select
-      f.flow_log_id  as from_id,
+      f.flow_log_id as from_id,
       r.arn as to_id,
       null as id,
       'permission' as title,
@@ -206,7 +205,7 @@ query "aws_vpc_flow_log_relationships_graph" {
       flow_log as f
       left join aws_iam_role as r on f.deliver_logs_permission_arn = r.arn
 
-    -- From Subnet Direct (node)
+    -- From Subnets (Flow Log created at subnet level) (node)
     union all
     select
       null as from_id,
@@ -226,14 +225,14 @@ query "aws_vpc_flow_log_relationships_graph" {
     where
       resource_id like 'subnet-%'
 
-    -- From Subnet Direct (edge)
+    -- From Subnet (Flow Log created at subnet level) (edge)
     union all
     select
       subnet_arn as from_id,
       case when i.network_interface_id is not null then i.network_interface_id else f.flow_log_id end as to_id,
       null as id,
       'subnet' as title,
-      'uses' as category,
+      'subnet' as category,
       jsonb_build_object(
         'ARN', subnet_arn,
         'Account ID', s.account_id,
@@ -246,7 +245,7 @@ query "aws_vpc_flow_log_relationships_graph" {
     where
       resource_id like 'subnet-%'
 
-    -- From VPC Indirect (node)
+    -- From VPC (Flow Log created at subnet level) (node)
     union all
     select
       null as from_id,
@@ -268,14 +267,14 @@ query "aws_vpc_flow_log_relationships_graph" {
     where
       resource_id like 'subnet-%'
 
-    -- From VPC Indirect (edge)
+    -- From VPC (Flow Log created at subnet level) (edge)
     union all
     select
       v.arn as from_id,
       s.subnet_arn as to_id,
       null as id,
       'VPC' as title,
-      'uses' as category,
+      'VPC' as category,
       jsonb_build_object(
         'ARN', v.arn,
         'ID', v.vpc_id,
@@ -289,7 +288,7 @@ query "aws_vpc_flow_log_relationships_graph" {
     where
       resource_id like 'subnet-%'
 
-    -- From VPC Direct (node)
+    -- From VPC (Flow Log created at VPC level) (node)
     union all
     select
       null as from_id,
@@ -310,14 +309,14 @@ query "aws_vpc_flow_log_relationships_graph" {
     where
       resource_id like 'vpc-%'
 
-    -- From VPC Direct (edge)
+    -- From VPC (Flow Log created at VPC level) (edge)
     union all
     select
       v.arn as from_id,
       case when s.subnet_arn is not null then s.subnet_arn else f.flow_log_id end as to_id,
       null as id,
       'VPC' as title,
-      'uses' as category,
+      'VPC' as category,
       jsonb_build_object(
          'ARN', v.arn,
         'ID', v.vpc_id,
@@ -331,7 +330,7 @@ query "aws_vpc_flow_log_relationships_graph" {
     where
       resource_id like 'vpc-%'
 
-    -- From Subnet Indirect (node)
+    -- From Subnet (Flow Log created at VPC level) (node)
     union all
     select
       null as from_id,
@@ -352,14 +351,14 @@ query "aws_vpc_flow_log_relationships_graph" {
     where
       resource_id like 'vpc-%'
 
-    -- From Subnet Indirect (edge)
+    -- From Subnet (Flow Log created at VPC level) (edge)
     union all
     select
       subnet_arn as from_id,
       f.flow_log_id as to_id,
       null as id,
       'subnet' as title,
-      'uses' as category,
+      'subnet' as category,
       jsonb_build_object(
         'ARN', subnet_arn,
         'Account ID', s.account_id,
@@ -372,7 +371,7 @@ query "aws_vpc_flow_log_relationships_graph" {
     where
       f.resource_id like 'vpc-%'
 
-    -- From ENI  (node)
+    -- From ENI (Flow Log created at ENI level) (node)
     union all
     select
       null as from_id,
@@ -391,14 +390,14 @@ query "aws_vpc_flow_log_relationships_graph" {
     where
       f.resource_id like 'eni-%'
 
-    -- From ENI  (edge)
+    -- From ENI (Flow Log created at ENI level) (edge)
     union all
     select
       i.network_interface_id as from_id,
       f.flow_log_id as to_id,
       null as id,
       'eni' as title,
-      'uses' as category,
+      'eni' as category,
       jsonb_build_object(
         'ID', network_interface_id,
         'Account ID', i.account_id,
@@ -410,7 +409,7 @@ query "aws_vpc_flow_log_relationships_graph" {
     where
       resource_id like 'eni-%'
 
-      -- From ENI >  Subnet  (node)
+      -- From ENI > Subnet (Flow Log created at ENI level) (node)
     union all
     select
       null as from_id,
@@ -431,14 +430,14 @@ query "aws_vpc_flow_log_relationships_graph" {
     where
       resource_id like 'eni-%'
 
-    -- From ENI > Subnet (edge)
+    -- From ENI > Subnet (Flow Log created at ENI level) (edge)
     union all
     select
       subnet_arn as from_id,
       i.network_interface_id as to_id,
       null as id,
       'subnet' as title,
-      'uses' as category,
+      'subnet' as category,
       jsonb_build_object(
         'ARN', subnet_arn,
         'Account ID', s.account_id,
@@ -451,7 +450,7 @@ query "aws_vpc_flow_log_relationships_graph" {
     where
       resource_id like 'eni-%'
 
-    -- From ENI > Subnet > VPC (node)
+    -- From ENI > Subnet > VPC (Flow Log created at ENI level) (node)
     union all
     select
       null as from_id,
@@ -472,14 +471,14 @@ query "aws_vpc_flow_log_relationships_graph" {
     where
       resource_id like 'eni-%'
 
-    -- From ENI > Subnet > VPC (edge)
+    -- From ENI > Subnet > VPC (Flow Log created at ENI level) (edge)
     union all
     select
       v.arn as from_id,
       s.subnet_arn as to_id,
       null as id,
       'VPC' as title,
-      'uses' as category,
+      'VPC' as category,
       jsonb_build_object(
         'ID', v.vpc_id,
         'Account ID', v.account_id,
@@ -492,7 +491,6 @@ query "aws_vpc_flow_log_relationships_graph" {
       left join aws_vpc_subnet as s on s.subnet_id = i.subnet_id
     where
       resource_id like 'eni-%'
-
 
   EOQ
   param "flow_log_id" {}

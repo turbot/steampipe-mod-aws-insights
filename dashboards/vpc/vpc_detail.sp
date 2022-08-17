@@ -1231,7 +1231,7 @@ query "aws_vpc_relationships_graph" {
       vpc as v
       left join aws_vpc_subnet as s on s.vpc_id = v.vpc_id
 
-    -- To Internet Gateway (node)
+    -- To Internet Gateways (node)
     union all
     select
       null as from_id,
@@ -1251,7 +1251,7 @@ query "aws_vpc_relationships_graph" {
     where
       a ->> 'VpcId' = $1
 
-    -- To Internet Gateway (edge)
+    -- To Internet Gateways (edge)
     union all
     select
       v.vpc_id as from_id,
@@ -1271,7 +1271,7 @@ query "aws_vpc_relationships_graph" {
     where
       a ->> 'VpcId' = $1
 
-    -- To Route Table (node)
+    -- To Route Tables (node)
     union all
     select
       null as from_id,
@@ -1289,7 +1289,7 @@ query "aws_vpc_relationships_graph" {
     where
       vpc_id = $1
 
-    -- To Route Table (edge)
+    -- To Route Tables (edge)
     union all
     select
       v.vpc_id as from_id,
@@ -1306,7 +1306,7 @@ query "aws_vpc_relationships_graph" {
       vpc as v
       left join aws_vpc_route_table as rt on rt.vpc_id = v.vpc_id
 
-    -- To VPC Endpoint (node)
+    -- To VPC Endpoints (node)
     union all
     select
       null as from_id,
@@ -1324,7 +1324,7 @@ query "aws_vpc_relationships_graph" {
     where
       vpc_id = $1
 
-    -- To VPC Endpoint (edge)
+    -- To VPC Endpoints (edge)
     union all
     select
       v.vpc_id as from_id,
@@ -1341,7 +1341,7 @@ query "aws_vpc_relationships_graph" {
       vpc as v
       left join aws_vpc_endpoint as e on e.vpc_id = v.vpc_id
 
-    -- To Transit Gateway (node)
+    -- To Transit Gateways (node)
     union all
     select
       null as from_id,
@@ -1363,7 +1363,7 @@ query "aws_vpc_relationships_graph" {
     where
       t.resource_id = $1 and resource_type = 'vpc'
 
-    -- To Transit Gateway (edge)
+    -- To Transit Gateways (edge)
     union all
     select
       v.vpc_id as from_id,
@@ -1380,7 +1380,7 @@ query "aws_vpc_relationships_graph" {
       vpc as v
       left join aws_ec2_transit_gateway_vpc_attachment as a on a.resource_id = v.vpc_id
 
-    -- To NAT Gateway (node)
+    -- To NAT Gateways (node)
     union all
     select
       null as from_id,
@@ -1399,7 +1399,7 @@ query "aws_vpc_relationships_graph" {
     where
       vpc_id = $1
 
-    -- To NAT Gateway (edge)
+    -- To NAT Gateways (edge)
     union all
     select
       v.vpc_id as from_id,
@@ -1508,7 +1508,7 @@ query "aws_vpc_relationships_graph" {
     where
       i.vpc_id  = $1
 
-    -- From EC2 Instance (edge)
+    -- From EC2 Instances (edge)
     union all
     select
       i.arn as from_id,
@@ -1543,7 +1543,7 @@ query "aws_vpc_relationships_graph" {
     where
       l.vpc_id  = $1
 
-    -- From Lambda Function (edge)
+    -- From Lambda Functions (edge)
     union all
     select
       l.arn as from_id,
@@ -1805,7 +1805,7 @@ query "aws_vpc_relationships_graph" {
       vpc as v
       left join aws_ec2_target_group as t on t.vpc_id = v.vpc_id
 
-    -- From FSX File System (node)
+    -- From FSX File Systems (node)
     union all
     select
       null as from_id,
