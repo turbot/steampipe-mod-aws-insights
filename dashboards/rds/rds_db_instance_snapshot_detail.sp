@@ -355,7 +355,7 @@ query "aws_rds_db_snapshot_relationships_graph" {
       s.db_snapshot_identifier as from_id,
       k.id as to_id,
       null as id,
-      'encrypted_with' as title,
+      'encrypted with' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', k.arn,
