@@ -1,9 +1,9 @@
-dashboard "aws_nlb_relationships" {
+dashboard "aws_ec2_network_load_balancer_detail" {
   title         = "AWS EC2 Network Load balancer Relationships"
   #documentation = file("./dashboards/lb/docs/nlb_relationships.md")
   
   tags = merge(local.ec2_common_tags, {
-    type = "Relationships"
+    type = "Details"
   })
   
   input "nlb" {

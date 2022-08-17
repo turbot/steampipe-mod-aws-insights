@@ -1,4 +1,4 @@
-dashboard "aws_alb_relationships" {
+dashboard "aws_ec2_application_load_balancer_detail" {
   title         = "AWS EC2 Application Load balancer Details"
   #documentation = file("./dashboards/lb/docs/alb_relationships.md")
   

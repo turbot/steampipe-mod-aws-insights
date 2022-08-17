@@ -1,9 +1,9 @@
-dashboard "aws_clb_relationships" {
-  title         = "AWS EC2 Classic Load balancer Relationships"
+dashboard "aws_ec2_classic_load_balancer_detail" {
+  title         = "AWS EC2 Classic Load balancer Details"
   #documentation = file("./dashboards/lb/docs/clb_relationships.md")
   
   tags = merge(local.ec2_common_tags, {
-    type = "Relationships"
+    type = "Details"
   })
   
   input "clb" {
