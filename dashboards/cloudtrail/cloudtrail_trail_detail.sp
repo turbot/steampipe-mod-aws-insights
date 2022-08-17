@@ -119,22 +119,22 @@ dashboard "aws_cloudtrail_trail_detail" {
       }
 
       category "aws_cloudtrail_trail" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ctt.svg"))
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/cloudtrail_trail_light.svg"))
       }
 
       category "aws_sns_topic" {
-        href = "${dashboard.aws_sns_topic_detail.url_path}?input.topic_arn={{.properties.'ARN' | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/sns.svg"))
+        # href = "${dashboard.aws_sns_topic_detail.url_path}?input.topic_arn={{.properties.'ARN' | @uri}}"
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/sns_topic_light.svg"))
       }
 
       category "aws_s3_bucket" {
         href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/s3_bucket.svg"))
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/s3_bucket_light.svg"))
       }
 
       category "aws_kms_key" {
-        href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kms_key.svg"))
+        # href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kms_key_light.svg"))
       }
 
       category "aws_cloudwatch_log_group" {
@@ -142,7 +142,7 @@ dashboard "aws_cloudtrail_trail_detail" {
       }
 
       category "aws_guardduty_detector" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/guardduty.svg"))
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/guardduty_detector_light.svg"))
       }
 
     }
