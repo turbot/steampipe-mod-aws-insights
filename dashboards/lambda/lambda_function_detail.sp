@@ -418,7 +418,7 @@ query "aws_lambda_function_relationships_graph" {
     from
       lambda as l,
       jsonb_array_elements_text(vpc_security_group_ids) as s
-      left join aws_vpc_security_group as sg  on sg.group_id = s
+      left join aws_vpc_security_group as sg on sg.group_id = s
 
     -- To Security Groups (edge)
     union all
