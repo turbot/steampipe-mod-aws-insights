@@ -68,7 +68,7 @@ dashboard "aws_sns_topic_detail" {
       }
 
       category "aws_redshift_cluster" {
-        # icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/aws_redshift_cluster.svg"))
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/redshift_cluster.svg"))
         href  = "${dashboard.aws_redshift_cluster_detail.url_path}?input.cluster_arn={{.properties.'ARN' | @uri}}"
       }
 
@@ -301,7 +301,7 @@ query "aws_sns_topic_relationships_graph" {
     from
       topic
 
-    -- To Kms key (node)
+    -- To Kms keys (node)
     union all
     select
       null as from_id,
@@ -310,7 +310,8 @@ query "aws_sns_topic_relationships_graph" {
       k.title as title,
       'aws_kms_key' as category,
       jsonb_build_object(
-        'ARN', arn,
+        'ARN', k.arn,
+        'ID', k.id,
         'Account ID', k.account_id,
         'Region', k.region
       ) as properties
@@ -320,16 +321,17 @@ query "aws_sns_topic_relationships_graph" {
     where
       k.region = q.region
 
-    -- To Kms key (edge)
+    -- To Kms keys (edge)
     union all
     select
       q.topic_arn as from_id,
       k.arn as to_id,
       null as id,
-      'Encrypted With' as title,
+      'encrypts with' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', k.arn,
+        'ID', k.id,
         'Account ID', k.account_id,
         'Region', k.region
       ) as properties
@@ -339,7 +341,7 @@ query "aws_sns_topic_relationships_graph" {
     where
       k.region = q.region
 
-    -- To Subscription topics (node)
+    -- To Subscriptions (node)
     union all
     select
       null as from_id,
@@ -354,9 +356,10 @@ query "aws_sns_topic_relationships_graph" {
       ) as properties
     from
       aws_sns_topic_subscription
-    where topic_arn = $1
+    where
+      topic_arn = $1
 
-    -- To Subscription Topics (edge)
+    -- To Subscriptions (edge)
     union all
     select
       q.topic_arn as from_id,
@@ -371,7 +374,7 @@ query "aws_sns_topic_relationships_graph" {
       ) as properties
     from
       topic as q
-    left join aws_sns_topic_subscription as s on s.topic_arn = q.topic_arn
+      left join aws_sns_topic_subscription as s on s.topic_arn = q.topic_arn
 
   -- From S3 Buckets (node)
     union all
@@ -403,7 +406,7 @@ query "aws_sns_topic_relationships_graph" {
       arn as from_id,
       $1 as to_id,
       null as id,
-      'uses' as title,
+      'event notification' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', arn,
@@ -431,6 +434,7 @@ query "aws_sns_topic_relationships_graph" {
       'aws_rds_db_instance' as category,
       jsonb_build_object(
         'ARN', i.arn,
+        'DB Instance Identifier', i.db_instance_identifier,
         'Account ID', i.account_id,
         'Region', i.region
       ) as properties
@@ -453,7 +457,7 @@ query "aws_sns_topic_relationships_graph" {
       i.arn as from_id,
       t.topic_arn as to_id,
       null as id,
-      'uses' as title,
+      'event subscription' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', i.arn,
@@ -485,6 +489,7 @@ query "aws_sns_topic_relationships_graph" {
       'aws_redshift_cluster' as category,
       jsonb_build_object(
         'ARN', c.arn,
+        'Cluster Identifier', c.cluster_identifier,
         'Account ID', c.account_id,
         'Region', c.region
       ) as properties
@@ -507,10 +512,11 @@ query "aws_sns_topic_relationships_graph" {
       c.arn as from_id,
       t.topic_arn as to_id,
       null as id,
-      'uses' as title,
+      'event subscription' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', c.arn,
+        'Cluster Identifier', c.cluster_identifier,
         'Event Categories List', case when event_categories_list is null then '["ALL"]' else event_categories_list end,
         'Account ID', c.account_id,
         'Region', c.region
@@ -539,7 +545,8 @@ query "aws_sns_topic_relationships_graph" {
       'aws_cloudtrail_trail' as category,
       jsonb_build_object(
         'ARN', t.arn,
-        'Account ID',t.account_id,
+        'Is Logging', t.is_logging,
+        'Account ID', t.account_id,
         'Region', t.region
       ) as properties
     from
@@ -553,10 +560,11 @@ query "aws_sns_topic_relationships_graph" {
       c.arn as from_id,
       $1 as to_id,
       null as id,
-      'uses' as title,
+      'send notification' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', c.arn,
+        'Is Logging', c.is_logging,
         'Account ID', c.account_id,
         'Region', c.region
       ) as properties
@@ -593,7 +601,7 @@ query "aws_sns_topic_relationships_graph" {
       s.id as from_id,
       t.topic_arn as to_id,
       null as id,
-      'uses' as title,
+      'event published' as title,
       'uses' as category,
       jsonb_build_object(
         'ID', s.id ,
@@ -635,7 +643,7 @@ query "aws_sns_topic_relationships_graph" {
       c.arn as from_id,
       t.topic_arn as to_id,
       null as id,
-      'uses' as title,
+      'event notification' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', c.arn,
