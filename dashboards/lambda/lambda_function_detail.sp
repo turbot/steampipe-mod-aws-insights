@@ -370,7 +370,6 @@ query "aws_lambda_function_relationships_graph" {
           arn = $1
       )
 
-    -- lambda node
     select
       null as from_id,
       null as to_id,
@@ -381,7 +380,7 @@ query "aws_lambda_function_relationships_graph" {
     from
       lambda
 
-    -- To VPC  Nodes
+    -- To VPC (node)
     union all
     select
       null as from_id,
@@ -394,7 +393,7 @@ query "aws_lambda_function_relationships_graph" {
       lambda as l
       left join aws_vpc as v on v.vpc_id = l.vpc_id
 
-    -- To VPC Edges
+    -- To VPC (edge)
     union all
     select
       l.arn as from_id,
@@ -407,7 +406,7 @@ query "aws_lambda_function_relationships_graph" {
       lambda as l
       left join aws_vpc as v on v.vpc_id = l.vpc_id
 
-    -- To Security Groups Nodes
+    -- To Security Groups (node)
     union all
     select
       null as from_id,
@@ -421,7 +420,7 @@ query "aws_lambda_function_relationships_graph" {
       jsonb_array_elements_text(vpc_security_group_ids) as s
       left join aws_vpc_security_group as sg  on sg.group_id = s
 
-    -- To Security Groups Edges
+    -- To Security Groups (edge)
     union all
     select
       l.arn as from_id,
@@ -437,7 +436,7 @@ query "aws_lambda_function_relationships_graph" {
         aws_vpc_security_group as sg
         on sg.group_id = s
 
-    -- To Kms keys Nodes
+    -- To Kms keys (node)
     union all
     select
       null as from_id,
@@ -450,20 +449,20 @@ query "aws_lambda_function_relationships_graph" {
       lambda as l
       left join aws_kms_key as k on k.arn = l.kms_key_arn
 
-    -- To Kms keys Edges
+    -- To Kms keys (edge)
     union all
     select
       l.arn as from_id,
       k.arn as to_id,
       null as id,
-      'encrypted with' as title,
+      'encrypts with' as title,
       'uses' as category,
       jsonb_build_object( 'ARN', k.arn, 'Account ID', k.account_id, 'Region', k.region ) as properties
     from
       lambda as l
       left join aws_kms_key as k on k.arn = l.kms_key_arn
 
-    -- To IAM Roles Nodes
+    -- To IAM Roles (node)
     union all
     select
       null as from_id,
@@ -475,10 +474,10 @@ query "aws_lambda_function_relationships_graph" {
     from
       lambda as l
       left join
-          aws_iam_role as r
-          on r.arn = l.role
+        aws_iam_role as r
+        on r.arn = l.role
 
-    -- To IAM Roles Edges
+    -- To IAM Roles (edge)
     union all
     select
       l.arn as from_id,
@@ -490,8 +489,8 @@ query "aws_lambda_function_relationships_graph" {
     from
       lambda as l
       left join aws_iam_role as r on r.arn = l.role
-      
-    -- From Buckets - nodes
+
+    -- From Buckets (node)
     union all
     select
       null as from_id,
@@ -515,13 +514,13 @@ query "aws_lambda_function_relationships_graph" {
     where
       t ->> 'LambdaFunctionArn' = $1
 
-    -- From Buckets - edges
+    -- From Buckets (edge)
     union all
     select
       arn as from_id,
       $1 as to_id,
       null as id,
-      'Uses' as title,
+      'event notification' as title,
       'uses' as category,
       jsonb_build_object( 'ARN', arn, 'Account ID', account_id, 'Event Notification Configuration ID', t ->> 'Id', 'Events Configured', t -> 'Events', 'Region', region ) as properties
     from
@@ -538,7 +537,6 @@ query "aws_lambda_function_relationships_graph" {
       ) as t
     where
       t ->> 'LambdaFunctionArn' = $1
-
     order by
       category,
       from_id,
