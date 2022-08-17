@@ -195,8 +195,8 @@ query "aws_vpc_flow_log_relationships_graph" {
       f.flow_log_id as from_id,
       r.arn as to_id,
       null as id,
-      'permission' as title,
-      'uses' as category,
+      'assumes' as title,
+      'assumes' as category,
       jsonb_build_object(
         'ARN', r.arn,
         'Account ID', r.account_id
