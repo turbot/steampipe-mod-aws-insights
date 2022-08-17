@@ -52,6 +52,74 @@ dashboard "aws_sqs_queue_detail" {
 
   container {
 
+    graph {
+      type  = "graph"
+      title = "Relationships"
+      query = query.aws_sqs_queue_relationships_graph
+      args = {
+        arn = self.input.queue_arn.value
+      }
+
+      category "aws_sqs_queue" {
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/sqs_queue_light.svg"))
+        color = "blue"
+      }
+
+      category "aws_sns_topic_subscription" {
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/sqs_queue_light.svg"))
+        color = "blue"
+      }
+
+      category "dead_letter_queue" {
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/sqs_queue_light.svg"))
+        color = "red"
+      }
+
+      category "aws_kms_key" {
+        color = "orange"
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kms_key_light.svg"))
+        // cyclic dependency prevents use of url_path, hardcode for now
+        # href  = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
+        href = "/aws_insights.dashboard.aws_kms_key_detail?input.key_arn={{.properties.'ARN' | @uri}}"
+      }
+
+      category "aws_sns_topic_subscription" {
+        color = "green"
+      }
+
+      category "aws_s3_bucket" {
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/s3_bucket_light.svg"))
+        color = "orange"
+        href  = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
+      }
+
+      category "aws_vpc_endpoint" {
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_endpoint_light.svg"))
+        color = "orange"
+      }
+
+      category "aws_vpc" {
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
+        color = "orange"
+        href  = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'ID' | @uri}}"
+      }
+
+      category "aws_lambda_function" {
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/lambda_function_light.svg"))
+        color = "blue"
+        href  = "${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn={{.properties.'ARN' | @uri}}"
+      }
+
+      category "aws_eventbridge_rule" {
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/eventbridge_rule_light.svg"))
+        color = "blue"
+      }
+
+    }
+  }
+
+  container {
+
     container {
 
       width = 6
@@ -277,4 +345,340 @@ query "aws_sqs_queue_encryption_details" {
   EOQ
 
   param "queue_arn" {}
+}
+
+query "aws_sqs_queue_relationships_graph"{
+  sql = <<-EOQ
+  with queue as (select * from aws_sqs_queue where queue_arn = $1)
+
+    select
+      null as from_id,
+      null as to_id,
+      queue_arn as id,
+      title as title,
+      'aws_sqs_queue' as category,
+      jsonb_build_object(
+        'ARN', queue_arn,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      queue
+
+    -- To Subscriptions (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      subscription_arn as id,
+      title as title,
+      'aws_sns_topic_subscription' as category,
+      jsonb_build_object(
+        'ARN', subscription_arn,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_sns_topic_subscription
+    where
+      endpoint = $1
+
+    -- To Subscriptions (edge)
+    union all
+    select
+      q.queue_arn as from_id,
+      s.subscription_arn as to_id,
+      null as id,
+      'subscibe to' as title,
+      'subscibe to' as category,
+      jsonb_build_object(
+        'ARN', s.subscription_arn,
+        'Account ID', s.account_id,
+        'Region', s.region
+      ) as properties
+    from
+      queue as q
+      left join aws_sns_topic_subscription as s on  s.endpoint = q.queue_arn
+
+    -- To Dead Letter queue (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      split_part(redrive_policy ->> 'deadLetterTargetArn', ':', 6)  as id,
+      split_part(redrive_policy ->> 'deadLetterTargetArn', ':', 6) as title,
+      'dead_letter_queue' as category,
+      jsonb_build_object(
+        'ARN', queue_arn,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      queue
+    where
+      redrive_policy ->> 'deadLetterTargetArn' is not null
+
+    -- To Dead Letter queue (edge)
+    union all
+    select
+      queue_arn as from_id,
+      split_part(redrive_policy ->> 'deadLetterTargetArn', ':', 6) as to_id,
+      null as id,
+      'dead letter queue' as title,
+      'dead letter queue' as category,
+      jsonb_build_object(
+        'ARN', queue_arn,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      queue
+     where
+      redrive_policy ->> 'deadLetterTargetArn' is not null
+
+  -- To Kms keys (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      arn as id,
+      title as title,
+      'aws_kms_key' as category,
+      jsonb_build_object(
+        'ARN', arn,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_kms_key,
+      jsonb_array_elements(aliases) as a
+    where
+      a ->> 'AliasName' = (select kms_master_key_id from queue)
+      and region = (select region from queue)
+
+    -- To Kms keys (edge)
+    union all
+    select
+      q.queue_arn as from_id,
+      k.arn as to_id,
+      null as id,
+      'encrypts with' as title,
+      'encrypts with' as category,
+      jsonb_build_object(
+        'ARN', k.arn,
+        'Account ID', k.account_id,
+        'Region', k.region
+      ) as properties
+    from
+      queue as q,
+      aws_kms_key as k,
+      jsonb_array_elements(aliases) as a
+    where
+      a ->> 'AliasName' = q.kms_master_key_id
+      and k.region = q.region
+
+    -- From S3 Buckets (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      arn as id,
+      title as title,
+      'aws_s3_bucket' as category,
+      jsonb_build_object(
+        'ARN', arn,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_s3_bucket,
+      jsonb_array_elements(
+        case jsonb_typeof(event_notification_configuration -> 'QueueConfigurations')
+          when 'array' then (event_notification_configuration -> 'QueueConfigurations')
+          else null end
+        )
+        as q
+    where
+      q ->> 'QueueArn'  = $1
+
+    -- From S3 Buckets (edge)
+    union all
+    select
+      arn as from_id,
+      $1 as to_id,
+      null as id,
+      'event notification' as title,
+      'event notification' as category,
+      jsonb_build_object(
+        'ARN', arn,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_s3_bucket,
+      jsonb_array_elements(
+        case jsonb_typeof(event_notification_configuration -> 'QueueConfigurations')
+          when 'array' then (event_notification_configuration -> 'QueueConfigurations')
+          else null end
+        )
+        as q
+    where
+      q ->> 'QueueArn'  = $1
+
+    -- From Lambda functions (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      arn as id,
+      title as title,
+      'aws_lambda_function' as category,
+      jsonb_build_object(
+        'ARN', arn,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_lambda_function
+    where
+      dead_letter_config_target_arn  = $1
+
+    -- From Lambda functions (edge)
+    union all
+    select
+      arn as from_id,
+      $1 as to_id,
+      null as id,
+      'dead letter config' as title,
+      'dead letter config' as category,
+      jsonb_build_object(
+        'ARN', l.arn,
+        'Account ID', l.account_id,
+        'Region', l.region
+      ) as properties
+    from
+      aws_lambda_function as l
+    where
+      dead_letter_config_target_arn  = $1
+
+  -- From VPC endpoints (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      vpc_endpoint_id as id,
+      title as title,
+      'aws_vpc_endpoint' as category,
+      jsonb_build_object(
+        'ID', vpc_endpoint_id,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_vpc_endpoint,
+      jsonb_array_elements(policy_std -> 'Statement') as s,
+      jsonb_array_elements_text(s -> 'Resource') as r
+    where
+      r = $1
+
+    -- From VPC endpoints (edge)
+    union all
+    select
+      vpc_endpoint_id as from_id,
+      $1 as to_id,
+      null as id,
+      'uses' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'ID', vpc_endpoint_id,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_vpc_endpoint,
+      jsonb_array_elements(policy_std -> 'Statement') as s,
+        jsonb_array_elements_text(s -> 'Resource') as r
+    where
+      r = $1
+
+    -- From VPC > VPC Endpoints (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      e.vpc_id as id,
+      e.vpc_id as title,
+      'aws_vpc' as category,
+      jsonb_build_object(
+        'ID', vpc_id,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_vpc_endpoint as e,
+      jsonb_array_elements(e.policy_std -> 'Statement') as s,
+      jsonb_array_elements_text(s -> 'Resource') as r
+    where
+      r = $1
+
+    -- From VPC > VPC Endpoints (edge)
+    union all
+    select
+      vpc_id as from_id,
+      vpc_endpoint_id as to_id,
+      null as id,
+      'uses' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'ID', vpc_id,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_vpc_endpoint,
+      jsonb_array_elements(policy_std -> 'Statement') as s,
+      jsonb_array_elements_text(s -> 'Resource') as r
+    where
+      r = $1
+
+    -- From Eventbridge Rule (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      arn as id,
+      title as title,
+      'aws_eventbridge_rule' as category,
+      jsonb_build_object(
+        'ARN', arn,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_eventbridge_rule,
+      jsonb_array_elements(targets) as t
+    where
+      t ->> 'Arn' = $1
+
+    -- From Eventbridge Rule (edge)
+    union all
+    select
+      arn as from_id,
+      $1 as to_id,
+      null as id,
+      'sends to' as title,
+      'sends to' as category,
+      jsonb_build_object(
+        'ARN', r.arn,
+        'Account ID', r.account_id,
+        'Region', r.region
+      ) as properties
+    from
+      aws_eventbridge_rule as r,
+      jsonb_array_elements(targets) as t
+    where
+      t ->> 'Arn' = $1
+  EOQ
+  param "arn" {}
+
 }

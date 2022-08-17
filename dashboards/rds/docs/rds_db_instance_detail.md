@@ -7,3 +7,4 @@ This dashboard answers the following questions for each instance:
 - What security groups and subnets is the instance configured with?
 - How is encryption configured?
 - How is logging configured?
+- What relationships does the instance have with other resources?
