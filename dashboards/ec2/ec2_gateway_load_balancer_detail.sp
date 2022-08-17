@@ -1,5 +1,5 @@
 dashboard "aws_ec2_gateway_load_balancer_detail" {
-  title         = "AWS EC2 Gateway Load balancer Relationships"
+  title         = "AWS EC2 Gateway Load balancer Details"
   #documentation = file("./dashboards/lb/docs/glb_relationships.md")
   
   tags = merge(local.ec2_common_tags, {
