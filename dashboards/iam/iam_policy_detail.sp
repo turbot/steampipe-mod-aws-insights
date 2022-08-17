@@ -72,7 +72,7 @@ query "aws_iam_policy_relationships_graph" {
     where
       arn = $1
 
-    -- To IAM Role (node)
+    -- From IAM Roles (node)
     union all
     select
       null as from_id,
@@ -87,13 +87,13 @@ query "aws_iam_policy_relationships_graph" {
     where
       arns = $1
 
-    -- To IAM Role (edge)
+    -- From IAM Roles (edge)
     union all
     select
       r.role_id as from_id,
       p.policy_id as to_id,
       null as id,
-      'uses' as title,
+      'attached with' as title,
       'uses' as category,
       jsonb_build_object( 'Account ID', r.account_id ) as properties
     from
@@ -105,7 +105,7 @@ query "aws_iam_policy_relationships_graph" {
     where
       p.arn = $1
 
-     -- To IAM User (node)
+     -- From IAM Users (node)
     union all
     select
       null as from_id,
@@ -120,13 +120,13 @@ query "aws_iam_policy_relationships_graph" {
     where
       arns = $1
 
-    -- To IAM User (edge)
+    -- From IAM Users (edge)
     union all
     select
       u.name as from_id,
       p.policy_id as to_id,
       null as id,
-      'uses' as title,
+      'attached with' as title,
       'uses' as category,
       jsonb_build_object( 'Account ID', u.account_id ) as properties
     from
@@ -138,7 +138,7 @@ query "aws_iam_policy_relationships_graph" {
       and p.arn = $1
 
 
-    -- To IAM Group (node)
+    -- From IAM Groups (node)
     union all
     select
       null as from_id,
@@ -153,13 +153,13 @@ query "aws_iam_policy_relationships_graph" {
     where
       arns = $1
 
-    -- To IAM Group (edge)
+    -- From IAM Groups (edge)
     union all
     select
       g.name as from_id,
       p.policy_id as to_id,
       null as id,
-      'uses' as title,
+      'attached with' as title,
       'uses' as category,
       jsonb_build_object( 'Account ID', g.account_id ) as properties
     from

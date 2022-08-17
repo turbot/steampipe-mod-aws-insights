@@ -65,7 +65,7 @@ dashboard "aws_iam_role_detail" {
       }
 
       category "aws_lambda_function" {
-        href = "${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn={{.properties.ARN | @uri}}"
+        href = "/aws_insights.dashboard.aws_lambda_function_detail?input.lambda_arn={{.properties.'ARN' | @uri}}"
         icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/lambda_function_light.svg"))
       }
 
@@ -261,7 +261,7 @@ query "aws_iam_role_relationships_graph" {
       r.role_id as from_id,
       p.policy_id as to_id,
       null as id,
-      'uses' as title,
+      'has policy' as title,
       'uses' as category,
       jsonb_build_object( 'Policy Name', p.name, 'AWS Managed', p.is_aws_managed ) as properties
     from
@@ -293,7 +293,7 @@ query "aws_iam_role_relationships_graph" {
       application_arn as from_id,
       role_id as to_id,
       null as id,
-      'uses' as title,
+      'associated to' as title,
       'uses' as category,
       jsonb_build_object( 'Service Execution Role', service_execution_role, 'Account ID', a.account_id ) as properties
     from
@@ -331,7 +331,7 @@ query "aws_iam_role_relationships_graph" {
       c.id as from_id,
       role_id as to_id,
       null as id,
-      'uses' as title,
+      'associated to' as title,
       'uses' as category,
       jsonb_build_object( 'Service Role', service_role, 'Account ID', c.account_id ) as properties
     from
@@ -361,7 +361,7 @@ query "aws_iam_role_relationships_graph" {
       detector_id as from_id,
       role_id as to_id,
       null as id,
-      'uses' as title,
+      'associated to' as title,
       'uses' as category,
       jsonb_build_object( 'Service Role', service_role, 'Account ID', d.account_id ) as properties
     from
@@ -391,7 +391,7 @@ query "aws_iam_role_relationships_graph" {
       f.arn as from_id,
       role_id as to_id,
       null as id,
-      'uses' as title,
+      'associated to' as title,
       'uses' as category,
       jsonb_build_object( 'Account ID', f.account_id ) as properties
     from
@@ -422,7 +422,7 @@ query "aws_iam_role_relationships_graph" {
       iam_instance_profile_arn as from_id,
       role_id as to_id,
       null as id,
-      'uses' as title,
+      'contains' as title,
       'uses' as category,
       jsonb_build_object( 'Instance Profile ARN', iam_instance_profile_arn ) as properties
     from
