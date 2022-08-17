@@ -5,3 +5,4 @@ This dashboard answers the following questions for each function:
 - Which security groups and subnets the function is configured with?
 - How is encryption configured?
 - What is the IAM policy of the function?
+- What relationships does the function have with other resources?
