@@ -2,6 +2,7 @@ This dashboard answers the following questions for each trail:
 
 - How is my trail configured?
 - Is my trail regional or multi-regional?
+- What relationships does the table have with other resources?
 - What tags are applied?
 - How is encryption configured?
 - Is logging and log file validation enabled on my trail?
