@@ -109,7 +109,7 @@ query "aws_elasticache_cluster_relationships_graph" {
       topic_arn as to_id,
       null as id,
       'publishes to' as title,
-      'publishes to' as category,
+      'uses' as category,
       jsonb_build_object( 'Account ID', c.account_id ) as properties
     from
       aws_elasticache_cluster as c
@@ -149,7 +149,7 @@ query "aws_elasticache_cluster_relationships_graph" {
       k.id as to_id,
       null as id,
       'encrypted with' as title,
-      'encrypted with' as category,
+      'uses' as category,
       jsonb_build_object( 'Account ID', c.account_id ) as properties
     from
       aws_elasticache_cluster as c
@@ -234,7 +234,7 @@ query "aws_elasticache_cluster_relationships_graph" {
       g.vpc_id as to_id,
       null as id,
       'resides under' as title,
-      'resides under' as category,
+      'uses' as category,
       jsonb_build_object( 'Account ID', c.account_id ) as properties
     from
       aws_vpc_security_group as g,
@@ -273,7 +273,7 @@ query "aws_elasticache_cluster_relationships_graph" {
       g.cache_subnet_group_name as to_id,
       null as id,
       'launched into' as title,
-      'launched into' as category,
+      'uses' as category,
       jsonb_build_object( 'Account ID', c.account_id ) as properties
     from
       aws_elasticache_cluster as c,
@@ -313,7 +313,7 @@ query "aws_elasticache_cluster_relationships_graph" {
       s.subnet_id as to_id,
       null as id,
       'contains' as title,
-      'contains' as category,
+      'uses' as category,
       jsonb_build_object( 'Account ID', c.account_id ) as properties
     from
       aws_elasticache_cluster as c,
@@ -355,7 +355,7 @@ query "aws_elasticache_cluster_relationships_graph" {
       g.vpc_id as to_id,
       null as id,
       'resides under' as title,
-      'resides under' as category,
+      'uses' as category,
       jsonb_build_object( 'Account ID', c.account_id ) as properties
     from
       aws_elasticache_cluster as c,
