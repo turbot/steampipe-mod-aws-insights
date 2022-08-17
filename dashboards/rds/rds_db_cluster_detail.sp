@@ -101,7 +101,7 @@ dashboard "aws_rds_db_cluster_detail" {
 
       category "aws_vpc" {
         href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.properties.\"VPC ID\" | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_dark.svg"))
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_vpc_dark.svg"))
       }
     }
   }

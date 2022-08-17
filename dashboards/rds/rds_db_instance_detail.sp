@@ -88,7 +88,7 @@ dashboard "aws_rds_db_instance_detail" {
         # cyclic dependency prevents use of url_path, hardcode for now
         # href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.\"VPC ID\" | @uri}}"
         href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.properties.\"VPC ID\" | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_dark.svg"))
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_vpc_dark.svg"))
       }
 
       category "aws_vpc_subnet" {
