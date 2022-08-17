@@ -1258,7 +1258,7 @@ query "aws_vpc_relationships_graph" {
       i.internet_gateway_id as to_id,
       null as id,
       'attached to' as title,
-      'uses' as category,
+      'attached to' as category,
       jsonb_build_object(
         'ID', i.internet_gateway_id,
         'Account ID', i.account_id,
@@ -1296,7 +1296,7 @@ query "aws_vpc_relationships_graph" {
       rt.route_table_id as to_id,
       null as id,
       'attached to' as title,
-      'uses' as category,
+      'attached to' as category,
       jsonb_build_object(
         'ID', rt.route_table_id,
         'Account ID', rt.account_id,
@@ -1370,7 +1370,7 @@ query "aws_vpc_relationships_graph" {
       a.transit_gateway_id as to_id,
       null as id,
       'attached to' as title,
-      'uses' as category,
+      'attached to' as category,
       jsonb_build_object(
         'ID', a.transit_gateway_id,
         'Account ID', a.account_id,
@@ -1406,7 +1406,7 @@ query "aws_vpc_relationships_graph" {
       n.arn as to_id,
       null as id,
       'attached to' as title,
-      'uses' as category,
+      'attached to' as category,
       jsonb_build_object(
         'ID', n.nat_gateway_id,
         'Account ID', n.account_id,
@@ -1442,7 +1442,7 @@ query "aws_vpc_relationships_graph" {
       g.vpn_gateway_id as to_id,
       null as id,
       'attached to' as title,
-      'uses' as category,
+      'attached to' as category,
       jsonb_build_object(
         'Account ID', g.account_id,
         'Region', g.region
@@ -1514,8 +1514,8 @@ query "aws_vpc_relationships_graph" {
       i.arn as from_id,
       v.vpc_id as to_id,
       null as id,
-      'attached to' as title,
-      'uses' as category,
+      'launched in' as title,
+      'launched in' as category,
       jsonb_build_object(
         'ARN', i.arn,
         'Account ID', i.account_id,
@@ -1549,8 +1549,8 @@ query "aws_vpc_relationships_graph" {
       l.arn as from_id,
       v.vpc_id as to_id,
       null as id,
-      'attached to' as title,
-      'uses' as category,
+      'launched in' as title,
+      'launched in' as category,
       jsonb_build_object(
         'ARN', l.arn,
         'Account ID', l.account_id,
@@ -1584,8 +1584,8 @@ query "aws_vpc_relationships_graph" {
       a.arn as from_id,
       v.vpc_id as to_id,
       null as id,
-      'attached to' as title,
-      'uses' as category,
+      'launched in' as title,
+      'launched in' as category,
       jsonb_build_object(
         'ARN', a.arn,
         'Account ID', a.account_id,
@@ -1619,8 +1619,8 @@ query "aws_vpc_relationships_graph" {
       n.arn as from_id,
       v.vpc_id as to_id,
       null as id,
-      'attached to' as title,
-      'uses' as category,
+      'launched in' as title,
+      'launched in' as category,
       jsonb_build_object(
         'ARN', n.arn,
         'Account ID', n.account_id,
@@ -1654,8 +1654,8 @@ query "aws_vpc_relationships_graph" {
       c.arn as from_id,
       v.vpc_id as to_id,
       null as id,
-      'attached to' as title,
-      'uses' as category,
+      'launched in' as title,
+      'launched in' as category,
       jsonb_build_object(
         'ARN', c.arn,
         'Account ID', c.account_id,
@@ -1689,8 +1689,8 @@ query "aws_vpc_relationships_graph" {
       g.arn as from_id,
       v.vpc_id as to_id,
       null as id,
-      'attached to' as title,
-      'uses' as category,
+      'launched in' as title,
+      'launched in' as category,
       jsonb_build_object(
         'ARN', g.arn,
         'Account ID', g.account_id,
@@ -1724,8 +1724,8 @@ query "aws_vpc_relationships_graph" {
       i.arn as from_id,
       v.vpc_id as to_id,
       null as id,
-      'attached to' as title,
-      'uses' as category,
+      'launched in' as title,
+      'launched in' as category,
       jsonb_build_object(
         'ARN', i.arn,
         'Account ID', i.account_id,
@@ -1759,8 +1759,8 @@ query "aws_vpc_relationships_graph" {
       c.arn as from_id,
       v.vpc_id as to_id,
       null as id,
-      'attached to' as title,
-      'uses' as category,
+      'launched in' as title,
+      'launched in' as category,
       jsonb_build_object(
         'ARN', c.arn,
         'Account ID', c.account_id,
@@ -1795,7 +1795,7 @@ query "aws_vpc_relationships_graph" {
       v.vpc_id as to_id,
       null as id,
       'attached to' as title,
-      'uses' as category,
+      'attached to' as category,
       jsonb_build_object(
         'ARN', t.target_group_arn,
         'Account ID', t.account_id,
@@ -1829,8 +1829,8 @@ query "aws_vpc_relationships_graph" {
       f.arn as from_id,
       v.vpc_id as to_id,
       null as id,
-      'attached to' as title,
-      'uses' as category,
+      'launched in' as title,
+      'launched in' as category,
       jsonb_build_object(
         'ARN', f.arn,
         'Account ID', f.account_id,
@@ -1864,7 +1864,7 @@ query "aws_vpc_relationships_graph" {
       a.access_point_arn as from_id,
       v.vpc_id as to_id,
       null as id,
-      'attached to' as title,
+      'uses' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', a.access_point_arn,
