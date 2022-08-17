@@ -67,6 +67,32 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
 
   container {
 
+    graph {
+      type  = "graph"
+      title = "Relationships"
+      query = query.aws_rds_db_cluster_snapshot_relationships_graph
+      args = {
+        arn = self.input.snapshot_arn.value
+      }
+
+      category "db_cluster_snapshot" {
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ebs_snapshot_dark.svg"))
+      }
+
+      category "aws_rds_db_cluster" {
+        href = "/aws_insights.dashboard.aws_rds_db_cluster_detail.url_path?input.db_cluster_arn={{.properties.ARN | @uri}}"
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/rds_db_cluster_dark.svg"))
+      }
+
+      category "kms_key" {
+        href = "/aws_insights.dashboard.aws_kms_key_detail.url_path?input.key_arn={{.properties.ARN | @uri}}"
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kms_key_dark.svg"))
+      }
+    }
+  }
+
+  container {
+
     container {
       width = 6
 
@@ -261,6 +287,129 @@ query "aws_rds_db_cluster_snapshot_attributes" {
       jsonb_array_elements(db_cluster_snapshot_attributes) as attributes
     where
       arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+
+query "aws_rds_db_cluster_snapshot_relationships_graph" {
+  sql = <<-EOQ
+    -- RDS DB cluster snapshot (node)
+    select
+      null as from_id,
+      null as to_id,
+      db_cluster_snapshot_identifier as id,
+      title,
+      'db_cluster_snapshot' as category,
+      jsonb_build_object(
+        'ARN', arn,
+        'Status', status,
+        'Type', type,
+        'DB Cluster Identifier', db_cluster_identifier,
+        'Create Time', create_time,
+        'Encrypted', storage_encrypted::text,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_rds_db_cluster_snapshot
+    where
+      arn = $1
+
+    -- To KMS Keys (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      k.id as id,
+      COALESCE(k.aliases #>> '{0,AliasName}', k.id) as title,
+      'kms_key' as category,
+      jsonb_build_object(
+        'ARN', k.arn,
+        'Rotation Enabled', k.key_rotation_enabled::text,
+        'Account ID', k.account_id,
+        'Region', k.region
+      ) as properties
+    from
+      aws_rds_db_cluster_snapshot as s
+      join aws_kms_key as k on s.kms_key_id = k.arn
+    where
+      s.arn = $1
+
+    -- To KMS keys (edge)
+    union all
+    select
+      s.db_cluster_snapshot_identifier as from_id,
+      k.id as to_id,
+      null as id,
+      'encrypted with' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'ARN', k.arn,
+        'DB Cluster Snapshot Identifier', s.db_cluster_snapshot_identifier,
+        'Account ID', k.account_id,
+        'Region', k.region
+      ) as properties
+    from
+      aws_rds_db_cluster_snapshot as s
+      join aws_kms_key as k on s.kms_key_id = k.arn
+    where
+      s.arn = $1
+
+
+    -- From RDS DB cluster (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      c.db_cluster_identifier as id,
+      c.title as title,
+      'aws_rds_db_cluster' as category,
+      jsonb_build_object(
+        'ARN', c.arn,
+        'Status', c.status,
+        'Availability Zones', c.availability_zones::text,
+        'Create Time', c.create_time,
+        'Is Multi AZ', c.multi_az::text,
+        'Account ID', c.account_id,
+        'Region', c.region
+      ) as properties
+    from
+      aws_rds_db_cluster_snapshot as s
+      join aws_rds_db_cluster as c on s.db_cluster_identifier = c.db_cluster_identifier
+        and s.account_id = c.account_id
+        and s.region = c.region
+    where
+      s.arn = $1
+
+    -- From RDS DB cluster (edge)
+    union all
+    select
+      c.db_cluster_identifier as from_id,
+      s.db_cluster_snapshot_identifier as to_id,
+      null as id,
+      'has snapshot' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'DB Cluster Identifier', c.db_cluster_identifier,
+        'DB Cluster Snapshot Identifier', s.db_cluster_snapshot_identifier,
+        'Status', s.status,
+        'Account ID', c.account_id,
+        'Region', c.region
+      ) as properties
+    from
+      aws_rds_db_cluster_snapshot as s
+      join aws_rds_db_cluster as c on s.db_cluster_identifier = c.db_cluster_identifier
+        and s.account_id = c.account_id
+        and s.region = c.region
+    where
+      s.arn = $1
+
+    order by
+      category,
+      from_id,
+      to_id;
   EOQ
 
   param "arn" {}
