@@ -246,7 +246,7 @@ query "aws_s3_bucket_relationships" {
       trail.arn as from_id,
       b.arn as to_id,
       null as id,
-      'Logs to' as title,
+      'logs to' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', trail.arn,
@@ -287,7 +287,7 @@ query "aws_s3_bucket_relationships" {
       aws_s3_bucket.arn as to_id,
       buckets.arn as from_id,
       null as id,
-      'Logs to' as title,
+      'logs to' as title,
       'uses' as category,
       jsonb_build_object(
         'Name', aws_s3_bucket.name,
@@ -329,7 +329,7 @@ query "aws_s3_bucket_relationships" {
       alb.arn as from_id,
       buckets.arn as to_id,
       null as id,
-      'Logs to' as title,
+      'logs to' as title,
       'uses' as category,
       jsonb_build_object(
         'Name', alb.name,
@@ -376,14 +376,14 @@ query "aws_s3_bucket_relationships" {
       nlb.arn as from_id,
       buckets.arn as to_id,
       null as id,
-      'Logs to' as title,
+      'logs to' as title,
       'uses' as category,
       jsonb_build_object(
         'Name', nlb.name,
         'ARN', nlb.arn,
         'Account ID', nlb.account_id,
         'Region', nlb.region,
-        'Logs to', attributes->>'Value',
+        'logs to', attributes->>'Value',
         'Log Prefix', (select a->>'Value' from jsonb_array_elements(nlb.load_balancer_attributes) as a where a->>'Key' = 'access_logs.s3.prefix' )
       ) as properties
     from
@@ -421,7 +421,7 @@ query "aws_s3_bucket_relationships" {
       clb.arn as from_id,
       buckets.arn as to_id,
       null as id,
-      'Logs to' as title,
+      'logs to' as title,
       'uses' as category,
       jsonb_build_object(
         'Name', clb.name,
@@ -463,7 +463,7 @@ query "aws_s3_bucket_relationships" {
       ap.access_point_arn as from_id,
       buckets.arn as to_id,
       null as id,
-      'Accesses' as title,
+      'accesses' as title,
       'uses' as category,
       jsonb_build_object(
         'Name', ap.name,
@@ -504,7 +504,7 @@ query "aws_s3_bucket_relationships" {
       buckets.arn as from_id,
       aws_s3_bucket.arn as to_id,
       null as id,
-      'Logs to' as title,
+      'logs to' as title,
       'uses' as category,
       jsonb_build_object(
         'Name', aws_s3_bucket.name,
