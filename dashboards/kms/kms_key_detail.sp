@@ -326,7 +326,7 @@ query "aws_kms_key_relationships_graph" {
       t.arn as from_id,
       k.id as to_id,
       null as id,
-      'uses' as title,
+      'encrypted with' as title,
       'uses' as category,
       jsonb_build_object( 'Account ID', t.account_id ) as properties
     from
@@ -356,7 +356,7 @@ query "aws_kms_key_relationships_graph" {
       volume_id as from_id,
       k.id as to_id,
       null as id,
-      'uses' as title,
+      'encrypted with' as title,
       'uses' as category,
       jsonb_build_object( 'Account ID', v.account_id ) as properties
     from
@@ -387,7 +387,7 @@ query "aws_kms_key_relationships_graph" {
       db_cluster_snapshot_identifier as from_id,
       k.id as to_id,
       null as id,
-      'uses' as title,
+      'encrypted with' as title,
       'uses' as category,
       jsonb_build_object( 'Account ID', s.account_id ) as properties
     from
@@ -417,7 +417,7 @@ query "aws_kms_key_relationships_graph" {
       db_cluster_identifier as from_id,
       k.id as to_id,
       null as id,
-      'uses' as title,
+      'encrypted with' as title,
       'uses' as category,
       jsonb_build_object( 'Account ID', c.account_id ) as properties
     from
@@ -447,7 +447,7 @@ query "aws_kms_key_relationships_graph" {
       db_instance_identifier as from_id,
       k.id as to_id,
       null as id,
-      'uses' as title,
+      'encrypted with' as title,
       'uses' as category,
       jsonb_build_object( 'Account ID', i.account_id ) as properties
     from
@@ -477,7 +477,7 @@ query "aws_kms_key_relationships_graph" {
       db_snapshot_identifier as from_id,
       k.id as to_id,
       null as id,
-      'uses' as title,
+      'encrypted with' as title,
       'uses' as category,
       jsonb_build_object( 'Account ID', s.account_id ) as properties
     from
@@ -507,7 +507,7 @@ query "aws_kms_key_relationships_graph" {
       cluster_identifier as from_id,
       k.id as to_id,
       null as id,
-      'uses' as title,
+      'encrypted with' as title,
       'uses' as category,
       jsonb_build_object( 'Account ID', c.account_id ) as properties
     from

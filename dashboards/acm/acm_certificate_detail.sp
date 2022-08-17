@@ -331,7 +331,7 @@ query "aws_acm_certificate_relationships_graph" {
       c.title as to_id,
       null as id,
       'associated' as title,
-      'associated' as category,
+      'uses' as category,
       jsonb_build_object( 'Account ID', b.account_id ) as properties
     from
       aws_acm_certificate as c,
@@ -372,7 +372,7 @@ query "aws_acm_certificate_relationships_graph" {
       c.title as to_id,
       null as id,
       'associated' as title,
-      'associated' as category,
+      'uses' as category,
       jsonb_build_object( 'Account ID', lb.account_id ) as properties
     from
       aws_acm_certificate as c,
@@ -413,7 +413,7 @@ query "aws_acm_certificate_relationships_graph" {
       c.title as to_id,
       null as id,
       'associated' as title,
-      'associated' as category,
+      'uses' as category,
       jsonb_build_object( 'Account ID', b.account_id ) as properties
     from
       aws_acm_certificate as c,
