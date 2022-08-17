@@ -145,8 +145,8 @@ query "aws_cloudfront_distribution_relationships_graph" {
       b.arn as from_id,
       d.id as to_id,
       null as id,
-      'uses' as title,
-      'uses' as category,
+      'origin for' as title,
+      'origin for' as category,
       jsonb_build_object( 'Account ID', d.account_id ) as properties
     from
       aws_cloudfront_distribution as d,
@@ -186,8 +186,8 @@ query "aws_cloudfront_distribution_relationships_graph" {
       b.arn as from_id,
       d.id as to_id,
       null as id,
-      'uses' as title,
-      'uses' as category,
+      'origin for' as title,
+      'origin for' as category,
       jsonb_build_object( 'Account ID', d.account_id ) as properties
     from
       aws_cloudfront_distribution as d,
@@ -227,8 +227,8 @@ query "aws_cloudfront_distribution_relationships_graph" {
       c.arn as from_id,
       d.id as to_id,
       null as id,
-      'uses' as title,
-      'uses' as category,
+      'origin for' as title,
+      'origin for' as category,
       jsonb_build_object( 'Account ID', d.account_id ) as properties
     from
       aws_cloudfront_distribution as d,
