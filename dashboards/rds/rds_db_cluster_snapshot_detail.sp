@@ -357,6 +357,7 @@ query "aws_rds_db_cluster_snapshot_relationships_graph" {
     where
       s.arn = $1
 
+
     -- From RDS DB cluster (node)
     union all
     select
@@ -404,6 +405,11 @@ query "aws_rds_db_cluster_snapshot_relationships_graph" {
         and s.region = c.region
     where
       s.arn = $1
+
+    order by
+      category,
+      from_id,
+      to_id;
   EOQ
 
   param "arn" {}

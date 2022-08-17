@@ -417,6 +417,11 @@ query "aws_rds_db_snapshot_relationships_graph" {
         and s.region = i.region
     where
       s.arn = $1
+
+    order by
+      category,
+      from_id,
+      to_id;
   EOQ
 
   param "arn" {}

@@ -1,7 +1,7 @@
 dashboard "aws_rds_db_cluster_detail" {
 
-  title = "AWS RDS DB Cluster Detail"
-  #documentation = file("./dashboards/rds/docs/rds_db_cluster_detail.md")
+  title         = "AWS RDS DB Cluster Detail"
+  documentation = file("./dashboards/rds/docs/rds_db_cluster_detail.md")
 
   tags = merge(local.rds_common_tags, {
     type = "Detail"
@@ -304,7 +304,7 @@ query "aws_rds_db_cluster_relationships_graph" {
       c.db_cluster_identifier as from_id,
       i.db_instance_identifier as to_id,
       null as id,
-      'has_instance' as title,
+      'has instance' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', i.arn,
@@ -350,7 +350,7 @@ query "aws_rds_db_cluster_relationships_graph" {
       rdc.db_cluster_identifier as from_id,
       rg.name as to_id,
       null as id,
-      'uses cluster parameter group' as title,
+      'uses parameter group' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', rg.arn,
@@ -410,7 +410,7 @@ query "aws_rds_db_cluster_relationships_graph" {
     where
       rdc.arn = $1
 
-    -- To KMS key (node)
+    -- To KMS keys (node)
     union all
     select
       null as from_id,
@@ -430,13 +430,13 @@ query "aws_rds_db_cluster_relationships_graph" {
     where
       c.arn = $1
 
-    -- To KMS key (edge)
+    -- To KMS keys (edge)
     union all
     select
       c.db_cluster_identifier as from_id,
       k.id as to_id,
       null as id,
-      'Encrypted with' as title,
+      'encrypted with' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', k.arn,
@@ -450,7 +450,7 @@ query "aws_rds_db_cluster_relationships_graph" {
     where
       c.arn = $1
 
-    -- To VPC security group (node)
+    -- To VPC security groups (node)
     union all
     select
       null as from_id,
@@ -471,7 +471,7 @@ query "aws_rds_db_cluster_relationships_graph" {
     where
       c.arn = $1
 
-    -- To VPC security group (edge)
+    -- To VPC security groups (edge)
     union all
     select
       c.db_cluster_identifier as from_id,

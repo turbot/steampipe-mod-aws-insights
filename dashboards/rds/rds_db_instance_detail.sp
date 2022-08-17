@@ -462,7 +462,7 @@ query "aws_rds_db_instance_relationships_graph" {
     where
       arn = $1
 
-    -- To DB Parameter groups (node)
+    -- To RDS DB parameter groups (node)
     union all
     select
       null as from_id,
@@ -481,13 +481,13 @@ query "aws_rds_db_instance_relationships_graph" {
     where
       rdb.arn = $1
 
-    -- To DB parameter groups (edge)
+    -- To RDS DB parameter groups (edge)
     union all
     select
       rdb.db_instance_identifier as from_id,
       db_parameter_group ->> 'DBParameterGroupName' as to_id,
       null as id,
-      'uses_parameter_group' as title,
+      'uses parameter group' as title,
       'uses' as category,
       jsonb_build_object(
         'DB Parameter Group Apply Status', db_parameter_group ->> 'ParameterApplyStatus',
@@ -569,7 +569,7 @@ query "aws_rds_db_instance_relationships_graph" {
       rdb.db_instance_identifier as from_id,
       k.id as to_id,
       null as id,
-      'encrypted_with' as title,
+      'encrypted with' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', k.arn,
@@ -724,7 +724,7 @@ query "aws_rds_db_instance_relationships_graph" {
       sg.group_id as from_id,
       sg.vpc_id as to_id,
       null as id,
-      'is vpc' as title,
+      'in vpc' as title,
       'uses' as category,
       jsonb_build_object(
         'Security Group ID', sg.group_id,
@@ -741,8 +741,7 @@ query "aws_rds_db_instance_relationships_graph" {
       and di.vpc_id = sg.vpc_id
 
 
-    -- THINGS THAT USE ME
-    -- From DB Cluster (node)
+    -- From RDS DB cluster (node)
     union all
     select
       null as from_id,
@@ -766,7 +765,7 @@ query "aws_rds_db_instance_relationships_graph" {
     where
       i.arn = $1
 
-    -- From DB Cluster (edge)
+    -- From RDS DB cluster (edge)
     union all
     select
       c.db_cluster_identifier as from_id,
