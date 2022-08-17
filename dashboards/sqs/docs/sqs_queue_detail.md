@@ -5,3 +5,4 @@ This dashboard answers the following questions for each queue:
 - How are the messages configured for the queue?
 - What is the IAM policy of the queue?
 - How is encryption configured?
+- What relationships does the queue have with other resources?
