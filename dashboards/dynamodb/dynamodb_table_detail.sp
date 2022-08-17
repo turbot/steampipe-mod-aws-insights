@@ -65,6 +65,40 @@ dashboard "aws_dynamodb_table_detail" {
 
   }
 
+  container{
+
+    graph {
+    type  = "graph"
+    title = "Relationships"
+    query = query.aws_dynamodb_table_graph_from_table
+    args = {
+      arn = self.input.table_arn.value
+    }
+    category "aws_dynamodb_table" {
+      icon  = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/dynamodb_table_light.svg"))
+    }
+
+    category "aws_kms_key" {
+      href  = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.ARN | @uri}}"
+      icon  = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kms_key_dark.svg"))
+    }
+
+    category "aws_kinesis_stream" {
+      icon  = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kinesis_data_stream.svg"))
+    }
+
+    category "aws_s3_bucket" {
+      href  = "${dashboard.aws_s3_bucket_detail.url_path}?input.key_arn={{.properties.ARN | @uri}}"
+      icon  = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/s3_bucket_light.svg"))
+    }
+
+    category "uses" {
+      color = "green"
+    }
+  }
+
+  }
+
   container {
 
     container {
@@ -262,6 +296,133 @@ query "aws_dynamodb_table_autoscaling_state" {
       left join table_with_autoscaling as t on concat('table/', d.name) = t.resource_id
     where
       d.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_dynamodb_table_graph_from_table" {
+  sql = <<-EOQ
+    select
+      null as from_id,
+      null as to_id,
+      table_id as id,
+      name as title,
+      'aws_dynamodb_table' as category,
+      jsonb_build_object( 'ARN', arn, 'Creation Date', creation_date_time, 'Table Status', table_status, 'Account ID', account_id ) as properties
+    from
+      aws_dynamodb_table
+    where
+      arn = $1
+
+    --To KMS Keys (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      id as id,
+      id as title,
+      'aws_kms_key' as category,
+      jsonb_build_object( 'ARN', arn, 'Key Manager', key_manager, 'Creation Date', creation_date, 'Enabled', enabled, 'Account ID', account_id ) as properties
+    from
+      aws_kms_key
+    where
+      arn in
+      (
+        select
+          sse_description ->> 'KMSMasterKeyArn'
+        from
+          aws_dynamodb_table
+        where
+          arn = $1
+      )
+
+    --To KMS Keys (edge)
+    union all
+    select
+      table_id as from_id,
+      k.id as to_id,
+      null as id,
+      'uses' as title,
+      'uses' as category,
+      jsonb_build_object( 'Account ID', t.account_id ) as properties
+    from
+      aws_dynamodb_table as t,
+      aws_kms_key as k
+    where
+      sse_description ->> 'KMSMasterKeyArn' = k.arn
+      and t.arn = $1
+
+    --To S3 Buckets (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      b.arn as id,
+      title as title,
+      'aws_s3_bucket' as category,
+      jsonb_build_object( 'ARN', b.arn, 'Versioning', versioning_enabled, 'Creation Date', creation_date, 'Region', b.region , 'Account ID', b.account_id ) as properties
+    from
+      aws_s3_bucket as b,
+      aws_dynamodb_table_export as t
+    where
+        b.name = t.s3_bucket
+        and t.table_arn = $1
+
+    --To S3 Buckets (edge)
+    union all
+    select
+      table_id as from_id,
+      b.arn as to_id,
+      null as id,
+      'exports to' as title,
+      'exports to' as category,
+      jsonb_build_object( 'Account ID', t.account_id ) as properties
+    from
+      aws_dynamodb_table_export as t,
+      aws_s3_bucket as b
+    where
+        b.name = t.s3_bucket
+        and t.table_arn = $1
+
+    --To Kinesis Stream (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      s.stream_arn as id,
+      s.title as title,
+      'aws_kinesis_stream' as category,
+      jsonb_build_object( 'ARN', s.stream_arn, 'Status', stream_status, 'Encryption Type', encryption_type, 'Region', s.region , 'Account ID', s.account_id ) as properties
+    from
+      aws_kinesis_stream as s,
+      aws_dynamodb_table as t,
+      jsonb_array_elements(t.streaming_destination -> 'KinesisDataStreamDestinations') as d
+    where
+        d ->> 'StreamArn' = s.stream_arn
+        and t.arn = $1
+
+    --To Kinesis Stream (edge)
+    union all
+    select
+      table_id as from_id,
+      s.stream_arn as to_id,
+      null as id,
+      'streams to' as title,
+      'streams to' as category,
+      jsonb_build_object( 'Account ID', t.account_id ) as properties
+    from
+      aws_kinesis_stream as s,
+      aws_dynamodb_table as t,
+      jsonb_array_elements(t.streaming_destination -> 'KinesisDataStreamDestinations') as d
+    where
+        d ->> 'StreamArn' = s.stream_arn
+        and t.arn = $1
+
+    order by
+      category,
+      from_id,
+      to_id
   EOQ
 
   param "arn" {}

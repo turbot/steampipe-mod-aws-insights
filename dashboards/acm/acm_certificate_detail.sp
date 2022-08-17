@@ -30,7 +30,7 @@ dashboard "acm_certificate_detail" {
         arn = self.input.certificate_arn.value
       }
     }
-      card {
+    card {
       query = query.aws_acm_certificate_renewal_eligibility_status
       width = 2
       args = {
@@ -54,6 +54,40 @@ dashboard "acm_certificate_detail" {
       }
     }
 
+  }
+
+  container {
+    graph {
+      type  = "graph"
+      title = "Relationships"
+      query = query.aws_acm_certificate_relationships_graph
+      args = {
+        arn = self.input.certificate_arn.value
+      }
+      category "aws_acm_certificate" {
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/acm_certificate_light.svg"))
+      }
+
+      category "aws_cloudfront_distribution" {
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/cloudfront_distribution_light.svg"))
+      }
+
+      category "aws_ec2_classic_load_balancer" {
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_classic_load_balancer_light.svg"))
+      }
+
+      category "aws_ec2_application_load_balancer" {
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_application_load_balancer_light.svg"))
+      }
+
+      category "aws_ec2_network_load_balancer" {
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_network_load_balancer_light.svg"))
+      }
+
+      category "uses" {
+        color = "green"
+      }
+    }
   }
 
   container {
@@ -209,6 +243,191 @@ query "aws_acm_certificate_transparency_logging_status" {
       aws_acm_certificate
     where
       certificate_arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_acm_certificate_relationships_graph" {
+  sql = <<-EOQ
+    select
+      null as from_id,
+      null as to_id,
+      title as id,
+      title as title,
+      'aws_acm_certificate' as category,
+      jsonb_build_object( 'ARN', certificate_arn, 'Domain Name', domain_name, 'Certificate Transparency Logging Preference', certificate_transparency_logging_preference, 'Created At', created_at, 'Account ID', account_id ) as properties
+    from
+      aws_acm_certificate
+    where
+      certificate_arn = $1
+
+    -- From Cloudfront Distributions (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      id as id,
+      id as title,
+      'aws_cloudfront_distribution' as category,
+      jsonb_build_object( 'ARN', arn, 'Status', status, 'Enabled', enabled::text, 'Domain Name', domain_name, 'Account ID', account_id ) as properties
+    from
+      aws_cloudfront_distribution
+    where
+      arn in
+      (
+        select
+          jsonb_array_elements_text(in_use_by)
+        from
+          aws_acm_certificate
+        where
+          certificate_arn = $1
+      )
+
+    -- From Cloudfront Distributions (edge)
+    union all
+    select
+      d.id as from_id,
+      c.title as to_id,
+      null as id,
+      'uses' as title,
+      'uses' as category,
+      jsonb_build_object( 'Account ID', d.account_id ) as properties
+    from
+      aws_acm_certificate as c,
+      jsonb_array_elements_text(in_use_by) as arns
+      left join
+        aws_cloudfront_distribution as d
+        on d.arn = arns
+    where
+      certificate_arn = $1
+
+    -- From EC2 Classic Load Balancers (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      arn as id,
+      name as title,
+      'aws_ec2_classic_load_balancer' as category,
+      jsonb_build_object( 'ARN', arn, 'VPC ID', vpc_id, 'DNS Name', dns_name, 'Created Time', created_time, 'Account ID', account_id ) as properties
+    from
+      aws_ec2_classic_load_balancer
+    where
+      arn in
+      (
+        select
+          jsonb_array_elements_text(in_use_by)
+        from
+          aws_acm_certificate
+        where
+          certificate_arn = $1
+      )
+
+    -- From EC2 Classic Load Balancers (edge)
+    union all
+    select
+      b.arn as from_id,
+      c.title as to_id,
+      null as id,
+      'associated' as title,
+      'associated' as category,
+      jsonb_build_object( 'Account ID', b.account_id ) as properties
+    from
+      aws_acm_certificate as c,
+      jsonb_array_elements_text(in_use_by) as arns
+      left join
+        aws_ec2_classic_load_balancer as b
+        on b.arn = arns
+    where
+      certificate_arn = $1
+
+    -- From EC2 Application Load Balancers (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      arn as id,
+      name as title,
+      'aws_ec2_application_load_balancer' as category,
+      jsonb_build_object( 'ARN', arn, 'VPC ID', vpc_id, 'DNS Name', dns_name, 'Created Time', created_time, 'Account ID', account_id ) as properties
+    from
+      aws_ec2_application_load_balancer
+    where
+      arn like '%loadbalancer/app%'
+      and arn in
+      (
+        select
+          jsonb_array_elements_text(in_use_by)
+        from
+          aws_acm_certificate
+        where
+          certificate_arn = $1
+      )
+
+    -- From EC2 Application Load Balancers (edge)
+    union all
+    select
+      lb.arn as from_id,
+      c.title as to_id,
+      null as id,
+      'associated' as title,
+      'associated' as category,
+      jsonb_build_object( 'Account ID', lb.account_id ) as properties
+    from
+      aws_acm_certificate as c,
+      jsonb_array_elements_text(in_use_by) as arns
+      left join
+        aws_ec2_application_load_balancer as lb
+        on lb.arn = arns
+    where
+      certificate_arn = $1
+      and lb.arn like '%loadbalancer/app%'
+
+    -- From EC2 Network Load Balancers (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      arn as id,
+      name as title,
+      'aws_ec2_network_load_balancer' as category,
+      jsonb_build_object( 'ARN', arn, 'VPC ID', vpc_id, 'DNS Name', dns_name, 'Created Time', created_time, 'Account ID', account_id ) as properties
+    from
+      aws_ec2_network_load_balancer
+    where
+      arn in
+      (
+        select
+          jsonb_array_elements_text(in_use_by)
+        from
+          aws_acm_certificate
+        where
+          certificate_arn = $1
+      )
+
+    -- From EC2 Network Load Balancers (edge)
+    union all
+    select
+      b.arn as from_id,
+      c.title as to_id,
+      null as id,
+      'associated' as title,
+      'associated' as category,
+      jsonb_build_object( 'Account ID', b.account_id ) as properties
+    from
+      aws_acm_certificate as c,
+      jsonb_array_elements_text(in_use_by) as arns
+      left join
+        aws_ec2_network_load_balancer as b
+        on b.arn = arns
+    where
+      certificate_arn = $1
+
+    order by
+      category,
+      from_id,
+      to_id;
   EOQ
 
   param "arn" {}
