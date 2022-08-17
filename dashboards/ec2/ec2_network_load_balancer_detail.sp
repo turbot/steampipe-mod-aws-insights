@@ -12,39 +12,88 @@ dashboard "aws_ec2_network_load_balancer_detail" {
     width = 4
   }
   
-  graph {
-    type  = "graph"
-    title = "Relationships"
-    query = query.aws_nlb_graph_relationships
-    args = {
-      arn = self.input.nlb.value
-    }    
-    
-    category "aws_ec2_network_load_balancer" {
-      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_network_load_balancer_light.svg"))
+  container {
+
+    card {
+      width = 2
+      query = query.aws_nlb_scheme
+      args = {
+        arn = self.input.nlb.value
+      }
     }
 
-    category "aws_vpc" {
-      href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'VPC ID' | @uri}}"
-      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
+    card {
+      width = 2
+      query = query.aws_nlb_ports
+      args = {
+        arn = self.input.nlb.value
+      }
     }
 
-    category "aws_s3_bucket" {
-      href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/s3_bucket_light.svg"))
-    }
+  }
+  
+  container {
+    graph {
+      type  = "graph"
+      title = "Relationships"
+      query = query.aws_nlb_graph_relationships
+      args = {
+        arn = self.input.nlb.value
+      }    
+      
+      category "aws_ec2_network_load_balancer" {
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_network_load_balancer_light.svg"))
+      }
 
-    category "aws_ec2_instance" {
-      href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_instance_light.svg"))
+      category "aws_vpc" {
+        href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'VPC ID' | @uri}}"
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
+      }
+
+      category "aws_s3_bucket" {
+        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/s3_bucket_light.svg"))
+      }
+
+      category "aws_ec2_instance" {
+        href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_instance_light.svg"))
+      }
+      
+      category "aws_vpc_security_group" {
+        href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.properties.'Group ID' | @uri}}"
+      }
+      
     }
-    
-    category "aws_vpc_security_group" {
-      href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.properties.'Group ID' | @uri}}"
-    }
-    
   }
 
+}
+
+query "aws_nlb_ports" {
+  sql = <<-EOQ
+    with d as (select distinct(port) as port from aws_ec2_load_balancer_listener where load_balancer_arn = $1)
+    select
+      'Ports' as label,
+      string_agg(port::text, ',') as value
+    from 
+      d
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_nlb_scheme" {
+  sql = <<-EOQ
+    select
+      'Schema' as label,
+      scheme as value
+    from
+      aws_ec2_network_load_balancer
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
 }
 
 

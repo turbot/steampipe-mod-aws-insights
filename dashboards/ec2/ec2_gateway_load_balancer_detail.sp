@@ -12,28 +12,31 @@ dashboard "aws_ec2_gateway_load_balancer_detail" {
     width = 4
   }
   
-  graph {
-    type  = "graph"
-    title = "Things I use..."
-    query = query.aws_glb_graph_relationships
-    args = {
-      arn = self.input.glb.value
-    }    
-    
-    category "aws_ec2_gateway_load_balancer" {
-      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_gateway_load_balancer_light.svg"))
-    }
+  container {
+    graph {
+      type  = "graph"
+      title = "Things I use..."
+      query = query.aws_glb_graph_relationships
+      args = {
+        arn = self.input.glb.value
+      }
+      
+      category "aws_ec2_gateway_load_balancer" {
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_gateway_load_balancer_light.svg"))
+      }
 
-    category "aws_vpc" {
-      href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'VPC ID' | @uri}}"
-      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
-    }
+      category "aws_vpc" {
+        href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'VPC ID' | @uri}}"
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
+      }
 
-    category "aws_s3_bucket" {
-      href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/s3_bucket_light.svg"))
+      category "aws_s3_bucket" {
+        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
+        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/s3_bucket_light.svg"))
+      }
+      
     }
-    
+  
   }
 
 }
