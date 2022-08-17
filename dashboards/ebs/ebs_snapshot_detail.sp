@@ -297,6 +297,28 @@ query "aws_ebs_snapshot_relationships" {
     where
       snapshot.kms_key_id = kms_keys.arn
 
+    -- kms > vol - edges
+    union all
+    select
+      volumes.volume_id as from_id,
+      kms_keys.arn as to_id,
+      null as id,
+      'secures with' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'ARN', kms_keys.arn,
+        'Account ID',kms_keys.account_id,
+        'Region', kms_keys.region,
+        'Key Manager', kms_keys.key_manager
+      ) as properties
+    from
+      aws_kms_key as kms_keys,
+      aws_ebs_volume as volumes,
+      snapshot
+    where
+      snapshot.volume_id = volumes.volume_id
+      and snapshot.kms_key_id = kms_keys.arn
+
 
   EOQ
   
