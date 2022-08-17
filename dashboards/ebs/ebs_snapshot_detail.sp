@@ -199,10 +199,10 @@ query "aws_ebs_snapshot_relationships" {
     -- AMI - edges
     union all
     select
-      bdm -> 'Ebs' ->> 'SnapshotId' as to_id,
       images.image_id as from_id,
+      bdm -> 'Ebs' ->> 'SnapshotId' as to_id,
       null as id,
-      'uses snapshot' as title,
+      'contains' as title,
       'uses' as category,
       jsonb_build_object(
         'SnapshotId', bdm -> 'Ebs' ->> 'SnapshotId',
@@ -240,10 +240,10 @@ query "aws_ebs_snapshot_relationships" {
     -- Launch Config - edges
     union all
     select
-      snapshot.snapshot_id as from_id,
-      launch_config.launch_configuration_arn as to_id,
+      launch_config.launch_configuration_arn as from_id,
+      snapshot.snapshot_id as to_id,
       null as id,
-      'mounts' as title,
+      'provisions EBS with' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', launch_config.launch_configuration_arn,
@@ -277,7 +277,7 @@ query "aws_ebs_snapshot_relationships" {
     where
       snapshot.kms_key_id = kms_keys.arn
 
-    -- kms - nodes
+    -- kms - edges
     union all
     select
       snapshot.snapshot_id as from_id,
