@@ -1,7 +1,7 @@
 dashboard "aws_vpc_eip_detail" {
 
   title         = "AWS VPC EIP Detail"
-  # documentation = file("./dashboards/vpc/docs/vpc_eip_detail.md")
+  documentation = file("./dashboards/vpc/docs/vpc_eip_detail.md")
 
   tags = merge(local.vpc_common_tags, {
     type = "Detail"
@@ -33,7 +33,7 @@ dashboard "aws_vpc_eip_detail" {
 
       category "aws_ec2_instance" {
         icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_instance_light.svg"))
-        href  = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
+        href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
       }
 
     }
@@ -138,7 +138,7 @@ query "aws_vpc_eip_relationships_graph" {
     where
       e.network_interface_id is not null
 
-    -- From ENI > EC2 Instance  (edge)
+    -- From ENI > EC2 Instance (edge)
     union all
     select
       i.arn as from_id,
