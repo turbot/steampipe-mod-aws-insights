@@ -204,21 +204,28 @@ query "aws_ebs_volume_input" {
 
 query "aws_ebs_volume_relationships" {
   sql = <<-EOQ
-    with volumes as (select arn,volume_id,title,account_id,region,size,kms_key_id from aws_ebs_volume where arn = $1)
+    with volumes as 
+    (
+      select
+        arn,
+        volume_id,
+        title,
+        account_id,
+        region,
+        size,
+        kms_key_id 
+      from
+        aws_ebs_volume 
+      where
+        arn = $1
+    )
     select
       null as from_id,
       null as to_id,
       arn as id,
       title as title,
       'aws_ebs_volume' as category,
-      jsonb_build_object(
-        'ID',volumes.volume_id,
-        'ARN',volumes.arn,
-        'Size',volumes.size,
-        'Account ID', volumes.account_id,
-        'Region', volumes.region,
-        'KMS Key ID', volumes.kms_key_id
-      ) as properties
+      jsonb_build_object( 'ID', volumes.volume_id, 'ARN', volumes.arn, 'Size', volumes.size, 'Account ID', volumes.account_id, 'Region', volumes.region, 'KMS Key ID', volumes.kms_key_id ) as properties 
     from
       volumes
 
@@ -230,15 +237,10 @@ query "aws_ebs_volume_relationships" {
       kms_keys.arn as id,
       kms_keys.title as title,
       'aws_kms_key' as category,
-      jsonb_build_object(
-        'ARN', kms_keys.arn,
-        'Account ID',kms_keys.account_id,
-        'Region', kms_keys.region,
-        'Key Manager', kms_keys.key_manager
-      ) as properties
+      jsonb_build_object( 'ARN', kms_keys.arn, 'Account ID', kms_keys.account_id, 'Region', kms_keys.region, 'Key Manager', kms_keys.key_manager ) as properties 
     from
       aws_kms_key as kms_keys,
-      volumes
+      volumes 
     where
       volumes.kms_key_id = kms_keys.arn
 
@@ -250,15 +252,10 @@ query "aws_ebs_volume_relationships" {
       null as id,
       'secures with' as title,
       'uses' as category,
-      jsonb_build_object(
-        'ARN', kms_keys.arn,
-        'Account ID',kms_keys.account_id,
-        'Region', kms_keys.region,
-        'Key Manager', kms_keys.key_manager
-      ) as properties
+      jsonb_build_object( 'ARN', kms_keys.arn, 'Account ID', kms_keys.account_id, 'Region', kms_keys.region, 'Key Manager', kms_keys.key_manager ) as properties 
     from
       aws_kms_key as kms_keys,
-      volumes
+      volumes 
     where
       volumes.kms_key_id = kms_keys.arn
 
@@ -270,16 +267,10 @@ query "aws_ebs_volume_relationships" {
       snapshot.snapshot_id as id,
       snapshot.snapshot_id as title,
       'aws_ebs_snapshot' as category,
-      jsonb_build_object(
-        'ARN', snapshot.arn,
-        'Account ID',snapshot.account_id,
-        'Region', snapshot.region,
-        'Snapshot Size', snapshot.volume_size,
-        'Snapshot ID', snapshot.snapshot_id
-      ) as properties
+      jsonb_build_object( 'ARN', snapshot.arn, 'Account ID', snapshot.account_id, 'Region', snapshot.region, 'Snapshot Size', snapshot.volume_size, 'Snapshot ID', snapshot.snapshot_id ) as properties 
     from
       aws_ebs_snapshot as snapshot,
-      volumes
+      volumes 
     where
       volumes.volume_id = snapshot.volume_id
 
@@ -291,15 +282,10 @@ query "aws_ebs_volume_relationships" {
       null as id,
       'snapshot' as title,
       'uses' as category,
-      jsonb_build_object(
-        'ARN', snapshot.arn,
-        'Account ID',snapshot.account_id,
-        'Region', snapshot.region,
-        'Snapshot Size', snapshot.volume_size
-      ) as properties
+      jsonb_build_object( 'ARN', snapshot.arn, 'Account ID', snapshot.account_id, 'Region', snapshot.region, 'Snapshot Size', snapshot.volume_size ) as properties 
     from
       aws_ebs_snapshot as snapshot,
-      volumes
+      volumes 
     where
       volumes.volume_id = snapshot.volume_id
 
@@ -311,19 +297,19 @@ query "aws_ebs_volume_relationships" {
       instances.arn as id,
       instance_id as title,
       'aws_ec2_instance' as category,
-      jsonb_build_object(
-        'Name', instances.tags ->> 'Name',
-        'Instance ID', instance_id,
-        'ARN', instances.arn,
-        'Account ID',instances.account_id,
-        'Region', instances.region
-      ) as properties
+      jsonb_build_object( 'Name', instances.tags ->> 'Name', 'Instance ID', instance_id, 'ARN', instances.arn, 'Account ID', instances.account_id, 'Region', instances.region ) as properties 
     from
       aws_ec2_instance as instances,
       jsonb_array_elements(instances.block_device_mappings) as bdm,
-      volumes
+      volumes 
     where
-      bdm -> 'Ebs' ->> 'VolumeId' in (select volume_id from volumes)
+      bdm -> 'Ebs' ->> 'VolumeId' in 
+      (
+        select
+          volume_id 
+        from
+          volumes
+      )
 
     -- instances - edges
     union all
@@ -333,19 +319,19 @@ query "aws_ebs_volume_relationships" {
       null as id,
       'mounts' as title,
       'uses' as category,
-      jsonb_build_object(
-        'Name', instances.tags ->> 'Name',
-        'Instance ID', instance_id,
-        'ARN', instances.arn,
-        'Account ID',instances.account_id,
-        'Region', instances.region
-      ) as properties
+      jsonb_build_object( 'Name', instances.tags ->> 'Name', 'Instance ID', instance_id, 'ARN', instances.arn, 'Account ID', instances.account_id, 'Region', instances.region ) as properties 
     from
       aws_ec2_instance as instances,
       jsonb_array_elements(instances.block_device_mappings) as bdm,
-      volumes
+      volumes 
     where
-      bdm -> 'Ebs' ->> 'VolumeId' in (select volume_id from volumes)
+      bdm -> 'Ebs' ->> 'VolumeId' in 
+      (
+        select
+          volume_id 
+        from
+          volumes
+      )
 
     -- AMI - nodes
     union all
@@ -355,18 +341,22 @@ query "aws_ebs_volume_relationships" {
       images.image_id as id,
       images.title as title,
       'aws_ec2_ami' as category,
-      jsonb_build_object(
-        'SnapshotId', bdm -> 'Ebs' ->> 'SnapshotId',
-        'Account ID',images.account_id,
-        'Region', images.region
-      ) as properties
+      jsonb_build_object( 'SnapshotId', bdm -> 'Ebs' ->> 'SnapshotId', 'Account ID', images.account_id, 'Region', images.region ) as properties 
     from
       aws_ec2_ami as images,
       jsonb_array_elements(images.block_device_mappings) as bdm,
-      volumes
+      volumes 
     where
-      bdm -> 'Ebs' is not null
-      and bdm -> 'Ebs' ->> 'SnapshotId' in (select snapshot_id from aws_ebs_snapshot where aws_ebs_snapshot.volume_id = volumes.volume_id)
+      bdm -> 'Ebs' is not null 
+      and bdm -> 'Ebs' ->> 'SnapshotId' in 
+      (
+        select
+          snapshot_id 
+        from
+          aws_ebs_snapshot 
+        where
+          aws_ebs_snapshot.volume_id = volumes.volume_id
+      )
 
     -- AMI - edges
     union all
@@ -376,19 +366,22 @@ query "aws_ebs_volume_relationships" {
       null as id,
       'uses snapshot' as title,
       'uses' as category,
-      jsonb_build_object(
-        'SnapshotId', bdm -> 'Ebs' ->> 'SnapshotId',
-        'Account ID',images.account_id,
-        'Region', images.region
-      ) as properties
+      jsonb_build_object( 'SnapshotId', bdm -> 'Ebs' ->> 'SnapshotId', 'Account ID', images.account_id, 'Region', images.region ) as properties 
     from
       aws_ec2_ami as images,
       jsonb_array_elements(images.block_device_mappings) as bdm,
-      volumes
+      volumes 
     where
-      bdm -> 'Ebs' is not null
-      and bdm -> 'Ebs' ->> 'SnapshotId' in (select snapshot_id from aws_ebs_snapshot where aws_ebs_snapshot.volume_id = volumes.volume_id)
-
+      bdm -> 'Ebs' is not null 
+      and bdm -> 'Ebs' ->> 'SnapshotId' in 
+      (
+        select
+          snapshot_id 
+        from
+          aws_ebs_snapshot 
+        where
+          aws_ebs_snapshot.volume_id = volumes.volume_id
+      )
   EOQ
 
   param "arn" {}
