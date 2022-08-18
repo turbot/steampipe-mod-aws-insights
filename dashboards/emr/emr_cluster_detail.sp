@@ -33,6 +33,10 @@ dashboard "aws_emr_cluster_detail" {
       icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/s3_bucket_light.svg"))
     }
 
+    category "aws_ec2_ami" {
+      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_ami_light.svg"))
+    }
+
     category "uses" {
       color = "green"
     }
@@ -45,6 +49,7 @@ query "aws_emr_cluster_input" {
       title as label,
       cluster_arn as value,
       json_build_object(
+        'id', id,
         'account_id', account_id,
         'region', region
       ) as tags
@@ -152,7 +157,7 @@ query "aws_emr_cluster_relationships_graph" {
       null as from_id,
       null as to_id,
       id as id,
-      id as title,
+      title as title,
       'aws_emr_instance_group' as category,
       jsonb_build_object( 'ARN', arn, 'State', state, 'Account ID', account_id, 'Region', region ) as properties
     from
@@ -182,6 +187,46 @@ query "aws_emr_cluster_relationships_graph" {
       left join
         aws_emr_instance_group as g
         on g.cluster_id = c.id
+    where
+      cluster_arn = $1
+
+
+    -- To EC2 AMIs (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      image_id as id,
+      title as title,
+      'aws_ec2_ami' as category,
+      jsonb_build_object( 'Image ID', image_id, 'Creation Date', creation_date, 'State', state, 'Account ID', account_id, 'Region', region ) as properties
+    from
+      aws_ec2_ami
+    where
+      image_id in
+      (
+        select
+          custom_ami_id
+        from
+          aws_emr_cluster
+        where
+          cluster_arn = $1
+      )
+
+     -- To EC2 AMIs (edge)
+    union all
+    select
+      c.id as from_id,
+      image_id as to_id,
+      null as id,
+      'uses' as title,
+      'uses' as category,
+      jsonb_build_object( 'Account ID', c.account_id ) as properties
+    from
+      aws_emr_cluster as c
+      left join
+        aws_ec2_ami as a
+        on a.image_id = c.custom_ami_id
     where
       cluster_arn = $1
 
