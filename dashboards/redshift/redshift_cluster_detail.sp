@@ -144,61 +144,51 @@ dashboard "aws_redshift_cluster_detail" {
       }
 
       category "aws_redshift_cluster" {
-        icon  = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/redshift_cluster.svg"))
-        color = "orange"
+        icon = local.aws_redshift_cluster_icon
       }
 
       category "aws_vpc" {
-        icon  = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
-        color = "orange"
-        # href  = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'ID' | @uri}}"
+        icon = local.aws_vpc_icon
+        href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.properties.'ID' | @uri}}"
       }
 
       category "aws_vpc_eip" {
-        icon  = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_eip.svg"))
-        color = "orange"
+        icon = local.aws_vpc_eip_icon
       }
 
       category "aws_vpc_security_group" {
-        icon  = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_endpoints.svg"))
         color = "orange"
-        # href  = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.properties.'ID' | @uri}}"
+        href  = "/aws_insights.dashboard.aws_vpc_security_group_detail?input.security_group_id={{.properties.'ID' | @uri}}"
       }
 
       category "aws_redshift_subnet_group" {
-        icon  = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_endpoints.svg"))
         color = "orange"
       }
 
       category "aws_vpc_subnet" {
-        icon  = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_endpoints.svg"))
         color = "orange"
       }
 
       category "aws_kms_key" {
-        color = "green"
-        icon  = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kms_key_light.svg"))
-        href  = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
+        icon = local.aws_kms_key_icon
+        href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
       }
 
       category "aws_iam_role" {
-        color = "pink"
-        icon  = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/iam_role_light.svg"))
-        href  = "${dashboard.aws_iam_role_detail.url_path}?input.role_arn={{.properties.'ARN' | @uri}}"
+        icon = local.aws_iam_role_icon
+        href = "${dashboard.aws_iam_role_detail.url_path}?input.role_arn={{.properties.'ARN' | @uri}}"
       }
 
       category "aws_cloudwatch_log_group" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/cwl.svg"))
+        icon = local.aws_cloudwatch_log_group_icon
       }
 
       category "aws_s3_bucket" {
-        color = "pink"
-        icon  = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/s3_bucket_light.svg"))
-        href  = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
+        icon = local.aws_s3_bucket_icon
+        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
       }
 
       category "aws_redshift_snapshot" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/redshift_cluster.svg"))
       }
 
     }
@@ -473,7 +463,7 @@ query "aws_redshift_cluster_relationship_graph" {
       ) as properties
     from
       cluster as c
-      left join aws_redshift_subnet_group as s 
+      left join aws_redshift_subnet_group as s
         on c.vpc_id = s.vpc_id
         and c.cluster_subnet_group_name = s.cluster_subnet_group_name
 
@@ -495,7 +485,7 @@ query "aws_redshift_cluster_relationship_graph" {
       ) as properties
     from
       cluster as c
-      left join aws_redshift_subnet_group as s 
+      left join aws_redshift_subnet_group as s
         on c.vpc_id = s.vpc_id
         and c.cluster_subnet_group_name = s.cluster_subnet_group_name
 
@@ -516,7 +506,7 @@ query "aws_redshift_cluster_relationship_graph" {
       ) as properties
     from
       cluster as c
-      left join aws_redshift_subnet_group as s 
+      left join aws_redshift_subnet_group as s
         on c.vpc_id = s.vpc_id
         and c.cluster_subnet_group_name = s.cluster_subnet_group_name,
       jsonb_array_elements(s.subnets) subnet
@@ -539,7 +529,7 @@ query "aws_redshift_cluster_relationship_graph" {
       ) as properties
     from
       cluster as c
-      left join aws_redshift_subnet_group as s 
+      left join aws_redshift_subnet_group as s
         on c.vpc_id = s.vpc_id
         and c.cluster_subnet_group_name = s.cluster_subnet_group_name,
       jsonb_array_elements(s.subnets) as subnet
@@ -563,7 +553,7 @@ query "aws_redshift_cluster_relationship_graph" {
     from
       cluster as c
       left join aws_vpc as v on v.vpc_id = c.vpc_id
-    
+
     -- VPC Edges (subnets)
     union all
     select
@@ -580,13 +570,13 @@ query "aws_redshift_cluster_relationship_graph" {
       ) as properties
     from
       cluster as c
-      left join aws_redshift_subnet_group as s 
+      left join aws_redshift_subnet_group as s
         on c.vpc_id = s.vpc_id
         and c.cluster_subnet_group_name = s.cluster_subnet_group_name
       left join aws_vpc as v on v.vpc_id = c.vpc_id,
       jsonb_array_elements(s.subnets) as subnet
 
-    
+
     -- VPC Edges (security group)
     union all
     select
@@ -701,7 +691,7 @@ query "aws_redshift_cluster_relationship_graph" {
       cluster as c,
       jsonb_array_elements(iam_roles) as ir
       left join aws_iam_role as r on r.arn = ir ->> 'IamRoleArn'
-    
+
     -- IAM Role Edges
     union all
     select
@@ -866,7 +856,7 @@ query "aws_redshift_cluster_relationship_graph" {
       cluster as c,
       jsonb_array_elements(cluster_parameter_groups) as p
       left join aws_redshift_parameter_group as g on g.name = p ->> 'ParameterGroupName'
-  
+
     -- Things that use me
     -- cluster snapshots - nodes
     union all
@@ -886,10 +876,10 @@ query "aws_redshift_cluster_relationship_graph" {
       ) as properties
     from
       cluster as c
-      left join aws_redshift_snapshot as snapshot 
+      left join aws_redshift_snapshot as snapshot
         on snapshot.cluster_identifier = c.cluster_identifier
         and snapshot.region = c.region
-      
+
     -- cluster snapshots - edges
     union all
     select
@@ -909,10 +899,10 @@ query "aws_redshift_cluster_relationship_graph" {
       ) as properties
     from
       cluster as c
-      left join aws_redshift_snapshot as snapshot 
+      left join aws_redshift_snapshot as snapshot
         on snapshot.cluster_identifier = c.cluster_identifier
         and snapshot.region = c.region
-  
+
   EOQ
 
   param "arn" {}

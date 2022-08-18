@@ -1,6 +1,6 @@
 dashboard "aws_vpc_detail" {
 
-  title = "AWS VPC Detail"
+  title         = "AWS VPC Detail"
   documentation = file("./dashboards/vpc/docs/vpc_detail.md")
 
   tags = merge(local.vpc_common_tags, {
@@ -18,7 +18,7 @@ dashboard "aws_vpc_detail" {
     card {
       width = 2
       query = query.aws_vpc_num_ips_for_vpc
-      args  = {
+      args = {
         vpc_id = self.input.vpc_id.value
       }
     }
@@ -26,7 +26,7 @@ dashboard "aws_vpc_detail" {
     card {
       width = 2
       query = query.aws_subnet_count_for_vpc
-      args  = {
+      args = {
         vpc_id = self.input.vpc_id.value
       }
     }
@@ -34,7 +34,7 @@ dashboard "aws_vpc_detail" {
     card {
       width = 2
       query = query.aws_vpc_is_default
-      args  = {
+      args = {
         vpc_id = self.input.vpc_id.value
       }
     }
@@ -42,7 +42,7 @@ dashboard "aws_vpc_detail" {
     card {
       width = 2
       query = query.aws_flow_logs_count_for_vpc
-      args  = {
+      args = {
         vpc_id = self.input.vpc_id.value
       }
     }
@@ -60,8 +60,7 @@ dashboard "aws_vpc_detail" {
       }
 
       category "aws_vpc" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
-        # href  = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'ID' | @uri}}"
+        icon = local.aws_vpc_icon
       }
 
       category "aws_vpc_subnet" {
@@ -69,78 +68,75 @@ dashboard "aws_vpc_detail" {
       }
 
       category "aws_vpc_internet_gateway" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_internet_gateway_light.svg"))
+        icon = local.aws_vpc_internet_gateway_icon
       }
 
       category "aws_vpc_route_table" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_router_light.svg"))
+        icon = local.aws_vpc_route_table_icon
       }
 
       category "aws_ec2_transit_gateway" {
-        # icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_router_light.svg"))
         color = "blue"
       }
 
       category "aws_vpc_endpoint" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_endpoint_light.svg"))
+        icon = local.aws_vpc_endpoint_icon
       }
 
       category "aws_vpc_nat_gateway" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_nat_gateway_light.svg"))
+        icon = local.aws_vpc_nat_gateway_icon
       }
 
       category "aws_vpc_vpn_gateway" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_vpn_gateway_light.svg"))
+        icon = local.aws_vpc_vpn_gateway_icon
       }
 
       category "aws_ec2_instance" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_instance_light.svg"))
-        href  = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
+        icon = local.aws_ec2_instance_icon
+        href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
       }
 
       category "aws_lambda_function" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/lambda_function_light.svg"))
-        href  = "${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn={{.properties.'ARN' | @uri}}"
+        icon = local.aws_lambda_function_icon
+        href = "${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn={{.properties.'ARN' | @uri}}"
       }
 
       category "aws_ec2_application_load_balancer" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_application_load_balancer_light.svg"))
+        icon = local.aws_ec2_application_load_balancer_icon
       }
 
       category "aws_ec2_network_load_balancer" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_network_load_balancer_light.svg"))
+        icon = local.aws_ec2_network_load_balancer_icon
       }
 
       category "aws_ec2_classic_load_balancer" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_classic_load_balancer_light.svg"))
+        icon = local.aws_ec2_classic_load_balancer_icon
       }
 
       category "aws_ec2_gateway_load_balancer" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_gateway_load_balancer_light.svg"))
+        icon = local.aws_ec2_gateway_load_balancer_icon
       }
 
       category "aws_rds_db_instance" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/rds_db_instance_light.svg"))
-        href  = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn={{.properties.'ARN' | @uri}}"
+        icon = local.aws_rds_db_instance_icon
+        href = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn={{.properties.'ARN' | @uri}}"
       }
 
       category "aws_redshift_cluster" {
-        # icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/aws_redshift_cluster.svg"))
-        href  = "${dashboard.aws_redshift_cluster_detail.url_path}?input.cluster_arn={{.properties.'ARN' | @uri}}"
+        icon = local.aws_redshift_cluster_icon
+        href = "${dashboard.aws_redshift_cluster_detail.url_path}?input.cluster_arn={{.properties.'ARN' | @uri}}"
       }
 
       category "aws_ec2_target_group" {
-        # icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/aws_redshift_cluster.svg"))
         color = "red"
       }
 
       category "aws_fsx_file_system" {
-        # icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/aws_redshift_cluster.svg"))
         color = "orange"
       }
 
       category "aws_s3_access_point" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/s3_access_point_light.svg"))
+        icon = local.aws_s3_access_point_icon
       }
 
     }
@@ -157,7 +153,7 @@ dashboard "aws_vpc_detail" {
         type  = "line"
         width = 6
         query = query.aws_vpc_overview
-        args  = {
+        args = {
           vpc_id = self.input.vpc_id.value
         }
       }
@@ -166,7 +162,7 @@ dashboard "aws_vpc_detail" {
         title = "Tags"
         width = 6
         query = query.aws_vpc_tags
-        args  = {
+        args = {
           vpc_id = self.input.vpc_id.value
         }
       }
@@ -180,7 +176,7 @@ dashboard "aws_vpc_detail" {
       table {
         title = "CIDR Blocks"
         query = query.aws_vpc_cidr_blocks
-        args  = {
+        args = {
           vpc_id = self.input.vpc_id.value
         }
       }
@@ -188,7 +184,7 @@ dashboard "aws_vpc_detail" {
       table {
         title = "DHCP Options"
         query = query.aws_vpc_dhcp_options
-        args  = {
+        args = {
           vpc_id = self.input.vpc_id.value
         }
       }
@@ -290,7 +286,7 @@ dashboard "aws_vpc_detail" {
 
 
     flow {
-      base = flow.nacl_flow
+      base  = flow.nacl_flow
       title = "Ingress NACLs"
       width = 6
       query = query.aws_ingress_nacl_for_vpc_sankey
@@ -301,7 +297,7 @@ dashboard "aws_vpc_detail" {
 
 
     flow {
-      base = flow.nacl_flow
+      base  = flow.nacl_flow
       title = "Egress NACLs"
       width = 6
       query = query.aws_egress_nacl_for_vpc_sankey
@@ -1158,7 +1154,7 @@ query "aws_vpc_dhcp_options" {
 }
 
 query "aws_vpc_subnet_by_az" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       availability_zone,
       count(*)

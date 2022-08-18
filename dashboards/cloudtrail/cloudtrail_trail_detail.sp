@@ -55,6 +55,47 @@ dashboard "aws_cloudtrail_trail_detail" {
 
   container {
 
+    graph {
+      type  = "graph"
+      title = "Relationships"
+      query = query.aws_cloudtrail_trail_relationship_graph
+      args = {
+        arn = self.input.trail_arn.value
+      }
+
+      category "aws_cloudtrail_trail" {
+        icon = local.aws_cloudtrail_trail_icon
+      }
+
+      category "aws_sns_topic" {
+        href = "/aws_insights.dashboard.aws_sns_topic_detail?input.topic_arn={{.properties.'ARN' | @uri}}"
+        icon = local.aws_sns_topic_icon
+      }
+
+      category "aws_s3_bucket" {
+        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
+        icon = local.aws_s3_bucket_icon
+      }
+
+      category "aws_kms_key" {
+        href = "/aws_insights.dashboard.aws_kms_key_detail?input.key_arn={{.properties.'ARN' | @uri}}"
+        icon = local.aws_kms_key_icon
+      }
+
+      category "aws_cloudwatch_log_group" {
+        icon = local.aws_cloudwatch_log_group_icon
+      }
+
+      category "aws_guardduty_detector" {
+        icon = local.aws_guardduty_detector_icon
+      }
+
+    }
+
+  }
+
+  container {
+
     container {
       width = 6
 
@@ -102,47 +143,6 @@ dashboard "aws_cloudtrail_trail_detail" {
         args = {
           arn = self.input.trail_arn.value
         }
-      }
-
-    }
-
-  }
-
-  container {
-
-    graph {
-      type  = "graph"
-      title = "Relationship Graph"
-      query = query.aws_cloudtrail_trail_relationship_graph
-      args = {
-        arn = self.input.trail_arn.value
-      }
-
-      category "aws_cloudtrail_trail" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/cloudtrail_trail_light.svg"))
-      }
-
-      category "aws_sns_topic" {
-        # href = "${dashboard.aws_sns_topic_detail.url_path}?input.topic_arn={{.properties.'ARN' | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/sns_topic_light.svg"))
-      }
-
-      category "aws_s3_bucket" {
-        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/s3_bucket_light.svg"))
-      }
-
-      category "aws_kms_key" {
-        # href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kms_key_light.svg"))
-      }
-
-      category "aws_cloudwatch_log_group" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/cwl.svg"))
-      }
-
-      category "aws_guardduty_detector" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/guardduty_detector_light.svg"))
       }
 
     }
@@ -308,7 +308,7 @@ query "aws_cloudtrail_trail_relationship_graph" {
       ) as properties
     from
       trails
-      
+
     -- S3 Buckets - nodes
     union all
     select
@@ -326,9 +326,9 @@ query "aws_cloudtrail_trail_relationship_graph" {
     from
       aws_s3_bucket as bucket,
       trails as t
-    where 
+    where
       t.s3_bucket_name = bucket.name
-      
+
     -- S3 Buckets - edges
     union all
     select
@@ -346,7 +346,7 @@ query "aws_cloudtrail_trail_relationship_graph" {
     from
       aws_s3_bucket as bucket,
       trails as t
-    where 
+    where
       t.s3_bucket_name = bucket.name
 
     -- KMS key - nodes
@@ -367,7 +367,7 @@ query "aws_cloudtrail_trail_relationship_graph" {
     from
       aws_kms_key as key,
       trails as t
-    where 
+    where
       t.kms_key_id = key.arn
 
     -- KMS key - edges
@@ -386,7 +386,7 @@ query "aws_cloudtrail_trail_relationship_graph" {
     from
       aws_kms_key as key,
       trails as t
-    where 
+    where
       t.kms_key_id = key.arn
 
     -- SNS topic - nodes
@@ -405,7 +405,7 @@ query "aws_cloudtrail_trail_relationship_graph" {
     from
       aws_sns_topic as topic,
       trails as t
-    where 
+    where
       t.sns_topic_arn = topic.topic_arn
 
     -- SNS topic - edges
@@ -424,7 +424,7 @@ query "aws_cloudtrail_trail_relationship_graph" {
     from
       aws_sns_topic as topic,
       trails as t
-    where 
+    where
       t.sns_topic_arn = topic.topic_arn
 
     -- Cloudwatch log group - nodes
@@ -443,7 +443,7 @@ query "aws_cloudtrail_trail_relationship_graph" {
     from
       aws_cloudwatch_log_group as grp,
       trails as t
-    where 
+    where
       t.log_group_arn = grp.arn
 
     -- Cloudwatch log group - edges
@@ -465,7 +465,7 @@ query "aws_cloudtrail_trail_relationship_graph" {
     from
       aws_cloudwatch_log_group as grp,
       trails as t
-    where 
+    where
       t.log_group_arn = grp.arn
 
     -- Things that use me
@@ -486,11 +486,11 @@ query "aws_cloudtrail_trail_relationship_graph" {
     from
       aws_guardduty_detector as detector,
       trails as t
-    where 
+    where
       detector.status = 'ENABLED'
       and detector.data_sources is not null
       and detector.data_sources -> 'CloudTrail' ->> 'Status' = 'ENABLED'
-      
+
     -- GuardDuty - edges
     union all
     select
@@ -507,7 +507,7 @@ query "aws_cloudtrail_trail_relationship_graph" {
     from
       aws_guardduty_detector as detector,
       trails as t
-    where 
+    where
       detector.status = 'ENABLED'
       and detector.data_sources is not null
       and detector.data_sources -> 'CloudTrail' ->> 'Status' = 'ENABLED'

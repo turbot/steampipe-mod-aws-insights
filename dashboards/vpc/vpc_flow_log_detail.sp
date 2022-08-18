@@ -19,39 +19,39 @@ dashboard "aws_vpc_flow_log_detail" {
       type  = "graph"
       title = "Relationships"
       query = query.aws_vpc_flow_log_relationships_graph
-      args  = {
+      args = {
         flow_log_id = self.input.flow_log_id.value
       }
 
       category "aws_vpc_flow_log" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_flow_logs_light.svg"))
+        icon = local.aws_vpc_flow_log_icon
       }
 
       category "aws_vpc" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
+        icon = local.aws_vpc_icon
         href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'ID' | @uri}}"
       }
 
       category "aws_vpc_network_acl" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_network_acl_light.svg"))
+        icon = local.aws_vpc_network_acl_icon
       }
 
       category "aws_iam_role" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/iam_role_light.svg"))
+        icon = local.aws_iam_role_icon
         href = "${dashboard.aws_iam_role_detail.url_path}?input.role_arn={{.properties.'ARN' | @uri}}"
       }
 
       category "aws_s3_bucket" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/s3_bucket_light.svg"))
+        icon = local.aws_s3_bucket_icon
         href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
       }
 
       category "aws_cloudwatch_log_group" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/cloudwatch_log_light.svg"))
+        icon = local.aws_cloudwatch_log_group_icon
       }
 
       category "aws_ec2_network_interface" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_network_interface_light.svg"))
+        icon = local.aws_ec2_network_interface_icon
       }
 
     }

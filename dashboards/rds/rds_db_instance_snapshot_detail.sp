@@ -74,17 +74,17 @@ dashboard "aws_rds_db_snapshot_detail" {
       }
 
       category "rds_db_snapshot" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ebs_snapshot_dark.svg"))
+        ###icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ebs_snapshot_dark.svg"))
       }
 
       category "aws_rds_db_instance" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/rds_db_instance_dark.svg"))
+        icon = local.aws_rds_db_instance_icon
         href = "/aws_insights.dashboard.aws_rds_db_instance_detail.url_path?input.db_instance_arn={{.properties.ARN | @uri}}"
       }
 
       category "kms_key" {
         href = "/aws_insights.dashboard.aws_kms_key_detail.url_path?input.key_arn={{.properties.ARN | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kms_key_dark.svg"))
+        icon = local.aws_kms_key_icon
       }
 
     }

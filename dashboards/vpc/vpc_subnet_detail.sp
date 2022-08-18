@@ -24,30 +24,30 @@ dashboard "aws_vpc_subnet_detail" {
       }
 
       category "aws_vpc_route_table" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_router_light.svg"))
+        icon = local.aws_vpc_route_table_icon
       }
 
       category "aws_vpc" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
+        icon = local.aws_vpc_icon
         href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'ID' | @uri}}"
       }
 
       category "aws_vpc_network_acl" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_network_acl_light.svg"))
+        icon = local.aws_vpc_network_acl_icon
       }
 
       category "aws_rds_db_instance" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/rds_db_instance_light.svg"))
+        icon = local.aws_rds_db_instance_icon
         href = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn={{.properties.'ARN' | @uri}}"
       }
 
       category "aws_ec2_instance" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_instance_light.svg"))
+        icon = local.aws_ec2_instance_icon
         href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
       }
 
       category "aws_lambda_function" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/lambda_function_light.svg"))
+        icon = local.aws_lambda_function_icon
         href = "${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn={{.properties.'ARN' | @uri}}"
       }
 
