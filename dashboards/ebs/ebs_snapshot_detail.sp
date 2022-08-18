@@ -133,14 +133,14 @@ query "aws_ebs_snapshot_relationships" {
       snapshot
     where
       snapshot.volume_id = volumes.volume_id
-
+      
     -- EBS - edges
     union all
     select
-      snapshot.snapshot_id as from_id,
-      volumes.volume_id as to_id,
+      volumes.volume_id as from_id,
+      snapshot.snapshot_id as to_id,
       null as id,
-      'snapshot of' as title,
+      'snapshot' as title,
       'ebs_volume_to_ebs_snapshot' as category,
       jsonb_build_object(
         'Volume ID', volumes.volume_id,
@@ -296,7 +296,6 @@ query "aws_ebs_snapshot_relationships" {
     where
       snapshot.volume_id = volumes.volume_id
       and snapshot.kms_key_id = kms_keys.arn
-
 
   EOQ
 
