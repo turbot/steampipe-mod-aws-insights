@@ -173,11 +173,7 @@ query "aws_ec2_key_pair_relationships_graph" {
       instances.arn as id,
       instances.title as title,
       'aws_ec2_instance' as category,
-      jsonb_build_object(
-        'ARN', instances.arn,
-        'Account ID', instances.account_id,
-        'Region', instances.region
-      ) as properties
+      jsonb_build_object( 'ARN', instances.arn, 'Account ID', instances.account_id, 'Region', instances.region ) as properties 
     from
       aws_ec2_instance instances,
       key_pair

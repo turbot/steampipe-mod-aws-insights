@@ -202,12 +202,7 @@ query "aws_s3_bucket_relationships_graph" {
       arn as id,
       title as title,
       'aws_s3_bucket' as category,
-      jsonb_build_object(
-        'Name', buckets.name,
-        'ARN', buckets.arn,
-        'Account ID', buckets.account_id,
-        'Region', buckets.region
-      ) as properties
+      jsonb_build_object( 'Name', buckets.name, 'ARN', buckets.arn, 'Account ID', buckets.account_id, 'Region', buckets.region ) as properties 
     from
       buckets
 
@@ -219,15 +214,14 @@ query "aws_s3_bucket_relationships_graph" {
       trail.arn as id,
       trail.title as title,
       'aws_cloudtrail_trail' as category,
-      jsonb_build_object(
-        'ARN', trail.arn,
-        'Account ID', trail.account_id,
-        'Region', trail.region,
-        'Latest Delivery Time', trail.latest_delivery_time
-      ) as properties
+      jsonb_build_object( 'ARN', trail.arn, 'Account ID', trail.account_id, 'Region', trail.region, 'Latest Delivery Time', trail.latest_delivery_time ) as properties 
     from
       aws_cloudtrail_trail as trail,
+<<<<<<< HEAD
       buckets as b
+=======
+      buckets as b 
+>>>>>>> 95877e6 (corrections and formatting)
     where
       trail.s3_bucket_name = b.name
 
@@ -248,7 +242,11 @@ query "aws_s3_bucket_relationships_graph" {
       ) as properties
     from
       aws_cloudtrail_trail as trail,
+<<<<<<< HEAD
       buckets as b
+=======
+      buckets as b 
+>>>>>>> 95877e6 (corrections and formatting)
     where
       trail.s3_bucket_name = b.name
 
@@ -260,15 +258,14 @@ query "aws_s3_bucket_relationships_graph" {
       aws_s3_bucket.arn as id,
       aws_s3_bucket.title as title,
       'aws_s3_bucket' as category,
-      jsonb_build_object(
-        'Name', aws_s3_bucket.name,
-        'ARN', aws_s3_bucket.arn,
-        'Account ID', aws_s3_bucket.account_id,
-        'Region', aws_s3_bucket.region
-      ) as properties
+      jsonb_build_object( 'Name', aws_s3_bucket.name, 'ARN', aws_s3_bucket.arn, 'Account ID', aws_s3_bucket.account_id, 'Region', aws_s3_bucket.region ) as properties 
     from
       aws_s3_bucket,
+<<<<<<< HEAD
       buckets
+=======
+      buckets 
+>>>>>>> 95877e6 (corrections and formatting)
     where
       aws_s3_bucket.logging ->> 'TargetBucket' = buckets.name
 
@@ -288,7 +285,11 @@ query "aws_s3_bucket_relationships_graph" {
       ) as properties
     from
       aws_s3_bucket,
+<<<<<<< HEAD
       buckets
+=======
+      buckets 
+>>>>>>> 95877e6 (corrections and formatting)
     where
       aws_s3_bucket.logging ->> 'TargetBucket' = buckets.name
 
@@ -300,15 +301,11 @@ query "aws_s3_bucket_relationships_graph" {
       alb.arn as id,
       alb.title as title,
       'aws_ec2_application_load_balancer' as category,
-      jsonb_build_object(
-        'Name', alb.name,
-        'ARN', alb.arn,
-        'Account ID', alb.account_id,
-        'Region', alb.region
-      ) as properties
+      jsonb_build_object( 'Name', alb.name, 'ARN', alb.arn, 'Account ID', alb.account_id, 'Region', alb.region ) as properties 
     from
       aws_ec2_application_load_balancer alb,
       jsonb_array_elements(alb.load_balancer_attributes) as attributes,
+<<<<<<< HEAD
       buckets
     where
       attributes ->> 'Key' = 'access_logs.s3.bucket'
@@ -340,6 +337,7 @@ query "aws_s3_bucket_relationships_graph" {
     from
       aws_ec2_application_load_balancer alb,
       jsonb_array_elements(alb.load_balancer_attributes) as attributes,
+<<<<<<< HEAD
       buckets
     where
       attributes ->> 'Key' = 'access_logs.s3.bucket'
@@ -363,6 +361,7 @@ query "aws_s3_bucket_relationships_graph" {
     from
       aws_ec2_network_load_balancer nlb,
       jsonb_array_elements(nlb.load_balancer_attributes) as attributes,
+<<<<<<< HEAD
       buckets
     where
       attributes ->> 'Key' = 'access_logs.s3.bucket'
@@ -394,6 +393,7 @@ query "aws_s3_bucket_relationships_graph" {
     from
       aws_ec2_network_load_balancer nlb,
       jsonb_array_elements(nlb.load_balancer_attributes) as attributes,
+<<<<<<< HEAD
       buckets
     where
       attributes ->> 'Key' = 'access_logs.s3.bucket'
@@ -407,16 +407,14 @@ query "aws_s3_bucket_relationships_graph" {
       clb.arn as id,
       clb.title as title,
       'aws_ec2_classic_load_balancer' as category,
-      jsonb_build_object(
-        'Name', clb.name,
-        'ARN', clb.arn,
-        'Account ID', clb.account_id,
-        'Region', clb.region,
-        'Log Prefix', clb.access_log_s3_bucket_prefix
-      ) as properties
+      jsonb_build_object( 'Name', clb.name, 'ARN', clb.arn, 'Account ID', clb.account_id, 'Region', clb.region, 'Log Prefix', clb.access_log_s3_bucket_prefix ) as properties 
     from
       aws_ec2_classic_load_balancer clb,
+<<<<<<< HEAD
       buckets
+=======
+      buckets 
+>>>>>>> 95877e6 (corrections and formatting)
     where
       clb.access_log_s3_bucket_name = buckets.name
 
@@ -437,7 +435,11 @@ query "aws_s3_bucket_relationships_graph" {
       ) as properties
     from
       aws_ec2_classic_load_balancer clb,
+<<<<<<< HEAD
       buckets
+=======
+      buckets 
+>>>>>>> 95877e6 (corrections and formatting)
     where
       clb.access_log_s3_bucket_name = buckets.name
 
@@ -449,17 +451,18 @@ query "aws_s3_bucket_relationships_graph" {
       ap.access_point_arn as id,
       ap.title as title,
       'aws_s3_access_point' as category,
-      jsonb_build_object(
-        'Name', ap.name,
-        'ARN', ap.access_point_arn,
-        'Account ID', ap.account_id,
-        'Region', ap.region
-      ) as properties
+      jsonb_build_object( 'Name', ap.name, 'ARN', ap.access_point_arn, 'Account ID', ap.account_id, 'Region', ap.region ) as properties 
     from
       aws_s3_access_point ap,
+<<<<<<< HEAD
       buckets
     where
       ap.bucket_name = buckets.name
+=======
+      buckets 
+    where
+      ap.bucket_name = buckets.name 
+>>>>>>> 95877e6 (corrections and formatting)
       and ap.region = buckets.region
 
     -- From S3 Access Points (edge)
@@ -478,9 +481,15 @@ query "aws_s3_bucket_relationships_graph" {
       ) as properties
     from
       aws_s3_access_point ap,
+<<<<<<< HEAD
       buckets
     where
       ap.bucket_name = buckets.name
+=======
+      buckets 
+    where
+      ap.bucket_name = buckets.name 
+>>>>>>> 95877e6 (corrections and formatting)
       and ap.region = buckets.region
 
     -- To S3 Buckets (node)
@@ -491,15 +500,14 @@ query "aws_s3_bucket_relationships_graph" {
       aws_s3_bucket.arn as id,
       aws_s3_bucket.title as title,
       'aws_s3_bucket' as category,
-      jsonb_build_object(
-        'Name', aws_s3_bucket.name,
-        'ARN', aws_s3_bucket.arn,
-        'Account ID', aws_s3_bucket.account_id,
-        'Region', aws_s3_bucket.region
-      ) as properties
+      jsonb_build_object( 'Name', aws_s3_bucket.name, 'ARN', aws_s3_bucket.arn, 'Account ID', aws_s3_bucket.account_id, 'Region', aws_s3_bucket.region ) as properties 
     from
       aws_s3_bucket,
+<<<<<<< HEAD
       buckets
+=======
+      buckets 
+>>>>>>> 95877e6 (corrections and formatting)
     where
       aws_s3_bucket.name = buckets.logging ->> 'TargetBucket'
 
@@ -519,6 +527,7 @@ query "aws_s3_bucket_relationships_graph" {
       ) as properties
     from
       aws_s3_bucket,
+<<<<<<< HEAD
       buckets
     where
       aws_s3_bucket.name = buckets.logging ->> 'TargetBucket'

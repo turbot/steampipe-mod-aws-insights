@@ -306,12 +306,7 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       arn as id,
       name as title,
       'aws_ec2_network_load_balancer' as category,
-      jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region,
-        'Security Groups', nlb.security_groups
-      ) as properties
+      jsonb_build_object( 'ARN', arn, 'Account ID', account_id, 'Region', region, 'Security Groups', nlb.security_groups ) as properties 
     from
       nlb
 
@@ -323,17 +318,10 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       sg.arn as id,
       sg.title as title,
       'aws_vpc_security_group' as category,
-      jsonb_build_object(
-        'Group Name', sg.group_name,
-        'Group ID', sg.group_id,
-        'ARN', sg.arn,
-        'Account ID', sg.account_id,
-        'Region', sg.region,
-        'VPC ID', sg.vpc_id
-      ) as properties
+      jsonb_build_object( 'Group Name', sg.group_name, 'Group ID', sg.group_id, 'ARN', sg.arn, 'Account ID', sg.account_id, 'Region', sg.region, 'VPC ID', sg.vpc_id ) as properties 
     from
       aws_vpc_security_group sg,
-      nlb
+      nlb 
     where
       sg.group_id in
       (
@@ -359,7 +347,7 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       ) as properties
     from
       aws_vpc_security_group sg,
-      nlb
+      nlb 
     where
       sg.group_id in
       (
@@ -375,15 +363,10 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       tg.target_group_arn as id,
       tg.title as title,
       'aws_ec2_target_group' as category,
-      jsonb_build_object(
-        'Group Name', tg.target_group_name,
-        'ARN', tg.target_group_arn,
-        'Account ID', tg.account_id,
-        'Region', tg.region
-      ) as properties
+      jsonb_build_object( 'Group Name', tg.target_group_name, 'ARN', tg.target_group_arn, 'Account ID', tg.account_id, 'Region', tg.region ) as properties 
     from
       aws_ec2_target_group tg,
-      nlb
+      nlb 
     where
       nlb.arn in
       (
@@ -407,7 +390,7 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       ) as properties
     from
       aws_ec2_target_group tg,
-      nlb
+      nlb 
     where
       nlb.arn in
       (
@@ -423,17 +406,12 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       instance.instance_id as id,
       instance.title as title,
       'aws_ec2_instance' as category,
-      jsonb_build_object(
-        'Instance ID', instance.instance_id,
-        'ARN', instance.arn,
-        'Account ID', instance.account_id,
-        'Region', instance.region
-      ) as properties
+      jsonb_build_object( 'Instance ID', instance.instance_id, 'ARN', instance.arn, 'Account ID', instance.account_id, 'Region', instance.region ) as properties 
     from
       aws_ec2_target_group tg,
       aws_ec2_instance instance,
       jsonb_array_elements(tg.target_health_descriptions) thd,
-      nlb
+      nlb 
     where
       instance.instance_id = thd -> 'Target' ->> 'Id'
       and nlb.arn in
@@ -463,7 +441,7 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       aws_ec2_target_group tg,
       aws_ec2_instance instance,
       jsonb_array_elements(tg.target_health_descriptions) thd,
-      nlb
+      nlb 
     where
       instance.instance_id = thd -> 'Target' ->> 'Id'
       and nlb.arn in
@@ -490,7 +468,7 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
     from
       aws_s3_bucket buckets,
       nlb,
-      jsonb_array_elements(nlb.load_balancer_attributes) attributes
+      jsonb_array_elements(nlb.load_balancer_attributes) attributes 
     where
       attributes ->> 'Key' = 'access_logs.s3.bucket'
       and buckets.name = attributes ->> 'Value'
@@ -513,7 +491,7 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
     from
       aws_s3_bucket buckets,
       nlb,
-      jsonb_array_elements(nlb.load_balancer_attributes) attributes
+      jsonb_array_elements(nlb.load_balancer_attributes) attributes 
     where
       attributes ->> 'Key' = 'access_logs.s3.bucket'
       and buckets.name = attributes ->> 'Value'
@@ -526,15 +504,10 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       vpc.vpc_id as id,
       vpc.title as title,
       'aws_vpc' as category,
-      jsonb_build_object(
-        'VPC ID', vpc.vpc_id,
-        'Account ID', vpc.account_id,
-        'Region', vpc.region,
-        'CIDR Block', vpc.cidr_block
-      ) as properties
+      jsonb_build_object( 'VPC ID', vpc.vpc_id, 'Account ID', vpc.account_id, 'Region', vpc.region, 'CIDR Block', vpc.cidr_block ) as properties 
     from
       aws_vpc vpc,
-      nlb
+      nlb 
     where
       nlb.vpc_id = vpc.vpc_id
 
@@ -554,7 +527,7 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       ) as properties
     from
       aws_vpc vpc,
-      nlb
+      nlb 
     where
       nlb.vpc_id = vpc.vpc_id
 
@@ -576,7 +549,7 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       ) as properties
     from
       aws_ec2_load_balancer_listener lblistener,
-      nlb
+      nlb 
     where
       nlb.arn = lblistener.load_balancer_arn
 
@@ -595,7 +568,7 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       ) as properties
     from
       aws_ec2_load_balancer_listener lblistener,
-      nlb
+      nlb 
     where
       nlb.arn = lblistener.load_balancer_arn
 
