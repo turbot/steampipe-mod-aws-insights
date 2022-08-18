@@ -64,9 +64,9 @@ dashboard "aws_s3_bucket_detail" {
     }
 
   }
-  
+
   container {
-    
+
     graph {
       type  = "graph"
       title = "Relationships"
@@ -74,32 +74,33 @@ dashboard "aws_s3_bucket_detail" {
       args = {
         arn = self.input.bucket_arn.value
       }
-      
-      category "aws_cloudtrail_trail" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/cloudtrail_trail_light.svg"))
-      }
-      
-      category "aws_ec2_application_load_balancer" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_application_load_balancer_light.svg"))
-      }
-      
-      category "aws_ec2_network_load_balancer" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_application_load_balancer_light.svg"))
-      }
-      
-      category "aws_ec2_classic_load_balancer" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_classic_load_balancer_light.svg"))
-      }
 
       category "aws_s3_bucket" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/s3_bucket_light.svg"))
+        icon = local.aws_s3_bucket_icon
+      }
+
+      category "aws_cloudtrail_trail" {
+        icon = local.aws_cloudtrail_trail_icon
+        href = "/aws_insights.dashboard.aws_cloudtrail_trail_detail?input.trail_arn={{.properties.'ARN' | @uri}}"
+      }
+
+      category "aws_ec2_application_load_balancer" {
+        icon = local.aws_ec2_application_load_balancer_icon
+      }
+
+      category "aws_ec2_network_load_balancer" {
+        icon = local.aws_ec2_application_load_balancer_icon
+      }
+
+      category "aws_ec2_classic_load_balancer" {
+        icon = local.aws_ec2_classic_load_balancer_icon
       }
 
       category "aws_s3_access_point" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/s3_access_point_light.svg"))
+        icon = local.aws_s3_access_point_icon
       }
     }
-    
+
   }
 
   container {
@@ -237,9 +238,9 @@ query "aws_s3_bucket_relationships" {
     from
       aws_cloudtrail_trail as trail,
       buckets as b
-    where 
+    where
       trail.s3_bucket_name = b.name
-      
+
     -- Cloudtrail - edges
     union all
     select
@@ -258,11 +259,11 @@ query "aws_s3_bucket_relationships" {
     from
       aws_cloudtrail_trail as trail,
       buckets as b
-    where 
+    where
       trail.s3_bucket_name = b.name
 
     -- Buckets that log to me - nodes
-    union all 
+    union all
     select
       null as from_id,
       null as to_id,
@@ -278,11 +279,11 @@ query "aws_s3_bucket_relationships" {
     from
       aws_s3_bucket,
       buckets
-    where 
+    where
       aws_s3_bucket.logging ->> 'TargetBucket' = buckets.name
 
     -- Buckets that log to me - edges
-    union all 
+    union all
     select
       aws_s3_bucket.arn as to_id,
       buckets.arn as from_id,
@@ -298,11 +299,11 @@ query "aws_s3_bucket_relationships" {
     from
       aws_s3_bucket,
       buckets
-    where 
+    where
       aws_s3_bucket.logging ->> 'TargetBucket' = buckets.name
 
     -- ALBs that log to me - nodes
-    union all 
+    union all
     select
       null as from_id,
       null as to_id,
@@ -319,12 +320,12 @@ query "aws_s3_bucket_relationships" {
       aws_ec2_application_load_balancer alb,
       jsonb_array_elements(alb.load_balancer_attributes) as attributes,
       buckets
-    where 
-      attributes->>'Key' = 'access_logs.s3.bucket' 
+    where
+      attributes->>'Key' = 'access_logs.s3.bucket'
       and attributes->>'Value' = buckets.name
 
     -- ALBs that log to me - edges
-    union all 
+    union all
     select
       alb.arn as from_id,
       buckets.arn as to_id,
@@ -343,12 +344,12 @@ query "aws_s3_bucket_relationships" {
       aws_ec2_application_load_balancer alb,
       jsonb_array_elements(alb.load_balancer_attributes) as attributes,
       buckets
-    where 
-      attributes->>'Key' = 'access_logs.s3.bucket' 
+    where
+      attributes->>'Key' = 'access_logs.s3.bucket'
       and attributes->>'Value' = buckets.name
 
     -- NLBs that log to me - nodes
-    union all 
+    union all
     select
       null as from_id,
       null as to_id,
@@ -366,8 +367,8 @@ query "aws_s3_bucket_relationships" {
       aws_ec2_network_load_balancer nlb,
       jsonb_array_elements(nlb.load_balancer_attributes) as attributes,
       buckets
-    where 
-      attributes->>'Key' = 'access_logs.s3.bucket' 
+    where
+      attributes->>'Key' = 'access_logs.s3.bucket'
       and attributes->>'Value' = buckets.name
 
     -- NLBs that log to me - edges
@@ -390,12 +391,12 @@ query "aws_s3_bucket_relationships" {
       aws_ec2_network_load_balancer nlb,
       jsonb_array_elements(nlb.load_balancer_attributes) as attributes,
       buckets
-    where 
-      attributes->>'Key' = 'access_logs.s3.bucket' 
+    where
+      attributes->>'Key' = 'access_logs.s3.bucket'
       and attributes->>'Value' = buckets.name
 
     -- CLBs that log to me - nodes
-    union all 
+    union all
     select
       null as from_id,
       null as to_id,
@@ -412,11 +413,11 @@ query "aws_s3_bucket_relationships" {
     from
       aws_ec2_classic_load_balancer clb,
       buckets
-    where 
+    where
       clb.access_log_s3_bucket_name = buckets.name
 
     -- CLBs that log to me - edges
-    union all 
+    union all
     select
       clb.arn as from_id,
       buckets.arn as to_id,
@@ -433,11 +434,11 @@ query "aws_s3_bucket_relationships" {
     from
       aws_ec2_classic_load_balancer clb,
       buckets
-    where 
+    where
       clb.access_log_s3_bucket_name = buckets.name
 
     -- Access Point that come to me - nodes
-    union all 
+    union all
     select
       null as from_id,
       null as to_id,
@@ -453,12 +454,12 @@ query "aws_s3_bucket_relationships" {
     from
       aws_s3_access_point ap,
       buckets
-    where 
+    where
       ap.bucket_name = buckets.name
       and ap.region = buckets.region
 
     -- Access Point that come to me - edges
-    union all 
+    union all
     select
       ap.access_point_arn as from_id,
       buckets.arn as to_id,
@@ -474,12 +475,12 @@ query "aws_s3_bucket_relationships" {
     from
       aws_s3_access_point ap,
       buckets
-    where 
+    where
       ap.bucket_name = buckets.name
       and ap.region = buckets.region
-      
+
     -- Buckets I log to - nodes
-    union all 
+    union all
     select
       null as from_id,
       null as to_id,
@@ -495,11 +496,11 @@ query "aws_s3_bucket_relationships" {
     from
       aws_s3_bucket,
       buckets
-    where 
+    where
       aws_s3_bucket.name = buckets.logging ->> 'TargetBucket'
-      
+
     -- Buckets I log to - edges
-    union all 
+    union all
     select
       buckets.arn as from_id,
       aws_s3_bucket.arn as to_id,
@@ -515,12 +516,12 @@ query "aws_s3_bucket_relationships" {
     from
       aws_s3_bucket,
       buckets
-    where 
+    where
       aws_s3_bucket.name = buckets.logging ->> 'TargetBucket'
 
     order by category,id,from_id,to_id
   EOQ
-  
+
   param "arn" {}
 }
 

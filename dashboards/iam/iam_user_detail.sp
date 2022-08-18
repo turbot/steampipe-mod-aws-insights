@@ -59,7 +59,7 @@ dashboard "aws_iam_user_detail" {
         arn = self.input.user_arn.value
       }
       category "aws_iam_user" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/iam_user_light.svg"))
+        icon = local.aws_iam_user_icon
       }
 
       category "aws_iam_group" {

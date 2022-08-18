@@ -65,37 +65,37 @@ dashboard "aws_dynamodb_table_detail" {
 
   }
 
-  container{
+  container {
 
     graph {
-    type  = "graph"
-    title = "Relationships"
-    query = query.aws_dynamodb_table_graph_from_table
-    args = {
-      arn = self.input.table_arn.value
-    }
-    category "aws_dynamodb_table" {
-      icon  = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/dynamodb_table_light.svg"))
-    }
+      type  = "graph"
+      title = "Relationships"
+      query = query.aws_dynamodb_table_graph_from_table
+      args = {
+        arn = self.input.table_arn.value
+      }
+      category "aws_dynamodb_table" {
+        icon = local.aws_dynamodb_table_icon
+      }
 
-    category "aws_kms_key" {
-      href  = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.ARN | @uri}}"
-      icon  = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kms_key_dark.svg"))
-    }
+      category "aws_kms_key" {
+        href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.ARN | @uri}}"
+        icon = local.aws_kms_key_icon
+      }
 
-    category "aws_kinesis_stream" {
-      icon  = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kinesis_data_stream.svg"))
-    }
+      category "aws_kinesis_stream" {
+        icon = local.aws_kinesis_stream_icon
+      }
 
-    category "aws_s3_bucket" {
-      href  = "${dashboard.aws_s3_bucket_detail.url_path}?input.key_arn={{.properties.ARN | @uri}}"
-      icon  = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/s3_bucket_light.svg"))
-    }
+      category "aws_s3_bucket" {
+        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.key_arn={{.properties.ARN | @uri}}"
+        icon = local.aws_s3_bucket_icon
+      }
 
-    category "uses" {
-      color = "green"
+      category "uses" {
+        color = "green"
+      }
     }
-  }
 
   }
 

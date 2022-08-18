@@ -60,21 +60,21 @@ dashboard "aws_kms_key_detail" {
         arn = self.input.key_arn.value
       }
       category "aws_kms_key" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kms_key_light.svg"))
+        icon = local.aws_kms_key_icon
       }
 
       category "aws_cloudtrail_trail" {
         href = "${dashboard.aws_cloudtrail_trail_detail.url_path}?input.trail_arn={{.properties.ARN | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/cloudtrail_trail_light.svg"))
+        icon = local.aws_cloudtrail_trail_icon
       }
 
       category "aws_ebs_volume" {
         href = "/aws_insights.dashboard.aws_ebs_volume_detail?input.volume_arn={{.properties.'ARN' | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ebs_volume_light.svg"))
+        icon = local.aws_ebs_volume_icon
       }
 
       category "aws_rds_db_cluster" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/rds_db_cluster_light.svg"))
+        icon = local.aws_rds_db_cluster_icon
       }
 
       category "aws_rds_db_cluster_snapshot" {
@@ -84,7 +84,7 @@ dashboard "aws_kms_key_detail" {
 
       category "aws_rds_db_instance" {
         href = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn={{.properties.ARN | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/rds_db_instance_light.svg"))
+        icon = local.aws_rds_db_instance_icon
       }
 
       category "aws_rds_db_snapshot" {
@@ -95,8 +95,8 @@ dashboard "aws_kms_key_detail" {
       category "aws_redshift_cluster" {
         // cyclic dependency prevents use of url_path, hardcode for now
         # href = "${dashboard.aws_redshift_cluster_detail.url_path}?input.cluster_arn={{.properties.ARN | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/redshift_cluster_light.svg"))
-         href = "/aws_insights.dashboard.aws_redshift_cluster_detail?input.cluster_arn={{.properties.'ARN' | @uri}}"
+        icon = local.aws_redshift_cluster_icon
+        href = "/aws_insights.dashboard.aws_redshift_cluster_detail?input.cluster_arn={{.properties.'ARN' | @uri}}"
       }
 
       category "uses" {

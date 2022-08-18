@@ -19,7 +19,7 @@ dashboard "aws_sqs_queue_detail" {
     card {
       width = 2
       query = query.aws_sqs_queue_encryption
-      args  = {
+      args = {
         queue_arn = self.input.queue_arn.value
       }
     }
@@ -27,7 +27,7 @@ dashboard "aws_sqs_queue_detail" {
     card {
       width = 2
       query = query.aws_sqs_queue_content_based_deduplication
-      args  = {
+      args = {
         queue_arn = self.input.queue_arn.value
       }
     }
@@ -35,7 +35,7 @@ dashboard "aws_sqs_queue_detail" {
     card {
       width = 2
       query = query.aws_sqs_queue_delay_seconds
-      args  = {
+      args = {
         queue_arn = self.input.queue_arn.value
       }
     }
@@ -43,7 +43,7 @@ dashboard "aws_sqs_queue_detail" {
     card {
       width = 2
       query = query.aws_sqs_queue_message_retention_seconds
-      args  = {
+      args = {
         queue_arn = self.input.queue_arn.value
       }
     }
@@ -61,58 +61,45 @@ dashboard "aws_sqs_queue_detail" {
       }
 
       category "aws_sqs_queue" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/sqs_queue_light.svg"))
-        color = "blue"
+        icon = local.aws_sqs_queue_icon
       }
 
       category "aws_sns_topic_subscription" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/sqs_queue_light.svg"))
         color = "blue"
       }
 
       category "dead_letter_queue" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/sqs_queue_light.svg"))
         color = "red"
       }
 
       category "aws_kms_key" {
-        color = "orange"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kms_key_light.svg"))
+        icon = local.aws_kms_key_icon
         // cyclic dependency prevents use of url_path, hardcode for now
         # href  = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
         href = "/aws_insights.dashboard.aws_kms_key_detail?input.key_arn={{.properties.'ARN' | @uri}}"
       }
 
-      category "aws_sns_topic_subscription" {
-        color = "green"
-      }
-
       category "aws_s3_bucket" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/s3_bucket_light.svg"))
-        color = "orange"
-        href  = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
+        icon = local.aws_s3_bucket_icon
+        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
       }
 
       category "aws_vpc_endpoint" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_endpoint_light.svg"))
-        color = "orange"
+        icon = local.aws_vpc_endpoint_icon
       }
 
       category "aws_vpc" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
-        color = "orange"
-        href  = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'ID' | @uri}}"
+        icon = local.aws_vpc_icon
+        href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'ID' | @uri}}"
       }
 
       category "aws_lambda_function" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/lambda_function_light.svg"))
-        color = "blue"
-        href  = "${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn={{.properties.'ARN' | @uri}}"
+        icon = local.aws_lambda_function_icon
+        href = "${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn={{.properties.'ARN' | @uri}}"
       }
 
       category "aws_eventbridge_rule" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/eventbridge_rule_light.svg"))
-        color = "blue"
+        icon = local.aws_eventbridge_rule_icon
       }
 
     }
@@ -129,7 +116,7 @@ dashboard "aws_sqs_queue_detail" {
         type  = "line"
         width = 6
         query = query.aws_sqs_queue_overview
-        args  = {
+        args = {
           queue_arn = self.input.queue_arn.value
         }
 
@@ -139,7 +126,7 @@ dashboard "aws_sqs_queue_detail" {
         title = "Tags"
         width = 6
         query = query.aws_sqs_queue_tags_detail
-        args  = {
+        args = {
           queue_arn = self.input.queue_arn.value
         }
       }
@@ -153,7 +140,7 @@ dashboard "aws_sqs_queue_detail" {
       table {
         title = "Message Details"
         query = query.aws_sqs_queue_message
-        args  = {
+        args = {
           queue_arn = self.input.queue_arn.value
         }
       }
@@ -161,7 +148,7 @@ dashboard "aws_sqs_queue_detail" {
       table {
         title = "Encryption Details"
         query = query.aws_sqs_queue_encryption_details
-        args  = {
+        args = {
           queue_arn = self.input.queue_arn.value
         }
       }
@@ -177,7 +164,7 @@ dashboard "aws_sqs_queue_detail" {
     table {
       title = "Policy"
       query = query.aws_sqs_queue_policy
-      args  = {
+      args = {
         queue_arn = self.input.queue_arn.value
       }
     }
@@ -347,7 +334,7 @@ query "aws_sqs_queue_encryption_details" {
   param "queue_arn" {}
 }
 
-query "aws_sqs_queue_relationships_graph"{
+query "aws_sqs_queue_relationships_graph" {
   sql = <<-EOQ
   with queue as (select * from aws_sqs_queue where queue_arn = $1)
 

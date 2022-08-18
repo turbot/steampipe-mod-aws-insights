@@ -1,4 +1,4 @@
-dashboard "elasticache_cluster_detail" {
+dashboard "aws_elasticache_cluster_detail" {
 
   title         = "AWS ElastiCache Cluster Detail"
   documentation = file("./dashboards/elasticache/docs/elasticache_cluster_detail.md")
@@ -21,22 +21,22 @@ dashboard "elasticache_cluster_detail" {
       arn = self.input.elasticache_cluster_arn.value
     }
     category "aws_elasticache_cluster" {
-      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/elasticache_cluster_light.svg"))
+      icon = local.aws_elasticache_cluster_icon
     }
 
     category "aws_sns_topic" {
       href = "${dashboard.aws_sns_topic_detail.url_path}?input.topic_arn={{.properties.ARN | @uri}}"
-      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/sns_topic_light.svg"))
+      icon = local.aws_sns_topic_icon
     }
 
     category "aws_kms_key" {
       href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kms_key_light.svg"))
+      icon = local.aws_kms_key_icon
     }
 
     category "aws_vpc" {
       href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.'id' | @uri}}"
-      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
+      icon = local.aws_vpc_icon
     }
 
     category "aws_vpc_security_group" {

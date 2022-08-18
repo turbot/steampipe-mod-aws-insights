@@ -65,23 +65,24 @@ dashboard "acm_certificate_detail" {
         arn = self.input.certificate_arn.value
       }
       category "aws_acm_certificate" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/acm_certificate_light.svg"))
+        icon = local.aws_acm_certificate_icon
       }
 
       category "aws_cloudfront_distribution" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/cloudfront_distribution_light.svg"))
+        href = "/aws_insights.dashboard.aws_cloudfront_distribution_detail?input.distribution_arn={{.properties.'ARN' | @uri}}"
+        icon = local.aws_cloudfront_distribution_icon
       }
 
       category "aws_ec2_classic_load_balancer" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_classic_load_balancer_light.svg"))
+        icon = local.aws_ec2_classic_load_balancer_icon
       }
 
       category "aws_ec2_application_load_balancer" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_application_load_balancer_light.svg"))
+        icon = local.aws_ec2_application_load_balancer_icon
       }
 
       category "aws_ec2_network_load_balancer" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_network_load_balancer_light.svg"))
+        icon = local.aws_ec2_network_load_balancer_icon
       }
 
       category "uses" {
