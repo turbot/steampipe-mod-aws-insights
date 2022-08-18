@@ -1,7 +1,7 @@
 dashboard "aws_ec2_application_load_balancer_detail" {
-  title = "AWS EC2 Application Load balancer Detail"
-  #documentation = file("./dashboards/lb/docs/alb_relationships.md")
-
+  title         = "AWS EC2 Application Load Balancer Details"
+  documentation = file("./dashboards/ec2/docs/ec2_application_load_balancer_detail.md")
+  
   tags = merge(local.ec2_common_tags, {
     type = "Details"
   })
@@ -214,8 +214,7 @@ query "aws_alb_graph_relationships" {
         'Account ID', instance.account_id,
         'Region', instance.region,
         'Health Check Port', thd['HealthCheckPort'],
-        'Health Check State', thd['TargetHealth']['State'],
-        'health',tg.target_health_descriptions
+        'Health Check State', thd['TargetHealth']['State']
       ) as properties
     from
       aws_ec2_target_group tg,

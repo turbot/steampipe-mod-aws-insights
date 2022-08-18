@@ -1,7 +1,7 @@
 dashboard "aws_ec2_classic_load_balancer_detail" {
-  title = "AWS EC2 Classic Load balancer Detail"
-  #documentation = file("./dashboards/lb/docs/clb_relationships.md")
-
+  title         = "AWS EC2 Classic Load Balancer Details"
+  documentation = file("./dashboards/ec2/docs/ec2_classic_load_balancer_detail.md")
+  
   tags = merge(local.ec2_common_tags, {
     type = "Details"
   })
