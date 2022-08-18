@@ -31,6 +31,10 @@ dashboard "aws_eventbridge_rule_detail" {
         icon = local.aws_eventbridge_bus_icon
       }
 
+      category "aws_cloudwatch_log_group" {
+        icon = local.aws_cloudwatch_log_group_icon
+      }
+
       category "aws_sns_topic" {
         href = "/aws_insights.dashboard.aws_sns_topic_detail.url_path?input.topic_arn={{.properties.ARN | @uri}}"
         icon = local.aws_sns_topic_icon
@@ -169,6 +173,49 @@ query "aws_eventbridge_rule_relationships_graph" {
     where
       r.arn = $1
       and split_part((t ->> 'Arn'::text), ':', 3) = 'lambda'
+
+    -- To CloudWatch log group (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      w.arn as id,
+      w.title,
+      'aws_cloudwatch_log_group' as category,
+      jsonb_build_object(
+        'ARN', w.arn,
+        'Account ID', w.account_id,
+        'Region', w.region,
+        'Retention days', w.retention_in_days
+      ) as properties
+    from
+      aws_eventbridge_rule r
+      cross join jsonb_array_elements(targets) t
+      join aws_cloudwatch_log_group w on w.arn = (t ->> 'Arn')::text || ':*'
+    where
+      r.arn = $1
+      and split_part((t ->> 'Arn'::text), ':', 3) = 'logs'
+
+    -- To CloudWatch log group (edge)
+    union all
+    select
+      r.arn as from_id,
+      w.arn as to_id,
+      null as id,
+      'logs to' as title,
+      'uses' as category,
+      jsonb_build_object(
+        'ARN', w.arn,
+        'Account ID', w.account_id,
+        'Region', w.region
+      ) as properties
+    from
+      aws_eventbridge_rule r
+      cross join jsonb_array_elements(targets) t
+      join aws_cloudwatch_log_group w on w.arn = (t ->> 'Arn')::text || ':*'
+    where
+      r.arn = $1
+      and split_part((t ->> 'Arn'::text), ':', 3) = 'logs'
 
     -- From Eventbridge bus (node)
     union all
