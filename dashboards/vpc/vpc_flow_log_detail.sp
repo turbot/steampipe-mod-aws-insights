@@ -15,6 +15,26 @@ dashboard "aws_vpc_flow_log_detail" {
 
   container {
 
+    card {
+      width = 2
+      query = query.aws_vpc_flow_log_resource_id
+      args = {
+        flow_log_id = self.input.flow_log_id.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_vpc_flow_log_deliver_logs_status
+      args = {
+        flow_log_id = self.input.flow_log_id.value
+      }
+    }
+
+  }
+
+  container {
+
     graph {
       type  = "graph"
       title = "Relationships"
@@ -57,6 +77,54 @@ dashboard "aws_vpc_flow_log_detail" {
     }
   }
 
+  container {
+
+    container {
+      width = 6
+
+      table {
+        title = "Overview"
+        type  = "line"
+        width = 6
+        query = query.aws_vpc_flow_log_overview
+        args = {
+          flow_log_id = self.input.flow_log_id.value
+        }
+
+      }
+
+      table {
+        title = "Tags"
+        width = 6
+        query = query.aws_vpc_flow_tags
+        args = {
+          flow_log_id = self.input.flow_log_id.value
+        }
+
+      }
+    }
+
+    container {
+      width = 6
+
+      table {
+        title = "Log Destination"
+        width = 12
+        query = query.aws_vpc_flow_log_destination
+        args = {
+          flow_log_id = self.input.flow_log_id.value
+        }
+
+        column "Bucket" {
+          href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.'Bucket' | @uri}}"
+
+        }
+      }
+
+    }
+
+  }
+
 }
 
 query "aws_vpc_flow_log_input" {
@@ -74,6 +142,36 @@ query "aws_vpc_flow_log_input" {
     order by
       title;
   EOQ
+}
+
+query "aws_vpc_flow_log_resource_id"{
+  sql = <<-EOQ
+    select
+      'Resource ID' as label,
+      resource_id as value
+    from
+      aws_vpc_flow_log
+    where
+      flow_log_id = $1
+
+  EOQ
+  param "flow_log_id" {}
+
+}
+
+query "aws_vpc_flow_log_deliver_logs_status"{
+  sql = <<-EOQ
+    select
+      'Deliver Logs Status' as label,
+      deliver_logs_status as value,
+      case when deliver_logs_status = 'SUCCESS' then 'ok' else 'alert' end as type
+    from
+      aws_vpc_flow_log
+    where
+      flow_log_id = $1
+  EOQ
+  param "flow_log_id" {}
+
 }
 
 query "aws_vpc_flow_log_relationships_graph" {
@@ -496,3 +594,55 @@ query "aws_vpc_flow_log_relationships_graph" {
   param "flow_log_id" {}
 
 }
+
+query "aws_vpc_flow_log_overview" {
+  sql = <<-EOQ
+    select
+      flow_log_id as "Flow Log ID",
+      creation_time as "Creation Time",
+      flow_log_status as "Status",
+      max_aggregation_interval as "Max Aggregation Interval",
+      title as "Title",
+      region as "Region",
+      account_id as "Account ID"
+    from
+      aws_vpc_flow_log
+    where
+      flow_log_id = $1
+  EOQ
+
+  param "flow_log_id" {}
+}
+
+query "aws_vpc_flow_tags" {
+  sql = <<-EOQ
+    select
+      tag ->> 'Key' as "Key",
+      tag ->> 'Value' as "Value"
+    from
+      aws_vpc_flow_log,
+      jsonb_array_elements(tags_src) as tag
+    where
+      flow_log_id = $1
+    order by
+      tag ->> 'Key';
+  EOQ
+
+  param "flow_log_id" {}
+}
+
+query "aws_vpc_flow_log_destination" {
+  sql = <<-EOQ
+    select
+      log_destination_type as "Log Destination Type",
+      case when log_destination is not null then log_destination else 'NA' end as "Bucket",
+      case when log_group_name is not null then log_group_name else 'NA' end as "Log Group"
+    from
+      aws_vpc_flow_log
+    where
+      flow_log_id = $1
+  EOQ
+
+  param "flow_log_id" {}
+}
+
