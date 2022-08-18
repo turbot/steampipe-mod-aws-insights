@@ -537,7 +537,7 @@ query "aws_ec2_instance_relationships_graph" {
       instance_id as from_id,
       image_id as to_id,
       null as id,
-      'launched from' as title,
+      'launched with' as title,
       'uses' as category,
       jsonb_build_object('Image ID', image_id, 'Instance ID', instance_id) as properties
     from

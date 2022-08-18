@@ -141,20 +141,22 @@ query "aws_ec2_keypair_tags" {
 
 query "aws_ec2_keypair_relationships" {
   sql = <<-EOQ
-    with keypair as (select * from aws_ec2_key_pair where key_name = $1)
+    with keypair as 
+    (
+      select
+        * 
+      from
+        aws_ec2_key_pair 
+      where
+        key_name = $1
+    )
     select
       null as from_id,
       null as to_id,
       key_pair_id as id,
       title as title,
       'aws_ec2_key_pair' as category,
-      jsonb_build_object(
-        'Name', keypair.key_name,
-        'ID', keypair.key_pair_id,
-        'Fingerprint', keypair.key_fingerprint,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
+      jsonb_build_object( 'Name', keypair.key_name, 'ID', keypair.key_pair_id, 'Fingerprint', keypair.key_fingerprint, 'Account ID', account_id, 'Region', region ) as properties 
     from
       keypair
 
@@ -166,14 +168,10 @@ query "aws_ec2_keypair_relationships" {
       instances.arn as id,
       instances.title as title,
       'aws_ec2_instance' as category,
-      jsonb_build_object(
-        'ARN', instances.arn,
-        'Account ID', instances.account_id,
-        'Region', instances.region
-      ) as properties
+      jsonb_build_object( 'ARN', instances.arn, 'Account ID', instances.account_id, 'Region', instances.region ) as properties 
     from
       aws_ec2_instance instances,
-      keypair
+      keypair 
     where
       instances.key_name = keypair.key_name
 
@@ -185,14 +183,10 @@ query "aws_ec2_keypair_relationships" {
       null as id,
       'has' as title,
       'uses' as category,
-      jsonb_build_object(
-        'ARN', instances.arn,
-        'Account ID', instances.account_id,
-        'Region', instances.region
-      ) as properties
+      jsonb_build_object( 'ARN', instances.arn, 'Account ID', instances.account_id, 'Region', instances.region ) as properties 
     from
       aws_ec2_instance instances,
-      keypair
+      keypair 
     where
       instances.key_name = keypair.key_name
 
@@ -204,14 +198,10 @@ query "aws_ec2_keypair_relationships" {
       launch_config.launch_configuration_arn as id,
       launch_config.title as title,
       'aws_ec2_launch_configuration' as category,
-      jsonb_build_object(
-        'ARN', launch_config.launch_configuration_arn,
-        'Account ID', launch_config.account_id,
-        'Region', launch_config.region
-      ) as properties
+      jsonb_build_object( 'ARN', launch_config.launch_configuration_arn, 'Account ID', launch_config.account_id, 'Region', launch_config.region ) as properties 
     from
       aws_ec2_launch_configuration launch_config,
-      keypair
+      keypair 
     where
       launch_config.key_name = keypair.key_name
 
@@ -223,14 +213,10 @@ query "aws_ec2_keypair_relationships" {
       null as id,
       'launches with' as title,
       'aws_ec2_launch_configuration' as category,
-      jsonb_build_object(
-        'ARN', launch_config.launch_configuration_arn,
-        'Account ID', launch_config.account_id,
-        'Region', launch_config.region
-      ) as properties
+      jsonb_build_object( 'ARN', launch_config.launch_configuration_arn, 'Account ID', launch_config.account_id, 'Region', launch_config.region ) as properties 
     from
       aws_ec2_launch_configuration launch_config,
-      keypair
+      keypair 
     where
       launch_config.key_name = keypair.key_name
 
