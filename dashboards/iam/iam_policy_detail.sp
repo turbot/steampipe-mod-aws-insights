@@ -24,11 +24,11 @@ dashboard "aws_iam_policy_detail" {
 
     category "aws_iam_role" {
       href = "${dashboard.aws_iam_role_detail.url_path}?input.role_arn={{.properties.ARN | @uri}}"
-      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/iam_role_light.svg"))
+      icon = local.aws_iam_role_icon
     }
 
     category "aws_iam_user" {
-      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/iam_user_light.svg"))
+      icon = local.aws_iam_user_icon
       href = "${dashboard.aws_iam_user_detail.url_path}?input.user_arn={{.properties.ARN | @uri}}"
     }
 

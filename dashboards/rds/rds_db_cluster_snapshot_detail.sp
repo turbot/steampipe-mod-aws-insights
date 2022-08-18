@@ -76,17 +76,17 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
       }
 
       category "db_cluster_snapshot" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ebs_snapshot_dark.svg"))
+        ###icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ebs_snapshot_dark.svg"))
       }
 
       category "aws_rds_db_cluster" {
         href = "/aws_insights.dashboard.aws_rds_db_cluster_detail.url_path?input.db_cluster_arn={{.properties.ARN | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/rds_db_cluster_dark.svg"))
+        icon = local.aws_rds_db_cluster_icon
       }
 
-      category "kms_key" {
+      category "aws_kms_key" {
         href = "/aws_insights.dashboard.aws_kms_key_detail.url_path?input.key_arn={{.properties.ARN | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kms_key_dark.svg"))
+        icon = local.aws_kms_key_icon
       }
     }
   }
@@ -324,7 +324,7 @@ query "aws_rds_db_cluster_snapshot_relationships_graph" {
       null as to_id,
       k.id as id,
       COALESCE(k.aliases #>> '{0,AliasName}', k.id) as title,
-      'kms_key' as category,
+      'aws_kms_key' as category,
       jsonb_build_object(
         'ARN', k.arn,
         'Rotation Enabled', k.key_rotation_enabled::text,

@@ -1,17 +1,17 @@
 dashboard "aws_ec2_classic_load_balancer_detail" {
-  title         = "AWS EC2 Classic Load balancer Details"
+  title = "AWS EC2 Classic Load balancer Details"
   #documentation = file("./dashboards/lb/docs/clb_relationships.md")
-  
+
   tags = merge(local.ec2_common_tags, {
     type = "Details"
   })
-  
+
   input "clb" {
     title = "Select a Classic Load balancer:"
     sql   = query.aws_clb_input.sql
     width = 4
   }
-  
+
   container {
 
     card {
@@ -23,7 +23,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
     }
 
   }
-  
+
   container {
     graph {
       type  = "graph"
@@ -32,25 +32,25 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
       args = {
         arn = self.input.clb.value
       }
-      
+
       category "aws_ec2_classic_load_balancer" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_classic_load_balancer_light.svg"))
+        icon = local.aws_ec2_classic_load_balancer_icon
       }
-      
+
       category "aws_vpc" {
         href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'VPC ID' | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
+        icon = local.aws_vpc_icon
       }
 
       category "aws_s3_bucket" {
         href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/s3_bucket_light.svg"))
+        icon = local.aws_s3_bucket_icon
       }
 
       category "aws_vpc_security_group" {
         href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.properties.'Group ID' | @uri}}"
       }
-      
+
     }
   }
 }
@@ -108,11 +108,11 @@ query "aws_clb_graph_relationships" {
     from
       aws_vpc_security_group sg,
       clb
-    where 
+    where
       sg.group_id in (select jsonb_array_elements_text(clb.security_groups))
 
     -- security groups - edges
-    union all 
+    union all
     select
       clb.arn as from_id,
       sg.arn as to_id,
@@ -130,11 +130,11 @@ query "aws_clb_graph_relationships" {
     from
       aws_vpc_security_group sg,
       clb
-    where 
+    where
       sg.group_id in (select jsonb_array_elements_text(clb.security_groups))
 
     -- target groups - nodes
-    union all 
+    union all
     select
       null as from_id,
       null as to_id,
@@ -150,11 +150,11 @@ query "aws_clb_graph_relationships" {
     from
       aws_ec2_target_group tg,
       clb
-    where 
+    where
       clb.arn in (select jsonb_array_elements_text(tg.load_balancer_arns))
 
     -- target groups - edges
-    union all 
+    union all
     select
       clb.arn as from_id,
       tg.target_group_arn as to_id,
@@ -170,11 +170,11 @@ query "aws_clb_graph_relationships" {
     from
       aws_ec2_target_group tg,
       clb
-    where 
+    where
       clb.arn in (select jsonb_array_elements_text(tg.load_balancer_arns))
 
     -- target group instances - nodes
-    union all 
+    union all
     select
       null as from_id,
       null as to_id,
@@ -192,12 +192,12 @@ query "aws_clb_graph_relationships" {
       aws_ec2_instance instance,
       jsonb_array_elements(tg.target_health_descriptions) thd,
       clb
-    where 
+    where
       instance.instance_id = thd->'Target'->>'Id'
       and clb.arn in (select jsonb_array_elements_text(tg.load_balancer_arns))
 
     -- target group instances - edges
-    union all 
+    union all
     select
       tg.target_group_arn as from_id,
       instance.instance_id as to_id,
@@ -218,12 +218,12 @@ query "aws_clb_graph_relationships" {
       aws_ec2_instance instance,
       jsonb_array_elements(tg.target_health_descriptions) thd,
       clb
-    where 
+    where
       instance.instance_id = thd->'Target'->>'Id'
       and clb.arn in (select jsonb_array_elements_text(tg.load_balancer_arns))
 
     -- S3 bucket I log to - nodes
-    union all 
+    union all
     select
       null as from_id,
       null as to_id,
@@ -240,11 +240,11 @@ query "aws_clb_graph_relationships" {
     from
       aws_s3_bucket buckets,
       clb
-    where 
+    where
       buckets.name = clb.access_log_s3_bucket_name
 
     -- S3 bucket I log to - edges
-    union all 
+    union all
     select
       clb.arn as from_id,
       buckets.arn as to_id,
@@ -262,9 +262,9 @@ query "aws_clb_graph_relationships" {
     from
       aws_s3_bucket buckets,
       clb
-    where 
+    where
       buckets.name = clb.access_log_s3_bucket_name
-    
+
     -- vpc - nodes
     union all
     select
@@ -279,12 +279,12 @@ query "aws_clb_graph_relationships" {
         'Region', vpc.region,
         'CIDR Block', vpc.cidr_block
       ) as properties
-    from 
+    from
       aws_vpc vpc,
       clb
     where
       clb.vpc_id = vpc.vpc_id
-    
+
     -- vpc - edges
     union all
     select
@@ -299,12 +299,12 @@ query "aws_clb_graph_relationships" {
         'Region', vpc.region,
         'CIDR Block', vpc.cidr_block
       ) as properties
-    from 
+    from
       aws_vpc vpc,
       clb
     where
       clb.vpc_id = vpc.vpc_id
-    
+
     -- lb listener - nodes
     union all
     select
@@ -321,12 +321,12 @@ query "aws_clb_graph_relationships" {
         'Port', lblistener.port,
         'SSL Policy', COALESCE(lblistener.ssl_policy,'None')
       ) as properties
-    from 
+    from
       aws_ec2_load_balancer_listener lblistener,
       clb
     where
       clb.arn = lblistener.load_balancer_arn
-    
+
     -- lb listener - edges
     union all
     select
@@ -340,12 +340,12 @@ query "aws_clb_graph_relationships" {
         'Account ID', lblistener.account_id,
         'Region', lblistener.region
       ) as properties
-    from 
+    from
       aws_ec2_load_balancer_listener lblistener,
       clb
     where
       clb.arn = lblistener.load_balancer_arn
-    
+
     -- lb listener port - nodes
     union all
     select
@@ -355,12 +355,12 @@ query "aws_clb_graph_relationships" {
       ('Port ' || lblistener.port) as title,
       'aws_ec2_load_balancer_listener_port' as category,
       jsonb_build_object() as properties
-    from 
+    from
       aws_ec2_load_balancer_listener lblistener,
       clb
     where
       clb.arn = lblistener.load_balancer_arn
-    
+
     -- lb listener port - edges
     union all
     select
@@ -370,7 +370,7 @@ query "aws_clb_graph_relationships" {
       'Inbound Port' as title,
       'uses' as category,
       jsonb_build_object() as properties
-    from 
+    from
       aws_ec2_load_balancer_listener lblistener,
       clb
     where
@@ -378,7 +378,7 @@ query "aws_clb_graph_relationships" {
 
     order by category,from_id,to_id
   EOQ
-  
+
   param "arn" {}
 }
 

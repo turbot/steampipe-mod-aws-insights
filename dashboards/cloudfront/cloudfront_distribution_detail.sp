@@ -20,25 +20,25 @@ dashboard "aws_cloudfront_distribution_detail" {
       arn = self.input.distribution_arn.value
     }
     category "aws_cloudfront_distribution" {
-      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/cloudfront_distribution_light.svg"))
+      icon = local.aws_cloudfront_distribution_icon
     }
 
     category "aws_acm_certificate" {
       href = "${dashboard.acm_certificate_detail.url_path}?input.certificate_arn={{.properties.ARN | @uri}}"
-      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/acm_certificate_light.svg"))
+      icon = local.aws_acm_certificate_icon
     }
 
     category "aws_s3_bucket" {
       href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/s3_bucket_light.svg"))
+      icon = local.aws_s3_bucket_icon
     }
 
     category "aws_ec2_application_load_balancer" {
-      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_application_load_balancer_light.svg"))
+      icon = local.aws_ec2_application_load_balancer_icon
     }
 
     category "aws_media_store_container" {
-      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/media_store_container_light.svg"))
+      icon = local.aws_media_store_container_icon
     }
 
     category "uses" {

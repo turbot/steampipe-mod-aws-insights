@@ -60,7 +60,7 @@ dashboard "aws_rds_db_cluster_detail" {
       }
 
       category "aws_rds_db_cluster" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/rds_db_cluster_dark.svg"))
+        icon = local.aws_rds_db_cluster_icon
       }
 
       category "aws_rds_db_instance" {
@@ -68,7 +68,7 @@ dashboard "aws_rds_db_cluster_detail" {
         # href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.\"VPC ID\" | @uri}}"
 
         href = "/aws_insights.dashboard.aws_rds_db_instance_detail.url_path?input.db_instance_arn={{.properties.ARN | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/rds_db_instance_dark.svg"))
+        icon = local.aws_rds_db_instance_icon
       }
 
       category "aws_vpc_security_group" {
@@ -76,32 +76,32 @@ dashboard "aws_rds_db_cluster_detail" {
         # href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.properties.\"Security Group ID\" | @uri}}"
 
         href = "/aws_insights.dashboard.aws_vpc_security_group_detail?input.security_group_id={{.properties.\"Security Group ID\" | @uri}}"
-        # icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
+        # icon = local.aws_vpc_icon
       }
 
-      category "kms_key" {
+      category "aws_kms_key" {
         # cyclic dependency prevents use of url_path, hardcode for now
         # href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.ARN | @uri}}"
 
         href = "/aws_insights.dashboard.aws_kms_key_detail.url_path?input.key_arn={{.properties.ARN | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kms_key_dark.svg"))
+        icon = local.aws_kms_key_icon
       }
 
       category "db_cluster_parameter_group" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/rds_db_parameter_group_dark.svg"))
+        ###icon = local.aws_rds_db_parameter_group_icon
       }
 
       category "db_subnet_group" {
-        # icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
+        # icon = local.aws_vpc_icon
       }
 
       category "aws_vpc_subnet" {
-        # icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
+        # icon = local.aws_vpc_icon
       }
 
       category "aws_vpc" {
         href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.properties.\"VPC ID\" | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_vpc_dark.svg"))
+        icon = local.aws_vpc_icon
       }
     }
   }
@@ -417,7 +417,7 @@ query "aws_rds_db_cluster_relationships_graph" {
       null as to_id,
       k.id as id,
       COALESCE(k.aliases #>> '{0,AliasName}', k.id) as title,
-      'kms_key' as category,
+      'aws_kms_key' as category,
       jsonb_build_object(
         'ARN', k.arn,
         'Rotation Enabled', k.key_rotation_enabled::text,
