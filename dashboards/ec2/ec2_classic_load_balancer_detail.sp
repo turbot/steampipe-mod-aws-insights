@@ -1,7 +1,7 @@
 dashboard "aws_ec2_classic_load_balancer_detail" {
   title         = "AWS EC2 Classic Load Balancer Details"
   documentation = file("./dashboards/ec2/docs/ec2_classic_load_balancer_detail.md")
-  
+
   tags = merge(local.ec2_common_tags, {
     type = "Details"
   })
@@ -17,7 +17,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
     card {
       width = 2
       query = query.aws_clb_scheme
-      args = {
+      args  = {
         arn = self.input.clb.value
       }
     }
@@ -29,7 +29,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
       type  = "graph"
       base  = graph.aws_graph_categories
       query = query.aws_clb_graph_relationships
-      args = {
+      args  = {
         arn = self.input.clb.value
       }
       category "aws_ec2_classic_load_balancer" {
@@ -55,7 +55,7 @@ query "aws_clb_scheme" {
 
 query "aws_clb_graph_relationships" {
   sql = <<-EOQ
-    with clb as 
+    with clb as
     (
       select
         backend_server_descriptions,
@@ -68,9 +68,9 @@ query "aws_clb_graph_relationships" {
         access_log_s3_bucket_name,
         access_log_s3_bucket_prefix,
         security_groups,
-        vpc_id 
+        vpc_id
       from
-        aws_ec2_classic_load_balancer 
+        aws_ec2_classic_load_balancer
       where
         arn = $1
     )
@@ -80,11 +80,17 @@ query "aws_clb_graph_relationships" {
       arn as id,
       name as title,
       'aws_ec2_classic_load_balancer' as category,
-      jsonb_build_object( 'ARN', arn, 'Account ID', account_id, 'Region', region, 'Security Groups', clb.security_groups, 'Scheme', clb.scheme, 'backend', clb.backend_server_descriptions ) as properties 
+      jsonb_build_object(
+        'ARN', arn,
+        'Account ID', account_id,
+        'Region', region,
+        'Security Groups', clb.security_groups,
+        'Scheme', clb.scheme
+      ) as properties
     from
       clb
 
-    -- security groups - nodes
+    -- To security group (node)
     union all
     select
       null as from_id,
@@ -92,18 +98,25 @@ query "aws_clb_graph_relationships" {
       sg.arn as id,
       sg.title as title,
       'aws_vpc_security_group' as category,
-      jsonb_build_object( 'Group Name', sg.group_name, 'Group ID', sg.group_id, 'ARN', sg.arn, 'Account ID', sg.account_id, 'Region', sg.region, 'VPC ID', sg.vpc_id ) as properties 
+      jsonb_build_object(
+        'Group Name', sg.group_name,
+        'Group ID', sg.group_id,
+        'ARN', sg.arn,
+        'Account ID', sg.account_id,
+        'Region', sg.region,
+        'VPC ID', sg.vpc_id
+      ) as properties
     from
       aws_vpc_security_group sg,
-      clb 
+      clb
     where
-      sg.group_id in 
+      sg.group_id in
       (
         select
           jsonb_array_elements_text(clb.security_groups)
       )
 
-    -- security groups - edges
+    -- To security group (edge)
     union all
     select
       clb.arn as from_id,
@@ -111,18 +124,25 @@ query "aws_clb_graph_relationships" {
       null as id,
       'Security Group' as title,
       'uses' as category,
-      jsonb_build_object( 'Group Name', sg.group_name, 'Group ID', sg.group_id, 'ARN', sg.arn, 'Account ID', sg.account_id, 'Region', sg.region, 'VPC ID', sg.vpc_id ) as properties 
+      jsonb_build_object(
+        'Group Name', sg.group_name,
+        'Group ID', sg.group_id,
+        'ARN', sg.arn,
+        'Account ID', sg.account_id,
+        'Region', sg.region,
+        'VPC ID', sg.vpc_id
+      ) as properties
     from
       aws_vpc_security_group sg,
-      clb 
+      clb
     where
-      sg.group_id in 
+      sg.group_id in
       (
         select
           jsonb_array_elements_text(clb.security_groups)
       )
 
-    -- target groups - nodes
+    -- To target group (node)
     union all
     select
       null as from_id,
@@ -130,18 +150,23 @@ query "aws_clb_graph_relationships" {
       tg.target_group_arn as id,
       tg.title as title,
       'aws_ec2_target_group' as category,
-      jsonb_build_object( 'Group Name', tg.target_group_name, 'ARN', tg.target_group_arn, 'Account ID', tg.account_id, 'Region', tg.region ) as properties 
+      jsonb_build_object(
+        'Group Name', tg.target_group_name,
+        'ARN', tg.target_group_arn,
+        'Account ID', tg.account_id,
+        'Region', tg.region
+      ) as properties
     from
       aws_ec2_target_group tg,
-      clb 
+      clb
     where
-      clb.arn in 
+      clb.arn in
       (
         select
           jsonb_array_elements_text(tg.load_balancer_arns)
       )
 
-    -- target groups - edges
+    -- To target group (edge)
     union all
     select
       clb.arn as from_id,
@@ -149,18 +174,23 @@ query "aws_clb_graph_relationships" {
       null as id,
       'Targets' as title,
       'uses' as category,
-      jsonb_build_object( 'Group Name', tg.target_group_name, 'ARN', tg.target_group_arn, 'Account ID', tg.account_id, 'Region', tg.region ) as properties 
+      jsonb_build_object(
+        'Group Name', tg.target_group_name,
+        'ARN', tg.target_group_arn,
+        'Account ID', tg.account_id,
+        'Region', tg.region
+      ) as properties
     from
       aws_ec2_target_group tg,
-      clb 
+      clb
     where
-      clb.arn in 
+      clb.arn in
       (
         select
           jsonb_array_elements_text(tg.load_balancer_arns)
       )
 
-    -- target group instances - nodes
+    -- To target group instance (node)
     union all
     select
       null as from_id,
@@ -168,21 +198,26 @@ query "aws_clb_graph_relationships" {
       instance.instance_id as id,
       instance.title as title,
       'aws_ec2_instance' as category,
-      jsonb_build_object( 'Instance ID', instance.instance_id, 'ARN', instance.arn, 'Account ID', instance.account_id, 'Region', instance.region ) as properties 
+      jsonb_build_object(
+        'Instance ID', instance.instance_id,
+        'ARN', instance.arn,
+        'Account ID', instance.account_id,
+        'Region', instance.region
+      ) as properties
     from
       aws_ec2_target_group tg,
       aws_ec2_instance instance,
       jsonb_array_elements(tg.target_health_descriptions) thd,
-      clb 
+      clb
     where
-      instance.instance_id = thd -> 'Target' ->> 'Id' 
-      and clb.arn in 
+      instance.instance_id = thd -> 'Target' ->> 'Id'
+      and clb.arn in
       (
         select
           jsonb_array_elements_text(tg.load_balancer_arns)
       )
 
-    -- target group instances - edges
+    -- To target group instance (edge)
     union all
     select
       tg.target_group_arn as from_id,
@@ -190,21 +225,28 @@ query "aws_clb_graph_relationships" {
       null as id,
       'Instance' as title,
       'uses' as category,
-      jsonb_build_object( 'Instance ID', instance.instance_id, 'ARN', instance.arn, 'Account ID', instance.account_id, 'Region', instance.region, 'Health Check Port', thd['HealthCheckPort'], 'Health Check State', thd['TargetHealth']['State'], 'health', tg.target_health_descriptions ) as properties 
+      jsonb_build_object(
+        'Instance ID', instance.instance_id,
+        'ARN', instance.arn,
+        'Account ID', instance.account_id,
+        'Region', instance.region,
+        'Health Check Port', thd['HealthCheckPort'],
+        'Health Check State', thd['TargetHealth']['State'],
+      ) as properties
     from
       aws_ec2_target_group tg,
       aws_ec2_instance instance,
       jsonb_array_elements(tg.target_health_descriptions) thd,
-      clb 
+      clb
     where
-      instance.instance_id = thd -> 'Target' ->> 'Id' 
-      and clb.arn in 
+      instance.instance_id = thd -> 'Target' ->> 'Id'
+      and clb.arn in
       (
         select
           jsonb_array_elements_text(tg.load_balancer_arns)
       )
 
-    -- S3 bucket I log to - nodes
+    -- S3 bucket (node)
     union all
     select
       null as from_id,
@@ -215,17 +257,17 @@ query "aws_clb_graph_relationships" {
       jsonb_build_object(
         'Name', buckets.name,
         'ARN', buckets.arn,
-        'Account ID', clb.account_id,
-        'Region', clb.region,
+        'Account ID', buckets.account_id,
+        'Region', buckets.region,
         'Logs to', clb.access_log_s3_bucket_name
       ) as properties
     from
       aws_s3_bucket buckets,
-      clb 
+      clb
     where
       buckets.name = clb.access_log_s3_bucket_name
 
-    -- S3 bucket I log to - edges
+    -- S3 bucket (edge)
     union all
     select
       clb.arn as from_id,
@@ -233,14 +275,21 @@ query "aws_clb_graph_relationships" {
       null as id,
       'Logs to' as title,
       'uses' as category,
-      jsonb_build_object( 'Name', clb.name, 'ARN', clb.arn, 'Account ID', clb.account_id, 'Region', clb.region, 'Logs to', clb.access_log_s3_bucket_name, 'Log Prefix', clb.access_log_s3_bucket_prefix ) as properties 
+      jsonb_build_object(
+        'Name', clb.name,
+        'ARN', clb.arn,
+        'Account ID', clb.account_id,
+        'Region', clb.region,
+        'Logs to', clb.access_log_s3_bucket_name,
+        'Log Prefix', clb.access_log_s3_bucket_prefix
+      ) as properties
     from
       aws_s3_bucket buckets,
-      clb 
+      clb
     where
       buckets.name = clb.access_log_s3_bucket_name
 
-    -- vpc - nodes
+    -- VPC (node)
     union all
     select
       null as from_id,
@@ -248,14 +297,19 @@ query "aws_clb_graph_relationships" {
       vpc.vpc_id as id,
       vpc.title as title,
       'aws_vpc' as category,
-      jsonb_build_object( 'VPC ID', vpc.vpc_id, 'Account ID', vpc.account_id, 'Region', vpc.region, 'CIDR Block', vpc.cidr_block ) as properties 
+      jsonb_build_object(
+        'VPC ID', vpc.vpc_id,
+        'Account ID', vpc.account_id,
+        'Region', vpc.region,
+        'CIDR Block', vpc.cidr_block
+      ) as properties
     from
       aws_vpc vpc,
-      clb 
+      clb
     where
       clb.vpc_id = vpc.vpc_id
 
-    -- vpc - edges
+    -- VPC (edges)
     union all
     select
       clb.arn as from_id,
@@ -263,14 +317,19 @@ query "aws_clb_graph_relationships" {
       null as id,
       'VPC' as title,
       'uses' as category,
-      jsonb_build_object( 'VPC ID', vpc.vpc_id, 'Account ID', vpc.account_id, 'Region', vpc.region, 'CIDR Block', vpc.cidr_block ) as properties 
+      jsonb_build_object(
+        'VPC ID', vpc.vpc_id,
+        'Account ID', vpc.account_id,
+        'Region', vpc.region,
+        'CIDR Block', vpc.cidr_block
+      ) as properties
     from
       aws_vpc vpc,
-      clb 
+      clb
     where
       clb.vpc_id = vpc.vpc_id
 
-    -- lb listener - nodes
+    -- To EC2 load balancer listener (node)
     union all
     select
       null as from_id,
@@ -278,29 +337,40 @@ query "aws_clb_graph_relationships" {
       lblistener.arn as id,
       lblistener.title as title,
       'aws_ec2_load_balancer_listener' as category,
-      jsonb_build_object( 'ARN', lblistener.arn, 'Account ID', lblistener.account_id, 'Region', lblistener.region, 'Protocol', lblistener.protocol, 'Port', lblistener.port, 'SSL Policy', coalesce(lblistener.ssl_policy, 'None') ) as properties 
+      jsonb_build_object(
+        'ARN', lblistener.arn,
+        'Account ID', lblistener.account_id,
+        'Region', lblistener.region,
+        'Protocol', lblistener.protocol,
+        'Port', lblistener.port,
+        'SSL Policy', coalesce(lblistener.ssl_policy, 'None')
+      ) as properties
     from
       aws_ec2_load_balancer_listener lblistener,
-      clb 
+      clb
     where
       clb.arn = lblistener.load_balancer_arn
 
-    -- lb listener - edges
+    -- To EC2 load balancer listener (edge)
     union all
     select
       clb.arn as from_id,
       lblistener.arn as to_id,
       null as id,
-      'Listens on' as title,
+      'listens on' as title,
       'uses' as category,
-      jsonb_build_object( 'ARN', lblistener.arn, 'Account ID', lblistener.account_id, 'Region', lblistener.region ) as properties 
+      jsonb_build_object(
+        'ARN', lblistener.arn,
+        'Account ID', lblistener.account_id,
+        'Region', lblistener.region
+      ) as properties
     from
       aws_ec2_load_balancer_listener lblistener,
-      clb 
+      clb
     where
       clb.arn = lblistener.load_balancer_arn
 
-    -- lb listener port - nodes
+    -- To EC2 load balancer listener port (node)
     union all
     select
       null as from_id,
@@ -314,14 +384,14 @@ query "aws_clb_graph_relationships" {
       )
       as title,
       'aws_ec2_load_balancer_listener_port' as category,
-      jsonb_build_object() as properties 
+      jsonb_build_object() as properties
     from
       aws_ec2_load_balancer_listener lblistener,
-      clb 
+      clb
     where
       clb.arn = lblistener.load_balancer_arn
 
-    -- lb listener port - edges
+    -- To EC2 load balancer listener port (edge)
     union all
     select
       lblistener.arn as from_id,
@@ -330,14 +400,15 @@ query "aws_clb_graph_relationships" {
       )
       as to_id,
       null as id,
-      'Inbound Port' as title,
+      'inbound port' as title,
       'uses' as category,
-      jsonb_build_object() as properties 
+      jsonb_build_object() as properties
     from
       aws_ec2_load_balancer_listener lblistener,
-      clb 
+      clb
     where
-      clb.arn = lblistener.load_balancer_arn 
+      clb.arn = lblistener.load_balancer_arn
+
     order by
       category,
       from_id,
