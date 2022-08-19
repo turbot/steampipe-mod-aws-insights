@@ -9,7 +9,7 @@ dashboard "aws_ebs_volume_detail" {
 
   input "volume_arn" {
     title = "Select a volume:"
-    sql   = query.aws_ebs_volume_input.sql
+    sql   = query.aws_ec2_ebs_volume_relationships_graph.sql
     width = 4
   }
 
@@ -181,7 +181,7 @@ dashboard "aws_ebs_volume_detail" {
 
 }
 
-query "aws_ebs_volume_input" {
+query "aws_ec2_ebs_volume_relationships_graph" {
   sql = <<-EOQ
     select
       title as label,

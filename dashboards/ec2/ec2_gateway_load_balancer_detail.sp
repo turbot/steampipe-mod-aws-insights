@@ -269,6 +269,23 @@ query "aws_glb_scheme" {
   param "arn" {}
 }
 
+query "aws_ec2_glb_overview" {
+  sql = <<-EOQ
+    select
+      title as "Title",
+      dns_name as "DNS Name",
+      canonical_hosted_zone_id as "Route 53 hosted zone ID",
+      account_id as "Account ID",
+      region as "Region",
+      partition as "Partition"
+    from
+      aws_ec2_gateway_load_balancer
+    where
+      aws_ec2_gateway_load_balancer.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
 
 query "aws_ec2_gateway_load_balancer_relationships_graph" {
   sql = <<-EOQ
