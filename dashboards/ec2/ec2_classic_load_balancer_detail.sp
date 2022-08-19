@@ -172,7 +172,7 @@ query "aws_clb_graph_relationships" {
       clb.arn as from_id,
       tg.target_group_arn as to_id,
       null as id,
-      'Targets' as title,
+      'targets' as title,
       'uses' as category,
       jsonb_build_object(
         'Group Name', tg.target_group_name,
@@ -223,7 +223,7 @@ query "aws_clb_graph_relationships" {
       tg.target_group_arn as from_id,
       instance.instance_id as to_id,
       null as id,
-      'Instance' as title,
+      'instance' as title,
       'uses' as category,
       jsonb_build_object(
         'Instance ID', instance.instance_id,
@@ -231,7 +231,7 @@ query "aws_clb_graph_relationships" {
         'Account ID', instance.account_id,
         'Region', instance.region,
         'Health Check Port', thd['HealthCheckPort'],
-        'Health Check State', thd['TargetHealth']['State'],
+        'Health Check State', thd['TargetHealth']['State']
       ) as properties
     from
       aws_ec2_target_group tg,
@@ -273,7 +273,7 @@ query "aws_clb_graph_relationships" {
       clb.arn as from_id,
       buckets.arn as to_id,
       null as id,
-      'Logs to' as title,
+      'logs to' as title,
       'uses' as category,
       jsonb_build_object(
         'Name', clb.name,
