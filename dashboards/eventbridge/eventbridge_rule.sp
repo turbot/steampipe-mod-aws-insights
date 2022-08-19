@@ -14,6 +14,24 @@ dashboard "aws_eventbridge_rule_detail" {
   }
 
   container {
+    card {
+      query = query.aws_eventbridge_rule_state
+      width = 2
+      args = {
+        arn = self.input.eventbridge_rule_arn.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_eventbridge_rule_target_count
+      args = {
+        arn = self.input.eventbridge_rule_arn.value
+      }
+    }
+  }
+
+  container {
 
     graph {
       type  = "graph"
@@ -47,6 +65,45 @@ dashboard "aws_eventbridge_rule_detail" {
 
     }
   }
+
+  container {
+
+    container {
+      width = 6
+
+      table {
+        title = "Overview"
+        type  = "line"
+        width = 6
+        query = query.aws_eventbridge_rule_overview
+        args = {
+          arn = self.input.eventbridge_rule_arn.value
+        }
+      }
+
+      table {
+        title = "Tags"
+        width = 6
+        query = query.aws_eventbridge_rule_tags
+        args = {
+          arn = self.input.eventbridge_rule_arn.value
+        }
+      }
+
+    }
+
+    container {
+      width = 6
+
+      table {
+        title = "Rule Targets"
+        query = query.aws_eventbridge_rule_targets
+        args = {
+          arn = self.input.eventbridge_rule_arn.value
+        }
+      }
+    }
+  }
 }
 
 
@@ -64,6 +121,84 @@ query "aws_eventbridge_rule_input" {
     order by
       arn;
   EOQ
+}
+
+query "aws_eventbridge_rule_state" {
+  sql = <<-EOQ
+    select
+      'State' as label,
+      initcap(state) as value
+    from
+      aws_eventbridge_rule
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_eventbridge_rule_overview" {
+  sql = <<-EOQ
+    select
+      name as "Name",
+      event_bus_name as "Event Bus Name",
+      managed_by as "Managed by",
+      region as "Region",
+      account_id as "Account ID",
+      arn as "ARN"
+    from
+      aws_eventbridge_rule
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_eventbridge_rule_tags" {
+  sql = <<-EOQ
+    select
+      tag ->> 'Key' as "Key",
+      tag ->> 'Value' as "Value"
+    from
+      aws_eventbridge_rule,
+      jsonb_array_elements(tags_src) as tag
+    where
+      arn = $1
+    order by
+      tag ->> 'Key';
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_eventbridge_rule_targets" {
+  sql = <<-EOQ
+    select
+      target ->> 'Arn' as "Target ARN"
+    from
+      aws_eventbridge_rule as c,
+      jsonb_array_elements(c.targets) as target
+    where
+      c.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_eventbridge_rule_target_count" {
+  sql = <<-EOQ
+    select
+      coalesce(jsonb_array_length(targets), 0) as value,
+      'Targets' as label,
+      'info' as type
+    from
+      aws_eventbridge_rule
+    where
+      arn = $1
+  EOQ
+
+  param "arn" {}
 }
 
 query "aws_eventbridge_rule_relationships_graph" {
