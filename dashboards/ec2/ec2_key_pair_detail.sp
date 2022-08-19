@@ -1,6 +1,6 @@
-dashboard "aws_ec2_keys_relationships" {
+dashboard "aws_ec2_key_pair_detail" {
   title = "AWS EC2 Key Pair Detail"
-  documentation = file("./dashboards/ec2/docs/ec2_keys_detail.md")
+  documentation = file("./dashboards/ec2/docs/ec2_key_pair_detail.md")
 
   tags = merge(local.ec2_common_tags, {
     type = "Detail"
@@ -11,7 +11,6 @@ dashboard "aws_ec2_keys_relationships" {
     sql   = query.ec2_key_input.sql
     width = 4
   }
-
 
   container {
 
@@ -54,7 +53,7 @@ dashboard "aws_ec2_keys_relationships" {
       title = "Overview"
       type  = "line"
       width = 6
-      query = query.aws_ec2_keypair_overview
+      query = query.aws_ec2_key_pair_overview
       args = {
         key_name = self.input.key_name.value
       }
@@ -64,7 +63,7 @@ dashboard "aws_ec2_keys_relationships" {
     table {
       title = "Tags"
       width = 6
-      query = query.aws_ec2_keypair_tags
+      query = query.aws_ec2_key_pair_tags
       args = {
         key_name = self.input.key_name.value
       }
@@ -91,7 +90,7 @@ query "aws_ec2_key_pair_instances" {
 query "aws_ec2_key_pair_launch_configs" {
   sql = <<-EOQ
     select
-      'Instances using this key' as label,
+      'Launch Configs using this key' as label,
       count(distinct(lc)) as value
     from
       aws_ec2_launch_configuration as lc
@@ -103,7 +102,7 @@ query "aws_ec2_key_pair_launch_configs" {
 
 }
 
-query "aws_ec2_keypair_overview" {
+query "aws_ec2_key_pair_overview" {
   sql = <<-EOQ
     select
       key_pair_id as "ID",
@@ -122,7 +121,7 @@ query "aws_ec2_keypair_overview" {
   param "key_name" {}
 }
 
-query "aws_ec2_keypair_tags" {
+query "aws_ec2_key_pair_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -139,9 +138,9 @@ query "aws_ec2_keypair_tags" {
   param "key_name" {}
 }
 
-query "aws_ec2_keypair_relationships_graph" {
+query "aws_ec2_key_pair_relationships_graph" {
   sql = <<-EOQ
-    with keypair as
+    with key_pair as
     (
       select
         *
@@ -150,6 +149,8 @@ query "aws_ec2_keypair_relationships_graph" {
       where
         key_name = $1
     )
+
+    -- Resource (node)
     select
       null as from_id,
       null as to_id,
@@ -157,16 +158,16 @@ query "aws_ec2_keypair_relationships_graph" {
       title as title,
       'aws_ec2_key_pair' as category,
       jsonb_build_object(
-        'Name', keypair.key_name,
-        'ID', keypair.key_pair_id,
-        'Fingerprint', keypair.key_fingerprint,
+        'Name', key_pair.key_name,
+        'ID', key_pair.key_pair_id,
+        'Fingerprint', key_pair.key_fingerprint,
         'Account ID', account_id,
         'Region', region
       ) as properties
     from
-      keypair
+      key_pair
 
-    -- EC2 Instances (node)
+    -- From EC2 Instances (node)
     union all
     select
       null as from_id,
@@ -181,15 +182,15 @@ query "aws_ec2_keypair_relationships_graph" {
       ) as properties
     from
       aws_ec2_instance instances,
-      keypair
+      key_pair
     where
-      instances.key_name = keypair.key_name
+      instances.key_name = key_pair.key_name
 
-    -- EC2 Instances (edges)
+    -- From EC2 Instances (edges)
     union all
     select
       instances.arn as from_id,
-      keypair.key_pair_id as to_id,
+      key_pair.key_pair_id as to_id,
       null as id,
       'has' as title,
       'uses' as category,
@@ -200,11 +201,11 @@ query "aws_ec2_keypair_relationships_graph" {
       ) as properties
     from
       aws_ec2_instance instances,
-      keypair
+      key_pair
     where
-      instances.key_name = keypair.key_name
+      instances.key_name = key_pair.key_name
 
-    -- EC2 Launch Config (node)
+    -- From EC2 Launch Config (node)
     union all
     select
       null as from_id,
@@ -218,27 +219,32 @@ query "aws_ec2_keypair_relationships_graph" {
         'Region', launch_config.region ) as properties
     from
       aws_ec2_launch_configuration launch_config,
-      keypair
+      key_pair
     where
-      launch_config.key_name = keypair.key_name
+      launch_config.key_name = key_pair.key_name
 
-    -- EC2 Launch Config (edge)
+    -- From EC2 Launch Config (edge)
     union all
     select
       launch_config.launch_configuration_arn as from_id,
-      keypair.key_pair_id as to_id,
+      key_pair.key_pair_id as to_id,
       null as id,
       'launches with' as title,
-      'aws_ec2_launch_configuration' as category,
+      'uses' as category,
       jsonb_build_object(
         'ARN', launch_config.launch_configuration_arn,
         'Account ID', launch_config.account_id,
         'Region', launch_config.region ) as properties
     from
       aws_ec2_launch_configuration launch_config,
-      keypair
+      key_pair
     where
-      launch_config.key_name = keypair.key_name
+      launch_config.key_name = key_pair.key_name
+
+    order by
+      category,
+      from_id,
+      to_id;
 
   EOQ
 

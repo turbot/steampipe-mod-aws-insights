@@ -93,6 +93,8 @@ query "aws_ec2_nlb_relationships_graph" {
       where
         arn = $1
     )
+
+    -- Resource (node)
     select
       null as from_id,
       null as to_id,
@@ -446,7 +448,6 @@ query "aws_nlb_input" {
       arn as value,
       json_build_object(
         'account_id', account_id,
-
         'region', region
       ) as tags
     from

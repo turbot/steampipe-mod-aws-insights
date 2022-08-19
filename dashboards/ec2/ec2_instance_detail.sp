@@ -279,6 +279,8 @@ query "aws_ec2_instance_relationships_graph" {
       where
         arn = $1
     )
+
+    -- Resource (node)
     select
       null as from_id,
       null as to_id,

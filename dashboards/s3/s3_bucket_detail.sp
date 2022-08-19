@@ -222,6 +222,8 @@ query "aws_s3_bucket_relationships_graph" {
       where
         arn = $1
     )
+
+    -- Resource (node)
     select
       null as from_id,
       null as to_id,
@@ -237,7 +239,7 @@ query "aws_s3_bucket_relationships_graph" {
     from
       buckets
 
-    -- Cloudtrail (node)
+    -- From Cloudtrail (node)
     union all
     select
       null as from_id,
@@ -257,7 +259,7 @@ query "aws_s3_bucket_relationships_graph" {
     where
       trail.s3_bucket_name = b.name
 
-    -- Cloudtrail - edges
+    -- From Cloudtrail (edge)
     union all
     select
       trail.arn as from_id,
@@ -278,7 +280,7 @@ query "aws_s3_bucket_relationships_graph" {
     where
       trail.s3_bucket_name = b.name
 
-    -- S3 Buckets that log to me (node)
+    -- From S3 Buckets (node)
     union all
     select
       null as from_id,
@@ -298,7 +300,7 @@ query "aws_s3_bucket_relationships_graph" {
     where
       aws_s3_bucket.logging ->> 'TargetBucket' = buckets.name
 
-    -- Buckets that log to me - edges
+    -- From S3 Buckets (edge)
     union all
     select
       aws_s3_bucket.arn as to_id,
@@ -318,7 +320,7 @@ query "aws_s3_bucket_relationships_graph" {
     where
       aws_s3_bucket.logging ->> 'TargetBucket' = buckets.name
 
-    -- EC2 Application LB (node)
+    -- From EC2 Application LB (node)
     union all
     select
       null as from_id,
@@ -340,7 +342,7 @@ query "aws_s3_bucket_relationships_graph" {
       attributes ->> 'Key' = 'access_logs.s3.bucket'
       and attributes ->> 'Value' = buckets.name
 
-    -- ALBs that log to me - edges
+    -- From EC2 Application LB (edge)
     union all
     select
       alb.arn as from_id,
@@ -371,7 +373,7 @@ query "aws_s3_bucket_relationships_graph" {
       attributes ->> 'Key' = 'access_logs.s3.bucket'
       and attributes ->> 'Value' = buckets.name
 
-    -- EC2 Network LB (node)
+    -- From EC2 Network LB (node)
     union all
     select
       null as from_id,
@@ -394,7 +396,7 @@ query "aws_s3_bucket_relationships_graph" {
       attributes ->> 'Key' = 'access_logs.s3.bucket'
       and attributes ->> 'Value' = buckets.name
 
-    -- NLBs that log to me - edges
+    -- From EC2 Network LB (edge)
     union all
     select
       nlb.arn as from_id,
@@ -425,7 +427,7 @@ query "aws_s3_bucket_relationships_graph" {
       attributes ->> 'Key' = 'access_logs.s3.bucket'
       and attributes ->> 'Value' = buckets.name
 
-    -- EC2 Classic LB (node)
+    -- From EC2 Classic LB (node)
     union all
     select
       null as from_id,
@@ -446,7 +448,7 @@ query "aws_s3_bucket_relationships_graph" {
     where
       clb.access_log_s3_bucket_name = buckets.name
 
-    -- CLBs that log to me - edges
+    -- From EC2 Classic LB (edge)
     union all
     select
       clb.arn as from_id,
@@ -467,7 +469,7 @@ query "aws_s3_bucket_relationships_graph" {
     where
       clb.access_log_s3_bucket_name = buckets.name
 
-    -- S3 Access Points (node)
+    -- From S3 Access Points (node)
     union all
     select
       null as from_id,
@@ -488,7 +490,7 @@ query "aws_s3_bucket_relationships_graph" {
       ap.bucket_name = buckets.name
       and ap.region = buckets.region
 
-    -- Access Point that come to me - edges
+    -- From S3 Access Points (edge)
     union all
     select
       ap.access_point_arn as from_id,
@@ -509,7 +511,7 @@ query "aws_s3_bucket_relationships_graph" {
       ap.bucket_name = buckets.name
       and ap.region = buckets.region
 
-    -- S3 Buckets (node)
+    -- To S3 Buckets (node)
     union all
     select
       null as from_id,
@@ -529,7 +531,7 @@ query "aws_s3_bucket_relationships_graph" {
     where
       aws_s3_bucket.name = buckets.logging ->> 'TargetBucket'
 
-    -- Buckets I log to - edges
+    -- To S3 Buckets (edge)
     union all
     select
       buckets.arn as from_id,
@@ -548,11 +550,11 @@ query "aws_s3_bucket_relationships_graph" {
       buckets
     where
       aws_s3_bucket.name = buckets.logging ->> 'TargetBucket'
+
     order by
       category,
-      id,
       from_id,
-      to_id
+      to_id;
 
   EOQ
 

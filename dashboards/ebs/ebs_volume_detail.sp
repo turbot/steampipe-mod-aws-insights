@@ -9,7 +9,7 @@ dashboard "aws_ebs_volume_detail" {
 
   input "volume_arn" {
     title = "Select a volume:"
-    sql   = query.aws_ec2_ebs_volume_relationships_graph.sql
+    sql   = query.aws_ebs_volume_input.sql
     width = 4
   }
 
@@ -185,7 +185,7 @@ dashboard "aws_ebs_volume_detail" {
 
 }
 
-query "aws_ec2_ebs_volume_relationships_graph" {
+query "aws_ebs_volume_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -202,7 +202,7 @@ query "aws_ec2_ebs_volume_relationships_graph" {
   EOQ
 }
 
-query "aws_ebs_volume_relationships" {
+query "aws_ec2_ebs_volume_relationships_graph" {
   sql = <<-EOQ
     with volumes as
     (
@@ -219,6 +219,8 @@ query "aws_ebs_volume_relationships" {
       where
         arn = $1
     )
+
+    -- Resource (node)
     select
       null as from_id,
       null as to_id,
@@ -236,7 +238,7 @@ query "aws_ebs_volume_relationships" {
     from
       volumes
 
-    -- KMS (node)
+    -- From KMS (node)
     union all
     select
       null as from_id,
@@ -256,11 +258,11 @@ query "aws_ebs_volume_relationships" {
     where
       volumes.kms_key_id = kms_keys.arn
 
-    -- KMS (edge)
+    -- From KMS (edge)
     union all
     select
-      volumes.arn as to_id,
       kms_keys.arn as from_id,
+      volumes.arn as to_id,
       null as id,
       'secures with' as title,
       'uses' as category,
@@ -276,7 +278,7 @@ query "aws_ebs_volume_relationships" {
     where
       volumes.kms_key_id = kms_keys.arn
 
-    -- EBS Snapshot (node)
+    -- To EBS Snapshot (node)
     union all
     select
       null as from_id,
@@ -297,7 +299,7 @@ query "aws_ebs_volume_relationships" {
     where
       volumes.volume_id = snapshot.volume_id
 
-    -- EBS Snapshot (edge)
+    -- To EBS Snapshot (edge)
     union all
     select
       volumes.arn as from_id,
@@ -317,7 +319,7 @@ query "aws_ebs_volume_relationships" {
     where
       volumes.volume_id = snapshot.volume_id
 
-    -- EC2 Instance (node)
+    -- To EC2 Instance (node)
     union all
     select
       null as from_id,
@@ -345,7 +347,7 @@ query "aws_ebs_volume_relationships" {
           volumes
       )
 
-    -- EC2 Instance (edge)
+    -- To EC2 Instance (edge)
     union all
     select
       instances.arn as from_id,
@@ -430,6 +432,11 @@ query "aws_ebs_volume_relationships" {
         where
           aws_ebs_snapshot.volume_id = volumes.volume_id
       )
+
+    order by
+      category,
+      from_id,
+      to_id;
   EOQ
 
   param "arn" {}
