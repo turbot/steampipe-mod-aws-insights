@@ -18,7 +18,7 @@ dashboard "aws_ebs_volume_detail" {
     card {
       width = 2
       query = query.aws_ebs_volume_storage
-      args  = {
+      args = {
         arn = self.input.volume_arn.value
       }
     }
@@ -26,7 +26,7 @@ dashboard "aws_ebs_volume_detail" {
     card {
       width = 2
       query = query.aws_ebs_volume_iops
-      args  = {
+      args = {
         arn = self.input.volume_arn.value
       }
     }
@@ -34,7 +34,7 @@ dashboard "aws_ebs_volume_detail" {
     card {
       width = 2
       query = query.aws_ebs_volume_type
-      args  = {
+      args = {
         arn = self.input.volume_arn.value
       }
     }
@@ -42,7 +42,7 @@ dashboard "aws_ebs_volume_detail" {
     card {
       width = 2
       query = query.aws_ebs_volume_attached_instances_count
-      args  = {
+      args = {
         arn = self.input.volume_arn.value
       }
     }
@@ -50,39 +50,39 @@ dashboard "aws_ebs_volume_detail" {
     card {
       width = 2
       query = query.aws_ebs_volume_encryption
-      args  = {
+      args = {
         arn = self.input.volume_arn.value
       }
     }
 
   }
-  
+
   container {
     graph {
       type  = "graph"
       title = "Relationships"
       query = query.aws_ebs_volume_relationships
-      args  = {
+      args = {
         arn = self.input.volume_arn.value
+      }
+
+      category "aws_ebs_volume" {
+        icon = local.aws_ebs_volume_icon
       }
 
       category "aws_kms_key" {
         href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kms_key_light.svg"))
+        icon = local.aws_kms_key_icon
       }
 
-      category "aws_ebs_volume" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ebs_volume_light.svg"))
-      }
-      
       category "aws_ec2_instance" {
         href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_instance_light.svg"))
+        icon = local.aws_ec2_instance_icon
       }
 
       category "aws_ebs_snapshot" {
         href = "${dashboard.aws_ebs_snapshot_detail.url_path}?input.snapshot_arn={{.properties.'ARN' | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ebs_snapshot_light.svg"))
+        icon = local.aws_ebs_snapshot_icon
       }
 
     }
@@ -99,7 +99,7 @@ dashboard "aws_ebs_volume_detail" {
         type  = "line"
         width = 6
         query = query.aws_ebs_volume_overview
-        args  = {
+        args = {
           arn = self.input.volume_arn.value
         }
       }
@@ -108,7 +108,7 @@ dashboard "aws_ebs_volume_detail" {
         title = "Tags"
         width = 6
         query = query.aws_ebs_volume_tags
-        args  = {
+        args = {
           arn = self.input.volume_arn.value
         }
       }
@@ -121,7 +121,7 @@ dashboard "aws_ebs_volume_detail" {
       table {
         title = "Attached To"
         query = query.aws_ebs_volume_attached_instances
-        args  = {
+        args = {
           arn = self.input.volume_arn.value
         }
 
@@ -140,7 +140,7 @@ dashboard "aws_ebs_volume_detail" {
           href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.'KMS Key ID' | @uri}}"
         }
         query = query.aws_ebs_volume_encryption_status
-        args  = {
+        args = {
           arn = self.input.volume_arn.value
         }
       }
@@ -155,7 +155,7 @@ dashboard "aws_ebs_volume_detail" {
       title = "Read Throughput (IOPS) - Last 7 Days"
       type  = "line"
       width = 6
-      sql   =  <<-EOQ
+      sql   = <<-EOQ
         select
           timestamp,
           (sum / 3600) as read_throughput_ops
@@ -169,7 +169,7 @@ dashboard "aws_ebs_volume_detail" {
 
       param "arn" {}
 
-      args  = {
+      args = {
         arn = self.input.volume_arn.value
       }
     }
@@ -178,7 +178,7 @@ dashboard "aws_ebs_volume_detail" {
       title = "Write Throughput (IOPS) - Last 7 Days"
       type  = "line"
       width = 6
-      sql   =  <<-EOQ
+      sql   = <<-EOQ
         select
           timestamp,
           (sum / 300) as write_throughput_ops
@@ -192,7 +192,7 @@ dashboard "aws_ebs_volume_detail" {
 
       param "arn" {}
 
-      args  = {
+      args = {
         arn = self.input.volume_arn.value
       }
     }
@@ -318,7 +318,7 @@ query "aws_ebs_volume_relationships" {
       volumes
     where
       volumes.volume_id = snapshot.volume_id
-      
+
     -- instances - nodes
     union all
     select
@@ -339,7 +339,7 @@ query "aws_ebs_volume_relationships" {
       jsonb_array_elements(instances.block_device_mappings) as bdm,
       volumes
     where
-      bdm -> 'Ebs' ->> 'VolumeId' in (select volume_id from volumes) 
+      bdm -> 'Ebs' ->> 'VolumeId' in (select volume_id from volumes)
 
     -- instances - edges
     union all
@@ -361,8 +361,8 @@ query "aws_ebs_volume_relationships" {
       jsonb_array_elements(instances.block_device_mappings) as bdm,
       volumes
     where
-      bdm -> 'Ebs' ->> 'VolumeId' in (select volume_id from volumes) 
-      
+      bdm -> 'Ebs' ->> 'VolumeId' in (select volume_id from volumes)
+
     -- AMI - nodes
     union all
     select
@@ -382,8 +382,8 @@ query "aws_ebs_volume_relationships" {
       volumes
     where
       bdm -> 'Ebs' is not null
-      and bdm -> 'Ebs' ->> 'SnapshotId' in (select snapshot_id from aws_ebs_snapshot where aws_ebs_snapshot.volume_id = volumes.volume_id) 
-      
+      and bdm -> 'Ebs' ->> 'SnapshotId' in (select snapshot_id from aws_ebs_snapshot where aws_ebs_snapshot.volume_id = volumes.volume_id)
+
     -- AMI - edges
     union all
     select
@@ -403,10 +403,10 @@ query "aws_ebs_volume_relationships" {
       volumes
     where
       bdm -> 'Ebs' is not null
-      and bdm -> 'Ebs' ->> 'SnapshotId' in (select snapshot_id from aws_ebs_snapshot where aws_ebs_snapshot.volume_id = volumes.volume_id) 
+      and bdm -> 'Ebs' ->> 'SnapshotId' in (select snapshot_id from aws_ebs_snapshot where aws_ebs_snapshot.volume_id = volumes.volume_id)
 
   EOQ
-  
+
   param "arn" {}
 }
 

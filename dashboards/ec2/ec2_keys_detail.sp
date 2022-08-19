@@ -1,18 +1,18 @@
 dashboard "aws_ec2_keys_relationships" {
-  title         = "AWS EC2 Key Pair Detail"
+  title = "AWS EC2 Key Pair Detail"
   # documentation = file("./dashboards/ec2/docs/ec2_instance_relationships.md")
-  
+
   tags = merge(local.ec2_common_tags, {
     type = "Detail"
   })
-  
+
   input "key_name" {
     title = "Select a Key:"
     sql   = query.ec2_key_input.sql
     width = 4
   }
-  
-  
+
+
   container {
 
     card {
@@ -30,9 +30,9 @@ dashboard "aws_ec2_keys_relationships" {
         key_name = self.input.key_name.value
       }
     }
-    
+
   }
-  
+
   container {
     graph {
       type  = "graph"
@@ -41,18 +41,18 @@ dashboard "aws_ec2_keys_relationships" {
       args = {
         key_name = self.input.key_name.value
       }
-      
+
       category "aws_ec2_instance" {
         href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_instance_light.svg"))
+        icon = local.aws_ec2_instance_icon
       }
     }
   }
-  
-  
+
+
 
   container {
-    
+
     table {
       title = "Overview"
       type  = "line"
@@ -61,7 +61,7 @@ dashboard "aws_ec2_keys_relationships" {
       args = {
         key_name = self.input.key_name.value
       }
-      
+
     }
 
     table {
@@ -142,7 +142,7 @@ query "aws_ec2_keypair_tags" {
   param "key_name" {}
 }
 
-query "aws_ec2_keypair_relationships"{
+query "aws_ec2_keypair_relationships" {
   sql = <<-EOQ
     with keypair as (select * from aws_ec2_key_pair where key_name = $1)
     select
@@ -160,7 +160,7 @@ query "aws_ec2_keypair_relationships"{
       ) as properties
     from
       keypair
-      
+
     -- Instances - nodes
     union all
     select
@@ -179,7 +179,7 @@ query "aws_ec2_keypair_relationships"{
       keypair
     where
       instances.key_name = keypair.key_name
-      
+
     -- Instances - edges
     union all
     select
@@ -198,7 +198,7 @@ query "aws_ec2_keypair_relationships"{
       keypair
     where
       instances.key_name = keypair.key_name
-      
+
     -- Launch Config - nodes
     union all
     select
@@ -217,7 +217,7 @@ query "aws_ec2_keypair_relationships"{
       keypair
     where
       launch_config.key_name = keypair.key_name
-      
+
     -- Launch Config - edges
     union all
     select
@@ -238,7 +238,7 @@ query "aws_ec2_keypair_relationships"{
       launch_config.key_name = keypair.key_name
 
   EOQ
-  
+
   param "key_name" {}
 }
 

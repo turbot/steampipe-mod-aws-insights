@@ -67,23 +67,22 @@ dashboard "aws_ec2_instance_detail" {
       }
 
       category "aws_ec2_instance" {
-        #href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_instance_light.svg"))
+        icon = local.aws_ec2_instance_icon
       }
 
       category "aws_ebs_volume" {
         // cyclic dependency prevents use of url_path, hardcode for now
         href = "/aws_insights.dashboard.aws_ebs_volume_detail?input.volume_arn={{.properties.'ARN' | @uri}}"
         #href = "${dashboard.aws_ebs_volume_detail.url_path}?input.volume_arn={{.properties.'ARN' | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ebs_volume_light.svg"))
+        icon = local.aws_ebs_volume_icon
       }
 
       category "aws_ec2_network_interface" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_network_interface_light.svg"))
+        icon = local.aws_ec2_network_interface_icon
       }
 
       category "aws_ec2_ami" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_ami_light.svg"))
+        icon = local.aws_ec2_ami_icon
       }
 
       category "aws_vpc_security_group" {
@@ -96,7 +95,7 @@ dashboard "aws_ec2_instance_detail" {
         // cyclic dependency prevents use of url_path, hardcode for now
         href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.properties.'ID' | @uri}}"
         #href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'ID' | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_light.svg"))
+        icon = local.aws_vpc_icon
       }
 
     }

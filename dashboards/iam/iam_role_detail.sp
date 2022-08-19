@@ -51,7 +51,7 @@ dashboard "aws_iam_role_detail" {
         arn = self.input.role_arn.value
       }
       category "aws_iam_role" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/iam_role_light.svg"))
+        icon = local.aws_iam_role_icon
       }
 
       category "aws_iam_policy" {
@@ -61,24 +61,24 @@ dashboard "aws_iam_role_detail" {
 
       category "aws_ec2_instance" {
         href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_id={{.properties.'Instance ID' | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_instance_light.svg"))
+        icon = local.aws_ec2_instance_icon
       }
 
       category "aws_lambda_function" {
         href = "/aws_insights.dashboard.aws_lambda_function_detail?input.lambda_arn={{.properties.'ARN' | @uri}}"
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/lambda_function_light.svg"))
+        icon = local.aws_lambda_function_icon
       }
 
       category "aws_guardduty_detector" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/guardduty_detector_light.svg"))
+        icon = local.aws_guardduty_detector_icon
       }
 
       category "aws_emr_cluster" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/emr_cluster_light.svg"))
+        icon = local.aws_emr_cluster_icon
       }
 
       category "aws_kinesisanalyticsv2_application" {
-        icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/kinesis_analytics_application_light.svg"))
+        icon = local.aws_kinesisanalytics_application_icon
       }
 
       category "uses" {
