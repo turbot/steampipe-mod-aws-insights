@@ -603,6 +603,7 @@ query "aws_ec2_application_load_balancer_relationships_graph" {
       alb
     where
       alb.arn = lblistener.load_balancer_arn
+
     order by
       category,
       from_id,

@@ -527,6 +527,7 @@ query "aws_s3_bucket_relationships_graph" {
       buckets
     where
       aws_s3_bucket.name = buckets.logging ->> 'TargetBucket'
+
     order by
       category,
       from_id,

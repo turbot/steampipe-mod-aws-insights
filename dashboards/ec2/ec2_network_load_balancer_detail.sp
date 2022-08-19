@@ -614,7 +614,6 @@ query "aws_ec2_network_load_balancer_input" {
       arn as value,
       json_build_object(
         'account_id', account_id,
-
         'region', region
       ) as tags
     from

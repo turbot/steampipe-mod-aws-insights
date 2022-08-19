@@ -368,6 +368,11 @@ query "aws_ebs_snapshot_relationships_graph" {
       snapshot.volume_id = volumes.volume_id
       and snapshot.kms_key_id = kms_keys.arn
 
+    order by
+      category,
+      from_id,
+      to_id;
+
   EOQ
 
   param "arn" {}

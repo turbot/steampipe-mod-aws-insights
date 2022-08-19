@@ -605,6 +605,7 @@ query "aws_ec2_gateway_load_balancer_relationships_graph" {
       glb
     where
       glb.arn = lblistener.load_balancer_arn
+
     order by
       category,
       from_id,
