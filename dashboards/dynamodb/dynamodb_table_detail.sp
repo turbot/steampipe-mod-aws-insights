@@ -309,13 +309,18 @@ query "aws_dynamodb_table_graph_from_table" {
       table_id as id,
       name as title,
       'aws_dynamodb_table' as category,
-      jsonb_build_object( 'ARN', arn, 'Creation Date', creation_date_time, 'Table Status', table_status, 'Account ID', account_id ) as properties
+      jsonb_build_object(
+        'ARN', arn,
+        'Creation Date', creation_date_time,
+        'Table Status', table_status,
+        'Account ID', account_id
+      ) as properties
     from
       aws_dynamodb_table
     where
       arn = $1
 
-    --To KMS Keys (node)
+    --To KMS keys (node)
     union all
     select
       null as from_id,
@@ -323,7 +328,13 @@ query "aws_dynamodb_table_graph_from_table" {
       id as id,
       id as title,
       'aws_kms_key' as category,
-      jsonb_build_object( 'ARN', arn, 'Key Manager', key_manager, 'Creation Date', creation_date, 'Enabled', enabled, 'Account ID', account_id ) as properties
+      jsonb_build_object(
+        'ARN', arn,
+        'Key Manager', key_manager,
+        'Creation Date', creation_date,
+        'Enabled', enabled,
+        'Account ID', account_id
+      ) as properties
     from
       aws_kms_key
     where
@@ -337,7 +348,7 @@ query "aws_dynamodb_table_graph_from_table" {
           arn = $1
       )
 
-    --To KMS Keys (edge)
+    --To KMS keys (edge)
     union all
     select
       table_id as from_id,
@@ -345,7 +356,9 @@ query "aws_dynamodb_table_graph_from_table" {
       null as id,
       'uses' as title,
       'uses' as category,
-      jsonb_build_object( 'Account ID', t.account_id ) as properties
+      jsonb_build_object(
+        'Account ID', t.account_id
+      ) as properties
     from
       aws_dynamodb_table as t,
       aws_kms_key as k
@@ -353,7 +366,7 @@ query "aws_dynamodb_table_graph_from_table" {
       sse_description ->> 'KMSMasterKeyArn' = k.arn
       and t.arn = $1
 
-    --To S3 Buckets (node)
+    --To S3 buckets (node)
     union all
     select
       null as from_id,
@@ -361,7 +374,12 @@ query "aws_dynamodb_table_graph_from_table" {
       b.arn as id,
       title as title,
       'aws_s3_bucket' as category,
-      jsonb_build_object( 'ARN', b.arn, 'Versioning', versioning_enabled, 'Creation Date', creation_date, 'Region', b.region , 'Account ID', b.account_id ) as properties
+      jsonb_build_object( 'ARN', b.arn,
+        'Versioning', versioning_enabled,
+        'Creation Date', creation_date,
+        'Region', b.region ,
+        'Account ID', b.account_id
+      ) as properties
     from
       aws_s3_bucket as b,
       aws_dynamodb_table_export as t
@@ -369,7 +387,7 @@ query "aws_dynamodb_table_graph_from_table" {
         b.name = t.s3_bucket
         and t.table_arn = $1
 
-    --To S3 Buckets (edge)
+    --To S3 buckets (edge)
     union all
     select
       table_id as from_id,
@@ -377,7 +395,9 @@ query "aws_dynamodb_table_graph_from_table" {
       null as id,
       'exports to' as title,
       'exports to' as category,
-      jsonb_build_object( 'Account ID', t.account_id ) as properties
+      jsonb_build_object(
+        'Account ID', t.account_id
+      ) as properties
     from
       aws_dynamodb_table_export as t,
       aws_s3_bucket as b
@@ -385,7 +405,7 @@ query "aws_dynamodb_table_graph_from_table" {
         b.name = t.s3_bucket
         and t.table_arn = $1
 
-    --To Kinesis Stream (node)
+    --To Kinesis data stream (node)
     union all
     select
       null as from_id,
@@ -393,7 +413,13 @@ query "aws_dynamodb_table_graph_from_table" {
       s.stream_arn as id,
       s.title as title,
       'aws_kinesis_stream' as category,
-      jsonb_build_object( 'ARN', s.stream_arn, 'Status', stream_status, 'Encryption Type', encryption_type, 'Region', s.region , 'Account ID', s.account_id ) as properties
+      jsonb_build_object(
+        'ARN', s.stream_arn,
+        'Status', stream_status,
+        'Encryption Type', encryption_type,
+        'Region', s.region ,
+        'Account ID', s.account_id
+      ) as properties
     from
       aws_kinesis_stream as s,
       aws_dynamodb_table as t,
@@ -402,7 +428,7 @@ query "aws_dynamodb_table_graph_from_table" {
         d ->> 'StreamArn' = s.stream_arn
         and t.arn = $1
 
-    --To Kinesis Stream (edge)
+    --To Kinesis data stream (edge)
     union all
     select
       table_id as from_id,
@@ -410,7 +436,9 @@ query "aws_dynamodb_table_graph_from_table" {
       null as id,
       'streams to' as title,
       'streams to' as category,
-      jsonb_build_object( 'Account ID', t.account_id ) as properties
+      jsonb_build_object(
+        'Account ID', t.account_id
+      ) as properties
     from
       aws_kinesis_stream as s,
       aws_dynamodb_table as t,
