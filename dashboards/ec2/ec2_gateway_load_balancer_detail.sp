@@ -48,6 +48,8 @@ query "aws_ec2_gwlb_relationships_graph" {
       where
         arn = $1
     )
+
+    -- Resource (node)
     select
       null as from_id,
       null as to_id,
@@ -346,10 +348,11 @@ query "aws_ec2_gwlb_relationships_graph" {
       glb
     where
       glb.arn = lblistener.load_balancer_arn
+
     order by
       category,
       from_id,
-      to_id
+      to_id;
   EOQ
 
   param "arn" {}

@@ -101,6 +101,8 @@ query "aws_ec2_alb_relationships_graph" {
       where
         arn = $1
     )
+
+    -- Resource (node)
     select
       null as from_id,
       null as to_id,
@@ -114,7 +116,7 @@ query "aws_ec2_alb_relationships_graph" {
         'DNS Name', alb.dns_name
       ) as properties
     from
-      alb 	
+      alb
 
     -- To security group (node)
     union all
@@ -293,7 +295,7 @@ query "aws_ec2_alb_relationships_graph" {
       jsonb_array_elements(alb.load_balancer_attributes) attributes
     where
       attributes ->> 'Key' = 'access_logs.s3.bucket'
-      and buckets.name = attributes ->> 'Value' 	
+      and buckets.name = attributes ->> 'Value'
 
     -- To S3 bucket (edge)
     union all
@@ -324,7 +326,7 @@ query "aws_ec2_alb_relationships_graph" {
       jsonb_array_elements(alb.load_balancer_attributes) attributes
     where
       attributes ->> 'Key' = 'access_logs.s3.bucket'
-      and buckets.name = attributes ->> 'Value' 	
+      and buckets.name = attributes ->> 'Value'
 
     -- To VPC (node)
     union all
@@ -405,7 +407,7 @@ query "aws_ec2_alb_relationships_graph" {
       aws_ec2_load_balancer_listener lblistener,
       alb
     where
-      alb.arn = lblistener.load_balancer_arn 	
+      alb.arn = lblistener.load_balancer_arn
 
     -- To EC2 load balancer listener port (node)
     union all
@@ -445,10 +447,11 @@ query "aws_ec2_alb_relationships_graph" {
       alb
     where
       alb.arn = lblistener.load_balancer_arn
+
     order by
       category,
       from_id,
-      to_id
+      to_id;
   EOQ
 
   param "arn" {}

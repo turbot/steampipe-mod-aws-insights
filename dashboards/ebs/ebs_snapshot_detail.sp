@@ -112,6 +112,8 @@ query "aws_ec2_ebs_relationships_graph" {
       where
         arn = $1
     )
+
+    -- Resource (node)
     select
       null as from_id,
       null as to_id,
@@ -129,7 +131,7 @@ query "aws_ec2_ebs_relationships_graph" {
     from
       snapshot
 
-    -- EBS (node)
+    -- From EC2 EBS (node)
     union all
     select
       null as from_id,
@@ -149,7 +151,7 @@ query "aws_ec2_ebs_relationships_graph" {
     where
       snapshot.volume_id = volumes.volume_id
 
-    -- EBS (edge)
+    -- From EC2 EBS (edge)
     union all
     select
       volumes.volume_id as from_id,
@@ -168,7 +170,7 @@ query "aws_ec2_ebs_relationships_graph" {
     where
       snapshot.volume_id = volumes.volume_id
 
-    -- AMI (node)
+    -- From AMI (node)
     union all
     select
       null as from_id,
@@ -189,7 +191,7 @@ query "aws_ec2_ebs_relationships_graph" {
       bdm -> 'Ebs' is not null
       and bdm -> 'Ebs' ->> 'SnapshotId' = snapshot.snapshot_id
 
-    -- AMI (edge)
+    -- From AMI (edge)
     union all
     select
       images.image_id as from_id,
@@ -210,7 +212,7 @@ query "aws_ec2_ebs_relationships_graph" {
       bdm -> 'Ebs' is not null
       and bdm -> 'Ebs' ->> 'SnapshotId' = snapshot.snapshot_id
 
-    -- Launch Config (node)
+    -- From Launch Config (node)
     union all
     select
       null as from_id,
@@ -230,7 +232,7 @@ query "aws_ec2_ebs_relationships_graph" {
     where
       bdm -> 'Ebs' ->> 'SnapshotId' = snapshot.snapshot_id
 
-    -- Launch Config (edge)
+    -- From Launch Config (edge)
     union all
     select
       launch_config.launch_configuration_arn as from_id,
@@ -250,7 +252,7 @@ query "aws_ec2_ebs_relationships_graph" {
     where
       bdm -> 'Ebs' ->> 'SnapshotId' = snapshot.snapshot_id
 
-    -- KMS (node)
+    -- To KMS (node)
     union all
     select
       null as from_id,
@@ -270,7 +272,7 @@ query "aws_ec2_ebs_relationships_graph" {
     where
       snapshot.kms_key_id = kms_keys.arn
 
-    -- KMS (edge)
+    -- To KMS (edge)
     union all
     select
       snapshot.snapshot_id as from_id,
@@ -311,6 +313,11 @@ query "aws_ec2_ebs_relationships_graph" {
     where
       snapshot.volume_id = volumes.volume_id
       and snapshot.kms_key_id = kms_keys.arn
+
+    order by
+      category,
+      from_id,
+      to_id;
 
   EOQ
 

@@ -74,6 +74,8 @@ query "aws_ec2_clb_relationships_graph" {
       where
         arn = $1
     )
+
+    -- Resource (node)
     select
       null as from_id,
       null as to_id,
@@ -412,7 +414,7 @@ query "aws_ec2_clb_relationships_graph" {
     order by
       category,
       from_id,
-      to_id
+      to_id;
   EOQ
 
   param "arn" {}
