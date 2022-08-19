@@ -1,7 +1,7 @@
 dashboard "aws_eventbridge_rule_detail" {
 
-  title = "AWS EventBridge Rule Detail"
-  # documentation = file("./dashboards/eventbridge/docs/aws_eventbridge_rule_detail.md")
+  title         = "AWS EventBridge Rule Detail"
+  documentation = file("./dashboards/eventbridge/docs/aws_eventbridge_rule_detail.md")
 
   tags = merge(local.eventbridge_common_tags, {
     type = "Detail"
