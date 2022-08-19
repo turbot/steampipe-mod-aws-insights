@@ -92,7 +92,7 @@ query "aws_ec2_clb_relationships_graph" {
     from
       clb
 
-    -- To security group (node)
+    -- To VPC security groups (node)
     union all
     select
       null as from_id,
@@ -118,7 +118,7 @@ query "aws_ec2_clb_relationships_graph" {
           jsonb_array_elements_text(clb.security_groups)
       )
 
-    -- To security group (edge)
+    -- To VPC security groups (edge)
     union all
     select
       clb.arn as from_id,
