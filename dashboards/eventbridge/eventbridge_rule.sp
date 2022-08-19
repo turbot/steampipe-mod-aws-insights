@@ -68,7 +68,7 @@ query "aws_eventbridge_rule_input" {
 
 query "aws_eventbridge_rule_relationships_graph" {
   sql = <<-EOQ
-    -- Eventbridge rule (node)
+    -- EventBridge rule (node)
     select
       null as from_id,
       null as to_id,
@@ -88,7 +88,6 @@ query "aws_eventbridge_rule_relationships_graph" {
     where
       arn = $1
 
-    -- To EventBridge targets (node)
     -- To SNS topics (node)
     union all
     select
@@ -217,7 +216,7 @@ query "aws_eventbridge_rule_relationships_graph" {
       r.arn = $1
       and split_part((t ->> 'Arn'::text), ':', 3) = 'logs'
 
-    -- From Eventbridge bus (node)
+    -- From EventBridge bus (node)
     union all
     select
       null as from_id,
@@ -238,28 +237,7 @@ query "aws_eventbridge_rule_relationships_graph" {
     where
       r.arn = $1
 
-    -- From Eventbridge bus (node)
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      b.arn as id,
-      r.event_bus_name as title,
-      'aws_eventbridge_bus' as category,
-      jsonb_build_object(
-        'ARN', b.arn,
-        'Account ID', b.account_id,
-        'Event Bus Name', r.event_bus_name
-      ) as properties
-    from
-      aws_eventbridge_rule r
-      join aws_eventbridge_bus b on b.name = r.event_bus_name
-        and b.region = r.region
-        and b.account_id = r.account_id
-    where
-      r.arn = $1
-
-    -- From Eventbridge bus (edge)
+    -- From EventBridge bus (edge)
     union all
     select
       b.arn as from_id,
