@@ -118,7 +118,7 @@ query "aws_ec2_alb_relationships_graph" {
     from
       alb
 
-    -- To security group (node)
+    -- To VPC security groups (node)
     union all
     select
       null as from_id,
@@ -144,7 +144,7 @@ query "aws_ec2_alb_relationships_graph" {
           jsonb_array_elements_text(alb.security_groups)
       )
 
-    -- To security group (edge)
+    -- To VPC security groups (edge)
     union all
     select
       alb.arn as from_id,

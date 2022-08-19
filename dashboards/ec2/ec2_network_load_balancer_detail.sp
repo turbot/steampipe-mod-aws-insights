@@ -110,7 +110,7 @@ query "aws_ec2_nlb_relationships_graph" {
     from
       nlb
 
-    -- To security group (node)
+    -- To VPC security groups (node)
     union all
     select
       null as from_id,
@@ -136,7 +136,7 @@ query "aws_ec2_nlb_relationships_graph" {
           jsonb_array_elements_text(nlb.security_groups)
       )
 
-    -- To security group (edge)
+    -- To VPC security groups (edge)
     union all
     select
       nlb.arn as from_id,
