@@ -1,6 +1,6 @@
 dashboard "aws_ec2_keys_relationships" {
   title = "AWS EC2 Key Pair Detail"
-  # documentation = file("./dashboards/ec2/docs/ec2_instance_relationships.md")
+  documentation = file("./dashboards/ec2/docs/ec2_keys_detail.md")
 
   tags = merge(local.ec2_common_tags, {
     type = "Detail"
@@ -141,12 +141,12 @@ query "aws_ec2_keypair_tags" {
 
 query "aws_ec2_keypair_relationships" {
   sql = <<-EOQ
-    with keypair as 
+    with keypair as
     (
       select
-        * 
+        *
       from
-        aws_ec2_key_pair 
+        aws_ec2_key_pair
       where
         key_name = $1
     )
@@ -156,11 +156,17 @@ query "aws_ec2_keypair_relationships" {
       key_pair_id as id,
       title as title,
       'aws_ec2_key_pair' as category,
-      jsonb_build_object( 'Name', keypair.key_name, 'ID', keypair.key_pair_id, 'Fingerprint', keypair.key_fingerprint, 'Account ID', account_id, 'Region', region ) as properties 
+      jsonb_build_object(
+        'Name', keypair.key_name,
+        'ID', keypair.key_pair_id,
+        'Fingerprint', keypair.key_fingerprint,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
     from
       keypair
 
-    -- Instances - nodes
+    -- EC2 Instances (node)
     union all
     select
       null as from_id,
@@ -168,14 +174,18 @@ query "aws_ec2_keypair_relationships" {
       instances.arn as id,
       instances.title as title,
       'aws_ec2_instance' as category,
-      jsonb_build_object( 'ARN', instances.arn, 'Account ID', instances.account_id, 'Region', instances.region ) as properties 
+      jsonb_build_object(
+        'ARN', instances.arn,
+        'Account ID', instances.account_id,
+        'Region', instances.region
+      ) as properties
     from
       aws_ec2_instance instances,
-      keypair 
+      keypair
     where
       instances.key_name = keypair.key_name
 
-    -- Instances - edges
+    -- EC2 Instances (edges)
     union all
     select
       instances.arn as from_id,
@@ -183,14 +193,18 @@ query "aws_ec2_keypair_relationships" {
       null as id,
       'has' as title,
       'uses' as category,
-      jsonb_build_object( 'ARN', instances.arn, 'Account ID', instances.account_id, 'Region', instances.region ) as properties 
+      jsonb_build_object(
+        'ARN', instances.arn,
+        'Account ID', instances.account_id,
+        'Region', instances.region
+      ) as properties
     from
       aws_ec2_instance instances,
-      keypair 
+      keypair
     where
       instances.key_name = keypair.key_name
 
-    -- Launch Config - nodes
+    -- EC2 Launch Config (node)
     union all
     select
       null as from_id,
@@ -198,14 +212,17 @@ query "aws_ec2_keypair_relationships" {
       launch_config.launch_configuration_arn as id,
       launch_config.title as title,
       'aws_ec2_launch_configuration' as category,
-      jsonb_build_object( 'ARN', launch_config.launch_configuration_arn, 'Account ID', launch_config.account_id, 'Region', launch_config.region ) as properties 
+      jsonb_build_object(
+        'ARN', launch_config.launch_configuration_arn,
+        'Account ID', launch_config.account_id,
+        'Region', launch_config.region ) as properties
     from
       aws_ec2_launch_configuration launch_config,
-      keypair 
+      keypair
     where
       launch_config.key_name = keypair.key_name
 
-    -- Launch Config - edges
+    -- EC2 Launch Config (edge)
     union all
     select
       launch_config.launch_configuration_arn as from_id,
@@ -213,10 +230,13 @@ query "aws_ec2_keypair_relationships" {
       null as id,
       'launches with' as title,
       'aws_ec2_launch_configuration' as category,
-      jsonb_build_object( 'ARN', launch_config.launch_configuration_arn, 'Account ID', launch_config.account_id, 'Region', launch_config.region ) as properties 
+      jsonb_build_object(
+        'ARN', launch_config.launch_configuration_arn,
+        'Account ID', launch_config.account_id,
+        'Region', launch_config.region ) as properties
     from
       aws_ec2_launch_configuration launch_config,
-      keypair 
+      keypair
     where
       launch_config.key_name = keypair.key_name
 
