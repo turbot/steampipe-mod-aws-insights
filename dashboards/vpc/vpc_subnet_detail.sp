@@ -15,6 +15,34 @@ dashboard "aws_vpc_subnet_detail" {
 
   container {
 
+    card {
+      width = 2
+      query = query.aws_vpc_subnet_num_ips
+      args = {
+        subnet_id = self.input.subnet_id.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_vpc_subnet_cidr_block
+      args = {
+        subnet_id = self.input.subnet_id.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_vpc_subnet_map_public_ip_on_launch_disabled
+      args = {
+        subnet_id = self.input.subnet_id.value
+      }
+    }
+
+  }
+
+  container {
+
     graph {
       type  = "graph"
       title = "Relationships"
@@ -49,6 +77,56 @@ dashboard "aws_vpc_subnet_detail" {
       category "aws_lambda_function" {
         icon = local.aws_lambda_function_icon
         href = "${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn={{.properties.'ARN' | @uri}}"
+      }
+
+    }
+  }
+
+  container{
+
+    container {
+
+      width = 6
+
+      table {
+        title = "Overview"
+        type  = "line"
+        width = 6
+        query = query.aws_vpc_subnet_overview
+        args = {
+          subnet_id = self.input.subnet_id.value
+        }
+      }
+
+      table {
+        title = "Tags"
+        width = 6
+        query = query.aws_vpc_subnet_tags
+        args = {
+          subnet_id = self.input.subnet_id.value
+        }
+      }
+
+    }
+    container {
+
+      width = 6
+
+      table {
+        title = "Attached Resources"
+        query = query.aws_vpc_subnet_association
+        args  = {
+          subnet_id = self.input.subnet_id.value
+        }
+
+        column "link" {
+          display = "none"
+        }
+
+        column "Title" {
+          href = "{{ .link }}"
+        }
+
       }
 
     }
@@ -355,4 +433,163 @@ query "aws_vpc_subnet_relationships_graph" {
 
 }
 
+query "aws_vpc_subnet_num_ips" {
+  sql = <<-EOQ
 
+    select
+      available_ip_address_count as "IP Addresses"
+    from
+      aws_vpc_subnet
+    where
+      subnet_id = $1
+  EOQ
+
+  param "subnet_id" {}
+}
+
+query "aws_vpc_subnet_cidr_block" {
+  sql = <<-EOQ
+    select
+      cidr_block as "CIDR Block"
+    from
+      aws_vpc_subnet
+    where
+      subnet_id = $1
+  EOQ
+
+  param "subnet_id" {}
+}
+
+query "aws_vpc_subnet_map_public_ip_on_launch_disabled" {
+  sql = <<-EOQ
+    select
+      'Map Public IP On Launch' as label,
+      map_public_ip_on_launch as value,
+      case when map_public_ip_on_launch then 'alert' else 'ok' end as type
+    from
+      aws_vpc_subnet
+    where
+      subnet_id = $1
+  EOQ
+
+  param "subnet_id" {}
+}
+
+query "aws_vpc_subnet_overview" {
+  sql = <<-EOQ
+    select
+      subnet_id as "Subnet ID",
+      vpc_id as "VPC ID",
+      owner_id as "Owner ID",
+      availability_zone as "Availability Zone",
+      availability_zone_id as "Availability Zone ID",
+      title as "Title",
+      region as "Region",
+      account_id as "Account ID",
+      subnet_arn as "ARN"
+    from
+      aws_vpc_subnet
+    where
+      subnet_id = $1
+  EOQ
+
+  param "subnet_id" {}
+}
+
+query "aws_vpc_subnet_tags" {
+  sql = <<-EOQ
+    select
+      tag ->> 'Key' as "Key",
+      tag ->> 'Value' as "Value"
+    from
+      aws_vpc_subnet,
+      jsonb_array_elements(tags_src) as tag
+    where
+      subnet_id = $1
+    order by
+      tag ->> 'Key';
+  EOQ
+
+  param "subnet_id" {}
+}
+
+query "aws_vpc_subnet_association" {
+  sql = <<-EOQ
+
+    -- EC2 instances
+    select
+      title as "Title",
+      'aws_ec2_instance' as "Type",
+      arn as "ARN",
+      '${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn=' || arn as link
+    from
+      aws_ec2_instance
+    where
+      subnet_id = $1
+
+    -- Lambda functions
+    union all
+    select
+      title as "Title",
+      'aws_lambda_function' as "Type",
+      arn as "ARN",
+      '${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn=' || arn as link
+    from
+      aws_lambda_function,
+      jsonb_array_elements(vpc_subnet_ids) as s
+    where
+       trim((s::text ), '""') = $1
+
+    -- Sagemaker Notebook Instances
+    union all
+    select
+      title as "Title",
+      'aws_sagemaker_notebook_instance' as "Type",
+      arn as "ARN",
+      null as link
+    from
+      aws_sagemaker_notebook_instance
+    where
+      subnet_id = $1
+
+    -- RDS DB Instances
+    union all
+    select
+      title as "Title",
+      'aws_rds_db_instance' as "Type",
+      arn as "ARN",
+      '${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn=' || arn as link
+    from
+      aws_rds_db_instance,
+      jsonb_array_elements(subnets) as s
+    where
+      s ->> 'SubnetIdentifier' = $1
+
+    -- Network ACLs
+    union all
+    select
+      title as "Title",
+      'aws_vpc_network_acl' as "Type",
+      network_acl_id as "ID",
+      null as link
+    from
+      aws_vpc_network_acl,
+      jsonb_array_elements(associations) as a
+    where
+      a ->> 'SubnetId' = $1
+
+    -- Route Tables
+    union all
+    select
+      title as "Title",
+      'aws_vpc_route_table' as "Type",
+      route_table_id as "ID",
+      null as link
+   from
+      aws_vpc_route_table,
+      jsonb_array_elements(associations) as a
+    where
+      a ->> 'SubnetId' = $1;
+  EOQ
+  param "subnet_id" {}
+}
