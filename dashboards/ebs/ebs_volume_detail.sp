@@ -250,7 +250,7 @@ query "aws_ebs_volume_relationships_graph" {
       ) as properties
     from
       aws_kms_key as kms_keys,
-      volumes 
+      volumes
     where
       volumes.kms_key_id = kms_keys.arn
 
@@ -270,7 +270,7 @@ query "aws_ebs_volume_relationships_graph" {
       ) as properties
     from
       aws_kms_key as kms_keys,
-      volumes 
+      volumes
     where
       volumes.kms_key_id = kms_keys.arn
 
@@ -291,7 +291,7 @@ query "aws_ebs_volume_relationships_graph" {
       ) as properties
     from
       aws_ebs_snapshot as snapshot,
-      volumes 
+      volumes
     where
       volumes.volume_id = snapshot.volume_id
 
@@ -311,7 +311,7 @@ query "aws_ebs_volume_relationships_graph" {
       ) as properties
     from
       aws_ebs_snapshot as snapshot,
-      volumes 
+      volumes
     where
       volumes.volume_id = snapshot.volume_id
 
@@ -333,7 +333,7 @@ query "aws_ebs_volume_relationships_graph" {
     from
       aws_ec2_instance as instances,
       jsonb_array_elements(instances.block_device_mappings) as bdm,
-      volumes 
+      volumes
     where
       bdm -> 'Ebs' ->> 'VolumeId' in
       (
@@ -361,7 +361,7 @@ query "aws_ebs_volume_relationships_graph" {
     from
       aws_ec2_instance as instances,
       jsonb_array_elements(instances.block_device_mappings) as bdm,
-      volumes 
+      volumes
     where
       bdm -> 'Ebs' ->> 'VolumeId' in
       (
@@ -387,7 +387,7 @@ query "aws_ebs_volume_relationships_graph" {
     from
       aws_ec2_ami as images,
       jsonb_array_elements(images.block_device_mappings) as bdm,
-      volumes 
+      volumes
     where
       bdm -> 'Ebs' is not null
       and bdm -> 'Ebs' ->> 'SnapshotId' in
@@ -416,7 +416,7 @@ query "aws_ebs_volume_relationships_graph" {
     from
       aws_ec2_ami as images,
       jsonb_array_elements(images.block_device_mappings) as bdm,
-      volumes 
+      volumes
     where
       bdm -> 'Ebs' is not null
       and bdm -> 'Ebs' ->> 'SnapshotId' in
