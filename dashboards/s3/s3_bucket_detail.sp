@@ -211,7 +211,12 @@ query "aws_s3_bucket_relationships_graph" {
     with buckets as
     (
       select
-        *
+        account_id,
+        arn,
+        logging,
+        name,
+        region,
+        title
       from
         aws_s3_bucket
       where
