@@ -75,7 +75,7 @@ query "aws_nlb_scheme" {
   param "arn" {}
 }
 
-query "aws_nlb_graph_relationships" {
+query "aws_ec2_nlb_relationships_graph" {
   sql = <<-EOQ
     with nlb as
     (

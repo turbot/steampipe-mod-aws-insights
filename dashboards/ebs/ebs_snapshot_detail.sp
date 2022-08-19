@@ -36,8 +36,8 @@ dashboard "aws_ebs_snapshot_detail" {
   container {
     graph {
       type  = "graph"
-      base  = graph.aws_graph_categories
-      query = query.aws_ebs_snapshot_relationships
+      title = "Relationships"
+      query = query.aws_ec2_ebs_relationships_graph
       args = {
         arn = self.input.snapshot_arn.value
       }
@@ -94,7 +94,7 @@ query "aws_ebs_snapshot_age" {
   param "arn" {}
 }
 
-query "aws_ebs_snapshot_relationships" {
+query "aws_ec2_ebs_relationships_graph" {
   sql = <<-EOQ
     with snapshot as
     (
@@ -149,7 +149,7 @@ query "aws_ebs_snapshot_relationships" {
     where
       snapshot.volume_id = volumes.volume_id
 
-    -- EBS - edges
+    -- EBS (edge)
     union all
     select
       volumes.volume_id as from_id,
@@ -189,7 +189,7 @@ query "aws_ebs_snapshot_relationships" {
       bdm -> 'Ebs' is not null
       and bdm -> 'Ebs' ->> 'SnapshotId' = snapshot.snapshot_id
 
-    -- AMI - edges
+    -- AMI (edge)
     union all
     select
       images.image_id as from_id,
@@ -230,7 +230,7 @@ query "aws_ebs_snapshot_relationships" {
     where
       bdm -> 'Ebs' ->> 'SnapshotId' = snapshot.snapshot_id
 
-    -- Launch Config - edges
+    -- Launch Config (edge)
     union all
     select
       launch_config.launch_configuration_arn as from_id,
@@ -270,7 +270,7 @@ query "aws_ebs_snapshot_relationships" {
     where
       snapshot.kms_key_id = kms_keys.arn
 
-    -- kms - edges
+    -- KMS (edge)
     union all
     select
       snapshot.snapshot_id as from_id,
@@ -290,7 +290,7 @@ query "aws_ebs_snapshot_relationships" {
     where
       snapshot.kms_key_id = kms_keys.arn
 
-    -- kms > vol - edges
+    -- KMS > EBS (edge)
     union all
     select
       volumes.volume_id as from_id,

@@ -9,7 +9,7 @@ dashboard "aws_ebs_volume_detail" {
 
   input "volume_arn" {
     title = "Select a volume:"
-    sql   = query.aws_ebs_volume_input.sql
+    sql   = query.aws_ec2_ebs_volume_relationships_graph.sql
     width = 4
   }
 
@@ -185,7 +185,7 @@ dashboard "aws_ebs_volume_detail" {
 
 }
 
-query "aws_ebs_volume_input" {
+query "aws_ec2_ebs_volume_relationships_graph" {
   sql = <<-EOQ
     select
       title as label,
@@ -256,7 +256,7 @@ query "aws_ebs_volume_relationships" {
     where
       volumes.kms_key_id = kms_keys.arn
 
-    -- kms - edges
+    -- KMS (edge)
     union all
     select
       volumes.arn as to_id,
@@ -276,7 +276,7 @@ query "aws_ebs_volume_relationships" {
     where
       volumes.kms_key_id = kms_keys.arn
 
-    -- snapshots - nodes
+    -- EBS Snapshot (node)
     union all
     select
       null as from_id,
@@ -297,7 +297,7 @@ query "aws_ebs_volume_relationships" {
     where
       volumes.volume_id = snapshot.volume_id
 
-    -- snapshots - edges
+    -- EBS Snapshot (edge)
     union all
     select
       volumes.arn as from_id,
@@ -317,7 +317,7 @@ query "aws_ebs_volume_relationships" {
     where
       volumes.volume_id = snapshot.volume_id
 
-    -- instances - nodes
+    -- EC2 Instance (node)
     union all
     select
       null as from_id,
@@ -345,7 +345,7 @@ query "aws_ebs_volume_relationships" {
           volumes
       )
 
-    -- instances - edges
+    -- EC2 Instance (edge)
     union all
     select
       instances.arn as from_id,
@@ -373,7 +373,7 @@ query "aws_ebs_volume_relationships" {
           volumes
       )
 
-    -- AMI - nodes
+    -- EC2 AMI (node)
     union all
     select
       null as from_id,
@@ -402,7 +402,7 @@ query "aws_ebs_volume_relationships" {
           aws_ebs_snapshot.volume_id = volumes.volume_id
       )
 
-    -- AMI - edges
+    -- EC2 AMI (edge)
     union all
     select
       bdm -> 'Ebs' ->> 'SnapshotId' as from_id,

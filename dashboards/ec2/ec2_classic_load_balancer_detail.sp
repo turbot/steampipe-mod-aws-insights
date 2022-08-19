@@ -53,7 +53,7 @@ query "aws_clb_scheme" {
   param "arn" {}
 }
 
-query "aws_clb_graph_relationships" {
+query "aws_ec2_clb_relationships_graph" {
   sql = <<-EOQ
     with clb as
     (

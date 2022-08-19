@@ -206,7 +206,7 @@ query "aws_s3_bucket_input" {
   EOQ
 }
 
-query "aws_s3_bucket_relationships" {
+query "aws_s3_bucket_relationships_graph" {
   sql = <<-EOQ
     with buckets as
     (

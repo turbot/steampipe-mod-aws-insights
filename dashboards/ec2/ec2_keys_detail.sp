@@ -139,7 +139,7 @@ query "aws_ec2_keypair_tags" {
   param "key_name" {}
 }
 
-query "aws_ec2_keypair_relationships" {
+query "aws_ec2_keypair_relationships_graph" {
   sql = <<-EOQ
     with keypair as
     (

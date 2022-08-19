@@ -82,7 +82,7 @@ query "aws_alb_scheme" {
   param "arn" {}
 }
 
-query "aws_alb_graph_relationships" {
+query "aws_ec2_alb_relationships_graph" {
   sql = <<-EOQ
     with alb as
     (

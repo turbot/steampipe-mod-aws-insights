@@ -26,12 +26,11 @@ dashboard "aws_ec2_gateway_load_balancer_detail" {
 
     }
 
-  }
-
 }
 
 
-query "aws_glb_graph_relationships" {
+
+query "aws_ec2_gwlb_relationships_graph" {
   sql = <<-EOQ
     with glb as
     (
