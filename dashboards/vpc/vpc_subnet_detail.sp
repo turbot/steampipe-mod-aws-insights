@@ -113,7 +113,7 @@ dashboard "aws_vpc_subnet_detail" {
       width = 6
 
       table {
-        title = "Attached Resources"
+        title = "Launched Resources"
         query = query.aws_vpc_subnet_association
         args  = {
           subnet_id = self.input.subnet_id.value
@@ -149,13 +149,19 @@ query "aws_vpc_subnet_input" {
     order by
       title;
   EOQ
+
 }
 
 query "aws_vpc_subnet_relationships_graph" {
   sql = <<-EOQ
-
-  with subnet as (select * from aws_vpc_subnet where subnet_id = $1)
-
+    with subnet as (
+      select
+        *
+      from
+        aws_vpc_subnet
+      where
+        subnet_id = $1
+    )
     select
       null as from_id,
       null as to_id,
@@ -182,6 +188,7 @@ query "aws_vpc_subnet_relationships_graph" {
       jsonb_build_object(
         'ARN', v.arn,
         'Region', v.region,
+        'CIDR Block', v.cidr_block,
         'Account ID', v.account_id
       ) as properties
     from
@@ -194,8 +201,8 @@ query "aws_vpc_subnet_relationships_graph" {
       $1 as from_id,
       v.vpc_id as to_id,
       null as id,
-      'uses' as title,
-      'uses' as category,
+      'sub network' as title,
+      'vpc_subnet_to_vpc' as category,
       jsonb_build_object(
         'ARN', v.arn,
         'Account ID', v.account_id,
@@ -205,7 +212,7 @@ query "aws_vpc_subnet_relationships_graph" {
       subnet as s
       left join aws_vpc as v on v.vpc_id = s.vpc_id
 
-    -- To Route Tables (node)
+    -- To VPC route tables (node)
     union all
     select
       null as from_id,
@@ -214,6 +221,7 @@ query "aws_vpc_subnet_relationships_graph" {
       title as title,
       'aws_vpc_route_table' as category,
       jsonb_build_object(
+        'Owner ID', owner_id,
         'Region', region,
         'Account ID', account_id
       ) as properties
@@ -223,14 +231,14 @@ query "aws_vpc_subnet_relationships_graph" {
     where
       a ->> 'SubnetId' = $1
 
-    -- To Route Tables (edge)
+    -- To VPC route tables (edge)
     union all
     select
       $1 as from_id,
       route_table_id as to_id,
       null as id,
-      'uses' as title,
-      'uses' as category,
+      'route to' as title,
+      'vpc_subnet_to_vpc_route_table' as category,
       jsonb_build_object(
         'Account ID', account_id,
         'Region', region
@@ -241,7 +249,7 @@ query "aws_vpc_subnet_relationships_graph" {
     where
       a ->> 'SubnetId' = $1
 
-    -- To Network ACLs (node)
+    -- To VPC network ACLs (node)
     union all
     select
       null as from_id,
@@ -251,6 +259,8 @@ query "aws_vpc_subnet_relationships_graph" {
       'aws_vpc_network_acl' as category,
       jsonb_build_object(
         'ARN', arn,
+        'Is Default', is_default,
+        'Association Id', a ->> 'NetworkAclAssociationId',
         'Region', region,
         'Account ID', account_id
       ) as properties
@@ -260,18 +270,17 @@ query "aws_vpc_subnet_relationships_graph" {
     where
       a ->> 'SubnetId' = $1
 
-    -- To Network ACLs (edge)
+    -- To VPC network ACLs (edge)
     union all
     select
       $1 as from_id,
       network_acl_id as to_id,
       null as id,
       'uses' as title,
-      'uses' as category,
+      'vpc_subnet_to_vpc_network_acl' as category,
       jsonb_build_object(
         'ARN', arn,
         'Account ID', account_id,
-        'Association Id', a ->> 'NetworkAclAssociationId',
         'Region', region
       ) as properties
     from
@@ -280,7 +289,7 @@ query "aws_vpc_subnet_relationships_graph" {
     where
       a ->> 'SubnetId' = $1
 
-    -- From RDS DB Instances (node)
+    -- From RDS DB instances (node)
     union all
     select
       null as from_id,
@@ -291,6 +300,7 @@ query "aws_vpc_subnet_relationships_graph" {
       jsonb_build_object(
         'ARN', arn,
         'Status', status,
+        'Engine', engine,
         'Region', region,
         'Account ID', account_id
       ) as properties
@@ -300,14 +310,14 @@ query "aws_vpc_subnet_relationships_graph" {
     where
       s ->> 'SubnetIdentifier' = $1
 
-    -- From RDS DB Instances (edge)
+    -- From RDS DB instances (edge)
     union all
     select
       db_instance_identifier as from_id,
       $1 as to_id,
       null as id,
-      'uses' as title,
-      'uses' as category,
+      'launched in' as title,
+      'rds_db_instance_to_vpc_subnet' as category,
       jsonb_build_object(
         'ARN', arn,
         'Account ID', account_id,
@@ -319,7 +329,7 @@ query "aws_vpc_subnet_relationships_graph" {
     where
       s ->> 'SubnetIdentifier' = $1
 
-    -- From EC2 Instance (node)
+    -- From EC2 instances (node)
     union all
     select
       null as from_id,
@@ -338,14 +348,14 @@ query "aws_vpc_subnet_relationships_graph" {
     where
       subnet_id = $1
 
-    -- From EC2 Instances (edge)
+    -- From EC2 instances (edge)
     union all
     select
       instance_id as from_id,
       $1 as to_id,
       null as id,
-      'uses' as title,
-      'uses' as category,
+      'launched in' as title,
+      'ec2_instance_to_vpc_subnet' as category,
       jsonb_build_object(
         'ARN', arn,
         'Account ID', account_id,
@@ -356,7 +366,7 @@ query "aws_vpc_subnet_relationships_graph" {
     where
       subnet_id = $1
 
-    -- From Lambda Functions (node)
+    -- From Lambda functions (node)
     union all
     select
       null as from_id,
@@ -365,6 +375,8 @@ query "aws_vpc_subnet_relationships_graph" {
       title as title,
       'aws_lambda_function' as category,
       jsonb_build_object(
+        'Runtime', runtime,
+        'Architectures', architectures,
         'Region', region,
         'Account ID', account_id
       ) as properties
@@ -372,16 +384,16 @@ query "aws_vpc_subnet_relationships_graph" {
       aws_lambda_function,
       jsonb_array_elements(vpc_subnet_ids) as s
     where
-       trim((s::text ), '""') = $1
+      trim((s::text ), '""') = $1
 
-    -- From Lambda Functions (edge)
+    -- From Lambda functions (edge)
     union all
     select
       arn as from_id,
       $1 as to_id,
       null as id,
-      'uses' as title,
-      'uses' as category,
+      'launched in' as title,
+      'lambda_function_to_vpc_subnet' as category,
       jsonb_build_object(
         'ARN', arn,
         'Account ID', account_id,
@@ -393,7 +405,7 @@ query "aws_vpc_subnet_relationships_graph" {
     where
       trim((s::text ), '""') = $1
 
-    -- From Sagemaker Notebook Instances (node)
+    -- From Sagemaker notebook instances (node)
     union all
     select
       null as from_id,
@@ -402,6 +414,9 @@ query "aws_vpc_subnet_relationships_graph" {
       title as title,
       'aws_sagemaker_notebook_instance' as category,
       jsonb_build_object(
+        'ARN', arn,
+        'Status', notebook_instance_status,
+        'Instance Type', instance_type,
         'Region', region,
         'Account ID', account_id
       ) as properties
@@ -410,14 +425,14 @@ query "aws_vpc_subnet_relationships_graph" {
     where
       subnet_id = $1
 
-    -- From Sagemaker Notebook Instances (edge)
+    -- From Sagemaker notebook instances (edge)
     union all
     select
       arn as from_id,
       $1 as to_id,
       null as id,
-      'uses' as title,
-      'uses' as category,
+      'launched in' as title,
+      'sagemaker_notebook_instance_to_vpc_subnet' as category,
       jsonb_build_object(
         'ARN', arn,
         'Account ID', account_id,
@@ -428,14 +443,16 @@ query "aws_vpc_subnet_relationships_graph" {
     where
       subnet_id = $1
 
+    order by
+      from_id,
+      to_id;
   EOQ
-  param "subnet_id" {}
 
+  param "subnet_id" {}
 }
 
 query "aws_vpc_subnet_num_ips" {
   sql = <<-EOQ
-
     select
       available_ip_address_count as "IP Addresses"
     from
@@ -463,7 +480,7 @@ query "aws_vpc_subnet_cidr_block" {
 query "aws_vpc_subnet_map_public_ip_on_launch_disabled" {
   sql = <<-EOQ
     select
-      'Map Public IP On Launch' as label,
+      'Map Public IP on Launch' as label,
       map_public_ip_on_launch as value,
       case when map_public_ip_on_launch then 'alert' else 'ok' end as type
     from
@@ -591,5 +608,6 @@ query "aws_vpc_subnet_association" {
     where
       a ->> 'SubnetId' = $1;
   EOQ
+
   param "subnet_id" {}
 }
