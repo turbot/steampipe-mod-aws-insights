@@ -1,9 +1,9 @@
 dashboard "aws_ec2_gateway_load_balancer_detail" {
-  title         = "AWS EC2 Gateway Load Balancer Details"
+  title         = "AWS EC2 Gateway Load Balancer Detail"
   documentation = file("./dashboards/ec2/docs/ec2_gateway_load_balancer_detail.md")
 
   tags = merge(local.ec2_common_tags, {
-    type = "Details"
+    type = "Detail"
   })
 
   input "glb" {

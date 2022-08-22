@@ -1,14 +1,14 @@
 dashboard "aws_ec2_network_load_balancer_detail" {
-  title         = "AWS EC2 Network Load Balancer Details"
+  title         = "AWS EC2 Network Load Balancer Detail"
   documentation = file("./dashboards/ec2/docs/ec2_network_load_balancer_detail.md")
 
   tags = merge(local.ec2_common_tags, {
-    type = "Details"
+    type = "Detail"
   })
 
   input "nlb" {
     title = "Select a Network Load balancer:"
-    query = query.aws_nlb_input
+    sql   = query.aws_ec2_network_load_balancer_input.sql
     width = 4
   }
 
@@ -441,7 +441,7 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
   param "arn" {}
 }
 
-query "aws_nlb_input" {
+query "aws_ec2_network_load_balancer_input" {
   sql = <<-EOQ
     select
       title as label,
