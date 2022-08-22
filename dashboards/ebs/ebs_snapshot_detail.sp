@@ -65,6 +65,28 @@ dashboard "aws_ebs_snapshot_detail" {
       }
     }
   }
+  
+  container {
+
+    table {
+      title = "Overview"
+      type  = "line"
+      width = 6
+      query = query.aws_ebs_snapshot_overview
+      args = {
+        arn = self.input.snapshot_arn.value
+      }
+    }
+
+    table {
+      title = "Tags"
+      width = 6
+      query = query.aws_ebs_snapshot_tags
+      args = {
+        arn = self.input.snapshot_arn.value
+      }
+    }
+  }
 }
 
 query "aws_ebs_snapshot_input" {
