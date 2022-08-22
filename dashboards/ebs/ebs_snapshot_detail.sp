@@ -198,7 +198,7 @@ query "aws_ebs_snapshot_relationships_graph" {
       bdm -> 'Ebs' ->> 'SnapshotId' as to_id,
       null as id,
       'contains' as title,
-      'uses' as category,
+      'ec2_ami_to_ebs_snapshot' as category,
       jsonb_build_object(
         'SnapshotId', bdm -> 'Ebs' ->> 'SnapshotId',
         'Account ID', images.account_id,
@@ -239,7 +239,7 @@ query "aws_ebs_snapshot_relationships_graph" {
       snapshot.snapshot_id as to_id,
       null as id,
       'provisions EBS with' as title,
-      'uses' as category,
+      'launch_config_to_ebs_snapshot' as category,
       jsonb_build_object(
         'ARN', launch_config.launch_configuration_arn,
         'Account ID', launch_config.account_id,
@@ -279,7 +279,7 @@ query "aws_ebs_snapshot_relationships_graph" {
       kms_keys.arn as to_id,
       null as id,
       'secures with' as title,
-      'uses' as category,
+      'ebs_snapshot_to_kms_keys' as category,
       jsonb_build_object(
         'ARN', kms_keys.arn,
         'Account ID', kms_keys.account_id,
@@ -299,7 +299,7 @@ query "aws_ebs_snapshot_relationships_graph" {
       kms_keys.arn as to_id,
       null as id,
       'secures with' as title,
-      'uses' as category,
+      'ebs_volumes_to_kms_keys' as category,
       jsonb_build_object(
         'ARN', kms_keys.arn,
         'Account ID', kms_keys.account_id,
