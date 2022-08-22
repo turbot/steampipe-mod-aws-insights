@@ -246,10 +246,9 @@ query "aws_vpc_eip_relationships_graph" {
       left join aws_ec2_instance as i on e.instance_id = i.instance_id
     where
       e.network_interface_id is not null
-
   EOQ
+  
   param "arn" {}
-
 }
 
 query "aws_vpc_eip_association" {
