@@ -134,20 +134,6 @@ query "aws_ec2_clb_security_groups" {
   param "arn" {}
 }
 
-query "aws_clb_ip_type" {
-  sql = <<-EOQ
-    select
-      'IP Address type' as label,
-      case when ip_address_type = 'ipv4' then 'IPv4' else 'IPv6' end as value
-    from
-      aws_ec2_classic_load_balancer
-    where
-      aws_ec2_classic_load_balancer.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
 query "aws_clb_logging_enabled" {
   sql = <<-EOQ
     select
