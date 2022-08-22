@@ -168,6 +168,7 @@ query "aws_ec2_glb_attributes" {
       cross join jsonb_array_elements(load_balancer_attributes) as lb
     where
       aws_ec2_gateway_load_balancer.arn = $1
+      and lb ->> 'Key' not in ( 'deletion_protection.enabled' ,'access_logs.s3.enabled' )
     order by
       lb ->> 'Key';
     EOQ
@@ -178,10 +179,10 @@ query "aws_ec2_glb_attributes" {
 query "aws_ec2_glb_security_groups" {
   sql = <<-EOQ
     select
-      sg::text as "Groups"
+      sg as "Groups"
     from
       aws_ec2_gateway_load_balancer,
-      jsonb_array_elements(aws_ec2_gateway_load_balancer.security_groups) as sg
+      jsonb_array_elements_text(aws_ec2_gateway_load_balancer.security_groups) as sg
     where
       aws_ec2_gateway_load_balancer.arn = $1;
     EOQ
@@ -585,11 +586,11 @@ query "aws_ec2_gateway_load_balancer_relationships_graph" {
     -- To load balancer listeners (edge)
     union all
     select
-      glb.arn as from_id,
-      lblistener.arn as to_id,
+      lblistener.arn as from_id,
+      glb.arn as to_id,
       null as id,
-      'listens on' as title,
-      'ec2_gateway_load_balancer_to_load_balancer_listener' as category,
+      'listens with' as title,
+      'load_balancer_listener_to_ec2_gateway_load_balancer' as category,
       jsonb_build_object(
         'ARN', lblistener.arn,
         'Account ID', lblistener.account_id,
