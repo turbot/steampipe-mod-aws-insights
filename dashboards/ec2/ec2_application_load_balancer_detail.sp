@@ -545,7 +545,7 @@ query "aws_ec2_application_load_balancer_relationships_graph" {
     where
       alb.vpc_id = vpc.vpc_id
 
-    -- To VPC (edges)
+    -- To VPCs (edges)
     union all
     select
       alb.arn as from_id,

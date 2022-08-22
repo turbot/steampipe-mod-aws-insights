@@ -165,7 +165,7 @@ query "aws_ec2_key_pair_relationships_graph" {
     from
       key_pair
 
-    -- From EC2 Instances (node)
+    -- From EC2 instances (node)
     union all
     select
       null as from_id,
@@ -184,7 +184,7 @@ query "aws_ec2_key_pair_relationships_graph" {
     where
       instances.key_name = key_pair.key_name
 
-    -- From EC2 Instances (edges)
+    -- From EC2 instances (edges)
     union all
     select
       instances.arn as from_id,
@@ -203,7 +203,7 @@ query "aws_ec2_key_pair_relationships_graph" {
     where
       instances.key_name = key_pair.key_name
 
-    -- From EC2 Launch Configs (node)
+    -- From EC2 aunch configurations (node)
     union all
     select
       null as from_id,
@@ -221,7 +221,7 @@ query "aws_ec2_key_pair_relationships_graph" {
     where
       launch_config.key_name = key_pair.key_name
 
-    -- From EC2 Launch Configs (edge)
+    -- From EC2 aunch configurations (edge)
     union all
     select
       launch_config.launch_configuration_arn as from_id,

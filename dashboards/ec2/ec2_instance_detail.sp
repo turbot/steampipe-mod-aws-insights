@@ -642,7 +642,7 @@ query "aws_ec2_instance_relationships_graph" {
     from
       instances as i
 
-    -- From AutoScaling groups (node)
+    -- From EC2 AutoScaling groups (node)
     union all
     select
       null as from_id,
@@ -662,7 +662,7 @@ query "aws_ec2_instance_relationships_graph" {
     where
       group_instance ->> 'InstanceId' = instances.instance_id
 
-    -- From AutoScaling groups (edge)
+    -- From EC2 AutoScaling groups (edge)
     union all
     select
       k.autoscaling_group_arn as from_id,
