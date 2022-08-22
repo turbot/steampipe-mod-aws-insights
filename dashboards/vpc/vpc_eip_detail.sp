@@ -1,6 +1,6 @@
 dashboard "aws_vpc_eip_detail" {
 
-  title         = "AWS VPC EIP Detail"
+  title         = "AWS VPC Elastic IP Detail"
   documentation = file("./dashboards/vpc/docs/vpc_eip_detail.md")
 
   tags = merge(local.vpc_common_tags, {
@@ -65,7 +65,6 @@ dashboard "aws_vpc_eip_detail" {
 
     }
   }
-
 
   container {
 
@@ -146,9 +145,14 @@ query "aws_vpc_eip_input" {
 
 query "aws_vpc_eip_relationships_graph" {
   sql = <<-EOQ
-
-  with eip as (select * from aws_vpc_eip where arn = $1)
-
+    with eip as (
+      select
+        *
+      from
+        aws_vpc_eip
+      where
+        arn = $1
+    )
     select
       null as from_id,
       null as to_id,
@@ -165,7 +169,7 @@ query "aws_vpc_eip_relationships_graph" {
     from
       eip
 
-    -- From ENI (node)
+    -- From EC2 network interfaces (node)
     union all
     select
       null as from_id,
@@ -184,14 +188,14 @@ query "aws_vpc_eip_relationships_graph" {
     where
       e.network_interface_id is not null
 
-    -- From ENI (edge)
+    -- From EC2 network interfaces (edge)
     union all
     select
       i.network_interface_id as from_id,
       e.arn as to_id,
       null as id,
       'allocated to' as title,
-      'allocated to' as category,
+      'ec2_network_interface_to_vpc_eip' as category,
       jsonb_build_object(
         'ID', i.network_interface_id,
         'Account ID', i.account_id,
@@ -203,7 +207,7 @@ query "aws_vpc_eip_relationships_graph" {
     where
       e.network_interface_id is not null
 
-    -- From ENI > EC2 Instance (node)
+    -- From EC2 instances (node)
     union all
     select
       null as from_id,
@@ -224,14 +228,14 @@ query "aws_vpc_eip_relationships_graph" {
     where
       e.network_interface_id is not null
 
-    -- From ENI > EC2 Instance (edge)
+    -- From EC2 instances (edge)
     union all
     select
       i.arn as from_id,
       e.network_interface_id as to_id,
       null as id,
       'attached to' as title,
-      'attached to' as category,
+      'ec2_instance_to_ec2_network_interface' as category,
       jsonb_build_object(
         'ID', e.network_interface_id,
         'Account ID', i.account_id,
