@@ -16,7 +16,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_alb_scheme
+      query = query.aws_alb_state
       args = {
         arn = self.input.alb.value
       }
@@ -24,7 +24,39 @@ dashboard "aws_ec2_application_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_alb_ports
+      query = query.aws_alb_scheme
+      args = {
+        arn = self.input.alb.value
+      }
+    }
+    
+    card {
+      width = 2
+      query = query.aws_alb_ip_type
+      args = {
+        arn = self.input.alb.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_alb_az_zone
+      args = {
+        arn = self.input.alb.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_alb_logging_enabled
+      args = {
+        arn = self.input.alb.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_alb_deletion_protection
       args = {
         arn = self.input.alb.value
       }
@@ -46,23 +78,188 @@ dashboard "aws_ec2_application_load_balancer_detail" {
 
     }
   }
+
+  container {
+
+    table {
+      title = "Overview"
+      type  = "line"
+      width = 3
+      query = query.aws_ec2_alb_overview
+      args = {
+        arn = self.input.alb.value
+      }
+
+    }
+
+    table {
+      title = "Tags"
+      width = 3
+      query = query.aws_ec2_alb_tags
+      args = {
+        arn = self.input.alb.value
+      }
+    }
+
+    table {
+      title = "Attributes"
+      width = 4
+      query = query.aws_ec2_alb_attributes
+      args = {
+        arn = self.input.alb.value
+      }
+    }
+
+    table {
+      title = "Security Groups"
+      width = 2
+      query = query.aws_ec2_alb_security_groups
+      args = {
+        arn = self.input.alb.value
+      }
+    }
+  }
+
 }
 
-query "aws_alb_ports" {
+query "aws_ec2_alb_overview" {
   sql = <<-EOQ
-    with d as
-    (
-      select distinct(port) as port
-      from
-        aws_ec2_load_balancer_listener
-      where
-        load_balancer_arn = $1
-    )
     select
-      'Ports' as label,
-      string_agg(port::text, ',') as value
+      title as "Title",
+      dns_name as "DNS Name",
+      canonical_hosted_zone_id as "Route 53 hosted zone ID",
+      account_id as "Account ID",
+      region as "Region",
+      partition as "Partition"
     from
-      d
+      aws_ec2_application_load_balancer
+    where
+      aws_ec2_application_load_balancer.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_ec2_alb_tags" {
+  sql = <<-EOQ
+    select
+      tags ->> 'Key' as "Key",
+      tags ->> 'Value' as "Value"
+    from
+      aws_ec2_application_load_balancer
+    where
+      aws_ec2_application_load_balancer.arn = $1
+    order by
+      tags ->> 'Key';
+    EOQ
+
+  param "arn" {}
+}
+
+query "aws_ec2_alb_attributes" {
+  sql = <<-EOQ
+    select
+      lb ->> 'Key' as "Key",
+      lb ->> 'Value' as "Value"
+    from
+      aws_ec2_application_load_balancer
+      cross join jsonb_array_elements(load_balancer_attributes) as lb
+    where
+      aws_ec2_application_load_balancer.arn = $1
+    order by
+      lb ->> 'Key';
+    EOQ
+
+  param "arn" {}
+}
+
+query "aws_ec2_alb_security_groups" {
+  sql = <<-EOQ
+    select
+      sg::text as "Groups"
+    from
+      aws_ec2_application_load_balancer,
+      jsonb_array_elements(aws_ec2_application_load_balancer.security_groups) as sg
+    where
+      aws_ec2_application_load_balancer.arn = $1;
+    EOQ
+
+  param "arn" {}
+}
+
+query "aws_alb_ip_type" {
+  sql = <<-EOQ
+    select
+      'IP Address type' as label,
+      case when ip_address_type = 'ipv4' then 'IPv4' else 'IPv6' end as value
+    from
+      aws_ec2_application_load_balancer
+    where
+      aws_ec2_application_load_balancer.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_alb_logging_enabled" {
+  sql = <<-EOQ
+    select
+      'Logging' as label,
+      case when lb ->> 'Value' = 'false' then 'Disabled' else 'Enabled' end as value,
+      case when lb ->> 'Value' = 'false' then 'alert' else 'ok' end as type
+    from
+      aws_ec2_application_load_balancer
+      cross join jsonb_array_elements(load_balancer_attributes) as lb
+    where
+      lb ->> 'Key' = 'access_logs.s3.enabled'
+      and aws_ec2_application_load_balancer.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_alb_deletion_protection" {
+  sql = <<-EOQ
+    select
+      'Deletion Protection' as label,
+      case when lb ->> 'Value' = 'false' then 'Disabled' else 'Enabled' end as value,
+      case when lb ->> 'Value' = 'false' then 'alert' else 'ok' end as type
+    from
+      aws_ec2_application_load_balancer
+      cross join jsonb_array_elements(load_balancer_attributes) as lb
+    where
+      lb ->> 'Key' = 'deletion_protection.enabled'
+      and aws_ec2_application_load_balancer.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_alb_az_zone" {
+  sql = <<-EOQ
+    select
+      'Availibility Zones' as label,
+      count(az ->> 'ZoneName') as value,
+      case when count(az ->> 'ZoneName') > 1 then 'ok' else 'alert' end as type
+    from
+      aws_ec2_application_load_balancer
+      cross join jsonb_array_elements(availability_zones) as az
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_alb_state" {
+  sql = <<-EOQ
+    select
+      'State' as label,
+      initcap(state_code) as value
+    from
+      aws_ec2_application_load_balancer
+    where
+      arn = $1;
   EOQ
 
   param "arn" {}
@@ -71,8 +268,8 @@ query "aws_alb_ports" {
 query "aws_alb_scheme" {
   sql = <<-EOQ
     select
-      'Schema' as label,
-      scheme as value
+      'Scheme' as label,
+      initcap(scheme) as value
     from
       aws_ec2_application_load_balancer
     where

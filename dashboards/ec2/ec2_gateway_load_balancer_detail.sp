@@ -11,6 +11,49 @@ dashboard "aws_ec2_gateway_load_balancer_detail" {
     query = query.aws_glb_input
     width = 4
   }
+  container {
+
+    card {
+      width = 2
+      query = query.aws_glb_state
+      args = {
+        arn = self.input.glb.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_glb_scheme
+      args = {
+        arn = self.input.glb.value
+      }
+    }
+    
+    card {
+      width = 2
+      query = query.aws_glb_ip_type
+      args = {
+        arn = self.input.glb.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_glb_az_zone
+      args = {
+        arn = self.input.glb.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_glb_deletion_protection
+      args = {
+        arn = self.input.glb.value
+      }
+    }
+
+  }
 
   container {
     graph {
@@ -24,13 +67,222 @@ dashboard "aws_ec2_gateway_load_balancer_detail" {
         icon = local.aws_ec2_gateway_load_balancer_icon
       }
 
+      category "aws_vpc" {
+        href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'VPC ID' | @uri}}"
+        icon = local.aws_vpc_icon
+      }
+
+      category "aws_s3_bucket" {
+        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
+        icon = local.aws_s3_bucket_icon
+      }
+
     }
+
+  }
+
+  container {
+
+    table {
+      title = "Overview"
+      type  = "line"
+      width = 3
+      query = query.aws_ec2_glb_overview
+      args = {
+        arn = self.input.glb.value
+      }
+
+    }
+
+    table {
+      title = "Tags"
+      width = 3
+      query = query.aws_ec2_glb_tags
+      args = {
+        arn = self.input.glb.value
+      }
+    }
+
+    table {
+      title = "Attributes"
+      width = 4
+      query = query.aws_ec2_glb_attributes
+      args = {
+        arn = self.input.glb.value
+      }
+    }
+
+    table {
+      title = "Security Groups"
+      width = 2
+      query = query.aws_ec2_glb_security_groups
+      args = {
+        arn = self.input.glb.value
+      }
+    }
+  }
 
 }
 
+query "aws_ec2_glb_overview" {
+  sql = <<-EOQ
+    select
+      title as "Title",
+      dns_name as "DNS Name",
+      canonical_hosted_zone_id as "Route 53 hosted zone ID",
+      account_id as "Account ID",
+      region as "Region",
+      partition as "Partition"
+    from
+      aws_ec2_gateway_load_balancer
+    where
+      aws_ec2_gateway_load_balancer.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_ec2_glb_tags" {
+  sql = <<-EOQ
+    select
+      tags ->> 'Key' as "Key",
+      tags ->> 'Value' as "Value"
+    from
+      aws_ec2_gateway_load_balancer
+    where
+      aws_ec2_gateway_load_balancer.arn = $1
+    order by
+      tags ->> 'Key';
+    EOQ
+
+  param "arn" {}
+}
+
+query "aws_ec2_glb_attributes" {
+  sql = <<-EOQ
+    select
+      lb ->> 'Key' as "Key",
+      lb ->> 'Value' as "Value"
+    from
+      aws_ec2_gateway_load_balancer
+      cross join jsonb_array_elements(load_balancer_attributes) as lb
+    where
+      aws_ec2_gateway_load_balancer.arn = $1
+    order by
+      lb ->> 'Key';
+    EOQ
+
+  param "arn" {}
+}
+
+query "aws_ec2_glb_security_groups" {
+  sql = <<-EOQ
+    select
+      sg::text as "Groups"
+    from
+      aws_ec2_gateway_load_balancer,
+      jsonb_array_elements(aws_ec2_gateway_load_balancer.security_groups) as sg
+    where
+      aws_ec2_gateway_load_balancer.arn = $1;
+    EOQ
+
+  param "arn" {}
+}
+
+query "aws_glb_ip_type" {
+  sql = <<-EOQ
+    select
+      'IP Address type' as label,
+      case when ip_address_type = 'ipv4' then 'IPv4' else 'IPv6' end as value
+    from
+      aws_ec2_gateway_load_balancer
+    where
+      aws_ec2_gateway_load_balancer.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_glb_logging_enabled" {
+  sql = <<-EOQ
+    select
+      'Logging' as label,
+      case when lb ->> 'Value' = 'false' then 'Disabled' else 'Enabled' end as value,
+      case when lb ->> 'Value' = 'false' then 'alert' else 'ok' end as type
+    from
+      aws_ec2_gateway_load_balancer
+      cross join jsonb_array_elements(load_balancer_attributes) as lb
+    where
+      lb ->> 'Key' = 'access_logs.s3.enabled'
+      and aws_ec2_gateway_load_balancer.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_glb_deletion_protection" {
+  sql = <<-EOQ
+    select
+      'Deletion Protection' as label,
+      case when lb ->> 'Value' = 'false' then 'Disabled' else 'Enabled' end as value,
+      case when lb ->> 'Value' = 'false' then 'alert' else 'ok' end as type
+    from
+      aws_ec2_gateway_load_balancer
+      cross join jsonb_array_elements(load_balancer_attributes) as lb
+    where
+      lb ->> 'Key' = 'deletion_protection.enabled'
+      and aws_ec2_gateway_load_balancer.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_glb_az_zone" {
+  sql = <<-EOQ
+    select
+      'Availibility Zones' as label,
+      count(az ->> 'ZoneName') as value,
+      case when count(az ->> 'ZoneName') > 1 then 'ok' else 'alert' end as type
+    from
+      aws_ec2_gateway_load_balancer
+      cross join jsonb_array_elements(availability_zones) as az
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_glb_state" {
+  sql = <<-EOQ
+    select
+      'State' as label,
+      initcap(state_code) as value
+    from
+      aws_ec2_gateway_load_balancer
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_glb_scheme" {
+  sql = <<-EOQ
+    select
+      'Scheme' as label,
+      initcap(scheme) as value
+    from
+      aws_ec2_gateway_load_balancer
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
 
 
-query "aws_ec2_gwlb_relationships_graph" {
+query "aws_ec2_gateway_load_balancer_relationships_graph" {
   sql = <<-EOQ
     with glb as
     (
