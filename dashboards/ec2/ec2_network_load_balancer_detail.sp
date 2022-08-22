@@ -346,7 +346,7 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       sg.arn as to_id,
       null as id,
       'attaches to' as title,
-      'uses' as category,
+      'ec2_network_load_balancer_to_vpc_security_group' as category,
       jsonb_build_object(
         'Group Name', sg.group_name,
         'Group ID', sg.group_id,
@@ -396,7 +396,7 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       tg.target_group_arn as to_id,
       null as id,
       'targets' as title,
-      'uses' as category,
+      'ec2_network_load_balancer_to_ec2_target_group' as category,
       jsonb_build_object(
         'Group Name', tg.target_group_name,
         'ARN', tg.target_group_arn,
@@ -447,7 +447,7 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       instance.instance_id as to_id,
       null as id,
       'forwards to' as title,
-      'uses' as category,
+      'ec2_target_group_to_ec2_instance' as category,
       jsonb_build_object(
         'Instance ID', instance.instance_id,
         'ARN', instance.arn,
@@ -500,7 +500,7 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       buckets.arn as to_id,
       null as id,
       'logs to' as title,
-      'uses' as category,
+      'ec2_network_load_balancer_to_s3_bucket' as category,
       jsonb_build_object(
         'Name', nlb.name,
         'ARN', nlb.arn,
@@ -543,7 +543,7 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       vpc.vpc_id as to_id,
       null as id,
       'resides in' as title,
-      'uses' as category,
+      'ec2_network_load_balancer_to_vpc' as category,
       jsonb_build_object(
         'VPC ID', vpc.vpc_id,
         'Account ID', vpc.account_id,
@@ -585,7 +585,7 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       lblistener.arn as to_id,
       null as id,
       'listens on' as title,
-      'uses' as category,
+      'ec2_network_load_balancer_to_load_balancer_listener' as category,
       jsonb_build_object(
         'ARN', lblistener.arn,
         'Account ID', lblistener.account_id,
@@ -628,7 +628,7 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       as to_id,
       null as id,
       'with port' as title,
-      'uses' as category,
+      'load_balancer_listener_to_port' as category,
       jsonb_build_object() as properties
     from
       aws_ec2_load_balancer_listener lblistener,

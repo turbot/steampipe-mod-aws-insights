@@ -265,7 +265,7 @@ query "aws_ebs_volume_relationships_graph" {
       volumes.arn as to_id,
       null as id,
       'secures with' as title,
-      'uses' as category,
+      'kms_keys_to_ebs_volume' as category,
       jsonb_build_object(
         'ARN', kms_keys.arn,
         'Account ID', kms_keys.account_id,
@@ -306,7 +306,7 @@ query "aws_ebs_volume_relationships_graph" {
       snapshot.snapshot_id as to_id,
       null as id,
       'snapshot' as title,
-      'uses' as category,
+      'ebs_volumes_to_ebs_snapshots' as category,
       jsonb_build_object(
         'ARN', snapshot.arn,
         'Account ID', snapshot.account_id,
@@ -354,7 +354,7 @@ query "aws_ebs_volume_relationships_graph" {
       volumes.arn as to_id,
       null as id,
       'mounts' as title,
-      'uses' as category,
+      'ec2_instances_to_ebs_volumes' as category,
       jsonb_build_object(
         'Name', instances.tags ->> 'Name',
         'Instance ID', instance_id,
@@ -411,7 +411,7 @@ query "aws_ebs_volume_relationships_graph" {
       images.image_id as to_id,
       null as id,
       'uses snapshot' as title,
-      'uses' as category,
+      'ebs_snapshots_to_ec2_ami' as category,
       jsonb_build_object(
         'SnapshotId', bdm -> 'Ebs' ->> 'SnapshotId',
         'Account ID', images.account_id,

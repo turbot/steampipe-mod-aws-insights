@@ -191,7 +191,7 @@ query "aws_ec2_key_pair_relationships_graph" {
       key_pair.key_pair_id as to_id,
       null as id,
       'has' as title,
-      'uses' as category,
+      'ec2_instance_to_ec2_key_pair' as category,
       jsonb_build_object(
         'ARN', instances.arn,
         'Account ID', instances.account_id,
@@ -228,7 +228,7 @@ query "aws_ec2_key_pair_relationships_graph" {
       key_pair.key_pair_id as to_id,
       null as id,
       'launches with' as title,
-      'uses' as category,
+      'ec2_launch_config_to_ec2_key_pair' as category,
       jsonb_build_object(
         'ARN', launch_config.launch_configuration_arn,
         'Account ID', launch_config.account_id,

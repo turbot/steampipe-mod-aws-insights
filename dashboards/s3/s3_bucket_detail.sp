@@ -266,7 +266,7 @@ query "aws_s3_bucket_relationships_graph" {
       b.arn as to_id,
       null as id,
       'logs to' as title,
-      'uses' as category,
+      'cloudtrail_to_s3_bucket' as category,
       jsonb_build_object(
         'ARN', trail.arn,
         'Account ID', trail.account_id,
@@ -307,7 +307,7 @@ query "aws_s3_bucket_relationships_graph" {
       buckets.arn as from_id,
       null as id,
       'logs to' as title,
-      'uses' as category,
+      's3_bucket_to_s3_bucket' as category,
       jsonb_build_object(
         'Name', aws_s3_bucket.name,
         'ARN', aws_s3_bucket.arn,
@@ -349,7 +349,7 @@ query "aws_s3_bucket_relationships_graph" {
       buckets.arn as to_id,
       null as id,
       'logs to' as title,
-      'uses' as category,
+      'ec2_application_load_balancer_to_s3_bucket' as category,
       jsonb_build_object(
         'Name', alb.name,
         'ARN', alb.arn,
@@ -403,7 +403,7 @@ query "aws_s3_bucket_relationships_graph" {
       buckets.arn as to_id,
       null as id,
       'logs to' as title,
-      'uses' as category,
+      'ec2_network_load_balancer_to_s3_bucket' as category,
       jsonb_build_object(
         'Name', nlb.name,
         'ARN', nlb.arn,
@@ -455,7 +455,7 @@ query "aws_s3_bucket_relationships_graph" {
       buckets.arn as to_id,
       null as id,
       'logs to' as title,
-      'uses' as category,
+      'ec2_classic_load_balancer_to_s3_bucket' as category,
       jsonb_build_object(
         'Name', clb.name,
         'ARN', clb.arn,
@@ -497,7 +497,7 @@ query "aws_s3_bucket_relationships_graph" {
       buckets.arn as to_id,
       null as id,
       'accesses' as title,
-      'uses' as category,
+      's3_access_point_to_s3_bucket' as category,
       jsonb_build_object(
         'Name', ap.name,
         'ARN', ap.access_point_arn,
@@ -538,7 +538,7 @@ query "aws_s3_bucket_relationships_graph" {
       aws_s3_bucket.arn as to_id,
       null as id,
       'logs to' as title,
-      'uses' as category,
+      's3_bucket_to_s3_bucket' as category,
       jsonb_build_object(
         'Name', aws_s3_bucket.name,
         'ARN', aws_s3_bucket.arn,
