@@ -308,6 +308,7 @@ query "aws_eks_cluster_relationships_graph" {
       'aws_vpc' as category,
       jsonb_build_object(
         'ARN', arn,
+        'VPC ID', vpc_id,
         'Default', is_default::text,
         'State', state,
         'Account ID', account_id,
