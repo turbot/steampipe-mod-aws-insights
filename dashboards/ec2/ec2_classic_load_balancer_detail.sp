@@ -123,10 +123,10 @@ query "aws_ec2_clb_tags" {
 query "aws_ec2_clb_security_groups" {
   sql = <<-EOQ
     select
-      sg::text as "Groups"
+      sg as "Groups"
     from
       aws_ec2_classic_load_balancer,
-      jsonb_array_elements(aws_ec2_classic_load_balancer.security_groups) as sg
+      jsonb_array_elements_text(aws_ec2_classic_load_balancer.security_groups) as sg
     where
       aws_ec2_classic_load_balancer.arn = $1;
     EOQ
@@ -497,55 +497,16 @@ query "aws_ec2_classic_load_balancer_relationships_graph" {
     -- To EC2 load balancer listeners (edge)
     union all
     select
-      clb.arn as from_id,
-      lblistener.arn as to_id,
+      lblistener.arn as from_id,
+      clb.arn as to_id,
       null as id,
-      'listens on' as title,
-      'ec2_classic_load_balancer_to_load_balancer_listener' as category,
+      'listens with' as title,
+      'load_balancer_listener_to_ec2_classic_load_balancer' as category,
       jsonb_build_object(
         'ARN', lblistener.arn,
         'Account ID', lblistener.account_id,
         'Region', lblistener.region
       ) as properties
-    from
-      aws_ec2_load_balancer_listener lblistener,
-      clb
-    where
-      clb.arn = lblistener.load_balancer_arn
-
-    -- To EC2 load balancer listener ports (node)
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      (
-        lblistener.arn || lblistener.port
-      )
-      as id,
-      (
-        'Port ' || lblistener.port
-      )
-      as title,
-      'aws_ec2_load_balancer_listener_port' as category,
-      jsonb_build_object() as properties
-    from
-      aws_ec2_load_balancer_listener lblistener,
-      clb
-    where
-      clb.arn = lblistener.load_balancer_arn
-
-    -- To EC2 load balancer listener ports (edge)
-    union all
-    select
-      lblistener.arn as from_id,
-      (
-        lblistener.arn || lblistener.port
-      )
-      as to_id,
-      null as id,
-      'inbound port' as title,
-      'ec2_load_balancer_listener_to_port' as category,
-      jsonb_build_object() as properties
     from
       aws_ec2_load_balancer_listener lblistener,
       clb
