@@ -37,7 +37,7 @@ dashboard "aws_ebs_snapshot_detail" {
     graph {
       type  = "graph"
       title = "Relationships"
-      query = query.aws_ec2_ebs_relationships_graph
+      query = query.aws_ebs_snapshot_relationships_graph
       args = {
         arn = self.input.snapshot_arn.value
       }
@@ -94,7 +94,7 @@ query "aws_ebs_snapshot_age" {
   param "arn" {}
 }
 
-query "aws_ec2_ebs_relationships_graph" {
+query "aws_ebs_snapshot_relationships_graph" {
   sql = <<-EOQ
     with snapshot as
     (
@@ -131,7 +131,7 @@ query "aws_ec2_ebs_relationships_graph" {
     from
       snapshot
 
-    -- From EC2 EBS (node)
+    -- From EBS volumes (node)
     union all
     select
       null as from_id,
@@ -151,7 +151,7 @@ query "aws_ec2_ebs_relationships_graph" {
     where
       snapshot.volume_id = volumes.volume_id
 
-    -- From EC2 EBS (edge)
+    -- From EBS volumes (edge)
     union all
     select
       volumes.volume_id as from_id,
@@ -170,7 +170,7 @@ query "aws_ec2_ebs_relationships_graph" {
     where
       snapshot.volume_id = volumes.volume_id
 
-    -- From AMI (node)
+    -- From EC2 AMI (node)
     union all
     select
       null as from_id,
@@ -191,7 +191,7 @@ query "aws_ec2_ebs_relationships_graph" {
       bdm -> 'Ebs' is not null
       and bdm -> 'Ebs' ->> 'SnapshotId' = snapshot.snapshot_id
 
-    -- From AMI (edge)
+    -- From EC2 AMI (edge)
     union all
     select
       images.image_id as from_id,
@@ -252,7 +252,7 @@ query "aws_ec2_ebs_relationships_graph" {
     where
       bdm -> 'Ebs' ->> 'SnapshotId' = snapshot.snapshot_id
 
-    -- To KMS (node)
+    -- To KMS Keys (node)
     union all
     select
       null as from_id,
@@ -272,7 +272,7 @@ query "aws_ec2_ebs_relationships_graph" {
     where
       snapshot.kms_key_id = kms_keys.arn
 
-    -- To KMS (edge)
+    -- To KMS Keys (edge)
     union all
     select
       snapshot.snapshot_id as from_id,
@@ -292,7 +292,7 @@ query "aws_ec2_ebs_relationships_graph" {
     where
       snapshot.kms_key_id = kms_keys.arn
 
-    -- KMS > EBS (edge)
+    -- EBS volume > KMS Key (edge)
     union all
     select
       volumes.volume_id as from_id,

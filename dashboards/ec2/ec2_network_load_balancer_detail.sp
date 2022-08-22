@@ -75,7 +75,7 @@ query "aws_nlb_scheme" {
   param "arn" {}
 }
 
-query "aws_ec2_nlb_relationships_graph" {
+query "aws_ec2_network_load_balancer_relationships_graph" {
   sql = <<-EOQ
     with nlb as
     (
