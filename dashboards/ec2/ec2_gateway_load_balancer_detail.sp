@@ -117,7 +117,7 @@ query "aws_ec2_gwlb_relationships_graph" {
           jsonb_array_elements_text(glb.security_groups)
       )
 
-    -- To target group (node)
+    -- To target groups (node)
     union all
     select
       null as from_id,
@@ -141,7 +141,7 @@ query "aws_ec2_gwlb_relationships_graph" {
           jsonb_array_elements_text(tg.load_balancer_arns)
       )
 
-    -- To target group (edge)
+    -- To target groups (edge)
     union all
     select
       glb.arn as from_id,
@@ -165,7 +165,7 @@ query "aws_ec2_gwlb_relationships_graph" {
           jsonb_array_elements_text(tg.load_balancer_arns)
       )
 
-    -- To target group instance (node)
+    -- To EC2 target group instances (node)
     union all
     select
       null as from_id,
@@ -192,7 +192,7 @@ query "aws_ec2_gwlb_relationships_graph" {
           jsonb_array_elements_text(tg.load_balancer_arns)
       )
 
-    -- To target group instance (edge)
+    -- To EC2 target group instances (edge)
     union all
     select
       tg.target_group_arn as from_id,
@@ -222,7 +222,7 @@ query "aws_ec2_gwlb_relationships_graph" {
           jsonb_array_elements_text(tg.load_balancer_arns)
       )
 
-    -- To S3 bucket (node)
+    -- To S3 buckets (node)
     union all
     select
       null as from_id,
@@ -245,7 +245,7 @@ query "aws_ec2_gwlb_relationships_graph" {
       attributes ->> 'Key' = 'access_logs.s3.bucket'
       and buckets.name = attributes ->> 'Value'
 
-    -- To S3 bucket (edge)
+    -- To S3 buckets (edge)
     union all
     select
       glb.arn as from_id,
@@ -268,7 +268,7 @@ query "aws_ec2_gwlb_relationships_graph" {
       attributes ->> 'Key' = 'access_logs.s3.bucket'
       and buckets.name = attributes ->> 'Value'
 
-    -- VPC (node)
+    -- VPCs (node)
     union all
     select
       null as from_id,
@@ -288,7 +288,7 @@ query "aws_ec2_gwlb_relationships_graph" {
     where
       glb.vpc_id = vpc.vpc_id
 
-    -- VPC (edge)
+    -- VPCs (edge)
     union all
     select
       glb.arn as from_id,
@@ -308,7 +308,7 @@ query "aws_ec2_gwlb_relationships_graph" {
     where
       glb.vpc_id = vpc.vpc_id
 
-    -- To load balancer listener (node)
+    -- To load balancer listeners (node)
     union all
     select
       null as from_id,
@@ -330,7 +330,7 @@ query "aws_ec2_gwlb_relationships_graph" {
     where
       glb.arn = lblistener.load_balancer_arn
 
-    -- To load balancer listener (edge)
+    -- To load balancer listeners (edge)
     union all
     select
       glb.arn as from_id,

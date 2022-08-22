@@ -144,7 +144,7 @@ query "aws_ec2_classic_load_balancer_relationships_graph" {
           jsonb_array_elements_text(clb.security_groups)
       )
 
-    -- To target group (node)
+    -- To EC2 target groups (node)
     union all
     select
       null as from_id,
@@ -168,7 +168,7 @@ query "aws_ec2_classic_load_balancer_relationships_graph" {
           jsonb_array_elements_text(tg.load_balancer_arns)
       )
 
-    -- To target group (edge)
+    -- To EC2 target groups (edge)
     union all
     select
       clb.arn as from_id,
@@ -192,7 +192,7 @@ query "aws_ec2_classic_load_balancer_relationships_graph" {
           jsonb_array_elements_text(tg.load_balancer_arns)
       )
 
-    -- To target group instance (node)
+    -- To EC2 target group instances (node)
     union all
     select
       null as from_id,
@@ -219,7 +219,7 @@ query "aws_ec2_classic_load_balancer_relationships_graph" {
           jsonb_array_elements_text(tg.load_balancer_arns)
       )
 
-    -- To target group instance (edge)
+    -- To EC2 target group instances (edge)
     union all
     select
       tg.target_group_arn as from_id,
@@ -248,7 +248,7 @@ query "aws_ec2_classic_load_balancer_relationships_graph" {
           jsonb_array_elements_text(tg.load_balancer_arns)
       )
 
-    -- S3 bucket (node)
+    -- To S3 buckets (node)
     union all
     select
       null as from_id,
@@ -269,7 +269,7 @@ query "aws_ec2_classic_load_balancer_relationships_graph" {
     where
       buckets.name = clb.access_log_s3_bucket_name
 
-    -- S3 bucket (edge)
+    -- To S3 buckets (edge)
     union all
     select
       clb.arn as from_id,
@@ -291,7 +291,7 @@ query "aws_ec2_classic_load_balancer_relationships_graph" {
     where
       buckets.name = clb.access_log_s3_bucket_name
 
-    -- VPC (node)
+    -- To VPCs (node)
     union all
     select
       null as from_id,
@@ -311,7 +311,7 @@ query "aws_ec2_classic_load_balancer_relationships_graph" {
     where
       clb.vpc_id = vpc.vpc_id
 
-    -- VPC (edges)
+    -- To VPCs (edges)
     union all
     select
       clb.arn as from_id,
@@ -331,7 +331,7 @@ query "aws_ec2_classic_load_balancer_relationships_graph" {
     where
       clb.vpc_id = vpc.vpc_id
 
-    -- To EC2 load balancer listener (node)
+    -- To EC2 load balancer listeners (node)
     union all
     select
       null as from_id,
@@ -353,7 +353,7 @@ query "aws_ec2_classic_load_balancer_relationships_graph" {
     where
       clb.arn = lblistener.load_balancer_arn
 
-    -- To EC2 load balancer listener (edge)
+    -- To EC2 load balancer listeners (edge)
     union all
     select
       clb.arn as from_id,
@@ -372,7 +372,7 @@ query "aws_ec2_classic_load_balancer_relationships_graph" {
     where
       clb.arn = lblistener.load_balancer_arn
 
-    -- To EC2 load balancer listener port (node)
+    -- To EC2 load balancer listener ports (node)
     union all
     select
       null as from_id,
@@ -393,7 +393,7 @@ query "aws_ec2_classic_load_balancer_relationships_graph" {
     where
       clb.arn = lblistener.load_balancer_arn
 
-    -- To EC2 load balancer listener port (edge)
+    -- To EC2 load balancer listener ports (edge)
     union all
     select
       lblistener.arn as from_id,

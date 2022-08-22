@@ -170,7 +170,7 @@ query "aws_ec2_application_load_balancer_relationships_graph" {
           jsonb_array_elements_text(alb.security_groups)
       )
 
-    -- To EC2 target group (node)
+    -- To EC2 target groups (node)
     union all
     select
       null as from_id,
@@ -194,7 +194,7 @@ query "aws_ec2_application_load_balancer_relationships_graph" {
           jsonb_array_elements_text(tg.load_balancer_arns)
       )
 
-    -- To EC2 target group (edge)
+    -- To EC2 target groups (edge)
     union all
     select
       alb.arn as from_id,
@@ -274,7 +274,7 @@ query "aws_ec2_application_load_balancer_relationships_graph" {
           jsonb_array_elements_text(tg.load_balancer_arns)
       )
 
-    -- To S3 bucket (node)
+    -- To S3 buckets (node)
     union all
     select
       null as from_id,
@@ -297,7 +297,7 @@ query "aws_ec2_application_load_balancer_relationships_graph" {
       attributes ->> 'Key' = 'access_logs.s3.bucket'
       and buckets.name = attributes ->> 'Value'
 
-    -- To S3 bucket (edge)
+    -- To S3 buckets (edge)
     union all
     select
       alb.arn as from_id,
@@ -328,7 +328,7 @@ query "aws_ec2_application_load_balancer_relationships_graph" {
       attributes ->> 'Key' = 'access_logs.s3.bucket'
       and buckets.name = attributes ->> 'Value'
 
-    -- To VPC (node)
+    -- To VPCs (node)
     union all
     select
       null as from_id,
@@ -368,7 +368,7 @@ query "aws_ec2_application_load_balancer_relationships_graph" {
     where
       alb.vpc_id = vpc.vpc_id
 
-    -- To EC2 load balancer listener (node)
+    -- To EC2 load balancer listeners (node)
     union all
     select
       null as from_id,
@@ -390,7 +390,7 @@ query "aws_ec2_application_load_balancer_relationships_graph" {
     where
       alb.arn = lblistener.load_balancer_arn
 
-    -- To EC2 load balancer listener (edge)
+    -- To EC2 load balancer listeners (edge)
     union all
     select
       alb.arn as from_id,
@@ -409,7 +409,7 @@ query "aws_ec2_application_load_balancer_relationships_graph" {
     where
       alb.arn = lblistener.load_balancer_arn
 
-    -- To EC2 load balancer listener port (node)
+    -- To EC2 load balancer listener ports (node)
     union all
     select
       null as from_id,
@@ -430,7 +430,7 @@ query "aws_ec2_application_load_balancer_relationships_graph" {
     where
       alb.arn = lblistener.load_balancer_arn
 
-    -- To EC2 load balancer listener port (edge)
+    -- To EC2 load balancer listener ports (edge)
     union all
     select
       lblistener.arn as from_id,
