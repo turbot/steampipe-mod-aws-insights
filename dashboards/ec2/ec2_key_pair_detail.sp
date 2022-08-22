@@ -45,8 +45,6 @@ dashboard "aws_ec2_key_pair_detail" {
     }
   }
 
-
-
   container {
 
     table {

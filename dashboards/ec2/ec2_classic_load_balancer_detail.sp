@@ -17,7 +17,23 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
     card {
       width = 2
       query = query.aws_clb_scheme
-      args  = {
+      args = {
+        arn = self.input.clb.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_clb_instances
+      args = {
+        arn = self.input.clb.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_clb_logging_enabled
+      args = {
         arn = self.input.clb.value
       }
     }
@@ -37,13 +53,137 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
       }
     }
   }
+
+  container {
+
+    table {
+      title = "Overview"
+      type  = "line"
+      width = 4
+      query = query.aws_ec2_clb_overview
+      args = {
+        arn = self.input.clb.value
+      }
+
+    }
+
+    table {
+      title = "Tags"
+      width = 4
+      query = query.aws_ec2_clb_tags
+      args = {
+        arn = self.input.clb.value
+      }
+    }
+
+    table {
+      title = "Security Groups"
+      width = 4
+      query = query.aws_ec2_clb_security_groups
+      args = {
+        arn = self.input.clb.value
+      }
+    }
+  }
+
+}
+query "aws_ec2_clb_overview" {
+  sql = <<-EOQ
+    select
+      title as "Title",
+      dns_name as "DNS Name",
+      account_id as "Account ID",
+      region as "Region",
+      partition as "Partition"
+    from
+      aws_ec2_classic_load_balancer
+    where
+      aws_ec2_classic_load_balancer.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_ec2_clb_tags" {
+  sql = <<-EOQ
+    select
+      tags ->> 'Key' as "Key",
+      tags ->> 'Value' as "Value"
+    from
+      aws_ec2_classic_load_balancer
+    where
+      aws_ec2_classic_load_balancer.arn = $1
+    order by
+      tags ->> 'Key';
+    EOQ
+
+  param "arn" {}
+}
+
+query "aws_ec2_clb_security_groups" {
+  sql = <<-EOQ
+    select
+      sg::text as "Groups"
+    from
+      aws_ec2_classic_load_balancer,
+      jsonb_array_elements(aws_ec2_classic_load_balancer.security_groups) as sg
+    where
+      aws_ec2_classic_load_balancer.arn = $1;
+    EOQ
+
+  param "arn" {}
+}
+
+query "aws_clb_ip_type" {
+  sql = <<-EOQ
+    select
+      'IP Address type' as label,
+      case when ip_address_type = 'ipv4' then 'IPv4' else 'IPv6' end as value
+    from
+      aws_ec2_classic_load_balancer
+    where
+      aws_ec2_classic_load_balancer.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_clb_logging_enabled" {
+  sql = <<-EOQ
+    select
+      'Logging' as label,
+      case when access_log_enabled = 'false' then 'Disabled' else 'Enabled' end as value,
+      case when access_log_enabled = 'false' then 'alert' else 'ok' end as type
+    from
+      aws_ec2_classic_load_balancer
+    where
+      aws_ec2_classic_load_balancer.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_clb_instances" {
+  sql = <<-EOQ
+    select
+      'Instances' as label,
+      count(i) as value,
+      case when count(i) > 1 then 'ok' else 'alert' end as type
+    from
+      aws_ec2_classic_load_balancer
+      cross join jsonb_array_elements(instances) as i
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
 }
 
 query "aws_clb_scheme" {
   sql = <<-EOQ
     select
-      'Schema' as label,
-      scheme as value
+      'Scheme' as label,
+      initcap(scheme) as value
     from
       aws_ec2_classic_load_balancer
     where
@@ -52,6 +192,7 @@ query "aws_clb_scheme" {
 
   param "arn" {}
 }
+
 
 query "aws_ec2_classic_load_balancer_relationships_graph" {
   sql = <<-EOQ
