@@ -20,21 +20,26 @@ dashboard "aws_emr_cluster_detail" {
       arn = self.input.emr_cluster_arn.value
     }
     category "aws_emr_cluster" {
-      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/emr_cluster_light.svg"))
+      icon = local.aws_emr_cluster_icon
     }
 
     category "aws_iam_role" {
       href = "${dashboard.aws_iam_role_detail.url_path}?input.role_arn={{.properties.ARN | @uri}}"
-      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/iam_role_light.svg"))
+      icon = local.aws_iam_role_icon
     }
 
     category "aws_s3_bucket" {
       href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/s3_bucket_light.svg"))
+      icon = local.aws_s3_bucket_icon
+    }
+
+    category "aws_emr_instance" {
+      href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'EC2 Instance ARN' | @uri}}"
+      icon = local.aws_ec2_instance_icon
     }
 
     category "aws_ec2_ami" {
-      icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_ami_light.svg"))
+      icon = local.aws_ec2_ami_icon
     }
 
     category "uses" {
@@ -151,6 +156,103 @@ query "aws_emr_cluster_relationships_graph" {
     where
       cluster_arn = $1
 
+    -- To EMR instance fleets (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      id as id,
+      title as title,
+      'aws_emr_instance_fleet' as category,
+      jsonb_build_object( 'ARN', arn, 'State', state, 'Account ID', account_id, 'Region', region ) as properties
+    from
+      aws_emr_instance_fleet
+    where
+      cluster_id in
+      (
+        select
+          id
+        from
+          aws_emr_cluster
+        where
+          cluster_arn = $1
+      )
+
+    -- To EMR instance fleets (edge)
+    union all
+    select
+      c.id as from_id,
+      f.id as to_id,
+      null as id,
+      'has' as title,
+      'uses' as category,
+      jsonb_build_object( 'Account ID', c.account_id ) as properties
+    from
+      aws_emr_cluster as c
+      left join
+        aws_emr_instance_fleet as f
+        on f.cluster_id = c.id
+    where
+      cluster_arn = $1
+
+     -- To EMR instances (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      emri.id as id,
+      emri.title as title,
+      'aws_emr_instance' as category,
+      jsonb_build_object( 'EC2 Instance ARN', ec2i.arn, 'EC2 Instance ID', ec2_instance_id, 'State', emri.state, 'Instance Type', emri.instance_type, 'Account ID', emri.account_id, 'Region', emri.region ) as properties
+    from
+      aws_ec2_instance as ec2i,
+      aws_emr_instance as emri
+    where
+      ec2i.instance_id = emri.ec2_instance_id
+      and cluster_id in
+      (
+        select
+          id
+        from
+          aws_emr_cluster
+        where
+          cluster_arn = $1
+      )
+
+    -- To EMR fleet instances (edge)
+    union all
+    select
+      instance_fleet_id as from_id,
+      i.id as to_id,
+      null as id,
+      'contains' as title,
+      'uses' as category,
+      jsonb_build_object( 'Account ID', c.account_id ) as properties
+    from
+      aws_emr_cluster as c
+      left join
+        aws_emr_instance as i
+        on i.cluster_id = c.id
+    where
+      cluster_arn = $1 and instance_fleet_id is not null
+
+    -- To EMR group instances (edge)
+    union all
+    select
+      instance_group_id as from_id,
+      i.id as to_id,
+      null as id,
+      'contains' as title,
+      'uses' as category,
+      jsonb_build_object( 'Account ID', c.account_id ) as properties
+    from
+      aws_emr_cluster as c
+      left join
+        aws_emr_instance as i
+        on i.cluster_id = c.id
+    where
+      cluster_arn = $1 and instance_group_id is not null
+
     -- To EMR instance groups (node)
     union all
     select
@@ -179,7 +281,7 @@ query "aws_emr_cluster_relationships_graph" {
       c.id as from_id,
       g.id as to_id,
       null as id,
-      'contains' as title,
+      'has' as title,
       'uses' as category,
       jsonb_build_object( 'Account ID', c.account_id ) as properties
     from
