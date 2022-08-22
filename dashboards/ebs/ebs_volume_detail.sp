@@ -319,7 +319,7 @@ query "aws_ebs_volume_relationships_graph" {
     where
       volumes.volume_id = snapshot.volume_id
 
-    -- To EC2 Instance (node)
+    -- To EC2 Instances (node)
     union all
     select
       null as from_id,
@@ -347,7 +347,7 @@ query "aws_ebs_volume_relationships_graph" {
           volumes
       )
 
-    -- To EC2 Instance (edge)
+    -- To EC2 Instances (edge)
     union all
     select
       instances.arn as from_id,

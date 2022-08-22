@@ -320,7 +320,7 @@ query "aws_s3_bucket_relationships_graph" {
     where
       aws_s3_bucket.logging ->> 'TargetBucket' = buckets.name
 
-    -- From EC2 Application LB (node)
+    -- From EC2 Application load balancers (node)
     union all
     select
       null as from_id,
@@ -342,7 +342,7 @@ query "aws_s3_bucket_relationships_graph" {
       attributes ->> 'Key' = 'access_logs.s3.bucket'
       and attributes ->> 'Value' = buckets.name
 
-    -- From EC2 Application LB (edge)
+    -- From EC2 Application load balancers (edge)
     union all
     select
       alb.arn as from_id,
@@ -373,7 +373,7 @@ query "aws_s3_bucket_relationships_graph" {
       attributes ->> 'Key' = 'access_logs.s3.bucket'
       and attributes ->> 'Value' = buckets.name
 
-    -- From EC2 Network LB (node)
+    -- From EC2 Network load balancers (node)
     union all
     select
       null as from_id,
@@ -396,7 +396,7 @@ query "aws_s3_bucket_relationships_graph" {
       attributes ->> 'Key' = 'access_logs.s3.bucket'
       and attributes ->> 'Value' = buckets.name
 
-    -- From EC2 Network LB (edge)
+    -- From EC2 Network load balancers (edge)
     union all
     select
       nlb.arn as from_id,
@@ -427,7 +427,7 @@ query "aws_s3_bucket_relationships_graph" {
       attributes ->> 'Key' = 'access_logs.s3.bucket'
       and attributes ->> 'Value' = buckets.name
 
-    -- From EC2 Classic LB (node)
+    -- From EC2 Classic load balancers (node)
     union all
     select
       null as from_id,
@@ -448,7 +448,7 @@ query "aws_s3_bucket_relationships_graph" {
     where
       clb.access_log_s3_bucket_name = buckets.name
 
-    -- From EC2 Classic LB (edge)
+    -- From EC2 Classic load balancers (edge)
     union all
     select
       clb.arn as from_id,
