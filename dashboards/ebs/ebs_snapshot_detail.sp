@@ -212,7 +212,7 @@ query "aws_ebs_snapshot_relationships_graph" {
       bdm -> 'Ebs' is not null
       and bdm -> 'Ebs' ->> 'SnapshotId' = snapshot.snapshot_id
 
-    -- From Launch Configs (node)
+    -- From EC2 launch configurations (node)
     union all
     select
       null as from_id,
@@ -232,7 +232,7 @@ query "aws_ebs_snapshot_relationships_graph" {
     where
       bdm -> 'Ebs' ->> 'SnapshotId' = snapshot.snapshot_id
 
-    -- From Launch Configs (edge)
+    -- From EC2 launch configurations (edge)
     union all
     select
       launch_config.launch_configuration_arn as from_id,
