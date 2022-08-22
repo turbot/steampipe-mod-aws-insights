@@ -46,6 +46,28 @@ dashboard "aws_ebs_snapshot_detail" {
       }
     }
   }
+  
+  container {
+
+    table {
+      title = "Overview"
+      type  = "line"
+      width = 6
+      query = query.aws_ebs_snapshot_overview
+      args = {
+        arn = self.input.snapshot_arn.value
+      }
+    }
+
+    table {
+      title = "Tags"
+      width = 6
+      query = query.aws_ebs_snapshot_tags
+      args = {
+        arn = self.input.snapshot_arn.value
+      }
+    }
+  }
 }
 
 query "aws_ebs_snapshot_input" {
@@ -65,6 +87,41 @@ query "aws_ebs_snapshot_input" {
       title;
   EOQ
 }
+
+query "aws_ebs_snapshot_overview" {
+  sql = <<-EOQ
+    select
+      snapshot_id as "Snapshot ID",
+      title as "Title",
+      region as "Region",
+      account_id as "Account ID",
+      arn as "ARN"
+    from
+      aws_ebs_snapshot
+    where
+      arn = $1
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_ebs_snapshot_tags" {
+  sql = <<-EOQ
+    select
+      tag ->> 'Key' as "Key",
+      tag ->> 'Value' as "Value"
+    from
+      aws_ebs_snapshot,
+      jsonb_array_elements(tags_src) as tag
+    where
+      arn = $1
+    order by
+      tag ->> 'Key';
+  EOQ
+
+  param "arn" {}
+}
+
 
 query "aws_ebs_snapshot_storage" {
   sql = <<-EOQ
