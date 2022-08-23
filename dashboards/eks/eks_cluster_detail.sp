@@ -338,6 +338,53 @@ query "aws_eks_cluster_relationships_graph" {
     where
       c.arn = $1
 
+    -- To EKS node group (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      arn as id,
+      title as title,
+      'aws_eks_node_group' as category,
+      jsonb_build_object(
+        'ARN', arn,
+        'Capacity Type ', capacity_type,
+        'Created At', created_at,
+        'Status', status,
+        'Account ID', account_id,
+        'Region', region
+        ) as properties
+    from
+      aws_eks_node_group
+    where
+      cluster_name in
+      (
+        select
+          name
+        from
+          aws_eks_cluster
+        where
+          arn = $1
+      )
+
+    -- To EKS node group (edge)
+    union all
+    select
+      c.arn as from_id,
+      g.arn as to_id,
+      null as id,
+      'has' as title,
+      'eks_cluster_to_eks_node_group' as category,
+      jsonb_build_object(
+        'Account ID', c.account_id ) as properties
+    from
+      aws_eks_cluster as c
+      left join
+        aws_eks_node_group as g
+        on g.cluster_name = c.name
+    where
+      c.arn = $1
+
     -- To EKS addons (node)
     union all
     select
