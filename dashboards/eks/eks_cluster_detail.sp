@@ -12,34 +12,127 @@ dashboard "aws_eks_cluster_detail" {
     width = 4
   }
 
-  graph {
-    type  = "graph"
-    title = "Relationships"
-    query = query.aws_eks_cluster_relationships_graph
-    args = {
-      arn = self.input.eks_cluster_arn.value
-    }
-    category "aws_eks_cluster" {
-      icon = local.aws_eks_cluster_icon
+  container {
+
+    card {
+      width = 2
+      query = query.aws_eks_cluster_status
+      args = {
+        arn = self.input.eks_cluster_arn.value
+      }
     }
 
-    category "aws_iam_role" {
-      href = "${dashboard.aws_iam_role_detail.url_path}?input.role_arn={{.properties.ARN | @uri}}"
-      icon = local.aws_iam_role_icon
+    card {
+      width = 2
+      query = query.aws_eks_cluster_kubernetes_version
+      args = {
+        arn = self.input.eks_cluster_arn.value
+      }
     }
 
-    category "aws_kms_key" {
-      href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.ARN | @uri}}"
-      icon = local.aws_kms_key_icon
+    card {
+      width = 2
+      query = query.aws_eks_cluster_secrets_encryption
+      args = {
+        arn = self.input.eks_cluster_arn.value
+      }
     }
 
-    category "aws_vpc_security_group" {
-      href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.properties.'Group ID' | @uri}}"
+    card {
+      width = 2
+      query = query.aws_eks_cluster_endpoint_restrict_public_access
+      args = {
+        arn = self.input.eks_cluster_arn.value
+      }
     }
 
-    category "aws_vpc" {
-      href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'VPC ID' | @uri}}"
-      icon = local.aws_vpc_icon
+    card {
+      width = 2
+      query = query.aws_eks_cluster_control_plane_audit_logging
+      args = {
+        arn = self.input.eks_cluster_arn.value
+      }
+    }
+
+  }
+
+  container {
+    graph {
+      type  = "graph"
+      title = "Relationships"
+      query = query.aws_eks_cluster_relationships_graph
+      args = {
+        arn = self.input.eks_cluster_arn.value
+      }
+      category "aws_eks_cluster" {
+        icon = local.aws_eks_cluster_icon
+      }
+
+      category "aws_iam_role" {
+        href = "${dashboard.aws_iam_role_detail.url_path}?input.role_arn={{.properties.ARN | @uri}}"
+        icon = local.aws_iam_role_icon
+      }
+
+      category "aws_kms_key" {
+        href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.ARN | @uri}}"
+        icon = local.aws_kms_key_icon
+      }
+
+      category "aws_vpc_security_group" {
+        href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.properties.'Group ID' | @uri}}"
+      }
+
+      category "aws_vpc" {
+        href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'VPC ID' | @uri}}"
+        icon = local.aws_vpc_icon
+      }
+
+    }
+  }
+
+  container {
+
+    container {
+      width = 6
+
+      table {
+        title = "Overview"
+        type  = "line"
+        width = 6
+        query = query.aws_eks_cluster_overview
+        args = {
+          arn = self.input.eks_cluster_arn.value
+        }
+
+      }
+
+      table {
+        title = "Tags"
+        width = 6
+        query = query.aws_eks_cluster_tags
+        args = {
+          arn = self.input.eks_cluster_arn.value
+        }
+      }
+    }
+    container {
+      width = 6
+
+      table {
+        title = "Control Plane Logging"
+        query = query.aws_eks_cluster_logging
+        args = {
+          arn = self.input.eks_cluster_arn.value
+        }
+      }
+
+      table {
+        title = "Resources VPC Config"
+        query = query.aws_eks_cluster_resources_vpc_config
+        args = {
+          arn = self.input.eks_cluster_arn.value
+        }
+      }
     }
 
   }
@@ -59,6 +152,87 @@ query "aws_eks_cluster_input" {
     order by
       title;
 EOQ
+}
+
+query "aws_eks_cluster_status" {
+  sql = <<-EOQ
+    select
+      'Status' as label,
+      initcap(status) as value
+    from
+      aws_eks_cluster
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+
+}
+
+query "aws_eks_cluster_kubernetes_version" {
+  sql = <<-EOQ
+    select
+      'Version' as label,
+      version as value
+    from
+      aws_eks_cluster
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+
+}
+
+query "aws_eks_cluster_secrets_encryption" {
+  sql = <<-EOQ
+    select
+      'Secrets Encryption' as label,
+      case when encryption_config is null then 'Disabled' else 'Enabled' end as value,
+      case when encryption_config is null then 'alert' else 'ok' end as type
+    from
+      aws_eks_cluster
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+
+}
+
+query "aws_eks_cluster_endpoint_restrict_public_access" {
+  sql = <<-EOQ
+    select
+      'Endpoint Public Access' as label,
+      case when resources_vpc_config ->> 'EndpointPublicAccess' = 'true' then 'Enabled' else 'Disabled' end as value,
+      case when resources_vpc_config ->> 'EndpointPublicAccess' = 'true' then 'alert' else 'ok' end as type
+    from
+      aws_eks_cluster
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+
+}
+
+query "aws_eks_cluster_control_plane_audit_logging" {
+  sql = <<-EOQ
+    select
+      'Control Plane Audit Logging' as label,
+      case when l ->> 'Enabled'::text = 'true' then 'Enabled' else 'Disabled' end as value,
+      case when l ->> 'Enabled'::text = 'true' then 'ok' else 'alert' end as type
+    from
+      aws_eks_cluster,
+      jsonb_array_elements(logging -> 'ClusterLogging') as l,
+      jsonb_array_elements_text(l -> 'Types') as t
+    where
+      t = 'audit'
+      and arn = $1;
+  EOQ
+
+  param "arn" {}
+
 }
 
 query "aws_eks_cluster_relationships_graph" {
@@ -365,4 +539,79 @@ query "aws_eks_cluster_relationships_graph" {
   EOQ
 
   param "arn" {}
+}
+
+query "aws_eks_cluster_overview" {
+  sql = <<-EOQ
+    select
+      title as "Title",
+      created_at as "Created At",
+      endpoint as "Endpoint",
+      region as "Region",
+      account_id as "Account ID",
+      arn as "ARN"
+    from
+      aws_eks_cluster
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_eks_cluster_tags" {
+  sql = <<-EOQ
+    with jsondata as (
+    select
+      tags::json as tags
+    from
+      aws_eks_cluster
+    where
+      arn = $1
+    )
+    select
+      key as "Key",
+      value as "Value"
+    from
+      jsondata,
+      json_each_text(tags);
+    EOQ
+
+  param "arn" {}
+}
+
+query "aws_eks_cluster_logging" {
+  sql = <<-EOQ
+    select
+      t as "Type",
+      l ->> 'Enabled'::text as "Enabled"
+    from
+      aws_eks_cluster,
+      jsonb_array_elements(logging -> 'ClusterLogging') as l,
+      jsonb_array_elements_text(l -> 'Types') as t
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+
+}
+
+query "aws_eks_cluster_resources_vpc_config" {
+  sql = <<-EOQ
+    select
+      resources_vpc_config ->> 'ClusterSecurityGroupId' as "Cluster Security Group ID",
+      resources_vpc_config ->> 'EndpointPrivateAccess' as "Endpoint Private Access",
+      resources_vpc_config -> 'PublicAccessCidrs' as "Public Access CIDRs",
+      resources_vpc_config -> 'SecurityGroupIds' as "Security Group IDs",
+      resources_vpc_config -> 'SubnetIds' as "Subnet IDs",
+      resources_vpc_config ->> 'VpcId' as "VPC ID"
+    from
+      aws_eks_cluster
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+
 }
