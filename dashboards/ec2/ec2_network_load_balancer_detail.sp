@@ -142,14 +142,15 @@ query "aws_ec2_nlb_overview" {
 query "aws_ec2_nlb_tags" {
   sql = <<-EOQ
     select
-      tags ->> 'Key' as "Key",
-      tags ->> 'Value' as "Value"
+      tag ->> 'Key' as "Key",
+      tag ->> 'Value' as "Value"
     from
-      aws_ec2_network_load_balancer
+      aws_ec2_network_load_balancer,
+      jsonb_array_elements(tags_src) as tag
     where
-      aws_ec2_network_load_balancer.arn = $1
+      arn = $1
     order by
-      tags ->> 'Key';
+      tag ->> 'Key';
     EOQ
 
   param "arn" {}
