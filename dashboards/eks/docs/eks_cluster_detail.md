@@ -1,4 +1,4 @@
-This dashboard answers the following questions for each instance:
+This dashboard answers the following questions for each cluster:
 
 - What relationships does the eks cluster have with other resources?
 - How is the cluster configured?
