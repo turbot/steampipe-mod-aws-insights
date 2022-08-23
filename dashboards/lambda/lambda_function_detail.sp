@@ -352,25 +352,27 @@ query "aws_lambda_function_tags" {
 }
 
 query "aws_lambda_function_relationships_graph" {
-
   sql = <<-EOQ
-    with lambda as
-      (
-        select
-          *
-        from
-          aws_lambda_function
-        where
-          arn = $1
-      )
-
+    with lambda as (
+      select
+        *
+      from
+        aws_lambda_function
+      where
+        arn = $1
+    )
     select
       null as from_id,
       null as to_id,
       arn as id,
       title as title,
       'aws_lambda_function' as category,
-      jsonb_build_object( 'ARN', arn, 'Account ID', account_id, 'Region', region ) as properties
+      jsonb_build_object(
+        'ARN', arn,
+        'Runtime', runtime,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
     from
       lambda
 
@@ -382,7 +384,12 @@ query "aws_lambda_function_relationships_graph" {
       v.arn as id,
       v.title as title,
       'aws_vpc' as category,
-      jsonb_build_object( 'ARN', v.arn, 'ID', v.vpc_id, 'Account ID', v.account_id, 'Region', v.region ) as properties
+      jsonb_build_object(
+        'ARN', v.arn,
+        'ID', v.vpc_id,
+        'Account ID', v.account_id,
+        'Region', v.region
+      ) as properties
     from
       lambda as l
       left join aws_vpc as v on v.vpc_id = l.vpc_id
@@ -393,14 +400,18 @@ query "aws_lambda_function_relationships_graph" {
       l.arn as from_id,
       v.arn as to_id,
       null as id,
-      'attaches' as title,
-      'uses' as category,
-      jsonb_build_object( 'ARN', v.arn, 'Account ID', v.account_id, 'Region', v.region ) as properties
+      'launched in' as title,
+      'lambda_function_to_vpc' as category,
+      jsonb_build_object(
+        'ARN', v.arn,
+        'Account ID', v.account_id,
+        'Region', v.region
+      ) as properties
     from
       lambda as l
       left join aws_vpc as v on v.vpc_id = l.vpc_id
 
-    -- To Security Groups (node)
+    -- To VPC security groups (node)
     union all
     select
       null as from_id,
@@ -408,29 +419,36 @@ query "aws_lambda_function_relationships_graph" {
       sg.arn as id,
       sg.group_id as title,
       'aws_vpc_security_group' as category,
-      jsonb_build_object( 'ARN', sg.arn, 'ID', sg.group_id, 'Account ID', sg.account_id, 'Region', sg.region ) as properties
+      jsonb_build_object(
+        'ARN', sg.arn,
+        'ID', sg.group_id,
+        'Account ID', sg.account_id,
+        'Region', sg.region
+      ) as properties
     from
       lambda as l,
       jsonb_array_elements_text(vpc_security_group_ids) as s
       left join aws_vpc_security_group as sg on sg.group_id = s
 
-    -- To Security Groups (edge)
+    -- To VPC security groups (edge)
     union all
     select
       l.arn as from_id,
       sg.arn as to_id,
       null as id,
-      'attaches' as title,
-      'uses' as category,
-      jsonb_build_object( 'ARN', sg.arn, 'Account ID', sg.account_id, 'Region', sg.region ) as properties
+      'attached to' as title,
+      'lambda_function_to_vpc_security_group' as category,
+      jsonb_build_object(
+        'ARN', sg.arn, 'Account ID',
+        sg.account_id,
+        'Region', sg.region
+      ) as properties
     from
       lambda as l,
       jsonb_array_elements_text(vpc_security_group_ids) as s
-      left join
-        aws_vpc_security_group as sg
-        on sg.group_id = s
+      left join aws_vpc_security_group as sg on sg.group_id = s
 
-    -- To Kms keys (node)
+    -- To KMS keys (node)
     union all
     select
       null as from_id,
@@ -438,25 +456,33 @@ query "aws_lambda_function_relationships_graph" {
       k.arn as id,
       k.title as title,
       'aws_kms_key' as category,
-      jsonb_build_object( 'ARN', k.arn, 'Account ID', k.account_id, 'Region', k.region ) as properties
+      jsonb_build_object(
+        'ARN', k.arn,
+        'Account ID', k.account_id,
+        'Region', k.region
+      ) as properties
     from
       lambda as l
       left join aws_kms_key as k on k.arn = l.kms_key_arn
 
-    -- To Kms keys (edge)
+    -- To KMS keys (edge)
     union all
     select
       l.arn as from_id,
       k.arn as to_id,
       null as id,
       'encrypts with' as title,
-      'uses' as category,
-      jsonb_build_object( 'ARN', k.arn, 'Account ID', k.account_id, 'Region', k.region ) as properties
+      'lambda_function_to_kms_key' as category,
+      jsonb_build_object(
+        'ARN', k.arn,
+        'Account ID', k.account_id,
+        'Region', k.region
+      ) as properties
     from
       lambda as l
       left join aws_kms_key as k on k.arn = l.kms_key_arn
 
-    -- To IAM Roles (node)
+    -- To IAM roles (node)
     union all
     select
       null as from_id,
@@ -464,27 +490,33 @@ query "aws_lambda_function_relationships_graph" {
       r.arn as id,
       r.title as title,
       'aws_iam_role' as category,
-      jsonb_build_object( 'ARN', r.arn, 'Account ID', r.account_id ) as properties
+      jsonb_build_object(
+        'ARN', r.arn,
+        'Account ID', r.account_id
+      ) as properties
     from
       lambda as l
       left join
         aws_iam_role as r
         on r.arn = l.role
 
-    -- To IAM Roles (edge)
+    -- To IAM roles (edge)
     union all
     select
       l.arn as from_id,
       r.arn as to_id,
       null as id,
-      'attaches' as title,
-      'uses' as category,
-      jsonb_build_object( 'ARN', r.arn, 'Account ID', r.account_id ) as properties
+      'assumes' as title,
+      'lambda_function_to_iam_role' as category,
+      jsonb_build_object(
+        'ARN', r.arn,
+        'Account ID', r.account_id
+      ) as properties
     from
       lambda as l
       left join aws_iam_role as r on r.arn = l.role
 
-    -- From Buckets (node)
+    -- From S3 buckets (node)
     union all
     select
       null as from_id,
@@ -492,7 +524,11 @@ query "aws_lambda_function_relationships_graph" {
       arn as id,
       title as title,
       'aws_s3_bucket' as category,
-      jsonb_build_object( 'ARN', arn, 'Account ID', account_id, 'Region', region ) as properties
+      jsonb_build_object(
+        'ARN', arn,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
     from
       aws_s3_bucket,
       jsonb_array_elements(
@@ -508,34 +544,40 @@ query "aws_lambda_function_relationships_graph" {
     where
       t ->> 'LambdaFunctionArn' = $1
 
-    -- From Buckets (edge)
+    -- From S3 buckets (edge)
     union all
     select
       arn as from_id,
       $1 as to_id,
       null as id,
       'event notification' as title,
-      'uses' as category,
-      jsonb_build_object( 'ARN', arn, 'Account ID', account_id, 'Event Notification Configuration ID', t ->> 'Id', 'Events Configured', t -> 'Events', 'Region', region ) as properties
+      's3_bucket_to_lambda_function' as category,
+      jsonb_build_object(
+        'ARN', arn,
+        'Account ID', account_id,
+        'Event Notification Configuration ID', t ->> 'Id',
+        'Events Configured', t -> 'Events',
+        'Region', region
+      ) as properties
     from
       aws_s3_bucket,
       jsonb_array_elements(
       case
-          jsonb_typeof(event_notification_configuration -> 'LambdaFunctionConfigurations')
-          when
-            'array'
-          then (event_notification_configuration -> 'LambdaFunctionConfigurations')
-          else
-            null
+        jsonb_typeof(event_notification_configuration -> 'LambdaFunctionConfigurations')
+        when
+          'array'
+        then (event_notification_configuration -> 'LambdaFunctionConfigurations')
+        else
+          null
       end
       ) as t
     where
       t ->> 'LambdaFunctionArn' = $1
+
     order by
-      category,
       from_id,
       to_id;
+  EOQ
 
-      EOQ
   param "arn" {}
 }
