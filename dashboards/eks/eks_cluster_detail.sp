@@ -274,7 +274,7 @@ query "aws_eks_cluster_relationships_graph" {
     where
       r.arn = c.role_arn and c.arn = $1
 
-    -- To IAM Roles (edge)
+    -- To IAM roles (edge)
     union all
     select
       c.arn as from_id,
@@ -367,7 +367,7 @@ query "aws_eks_cluster_relationships_graph" {
           arn = $1
       )
 
-    -- To EKS Addons (edge)
+    -- To EKS addons (edge)
     union all
     select
       c.arn as from_id,
