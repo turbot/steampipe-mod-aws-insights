@@ -73,6 +73,7 @@ dashboard "aws_iam_role_detail" {
       }
 
       category "aws_emr_cluster" {
+        href = "/aws_insights.dashboard.aws_emr_cluster_detail?input.emr_cluster_arn={{.properties.'ARN' | @uri}}"
         icon = local.aws_emr_cluster_icon
       }
 

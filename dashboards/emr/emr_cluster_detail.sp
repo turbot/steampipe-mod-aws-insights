@@ -257,7 +257,7 @@ query "aws_emr_cluster_relationships_graph" {
     where
       cluster_arn = $1
 
-    -- To IAM Roles (node)
+    -- To IAM roles (node)
     union all
     select
       null as from_id,
@@ -283,7 +283,7 @@ query "aws_emr_cluster_relationships_graph" {
           cluster_arn = $1
       )
 
-    -- To IAM Roles (edge)
+    -- To IAM roles (edge)
     union all
     select
       c.id as from_id,
@@ -326,7 +326,7 @@ query "aws_emr_cluster_relationships_graph" {
           cluster_arn = $1
       )
 
-    -- To S3 Buckets (edge)
+    -- To S3 buckets (edge)
     union all
     select
       c.id as from_id,
@@ -434,7 +434,9 @@ query "aws_emr_cluster_relationships_graph" {
         aws_emr_instance as i
         on i.cluster_id = c.id
     where
-      cluster_arn = $1 and instance_fleet_id is not null and i.state <> 'TERMINATED'
+      cluster_arn = $1
+      and instance_fleet_id is not null
+      and i.state <> 'TERMINATED'
 
     -- To EMR instance group -> EC2 instances (edge)
     union all
@@ -452,7 +454,9 @@ query "aws_emr_cluster_relationships_graph" {
         aws_emr_instance as i
         on i.cluster_id = c.id
     where
-      cluster_arn = $1 and instance_group_id is not null and i.state <> 'TERMINATED'
+      cluster_arn = $1
+      and instance_group_id is not null
+      and i.state <> 'TERMINATED'
 
     -- To EMR instance groups (node)
     union all
