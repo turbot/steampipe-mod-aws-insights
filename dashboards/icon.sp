@@ -1,5 +1,6 @@
 locals {
   aws_acm_certificate_icon               = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/acm_certificate_light.svg"))
+  aws_api_gatewayv2_api_icon             = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/api_gateway_dark.svg"))
   aws_cloudformation_stack_icon          = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/cloudformation_stack_light.svg"))
   aws_cloudfront_distribution_icon       = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/cloudfront_distribution_light.svg"))
   aws_cloudtrail_trail_icon              = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/cloudtrail_trail_light.svg"))
@@ -32,6 +33,7 @@ locals {
   aws_s3_bucket_icon                     = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/s3_bucket_light.svg"))
   aws_sns_topic_icon                     = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/sns_topic_light.svg"))
   aws_sqs_queue_icon                     = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/sqs_queue_light.svg"))
+  aws_step_function_icon                 = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/step_function_light.svg"))
   aws_vpc_eip_icon                       = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_eip.svg"))
   aws_vpc_endpoint_icon                  = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_endpoint_light.svg"))
   aws_vpc_flow_log_icon                  = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_flow_logs_light.svg"))
