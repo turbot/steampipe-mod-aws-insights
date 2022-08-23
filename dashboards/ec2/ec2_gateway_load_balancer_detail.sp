@@ -1,5 +1,5 @@
 dashboard "aws_ec2_gateway_load_balancer_detail" {
-  title = "AWS EC2 Gateway Load balancer Details"
+  title = "AWS EC2 Gateway Load balancer Detail"
   #documentation = file("./dashboards/lb/docs/glb_relationships.md")
 
   tags = merge(local.ec2_common_tags, {
@@ -8,7 +8,7 @@ dashboard "aws_ec2_gateway_load_balancer_detail" {
 
   input "glb" {
     title = "Select a Gateway Load balancer:"
-    sql   = query.aws_glb_input.sql
+    query = query.aws_glb_input
     width = 4
   }
 

@@ -43,13 +43,8 @@ dashboard "aws_iam_group_detail" {
       args = {
         arn = self.input.group_arn.value
       }
-      category "aws_iam_group" {
-        color = "Orange"
-      }
-
       category "aws_iam_policy" {
-        color = "blue"
-        href  = "/aws_insights.dashboard.aws_iam_policy_detail?input.policy_arn={{.properties.'ARN' | @uri}}"
+        href = "/aws_insights.dashboard.aws_iam_policy_detail?input.policy_arn={{.properties.'ARN' | @uri}}"
       }
 
       category "aws_iam_user" {
@@ -57,9 +52,6 @@ dashboard "aws_iam_group_detail" {
         icon = local.aws_iam_user_icon
       }
 
-      category "uses" {
-        color = "green"
-      }
     }
   }
 
@@ -167,13 +159,17 @@ query "aws_iam_group_relationships_graph" {
       group_id as id,
       name as title,
       'aws_iam_group' as category,
-      jsonb_build_object( 'ARN', arn, 'Path', path, 'Create Date', create_date, 'Account ID', account_id ) as properties
+      jsonb_build_object(
+        'ARN', arn,
+        'Path', path,
+        'Create Date', create_date,
+        'Account ID', account_id ) as properties
     from
       aws_iam_group
     where
       arn = $1
 
-    -- To IAM Policies (node)
+    -- To IAM policies (node)
     union all
     select
       null as from_id,
@@ -181,7 +177,12 @@ query "aws_iam_group_relationships_graph" {
       policy_id as id,
       name as title,
       'aws_iam_policy' as category,
-      jsonb_build_object( 'ARN', arn, 'AWS Managed', is_aws_managed::text, 'Attached', is_attached::text, 'Create Date', create_date, 'Account ID', account_id ) as properties
+      jsonb_build_object(
+        'ARN', arn,
+        'AWS Managed', is_aws_managed::text,
+        'Attached', is_attached::text,
+        'Create Date', create_date,
+        'Account ID', account_id ) as properties
     from
       aws_iam_policy
     where
@@ -195,15 +196,16 @@ query "aws_iam_group_relationships_graph" {
           arn = $1
       )
 
-    -- To IAM Policies (edge)
+    -- To IAM policies (edge)
     union all
     select
       r.group_id as from_id,
       p.policy_id as to_id,
       null as id,
       'has policy' as title,
-      'uses' as category,
-      jsonb_build_object( 'Account ID', p.account_id ) as properties
+      'iam_group_to_iam_policy' as category,
+      jsonb_build_object(
+        'Account ID', p.account_id ) as properties
     from
       aws_iam_group as r,
       jsonb_array_elements_text(attached_policy_arns) as arns
@@ -213,7 +215,7 @@ query "aws_iam_group_relationships_graph" {
     where
       r.arn = $1
 
-    -- From IAM Users (node)
+    -- From IAM users (node)
     union all
     select
       null as from_id,
@@ -221,21 +223,26 @@ query "aws_iam_group_relationships_graph" {
       u.name as id,
       u.name as title,
       'aws_iam_user' as category,
-      jsonb_build_object( 'ARN', u.arn, 'path', path, 'Create Date', create_date, 'MFA Enabled', mfa_enabled::text, 'Account ID', u.account_id ) as properties
+      jsonb_build_object(
+        'ARN', u.arn,
+        'path', path,
+        'Create Date', create_date,
+        'MFA Enabled', mfa_enabled::text,
+        'Account ID', u.account_id ) as properties
     from
       aws_iam_user as u,
       jsonb_array_elements(groups) as g
     where
       g ->> 'Arn' = $1
 
-    -- From IAM Users (edge)
+    -- From IAM users (edge)
     union all
     select
       u.name as from_id,
       g ->> 'GroupId' as from_id,
       null as id,
       'in group' as title,
-      'uses' as category,
+      'iam_user_to_iam_group' as category,
       jsonb_build_object( 'Account ID', u.account_id ) as properties
     from
       aws_iam_user as u,

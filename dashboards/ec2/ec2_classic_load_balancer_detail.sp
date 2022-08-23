@@ -1,5 +1,5 @@
 dashboard "aws_ec2_classic_load_balancer_detail" {
-  title = "AWS EC2 Classic Load balancer Details"
+  title = "AWS EC2 Classic Load balancer Detail"
   #documentation = file("./dashboards/lb/docs/clb_relationships.md")
 
   tags = merge(local.ec2_common_tags, {
@@ -8,7 +8,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
 
   input "clb" {
     title = "Select a Classic Load balancer:"
-    sql   = query.aws_clb_input.sql
+    query = query.aws_clb_input
     width = 4
   }
 

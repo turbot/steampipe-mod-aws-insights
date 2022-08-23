@@ -12,37 +12,120 @@ dashboard "aws_cloudfront_distribution_detail" {
     width = 4
   }
 
-  graph {
-    type  = "graph"
-    title = "Relationships"
-    query = query.aws_cloudfront_distribution_relationships_graph
-    args = {
-      arn = self.input.distribution_arn.value
-    }
-    category "aws_cloudfront_distribution" {
-      icon = local.aws_cloudfront_distribution_icon
+  container {
+
+    card {
+      query = query.aws_cloudfront_distribution_status
+      width = 2
+      args = {
+        arn = self.input.distribution_arn.value
+      }
     }
 
-    category "aws_acm_certificate" {
-      href = "${dashboard.acm_certificate_detail.url_path}?input.certificate_arn={{.properties.ARN | @uri}}"
-      icon = local.aws_acm_certificate_icon
+    card {
+      query = query.aws_cloudfront_distribution_price_class
+      width = 2
+      args = {
+        arn = self.input.distribution_arn.value
+      }
     }
 
-    category "aws_s3_bucket" {
-      href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-      icon = local.aws_s3_bucket_icon
+    card {
+      query = query.aws_cloudfront_distribution_logging
+      width = 2
+      args = {
+        arn = self.input.distribution_arn.value
+      }
     }
 
-    category "aws_ec2_application_load_balancer" {
-      icon = local.aws_ec2_application_load_balancer_icon
+    card {
+      query = query.aws_cloudfront_distribution_field_level_encryption
+      width = 2
+      args = {
+        arn = self.input.distribution_arn.value
+      }
     }
 
-    category "aws_media_store_container" {
-      icon = local.aws_media_store_container_icon
+    card {
+      query = query.aws_cloudfront_distribution_sni
+      width = 2
+      args = {
+        arn = self.input.distribution_arn.value
+      }
     }
 
-    category "uses" {
-      color = "green"
+  }
+
+  container {
+    graph {
+      type  = "graph"
+      title = "Relationships"
+      query = query.aws_cloudfront_distribution_relationships_graph
+      args = {
+        arn = self.input.distribution_arn.value
+      }
+      category "aws_cloudfront_distribution" {
+        icon = local.aws_cloudfront_distribution_icon
+      }
+
+      category "aws_acm_certificate" {
+        href = "${dashboard.acm_certificate_detail.url_path}?input.certificate_arn={{.properties.ARN | @uri}}"
+        icon = local.aws_acm_certificate_icon
+      }
+
+      category "aws_s3_bucket" {
+        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
+        icon = local.aws_s3_bucket_icon
+      }
+
+      category "aws_ec2_application_load_balancer" {
+        href = "${dashboard.aws_ec2_application_load_balancer_detail.url_path}?input.alb={{.properties.'ARN' | @uri}}"
+        icon = local.aws_ec2_application_load_balancer_icon
+      }
+
+      category "aws_media_store_container" {
+        icon = local.aws_media_store_container_icon
+      }
+
+    }
+  }
+
+  container {
+
+    container {
+      width = 6
+
+      table {
+        title = "Overview"
+        type  = "line"
+        width = 6
+        query = query.aws_cloudfront_distribution_overview
+        args = {
+          arn = self.input.distribution_arn.value
+        }
+
+      }
+
+      table {
+        title = "Tags"
+        width = 6
+        query = query.aws_cloudfront_distribution_tags
+        args = {
+          arn = self.input.distribution_arn.value
+        }
+
+      }
+    }
+    container {
+      width = 6
+
+      table {
+        title = "Restrictions"
+        query = query.aws_cloudfront_distribution_restrictions
+        args = {
+          arn = self.input.distribution_arn.value
+        }
+      }
     }
   }
 }
@@ -60,6 +143,79 @@ query "aws_cloudfront_distribution_input" {
     order by
       title;
 EOQ
+}
+
+query "aws_cloudfront_distribution_status" {
+  sql = <<-EOQ
+    select
+      'Status' as label,
+      initcap(status) as value
+    from
+      aws_cloudfront_distribution
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_cloudfront_distribution_price_class" {
+  sql = <<-EOQ
+    select
+      'Price Class' as label,
+      initcap(price_class) as value
+    from
+      aws_cloudfront_distribution
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_cloudfront_distribution_logging" {
+  sql = <<-EOQ
+    select
+      'Logging' as label,
+      case when logging ->> 'Enabled' = 'false' then 'Disabled' else 'Enabled' end as value,
+      case when logging ->> 'Enabled' = 'false' then 'alert' else 'ok' end as type
+    from
+      aws_cloudfront_distribution
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_cloudfront_distribution_field_level_encryption" {
+  sql = <<-EOQ
+    select
+      'Field Level Encryption' as label,
+      case when default_cache_behavior ->> 'FieldLevelEncryptionId' = '' then 'Disabled' else 'Enabled' end as value,
+      case when default_cache_behavior ->> 'FieldLevelEncryptionId' = '' then 'alert' else 'ok' end as type
+    from
+      aws_cloudfront_distribution
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_cloudfront_distribution_sni" {
+  sql = <<-EOQ
+    select
+      'SNI' as label,
+      case when viewer_certificate ->> 'SSLSupportMethod' <> 'sni-only' then 'Disabled' else 'Enabled' end as value,
+      case when viewer_certificate ->> 'SSLSupportMethod' <> 'sni-only' then 'alert' else 'ok' end as type
+    from
+      aws_cloudfront_distribution
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
 }
 
 query "aws_cloudfront_distribution_relationships_graph" {
@@ -243,6 +399,58 @@ query "aws_cloudfront_distribution_relationships_graph" {
       category,
       from_id,
       to_id;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_cloudfront_distribution_overview" {
+  sql = <<-EOQ
+    select
+      domain_name as "Domain Name",
+      title as "Title",
+      last_modified_time as "Last Modified Time",
+      http_version as "HTTP Version",
+      is_ipv6_enabled::text as "IPv6 Enabled",
+      region as "Region",
+      account_id as "Account ID",
+      arn as "ARN"
+    from
+      aws_cloudfront_distribution
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_cloudfront_distribution_tags" {
+  sql = <<-EOQ
+    select
+      tag ->> 'Key' as "Key",
+      tag ->> 'Value' as "Value"
+    from
+      aws_cloudfront_distribution,
+      jsonb_array_elements(tags_src) as tag
+    where
+      arn = $1
+    order by
+      tag ->> 'Key';
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_cloudfront_distribution_restrictions" {
+  sql = <<-EOQ
+    select
+      restrictions -> 'GeoRestriction' -> 'Items' as "Geo Restriction Items",
+      restrictions -> 'GeoRestriction' ->> 'Quantity' as "Geo Restriction Quantity",
+      restrictions -> 'GeoRestriction' ->> 'RestrictionType' as "Geo Restriction Restriction Type"
+    from
+      aws_cloudfront_distribution
+    where
+      arn = $1;
   EOQ
 
   param "arn" {}

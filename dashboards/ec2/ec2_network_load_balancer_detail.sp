@@ -1,5 +1,5 @@
 dashboard "aws_ec2_network_load_balancer_detail" {
-  title = "AWS EC2 Network Load balancer Details"
+  title = "AWS EC2 Network Load balancer Detail"
   #documentation = file("./dashboards/lb/docs/nlb_relationships.md")
 
   tags = merge(local.ec2_common_tags, {
@@ -8,7 +8,7 @@ dashboard "aws_ec2_network_load_balancer_detail" {
 
   input "nlb" {
     title = "Select a Network Load balancer:"
-    sql   = query.aws_nlb_input.sql
+    query = query.aws_nlb_input
     width = 4
   }
 
