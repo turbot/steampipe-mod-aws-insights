@@ -202,8 +202,8 @@ query "aws_ebs_snapshot_relationships" {
       images.image_id as from_id,
       bdm -> 'Ebs' ->> 'SnapshotId' as to_id,
       null as id,
-      'contains' as title,
-      'uses' as category,
+      'created from' as title,
+      'edge_created_from' as category,
       jsonb_build_object(
         'SnapshotId', bdm -> 'Ebs' ->> 'SnapshotId',
         'Account ID',images.account_id,
@@ -243,8 +243,8 @@ query "aws_ebs_snapshot_relationships" {
       launch_config.launch_configuration_arn as from_id,
       snapshot.snapshot_id as to_id,
       null as id,
-      'provisions EBS with' as title,
-      'uses' as category,
+      'provisions with' as title,
+      'edge_provisions_with' as category,
       jsonb_build_object(
         'ARN', launch_config.launch_configuration_arn,
         'Account ID', launch_config.account_id,
@@ -263,7 +263,7 @@ query "aws_ebs_snapshot_relationships" {
       null as from_id,
       null as to_id,
       kms_keys.arn as id,
-      kms_keys.title as title,
+      coalesce(aliases['0'] ->> 'AliasName', id) as title,
       'aws_kms_key' as category,
       jsonb_build_object(
         'ARN', kms_keys.arn,
@@ -283,8 +283,8 @@ query "aws_ebs_snapshot_relationships" {
       snapshot.snapshot_id as from_id,
       kms_keys.arn as to_id,
       null as id,
-      'secures with' as title,
-      'uses' as category,
+      'encrypted with' as title,
+      'edge_encrypted_with' as category,
       jsonb_build_object(
         'ARN', kms_keys.arn,
         'Account ID',kms_keys.account_id,
@@ -303,8 +303,8 @@ query "aws_ebs_snapshot_relationships" {
       volumes.volume_id as from_id,
       kms_keys.arn as to_id,
       null as id,
-      'secures with' as title,
-      'uses' as category,
+      'encrypted with' as title,
+      'edge_encrypted_with' as category,
       jsonb_build_object(
         'ARN', kms_keys.arn,
         'Account ID',kms_keys.account_id,

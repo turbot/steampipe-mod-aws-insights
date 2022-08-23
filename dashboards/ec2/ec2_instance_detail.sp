@@ -338,7 +338,7 @@ query "aws_ec2_instance_relationships_graph" {
       bd -> 'Ebs' ->> 'VolumeId' as to_id,
       null as id,
       'mounts' as title,
-      'uses' as category,
+      'edge_mounts' as category,
       jsonb_build_object('Volume ID', bd -> 'Ebs' ->> 'VolumeId', 'Device Name', bd ->> 'DeviceName', 'Status', bd -> 'Ebs' ->> 'Status', 'Attach Time', bd -> 'Ebs' ->> 'AttachTime', 'Delete On Termination', bd -> 'Ebs' ->> 'DeleteOnTermination') as properties
     from
       instances,
@@ -365,8 +365,8 @@ query "aws_ec2_instance_relationships_graph" {
       instance_id as from_id,
       eni.network_interface_id as to_id,
       null as id,
-      'attaches' as title,
-      'uses' as category,
+      'eni' as title,
+      'edge_eni' as category,
       jsonb_build_object('Status', status, 'Attachment ID', attachment_id, 'Attachment Status', attachment_status, 'Attachment Time', attachment_time, 'Delete on Instance Termination', delete_on_instance_termination, 'Device Index', device_index) as properties
     from
       instances as i,
@@ -393,8 +393,8 @@ query "aws_ec2_instance_relationships_graph" {
       instance_id as from_id,
       sg ->> 'GroupId' as to_id,
       null as id,
-      'attaches' as title,
-      'uses' as category,
+      'security group' as title,
+      'edge_security_group' as category,
       jsonb_build_object('ID', sg ->> 'GroupId', 'Name', sg ->> 'GroupName', 'Account ID', account_id, 'Region', region) as properties
     from
       instances,
@@ -421,8 +421,8 @@ query "aws_ec2_instance_relationships_graph" {
       i.instance_id as from_id,
       i.subnet_id as to_id,
       null as id,
-      'launched in' as title,
-      'uses' as category,
+      'subnet' as title,
+      'edge_subnet' as category,
       jsonb_build_object('Name', subnet.tags ->> 'Name', 'Subnet ID', subnet.subnet_id, 'State', subnet.state) as properties
     from
       instances as i,
@@ -451,8 +451,8 @@ query "aws_ec2_instance_relationships_graph" {
       instances.subnet_id as from_id,
       vpc.vpc_id as to_id,
       null as id,
-      'connects to' as title,
-      'uses' as category,
+      'vpc' as title,
+      'edge_vpc' as category,
       jsonb_build_object('ID', vpc.vpc_id, 'Name', vpc.tags ->> 'Name', 'CIDR Block', vpc.cidr_block, 'Account ID', vpc.account_id, 'Owner ID', vpc.owner_id, 'Region', vpc.region) as properties
     from
       instances,
@@ -478,8 +478,8 @@ query "aws_ec2_instance_relationships_graph" {
       instance_id as from_id,
       iam_instance_profile_arn as to_id,
       null as id,
-      'attaches' as title,
-      'uses' as category,
+      'runs as' as title,
+      'edge_runs_as' as category,
       jsonb_build_object('Instance Profile ARN', iam_instance_profile_arn, 'Instance Profile ID', iam_instance_profile_id) as properties
     from
       instances
@@ -506,8 +506,8 @@ query "aws_ec2_instance_relationships_graph" {
       i.iam_instance_profile_arn as from_id,
       r.arn as to_id,
       null as id,
-      'passes' as title,
-      'uses' as category,
+      'assumes' as title,
+      'edge_assumes' as category,
       jsonb_build_object('Role ARN', r.arn, 'Instance Profile ARN', i.iam_instance_profile_arn, 'Account ID', r.account_id) as properties
     from
       instances as i,
@@ -539,8 +539,8 @@ query "aws_ec2_instance_relationships_graph" {
       instance_id as from_id,
       key_name as to_id,
       null as id,
-      'adds' as title,
-      'uses' as category,
+      'key pair' as title,
+      'edge_keypair' as category,
       jsonb_build_object('Name', key_name, 'Instance ID', instance_id) as properties
     from
       instances as i
@@ -564,7 +564,7 @@ query "aws_ec2_instance_relationships_graph" {
       image_id as to_id,
       null as id,
       'launched from' as title,
-      'uses' as category,
+      'edge_launched_from' as category,
       jsonb_build_object('Image ID', image_id, 'Instance ID', instance_id) as properties
     from
       instances as i
@@ -592,7 +592,7 @@ query "aws_ec2_instance_relationships_graph" {
       instances.instance_id as to_id,
       null as id,
       'launches' as title,
-      'uses' as category,
+      'edge_launches' as category,
       jsonb_build_object() as properties
     from
       aws_ec2_autoscaling_group as k,
@@ -624,7 +624,7 @@ query "aws_ec2_instance_relationships_graph" {
       instances.instance_id as to_id,
       null as id,
       'routes to' as title,
-      'uses' as category,
+      'edge_routes_to' as category,
       jsonb_build_object('instance', group_instance ->> 'InstanceId', 'i', instances.instance_id, 'clb', group_instance) as properties
     from
       aws_ec2_classic_load_balancer as k,
@@ -656,7 +656,7 @@ query "aws_ec2_instance_relationships_graph" {
       i.instance_id as to_id,
       null as id,
       'routes to' as title,
-      'uses' as category,
+      'edge_routes_to' as category,
       jsonb_build_object('Name', target.target_group_name, 'ARN', target.target_group_arn, 'Region', target.region, 'Account ID', target.account_id, 'Health Check Enabled', target.health_check_enabled) as properties
     from
       instances as i,

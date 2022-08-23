@@ -82,17 +82,24 @@ dashboard "aws_rds_db_instance_detail" {
 
       category "db_subnet_group" {
         # icon = local.aws_vpc_icon
+        icon = "cog"
       }
 
       category "aws_vpc" {
         # cyclic dependency prevents use of url_path, hardcode for now
         # href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.\"VPC ID\" | @uri}}"
         href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.properties.\"VPC ID\" | @uri}}"
-        icon = local.aws_vpc_icon
+        icon = "cloud" #local.aws_vpc_icon
       }
 
       category "aws_vpc_subnet" {
         # icon = local.aws_vpc_icon
+
+        fold {
+          threshold  = 3
+          title      = "Subnets..."
+          icon       = "collection"
+        }
       }
 
       category "aws_vpc_security_group" {
@@ -101,6 +108,7 @@ dashboard "aws_rds_db_instance_detail" {
 
         href = "/aws_insights.dashboard.aws_vpc_security_group_detail?input.security_group_id={{.properties.\"Security Group ID\" | @uri}}"
         # icon = local.aws_vpc_icon
+        icon = "lock"
       }
 
       category "kms_key" {
@@ -108,11 +116,11 @@ dashboard "aws_rds_db_instance_detail" {
         # href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.ARN | @uri}}"
 
         href = "/aws_insights.dashboard.aws_kms_key_detail.url_path?input.key_arn={{.properties.ARN | @uri}}"
-        icon = local.aws_kms_key_icon
+        icon = "key" #local.aws_kms_key_icon
       }
 
       category "uses" {
-        color = "green"
+       // color = "green"
       }
     }
   }
@@ -487,7 +495,7 @@ query "aws_rds_db_instance_relationships_graph" {
       rdb.db_instance_identifier as from_id,
       db_parameter_group ->> 'DBParameterGroupName' as to_id,
       null as id,
-      'uses parameter group' as title,
+      'parameter group' as title,
       'uses' as category,
       jsonb_build_object(
         'DB Parameter Group Apply Status', db_parameter_group ->> 'ParameterApplyStatus',
@@ -528,7 +536,7 @@ query "aws_rds_db_instance_relationships_graph" {
       rdb.db_instance_identifier as from_id,
       rdsg.name as to_id,
       null as id,
-      'uses subnet group' as title,
+      'subnet group' as title,
       'uses' as category,
       jsonb_build_object(
         'Status', rdsg.status,
@@ -612,7 +620,8 @@ query "aws_rds_db_instance_relationships_graph" {
       null as from_id,
       null as to_id,
       vs.subnet_id as id,
-      vs.title,
+      vs.cidr_block::text as title,
+            -- vs.title,
       'aws_vpc_subnet' as category,
       jsonb_build_object(
         'Subnet Id', vs.subnet_id,
@@ -637,7 +646,7 @@ query "aws_rds_db_instance_relationships_graph" {
       rdb.db_subnet_group_name as from_id,
       vs.subnet_id as to_id,
       null as id,
-      'uses subnet' as title,
+      'subnet' as title,
       'uses' as category,
       jsonb_build_object(
         'DB Identifier', rdb.db_instance_identifier,
@@ -681,7 +690,7 @@ query "aws_rds_db_instance_relationships_graph" {
       di.db_instance_identifier as from_id,
       sg.group_id as to_id,
       null as id,
-      'uses security group' as title,
+      'security group' as title,
       'uses' as category,
       jsonb_build_object(
         'DB Identifier', di.db_instance_identifier,
@@ -703,7 +712,7 @@ query "aws_rds_db_instance_relationships_graph" {
       vs.subnet_id as from_id,
       vs.vpc_id as to_id,
       null as id,
-      'in vpc' as title,
+      'vpc' as title,
       'uses' as category,
       jsonb_build_object(
         'Subnet Id', vs.subnet_id,
@@ -724,7 +733,7 @@ query "aws_rds_db_instance_relationships_graph" {
       sg.group_id as from_id,
       sg.vpc_id as to_id,
       null as id,
-      'in vpc' as title,
+      'vpc' as title,
       'uses' as category,
       jsonb_build_object(
         'Security Group ID', sg.group_id,
@@ -771,7 +780,7 @@ query "aws_rds_db_instance_relationships_graph" {
       c.db_cluster_identifier as from_id,
       i.db_instance_identifier as to_id,
       null as id,
-      'has instance' as title,
+      'instance' as title,
       'uses' as category,
       jsonb_build_object(
         'Cluster', c.title,
