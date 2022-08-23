@@ -119,16 +119,16 @@ dashboard "aws_eks_cluster_detail" {
       width = 6
 
       table {
-        title = "Control Plane Logging"
-        query = query.aws_eks_cluster_logging
+        title = "Resources VPC Config"
+        query = query.aws_eks_cluster_resources_vpc_config
         args = {
           arn = self.input.eks_cluster_arn.value
         }
       }
 
       table {
-        title = "Resources VPC Config"
-        query = query.aws_eks_cluster_resources_vpc_config
+        title = "Control Plane Logging"
+        query = query.aws_eks_cluster_logging
         args = {
           arn = self.input.eks_cluster_arn.value
         }
