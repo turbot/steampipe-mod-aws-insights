@@ -54,6 +54,10 @@ dashboard "aws_sns_topic_detail" {
 
       category "aws_sns_topic_subscription" {
         color = "green"
+        fold {
+          threshold  = 2
+          title      = "Subscriptions..."
+        }
       }
 
       category "aws_s3_bucket" {
@@ -668,6 +672,7 @@ query "aws_sns_topic_relationships_graph" {
       t.topic_arn = (c.notification_configuration ->> 'TopicArn')
 
     order by
+      category,
       from_id,
       to_id;
   EOQ
