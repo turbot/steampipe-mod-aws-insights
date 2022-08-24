@@ -1,3 +1,3 @@
 This dashboard answers the following questions:
 
-- What are the things that use me?
+- What relationships does the policy have with other resources?

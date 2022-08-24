@@ -1,5 +1,5 @@
 dashboard "aws_ec2_application_load_balancer_detail" {
-  title = "AWS EC2 Application Load balancer Details"
+  title = "AWS EC2 Application Load balancer Detail"
   #documentation = file("./dashboards/lb/docs/alb_relationships.md")
 
   tags = merge(local.ec2_common_tags, {
@@ -8,7 +8,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
 
   input "alb" {
     title = "Select an Application Load balancer:"
-    sql   = query.aws_alb_input.sql
+    query = query.aws_alb_input
     width = 4
   }
 

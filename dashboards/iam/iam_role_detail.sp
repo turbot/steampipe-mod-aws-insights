@@ -55,8 +55,7 @@ dashboard "aws_iam_role_detail" {
       }
 
       category "aws_iam_policy" {
-        color = "blue"
-        href  = "/aws_insights.dashboard.aws_iam_policy_detail?input.policy_arn={{.properties.'ARN' | @uri}}"
+        href = "/aws_insights.dashboard.aws_iam_policy_detail?input.policy_arn={{.properties.'ARN' | @uri}}"
       }
 
       category "aws_ec2_instance" {
@@ -74,6 +73,7 @@ dashboard "aws_iam_role_detail" {
       }
 
       category "aws_emr_cluster" {
+        href = "/aws_insights.dashboard.aws_emr_cluster_detail?input.emr_cluster_arn={{.properties.'ARN' | @uri}}"
         icon = local.aws_emr_cluster_icon
       }
 
@@ -81,9 +81,6 @@ dashboard "aws_iam_role_detail" {
         icon = local.aws_kinesisanalytics_application_icon
       }
 
-      category "uses" {
-        color = "green"
-      }
     }
 
   }
@@ -227,13 +224,17 @@ query "aws_iam_role_relationships_graph" {
       role_id as id,
       name as title,
       'aws_iam_role' as category,
-      jsonb_build_object( 'ARN', arn, 'Create Date', create_date, 'Max Session Duration', max_session_duration, 'Account ID', account_id ) as properties
+      jsonb_build_object(
+        'ARN', arn,
+        'Create Date', create_date,
+        'Max Session Duration', max_session_duration,
+        'Account ID', account_id ) as properties
     from
       aws_iam_role
     where
       arn = $1
 
-    -- To IAM Policies (node)
+    -- To IAM policies (node)
     union all
     select
       null as from_id,
@@ -241,7 +242,12 @@ query "aws_iam_role_relationships_graph" {
       policy_id as id,
       name as title,
       'aws_iam_policy' as category,
-      jsonb_build_object( 'ARN', arn, 'AWS Managed', is_aws_managed::text, 'Attached', is_attached::text, 'Create Date', create_date, 'Account ID', account_id ) as properties
+      jsonb_build_object(
+        'ARN', arn,
+        'AWS Managed', is_aws_managed::text,
+        'Attached', is_attached::text,
+        'Create Date', create_date,
+        'Account ID', account_id ) as properties
     from
       aws_iam_policy
     where
@@ -255,15 +261,16 @@ query "aws_iam_role_relationships_graph" {
           arn = $1
       )
 
-    -- To IAM Policies (edge)
+    -- To IAM policies (edge)
     union all
     select
       r.role_id as from_id,
       p.policy_id as to_id,
       null as id,
       'has policy' as title,
-      'uses' as category,
-      jsonb_build_object( 'Policy Name', p.name, 'AWS Managed', p.is_aws_managed ) as properties
+      'iam_role_to_iam_policy' as category,
+      jsonb_build_object(
+        'Account ID', r.account_id ) as properties
     from
       aws_iam_role as r,
       jsonb_array_elements_text(attached_policy_arns) as arns
@@ -273,7 +280,7 @@ query "aws_iam_role_relationships_graph" {
     where
       r.arn = $1
 
-    -- From Kinesis Applications (node)
+    -- From Kinesis applications (node)
     union all
     select
       null as from_id,
@@ -281,21 +288,28 @@ query "aws_iam_role_relationships_graph" {
       application_arn as id,
       application_name as title,
       'aws_kinesisanalyticsv2_application' as category,
-      jsonb_build_object( 'ARN', application_arn, 'Application Status', application_status, 'Create Timestamp', create_timestamp, 'Runtime Environment', runtime_environment, 'Account ID', account_id, 'Region', region ) as properties
+      jsonb_build_object(
+        'ARN', application_arn,
+        'Application Status', application_status,
+        'Create Timestamp', create_timestamp,
+        'Runtime Environment', runtime_environment,
+        'Account ID', account_id,
+        'Region', region ) as properties
     from
       aws_kinesisanalyticsv2_application
     where
       service_execution_role = $1
 
-    -- From Kinesis Applications (edge)
+    -- From Kinesis applications (edge)
     union all
     select
       application_arn as from_id,
       role_id as to_id,
       null as id,
       'associated to' as title,
-      'uses' as category,
-      jsonb_build_object( 'Service Execution Role', service_execution_role, 'Account ID', a.account_id ) as properties
+      'kinesisanalyticsv2_application_to_iam_role' as category,
+      jsonb_build_object(
+        'Account ID', a.account_id ) as properties
     from
       aws_iam_role as r,
       aws_kinesisanalyticsv2_application as a
@@ -303,7 +317,7 @@ query "aws_iam_role_relationships_graph" {
       r.arn = $1
       and r.arn = a.service_execution_role
 
-    -- From EMR Clusters (node)
+    -- From EMR clusters (node)
     union all
     select
       null as from_id,
@@ -311,7 +325,13 @@ query "aws_iam_role_relationships_graph" {
       id as id,
       name as title,
       'aws_emr_cluster' as category,
-      jsonb_build_object( 'ARN', cluster_arn, 'State', state, 'Log URI', log_uri, 'Auto Terminate', auto_terminate::text, 'Account ID', account_id, 'Region', region ) as properties
+      jsonb_build_object(
+        'ARN', cluster_arn,
+        'State', state,
+        'Log URI', log_uri,
+        'Auto Terminate', auto_terminate::text,
+        'Account ID', account_id,
+        'Region', region ) as properties
     from
       aws_emr_cluster
     where
@@ -325,15 +345,16 @@ query "aws_iam_role_relationships_graph" {
           arn = $1
       )
 
-    -- From EMR Clusters (edge)
+    -- From EMR clusters (edge)
     union all
     select
       c.id as from_id,
       role_id as to_id,
       null as id,
       'associated to' as title,
-      'uses' as category,
-      jsonb_build_object( 'Service Role', service_role, 'Account ID', c.account_id ) as properties
+      'emr_cluster_to_iam_role' as category,
+      jsonb_build_object(
+        'Account ID', c.account_id ) as properties
     from
       aws_iam_role as r,
       aws_emr_cluster as c
@@ -341,7 +362,7 @@ query "aws_iam_role_relationships_graph" {
       r.arn = $1
       and r.name = c.service_role
 
-    -- From GuardDuty Detectors (node)
+    -- From GuardDuty detectors (node)
     union all
     select
       null as from_id,
@@ -349,21 +370,27 @@ query "aws_iam_role_relationships_graph" {
       detector_id as id,
       detector_id as title,
       'aws_guardduty_detector' as category,
-      jsonb_build_object( 'ARN', arn, 'Status', status, 'Created At', created_at, 'Account ID', account_id, 'Region', region ) as properties
+      jsonb_build_object(
+        'ARN', arn,
+        'Status', status,
+        'Created At', created_at,
+        'Account ID', account_id,
+        'Region', region ) as properties
     from
       aws_guardduty_detector
     where
       service_role = $1
 
-    -- From GuardDuty Detectors (edge)
+    -- From GuardDuty detectors (edge)
     union all
     select
       detector_id as from_id,
       role_id as to_id,
       null as id,
       'associated to' as title,
-      'uses' as category,
-      jsonb_build_object( 'Service Role', service_role, 'Account ID', d.account_id ) as properties
+      'guardduty_detector_to_iam_role' as category,
+      jsonb_build_object(
+        'Account ID', d.account_id ) as properties
     from
       aws_iam_role as r,
       aws_guardduty_detector as d
@@ -371,7 +398,7 @@ query "aws_iam_role_relationships_graph" {
       r.arn = $1
       and r.arn = d.service_role
 
-    -- From Lambda Functions (node)
+    -- From Lambda functions (node)
     union all
     select
       null as from_id,
@@ -379,21 +406,28 @@ query "aws_iam_role_relationships_graph" {
       arn as id,
       name as title,
       'aws_lambda_function' as category,
-      jsonb_build_object( 'ARN', arn, 'Last Modified', last_modified, 'Version', version, 'State', state, 'Account ID', account_id, 'Region', region ) as properties
+      jsonb_build_object(
+        'ARN', arn,
+        'Last Modified', last_modified,
+        'Version', version,
+        'State', state,
+        'Account ID', account_id,
+        'Region', region ) as properties
     from
       aws_lambda_function
     where
       role = $1
 
-    -- From Lambda Functions (edge)
+    -- From Lambda functions (edge)
     union all
     select
       f.arn as from_id,
       role_id as to_id,
       null as id,
       'associated to' as title,
-      'uses' as category,
-      jsonb_build_object( 'Account ID', f.account_id ) as properties
+      'lambda_function_to_iam_role' as category,
+      jsonb_build_object(
+        'Account ID', f.account_id ) as properties
     from
       aws_iam_role as r,
       aws_lambda_function as f
@@ -401,7 +435,7 @@ query "aws_iam_role_relationships_graph" {
       r.arn = $1
       and r.arn = f.role
 
-    -- From Instance Profiles (node)
+    -- From instance profiles (node)
     union all
     select
       null as from_id,
@@ -409,21 +443,22 @@ query "aws_iam_role_relationships_graph" {
       iam_instance_profile_arn as id,
       iam_instance_profile_arn as title,
       'iam_instance_profile_arn' as category,
-      jsonb_build_object( 'Instance Profile ARN', iam_instance_profile_arn ) as properties
+      jsonb_build_object(
+        'Instance Profile ARN', iam_instance_profile_arn ) as properties
     from
       aws_iam_role,
       jsonb_array_elements_text(instance_profile_arns) as iam_instance_profile_arn
     where
       arn = $1
 
-     -- From Instance Profiles (edge)
+     -- From instance profiles (edge)
     union all
     select
       iam_instance_profile_arn as from_id,
       role_id as to_id,
       null as id,
       'contains' as title,
-      'uses' as category,
+      'instance_profile_to_iam_role' as category,
       jsonb_build_object( 'Instance Profile ARN', iam_instance_profile_arn ) as properties
     from
       aws_iam_role,
@@ -431,7 +466,7 @@ query "aws_iam_role_relationships_graph" {
     where
       arn = $1
 
-    -- From EC2 Instances (node)
+    -- From EC2 instances (node)
     union all
     select
       null as from_id,
@@ -439,7 +474,12 @@ query "aws_iam_role_relationships_graph" {
       i.instance_id as id,
       i.instance_id as title,
       'aws_ec2_instance' as category,
-      jsonb_build_object( 'Name', i.tags ->> 'Name', 'Instance ID', instance_id, 'ARN', i.arn, 'Account ID', i.account_id, 'Region', i.region ) as properties
+      jsonb_build_object(
+        'Name', i.tags ->> 'Name',
+        'Instance ID', instance_id,
+        'ARN', i.arn,
+        'Account ID', i.account_id,
+        'Region', i.region ) as properties
     from
       aws_ec2_instance as i,
       aws_iam_role as r,
@@ -448,15 +488,18 @@ query "aws_iam_role_relationships_graph" {
       r.arn = $1
       and instance_profile = i.iam_instance_profile_arn
 
-    -- From EC2 Instances (edge)
+    -- From EC2 instances (edge)
     union all
     select
       i.instance_id as from_id,
       i.iam_instance_profile_arn as to_id,
       null as id,
       'uses' as title,
-      'uses' as category,
-      jsonb_build_object( 'Instance ARN', i.arn, 'Instance Profile ARN', i.iam_instance_profile_arn, 'Account ID', i.account_id ) as properties
+      'ec2_instance_to_instance_profile' as category,
+      jsonb_build_object(
+        'Instance ARN', i.arn,
+        'Instance Profile ARN', i.iam_instance_profile_arn,
+        'Account ID', i.account_id ) as properties
     from
       aws_ec2_instance as i,
       aws_iam_role as r,
