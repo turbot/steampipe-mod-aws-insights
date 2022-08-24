@@ -49,6 +49,10 @@ dashboard "api_gatewayv2_api_detail" {
         api_id = self.input.api_id.value
       }
 
+      category "aws_appconfig_application" {
+        # icon = local.aws_api_gatewayv2_api_icon
+      }
+
       category "aws_api_gatewayv2_stage" {
         icon = local.aws_api_gatewayv2_api_icon
       }
@@ -414,6 +418,46 @@ query "aws_api_gatewayv2_api_relationships_graph" {
       join
         api a 
         on a.api_id = i.api_id
+
+    -- To appconfig application (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      ap.arn as id,
+      ap.title as title,
+      'aws_appconfig_application' as category,
+      jsonb_build_object( 'ARN', ap.arn, 'Region', ap.region, 'Account ID', ap.account_id, 'Description', ap.description ) as properties
+    from
+      aws_api_gatewayv2_integration i 
+      join
+        aws_appconfig_application ap
+        on i.request_parameters ->> 'Application' = ap.name 
+      join
+        api a
+        on a.api_id = i.api_id
+    where
+      integration_subtype like '%AppConfig-%'
+
+    -- To appconfig application (edge)
+    union all
+    select
+      a.api_id as from_id,
+      ap.arn as to_id,
+      null as id,
+      'Integrated with' as title,
+      'uses' as category,
+      jsonb_build_object( 'Name', a.name, 'API Endpoint', a.api_endpoint, 'Protocol Type', protocol_type) as properties 
+    from
+      aws_api_gatewayv2_integration i 
+      join
+        aws_appconfig_application ap
+        on i.request_parameters ->> 'Application' = ap.name 
+      join
+        api a
+        on a.api_id = i.api_id
+    where
+      integration_subtype like '%AppConfig-%'
 
     -- From API gateway v2 stage (node)
     union all
