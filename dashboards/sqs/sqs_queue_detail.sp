@@ -54,52 +54,13 @@ dashboard "aws_sqs_queue_detail" {
 
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_sqs_queue_relationships_graph
       args = {
         arn = self.input.queue_arn.value
       }
-
       category "aws_sqs_queue" {
         icon = local.aws_sqs_queue_icon
-      }
-
-      category "aws_sns_topic_subscription" {
-        color = "blue"
-      }
-
-      category "dead_letter_queue" {
-        color = "red"
-      }
-
-      category "aws_kms_key" {
-        icon = local.aws_kms_key_icon
-        // cyclic dependency prevents use of url_path, hardcode for now
-        # href  = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
-        href = "/aws_insights.dashboard.aws_kms_key_detail?input.key_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_s3_bucket" {
-        icon = local.aws_s3_bucket_icon
-        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_vpc_endpoint" {
-        icon = local.aws_vpc_endpoint_icon
-      }
-
-      category "aws_vpc" {
-        icon = local.aws_vpc_icon
-        href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'ID' | @uri}}"
-      }
-
-      category "aws_lambda_function" {
-        icon = local.aws_lambda_function_icon
-        href = "${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_eventbridge_rule" {
-        icon = local.aws_eventbridge_rule_icon
       }
 
     }
@@ -603,7 +564,7 @@ query "aws_sqs_queue_relationships_graph" {
       e.vpc_id as title,
       'aws_vpc' as category,
       jsonb_build_object(
-        'ID', vpc_id,
+        'VPC ID', vpc_id,
         'Account ID', account_id,
         'Region', region
       ) as properties

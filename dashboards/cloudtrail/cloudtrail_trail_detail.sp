@@ -57,39 +57,14 @@ dashboard "aws_cloudtrail_trail_detail" {
 
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_cloudtrail_trail_relationship_graph
       args = {
         arn = self.input.trail_arn.value
       }
-
       category "aws_cloudtrail_trail" {
         icon = local.aws_cloudtrail_trail_icon
       }
-
-      category "aws_sns_topic" {
-        href = "/aws_insights.dashboard.aws_sns_topic_detail?input.topic_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_sns_topic_icon
-      }
-
-      category "aws_s3_bucket" {
-        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_s3_bucket_icon
-      }
-
-      category "aws_kms_key" {
-        href = "/aws_insights.dashboard.aws_kms_key_detail?input.key_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_kms_key_icon
-      }
-
-      category "aws_cloudwatch_log_group" {
-        icon = local.aws_cloudwatch_log_group_icon
-      }
-
-      category "aws_guardduty_detector" {
-        icon = local.aws_guardduty_detector_icon
-      }
-
     }
 
   }

@@ -69,31 +69,13 @@ dashboard "aws_dynamodb_table_detail" {
 
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_dynamodb_table_relationships_graph
       args = {
         arn = self.input.table_arn.value
       }
       category "aws_dynamodb_table" {
         icon = local.aws_dynamodb_table_icon
-      }
-
-      category "aws_kms_key" {
-        href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.ARN | @uri}}"
-        icon = local.aws_kms_key_icon
-      }
-
-      category "aws_kinesis_stream" {
-        icon = local.aws_kinesis_stream_icon
-      }
-
-      category "aws_s3_bucket" {
-        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.key_arn={{.properties.ARN | @uri}}"
-        icon = local.aws_s3_bucket_icon
-      }
-
-      category "uses" {
-        color = "green"
       }
     }
 

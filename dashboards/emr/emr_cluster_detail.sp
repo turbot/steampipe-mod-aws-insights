@@ -51,32 +51,13 @@ dashboard "aws_emr_cluster_detail" {
   container {
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_emr_cluster_relationships_graph
       args = {
         arn = self.input.emr_cluster_arn.value
       }
       category "aws_emr_cluster" {
         icon = local.aws_emr_cluster_icon
-      }
-
-      category "aws_iam_role" {
-        href = "${dashboard.aws_iam_role_detail.url_path}?input.role_arn={{.properties.ARN | @uri}}"
-        icon = local.aws_iam_role_icon
-      }
-
-      category "aws_s3_bucket" {
-        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_s3_bucket_icon
-      }
-
-      category "aws_emr_instance" {
-        href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'EC2 Instance ARN' | @uri}}"
-        icon = local.aws_ec2_instance_icon
-      }
-
-      category "aws_ec2_ami" {
-        icon = local.aws_ec2_ami_icon
       }
 
     }
