@@ -15,6 +15,26 @@ dashboard "aws_glacier_vault_detail" {
 
   container {
 
+    card {
+      width = 2
+      query = query.aws_glacier_vault_archives_count
+      args = {
+        arn = self.input.vault_arn.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_glacier_vault_size
+      args = {
+        arn = self.input.vault_arn.value
+      }
+    }
+
+  }
+
+  container {
+
     graph {
       type  = "graph"
       title = "Relationships"
@@ -33,6 +53,32 @@ dashboard "aws_glacier_vault_detail" {
       }
     }
   }
+
+  container {
+
+    container {
+      width = 12
+      table {
+        title = "Policy"
+        query = query.aws_glacier_vault_public_access_table
+        args = {
+          arn = self.input.vault_arn.value
+        }
+      }
+    }
+
+    container {
+      width = 12
+      table {
+        title = "Vault Lock Policy"
+        query = query.aws_glacier_vault_lock_public_policy
+        args = {
+          arn = self.input.vault_arn.value
+        }
+      }
+    }
+
+  }
 }
 
 query "aws_glacier_vault_input" {
@@ -49,6 +95,34 @@ query "aws_glacier_vault_input" {
     order by
       vault_arn;
   EOQ
+}
+
+query "aws_glacier_vault_archives_count" {
+  sql = <<-EOQ
+    select
+      'Archives Count' as label,
+      number_of_archives as  value
+    from
+      aws_glacier_vault
+    where
+      vault_arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_glacier_vault_size" {
+  sql = <<-EOQ
+    select
+      'Size (bytes)' as label,
+      size_in_bytes as  value
+    from
+      aws_glacier_vault
+    where
+      vault_arn = $1;
+  EOQ
+
+  param "arn" {}
 }
 
 query "aws_glacier_vault_relationships_graph" {
@@ -124,4 +198,46 @@ query "aws_glacier_vault_relationships_graph" {
   EOQ
 
   param "arn" {}
+}
+
+query "aws_glacier_vault_public_access_table" {
+  sql = <<-EOQ
+    select
+      v.vault_name as "Name",
+      case
+        when
+        statement ->> 'Effect' = 'Allow'
+        and (statement -> 'Principal' ->> 'AWS' = '["*"]')
+        then 'Public' else 'Private' end as "Public/Private",
+      statement ->> 'Action' as "Action",
+      v.account_id as "Account ID",
+      v.region as "Region",
+      v.vault_arn as "ARN"
+    from
+      aws_glacier_vault as v,
+      jsonb_array_elements(policy_std -> 'Statement') as statement
+    order by
+      v.vault_name;
+  EOQ
+}
+
+query "aws_glacier_vault_lock_public_policy" {
+  sql = <<-EOQ
+    select
+      v.vault_name as "Name",
+      case
+        when
+        statement ->> 'Effect' = 'Allow'
+        and (statement -> 'Principal' ->> 'AWS' = '["*"]')
+        then 'Public' else 'Private' end as "Public/Private",
+      statement ->> 'Action' as "Action",
+      v.account_id as "Account ID",
+      v.region as "Region",
+      v.vault_arn as "ARN"
+    from
+      aws_glacier_vault as v,
+      jsonb_array_elements(vault_lock_policy_std -> 'Statement') as statement
+    order by
+      v.vault_name;
+  EOQ
 }
