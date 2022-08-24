@@ -65,10 +65,6 @@ dashboard "aws_ec2_instance_detail" {
       args = {
         arn = self.input.instance_arn.value
       }
-      category "aws_ec2_instance" {
-        icon = local.aws_ec2_instance_icon
-      }
-
     }
   }
 

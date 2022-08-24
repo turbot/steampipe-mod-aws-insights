@@ -41,9 +41,6 @@ dashboard "aws_ebs_snapshot_detail" {
       args = {
         arn = self.input.snapshot_arn.value
       }
-      category "aws_ebs_snapshot" {
-        icon = local.aws_ebs_snapshot_icon
-      }
     }
   }
   

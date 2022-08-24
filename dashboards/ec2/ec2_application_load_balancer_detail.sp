@@ -72,10 +72,6 @@ dashboard "aws_ec2_application_load_balancer_detail" {
       args = {
         arn = self.input.alb.value
       }
-      category "aws_ec2_application_load_balancer" {
-        icon = local.aws_ec2_application_load_balancer_icon
-      }
-
     }
   }
 

@@ -48,9 +48,6 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
       args  = {
         arn = self.input.clb.value
       }
-      category "aws_ec2_classic_load_balancer" {
-        icon = local.aws_ec2_classic_load_balancer_icon
-      }
     }
   }
 
