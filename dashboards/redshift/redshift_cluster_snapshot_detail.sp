@@ -15,6 +15,58 @@ dashboard "aws_redshift_snapshot_detail" {
 
   container {
 
+    card {
+      query = query.aws_redshift_snapshot_type
+      width = 2
+      args = {
+        arn = self.input.snapshot_arn.value
+      }
+    }
+
+    card {
+      query = query.aws_redshift_snapshot_engine
+      width = 2
+      args = {
+        arn = self.input.snapshot_arn.value
+      }
+    }
+
+    card {
+      query = query.aws_redshift_snapshot_backup_size
+      width = 2
+      args = {
+        arn = self.input.snapshot_arn.value
+      }
+    }
+
+    card {
+      query = query.aws_redshift_snapshot_node_type
+      width = 2
+      args = {
+        arn = self.input.snapshot_arn.value
+      }
+    }
+
+    card {
+      query = query.aws_redshift_snapshot_status
+      width = 2
+      args = {
+        arn = self.input.snapshot_arn.value
+      }
+    }
+
+    card {
+      query = query.aws_redshift_snapshot_unencrypted
+      width = 2
+      args = {
+        arn = self.input.snapshot_arn.value
+      }
+    }
+
+  }
+
+  container {
+
     graph {
       type  = "graph"
       title = "Relationships"
@@ -37,6 +89,34 @@ dashboard "aws_redshift_snapshot_detail" {
       }
     }
   }
+
+  container {
+
+    container {
+      width = 6
+
+      table {
+        title = "Overview"
+        type  = "line"
+        width = 6
+        query = query.aws_redshift_snapshot_overview
+        args = {
+          arn = self.input.snapshot_arn.value
+        }
+
+      }
+
+      table {
+        title = "Tags"
+        width = 6
+        query = query.aws_redshift_snapshot_tags
+        args = {
+          arn = self.input.snapshot_arn.value
+        }
+
+      }
+    }
+  }
 }
 
 query "aws_redshift_snapshot_input" {
@@ -53,6 +133,92 @@ query "aws_redshift_snapshot_input" {
     order by
       akas;
   EOQ
+}
+
+query "aws_redshift_snapshot_type" {
+  sql = <<-EOQ
+    select
+      'Type' as label,
+      snapshot_type as value
+    from
+      aws_redshift_snapshot
+    where
+      akas::text = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_redshift_snapshot_engine" {
+  sql = <<-EOQ
+    select
+      'Engine Version' as label,
+      engine_full_version as  value
+    from
+      aws_redshift_snapshot
+    where
+      akas::text = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_redshift_snapshot_backup_size" {
+  sql = <<-EOQ
+    select
+      'Size (GB)' as label,
+      total_backup_size_in_mega_bytes as  value
+    from
+      aws_redshift_snapshot
+    where
+      akas::text = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_redshift_snapshot_node_type" {
+  sql = <<-EOQ
+    select
+      'Node Type' as label,
+      node_type as  value
+    from
+      aws_redshift_snapshot
+    where
+      akas::text = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_redshift_snapshot_status" {
+  sql = <<-EOQ
+    select
+      status as value,
+      'Status' as label,
+      case when status = 'available' then 'ok' else 'alert' end as type
+    from
+      aws_redshift_snapshot
+    where
+      akas::text = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_redshift_snapshot_unencrypted" {
+  sql = <<-EOQ
+    select
+      case when encrypted or encrypted_with_hsm then 'Enabled' else 'Disabled' end as value,
+      'Encryption' as label,
+      case when encrypted or encrypted_with_hsm then 'ok' else 'alert' end as "type"
+    from
+      aws_redshift_snapshot
+    where
+      akas::text = $1;
+  EOQ
+
+  param "arn" {}
 }
 
 query "aws_redshift_snapshot_relationships_graph" {
@@ -167,6 +333,45 @@ query "aws_redshift_snapshot_relationships_graph" {
       category,
       from_id,
       to_id;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_redshift_snapshot_overview" {
+  sql = <<-EOQ
+    select
+      snapshot_identifier as "Snapshot Name",
+      cluster_identifier as "Cluster Name",
+      title as "Title",
+      snapshot_create_time as "Create Date",
+      engine_full_version as "Engine Version",
+      vpc_id as "VPC ID",
+      manual_snapshot_remaining_days as "Manual Snapshot Remaining Days",
+      availability_zone as "Availability Zone",
+      region as "Region",
+      account_id as "Account ID"
+    from
+      aws_redshift_snapshot
+    where
+      akas::text = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_redshift_snapshot_tags" {
+  sql = <<-EOQ
+    select
+      tag ->> 'Key' as "Key",
+      tag ->> 'Value' as "Value"
+    from
+      aws_redshift_snapshot,
+      jsonb_array_elements(tags_src) as tag
+    where
+      akas::text = $1
+    order by
+      tag ->> 'Key';
   EOQ
 
   param "arn" {}
