@@ -36,7 +36,7 @@ dashboard "aws_ebs_snapshot_detail" {
   container {
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_ebs_snapshot_relationships_graph
       args = {
         arn = self.input.snapshot_arn.value
