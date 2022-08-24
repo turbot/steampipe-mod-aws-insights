@@ -65,10 +65,6 @@ dashboard "aws_ebs_volume_detail" {
       args = {
         arn = self.input.volume_arn.value
       }
-      category "aws_ebs_volume" {
-        icon = local.aws_ebs_volume_icon
-      }
-
     }
   }
 
