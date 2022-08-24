@@ -41,4 +41,7 @@ locals {
   aws_vpc_network_acl_icon               = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_network_acl_light.svg"))
   aws_vpc_route_table_icon               = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_router_light.svg"))
   aws_vpc_vpn_gateway_icon               = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_vpn_gateway_light.svg"))
+  aws_ecs_task_icon                      = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ecs_task_light.svg"))
+  aws_ecs_service_icon                   = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ecs_service_light.svg"))
+
 }
