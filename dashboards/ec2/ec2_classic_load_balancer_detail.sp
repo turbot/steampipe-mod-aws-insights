@@ -61,20 +61,6 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
       args = {
         arn = self.input.clb.value
       }
-query "aws_ec2_clb_overview" {
-  sql = <<-EOQ
-    select
-      title as "Title",
-      dns_name as "DNS Name",
-      account_id as "Account ID",
-      region as "Region",
-      partition as "Partition"
-    from
-      aws_ec2_classic_load_balancer
-    where
-      aws_ec2_classic_load_balancer.arn = $1;
-  EOQ
-
     }
 
     table {

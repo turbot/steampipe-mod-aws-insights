@@ -309,7 +309,6 @@ query "aws_s3_bucket_relationships_graph" {
     from
       aws_ec2_application_load_balancer alb,
       jsonb_array_elements(alb.load_balancer_attributes) as attributes,
-<<<<<<< HEAD
       buckets
     where
       attributes ->> 'Key' = 'access_logs.s3.bucket'
@@ -341,7 +340,6 @@ query "aws_s3_bucket_relationships_graph" {
     from
       aws_ec2_application_load_balancer alb,
       jsonb_array_elements(alb.load_balancer_attributes) as attributes,
-<<<<<<< HEAD
       buckets
     where
       attributes ->> 'Key' = 'access_logs.s3.bucket'
@@ -365,7 +363,6 @@ query "aws_s3_bucket_relationships_graph" {
     from
       aws_ec2_network_load_balancer nlb,
       jsonb_array_elements(nlb.load_balancer_attributes) as attributes,
-<<<<<<< HEAD
       buckets
     where
       attributes ->> 'Key' = 'access_logs.s3.bucket'
@@ -397,7 +394,6 @@ query "aws_s3_bucket_relationships_graph" {
     from
       aws_ec2_network_load_balancer nlb,
       jsonb_array_elements(nlb.load_balancer_attributes) as attributes,
-<<<<<<< HEAD
       buckets
     where
       attributes ->> 'Key' = 'access_logs.s3.bucket'
@@ -523,7 +519,6 @@ query "aws_s3_bucket_relationships_graph" {
       ) as properties
     from
       aws_s3_bucket,
-<<<<<<< HEAD
       buckets
     where
       aws_s3_bucket.name = buckets.logging ->> 'TargetBucket'
