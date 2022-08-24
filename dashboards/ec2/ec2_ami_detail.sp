@@ -106,23 +106,34 @@ dashboard "aws_ec2_ami_detail" {
     
     table {
       title = "Shared with Accounts"
-      width = 4
+      width = 3
       query = query.aws_ec2_ami_shared_with_user
       args = {
         image_id = self.input.ami.value
       }
     }
+    
+    table {
+      title = "Shared with Groups"
+      width = 3
+      query = query.aws_ec2_ami_shared_with_group
+      args = {
+        image_id = self.input.ami.value
+      }
+    }
+    
     table {
       title = "Shared with Organizations"
-      width = 4
+      width = 3
       query = query.aws_ec2_ami_shared_with_org
       args = {
         image_id = self.input.ami.value
       }
     }
+    
     table {
       title = "Shared with OUs"
-      width = 4
+      width = 3
       query = query.aws_ec2_ami_shared_with_ou
       args = {
         image_id = self.input.ami.value
@@ -165,25 +176,61 @@ query "aws_ec2_ami_instances" {
 query "aws_ec2_ami_shared_with_user" {
   sql = <<-EOQ
     select
-      'List' as "Account ID"
+      lp->>'UserId' as "Account ID"
+    from
+      aws_ec2_ami as ami,
+      jsonb_array_elements(ami.launch_permissions) as lp
+    where
+      image_id = $1
+      and lp->>'UserId' is not null;
   EOQ
 
   param "image_id" {}
 
 }
+
+query "aws_ec2_ami_shared_with_group" {
+  sql = <<-EOQ
+    select
+      lp->>'Group' as "Group"
+    from
+      aws_ec2_ami as ami,
+      jsonb_array_elements(ami.launch_permissions) as lp
+    where
+      image_id = $1
+      and lp->>'Group' is not null;
+  EOQ
+
+  param "image_id" {}
+
+}
+
 query "aws_ec2_ami_shared_with_org" {
   sql = <<-EOQ
     select
-      'List' as "Organization ARN"
+      lp->>'OrganizationArn' as "Organization ARN"
+    from
+      aws_ec2_ami as ami,
+      jsonb_array_elements(ami.launch_permissions) as lp
+    where
+      image_id = $1
+      and lp->>'OrganizationArn' is not null;
   EOQ
 
   param "image_id" {}
 
 }
+
 query "aws_ec2_ami_shared_with_ou" {
   sql = <<-EOQ
     select
-      'List' as "Organizational Unit ARN"
+      lp->>'OrganizationalUnitArn' as "Organizational Unit ARN"
+    from
+      aws_ec2_ami as ami,
+      jsonb_array_elements(ami.launch_permissions) as lp
+    where
+      image_id = $1
+      and lp->>'OrganizationalUnitArn' is not null;
   EOQ
 
   param "image_id" {}
