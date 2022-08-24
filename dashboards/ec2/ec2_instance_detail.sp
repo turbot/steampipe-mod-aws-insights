@@ -65,6 +65,7 @@ dashboard "aws_ec2_instance_detail" {
       args = {
         arn = self.input.instance_arn.value
       }
+
     }
   }
 

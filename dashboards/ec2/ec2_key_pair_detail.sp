@@ -40,8 +40,6 @@ dashboard "aws_ec2_key_pair_detail" {
       args = {
         key_name = self.input.key_name.value
       }
-      category "aws_ec2_key_pair" {
-      }
     }
   }
 

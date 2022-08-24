@@ -72,9 +72,6 @@ dashboard "aws_ec2_network_load_balancer_detail" {
       args = {
         arn = self.input.nlb.value
       }
-      category "aws_ec2_network_load_balancer" {
-        icon = local.aws_ec2_network_load_balancer_icon
-      }
     }
   }
 

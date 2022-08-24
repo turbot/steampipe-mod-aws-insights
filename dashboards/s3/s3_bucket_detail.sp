@@ -74,6 +74,11 @@ dashboard "aws_s3_bucket_detail" {
       args = {
         arn = self.input.bucket_arn.value
       }
+
+      category "aws_s3_access_point" {
+        icon = local.aws_s3_access_point_icon
+      }
+      
     }
 
   }
