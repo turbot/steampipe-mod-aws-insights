@@ -52,29 +52,11 @@ dashboard "aws_ec2_ami_detail" {
   container {
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_ec2_ami_relationships_graph
+      
       args = {
         image_id = self.input.ami.value
-      }
-
-      category "aws_ec2_instance" {
-        href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_ec2_instance_icon
-      }
-
-      category "aws_kms_key" {
-        href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_kms_key_icon
-      }
-
-      category "aws_ebs_snapshot" {
-        href = "${dashboard.aws_ebs_snapshot_detail.url_path}?input.snapshot_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_ebs_snapshot_icon
-      }
-
-      category "aws_ec2_ami" {
-        icon = local.aws_ec2_ami_icon
       }
 
     }
@@ -110,19 +92,40 @@ dashboard "aws_ec2_ami_detail" {
       width = 6
       table {
         title = "Instances"
-        width = 6
+        width = 12
         query = query.aws_ec2_ami_instances
         args = {
           image_id = self.input.ami.value
         }
       }
-      table {
-        title = "Shared with"
-        width = 6
-        query = query.aws_ec2_ami_shared_with
-        args = {
-          image_id = self.input.ami.value
-        }
+    }
+  }
+  
+  container {
+    title = "AMI Sharing"
+    
+    table {
+      title = "Shared with Accounts"
+      width = 4
+      query = query.aws_ec2_ami_shared_with_user
+      args = {
+        image_id = self.input.ami.value
+      }
+    }
+    table {
+      title = "Shared with Organizations"
+      width = 4
+      query = query.aws_ec2_ami_shared_with_org
+      args = {
+        image_id = self.input.ami.value
+      }
+    }
+    table {
+      title = "Shared with OUs"
+      width = 4
+      query = query.aws_ec2_ami_shared_with_ou
+      args = {
+        image_id = self.input.ami.value
       }
     }
   }
@@ -159,15 +162,28 @@ query "aws_ec2_ami_instances" {
 
 }
 
-query "aws_ec2_ami_shared_with" {
+query "aws_ec2_ami_shared_with_user" {
   sql = <<-EOQ
     select
-      instance_id as "ID",
-      instance_state as "Instance State"
-    from
-      aws_ec2_instance
-    where
-      image_id = $1;
+      'List' as "Account ID"
+  EOQ
+
+  param "image_id" {}
+
+}
+query "aws_ec2_ami_shared_with_org" {
+  sql = <<-EOQ
+    select
+      'List' as "Organization ARN"
+  EOQ
+
+  param "image_id" {}
+
+}
+query "aws_ec2_ami_shared_with_ou" {
+  sql = <<-EOQ
+    select
+      'List' as "Organizational Unit ARN"
   EOQ
 
   param "image_id" {}
