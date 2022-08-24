@@ -300,7 +300,6 @@ query "aws_ec2_ami_virtualization" {
 query "aws_ec2_ami_overview" {
   sql = <<-EOQ
     select
-      launch_permissions,
       name as "Name",
       description as "Description",
       image_id as "Image ID",
