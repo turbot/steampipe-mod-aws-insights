@@ -421,7 +421,7 @@ query "aws_ecs_cluster_relationships_graph" {
       null as from_id,
       null as to_id,
       t.task_arn as id,
-      t.task_arn as title,
+      concat(split_part(t.task_arn, '/', 2),'/' ,split_part(t.task_arn, '/', 3)) as title,
       'aws_ecs_task' as category,
       jsonb_build_object(
         'ARN', t.task_arn,
@@ -500,7 +500,7 @@ query "aws_ecs_cluster_relationships_graph" {
       null as from_id,
       null as to_id,
       t.task_arn as id,
-      t.task_arn as title,
+      concat(split_part(t.task_arn, '/', 2),'/' ,split_part(t.task_arn, '/', 3)) as title,
       'aws_ecs_task' as category,
       jsonb_build_object(
         'ARN', t.task_arn,
