@@ -8,7 +8,7 @@ dashboard "aws_ec2_key_pair_detail" {
 
   input "key_name" {
     title = "Select a Key:"
-    sql   = query.ec2_key_input.sql
+    sql   = query.ec2_key_pair_input.sql
     width = 4
   }
 
@@ -36,7 +36,7 @@ dashboard "aws_ec2_key_pair_detail" {
     graph {
       type  = "graph"
       base  = graph.aws_graph_categories
-      query = query.aws_ec2_keypair_relationships
+      query = query.aws_ec2_key_pair_relationships_graph
       args = {
         key_name = self.input.key_name.value
       }
@@ -249,7 +249,7 @@ query "aws_ec2_key_pair_relationships_graph" {
   param "key_name" {}
 }
 
-query "ec2_key_input" {
+query "ec2_key_pair_input" {
   sql = <<-EOQ
     select
       key_name as label,

@@ -68,7 +68,7 @@ dashboard "aws_ec2_network_load_balancer_detail" {
     graph {
       type  = "graph"
       base  = graph.aws_graph_categories
-      query = query.aws_nlb_graph_relationships
+      query = query.aws_ec2_network_load_balancer_relationships_graph
       args = {
         arn = self.input.nlb.value
       }

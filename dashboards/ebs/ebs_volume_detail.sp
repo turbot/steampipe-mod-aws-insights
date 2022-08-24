@@ -61,7 +61,7 @@ dashboard "aws_ebs_volume_detail" {
     graph {
       type  = "graph"
       base  = graph.aws_graph_categories
-      query = query.aws_ebs_volume_relationships
+      query = query.aws_ebs_volume_relationships_graph
       args = {
         arn = self.input.volume_arn.value
       }
