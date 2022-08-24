@@ -307,8 +307,8 @@ query "aws_ec2_instance_relationships_graph" {
       'aws_ebs_volume' as category,
       jsonb_build_object(
         'Volume ID', bd -> 'Ebs' ->> 'VolumeId',
-        'Account ID', account_id,
-        'Region', region
+        'Account ID', v.account_id,
+        'Region', v.region
       ) as properties
     from
       instances,

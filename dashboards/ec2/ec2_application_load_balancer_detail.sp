@@ -68,7 +68,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
     graph {
       type  = "graph"
       base  = graph.aws_graph_categories
-      query = query.aws_alb_graph_relationships
+      query = query.aws_ec2_application_load_balancer_relationships_graph
       args = {
         arn = self.input.alb.value
       }

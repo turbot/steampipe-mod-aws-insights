@@ -70,7 +70,7 @@ dashboard "aws_s3_bucket_detail" {
     graph {
       type  = "graph"
       base  = graph.aws_graph_categories
-      query = query.aws_s3_bucket_relationships
+      query = query.aws_s3_bucket_relationships_graph
       args = {
         arn = self.input.bucket_arn.value
       }
