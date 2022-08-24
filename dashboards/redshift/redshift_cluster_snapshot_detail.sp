@@ -238,15 +238,7 @@ query "aws_redshift_snapshot_relationships_graph" {
       title as id,
       title,
       'snapshot' as category,
-      jsonb_build_object(
-        'Status', status,
-        'Cluster Identifier', cluster_identifier,
-        'Create Time', cluster_create_time,
-        'Type', snapshot_type,
-        'Encrypted', encrypted::text,
-        'Account ID', account_id,
-        'Source Region', source_region
-      ) as properties
+      jsonb_build_object( 'Status', status, 'Cluster Identifier', cluster_identifier, 'Create Time', cluster_create_time, 'Type', snapshot_type, 'Encrypted', encrypted::text, 'Account ID', account_id, 'Source Region', source_region ) as properties 
     from
       snapshot
 
@@ -256,17 +248,14 @@ query "aws_redshift_snapshot_relationships_graph" {
       null as from_id,
       null as to_id,
       k.id as id,
-      COALESCE(k.aliases #>> '{0,AliasName}', k.id) as title,
+      coalesce(k.aliases #>> '{0,AliasName}', k.id) as title,
       'kms_key' as category,
-      jsonb_build_object(
-        'ARN', k.arn,
-        'Rotation Enabled', k.key_rotation_enabled::text,
-        'Account ID', k.account_id,
-        'Region', k.region
-      ) as properties
+      jsonb_build_object( 'ARN', k.arn, 'Rotation Enabled', k.key_rotation_enabled::text, 'Account ID', k.account_id, 'Region', k.region ) as properties 
     from
-      snapshot as s
-      join aws_kms_key as k on s.kms_key_id = k.arn
+      snapshot as s 
+      join
+        aws_kms_key as k 
+        on s.kms_key_id = k.arn
 
     -- To KMS keys (edge)
     union all
@@ -294,18 +283,13 @@ query "aws_redshift_snapshot_relationships_graph" {
       c.cluster_identifier as id,
       c.title as title,
       'aws_redshift_cluster' as category,
-      jsonb_build_object(
-        'ARN', c.arn,
-        'Status', c.cluster_status,
-        'Availability Zone', c.availability_zone,
-        'Create Time', c.cluster_create_time,
-        'Account ID', c.account_id,
-        'Region', c.region
-      ) as properties
+      jsonb_build_object( 'ARN', c.arn, 'Status', c.cluster_status, 'Availability Zone', c.availability_zone, 'Create Time', c.cluster_create_time, 'Account ID', c.account_id, 'Region', c.region ) as properties 
     from
-      snapshot as s
-      join aws_redshift_cluster as c on s.cluster_identifier = c.cluster_identifier
-        and s.account_id = c.account_id
+      snapshot as s 
+      join
+        aws_redshift_cluster as c 
+        on s.cluster_identifier = c.cluster_identifier 
+        and s.account_id = c.account_id 
         and s.region = c.region
 
     -- From Redshift cluster (edge)
@@ -316,19 +300,15 @@ query "aws_redshift_snapshot_relationships_graph" {
       null as id,
       'has snapshot' as title,
       'uses' as category,
-      jsonb_build_object(
-        'Cluster Identifier', c.cluster_identifier,
-        'Cluster Snapshot Identifier', s.snapshot_identifier,
-        'Status', s.status,
-        'Account ID', c.account_id,
-        'Region', c.region
-      ) as properties
+      jsonb_build_object( 'Cluster Identifier', c.cluster_identifier, 'Cluster Snapshot Identifier', s.snapshot_identifier, 'Status', s.status, 'Account ID', c.account_id, 'Region', c.region ) as properties 
     from
-      snapshot as s
-      join aws_redshift_cluster as c on s.cluster_identifier = c.cluster_identifier
-        and s.account_id = c.account_id
+      snapshot as s 
+      join
+        aws_redshift_cluster as c 
+        on s.cluster_identifier = c.cluster_identifier 
+        and s.account_id = c.account_id 
         and s.region = c.region
-
+        
     order by
       category,
       from_id,
