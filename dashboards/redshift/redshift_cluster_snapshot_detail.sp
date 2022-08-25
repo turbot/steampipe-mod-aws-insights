@@ -17,24 +17,12 @@ dashboard "aws_redshift_snapshot_detail" {
 
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_redshift_snapshot_relationships_graph
       args = {
         arn = self.input.snapshot_arn.value
       }
-
-      category "snapshot" {
-      }
-
-      category "aws_redshift_cluster" {
-        href = "/aws_insights.dashboard.aws_redshift_cluster_detail.url_path?input.cluster_arn={{.properties.ARN | @uri}}"
-        icon = local.aws_redshift_cluster_icon
-      }
-
-      category "kms_key" {
-        href = "/aws_insights.dashboard.aws_kms_key_detail.url_path?input.key_arn={{.properties.ARN | @uri}}"
-        icon = local.aws_kms_key_icon
-      }
+      category "aws_redshift_snapshot" {}
     }
   }
 }
@@ -71,7 +59,7 @@ query "aws_redshift_snapshot_relationships_graph" {
       null as to_id,
       title as id,
       title,
-      'snapshot' as category,
+      'aws_redshift_snapshot' as category,
       jsonb_build_object(
         'Status', status,
         'Cluster Identifier', cluster_identifier,
@@ -84,14 +72,14 @@ query "aws_redshift_snapshot_relationships_graph" {
     from
       snapshot
 
-    -- To KMS Keys (node)
+    -- To KMS keys (node)
     union all
     select
       null as from_id,
       null as to_id,
       k.id as id,
       COALESCE(k.aliases #>> '{0,AliasName}', k.id) as title,
-      'kms_key' as category,
+      'aws_kms_key' as category,
       jsonb_build_object(
         'ARN', k.arn,
         'Rotation Enabled', k.key_rotation_enabled::text,

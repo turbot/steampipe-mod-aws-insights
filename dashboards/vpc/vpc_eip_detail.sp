@@ -44,25 +44,14 @@ dashboard "aws_vpc_eip_detail" {
 
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_vpc_eip_relationships_graph
       args = {
         arn = self.input.eip_arn.value
       }
-
       category "aws_vpc_eip" {
         icon = local.aws_vpc_eip_icon
       }
-
-      category "aws_ec2_network_interface" {
-        icon = local.aws_ec2_network_interface_icon
-      }
-
-      category "aws_ec2_instance" {
-        icon = local.aws_ec2_instance_icon
-        href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
-      }
-
     }
   }
 
@@ -97,29 +86,29 @@ dashboard "aws_vpc_eip_detail" {
 
       width = 6
 
-        table {
-          title = "Association"
-          query = query.aws_vpc_eip_association_details
-          args = {
-            arn = self.input.eip_arn.value
-          }
-
-          column "Instance ARN" {
-            display = "none"
-          }
-
-          column "Instance ID" {
-            href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.'Instance ARN' | @uri}}"
-          }
+      table {
+        title = "Association"
+        query = query.aws_vpc_eip_association_details
+        args = {
+          arn = self.input.eip_arn.value
         }
 
-        table {
-          title = "Other IP Addresses"
-          query = query.aws_vpc_eip_other_ip
-          args = {
-            arn = self.input.eip_arn.value
-          }
+        column "Instance ARN" {
+          display = "none"
         }
+
+        column "Instance ID" {
+          href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.'Instance ARN' | @uri}}"
+        }
+      }
+
+      table {
+        title = "Other IP Addresses"
+        query = query.aws_vpc_eip_other_ip
+        args = {
+          arn = self.input.eip_arn.value
+        }
+      }
     }
 
   }
@@ -194,7 +183,7 @@ query "aws_vpc_eip_relationships_graph" {
       i.network_interface_id as from_id,
       e.arn as to_id,
       null as id,
-      'allocated to' as title,
+      'eni' as title,
       'ec2_network_interface_to_vpc_eip' as category,
       jsonb_build_object(
         'ID', i.network_interface_id,
@@ -234,7 +223,7 @@ query "aws_vpc_eip_relationships_graph" {
       i.arn as from_id,
       e.network_interface_id as to_id,
       null as id,
-      'attached to' as title,
+      'ec2 instance' as title,
       'ec2_instance_to_ec2_network_interface' as category,
       jsonb_build_object(
         'ID', e.network_interface_id,
@@ -247,7 +236,7 @@ query "aws_vpc_eip_relationships_graph" {
     where
       e.network_interface_id is not null
   EOQ
-  
+
   param "arn" {}
 }
 

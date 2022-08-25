@@ -60,29 +60,13 @@ dashboard "aws_ebs_volume_detail" {
   container {
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_ebs_volume_relationships
       args = {
         arn = self.input.volume_arn.value
       }
-
       category "aws_ebs_volume" {
         icon = local.aws_ebs_volume_icon
-      }
-
-      category "aws_kms_key" {
-        href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_kms_key_icon
-      }
-
-      category "aws_ec2_instance" {
-        href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_ec2_instance_icon
-      }
-
-      category "aws_ebs_snapshot" {
-        href = "${dashboard.aws_ebs_snapshot_detail.url_path}?input.snapshot_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_ebs_snapshot_icon
       }
 
     }

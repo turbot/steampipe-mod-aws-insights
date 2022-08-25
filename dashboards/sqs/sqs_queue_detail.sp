@@ -54,52 +54,13 @@ dashboard "aws_sqs_queue_detail" {
 
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_sqs_queue_relationships_graph
       args = {
         arn = self.input.queue_arn.value
       }
-
       category "aws_sqs_queue" {
         icon = local.aws_sqs_queue_icon
-      }
-
-      category "aws_sns_topic_subscription" {
-        color = "blue"
-      }
-
-      category "dead_letter_queue" {
-        color = "red"
-      }
-
-      category "aws_kms_key" {
-        icon = local.aws_kms_key_icon
-        // cyclic dependency prevents use of url_path, hardcode for now
-        # href  = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
-        href = "/aws_insights.dashboard.aws_kms_key_detail?input.key_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_s3_bucket" {
-        icon = local.aws_s3_bucket_icon
-        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_vpc_endpoint" {
-        icon = local.aws_vpc_endpoint_icon
-      }
-
-      category "aws_vpc" {
-        icon = local.aws_vpc_icon
-        href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'ID' | @uri}}"
-      }
-
-      category "aws_lambda_function" {
-        icon = local.aws_lambda_function_icon
-        href = "${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_eventbridge_rule" {
-        icon = local.aws_eventbridge_rule_icon
       }
 
     }
@@ -439,6 +400,8 @@ query "aws_sqs_queue_relationships_graph" {
       'aws_kms_key' as category,
       jsonb_build_object(
         'ARN', arn,
+        'Id', id,
+        'Enabled', enabled::text,
         'Account ID', account_id,
         'Region', region
       ) as properties
@@ -455,7 +418,7 @@ query "aws_sqs_queue_relationships_graph" {
       q.queue_arn as from_id,
       k.arn as to_id,
       null as id,
-      'encrypts with' as title,
+      'encrypted with' as title,
       'sqs_queue_to_kms_key' as category,
       jsonb_build_object(
         'ARN', k.arn,
@@ -476,10 +439,11 @@ query "aws_sqs_queue_relationships_graph" {
       null as from_id,
       null as to_id,
       arn as id,
-      title as title,
+      name as title,
       'aws_s3_bucket' as category,
       jsonb_build_object(
         'ARN', arn,
+        'Versioning Enabled', versioning_enabled::text,
         'Account ID', account_id,
         'Region', region
       ) as properties
@@ -500,7 +464,7 @@ query "aws_sqs_queue_relationships_graph" {
       arn as from_id,
       $1 as to_id,
       null as id,
-      'event notification' as title,
+      'sends notifications' as title,
       's3_bucket_to_sqs_queue' as category,
       jsonb_build_object(
         'ARN', arn,
@@ -528,6 +492,8 @@ query "aws_sqs_queue_relationships_graph" {
       'aws_lambda_function' as category,
       jsonb_build_object(
         'ARN', arn,
+        'State', state,
+        'Runtime', runtime,
         'Account ID', account_id,
         'Region', region
       ) as properties
@@ -564,6 +530,8 @@ query "aws_sqs_queue_relationships_graph" {
       'aws_vpc_endpoint' as category,
       jsonb_build_object(
         'ID', vpc_endpoint_id,
+        'State', state,
+        'Service Name', service_name,
         'Account ID', account_id,
         'Region', region
       ) as properties
@@ -580,7 +548,7 @@ query "aws_sqs_queue_relationships_graph" {
       vpc_endpoint_id as from_id,
       $1 as to_id,
       null as id,
-      'uses' as title,
+      'vpc endpoint' as title,
       'vpc_endpoint_to_sqs_queue' as category,
       jsonb_build_object(
         'ID', vpc_endpoint_id,
@@ -590,7 +558,7 @@ query "aws_sqs_queue_relationships_graph" {
     from
       aws_vpc_endpoint,
       jsonb_array_elements(policy_std -> 'Statement') as s,
-        jsonb_array_elements_text(s -> 'Resource') as r
+      jsonb_array_elements_text(s -> 'Resource') as r
     where
       r = $1
 
@@ -603,36 +571,42 @@ query "aws_sqs_queue_relationships_graph" {
       e.vpc_id as title,
       'aws_vpc' as category,
       jsonb_build_object(
-        'ID', vpc_id,
-        'Account ID', account_id,
-        'Region', region
+        'VPC ARN', v.arn,
+        'VPC ID', v.vpc_id,
+        'Account ID', v.account_id,
+        'Region', v.region
       ) as properties
     from
       aws_vpc_endpoint as e,
       jsonb_array_elements(e.policy_std -> 'Statement') as s,
       jsonb_array_elements_text(s -> 'Resource') as r
+      ,aws_vpc as v
     where
-      r = $1
+      v.vpc_id = e.vpc_id
+      and r = $1
 
     -- From VPC (edge)
     union all
     select
-      vpc_id as from_id,
-      vpc_endpoint_id as to_id,
+      e.vpc_id as from_id,
+      e.vpc_endpoint_id as to_id,
       null as id,
-      'uses' as title,
+      'vpc' as title,
       'vpc_to_vpc_endpoint' as category,
       jsonb_build_object(
-        'ID', vpc_id,
-        'Account ID', account_id,
-        'Region', region
+        'VPC ARN', v.arn,
+        'VPC ID', v.vpc_id,
+        'Account ID', v.account_id,
+        'Region', v.region
       ) as properties
     from
-      aws_vpc_endpoint,
+      aws_vpc_endpoint as e,
       jsonb_array_elements(policy_std -> 'Statement') as s,
       jsonb_array_elements_text(s -> 'Resource') as r
+      , aws_vpc as v
     where
-      r = $1
+      v.vpc_id = e.vpc_id
+      and r = $1
 
     -- From Eventbridge rules (node)
     union all
@@ -640,10 +614,11 @@ query "aws_sqs_queue_relationships_graph" {
       null as from_id,
       null as to_id,
       arn as id,
-      title as title,
+      name as title,
       'aws_eventbridge_rule' as category,
       jsonb_build_object(
         'ARN', arn,
+        'State', state,
         'Account ID', account_id,
         'Region', region
       ) as properties
@@ -659,10 +634,11 @@ query "aws_sqs_queue_relationships_graph" {
       arn as from_id,
       $1 as to_id,
       null as id,
-      'target' as title,
+      'target as' as title,
       'eventbridge_rule_to_sqs_queue' as category,
       jsonb_build_object(
         'ARN', r.arn,
+        'State', state,
         'Account ID', r.account_id,
         'Region', r.region
       ) as properties

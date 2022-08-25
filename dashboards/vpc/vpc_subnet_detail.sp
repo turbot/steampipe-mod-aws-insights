@@ -45,44 +45,16 @@ dashboard "aws_vpc_subnet_detail" {
 
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_vpc_subnet_relationships_graph
       args = {
         subnet_id = self.input.subnet_id.value
       }
-
-      category "aws_vpc_route_table" {
-        icon = local.aws_vpc_route_table_icon
-      }
-
-      category "aws_vpc" {
-        icon = local.aws_vpc_icon
-        href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'ID' | @uri}}"
-      }
-
-      category "aws_vpc_network_acl" {
-        icon = local.aws_vpc_network_acl_icon
-      }
-
-      category "aws_rds_db_instance" {
-        icon = local.aws_rds_db_instance_icon
-        href = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_ec2_instance" {
-        icon = local.aws_ec2_instance_icon
-        href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_lambda_function" {
-        icon = local.aws_lambda_function_icon
-        href = "${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn={{.properties.'ARN' | @uri}}"
-      }
-
+      category "aws_vpc_subnet" {}
     }
   }
 
-  container{
+  container {
 
     container {
 
@@ -115,7 +87,7 @@ dashboard "aws_vpc_subnet_detail" {
       table {
         title = "Launched Resources"
         query = query.aws_vpc_subnet_association
-        args  = {
+        args = {
           subnet_id = self.input.subnet_id.value
         }
 
@@ -169,6 +141,7 @@ query "aws_vpc_subnet_relationships_graph" {
       title as title,
       'aws_vpc_subnet' as category,
       jsonb_build_object(
+        'Subnet ID', subnet_id,
         'ARN', subnet_arn,
         'VPC ID', vpc_id,
         'Account ID', account_id,
@@ -186,6 +159,7 @@ query "aws_vpc_subnet_relationships_graph" {
       v.title as title,
       'aws_vpc' as category,
       jsonb_build_object(
+        'VPC ID', s.vpc_id,
         'ARN', v.arn,
         'Region', v.region,
         'CIDR Block', v.cidr_block,
@@ -201,9 +175,10 @@ query "aws_vpc_subnet_relationships_graph" {
       $1 as from_id,
       v.vpc_id as to_id,
       null as id,
-      'sub network' as title,
+      'vpc' as title,
       'vpc_subnet_to_vpc' as category,
       jsonb_build_object(
+        'VPC ID', v.vpc_id,
         'ARN', v.arn,
         'Account ID', v.account_id,
         'Region', v.region
@@ -276,7 +251,7 @@ query "aws_vpc_subnet_relationships_graph" {
       $1 as from_id,
       network_acl_id as to_id,
       null as id,
-      'uses' as title,
+      'network acl' as title,
       'vpc_subnet_to_vpc_network_acl' as category,
       jsonb_build_object(
         'ARN', arn,
@@ -316,7 +291,7 @@ query "aws_vpc_subnet_relationships_graph" {
       db_instance_identifier as from_id,
       $1 as to_id,
       null as id,
-      'launched in' as title,
+      'rds db instance' as title,
       'rds_db_instance_to_vpc_subnet' as category,
       jsonb_build_object(
         'ARN', arn,
@@ -354,7 +329,7 @@ query "aws_vpc_subnet_relationships_graph" {
       instance_id as from_id,
       $1 as to_id,
       null as id,
-      'launched in' as title,
+      'ec2 instance' as title,
       'ec2_instance_to_vpc_subnet' as category,
       jsonb_build_object(
         'ARN', arn,
@@ -375,6 +350,7 @@ query "aws_vpc_subnet_relationships_graph" {
       title as title,
       'aws_lambda_function' as category,
       jsonb_build_object(
+        'ARN', arn,
         'Runtime', runtime,
         'Architectures', architectures,
         'Region', region,
@@ -392,7 +368,7 @@ query "aws_vpc_subnet_relationships_graph" {
       arn as from_id,
       $1 as to_id,
       null as id,
-      'launched in' as title,
+      'lambda function' as title,
       'lambda_function_to_vpc_subnet' as category,
       jsonb_build_object(
         'ARN', arn,
@@ -431,7 +407,7 @@ query "aws_vpc_subnet_relationships_graph" {
       arn as from_id,
       $1 as to_id,
       null as id,
-      'launched in' as title,
+      'notebook instance' as title,
       'sagemaker_notebook_instance_to_vpc_subnet' as category,
       jsonb_build_object(
         'ARN', arn,

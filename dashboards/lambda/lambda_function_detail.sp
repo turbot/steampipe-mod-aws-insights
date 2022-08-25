@@ -54,44 +54,15 @@ dashboard "aws_lambda_function_detail" {
 
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_lambda_function_relationships_graph
       args = {
         arn = self.input.lambda_arn.value
       }
-
       category "aws_lambda_function" {
         icon = local.aws_lambda_function_icon
       }
 
-      category "aws_vpc" {
-        icon = local.aws_vpc_icon
-        // cyclic dependency prevents use of url_path, hardcode for now
-        href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.properties.'ID' | @uri}}"
-        #href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'ID' | @uri}}"
-      }
-
-      category "aws_vpc_security_group" {
-        # icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/aws_vpc.svg"))
-        // cyclic dependency prevents use of url_path, hardcode for now
-        href = "/aws_insights.dashboard.aws_vpc_security_group_detail?input.security_group_id={{.properties.'ID' | @uri}}"
-        #href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.properties.'ID' | @uri}}"
-      }
-
-      category "aws_kms_key" {
-        icon = local.aws_kms_key_icon
-        href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_iam_role" {
-        icon = local.aws_iam_role_icon
-        href = "${dashboard.aws_iam_role_detail.url_path}?input.role_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_s3_bucket" {
-        icon = local.aws_s3_bucket_icon
-        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-      }
     }
   }
 
@@ -386,7 +357,7 @@ query "aws_lambda_function_relationships_graph" {
       'aws_vpc' as category,
       jsonb_build_object(
         'ARN', v.arn,
-        'ID', v.vpc_id,
+        'VPC ID', v.vpc_id,
         'Account ID', v.account_id,
         'Region', v.region
       ) as properties
@@ -400,7 +371,7 @@ query "aws_lambda_function_relationships_graph" {
       l.arn as from_id,
       v.arn as to_id,
       null as id,
-      'launched in' as title,
+      'vpc' as title,
       'lambda_function_to_vpc' as category,
       jsonb_build_object(
         'ARN', v.arn,
@@ -421,7 +392,7 @@ query "aws_lambda_function_relationships_graph" {
       'aws_vpc_security_group' as category,
       jsonb_build_object(
         'ARN', sg.arn,
-        'ID', sg.group_id,
+        'Group ID', sg.group_id,
         'Account ID', sg.account_id,
         'Region', sg.region
       ) as properties
@@ -436,7 +407,7 @@ query "aws_lambda_function_relationships_graph" {
       l.arn as from_id,
       sg.arn as to_id,
       null as id,
-      'attached to' as title,
+      'security group' as title,
       'lambda_function_to_vpc_security_group' as category,
       jsonb_build_object(
         'ARN', sg.arn, 'Account ID',
@@ -471,7 +442,7 @@ query "aws_lambda_function_relationships_graph" {
       l.arn as from_id,
       k.arn as to_id,
       null as id,
-      'encrypts with' as title,
+      'encrypted with' as title,
       'lambda_function_to_kms_key' as category,
       jsonb_build_object(
         'ARN', k.arn,
@@ -550,7 +521,7 @@ query "aws_lambda_function_relationships_graph" {
       arn as from_id,
       $1 as to_id,
       null as id,
-      'event notification' as title,
+      'sends notification' as title,
       's3_bucket_to_lambda_function' as category,
       jsonb_build_object(
         'ARN', arn,

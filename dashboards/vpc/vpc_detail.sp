@@ -53,90 +53,13 @@ dashboard "aws_vpc_detail" {
 
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_vpc_relationships_graph
       args = {
         vpc_id = self.input.vpc_id.value
       }
-
       category "aws_vpc" {
         icon = local.aws_vpc_icon
-      }
-
-      category "aws_vpc_subnet" {
-        color = "orange"
-      }
-
-      category "aws_vpc_internet_gateway" {
-        icon = local.aws_vpc_internet_gateway_icon
-      }
-
-      category "aws_vpc_route_table" {
-        icon = local.aws_vpc_route_table_icon
-      }
-
-      category "aws_ec2_transit_gateway" {
-        color = "blue"
-      }
-
-      category "aws_vpc_endpoint" {
-        icon = local.aws_vpc_endpoint_icon
-      }
-
-      category "aws_vpc_nat_gateway" {
-        icon = local.aws_vpc_nat_gateway_icon
-      }
-
-      category "aws_vpc_vpn_gateway" {
-        icon = local.aws_vpc_vpn_gateway_icon
-      }
-
-      category "aws_ec2_instance" {
-        icon = local.aws_ec2_instance_icon
-        href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_lambda_function" {
-        icon = local.aws_lambda_function_icon
-        href = "${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_ec2_application_load_balancer" {
-        icon = local.aws_ec2_application_load_balancer_icon
-      }
-
-      category "aws_ec2_network_load_balancer" {
-        icon = local.aws_ec2_network_load_balancer_icon
-      }
-
-      category "aws_ec2_classic_load_balancer" {
-        icon = local.aws_ec2_classic_load_balancer_icon
-      }
-
-      category "aws_ec2_gateway_load_balancer" {
-        icon = local.aws_ec2_gateway_load_balancer_icon
-      }
-
-      category "aws_rds_db_instance" {
-        icon = local.aws_rds_db_instance_icon
-        href = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_redshift_cluster" {
-        icon = local.aws_redshift_cluster_icon
-        href = "${dashboard.aws_redshift_cluster_detail.url_path}?input.cluster_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_ec2_target_group" {
-        color = "red"
-      }
-
-      category "aws_fsx_file_system" {
-        color = "orange"
-      }
-
-      category "aws_s3_access_point" {
-        icon = local.aws_s3_access_point_icon
       }
 
     }
@@ -1173,7 +1096,15 @@ query "aws_vpc_subnet_by_az" {
 
 query "aws_vpc_relationships_graph" {
   sql = <<-EOQ
-  with vpc as (select * from aws_vpc where vpc_id = $1)
+    with vpc as
+    (
+      select
+        *
+      from
+        aws_vpc
+      where
+        vpc_id = $1
+    )
 
     select
       null as from_id,
@@ -1182,6 +1113,7 @@ query "aws_vpc_relationships_graph" {
       title as title,
       'aws_vpc' as category,
       jsonb_build_object(
+        'VPC ID', vpc_id,
         'ARN', arn,
         'Account ID', account_id,
         'Region', region
@@ -1199,7 +1131,7 @@ query "aws_vpc_relationships_graph" {
       'aws_vpc_subnet' as category,
       jsonb_build_object(
         'ARN', subnet_arn,
-        'ID', subnet_id,
+        'Subnet ID', subnet_id,
         'CIDR Block', cidr_block,
         'IP Address Count', available_ip_address_count,
         'Region', region,
@@ -1216,8 +1148,8 @@ query "aws_vpc_relationships_graph" {
       v.vpc_id as from_id,
       s.subnet_arn as to_id,
       null as id,
-      'uses' as title,
-      'uses' as category,
+      'subnet' as title,
+      'vpc_subnet_to_vpc' as category,
       jsonb_build_object(
         'ARN', s.subnet_arn,
         'Account ID', s.account_id,
@@ -1253,8 +1185,8 @@ query "aws_vpc_relationships_graph" {
       v.vpc_id as from_id,
       i.internet_gateway_id as to_id,
       null as id,
-      'attached to' as title,
-      'attached to' as category,
+      'internet gateway' as title,
+      'vpc_internet_gateway_to_vpc' as category,
       jsonb_build_object(
         'ID', i.internet_gateway_id,
         'Account ID', i.account_id,
@@ -1291,8 +1223,8 @@ query "aws_vpc_relationships_graph" {
       v.vpc_id as from_id,
       rt.route_table_id as to_id,
       null as id,
-      'attached to' as title,
-      'attached to' as category,
+      'route table' as title,
+      'vpc_route_table_to_vpc' as category,
       jsonb_build_object(
         'ID', rt.route_table_id,
         'Account ID', rt.account_id,
@@ -1326,8 +1258,8 @@ query "aws_vpc_relationships_graph" {
       v.vpc_id as from_id,
       e.vpc_endpoint_id as to_id,
       null as id,
-      'uses' as title,
-      'uses' as category,
+      'vpc endpoint' as title,
+      'vpc_endpoint_to_vpc' as category,
       jsonb_build_object(
         'ID', e.vpc_endpoint_id,
         'Account ID', e.account_id,
@@ -1365,8 +1297,8 @@ query "aws_vpc_relationships_graph" {
       v.vpc_id as from_id,
       a.transit_gateway_id as to_id,
       null as id,
-      'attached to' as title,
-      'attached to' as category,
+      'ec2 transit gateway' as title,
+      'c2_transit_gateway_to_vpc' as category,
       jsonb_build_object(
         'ID', a.transit_gateway_id,
         'Account ID', a.account_id,
@@ -1401,8 +1333,8 @@ query "aws_vpc_relationships_graph" {
       v.vpc_id as from_id,
       n.arn as to_id,
       null as id,
-      'attached to' as title,
-      'attached to' as category,
+      'nat gateway' as title,
+      'vpc_nat_gateway_to_vpc' as category,
       jsonb_build_object(
         'ID', n.nat_gateway_id,
         'Account ID', n.account_id,
@@ -1437,8 +1369,8 @@ query "aws_vpc_relationships_graph" {
       v.vpc_id as from_id,
       g.vpn_gateway_id as to_id,
       null as id,
-      'attached to' as title,
-      'attached to' as category,
+      'vpn gateway' as title,
+      'vpn_gateway_to_vpc' as category,
       jsonb_build_object(
         'Account ID', g.account_id,
         'Region', g.region
@@ -1460,7 +1392,7 @@ query "aws_vpc_relationships_graph" {
       'aws_vpc_security_group' as category,
       jsonb_build_object(
         'ARN', arn,
-        'ID', group_id,
+        'Group ID', group_id,
         'Region', region,
         'Account ID', account_id
       ) as properties
@@ -1475,8 +1407,8 @@ query "aws_vpc_relationships_graph" {
       v.vpc_id as from_id,
       sg.arn as to_id,
       null as id,
-      'uses' as title,
-      'uses' as category,
+      'security group' as title,
+      'vpc_security_group_to_vpc' as category,
       jsonb_build_object(
         'ARN', sg.arn,
         'Account ID', sg.account_id,
@@ -1510,8 +1442,8 @@ query "aws_vpc_relationships_graph" {
       i.arn as from_id,
       v.vpc_id as to_id,
       null as id,
-      'launched in' as title,
-      'launched in' as category,
+      'ec2 instance' as title,
+      'ec2_instance_to_vpc' as category,
       jsonb_build_object(
         'ARN', i.arn,
         'Account ID', i.account_id,
@@ -1545,8 +1477,8 @@ query "aws_vpc_relationships_graph" {
       l.arn as from_id,
       v.vpc_id as to_id,
       null as id,
-      'launched in' as title,
-      'launched in' as category,
+      'lambda function ' as title,
+      'lambda_function_to_vpc' as category,
       jsonb_build_object(
         'ARN', l.arn,
         'Account ID', l.account_id,
@@ -1580,8 +1512,8 @@ query "aws_vpc_relationships_graph" {
       a.arn as from_id,
       v.vpc_id as to_id,
       null as id,
-      'launched in' as title,
-      'launched in' as category,
+      'ec2 application lb' as title,
+      'ec2_application_load_balancer_to_vpc' as category,
       jsonb_build_object(
         'ARN', a.arn,
         'Account ID', a.account_id,
@@ -1615,8 +1547,8 @@ query "aws_vpc_relationships_graph" {
       n.arn as from_id,
       v.vpc_id as to_id,
       null as id,
-      'launched in' as title,
-      'launched in' as category,
+      'network lb' as title,
+      'ec2_network_load_balancer_to_vpc' as category,
       jsonb_build_object(
         'ARN', n.arn,
         'Account ID', n.account_id,
@@ -1650,8 +1582,8 @@ query "aws_vpc_relationships_graph" {
       c.arn as from_id,
       v.vpc_id as to_id,
       null as id,
-      'launched in' as title,
-      'launched in' as category,
+      'ec2 classic lb' as title,
+      'ec2_classic_load_balancer_to_vpc' as category,
       jsonb_build_object(
         'ARN', c.arn,
         'Account ID', c.account_id,
@@ -1685,8 +1617,8 @@ query "aws_vpc_relationships_graph" {
       g.arn as from_id,
       v.vpc_id as to_id,
       null as id,
-      'launched in' as title,
-      'launched in' as category,
+      'ec2 gateway lb' as title,
+      'ec2_gateway_load_balancer_to_vpc' as category,
       jsonb_build_object(
         'ARN', g.arn,
         'Account ID', g.account_id,
@@ -1720,8 +1652,8 @@ query "aws_vpc_relationships_graph" {
       i.arn as from_id,
       v.vpc_id as to_id,
       null as id,
-      'launched in' as title,
-      'launched in' as category,
+      'rds db instance' as title,
+      'rds_db_instance_to_vpc' as category,
       jsonb_build_object(
         'ARN', i.arn,
         'Account ID', i.account_id,
@@ -1755,8 +1687,8 @@ query "aws_vpc_relationships_graph" {
       c.arn as from_id,
       v.vpc_id as to_id,
       null as id,
-      'launched in' as title,
-      'launched in' as category,
+      'redshift cluster' as title,
+      'redshift_cluster_to_vpc' as category,
       jsonb_build_object(
         'ARN', c.arn,
         'Account ID', c.account_id,
@@ -1790,8 +1722,8 @@ query "aws_vpc_relationships_graph" {
       t.target_group_arn as from_id,
       v.vpc_id as to_id,
       null as id,
-      'attached to' as title,
-      'attached to' as category,
+      'target group' as title,
+      'ec2_target_group_to_vpc' as category,
       jsonb_build_object(
         'ARN', t.target_group_arn,
         'Account ID', t.account_id,
@@ -1825,8 +1757,8 @@ query "aws_vpc_relationships_graph" {
       f.arn as from_id,
       v.vpc_id as to_id,
       null as id,
-      'launched in' as title,
-      'launched in' as category,
+      'fsx file system' as title,
+      'fsx_file_system_to_vpc' as category,
       jsonb_build_object(
         'ARN', f.arn,
         'Account ID', f.account_id,
@@ -1860,7 +1792,7 @@ query "aws_vpc_relationships_graph" {
       a.access_point_arn as from_id,
       v.vpc_id as to_id,
       null as id,
-      'uses' as title,
+      's3 access point' as title,
       'uses' as category,
       jsonb_build_object(
         'ARN', a.access_point_arn,

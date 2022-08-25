@@ -1,5 +1,5 @@
 dashboard "aws_ec2_classic_load_balancer_detail" {
-  title = "AWS EC2 Classic Load balancer Details"
+  title = "AWS EC2 Classic Load balancer Detail"
   #documentation = file("./dashboards/lb/docs/clb_relationships.md")
 
   tags = merge(local.ec2_common_tags, {
@@ -8,7 +8,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
 
   input "clb" {
     title = "Select a Classic Load balancer:"
-    sql   = query.aws_clb_input.sql
+    query = query.aws_clb_input
     width = 4
   }
 
@@ -27,30 +27,14 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
   container {
     graph {
       type  = "graph"
-      title = "Things I use..."
+      base  = graph.aws_graph_categories
       query = query.aws_clb_graph_relationships
       args = {
         arn = self.input.clb.value
       }
-
       category "aws_ec2_classic_load_balancer" {
         icon = local.aws_ec2_classic_load_balancer_icon
       }
-
-      category "aws_vpc" {
-        href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'VPC ID' | @uri}}"
-        icon = local.aws_vpc_icon
-      }
-
-      category "aws_s3_bucket" {
-        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_s3_bucket_icon
-      }
-
-      category "aws_vpc_security_group" {
-        href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.properties.'Group ID' | @uri}}"
-      }
-
     }
   }
 }
@@ -231,8 +215,8 @@ query "aws_clb_graph_relationships" {
       buckets.title as title,
       'aws_s3_bucket' as category,
       jsonb_build_object(
-        'Name', clb.name,
-        'ARN', clb.arn,
+        'Name', buckets.name,
+        'ARN', buckets.arn,
         'Account ID', clb.account_id,
         'Region', clb.region,
         'Logs to', clb.access_log_s3_bucket_name
