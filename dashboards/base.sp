@@ -290,6 +290,16 @@ graph "aws_graph_categories" {
     }
   }
 
+  category "aws_eks_cluster" {
+    href = "/aws_insights.dashboard.aws_eks_cluster_detail?input.eks_cluster_arn={{.properties.'ARN' | @uri}}"
+    icon = local.aws_eks_cluster_icon
+    fold {
+      title     = "EKS Clusters"
+      icon      = local.aws_eks_cluster_icon
+      threshold = 3
+    }
+  }
+
   category "aws_kinesisanalyticsv2_application" {
     icon = local.aws_kinesisanalytics_application_icon
     fold {

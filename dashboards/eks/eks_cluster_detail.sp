@@ -59,7 +59,7 @@ dashboard "aws_eks_cluster_detail" {
   container {
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_eks_cluster_relationships_graph
       args = {
         arn = self.input.eks_cluster_arn.value
@@ -67,26 +67,6 @@ dashboard "aws_eks_cluster_detail" {
       category "aws_eks_cluster" {
         icon = local.aws_eks_cluster_icon
       }
-
-      category "aws_iam_role" {
-        href = "${dashboard.aws_iam_role_detail.url_path}?input.role_arn={{.properties.ARN | @uri}}"
-        icon = local.aws_iam_role_icon
-      }
-
-      category "aws_kms_key" {
-        href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.ARN | @uri}}"
-        icon = local.aws_kms_key_icon
-      }
-
-      category "aws_vpc_security_group" {
-        href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.properties.'Group ID' | @uri}}"
-      }
-
-      category "aws_vpc" {
-        href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'VPC ID' | @uri}}"
-        icon = local.aws_vpc_icon
-      }
-
     }
   }
 
