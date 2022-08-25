@@ -313,7 +313,7 @@ query "aws_ec2_instance_security_groups" {
   sql = <<-EOQ
     select
       p ->> 'GroupId'  as "Group ID",
-      p -> 'GroupName' ->> 'AttachTime' as "Group Name"
+      p ->> 'GroupName' as "Group Name"
     from
       aws_ec2_instance,
       jsonb_array_elements(security_groups) as p
@@ -329,6 +329,7 @@ query "aws_ec2_instance_network_interfaces" {
     select
       p ->> 'NetworkInterfaceId' as "Network Interface ID",
       p ->> 'InterfaceType' as "Interface Type",
+      p ->> 'PrivateIpAddress' as "Private IP Address",
       p ->> 'Status' as "Status",
       p ->> 'SubnetId' as "Subnet ID",
       p ->> 'VpcId' as "VPC ID"
