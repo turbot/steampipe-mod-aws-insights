@@ -74,6 +74,9 @@ dashboard "aws_s3_bucket_detail" {
       args = {
         arn = self.input.bucket_arn.value
       }
+      category "aws_s3_bucket" {
+        icon = local.aws_s3_bucket_icon
+      }
     }
 
   }

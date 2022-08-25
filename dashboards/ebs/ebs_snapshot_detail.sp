@@ -9,7 +9,7 @@ dashboard "aws_ebs_snapshot_detail" {
 
   input "snapshot_arn" {
     title = "Select a snapshot:"
-    sql   = query.aws_ebs_snapshot_input.sql
+    query = query.aws_ebs_snapshot_input
     width = 4
   }
 
@@ -40,6 +40,9 @@ dashboard "aws_ebs_snapshot_detail" {
       query = query.aws_ebs_snapshot_relationships_graph
       args = {
         arn = self.input.snapshot_arn.value
+      }
+      category "aws_ebs_snapshot" {
+        icon = local.aws_ebs_snapshot_icon
       }
     }
   }
