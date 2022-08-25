@@ -22,7 +22,7 @@ dashboard "aws_ec2_ami_detail" {
         image_id = self.input.ami.value
       }
     }
-    
+
     card {
       width = 2
       query = query.aws_ec2_ami_architecture
@@ -30,7 +30,7 @@ dashboard "aws_ec2_ami_detail" {
         image_id = self.input.ami.value
       }
     }
-    
+
     card {
       width = 2
       query = query.aws_ec2_ami_hypervisor
@@ -38,7 +38,7 @@ dashboard "aws_ec2_ami_detail" {
         image_id = self.input.ami.value
       }
     }
-    
+
     card {
       width = 2
       query = query.aws_ec2_ami_virtualization
@@ -48,98 +48,76 @@ dashboard "aws_ec2_ami_detail" {
     }
 
   }
-  
+
   container {
+
     graph {
       type  = "graph"
       base  = graph.aws_graph_categories
       query = query.aws_ec2_ami_relationships_graph
-      
       args = {
         image_id = self.input.ami.value
       }
-
+      category "aws_ec2_ami" {
+        icon = local.aws_ec2_ami_icon
+      }
     }
+
   }
 
   container {
 
     container {
-      width = 6
 
       table {
         title = "Overview"
         type  = "line"
-        width = 6
+        width = 4
         query = query.aws_ec2_ami_overview
         args = {
           image_id = self.input.ami.value
         }
-
       }
 
       table {
         title = "Tags"
-        width = 6
+        width = 3
         query = query.aws_ec2_ami_tags
         args = {
           image_id = self.input.ami.value
         }
       }
-    }
-    
-    container {
-      width = 6
+
       table {
         title = "Instances"
-        width = 12
+        width = 3
         query = query.aws_ec2_ami_instances
         args = {
           image_id = self.input.ami.value
         }
+        column "link" {
+          display = "none"
+        }
+        column "ID" {
+          href = "{{ .link }}"
+        }
+        column "Name" {
+          href = "{{ .link }}"
+        }
       }
+
+      table {
+        width = 2
+        query = query.aws_ec2_ami_shared_with
+        args = {
+          image_id = self.input.ami.value
+        }
+      }
+
     }
+
   }
-  
-  container {
-    title = "AMI Sharing"
-    
-    table {
-      title = "Shared with Accounts"
-      width = 3
-      query = query.aws_ec2_ami_shared_with_user
-      args = {
-        image_id = self.input.ami.value
-      }
-    }
-    
-    table {
-      title = "Shared with Groups"
-      width = 3
-      query = query.aws_ec2_ami_shared_with_group
-      args = {
-        image_id = self.input.ami.value
-      }
-    }
-    
-    table {
-      title = "Shared with Organizations"
-      width = 3
-      query = query.aws_ec2_ami_shared_with_org
-      args = {
-        image_id = self.input.ami.value
-      }
-    }
-    
-    table {
-      title = "Shared with OUs"
-      width = 3
-      query = query.aws_ec2_ami_shared_with_ou
-      args = {
-        image_id = self.input.ami.value
-      }
-    }
-  }
+
 }
 
 query "aws_ec2_ami_input" {
@@ -162,7 +140,9 @@ query "aws_ec2_ami_instances" {
   sql = <<-EOQ
     select
       instance_id as "ID",
-      instance_state as "Instance State"
+      tags ->> 'Name' as "Name",
+      instance_state as "Instance State",
+      '${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn=' || arn as link
     from
       aws_ec2_instance
     where
@@ -173,48 +153,42 @@ query "aws_ec2_ami_instances" {
 
 }
 
-query "aws_ec2_ami_shared_with_user" {
+query "aws_ec2_ami_shared_with" {
   sql = <<-EOQ
+    with sharing as (
+      select
+        lp
+      from
+        aws_ec2_ami as ami,
+        jsonb_array_elements(ami.launch_permissions) as lp
+      where image_id = $1
+    )
+
+    -- Accounts
     select
-      lp->>'UserId' as "Account ID"
+      lp ->> 'UserId' as "Shared With"
     from
-      aws_ec2_ami as ami,
-      jsonb_array_elements(ami.launch_permissions) as lp
+      sharing
     where
-      image_id = $1
-      and lp->>'UserId' is not null;
-  EOQ
+      lp ->> 'UserId' is not null
 
-  param "image_id" {}
-
-}
-
-query "aws_ec2_ami_shared_with_group" {
-  sql = <<-EOQ
+    -- Organization
+    union all
     select
-      lp->>'Group' as "Group"
+      lp ->> 'OrganizationArn' as "Shared With"
     from
-      aws_ec2_ami as ami,
-      jsonb_array_elements(ami.launch_permissions) as lp
+      sharing
     where
-      image_id = $1
-      and lp->>'Group' is not null;
-  EOQ
+      lp ->> 'OrganizationArn' is not null
 
-  param "image_id" {}
-
-}
-
-query "aws_ec2_ami_shared_with_org" {
-  sql = <<-EOQ
+    -- Organizational Unit
+    union all
     select
-      lp->>'OrganizationArn' as "Organization ARN"
+      lp ->> 'OrganizationalUnitArn' as "Shared With"
     from
-      aws_ec2_ami as ami,
-      jsonb_array_elements(ami.launch_permissions) as lp
+      sharing
     where
-      image_id = $1
-      and lp->>'OrganizationArn' is not null;
+      lp ->> 'OrganizationalUnitArn' is not null
   EOQ
 
   param "image_id" {}
@@ -382,8 +356,8 @@ query "aws_ec2_ami_relationships_graph"{
       aws_ec2_instance as instances,
       ami
     where
-      instances.image_id = ami.image_id   
-      
+      instances.image_id = ami.image_id
+
     -- To EC2 Instance (edge)
     union all
     select
@@ -443,7 +417,7 @@ query "aws_ec2_ami_relationships_graph"{
       jsonb_array_elements(ami.block_device_mappings) as device_mappings
     where
       device_mappings -> 'Ebs' is not null
-    
+
     order by
       category,
       from_id,
