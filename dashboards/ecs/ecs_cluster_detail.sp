@@ -501,7 +501,7 @@ query "aws_ecs_cluster_relationships_graph" {
     -- To ECS conatiner instances (edge)
     union all
     select
-      s.arn as from_id,
+      'EC2' as from_id,
       i.arn as to_id,
       null as id,
       'uses' as title,
@@ -513,11 +513,8 @@ query "aws_ecs_cluster_relationships_graph" {
       ) as properties
     from
       aws_ecs_container_instance as i
-      left join aws_ec2_instance as e on i.ec2_instance_id = e.instance_id
-      left join aws_ecs_service as s on s.cluster_arn = i.cluster_arn
     where
-      s.launch_type = 'EC2'
-      and i.cluster_arn = $1
+      i.cluster_arn = $1
 
      -- To VPC Subnet (node)
     union all
@@ -604,88 +601,6 @@ query "aws_ecs_cluster_relationships_graph" {
     where
       i.cluster_arn  = $1
 
-    -- To ECS services role (node)
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      r.arn as id,
-      r.name as title,
-      'aws_iam_role' as category,
-      jsonb_build_object(
-        'ARN', r.arn,
-        'Create Date', r.create_date,
-        'Account ID', r.account_id
-      ) as properties
-    from
-      aws_ecs_service as s
-      left join aws_iam_role as r on r.arn = s.role_arn
-    where
-      s.cluster_arn = $1
-
-    -- To ECS services role (edge)
-    union all
-    select
-      s.arn as from_id,
-      s.role_arn as to_id,
-      null as id,
-      'assumes' as title,
-      'aws_ecs_service_to_iam_role' as category,
-      jsonb_build_object(
-        'ARN', r.arn,
-        'Create Date', r.create_date,
-        'Account ID', r.account_id
-      ) as properties
-    from
-      aws_ecs_service as s
-      left join aws_iam_role as r on r.arn = s.role_arn
-    where
-      s.cluster_arn = $1
-
-    -- To ECS services load balancing (node)
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      t.target_group_arn as id,
-      t.target_group_name as title,
-      'aws_ec2_target_group' as category,
-      jsonb_build_object(
-        'ARN', t.target_group_arn,
-        'VPC ID', t.vpc_id,
-        'Target Type', target_type,
-        'Account ID', t.account_id,
-        'Region', t.region
-      ) as properties
-    from
-      aws_ecs_service as s,
-      jsonb_array_elements(load_balancers) as l
-      left join aws_ec2_target_group as t on t.target_group_arn = l ->> 'TargetGroupArn'
-    where
-      s.cluster_arn = $1
-
-    -- To ECS services load balancing  (edge)
-    union all
-    select
-      s.arn as from_id,
-      l ->> 'TargetGroupArn' as to_id,
-      null as id,
-      'load balancing' as title,
-      'ecs_service_to_ec2_target_group' as category,
-      jsonb_build_object(
-        'ARN', t.target_group_arn,
-        'VPC ID', t.vpc_id,
-        'Target Type', target_type,
-        'Account ID', t.account_id,
-        'Region', t.region
-      ) as properties
-    from
-      aws_ecs_service as s,
-      jsonb_array_elements(load_balancers) as l
-      left join aws_ec2_target_group as t on t.target_group_arn = l ->> 'TargetGroupArn'
-    where
-      s.cluster_arn = $1
-
     -- To ECS services subnet (node)
     union all
     select
@@ -753,7 +668,6 @@ query "aws_ecs_cluster_relationships_graph" {
       e.network_configuration is not null
       and e.cluster_arn = $1
       and v.vpc_id = sb.vpc_id
-
 
     -- To ECS services VPC (edge)
     union all
