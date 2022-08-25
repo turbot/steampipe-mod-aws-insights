@@ -300,6 +300,16 @@ graph "aws_graph_categories" {
     }
   }
 
+  category "aws_eventbridge_rule" {
+    href = "/aws_insights.dashboard.aws_eventbridge_rule_detail?input.eventbridge_rule_arn={{.properties.'ARN' | @uri}}"
+    icon = local.aws_eventbridge_rule_icon
+    fold {
+      title     = "EventBridge Rules"
+      icon      = local.aws_eventbridge_rule_icon
+      threshold = 3
+    }
+  }
+
   category "aws_kinesisanalyticsv2_application" {
     icon = local.aws_kinesisanalytics_application_icon
     fold {
@@ -359,15 +369,6 @@ graph "aws_graph_categories" {
     fold {
       title     = "VPC Endpoints"
       icon      = local.aws_vpc_endpoint_icon
-      threshold = 3
-    }
-  }
-
-  category "aws_eventbridge_rule" {
-    icon = local.aws_eventbridge_rule_icon
-    fold {
-      title     = "EventBridge Rules"
-      icon      = local.aws_eventbridge_rule_icon
       threshold = 3
     }
   }
@@ -440,6 +441,15 @@ graph "aws_graph_categories" {
     fold {
       title     = "Media Store Containers"
       icon      = local.aws_media_store_container_icon
+      threshold = 3
+    }
+  }
+
+  category "aws_eventbridge_bus" {
+    icon = local.aws_eventbridge_bus_icon
+    fold {
+      title     = "EventBridge Buses"
+      icon      = local.aws_eventbridge_bus_icon
       threshold = 3
     }
   }

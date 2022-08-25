@@ -18,6 +18,7 @@ locals {
   aws_elasticache_cluster_icon           = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/elasticache_cluster_light.svg"))
   aws_emr_cluster_icon                   = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/emr_cluster_light.svg"))
   aws_eventbridge_rule_icon              = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/eventbridge_rule_light.svg"))
+  aws_eventbridge_bus_icon               = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/eventbridge_bus_light.svg"))
   aws_guardduty_detector_icon            = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/guardduty_detector_light.svg"))
   aws_iam_role_icon                      = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/iam_role_light.svg"))
   aws_iam_user_icon                      = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/iam_user_light.svg"))
