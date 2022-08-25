@@ -37,54 +37,14 @@ dashboard "aws_sns_topic_detail" {
 
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_sns_topic_relationships_graph
       args = {
         arn = self.input.topic_arn.value
       }
-
       category "aws_sns_topic" {
         icon = local.aws_sns_topic_icon
       }
-
-      category "aws_kms_key" {
-        icon = local.aws_kms_key_icon
-        href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_sns_topic_subscription" {
-        color = "green"
-      }
-
-      category "aws_s3_bucket" {
-        icon = local.aws_s3_bucket_icon
-        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_rds_db_instance" {
-        icon = local.aws_rds_db_instance_icon
-        href = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_redshift_cluster" {
-        icon = local.aws_redshift_cluster_icon
-        href = "${dashboard.aws_redshift_cluster_detail.url_path}?input.cluster_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_cloudtrail_trail" {
-        icon = local.aws_cloudtrail_trail_icon
-        href = "${dashboard.aws_cloudtrail_trail_detail.url_path}?input.trail_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_cloudformation_stack" {
-        icon = local.aws_cloudformation_stack_icon
-      }
-
-      category "aws_elasticache_cluster" {
-        icon = local.aws_elasticache_cluster_icon
-        href = "/aws_insights.dashboard.aws_elasticache_cluster_detail.url_path?input.elasticache_cluster_arn={{.properties.ARN | @uri}}"
-      }
-
     }
   }
 
@@ -285,8 +245,14 @@ query "aws_sns_topic_policy_standard" {
 
 query "aws_sns_topic_relationships_graph" {
   sql = <<-EOQ
-  with topic as (select * from aws_sns_topic where topic_arn = $1)
-
+    with topic as (
+      select
+        *
+      from
+        aws_sns_topic
+      where
+        topic_arn = $1
+    )
     select
       null as from_id,
       null as to_id,
@@ -301,7 +267,7 @@ query "aws_sns_topic_relationships_graph" {
     from
       topic
 
-    -- To Kms keys (node)
+    -- To KMS keys (node)
     union all
     select
       null as from_id,
@@ -312,6 +278,7 @@ query "aws_sns_topic_relationships_graph" {
       jsonb_build_object(
         'ARN', k.arn,
         'ID', k.id,
+        'enabled', k.enabled,
         'Account ID', k.account_id,
         'Region', k.region
       ) as properties
@@ -321,14 +288,14 @@ query "aws_sns_topic_relationships_graph" {
     where
       k.region = q.region
 
-    -- To Kms keys (edge)
+    -- To KMS keys (edge)
     union all
     select
       q.topic_arn as from_id,
       k.arn as to_id,
       null as id,
       'encrypts with' as title,
-      'uses' as category,
+      'sns_topic_to_kms_key' as category,
       jsonb_build_object(
         'ARN', k.arn,
         'ID', k.id,
@@ -341,7 +308,7 @@ query "aws_sns_topic_relationships_graph" {
     where
       k.region = q.region
 
-    -- To Subscriptions (node)
+    -- To SNS topic subscriptions (node)
     union all
     select
       null as from_id,
@@ -351,6 +318,7 @@ query "aws_sns_topic_relationships_graph" {
       'aws_sns_topic_subscription' as category,
       jsonb_build_object(
         'ARN', subscription_arn,
+        'Pending Confirmation', pending_confirmation,
         'Account ID', account_id,
         'Region', region
       ) as properties
@@ -359,14 +327,14 @@ query "aws_sns_topic_relationships_graph" {
     where
       topic_arn = $1
 
-    -- To Subscriptions (edge)
+    -- To SNS topic subscriptions (edge)
     union all
     select
       q.topic_arn as from_id,
       s.subscription_arn as to_id,
       null as id,
       'subscibe to' as title,
-      'uses' as category,
+      'sns_topic_to_sns_topic_subscription' as category,
       jsonb_build_object(
         'ARN', s.subscription_arn,
         'Account ID', s.account_id,
@@ -376,7 +344,7 @@ query "aws_sns_topic_relationships_graph" {
       topic as q
       left join aws_sns_topic_subscription as s on s.topic_arn = q.topic_arn
 
-  -- From S3 Buckets (node)
+  -- From S3 buckets (node)
     union all
     select
       null as from_id,
@@ -398,16 +366,16 @@ query "aws_sns_topic_relationships_graph" {
         )
         as t
     where
-      t ->> 'TopicArn'  = $1
+      t ->> 'TopicArn' = $1
 
-    -- From S3 Buckets (edge)
+    -- From S3 buckets (edge)
     union all
     select
       arn as from_id,
       $1 as to_id,
       null as id,
       'event notification' as title,
-      'uses' as category,
+      's3_bucket_to_sns_topic' as category,
       jsonb_build_object(
         'ARN', arn,
         'Account ID', account_id,
@@ -422,9 +390,9 @@ query "aws_sns_topic_relationships_graph" {
         )
         as t
     where
-      t ->> 'TopicArn'  = $1
+      t ->> 'TopicArn' = $1
 
-    -- From RDS DB Instances (node)
+    -- From RDS DB instances (node)
     union all
     select
       null as from_id,
@@ -451,14 +419,14 @@ query "aws_sns_topic_relationships_graph" {
       and (source_ids_list is null or i.db_instance_identifier = trim((s::text ), '""'))
       and e.sns_topic_arn = $1
 
-    -- From RDS DB Instances (edge)
+    -- From RDS DB instances (edge)
     union all
     select
       i.arn as from_id,
       t.topic_arn as to_id,
       null as id,
       'event subscription' as title,
-      'uses' as category,
+      'rds_db_instance_to_sns_topic' as category,
       jsonb_build_object(
         'ARN', i.arn,
         'Event Categories List', case when event_categories_list is null then '["ALL"]' else event_categories_list end,
@@ -490,6 +458,7 @@ query "aws_sns_topic_relationships_graph" {
       jsonb_build_object(
         'ARN', c.arn,
         'Cluster Identifier', c.cluster_identifier,
+        'Event Categories List', case when event_categories_list is null then '["ALL"]' else event_categories_list end,
         'Account ID', c.account_id,
         'Region', c.region
       ) as properties
@@ -513,11 +482,10 @@ query "aws_sns_topic_relationships_graph" {
       t.topic_arn as to_id,
       null as id,
       'event subscription' as title,
-      'uses' as category,
+      'redshift_cluster_to_sns_topic' as category,
       jsonb_build_object(
         'ARN', c.arn,
         'Cluster Identifier', c.cluster_identifier,
-        'Event Categories List', case when event_categories_list is null then '["ALL"]' else event_categories_list end,
         'Account ID', c.account_id,
         'Region', c.region
       ) as properties
@@ -535,7 +503,7 @@ query "aws_sns_topic_relationships_graph" {
       and (e.source_ids_list is null or c.cluster_identifier = trim((s::text ), '""'))
       and t.topic_arn = e.sns_topic_arn
 
-    -- From Cloudtrail Trails (node)
+    -- From Cloudtrail trails (node)
     union all
     select
       null as from_id,
@@ -552,19 +520,18 @@ query "aws_sns_topic_relationships_graph" {
     from
       aws_cloudtrail_trail as t
     where
-      t.sns_topic_arn  = $1
+      t.sns_topic_arn = $1
 
-    -- From Cloudtrail Trails (edge)
+    -- From Cloudtrail trails (edge)
     union all
     select
       c.arn as from_id,
       $1 as to_id,
       null as id,
       'send notification' as title,
-      'uses' as category,
+      'cloudtrail_trail_to_sns_topic' as category,
       jsonb_build_object(
         'ARN', c.arn,
-        'Is Logging', c.is_logging,
         'Account ID', c.account_id,
         'Region', c.region
       ) as properties
@@ -572,7 +539,7 @@ query "aws_sns_topic_relationships_graph" {
       topic as t
       left join aws_cloudtrail_trail as c on t.topic_arn = c.sns_topic_arn
 
-    -- From Clouformation Stacks (node)
+    -- From Clouformation stacks (node)
     union all
     select
       null as from_id,
@@ -582,6 +549,8 @@ query "aws_sns_topic_relationships_graph" {
       'aws_cloudformation_stack' as category,
       jsonb_build_object(
         'ARN', s.id,
+        'Last Updated Time', s.last_updated_time,
+        'Status', s.status,
         'Account ID', s.account_id,
         'Region', s.region
       ) as properties
@@ -595,14 +564,14 @@ query "aws_sns_topic_relationships_graph" {
     where
       trim((n::text ), '""') = $1
 
-    -- From Clouformation Stacks (edge)
+    -- From Clouformation stacks (edge)
     union all
     select
       s.id as from_id,
       t.topic_arn as to_id,
       null as id,
       'event published' as title,
-      'uses' as category,
+      'cloudformation_stack_to_sns_topic' as category,
       jsonb_build_object(
         'ID', s.id ,
         'Account ID', s.account_id,
@@ -619,7 +588,7 @@ query "aws_sns_topic_relationships_graph" {
     where
       t.topic_arn = trim((n::text ), '""')
 
-    -- From ElastiCache Clusters (node)
+    -- From ElastiCache clusters (node)
     union all
     select
       null as from_id,
@@ -629,6 +598,8 @@ query "aws_sns_topic_relationships_graph" {
       'aws_elasticache_cluster' as category,
       jsonb_build_object(
         'ARN', c.arn,
+        'ID', c.cache_cluster_id,
+        'Status', c.cache_cluster_status,
         'Account ID', c.account_id,
         'Region', c.region
       ) as properties
@@ -637,14 +608,14 @@ query "aws_sns_topic_relationships_graph" {
     where
       c.notification_configuration ->> 'TopicArn' = $1
 
-    -- From ElastiCache Clusters (edge)
+    -- From ElastiCache clusters (edge)
     union all
     select
       c.arn as from_id,
       t.topic_arn as to_id,
       null as id,
       'event notification' as title,
-      'uses' as category,
+      'elasticache_cluster_to_sns_topic' as category,
       jsonb_build_object(
         'ARN', c.arn,
         'Account ID', c.account_id,
@@ -655,11 +626,11 @@ query "aws_sns_topic_relationships_graph" {
       aws_elasticache_cluster as c
     where
       t.topic_arn = (c.notification_configuration ->> 'TopicArn')
+
     order by
-      category,
       from_id,
       to_id;
-
   EOQ
+
   param "arn" {}
 }

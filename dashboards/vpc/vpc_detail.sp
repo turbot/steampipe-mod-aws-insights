@@ -53,90 +53,13 @@ dashboard "aws_vpc_detail" {
 
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_vpc_relationships_graph
       args = {
         vpc_id = self.input.vpc_id.value
       }
-
       category "aws_vpc" {
         icon = local.aws_vpc_icon
-      }
-
-      category "aws_vpc_subnet" {
-        color = "orange"
-      }
-
-      category "aws_vpc_internet_gateway" {
-        icon = local.aws_vpc_internet_gateway_icon
-      }
-
-      category "aws_vpc_route_table" {
-        icon = local.aws_vpc_route_table_icon
-      }
-
-      category "aws_ec2_transit_gateway" {
-        color = "blue"
-      }
-
-      category "aws_vpc_endpoint" {
-        icon = local.aws_vpc_endpoint_icon
-      }
-
-      category "aws_vpc_nat_gateway" {
-        icon = local.aws_vpc_nat_gateway_icon
-      }
-
-      category "aws_vpc_vpn_gateway" {
-        icon = local.aws_vpc_vpn_gateway_icon
-      }
-
-      category "aws_ec2_instance" {
-        icon = local.aws_ec2_instance_icon
-        href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_lambda_function" {
-        icon = local.aws_lambda_function_icon
-        href = "${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_ec2_application_load_balancer" {
-        icon = local.aws_ec2_application_load_balancer_icon
-      }
-
-      category "aws_ec2_network_load_balancer" {
-        icon = local.aws_ec2_network_load_balancer_icon
-      }
-
-      category "aws_ec2_classic_load_balancer" {
-        icon = local.aws_ec2_classic_load_balancer_icon
-      }
-
-      category "aws_ec2_gateway_load_balancer" {
-        icon = local.aws_ec2_gateway_load_balancer_icon
-      }
-
-      category "aws_rds_db_instance" {
-        icon = local.aws_rds_db_instance_icon
-        href = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_redshift_cluster" {
-        icon = local.aws_redshift_cluster_icon
-        href = "${dashboard.aws_redshift_cluster_detail.url_path}?input.cluster_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_ec2_target_group" {
-        color = "red"
-      }
-
-      category "aws_fsx_file_system" {
-        color = "orange"
-      }
-
-      category "aws_s3_access_point" {
-        icon = local.aws_s3_access_point_icon
       }
 
     }
@@ -1173,7 +1096,15 @@ query "aws_vpc_subnet_by_az" {
 
 query "aws_vpc_relationships_graph" {
   sql = <<-EOQ
-  with vpc as (select * from aws_vpc where vpc_id = $1)
+    with vpc as
+    (
+      select
+        *
+      from
+        aws_vpc
+      where
+        vpc_id = $1
+    )
 
     select
       null as from_id,
@@ -1182,6 +1113,7 @@ query "aws_vpc_relationships_graph" {
       title as title,
       'aws_vpc' as category,
       jsonb_build_object(
+        'VPC ID', vpc_id,
         'ARN', arn,
         'Account ID', account_id,
         'Region', region
@@ -1199,7 +1131,7 @@ query "aws_vpc_relationships_graph" {
       'aws_vpc_subnet' as category,
       jsonb_build_object(
         'ARN', subnet_arn,
-        'ID', subnet_id,
+        'Subnet ID', subnet_id,
         'CIDR Block', cidr_block,
         'IP Address Count', available_ip_address_count,
         'Region', region,
@@ -1460,7 +1392,7 @@ query "aws_vpc_relationships_graph" {
       'aws_vpc_security_group' as category,
       jsonb_build_object(
         'ARN', arn,
-        'ID', group_id,
+        'Group ID', group_id,
         'Region', region,
         'Account ID', account_id
       ) as properties

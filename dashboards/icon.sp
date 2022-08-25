@@ -14,6 +14,7 @@ locals {
   aws_ec2_instance_icon                  = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_instance_light.svg"))
   aws_ec2_network_interface_icon         = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_network_interface_light.svg"))
   aws_ec2_network_load_balancer_icon     = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_network_load_balancer_light.svg"))
+  aws_eks_cluster_icon                   = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/eks_cluster.svg"))
   aws_elasticache_cluster_icon           = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/elasticache_cluster_light.svg"))
   aws_emr_cluster_icon                   = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/emr_cluster_light.svg"))
   aws_eventbridge_rule_icon              = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/eventbridge_rule_light.svg"))

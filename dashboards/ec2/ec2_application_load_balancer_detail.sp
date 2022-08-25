@@ -1,5 +1,5 @@
 dashboard "aws_ec2_application_load_balancer_detail" {
-  title = "AWS EC2 Application Load balancer Details"
+  title = "AWS EC2 Application Load balancer Detail"
   #documentation = file("./dashboards/lb/docs/alb_relationships.md")
 
   tags = merge(local.ec2_common_tags, {
@@ -8,7 +8,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
 
   input "alb" {
     title = "Select an Application Load balancer:"
-    sql   = query.aws_alb_input.sql
+    query = query.aws_alb_input
     width = 4
   }
 
@@ -35,33 +35,13 @@ dashboard "aws_ec2_application_load_balancer_detail" {
   container {
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_alb_graph_relationships
       args = {
         arn = self.input.alb.value
       }
-
       category "aws_ec2_application_load_balancer" {
         icon = local.aws_ec2_application_load_balancer_icon
-      }
-
-      category "aws_vpc" {
-        href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'VPC ID' | @uri}}"
-        icon = local.aws_vpc_icon
-      }
-
-      category "aws_s3_bucket" {
-        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_s3_bucket_icon
-      }
-
-      category "aws_ec2_instance" {
-        href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_ec2_instance_icon
-      }
-
-      category "aws_vpc_security_group" {
-        href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.properties.'Group ID' | @uri}}"
       }
 
     }
