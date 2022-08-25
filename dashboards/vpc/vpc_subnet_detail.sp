@@ -159,7 +159,7 @@ query "aws_vpc_subnet_relationships_graph" {
       v.title as title,
       'aws_vpc' as category,
       jsonb_build_object(
-        'VPC ID', v.vpc_id,
+        'VPC ID', s.vpc_id,
         'ARN', v.arn,
         'Region', v.region,
         'CIDR Block', v.cidr_block,
@@ -175,9 +175,10 @@ query "aws_vpc_subnet_relationships_graph" {
       $1 as from_id,
       v.vpc_id as to_id,
       null as id,
-      'subnet' as title,
+      'vpc' as title,
       'vpc_subnet_to_vpc' as category,
       jsonb_build_object(
+        'VPC ID', v.vpc_id,
         'ARN', v.arn,
         'Account ID', v.account_id,
         'Region', v.region

@@ -399,9 +399,9 @@ query "aws_sqs_queue_relationships_graph" {
       title as title,
       'aws_kms_key' as category,
       jsonb_build_object(
-        'Key ARN', arn,
-        'Key Id', id,
-        'Enabled', enabled,
+        'ARN', arn,
+        'Id', id,
+        'Enabled', enabled::text,
         'Account ID', account_id,
         'Region', region
       ) as properties
@@ -443,7 +443,7 @@ query "aws_sqs_queue_relationships_graph" {
       'aws_s3_bucket' as category,
       jsonb_build_object(
         'ARN', arn,
-        'Versioning Enabled', versioning_enabled,
+        'Versioning Enabled', versioning_enabled::text,
         'Account ID', account_id,
         'Region', region
       ) as properties
@@ -551,8 +551,7 @@ query "aws_sqs_queue_relationships_graph" {
       'vpc endpoint' as title,
       'vpc_endpoint_to_sqs_queue' as category,
       jsonb_build_object(
-        'VPC Endpoint ID', vpc_endpoint_id,
-
+        'ID', vpc_endpoint_id,
         'Account ID', account_id,
         'Region', region
       ) as properties
