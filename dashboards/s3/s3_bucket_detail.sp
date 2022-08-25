@@ -69,35 +69,13 @@ dashboard "aws_s3_bucket_detail" {
 
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_s3_bucket_relationships
       args = {
         arn = self.input.bucket_arn.value
       }
-
       category "aws_s3_bucket" {
         icon = local.aws_s3_bucket_icon
-      }
-
-      category "aws_cloudtrail_trail" {
-        icon = local.aws_cloudtrail_trail_icon
-        href = "/aws_insights.dashboard.aws_cloudtrail_trail_detail?input.trail_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_ec2_application_load_balancer" {
-        icon = local.aws_ec2_application_load_balancer_icon
-      }
-
-      category "aws_ec2_network_load_balancer" {
-        icon = local.aws_ec2_application_load_balancer_icon
-      }
-
-      category "aws_ec2_classic_load_balancer" {
-        icon = local.aws_ec2_classic_load_balancer_icon
-      }
-
-      category "aws_s3_access_point" {
-        icon = local.aws_s3_access_point_icon
       }
     }
 

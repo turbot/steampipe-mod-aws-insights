@@ -36,15 +36,12 @@ dashboard "aws_ec2_keys_relationships" {
   container {
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_ec2_keypair_relationships
       args = {
         key_name = self.input.key_name.value
       }
-
-      category "aws_ec2_instance" {
-        href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_ec2_instance_icon
+      category "aws_ec2_key_pair" {
       }
     }
   }

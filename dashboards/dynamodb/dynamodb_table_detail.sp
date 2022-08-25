@@ -69,31 +69,13 @@ dashboard "aws_dynamodb_table_detail" {
 
     graph {
       type  = "graph"
-      title = "Relationships"
-      query = query.aws_dynamodb_table_graph_from_table
+      base  = graph.aws_graph_categories
+      query = query.aws_dynamodb_table_relationships_graph
       args = {
         arn = self.input.table_arn.value
       }
       category "aws_dynamodb_table" {
         icon = local.aws_dynamodb_table_icon
-      }
-
-      category "aws_kms_key" {
-        href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.ARN | @uri}}"
-        icon = local.aws_kms_key_icon
-      }
-
-      category "aws_kinesis_stream" {
-        icon = local.aws_kinesis_stream_icon
-      }
-
-      category "aws_s3_bucket" {
-        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.key_arn={{.properties.ARN | @uri}}"
-        icon = local.aws_s3_bucket_icon
-      }
-
-      category "uses" {
-        color = "green"
       }
     }
 
@@ -301,7 +283,7 @@ query "aws_dynamodb_table_autoscaling_state" {
   param "arn" {}
 }
 
-query "aws_dynamodb_table_graph_from_table" {
+query "aws_dynamodb_table_relationships_graph" {
   sql = <<-EOQ
     select
       null as from_id,
@@ -354,8 +336,8 @@ query "aws_dynamodb_table_graph_from_table" {
       table_id as from_id,
       k.id as to_id,
       null as id,
-      'uses' as title,
-      'uses' as category,
+      'encrypted with' as title,
+      'dynamodb_table_to_kms_key' as category,
       jsonb_build_object(
         'Account ID', t.account_id
       ) as properties
@@ -394,7 +376,7 @@ query "aws_dynamodb_table_graph_from_table" {
       b.arn as to_id,
       null as id,
       'exports to' as title,
-      'exports to' as category,
+      'dynamodb_table_to_s3_bucket' as category,
       jsonb_build_object(
         'Account ID', t.account_id
       ) as properties
@@ -435,7 +417,7 @@ query "aws_dynamodb_table_graph_from_table" {
       s.stream_arn as to_id,
       null as id,
       'streams to' as title,
-      'streams to' as category,
+      'dynamodb_table_to_kinesis_stream' as category,
       jsonb_build_object(
         'Account ID', t.account_id
       ) as properties

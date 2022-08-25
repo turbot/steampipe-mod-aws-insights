@@ -13,38 +13,101 @@ dashboard "aws_elasticache_cluster_detail" {
     width = 4
   }
 
-  graph {
-    type  = "graph"
-    title = "Relationships"
-    query = query.aws_elasticache_cluster_relationships_graph
-    args = {
-      arn = self.input.elasticache_cluster_arn.value
-    }
-    category "aws_elasticache_cluster" {
-      icon = local.aws_elasticache_cluster_icon
+  container {
+
+    card {
+      query = query.aws_elasticache_cluster_status
+      width = 2
+      args = {
+        arn = self.input.elasticache_cluster_arn.value
+      }
     }
 
-    category "aws_sns_topic" {
-      href = "${dashboard.aws_sns_topic_detail.url_path}?input.topic_arn={{.properties.ARN | @uri}}"
-      icon = local.aws_sns_topic_icon
+    card {
+      query = query.aws_elasticache_cluster_node_type
+      width = 2
+      args = {
+        arn = self.input.elasticache_cluster_arn.value
+      }
     }
 
-    category "aws_kms_key" {
-      href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
-      icon = local.aws_kms_key_icon
+    card {
+      query = query.aws_elasticache_cluster_automatic_backup
+      width = 2
+      args = {
+        arn = self.input.elasticache_cluster_arn.value
+      }
     }
 
-    category "aws_vpc" {
-      href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.'id' | @uri}}"
-      icon = local.aws_vpc_icon
+    card {
+      query = query.aws_elasticache_cluster_encryption_transit
+      width = 2
+      args = {
+        arn = self.input.elasticache_cluster_arn.value
+      }
     }
 
-    category "aws_vpc_security_group" {
-      href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.'id' | @uri}}"
+    card {
+      query = query.aws_elasticache_cluster_encryption_rest
+      width = 2
+      args = {
+        arn = self.input.elasticache_cluster_arn.value
+      }
     }
 
-    category "uses" {
-      color = "green"
+  }
+
+  container {
+    graph {
+      type  = "graph"
+      base  = graph.aws_graph_categories
+      query = query.aws_elasticache_cluster_relationships_graph
+      args = {
+        arn = self.input.elasticache_cluster_arn.value
+      }
+      category "aws_elasticache_cluster" {
+        icon = local.aws_elasticache_cluster_icon
+      }
+
+    }
+  }
+
+  container {
+
+    container {
+      width = 6
+
+      table {
+        title = "Overview"
+        type  = "line"
+        width = 6
+        query = query.aws_elasticache_cluster_overview
+        args = {
+          arn = self.input.elasticache_cluster_arn.value
+        }
+
+      }
+
+      table {
+        title = "Tags"
+        width = 6
+        query = query.aws_elasticache_cluster_tags
+        args = {
+          arn = self.input.elasticache_cluster_arn.value
+        }
+
+      }
+    }
+    container {
+      width = 6
+
+      table {
+        title = "Notification Configuration"
+        query = query.aws_elasticache_cluster_notification_configuration
+        args = {
+          arn = self.input.elasticache_cluster_arn.value
+        }
+      }
     }
   }
 }
@@ -66,6 +129,79 @@ query "aws_elasticache_cluster_input" {
   EOQ
 }
 
+query "aws_elasticache_cluster_status" {
+  sql = <<-EOQ
+    select
+      'Status' as label,
+      initcap(cache_cluster_status) as value
+    from
+      aws_elasticache_cluster
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_elasticache_cluster_node_type" {
+  sql = <<-EOQ
+    select
+      'Node Type' as label,
+      cache_node_type as value
+    from
+      aws_elasticache_cluster
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_elasticache_cluster_automatic_backup" {
+  sql = <<-EOQ
+    select
+      'Automatic Backup' as label,
+      case when snapshot_retention_limit is null then 'Disabled' else 'Enabled' end as value,
+      case when snapshot_retention_limit is null then 'alert' else 'ok' end as type
+    from
+      aws_elasticache_cluster
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_elasticache_cluster_encryption_transit" {
+  sql = <<-EOQ
+    select
+      'Encryption in Transit' as label,
+      case when transit_encryption_enabled then 'Enabled' else 'Disabled' end as value,
+      case when transit_encryption_enabled then 'ok' else 'alert' end as type
+    from
+      aws_elasticache_cluster
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_elasticache_cluster_encryption_rest" {
+  sql = <<-EOQ
+    select
+      'Encryption at Rest' as label,
+      case when at_rest_encryption_enabled then 'Enabled' else 'Disabled' end as value,
+      case when at_rest_encryption_enabled then 'ok' else 'alert' end as type
+    from
+      aws_elasticache_cluster
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
 query "aws_elasticache_cluster_relationships_graph" {
   sql = <<-EOQ
     select
@@ -74,13 +210,19 @@ query "aws_elasticache_cluster_relationships_graph" {
       cache_cluster_id as id,
       title as title,
       'aws_elasticache_cluster' as category,
-      jsonb_build_object( 'ARN', arn, 'Status', cache_cluster_status, 'Encryption Enabled', at_rest_encryption_enabled::text, 'Create Time', cache_cluster_create_time, 'Account ID', account_id, 'Region', region ) as properties
+      jsonb_build_object(
+        'ARN', arn,
+        'Status', cache_cluster_status,
+        'Encryption Enabled', at_rest_encryption_enabled::text,
+        'Create Time', cache_cluster_create_time,
+        'Account ID', account_id,
+        'Region', region ) as properties
     from
       aws_elasticache_cluster
     where
       arn = $1
 
-    -- To SNS Topics (node)
+    -- To SNS topics (node)
     union all
     select
       null as from_id,
@@ -88,7 +230,10 @@ query "aws_elasticache_cluster_relationships_graph" {
       topic_arn as id,
       title as title,
       'aws_sns_topic' as category,
-      jsonb_build_object( 'ARN', topic_arn, 'Account ID', account_id, 'Region', region ) as properties
+      jsonb_build_object(
+        'ARN', topic_arn,
+        'Account ID', account_id,
+        'Region', region ) as properties
     from
       aws_sns_topic
     where
@@ -102,15 +247,16 @@ query "aws_elasticache_cluster_relationships_graph" {
           arn = $1
       )
 
-    -- To SNS Topics (edge)
+    -- To SNS topics (edge)
     union all
     select
       cache_cluster_id as from_id,
       topic_arn as to_id,
       null as id,
       'publishes to' as title,
-      'uses' as category,
-      jsonb_build_object( 'Account ID', c.account_id ) as properties
+      'elasticache_cluster_to_sns_topic' as category,
+      jsonb_build_object(
+        'Account ID', c.account_id ) as properties
     from
       aws_elasticache_cluster as c
       left join
@@ -119,7 +265,7 @@ query "aws_elasticache_cluster_relationships_graph" {
     where
       c.arn = $1
 
-    -- To KMS Keys (node)
+    -- To KMS keys (node)
     union all
     select
       null as from_id,
@@ -127,7 +273,13 @@ query "aws_elasticache_cluster_relationships_graph" {
       id as id,
       title as title,
       'aws_kms_key' as category,
-      jsonb_build_object( 'ARN', arn, 'Key Manager', key_manager, 'Creation Date', creation_date, 'Enabled', enabled, 'Account ID', account_id, 'Region', region ) as properties
+      jsonb_build_object(
+        'ARN', arn,
+        'Key Manager', key_manager,
+        'Creation Date', creation_date,
+        'Enabled', enabled::text,
+        'Account ID', account_id,
+        'Region', region ) as properties
     from
       aws_kms_key
     where
@@ -139,18 +291,20 @@ query "aws_elasticache_cluster_relationships_graph" {
           aws_elasticache_cluster as c,
           aws_elasticache_replication_group as g
         where
-          c.arn = $1 and c.replication_group_id = g.replication_group_id
+          c.arn = $1
+          and c.replication_group_id = g.replication_group_id
       )
 
-    -- To KMS Keys (edge)
+    -- To KMS keys (edge)
     union all
     select
       cache_cluster_id as from_id,
       k.id as to_id,
       null as id,
       'encrypted with' as title,
-      'uses' as category,
-      jsonb_build_object( 'Account ID', c.account_id ) as properties
+      'elasticache_cluster_to_kms_key' as category,
+      jsonb_build_object(
+        'Account ID', c.account_id ) as properties
     from
       aws_elasticache_cluster as c
       left join
@@ -162,7 +316,7 @@ query "aws_elasticache_cluster_relationships_graph" {
     where
       c.arn = $1
 
-    -- To VPC Security Groups (node)
+    -- To VPC security groups (node)
     union all
     select
       null as from_id,
@@ -170,7 +324,12 @@ query "aws_elasticache_cluster_relationships_graph" {
       group_id as id,
       title as title,
       'aws_vpc_security_group' as category,
-      jsonb_build_object( 'ARN', arn, 'VPC ID', vpc_id, 'Account ID', account_id, 'Region', region ) as properties
+      jsonb_build_object(
+        'ARN', arn,
+        'VPC ID', vpc_id,
+        'Group ID', group_id,
+        'Account ID', account_id,
+        'Region', region ) as properties
     from
       aws_vpc_security_group
     where
@@ -185,15 +344,16 @@ query "aws_elasticache_cluster_relationships_graph" {
           arn = $1
       )
 
-    -- To VPC Security Groups (edge)
+    -- To VPC security groups (edge)
     union all
     select
       c.cache_cluster_id as from_id,
       g.group_id as to_id,
       null as id,
-      'uses' as title,
-      'uses' as category,
-      jsonb_build_object( 'Account ID', c.account_id ) as properties
+      'control traffic through' as title,
+      'elasticache_cluster_to_vpc_security_group' as category,
+      jsonb_build_object(
+        'Account ID', c.account_id ) as properties
     from
       aws_vpc_security_group as g,
       aws_elasticache_cluster as c,
@@ -202,7 +362,7 @@ query "aws_elasticache_cluster_relationships_graph" {
       sg ->> 'SecurityGroupId' = g.group_id
       and c.arn = $1
 
-    -- To Security Groups -> VPC (node)
+    -- To VPC (node)
     union all
     select
       null as from_id,
@@ -210,7 +370,13 @@ query "aws_elasticache_cluster_relationships_graph" {
       vpc_id as id,
       title as title,
       'aws_vpc' as category,
-      jsonb_build_object( 'ARN', arn, 'State', state, 'CIDR Block', cidr_block, 'Account ID', account_id, 'Region', region ) as properties
+      jsonb_build_object(
+        'VPC ID', vpc_id,
+        'ARN', arn,
+        'State', state,
+        'CIDR Block', cidr_block,
+        'Account ID', account_id,
+        'Region', region ) as properties
     from
       aws_vpc
     where
@@ -227,15 +393,16 @@ query "aws_elasticache_cluster_relationships_graph" {
           and c.arn = $1
       )
 
-    -- To Security Groups -> VPC (edge)
+    -- To security groups -> VPC (edge)
     union all
     select
       g.group_id as from_id,
       g.vpc_id as to_id,
       null as id,
       'resides under' as title,
-      'uses' as category,
-      jsonb_build_object( 'Account ID', c.account_id ) as properties
+      'vpc_security_group_to_vpc' as category,
+      jsonb_build_object(
+        'Account ID', c.account_id ) as properties
     from
       aws_vpc_security_group as g,
       aws_elasticache_cluster as c,
@@ -244,7 +411,7 @@ query "aws_elasticache_cluster_relationships_graph" {
       sg ->> 'SecurityGroupId' = g.group_id
       and c.arn = $1
 
-    -- To VPC Subnet Groups (node)
+    -- To Elasticache subnet groups (node)
     union all
     select
       null as from_id,
@@ -252,7 +419,11 @@ query "aws_elasticache_cluster_relationships_graph" {
       cache_subnet_group_name as id,
       title as title,
       'aws_elasticache_subnet_group' as category,
-      jsonb_build_object( 'ARN', arn, 'VPC ID', vpc_id, 'Account ID', account_id, 'Region', region ) as properties
+      jsonb_build_object(
+        'ARN', arn,
+        'VPC ID', vpc_id,
+        'Account ID', account_id,
+        'Region', region ) as properties
     from
       aws_elasticache_subnet_group
     where
@@ -266,14 +437,14 @@ query "aws_elasticache_cluster_relationships_graph" {
           arn = $1
       )
 
-    -- To VPC Subnet Groups (edge)
+    -- To Elasticache subnet groups (edge)
     union all
     select
       c.cache_cluster_id as from_id,
       g.cache_subnet_group_name as to_id,
       null as id,
       'launched into' as title,
-      'uses' as category,
+      'elasticache_cluster_to_elasticache_subnet_group' as category,
       jsonb_build_object( 'Account ID', c.account_id ) as properties
     from
       aws_elasticache_cluster as c,
@@ -282,7 +453,7 @@ query "aws_elasticache_cluster_relationships_graph" {
       g.cache_subnet_group_name = c.cache_subnet_group_name
       and c.arn = $1
 
-    -- To VPC Subnets (node)
+    -- To VPC subnets (node)
     union all
     select
       null as from_id,
@@ -290,7 +461,12 @@ query "aws_elasticache_cluster_relationships_graph" {
       subnet_id as id,
       title as title,
       'aws_vpc_subnet' as category,
-      jsonb_build_object( 'ARN', subnet_arn, 'CIDR Block', cidr_block, 'Account ID', account_id, 'Region', region ) as properties
+      jsonb_build_object(
+        'Subnet ID', subnet_id,
+        'ARN', subnet_arn,
+        'CIDR Block', cidr_block,
+        'Account ID', account_id,
+        'Region', region ) as properties
     from
       aws_vpc_subnet
     where
@@ -303,17 +479,18 @@ query "aws_elasticache_cluster_relationships_graph" {
           aws_elasticache_subnet_group as g,
           jsonb_array_elements(subnets) as subnet
         where
-          g.cache_subnet_group_name = c.cache_subnet_group_name and c.arn = $1
+          g.cache_subnet_group_name = c.cache_subnet_group_name
+          and c.arn = $1
       )
 
-    -- To VPC Subnets (edge)
+    -- To VPC subnets (edge)
     union all
     select
       g.cache_subnet_group_name as from_id,
       s.subnet_id as to_id,
       null as id,
       'contains' as title,
-      'uses' as category,
+      'elasticache_subnet_group_to_vpc_subnet' as category,
       jsonb_build_object( 'Account ID', c.account_id ) as properties
     from
       aws_elasticache_cluster as c,
@@ -325,7 +502,7 @@ query "aws_elasticache_cluster_relationships_graph" {
       and subnet ->> 'SubnetIdentifier' = s.subnet_id
       and c.arn = $1
 
-    -- To Subnet -> VPC (node)
+    -- To subnet -> VPC (node)
     union all
     select
       null as from_id,
@@ -333,7 +510,13 @@ query "aws_elasticache_cluster_relationships_graph" {
       vpc_id as id,
       title as title,
       'aws_vpc' as category,
-      jsonb_build_object( 'ARN', arn, 'State', state, 'CIDR Block', cidr_block, 'Account ID', account_id, 'Region', region ) as properties
+      jsonb_build_object(
+        'VPC ID', vpc_id,
+        'ARN', arn,
+        'State', state,
+        'CIDR Block', cidr_block,
+        'Account ID', account_id,
+        'Region', region ) as properties
     from
       aws_vpc
     where
@@ -348,14 +531,14 @@ query "aws_elasticache_cluster_relationships_graph" {
           g.cache_subnet_group_name = c.cache_subnet_group_name and c.arn = $1
       )
 
-    -- To Subnet -> VPC (edge)
+    -- To subnet -> VPC (edge)
     union all
     select
       subnet ->> 'SubnetIdentifier' as from_id,
       g.vpc_id as to_id,
       null as id,
       'resides under' as title,
-      'uses' as category,
+      'elasticache_subnet_to_vpc' as category,
       jsonb_build_object( 'Account ID', c.account_id ) as properties
     from
       aws_elasticache_cluster as c,
@@ -369,6 +552,63 @@ query "aws_elasticache_cluster_relationships_graph" {
       category,
       from_id,
       to_id;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_elasticache_cluster_overview" {
+  sql = <<-EOQ
+    select
+      title as "Title",
+      auth_token_enabled as "Auth Token Enabled",
+      auto_minor_version_upgrade as "Auto Minor Version Upgrade",
+      cache_cluster_create_time as "Create Time",
+      cache_subnet_group_name as "Subnet Group Name",
+      engine as "Engine",
+      engine_version as "Engine Version",
+      preferred_availability_zone as "Preferred Availability Zone",
+      region as "Region",
+      account_id as "Account ID",
+      arn as "ARN"
+    from
+      aws_elasticache_cluster
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_elasticache_cluster_tags" {
+  sql = <<-EOQ
+    select
+      tag ->> 'Key' as "Key",
+      tag ->> 'Value' as "Value"
+    from
+      aws_elasticache_cluster,
+      jsonb_array_elements(tags_src) as tag
+    where
+      arn = $1
+    order by
+      tag ->> 'Key';
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_elasticache_cluster_notification_configuration" {
+  sql = <<-EOQ
+    select
+      t.title as "Topic Title",
+      notification_configuration ->> 'TopicStatus' as "Topic Status"
+    from
+      aws_elasticache_cluster as c
+      left join
+        aws_sns_topic as t
+        on notification_configuration ->> 'TopicArn' = topic_arn
+    where
+      c.arn = $1;
   EOQ
 
   param "arn" {}

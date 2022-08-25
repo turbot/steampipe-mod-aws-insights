@@ -62,57 +62,13 @@ dashboard "aws_rds_db_instance_detail" {
 
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_rds_db_instance_relationships_graph
       args = {
         arn = self.input.db_instance_arn.value
       }
-
       category "aws_rds_db_instance" {
         icon = local.aws_rds_db_instance_icon
-      }
-
-      category "aws_rds_db_cluster" {
-        icon = local.aws_rds_db_cluster_icon
-      }
-
-      category "db_parameter_group" {
-        ####icon = local.aws_rds_db_parameter_group_icon
-      }
-
-      category "db_subnet_group" {
-        # icon = local.aws_vpc_icon
-      }
-
-      category "aws_vpc" {
-        # cyclic dependency prevents use of url_path, hardcode for now
-        # href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.\"VPC ID\" | @uri}}"
-        href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.properties.\"VPC ID\" | @uri}}"
-        icon = local.aws_vpc_icon
-      }
-
-      category "aws_vpc_subnet" {
-        # icon = local.aws_vpc_icon
-      }
-
-      category "aws_vpc_security_group" {
-        # cyclic dependency prevents use of url_path, hardcode for now
-        # href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.properties.\"Security Group ID\" | @uri}}"
-
-        href = "/aws_insights.dashboard.aws_vpc_security_group_detail?input.security_group_id={{.properties.\"Security Group ID\" | @uri}}"
-        # icon = local.aws_vpc_icon
-      }
-
-      category "kms_key" {
-        # cyclic dependency prevents use of url_path, hardcode for now
-        # href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.ARN | @uri}}"
-
-        href = "/aws_insights.dashboard.aws_kms_key_detail.url_path?input.key_arn={{.properties.ARN | @uri}}"
-        icon = local.aws_kms_key_icon
-      }
-
-      category "uses" {
-        color = "green"
       }
     }
   }
@@ -550,7 +506,7 @@ query "aws_rds_db_instance_relationships_graph" {
       null as to_id,
       k.id as id,
       COALESCE(k.aliases #>> '{0,AliasName}', k.id) as title,
-      'kms_key' as category,
+      'aws_kms_key' as category,
       jsonb_build_object(
         'ARN', k.arn,
         'Rotation Enabled', k.key_rotation_enabled::text,
@@ -615,7 +571,7 @@ query "aws_rds_db_instance_relationships_graph" {
       vs.title,
       'aws_vpc_subnet' as category,
       jsonb_build_object(
-        'Subnet Id', vs.subnet_id,
+        'Subnet ID', vs.subnet_id,
         'VPC ID', vs.vpc_id,
         'Availability Zone', vs.availability_zone,
         'CIDR Block', vs.cidr_block,
@@ -662,7 +618,7 @@ query "aws_rds_db_instance_relationships_graph" {
       sg.title,
       'aws_vpc_security_group' as category,
       jsonb_build_object(
-        'Security Group ID', sg.group_id,
+        'Group ID', sg.group_id,
         'VPC ID', sg.vpc_id,
         'Account ID', sg.account_id,
         'Region', sg.region

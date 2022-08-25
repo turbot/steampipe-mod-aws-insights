@@ -69,23 +69,12 @@ dashboard "aws_redshift_snapshot_detail" {
 
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_redshift_snapshot_relationships_graph
       args = {
         arn = self.input.snapshot_arn.value
       }
-
-      category "snapshot" {
-      }
-
-      category "aws_redshift_cluster" {
-        href = "/aws_insights.dashboard.aws_redshift_cluster_detail.url_path?input.cluster_arn={{.properties.ARN | @uri}}"
-        icon = local.aws_redshift_cluster_icon
-      }
-
-      category "kms_key" {
-        href = "/aws_insights.dashboard.aws_kms_key_detail.url_path?input.key_arn={{.properties.ARN | @uri}}"
-        icon = local.aws_kms_key_icon
+      category "aws_redshift_snapshot" {
       }
     }
   }
