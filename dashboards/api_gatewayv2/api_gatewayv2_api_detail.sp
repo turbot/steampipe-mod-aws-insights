@@ -42,15 +42,14 @@ dashboard "api_gatewayv2_api_detail" {
 
   container {
     graph {
-      type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_api_gatewayv2_api_relationships_graph
       args = {
         api_id = self.input.api_id.value
       }
 
       category "aws_appconfig_application" {
-        # icon = local.aws_api_gatewayv2_api_icon
+        color = "pink"
       }
 
       category "aws_api_gatewayv2_stage" {
@@ -61,38 +60,12 @@ dashboard "api_gatewayv2_api_detail" {
         icon = local.aws_api_gatewayv2_api_icon
       }
 
-      category "aws_lambda_function" {
-        href = "${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn={{.properties.ARN | @uri}}"
-        icon = local.aws_lambda_function_icon
-      }
-
-      category "http_uri" {
-        # href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-        # icon = local.aws_s3_bucket_icon
-      }
-
-      category "aws_eventbridge" {
-        icon = local.aws_eventbridge_rule_icon
-      }
-
       category "aws_sqs_queue" {
         icon = local.aws_sqs_queue_icon
       }
 
-      category "aws_app_config" {
-        # icon = local.aws_sqs_queue_icon
-      }
-
-      category "aws_kinesis_stream" {
-        icon = local.aws_kinesis_stream_icon
-      }
-
-      category "aws_ec2_load_balancer_listener" {
-        icon = local.aws_ec2_application_load_balancer_icon
-      }
-
       category "aws_sfn_state_machine" {
-        icon = local.aws_step_function_icon
+        color = "pink"
       }
 
       category "uses" {
@@ -390,12 +363,12 @@ query "aws_api_gatewayv2_api_relationships_graph" {
       null as to_id,
       lb.arn as id,
       lb.title as title,
-      'aws_ec2_load_balancer_listener' as category,
+      'aws_ec2_classic_load_balancer' as category,
       jsonb_build_object( 'ARN', lb.arn, 'Account ID', lb.account_id, 'Region', lb.region, 'Protocol', lb.protocol, 'Port', lb.port, 'SSL Policy', coalesce(lb.ssl_policy, 'None') ) as properties 
     from
       aws_api_gatewayv2_integration i 
       join
-        aws_ec2_load_balancer_listener lb 
+        aws_ec2_load_balancer_listener lb
         on i.integration_uri = lb.arn 
       join
         api a 
