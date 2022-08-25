@@ -35,34 +35,14 @@ dashboard "aws_eventbridge_rule_detail" {
 
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_eventbridge_rule_relationships_graph
       args = {
         arn = self.input.eventbridge_rule_arn.value
       }
-
       category "aws_eventbridge_rule" {
         icon = local.aws_eventbridge_rule_icon
       }
-
-      category "aws_eventbridge_bus" {
-        icon = local.aws_eventbridge_bus_icon
-      }
-
-      category "aws_cloudwatch_log_group" {
-        icon = local.aws_cloudwatch_log_group_icon
-      }
-
-      category "aws_sns_topic" {
-        href = "/aws_insights.dashboard.aws_sns_topic_detail.url_path?input.topic_arn={{.properties.ARN | @uri}}"
-        icon = local.aws_sns_topic_icon
-      }
-
-      category "aws_lambda_function" {
-        href = "/aws_insights.dashboard.aws_lambda_function_detail.url_path?input.lambda_arn={{.properties.ARN | @uri}}"
-        icon = local.aws_lambda_function_icon
-      }
-
     }
   }
 
@@ -96,7 +76,7 @@ dashboard "aws_eventbridge_rule_detail" {
       width = 6
 
       table {
-        title = "Rule Targets"
+        title = "Targets"
         query = query.aws_eventbridge_rule_targets
         args = {
           arn = self.input.eventbridge_rule_arn.value
@@ -175,7 +155,9 @@ query "aws_eventbridge_rule_tags" {
 query "aws_eventbridge_rule_targets" {
   sql = <<-EOQ
     select
-      target ->> 'Arn' as "Target ARN"
+      target ->> 'Id' as "ID",
+      target ->> 'Arn' as "ARN",
+      target ->> 'Input' as "Input"
     from
       aws_eventbridge_rule as c,
       jsonb_array_elements(c.targets) as target
@@ -251,7 +233,7 @@ query "aws_eventbridge_rule_relationships_graph" {
       s.topic_arn as to_id,
       null as id,
       'sends events' as title,
-      'uses' as category,
+      'eventbridge_rule_to_sns_topic' as category,
       jsonb_build_object(
         'Name', s.title,
         'ARN', s.topic_arn,
@@ -294,7 +276,7 @@ query "aws_eventbridge_rule_relationships_graph" {
       f.arn as to_id,
       null as id,
       'sends events' as title,
-      'uses' as category,
+      'eventbridge_rule_to_lambda_function' as category,
       jsonb_build_object(
         'ARN', f.arn,
         'Account ID', f.account_id,
@@ -337,7 +319,7 @@ query "aws_eventbridge_rule_relationships_graph" {
       w.arn as to_id,
       null as id,
       'logs to' as title,
-      'uses' as category,
+      'eventbridge_rule_to_cloudwatch_log_group' as category,
       jsonb_build_object(
         'ARN', w.arn,
         'Account ID', w.account_id,
@@ -362,7 +344,8 @@ query "aws_eventbridge_rule_relationships_graph" {
       jsonb_build_object(
         'ARN', b.arn,
         'Account ID', b.account_id,
-        'Event Bus Name', r.event_bus_name
+        'Event Bus Name', r.event_bus_name,
+        'Region', r.region
       ) as properties
     from
       aws_eventbridge_rule r
@@ -379,12 +362,9 @@ query "aws_eventbridge_rule_relationships_graph" {
       r.arn as to_id,
       null as id,
       'has rule' as title,
-      'uses' as category,
+      'eventbridge_bus_to_eventbridge_rule' as category,
       jsonb_build_object(
-        'Bus Name', b.name,
-        'Rule Name', r.name,
-        'Account ID', b.account_id,
-        'Event Bus Name', r.event_bus_name
+        'Account ID', b.account_id
       ) as properties
     from
       aws_eventbridge_rule r
