@@ -168,6 +168,16 @@ graph "aws_graph_categories" {
     }
   }
 
+  category "aws_ec2_ami" {
+    href = "aws_insights.dashboard.aws_ec2_ami_detail?input.ami={{.properties.'Image ID' | @uri}}"
+    icon = local.aws_ec2_ami_icon
+    fold {
+      title     = "EC2 AMIs"
+      icon      = local.aws_ec2_ami_icon
+      threshold = 3
+    }
+  }
+
   category "aws_ec2_instance" {
     href = "/aws_insights.dashboard.aws_ec2_instance_detail?input.instance_arn={{.properties.'ARN' | @uri}}"
     icon = local.aws_ec2_instance_icon
@@ -342,15 +352,6 @@ graph "aws_graph_categories" {
     fold {
       title     = "EC2 Network Interfaces"
       icon      = local.aws_ec2_network_interface_icon
-      threshold = 3
-    }
-  }
-
-  category "aws_ec2_ami" {
-    icon = local.aws_ec2_ami_icon
-    fold {
-      title     = "EC2 AMIs"
-      icon      = local.aws_ec2_ami_icon
       threshold = 3
     }
   }

@@ -252,7 +252,7 @@ query "aws_ebs_snapshot_relationships_graph" {
       images.image_id as from_id,
       bdm -> 'Ebs' ->> 'SnapshotId' as to_id,
       null as id,
-      'contains' as title,
+      'created from' as title,
       'ec2_ami_to_ebs_snapshot' as category,
       jsonb_build_object(
         'Account ID', images.account_id

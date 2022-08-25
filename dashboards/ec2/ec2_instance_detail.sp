@@ -619,14 +619,17 @@ query "aws_ec2_instance_relationships_graph" {
     select
       null as from_id,
       null as to_id,
-      image_id as id,
-      image_id as title,
+      ami.image_id as id,
+      ami.name as title,
       'aws_ec2_ami' as category,
       jsonb_build_object(
-        'Image ID', image_id
+        'Image ID', ami.image_id
       ) as properties
     from
-      instances as i
+      instances as i,
+      aws_ec2_ami as ami
+    where
+      ami.image_id = i.image_id
 
     -- From EC2 AMIs (edge)
     union all
