@@ -42,6 +42,10 @@ dashboard "aws_vpc_flow_log_detail" {
       args = {
         flow_log_id = self.input.flow_log_id.value
       }
+      category "aws_vpc_flow_log" {
+        icon = local.aws_vpc_flow_log_icon
+      }
+
     }
   }
 
