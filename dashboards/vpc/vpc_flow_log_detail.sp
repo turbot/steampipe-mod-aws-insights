@@ -42,10 +42,6 @@ dashboard "aws_vpc_flow_log_detail" {
       args = {
         flow_log_id = self.input.flow_log_id.value
       }
-      category "aws_vpc_flow_log" {
-        icon = local.aws_vpc_flow_log_icon
-      }
-
     }
   }
 
@@ -349,7 +345,7 @@ query "aws_vpc_flow_log_relationships_graph" {
       v.arn as from_id,
       s.subnet_arn as to_id,
       null as id,
-      'sub network' as title,
+      'vpc' as title,
       'vpc_to_vpc_subnet' as category,
       jsonb_build_object(
         'ARN', v.arn,
@@ -391,7 +387,7 @@ query "aws_vpc_flow_log_relationships_graph" {
       v.arn as from_id,
       case when s.subnet_arn is not null then s.subnet_arn else f.flow_log_id end as to_id,
       null as id,
-      case when s.subnet_arn is not null then 'sub network' else 'uses' end as title,
+      'vpc' as title,
       case when s.subnet_arn is not null then 'vpc_to_vpc_subnet' else 'vpc_to_vpc_flow_log' end as category,
       jsonb_build_object(
         'ARN', v.arn,
@@ -433,7 +429,7 @@ query "aws_vpc_flow_log_relationships_graph" {
       subnet_arn as from_id,
       f.flow_log_id as to_id,
       null as id,
-      'uses' as title,
+      'subnet' as title,
       'vpc_subnet_to_vpc_flow_log' as category,
       jsonb_build_object(
         'ARN', subnet_arn,
@@ -472,7 +468,7 @@ query "aws_vpc_flow_log_relationships_graph" {
       i.network_interface_id as from_id,
       f.flow_log_id as to_id,
       null as id,
-      'attached to' as title,
+      'eni' as title,
       'ec2_network_interface_to_vpc_flow_log' as category,
       jsonb_build_object(
         'ID', network_interface_id,
@@ -512,7 +508,7 @@ query "aws_vpc_flow_log_relationships_graph" {
       subnet_arn as from_id,
       i.network_interface_id as to_id,
       null as id,
-      'connects to' as title,
+      'subnet' as title,
       'vpc_subnet_to_ec2_network_interface' as category,
       jsonb_build_object(
         'ARN', subnet_arn,
@@ -553,7 +549,7 @@ query "aws_vpc_flow_log_relationships_graph" {
       v.arn as from_id,
       s.subnet_arn as to_id,
       null as id,
-      'sub network' as title,
+      'vpc' as title,
       'vpc_to_vpc_subnet' as category,
       jsonb_build_object(
         'ID', v.vpc_id,

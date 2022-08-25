@@ -175,7 +175,7 @@ query "aws_vpc_subnet_relationships_graph" {
       $1 as from_id,
       v.vpc_id as to_id,
       null as id,
-      'sub network' as title,
+      'subnet' as title,
       'vpc_subnet_to_vpc' as category,
       jsonb_build_object(
         'ARN', v.arn,
@@ -250,7 +250,7 @@ query "aws_vpc_subnet_relationships_graph" {
       $1 as from_id,
       network_acl_id as to_id,
       null as id,
-      'uses' as title,
+      'network acl' as title,
       'vpc_subnet_to_vpc_network_acl' as category,
       jsonb_build_object(
         'ARN', arn,
@@ -290,7 +290,7 @@ query "aws_vpc_subnet_relationships_graph" {
       db_instance_identifier as from_id,
       $1 as to_id,
       null as id,
-      'launched in' as title,
+      'rds db instance' as title,
       'rds_db_instance_to_vpc_subnet' as category,
       jsonb_build_object(
         'ARN', arn,
@@ -328,7 +328,7 @@ query "aws_vpc_subnet_relationships_graph" {
       instance_id as from_id,
       $1 as to_id,
       null as id,
-      'launched in' as title,
+      'ec2 instance' as title,
       'ec2_instance_to_vpc_subnet' as category,
       jsonb_build_object(
         'ARN', arn,
@@ -367,7 +367,7 @@ query "aws_vpc_subnet_relationships_graph" {
       arn as from_id,
       $1 as to_id,
       null as id,
-      'launched in' as title,
+      'lambda function' as title,
       'lambda_function_to_vpc_subnet' as category,
       jsonb_build_object(
         'ARN', arn,
@@ -406,7 +406,7 @@ query "aws_vpc_subnet_relationships_graph" {
       arn as from_id,
       $1 as to_id,
       null as id,
-      'launched in' as title,
+      'notebook instance' as title,
       'sagemaker_notebook_instance_to_vpc_subnet' as category,
       jsonb_build_object(
         'ARN', arn,
