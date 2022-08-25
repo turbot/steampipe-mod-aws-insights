@@ -61,6 +61,7 @@ dashboard "aws_ecs_cluster_detail" {
 
     graph {
       type  = "graph"
+      base  = graph.aws_graph_categories
       title = "Relationships"
       query = query.aws_ecs_cluster_relationships_graph
       args = {
@@ -70,42 +71,37 @@ dashboard "aws_ecs_cluster_detail" {
       category "aws_ecs_task" {
         icon       = local.aws_ecs_task_icon
         fold {
-        threshold  = 3
-        title      = "Tasks..."
-
+          threshold  = 2
+          title      = "Tasks..."
+          icon =   local.aws_ecs_task_icon
         }
       }
 
-      category "aws_vpc" {
-        href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'VPC ID' | @uri}}"
-        icon = local.aws_vpc_icon
+      category "aws_ecs_task_definition" {
+        fold {
+          threshold  = 2
+          title      = "TasksDefinitions..."
+          icon =   "collection"
+        }
+      }
+
+      category "aws_ecs_service" {
+        icon = local.aws_ecs_service_icon
+        fold {
+          threshold  = 2
+          title      = "Service..."
+          icon       = local.aws_ecs_service_icon
+        }
       }
 
       category "aws_ecs_container_instance" {
         color = "green"
       }
 
-      category "aws_ecs_service" {
-        icon = local.aws_ecs_service_icon
+      category "launch_type" {
+        color = "red"
       }
 
-      category "aws_kms_key" {
-        href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.ARN | @uri}}"
-        icon = local.aws_kms_key_icon
-      }
-
-      category "aws_kinesis_stream" {
-        icon = local.aws_kinesis_stream_icon
-      }
-
-      category "aws_s3_bucket" {
-        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.key_arn={{.properties.ARN | @uri}}"
-        icon = local.aws_s3_bucket_icon
-      }
-
-      category "uses" {
-        color = "green"
-      }
     }
 
   }
@@ -274,6 +270,28 @@ query "aws_ecs_cluster_relationships_graph" {
         aws_ecs_cluster
       where
         cluster_arn = $1
+    ), list_all_task_definitions as (
+        select
+          distinct task_definition_arn as task_definition
+        from
+          aws_ecs_task
+        where
+          cluster_arn = $1
+        union
+        select
+          distinct task_definition as task_definition
+        from
+          aws_ecs_service
+        where
+          cluster_arn = $1
+    ), task_definition_launch_type as (
+        select
+          jsonb_array_elements_text(requires_compatibilities) as launch_type,
+          task_definition_arn
+        from
+          aws_ecs_task_definition as d
+        where
+          d.task_definition_arn in (select task_definition from list_all_task_definitions)
     )
     select
       null as from_id,
@@ -289,6 +307,175 @@ query "aws_ecs_cluster_relationships_graph" {
       ) as properties
     from
       esc_cluster
+
+  -- To ECS Launch Type EC2 (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      'EC2' as id,
+      'EC2' as title,
+      'launch_type' as category,
+      jsonb_build_object(
+        'Launch Type', 'EC2'
+      ) as properties
+    from
+      esc_cluster
+    where
+      'EC2' in (select launch_type from task_definition_launch_type)
+
+    -- To ECS Launch Type EC2 (edge)
+    union all
+    select
+      $1 as from_id,
+      'EC2' as to_id,
+      null as id,
+      'launch type' as title,
+      'ecs_cluster_to_launch_type' as category,
+      jsonb_build_object(
+        'Launch Type', 'EC2'
+      ) as properties
+    from
+      esc_cluster
+    where
+      'EC2' in (select launch_type from task_definition_launch_type)
+
+    -- To ECS Launch Type FARGATE (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      'FARGATE' as id,
+      'FARGATE' as title,
+      'launch_type' as category,
+      jsonb_build_object(
+        'Launch Type', 'FARGATE'
+      ) as properties
+    from
+      esc_cluster
+    where
+      'FARGATE' in (select launch_type from task_definition_launch_type)
+
+    -- To ECS Launch Type FARGATE (edge)
+    union all
+    select
+      $1 as from_id,
+      'FARGATE' as to_id,
+      null as id,
+      'launch type' as title,
+      'ecs_cluster_to_launch_type' as category,
+      jsonb_build_object(
+        'Launch Type', 'FARGATE'
+      ) as properties
+    from
+      esc_cluster
+    where
+      'FARGATE' in (select launch_type from task_definition_launch_type)
+
+   -- To ECS External Launch Type (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      'EXTERNAL' as id,
+      'EXTERNAL' as title,
+      'launch_type' as category,
+      jsonb_build_object(
+        'Launch Type', 'EXTERNAL'
+      ) as properties
+    from
+      esc_cluster
+     where
+      'EXTERNAL' in (select launch_type from task_definition_launch_type)
+
+    -- To ECS Fargate Launch Type  (edge)
+    union all
+    select
+      $1 as from_id,
+      'EXTERNAL' as to_id,
+      null as id,
+      'launch type' as title,
+      'ecs_cluster_to_launch_type' as category,
+      jsonb_build_object(
+        'Launch Type', 'EXTERNAL'
+      ) as properties
+    from
+      esc_cluster
+    where
+      'EXTERNAL' in (select launch_type from task_definition_launch_type)
+
+    -- To ECS task definitions (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      d.task_definition_arn as id,
+      d.title as title,
+      'aws_ecs_task_definition' as category,
+      jsonb_build_object(
+        'ARN', d.task_definition_arn,
+        'Account ID', d.account_id,
+        'Region', d.region
+      ) as properties
+    from
+      aws_ecs_task_definition as d
+    where
+      d.task_definition_arn in (select distinct task_definition from list_all_task_definitions )
+
+    -- To ECS task definitions (edge)
+    union all
+    select
+      jsonb_array_elements_text(requires_compatibilities) as from_id,
+      d.task_definition_arn as to_id,
+      null as id,
+      'task defintion' as title,
+      'launch_type_to_ecs_task_definition' as category,
+      jsonb_build_object(
+        'ARN', d.task_definition_arn,
+        'Account ID', d.account_id,
+        'Region', d.region
+      ) as properties
+    from
+      aws_ecs_task_definition as d
+    where
+      d.task_definition_arn in (select task_definition from list_all_task_definitions )
+
+    -- To ECS services  (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      s.arn as id,
+      s.service_name as title,
+      'aws_ecs_service' as category,
+      jsonb_build_object(
+        'ARN', s.arn,
+        'launch_type', s.launch_type,
+        'Account ID', s.account_id,
+        'Region', s.region
+      ) as properties
+    from
+      aws_ecs_service as s
+    where
+      s.cluster_arn = $1
+
+    -- To ECS services  (edge)
+    union all
+    select
+      s.task_definition as from_id,
+      s.arn as to_id,
+      null as id,
+      'service' as title,
+      'ecs_task_definition_to_ecs_service' as category,
+      jsonb_build_object(
+        'ARN', s.arn,
+        'Account ID', s.account_id,
+        'Region', s.region
+      ) as properties
+    from
+      aws_ecs_service as s
+    where
+      s.cluster_arn = $1
 
     -- To ECS conatiner instances (node)
     union all
@@ -314,11 +501,11 @@ query "aws_ecs_cluster_relationships_graph" {
     -- To ECS conatiner instances (edge)
     union all
     select
-      $1 as from_id,
+      s.arn as from_id,
       i.arn as to_id,
       null as id,
       'uses' as title,
-      'ecs_cluster_to_ecs_container_insatnce' as category,
+      'ecs_service_to_ecs_container_insatnce' as category,
       jsonb_build_object(
         'ARN', i.arn,
         'Account ID', i.account_id,
@@ -327,10 +514,12 @@ query "aws_ecs_cluster_relationships_graph" {
     from
       aws_ecs_container_instance as i
       left join aws_ec2_instance as e on i.ec2_instance_id = e.instance_id
+      left join aws_ecs_service as s on s.cluster_arn = i.cluster_arn
     where
-      i.cluster_arn = $1
+      s.launch_type = 'EC2'
+      and i.cluster_arn = $1
 
-    -- To VPC Subnet (node)
+     -- To VPC Subnet (node)
     union all
     select
       null as from_id,
@@ -415,238 +604,181 @@ query "aws_ecs_cluster_relationships_graph" {
     where
       i.cluster_arn  = $1
 
-    -- To ECS task (node)
+    -- To ECS services role (node)
     union all
     select
       null as from_id,
       null as to_id,
-      t.task_arn as id,
-      concat(split_part(t.task_arn, '/', 2),'/' ,split_part(t.task_arn, '/', 3)) as title,
-      'aws_ecs_task' as category,
+      r.arn as id,
+      r.name as title,
+      'aws_iam_role' as category,
       jsonb_build_object(
-        'ARN', t.task_arn,
-        'launch_type', t.launch_type,
-        'Account ID', t.account_id,
-        'Region', t.region
-      ) as properties
-    from
-      aws_ecs_task as t
-    where
-      t.launch_type = 'EC2'
-      and t.cluster_arn = $1
-
-    -- To ECS task (edge)
-    union all
-    select
-      t.container_instance_arn as from_id,
-      t.task_arn as to_id,
-      null as id,
-      'task' as title,
-      'aws_ecs_task' as category,
-      jsonb_build_object(
-        'ARN', t.task_arn,
-        'Account ID', t.account_id,
-        'Region', t.region
-      ) as properties
-    from
-      aws_ecs_task as t
-    where
-      t.launch_type = 'EC2'
-      and t.cluster_arn = $1
-
-  -- To ECS service launch type = ec2 (node)
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      s.arn as id,
-      s.service_name as title,
-      'aws_ecs_service' as category,
-      jsonb_build_object(
-        'ARN', s.arn,
-        'launch_type', s.launch_type,
-        'Account ID', s.account_id,
-        'Region', s.region
+        'ARN', r.arn,
+        'Create Date', r.create_date,
+        'Account ID', r.account_id
       ) as properties
     from
       aws_ecs_service as s
-    where
-      s.launch_type = 'EC2'
-      and s.cluster_arn = $1
-
-    -- To ECS service launch type = ec2 (edge)
-    union all
-    select
-      i.arn as from_id,
-      s.arn as to_id,
-      null as id,
-      'service' as title,
-      'aws_ecs_service' as category,
-      jsonb_build_object(
-        'ARN', s.arn,
-        'Account ID', s.account_id,
-        'Region', s.region
-      ) as properties
-    from
-      aws_ecs_service as s
-      left join aws_ecs_container_instance as i on i.cluster_arn = s.cluster_arn
-    where
-      s.launch_type = 'EC2'
-      and s.cluster_arn = $1
-
-   -- To ECS task launch type <> ec2 (node)
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      t.task_arn as id,
-      concat(split_part(t.task_arn, '/', 2),'/' ,split_part(t.task_arn, '/', 3)) as title,
-      'aws_ecs_task' as category,
-      jsonb_build_object(
-        'ARN', t.task_arn,
-        'launch_type', t.launch_type,
-        'Account ID', t.account_id,
-        'Region', t.region
-      ) as properties
-    from
-      aws_ecs_task as t
-    where
-      t.launch_type <> 'EC2'
-      and t.cluster_arn = $1
-
-    -- To ECS task launch type <> ec2 (edge)
-    union all
-    select
-      t.cluster_arn as from_id,
-      t.task_arn as to_id,
-      null as id,
-      'task' as title,
-      'aws_ecs_task' as category,
-      jsonb_build_object(
-        'ARN', t.task_arn,
-        'Account ID', t.account_id,
-        'Region', t.region
-      ) as properties
-    from
-      aws_ecs_task as t
-    where
-      t.launch_type <> 'EC2'
-      and t.cluster_arn = $1
-
-    -- To ECS service launch type <> ec2 (node)
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      s.arn as id,
-      s.service_name as title,
-      'aws_ecs_service' as category,
-      jsonb_build_object(
-        'ARN', s.arn,
-        'launch_type', s.launch_type,
-        'Account ID', s.account_id,
-        'Region', s.region
-      ) as properties
-    from
-      aws_ecs_service as s
-    where
-      s.launch_type <> 'EC2'
-      and s.cluster_arn = $1
-
-    -- To ECS service launch type <> ec2 (edge)
-    union all
-    select
-      s.cluster_arn as from_id,
-      s.arn as to_id,
-      null as id,
-      'service' as title,
-      'aws_ecs_service' as category,
-      jsonb_build_object(
-        'ARN', s.arn,
-        'Account ID', s.account_id,
-        'Region', s.region
-      ) as properties
-    from
-      aws_ecs_service as s
-    where
-      s.launch_type <> 'EC2'
-      and s.cluster_arn = $1
-
-    -- To ECS task definition for task (node)
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      d.task_definition_arn as id,
-      d.title as title,
-      'aws_ecs_task_definition' as category,
-      jsonb_build_object(
-        'ARN', d.task_definition_arn,
-        'Account ID', d.account_id,
-        'Region', d.region
-      ) as properties
-    from
-      aws_ecs_task as t
-      right join aws_ecs_task_definition as d on d.task_definition_arn =  t.task_definition_arn
-    where
-      t.cluster_arn = $1
-
-    -- To ECS task definition (edge)
-    union all
-    select
-      t.task_arn as from_id,
-      d.task_definition_arn as to_id,
-      null as id,
-      'task defintion' as title,
-      'aws_ecs_task_definition' as category,
-      jsonb_build_object(
-        'ARN', d.task_definition_arn,
-        'Account ID', d.account_id,
-        'Region', d.region
-      ) as properties
-    from
-      aws_ecs_task as t
-      right join aws_ecs_task_definition as d on d.task_definition_arn =  t.task_definition_arn
-    where
-      t.cluster_arn = $1
-
-    -- To ECS task definition for servcie (node)
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      d.task_definition_arn as id,
-      d.title as title,
-      'aws_ecs_task_definition' as category,
-      jsonb_build_object(
-        'ARN', d.task_definition_arn,
-        'Account ID', d.account_id,
-        'Region', d.region
-      ) as properties
-    from
-      aws_ecs_service as s
-      right join aws_ecs_task_definition as d on d.task_definition_arn =  s.task_definition
+      left join aws_iam_role as r on r.arn = s.role_arn
     where
       s.cluster_arn = $1
 
-    -- To ECS task definition servcie (edge)
+    -- To ECS services role (edge)
     union all
     select
       s.arn as from_id,
-      d.task_definition_arn as to_id,
+      s.role_arn as to_id,
       null as id,
-      'task defintion' as title,
-      'aws_ecs_task_definition' as category,
+      'assumes' as title,
+      'aws_ecs_service_to_iam_role' as category,
       jsonb_build_object(
-        'ARN', d.task_definition_arn,
-        'Account ID', d.account_id,
-        'Region', d.region
+        'ARN', r.arn,
+        'Create Date', r.create_date,
+        'Account ID', r.account_id
       ) as properties
     from
       aws_ecs_service as s
-      right join aws_ecs_task_definition as d on d.task_definition_arn =  s.task_definition
+      left join aws_iam_role as r on r.arn = s.role_arn
     where
       s.cluster_arn = $1
+
+    -- To ECS services load balancing (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      t.target_group_arn as id,
+      t.target_group_name as title,
+      'aws_ec2_target_group' as category,
+      jsonb_build_object(
+        'ARN', t.target_group_arn,
+        'VPC ID', t.vpc_id,
+        'Target Type', target_type,
+        'Account ID', t.account_id,
+        'Region', t.region
+      ) as properties
+    from
+      aws_ecs_service as s,
+      jsonb_array_elements(load_balancers) as l
+      left join aws_ec2_target_group as t on t.target_group_arn = l ->> 'TargetGroupArn'
+    where
+      s.cluster_arn = $1
+
+    -- To ECS services load balancing  (edge)
+    union all
+    select
+      s.arn as from_id,
+      l ->> 'TargetGroupArn' as to_id,
+      null as id,
+      'load balancing' as title,
+      'ecs_service_to_ec2_target_group' as category,
+      jsonb_build_object(
+        'ARN', t.target_group_arn,
+        'VPC ID', t.vpc_id,
+        'Target Type', target_type,
+        'Account ID', t.account_id,
+        'Region', t.region
+      ) as properties
+    from
+      aws_ecs_service as s,
+      jsonb_array_elements(load_balancers) as l
+      left join aws_ec2_target_group as t on t.target_group_arn = l ->> 'TargetGroupArn'
+    where
+      s.cluster_arn = $1
+
+    -- To ECS services subnet (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      sb.subnet_arn as id,
+      sb.title as title,
+      'aws_vpc_subnet' as category,
+      jsonb_build_object(
+        'ARN', sb.subnet_arn,
+        'Subnet ID', sb.subnet_id,
+        'Account ID', sb.account_id,
+        'Region', sb.region
+      ) as properties
+    from
+      aws_ecs_service as e,
+      jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
+      left join aws_vpc_subnet as sb on sb.subnet_id = trim((s::text ), '""')
+    where
+      e.network_configuration is not null
+      and e.cluster_arn = $1
+
+    -- To ECS services subnet (edge)
+    union all
+    select
+      e.arn as from_id,
+      sb.subnet_arn as to_id,
+      null as id,
+      'subnet' as title,
+      'ecs_service_to_vpc_subnet' as category,
+      jsonb_build_object(
+        'ARN', sb.subnet_arn,
+        'Subnet ID', sb.subnet_id,
+        'Account ID', sb.account_id,
+        'Region', sb.region
+      ) as properties
+    from
+      aws_ecs_service as e,
+      jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
+      left join aws_vpc_subnet as sb on sb.subnet_id = trim((s::text ), '""')
+    where
+      e.network_configuration is not null
+      and e.cluster_arn = $1
+
+    -- To ECS services VPC (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      v.arn as id,
+      v.title as title,
+      'aws_vpc' as category,
+      jsonb_build_object(
+        'ARN', v.arn,
+        'VPC ID', v.vpc_id,
+        'Account ID', v.account_id,
+        'Region', v.region
+      ) as properties
+    from
+      aws_ecs_service as e,
+      jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
+      left join aws_vpc_subnet as sb on sb.subnet_id = trim((s::text ), '""')
+      ,aws_vpc as v
+    where
+      e.network_configuration is not null
+      and e.cluster_arn = $1
+      and v.vpc_id = sb.vpc_id
+
+
+    -- To ECS services VPC (edge)
+    union all
+    select
+      sb.subnet_arn as from_id,
+      v.arn as to_id,
+      null as id,
+      'vpc' as title,
+      'vpc_subnet_to_vpc' as category,
+      jsonb_build_object(
+        'ARN', v.arn,
+        'VPC ID', v.vpc_id,
+        'Account ID', v.account_id,
+        'Region', v.region
+      ) as properties
+    from
+      aws_ecs_service as e,
+      jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
+      left join aws_vpc_subnet as sb on sb.subnet_id = trim((s::text ), '""')
+      ,aws_vpc as v
+    where
+      e.network_configuration is not null
+      and e.cluster_arn = $1
+       and v.vpc_id = sb.vpc_id
+
   EOQ
 
   param "arn" {}
