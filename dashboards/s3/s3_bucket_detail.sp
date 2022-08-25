@@ -243,11 +243,7 @@ query "aws_s3_bucket_relationships_graph" {
       'logs to' as title,
       'cloudtrail_to_s3_bucket' as category,
       jsonb_build_object(
-        'ARN', trail.arn,
-        'Account ID', trail.account_id,
-        'Region', trail.region,
-        'Log Prefix', trail.s3_key_prefix,
-        'Latest Delivery Time', trail.latest_delivery_time
+        'Account ID', trail.account_id
       ) as properties
     from
       aws_cloudtrail_trail as trail,
@@ -284,10 +280,7 @@ query "aws_s3_bucket_relationships_graph" {
       'logs to' as title,
       's3_bucket_to_s3_bucket' as category,
       jsonb_build_object(
-        'Name', aws_s3_bucket.name,
-        'ARN', aws_s3_bucket.arn,
-        'Account ID', aws_s3_bucket.account_id,
-        'Region', aws_s3_bucket.region
+        'Account ID', aws_s3_bucket.account_id
       ) as properties
     from
       aws_s3_bucket,
@@ -326,10 +319,7 @@ query "aws_s3_bucket_relationships_graph" {
       'logs to' as title,
       'ec2_application_load_balancer_to_s3_bucket' as category,
       jsonb_build_object(
-        'Name', alb.name,
-        'ARN', alb.arn,
         'Account ID', alb.account_id,
-        'Region', alb.region,
         'Log to', attributes ->> 'Value',
         'Log Prefix', (
           select
@@ -380,19 +370,16 @@ query "aws_s3_bucket_relationships_graph" {
       'logs to' as title,
       'ec2_network_load_balancer_to_s3_bucket' as category,
       jsonb_build_object(
-        'Name', nlb.name,
-        'ARN', nlb.arn,
         'Account ID', nlb.account_id,
-        'Region', nlb.region,
-        'logs to', attributes ->> 'Value', 'Log Prefix',
-      (
-        select
-          a ->> 'Value'
-        from
-          jsonb_array_elements(nlb.load_balancer_attributes) as a
-        where
-          a ->> 'Key' = 'access_logs.s3.prefix'
-      )
+        'logs to', attributes ->> 'Value', 
+        'Log Prefix', (
+          select
+            a ->> 'Value'
+          from
+            jsonb_array_elements(nlb.load_balancer_attributes) as a
+          where
+            a ->> 'Key' = 'access_logs.s3.prefix'
+        )
       ) as properties
     from
       aws_ec2_network_load_balancer nlb,
@@ -432,10 +419,7 @@ query "aws_s3_bucket_relationships_graph" {
       'logs to' as title,
       'ec2_classic_load_balancer_to_s3_bucket' as category,
       jsonb_build_object(
-        'Name', clb.name,
-        'ARN', clb.arn,
         'Account ID', clb.account_id,
-        'Region', clb.region,
         'Log Prefix', clb.access_log_s3_bucket_prefix
       ) as properties
     from
@@ -474,10 +458,7 @@ query "aws_s3_bucket_relationships_graph" {
       'accesses' as title,
       's3_access_point_to_s3_bucket' as category,
       jsonb_build_object(
-        'Name', ap.name,
-        'ARN', ap.access_point_arn,
-        'Account ID', ap.account_id,
-        'Region', ap.region
+        'Account ID', ap.account_id
       ) as properties
     from
       aws_s3_access_point ap,
@@ -515,10 +496,7 @@ query "aws_s3_bucket_relationships_graph" {
       'logs to' as title,
       's3_bucket_to_s3_bucket' as category,
       jsonb_build_object(
-        'Name', aws_s3_bucket.name,
-        'ARN', aws_s3_bucket.arn,
-        'Account ID', aws_s3_bucket.account_id,
-        'Region', aws_s3_bucket.region
+        'Account ID', aws_s3_bucket.account_id
       ) as properties
     from
       aws_s3_bucket,

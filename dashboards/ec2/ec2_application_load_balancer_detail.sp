@@ -351,12 +351,7 @@ query "aws_ec2_application_load_balancer_relationships_graph" {
       'Security Group' as title,
       'ec2_application_load_balancer_to_vpc_security_group' as category,
       jsonb_build_object(
-        'Group Name', sg.group_name,
-        'Group ID', sg.group_id,
-        'ARN', sg.arn,
-        'Account ID', sg.account_id,
-        'Region', sg.region,
-        'VPC ID', sg.vpc_id
+        'Account ID', sg.account_id
       ) as properties
     from
       aws_vpc_security_group sg,
@@ -401,10 +396,7 @@ query "aws_ec2_application_load_balancer_relationships_graph" {
       'targets' as title,
       'ec2_application_load_balancer_to_ec2_target_group' as category,
       jsonb_build_object(
-        'Group Name', tg.target_group_name,
-        'ARN', tg.target_group_arn,
-        'Account ID', tg.account_id,
-        'Region', tg.region
+        'Account ID', tg.account_id
       ) as properties
     from
       aws_ec2_target_group tg,
@@ -504,11 +496,7 @@ query "aws_ec2_application_load_balancer_relationships_graph" {
       'logs to' as title,
       'ec2_application_load_balancer_to_s3_bucket' as category,
       jsonb_build_object(
-        'Name', buckets.name,
-        'ARN', buckets.arn,
         'Account ID', alb.account_id,
-        'Region', alb.region,
-        'Logs to', attributes ->> 'Value',
         'Log Prefix', (
           select
             a ->> 'Value'
@@ -597,9 +585,7 @@ query "aws_ec2_application_load_balancer_relationships_graph" {
       'listens with' as title,
       'load_balancer_listener_to_ec2_application_load_balancer' as category,
       jsonb_build_object(
-        'ARN', lblistener.arn,
-        'Account ID', lblistener.account_id,
-        'Region', lblistener.region
+        'Account ID', lblistener.account_id
       ) as properties
     from
       aws_ec2_load_balancer_listener lblistener,

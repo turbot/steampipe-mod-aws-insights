@@ -9,7 +9,7 @@ dashboard "aws_ebs_volume_detail" {
 
   input "volume_arn" {
     title = "Select a volume:"
-    sql   = query.aws_ebs_volume_input.sql
+    query = query.aws_ebs_volume_input
     width = 4
   }
 
@@ -237,7 +237,7 @@ query "aws_ebs_volume_relationships_graph" {
     from
       volumes
 
-    -- From KMS Keys (node)
+    -- From KMS keys (node)
     union all
     select
       null as from_id,
@@ -257,7 +257,7 @@ query "aws_ebs_volume_relationships_graph" {
     where
       volumes.kms_key_id = kms_keys.arn
 
-    -- From KMS Keys (edge)
+    -- From KMS keys (edge)
     union all
     select
       kms_keys.arn as from_id,
@@ -266,10 +266,7 @@ query "aws_ebs_volume_relationships_graph" {
       'secures with' as title,
       'kms_keys_to_ebs_volume' as category,
       jsonb_build_object(
-        'ARN', kms_keys.arn,
-        'Account ID', kms_keys.account_id,
-        'Region', kms_keys.region,
-        'Key Manager', kms_keys.key_manager
+        'Account ID', kms_keys.account_id
       ) as properties
     from
       aws_kms_key as kms_keys,
@@ -307,10 +304,7 @@ query "aws_ebs_volume_relationships_graph" {
       'snapshot' as title,
       'ebs_volumes_to_ebs_snapshots' as category,
       jsonb_build_object(
-        'ARN', snapshot.arn,
-        'Account ID', snapshot.account_id,
-        'Region', snapshot.region,
-        'Snapshot Size', snapshot.volume_size
+        'Account ID', snapshot.account_id
       ) as properties
     from
       aws_ebs_snapshot as snapshot,
@@ -355,11 +349,7 @@ query "aws_ebs_volume_relationships_graph" {
       'mounts' as title,
       'ec2_instances_to_ebs_volumes' as category,
       jsonb_build_object(
-        'Name', instances.tags ->> 'Name',
-        'Instance ID', instance_id,
-        'ARN', instances.arn,
-        'Account ID', instances.account_id,
-        'Region', instances.region
+        'Account ID', instances.account_id
       ) as properties
     from
       aws_ec2_instance as instances,
@@ -383,7 +373,7 @@ query "aws_ebs_volume_relationships_graph" {
       images.title as title,
       'aws_ec2_ami' as category,
       jsonb_build_object(
-        'SnapshotId', bdm -> 'Ebs' ->> 'SnapshotId',
+        'Snapshot ID', bdm -> 'Ebs' ->> 'SnapshotId',
         'Account ID', images.account_id,
         'Region', images.region
       ) as properties
@@ -412,9 +402,7 @@ query "aws_ebs_volume_relationships_graph" {
       'uses snapshot' as title,
       'ebs_snapshots_to_ec2_ami' as category,
       jsonb_build_object(
-        'SnapshotId', bdm -> 'Ebs' ->> 'SnapshotId',
-        'Account ID', images.account_id,
-        'Region', images.region
+        'Account ID', images.account_id
       ) as properties
     from
       aws_ec2_ami as images,

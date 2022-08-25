@@ -350,12 +350,7 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       'attaches to' as title,
       'ec2_network_load_balancer_to_vpc_security_group' as category,
       jsonb_build_object(
-        'Group Name', sg.group_name,
-        'Group ID', sg.group_id,
-        'ARN', sg.arn,
-        'Account ID', sg.account_id,
-        'Region', sg.region,
-        'VPC ID', sg.vpc_id
+        'Account ID', sg.account_id
       ) as properties
     from
       aws_vpc_security_group sg,
@@ -400,10 +395,7 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       'targets' as title,
       'ec2_network_load_balancer_to_ec2_target_group' as category,
       jsonb_build_object(
-        'Group Name', tg.target_group_name,
-        'ARN', tg.target_group_arn,
-        'Account ID', tg.account_id,
-        'Region', tg.region
+        'Account ID', tg.account_id
       ) as properties
     from
       aws_ec2_target_group tg,
@@ -451,13 +443,9 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       'forwards to' as title,
       'ec2_target_group_to_ec2_instance' as category,
       jsonb_build_object(
-        'Instance ID', instance.instance_id,
-        'ARN', instance.arn,
         'Account ID', instance.account_id,
-        'Region', instance.region,
         'Health Check Port', thd['HealthCheckPort'],
-        'Health Check State', thd['TargetHealth']['State'],
-        'health', tg.target_health_descriptions
+        'Health Check State', thd['TargetHealth']['State']
       ) as properties
     from
       aws_ec2_target_group tg,
@@ -504,10 +492,7 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       'logs to' as title,
       'ec2_network_load_balancer_to_s3_bucket' as category,
       jsonb_build_object(
-        'Name', nlb.name,
-        'ARN', nlb.arn,
-        'Account ID', nlb.account_id,
-        'Region', nlb.region,
+        'Account ID', buckets.account_id,
         'Logs to', attributes ->> 'Value'
       ) as properties
     from
@@ -547,10 +532,7 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       'resides in' as title,
       'ec2_network_load_balancer_to_vpc' as category,
       jsonb_build_object(
-        'VPC ID', vpc.vpc_id,
-        'Account ID', vpc.account_id,
-        'Region', vpc.region,
-        'CIDR Block', vpc.cidr_block
+        'Account ID', vpc.account_id
       ) as properties
     from
       aws_vpc vpc,
@@ -589,9 +571,7 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       'listens with' as title,
       'load_balancer_listener_to_ec2_network_load_balancer' as category,
       jsonb_build_object(
-        'ARN', lblistener.arn,
-        'Account ID', lblistener.account_id,
-        'Region', lblistener.region
+        'Account ID', lblistener.account_id
       ) as properties
     from
       aws_ec2_load_balancer_listener lblistener,

@@ -325,6 +325,7 @@ query "aws_ec2_instance_relationships_graph" {
       'mounts' as title,
       'ec2_instance_to_ebs_volume' as category,
       jsonb_build_object(
+        'Account ID', instances.account_id,
         'Volume ID', bd -> 'Ebs' ->> 'VolumeId',
         'Device Name', bd ->> 'DeviceName',
         'Status', bd -> 'Ebs' ->> 'Status',
@@ -370,6 +371,7 @@ query "aws_ec2_instance_relationships_graph" {
       'attaches' as title,
       'ec2_instance_to_ec2_eni' as category,
       jsonb_build_object(
+        'Account ID', i.account_id,
         'Status', status,
         'Attachment ID', attachment_id,
         'Attachment Status', attachment_status,
@@ -410,6 +412,7 @@ query "aws_ec2_instance_relationships_graph" {
       'attaches' as title,
       'ec2_instance_to_vpc_security_group' as category,
       jsonb_build_object(
+        'Account ID', instances.account_id,
         'ID', sg ->> 'GroupId',
         'Name', sg ->> 'GroupName',
         'Account ID', account_id,
@@ -451,6 +454,7 @@ query "aws_ec2_instance_relationships_graph" {
       'launched in' as title,
       'ec2_instance_to_vpc_subnet' as category,
       jsonb_build_object(
+        'Account ID', i.account_id,
         'Name', subnet.tags ->> 'Name',
         'Subnet ID', subnet.subnet_id,
         'State', subnet.state
@@ -529,6 +533,7 @@ query "aws_ec2_instance_relationships_graph" {
       'attaches' as title,
       'ec2_instance_to_iam_profile' as category,
       jsonb_build_object(
+        'Account ID', instances.account_id,
         'Instance Profile ARN', iam_instance_profile_arn,
         'Instance Profile ID', iam_instance_profile_id
       ) as properties
@@ -606,6 +611,7 @@ query "aws_ec2_instance_relationships_graph" {
       'adds' as title,
       'ec2_instance_to_ec2_key_pair' as category,
       jsonb_build_object(
+        'Account ID', i.account_id,
         'Name', key_name,
         'Instance ID', instance_id
       ) as properties
@@ -635,6 +641,7 @@ query "aws_ec2_instance_relationships_graph" {
       'launched with' as title,
       'ec2_instance_to_ec2_ami' as category,
       jsonb_build_object(
+        'Account ID', i.account_id,
         'Image ID', image_id,
         'Instance ID', instance_id
       ) as properties
@@ -670,6 +677,7 @@ query "aws_ec2_instance_relationships_graph" {
       'launches' as title,
       'ec2_auto_scaling_group_to_ec2_instance' as category,
       jsonb_build_object(
+        'Account ID', instances.account_id
       ) as properties
     from
       aws_ec2_autoscaling_group as k,
@@ -707,9 +715,8 @@ query "aws_ec2_instance_relationships_graph" {
       'routes to' as title,
       'ec2_classic_load_balancer_to_ec2_instance' as category,
       jsonb_build_object(
-        'instance', group_instance ->> 'InstanceId',
-        'i', instances.instance_id,
-        'clb', group_instance
+        'Account ID', instances.account_id,
+        'Instance ID', group_instance ->> 'InstanceId'
       ) as properties
     from
       aws_ec2_classic_load_balancer as k,

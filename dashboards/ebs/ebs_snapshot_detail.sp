@@ -217,9 +217,7 @@ query "aws_ebs_snapshot_relationships_graph" {
       'snapshot' as title,
       'ebs_volume_to_ebs_snapshot' as category,
       jsonb_build_object(
-        'Volume ID', volumes.volume_id,
-        'Account ID', volumes.account_id,
-        'Region', volumes.region
+        'Account ID', volumes.account_id
       ) as properties
     from
       aws_ebs_volume as volumes,
@@ -236,7 +234,7 @@ query "aws_ebs_snapshot_relationships_graph" {
       images.title as title,
       'aws_ec2_ami' as category,
       jsonb_build_object(
-        'SnapshotId', bdm -> 'Ebs' ->> 'SnapshotId',
+        'Snapshot ID', bdm -> 'Ebs' ->> 'SnapshotId',
         'Account ID', images.account_id,
         'Region', images.region
       ) as properties
@@ -257,9 +255,7 @@ query "aws_ebs_snapshot_relationships_graph" {
       'contains' as title,
       'ec2_ami_to_ebs_snapshot' as category,
       jsonb_build_object(
-        'SnapshotId', bdm -> 'Ebs' ->> 'SnapshotId',
-        'Account ID', images.account_id,
-        'Region', images.region
+        'Account ID', images.account_id
       ) as properties
     from
       aws_ec2_ami as images,
@@ -298,9 +294,7 @@ query "aws_ebs_snapshot_relationships_graph" {
       'provisions EBS with' as title,
       'ec2_launch_config_to_ebs_snapshot' as category,
       jsonb_build_object(
-        'ARN', launch_config.launch_configuration_arn,
-        'Account ID', launch_config.account_id,
-        'Region', launch_config.region
+        'Account ID', launch_config.account_id
       ) as properties
     from
       aws_ec2_launch_configuration as launch_config,
@@ -338,9 +332,7 @@ query "aws_ebs_snapshot_relationships_graph" {
       'secures with' as title,
       'ebs_snapshot_to_kms_keys' as category,
       jsonb_build_object(
-        'ARN', kms_keys.arn,
         'Account ID', kms_keys.account_id,
-        'Region', kms_keys.region,
         'Key Manager', kms_keys.key_manager
       ) as properties
     from
@@ -358,10 +350,7 @@ query "aws_ebs_snapshot_relationships_graph" {
       'secures with' as title,
       'ebs_volumes_to_kms_keys' as category,
       jsonb_build_object(
-        'ARN', kms_keys.arn,
-        'Account ID', kms_keys.account_id,
-        'Region', kms_keys.region,
-        'Key Manager', kms_keys.key_manager
+        'Account ID', kms_keys.account_id
       ) as properties
     from
       aws_kms_key as kms_keys,

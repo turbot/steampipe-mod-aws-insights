@@ -229,9 +229,8 @@ query "aws_ec2_key_pair_relationships_graph" {
       'launches with' as title,
       'ec2_launch_config_to_ec2_key_pair' as category,
       jsonb_build_object(
-        'ARN', launch_config.launch_configuration_arn,
-        'Account ID', launch_config.account_id,
-        'Region', launch_config.region ) as properties
+        'Account ID', launch_config.account_id
+      ) as properties
     from
       aws_ec2_launch_configuration launch_config,
       key_pair
