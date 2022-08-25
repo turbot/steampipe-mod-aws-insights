@@ -444,10 +444,7 @@ query "aws_ec2_application_load_balancer_relationships_graph" {
       'forwards to' as title,
       'ec2_target_group_to_ec2_instance' as category,
       jsonb_build_object(
-        'Instance ID', instance.instance_id,
-        'ARN', instance.arn,
         'Account ID', instance.account_id,
-        'Region', instance.region,
         'Health Check Port', thd['HealthCheckPort'],
         'Health Check State', thd['TargetHealth']['State']
       ) as properties
@@ -504,8 +501,8 @@ query "aws_ec2_application_load_balancer_relationships_graph" {
             jsonb_array_elements(alb.load_balancer_attributes) as a
           where
             a ->> 'Key' = 'access_logs.s3.prefix'
-      )
-    ) as properties
+        )
+      ) as properties
     from
       aws_s3_bucket buckets,
       alb,
@@ -543,10 +540,7 @@ query "aws_ec2_application_load_balancer_relationships_graph" {
       'resides in' as title,
       'ec2_application_load_balancer_to_vpc' as category,
       jsonb_build_object(
-        'VPC ID', vpc.vpc_id,
-        'Account ID', vpc.account_id,
-        'Region', vpc.region,
-        'CIDR Block', vpc.cidr_block
+        'Account ID', vpc.account_id
       ) as properties
     from
       aws_vpc vpc,

@@ -486,7 +486,14 @@ query "aws_ec2_gateway_load_balancer_relationships_graph" {
       'ec2_gateway_load_balancer_to_s3_bucket' as category,
       jsonb_build_object(
         'Account ID', buckets.account_id,
-        'Logs to', attributes ->> 'Value'
+        'Log Prefix', (
+          select
+            a ->> 'Value'
+          from
+            jsonb_array_elements(glb.load_balancer_attributes) as a
+          where
+            a ->> 'Key' = 'access_logs.s3.prefix'
+        )
       ) as properties
     from
       aws_s3_bucket buckets,

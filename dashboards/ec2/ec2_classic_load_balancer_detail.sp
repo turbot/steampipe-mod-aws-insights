@@ -433,10 +433,7 @@ query "aws_ec2_classic_load_balancer_relationships_graph" {
       'VPC' as title,
       'ec2_classic_load_balancer_to_vpc' as category,
       jsonb_build_object(
-        'VPC ID', vpc.vpc_id,
-        'Account ID', vpc.account_id,
-        'Region', vpc.region,
-        'CIDR Block', vpc.cidr_block
+        'Account ID', vpc.account_id
       ) as properties
     from
       aws_vpc vpc,

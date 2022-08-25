@@ -192,9 +192,7 @@ query "aws_ec2_key_pair_relationships_graph" {
       'has' as title,
       'ec2_instance_to_ec2_key_pair' as category,
       jsonb_build_object(
-        'ARN', instances.arn,
-        'Account ID', instances.account_id,
-        'Region', instances.region
+        'Account ID', instances.account_id
       ) as properties
     from
       aws_ec2_instance instances,

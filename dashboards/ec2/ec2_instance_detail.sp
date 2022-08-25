@@ -412,11 +412,7 @@ query "aws_ec2_instance_relationships_graph" {
       'attaches' as title,
       'ec2_instance_to_vpc_security_group' as category,
       jsonb_build_object(
-        'Account ID', instances.account_id,
-        'ID', sg ->> 'GroupId',
-        'Name', sg ->> 'GroupName',
-        'Account ID', account_id,
-        'Region', region
+        'Account ID', account_id
       ) as properties
     from
       instances,

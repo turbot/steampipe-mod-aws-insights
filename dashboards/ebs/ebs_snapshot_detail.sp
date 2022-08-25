@@ -332,8 +332,7 @@ query "aws_ebs_snapshot_relationships_graph" {
       'secures with' as title,
       'ebs_snapshot_to_kms_keys' as category,
       jsonb_build_object(
-        'Account ID', kms_keys.account_id,
-        'Key Manager', kms_keys.key_manager
+        'Account ID', kms_keys.account_id
       ) as properties
     from
       aws_kms_key as kms_keys,
