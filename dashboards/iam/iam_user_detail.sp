@@ -53,7 +53,7 @@ dashboard "aws_iam_user_detail" {
 
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_iam_user_relationships_graph
       args = {
         arn = self.input.user_arn.value
@@ -61,15 +61,6 @@ dashboard "aws_iam_user_detail" {
       category "aws_iam_user" {
         icon = local.aws_iam_user_icon
       }
-
-      category "aws_iam_group" {
-        href = "/aws_insights.dashboard.aws_iam_group_detail?input.group_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_iam_policy" {
-        href = "/aws_insights.dashboard.aws_iam_policy_detail?input.policy_arn={{.properties.'ARN' | @uri}}"
-      }
-
     }
   }
 

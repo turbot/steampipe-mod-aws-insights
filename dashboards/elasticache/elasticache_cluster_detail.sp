@@ -60,32 +60,13 @@ dashboard "aws_elasticache_cluster_detail" {
   container {
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_elasticache_cluster_relationships_graph
       args = {
         arn = self.input.elasticache_cluster_arn.value
       }
       category "aws_elasticache_cluster" {
         icon = local.aws_elasticache_cluster_icon
-      }
-
-      category "aws_sns_topic" {
-        href = "${dashboard.aws_sns_topic_detail.url_path}?input.topic_arn={{.properties.ARN | @uri}}"
-        icon = local.aws_sns_topic_icon
-      }
-
-      category "aws_kms_key" {
-        href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_kms_key_icon
-      }
-
-      category "aws_vpc" {
-        href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.'id' | @uri}}"
-        icon = local.aws_vpc_icon
-      }
-
-      category "aws_vpc_security_group" {
-        href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.'id' | @uri}}"
       }
 
     }
@@ -346,6 +327,7 @@ query "aws_elasticache_cluster_relationships_graph" {
       jsonb_build_object(
         'ARN', arn,
         'VPC ID', vpc_id,
+        'Group ID', group_id,
         'Account ID', account_id,
         'Region', region ) as properties
     from
@@ -389,6 +371,7 @@ query "aws_elasticache_cluster_relationships_graph" {
       title as title,
       'aws_vpc' as category,
       jsonb_build_object(
+        'VPC ID', vpc_id,
         'ARN', arn,
         'State', state,
         'CIDR Block', cidr_block,
@@ -479,6 +462,7 @@ query "aws_elasticache_cluster_relationships_graph" {
       title as title,
       'aws_vpc_subnet' as category,
       jsonb_build_object(
+        'Subnet ID', subnet_id,
         'ARN', subnet_arn,
         'CIDR Block', cidr_block,
         'Account ID', account_id,
@@ -527,6 +511,7 @@ query "aws_elasticache_cluster_relationships_graph" {
       title as title,
       'aws_vpc' as category,
       jsonb_build_object(
+        'VPC ID', vpc_id,
         'ARN', arn,
         'State', state,
         'CIDR Block', cidr_block,

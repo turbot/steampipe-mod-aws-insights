@@ -59,33 +59,13 @@ dashboard "acm_certificate_detail" {
   container {
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_acm_certificate_relationships_graph
       args = {
         arn = self.input.certificate_arn.value
       }
       category "aws_acm_certificate" {
         icon = local.aws_acm_certificate_icon
-      }
-
-      category "aws_cloudfront_distribution" {
-        href = "/aws_insights.dashboard.aws_cloudfront_distribution_detail?input.distribution_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_cloudfront_distribution_icon
-      }
-
-      category "aws_ec2_classic_load_balancer" {
-        href = "${dashboard.aws_ec2_classic_load_balancer_detail.url_path}?input.clb={{.properties.'ARN' | @uri}}"
-        icon = local.aws_ec2_classic_load_balancer_icon
-      }
-
-      category "aws_ec2_application_load_balancer" {
-        href = "${dashboard.aws_ec2_application_load_balancer_detail.url_path}?input.alb={{.properties.'ARN' | @uri}}"
-        icon = local.aws_ec2_application_load_balancer_icon
-      }
-
-      category "aws_ec2_network_load_balancer" {
-        href = "${dashboard.aws_ec2_network_load_balancer_detail.url_path}?input.nlb={{.properties.'ARN' | @uri}}"
-        icon = local.aws_ec2_network_load_balancer_icon
       }
     }
   }

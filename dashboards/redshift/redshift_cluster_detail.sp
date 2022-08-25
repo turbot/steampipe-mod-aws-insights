@@ -137,60 +137,14 @@ dashboard "aws_redshift_cluster_detail" {
 
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_redshift_cluster_relationship_graph
       args = {
         arn = self.input.cluster_arn.value
       }
-
       category "aws_redshift_cluster" {
         icon = local.aws_redshift_cluster_icon
       }
-
-      category "aws_vpc" {
-        icon = local.aws_vpc_icon
-        href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.properties.'ID' | @uri}}"
-      }
-
-      category "aws_vpc_eip" {
-        icon = local.aws_vpc_eip_icon
-      }
-
-      category "aws_vpc_security_group" {
-        color = "orange"
-        href  = "/aws_insights.dashboard.aws_vpc_security_group_detail?input.security_group_id={{.properties.'ID' | @uri}}"
-      }
-
-      category "aws_redshift_subnet_group" {
-        color = "orange"
-      }
-
-      category "aws_vpc_subnet" {
-        color = "orange"
-      }
-
-      category "aws_kms_key" {
-        icon = local.aws_kms_key_icon
-        href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_iam_role" {
-        icon = local.aws_iam_role_icon
-        href = "${dashboard.aws_iam_role_detail.url_path}?input.role_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_cloudwatch_log_group" {
-        icon = local.aws_cloudwatch_log_group_icon
-      }
-
-      category "aws_s3_bucket" {
-        icon = local.aws_s3_bucket_icon
-        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_redshift_snapshot" {
-      }
-
     }
   }
 }
@@ -498,6 +452,7 @@ query "aws_redshift_cluster_relationship_graph" {
       subnet ->>  'SubnetIdentifier' as title,
       'aws_vpc_subnet' as category,
       jsonb_build_object(
+        'Subnet ID', subnet ->>  'SubnetIdentifier',
         'Subnet Availability Zone', subnet -> 'SubnetAvailabilityZone' ->> 'Name',
         'Account ID', s.account_id,
         'Region', s.region,
@@ -544,7 +499,7 @@ query "aws_redshift_cluster_relationship_graph" {
       'aws_vpc' as category,
       jsonb_build_object(
         'ARN', v.arn,
-        'ID', v.vpc_id,
+        'VPC ID', v.vpc_id,
         'Account ID', v.account_id,
         'Region', v.region,
         'Default', is_default::text,
@@ -608,7 +563,7 @@ query "aws_redshift_cluster_relationship_graph" {
       'aws_vpc_security_group' as category,
       jsonb_build_object(
         'ARN', sg.arn,
-        'ID', sg.group_id,
+        'Group ID', sg.group_id,
         'Account ID', sg.account_id,
         'Region', sg.region,
         'Status', s ->> 'Status'

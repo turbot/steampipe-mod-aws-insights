@@ -59,32 +59,13 @@ dashboard "aws_cloudfront_distribution_detail" {
   container {
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_cloudfront_distribution_relationships_graph
       args = {
         arn = self.input.distribution_arn.value
       }
       category "aws_cloudfront_distribution" {
         icon = local.aws_cloudfront_distribution_icon
-      }
-
-      category "aws_acm_certificate" {
-        href = "${dashboard.acm_certificate_detail.url_path}?input.certificate_arn={{.properties.ARN | @uri}}"
-        icon = local.aws_acm_certificate_icon
-      }
-
-      category "aws_s3_bucket" {
-        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_s3_bucket_icon
-      }
-
-      category "aws_ec2_application_load_balancer" {
-        href = "${dashboard.aws_ec2_application_load_balancer_detail.url_path}?input.alb={{.properties.'ARN' | @uri}}"
-        icon = local.aws_ec2_application_load_balancer_icon
-      }
-
-      category "aws_media_store_container" {
-        icon = local.aws_media_store_container_icon
       }
 
     }
@@ -226,7 +207,12 @@ query "aws_cloudfront_distribution_relationships_graph" {
       id as id,
       id as title,
       'aws_cloudfront_distribution' as category,
-      jsonb_build_object( 'ARN', arn, 'Status', status, 'Enabled', enabled::text, 'Domain Name', domain_name, 'Account ID', account_id ) as properties
+      jsonb_build_object(
+        'ARN', arn,
+        'Status', status,
+        'Enabled', enabled::text,
+        'Domain Name', domain_name,
+        'Account ID', account_id ) as properties
     from
       aws_cloudfront_distribution
     where
@@ -240,7 +226,12 @@ query "aws_cloudfront_distribution_relationships_graph" {
       title as id,
       title as title,
       'aws_acm_certificate' as category,
-      jsonb_build_object( 'ARN', certificate_arn, 'Domain Name', domain_name, 'Certificate Transparency Logging Preference', certificate_transparency_logging_preference, 'Created At', created_at, 'Account ID', account_id ) as properties
+      jsonb_build_object(
+        'ARN', certificate_arn,
+        'Domain Name', domain_name,
+        'Certificate Transparency Logging Preference', certificate_transparency_logging_preference,
+        'Created At', created_at,
+        'Account ID', account_id ) as properties
     from
       aws_acm_certificate
     where
@@ -261,8 +252,9 @@ query "aws_cloudfront_distribution_relationships_graph" {
       c.title as to_id,
       null as id,
       'uses' as title,
-      'uses' as category,
-      jsonb_build_object( 'Account ID', d.account_id ) as properties
+      'cloudfront_distribution_to_acm_certificate' as category,
+      jsonb_build_object(
+        'Account ID', d.account_id ) as properties
     from
       aws_acm_certificate as c
       left join
@@ -279,7 +271,11 @@ query "aws_cloudfront_distribution_relationships_graph" {
       arn as id,
       title as title,
       'aws_s3_bucket' as category,
-      jsonb_build_object( 'Name', name, 'ARN', arn, 'Account ID', account_id, 'Region', region ) as properties
+      jsonb_build_object(
+        'Name', name,
+        'ARN', arn,
+        'Account ID', account_id,
+        'Region', region ) as properties
     from
       aws_s3_bucket
     where
@@ -302,8 +298,9 @@ query "aws_cloudfront_distribution_relationships_graph" {
       d.id as to_id,
       null as id,
       'origin for' as title,
-      'uses' as category,
-      jsonb_build_object( 'Account ID', d.account_id ) as properties
+      's3_bucket_to_cloudfront_distribution' as category,
+      jsonb_build_object(
+        'Account ID', d.account_id ) as properties
     from
       aws_cloudfront_distribution as d,
       jsonb_array_elements(origins) as origin
@@ -321,7 +318,12 @@ query "aws_cloudfront_distribution_relationships_graph" {
       arn as id,
       name as title,
       'aws_ec2_application_load_balancer' as category,
-      jsonb_build_object( 'ARN', arn, 'VPC ID', vpc_id, 'DNS Name', dns_name, 'Created Time', created_time, 'Account ID', account_id ) as properties
+      jsonb_build_object(
+        'ARN', arn,
+        'VPC ID', vpc_id,
+        'DNS Name', dns_name,
+        'Created Time', created_time,
+        'Account ID', account_id ) as properties
     from
       aws_ec2_application_load_balancer
     where
@@ -343,7 +345,7 @@ query "aws_cloudfront_distribution_relationships_graph" {
       d.id as to_id,
       null as id,
       'origin for' as title,
-      'uses' as category,
+      'ec2_application_load_balancer_to_cloudfront_distribution' as category,
       jsonb_build_object( 'Account ID', d.account_id ) as properties
     from
       aws_cloudfront_distribution as d,
@@ -362,7 +364,12 @@ query "aws_cloudfront_distribution_relationships_graph" {
       arn as id,
       name as title,
       'aws_media_store_container' as category,
-      jsonb_build_object( 'ARN', arn, 'Status', status, 'Access Logging Enabled', access_logging_enabled::text, 'Creation Time', creation_time, 'Account ID', account_id ) as properties
+      jsonb_build_object(
+        'ARN', arn,
+        'Status', status,
+        'Access Logging Enabled', access_logging_enabled::text,
+        'Creation Time', creation_time,
+        'Account ID', account_id ) as properties
     from
       aws_media_store_container
     where
@@ -384,7 +391,7 @@ query "aws_cloudfront_distribution_relationships_graph" {
       d.id as to_id,
       null as id,
       'origin for' as title,
-      'uses' as category,
+      'media_store_container_to_cloudfront_distribution' as category,
       jsonb_build_object( 'Account ID', d.account_id ) as properties
     from
       aws_cloudfront_distribution as d,

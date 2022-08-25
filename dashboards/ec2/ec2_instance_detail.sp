@@ -60,42 +60,13 @@ dashboard "aws_ec2_instance_detail" {
 
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_ec2_instance_relationships_graph
       args = {
         arn = self.input.instance_arn.value
       }
-
       category "aws_ec2_instance" {
         icon = local.aws_ec2_instance_icon
-      }
-
-      category "aws_ebs_volume" {
-        // cyclic dependency prevents use of url_path, hardcode for now
-        href = "/aws_insights.dashboard.aws_ebs_volume_detail?input.volume_arn={{.properties.'ARN' | @uri}}"
-        #href = "${dashboard.aws_ebs_volume_detail.url_path}?input.volume_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_ebs_volume_icon
-      }
-
-      category "aws_ec2_network_interface" {
-        icon = local.aws_ec2_network_interface_icon
-      }
-
-      category "aws_ec2_ami" {
-        icon = local.aws_ec2_ami_icon
-      }
-
-      category "aws_vpc_security_group" {
-        // cyclic dependency prevents use of url_path, hardcode for now
-        href = "/aws_insights.dashboard.aws_vpc_security_group_detail?input.security_group_id={{.properties.'ID' | @uri}}"
-        #href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.properties.'ID' | @uri}}"
-      }
-
-      category "aws_vpc" {
-        // cyclic dependency prevents use of url_path, hardcode for now
-        href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.properties.'ID' | @uri}}"
-        #href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'ID' | @uri}}"
-        icon = local.aws_vpc_icon
       }
 
     }
@@ -326,10 +297,13 @@ query "aws_ec2_instance_relationships_graph" {
       bd -> 'Ebs' ->> 'VolumeId' as id,
       bd -> 'Ebs' ->> 'VolumeId' as title,
       'aws_ebs_volume' as category,
-      jsonb_build_object('Volume ID', bd -> 'Ebs' ->> 'VolumeId', 'Account ID', account_id, 'Region', region) as properties
+      jsonb_build_object( 'ARN', v.arn, 'Volume ID', bd -> 'Ebs' ->> 'VolumeId', 'Account ID', v.account_id, 'Region', v.region) as properties
     from
       instances,
-      jsonb_array_elements(block_device_mappings) as bd
+      jsonb_array_elements(block_device_mappings) as bd,
+      aws_ebs_volume as v
+    where
+      v.volume_id = bd -> 'Ebs' ->> 'VolumeId'
 
     -- To EBS volumes (edge)
     union all
@@ -339,7 +313,7 @@ query "aws_ec2_instance_relationships_graph" {
       null as id,
       'mounts' as title,
       'uses' as category,
-      jsonb_build_object('Volume ID', bd -> 'Ebs' ->> 'VolumeId', 'Device Name', bd ->> 'DeviceName', 'Status', bd -> 'Ebs' ->> 'Status', 'Attach Time', bd -> 'Ebs' ->> 'AttachTime', 'Delete On Termination', bd -> 'Ebs' ->> 'DeleteOnTermination') as properties
+      jsonb_build_object( 'Volume ID', bd -> 'Ebs' ->> 'VolumeId', 'Device Name', bd ->> 'DeviceName', 'Status', bd -> 'Ebs' ->> 'Status', 'Attach Time', bd -> 'Ebs' ->> 'AttachTime', 'Delete On Termination', bd -> 'Ebs' ->> 'DeleteOnTermination') as properties
     from
       instances,
       jsonb_array_elements(block_device_mappings) as bd
@@ -382,7 +356,7 @@ query "aws_ec2_instance_relationships_graph" {
       sg ->> 'GroupId' as id,
       sg ->> 'GroupId' as title,
       'aws_vpc_security_group' as category,
-      jsonb_build_object('ID', sg ->> 'GroupId', 'Name', sg ->> 'GroupName', 'Account ID', account_id, 'Region', region) as properties
+      jsonb_build_object('Group ID', sg ->> 'GroupId', 'Name', sg ->> 'GroupName', 'Account ID', account_id, 'Region', region) as properties
     from
       instances,
       jsonb_array_elements(security_groups) as sg
@@ -438,7 +412,7 @@ query "aws_ec2_instance_relationships_graph" {
       vpc.vpc_id as id,
       vpc.tags ->> 'Name' as title,
       'aws_vpc' as category,
-      jsonb_build_object('ID', vpc.vpc_id, 'Name', vpc.tags ->> 'Name', 'CIDR Block', vpc.cidr_block, 'Account ID', vpc.account_id, 'Owner ID', vpc.owner_id, 'Region', vpc.region) as properties
+      jsonb_build_object('VPC ID', vpc.vpc_id, 'Name', vpc.tags ->> 'Name', 'CIDR Block', vpc.cidr_block, 'Account ID', vpc.account_id, 'Owner ID', vpc.owner_id, 'Region', vpc.region) as properties
     from
       instances,
       aws_vpc as vpc
@@ -609,7 +583,7 @@ query "aws_ec2_instance_relationships_graph" {
       k.arn as id,
       k.name as title,
       'aws_ec2_classic_load_balancer' as category,
-      jsonb_build_object('instance', group_instance ->> 'InstanceId', 'i', instances.instance_id, 'clb', group_instance) as properties
+      jsonb_build_object( 'ARN', k.arn, 'instance', group_instance ->> 'InstanceId', 'i', instances.instance_id, 'clb', group_instance) as properties
     from
       aws_ec2_classic_load_balancer as k,
       jsonb_array_elements(k.instances) as group_instance,

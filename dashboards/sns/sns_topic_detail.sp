@@ -37,54 +37,14 @@ dashboard "aws_sns_topic_detail" {
 
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_sns_topic_relationships_graph
       args = {
         arn = self.input.topic_arn.value
       }
-
       category "aws_sns_topic" {
         icon = local.aws_sns_topic_icon
       }
-
-      category "aws_kms_key" {
-        icon = local.aws_kms_key_icon
-        href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_sns_topic_subscription" {
-        color = "green"
-      }
-
-      category "aws_s3_bucket" {
-        icon = local.aws_s3_bucket_icon
-        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_rds_db_instance" {
-        icon = local.aws_rds_db_instance_icon
-        href = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_redshift_cluster" {
-        icon = local.aws_redshift_cluster_icon
-        href = "${dashboard.aws_redshift_cluster_detail.url_path}?input.cluster_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_cloudtrail_trail" {
-        icon = local.aws_cloudtrail_trail_icon
-        href = "${dashboard.aws_cloudtrail_trail_detail.url_path}?input.trail_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_cloudformation_stack" {
-        icon = local.aws_cloudformation_stack_icon
-      }
-
-      category "aws_elasticache_cluster" {
-        icon = local.aws_elasticache_cluster_icon
-        href = "/aws_insights.dashboard.aws_elasticache_cluster_detail.url_path?input.elasticache_cluster_arn={{.properties.ARN | @uri}}"
-      }
-
     }
   }
 
