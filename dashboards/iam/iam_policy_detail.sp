@@ -13,33 +13,12 @@ dashboard "aws_iam_policy_detail" {
 
   graph {
     type  = "graph"
-    title = "Relationships"
+    base  = graph.aws_graph_categories
     query = query.aws_iam_policy_relationships_graph
     args = {
       arn = self.input.policy_arn.value
     }
-    category "aws_iam_policy" {
-      color = "orange"
-    }
-
-    category "aws_iam_role" {
-      href = "${dashboard.aws_iam_role_detail.url_path}?input.role_arn={{.properties.ARN | @uri}}"
-      icon = local.aws_iam_role_icon
-    }
-
-    category "aws_iam_user" {
-      icon = local.aws_iam_user_icon
-      href = "${dashboard.aws_iam_user_detail.url_path}?input.user_arn={{.properties.ARN | @uri}}"
-    }
-
-    category "aws_iam_group" {
-      color = "blue"
-      href  = "${dashboard.aws_iam_group_detail.url_path}?input.group_arn={{.properties.ARN | @uri}}"
-    }
-
-    category "uses" {
-      color = "green"
-    }
+    category "aws_iam_policy" {}
   }
 }
 

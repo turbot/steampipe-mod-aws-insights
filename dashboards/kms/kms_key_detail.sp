@@ -54,53 +54,13 @@ dashboard "aws_kms_key_detail" {
 
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_kms_key_relationships_graph
       args = {
         arn = self.input.key_arn.value
       }
       category "aws_kms_key" {
         icon = local.aws_kms_key_icon
-      }
-
-      category "aws_cloudtrail_trail" {
-        href = "${dashboard.aws_cloudtrail_trail_detail.url_path}?input.trail_arn={{.properties.ARN | @uri}}"
-        icon = local.aws_cloudtrail_trail_icon
-      }
-
-      category "aws_ebs_volume" {
-        href = "/aws_insights.dashboard.aws_ebs_volume_detail?input.volume_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_ebs_volume_icon
-      }
-
-      category "aws_rds_db_cluster" {
-        icon = local.aws_rds_db_cluster_icon
-      }
-
-      category "aws_rds_db_cluster_snapshot" {
-        color = "blue"
-        href  = "${dashboard.aws_rds_db_cluster_snapshot_detail.url_path}?input.snapshot_arn={{.properties.ARN | @uri}}"
-      }
-
-      category "aws_rds_db_instance" {
-        href = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn={{.properties.ARN | @uri}}"
-        icon = local.aws_rds_db_instance_icon
-      }
-
-      category "aws_rds_db_snapshot" {
-        color = "blue"
-        href  = "${dashboard.aws_rds_db_snapshot_detail.url_path}?input.db_snapshot_arn={{.properties.ARN | @uri}}"
-      }
-
-      category "aws_redshift_cluster" {
-        // cyclic dependency prevents use of url_path, hardcode for now
-        # href = "${dashboard.aws_redshift_cluster_detail.url_path}?input.cluster_arn={{.properties.ARN | @uri}}"
-        icon = local.aws_redshift_cluster_icon
-        href = "/aws_insights.dashboard.aws_redshift_cluster_detail?input.cluster_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "uses" {
-        color = "green"
       }
     }
   }
@@ -302,13 +262,19 @@ query "aws_kms_key_relationships_graph" {
       id as id,
       id as title,
       'aws_kms_key' as category,
-      jsonb_build_object( 'ARN', arn, 'Key Manager', key_manager, 'Creation Date', creation_date, 'Enabled', enabled, 'Account ID', account_id ) as properties
+      jsonb_build_object(
+        'ARN', arn,
+        'Key Manager', key_manager,
+        'Creation Date', creation_date,
+        'Enabled', enabled::text,
+        'Account ID', account_id,
+        'region', region ) as properties
     from
       aws_kms_key
     where
       arn = $1
 
-    -- From Cloud Trails (node)
+    -- From Cloud trails (node)
     union all
     select
       null as from_id,
@@ -316,21 +282,28 @@ query "aws_kms_key_relationships_graph" {
       t.arn as id,
       t.name as title,
       'aws_cloudtrail_trail' as category,
-      jsonb_build_object( 'ARN', t.arn, 'Multi Region Trail', is_multi_region_trail::text, 'Logging', is_logging::text, 'Account ID', t.account_id, 'Home Region', home_region ) as properties
+      jsonb_build_object(
+        'ARN', t.arn,
+        'Multi Region Trail',
+        is_multi_region_trail::text,
+        'Logging', is_logging::text,
+        'Account ID', t.account_id,
+        'Home Region', home_region ) as properties
     from
       aws_cloudtrail_trail as t
     where
       t.kms_key_id = $1
 
-    -- From Cloud Trails (edge)
+    -- From Cloud trails (edge)
     union all
     select
       t.arn as from_id,
       k.id as to_id,
       null as id,
       'encrypted with' as title,
-      'uses' as category,
-      jsonb_build_object( 'Account ID', t.account_id ) as properties
+      'cloudtrail_trail_to_kms_key' as category,
+      jsonb_build_object(
+        'Account ID', t.account_id ) as properties
     from
       aws_cloudtrail_trail as t,
       aws_kms_key as k
@@ -338,7 +311,7 @@ query "aws_kms_key_relationships_graph" {
       t.kms_key_id = k.arn
       and k.arn = $1
 
-    -- EBS Volumes (node)
+    -- EBS volumes (node)
     union all
     select
       null as from_id,
@@ -346,21 +319,28 @@ query "aws_kms_key_relationships_graph" {
       volume_id as id,
       volume_id as title,
       'aws_ebs_volume' as category,
-      jsonb_build_object( 'ARN', v.arn, 'Volume Type', volume_type, 'State', state, 'Create Time', create_time, 'Account ID', v.account_id, 'Region', v.region ) as properties
+      jsonb_build_object(
+        'ARN', v.arn,
+        'Volume Type', volume_type,
+        'State', state,
+        'Create Time', create_time,
+        'Account ID', v.account_id,
+        'Region', v.region ) as properties
     from
       aws_ebs_volume as v
     where
       v.kms_key_id = $1
 
-    -- EBS Volumes (edge)
+    -- EBS volumes (edge)
     union all
     select
       volume_id as from_id,
       k.id as to_id,
       null as id,
       'encrypted with' as title,
-      'uses' as category,
-      jsonb_build_object( 'Account ID', v.account_id ) as properties
+      'ebs_volume_to_kms_key' as category,
+      jsonb_build_object(
+        'Account ID', v.account_id ) as properties
     from
       aws_ebs_volume as v,
       aws_kms_key as k
@@ -369,7 +349,7 @@ query "aws_kms_key_relationships_graph" {
       and k.arn = $1
 
 
-    -- RDS DB Cluster Snapshots (node)
+    -- RDS DB cluster snapshots (node)
     union all
     select
       null as from_id,
@@ -377,21 +357,28 @@ query "aws_kms_key_relationships_graph" {
       db_cluster_snapshot_identifier as id,
       db_cluster_snapshot_identifier as title,
       'aws_rds_db_cluster_snapshot' as category,
-      jsonb_build_object( 'ARN', s.arn, 'Type', type, 'Status', status, 'Create Time', create_time, 'Account ID', s.account_id, 'Region', s.region ) as properties
+      jsonb_build_object(
+        'ARN', s.arn,
+        'Type', type,
+        'Status', status,
+        'Create Time', create_time,
+        'Account ID', s.account_id,
+        'Region', s.region ) as properties
     from
       aws_rds_db_cluster_snapshot as s
     where
       s.kms_key_id = $1
 
-    -- RDS DB Cluster Snapshots (edge)
+    -- RDS DB cluster snapshots (edge)
     union all
     select
       db_cluster_snapshot_identifier as from_id,
       k.id as to_id,
       null as id,
       'encrypted with' as title,
-      'uses' as category,
-      jsonb_build_object( 'Account ID', s.account_id ) as properties
+      'rds_db_cluster_snapshot_to_kms_key' as category,
+      jsonb_build_object(
+        'Account ID', s.account_id ) as properties
     from
       aws_rds_db_cluster_snapshot as s,
       aws_kms_key as k
@@ -399,7 +386,7 @@ query "aws_kms_key_relationships_graph" {
       s.kms_key_id = k.arn
       and k.arn = $1
 
-    -- RDS DB Clusters (node)
+    -- RDS DB clusters (node)
     union all
     select
       null as from_id,
@@ -407,7 +394,12 @@ query "aws_kms_key_relationships_graph" {
       db_cluster_identifier as id,
       db_cluster_identifier as title,
       'aws_rds_db_cluster' as category,
-      jsonb_build_object( 'ARN', c.arn, 'Status', status, 'Create Time', create_time, 'Account ID', c.account_id, 'Region', c.region ) as properties
+      jsonb_build_object(
+        'ARN', c.arn,
+        'Status', status,
+        'Create Time', create_time,
+        'Account ID', c.account_id,
+        'Region', c.region ) as properties
     from
       aws_rds_db_cluster as c
     where
@@ -420,7 +412,7 @@ query "aws_kms_key_relationships_graph" {
       k.id as to_id,
       null as id,
       'encrypted with' as title,
-      'uses' as category,
+      'rds_db_cluster_to_kms_key' as category,
       jsonb_build_object( 'Account ID', c.account_id ) as properties
     from
       aws_rds_db_cluster as c,
@@ -429,7 +421,7 @@ query "aws_kms_key_relationships_graph" {
       c.kms_key_id = k.arn
       and k.arn = $1
 
-    -- RDS DB Instances (node)
+    -- RDS DB instances (node)
     union all
     select
       null as from_id,
@@ -437,21 +429,28 @@ query "aws_kms_key_relationships_graph" {
       db_instance_identifier as id,
       db_instance_identifier as title,
       'aws_rds_db_instance' as category,
-      jsonb_build_object( 'ARN', i.arn, 'Status', status, 'Class', class, 'Engine', engine, 'Account ID', i.account_id, 'Region', i.region ) as properties
+      jsonb_build_object(
+        'ARN', i.arn,
+        'Status', status,
+        'Class', class,
+        'Engine', engine,
+        'Account ID', i.account_id,
+        'Region', i.region ) as properties
     from
       aws_rds_db_instance as i
     where
       i.kms_key_id = $1
 
-    -- RDS DB Instances (edge)
+    -- RDS DB instances (edge)
     union all
     select
       db_instance_identifier as from_id,
       k.id as to_id,
       null as id,
       'encrypted with' as title,
-      'uses' as category,
-      jsonb_build_object( 'Account ID', i.account_id ) as properties
+      'rds_db_instance_to_kms_key' as category,
+      jsonb_build_object(
+        'Account ID', i.account_id ) as properties
     from
       aws_rds_db_instance as i,
       aws_kms_key as k
@@ -459,7 +458,7 @@ query "aws_kms_key_relationships_graph" {
       i.kms_key_id = k.arn
       and k.arn = $1
 
-    -- RDS DB Instance Snapshots (node)
+    -- RDS DB instance snapshots (node)
     union all
     select
       null as from_id,
@@ -467,21 +466,28 @@ query "aws_kms_key_relationships_graph" {
       db_snapshot_identifier as id,
       db_snapshot_identifier as title,
       'aws_rds_db_snapshot' as category,
-      jsonb_build_object( 'ARN', s.arn, 'Type', type, 'Status', status, 'Create Time', create_time, 'Account ID', s.account_id, 'Region', s.region ) as properties
+      jsonb_build_object(
+        'ARN', s.arn,
+        'Type', type,
+        'Status', status,
+        'Create Time', create_time,
+        'Account ID', s.account_id,
+        'Region', s.region ) as properties
     from
       aws_rds_db_snapshot as s
     where
       s.kms_key_id = $1
 
-    -- RDS DB Instance Snapshots (edge)
+    -- RDS DB instance snapshots (edge)
     union all
     select
       db_snapshot_identifier as from_id,
       k.id as to_id,
       null as id,
       'encrypted with' as title,
-      'uses' as category,
-      jsonb_build_object( 'Account ID', s.account_id ) as properties
+      'rds_db_snapshot_to_kms_key' as category,
+      jsonb_build_object(
+        'Account ID', s.account_id ) as properties
     from
       aws_rds_db_snapshot as s,
       aws_kms_key as k
@@ -489,7 +495,7 @@ query "aws_kms_key_relationships_graph" {
       s.kms_key_id = k.arn
       and k.arn = $1
 
-    -- Redshift Clusters (node)
+    -- Redshift clusters (node)
     union all
     select
       null as from_id,
@@ -497,20 +503,26 @@ query "aws_kms_key_relationships_graph" {
       cluster_identifier as id,
       cluster_identifier as title,
       'aws_redshift_cluster' as category,
-      jsonb_build_object( 'ARN', c.arn, 'Cluster Availability Status', cluster_availability_status, 'Cluster Create Time', cluster_create_time, 'Cluster Status', cluster_status, 'Account ID', c.account_id, 'Region', c.region ) as properties
+      jsonb_build_object(
+        'ARN', c.arn,
+        'Cluster Availability Status', cluster_availability_status,
+        'Cluster Create Time', cluster_create_time,
+        'Cluster Status', cluster_status,
+        'Account ID', c.account_id,
+        'Region', c.region ) as properties
     from
       aws_redshift_cluster as c
     where
       c.kms_key_id = $1
 
-    -- Redshift Clusters (edge)
+    -- Redshift clusters (edge)
     union all
     select
       cluster_identifier as from_id,
       k.id as to_id,
       null as id,
       'encrypted with' as title,
-      'uses' as category,
+      'redshift_cluster_to_kms_key' as category,
       jsonb_build_object( 'Account ID', c.account_id ) as properties
     from
       aws_redshift_cluster as c,

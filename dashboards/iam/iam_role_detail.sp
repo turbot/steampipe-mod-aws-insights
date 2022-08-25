@@ -45,39 +45,13 @@ dashboard "aws_iam_role_detail" {
 
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_iam_role_relationships_graph
       args = {
         arn = self.input.role_arn.value
       }
       category "aws_iam_role" {
         icon = local.aws_iam_role_icon
-      }
-
-      category "aws_iam_policy" {
-        href = "/aws_insights.dashboard.aws_iam_policy_detail?input.policy_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_ec2_instance" {
-        href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_id={{.properties.'Instance ID' | @uri}}"
-        icon = local.aws_ec2_instance_icon
-      }
-
-      category "aws_lambda_function" {
-        href = "/aws_insights.dashboard.aws_lambda_function_detail?input.lambda_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_lambda_function_icon
-      }
-
-      category "aws_guardduty_detector" {
-        icon = local.aws_guardduty_detector_icon
-      }
-
-      category "aws_emr_cluster" {
-        icon = local.aws_emr_cluster_icon
-      }
-
-      category "aws_kinesisanalyticsv2_application" {
-        icon = local.aws_kinesisanalytics_application_icon
       }
 
     }

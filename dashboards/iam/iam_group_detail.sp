@@ -38,20 +38,12 @@ dashboard "aws_iam_group_detail" {
 
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_iam_group_relationships_graph
       args = {
         arn = self.input.group_arn.value
       }
-      category "aws_iam_policy" {
-        href = "/aws_insights.dashboard.aws_iam_policy_detail?input.policy_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_iam_user" {
-        href = "${dashboard.aws_iam_user_detail.url_path}?input.user_arn={{.properties.ARN | @uri}}"
-        icon = local.aws_iam_user_icon
-      }
-
+      category "aws_iam_group" {}
     }
   }
 

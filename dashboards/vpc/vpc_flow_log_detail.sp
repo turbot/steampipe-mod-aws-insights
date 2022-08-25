@@ -1,6 +1,6 @@
 dashboard "aws_vpc_flow_log_detail" {
 
-  title         = "AWS VPC Flow Logs Detail"
+  title         = "AWS VPC Flow Log Detail"
   documentation = file("./dashboards/vpc/docs/vpc_flow_log_detail.md")
 
   tags = merge(local.vpc_common_tags, {
@@ -37,37 +37,13 @@ dashboard "aws_vpc_flow_log_detail" {
 
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_vpc_flow_log_relationships_graph
       args = {
         flow_log_id = self.input.flow_log_id.value
       }
-
       category "aws_vpc_flow_log" {
         icon = local.aws_vpc_flow_log_icon
-      }
-
-      category "aws_vpc" {
-        icon = local.aws_vpc_icon
-        href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'ID' | @uri}}"
-      }
-
-      category "aws_iam_role" {
-        icon = local.aws_iam_role_icon
-        href = "${dashboard.aws_iam_role_detail.url_path}?input.role_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_s3_bucket" {
-        icon = local.aws_s3_bucket_icon
-        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-      }
-
-      category "aws_cloudwatch_log_group" {
-        icon = local.aws_cloudwatch_log_group_icon
-      }
-
-      category "aws_ec2_network_interface" {
-        icon = local.aws_ec2_network_interface_icon
       }
 
     }
@@ -141,7 +117,7 @@ query "aws_vpc_flow_log_input" {
 
 }
 
-query "aws_vpc_flow_log_resource_id"{
+query "aws_vpc_flow_log_resource_id" {
   sql = <<-EOQ
     select
       'Resource ID' as label,
@@ -155,7 +131,7 @@ query "aws_vpc_flow_log_resource_id"{
   param "flow_log_id" {}
 }
 
-query "aws_vpc_flow_log_deliver_logs_status"{
+query "aws_vpc_flow_log_deliver_logs_status" {
   sql = <<-EOQ
     select
       'Deliver Logs Status' as label,
@@ -315,7 +291,7 @@ query "aws_vpc_flow_log_relationships_graph" {
       'aws_vpc_subnet' as category,
       jsonb_build_object(
         'ARN', s.subnet_arn,
-        'ID' , s.subnet_id,
+        'Subnet ID' , s.subnet_id,
         'Region', s.region,
         'Account ID', s.account_id
       ) as properties
@@ -355,7 +331,7 @@ query "aws_vpc_flow_log_relationships_graph" {
       'aws_vpc' as category,
       jsonb_build_object(
         'ARN', v.arn ,
-        'ID' , v.vpc_id,
+        'VPC ID' , v.vpc_id,
         'Region', v.region,
         'Default', v.is_default,
         'Account ID', v.account_id
@@ -398,7 +374,7 @@ query "aws_vpc_flow_log_relationships_graph" {
       'aws_vpc' as category,
       jsonb_build_object(
         'ARN', v.arn,
-        'ID' , v.vpc_id,
+        'VPC ID' , v.vpc_id,
         'Region', v.region,
         'Default', v.is_default,
         'Account ID', v.account_id
@@ -440,7 +416,7 @@ query "aws_vpc_flow_log_relationships_graph" {
       'aws_vpc_subnet' as category,
       jsonb_build_object(
         'ARN', s.subnet_arn,
-        'ID' , s.subnet_id,
+        'Subnet ID' , s.subnet_id,
         'Region', s.region,
         'Account ID', s.account_id
       ) as properties
@@ -519,7 +495,7 @@ query "aws_vpc_flow_log_relationships_graph" {
       'aws_vpc_subnet' as category,
       jsonb_build_object(
         'ARN', s.subnet_arn,
-        'ID' , s.subnet_id,
+        'Subnet ID' , s.subnet_id,
         'Region', s.region,
         'Account ID', s.account_id
       ) as properties
@@ -559,7 +535,7 @@ query "aws_vpc_flow_log_relationships_graph" {
       v.title as title,
       'aws_vpc' as category,
       jsonb_build_object(
-        'ID' , v.vpc_id,
+        'VPC ID' , v.vpc_id,
         'Region', v.region,
         'Default', v.is_default,
         'Account ID', v.account_id

@@ -35,35 +35,14 @@ dashboard "aws_ec2_network_load_balancer_detail" {
   container {
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_nlb_graph_relationships
       args = {
         arn = self.input.nlb.value
       }
-
       category "aws_ec2_network_load_balancer" {
         icon = local.aws_ec2_network_load_balancer_icon
       }
-
-      category "aws_vpc" {
-        href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'VPC ID' | @uri}}"
-        icon = local.aws_vpc_icon
-      }
-
-      category "aws_s3_bucket" {
-        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_s3_bucket_icon
-      }
-
-      category "aws_ec2_instance" {
-        href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_ec2_instance_icon
-      }
-
-      category "aws_vpc_security_group" {
-        href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.properties.'Group ID' | @uri}}"
-      }
-
     }
   }
 
@@ -257,8 +236,8 @@ query "aws_nlb_graph_relationships" {
       buckets.title as title,
       'aws_s3_bucket' as category,
       jsonb_build_object(
-        'Name', nlb.name,
-        'ARN', nlb.arn,
+        'Name', buckets.name,
+        'ARN', buckets.arn,
         'Account ID', nlb.account_id,
         'Region', nlb.region,
         'Logs to', attributes->>'Value'

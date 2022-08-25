@@ -36,36 +36,14 @@ dashboard "aws_ebs_snapshot_detail" {
   container {
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_ebs_snapshot_relationships
       args = {
         arn = self.input.snapshot_arn.value
       }
-
       category "aws_ebs_snapshot" {
         icon = local.aws_ebs_snapshot_icon
       }
-
-      category "aws_kms_key" {
-        href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_kms_key_icon
-      }
-
-      category "aws_ebs_volume" {
-        # vol -> snapshot -> vol cyclic dependency prevents usage of interpolation here
-        href = "/aws_insights.dashboard.aws_ebs_volume_detail?input.volume_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_ebs_volume_icon
-      }
-
-      category "aws_ec2_instance" {
-        href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_ec2_instance_icon
-      }
-
-      category "aws_ec2_ami" {
-        icon = local.aws_ec2_ami_icon
-      }
-
     }
   }
 }
@@ -118,7 +96,22 @@ query "aws_ebs_snapshot_age" {
 
 query "aws_ebs_snapshot_relationships" {
   sql = <<-EOQ
-    with snapshot as (select arn,snapshot_id,volume_id,volume_size,title,account_id,region,kms_key_id from aws_ebs_snapshot where arn = $1)
+    with snapshot as
+      (
+        select
+          arn,
+          snapshot_id,
+          volume_id,
+          volume_size,
+          title,
+          account_id,
+          region,
+          kms_key_id
+        from
+          aws_ebs_snapshot
+        where
+          arn = $1
+      )
     select
       null as from_id,
       null as to_id,
@@ -156,14 +149,14 @@ query "aws_ebs_snapshot_relationships" {
     where
       snapshot.volume_id = volumes.volume_id
 
-    -- EBS - nodes
+    -- EBS - edges
     union all
     select
       snapshot.snapshot_id as from_id,
       volumes.volume_id as to_id,
       null as id,
       'snapshot of' as title,
-      'aws_ebs_volume' as category,
+      'ebs_volume_to_ebs_snapshot' as category,
       jsonb_build_object(
         'Volume ID', volumes.volume_id,
         'Account ID', volumes.account_id,
