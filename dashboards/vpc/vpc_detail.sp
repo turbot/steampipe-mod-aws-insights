@@ -1096,7 +1096,15 @@ query "aws_vpc_subnet_by_az" {
 
 query "aws_vpc_relationships_graph" {
   sql = <<-EOQ
-  with vpc as (select * from aws_vpc where vpc_id = $1)
+    with vpc as
+    (
+      select
+        *
+      from
+        aws_vpc
+      where
+        vpc_id = $1
+    )
 
     select
       null as from_id,

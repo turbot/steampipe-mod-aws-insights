@@ -72,8 +72,7 @@ dashboard "aws_rds_db_snapshot_detail" {
       args = {
         arn = self.input.db_snapshot_arn.value
       }
-      category "aws_rds_db_snapshot" {
-      }
+      category "aws_rds_db_snapshot" {}
 
     }
   }
@@ -317,7 +316,7 @@ query "aws_rds_db_snapshot_relationships_graph" {
     where
       arn = $1
 
-    -- To KMS Keys (node)
+    -- To KMS keys (node)
     union all
     select
       null as from_id,

@@ -499,7 +499,7 @@ query "aws_rds_db_instance_relationships_graph" {
     where
       rdb.arn = $1
 
-    -- To KMS Keys (node)
+    -- To KMS keys (node)
     union all
     select
       null as from_id,

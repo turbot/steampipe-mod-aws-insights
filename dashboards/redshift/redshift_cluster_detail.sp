@@ -378,9 +378,17 @@ query "aws_redshift_cluster_tags" {
 
 query "aws_redshift_cluster_relationship_graph" {
   sql = <<-EOQ
-    with cluster as (select * from aws_redshift_cluster where arn = $1)
+    with cluster as
+      (
+        select
+          *
+        from
+          aws_redshift_cluster
+        where
+          arn = $1
+      )
 
-    -- cluster node
+    -- cluster (node)
     select
       null as from_id,
       null as to_id,
@@ -399,7 +407,7 @@ query "aws_redshift_cluster_relationship_graph" {
     from
       cluster
 
-    -- Subnet Group Nodes
+    -- Subnet group (node)
     union all
     select
       null as from_id,
@@ -421,7 +429,7 @@ query "aws_redshift_cluster_relationship_graph" {
         on c.vpc_id = s.vpc_id
         and c.cluster_subnet_group_name = s.cluster_subnet_group_name
 
-    -- Subnet Group Edges
+    -- Subnet group (edge)
     union all
     select
       c.arn as from_id,
@@ -443,7 +451,7 @@ query "aws_redshift_cluster_relationship_graph" {
         on c.vpc_id = s.vpc_id
         and c.cluster_subnet_group_name = s.cluster_subnet_group_name
 
-    -- Subnet Nodes
+    -- VPC subnets (node)
     union all
     select
       null as from_id,
@@ -466,7 +474,7 @@ query "aws_redshift_cluster_relationship_graph" {
         and c.cluster_subnet_group_name = s.cluster_subnet_group_name,
       jsonb_array_elements(s.subnets) subnet
 
-    -- Subnet Edges
+    -- VPC subnets (edge)
     union all
     select
       s.cluster_subnet_group_name as from_id,
@@ -489,7 +497,7 @@ query "aws_redshift_cluster_relationship_graph" {
         and c.cluster_subnet_group_name = s.cluster_subnet_group_name,
       jsonb_array_elements(s.subnets) as subnet
 
-    -- VPC  Nodes
+    -- VPC (node)
     union all
     select
       null as from_id,
@@ -509,7 +517,7 @@ query "aws_redshift_cluster_relationship_graph" {
       cluster as c
       left join aws_vpc as v on v.vpc_id = c.vpc_id
 
-    -- VPC Edges (subnets)
+    -- subnet - VPC (edge)
     union all
     select
       subnet ->> 'SubnetIdentifier' as from_id,
@@ -532,7 +540,7 @@ query "aws_redshift_cluster_relationship_graph" {
       jsonb_array_elements(s.subnets) as subnet
 
 
-    -- VPC Edges (security group)
+    -- security group - VPC (edge)
     union all
     select
       sg.arn as from_id,
@@ -553,7 +561,7 @@ query "aws_redshift_cluster_relationship_graph" {
       left join aws_vpc_security_group as sg on sg.group_id = s ->> 'VpcSecurityGroupId'
 
 
-    -- Security Group Nodes
+    -- VPC security groups (node)
     union all
     select
       null as from_id,
@@ -573,7 +581,7 @@ query "aws_redshift_cluster_relationship_graph" {
       jsonb_array_elements(vpc_security_groups) as s
       left join aws_vpc_security_group as sg on sg.group_id = s ->> 'VpcSecurityGroupId'
 
-    -- Security Group Edges
+    -- VPC security group (edge)
     union all
     select
       c.arn as from_id,
@@ -592,7 +600,7 @@ query "aws_redshift_cluster_relationship_graph" {
       jsonb_array_elements(vpc_security_groups) as s
       left join aws_vpc_security_group as sg on sg.group_id = s ->> 'VpcSecurityGroupId'
 
-    -- Kms key Nodes
+    -- KMS keys (node)
     union all
     select
       null as from_id,
@@ -611,7 +619,7 @@ query "aws_redshift_cluster_relationship_graph" {
       cluster as c
       left join aws_kms_key as k on k.arn = c.kms_key_id
 
-    -- Kms key Edges
+    -- KMS keys (edge)
     union all
     select
       c.arn as from_id,
@@ -628,7 +636,7 @@ query "aws_redshift_cluster_relationship_graph" {
       cluster as c
       left join aws_kms_key as k on k.arn = c.kms_key_id
 
-    -- IAM Role Nodes
+    -- IAM Roles (node)
     union all
     select
       null as from_id,
@@ -647,7 +655,7 @@ query "aws_redshift_cluster_relationship_graph" {
       jsonb_array_elements(iam_roles) as ir
       left join aws_iam_role as r on r.arn = ir ->> 'IamRoleArn'
 
-    -- IAM Role Edges
+    -- IAM Roles (edge)
     union all
     select
       c.arn as from_id,
@@ -665,7 +673,7 @@ query "aws_redshift_cluster_relationship_graph" {
       jsonb_array_elements(iam_roles) as ir
       left join aws_iam_role as r on r.arn = ir ->> 'IamRoleArn'
 
-    -- Elastic IP Nodes
+    -- Elastic IP (node)
     union all
     select
       null as from_id,
@@ -686,7 +694,7 @@ query "aws_redshift_cluster_relationship_graph" {
     where
       c.elastic_ip_status is not null
 
-    -- Elastic IP Edges
+    -- Elastic IP (edge)
     union all
     select
       c.arn as from_id,
@@ -705,7 +713,7 @@ query "aws_redshift_cluster_relationship_graph" {
     where
       c.elastic_ip_status is not null
 
-    -- CloudWatch Nodes
+    -- CloudWatch log group (node)
     union all
     select
       null as from_id,
@@ -723,7 +731,7 @@ query "aws_redshift_cluster_relationship_graph" {
       cluster as c
       left join aws_cloudwatch_log_group as g on g.title like '%' || c.title || '%'
 
-    -- CloudWatch Edges
+    -- CloudWatch log group (edge)
     union all
     select
       c.arn as from_id,
@@ -740,7 +748,7 @@ query "aws_redshift_cluster_relationship_graph" {
       cluster as c
       left join aws_cloudwatch_log_group as g on g.title like '%' || c.title || '%'
 
-    -- S3 Buckets - nodes
+    -- S3 buckets (node)
     union all
     select
       null as from_id,
@@ -758,7 +766,7 @@ query "aws_redshift_cluster_relationship_graph" {
       cluster as c
       left join aws_s3_bucket as bucket on bucket.name = c.logging_status ->> 'BucketName'
 
-    -- S3 Buckets - edges
+    -- S3 buckets (edge)
     union all
     select
       c.arn as from_id,
@@ -775,7 +783,7 @@ query "aws_redshift_cluster_relationship_graph" {
       cluster as c
       left join aws_s3_bucket as bucket on bucket.name = c.logging_status ->> 'BucketName'
 
-    -- Parameter Group Nodes
+    -- Redshift parameter groups (node)
     union all
     select
       null as from_id,
@@ -794,7 +802,7 @@ query "aws_redshift_cluster_relationship_graph" {
       jsonb_array_elements(cluster_parameter_groups) as p
       left join aws_redshift_parameter_group as g on g.name = p ->> 'ParameterGroupName'
 
-    -- Parameter Group Edges
+    -- Redshift parameter groups (edge)
     union all
     select
       c.arn as from_id,
@@ -812,8 +820,7 @@ query "aws_redshift_cluster_relationship_graph" {
       jsonb_array_elements(cluster_parameter_groups) as p
       left join aws_redshift_parameter_group as g on g.name = p ->> 'ParameterGroupName'
 
-    -- Things that use me
-    -- cluster snapshots - nodes
+    -- Redshift cluster snapshots (node)
     union all
     select
       null as from_id,
@@ -835,7 +842,7 @@ query "aws_redshift_cluster_relationship_graph" {
         on snapshot.cluster_identifier = c.cluster_identifier
         and snapshot.region = c.region
 
-    -- cluster snapshots - edges
+    -- Redshift cluster snapshots (edge)
     union all
     select
       snapshot.snapshot_identifier as from_id,

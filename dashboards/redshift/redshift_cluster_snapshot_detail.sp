@@ -22,8 +22,7 @@ dashboard "aws_redshift_snapshot_detail" {
       args = {
         arn = self.input.snapshot_arn.value
       }
-      category "aws_redshift_snapshot" {
-      }
+      category "aws_redshift_snapshot" {}
     }
   }
 }
@@ -73,7 +72,7 @@ query "aws_redshift_snapshot_relationships_graph" {
     from
       snapshot
 
-    -- To KMS Keys (node)
+    -- To KMS keys (node)
     union all
     select
       null as from_id,

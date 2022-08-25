@@ -96,7 +96,22 @@ query "aws_ebs_snapshot_age" {
 
 query "aws_ebs_snapshot_relationships" {
   sql = <<-EOQ
-    with snapshot as (select arn,snapshot_id,volume_id,volume_size,title,account_id,region,kms_key_id from aws_ebs_snapshot where arn = $1)
+    with snapshot as
+      (
+        select
+          arn,
+          snapshot_id,
+          volume_id,
+          volume_size,
+          title,
+          account_id,
+          region,
+          kms_key_id
+        from
+          aws_ebs_snapshot
+        where
+          arn = $1
+      )
     select
       null as from_id,
       null as to_id,

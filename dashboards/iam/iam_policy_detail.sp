@@ -18,8 +18,7 @@ dashboard "aws_iam_policy_detail" {
     args = {
       arn = self.input.policy_arn.value
     }
-    category "aws_iam_policy" {
-    }
+    category "aws_iam_policy" {}
   }
 }
 

@@ -50,8 +50,7 @@ dashboard "aws_vpc_subnet_detail" {
       args = {
         subnet_id = self.input.subnet_id.value
       }
-      category "aws_vpc_subnet" {
-      }
+      category "aws_vpc_subnet" {}
     }
   }
 

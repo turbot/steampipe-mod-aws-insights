@@ -43,8 +43,7 @@ dashboard "aws_iam_group_detail" {
       args = {
         arn = self.input.group_arn.value
       }
-      category "aws_iam_group" {
-      }
+      category "aws_iam_group" {}
     }
   }
 
