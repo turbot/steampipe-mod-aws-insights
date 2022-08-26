@@ -32,7 +32,7 @@ dashboard "aws_ecs_cluster_detail" {
     }
 
     card {
-      query = query.aws_ecs_cluster_pending_tasks_count
+      query = query.aws_ecs_cluster_active_services_count
       width = 2
       args = {
         arn = self.input.ecs_cluster_arn.value
@@ -48,7 +48,15 @@ dashboard "aws_ecs_cluster_detail" {
     }
 
     card {
-      query = query.aws_ecs_cluster_active_services_count
+      query = query.aws_ecs_cluster_pending_tasks_count
+      width = 2
+      args = {
+        arn = self.input.ecs_cluster_arn.value
+      }
+    }
+
+    card {
+      query = query.aws_ecs_cluster_container_insights_enabled
       width = 2
       args = {
         arn = self.input.ecs_cluster_arn.value
@@ -68,19 +76,13 @@ dashboard "aws_ecs_cluster_detail" {
         arn = self.input.ecs_cluster_arn.value
       }
 
-      category "aws_ecs_task" {
-        icon       = local.aws_ecs_task_icon
-        fold {
-          threshold  = 2
-          title      = "Tasks..."
-          icon =   local.aws_ecs_task_icon
-        }
-      }
+      category "aws_ecs_cluster" {}
 
       category "aws_ecs_task_definition" {
+        color = "blue"
         fold {
           threshold  = 2
-          title      = "TasksDefinitions..."
+          title      = "Tasks Definitions"
           icon =   "collection"
         }
       }
@@ -89,13 +91,18 @@ dashboard "aws_ecs_cluster_detail" {
         icon = local.aws_ecs_service_icon
         fold {
           threshold  = 2
-          title      = "Service..."
+          title      = "Services"
           icon       = local.aws_ecs_service_icon
         }
       }
 
       category "aws_ecs_container_instance" {
         color = "green"
+        fold {
+          title     = "Container Instances"
+          icon      = local.aws_guardduty_detector_icon
+          threshold = 2
+        }
       }
 
       category "launch_type" {
@@ -135,6 +142,15 @@ dashboard "aws_ecs_cluster_detail" {
 
     container {
       width = 6
+
+      table {
+        title = "Statistics"
+        query = query.aws_ecs_cluster_statistics
+        args = {
+          arn = self.input.ecs_cluster_arn.value
+        }
+
+      }
 
     }
 
@@ -228,6 +244,22 @@ query "aws_ecs_cluster_active_services_count" {
   param "arn" {}
 }
 
+query "aws_ecs_cluster_container_insights_enabled" {
+  sql = <<-EOQ
+    select
+      'Container Insights' as label,
+      case when s ->> 'Name' = 'containerInsights' and s ->> 'Value' = 'enabled' then 'Enabled' else 'Disabled' end as value,
+      case when s ->> 'Name' = 'containerInsights' and s ->> 'Value' = 'enabled' then 'ok' else 'alert' end as type
+    from
+      aws_ecs_cluster as c,
+      jsonb_array_elements(settings) as s
+    where
+      cluster_arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
 query "aws_ecs_cluster_overview" {
   sql = <<-EOQ
     select
@@ -256,6 +288,23 @@ query "aws_ecs_cluster_tags" {
       cluster_arn = $1
     order by
       tag ->> 'Key';
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_ecs_cluster_statistics" {
+  sql = <<-EOQ
+    select
+      s ->> 'Name' as "Name",
+      s ->> 'Value' as "Value"
+    from
+      aws_ecs_cluster,
+      jsonb_array_elements(statistics) as s
+    where
+      cluster_arn = $1
+    order by
+      s ->> 'Name';
   EOQ
 
   param "arn" {}
@@ -372,7 +421,7 @@ query "aws_ecs_cluster_relationships_graph" {
     where
       'FARGATE' in (select launch_type from task_definition_launch_type)
 
-   -- To ECS External Launch Type (node)
+   -- To ECS Launch Type External (node)
     union all
     select
       null as from_id,
@@ -388,7 +437,7 @@ query "aws_ecs_cluster_relationships_graph" {
      where
       'EXTERNAL' in (select launch_type from task_definition_launch_type)
 
-    -- To ECS Fargate Launch Type  (edge)
+    -- To ECS Launch Type External (edge)
     union all
     select
       $1 as from_id,
@@ -440,7 +489,7 @@ query "aws_ecs_cluster_relationships_graph" {
     where
       d.task_definition_arn in (select task_definition from list_all_task_definitions )
 
-    -- To ECS services  (node)
+    -- To ECS services (node)
     union all
     select
       null as from_id,
@@ -459,7 +508,7 @@ query "aws_ecs_cluster_relationships_graph" {
     where
       s.cluster_arn = $1
 
-    -- To ECS services  (edge)
+    -- To ECS services (edge)
     union all
     select
       s.task_definition as from_id,
@@ -504,10 +553,11 @@ query "aws_ecs_cluster_relationships_graph" {
       'EC2' as from_id,
       i.arn as to_id,
       null as id,
-      'uses' as title,
-      'ecs_service_to_ecs_container_insatnce' as category,
+      'container instances' as title,
+      'ecs_launch_type_to_ecs_container_insatnce' as category,
       jsonb_build_object(
         'ARN', i.arn,
+        'Instance ID', i.ec2_instance_id,
         'Account ID', i.account_id,
         'Region', i.region
       ) as properties
@@ -516,7 +566,7 @@ query "aws_ecs_cluster_relationships_graph" {
     where
       i.cluster_arn = $1
 
-     -- To VPC Subnet (node)
+     -- To VPC subnets (node)
     union all
     select
       null as from_id,
@@ -537,7 +587,7 @@ query "aws_ecs_cluster_relationships_graph" {
     where
       i.cluster_arn  = $1
 
-    -- To VPC Subnet  (edge)
+    -- To VPC subnets  (edge)
     union all
     select
       i.arn as from_id,
@@ -547,6 +597,7 @@ query "aws_ecs_cluster_relationships_graph" {
       'ecs_container_instance_to_vpc_subnet' as category,
       jsonb_build_object(
         'ARN', s.subnet_arn,
+        'Subnet ID', s.subnet_id,
         'Account ID', s.account_id,
         'Region', s.region
       ) as properties
@@ -557,7 +608,7 @@ query "aws_ecs_cluster_relationships_graph" {
     where
       i.cluster_arn  = $1
 
-    -- To VPC  (node)
+    -- To VPC (node)
     union all
     select
       null as from_id,
@@ -567,7 +618,7 @@ query "aws_ecs_cluster_relationships_graph" {
       'aws_vpc' as category,
       jsonb_build_object(
         'ARN', v.arn,
-        'ID', v.vpc_id,
+        'VPC ID', v.vpc_id,
         'Account ID', v.account_id,
         'Region', v.region
       ) as properties
@@ -579,7 +630,7 @@ query "aws_ecs_cluster_relationships_graph" {
     where
       i.cluster_arn  = $1
 
-    -- To VPC  (edge)
+    -- To VPC (edge)
     union all
     select
       s.subnet_arn as from_id,
@@ -589,7 +640,7 @@ query "aws_ecs_cluster_relationships_graph" {
       'vpc_subnet_to_vpc' as category,
       jsonb_build_object(
         'ARN', v.arn,
-        'ID', v.vpc_id,
+        'VPC ID', v.vpc_id,
         'Account ID', v.account_id,
         'Region', v.region
       ) as properties
