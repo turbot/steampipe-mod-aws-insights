@@ -29,6 +29,15 @@ dashboard "api_gatewayv2_api_detail" {
         api_id = self.input.api_id.value
       }
     }
+
+    card {
+      width = 2
+      query = query.aws_api_gatewayv2_default_endpoint
+      args = {
+        api_id = self.input.api_id.value
+      }
+    }
+
   }
 
   container {
@@ -131,6 +140,21 @@ query "aws_api_gatewayv2_stage_count" {
       count(stage_name) as value
     from
       aws_api_gatewayv2_stage
+    where
+      api_id = $1;
+  EOQ
+
+  param "api_id" {}
+}
+
+query "aws_api_gatewayv2_default_endpoint" {
+  sql = <<-EOQ
+    select
+      'Default Endpoint' as label,
+      case when disable_execute_api_endpoint then 'Disabled' else 'Enabled' end as value,
+      case when disable_execute_api_endpoint then 'ok' else 'alert' end as type
+    from
+      aws_api_gatewayv2_api
     where
       api_id = $1;
   EOQ
