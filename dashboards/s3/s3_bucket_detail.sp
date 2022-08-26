@@ -251,7 +251,7 @@ query "aws_s3_bucket_relationships_graph" {
     where
       trail.s3_bucket_name = b.name
 
-    -- From S3 Buckets (node)
+    -- From S3 buckets (node)
     union all
     select
       null as from_id,
@@ -271,7 +271,7 @@ query "aws_s3_bucket_relationships_graph" {
     where
       aws_s3_bucket.logging ->> 'TargetBucket' = buckets.name
 
-    -- From S3 Buckets (edge)
+    -- From S3 buckets (edge)
     union all
     select
       aws_s3_bucket.arn as to_id,
@@ -371,7 +371,7 @@ query "aws_s3_bucket_relationships_graph" {
       'ec2_network_load_balancer_to_s3_bucket' as category,
       jsonb_build_object(
         'Account ID', nlb.account_id,
-        'logs to', attributes ->> 'Value', 
+        'logs to', attributes ->> 'Value',
         'Log Prefix', (
           select
             a ->> 'Value'
@@ -428,7 +428,7 @@ query "aws_s3_bucket_relationships_graph" {
     where
       clb.access_log_s3_bucket_name = buckets.name
 
-    -- From S3 Access Points (node)
+    -- From S3 access points (node)
     union all
     select
       null as from_id,
@@ -449,13 +449,13 @@ query "aws_s3_bucket_relationships_graph" {
       ap.bucket_name = buckets.name
       and ap.region = buckets.region
 
-    -- From S3 Access Points (edge)
+    -- From S3 access points (edge)
     union all
     select
       ap.access_point_arn as from_id,
       buckets.arn as to_id,
       null as id,
-      'accesses' as title,
+      'access point' as title,
       's3_access_point_to_s3_bucket' as category,
       jsonb_build_object(
         'Account ID', ap.account_id
@@ -467,7 +467,7 @@ query "aws_s3_bucket_relationships_graph" {
       ap.bucket_name = buckets.name
       and ap.region = buckets.region
 
-    -- To S3 Buckets (node)
+    -- To S3 buckets (node)
     union all
     select
       null as from_id,
@@ -487,7 +487,7 @@ query "aws_s3_bucket_relationships_graph" {
     where
       aws_s3_bucket.name = buckets.logging ->> 'TargetBucket'
 
-    -- To S3 Buckets (edge)
+    -- To S3 buckets (edge)
     union all
     select
       buckets.arn as from_id,

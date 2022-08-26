@@ -263,7 +263,7 @@ query "aws_ebs_volume_relationships_graph" {
       kms_keys.arn as from_id,
       volumes.arn as to_id,
       null as id,
-      'secures with' as title,
+      'encrypted with' as title,
       'kms_keys_to_ebs_volume' as category,
       jsonb_build_object(
         'Account ID', kms_keys.account_id
@@ -399,7 +399,7 @@ query "aws_ebs_volume_relationships_graph" {
       bdm -> 'Ebs' ->> 'SnapshotId' as from_id,
       images.image_id as to_id,
       null as id,
-      'uses snapshot' as title,
+      'snapshot' as title,
       'ebs_snapshots_to_ec2_ami' as category,
       jsonb_build_object(
         'Account ID', images.account_id

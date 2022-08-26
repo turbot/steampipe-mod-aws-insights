@@ -232,7 +232,7 @@ query "aws_eventbridge_rule_relationships_graph" {
       r.arn as from_id,
       s.topic_arn as to_id,
       null as id,
-      'sends events' as title,
+      'send events' as title,
       'eventbridge_rule_to_sns_topic' as category,
       jsonb_build_object(
         'Name', s.title,
@@ -275,7 +275,7 @@ query "aws_eventbridge_rule_relationships_graph" {
       r.arn as from_id,
       f.arn as to_id,
       null as id,
-      'sends events' as title,
+      'send events' as title,
       'eventbridge_rule_to_lambda_function' as category,
       jsonb_build_object(
         'ARN', f.arn,
@@ -361,7 +361,7 @@ query "aws_eventbridge_rule_relationships_graph" {
       b.arn as from_id,
       r.arn as to_id,
       null as id,
-      'has rule' as title,
+      'eventbridge bus' as title,
       'eventbridge_bus_to_eventbridge_rule' as category,
       jsonb_build_object(
         'Account ID', b.account_id

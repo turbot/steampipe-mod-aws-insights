@@ -46,7 +46,7 @@ dashboard "aws_ebs_snapshot_detail" {
       }
     }
   }
-  
+
   container {
 
     table {
@@ -303,7 +303,7 @@ query "aws_ebs_snapshot_relationships_graph" {
     where
       bdm -> 'Ebs' ->> 'SnapshotId' = snapshot.snapshot_id
 
-    -- To KMS Keys (node)
+    -- To KMS keys (node)
     union all
     select
       null as from_id,
@@ -323,13 +323,13 @@ query "aws_ebs_snapshot_relationships_graph" {
     where
       snapshot.kms_key_id = kms_keys.arn
 
-    -- To KMS Keys (edge)
+    -- To KMS keys (edge)
     union all
     select
       snapshot.snapshot_id as from_id,
       kms_keys.arn as to_id,
       null as id,
-      'secures with' as title,
+      'encrypted with' as title,
       'ebs_snapshot_to_kms_keys' as category,
       jsonb_build_object(
         'Account ID', kms_keys.account_id
@@ -340,13 +340,13 @@ query "aws_ebs_snapshot_relationships_graph" {
     where
       snapshot.kms_key_id = kms_keys.arn
 
-    -- EBS volume > KMS Key (edge)
+    -- EBS volume > KMS key (edge)
     union all
     select
       volumes.volume_id as from_id,
       kms_keys.arn as to_id,
       null as id,
-      'secures with' as title,
+      'encrypted with' as title,
       'ebs_volumes_to_kms_keys' as category,
       jsonb_build_object(
         'Account ID', kms_keys.account_id

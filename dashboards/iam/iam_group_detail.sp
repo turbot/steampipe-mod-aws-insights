@@ -194,7 +194,7 @@ query "aws_iam_group_relationships_graph" {
       r.group_id as from_id,
       p.policy_id as to_id,
       null as id,
-      'has policy' as title,
+      'iam policy' as title,
       'iam_group_to_iam_policy' as category,
       jsonb_build_object(
         'Account ID', p.account_id ) as properties
@@ -233,7 +233,7 @@ query "aws_iam_group_relationships_graph" {
       u.name as from_id,
       g ->> 'GroupId' as from_id,
       null as id,
-      'in group' as title,
+      'iam group' as title,
       'iam_user_to_iam_group' as category,
       jsonb_build_object( 'Account ID', u.account_id ) as properties
     from

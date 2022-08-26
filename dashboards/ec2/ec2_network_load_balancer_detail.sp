@@ -29,7 +29,7 @@ dashboard "aws_ec2_network_load_balancer_detail" {
         arn = self.input.nlb.value
       }
     }
-    
+
     card {
       width = 2
       query = query.aws_nlb_ip_type
@@ -347,7 +347,7 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       nlb.arn as from_id,
       sg.arn as to_id,
       null as id,
-      'attaches to' as title,
+      'security group' as title,
       'ec2_network_load_balancer_to_vpc_security_group' as category,
       jsonb_build_object(
         'Account ID', sg.account_id
@@ -392,7 +392,7 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       nlb.arn as from_id,
       tg.target_group_arn as to_id,
       null as id,
-      'targets' as title,
+      'target group' as title,
       'ec2_network_load_balancer_to_ec2_target_group' as category,
       jsonb_build_object(
         'Account ID', tg.account_id
@@ -536,7 +536,7 @@ query "aws_ec2_network_load_balancer_relationships_graph" {
       nlb.arn as from_id,
       vpc.vpc_id as to_id,
       null as id,
-      'resides in' as title,
+      'vpc' as title,
       'ec2_network_load_balancer_to_vpc' as category,
       jsonb_build_object(
         'Account ID', vpc.account_id

@@ -97,7 +97,7 @@ query "aws_redshift_snapshot_relationships_graph" {
       k.id as to_id,
       null as id,
       'encrypted with' as title,
-      'uses' as category,
+      'redshift_snapshot_to_kms_key' as category,
       jsonb_build_object(
         'ARN', k.arn,
         'Cluster Snapshot Identifier', s.snapshot_identifier,
@@ -136,8 +136,8 @@ query "aws_redshift_snapshot_relationships_graph" {
       c.cluster_identifier as from_id,
       s.snapshot_identifier as to_id,
       null as id,
-      'has snapshot' as title,
-      'uses' as category,
+      'cluster' as title,
+      'redshift_cluster_to_redshift_snapshot' as category,
       jsonb_build_object(
         'Cluster Identifier', c.cluster_identifier,
         'Cluster Snapshot Identifier', s.snapshot_identifier,

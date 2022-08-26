@@ -240,7 +240,7 @@ query "aws_iam_role_relationships_graph" {
       r.role_id as from_id,
       p.policy_id as to_id,
       null as id,
-      'has policy' as title,
+      'iam policy' as title,
       'iam_role_to_iam_policy' as category,
       jsonb_build_object(
         'Account ID', r.account_id ) as properties
@@ -279,7 +279,7 @@ query "aws_iam_role_relationships_graph" {
       application_arn as from_id,
       role_id as to_id,
       null as id,
-      'associated to' as title,
+      'kinesis application' as title,
       'kinesisanalyticsv2_application_to_iam_role' as category,
       jsonb_build_object(
         'Account ID', a.account_id ) as properties
@@ -324,7 +324,7 @@ query "aws_iam_role_relationships_graph" {
       c.id as from_id,
       role_id as to_id,
       null as id,
-      'associated to' as title,
+      'emr cluster' as title,
       'emr_cluster_to_iam_role' as category,
       jsonb_build_object(
         'Account ID', c.account_id ) as properties
@@ -360,7 +360,7 @@ query "aws_iam_role_relationships_graph" {
       detector_id as from_id,
       role_id as to_id,
       null as id,
-      'associated to' as title,
+      'guardduty detector' as title,
       'guardduty_detector_to_iam_role' as category,
       jsonb_build_object(
         'Account ID', d.account_id ) as properties
@@ -397,7 +397,7 @@ query "aws_iam_role_relationships_graph" {
       f.arn as from_id,
       role_id as to_id,
       null as id,
-      'associated to' as title,
+      'lambda function' as title,
       'lambda_function_to_iam_role' as category,
       jsonb_build_object(
         'Account ID', f.account_id ) as properties
@@ -430,7 +430,7 @@ query "aws_iam_role_relationships_graph" {
       iam_instance_profile_arn as from_id,
       role_id as to_id,
       null as id,
-      'contains' as title,
+      'instance profile' as title,
       'instance_profile_to_iam_role' as category,
       jsonb_build_object( 'Instance Profile ARN', iam_instance_profile_arn ) as properties
     from
@@ -467,7 +467,7 @@ query "aws_iam_role_relationships_graph" {
       i.instance_id as from_id,
       i.iam_instance_profile_arn as to_id,
       null as id,
-      'uses' as title,
+      'ec2 instance' as title,
       'ec2_instance_to_instance_profile' as category,
       jsonb_build_object(
         'Instance ARN', i.arn,

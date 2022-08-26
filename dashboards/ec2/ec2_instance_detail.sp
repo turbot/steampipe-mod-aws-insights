@@ -368,7 +368,7 @@ query "aws_ec2_instance_relationships_graph" {
       instance_id as from_id,
       eni.network_interface_id as to_id,
       null as id,
-      'attaches' as title,
+      'eni' as title,
       'ec2_instance_to_ec2_eni' as category,
       jsonb_build_object(
         'Account ID', i.account_id,
@@ -409,7 +409,7 @@ query "aws_ec2_instance_relationships_graph" {
       instance_id as from_id,
       sg ->> 'GroupId' as to_id,
       null as id,
-      'attaches' as title,
+      'security groups' as title,
       'ec2_instance_to_vpc_security_group' as category,
       jsonb_build_object(
         'Account ID', account_id
@@ -489,7 +489,7 @@ query "aws_ec2_instance_relationships_graph" {
       instances.subnet_id as from_id,
       vpc.vpc_id as to_id,
       null as id,
-      'connects to' as title,
+      'vpc' as title,
       'ec2_instance_to_vpc' as category,
       jsonb_build_object(
         'ID', vpc.vpc_id,
@@ -526,7 +526,7 @@ query "aws_ec2_instance_relationships_graph" {
       instance_id as from_id,
       iam_instance_profile_arn as to_id,
       null as id,
-      'attaches' as title,
+      'ec2 instance' as title,
       'ec2_instance_to_iam_profile' as category,
       jsonb_build_object(
         'Account ID', instances.account_id,
@@ -563,7 +563,7 @@ query "aws_ec2_instance_relationships_graph" {
       i.iam_instance_profile_arn as from_id,
       r.arn as to_id,
       null as id,
-      'passes' as title,
+      'assumes' as title,
       'ec2_instance_to_iam_profile_role' as category,
       jsonb_build_object(
         'Role ARN', r.arn,
@@ -604,7 +604,7 @@ query "aws_ec2_instance_relationships_graph" {
       instance_id as from_id,
       key_name as to_id,
       null as id,
-      'adds' as title,
+      'key pair' as title,
       'ec2_instance_to_ec2_key_pair' as category,
       jsonb_build_object(
         'Account ID', i.account_id,

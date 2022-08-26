@@ -1,5 +1,5 @@
 dashboard "aws_ec2_key_pair_detail" {
-  title = "AWS EC2 Key Pair Detail"
+  title         = "AWS EC2 Key Pair Detail"
   documentation = file("./dashboards/ec2/docs/ec2_key_pair_detail.md")
 
   tags = merge(local.ec2_common_tags, {
@@ -189,7 +189,7 @@ query "aws_ec2_key_pair_relationships_graph" {
       instances.arn as from_id,
       key_pair.key_pair_id as to_id,
       null as id,
-      'has' as title,
+      'ec2 instance' as title,
       'ec2_instance_to_ec2_key_pair' as category,
       jsonb_build_object(
         'Account ID', instances.account_id

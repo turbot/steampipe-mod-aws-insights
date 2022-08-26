@@ -28,7 +28,7 @@ dashboard "aws_ec2_gateway_load_balancer_detail" {
         arn = self.input.glb.value
       }
     }
-    
+
     card {
       width = 2
       query = query.aws_glb_ip_type
@@ -340,7 +340,7 @@ query "aws_ec2_gateway_load_balancer_relationships_graph" {
       glb.arn as from_id,
       sg.arn as to_id,
       null as id,
-      'Security Group' as title,
+      'security group' as title,
       'ec2_gateway_load_balancer_to_vpc_security_group' as category,
       jsonb_build_object(
         'Account ID', sg.account_id
@@ -385,7 +385,7 @@ query "aws_ec2_gateway_load_balancer_relationships_graph" {
       glb.arn as from_id,
       tg.target_group_arn as to_id,
       null as id,
-      'targets' as title,
+      'target group' as title,
       'ec2_gateway_load_balancer_to_ec2_target_group' as category,
       jsonb_build_object(
         'Account ID', tg.account_id
@@ -433,7 +433,7 @@ query "aws_ec2_gateway_load_balancer_relationships_graph" {
       tg.target_group_arn as from_id,
       instance.instance_id as to_id,
       null as id,
-      'forwards to' as title,
+      'ec2 instance' as title,
       'ec2_target_group_to_ec2_instance' as category,
       jsonb_build_object(
         'Account ID', instance.account_id,
@@ -529,7 +529,7 @@ query "aws_ec2_gateway_load_balancer_relationships_graph" {
       glb.arn as from_id,
       vpc.vpc_id as to_id,
       null as id,
-      'resides in' as title,
+      'vpc' as title,
       'ec2_gateway_load_balancer_to_vpc' as category,
       jsonb_build_object(
         'Account ID', vpc.account_id
