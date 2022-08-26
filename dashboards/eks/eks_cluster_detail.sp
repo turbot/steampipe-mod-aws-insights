@@ -64,9 +64,7 @@ dashboard "aws_eks_cluster_detail" {
       args = {
         arn = self.input.eks_cluster_arn.value
       }
-      category "aws_eks_cluster" {
-        icon = local.aws_eks_cluster_icon
-      }
+      category "aws_eks_cluster" {}
     }
   }
 

@@ -62,9 +62,7 @@ dashboard "aws_cloudtrail_trail_detail" {
       args = {
         arn = self.input.trail_arn.value
       }
-      category "aws_cloudtrail_trail" {
-        icon = local.aws_cloudtrail_trail_icon
-      }
+      category "aws_cloudtrail_trail" {}
     }
 
   }

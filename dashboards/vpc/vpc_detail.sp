@@ -58,9 +58,7 @@ dashboard "aws_vpc_detail" {
       args = {
         vpc_id = self.input.vpc_id.value
       }
-      category "aws_vpc" {
-        icon = local.aws_vpc_icon
-      }
+      category "aws_vpc" {}
 
     }
   }

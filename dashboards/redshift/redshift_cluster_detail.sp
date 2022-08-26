@@ -142,9 +142,7 @@ dashboard "aws_redshift_cluster_detail" {
       args = {
         arn = self.input.cluster_arn.value
       }
-      category "aws_redshift_cluster" {
-        icon = local.aws_redshift_cluster_icon
-      }
+      category "aws_redshift_cluster" {}
     }
   }
 }
