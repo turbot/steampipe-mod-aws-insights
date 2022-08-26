@@ -29,47 +29,18 @@ dashboard "api_gatewayv2_api_detail" {
         api_id = self.input.api_id.value
       }
     }
-
-    card {
-      width = 2
-      query = query.aws_api_gatewayv2_default_endpoint
-      args = {
-        api_id = self.input.api_id.value
-      }
-    }
-
   }
 
   container {
     graph {
+      type  = "graph"
       base  = graph.aws_graph_categories
       query = query.aws_api_gatewayv2_api_relationships_graph
       args = {
         api_id = self.input.api_id.value
       }
-
-      category "aws_appconfig_application" {
-        color = "pink"
-      }
-
-      category "aws_api_gatewayv2_stage" {
-        icon = local.aws_api_gatewayv2_api_icon
-      }
-
       category "aws_api_gatewayv2_api" {
         icon = local.aws_api_gatewayv2_api_icon
-      }
-
-      category "aws_sqs_queue" {
-        icon = local.aws_sqs_queue_icon
-      }
-
-      category "aws_sfn_state_machine" {
-        color = "pink"
-      }
-
-      category "uses" {
-        color = "green"
       }
     }
   }
@@ -167,25 +138,16 @@ query "aws_api_gatewayv2_stage_count" {
   param "api_id" {}
 }
 
-query "aws_api_gatewayv2_default_endpoint" {
-  sql = <<-EOQ
-    select
-      'Default Endpoint' as label,
-      case when disable_execute_api_endpoint then 'Disabled' else 'Enabled' end as value,
-      case when disable_execute_api_endpoint then 'ok' else 'alert' end as type
-    from
-      aws_api_gatewayv2_api
-    where
-      api_id = $1;
-  EOQ
-
-  param "api_id" {}
-}
-
 query "aws_api_gatewayv2_api_relationships_graph" {
   sql = <<-EOQ
-    with api as (
-      select * from aws_api_gatewayv2_api where api_id = $1
+    with api as
+    (
+      select
+        *
+      from
+        aws_api_gatewayv2_api
+      where
+        api_id = $1
     )
 
     select
@@ -194,11 +156,17 @@ query "aws_api_gatewayv2_api_relationships_graph" {
       api_id as id,
       title,
       'aws_api_gatewayv2_api' as category,
-      jsonb_build_object( 'Name', name, 'API Endpoint', api_endpoint, 'Created Date', created_date, 'Account ID', account_id, 'Region', region, 'Protocol Type', protocol_type) as properties 
+      jsonb_build_object(
+        'Name', name,
+        'API Endpoint', api_endpoint,
+        'Created Date', created_date,
+        'Account ID', account_id,
+        'Region', region,
+        'Protocol Type', protocol_type) as properties
     from
       api
 
-    -- To Lambda function (node)
+    -- To Lambda functions (node)
     union all
     select
       null as from_id,
@@ -206,35 +174,43 @@ query "aws_api_gatewayv2_api_relationships_graph" {
       f.arn as id,
       f.title as title,
       'aws_lambda_function' as category,
-      jsonb_build_object( 'Runtime', runtime, 'Architectures', architectures, 'Region', f.region, 'Account ID', f.account_id ) as properties 
+      jsonb_build_object(
+        'ARN', f.arn,
+        'Runtime', runtime,
+        'Architectures', architectures,
+        'Region', f.region,
+        'Account ID', f.account_id ) as properties
     from
-      aws_api_gatewayv2_integration i 
+      aws_api_gatewayv2_integration i
       join
         aws_lambda_function f
-        on i.integration_uri = f.arn 
+        on i.integration_uri = f.arn
       join
-        api a 
+        api a
         on a.api_id = i.api_id
 
-    -- To Lambda function (edge)
+    -- To Lambda functions (edge)
     union all
     select
       a.api_id as from_id,
       f.arn as to_id,
       null as id,
-      'Integrated with' as title,
-      'uses' as category,
-      jsonb_build_object( 'Name', a.name, 'API Endpoint', a.api_endpoint, 'Protocol Type', protocol_type) as properties 
+      'integrated with' as title,
+      'api_gatewayv2_api_to_lambda_function' as category,
+      jsonb_build_object(
+        'Name', a.name,
+        'API Endpoint', a.api_endpoint,
+        'Protocol Type', protocol_type) as properties
     from
-      aws_api_gatewayv2_integration i 
+      aws_api_gatewayv2_integration i
       join
-        aws_lambda_function f 
-        on i.integration_uri = f.arn 
+        aws_lambda_function f
+        on i.integration_uri = f.arn
       join
-        api a 
+        api a
         on a.api_id = i.api_id
 
-    -- To SQS queue (node)
+    -- To SQS queues (node)
     union all
     select
       null as from_id,
@@ -242,12 +218,15 @@ query "aws_api_gatewayv2_api_relationships_graph" {
       q.queue_arn as id,
       q.title as title,
       'aws_sqs_queue' as category,
-      jsonb_build_object( 'ARN', queue_arn, 'Region', q.region, 'Account ID', q.account_id ) as properties 
+      jsonb_build_object(
+        'ARN', queue_arn,
+        'Region', q.region,
+        'Account ID', q.account_id ) as properties
     from
-      aws_api_gatewayv2_integration i 
+      aws_api_gatewayv2_integration i
       join
         aws_sqs_queue q
-        on i.request_parameters ->> 'QueueUrl' = q.queue_url 
+        on i.request_parameters ->> 'QueueUrl' = q.queue_url
       join
         api a
         on a.api_id = i.api_id
@@ -261,21 +240,24 @@ query "aws_api_gatewayv2_api_relationships_graph" {
       a.api_id as from_id,
       q.queue_arn as to_id,
       null as id,
-      'Integrated with' as title,
-      'uses' as category,
-      jsonb_build_object( 'Name', a.name, 'API Endpoint', a.api_endpoint, 'Protocol Type', protocol_type) as properties 
+      'integrated with' as title,
+      'api_gatewayv2_api_to_sqs_queue' as category,
+      jsonb_build_object(
+        'Name', a.name,
+        'API Endpoint', a.api_endpoint,
+        'Protocol Type', protocol_type) as properties
     from
-      aws_api_gatewayv2_integration i 
+      aws_api_gatewayv2_integration i
       join
         aws_sqs_queue q
-        on i.request_parameters ->> 'QueueUrl' = q.queue_url 
+        on i.request_parameters ->> 'QueueUrl' = q.queue_url
       join
         api a
         on a.api_id = i.api_id
     where
       integration_subtype like '%SQS-%'
 
-    -- To step function state machine (node)
+    -- To Step Function state machines (node)
     union all
     select
       null as from_id,
@@ -283,12 +265,17 @@ query "aws_api_gatewayv2_api_relationships_graph" {
       sm.arn as id,
       sm.title as title,
       'aws_sfn_state_machine' as category,
-      jsonb_build_object( 'ARN', sm.arn, 'Region', sm.region, 'Account ID', sm.account_id, 'Status', sm.status, 'Type', sm.type ) as properties 
+      jsonb_build_object(
+        'ARN', sm.arn,
+        'Region', sm.region,
+        'Account ID', sm.account_id,
+        'Status', sm.status,
+        'Type', sm.type ) as properties
     from
-      aws_api_gatewayv2_integration i 
+      aws_api_gatewayv2_integration i
       join
         aws_sfn_state_machine sm
-        on i.request_parameters ->> 'StateMachineArn' = sm.arn 
+        on i.request_parameters ->> 'StateMachineArn' = sm.arn
       join
         api a
         on a.api_id = i.api_id
@@ -296,27 +283,30 @@ query "aws_api_gatewayv2_api_relationships_graph" {
       integration_subtype like '%StepFunctions-%'
 
 
-    -- To step function state machine (edge)
+    -- To Step Function state machines (edge)
     union all
     select
       a.api_id as from_id,
       sm.arn as to_id,
       null as id,
-      'Integrated with' as title,
-      'uses' as category,
-      jsonb_build_object( 'Name', a.name, 'API Endpoint', a.api_endpoint, 'Protocol Type', protocol_type) as properties 
+      'integrated with' as title,
+      'api_gatewayv2_api_to_sfn_state_machine' as category,
+      jsonb_build_object(
+        'Name', a.name,
+        'API Endpoint', a.api_endpoint,
+        'Protocol Type', protocol_type) as properties
     from
-      aws_api_gatewayv2_integration i 
+      aws_api_gatewayv2_integration i
       join
         aws_sfn_state_machine sm
-        on i.request_parameters ->> 'StateMachineArn' = sm.arn 
+        on i.request_parameters ->> 'StateMachineArn' = sm.arn
       join
         api a
         on a.api_id = i.api_id
     where
       integration_subtype like '%StepFunctions-%'
 
-    -- To kinesis stream (node)
+    -- To Kinesis streams (node)
     union all
     select
       null as from_id,
@@ -324,75 +314,92 @@ query "aws_api_gatewayv2_api_relationships_graph" {
       s.stream_arn as id,
       s.title as title,
       'aws_kinesis_stream' as category,
-      jsonb_build_object( 'ARN', s.stream_arn, 'Region', s.region, 'Account ID', s.account_id, 'Status', s.stream_status, 'Encryption Type', s.encryption_type ) as properties
+      jsonb_build_object(
+        'ARN', s.stream_arn,
+        'Region', s.region,
+        'Account ID', s.account_id,
+        'Status', s.stream_status,
+        'Encryption Type', s.encryption_type ) as properties
     from
-      aws_api_gatewayv2_integration i 
+      aws_api_gatewayv2_integration i
       join
         aws_kinesis_stream s
-        on i.request_parameters ->> 'StreamName' = s.stream_name 
+        on i.request_parameters ->> 'StreamName' = s.stream_name
       join
         api a
         on a.api_id = i.api_id
     where
       integration_subtype like '%Kinesis-%'
 
-    -- To kinesis stream (edge)
+    -- To Kinesis stream (edge)
     union all
     select
       a.api_id as from_id,
       s.stream_arn as to_id,
       null as id,
-      'Integrated with' as title,
-      'uses' as category,
-      jsonb_build_object( 'Name', a.name, 'API Endpoint', a.api_endpoint, 'Protocol Type', protocol_type) as properties 
+      'integrated with' as title,
+      'api_gatewayv2_to_kinesis_stream' as category,
+      jsonb_build_object(
+        'Name', a.name,
+        'API Endpoint', a.api_endpoint,
+        'Protocol Type', protocol_type) as properties
     from
-      aws_api_gatewayv2_integration i 
+      aws_api_gatewayv2_integration i
       join
         aws_kinesis_stream s
-        on i.request_parameters ->> 'StreamName' = s.stream_name 
+        on i.request_parameters ->> 'StreamName' = s.stream_name
       join
         api a
         on a.api_id = i.api_id
     where
       integration_subtype like '%Kinesis-%'
 
-    -- To load balancer (node)
+    -- To EC2 load balancer listeners (node)
     union all
     select
       null as from_id,
       null as to_id,
       lb.arn as id,
       lb.title as title,
-      'aws_ec2_classic_load_balancer' as category,
-      jsonb_build_object( 'ARN', lb.arn, 'Account ID', lb.account_id, 'Region', lb.region, 'Protocol', lb.protocol, 'Port', lb.port, 'SSL Policy', coalesce(lb.ssl_policy, 'None') ) as properties 
+      'aws_ec2_load_balancer_listener' as category,
+      jsonb_build_object(
+        'ARN', lb.arn,
+        'Account ID', lb.account_id,
+        'Region', lb.region,
+        'Protocol', lb.protocol,
+        'Port', lb.port,
+        'SSL Policy', coalesce(lb.ssl_policy, 'None') ) as properties
     from
-      aws_api_gatewayv2_integration i 
+      aws_api_gatewayv2_integration i
       join
         aws_ec2_load_balancer_listener lb
-        on i.integration_uri = lb.arn 
+        on i.integration_uri = lb.arn
       join
-        api a 
+        api a
         on a.api_id = i.api_id
 
-    -- To load balancer (edge)
+    -- To EC2 load balancer listeners (edge)
     union all
     select
       a.api_id as from_id,
       lb.arn as to_id,
       null as id,
-      'Integrated with' as title,
-      'uses' as category,
-      jsonb_build_object( 'Name', a.name, 'API Endpoint', a.api_endpoint, 'Protocol Type', protocol_type) as properties 
+      'integrated with' as title,
+      'api_gatewayv2_api_to_ec2_load_balancer_listener' as category,
+      jsonb_build_object(
+        'Name', a.name,
+        'API Endpoint', a.api_endpoint,
+        'Protocol Type', protocol_type) as properties
     from
-      aws_api_gatewayv2_integration i 
+      aws_api_gatewayv2_integration i
       join
         aws_ec2_load_balancer_listener lb
-        on i.integration_uri = lb.arn 
+        on i.integration_uri = lb.arn
       join
-        api a 
+        api a
         on a.api_id = i.api_id
 
-    -- To appconfig application (node)
+    -- To AppConfig applications (node)
     union all
     select
       null as from_id,
@@ -400,39 +407,46 @@ query "aws_api_gatewayv2_api_relationships_graph" {
       ap.arn as id,
       ap.title as title,
       'aws_appconfig_application' as category,
-      jsonb_build_object( 'ARN', ap.arn, 'Region', ap.region, 'Account ID', ap.account_id, 'Description', ap.description ) as properties
+      jsonb_build_object(
+        'ARN', ap.arn,
+        'Region', ap.region,
+        'Account ID', ap.account_id,
+        'Description', ap.description ) as properties
     from
-      aws_api_gatewayv2_integration i 
+      aws_api_gatewayv2_integration i
       join
         aws_appconfig_application ap
-        on i.request_parameters ->> 'Application' = ap.name 
+        on i.request_parameters ->> 'Application' = ap.name
       join
         api a
         on a.api_id = i.api_id
     where
       integration_subtype like '%AppConfig-%'
 
-    -- To appconfig application (edge)
+    -- To AppConfig applications (edge)
     union all
     select
       a.api_id as from_id,
       ap.arn as to_id,
       null as id,
-      'Integrated with' as title,
-      'uses' as category,
-      jsonb_build_object( 'Name', a.name, 'API Endpoint', a.api_endpoint, 'Protocol Type', protocol_type) as properties 
+      'integrated with' as title,
+      'api_gatewayv2_to_appconfig_application' as category,
+      jsonb_build_object(
+        'Name', a.name,
+        'API Endpoint', a.api_endpoint,
+        'Protocol Type', protocol_type) as properties
     from
-      aws_api_gatewayv2_integration i 
+      aws_api_gatewayv2_integration i
       join
         aws_appconfig_application ap
-        on i.request_parameters ->> 'Application' = ap.name 
+        on i.request_parameters ->> 'Application' = ap.name
       join
         api a
         on a.api_id = i.api_id
     where
       integration_subtype like '%AppConfig-%'
 
-    -- From API gateway v2 stage (node)
+    -- From API gateway v2 stages (node)
     union all
     select
       null as from_id,
@@ -440,26 +454,32 @@ query "aws_api_gatewayv2_api_relationships_graph" {
       s.stage_name as id,
       s.title as title,
       'aws_api_gatewayv2_stage' as category,
-      jsonb_build_object( 'Deployment ID', s.deployment_id, 'Auto Deploy', s.auto_deploy, 'Created Time', s.created_date, 'Region', s.region, 'Account ID', s.account_id ) as properties 
+      jsonb_build_object(
+        'Deployment ID', s.deployment_id,
+        'Auto Deploy', s.auto_deploy,
+        'Created Time', s.created_date,
+        'Region', s.region,
+        'Account ID', s.account_id ) as properties
     from
-      aws_api_gatewayv2_stage s 
+      aws_api_gatewayv2_stage s
       join
-        api a 
-        on a.api_id = s.api_id  
+        api a
+        on a.api_id = s.api_id
 
-    -- From API gateway v2 stage (edge)
+    -- From API gateway v2 stages (edge)
     union all
     select
       s.stage_name as from_id,
       a.api_id as to_id,
       null as id,
       'Deploys' as title,
-      'uses' as category,
-      jsonb_build_object( 'Deployment ID', s.deployment_id, 'Auto Deploy', s.auto_deploy, 'Created Time', s.created_date, 'Region', s.region, 'Account ID', s.account_id ) as properties 
+      'api_gatewayv2_stage_to_api_gatewayv2_api' as category,
+      jsonb_build_object(
+        'Account ID', s.account_id ) as properties
     from
-      aws_api_gatewayv2_stage s 
+      aws_api_gatewayv2_stage s
       join
-        api a 
+        api a
         on a.api_id = s.api_id
 
     order by

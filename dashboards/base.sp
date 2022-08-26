@@ -290,6 +290,26 @@ graph "aws_graph_categories" {
     }
   }
 
+  category "aws_sqs_queue" {
+    href = "/aws_insights.dashboard.aws_sqs_queue_detail?input.queue_arn={{.properties.'ARN' | @uri}}"
+    icon = local.aws_sqs_queue_icon
+    fold {
+      title     = "SQS Queues"
+      icon      = local.aws_sqs_queue_icon
+      threshold = 3
+    }
+  }
+
+  category "aws_api_gatewayv2_api" {
+    href = "/aws_insights.dashboard.api_gatewayv2_api_detail?input.api_id={{.properties.'ID' | @uri}}"
+    icon = local.aws_api_gatewayv2_api_icon
+    fold {
+      title     = "API Gatewayv2 APIs"
+      icon      = local.aws_api_gatewayv2_api_icon
+      threshold = 3
+    }
+  }
+
   category "aws_kinesisanalyticsv2_application" {
     icon = local.aws_kinesisanalytics_application_icon
     fold {
@@ -430,6 +450,27 @@ graph "aws_graph_categories" {
     fold {
       title     = "Media Store Containers"
       icon      = local.aws_media_store_container_icon
+      threshold = 3
+    }
+  }
+
+  category "aws_appconfig_application" {
+    fold {
+      title     = "AppConfig Applications"
+      threshold = 3
+    }
+  }
+
+  category "aws_api_gatewayv2_stage" {
+    fold {
+      title     = "API Gatewayv2 Stages"
+      threshold = 3
+    }
+  }
+
+  category "aws_sfn_state_machine" {
+    fold {
+      title     = "Step Function State Machines"
       threshold = 3
     }
   }
