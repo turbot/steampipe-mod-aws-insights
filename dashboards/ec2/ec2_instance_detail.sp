@@ -113,6 +113,11 @@ dashboard "aws_ec2_instance_detail" {
       args = {
         arn = self.input.instance_arn.value
       }
+
+      column "VPC ID" {
+        // cyclic dependency prevents use of url_path, hardcode for now
+        href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{ .'VPC ID' | @uri }}"
+      }
     }
 
   }
