@@ -42,6 +42,29 @@ graph "aws_graph_categories" {
     }
   }
 
+  category "aws_ecs_container_instance" {
+    fold {
+      title     = "Container Instances"
+      threshold = 3
+    }
+  }
+
+  category "aws_ecs_task_definition" {
+    fold {
+      title     = "Tasks Definitions"
+      threshold = 3
+    }
+  }
+
+  category "aws_ecs_service" {
+    icon = local.aws_ecs_service_icon
+    fold {
+      threshold  = 3
+      title      = "Services"
+      icon       = local.aws_ecs_service_icon
+    }
+  }
+
   category "aws_s3_bucket" {
     href = "/aws_insights.dashboard.aws_s3_bucket_detail?input.bucket_arn={{.properties.'ARN' | @uri}}"
     icon = local.aws_s3_bucket_icon
