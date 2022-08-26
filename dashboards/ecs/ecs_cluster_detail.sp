@@ -81,9 +81,8 @@ dashboard "aws_ecs_cluster_detail" {
       category "aws_ecs_task_definition" {
         color = "blue"
         fold {
+          title     = "Tasks Definitions"
           threshold  = 2
-          title      = "Tasks Definitions"
-          icon =   "collection"
         }
       }
 
@@ -100,7 +99,6 @@ dashboard "aws_ecs_cluster_detail" {
         color = "green"
         fold {
           title     = "Container Instances"
-          icon      = local.aws_guardduty_detector_icon
           threshold = 2
         }
       }
@@ -144,7 +142,7 @@ dashboard "aws_ecs_cluster_detail" {
       width = 6
 
       table {
-        title = "Registerted Container Instances"
+        title = "Registered Container Instances"
         query = query.aws_ecs_cluster_container_instances
         args = {
           arn = self.input.ecs_cluster_arn.value
@@ -590,7 +588,7 @@ query "aws_ecs_cluster_relationships_graph" {
       'EC2' as from_id,
       i.arn as to_id,
       null as id,
-      'container instances' as title,
+      'container instance' as title,
       'ecs_launch_type_to_ecs_container_insatnce' as category,
       jsonb_build_object(
         'ARN', i.arn,

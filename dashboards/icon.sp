@@ -14,11 +14,13 @@ locals {
   aws_ec2_instance_icon                  = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_instance_light.svg"))
   aws_ec2_network_interface_icon         = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_network_interface_light.svg"))
   aws_ec2_network_load_balancer_icon     = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ec2_network_load_balancer_light.svg"))
+  aws_ecs_service_icon                   = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ecs_service_light.svg"))
+  aws_ecs_task_icon                      = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ecs_task_light.svg"))
   aws_eks_cluster_icon                   = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/eks_cluster.svg"))
   aws_elasticache_cluster_icon           = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/elasticache_cluster_light.svg"))
   aws_emr_cluster_icon                   = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/emr_cluster_light.svg"))
-  aws_eventbridge_rule_icon              = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/eventbridge_rule_light.svg"))
   aws_eventbridge_bus_icon               = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/eventbridge_bus_light.svg"))
+  aws_eventbridge_rule_icon              = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/eventbridge_rule_light.svg"))
   aws_guardduty_detector_icon            = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/guardduty_detector_light.svg"))
   aws_iam_role_icon                      = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/iam_role_light.svg"))
   aws_iam_user_icon                      = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/iam_user_light.svg"))
@@ -43,7 +45,5 @@ locals {
   aws_vpc_network_acl_icon               = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_network_acl_light.svg"))
   aws_vpc_route_table_icon               = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_router_light.svg"))
   aws_vpc_vpn_gateway_icon               = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_vpn_gateway_light.svg"))
-  aws_ecs_task_icon                      = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ecs_task_light.svg"))
-  aws_ecs_service_icon                   = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ecs_service_light.svg"))
 
 }
