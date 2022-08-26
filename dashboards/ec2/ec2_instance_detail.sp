@@ -49,6 +49,14 @@ dashboard "aws_ec2_instance_detail" {
 
     card {
       width = 2
+      query = query.aws_ec2_instance_public_ip_address
+      args = {
+        arn = self.input.instance_arn.value
+      }
+    }
+
+    card {
+      width = 2
       query = query.aws_ec2_instance_ebs_optimized
       args = {
         arn = self.input.instance_arn.value
@@ -123,7 +131,7 @@ dashboard "aws_ec2_instance_detail" {
   }
 
   container {
-    width = 4
+    width = 6
 
     table {
       title = "Security Groups"
@@ -141,28 +149,11 @@ dashboard "aws_ec2_instance_detail" {
   }
 
   container {
-    width = 8
+    width = 6
 
     table {
       title = "CPU cores"
-      width = 6
       query = query.aws_ec2_instance_cpu_cores
-      args = {
-        arn = self.input.instance_arn.value
-      }
-    }
-
-    card {
-      width = 3
-      query = query.aws_ec2_instance_public_ip_address
-      args = {
-        arn = self.input.instance_arn.value
-      }
-    }
-
-    table {
-      width = 3
-      query = query.aws_ec2_instance_private_ip_addresses
       args = {
         arn = self.input.instance_arn.value
       }
@@ -256,21 +247,6 @@ query "aws_ec2_instance_public_ip_address" {
       aws_ec2_instance
     where
       arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-query "aws_ec2_instance_private_ip_addresses" {
-  sql = <<-EOQ
-    select
-      privates ->> 'PrivateIpAddress'::text as "Private IP Addresses"
-    from 
-      aws_ec2_instance,
-      jsonb_array_elements(network_interfaces) as p,
-      jsonb_array_elements(p->'PrivateIpAddresses') as privates
-    where
-      arn = $1
   EOQ
 
   param "arn" {}
@@ -378,15 +354,18 @@ query "aws_ec2_instance_security_groups" {
 query "aws_ec2_instance_network_interfaces" {
   sql = <<-EOQ
     select
+    --p as data,
       p ->> 'NetworkInterfaceId' as "Network Interface ID",
       p ->> 'InterfaceType' as "Interface Type",
-      p ->> 'PrivateIpAddress' as "Private IP Address",
+      ips -> 'Association' ->> 'PublicIp' as "Public IP Address",
+      ips ->> 'PrivateIpAddress' as "Private IP Address",
       p ->> 'Status' as "Status",
       p ->> 'SubnetId' as "Subnet ID",
       p ->> 'VpcId' as "VPC ID"
     from
       aws_ec2_instance,
-      jsonb_array_elements(network_interfaces) as p
+      jsonb_array_elements(network_interfaces) as p,
+      jsonb_array_elements(p -> 'PrivateIpAddresses') as ips
     where
       arn = $1;
   EOQ
