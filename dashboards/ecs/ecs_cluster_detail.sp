@@ -144,6 +144,23 @@ dashboard "aws_ecs_cluster_detail" {
       width = 6
 
       table {
+        title = "Registerted Container Instances"
+        query = query.aws_ecs_cluster_container_instances
+        args = {
+          arn = self.input.ecs_cluster_arn.value
+        }
+
+        column "Instance ARN" {
+          display = "none"
+        }
+
+        column "EC2 Instance ID" {
+          href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.'Instance ARN' | @uri}}"
+        }
+
+      }
+
+      table {
         title = "Statistics"
         query = query.aws_ecs_cluster_statistics
         args = {
@@ -151,6 +168,7 @@ dashboard "aws_ecs_cluster_detail" {
         }
 
       }
+
 
     }
 
@@ -305,6 +323,25 @@ query "aws_ecs_cluster_statistics" {
       cluster_arn = $1
     order by
       s ->> 'Name';
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_ecs_cluster_container_instances" {
+  sql = <<-EOQ
+    select
+      c.ec2_instance_id as "EC2 Instance ID",
+      c.registered_at as "Rgeistered At",
+      c.arn as "ARN",
+      i.arn as "Instance ARN"
+    from
+      aws_ecs_container_instance as c
+      left join aws_ec2_instance as i on c.ec2_instance_id = i.instance_id
+    where
+      cluster_arn = $1
+    order by
+      ec2_instance_id;
   EOQ
 
   param "arn" {}
