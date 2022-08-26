@@ -247,21 +247,6 @@ query "aws_ec2_instance_public_access" {
   param "arn" {}
 }
 
-query "aws_ec2_instance_ebs_optimized" {
-  sql = <<-EOQ
-    select
-      'EBS Optimized' as label,
-      case when ebs_optimized then 'Enabled' else 'Disabled' end as value,
-      case when ebs_optimized then 'ok' else 'alert' end as type
-    from
-      aws_ec2_instance
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
 query "aws_ec2_instance_public_ip_address" {
   sql = <<-EOQ
     select
@@ -286,6 +271,21 @@ query "aws_ec2_instance_private_ip_addresses" {
       jsonb_array_elements(p->'PrivateIpAddresses') as privates
     where
       arn = $1
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_ec2_instance_ebs_optimized" {
+  sql = <<-EOQ
+    select
+      'EBS Optimized' as label,
+      case when ebs_optimized then 'Enabled' else 'Disabled' end as value,
+      case when ebs_optimized then 'ok' else 'alert' end as type
+    from
+      aws_ec2_instance
+    where
+      arn = $1;
   EOQ
 
   param "arn" {}
