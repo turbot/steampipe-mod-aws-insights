@@ -49,14 +49,6 @@ dashboard "aws_ec2_instance_detail" {
 
     card {
       width = 2
-      query = query.aws_ec2_instance_public_ip_address
-      args = {
-        arn = self.input.instance_arn.value
-      }
-    }
-
-    card {
-      width = 2
       query = query.aws_ec2_instance_ebs_optimized
       args = {
         arn = self.input.instance_arn.value
@@ -226,23 +218,9 @@ query "aws_ec2_instance_total_cores_count" {
 query "aws_ec2_instance_public_access" {
   sql = <<-EOQ
     select
-      'Public Access' as label,
-      case when public_ip_address is null then 'Disabled' else 'Enabled' end as value,
-      case when public_ip_address is null then 'ok' else 'alert' end as type
-    from
-      aws_ec2_instance
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-query "aws_ec2_instance_public_ip_address" {
-  sql = <<-EOQ
-    select
       'Public IP Address' as label,
-      case when public_ip_address is null then 'None' else public_ip_address::text end as value
+      case when public_ip_address is null then 'Disabled' else host(public_ip_address) end as value,
+      case when public_ip_address is null then 'ok' else 'alert' end as type
     from
       aws_ec2_instance
     where
