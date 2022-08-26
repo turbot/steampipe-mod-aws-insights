@@ -41,10 +41,26 @@ graph "aws_graph_categories" {
       threshold = 3
     }
   }
+  
+  category "aws_ecs_cluster" {
+    href = "/aws_insights.dashboard.aws_ecs_cluster_detail?input.ecs_cluster_arn={{.properties.'ARN' | @uri}}"
+    fold {
+      title     = "ECS Clusters"
+      threshold = 3
+    }
+  }
 
   category "aws_ecs_container_instance" {
     fold {
       title     = "Container Instances"
+      threshold = 3
+    }
+  }
+
+  category "aws_ecs_task" {
+    icon = local.aws_ecs_task_icon
+    fold {
+      title     = "Tasks"
       threshold = 3
     }
   }
