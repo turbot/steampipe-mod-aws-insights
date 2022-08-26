@@ -81,7 +81,7 @@ query "aws_iam_policy_relationships_graph" {
       r.role_id as from_id,
       p.policy_id as to_id,
       null as id,
-      'attached with' as title,
+      'iam role' as title,
       'iam_role_to_iam_policy' as category,
       jsonb_build_object(
         'Account ID', r.account_id ) as properties
@@ -120,7 +120,7 @@ query "aws_iam_policy_relationships_graph" {
       u.name as from_id,
       p.policy_id as to_id,
       null as id,
-      'attached with' as title,
+      'iam user' as title,
       'iam_user_to_iam_policy' as category,
       jsonb_build_object(
         'Account ID', u.account_id ) as properties
@@ -158,7 +158,7 @@ query "aws_iam_policy_relationships_graph" {
       g.name as from_id,
       p.policy_id as to_id,
       null as id,
-      'attached with' as title,
+      'iam group' as title,
       'iam_group_to_iam_policy' as category,
       jsonb_build_object( 'Account ID', g.account_id ) as properties
     from

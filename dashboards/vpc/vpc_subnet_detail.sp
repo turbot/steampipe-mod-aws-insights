@@ -420,6 +420,7 @@ query "aws_vpc_subnet_relationships_graph" {
       subnet_id = $1
 
     order by
+      category,
       from_id,
       to_id;
   EOQ

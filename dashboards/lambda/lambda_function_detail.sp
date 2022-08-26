@@ -521,7 +521,7 @@ query "aws_lambda_function_relationships_graph" {
       arn as from_id,
       $1 as to_id,
       null as id,
-      'sends notification' as title,
+      'send notifications' as title,
       's3_bucket_to_lambda_function' as category,
       jsonb_build_object(
         'ARN', arn,

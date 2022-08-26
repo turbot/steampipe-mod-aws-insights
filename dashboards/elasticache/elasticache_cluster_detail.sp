@@ -350,7 +350,7 @@ query "aws_elasticache_cluster_relationships_graph" {
       c.cache_cluster_id as from_id,
       g.group_id as to_id,
       null as id,
-      'control traffic through' as title,
+      'security group' as title,
       'elasticache_cluster_to_vpc_security_group' as category,
       jsonb_build_object(
         'Account ID', c.account_id ) as properties
@@ -399,7 +399,7 @@ query "aws_elasticache_cluster_relationships_graph" {
       g.group_id as from_id,
       g.vpc_id as to_id,
       null as id,
-      'resides under' as title,
+      'vpc' as title,
       'vpc_security_group_to_vpc' as category,
       jsonb_build_object(
         'Account ID', c.account_id ) as properties
@@ -489,7 +489,7 @@ query "aws_elasticache_cluster_relationships_graph" {
       g.cache_subnet_group_name as from_id,
       s.subnet_id as to_id,
       null as id,
-      'contains' as title,
+      'subnet' as title,
       'elasticache_subnet_group_to_vpc_subnet' as category,
       jsonb_build_object( 'Account ID', c.account_id ) as properties
     from
@@ -537,7 +537,7 @@ query "aws_elasticache_cluster_relationships_graph" {
       subnet ->> 'SubnetIdentifier' as from_id,
       g.vpc_id as to_id,
       null as id,
-      'resides under' as title,
+      'vpc' as title,
       'elasticache_subnet_to_vpc' as category,
       jsonb_build_object( 'Account ID', c.account_id ) as properties
     from

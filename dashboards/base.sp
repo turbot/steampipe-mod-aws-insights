@@ -107,20 +107,16 @@ graph "aws_graph_categories" {
 
   category "aws_kms_key" {
     href = "/aws_insights.dashboard.aws_kms_key_detail?input.key_arn={{.properties.'ARN' | @uri}}"
-    icon = local.aws_kms_key_icon
     fold {
       title     = "KMS Keys"
-      icon      = local.aws_kms_key_icon
       threshold = 3
     }
   }
 
   category "aws_cloudtrail_trail" {
     href = "/aws_insights.dashboard.aws_cloudtrail_trail_detail?input.trail_arn={{.properties.'ARN' | @uri}}"
-    icon = local.aws_cloudtrail_trail_icon
     fold {
       title     = "CloudTrail Trails"
-      icon      = local.aws_cloudtrail_trail_icon
       threshold = 3
     }
   }
@@ -183,10 +179,18 @@ graph "aws_graph_categories" {
 
   category "aws_redshift_cluster" {
     href = "/aws_insights.dashboard.aws_redshift_cluster_detail?input.cluster_arn={{.properties.'ARN' | @uri}}"
-    icon = local.aws_redshift_cluster_icon
     fold {
       title     = "Redshift Clusters"
-      icon      = local.aws_redshift_cluster_icon
+      threshold = 3
+    }
+  }
+
+  category "aws_ec2_ami" {
+    href = "aws_insights.dashboard.aws_ec2_ami_detail?input.ami={{.properties.'Image ID' | @uri}}"
+    icon = local.aws_ec2_ami_icon
+    fold {
+      title     = "EC2 AMIs"
+      icon      = local.aws_ec2_ami_icon
       threshold = 3
     }
   }
@@ -203,10 +207,8 @@ graph "aws_graph_categories" {
 
   category "aws_vpc" {
     href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.properties.'VPC ID' | @uri}}"
-    icon = local.aws_vpc_icon
     fold {
       title     = "VPCs"
-      icon      = local.aws_vpc_icon
       threshold = 3
     }
   }
@@ -315,10 +317,8 @@ graph "aws_graph_categories" {
 
   category "aws_eks_cluster" {
     href = "/aws_insights.dashboard.aws_eks_cluster_detail?input.eks_cluster_arn={{.properties.'ARN' | @uri}}"
-    icon = local.aws_eks_cluster_icon
     fold {
       title     = "EKS Clusters"
-      icon      = local.aws_eks_cluster_icon
       threshold = 3
     }
   }
@@ -334,10 +334,8 @@ graph "aws_graph_categories" {
   }
 
   category "aws_kinesisanalyticsv2_application" {
-    icon = local.aws_kinesisanalytics_application_icon
     fold {
       title     = "Kinesis Analytics Applications"
-      icon      = local.aws_kinesisanalytics_application_icon
       threshold = 3
     }
   }
@@ -369,20 +367,9 @@ graph "aws_graph_categories" {
     }
   }
 
-  category "aws_ec2_ami" {
-    icon = local.aws_ec2_ami_icon
-    fold {
-      title     = "EC2 AMIs"
-      icon      = local.aws_ec2_ami_icon
-      threshold = 3
-    }
-  }
-
   category "aws_kinesis_stream" {
-    icon = local.aws_kinesis_stream_icon
     fold {
       title     = "Kinesis Streams"
-      icon      = local.aws_kinesis_stream_icon
       threshold = 3
     }
   }
@@ -442,28 +429,22 @@ graph "aws_graph_categories" {
   }
 
   category "aws_cloudwatch_log_group" {
-    icon = local.aws_cloudwatch_log_group_icon
     fold {
       title     = "CloudWatch Log Groups"
-      icon      = local.aws_cloudwatch_log_group_icon
       threshold = 3
     }
   }
 
   category "aws_guardduty_detector" {
-    icon = local.aws_guardduty_detector_icon
     fold {
       title     = "GuardDuty Detectors"
-      icon      = local.aws_guardduty_detector_icon
       threshold = 3
     }
   }
 
   category "aws_media_store_container" {
-    icon = local.aws_media_store_container_icon
     fold {
       title     = "Media Store Containers"
-      icon      = local.aws_media_store_container_icon
       threshold = 3
     }
   }

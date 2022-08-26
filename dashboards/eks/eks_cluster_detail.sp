@@ -64,9 +64,7 @@ dashboard "aws_eks_cluster_detail" {
       args = {
         arn = self.input.eks_cluster_arn.value
       }
-      category "aws_eks_cluster" {
-        icon = local.aws_eks_cluster_icon
-      }
+      category "aws_eks_cluster" {}
     }
   }
 
@@ -353,7 +351,7 @@ query "aws_eks_cluster_relationships_graph" {
       c.arn as from_id,
       g.arn as to_id,
       null as id,
-      'has' as title,
+      'node group' as title,
       'eks_cluster_to_eks_node_group' as category,
       jsonb_build_object(
         'Account ID', c.account_id ) as properties
@@ -400,7 +398,7 @@ query "aws_eks_cluster_relationships_graph" {
       c.arn as from_id,
       a.arn as to_id,
       null as id,
-      'has' as title,
+      'addon' as title,
       'eks_cluster_to_eks_addons' as category,
       jsonb_build_object(
         'Account ID', c.account_id ) as properties
@@ -445,7 +443,7 @@ query "aws_eks_cluster_relationships_graph" {
       arn as from_id,
       group_id as to_id,
       null as id,
-      'control trafic through' as title,
+      'security group' as title,
       'eks_cluster_to_security_group' as category,
       jsonb_build_object(
         'Account ID', c.account_id ) as properties
@@ -489,7 +487,7 @@ query "aws_eks_cluster_relationships_graph" {
       arn as from_id,
       subnet_id as to_id,
       null as id,
-      'control plane uses' as title,
+      'subnet' as title,
       'eks_cluster_to_vpc_subnet' as category,
       jsonb_build_object(
         'Account ID', c.account_id ) as properties
@@ -533,7 +531,7 @@ query "aws_eks_cluster_relationships_graph" {
       subnet_id as from_id,
       resources_vpc_config ->> 'VpcId' as to_id,
       null as id,
-      'resides under' as title,
+      'vpc' as title,
       'vpc_subnet_to_vpc' as category,
       jsonb_build_object(
         'Account ID', c.account_id ) as properties
@@ -549,7 +547,7 @@ query "aws_eks_cluster_relationships_graph" {
       group_id as from_id,
       resources_vpc_config ->> 'VpcId' as to_id,
       null as id,
-      'resides under' as title,
+      'vpc' as title,
       'security_group_to_vpc' as category,
       jsonb_build_object(
         'Account ID', c.account_id ) as properties

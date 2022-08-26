@@ -281,7 +281,7 @@ query "aws_acm_certificate_relationships_graph" {
       d.id as from_id,
       c.title as to_id,
       null as id,
-      'uses' as title,
+      'encrypted with' as title,
       'cloudfront_distribution_to_acm_certificate' as category,
       jsonb_build_object(
         'Account ID', d.account_id ) as properties
@@ -328,7 +328,7 @@ query "aws_acm_certificate_relationships_graph" {
       b.arn as from_id,
       c.title as to_id,
       null as id,
-      'associated' as title,
+      'encrypted with' as title,
       'ec2_classic_load_balancer_to_acm_certificate' as category,
       jsonb_build_object(
         'Account ID', b.account_id ) as properties
@@ -376,7 +376,7 @@ query "aws_acm_certificate_relationships_graph" {
       lb.arn as from_id,
       c.title as to_id,
       null as id,
-      'associated' as title,
+      'encrypted with' as title,
       'ec2_application_load_balancer_to_acm_certificate' as category,
       jsonb_build_object(
         'Account ID', lb.account_id ) as properties
@@ -424,7 +424,7 @@ query "aws_acm_certificate_relationships_graph" {
       b.arn as from_id,
       c.title as to_id,
       null as id,
-      'associated' as title,
+      'encrypted with' as title,
       'ec2_network_load_balancer_to_acm_certificate' as category,
       jsonb_build_object( 'Account ID', b.account_id ) as properties
     from
