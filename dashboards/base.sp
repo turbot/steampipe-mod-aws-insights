@@ -212,6 +212,20 @@ graph "aws_graph_categories" {
     }
   }
 
+   category "aws_ecr_repository" {
+    fold {
+      title     = "ECR repositories"
+      threshold = 3
+    }
+  }
+
+  category "aws_efs_file_system" {
+    fold {
+      title     = "EFS File Systems"
+      threshold = 3
+    }
+  }
+
   category "aws_ec2_instance" {
     href = "/aws_insights.dashboard.aws_ec2_instance_detail?input.instance_arn={{.properties.'ARN' | @uri}}"
     icon = local.aws_ec2_instance_icon
