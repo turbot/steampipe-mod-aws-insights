@@ -294,7 +294,7 @@ query "aws_sns_topic_relationships_graph" {
       q.topic_arn as from_id,
       k.arn as to_id,
       null as id,
-      'encrypts with' as title,
+      'encrypted with' as title,
       'sns_topic_to_kms_key' as category,
       jsonb_build_object(
         'ARN', k.arn,
@@ -374,7 +374,7 @@ query "aws_sns_topic_relationships_graph" {
       arn as from_id,
       $1 as to_id,
       null as id,
-      'event notification' as title,
+      'send notifications' as title,
       's3_bucket_to_sns_topic' as category,
       jsonb_build_object(
         'ARN', arn,
@@ -528,7 +528,7 @@ query "aws_sns_topic_relationships_graph" {
       c.arn as from_id,
       $1 as to_id,
       null as id,
-      'send notification' as title,
+      'send notifications' as title,
       'cloudtrail_trail_to_sns_topic' as category,
       jsonb_build_object(
         'ARN', c.arn,
@@ -570,7 +570,7 @@ query "aws_sns_topic_relationships_graph" {
       s.id as from_id,
       t.topic_arn as to_id,
       null as id,
-      'event published' as title,
+      'send notifications' as title,
       'cloudformation_stack_to_sns_topic' as category,
       jsonb_build_object(
         'ID', s.id ,
@@ -614,7 +614,7 @@ query "aws_sns_topic_relationships_graph" {
       c.arn as from_id,
       t.topic_arn as to_id,
       null as id,
-      'event notification' as title,
+      'send notifications' as title,
       'elasticache_cluster_to_sns_topic' as category,
       jsonb_build_object(
         'ARN', c.arn,

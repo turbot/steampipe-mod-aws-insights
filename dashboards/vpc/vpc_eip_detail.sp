@@ -183,7 +183,7 @@ query "aws_vpc_eip_relationships_graph" {
       i.network_interface_id as from_id,
       e.arn as to_id,
       null as id,
-      'allocated to' as title,
+      'eni' as title,
       'ec2_network_interface_to_vpc_eip' as category,
       jsonb_build_object(
         'ID', i.network_interface_id,
@@ -223,7 +223,7 @@ query "aws_vpc_eip_relationships_graph" {
       i.arn as from_id,
       e.network_interface_id as to_id,
       null as id,
-      'attached to' as title,
+      'ec2 instance' as title,
       'ec2_instance_to_ec2_network_interface' as category,
       jsonb_build_object(
         'ID', e.network_interface_id,

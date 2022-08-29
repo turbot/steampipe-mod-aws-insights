@@ -74,8 +74,7 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
       args = {
         arn = self.input.snapshot_arn.value
       }
-      category "aws_rds_db_cluster_snapshot" {
-      }
+      category "aws_rds_db_cluster_snapshot" {}
     }
   }
 
@@ -305,7 +304,7 @@ query "aws_rds_db_cluster_snapshot_relationships_graph" {
     where
       arn = $1
 
-    -- To KMS Keys (node)
+    -- To KMS keys (node)
     union all
     select
       null as from_id,
@@ -332,7 +331,7 @@ query "aws_rds_db_cluster_snapshot_relationships_graph" {
       k.id as to_id,
       null as id,
       'encrypted with' as title,
-      'uses' as category,
+      'rds_db_cluster_snapshot_to_kms_key' as category,
       jsonb_build_object(
         'ARN', k.arn,
         'DB Cluster Snapshot Identifier', s.db_cluster_snapshot_identifier,
@@ -377,8 +376,8 @@ query "aws_rds_db_cluster_snapshot_relationships_graph" {
       c.db_cluster_identifier as from_id,
       s.db_cluster_snapshot_identifier as to_id,
       null as id,
-      'has snapshot' as title,
-      'uses' as category,
+      'snapshot' as title,
+      'rds_db_cluster_to_rds_db_cluster_snapshot' as category,
       jsonb_build_object(
         'DB Cluster Identifier', c.db_cluster_identifier,
         'DB Cluster Snapshot Identifier', s.db_cluster_snapshot_identifier,
