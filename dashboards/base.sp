@@ -76,9 +76,9 @@ graph "aws_graph_categories" {
     href = "/aws_insights.dashboard.aws_ecs_service_detail?input.service_arn={{.properties.'ARN' | @uri}}"
     icon = local.aws_ecs_service_icon
     fold {
-      threshold  = 3
-      title      = "ECS Services"
-      icon       = local.aws_ecs_service_icon
+      threshold = 3
+      title     = "ECS Services"
+      icon      = local.aws_ecs_service_icon
     }
   }
 
@@ -202,6 +202,14 @@ graph "aws_graph_categories" {
     }
   }
 
+  category "aws_redshift_snapshot" {
+    href = "/aws_insights.dashboard.aws_redshift_snapshot_detail?input.snapshot_arn={{.properties.'ARN' | @uri}}"
+    fold {
+      title     = "Redshift Snapshots"
+      threshold = 3
+    }
+  }
+
   category "aws_ec2_ami" {
     href = "aws_insights.dashboard.aws_ec2_ami_detail?input.ami={{.properties.'Image ID' | @uri}}"
     icon = local.aws_ec2_ami_icon
@@ -212,7 +220,7 @@ graph "aws_graph_categories" {
     }
   }
 
-   category "aws_ecr_repository" {
+  category "aws_ecr_repository" {
     fold {
       title     = "ECR repositories"
       threshold = 3
@@ -354,12 +362,30 @@ graph "aws_graph_categories" {
     }
   }
 
+  category "aws_sqs_queue" {
+    href = "/aws_insights.dashboard.aws_sqs_queue_detail?input.queue_arn={{.properties.'ARN' | @uri}}"
+    icon = local.aws_sqs_queue_icon
+    fold {
+      title     = "SQS Queues"
+      icon      = local.aws_sqs_queue_icon
+      threshold = 3
+    }
+  }
+
   category "aws_eventbridge_rule" {
     href = "/aws_insights.dashboard.aws_eventbridge_rule_detail?input.eventbridge_rule_arn={{.properties.'ARN' | @uri}}"
     icon = local.aws_eventbridge_rule_icon
     fold {
       title     = "EventBridge Rules"
       icon      = local.aws_eventbridge_rule_icon
+      threshold = 3
+    }
+  }
+
+  category "aws_api_gatewayv2_api" {
+    href = "/aws_insights.dashboard.api_gatewayv2_api_detail?input.api_id={{.properties.'ID' | @uri}}"
+    fold {
+      title     = "API Gatewayv2 APIs"
       threshold = 3
     }
   }
@@ -495,6 +521,27 @@ graph "aws_graph_categories" {
     fold {
       title     = "Glacier Vaults"
       icon      = local.aws_glacier_vault_icon
+      threshold = 3
+    }
+  }
+
+  category "aws_appconfig_application" {
+    fold {
+      title     = "AppConfig Applications"
+      threshold = 3
+    }
+  }
+
+  category "aws_api_gatewayv2_stage" {
+    fold {
+      title     = "API Gatewayv2 Stages"
+      threshold = 3
+    }
+  }
+
+  category "aws_sfn_state_machine" {
+    fold {
+      title     = "Step Function State Machines"
       threshold = 3
     }
   }

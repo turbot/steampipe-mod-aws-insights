@@ -15,6 +15,58 @@ dashboard "aws_redshift_snapshot_detail" {
 
   container {
 
+    card {
+      query = query.aws_redshift_snapshot_status
+      width = 2
+      args = {
+        arn = self.input.snapshot_arn.value
+      }
+    }
+
+    card {
+      query = query.aws_redshift_snapshot_type
+      width = 2
+      args = {
+        arn = self.input.snapshot_arn.value
+      }
+    }
+
+    card {
+      query = query.aws_redshift_snapshot_engine
+      width = 2
+      args = {
+        arn = self.input.snapshot_arn.value
+      }
+    }
+
+    card {
+      query = query.aws_redshift_snapshot_backup_size
+      width = 2
+      args = {
+        arn = self.input.snapshot_arn.value
+      }
+    }
+
+    card {
+      query = query.aws_redshift_snapshot_node_type
+      width = 2
+      args = {
+        arn = self.input.snapshot_arn.value
+      }
+    }
+
+    card {
+      query = query.aws_redshift_snapshot_unencrypted
+      width = 2
+      args = {
+        arn = self.input.snapshot_arn.value
+      }
+    }
+
+  }
+
+  container {
+
     graph {
       type  = "graph"
       base  = graph.aws_graph_categories
@@ -23,6 +75,34 @@ dashboard "aws_redshift_snapshot_detail" {
         arn = self.input.snapshot_arn.value
       }
       category "aws_redshift_snapshot" {}
+    }
+  }
+
+  container {
+
+    container {
+      width = 6
+
+      table {
+        title = "Overview"
+        type  = "line"
+        width = 6
+        query = query.aws_redshift_snapshot_overview
+        args = {
+          arn = self.input.snapshot_arn.value
+        }
+
+      }
+
+      table {
+        title = "Tags"
+        width = 6
+        query = query.aws_redshift_snapshot_tags
+        args = {
+          arn = self.input.snapshot_arn.value
+        }
+
+      }
     }
   }
 }
@@ -43,6 +123,91 @@ query "aws_redshift_snapshot_input" {
   EOQ
 }
 
+query "aws_redshift_snapshot_type" {
+  sql = <<-EOQ
+    select
+      'Type' as label,
+      initcap(snapshot_type) as value
+    from
+      aws_redshift_snapshot
+    where
+      akas::text = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_redshift_snapshot_engine" {
+  sql = <<-EOQ
+    select
+      'Engine Version' as label,
+      engine_full_version as  value
+    from
+      aws_redshift_snapshot
+    where
+      akas::text = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_redshift_snapshot_backup_size" {
+  sql = <<-EOQ
+    select
+      'Size (GB)' as label,
+      total_backup_size_in_mega_bytes as  value
+    from
+      aws_redshift_snapshot
+    where
+      akas::text = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_redshift_snapshot_node_type" {
+  sql = <<-EOQ
+    select
+      'Node Type' as label,
+      node_type as  value
+    from
+      aws_redshift_snapshot
+    where
+      akas::text = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_redshift_snapshot_status" {
+  sql = <<-EOQ
+    select
+      'Status' as label,
+      initcap(status) as value
+    from
+      aws_redshift_snapshot
+    where
+      akas::text = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_redshift_snapshot_unencrypted" {
+  sql = <<-EOQ
+    select
+      case when encrypted or encrypted_with_hsm then 'Enabled' else 'Disabled' end as value,
+      'Encryption' as label,
+      case when encrypted or encrypted_with_hsm then 'ok' else 'alert' end as "type"
+    from
+      aws_redshift_snapshot
+    where
+      akas::text = $1;
+  EOQ
+
+  param "arn" {}
+}
+
 query "aws_redshift_snapshot_relationships_graph" {
   sql = <<-EOQ
     with snapshot as(
@@ -59,16 +224,16 @@ query "aws_redshift_snapshot_relationships_graph" {
       null as to_id,
       title as id,
       title,
-      'aws_redshift_snapshot' as category,
-      jsonb_build_object(
-        'Status', status,
-        'Cluster Identifier', cluster_identifier,
-        'Create Time', cluster_create_time,
-        'Type', snapshot_type,
-        'Encrypted', encrypted::text,
-        'Account ID', account_id,
-        'Source Region', source_region
-      ) as properties
+      'snapshot' as category,
+      jsonb_build_object( 
+        'Status', status, 
+        'Cluster Identifier', cluster_identifier, 
+        'Create Time', cluster_create_time, 
+        'Type', snapshot_type, 
+        'Encrypted', encrypted::text, 
+        'Account ID', account_id, 
+        'Source Region', source_region 
+      ) as properties 
     from
       snapshot
 
@@ -78,17 +243,19 @@ query "aws_redshift_snapshot_relationships_graph" {
       null as from_id,
       null as to_id,
       k.id as id,
-      COALESCE(k.aliases #>> '{0,AliasName}', k.id) as title,
-      'aws_kms_key' as category,
-      jsonb_build_object(
-        'ARN', k.arn,
-        'Rotation Enabled', k.key_rotation_enabled::text,
-        'Account ID', k.account_id,
-        'Region', k.region
-      ) as properties
+      coalesce(k.aliases #>> '{0,AliasName}', k.id) as title,
+      'kms_key' as category,
+      jsonb_build_object( 
+        'ARN', k.arn, 
+        'Rotation Enabled', k.key_rotation_enabled::text, 
+        'Account ID', k.account_id, 
+        'Region', k.region 
+      ) as properties 
     from
-      snapshot as s
-      join aws_kms_key as k on s.kms_key_id = k.arn
+      snapshot as s 
+      join
+        aws_kms_key as k 
+        on s.kms_key_id = k.arn
 
     -- To KMS keys (edge)
     union all
@@ -116,18 +283,20 @@ query "aws_redshift_snapshot_relationships_graph" {
       c.cluster_identifier as id,
       c.title as title,
       'aws_redshift_cluster' as category,
-      jsonb_build_object(
-        'ARN', c.arn,
-        'Status', c.cluster_status,
-        'Availability Zone', c.availability_zone,
-        'Create Time', c.cluster_create_time,
-        'Account ID', c.account_id,
-        'Region', c.region
-      ) as properties
+      jsonb_build_object( 
+        'ARN', c.arn, 
+        'Status', c.cluster_status, 
+        'Availability Zone', c.availability_zone, 
+        'Create Time', c.cluster_create_time, 
+        'Account ID', c.account_id, 
+        'Region', c.region 
+      ) as properties 
     from
-      snapshot as s
-      join aws_redshift_cluster as c on s.cluster_identifier = c.cluster_identifier
-        and s.account_id = c.account_id
+      snapshot as s 
+      join
+        aws_redshift_cluster as c 
+        on s.cluster_identifier = c.cluster_identifier 
+        and s.account_id = c.account_id 
         and s.region = c.region
 
     -- From Redshift cluster (edge)
@@ -136,7 +305,7 @@ query "aws_redshift_snapshot_relationships_graph" {
       c.cluster_identifier as from_id,
       s.snapshot_identifier as to_id,
       null as id,
-      'cluster' as title,
+      'snapshot' as title,
       'redshift_cluster_to_redshift_snapshot' as category,
       jsonb_build_object(
         'Cluster Identifier', c.cluster_identifier,
@@ -146,15 +315,56 @@ query "aws_redshift_snapshot_relationships_graph" {
         'Region', c.region
       ) as properties
     from
-      snapshot as s
-      join aws_redshift_cluster as c on s.cluster_identifier = c.cluster_identifier
-        and s.account_id = c.account_id
+      snapshot as s 
+      join
+        aws_redshift_cluster as c 
+        on s.cluster_identifier = c.cluster_identifier 
+        and s.account_id = c.account_id 
         and s.region = c.region
-
+        
     order by
       category,
       from_id,
       to_id;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_redshift_snapshot_overview" {
+  sql = <<-EOQ
+    select
+      snapshot_identifier as "Snapshot Name",
+      cluster_identifier as "Cluster Name",
+      title as "Title",
+      snapshot_create_time as "Create Date",
+      engine_full_version as "Engine Version",
+      vpc_id as "VPC ID",
+      manual_snapshot_remaining_days as "Manual Snapshot Remaining Days",
+      availability_zone as "Availability Zone",
+      region as "Region",
+      account_id as "Account ID"
+    from
+      aws_redshift_snapshot
+    where
+      akas::text = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_redshift_snapshot_tags" {
+  sql = <<-EOQ
+    select
+      tag ->> 'Key' as "Key",
+      tag ->> 'Value' as "Value"
+    from
+      aws_redshift_snapshot,
+      jsonb_array_elements(tags_src) as tag
+    where
+      akas::text = $1
+    order by
+      tag ->> 'Key';
   EOQ
 
   param "arn" {}
