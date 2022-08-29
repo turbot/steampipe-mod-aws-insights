@@ -155,8 +155,6 @@ query "aws_ecs_service_overview" {
       created_at as "Created At",
       created_by as "Created By",
       scheduling_strategy as "Scheduling Strategy",
-      enable_ecs_managed_tags as "Enable ECS Managed Tags",
-      enable_execute_command as "Enable Execute Command",
       region as "Region",
       account_id as "Account ID",
       arn as "ARN"
@@ -264,7 +262,7 @@ query "aws_ecs_service_relationships_graph" {
       t.service_name in (select service_name from ecs_service)
       and t.region in (select region from ecs_service)
 
-     -- To ECS services role (node)
+     -- To IAM roles (node)
     union all
     select
       null as from_id,
@@ -281,7 +279,7 @@ query "aws_ecs_service_relationships_graph" {
       ecs_service as s
       left join aws_iam_role as r on r.arn = s.role_arn
 
-    -- To ECS services role (edge)
+    -- To IAM roles (edge)
     union all
     select
       s.arn as from_id,
@@ -298,7 +296,7 @@ query "aws_ecs_service_relationships_graph" {
       ecs_service as s
       left join aws_iam_role as r on r.arn = s.role_arn
 
-    -- To ECS services load balancing (node)
+    -- To EC2 target groups (node)
     union all
     select
       null as from_id,
@@ -318,7 +316,7 @@ query "aws_ecs_service_relationships_graph" {
       jsonb_array_elements(load_balancers) as l
       left join aws_ec2_target_group as t on t.target_group_arn = l ->> 'TargetGroupArn'
 
-    -- To ECS services load balancing (edge)
+    -- To EC2 target groups (edge)
     union all
     select
       s.arn as from_id,
@@ -411,7 +409,7 @@ query "aws_ecs_service_relationships_graph" {
       left join aws_ecs_container_instance as i on s.cluster_arn = i.cluster_arn
       left join aws_ec2_instance as e on i.ec2_instance_id = e.instance_id
 
-    -- To ECS services subnet (node)
+    -- To VPC subnet (ECS service) (node)
     union all
     select
       null as from_id,
@@ -432,7 +430,7 @@ query "aws_ecs_service_relationships_graph" {
     where
       e.network_configuration is not null
 
-    -- To ECS services subnet (edge)
+    -- To VPC subnet (ECS service) (edge)
     union all
     select
       e.arn as from_id,
@@ -453,7 +451,7 @@ query "aws_ecs_service_relationships_graph" {
     where
       e.network_configuration is not null
 
-    -- To ECS services VPC (node)
+    -- To VPC (ECS service) (node)
     union all
     select
       null as from_id,
@@ -476,7 +474,7 @@ query "aws_ecs_service_relationships_graph" {
       e.network_configuration is not null
       and v.vpc_id = sb.vpc_id
 
-    -- To ECS services VPC (edge)
+    -- To VPC (ECS service) (edge)
     union all
     select
       sb.subnet_arn as from_id,

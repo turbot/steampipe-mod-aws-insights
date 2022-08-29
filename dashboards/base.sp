@@ -41,7 +41,7 @@ graph "aws_graph_categories" {
       threshold = 3
     }
   }
-  
+
   category "aws_ecs_cluster" {
     href = "/aws_insights.dashboard.aws_ecs_cluster_detail?input.ecs_cluster_arn={{.properties.'ARN' | @uri}}"
     fold {
@@ -73,6 +73,7 @@ graph "aws_graph_categories" {
   }
 
   category "aws_ecs_service" {
+    href = "/aws_insights.dashboard.aws_ecs_service_detail?input.service_arn={{.properties.'ARN' | @uri}}"
     icon = local.aws_ecs_service_icon
     fold {
       threshold  = 3
