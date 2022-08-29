@@ -41,16 +41,35 @@ dashboard "aws_glacier_vault_detail" {
       args = {
         arn = self.input.vault_arn.value
       }
+
+      category "glacier_vault" {
+        icon = local.aws_glacier_vault_icon
+      }
+
     }
   }
 
   container {
 
     container {
-      width = 12
+
+      width = 6
+
       table {
-        title = "Policy"
-        query = query.aws_glacier_vault_public_access_table
+        title = "Overview"
+        type  = "line"
+        width = 6
+        query = query.aws_glacier_vault_overview
+        args = {
+          arn = self.input.vault_arn.value
+        }
+
+      }
+
+      table {
+        title = "Tags"
+        width = 6
+        query = query.aws_glacier_vault_tags
         args = {
           arn = self.input.vault_arn.value
         }
@@ -58,7 +77,15 @@ dashboard "aws_glacier_vault_detail" {
     }
 
     container {
-      width = 12
+      width = 6
+      table {
+        title = "Policy"
+        query = query.aws_glacier_vault_public_access_table
+        args = {
+          arn = self.input.vault_arn.value
+        }
+      }
+
       table {
         title = "Vault Lock Policy"
         query = query.aws_glacier_vault_lock_public_policy
@@ -67,7 +94,6 @@ dashboard "aws_glacier_vault_detail" {
         }
       }
     }
-
   }
 }
 
@@ -190,6 +216,46 @@ query "aws_glacier_vault_relationships_graph" {
   param "arn" {}
 }
 
+query "aws_glacier_vault_overview" {
+  sql = <<-EOQ
+    select
+      vault_name as "Name",
+      creation_date as "Cteated Date",
+      title as "Title",
+      region as "Region",
+      account_id as "Account ID",
+      vault_arn as "ARN"
+    from
+      aws_glacier_vault
+    where
+      vault_arn = $1
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_glacier_vault_tags" {
+  sql = <<-EOQ
+
+    with jsondata as (
+    select
+      tags::json as tags
+    from
+      aws_glacier_vault
+    where
+      vault_arn = $1
+    )
+    select
+      key as "Key",
+      value as "Value"
+    from
+      jsondata,
+      json_each_text(tags);
+    EOQ
+
+  param "arn" {}
+}
+
 query "aws_glacier_vault_public_access_table" {
   sql = <<-EOQ
     select
@@ -199,10 +265,7 @@ query "aws_glacier_vault_public_access_table" {
         statement ->> 'Effect' = 'Allow'
         and (statement -> 'Principal' ->> 'AWS' = '["*"]')
         then 'Public' else 'Private' end as "Public/Private",
-      statement ->> 'Action' as "Action",
-      v.account_id as "Account ID",
-      v.region as "Region",
-      v.vault_arn as "ARN"
+      statement ->> 'Action' as "Action"
     from
       aws_glacier_vault as v,
       jsonb_array_elements(policy_std -> 'Statement') as statement
@@ -220,10 +283,7 @@ query "aws_glacier_vault_lock_public_policy" {
         statement ->> 'Effect' = 'Allow'
         and (statement -> 'Principal' ->> 'AWS' = '["*"]')
         then 'Public' else 'Private' end as "Public/Private",
-      statement ->> 'Action' as "Action",
-      v.account_id as "Account ID",
-      v.region as "Region",
-      v.vault_arn as "ARN"
+      statement ->> 'Action' as "Action"
     from
       aws_glacier_vault as v,
       jsonb_array_elements(vault_lock_policy_std -> 'Statement') as statement

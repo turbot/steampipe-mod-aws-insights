@@ -434,7 +434,8 @@ graph "aws_graph_categories" {
     }
   }
 
-  category "glacier_vault" {
+  category "aws_glacier_vault" {
+    href = "/aws_insights.dashboard.aws_glacier_vault_detail?input.vault_arn={{.properties.'ARN' | @uri}}"
     icon = local.aws_glacier_vault_icon
     fold {
       title     = "Glacier Vaults"
