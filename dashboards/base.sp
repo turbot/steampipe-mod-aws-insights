@@ -474,4 +474,14 @@ graph "aws_graph_categories" {
       threshold = 3
     }
   }
+
+  category "aws_glacier_vault" {
+    href = "/aws_insights.dashboard.aws_glacier_vault_detail?input.vault_arn={{.properties.'ARN' | @uri}}"
+    icon = local.aws_glacier_vault_icon
+    fold {
+      title     = "Glacier Vaults"
+      icon      = local.aws_glacier_vault_icon
+      threshold = 3
+    }
+  }
 }
