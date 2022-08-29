@@ -87,6 +87,7 @@ dashboard "aws_ecs_cluster_detail" {
       }
 
       category "aws_ecs_service" {
+        href = "/aws_insights.dashboard.aws_ecs_service_detail?input.service_arn={{.properties.'ARN' | @uri}}"
         icon = local.aws_ecs_service_icon
         fold {
           threshold  = 2
@@ -392,7 +393,7 @@ query "aws_ecs_cluster_relationships_graph" {
     from
       esc_cluster
 
-  -- To ECS Launch Type EC2 (node)
+  -- To ECS launch type EC2 (node)
     union all
     select
       null as from_id,
@@ -408,7 +409,7 @@ query "aws_ecs_cluster_relationships_graph" {
     where
       'EC2' in (select launch_type from task_definition_launch_type)
 
-    -- To ECS Launch Type EC2 (edge)
+    -- To ECS launch type EC2 (edge)
     union all
     select
       $1 as from_id,
@@ -424,7 +425,7 @@ query "aws_ecs_cluster_relationships_graph" {
     where
       'EC2' in (select launch_type from task_definition_launch_type)
 
-    -- To ECS Launch Type FARGATE (node)
+    -- To ECS launch type FARGATE (node)
     union all
     select
       null as from_id,
@@ -440,7 +441,7 @@ query "aws_ecs_cluster_relationships_graph" {
     where
       'FARGATE' in (select launch_type from task_definition_launch_type)
 
-    -- To ECS Launch Type FARGATE (edge)
+    -- To ECS launch type FARGATE (edge)
     union all
     select
       $1 as from_id,
@@ -456,7 +457,7 @@ query "aws_ecs_cluster_relationships_graph" {
     where
       'FARGATE' in (select launch_type from task_definition_launch_type)
 
-   -- To ECS Launch Type External (node)
+   -- To ECS launch type External (node)
     union all
     select
       null as from_id,
@@ -472,7 +473,7 @@ query "aws_ecs_cluster_relationships_graph" {
      where
       'EXTERNAL' in (select launch_type from task_definition_launch_type)
 
-    -- To ECS Launch Type External (edge)
+    -- To ECS launch type External (edge)
     union all
     select
       $1 as from_id,
@@ -620,9 +621,9 @@ query "aws_ecs_cluster_relationships_graph" {
       right join aws_ec2_instance as c on c.instance_id = i.ec2_instance_id
       right join aws_vpc_subnet as s on s.subnet_id = c.subnet_id
     where
-      i.cluster_arn  = $1
+      i.cluster_arn = $1
 
-    -- To VPC subnets  (edge)
+    -- To VPC subnets (edge)
     union all
     select
       i.arn as from_id,
@@ -641,7 +642,7 @@ query "aws_ecs_cluster_relationships_graph" {
       right join aws_ec2_instance as c on c.instance_id = i.ec2_instance_id
       right join aws_vpc_subnet as s on s.subnet_id = c.subnet_id
     where
-      i.cluster_arn  = $1
+      i.cluster_arn = $1
 
     -- To VPC (node)
     union all
@@ -663,7 +664,7 @@ query "aws_ecs_cluster_relationships_graph" {
       right join aws_vpc_subnet as s on s.subnet_id = c.subnet_id
       right join aws_vpc as v on v.vpc_id = s.vpc_id
     where
-      i.cluster_arn  = $1
+      i.cluster_arn = $1
 
     -- To VPC (edge)
     union all
@@ -685,7 +686,7 @@ query "aws_ecs_cluster_relationships_graph" {
       right join aws_vpc_subnet as s on s.subnet_id = c.subnet_id
       right join aws_vpc as v on v.vpc_id = s.vpc_id
     where
-      i.cluster_arn  = $1
+      i.cluster_arn = $1
 
     -- To ECS services subnet (node)
     union all
@@ -778,7 +779,6 @@ query "aws_ecs_cluster_relationships_graph" {
       e.network_configuration is not null
       and e.cluster_arn = $1
        and v.vpc_id = sb.vpc_id
-
   EOQ
 
   param "arn" {}
