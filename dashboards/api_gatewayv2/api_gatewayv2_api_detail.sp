@@ -423,52 +423,52 @@ query "aws_api_gatewayv2_api_relationships_graph" {
         api a
         on a.api_id = i.api_id
 
-    -- To AppConfig applications (node)
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      ap.arn as id,
-      ap.title as title,
-      'aws_appconfig_application' as category,
-      jsonb_build_object(
-        'ARN', ap.arn,
-        'Region', ap.region,
-        'Account ID', ap.account_id,
-        'Description', ap.description ) as properties
-    from
-      aws_api_gatewayv2_integration i
-      join
-        aws_appconfig_application ap
-        on i.request_parameters ->> 'Application' = ap.name
-      join
-        api a
-        on a.api_id = i.api_id
-    where
-      integration_subtype like '%AppConfig-%'
+    # -- To AppConfig applications (node)
+    # union all
+    # select
+    #   null as from_id,
+    #   null as to_id,
+    #   ap.arn as id,
+    #   ap.title as title,
+    #   'aws_appconfig_application' as category,
+    #   jsonb_build_object(
+    #     'ARN', ap.arn,
+    #     'Region', ap.region,
+    #     'Account ID', ap.account_id,
+    #     'Description', ap.description ) as properties
+    # from
+    #   aws_api_gatewayv2_integration i
+    #   join
+    #     aws_appconfig_application ap
+    #     on i.request_parameters ->> 'Application' = ap.name
+    #   join
+    #     api a
+    #     on a.api_id = i.api_id
+    # where
+    #   integration_subtype like '%AppConfig-%'
 
-    -- To AppConfig applications (edge)
-    union all
-    select
-      a.api_id as from_id,
-      ap.arn as to_id,
-      null as id,
-      'integrated with' as title,
-      'api_gatewayv2_to_appconfig_application' as category,
-      jsonb_build_object(
-        'Name', a.name,
-        'API Endpoint', a.api_endpoint,
-        'Protocol Type', protocol_type) as properties
-    from
-      aws_api_gatewayv2_integration i
-      join
-        aws_appconfig_application ap
-        on i.request_parameters ->> 'Application' = ap.name
-      join
-        api a
-        on a.api_id = i.api_id
-    where
-      integration_subtype like '%AppConfig-%'
+    # -- To AppConfig applications (edge)
+    # union all
+    # select
+    #   a.api_id as from_id,
+    #   ap.arn as to_id,
+    #   null as id,
+    #   'integrated with' as title,
+    #   'api_gatewayv2_to_appconfig_application' as category,
+    #   jsonb_build_object(
+    #     'Name', a.name,
+    #     'API Endpoint', a.api_endpoint,
+    #     'Protocol Type', protocol_type) as properties
+    # from
+    #   aws_api_gatewayv2_integration i
+    #   join
+    #     aws_appconfig_application ap
+    #     on i.request_parameters ->> 'Application' = ap.name
+    #   join
+    #     api a
+    #     on a.api_id = i.api_id
+    # where
+    #   integration_subtype like '%AppConfig-%'
 
     -- From API gateway v2 stages (node)
     union all
