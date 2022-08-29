@@ -332,7 +332,6 @@ query "aws_ec2_instance_security_groups" {
 query "aws_ec2_instance_network_interfaces" {
   sql = <<-EOQ
     select
-    --p as data,
       p ->> 'NetworkInterfaceId' as "Network Interface ID",
       p ->> 'InterfaceType' as "Interface Type",
       ips -> 'Association' ->> 'PublicIp' as "Public IP Address",
