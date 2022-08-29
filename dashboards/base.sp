@@ -52,7 +52,7 @@ graph "aws_graph_categories" {
 
   category "aws_ecs_container_instance" {
     fold {
-      title     = "Container Instances"
+      title     = "ECS Container Instances"
       threshold = 3
     }
   }
@@ -60,14 +60,14 @@ graph "aws_graph_categories" {
   category "aws_ecs_task" {
     icon = local.aws_ecs_task_icon
     fold {
-      title     = "Tasks"
+      title     = "ECS Tasks"
       threshold = 3
     }
   }
 
   category "aws_ecs_task_definition" {
     fold {
-      title     = "Tasks Definitions"
+      title     = "ECS Tasks Definitions"
       threshold = 3
     }
   }
@@ -77,7 +77,7 @@ graph "aws_graph_categories" {
     icon = local.aws_ecs_service_icon
     fold {
       threshold  = 3
-      title      = "Services"
+      title      = "ECS Services"
       icon       = local.aws_ecs_service_icon
     }
   }
