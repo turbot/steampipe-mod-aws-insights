@@ -61,12 +61,21 @@ dashboard "api_gatewayv2_api_detail" {
       table {
         title = "Overview"
         type  = "line"
-        width = 6
+        width = 3
         query = query.aws_api_gatewayv2_api_overview
         args = {
           api_id = self.input.api_id.value
         }
 
+      }
+
+      table {
+        title = "Tags"
+        width = 3
+        query = query.aws_api_gatewayv2_api_tags
+        args = {
+          api_id = self.input.api_id.value
+        }
       }
 
 
@@ -522,7 +531,6 @@ query "aws_api_gatewayv2_api_overview" {
       api_id as "API ID",
       api_endpoint as "API Endpoint",
       created_date as "Created Time",
-      protocol_type as "Protocol Type",
       title as "Title",
       region as "Region",
       account_id as "Account ID"
@@ -531,6 +539,27 @@ query "aws_api_gatewayv2_api_overview" {
     where
       api_id = $1;
   EOQ
+
+  param "api_id" {}
+}
+
+query "aws_api_gatewayv2_api_tags" {
+  sql = <<-EOQ
+    with jsondata as (
+    select
+      tags::json as tags
+    from
+      aws_api_gatewayv2_api
+    where
+      api_id = $1
+    )
+    select
+      key as "Key",
+      value as "Value"
+    from
+      jsondata,
+      json_each_text(tags);
+    EOQ
 
   param "api_id" {}
 }
@@ -555,11 +584,10 @@ query "aws_api_gatewayv2_api_stages" {
 query "aws_api_gatewayv2_api_integrations" {
   sql = <<-EOQ
     select
-      arn as "ARN",
       integration_id as "Integration ID",
+      integration_uri as "Integration URI",
       integration_method as "Integration Method",
       integration_type as "Integration Type",
-      integration_uri as "Integration URI",
       integration_subtype as "Integration Subtype",
       request_parameters as "Request Parameters"
     from
