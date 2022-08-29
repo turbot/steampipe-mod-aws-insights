@@ -128,6 +128,11 @@ dashboard "aws_ec2_instance_detail" {
       args = {
         arn = self.input.instance_arn.value
       }
+
+      column "VPC ID" {
+        // cyclic dependency prevents use of url_path, hardcode for now
+        href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{ .'VPC ID' | @uri }}"
+      }
     }
 
   }
@@ -154,7 +159,7 @@ dashboard "aws_ec2_instance_detail" {
     width = 6
 
     table {
-      title = " CPU cores"
+      title = "CPU cores"
       query = query.aws_ec2_instance_cpu_cores
       args = {
         arn = self.input.instance_arn.value
@@ -228,8 +233,8 @@ query "aws_ec2_instance_total_cores_count" {
 query "aws_ec2_instance_public_access" {
   sql = <<-EOQ
     select
-      'Public Access' as label,
-      case when public_ip_address is null then 'Disabled' else 'Enabled' end as value,
+      'Public IP Address' as label,
+      case when public_ip_address is null then 'Disabled' else host(public_ip_address) end as value,
       case when public_ip_address is null then 'ok' else 'alert' end as type
     from
       aws_ec2_instance
@@ -849,7 +854,7 @@ query "aws_ec2_instance_security_groups" {
   sql = <<-EOQ
     select
       p ->> 'GroupId'  as "Group ID",
-      p -> 'GroupName' ->> 'AttachTime' as "Group Name"
+      p ->> 'GroupName' as "Group Name"
     from
       aws_ec2_instance,
       jsonb_array_elements(security_groups) as p
@@ -865,12 +870,15 @@ query "aws_ec2_instance_network_interfaces" {
     select
       p ->> 'NetworkInterfaceId' as "Network Interface ID",
       p ->> 'InterfaceType' as "Interface Type",
+      ips -> 'Association' ->> 'PublicIp' as "Public IP Address",
+      ips ->> 'PrivateIpAddress' as "Private IP Address",
       p ->> 'Status' as "Status",
       p ->> 'SubnetId' as "Subnet ID",
       p ->> 'VpcId' as "VPC ID"
     from
       aws_ec2_instance,
-      jsonb_array_elements(network_interfaces) as p
+      jsonb_array_elements(network_interfaces) as p,
+      jsonb_array_elements(p -> 'PrivateIpAddresses') as ips
     where
       arn = $1;
   EOQ
