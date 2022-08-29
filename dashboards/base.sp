@@ -42,25 +42,42 @@ graph "aws_graph_categories" {
     }
   }
 
+  category "aws_ecs_cluster" {
+    href = "/aws_insights.dashboard.aws_ecs_cluster_detail?input.ecs_cluster_arn={{.properties.'ARN' | @uri}}"
+    fold {
+      title     = "ECS Clusters"
+      threshold = 3
+    }
+  }
+
   category "aws_ecs_container_instance" {
     fold {
-      title     = "Container Instances"
+      title     = "ECS Container Instances"
+      threshold = 3
+    }
+  }
+
+  category "aws_ecs_task" {
+    icon = local.aws_ecs_task_icon
+    fold {
+      title     = "ECS Tasks"
       threshold = 3
     }
   }
 
   category "aws_ecs_task_definition" {
     fold {
-      title     = "Tasks Definitions"
+      title     = "ECS Tasks Definitions"
       threshold = 3
     }
   }
 
   category "aws_ecs_service" {
+    href = "/aws_insights.dashboard.aws_ecs_service_detail?input.service_arn={{.properties.'ARN' | @uri}}"
     icon = local.aws_ecs_service_icon
     fold {
       threshold  = 3
-      title      = "Services"
+      title      = "ECS Services"
       icon       = local.aws_ecs_service_icon
     }
   }
