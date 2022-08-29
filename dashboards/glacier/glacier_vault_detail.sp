@@ -151,13 +151,13 @@ query "aws_glacier_vault_relationships_graph" {
       where
         vault_arn = $1
     )
-    -- Glacier vault vault (node)
+    -- Glacier vault (node)
     select
       null as from_id,
       null as to_id,
       vault_arn as id,
       title,
-      'glacier_vault' as category,
+      'aws_glacier_vault' as category,
       jsonb_build_object( 
         'Vault Name', vault_name, 
         'Create Time', creation_date, 
@@ -236,7 +236,6 @@ query "aws_glacier_vault_overview" {
 
 query "aws_glacier_vault_tags" {
   sql = <<-EOQ
-
     with jsondata as (
     select
       tags::json as tags
