@@ -49,7 +49,6 @@ dashboard "api_gatewayv2_api_detail" {
         api_id = self.input.api_id.value
       }
       category "aws_api_gatewayv2_api" {
-        icon = local.aws_api_gatewayv2_api_icon
       }
     }
   }

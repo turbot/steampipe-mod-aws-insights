@@ -205,7 +205,7 @@ graph "aws_graph_categories" {
   category "aws_redshift_snapshot" {
     href = "/aws_insights.dashboard.aws_redshift_snapshot_detail?input.snapshot_arn={{.properties.'ARN' | @uri}}"
     fold {
-      title     = "Redshift Snapshot"
+      title     = "Redshift Snapshots"
       threshold = 3
     }
   }
