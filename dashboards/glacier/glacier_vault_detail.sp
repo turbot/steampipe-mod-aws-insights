@@ -41,11 +41,6 @@ dashboard "aws_glacier_vault_detail" {
       args = {
         arn = self.input.vault_arn.value
       }
-
-      category "glacier_vault" {
-        icon = local.aws_glacier_vault_icon
-      }
-
     }
   }
 
@@ -137,11 +132,15 @@ query "aws_glacier_vault_relationships_graph" {
       vault_arn as id,
       title,
       'glacier_vault' as category,
-      jsonb_build_object( 'Vault Name', vault_name, 'Create Time', creation_date, 'Account ID', account_id ) as properties 
+      jsonb_build_object( 
+        'Vault Name', vault_name, 
+        'Create Time', creation_date, 
+        'Account ID', account_id 
+      ) as properties 
     from
       vault
 
-    -- To SNS topic - nodes
+    -- To SNS topic (node)
     union all
     select
       null as from_id,
@@ -149,7 +148,11 @@ query "aws_glacier_vault_relationships_graph" {
       topic.topic_arn as id,
       topic.title as title,
       'aws_sns_topic' as category,
-      jsonb_build_object( 'ARN', topic.topic_arn, 'Account ID', topic.account_id, 'Region', topic.region ) as properties 
+      jsonb_build_object( 
+        'ARN', topic.topic_arn,
+        'Account ID', topic.account_id,
+        'Region', topic.region
+      ) as properties 
     from
       aws_sns_topic as topic,
       vault as v 
@@ -157,7 +160,7 @@ query "aws_glacier_vault_relationships_graph" {
       v.vault_notification_config is not null 
       and v.vault_notification_config ->> 'SNSTopic' = topic.topic_arn
 
-    -- To SNS topic - edges
+    -- To SNS topic (edges)
     union all
     select
       v.vault_arn as from_id,
@@ -165,7 +168,12 @@ query "aws_glacier_vault_relationships_graph" {
       null as id,
       'Logs to' as title,
       'uses' as category,
-      jsonb_build_object( 'ARN', v.vault_arn, 'Account ID', v.account_id, 'Region', v.region, 'Events', v.vault_notification_config ->> 'Events' ) as properties 
+      jsonb_build_object(
+        'ARN', v.vault_arn, 
+        'Account ID', v.account_id, 
+        'Region', v.region, 
+        'Events', v.vault_notification_config ->> 'Events' 
+      ) as properties 
     from
       aws_sns_topic as topic,
       vault as v 

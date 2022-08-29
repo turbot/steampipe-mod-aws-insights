@@ -433,4 +433,13 @@ graph "aws_graph_categories" {
       threshold = 3
     }
   }
+
+  category "glacier_vault" {
+    icon = local.aws_glacier_vault_icon
+    fold {
+      title     = "Glacier Vaults"
+      icon      = local.aws_glacier_vault_icon
+      threshold = 3
+    }
+  }
 }
