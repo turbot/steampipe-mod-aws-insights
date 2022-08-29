@@ -16,6 +16,14 @@ dashboard "aws_redshift_snapshot_detail" {
   container {
 
     card {
+      query = query.aws_redshift_snapshot_status
+      width = 2
+      args = {
+        arn = self.input.snapshot_arn.value
+      }
+    }
+
+    card {
       query = query.aws_redshift_snapshot_type
       width = 2
       args = {
@@ -41,14 +49,6 @@ dashboard "aws_redshift_snapshot_detail" {
 
     card {
       query = query.aws_redshift_snapshot_node_type
-      width = 2
-      args = {
-        arn = self.input.snapshot_arn.value
-      }
-    }
-
-    card {
-      query = query.aws_redshift_snapshot_status
       width = 2
       args = {
         arn = self.input.snapshot_arn.value
@@ -127,7 +127,7 @@ query "aws_redshift_snapshot_type" {
   sql = <<-EOQ
     select
       'Type' as label,
-      snapshot_type as value
+      initcap(snapshot_type) as value
     from
       aws_redshift_snapshot
     where
@@ -182,9 +182,8 @@ query "aws_redshift_snapshot_node_type" {
 query "aws_redshift_snapshot_status" {
   sql = <<-EOQ
     select
-      status as value,
       'Status' as label,
-      case when status = 'available' then 'ok' else 'alert' end as type
+      initcap(status) as value
     from
       aws_redshift_snapshot
     where
@@ -226,7 +225,15 @@ query "aws_redshift_snapshot_relationships_graph" {
       title as id,
       title,
       'snapshot' as category,
-      jsonb_build_object( 'Status', status, 'Cluster Identifier', cluster_identifier, 'Create Time', cluster_create_time, 'Type', snapshot_type, 'Encrypted', encrypted::text, 'Account ID', account_id, 'Source Region', source_region ) as properties 
+      jsonb_build_object( 
+        'Status', status, 
+        'Cluster Identifier', cluster_identifier, 
+        'Create Time', cluster_create_time, 
+        'Type', snapshot_type, 
+        'Encrypted', encrypted::text, 
+        'Account ID', account_id, 
+        'Source Region', source_region 
+      ) as properties 
     from
       snapshot
 
@@ -238,7 +245,12 @@ query "aws_redshift_snapshot_relationships_graph" {
       k.id as id,
       coalesce(k.aliases #>> '{0,AliasName}', k.id) as title,
       'kms_key' as category,
-      jsonb_build_object( 'ARN', k.arn, 'Rotation Enabled', k.key_rotation_enabled::text, 'Account ID', k.account_id, 'Region', k.region ) as properties 
+      jsonb_build_object( 
+        'ARN', k.arn, 
+        'Rotation Enabled', k.key_rotation_enabled::text, 
+        'Account ID', k.account_id, 
+        'Region', k.region 
+      ) as properties 
     from
       snapshot as s 
       join
@@ -271,7 +283,14 @@ query "aws_redshift_snapshot_relationships_graph" {
       c.cluster_identifier as id,
       c.title as title,
       'aws_redshift_cluster' as category,
-      jsonb_build_object( 'ARN', c.arn, 'Status', c.cluster_status, 'Availability Zone', c.availability_zone, 'Create Time', c.cluster_create_time, 'Account ID', c.account_id, 'Region', c.region ) as properties 
+      jsonb_build_object( 
+        'ARN', c.arn, 
+        'Status', c.cluster_status, 
+        'Availability Zone', c.availability_zone, 
+        'Create Time', c.cluster_create_time, 
+        'Account ID', c.account_id, 
+        'Region', c.region 
+      ) as properties 
     from
       snapshot as s 
       join
@@ -286,8 +305,8 @@ query "aws_redshift_snapshot_relationships_graph" {
       c.cluster_identifier as from_id,
       s.snapshot_identifier as to_id,
       null as id,
-      'has snapshot' as title,
-      'uses' as category,
+      'snapshot' as title,
+      'redshift_cluster_to_redshift_snapshot' as category,
       jsonb_build_object(
         'Cluster Identifier', c.cluster_identifier,
         'Cluster Snapshot Identifier', s.snapshot_identifier,
