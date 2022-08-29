@@ -59,9 +59,7 @@ dashboard "aws_kms_key_detail" {
       args = {
         arn = self.input.key_arn.value
       }
-      category "aws_kms_key" {
-        icon = local.aws_kms_key_icon
-      }
+      category "aws_kms_key" {}
     }
   }
 

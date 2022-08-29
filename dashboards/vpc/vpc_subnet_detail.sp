@@ -50,8 +50,7 @@ dashboard "aws_vpc_subnet_detail" {
       args = {
         subnet_id = self.input.subnet_id.value
       }
-      category "aws_vpc_subnet" {
-      }
+      category "aws_vpc_subnet" {}
     }
   }
 
@@ -160,7 +159,7 @@ query "aws_vpc_subnet_relationships_graph" {
       v.title as title,
       'aws_vpc' as category,
       jsonb_build_object(
-        'VPC ID', v.vpc_id,
+        'VPC ID', s.vpc_id,
         'ARN', v.arn,
         'Region', v.region,
         'CIDR Block', v.cidr_block,
@@ -176,9 +175,10 @@ query "aws_vpc_subnet_relationships_graph" {
       $1 as from_id,
       v.vpc_id as to_id,
       null as id,
-      'sub network' as title,
+      'vpc' as title,
       'vpc_subnet_to_vpc' as category,
       jsonb_build_object(
+        'VPC ID', v.vpc_id,
         'ARN', v.arn,
         'Account ID', v.account_id,
         'Region', v.region
@@ -251,7 +251,7 @@ query "aws_vpc_subnet_relationships_graph" {
       $1 as from_id,
       network_acl_id as to_id,
       null as id,
-      'uses' as title,
+      'network acl' as title,
       'vpc_subnet_to_vpc_network_acl' as category,
       jsonb_build_object(
         'ARN', arn,
@@ -291,7 +291,7 @@ query "aws_vpc_subnet_relationships_graph" {
       db_instance_identifier as from_id,
       $1 as to_id,
       null as id,
-      'launched in' as title,
+      'rds db instance' as title,
       'rds_db_instance_to_vpc_subnet' as category,
       jsonb_build_object(
         'ARN', arn,
@@ -329,7 +329,7 @@ query "aws_vpc_subnet_relationships_graph" {
       instance_id as from_id,
       $1 as to_id,
       null as id,
-      'launched in' as title,
+      'ec2 instance' as title,
       'ec2_instance_to_vpc_subnet' as category,
       jsonb_build_object(
         'ARN', arn,
@@ -368,7 +368,7 @@ query "aws_vpc_subnet_relationships_graph" {
       arn as from_id,
       $1 as to_id,
       null as id,
-      'launched in' as title,
+      'lambda function' as title,
       'lambda_function_to_vpc_subnet' as category,
       jsonb_build_object(
         'ARN', arn,
@@ -407,7 +407,7 @@ query "aws_vpc_subnet_relationships_graph" {
       arn as from_id,
       $1 as to_id,
       null as id,
-      'launched in' as title,
+      'notebook instance' as title,
       'sagemaker_notebook_instance_to_vpc_subnet' as category,
       jsonb_build_object(
         'ARN', arn,
@@ -420,6 +420,7 @@ query "aws_vpc_subnet_relationships_graph" {
       subnet_id = $1
 
     order by
+      category,
       from_id,
       to_id;
   EOQ
@@ -457,7 +458,7 @@ query "aws_vpc_subnet_map_public_ip_on_launch_disabled" {
   sql = <<-EOQ
     select
       'Map Public IP on Launch' as label,
-      map_public_ip_on_launch as value,
+      case when map_public_ip_on_launch then 'Enabled' else 'Disabled' end as value,
       case when map_public_ip_on_launch then 'alert' else 'ok' end as type
     from
       aws_vpc_subnet

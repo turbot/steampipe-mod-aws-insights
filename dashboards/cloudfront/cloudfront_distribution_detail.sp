@@ -251,7 +251,7 @@ query "aws_cloudfront_distribution_relationships_graph" {
       d.id as from_id,
       c.title as to_id,
       null as id,
-      'uses' as title,
+      'encrypted with' as title,
       'cloudfront_distribution_to_acm_certificate' as category,
       jsonb_build_object(
         'Account ID', d.account_id ) as properties

@@ -72,8 +72,7 @@ dashboard "aws_rds_db_snapshot_detail" {
       args = {
         arn = self.input.db_snapshot_arn.value
       }
-      category "aws_rds_db_snapshot" {
-      }
+      category "aws_rds_db_snapshot" {}
 
     }
   }
@@ -317,7 +316,7 @@ query "aws_rds_db_snapshot_relationships_graph" {
     where
       arn = $1
 
-    -- To KMS Keys (node)
+    -- To KMS keys (node)
     union all
     select
       null as from_id,
@@ -344,7 +343,7 @@ query "aws_rds_db_snapshot_relationships_graph" {
       k.id as to_id,
       null as id,
       'encrypted with' as title,
-      'uses' as category,
+      'rds_db_snapshot_to_kms_key' as category,
       jsonb_build_object(
         'ARN', k.arn,
         'DB Snapshot Identifier', s.db_snapshot_identifier,
@@ -390,8 +389,8 @@ query "aws_rds_db_snapshot_relationships_graph" {
       i.db_instance_identifier as from_id,
       s.db_snapshot_identifier as to_id,
       null as id,
-      'has snapshot' as title,
-      'uses' as category,
+      'snapshot' as title,
+      'rds_db_instance_to_rds_db_snapshot' as category,
       jsonb_build_object(
         'DB Instance Identifier', i.db_instance_identifier,
         'DB Snapshot Identifier', s.db_snapshot_identifier,

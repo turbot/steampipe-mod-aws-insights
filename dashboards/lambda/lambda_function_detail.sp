@@ -371,7 +371,7 @@ query "aws_lambda_function_relationships_graph" {
       l.arn as from_id,
       v.arn as to_id,
       null as id,
-      'launched in' as title,
+      'vpc' as title,
       'lambda_function_to_vpc' as category,
       jsonb_build_object(
         'ARN', v.arn,
@@ -407,7 +407,7 @@ query "aws_lambda_function_relationships_graph" {
       l.arn as from_id,
       sg.arn as to_id,
       null as id,
-      'attached to' as title,
+      'security group' as title,
       'lambda_function_to_vpc_security_group' as category,
       jsonb_build_object(
         'ARN', sg.arn, 'Account ID',
@@ -442,7 +442,7 @@ query "aws_lambda_function_relationships_graph" {
       l.arn as from_id,
       k.arn as to_id,
       null as id,
-      'encrypts with' as title,
+      'encrypted with' as title,
       'lambda_function_to_kms_key' as category,
       jsonb_build_object(
         'ARN', k.arn,
@@ -521,7 +521,7 @@ query "aws_lambda_function_relationships_graph" {
       arn as from_id,
       $1 as to_id,
       null as id,
-      'event notification' as title,
+      'send notifications' as title,
       's3_bucket_to_lambda_function' as category,
       jsonb_build_object(
         'ARN', arn,

@@ -313,7 +313,7 @@ query "aws_emr_cluster_relationships_graph" {
       c.id as from_id,
       b.arn as to_id,
       null as id,
-      'Logs to' as title,
+      'logs to' as title,
       'emr_cluster_to_s3_bucket' as category,
       jsonb_build_object(
         'Account ID', c.account_id ) as properties
@@ -357,7 +357,7 @@ query "aws_emr_cluster_relationships_graph" {
       c.id as from_id,
       f.id as to_id,
       null as id,
-      'has' as title,
+      'instance fleet' as title,
       'emr_cluster_to_instance_fleet' as category,
       jsonb_build_object(
         'Account ID', c.account_id ) as properties
@@ -405,7 +405,7 @@ query "aws_emr_cluster_relationships_graph" {
       instance_fleet_id as from_id,
       i.id as to_id,
       null as id,
-      'contains' as title,
+      'ec2 instance' as title,
       'instance_fleet_to_ec2_instance' as category,
       jsonb_build_object(
         'Account ID', c.account_id ) as properties
@@ -425,7 +425,7 @@ query "aws_emr_cluster_relationships_graph" {
       instance_group_id as from_id,
       i.id as to_id,
       null as id,
-      'contains' as title,
+      'ec2 instance' as title,
       'instance_group_to_ec2_instance' as category,
       jsonb_build_object(
         'Account ID', c.account_id ) as properties
@@ -471,7 +471,7 @@ query "aws_emr_cluster_relationships_graph" {
       c.id as from_id,
       g.id as to_id,
       null as id,
-      'has' as title,
+      'instance group' as title,
       'emr_cluster_to_instance_group' as category,
       jsonb_build_object(
         'Account ID', c.account_id ) as properties
@@ -517,7 +517,7 @@ query "aws_emr_cluster_relationships_graph" {
       c.id as from_id,
       image_id as to_id,
       null as id,
-      'uses' as title,
+      'ami' as title,
       'emr_cluster_to_ec2_ami' as category,
       jsonb_build_object(
         'Account ID', c.account_id ) as properties
