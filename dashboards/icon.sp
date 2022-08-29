@@ -1,6 +1,5 @@
 locals {
   aws_acm_certificate_icon               = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/acm_certificate_light.svg"))
-  aws_api_gatewayv2_api_icon             = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/api_gateway_dark.svg"))
   aws_cloudformation_stack_icon          = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/cloudformation_stack_light.svg"))
   aws_cloudfront_distribution_icon       = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/cloudfront_distribution_light.svg"))
   aws_dynamodb_table_icon                = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/dynamodb_table_light.svg"))

@@ -202,6 +202,14 @@ graph "aws_graph_categories" {
     }
   }
 
+  category "aws_redshift_snapshot" {
+    href = "/aws_insights.dashboard.aws_redshift_snapshot_detail?input.snapshot_arn={{.properties.'ARN' | @uri}}"
+    fold {
+      title     = "Redshift Snapshot"
+      threshold = 3
+    }
+  }
+
   category "aws_ec2_ami" {
     href = "aws_insights.dashboard.aws_ec2_ami_detail?input.ami={{.properties.'Image ID' | @uri}}"
     icon = local.aws_ec2_ami_icon
@@ -376,10 +384,8 @@ graph "aws_graph_categories" {
 
   category "aws_api_gatewayv2_api" {
     href = "/aws_insights.dashboard.api_gatewayv2_api_detail?input.api_id={{.properties.'ID' | @uri}}"
-    icon = local.aws_api_gatewayv2_api_icon
     fold {
       title     = "API Gatewayv2 APIs"
-      icon      = local.aws_api_gatewayv2_api_icon
       threshold = 3
     }
   }
