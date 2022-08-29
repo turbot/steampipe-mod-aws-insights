@@ -458,7 +458,7 @@ query "aws_vpc_subnet_map_public_ip_on_launch_disabled" {
   sql = <<-EOQ
     select
       'Map Public IP on Launch' as label,
-      map_public_ip_on_launch as value,
+      case when map_public_ip_on_launch then 'Enabled' else 'Disabled' end as value,
       case when map_public_ip_on_launch then 'alert' else 'ok' end as type
     from
       aws_vpc_subnet

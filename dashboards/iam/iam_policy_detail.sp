@@ -23,14 +23,6 @@ dashboard "aws_iam_policy_detail" {
 
     card {
       width = 2
-      query = query.aws_iam_policy_attachable
-      args = {
-        arn = self.input.policy_arn.value
-      }
-    }
-
-    card {
-      width = 2
       query = query.aws_iam_policy_attached
       args = {
         arn = self.input.policy_arn.value
@@ -111,22 +103,8 @@ query "aws_iam_policy_input" {
 query "aws_iam_policy_aws_managed" {
   sql = <<-EOQ
     select
-      case when is_aws_managed then 'Yes' else 'No' end as value,
-      'AWS Managed' as label
-    from
-      aws_iam_policy
-    where
-      arn = $1
-  EOQ
-
-  param "arn" {}
-}
-
-query "aws_iam_policy_attachable" {
-  sql = <<-EOQ
-    select
-      case when is_attachable then 'Yes' else 'No' end as value,
-      'Attachable' as label
+      case when is_aws_managed then 'AWS' else 'Customer' end as value,
+      'Managed By' as label
     from
       aws_iam_policy
     where
@@ -139,8 +117,8 @@ query "aws_iam_policy_attachable" {
 query "aws_iam_policy_attached" {
   sql = <<-EOQ
     select
-      case when is_attached then 'Yes' else 'No' end as value,
-      'Attached' as label,
+      case when is_attached then 'Attached' else 'Detached' end as value,
+      'Attachment Status' as label,
       case when is_attached then 'ok' else 'alert' end as type
     from
       aws_iam_policy

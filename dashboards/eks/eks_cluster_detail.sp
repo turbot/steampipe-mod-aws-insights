@@ -114,6 +114,18 @@ dashboard "aws_eks_cluster_detail" {
     }
 
   }
+
+  container {
+
+    table {
+      title = "Node Groups"
+      query = query.aws_eks_cluster_node_group
+      args = {
+        arn = self.input.eks_cluster_arn.value
+      }
+    }
+
+  }
 }
 
 query "aws_eks_cluster_input" {
@@ -635,6 +647,30 @@ query "aws_eks_cluster_resources_vpc_config" {
       aws_eks_cluster
     where
       arn = $1;
+  EOQ
+
+  param "arn" {}
+
+}
+
+query "aws_eks_cluster_node_group" {
+  sql = <<-EOQ
+    select
+      g.nodegroup_name as "Name",
+      g.created_at as "Created At",
+      g.status as "Status",
+      g.ami_type as "AMI Type",
+      g.capacity_type as "Capacity Type",
+      g.disk_size as "Disk Size",
+      g.health as "Health",
+      g.instance_types as "Instance Types",
+      g.launch_template as "Launch Template"
+    from
+      aws_eks_node_group as g,
+      aws_eks_cluster as c
+    where
+      g.cluster_name = c.name
+      and c.arn = $1;
   EOQ
 
   param "arn" {}

@@ -172,8 +172,7 @@ query "aws_eventbridge_rule_target_count" {
   sql = <<-EOQ
     select
       coalesce(jsonb_array_length(targets), 0) as value,
-      'Targets' as label,
-      'info' as type
+      'Targets' as label
     from
       aws_eventbridge_rule
     where
