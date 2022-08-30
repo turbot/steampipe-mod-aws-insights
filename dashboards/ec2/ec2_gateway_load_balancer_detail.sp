@@ -23,14 +23,6 @@ dashboard "aws_ec2_gateway_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_glb_scheme
-      args = {
-        arn = self.input.glb.value
-      }
-    }
-
-    card {
-      width = 2
       query = query.aws_glb_ip_type
       args = {
         arn = self.input.glb.value
@@ -94,17 +86,8 @@ dashboard "aws_ec2_gateway_load_balancer_detail" {
 
     table {
       title = "Attributes"
-      width = 4
+      width = 6
       query = query.aws_ec2_glb_attributes
-      args = {
-        arn = self.input.glb.value
-      }
-    }
-
-    table {
-      title = "Security Groups"
-      width = 2
-      query = query.aws_ec2_glb_security_groups
       args = {
         arn = self.input.glb.value
       }
@@ -117,11 +100,12 @@ query "aws_ec2_glb_overview" {
   sql = <<-EOQ
     select
       title as "Title",
+      created_time as "Created Time",
       dns_name as "DNS Name",
-      canonical_hosted_zone_id as "Route 53 hosted zone ID",
+      canonical_hosted_zone_id as "Route 53 Hosted Zone ID",
       account_id as "Account ID",
       region as "Region",
-      partition as "Partition"
+      arn as "ARN"
     from
       aws_ec2_gateway_load_balancer
     where
@@ -162,34 +146,6 @@ query "aws_ec2_glb_attributes" {
     order by
       lb ->> 'Key';
     EOQ
-
-  param "arn" {}
-}
-
-query "aws_ec2_glb_security_groups" {
-  sql = <<-EOQ
-    select
-      sg as "Groups"
-    from
-      aws_ec2_gateway_load_balancer,
-      jsonb_array_elements_text(aws_ec2_gateway_load_balancer.security_groups) as sg
-    where
-      aws_ec2_gateway_load_balancer.arn = $1;
-    EOQ
-
-  param "arn" {}
-}
-
-query "aws_glb_ip_type" {
-  sql = <<-EOQ
-    select
-      'IP Address type' as label,
-      case when ip_address_type = 'ipv4' then 'IPv4' else 'IPv6' end as value
-    from
-      aws_ec2_gateway_load_balancer
-    where
-      aws_ec2_gateway_load_balancer.arn = $1;
-  EOQ
 
   param "arn" {}
 }
@@ -244,6 +200,20 @@ query "aws_glb_az_zone" {
   param "arn" {}
 }
 
+query "aws_glb_ip_type" {
+  sql = <<-EOQ
+    select
+      'IP Address Type' as label,
+      case when ip_address_type = 'ipv4' then 'IPv4' else initcap(ip_address_type) end as value
+    from
+      aws_ec2_gateway_load_balancer
+    where
+      aws_ec2_gateway_load_balancer.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
 query "aws_glb_state" {
   sql = <<-EOQ
     select
@@ -257,21 +227,6 @@ query "aws_glb_state" {
 
   param "arn" {}
 }
-
-query "aws_glb_scheme" {
-  sql = <<-EOQ
-    select
-      'Scheme' as label,
-      initcap(scheme) as value
-    from
-      aws_ec2_gateway_load_balancer
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
 
 query "aws_ec2_gateway_load_balancer_relationships_graph" {
   sql = <<-EOQ

@@ -8,7 +8,7 @@ dashboard "aws_ec2_network_load_balancer_detail" {
 
   input "nlb" {
     title = "Select a Network Load balancer:"
-    sql   = query.aws_ec2_network_load_balancer_input.sql
+    query = query.aws_ec2_network_load_balancer_input
     width = 4
   }
 
@@ -102,29 +102,20 @@ dashboard "aws_ec2_network_load_balancer_detail" {
 
     table {
       title = "Attributes"
-      width = 4
+      width = 6
       query = query.aws_ec2_nlb_attributes
       args = {
         arn = self.input.nlb.value
       }
     }
-
-    table {
-      title = "Security Groups"
-      width = 2
-      query = query.aws_ec2_nlb_security_groups
-      args = {
-        arn = self.input.nlb.value
-      }
-    }
   }
-
 }
 
 query "aws_ec2_nlb_overview" {
   sql = <<-EOQ
     select
       title as "Title",
+      created_time as "Created Time",
       dns_name as "DNS Name",
       canonical_hosted_zone_id as "Route 53 hosted zone ID",
       account_id as "Account ID",
@@ -174,25 +165,11 @@ query "aws_ec2_nlb_attributes" {
   param "arn" {}
 }
 
-query "aws_ec2_nlb_security_groups" {
-  sql = <<-EOQ
-    select
-      sg as "Groups"
-    from
-      aws_ec2_network_load_balancer,
-      jsonb_array_elements_text(aws_ec2_network_load_balancer.security_groups) as sg
-    where
-      aws_ec2_network_load_balancer.arn = $1;
-    EOQ
-
-  param "arn" {}
-}
-
 query "aws_nlb_ip_type" {
   sql = <<-EOQ
     select
-      'IP Address type' as label,
-      case when ip_address_type = 'ipv4' then 'IPv4' else 'IPv6' end as value
+      'IP Address Type' as label,
+      case when ip_address_type = 'ipv4' then 'IPv4' else initcap(ip_address_type) end as value
     from
       aws_ec2_network_load_balancer
     where

@@ -45,7 +45,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
       type  = "graph"
       base  = graph.aws_graph_categories
       query = query.aws_ec2_classic_load_balancer_relationships_graph
-      args  = {
+      args = {
         arn = self.input.clb.value
       }
       category "aws_ec2_classic_load_balancer" {
@@ -59,7 +59,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
     table {
       title = "Overview"
       type  = "line"
-      width = 4
+      width = 3
       query = query.aws_ec2_clb_overview
       args = {
         arn = self.input.clb.value
@@ -69,17 +69,8 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
 
     table {
       title = "Tags"
-      width = 4
+      width = 3
       query = query.aws_ec2_clb_tags
-      args = {
-        arn = self.input.clb.value
-      }
-    }
-
-    table {
-      title = "Security Groups"
-      width = 4
-      query = query.aws_ec2_clb_security_groups
       args = {
         arn = self.input.clb.value
       }
@@ -91,10 +82,12 @@ query "aws_ec2_clb_overview" {
   sql = <<-EOQ
     select
       title as "Title",
+      created_time as "Created Time",
       dns_name as "DNS Name",
+      canonical_hosted_zone_name_id as "Route 53 Hosted Zone ID",
       account_id as "Account ID",
       region as "Region",
-      partition as "Partition"
+      arn as "ARN"
     from
       aws_ec2_classic_load_balancer
     where
@@ -121,20 +114,6 @@ query "aws_ec2_clb_tags" {
   param "arn" {}
 }
 
-query "aws_ec2_clb_security_groups" {
-  sql = <<-EOQ
-    select
-      sg as "Groups"
-    from
-      aws_ec2_classic_load_balancer,
-      jsonb_array_elements_text(aws_ec2_classic_load_balancer.security_groups) as sg
-    where
-      aws_ec2_classic_load_balancer.arn = $1;
-    EOQ
-
-  param "arn" {}
-}
-
 query "aws_clb_logging_enabled" {
   sql = <<-EOQ
     select
@@ -155,7 +134,7 @@ query "aws_clb_instances" {
     select
       'Instances' as label,
       count(i) as value,
-      case when count(i) > 1 then 'ok' else 'alert' end as type
+      case when count(i) >= 1 then 'ok' else 'alert' end as type
     from
       aws_ec2_classic_load_balancer
       cross join jsonb_array_elements(instances) as i

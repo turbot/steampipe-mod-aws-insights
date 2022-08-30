@@ -49,7 +49,7 @@ dashboard "aws_ec2_key_pair_detail" {
     table {
       title = "Overview"
       type  = "line"
-      width = 6
+      width = 3
       query = query.aws_ec2_key_pair_overview
       args = {
         key_name = self.input.key_name.value
@@ -59,7 +59,7 @@ dashboard "aws_ec2_key_pair_detail" {
 
     table {
       title = "Tags"
-      width = 6
+      width = 3
       query = query.aws_ec2_key_pair_tags
       args = {
         key_name = self.input.key_name.value
@@ -72,7 +72,7 @@ dashboard "aws_ec2_key_pair_detail" {
 query "aws_ec2_key_pair_instances" {
   sql = <<-EOQ
     select
-      'Instances using this key' as label,
+      'Instances Using This Key' as label,
       count(distinct(instances)) as value
     from
       aws_ec2_instance as instances
@@ -87,7 +87,7 @@ query "aws_ec2_key_pair_instances" {
 query "aws_ec2_key_pair_launch_configs" {
   sql = <<-EOQ
     select
-      'Launch Configs using this key' as label,
+      'Launch Configs Using This Key' as label,
       count(distinct(lc)) as value
     from
       aws_ec2_launch_configuration as lc
@@ -105,7 +105,6 @@ query "aws_ec2_key_pair_overview" {
       key_pair_id as "ID",
       key_name as "Name",
       key_fingerprint as "Fingerprint",
-      partition as "Partition",
       title as "Title",
       region as "Region",
       account_id as "Account ID"
