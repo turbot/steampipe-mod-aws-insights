@@ -23,14 +23,6 @@ dashboard "aws_ec2_gateway_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_glb_ip_type
-      args = {
-        arn = self.input.glb.value
-      }
-    }
-
-    card {
-      width = 2
       query = query.aws_glb_az_zone
       args = {
         arn = self.input.glb.value
@@ -195,20 +187,6 @@ query "aws_glb_az_zone" {
       cross join jsonb_array_elements(availability_zones) as az
     where
       arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-query "aws_glb_ip_type" {
-  sql = <<-EOQ
-    select
-      'IP Address Type' as label,
-      case when ip_address_type = 'ipv4' then 'IPv4' else initcap(ip_address_type) end as value
-    from
-      aws_ec2_gateway_load_balancer
-    where
-      aws_ec2_gateway_load_balancer.arn = $1;
   EOQ
 
   param "arn" {}

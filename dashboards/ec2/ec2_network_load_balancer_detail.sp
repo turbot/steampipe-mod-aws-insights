@@ -120,7 +120,7 @@ query "aws_ec2_nlb_overview" {
       canonical_hosted_zone_id as "Route 53 hosted zone ID",
       account_id as "Account ID",
       region as "Region",
-      partition as "Partition"
+      arn as "ARN"
     from
       aws_ec2_network_load_balancer
     where
