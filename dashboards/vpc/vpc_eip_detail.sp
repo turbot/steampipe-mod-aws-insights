@@ -9,7 +9,7 @@ dashboard "aws_vpc_eip_detail" {
 
   input "eip_arn" {
     title = "Select an eip:"
-    sql   = query.aws_vpc_eip_input.sql
+    query = query.aws_vpc_eip_input
     width = 4
   }
 
@@ -122,8 +122,7 @@ query "aws_vpc_eip_input" {
       arn as value,
       json_build_object(
         'account_id', account_id,
-        'region', region,
-        'arn', arn
+        'region', region
       ) as tags
     from
       aws_vpc_eip
