@@ -75,7 +75,7 @@ dashboard "aws_ec2_network_interface_detail" {
     table {
       title = "Overview"
       type  = "line"
-      width = 3
+      width = 2
       query = query.aws_ec2_eni_overview
       args = {
         network_interface_id = self.input.network_interface_id.value
@@ -90,42 +90,30 @@ dashboard "aws_ec2_network_interface_detail" {
         network_interface_id = self.input.network_interface_id.value
       }
     }
-    
+
     container {
-      width = 6
-      
+      width = 7
+
       table {
         title = "IP Addresses and Associations"
         query = query.aws_ec2_eni_association_details
         args = {
           network_interface_id = self.input.network_interface_id.value
         }
-
         column "eip_alloc_arn" {
           display = "none"
         }
-
         column "Allocation ID" {
           href = "/aws_insights.dashboard.aws_vpc_eip_detail?input.eip_arn={{.'eip_alloc_arn' | @uri}}"
         }
-
       }
 
       table {
-        title = "IP Addresses and Associations"
-        query = query.aws_ec2_eni_association_details
+        title = "Private IP Addresses"
+        query = query.aws_ec2_eni_private_ip
         args = {
           network_interface_id = self.input.network_interface_id.value
         }
-
-        column "eip_alloc_arn" {
-          display = "none"
-        }
-
-        column "Allocation ID" {
-          href = "/aws_insights.dashboard.aws_vpc_eip_detail?input.eip_arn={{.'eip_alloc_arn' | @uri}}"
-        }
-
       }
     }
 
@@ -217,14 +205,34 @@ query "aws_ec2_eni_public_ip" {
   param "network_interface_id" {}
 }
 
+query "aws_ec2_eni_private_ip" {
+  sql = <<-EOQ
+    select
+      pvt_ip_addr ->> 'PrivateIpAddress' as "IP Address",
+      pvt_ip_addr ->> 'Primary' as "Primary"
+    from
+      aws_ec2_network_interface eni,
+      jsonb_array_elements(eni.private_ip_addresses) as pvt_ip_addr
+    where
+      eni.network_interface_id = $1
+    order by
+      -- primary first
+      pvt_ip_addr ->> 'Primary' desc
+  EOQ
+
+  param "network_interface_id" {}
+}
+
 query "aws_ec2_eni_association_details" {
   sql = <<-EOQ
     select
       pvt_ip_addrs ->> 'PrivateIpAddress' as "Private IP Address",
-      pvt_ip_addrs ->> 'Primary' as "Primary",
       pvt_ip_addrs -> 'Association' ->> 'PublicIp' as "Public IP Address",
-      case when pvt_ip_addrs -> 'Association' ->> 'AllocationId' is null then '' else pvt_ip_addrs -> 'Association' ->> 'AllocationId' end as "Allocation ID",
-      case when pvt_ip_addrs -> 'Association' ->> 'AssociationId' is null then '' else pvt_ip_addrs -> 'Association' ->> 'AssociationId' end as "Association ID",
+      pvt_ip_addrs -> 'Association' ->> 'CarrierIp' as "Carrier IP",
+      pvt_ip_addrs -> 'Association' ->> 'CustomerOwnedIp' as "Customer Owned IP",
+      pvt_ip_addrs -> 'Association' ->> 'IpOwnerId' as "IP Owner ID",
+      pvt_ip_addrs -> 'Association' ->> 'AllocationId' as "Allocation ID",
+      pvt_ip_addrs -> 'Association' ->> 'AssociationId' as "Association ID",
       eip_alloc.arn as "eip_alloc_arn"
     from
       aws_ec2_network_interface eni,
@@ -234,6 +242,7 @@ query "aws_ec2_eni_association_details" {
       and eip_alloc.association_id = pvt_ip_addrs -> 'Association' ->> 'AssociationId'
     where
       eni.network_interface_id = $1
+      and pvt_ip_addrs ->> 'Association' is not null
   EOQ
 
   param "network_interface_id" {}
@@ -332,8 +341,8 @@ query "aws_ec2_eni_relationships_graph" {
       ) as properties
     from
       network_interface
-    left join 
-      aws_ec2_instance as instance 
+    left join
+      aws_ec2_instance as instance
       on network_interface.attached_instance_id = instance.instance_id
 
     -- To EC2 Instances (edge)
@@ -349,8 +358,8 @@ query "aws_ec2_eni_relationships_graph" {
       ) as properties
     from
       network_interface
-      left join 
-        aws_ec2_instance as instance 
+      left join
+        aws_ec2_instance as instance
         on network_interface.attached_instance_id = instance.instance_id
 
     -- To VPC security groups (node)
@@ -405,8 +414,8 @@ query "aws_ec2_eni_relationships_graph" {
       ) as properties
     from
       network_interface
-    left join 
-      aws_vpc_subnet as subnet 
+    left join
+      aws_vpc_subnet as subnet
       on network_interface.subnet_id = subnet.subnet_id
 
     -- To VPC subnets (edge)
@@ -425,8 +434,8 @@ query "aws_ec2_eni_relationships_graph" {
       ) as properties
     from
       network_interface
-      left join 
-        aws_vpc_subnet as subnet 
+      left join
+        aws_vpc_subnet as subnet
         on network_interface.subnet_id = subnet.subnet_id
 
     -- To VPCs (node)
@@ -435,7 +444,7 @@ query "aws_ec2_eni_relationships_graph" {
       null as from_id,
       null as to_id,
       vpc.vpc_id as id,
-      vpc.tags ->> 'Name' as title,
+      vpc.title as title,
       'aws_vpc' as category,
       jsonb_build_object(
         'ID', vpc.vpc_id,
@@ -447,8 +456,8 @@ query "aws_ec2_eni_relationships_graph" {
       ) as properties
     from
       network_interface
-      left join 
-        aws_vpc as vpc 
+      left join
+        aws_vpc as vpc
         on network_interface.vpc_id = vpc.vpc_id
 
     -- To VPCs (edge)
@@ -469,8 +478,8 @@ query "aws_ec2_eni_relationships_graph" {
       ) as properties
     from
       network_interface
-      left join 
-        aws_vpc as vpc 
+      left join
+        aws_vpc as vpc
         on network_interface.vpc_id = vpc.vpc_id
 
     order by
