@@ -280,14 +280,10 @@ query "aws_ec2_gateway_load_balancer_relationships_graph" {
         'VPC ID', sg.vpc_id
       ) as properties
     from
-      aws_vpc_security_group sg,
       glb
-    where
-      sg.group_id in
-      (
-        select
-          jsonb_array_elements_text(glb.security_groups)
-      )
+    left join 
+      aws_vpc_security_group sg 
+      on sg.group_id in (select jsonb_array_elements_text(glb.security_groups))
 
     -- To VPC security groups (edge)
     union all
@@ -301,14 +297,10 @@ query "aws_ec2_gateway_load_balancer_relationships_graph" {
         'Account ID', sg.account_id
       ) as properties
     from
-      aws_vpc_security_group sg,
       glb
-    where
-      sg.group_id in
-      (
-        select
-          jsonb_array_elements_text(glb.security_groups)
-      )
+    left join 
+      aws_vpc_security_group sg 
+      on sg.group_id in (select jsonb_array_elements_text(glb.security_groups))
 
     -- To target groups (node)
     union all
@@ -473,10 +465,9 @@ query "aws_ec2_gateway_load_balancer_relationships_graph" {
         'CIDR Block', vpc.cidr_block
       ) as properties
     from
-      aws_vpc vpc,
       glb
-    where
-      glb.vpc_id = vpc.vpc_id
+    left join aws_vpc vpc 
+    on glb.vpc_id = vpc.vpc_id
 
     -- VPCs (edge)
     union all
@@ -490,10 +481,9 @@ query "aws_ec2_gateway_load_balancer_relationships_graph" {
         'Account ID', vpc.account_id
       ) as properties
     from
-      aws_vpc vpc,
       glb
-    where
-      glb.vpc_id = vpc.vpc_id
+    left join aws_vpc vpc 
+    on glb.vpc_id = vpc.vpc_id
 
     -- To load balancer listeners (node)
     union all
@@ -512,10 +502,9 @@ query "aws_ec2_gateway_load_balancer_relationships_graph" {
         'SSL Policy', coalesce(lblistener.ssl_policy, 'None')
       ) as properties
     from
-      aws_ec2_load_balancer_listener lblistener,
       glb
-    where
-      glb.arn = lblistener.load_balancer_arn
+    left join aws_ec2_load_balancer_listener lblistener
+    on glb.arn = lblistener.load_balancer_arn
 
     -- To load balancer listeners (edge)
     union all
@@ -529,10 +518,9 @@ query "aws_ec2_gateway_load_balancer_relationships_graph" {
         'Account ID', lblistener.account_id
       ) as properties
     from
-      aws_ec2_load_balancer_listener lblistener,
       glb
-    where
-      glb.arn = lblistener.load_balancer_arn
+    left join aws_ec2_load_balancer_listener lblistener
+    on glb.arn = lblistener.load_balancer_arn
 
     order by
       category,
