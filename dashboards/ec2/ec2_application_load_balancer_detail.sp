@@ -512,7 +512,7 @@ query "aws_ec2_application_load_balancer_relationships_graph" {
     -- To VPCs (edges)
     union all
     select
-      alb.arn as from_id,
+      sg.arn as from_id,
       vpc.vpc_id as to_id,
       null as id,
       'vpc' as title,
@@ -523,6 +523,7 @@ query "aws_ec2_application_load_balancer_relationships_graph" {
     from
       aws_vpc vpc,
       alb
+    left join aws_vpc_security_group sg on sg.group_id in (select jsonb_array_elements_text(alb.security_groups))
     where
       alb.vpc_id = vpc.vpc_id
 
