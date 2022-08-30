@@ -38,6 +38,22 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
       }
     }
 
+    card {
+      width = 2
+      query = query.aws_clb_az_zone
+      args = {
+        arn = self.input.clb.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_clb_cross_zone_enabled
+      args = {
+        arn = self.input.clb.value
+      }
+    }
+
   }
 
   container {
@@ -124,6 +140,38 @@ query "aws_clb_logging_enabled" {
       aws_ec2_classic_load_balancer
     where
       aws_ec2_classic_load_balancer.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_clb_az_zone" {
+  sql = <<-EOQ
+    select
+      'Availibility Zones' as label,
+      count(az ->> 'ZoneName') as value,
+      case when count(az ->> 'ZoneName') > 1 then 'ok' else 'alert' end as type
+    from
+      aws_ec2_classic_load_balancer
+      cross join jsonb_array_elements(availability_zones) as az
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_clb_cross_zone_enabled" {
+  sql = <<-EOQ
+    select
+      'Cross Zone' as label,
+      case when cross_zone_load_balancing_enabled then 'Enabled' else 'Disabled' end as value,
+      case when cross_zone_load_balancing_enabled then 'ok' else 'alert' end as type
+    from
+      aws_ec2_classic_load_balancer
+      cross join jsonb_array_elements(availability_zones) as az
+    where
+      arn = $1;
   EOQ
 
   param "arn" {}
