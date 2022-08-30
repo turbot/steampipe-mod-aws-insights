@@ -16,14 +16,6 @@ dashboard "aws_ec2_network_interface_detail" {
 
     card {
       width = 2
-      query = query.aws_ec2_eni_status
-      args = {
-        network_interface_id = self.input.network_interface_id.value
-      }
-    }
-
-    card {
-      width = 2
       query = query.aws_ec2_eni_public_ip
       args = {
         network_interface_id = self.input.network_interface_id.value
@@ -32,7 +24,7 @@ dashboard "aws_ec2_network_interface_detail" {
 
     card {
       width = 2
-      query = query.aws_ec2_eni_attachment_status
+      query = query.aws_ec2_eni_type
       args = {
         network_interface_id = self.input.network_interface_id.value
       }
@@ -41,6 +33,22 @@ dashboard "aws_ec2_network_interface_detail" {
     card {
       width = 2
       query = query.aws_ec2_eni_delete_on_termination
+      args = {
+        network_interface_id = self.input.network_interface_id.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_ec2_eni_status
+      args = {
+        network_interface_id = self.input.network_interface_id.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_ec2_eni_attachment_status
       args = {
         network_interface_id = self.input.network_interface_id.value
       }
@@ -67,7 +75,7 @@ dashboard "aws_ec2_network_interface_detail" {
     table {
       title = "Overview"
       type  = "line"
-      width = 2
+      width = 3
       query = query.aws_ec2_eni_overview
       args = {
         network_interface_id = self.input.network_interface_id.value
@@ -82,48 +90,68 @@ dashboard "aws_ec2_network_interface_detail" {
         network_interface_id = self.input.network_interface_id.value
       }
     }
+    
+    container {
+      width = 6
+      
+      table {
+        title = "IP Addresses and Associations"
+        query = query.aws_ec2_eni_association_details
+        args = {
+          network_interface_id = self.input.network_interface_id.value
+        }
 
-    table {
-      title = "Private IP Addresses"
-      width = 2
-      query = query.aws_ec2_eni_private_ip
-      args = {
-        network_interface_id = self.input.network_interface_id.value
-      }
-    }
+        column "eip_alloc_arn" {
+          display = "none"
+        }
 
-    table {
-      title = "Associations"
-      width = 5
-      query = query.aws_ec2_eni_association_details
-      args = {
-        network_interface_id = self.input.network_interface_id.value
-      }
+        column "Allocation ID" {
+          href = "/aws_insights.dashboard.aws_vpc_eip_detail?input.eip_arn={{.'eip_alloc_arn' | @uri}}"
+        }
 
-      column "eip_alloc_arn" {
-        display = "none"
-      }
-
-      column "Allocation ID" {
-        href = "/aws_insights.dashboard.aws_vpc_eip_detail?input.eip_arn={{.'eip_alloc_arn' | @uri}}"
       }
 
-      column "Association ID" {
-        href = "/aws_insights.dashboard.aws_vpc_eip_detail?input.eip_arn={{.'eip_alloc_arn' | @uri}}"
-      }
+      table {
+        title = "IP Addresses and Associations"
+        query = query.aws_ec2_eni_association_details
+        args = {
+          network_interface_id = self.input.network_interface_id.value
+        }
 
+        column "eip_alloc_arn" {
+          display = "none"
+        }
+
+        column "Allocation ID" {
+          href = "/aws_insights.dashboard.aws_vpc_eip_detail?input.eip_arn={{.'eip_alloc_arn' | @uri}}"
+        }
+
+      }
     }
 
   }
-
 }
 
 query "aws_ec2_eni_status" {
   sql = <<-EOQ
     select
       'Status' as label,
-      case when status='in-use' then 'In Use' else initcap(status) end as value,
-      case when status='in-use' then 'ok' else 'alert' end as type
+      case when status = 'in-use' then 'In Use' else initcap(status) end as value,
+      case when status = 'available' then 'alert' else 'ok' end as type
+    from
+      aws_ec2_network_interface
+    where
+      network_interface_id = $1
+  EOQ
+
+  param "network_interface_id" {}
+}
+
+query "aws_ec2_eni_type" {
+  sql = <<-EOQ
+    select
+      'Type' as label,
+      initcap(interface_type) as value
     from
       aws_ec2_network_interface
     where
@@ -136,9 +164,9 @@ query "aws_ec2_eni_status" {
 query "aws_ec2_eni_attachment_status" {
   sql = <<-EOQ
     select
-      'Status' as label,
-      case when attachment_status='attached' then 'Attached' else 'Not Attached' end as value,
-      case when attachment_status='attached' then 'ok' else 'alert' end as type
+      'Attachment Status' as label,
+      case when attachment_status = 'attached' then 'Attached' else 'Detached' end as value,
+      case when attachment_status = 'attached' then 'ok' else 'alert' end as type
     from
       aws_ec2_network_interface
     where
@@ -151,7 +179,7 @@ query "aws_ec2_eni_attachment_status" {
 query "aws_ec2_eni_delete_on_termination" {
   sql = <<-EOQ
     select
-      'Delete on instance terminate' as label,
+      'Delete on Instance Terminate' as label,
       case
         when interface_type = 'interface'
         then
@@ -179,8 +207,7 @@ query "aws_ec2_eni_public_ip" {
   sql = <<-EOQ
     select
       'Public IP' as label,
-      case when association_public_ip is null then 'None' else host(association_public_ip) end as value,
-      case when association_public_ip is null then 'ok' else 'info' end as type
+      case when association_public_ip is null then 'None' else host(association_public_ip) end as value
     from
       aws_ec2_network_interface
     where
@@ -190,27 +217,14 @@ query "aws_ec2_eni_public_ip" {
   param "network_interface_id" {}
 }
 
-query "aws_ec2_eni_private_ip" {
-  sql = <<-EOQ
-    select
-      pvt_ip_addrs ->> 'PrivateIpAddress' as "Private IP"
-    from
-      aws_ec2_network_interface eni,
-      jsonb_array_elements(eni.private_ip_addresses) as pvt_ip_addrs
-    where
-      eni.network_interface_id = $1
-  EOQ
-
-  param "network_interface_id" {}
-}
-
 query "aws_ec2_eni_association_details" {
   sql = <<-EOQ
     select
-      pvt_ip_addrs -> 'Association' ->> 'AssociationId' as "Association ID",
-      pvt_ip_addrs -> 'Association' ->> 'AllocationId' as "Allocation ID",
-      pvt_ip_addrs -> 'Association' ->> 'PublicIp' as "Public IP Address",
       pvt_ip_addrs ->> 'PrivateIpAddress' as "Private IP Address",
+      pvt_ip_addrs ->> 'Primary' as "Primary",
+      pvt_ip_addrs -> 'Association' ->> 'PublicIp' as "Public IP Address",
+      case when pvt_ip_addrs -> 'Association' ->> 'AllocationId' is null then '' else pvt_ip_addrs -> 'Association' ->> 'AllocationId' end as "Allocation ID",
+      case when pvt_ip_addrs -> 'Association' ->> 'AssociationId' is null then '' else pvt_ip_addrs -> 'Association' ->> 'AssociationId' end as "Association ID",
       eip_alloc.arn as "eip_alloc_arn"
     from
       aws_ec2_network_interface eni,
@@ -220,7 +234,6 @@ query "aws_ec2_eni_association_details" {
       and eip_alloc.association_id = pvt_ip_addrs -> 'Association' ->> 'AssociationId'
     where
       eni.network_interface_id = $1
-      and pvt_ip_addrs ->> 'Association' is not null
   EOQ
 
   param "network_interface_id" {}
@@ -230,7 +243,10 @@ query "aws_ec2_eni_overview" {
   sql = <<-EOQ
     select
       network_interface_id as "ID",
-      status as "Status",
+      title as "Title",
+      attachment_time as "Attachment Time",
+      private_dns_name as "Private DNS Name",
+      association_public_dns_name as "Public DNS Name",
       mac_address as "MAC Address",
       availability_zone as "Availibility Zone",
       region as "Region",
