@@ -1215,7 +1215,7 @@ query "aws_vpc_security_group_relationships_graph" {
       from
         aws_vpc_security_group
       where
-        group_id = 'sg-05cfaa2b4daf48b37'
+        group_id = $1
     )
 
     select
