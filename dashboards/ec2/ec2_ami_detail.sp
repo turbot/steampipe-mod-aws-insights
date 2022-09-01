@@ -9,7 +9,7 @@ dashboard "aws_ec2_ami_detail" {
 
   input "ami" {
     title = "Select an image:"
-    sql   = query.aws_ec2_ami_input.sql
+    query = query.aws_ec2_ami_input
     width = 4
   }
 
@@ -68,11 +68,11 @@ dashboard "aws_ec2_ami_detail" {
   container {
 
     container {
-
+      width = 6
       table {
         title = "Overview"
         type  = "line"
-        width = 4
+        width = 6
         query = query.aws_ec2_ami_overview
         args = {
           image_id = self.input.ami.value
@@ -81,8 +81,20 @@ dashboard "aws_ec2_ami_detail" {
 
       table {
         title = "Tags"
-        width = 3
+        width = 6
         query = query.aws_ec2_ami_tags
+        args = {
+          image_id = self.input.ami.value
+        }
+      }
+    }
+
+    container {
+      width = 6
+
+      table {
+        title = "Sharing"
+        query = query.aws_ec2_ami_shared_with
         args = {
           image_id = self.input.ami.value
         }
@@ -90,7 +102,6 @@ dashboard "aws_ec2_ami_detail" {
 
       table {
         title = "Instances"
-        width = 3
         query = query.aws_ec2_ami_instances
         args = {
           image_id = self.input.ami.value
@@ -101,19 +112,7 @@ dashboard "aws_ec2_ami_detail" {
         column "ID" {
           href = "{{ .link }}"
         }
-        column "Name" {
-          href = "{{ .link }}"
-        }
       }
-
-      table {
-        width = 2
-        query = query.aws_ec2_ami_shared_with
-        args = {
-          image_id = self.input.ami.value
-        }
-      }
-
     }
 
   }
@@ -195,22 +194,6 @@ query "aws_ec2_ami_shared_with" {
 
 }
 
-query "aws_ec2_ami_shared_with_ou" {
-  sql = <<-EOQ
-    select
-      lp->>'OrganizationalUnitArn' as "Organizational Unit ARN"
-    from
-      aws_ec2_ami as ami,
-      jsonb_array_elements(ami.launch_permissions) as lp
-    where
-      image_id = $1
-      and lp->>'OrganizationalUnitArn' is not null;
-  EOQ
-
-  param "image_id" {}
-
-}
-
 query "aws_ec2_ami_state" {
   sql = <<-EOQ
     select
@@ -275,13 +258,10 @@ query "aws_ec2_ami_overview" {
   sql = <<-EOQ
     select
       name as "Name",
-      description as "Description",
       image_id as "Image ID",
-      image_type as "Image yype",
-      image_location as "Image location",
-      architecture as "Architecture",
-      hypervisor as "Hypervisor",
-      root_device_type as "Root device type",
+      image_type as "Image Type",
+      image_location as "Image Location",
+      root_device_type as "Root Device Type",
       ena_support as "ENA Support",
       account_id as "Account ID",
       region as "Region"
@@ -311,7 +291,7 @@ query "aws_ec2_ami_tags" {
   param "image_id" {}
 }
 
-query "aws_ec2_ami_relationships_graph"{
+query "aws_ec2_ami_relationships_graph" {
   sql = <<-EOQ
     with ami as
     (

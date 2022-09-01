@@ -9,7 +9,7 @@ dashboard "aws_vpc_flow_log_detail" {
 
   input "flow_log_id" {
     title = "Select a flow log:"
-    sql   = query.aws_vpc_flow_log_input.sql
+    query = query.aws_vpc_flow_log_input
     width = 4
   }
 
@@ -106,8 +106,7 @@ query "aws_vpc_flow_log_input" {
       flow_log_id as value,
       json_build_object(
         'account_id', account_id,
-        'region', region,
-        'flow_log_id', flow_log_id
+        'region', region
       ) as tags
     from
       aws_vpc_flow_log
@@ -617,8 +616,8 @@ query "aws_vpc_flow_log_destination" {
   sql = <<-EOQ
     select
       log_destination_type as "Log Destination Type",
-      case when log_destination is not null then log_destination else 'NA' end as "Bucket",
-      case when log_group_name is not null then log_group_name else 'NA' end as "Log Group"
+      case when log_destination is not null then log_destination else '' end as "Bucket",
+      case when log_group_name is not null then log_group_name else '' end as "Log Group"
     from
       aws_vpc_flow_log
     where

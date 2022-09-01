@@ -14,10 +14,26 @@ dashboard "aws_ebs_snapshot_detail" {
   }
 
   container {
+    
+    card {
+      width = 2
+      query = query.aws_ebs_snapshot_state
+      args = {
+        arn = self.input.snapshot_arn.value
+      }
+    }
 
     card {
       width = 2
       query = query.aws_ebs_snapshot_storage
+      args = {
+        arn = self.input.snapshot_arn.value
+      }
+    }
+    
+    card {
+      width = 2
+      query = query.aws_ebs_snapshot_encryption
       args = {
         arn = self.input.snapshot_arn.value
       }
@@ -52,7 +68,7 @@ dashboard "aws_ebs_snapshot_detail" {
     table {
       title = "Overview"
       type  = "line"
-      width = 6
+      width = 3
       query = query.aws_ebs_snapshot_overview
       args = {
         arn = self.input.snapshot_arn.value
@@ -61,7 +77,7 @@ dashboard "aws_ebs_snapshot_detail" {
 
     table {
       title = "Tags"
-      width = 6
+      width = 3
       query = query.aws_ebs_snapshot_tags
       args = {
         arn = self.input.snapshot_arn.value
@@ -122,7 +138,6 @@ query "aws_ebs_snapshot_tags" {
   param "arn" {}
 }
 
-
 query "aws_ebs_snapshot_storage" {
   sql = <<-EOQ
     select
@@ -137,15 +152,51 @@ query "aws_ebs_snapshot_storage" {
   param "arn" {}
 }
 
-query "aws_ebs_snapshot_age" {
+query "aws_ebs_snapshot_encryption" {
   sql = <<-EOQ
     select
-      'Age (days)' as label,
-      (EXTRACT(epoch FROM (SELECT (NOW() - start_time)))/86400)::int as value
+      'Encryption' as label,
+      case when encrypted then 'Enabled' else 'Disabled' end as value,
+      case when encrypted then 'ok' else 'alert' end as type
     from
       aws_ebs_snapshot
     where
       arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_ebs_snapshot_state" {
+  sql = <<-EOQ
+    select
+      'State' as label,
+      initcap(state) as value
+    from
+      aws_ebs_snapshot
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_ebs_snapshot_age" {
+  sql = <<-EOQ
+    with data as (
+      select
+        (EXTRACT(epoch FROM (SELECT (NOW() - start_time)))/86400)::int as age
+      from
+        aws_ebs_snapshot
+      where
+        arn = $1
+    )
+    select
+      'Age (in Days)' as label,
+      age as value,
+      case when age<35 then 'ok' else 'alert' end as type
+    from
+      data;
   EOQ
 
   param "arn" {}
@@ -203,10 +254,9 @@ query "aws_ebs_snapshot_relationships_graph" {
         'Region', volumes.region
       ) as properties
     from
-      aws_ebs_volume as volumes,
       snapshot
-    where
-      snapshot.volume_id = volumes.volume_id
+    left join aws_ebs_volume as volumes 
+    on snapshot.volume_id = volumes.volume_id
 
     -- From EBS volumes (edge)
     union all
@@ -220,10 +270,9 @@ query "aws_ebs_snapshot_relationships_graph" {
         'Account ID', volumes.account_id
       ) as properties
     from
-      aws_ebs_volume as volumes,
       snapshot
-    where
-      snapshot.volume_id = volumes.volume_id
+    left join aws_ebs_volume as volumes 
+    on snapshot.volume_id = volumes.volume_id
 
     -- From EC2 AMI (node)
     union all
@@ -318,10 +367,9 @@ query "aws_ebs_snapshot_relationships_graph" {
         'Key Manager', kms_keys.key_manager
       ) as properties
     from
-      aws_kms_key as kms_keys,
       snapshot
-    where
-      snapshot.kms_key_id = kms_keys.arn
+    left join aws_kms_key as kms_keys
+    on snapshot.kms_key_id = kms_keys.arn
 
     -- To KMS keys (edge)
     union all
@@ -335,10 +383,9 @@ query "aws_ebs_snapshot_relationships_graph" {
         'Account ID', kms_keys.account_id
       ) as properties
     from
-      aws_kms_key as kms_keys,
       snapshot
-    where
-      snapshot.kms_key_id = kms_keys.arn
+    left join aws_kms_key as kms_keys
+    on snapshot.kms_key_id = kms_keys.arn
 
     -- EBS volume > KMS key (edge)
     union all
