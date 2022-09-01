@@ -9,7 +9,7 @@ dashboard "aws_vpc_flow_logs_detail" {
 
   input "flow_log_id" {
     title = "Select a flow log:"
-    sql   = query.aws_vpc_flow_log_input.sql
+    query = query.aws_vpc_flow_log_input
     width = 4
   }
 
@@ -106,8 +106,7 @@ query "aws_vpc_flow_log_input" {
       flow_log_id as value,
       json_build_object(
         'account_id', account_id,
-        'region', region,
-        'flow_log_id', flow_log_id
+        'region', region
       ) as tags
     from
       aws_vpc_flow_log
