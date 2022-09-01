@@ -9,7 +9,7 @@ dashboard "aws_ebs_volume_detail" {
 
   input "volume_arn" {
     title = "Select a volume:"
-    sql   = query.aws_ebs_volume_input.sql
+    query = query.aws_ebs_volume_input
     width = 4
   }
 
@@ -60,31 +60,14 @@ dashboard "aws_ebs_volume_detail" {
   container {
     graph {
       type  = "graph"
-      title = "Relationships"
-      query = query.aws_ebs_volume_relationships
+      base  = graph.aws_graph_categories
+      query = query.aws_ebs_volume_relationships_graph
       args = {
         arn = self.input.volume_arn.value
       }
-
       category "aws_ebs_volume" {
         icon = local.aws_ebs_volume_icon
       }
-
-      category "aws_kms_key" {
-        href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_kms_key_icon
-      }
-
-      category "aws_ec2_instance" {
-        href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_ec2_instance_icon
-      }
-
-      category "aws_ebs_snapshot" {
-        href = "${dashboard.aws_ebs_snapshot_detail.url_path}?input.snapshot_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_ebs_snapshot_icon
-      }
-
     }
   }
 
@@ -218,9 +201,25 @@ query "aws_ebs_volume_input" {
   EOQ
 }
 
-query "aws_ebs_volume_relationships" {
+query "aws_ebs_volume_relationships_graph" {
   sql = <<-EOQ
-    with volumes as (select arn,volume_id,title,account_id,region,size,kms_key_id from aws_ebs_volume where arn = $1)
+    with volumes as
+    (
+      select
+        arn,
+        volume_id,
+        title,
+        account_id,
+        region,
+        size,
+        kms_key_id
+      from
+        aws_ebs_volume
+      where
+        arn = $1
+    )
+
+    -- Resource (node)
     select
       null as from_id,
       null as to_id,
@@ -228,9 +227,9 @@ query "aws_ebs_volume_relationships" {
       title as title,
       'aws_ebs_volume' as category,
       jsonb_build_object(
-        'ID',volumes.volume_id,
-        'ARN',volumes.arn,
-        'Size',volumes.size,
+        'ID', volumes.volume_id,
+        'ARN', volumes.arn,
+        'Size', volumes.size,
         'Account ID', volumes.account_id,
         'Region', volumes.region,
         'KMS Key ID', volumes.kms_key_id
@@ -238,7 +237,7 @@ query "aws_ebs_volume_relationships" {
     from
       volumes
 
-    -- kms - nodes
+    -- From KMS keys (node)
     union all
     select
       null as from_id,
@@ -248,7 +247,7 @@ query "aws_ebs_volume_relationships" {
       'aws_kms_key' as category,
       jsonb_build_object(
         'ARN', kms_keys.arn,
-        'Account ID',kms_keys.account_id,
+        'Account ID', kms_keys.account_id,
         'Region', kms_keys.region,
         'Key Manager', kms_keys.key_manager
       ) as properties
@@ -258,19 +257,16 @@ query "aws_ebs_volume_relationships" {
     where
       volumes.kms_key_id = kms_keys.arn
 
-    -- kms - edges
+    -- From KMS keys (edge)
     union all
     select
-      volumes.arn as to_id,
       kms_keys.arn as from_id,
+      volumes.arn as to_id,
       null as id,
-      'secures with' as title,
-      'uses' as category,
+      'encrypted with' as title,
+      'kms_keys_to_ebs_volume' as category,
       jsonb_build_object(
-        'ARN', kms_keys.arn,
-        'Account ID',kms_keys.account_id,
-        'Region', kms_keys.region,
-        'Key Manager', kms_keys.key_manager
+        'Account ID', kms_keys.account_id
       ) as properties
     from
       aws_kms_key as kms_keys,
@@ -278,7 +274,7 @@ query "aws_ebs_volume_relationships" {
     where
       volumes.kms_key_id = kms_keys.arn
 
-    -- snapshots - nodes
+    -- To EBS snapshots (node)
     union all
     select
       null as from_id,
@@ -288,7 +284,7 @@ query "aws_ebs_volume_relationships" {
       'aws_ebs_snapshot' as category,
       jsonb_build_object(
         'ARN', snapshot.arn,
-        'Account ID',snapshot.account_id,
+        'Account ID', snapshot.account_id,
         'Region', snapshot.region,
         'Snapshot Size', snapshot.volume_size,
         'Snapshot ID', snapshot.snapshot_id
@@ -299,19 +295,16 @@ query "aws_ebs_volume_relationships" {
     where
       volumes.volume_id = snapshot.volume_id
 
-    -- snapshots - edges
+    -- To EBS snapshots (edge)
     union all
     select
       volumes.arn as from_id,
       snapshot.snapshot_id as to_id,
       null as id,
       'snapshot' as title,
-      'uses' as category,
+      'ebs_volumes_to_ebs_snapshots' as category,
       jsonb_build_object(
-        'ARN', snapshot.arn,
-        'Account ID',snapshot.account_id,
-        'Region', snapshot.region,
-        'Snapshot Size', snapshot.volume_size
+        'Account ID', snapshot.account_id
       ) as properties
     from
       aws_ebs_snapshot as snapshot,
@@ -319,7 +312,7 @@ query "aws_ebs_volume_relationships" {
     where
       volumes.volume_id = snapshot.volume_id
 
-    -- instances - nodes
+    -- To EC2 instances (node)
     union all
     select
       null as from_id,
@@ -331,7 +324,7 @@ query "aws_ebs_volume_relationships" {
         'Name', instances.tags ->> 'Name',
         'Instance ID', instance_id,
         'ARN', instances.arn,
-        'Account ID',instances.account_id,
+        'Account ID', instances.account_id,
         'Region', instances.region
       ) as properties
     from
@@ -339,31 +332,39 @@ query "aws_ebs_volume_relationships" {
       jsonb_array_elements(instances.block_device_mappings) as bdm,
       volumes
     where
-      bdm -> 'Ebs' ->> 'VolumeId' in (select volume_id from volumes)
+      bdm -> 'Ebs' ->> 'VolumeId' in
+      (
+        select
+          volume_id
+        from
+          volumes
+      )
 
-    -- instances - edges
+    -- To EC2 instances (edge)
     union all
     select
       instances.arn as from_id,
       volumes.arn as to_id,
       null as id,
       'mounts' as title,
-      'uses' as category,
+      'ec2_instances_to_ebs_volumes' as category,
       jsonb_build_object(
-        'Name', instances.tags ->> 'Name',
-        'Instance ID', instance_id,
-        'ARN', instances.arn,
-        'Account ID',instances.account_id,
-        'Region', instances.region
+        'Account ID', instances.account_id
       ) as properties
     from
       aws_ec2_instance as instances,
       jsonb_array_elements(instances.block_device_mappings) as bdm,
       volumes
     where
-      bdm -> 'Ebs' ->> 'VolumeId' in (select volume_id from volumes)
+      bdm -> 'Ebs' ->> 'VolumeId' in
+      (
+        select
+          volume_id
+        from
+          volumes
+      )
 
-    -- AMI - nodes
+    -- To EC2 AMI (node)
     union all
     select
       null as from_id,
@@ -372,8 +373,8 @@ query "aws_ebs_volume_relationships" {
       images.title as title,
       'aws_ec2_ami' as category,
       jsonb_build_object(
-        'SnapshotId', bdm -> 'Ebs' ->> 'SnapshotId',
-        'Account ID',images.account_id,
+        'Snapshot ID', bdm -> 'Ebs' ->> 'SnapshotId',
+        'Account ID', images.account_id,
         'Region', images.region
       ) as properties
     from
@@ -382,20 +383,26 @@ query "aws_ebs_volume_relationships" {
       volumes
     where
       bdm -> 'Ebs' is not null
-      and bdm -> 'Ebs' ->> 'SnapshotId' in (select snapshot_id from aws_ebs_snapshot where aws_ebs_snapshot.volume_id = volumes.volume_id)
+      and bdm -> 'Ebs' ->> 'SnapshotId' in
+      (
+        select
+          snapshot_id
+        from
+          aws_ebs_snapshot
+        where
+          aws_ebs_snapshot.volume_id = volumes.volume_id
+      )
 
-    -- AMI - edges
+    -- To EC2 AMI (edge)
     union all
     select
       bdm -> 'Ebs' ->> 'SnapshotId' as from_id,
       images.image_id as to_id,
       null as id,
-      'uses snapshot' as title,
-      'uses' as category,
+      'snapshot' as title,
+      'ebs_snapshots_to_ec2_ami' as category,
       jsonb_build_object(
-        'SnapshotId', bdm -> 'Ebs' ->> 'SnapshotId',
-        'Account ID',images.account_id,
-        'Region', images.region
+        'Account ID', images.account_id
       ) as properties
     from
       aws_ec2_ami as images,
@@ -403,8 +410,20 @@ query "aws_ebs_volume_relationships" {
       volumes
     where
       bdm -> 'Ebs' is not null
-      and bdm -> 'Ebs' ->> 'SnapshotId' in (select snapshot_id from aws_ebs_snapshot where aws_ebs_snapshot.volume_id = volumes.volume_id)
+      and bdm -> 'Ebs' ->> 'SnapshotId' in
+      (
+        select
+          snapshot_id
+        from
+          aws_ebs_snapshot
+        where
+          aws_ebs_snapshot.volume_id = volumes.volume_id
+      )
 
+    order by
+      category,
+      from_id,
+      to_id;
   EOQ
 
   param "arn" {}

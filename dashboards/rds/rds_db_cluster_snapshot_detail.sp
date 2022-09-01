@@ -69,25 +69,12 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
 
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_rds_db_cluster_snapshot_relationships_graph
       args = {
         arn = self.input.snapshot_arn.value
       }
-
-      category "db_cluster_snapshot" {
-        ###icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/ebs_snapshot_dark.svg"))
-      }
-
-      category "aws_rds_db_cluster" {
-        href = "/aws_insights.dashboard.aws_rds_db_cluster_detail.url_path?input.db_cluster_arn={{.properties.ARN | @uri}}"
-        icon = local.aws_rds_db_cluster_icon
-      }
-
-      category "aws_kms_key" {
-        href = "/aws_insights.dashboard.aws_kms_key_detail.url_path?input.key_arn={{.properties.ARN | @uri}}"
-        icon = local.aws_kms_key_icon
-      }
+      category "aws_rds_db_cluster_snapshot" {}
     }
   }
 
@@ -301,7 +288,7 @@ query "aws_rds_db_cluster_snapshot_relationships_graph" {
       null as to_id,
       db_cluster_snapshot_identifier as id,
       title,
-      'db_cluster_snapshot' as category,
+      'aws_rds_db_cluster_snapshot' as category,
       jsonb_build_object(
         'ARN', arn,
         'Status', status,
@@ -317,7 +304,7 @@ query "aws_rds_db_cluster_snapshot_relationships_graph" {
     where
       arn = $1
 
-    -- To KMS Keys (node)
+    -- To KMS keys (node)
     union all
     select
       null as from_id,
@@ -344,7 +331,7 @@ query "aws_rds_db_cluster_snapshot_relationships_graph" {
       k.id as to_id,
       null as id,
       'encrypted with' as title,
-      'uses' as category,
+      'rds_db_cluster_snapshot_to_kms_key' as category,
       jsonb_build_object(
         'ARN', k.arn,
         'DB Cluster Snapshot Identifier', s.db_cluster_snapshot_identifier,
@@ -389,8 +376,8 @@ query "aws_rds_db_cluster_snapshot_relationships_graph" {
       c.db_cluster_identifier as from_id,
       s.db_cluster_snapshot_identifier as to_id,
       null as id,
-      'has snapshot' as title,
-      'uses' as category,
+      'snapshot' as title,
+      'rds_db_cluster_to_rds_db_cluster_snapshot' as category,
       jsonb_build_object(
         'DB Cluster Identifier', c.db_cluster_identifier,
         'DB Cluster Snapshot Identifier', s.db_cluster_snapshot_identifier,

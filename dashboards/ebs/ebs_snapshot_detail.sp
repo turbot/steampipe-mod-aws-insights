@@ -9,15 +9,31 @@ dashboard "aws_ebs_snapshot_detail" {
 
   input "snapshot_arn" {
     title = "Select a snapshot:"
-    sql   = query.aws_ebs_snapshot_input.sql
+    query = query.aws_ebs_snapshot_input
     width = 4
   }
 
   container {
+    
+    card {
+      width = 2
+      query = query.aws_ebs_snapshot_state
+      args = {
+        arn = self.input.snapshot_arn.value
+      }
+    }
 
     card {
       width = 2
       query = query.aws_ebs_snapshot_storage
+      args = {
+        arn = self.input.snapshot_arn.value
+      }
+    }
+    
+    card {
+      width = 2
+      query = query.aws_ebs_snapshot_encryption
       args = {
         arn = self.input.snapshot_arn.value
       }
@@ -36,36 +52,36 @@ dashboard "aws_ebs_snapshot_detail" {
   container {
     graph {
       type  = "graph"
-      title = "Relationships"
-      query = query.aws_ebs_snapshot_relationships
+      base  = graph.aws_graph_categories
+      query = query.aws_ebs_snapshot_relationships_graph
       args = {
         arn = self.input.snapshot_arn.value
       }
-
       category "aws_ebs_snapshot" {
         icon = local.aws_ebs_snapshot_icon
       }
+    }
+  }
 
-      category "aws_kms_key" {
-        href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_kms_key_icon
+  container {
+
+    table {
+      title = "Overview"
+      type  = "line"
+      width = 3
+      query = query.aws_ebs_snapshot_overview
+      args = {
+        arn = self.input.snapshot_arn.value
       }
+    }
 
-      category "aws_ebs_volume" {
-        # vol -> snapshot -> vol cyclic dependency prevents usage of interpolation here
-        href = "/aws_insights.dashboard.aws_ebs_volume_detail?input.volume_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_ebs_volume_icon
+    table {
+      title = "Tags"
+      width = 3
+      query = query.aws_ebs_snapshot_tags
+      args = {
+        arn = self.input.snapshot_arn.value
       }
-
-      category "aws_ec2_instance" {
-        href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_ec2_instance_icon
-      }
-
-      category "aws_ec2_ami" {
-        icon = local.aws_ec2_ami_icon
-      }
-
     }
   }
 }
@@ -88,6 +104,40 @@ query "aws_ebs_snapshot_input" {
   EOQ
 }
 
+query "aws_ebs_snapshot_overview" {
+  sql = <<-EOQ
+    select
+      snapshot_id as "Snapshot ID",
+      title as "Title",
+      region as "Region",
+      account_id as "Account ID",
+      arn as "ARN"
+    from
+      aws_ebs_snapshot
+    where
+      arn = $1
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_ebs_snapshot_tags" {
+  sql = <<-EOQ
+    select
+      tag ->> 'Key' as "Key",
+      tag ->> 'Value' as "Value"
+    from
+      aws_ebs_snapshot,
+      jsonb_array_elements(tags_src) as tag
+    where
+      arn = $1
+    order by
+      tag ->> 'Key';
+  EOQ
+
+  param "arn" {}
+}
+
 query "aws_ebs_snapshot_storage" {
   sql = <<-EOQ
     select
@@ -102,11 +152,12 @@ query "aws_ebs_snapshot_storage" {
   param "arn" {}
 }
 
-query "aws_ebs_snapshot_age" {
+query "aws_ebs_snapshot_encryption" {
   sql = <<-EOQ
     select
-      'Age (days)' as label,
-      (EXTRACT(epoch FROM (SELECT (NOW() - start_time)))/86400)::int as value
+      'Encryption' as label,
+      case when encrypted then 'Enabled' else 'Disabled' end as value,
+      case when encrypted then 'ok' else 'alert' end as type
     from
       aws_ebs_snapshot
     where
@@ -116,9 +167,61 @@ query "aws_ebs_snapshot_age" {
   param "arn" {}
 }
 
-query "aws_ebs_snapshot_relationships" {
+query "aws_ebs_snapshot_state" {
   sql = <<-EOQ
-    with snapshot as (select arn,snapshot_id,volume_id,volume_size,title,account_id,region,kms_key_id from aws_ebs_snapshot where arn = $1)
+    select
+      'State' as label,
+      initcap(state) as value
+    from
+      aws_ebs_snapshot
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_ebs_snapshot_age" {
+  sql = <<-EOQ
+    with data as (
+      select
+        (EXTRACT(epoch FROM (SELECT (NOW() - start_time)))/86400)::int as age
+      from
+        aws_ebs_snapshot
+      where
+        arn = $1
+    )
+    select
+      'Age (in Days)' as label,
+      age as value,
+      case when age<35 then 'ok' else 'alert' end as type
+    from
+      data;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_ebs_snapshot_relationships_graph" {
+  sql = <<-EOQ
+    with snapshot as
+    (
+      select
+        arn,
+        snapshot_id,
+        volume_id,
+        volume_size,
+        title,
+        account_id,
+        region,
+        kms_key_id
+      from
+        aws_ebs_snapshot
+      where
+        arn = $1
+    )
+
+    -- Resource (node)
     select
       null as from_id,
       null as to_id,
@@ -136,7 +239,7 @@ query "aws_ebs_snapshot_relationships" {
     from
       snapshot
 
-    -- EBS - nodes
+    -- From EBS volumes (node)
     union all
     select
       null as from_id,
@@ -151,31 +254,27 @@ query "aws_ebs_snapshot_relationships" {
         'Region', volumes.region
       ) as properties
     from
-      aws_ebs_volume as volumes,
       snapshot
-    where
-      snapshot.volume_id = volumes.volume_id
+    left join aws_ebs_volume as volumes 
+    on snapshot.volume_id = volumes.volume_id
 
-    -- EBS - nodes
+    -- From EBS volumes (edge)
     union all
     select
-      snapshot.snapshot_id as from_id,
-      volumes.volume_id as to_id,
+      volumes.volume_id as from_id,
+      snapshot.snapshot_id as to_id,
       null as id,
-      'snapshot of' as title,
-      'aws_ebs_volume' as category,
+      'snapshot' as title,
+      'ebs_volume_to_ebs_snapshot' as category,
       jsonb_build_object(
-        'Volume ID', volumes.volume_id,
-        'Account ID', volumes.account_id,
-        'Region', volumes.region
+        'Account ID', volumes.account_id
       ) as properties
     from
-      aws_ebs_volume as volumes,
       snapshot
-    where
-      snapshot.volume_id = volumes.volume_id
+    left join aws_ebs_volume as volumes 
+    on snapshot.volume_id = volumes.volume_id
 
-    -- AMI - nodes
+    -- From EC2 AMI (node)
     union all
     select
       null as from_id,
@@ -184,8 +283,8 @@ query "aws_ebs_snapshot_relationships" {
       images.title as title,
       'aws_ec2_ami' as category,
       jsonb_build_object(
-        'SnapshotId', bdm -> 'Ebs' ->> 'SnapshotId',
-        'Account ID',images.account_id,
+        'Snapshot ID', bdm -> 'Ebs' ->> 'SnapshotId',
+        'Account ID', images.account_id,
         'Region', images.region
       ) as properties
     from
@@ -196,18 +295,16 @@ query "aws_ebs_snapshot_relationships" {
       bdm -> 'Ebs' is not null
       and bdm -> 'Ebs' ->> 'SnapshotId' = snapshot.snapshot_id
 
-    -- AMI - edges
+    -- From EC2 AMI (edge)
     union all
     select
       images.image_id as from_id,
       bdm -> 'Ebs' ->> 'SnapshotId' as to_id,
       null as id,
-      'contains' as title,
-      'uses' as category,
+      'created from' as title,
+      'ec2_ami_to_ebs_snapshot' as category,
       jsonb_build_object(
-        'SnapshotId', bdm -> 'Ebs' ->> 'SnapshotId',
-        'Account ID',images.account_id,
-        'Region', images.region
+        'Account ID', images.account_id
       ) as properties
     from
       aws_ec2_ami as images,
@@ -217,7 +314,7 @@ query "aws_ebs_snapshot_relationships" {
       bdm -> 'Ebs' is not null
       and bdm -> 'Ebs' ->> 'SnapshotId' = snapshot.snapshot_id
 
-    -- Launch Config - nodes
+    -- From EC2 launch configurations (node)
     union all
     select
       null as from_id,
@@ -237,18 +334,16 @@ query "aws_ebs_snapshot_relationships" {
     where
       bdm -> 'Ebs' ->> 'SnapshotId' = snapshot.snapshot_id
 
-    -- Launch Config - edges
+    -- From EC2 launch configurations (edge)
     union all
     select
       launch_config.launch_configuration_arn as from_id,
       snapshot.snapshot_id as to_id,
       null as id,
       'provisions EBS with' as title,
-      'uses' as category,
+      'ec2_launch_config_to_ebs_snapshot' as category,
       jsonb_build_object(
-        'ARN', launch_config.launch_configuration_arn,
-        'Account ID', launch_config.account_id,
-        'Region', launch_config.region
+        'Account ID', launch_config.account_id
       ) as properties
     from
       aws_ec2_launch_configuration as launch_config,
@@ -257,7 +352,7 @@ query "aws_ebs_snapshot_relationships" {
     where
       bdm -> 'Ebs' ->> 'SnapshotId' = snapshot.snapshot_id
 
-    -- kms - nodes
+    -- To KMS keys (node)
     union all
     select
       null as from_id,
@@ -267,49 +362,41 @@ query "aws_ebs_snapshot_relationships" {
       'aws_kms_key' as category,
       jsonb_build_object(
         'ARN', kms_keys.arn,
-        'Account ID',kms_keys.account_id,
+        'Account ID', kms_keys.account_id,
         'Region', kms_keys.region,
         'Key Manager', kms_keys.key_manager
       ) as properties
     from
-      aws_kms_key as kms_keys,
       snapshot
-    where
-      snapshot.kms_key_id = kms_keys.arn
+    left join aws_kms_key as kms_keys
+    on snapshot.kms_key_id = kms_keys.arn
 
-    -- kms - edges
+    -- To KMS keys (edge)
     union all
     select
       snapshot.snapshot_id as from_id,
       kms_keys.arn as to_id,
       null as id,
-      'secures with' as title,
-      'uses' as category,
+      'encrypted with' as title,
+      'ebs_snapshot_to_kms_keys' as category,
       jsonb_build_object(
-        'ARN', kms_keys.arn,
-        'Account ID',kms_keys.account_id,
-        'Region', kms_keys.region,
-        'Key Manager', kms_keys.key_manager
+        'Account ID', kms_keys.account_id
       ) as properties
     from
-      aws_kms_key as kms_keys,
       snapshot
-    where
-      snapshot.kms_key_id = kms_keys.arn
+    left join aws_kms_key as kms_keys
+    on snapshot.kms_key_id = kms_keys.arn
 
-    -- kms > vol - edges
+    -- EBS volume > KMS key (edge)
     union all
     select
       volumes.volume_id as from_id,
       kms_keys.arn as to_id,
       null as id,
-      'secures with' as title,
-      'uses' as category,
+      'encrypted with' as title,
+      'ebs_volumes_to_kms_keys' as category,
       jsonb_build_object(
-        'ARN', kms_keys.arn,
-        'Account ID',kms_keys.account_id,
-        'Region', kms_keys.region,
-        'Key Manager', kms_keys.key_manager
+        'Account ID', kms_keys.account_id
       ) as properties
     from
       aws_kms_key as kms_keys,
@@ -319,6 +406,10 @@ query "aws_ebs_snapshot_relationships" {
       snapshot.volume_id = volumes.volume_id
       and snapshot.kms_key_id = kms_keys.arn
 
+    order by
+      category,
+      from_id,
+      to_id;
 
   EOQ
 

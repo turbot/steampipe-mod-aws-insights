@@ -59,34 +59,13 @@ dashboard "acm_certificate_detail" {
   container {
     graph {
       type  = "graph"
-      title = "Relationships"
+      base  = graph.aws_graph_categories
       query = query.aws_acm_certificate_relationships_graph
       args = {
         arn = self.input.certificate_arn.value
       }
       category "aws_acm_certificate" {
         icon = local.aws_acm_certificate_icon
-      }
-
-      category "aws_cloudfront_distribution" {
-        href = "/aws_insights.dashboard.aws_cloudfront_distribution_detail?input.distribution_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_cloudfront_distribution_icon
-      }
-
-      category "aws_ec2_classic_load_balancer" {
-        icon = local.aws_ec2_classic_load_balancer_icon
-      }
-
-      category "aws_ec2_application_load_balancer" {
-        icon = local.aws_ec2_application_load_balancer_icon
-      }
-
-      category "aws_ec2_network_load_balancer" {
-        icon = local.aws_ec2_network_load_balancer_icon
-      }
-
-      category "uses" {
-        color = "green"
       }
     }
   }
@@ -257,7 +236,13 @@ query "aws_acm_certificate_relationships_graph" {
       title as id,
       title as title,
       'aws_acm_certificate' as category,
-      jsonb_build_object( 'ARN', certificate_arn, 'Domain Name', domain_name, 'Certificate Transparency Logging Preference', certificate_transparency_logging_preference, 'Created At', created_at, 'Account ID', account_id ) as properties
+      jsonb_build_object(
+        'ARN', certificate_arn,
+        'Domain Name', domain_name,
+        'Certificate Transparency Logging Preference', certificate_transparency_logging_preference,
+        'Created At', created_at,
+        'Account ID', account_id,
+        'Region', region ) as properties
     from
       aws_acm_certificate
     where
@@ -271,7 +256,12 @@ query "aws_acm_certificate_relationships_graph" {
       id as id,
       id as title,
       'aws_cloudfront_distribution' as category,
-      jsonb_build_object( 'ARN', arn, 'Status', status, 'Enabled', enabled::text, 'Domain Name', domain_name, 'Account ID', account_id ) as properties
+      jsonb_build_object(
+        'ARN', arn,
+        'Status', status,
+        'Enabled', enabled::text,
+        'Domain Name', domain_name,
+        'Account ID', account_id ) as properties
     from
       aws_cloudfront_distribution
     where
@@ -291,9 +281,10 @@ query "aws_acm_certificate_relationships_graph" {
       d.id as from_id,
       c.title as to_id,
       null as id,
-      'uses' as title,
-      'uses' as category,
-      jsonb_build_object( 'Account ID', d.account_id ) as properties
+      'encrypted with' as title,
+      'cloudfront_distribution_to_acm_certificate' as category,
+      jsonb_build_object(
+        'Account ID', d.account_id ) as properties
     from
       aws_acm_certificate as c,
       jsonb_array_elements_text(in_use_by) as arns
@@ -311,7 +302,13 @@ query "aws_acm_certificate_relationships_graph" {
       arn as id,
       name as title,
       'aws_ec2_classic_load_balancer' as category,
-      jsonb_build_object( 'ARN', arn, 'VPC ID', vpc_id, 'DNS Name', dns_name, 'Created Time', created_time, 'Account ID', account_id ) as properties
+      jsonb_build_object(
+        'ARN', arn,
+        'VPC ID', vpc_id,
+        'DNS Name', dns_name,
+        'Created Time', created_time,
+        'Account ID', account_id,
+        'Region', region ) as properties
     from
       aws_ec2_classic_load_balancer
     where
@@ -331,9 +328,10 @@ query "aws_acm_certificate_relationships_graph" {
       b.arn as from_id,
       c.title as to_id,
       null as id,
-      'associated' as title,
-      'uses' as category,
-      jsonb_build_object( 'Account ID', b.account_id ) as properties
+      'encrypted with' as title,
+      'ec2_classic_load_balancer_to_acm_certificate' as category,
+      jsonb_build_object(
+        'Account ID', b.account_id ) as properties
     from
       aws_acm_certificate as c,
       jsonb_array_elements_text(in_use_by) as arns
@@ -351,7 +349,13 @@ query "aws_acm_certificate_relationships_graph" {
       arn as id,
       name as title,
       'aws_ec2_application_load_balancer' as category,
-      jsonb_build_object( 'ARN', arn, 'VPC ID', vpc_id, 'DNS Name', dns_name, 'Created Time', created_time, 'Account ID', account_id ) as properties
+      jsonb_build_object(
+        'ARN', arn,
+        'VPC ID', vpc_id,
+        'DNS Name', dns_name,
+        'Created Time', created_time,
+        'Account ID', account_id,
+        'Region', region ) as properties
     from
       aws_ec2_application_load_balancer
     where
@@ -372,9 +376,10 @@ query "aws_acm_certificate_relationships_graph" {
       lb.arn as from_id,
       c.title as to_id,
       null as id,
-      'associated' as title,
-      'uses' as category,
-      jsonb_build_object( 'Account ID', lb.account_id ) as properties
+      'encrypted with' as title,
+      'ec2_application_load_balancer_to_acm_certificate' as category,
+      jsonb_build_object(
+        'Account ID', lb.account_id ) as properties
     from
       aws_acm_certificate as c,
       jsonb_array_elements_text(in_use_by) as arns
@@ -393,7 +398,13 @@ query "aws_acm_certificate_relationships_graph" {
       arn as id,
       name as title,
       'aws_ec2_network_load_balancer' as category,
-      jsonb_build_object( 'ARN', arn, 'VPC ID', vpc_id, 'DNS Name', dns_name, 'Created Time', created_time, 'Account ID', account_id ) as properties
+      jsonb_build_object(
+        'ARN', arn,
+        'VPC ID', vpc_id,
+        'DNS Name', dns_name,
+        'Created Time', created_time,
+        'Account ID', account_id,
+        'Region', region ) as properties
     from
       aws_ec2_network_load_balancer
     where
@@ -413,8 +424,8 @@ query "aws_acm_certificate_relationships_graph" {
       b.arn as from_id,
       c.title as to_id,
       null as id,
-      'associated' as title,
-      'uses' as category,
+      'encrypted with' as title,
+      'ec2_network_load_balancer_to_acm_certificate' as category,
       jsonb_build_object( 'Account ID', b.account_id ) as properties
     from
       aws_acm_certificate as c,

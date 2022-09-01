@@ -1,18 +1,26 @@
 dashboard "aws_ec2_application_load_balancer_detail" {
-  title = "AWS EC2 Application Load balancer Details"
-  #documentation = file("./dashboards/lb/docs/alb_relationships.md")
+  title         = "AWS EC2 Application Load Balancer Detail"
+  documentation = file("./dashboards/ec2/docs/ec2_application_load_balancer_detail.md")
 
   tags = merge(local.ec2_common_tags, {
-    type = "Details"
+    type = "Detail"
   })
 
   input "alb" {
     title = "Select an Application Load balancer:"
-    sql   = query.aws_alb_input.sql
+    query = query.aws_alb_input
     width = 4
   }
 
   container {
+
+    card {
+      width = 2
+      query = query.aws_alb_state
+      args = {
+        arn = self.input.alb.value
+      }
+    }
 
     card {
       width = 2
@@ -24,7 +32,31 @@ dashboard "aws_ec2_application_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_alb_ports
+      query = query.aws_alb_ip_type
+      args = {
+        arn = self.input.alb.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_alb_az_zone
+      args = {
+        arn = self.input.alb.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_alb_logging_enabled
+      args = {
+        arn = self.input.alb.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_alb_deletion_protection
       args = {
         arn = self.input.alb.value
       }
@@ -35,57 +67,174 @@ dashboard "aws_ec2_application_load_balancer_detail" {
   container {
     graph {
       type  = "graph"
-      title = "Relationships"
-      query = query.aws_alb_graph_relationships
+      base  = graph.aws_graph_categories
+      query = query.aws_ec2_application_load_balancer_relationships_graph
+      args = {
+        arn = self.input.alb.value
+      }
+      category "aws_ec2_application_load_balancer" {
+        icon = local.aws_ec2_application_load_balancer_icon
+      }
+    }
+  }
+
+  container {
+
+    table {
+      title = "Overview"
+      type  = "line"
+      width = 3
+      query = query.aws_ec2_alb_overview
       args = {
         arn = self.input.alb.value
       }
 
-      category "aws_ec2_application_load_balancer" {
-        icon = local.aws_ec2_application_load_balancer_icon
-      }
+    }
 
-      category "aws_vpc" {
-        href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.properties.'VPC ID' | @uri}}"
-        icon = local.aws_vpc_icon
+    table {
+      title = "Tags"
+      width = 3
+      query = query.aws_ec2_alb_tags
+      args = {
+        arn = self.input.alb.value
       }
+    }
 
-      category "aws_s3_bucket" {
-        href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_s3_bucket_icon
+    table {
+      title = "Attributes"
+      width = 6
+      query = query.aws_ec2_alb_attributes
+      args = {
+        arn = self.input.alb.value
       }
-
-      category "aws_ec2_instance" {
-        href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.properties.'ARN' | @uri}}"
-        icon = local.aws_ec2_instance_icon
-      }
-
-      category "aws_vpc_security_group" {
-        href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.properties.'Group ID' | @uri}}"
-      }
-
     }
   }
+
 }
 
-query "aws_alb_ports" {
+query "aws_ec2_alb_overview" {
   sql = <<-EOQ
-    with d as (select distinct(port) as port from aws_ec2_load_balancer_listener where load_balancer_arn = $1)
     select
-      'Ports' as label,
-      string_agg(port::text, ',') as value
+      title as "Title",
+      created_time as "Created Time",
+      dns_name as "DNS Name",
+      canonical_hosted_zone_id as "Route 53 hosted zone ID",
+      account_id as "Account ID",
+      region as "Region",
+      arn as "ARN"
     from
-      d
+      aws_ec2_application_load_balancer
+    where
+      aws_ec2_application_load_balancer.arn = $1;
   EOQ
 
   param "arn" {}
 }
 
-query "aws_alb_scheme" {
+query "aws_ec2_alb_tags" {
   sql = <<-EOQ
     select
-      'Schema' as label,
-      scheme as value
+      tag ->> 'Key' as "Key",
+      tag ->> 'Value' as "Value"
+    from
+      aws_ec2_application_load_balancer,
+      jsonb_array_elements(tags_src) as tag
+    where
+      arn = $1
+    order by
+      tag ->> 'Key';
+    EOQ
+
+  param "arn" {}
+}
+
+query "aws_ec2_alb_attributes" {
+  sql = <<-EOQ
+    select
+      lb ->> 'Key' as "Key",
+      lb ->> 'Value' as "Value"
+    from
+      aws_ec2_application_load_balancer
+      cross join jsonb_array_elements(load_balancer_attributes) as lb
+    where
+      aws_ec2_application_load_balancer.arn = $1
+      and lb ->> 'Key' not in ( 'deletion_protection.enabled' ,'access_logs.s3.enabled' )
+    order by
+      lb ->> 'Key';
+    EOQ
+
+  param "arn" {}
+}
+
+query "aws_alb_ip_type" {
+  sql = <<-EOQ
+    select
+      'IP Address Type' as label,
+      case when ip_address_type = 'ipv4' then 'IPv4' else initcap(ip_address_type) end as value
+    from
+      aws_ec2_application_load_balancer
+    where
+      aws_ec2_application_load_balancer.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_alb_logging_enabled" {
+  sql = <<-EOQ
+    select
+      'Logging' as label,
+      case when lb ->> 'Value' = 'false' then 'Disabled' else 'Enabled' end as value,
+      case when lb ->> 'Value' = 'false' then 'alert' else 'ok' end as type
+    from
+      aws_ec2_application_load_balancer
+      cross join jsonb_array_elements(load_balancer_attributes) as lb
+    where
+      lb ->> 'Key' = 'access_logs.s3.enabled'
+      and aws_ec2_application_load_balancer.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_alb_deletion_protection" {
+  sql = <<-EOQ
+    select
+      'Deletion Protection' as label,
+      case when lb ->> 'Value' = 'false' then 'Disabled' else 'Enabled' end as value,
+      case when lb ->> 'Value' = 'false' then 'alert' else 'ok' end as type
+    from
+      aws_ec2_application_load_balancer
+      cross join jsonb_array_elements(load_balancer_attributes) as lb
+    where
+      lb ->> 'Key' = 'deletion_protection.enabled'
+      and aws_ec2_application_load_balancer.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_alb_az_zone" {
+  sql = <<-EOQ
+    select
+      'Availibility Zones' as label,
+      count(az ->> 'ZoneName') as value,
+      case when count(az ->> 'ZoneName') > 1 then 'ok' else 'alert' end as type
+    from
+      aws_ec2_application_load_balancer
+      cross join jsonb_array_elements(availability_zones) as az
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_alb_state" {
+  sql = <<-EOQ
+    select
+      'State' as label,
+      initcap(state_code) as value
     from
       aws_ec2_application_load_balancer
     where
@@ -95,9 +244,41 @@ query "aws_alb_scheme" {
   param "arn" {}
 }
 
-query "aws_alb_graph_relationships" {
+query "aws_alb_scheme" {
   sql = <<-EOQ
-    with alb as (select dns_name,arn,name,account_id,region,title,security_groups,vpc_id,load_balancer_attributes from aws_ec2_application_load_balancer where arn = $1)
+    select
+      'Scheme' as label,
+      initcap(scheme) as value
+    from
+      aws_ec2_application_load_balancer
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_ec2_application_load_balancer_relationships_graph" {
+  sql = <<-EOQ
+    with alb as
+    (
+      select
+        dns_name,
+        arn,
+        name,
+        account_id,
+        region,
+        title,
+        security_groups,
+        vpc_id,
+        load_balancer_attributes
+      from
+        aws_ec2_application_load_balancer
+      where
+        arn = $1
+    )
+
+    -- Resource (node)
     select
       null as from_id,
       null as to_id,
@@ -113,7 +294,7 @@ query "aws_alb_graph_relationships" {
     from
       alb
 
-    -- security groups - nodes
+    -- To VPC security groups (node)
     union all
     select
       null as from_id,
@@ -133,31 +314,34 @@ query "aws_alb_graph_relationships" {
       aws_vpc_security_group sg,
       alb
     where
-      sg.group_id in (select jsonb_array_elements_text(alb.security_groups))
+      sg.group_id in
+      (
+        select
+          jsonb_array_elements_text(alb.security_groups)
+      )
 
-    -- security groups - edges
+    -- To VPC security groups (edge)
     union all
     select
       alb.arn as from_id,
       sg.arn as to_id,
       null as id,
-      'Security Group' as title,
-      'uses' as category,
+      'security group' as title,
+      'ec2_application_load_balancer_to_vpc_security_group' as category,
       jsonb_build_object(
-        'Group Name', sg.group_name,
-        'Group ID', sg.group_id,
-        'ARN', sg.arn,
-        'Account ID', sg.account_id,
-        'Region', sg.region,
-        'VPC ID', sg.vpc_id
+        'Account ID', sg.account_id
       ) as properties
     from
       aws_vpc_security_group sg,
       alb
     where
-      sg.group_id in (select jsonb_array_elements_text(alb.security_groups))
+      sg.group_id in
+      (
+        select
+          jsonb_array_elements_text(alb.security_groups)
+      )
 
-    -- target groups - nodes
+    -- To EC2 target groups (node)
     union all
     select
       null as from_id,
@@ -175,29 +359,34 @@ query "aws_alb_graph_relationships" {
       aws_ec2_target_group tg,
       alb
     where
-      alb.arn in (select jsonb_array_elements_text(tg.load_balancer_arns))
+      alb.arn in
+      (
+        select
+          jsonb_array_elements_text(tg.load_balancer_arns)
+      )
 
-    -- target groups - edges
+    -- To EC2 target groups (edge)
     union all
     select
       alb.arn as from_id,
       tg.target_group_arn as to_id,
       null as id,
-      'targets' as title,
-      'uses' as category,
+      'target group' as title,
+      'ec2_application_load_balancer_to_ec2_target_group' as category,
       jsonb_build_object(
-        'Group Name', tg.target_group_name,
-        'ARN', tg.target_group_arn,
-        'Account ID', tg.account_id,
-        'Region', tg.region
+        'Account ID', tg.account_id
       ) as properties
     from
       aws_ec2_target_group tg,
       alb
     where
-      alb.arn in (select jsonb_array_elements_text(tg.load_balancer_arns))
+      alb.arn in
+      (
+        select
+          jsonb_array_elements_text(tg.load_balancer_arns)
+      )
 
-    -- target group instances - nodes
+    -- To EC2 target group instances (node)
     union all
     select
       null as from_id,
@@ -217,25 +406,25 @@ query "aws_alb_graph_relationships" {
       jsonb_array_elements(tg.target_health_descriptions) thd,
       alb
     where
-      instance.instance_id = thd->'Target'->>'Id'
-      and alb.arn in (select jsonb_array_elements_text(tg.load_balancer_arns))
+      instance.instance_id = thd -> 'Target' ->> 'Id'
+      and alb.arn in
+      (
+        select
+          jsonb_array_elements_text(tg.load_balancer_arns)
+      )
 
-    -- target group instances - edges
+    -- To EC2 target group instances (edges)
     union all
     select
       tg.target_group_arn as from_id,
       instance.instance_id as to_id,
       null as id,
-      'forwards to' as title,
-      'uses' as category,
+      'ec2 instance' as title,
+      'ec2_target_group_to_ec2_instance' as category,
       jsonb_build_object(
-        'Instance ID', instance.instance_id,
-        'ARN', instance.arn,
         'Account ID', instance.account_id,
-        'Region', instance.region,
         'Health Check Port', thd['HealthCheckPort'],
-        'Health Check State', thd['TargetHealth']['State'],
-        'health',tg.target_health_descriptions
+        'Health Check State', thd['TargetHealth']['State']
       ) as properties
     from
       aws_ec2_target_group tg,
@@ -243,10 +432,14 @@ query "aws_alb_graph_relationships" {
       jsonb_array_elements(tg.target_health_descriptions) thd,
       alb
     where
-      instance.instance_id = thd->'Target'->>'Id'
-      and alb.arn in (select jsonb_array_elements_text(tg.load_balancer_arns))
+      instance.instance_id = thd -> 'Target' ->> 'Id'
+      and alb.arn in
+      (
+        select
+          jsonb_array_elements_text(tg.load_balancer_arns)
+      )
 
-    -- S3 bucket I log to - nodes
+    -- To S3 buckets (node)
     union all
     select
       null as from_id,
@@ -259,41 +452,44 @@ query "aws_alb_graph_relationships" {
         'ARN', buckets.arn,
         'Account ID', alb.account_id,
         'Region', alb.region,
-        'Logs to', attributes->>'Value'
+        'Logs to', attributes ->> 'Value'
       ) as properties
     from
       aws_s3_bucket buckets,
       alb,
       jsonb_array_elements(alb.load_balancer_attributes) attributes
     where
-      attributes->>'Key' = 'access_logs.s3.bucket'
-      and buckets.name = attributes->>'Value'
+      attributes ->> 'Key' = 'access_logs.s3.bucket'
+      and buckets.name = attributes ->> 'Value'
 
-    -- S3 bucket I log to - edges
+    -- To S3 buckets (edge)
     union all
     select
       alb.arn as from_id,
       buckets.arn as to_id,
       null as id,
       'logs to' as title,
-      'uses' as category,
+      'ec2_application_load_balancer_to_s3_bucket' as category,
       jsonb_build_object(
-        'Name', buckets.name,
-        'ARN', buckets.arn,
         'Account ID', alb.account_id,
-        'Region', alb.region,
-        'Logs to', attributes->>'Value',
-        'Log Prefix', (select a->>'Value' from jsonb_array_elements(alb.load_balancer_attributes) as a where a->>'Key' = 'access_logs.s3.prefix' )
+        'Log Prefix', (
+          select
+            a ->> 'Value'
+          from
+            jsonb_array_elements(alb.load_balancer_attributes) as a
+          where
+            a ->> 'Key' = 'access_logs.s3.prefix'
+        )
       ) as properties
     from
       aws_s3_bucket buckets,
       alb,
       jsonb_array_elements(alb.load_balancer_attributes) attributes
     where
-      attributes->>'Key' = 'access_logs.s3.bucket'
-      and buckets.name = attributes->>'Value'
+      attributes ->> 'Key' = 'access_logs.s3.bucket'
+      and buckets.name = attributes ->> 'Value'
 
-    -- vpc - nodes
+    -- To VPCs (node)
     union all
     select
       null as from_id,
@@ -313,27 +509,25 @@ query "aws_alb_graph_relationships" {
     where
       alb.vpc_id = vpc.vpc_id
 
-    -- vpc - edges
+    -- To VPCs (edges)
     union all
     select
-      alb.arn as from_id,
+      sg.arn as from_id,
       vpc.vpc_id as to_id,
       null as id,
-      'resides in' as title,
-      'uses' as category,
+      'vpc' as title,
+      'ec2_application_load_balancer_to_vpc' as category,
       jsonb_build_object(
-        'VPC ID', vpc.vpc_id,
-        'Account ID', vpc.account_id,
-        'Region', vpc.region,
-        'CIDR Block', vpc.cidr_block
+        'Account ID', vpc.account_id
       ) as properties
     from
       aws_vpc vpc,
       alb
+    left join aws_vpc_security_group sg on sg.group_id in (select jsonb_array_elements_text(alb.security_groups))
     where
       alb.vpc_id = vpc.vpc_id
 
-    -- lb listener - nodes
+    -- To EC2 load balancer listeners (node)
     union all
     select
       null as from_id,
@@ -347,7 +541,7 @@ query "aws_alb_graph_relationships" {
         'Region', lblistener.region,
         'Protocol', lblistener.protocol,
         'Port', lblistener.port,
-        'SSL Policy', COALESCE(lblistener.ssl_policy,'None')
+        'SSL Policy', coalesce(lblistener.ssl_policy, 'None')
       ) as properties
     from
       aws_ec2_load_balancer_listener lblistener,
@@ -355,57 +549,27 @@ query "aws_alb_graph_relationships" {
     where
       alb.arn = lblistener.load_balancer_arn
 
-    -- lb listener - edges
-    union all
-    select
-      alb.arn as from_id,
-      lblistener.arn as to_id,
-      null as id,
-      'listens on' as title,
-      'uses' as category,
-      jsonb_build_object(
-        'ARN', lblistener.arn,
-        'Account ID', lblistener.account_id,
-        'Region', lblistener.region
-      ) as properties
-    from
-      aws_ec2_load_balancer_listener lblistener,
-      alb
-    where
-      alb.arn = lblistener.load_balancer_arn
-
-    -- lb listener port - nodes
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      (lblistener.arn || lblistener.port) as id,
-      ('Port ' || lblistener.port) as title,
-      'aws_ec2_load_balancer_listener_port' as category,
-      jsonb_build_object() as properties
-    from
-      aws_ec2_load_balancer_listener lblistener,
-      alb
-    where
-      alb.arn = lblistener.load_balancer_arn
-
-    -- lb listener port - edges
+    -- To EC2 load balancer listeners (edge)
     union all
     select
       lblistener.arn as from_id,
-      (lblistener.arn || lblistener.port) as to_id,
+      alb.arn as to_id,
       null as id,
-      'through port' as title,
-      'uses' as category,
-      jsonb_build_object() as properties
+      'listens with' as title,
+      'load_balancer_listener_to_ec2_application_load_balancer' as category,
+      jsonb_build_object(
+        'Account ID', lblistener.account_id
+      ) as properties
     from
       aws_ec2_load_balancer_listener lblistener,
       alb
     where
       alb.arn = lblistener.load_balancer_arn
 
-    order by category,from_id,to_id
-
+    order by
+      category,
+      from_id,
+      to_id;
   EOQ
 
   param "arn" {}
