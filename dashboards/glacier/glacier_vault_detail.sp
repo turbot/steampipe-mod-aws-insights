@@ -158,11 +158,11 @@ query "aws_glacier_vault_relationships_graph" {
       vault_arn as id,
       title,
       'aws_glacier_vault' as category,
-      jsonb_build_object( 
-        'Vault Name', vault_name, 
-        'Create Time', creation_date, 
-        'Account ID', account_id 
-      ) as properties 
+      jsonb_build_object(
+        'Vault Name', vault_name,
+        'Create Time', creation_date,
+        'Account ID', account_id
+      ) as properties
     from
       vault
 
@@ -174,16 +174,16 @@ query "aws_glacier_vault_relationships_graph" {
       topic.topic_arn as id,
       topic.title as title,
       'aws_sns_topic' as category,
-      jsonb_build_object( 
+      jsonb_build_object(
         'ARN', topic.topic_arn,
         'Account ID', topic.account_id,
         'Region', topic.region
-      ) as properties 
+      ) as properties
     from
       aws_sns_topic as topic,
-      vault as v 
+      vault as v
     where
-      v.vault_notification_config is not null 
+      v.vault_notification_config is not null
       and v.vault_notification_config ->> 'SNSTopic' = topic.topic_arn
 
     -- To SNS topic (edges)
@@ -195,16 +195,16 @@ query "aws_glacier_vault_relationships_graph" {
       'Logs to' as title,
       'uses' as category,
       jsonb_build_object(
-        'ARN', v.vault_arn, 
-        'Account ID', v.account_id, 
-        'Region', v.region, 
-        'Events', v.vault_notification_config ->> 'Events' 
-      ) as properties 
+        'ARN', v.vault_arn,
+        'Account ID', v.account_id,
+        'Region', v.region,
+        'Events', v.vault_notification_config ->> 'Events'
+      ) as properties
     from
       aws_sns_topic as topic,
-      vault as v 
+      vault as v
     where
-      v.vault_notification_config is not null 
+      v.vault_notification_config is not null
       and v.vault_notification_config ->> 'SNSTopic' = topic.topic_arn
 
     order by
@@ -220,7 +220,7 @@ query "aws_glacier_vault_overview" {
   sql = <<-EOQ
     select
       vault_name as "Name",
-      creation_date as "Cteated Date",
+      creation_date as "Created Date",
       title as "Title",
       region as "Region",
       account_id as "Account ID",
