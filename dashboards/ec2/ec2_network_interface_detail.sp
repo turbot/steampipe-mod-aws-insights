@@ -226,23 +226,22 @@ query "aws_ec2_eni_private_ip" {
 query "aws_ec2_eni_association_details" {
   sql = <<-EOQ
     select
-      pvt_ip_addrs ->> 'PrivateIpAddress' as "Private IP Address",
-      pvt_ip_addrs -> 'Association' ->> 'PublicIp' as "Public IP Address",
-      pvt_ip_addrs -> 'Association' ->> 'CarrierIp' as "Carrier IP",
-      pvt_ip_addrs -> 'Association' ->> 'CustomerOwnedIp' as "Customer Owned IP",
-      pvt_ip_addrs -> 'Association' ->> 'IpOwnerId' as "IP Owner ID",
-      pvt_ip_addrs -> 'Association' ->> 'AllocationId' as "Allocation ID",
-      pvt_ip_addrs -> 'Association' ->> 'AssociationId' as "Association ID",
+      eni.association_allocation_id "Allocation ID",
+      eni.association_public_ip as "Public IP Address",
+      eni.association_carrier_ip as "Carrier IP",
+      eni.association_customer_owned_ip as "Customer Owned IP",
+      eni.association_id as "Association ID",
+      eni.association_ip_owner_id as "IP Owner ID",
+      eni.association_public_dns_name as "Public DNS Name",
       eip_alloc.arn as "eip_alloc_arn"
     from
-      aws_ec2_network_interface eni,
-      jsonb_array_elements(eni.private_ip_addresses) as pvt_ip_addrs
+      aws_ec2_network_interface eni
     left join aws_vpc_eip eip_alloc on
-      eip_alloc.allocation_id = pvt_ip_addrs -> 'Association' ->> 'AllocationId'
-      and eip_alloc.association_id = pvt_ip_addrs -> 'Association' ->> 'AssociationId'
+      eip_alloc.allocation_id = eni.association_allocation_id
+      and eip_alloc.association_id = eni.association_id
     where
       eni.network_interface_id = $1
-      and pvt_ip_addrs ->> 'Association' is not null
+      and eni.association_allocation_id is not null;
   EOQ
 
   param "network_interface_id" {}
@@ -251,11 +250,9 @@ query "aws_ec2_eni_association_details" {
 query "aws_ec2_eni_overview" {
   sql = <<-EOQ
     select
-      network_interface_id as "ID",
       title as "Title",
       attachment_time as "Attachment Time",
       private_dns_name as "Private DNS Name",
-      association_public_dns_name as "Public DNS Name",
       mac_address as "MAC Address",
       availability_zone as "Availibility Zone",
       region as "Region",
@@ -463,11 +460,11 @@ query "aws_ec2_eni_relationships_graph" {
     -- To VPCs (edge)
     union all
     select
-      network_interface.network_interface_id as from_id,
+      sg ->> 'GroupId' as from_id,
       vpc.vpc_id as to_id,
       null as id,
       'vpc' as title,
-      'ec2_instance_to_vpc' as category,
+      'vpc_security_group_to_vpc' as category,
       jsonb_build_object(
         'ID', vpc.vpc_id,
         'Name', vpc.tags ->> 'Name',
@@ -478,6 +475,7 @@ query "aws_ec2_eni_relationships_graph" {
       ) as properties
     from
       network_interface
+      cross join jsonb_array_elements(network_interface.groups) as sg
       left join
         aws_vpc as vpc
         on network_interface.vpc_id = vpc.vpc_id
