@@ -244,6 +244,16 @@ graph "aws_graph_categories" {
     }
   }
 
+  category "aws_ec2_network_interface" {
+    href = "/aws_insights.dashboard.aws_ec2_network_interface_detail?input.network_interface_id={{.properties.'Interface ID' | @uri}}"
+    icon = local.aws_ec2_network_interface_icon
+    fold {
+      title     = "EC2 Network Interfaces"
+      icon      = local.aws_ec2_network_interface_icon
+      threshold = 3
+    }
+  }
+  
   category "aws_vpc" {
     href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.properties.'VPC ID' | @uri}}"
     fold {
@@ -411,15 +421,6 @@ graph "aws_graph_categories" {
     fold {
       title     = "CloudFormation Stacks"
       icon      = local.aws_cloudformation_stack_icon
-      threshold = 3
-    }
-  }
-
-  category "aws_ec2_network_interface" {
-    icon = local.aws_ec2_network_interface_icon
-    fold {
-      title     = "EC2 Network Interfaces"
-      icon      = local.aws_ec2_network_interface_icon
       threshold = 3
     }
   }

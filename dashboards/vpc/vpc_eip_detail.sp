@@ -100,6 +100,10 @@ dashboard "aws_vpc_eip_detail" {
         column "Instance ID" {
           href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.'Instance ARN' | @uri}}"
         }
+
+        column "Network Interface ID" {
+          href = "/aws_insights.dashboard.aws_ec2_network_interface_detail?input.network_interface_id={{.'Network Interface ID' | @uri}}"
+        }
       }
 
       table {
