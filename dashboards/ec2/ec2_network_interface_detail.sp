@@ -95,7 +95,7 @@ dashboard "aws_ec2_network_interface_detail" {
       width = 7
 
       table {
-        title = "IP Addresses and Associations"
+        title = "Associations"
         query = query.aws_ec2_eni_association_details
         args = {
           network_interface_id = self.input.network_interface_id.value
