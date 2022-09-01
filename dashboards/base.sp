@@ -234,6 +234,13 @@ graph "aws_graph_categories" {
     }
   }
 
+  category "aws_efs_mount_target" {
+    fold {
+      title     = "EFS Mount Target"
+      threshold = 3
+    }
+  }
+
   category "aws_ec2_instance" {
     href = "/aws_insights.dashboard.aws_ec2_instance_detail?input.instance_arn={{.properties.'ARN' | @uri}}"
     icon = local.aws_ec2_instance_icon
@@ -542,6 +549,34 @@ graph "aws_graph_categories" {
   category "aws_sfn_state_machine" {
     fold {
       title     = "Step Function State Machines"
+      threshold = 3
+    }
+  }
+
+  category "aws_ec2_launch_configuration" {
+    fold {
+      title     = "EC2 Launch Configuration"
+      threshold = 3
+    }
+  }
+
+  category "aws_dms_replication_instance" {
+    fold {
+      title     = "DMS Replication Instance"
+      threshold = 3
+    }
+  }
+
+  category "aws_dax_cluster" {
+    fold {
+      title     = "DAX Cluster"
+      threshold = 3
+    }
+  }
+
+  category "aws_sagemaker_notebook_instance" {
+    fold {
+      title     = "Sagemaker Notebook Instance"
       threshold = 3
     }
   }
