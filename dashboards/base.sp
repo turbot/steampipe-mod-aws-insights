@@ -253,7 +253,7 @@ graph "aws_graph_categories" {
       threshold = 3
     }
   }
-  
+
   category "aws_vpc" {
     href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.properties.'VPC ID' | @uri}}"
     fold {
@@ -396,6 +396,25 @@ graph "aws_graph_categories" {
     href = "/aws_insights.dashboard.api_gatewayv2_api_detail?input.api_id={{.properties.'ID' | @uri}}"
     fold {
       title     = "API Gatewayv2 APIs"
+      threshold = 3
+    }
+  }
+
+  category "aws_backup_plan" {
+    icon = local.aws_backup_plan_icon
+    fold {
+      title     = "Backup Plans"
+      icon      = local.aws_backup_plan_icon
+      threshold = 3
+    }
+  }
+
+  category "aws_backup_vault" {
+    href = "/aws_insights.dashboard.backup_vault_detail?input.backup_vault_arn={{.properties.'ARN' | @uri}}"
+    icon = local.aws_backup_vault_icon
+    fold {
+      title     = "Backup Vaults"
+      icon      = local.aws_backup_vault_icon
       threshold = 3
     }
   }

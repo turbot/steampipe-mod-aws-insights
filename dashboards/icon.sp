@@ -36,4 +36,6 @@ locals {
   aws_vpc_network_acl_icon               = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_network_acl_light.svg"))
   aws_vpc_route_table_icon               = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_router_light.svg"))
   aws_vpc_vpn_gateway_icon               = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/vpc_vpn_gateway_light.svg"))
+  aws_backup_plan_icon                   = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/backup_plan_light.svg"))
+  aws_backup_vault_icon                  = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/backup_vault_light.svg"))
 }
