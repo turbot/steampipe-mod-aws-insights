@@ -401,6 +401,7 @@ graph "aws_graph_categories" {
   }
 
   category "aws_backup_plan" {
+    href = "/aws_insights.dashboard.backup_plan_detail?input.backup_plan_arn={{.properties.'ARN' | @uri}}"
     icon = local.aws_backup_plan_icon
     fold {
       title     = "Backup Plans"
@@ -562,6 +563,13 @@ graph "aws_graph_categories" {
   category "aws_sfn_state_machine" {
     fold {
       title     = "Step Function State Machines"
+      threshold = 3
+    }
+  }
+
+  category "aws_backup_selection" {
+    fold {
+      title     = "Backup Selections"
       threshold = 3
     }
   }
