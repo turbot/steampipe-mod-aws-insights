@@ -66,6 +66,8 @@ graph "aws_graph_categories" {
   }
 
   category "aws_ecs_task_definition" {
+    href = "/aws_insights.dashboard.aws_ecs_task_definition_detail?input.task_definition_arn={{.properties.'ARN' | @uri}}"
+    icon = local.aws_ecs_task_definition_icon
     fold {
       title     = "ECS Tasks Definitions"
       threshold = 3
@@ -221,8 +223,18 @@ graph "aws_graph_categories" {
   }
 
   category "aws_ecr_repository" {
+    href = "aws_insights.dashboard.aws_ecr_repository_detail?input.ecr_repository_arn={{.properties.'ARN' | @uri}}"
+    icon = local.aws_ecr_repository_icon
     fold {
       title     = "ECR repositories"
+      threshold = 3
+    }
+  }
+  
+  category "aws_ecr_image" {
+    icon = local.aws_ecr_image_icon
+    fold {
+      title     = "ECR images"
       threshold = 3
     }
   }
