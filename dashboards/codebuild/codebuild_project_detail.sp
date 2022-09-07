@@ -401,13 +401,28 @@ query "aws_codebuild_project_relationships_graph" {
       null as from_id,
       null as to_id,
       cloudwatch.arn as id,
-      cloudwatch.title,
+      cloudwatch.title as title,
       'aws_cloudwatch_log_group' as category,
       jsonb_build_object(
         'ARN', cloudwatch.arn,
         'Account ID', cloudwatch.account_id,
         'Region', cloudwatch.region,
         'Retention days', cloudwatch.retention_in_days
+      ) as properties
+    from
+      cbproject
+      left join aws_cloudwatch_log_group cloudwatch on cloudwatch.name = logs_config -> 'CloudWatchLogs' ->> 'GroupName' 
+    
+    -- To CloudWatch log group (edge)
+    union all
+    select
+      cbproject.arn as from_id,
+      cloudwatch.arn as to_id,
+      null as id,
+      'logs to',
+      'codebuild_project_to_cloudwatch_log_group' as category,
+      jsonb_build_object(
+        'Account ID', cloudwatch.account_id
       ) as properties
     from
       cbproject
