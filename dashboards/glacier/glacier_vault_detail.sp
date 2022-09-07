@@ -1,4 +1,4 @@
-dashboard "aws_glacier_vault_detail" {
+dashboard "glacier_vault_detail" {
 
   title         = "AWS Glacier Vault Detail"
   documentation = file("./dashboards/glacier/docs/glacier_vault_detail.md")

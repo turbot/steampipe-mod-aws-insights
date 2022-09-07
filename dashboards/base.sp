@@ -50,28 +50,6 @@ graph "aws_graph_categories" {
     }
   }
 
-  category "aws_ecs_container_instance" {
-    fold {
-      title     = "ECS Container Instances"
-      threshold = 3
-    }
-  }
-
-  category "aws_ecs_task" {
-    icon = local.aws_ecs_task_icon
-    fold {
-      title     = "ECS Tasks"
-      threshold = 3
-    }
-  }
-
-  category "aws_ecs_task_definition" {
-    fold {
-      title     = "ECS Tasks Definitions"
-      threshold = 3
-    }
-  }
-
   category "aws_ecs_service" {
     href = "/aws_insights.dashboard.aws_ecs_service_detail?input.service_arn={{.properties.'ARN' | @uri}}"
     icon = local.aws_ecs_service_icon
@@ -420,6 +398,38 @@ graph "aws_graph_categories" {
     }
   }
 
+  category "aws_glacier_vault" {
+    href = "/aws_insights.dashboard.glacier_vault_detail?input.vault_arn={{.properties.'ARN' | @uri}}"
+    icon = local.aws_glacier_vault_icon
+    fold {
+      title     = "Glacier Vaults"
+      icon      = local.aws_glacier_vault_icon
+      threshold = 3
+    }
+  }
+
+  category "aws_codepipeline_pipeline" {
+    href = "/aws_insights.dashboard.codepipeline_pipeline_detail?input.pipeline_arn={{.properties.'ARN' | @uri}}"
+    fold {
+      title     = "CodePipeline Pipelines"
+      threshold = 3
+    }
+  }
+
+  category "aws_codecommit_repository" {
+    fold {
+      title     = "CodeCommit Repositories"
+      threshold = 3
+    }
+  }
+
+  category "aws_codebuild_project" {
+    fold {
+      title     = "CodeBuild Projects"
+      threshold = 3
+    }
+  }
+
   category "aws_kinesisanalyticsv2_application" {
     fold {
       title     = "Kinesis Analytics Applications"
@@ -536,16 +546,6 @@ graph "aws_graph_categories" {
     }
   }
 
-  category "aws_glacier_vault" {
-    href = "/aws_insights.dashboard.aws_glacier_vault_detail?input.vault_arn={{.properties.'ARN' | @uri}}"
-    icon = local.aws_glacier_vault_icon
-    fold {
-      title     = "Glacier Vaults"
-      icon      = local.aws_glacier_vault_icon
-      threshold = 3
-    }
-  }
-
   category "aws_appconfig_application" {
     fold {
       title     = "AppConfig Applications"
@@ -570,6 +570,36 @@ graph "aws_graph_categories" {
   category "aws_backup_selection" {
     fold {
       title     = "Backup Selections"
+      threshold = 3
+    }
+  }
+
+  category "aws_ecs_container_instance" {
+    fold {
+      title     = "ECS Container Instances"
+      threshold = 3
+    }
+  }
+
+  category "aws_ecs_task" {
+    icon = local.aws_ecs_task_icon
+    fold {
+      title     = "ECS Tasks"
+      icon      = local.aws_ecs_task_icon
+      threshold = 3
+    }
+  }
+
+  category "aws_ecs_task_definition" {
+    fold {
+      title     = "ECS Tasks Definitions"
+      threshold = 3
+    }
+  }
+
+  category "aws_codedeploy_app" {
+    fold {
+      title     = "CodeDeploy Applications"
       threshold = 3
     }
   }
