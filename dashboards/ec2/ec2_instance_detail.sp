@@ -399,7 +399,7 @@ query "aws_ec2_instance_relationships_graph" {
       sg ->> 'GroupId' as title,
       'aws_vpc_security_group' as category,
       jsonb_build_object(
-        'ID', sg ->> 'GroupId',
+        'Group ID', sg ->> 'GroupId',
         'Name', sg ->> 'GroupName',
         'Account ID', account_id,
         'Region', region

@@ -38,6 +38,22 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
       }
     }
 
+    card {
+      width = 2
+      query = query.aws_clb_az_zone
+      args = {
+        arn = self.input.clb.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.aws_clb_cross_zone_enabled
+      args = {
+        arn = self.input.clb.value
+      }
+    }
+
   }
 
   container {
@@ -45,7 +61,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
       type  = "graph"
       base  = graph.aws_graph_categories
       query = query.aws_ec2_classic_load_balancer_relationships_graph
-      args  = {
+      args = {
         arn = self.input.clb.value
       }
       category "aws_ec2_classic_load_balancer" {
@@ -59,7 +75,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
     table {
       title = "Overview"
       type  = "line"
-      width = 4
+      width = 3
       query = query.aws_ec2_clb_overview
       args = {
         arn = self.input.clb.value
@@ -69,17 +85,8 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
 
     table {
       title = "Tags"
-      width = 4
+      width = 3
       query = query.aws_ec2_clb_tags
-      args = {
-        arn = self.input.clb.value
-      }
-    }
-
-    table {
-      title = "Security Groups"
-      width = 4
-      query = query.aws_ec2_clb_security_groups
       args = {
         arn = self.input.clb.value
       }
@@ -91,10 +98,12 @@ query "aws_ec2_clb_overview" {
   sql = <<-EOQ
     select
       title as "Title",
+      created_time as "Created Time",
       dns_name as "DNS Name",
+      canonical_hosted_zone_name_id as "Route 53 Hosted Zone ID",
       account_id as "Account ID",
       region as "Region",
-      partition as "Partition"
+      arn as "ARN"
     from
       aws_ec2_classic_load_balancer
     where
@@ -121,20 +130,6 @@ query "aws_ec2_clb_tags" {
   param "arn" {}
 }
 
-query "aws_ec2_clb_security_groups" {
-  sql = <<-EOQ
-    select
-      sg as "Groups"
-    from
-      aws_ec2_classic_load_balancer,
-      jsonb_array_elements_text(aws_ec2_classic_load_balancer.security_groups) as sg
-    where
-      aws_ec2_classic_load_balancer.arn = $1;
-    EOQ
-
-  param "arn" {}
-}
-
 query "aws_clb_logging_enabled" {
   sql = <<-EOQ
     select
@@ -150,12 +145,44 @@ query "aws_clb_logging_enabled" {
   param "arn" {}
 }
 
+query "aws_clb_az_zone" {
+  sql = <<-EOQ
+    select
+      'Availibility Zones' as label,
+      count(az ->> 'ZoneName') as value,
+      case when count(az ->> 'ZoneName') > 1 then 'ok' else 'alert' end as type
+    from
+      aws_ec2_classic_load_balancer
+      cross join jsonb_array_elements(availability_zones) as az
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_clb_cross_zone_enabled" {
+  sql = <<-EOQ
+    select
+      'Cross Zone' as label,
+      case when cross_zone_load_balancing_enabled then 'Enabled' else 'Disabled' end as value,
+      case when cross_zone_load_balancing_enabled then 'ok' else 'alert' end as type
+    from
+      aws_ec2_classic_load_balancer
+      cross join jsonb_array_elements(availability_zones) as az
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
 query "aws_clb_instances" {
   sql = <<-EOQ
     select
       'Instances' as label,
       count(i) as value,
-      case when count(i) > 1 then 'ok' else 'alert' end as type
+      case when count(i) >= 1 then 'ok' else 'alert' end as type
     from
       aws_ec2_classic_load_balancer
       cross join jsonb_array_elements(instances) as i
@@ -186,16 +213,16 @@ query "aws_ec2_classic_load_balancer_relationships_graph" {
     with clb as
     (
       select
-        backend_server_descriptions,
-        scheme,
-        arn,
-        name,
-        account_id,
-        region,
-        title,
-        access_log_s3_bucket_name,
         access_log_s3_bucket_prefix,
+        access_log_s3_bucket_name,
+        account_id,
+        arn,
+        instances,
+        name,
+        region,
+        scheme,
         security_groups,
+        title,
         vpc_id
       from
         aws_ec2_classic_load_balancer
@@ -219,6 +246,84 @@ query "aws_ec2_classic_load_balancer_relationships_graph" {
       ) as properties
     from
       clb
+
+    -- To EC2 Instances (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      instances.arn as id,
+      instances.title as title,
+      'aws_ec2_instance' as category,
+      jsonb_build_object(
+        'Instance ID', instances.instance_id,
+        'ARN', instances.arn,
+        'Account ID', instances.account_id,
+        'Region', instances.region
+      ) as properties
+    from
+      clb
+      cross join jsonb_array_elements(clb.instances) as i
+    left join
+      aws_ec2_instance instances
+      on instances.instance_id = i ->> 'InstanceId'
+
+    -- To EC2 Instances (edge)
+    union all
+    select
+      clb.arn as from_id,
+      instances.arn as to_id,
+      null as id,
+      'ec2 instance' as title,
+      'ec2_classic_load_balancer_to_ec2_instance' as category,
+      jsonb_build_object(
+        'Account ID', instances.account_id
+      ) as properties
+    from
+      clb
+      cross join jsonb_array_elements(clb.instances) as i
+    left join
+      aws_ec2_instance instances
+      on instances.instance_id = i ->> 'InstanceId'
+
+    -- To S3 buckets (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      buckets.arn as id,
+      buckets.title as title,
+      'aws_s3_bucket' as category,
+      jsonb_build_object(
+        'Name', buckets.name,
+        'ARN', buckets.arn,
+        'Account ID', buckets.account_id,
+        'Region', buckets.region,
+        'Logs to', clb.access_log_s3_bucket_name
+      ) as properties
+    from
+      aws_s3_bucket buckets,
+      clb
+    where
+      buckets.name = clb.access_log_s3_bucket_name
+
+    -- To S3 buckets (edge)
+    union all
+    select
+      clb.arn as from_id,
+      buckets.arn as to_id,
+      null as id,
+      'logs to' as title,
+      'ec2_classic_load_balancer_to_s3_bucket' as category,
+      jsonb_build_object(
+        'Account ID', buckets.account_id,
+        'Log Prefix', clb.access_log_s3_bucket_prefix
+      ) as properties
+    from
+      aws_s3_bucket buckets,
+      clb
+    where
+      buckets.name = clb.access_log_s3_bucket_name
 
     -- To VPC security groups (node)
     union all
@@ -267,143 +372,6 @@ query "aws_ec2_classic_load_balancer_relationships_graph" {
           jsonb_array_elements_text(clb.security_groups)
       )
 
-    -- To EC2 target groups (node)
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      tg.target_group_arn as id,
-      tg.title as title,
-      'aws_ec2_target_group' as category,
-      jsonb_build_object(
-        'Group Name', tg.target_group_name,
-        'ARN', tg.target_group_arn,
-        'Account ID', tg.account_id,
-        'Region', tg.region
-      ) as properties
-    from
-      aws_ec2_target_group tg,
-      clb
-    where
-      clb.arn in
-      (
-        select
-          jsonb_array_elements_text(tg.load_balancer_arns)
-      )
-
-    -- To EC2 target groups (edge)
-    union all
-    select
-      clb.arn as from_id,
-      tg.target_group_arn as to_id,
-      null as id,
-      'target group' as title,
-      'ec2_classic_load_balancer_to_ec2_target_group' as category,
-      jsonb_build_object(
-        'Account ID', tg.account_id
-      ) as properties
-    from
-      aws_ec2_target_group tg,
-      clb
-    where
-      clb.arn in
-      (
-        select
-          jsonb_array_elements_text(tg.load_balancer_arns)
-      )
-
-    -- To EC2 target group instances (node)
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      instance.instance_id as id,
-      instance.title as title,
-      'aws_ec2_instance' as category,
-      jsonb_build_object(
-        'Instance ID', instance.instance_id,
-        'ARN', instance.arn,
-        'Account ID', instance.account_id,
-        'Region', instance.region
-      ) as properties
-    from
-      aws_ec2_target_group tg,
-      aws_ec2_instance instance,
-      jsonb_array_elements(tg.target_health_descriptions) thd,
-      clb
-    where
-      instance.instance_id = thd -> 'Target' ->> 'Id'
-      and clb.arn in
-      (
-        select
-          jsonb_array_elements_text(tg.load_balancer_arns)
-      )
-
-    -- To EC2 target group instances (edge)
-    union all
-    select
-      tg.target_group_arn as from_id,
-      instance.instance_id as to_id,
-      null as id,
-      'ec2 instance' as title,
-      'ec2_target_group_to_ec2_instance' as category,
-      jsonb_build_object(
-        'Account ID', instance.account_id,
-        'Health Check Port', thd['HealthCheckPort'],
-        'Health Check State', thd['TargetHealth']['State']
-      ) as properties
-    from
-      aws_ec2_target_group tg,
-      aws_ec2_instance instance,
-      jsonb_array_elements(tg.target_health_descriptions) thd,
-      clb
-    where
-      instance.instance_id = thd -> 'Target' ->> 'Id'
-      and clb.arn in
-      (
-        select
-          jsonb_array_elements_text(tg.load_balancer_arns)
-      )
-
-    -- To S3 buckets (node)
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      buckets.arn as id,
-      buckets.title as title,
-      'aws_s3_bucket' as category,
-      jsonb_build_object(
-        'Name', buckets.name,
-        'ARN', buckets.arn,
-        'Account ID', buckets.account_id,
-        'Region', buckets.region,
-        'Logs to', clb.access_log_s3_bucket_name
-      ) as properties
-    from
-      aws_s3_bucket buckets,
-      clb
-    where
-      buckets.name = clb.access_log_s3_bucket_name
-
-    -- To S3 buckets (edge)
-    union all
-    select
-      clb.arn as from_id,
-      buckets.arn as to_id,
-      null as id,
-      'logs to' as title,
-      'ec2_classic_load_balancer_to_s3_bucket' as category,
-      jsonb_build_object(
-        'Account ID', buckets.account_id,
-        'Log Prefix', clb.access_log_s3_bucket_prefix
-      ) as properties
-    from
-      aws_s3_bucket buckets,
-      clb
-    where
-      buckets.name = clb.access_log_s3_bucket_name
-
     -- To VPCs (node)
     union all
     select
@@ -427,7 +395,7 @@ query "aws_ec2_classic_load_balancer_relationships_graph" {
     -- To VPCs (edges)
     union all
     select
-      clb.arn as from_id,
+      sg.arn as from_id,
       vpc.vpc_id as to_id,
       null as id,
       'vpc' as title,
@@ -438,6 +406,7 @@ query "aws_ec2_classic_load_balancer_relationships_graph" {
     from
       aws_vpc vpc,
       clb
+    left join aws_vpc_security_group sg on sg.group_id in (select jsonb_array_elements_text(clb.security_groups))
     where
       clb.vpc_id = vpc.vpc_id
 

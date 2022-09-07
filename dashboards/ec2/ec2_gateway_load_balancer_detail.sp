@@ -23,22 +23,6 @@ dashboard "aws_ec2_gateway_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_glb_scheme
-      args = {
-        arn = self.input.glb.value
-      }
-    }
-
-    card {
-      width = 2
-      query = query.aws_glb_ip_type
-      args = {
-        arn = self.input.glb.value
-      }
-    }
-
-    card {
-      width = 2
       query = query.aws_glb_az_zone
       args = {
         arn = self.input.glb.value
@@ -94,17 +78,8 @@ dashboard "aws_ec2_gateway_load_balancer_detail" {
 
     table {
       title = "Attributes"
-      width = 4
+      width = 6
       query = query.aws_ec2_glb_attributes
-      args = {
-        arn = self.input.glb.value
-      }
-    }
-
-    table {
-      title = "Security Groups"
-      width = 2
-      query = query.aws_ec2_glb_security_groups
       args = {
         arn = self.input.glb.value
       }
@@ -117,11 +92,12 @@ query "aws_ec2_glb_overview" {
   sql = <<-EOQ
     select
       title as "Title",
+      created_time as "Created Time",
       dns_name as "DNS Name",
-      canonical_hosted_zone_id as "Route 53 hosted zone ID",
+      canonical_hosted_zone_id as "Route 53 Hosted Zone ID",
       account_id as "Account ID",
       region as "Region",
-      partition as "Partition"
+      arn as "ARN"
     from
       aws_ec2_gateway_load_balancer
     where
@@ -162,34 +138,6 @@ query "aws_ec2_glb_attributes" {
     order by
       lb ->> 'Key';
     EOQ
-
-  param "arn" {}
-}
-
-query "aws_ec2_glb_security_groups" {
-  sql = <<-EOQ
-    select
-      sg as "Groups"
-    from
-      aws_ec2_gateway_load_balancer,
-      jsonb_array_elements_text(aws_ec2_gateway_load_balancer.security_groups) as sg
-    where
-      aws_ec2_gateway_load_balancer.arn = $1;
-    EOQ
-
-  param "arn" {}
-}
-
-query "aws_glb_ip_type" {
-  sql = <<-EOQ
-    select
-      'IP Address type' as label,
-      case when ip_address_type = 'ipv4' then 'IPv4' else 'IPv6' end as value
-    from
-      aws_ec2_gateway_load_balancer
-    where
-      aws_ec2_gateway_load_balancer.arn = $1;
-  EOQ
 
   param "arn" {}
 }
@@ -258,21 +206,6 @@ query "aws_glb_state" {
   param "arn" {}
 }
 
-query "aws_glb_scheme" {
-  sql = <<-EOQ
-    select
-      'Scheme' as label,
-      initcap(scheme) as value
-    from
-      aws_ec2_gateway_load_balancer
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-
 query "aws_ec2_gateway_load_balancer_relationships_graph" {
   sql = <<-EOQ
     with glb as
@@ -325,14 +258,10 @@ query "aws_ec2_gateway_load_balancer_relationships_graph" {
         'VPC ID', sg.vpc_id
       ) as properties
     from
-      aws_vpc_security_group sg,
       glb
-    where
-      sg.group_id in
-      (
-        select
-          jsonb_array_elements_text(glb.security_groups)
-      )
+    left join 
+      aws_vpc_security_group sg 
+      on sg.group_id in (select jsonb_array_elements_text(glb.security_groups))
 
     -- To VPC security groups (edge)
     union all
@@ -346,14 +275,10 @@ query "aws_ec2_gateway_load_balancer_relationships_graph" {
         'Account ID', sg.account_id
       ) as properties
     from
-      aws_vpc_security_group sg,
       glb
-    where
-      sg.group_id in
-      (
-        select
-          jsonb_array_elements_text(glb.security_groups)
-      )
+    left join 
+      aws_vpc_security_group sg 
+      on sg.group_id in (select jsonb_array_elements_text(glb.security_groups))
 
     -- To target groups (node)
     union all
@@ -518,10 +443,9 @@ query "aws_ec2_gateway_load_balancer_relationships_graph" {
         'CIDR Block', vpc.cidr_block
       ) as properties
     from
-      aws_vpc vpc,
       glb
-    where
-      glb.vpc_id = vpc.vpc_id
+    left join aws_vpc vpc 
+    on glb.vpc_id = vpc.vpc_id
 
     -- VPCs (edge)
     union all
@@ -535,10 +459,9 @@ query "aws_ec2_gateway_load_balancer_relationships_graph" {
         'Account ID', vpc.account_id
       ) as properties
     from
-      aws_vpc vpc,
       glb
-    where
-      glb.vpc_id = vpc.vpc_id
+    left join aws_vpc vpc 
+    on glb.vpc_id = vpc.vpc_id
 
     -- To load balancer listeners (node)
     union all
@@ -557,10 +480,9 @@ query "aws_ec2_gateway_load_balancer_relationships_graph" {
         'SSL Policy', coalesce(lblistener.ssl_policy, 'None')
       ) as properties
     from
-      aws_ec2_load_balancer_listener lblistener,
       glb
-    where
-      glb.arn = lblistener.load_balancer_arn
+    left join aws_ec2_load_balancer_listener lblistener
+    on glb.arn = lblistener.load_balancer_arn
 
     -- To load balancer listeners (edge)
     union all
@@ -574,10 +496,9 @@ query "aws_ec2_gateway_load_balancer_relationships_graph" {
         'Account ID', lblistener.account_id
       ) as properties
     from
-      aws_ec2_load_balancer_listener lblistener,
       glb
-    where
-      glb.arn = lblistener.load_balancer_arn
+    left join aws_ec2_load_balancer_listener lblistener
+    on glb.arn = lblistener.load_balancer_arn
 
     order by
       category,

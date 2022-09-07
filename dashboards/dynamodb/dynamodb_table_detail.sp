@@ -314,7 +314,7 @@ query "aws_dynamodb_table_relationships_graph" {
         'ARN', arn,
         'Key Manager', key_manager,
         'Creation Date', creation_date,
-        'Enabled', enabled,
+        'Enabled', enabled::text,
         'Account ID', account_id
       ) as properties
     from

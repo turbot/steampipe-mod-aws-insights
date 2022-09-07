@@ -102,17 +102,8 @@ dashboard "aws_ec2_application_load_balancer_detail" {
 
     table {
       title = "Attributes"
-      width = 4
+      width = 6
       query = query.aws_ec2_alb_attributes
-      args = {
-        arn = self.input.alb.value
-      }
-    }
-
-    table {
-      title = "Security Groups"
-      width = 2
-      query = query.aws_ec2_alb_security_groups
       args = {
         arn = self.input.alb.value
       }
@@ -125,11 +116,12 @@ query "aws_ec2_alb_overview" {
   sql = <<-EOQ
     select
       title as "Title",
+      created_time as "Created Time",
       dns_name as "DNS Name",
       canonical_hosted_zone_id as "Route 53 hosted zone ID",
       account_id as "Account ID",
       region as "Region",
-      partition as "Partition"
+      arn as "ARN"
     from
       aws_ec2_application_load_balancer
     where
@@ -174,25 +166,11 @@ query "aws_ec2_alb_attributes" {
   param "arn" {}
 }
 
-query "aws_ec2_alb_security_groups" {
-  sql = <<-EOQ
-    select
-      sg as "Groups"
-    from
-      aws_ec2_application_load_balancer,
-      jsonb_array_elements_text(aws_ec2_application_load_balancer.security_groups) as sg
-    where
-      aws_ec2_application_load_balancer.arn = $1;
-    EOQ
-
-  param "arn" {}
-}
-
 query "aws_alb_ip_type" {
   sql = <<-EOQ
     select
-      'IP Address type' as label,
-      case when ip_address_type = 'ipv4' then 'IPv4' else 'IPv6' end as value
+      'IP Address Type' as label,
+      case when ip_address_type = 'ipv4' then 'IPv4' else initcap(ip_address_type) end as value
     from
       aws_ec2_application_load_balancer
     where
@@ -534,7 +512,7 @@ query "aws_ec2_application_load_balancer_relationships_graph" {
     -- To VPCs (edges)
     union all
     select
-      alb.arn as from_id,
+      sg.arn as from_id,
       vpc.vpc_id as to_id,
       null as id,
       'vpc' as title,
@@ -545,6 +523,7 @@ query "aws_ec2_application_load_balancer_relationships_graph" {
     from
       aws_vpc vpc,
       alb
+    left join aws_vpc_security_group sg on sg.group_id in (select jsonb_array_elements_text(alb.security_groups))
     where
       alb.vpc_id = vpc.vpc_id
 
