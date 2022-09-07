@@ -455,7 +455,7 @@ query "aws_vpc_security_group_assoc" {
         null as link
       from
         aws_rds_db_cluster,
-        jsonb_array_elements_text(vpc_security_groups) as sg
+        jsonb_array_elements(vpc_security_groups) as sg
       where
         sg ->> 'SecurityGroupId' = $1
 
@@ -467,7 +467,7 @@ query "aws_vpc_security_group_assoc" {
       '${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn=' || arn as link
       from
         aws_rds_db_instance,
-        jsonb_array_elements_text(vpc_security_groups) as sg
+        jsonb_array_elements(vpc_security_groups) as sg
       where
         sg ->> 'VpcSecurityGroupId' = $1
 
