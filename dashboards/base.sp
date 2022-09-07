@@ -236,7 +236,7 @@ graph "aws_graph_categories" {
 
   category "aws_efs_mount_target" {
     fold {
-      title     = "EFS Mount Target"
+      title     = "EFS Mount Targets"
       threshold = 3
     }
   }
@@ -576,28 +576,28 @@ graph "aws_graph_categories" {
 
   category "aws_ec2_launch_configuration" {
     fold {
-      title     = "EC2 Launch Configuration"
+      title     = "EC2 Launch Configurations"
       threshold = 3
     }
   }
 
   category "aws_dms_replication_instance" {
     fold {
-      title     = "DMS Replication Instance"
+      title     = "DMS Replication Instances"
       threshold = 3
     }
   }
 
   category "aws_dax_cluster" {
     fold {
-      title     = "DAX Cluster"
+      title     = "DAX Clusters"
       threshold = 3
     }
   }
 
   category "aws_sagemaker_notebook_instance" {
     fold {
-      title     = "Sagemaker Notebook Instance"
+      title     = "Sagemaker Notebook Instances"
       threshold = 3
     }
   }
