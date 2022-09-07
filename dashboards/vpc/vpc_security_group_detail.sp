@@ -457,7 +457,7 @@ query "aws_vpc_security_group_assoc" {
         aws_rds_db_cluster,
         jsonb_array_elements_text(vpc_security_groups) as sg
       where
-        sg = $1
+        sg ->> 'SecurityGroupId' = $1
 
     -- attached aws_rds_db_instance
     union all select
@@ -469,7 +469,7 @@ query "aws_vpc_security_group_assoc" {
         aws_rds_db_instance,
         jsonb_array_elements_text(vpc_security_groups) as sg
       where
-        sg = $1
+        sg ->> 'VpcSecurityGroupId' = $1
 
 
     -- attached aws_redshift_cluster
