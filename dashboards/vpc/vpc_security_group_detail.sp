@@ -1900,6 +1900,47 @@ query "aws_vpc_security_group_relationships_graph" {
       join vpc_security_group vsg
         on vsg.group_id = sg
 
+    -- From DocDB cluster (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      rc.arn as id,
+      rc.title as title,
+      'aws_docdb_cluster' as category,
+      jsonb_build_object(
+        'ID', rc.db_cluster_identifier,
+        'Availability Zone', rc.availability_zones,
+        'Create Time', rc.cluster_create_time,
+        'Encrypted', rc.storage_encrypted,
+        'Account ID', rc.account_id,
+        'Region', rc.region
+      ) as properties
+    from
+      aws_docdb_cluster as rc,
+      jsonb_array_elements(rc.vpc_security_groups) as sg
+      join vpc_security_group vsg
+        on vsg.group_id = sg ->> 'VpcSecurityGroupId'
+
+    -- From DocDB cluster (edge)
+    union all
+    select
+      rc.arn as from_id,
+      vsg.arn as to_id,
+      null as id,
+      'docdb cluster' as title,
+      'docdb_cluster_to_vpc_security_group' as category,
+      jsonb_build_object(
+        'ID', rc.db_cluster_identifier,
+        'Account ID', rc.account_id,
+        'Region', rc.region
+      ) as properties
+    from
+      aws_docdb_cluster as rc,
+      jsonb_array_elements(rc.vpc_security_groups) as sg
+      join vpc_security_group vsg
+        on vsg.group_id = sg ->> 'VpcSecurityGroupId'
+
     order by
       category,
       from_id,
