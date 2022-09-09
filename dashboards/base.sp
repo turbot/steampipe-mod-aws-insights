@@ -457,6 +457,21 @@ graph "aws_graph_categories" {
     }
   }
 
+  category "aws_dax_cluster" {
+    href = "/aws_insights.dashboard.dax_cluster_detail?input.dax_cluster_arn={{.properties.'ARN' | @uri}}"
+    fold {
+      title     = "DAX Clusters"
+      threshold = 3
+    }
+  }
+
+  category "aws_dax_subnet_group" {
+    fold {
+      title     = "DAX Subnet Groups"
+      threshold = 3
+    }
+  }
+
   category "aws_codecommit_repository" {
     fold {
       title     = "CodeCommit Repositories"
@@ -618,13 +633,6 @@ graph "aws_graph_categories" {
   category "aws_dms_replication_instance" {
     fold {
       title     = "DMS Replication Instances"
-      threshold = 3
-    }
-  }
-
-  category "aws_dax_cluster" {
-    fold {
-      title     = "DAX Clusters"
       threshold = 3
     }
   }

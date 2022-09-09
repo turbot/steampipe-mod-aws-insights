@@ -1225,7 +1225,7 @@ query "aws_vpc_security_group_relationships_graph" {
       title as title,
       'aws_vpc_security_group' as category,
       jsonb_build_object(
-        'Security Group ID', group_id,
+        'Group ID', group_id,
         'Description', description,
         'ARN', arn,
         'Account ID', account_id,
@@ -1549,7 +1549,7 @@ query "aws_vpc_security_group_relationships_graph" {
         'DNS Name', elb.dns_name,
         'Created Time', elb.created_time,
         'Account ID', elb.account_id,
-        'Region', elb.region 
+        'Region', elb.region
       ) as properties
     from
       aws_ec2_classic_load_balancer elb,
@@ -1568,7 +1568,7 @@ query "aws_vpc_security_group_relationships_graph" {
       jsonb_build_object(
         'ARN', elb.arn,
         'Account ID', elb.account_id,
-        'Region', elb.region 
+        'Region', elb.region
       ) as properties
     from
       aws_ec2_classic_load_balancer elb,
