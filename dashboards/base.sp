@@ -651,28 +651,28 @@ graph "aws_graph_categories" {
     }
   }
 
-  category "aws_ecs_container_instance" {
-    fold {
-      title     = "ECS Container Instances"
-      threshold = 3
-    }
-  }
+  # category "aws_ecs_container_instance" {
+  #   fold {
+  #     title     = "ECS Container Instances"
+  #     threshold = 3
+  #   }
+  # }
 
-  category "aws_ecs_task" {
-    icon = local.aws_ecs_task_icon
-    fold {
-      title     = "ECS Tasks"
-      icon      = local.aws_ecs_task_icon
-      threshold = 3
-    }
-  }
+  # category "aws_ecs_task" {
+  #   icon = local.aws_ecs_task_icon
+  #   fold {
+  #     title     = "ECS Tasks"
+  #     icon      = local.aws_ecs_task_icon
+  #     threshold = 3
+  #   }
+  # }
 
-  category "aws_ecs_task_definition" {
-    fold {
-      title     = "ECS Tasks Definitions"
-      threshold = 3
-    }
-  }
+  # category "aws_ecs_task_definition" {
+  #   fold {
+  #     title     = "ECS Tasks Definitions"
+  #     threshold = 3
+  #   }
+  # }
 
   category "aws_codedeploy_app" {
     fold {
