@@ -222,6 +222,20 @@ graph "aws_graph_categories" {
     }
   }
 
+  category "aws_ec2_autoscaling_group" {
+    fold {
+      title     = "EC2 Autoscaling Groups"
+      threshold = 3
+    }
+  }
+
+  category "aws_ec2_target_group" {
+    fold {
+      title     = "EC2 Autoscaling Groups"
+      threshold = 3
+    }
+  }
+
   category "aws_ecr_repository" {
     href = "aws_insights.dashboard.aws_ecr_repository_detail?input.ecr_repository_arn={{.properties.'ARN' | @uri}}"
     icon = local.aws_ecr_repository_icon
@@ -331,6 +345,13 @@ graph "aws_graph_categories" {
     href = "/aws_insights.dashboard.aws_iam_group_detail?input.group_arn={{.properties.'ARN' | @uri}}"
     fold {
       title     = "IAM Groups"
+      threshold = 3
+    }
+  }
+
+  category "aws_iam_profile" {
+    fold {
+      title     = "IAM Profiles"
       threshold = 3
     }
   }
