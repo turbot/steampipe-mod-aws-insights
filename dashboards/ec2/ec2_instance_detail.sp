@@ -295,11 +295,8 @@ node "aws_ec2_instance_node" {
 
   sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       instance_id as id,
       instance_id as title,
-      'aws_ec2_instance' as category,
       jsonb_build_object(
         'Name', tags ->> 'Name',
         'Instance ID', instance_id,
@@ -854,7 +851,6 @@ node "aws_ec2_instance_to_ec2_target_group_node" {
     select
       target.target_group_arn as id,
       target.target_group_name as title,
-      'aws_ec2_target_group' as category,
       jsonb_build_object(
         'Name', target.target_group_name,
         'ARN', target.target_group_arn,
