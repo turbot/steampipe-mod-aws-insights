@@ -52,17 +52,25 @@ dashboard "aws_ec2_ami_detail" {
   container {
 
     graph {
-      type  = "graph"
-      base  = graph.aws_graph_categories
-      query = query.aws_ec2_ami_relationships_graph
+      type      = "graph"
+      direction = "TD"
+
+
+      nodes = [
+        node.aws_ec2_ami_node,
+        node.aws_ec2_ami_to_ec2_instance_node,
+        node.aws_ec2_ami_from_ebs_snapshot_node
+      ]
+
+      edges = [
+        edge.aws_ec2_ami_to_ec2_instance_edge,
+        edge.aws_ec2_ami_from_ebs_snapshot_edge
+      ]
+
       args = {
         image_id = self.input.ami.value
       }
-      category "aws_ec2_ami" {
-        icon = local.aws_ec2_ami_icon
-      }
     }
-
   }
 
   container {
@@ -291,40 +299,33 @@ query "aws_ec2_ami_tags" {
   param "image_id" {}
 }
 
-query "aws_ec2_ami_relationships_graph" {
-  sql = <<-EOQ
-    with ami as
-    (
-      select
-        *
-      from
-        aws_ec2_ami
-      where
-        image_id = $1
-    )
+node "aws_ec2_ami_node" {
+  category = category.aws_ec2_ami
 
-    -- Resource (node)
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       image_id as id,
       name as title,
-      'aws_ec2_ami' as category,
       jsonb_build_object(
         'Account ID', account_id,
         'Region', region
       ) as properties
     from
-      ami
+      aws_ec2_ami
+    where
+      image_id = $1;
+  EOQ
 
-    -- To EC2 Instance (node)
-    union all
+  param "image_id" {}
+}
+
+node "aws_ec2_ami_to_ec2_instance_node" {
+  category = category.aws_ec2_instance
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       instances.instance_id as id,
       instances.tags->>'Name' as title,
-      'aws_ec2_instance' as category,
       jsonb_build_object(
         'Name', instances.tags ->> 'Name',
         'Instance ID', instances.instance_id,
@@ -333,19 +334,21 @@ query "aws_ec2_ami_relationships_graph" {
         'Region', instances.region
       ) as properties
     from
-      aws_ec2_instance as instances,
-      ami
+      aws_ec2_instance as instances
     where
-      instances.image_id = ami.image_id
+      image_id = $1;
+  EOQ
 
-    -- To EC2 Instance (edge)
-    union all
+  param "image_id" {}
+}
+
+edge "aws_ec2_ami_to_ec2_instance_edge" {
+  title = "launched with"
+
+  sql = <<-EOQ
     select
       instances.instance_id as from_id,
-      ami.image_id as to_id,
-      null as id,
-      'launched with' as title,
-      'ec2_ami_to_ec2_instance' as category,
+      image_id as to_id,
       jsonb_build_object(
         'Name', instances.tags ->> 'Name',
         'Instance ID', instances.instance_id,
@@ -354,19 +357,21 @@ query "aws_ec2_ami_relationships_graph" {
         'Region', instances.region
       ) as properties
     from
-      aws_ec2_instance as instances,
-      ami
+      aws_ec2_instance as instances
     where
-      instances.image_id = ami.image_id
+      instances.image_id = $1;
+  EOQ
 
-    -- From EBS snapshots (node)
-    union all
+  param "image_id" {}
+}
+
+node "aws_ec2_ami_from_ebs_snapshot_node" {
+  category = category.aws_ebs_snapshot
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       device_mappings -> 'Ebs' ->> 'SnapshotId' as id,
       snapshot.title as title,
-      'aws_ebs_snapshot' as category,
       jsonb_build_object(
         'ARN', snapshot.arn,
         'SnapshotId', device_mappings -> 'Ebs' ->> 'SnapshotId',
@@ -375,33 +380,34 @@ query "aws_ec2_ami_relationships_graph" {
       ) as properties
     from
       aws_ebs_snapshot as snapshot,
-      ami,
+      aws_ec2_ami as ami,
       jsonb_array_elements(ami.block_device_mappings) as device_mappings
     where
       device_mappings -> 'Ebs' is not null
       and snapshot.snapshot_id = device_mappings -> 'Ebs' ->> 'SnapshotId'
+      and ami.image_id = $1
+  EOQ
 
-    -- From EBS snapshots (node)
-    union all
+  param "image_id" {}
+}
+
+edge "aws_ec2_ami_from_ebs_snapshot_edge" {
+  title = "launched with"
+
+  sql = <<-EOQ
     select
       ami.image_id as from_id,
       device_mappings -> 'Ebs' ->> 'SnapshotId' as to_id,
-      null as id,
       'created from' as title,
-      'ec2_ami_to_ebs_snapshot' as category,
       jsonb_build_object(
         'SnapshotId', device_mappings -> 'Ebs' ->> 'SnapshotId'
       ) as properties
     from
-      ami,
+      aws_ec2_ami as ami,
       jsonb_array_elements(ami.block_device_mappings) as device_mappings
     where
-      device_mappings -> 'Ebs' is not null
-
-    order by
-      category,
-      from_id,
-      to_id;
+      ami.image_id = $1
+      and device_mappings -> 'Ebs' is not null;
   EOQ
 
   param "image_id" {}
