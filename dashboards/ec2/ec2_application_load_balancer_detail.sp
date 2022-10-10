@@ -69,7 +69,6 @@ dashboard "aws_ec2_application_load_balancer_detail" {
       type      = "graph"
       direction = "TD"
 
-
       nodes = [
         node.aws_ec2_application_load_balancer_node,
         node.aws_ec2_alb_to_vpc_security_group_node,

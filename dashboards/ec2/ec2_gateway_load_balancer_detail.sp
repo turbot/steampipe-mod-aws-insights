@@ -11,6 +11,7 @@ dashboard "aws_ec2_gateway_load_balancer_detail" {
     query = query.aws_glb_input
     width = 4
   }
+
   container {
 
     card {
@@ -41,17 +42,32 @@ dashboard "aws_ec2_gateway_load_balancer_detail" {
 
   container {
     graph {
-      type  = "graph"
-      base  = graph.aws_graph_categories
-      query = query.aws_ec2_gateway_load_balancer_relationships_graph
+      type      = "graph"
+      direction = "TD"
+
+      nodes = [
+        node.aws_ec2_gateway_load_balancer_node,
+        node.aws_ec2_glb_to_vpc_security_group_node,
+        node.aws_ec2_glb_to_s3_bucket_node,
+        node.aws_ec2_glb_to_vpc_node,
+        node.aws_ec2_lb_to_target_group_node,
+        node.aws_ec2_lb_to_ec2_instance_node,
+        node.aws_ec2_lb_from_ec2_load_balancer_listener_node
+      ]
+
+      edges = [
+        edge.aws_ec2_glb_to_vpc_security_group_edge,
+        edge.aws_ec2_glb_to_s3_bucket_edge,
+        edge.aws_ec2_glb_to_vpc_edge,
+        edge.aws_ec2_lb_to_target_group_edge,
+        edge.aws_ec2_lb_to_ec2_instance_edge,
+        edge.aws_ec2_lb_from_ec2_load_balancer_listener_edge
+      ]
+
       args = {
         arn = self.input.glb.value
       }
-      category "aws_ec2_gateway_load_balancer" {
-        icon = local.aws_ec2_gateway_load_balancer_icon
-      }
     }
-
   }
 
   container {
@@ -86,6 +102,22 @@ dashboard "aws_ec2_gateway_load_balancer_detail" {
     }
   }
 
+}
+
+query "aws_glb_input" {
+  sql = <<-EOQ
+    select
+      title as label,
+      arn as value,
+      json_build_object(
+        'account_id', account_id,
+        'region', region
+      ) as tags
+    from
+      aws_ec2_gateway_load_balancer
+    order by
+      title;
+  EOQ
 }
 
 query "aws_ec2_glb_overview" {
@@ -206,49 +238,35 @@ query "aws_glb_state" {
   param "arn" {}
 }
 
-query "aws_ec2_gateway_load_balancer_relationships_graph" {
-  sql = <<-EOQ
-    with glb as
-    (
-      select
-        arn,
-        name,
-        account_id,
-        region,
-        title,
-        security_groups,
-        vpc_id,
-        load_balancer_attributes
-      from
-        aws_ec2_gateway_load_balancer
-      where
-        arn = $1
-    )
+node "aws_ec2_gateway_load_balancer_node" {
+  category = category.aws_ec2_gateway_load_balancer
 
-    -- Resource (node)
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       arn as id,
       name as title,
-      'aws_ec2_gateway_load_balancer' as category,
       jsonb_build_object(
         'ARN', arn,
         'Account ID', account_id,
         'Region', region,
-        'Security Groups', glb.security_groups
+        'DNS Name', dns_name
       ) as properties
     from
-      glb
+      aws_ec2_gateway_load_balancer
+    where
+      arn = $1;
+  EOQ
 
-    -- To VPC security groups (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_ec2_glb_to_vpc_security_group_node" {
+  category = category.aws_vpc_security_group
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       sg.arn as id,
       sg.title as title,
-      'aws_vpc_security_group' as category,
       jsonb_build_object(
         'Group Name', sg.group_name,
         'Group ID', sg.group_id,
@@ -258,159 +276,81 @@ query "aws_ec2_gateway_load_balancer_relationships_graph" {
         'VPC ID', sg.vpc_id
       ) as properties
     from
-      glb
-    left join 
-      aws_vpc_security_group sg 
-      on sg.group_id in (select jsonb_array_elements_text(glb.security_groups))
+      aws_vpc_security_group sg,
+      aws_ec2_gateway_load_balancer as glb
+    where
+      glb.arn = $1
+      and sg.group_id in
+      (
+        select
+          jsonb_array_elements_text(glb.security_groups)
+      );
+  EOQ
 
-    -- To VPC security groups (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_ec2_glb_to_vpc_security_group_edge" {
+  title = "security group"
+
+  sql = <<-EOQ
     select
       glb.arn as from_id,
       sg.arn as to_id,
-      null as id,
-      'security group' as title,
-      'ec2_gateway_load_balancer_to_vpc_security_group' as category,
       jsonb_build_object(
         'Account ID', sg.account_id
       ) as properties
     from
-      glb
-    left join 
-      aws_vpc_security_group sg 
-      on sg.group_id in (select jsonb_array_elements_text(glb.security_groups))
-
-    -- To target groups (node)
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      tg.target_group_arn as id,
-      tg.title as title,
-      'aws_ec2_target_group' as category,
-      jsonb_build_object(
-        'Group Name', tg.target_group_name,
-        'ARN', tg.target_group_arn,
-        'Account ID', tg.account_id,
-        'Region', tg.region
-      ) as properties
-    from
-      aws_ec2_target_group tg,
-      glb
+      aws_vpc_security_group sg,
+      aws_ec2_gateway_load_balancer as glb
     where
-      glb.arn in
+      glb.arn = $1
+      and sg.group_id in
       (
         select
-          jsonb_array_elements_text(tg.load_balancer_arns)
-      )
+          jsonb_array_elements_text(glb.security_groups)
+      );
+  EOQ
 
-    -- To target groups (edge)
-    union all
-    select
-      glb.arn as from_id,
-      tg.target_group_arn as to_id,
-      null as id,
-      'target group' as title,
-      'ec2_gateway_load_balancer_to_ec2_target_group' as category,
-      jsonb_build_object(
-        'Account ID', tg.account_id
-      ) as properties
-    from
-      aws_ec2_target_group tg,
-      glb
-    where
-      glb.arn in
-      (
-        select
-          jsonb_array_elements_text(tg.load_balancer_arns)
-      )
+  param "arn" {}
+}
 
-    -- To EC2 target group instances (node)
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      instance.instance_id as id,
-      instance.title as title,
-      'aws_ec2_instance' as category,
-      jsonb_build_object(
-        'Instance ID', instance.instance_id,
-        'ARN', instance.arn,
-        'Account ID', instance.account_id,
-        'Region', instance.region
-      ) as properties
-    from
-      aws_ec2_target_group tg,
-      aws_ec2_instance instance,
-      jsonb_array_elements(tg.target_health_descriptions) thd,
-      glb
-    where
-      instance.instance_id = thd -> 'Target' ->> 'Id'
-      and glb.arn in
-      (
-        select
-          jsonb_array_elements_text(tg.load_balancer_arns)
-      )
+node "aws_ec2_glb_to_s3_bucket_node" {
+  category = category.aws_s3_bucket
 
-    -- To EC2 target group instances (edge)
-    union all
+  sql = <<-EOQ
     select
-      tg.target_group_arn as from_id,
-      instance.instance_id as to_id,
-      null as id,
-      'ec2 instance' as title,
-      'ec2_target_group_to_ec2_instance' as category,
-      jsonb_build_object(
-        'Account ID', instance.account_id,
-        'Health Check Port', thd['HealthCheckPort'],
-        'Health Check State', thd['TargetHealth']['State']
-      ) as properties
-    from
-      aws_ec2_target_group tg,
-      aws_ec2_instance instance,
-      jsonb_array_elements(tg.target_health_descriptions) thd,
-      glb
-    where
-      instance.instance_id = thd -> 'Target' ->> 'Id'
-      and glb.arn in
-      (
-        select
-          jsonb_array_elements_text(tg.load_balancer_arns)
-      )
-
-    -- To S3 buckets (node)
-    union all
-    select
-      null as from_id,
-      null as to_id,
       buckets.arn as id,
       buckets.title as title,
-      'aws_s3_bucket' as category,
       jsonb_build_object(
         'Name', buckets.name,
         'ARN', buckets.arn,
         'Account ID', glb.account_id,
         'Region', glb.region,
-        'Logs to', attributes->>'Value'
+        'Logs to', attributes ->> 'Value'
       ) as properties
     from
       aws_s3_bucket buckets,
-      glb,
+      aws_ec2_gateway_load_balancer as glb,
       jsonb_array_elements(glb.load_balancer_attributes) attributes
     where
-      attributes ->> 'Key' = 'access_logs.s3.bucket'
-      and buckets.name = attributes ->> 'Value'
+      glb.arn = $1
+      and attributes ->> 'Key' = 'access_logs.s3.bucket'
+      and buckets.name = attributes ->> 'Value';
+  EOQ
 
-    -- To S3 buckets (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_ec2_glb_to_s3_bucket_edge" {
+  title = "logs to"
+
+  sql = <<-EOQ
     select
       glb.arn as from_id,
       buckets.arn as to_id,
-      null as id,
-      'logs to' as title,
-      'ec2_gateway_load_balancer_to_s3_bucket' as category,
       jsonb_build_object(
-        'Account ID', buckets.account_id,
+        'Account ID', glb.account_id,
         'Log Prefix', (
           select
             a ->> 'Value'
@@ -422,20 +362,24 @@ query "aws_ec2_gateway_load_balancer_relationships_graph" {
       ) as properties
     from
       aws_s3_bucket buckets,
-      glb,
+      aws_ec2_gateway_load_balancer as glb,
       jsonb_array_elements(glb.load_balancer_attributes) attributes
     where
-      attributes ->> 'Key' = 'access_logs.s3.bucket'
-      and buckets.name = attributes ->> 'Value'
+      glb.arn = $1
+      and attributes ->> 'Key' = 'access_logs.s3.bucket'
+      and buckets.name = attributes ->> 'Value';
+  EOQ
 
-    -- VPCs (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_ec2_glb_to_vpc_node" {
+  category = category.aws_vpc
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       vpc.vpc_id as id,
       vpc.title as title,
-      'aws_vpc' as category,
       jsonb_build_object(
         'VPC ID', vpc.vpc_id,
         'Account ID', vpc.account_id,
@@ -443,85 +387,35 @@ query "aws_ec2_gateway_load_balancer_relationships_graph" {
         'CIDR Block', vpc.cidr_block
       ) as properties
     from
-      glb
-    left join aws_vpc vpc 
-    on glb.vpc_id = vpc.vpc_id
-
-    -- VPCs (edge)
-    union all
-    select
-      glb.arn as from_id,
-      vpc.vpc_id as to_id,
-      null as id,
-      'vpc' as title,
-      'ec2_gateway_load_balancer_to_vpc' as category,
-      jsonb_build_object(
-        'Account ID', vpc.account_id
-      ) as properties
-    from
-      glb
-    left join aws_vpc vpc 
-    on glb.vpc_id = vpc.vpc_id
-
-    -- To load balancer listeners (node)
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      lblistener.arn as id,
-      lblistener.title as title,
-      'aws_ec2_load_balancer_listener' as category,
-      jsonb_build_object(
-        'ARN', lblistener.arn,
-        'Account ID', lblistener.account_id,
-        'Region', lblistener.region,
-        'Protocol', lblistener.protocol,
-        'Port', lblistener.port,
-        'SSL Policy', coalesce(lblistener.ssl_policy, 'None')
-      ) as properties
-    from
-      glb
-    left join aws_ec2_load_balancer_listener lblistener
-    on glb.arn = lblistener.load_balancer_arn
-
-    -- To load balancer listeners (edge)
-    union all
-    select
-      lblistener.arn as from_id,
-      glb.arn as to_id,
-      null as id,
-      'listens with' as title,
-      'load_balancer_listener_to_ec2_gateway_load_balancer' as category,
-      jsonb_build_object(
-        'Account ID', lblistener.account_id
-      ) as properties
-    from
-      glb
-    left join aws_ec2_load_balancer_listener lblistener
-    on glb.arn = lblistener.load_balancer_arn
-
-    order by
-      category,
-      from_id,
-      to_id;
+      aws_vpc vpc,
+      aws_ec2_gateway_load_balancer as glb
+    where
+      glb.arn = $1
+      and glb.vpc_id = vpc.vpc_id;
   EOQ
 
   param "arn" {}
 }
 
-query "aws_glb_input" {
+edge "aws_ec2_glb_to_vpc_edge" {
+  title = "vpc"
+
   sql = <<-EOQ
     select
-      title as label,
-      arn as value,
-      json_build_object(
-        'account_id', account_id,
-
-        'region', region
-      ) as tags
+      sg.arn as from_id,
+      vpc.vpc_id as to_id,
+      jsonb_build_object(
+        'Account ID', vpc.account_id
+      ) as properties
     from
-      aws_ec2_gateway_load_balancer
-    order by
-      title;
+      aws_vpc vpc,
+      aws_ec2_gateway_load_balancer as glb
+      left join aws_vpc_security_group sg 
+        on sg.group_id in (select jsonb_array_elements_text(glb.security_groups))
+    where
+      glb.arn = $1
+      and glb.vpc_id = vpc.vpc_id;
   EOQ
+
+  param "arn" {}
 }
