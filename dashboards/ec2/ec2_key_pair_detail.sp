@@ -33,14 +33,26 @@ dashboard "aws_ec2_key_pair_detail" {
   }
 
   container {
+
     graph {
-      type  = "graph"
-      base  = graph.aws_graph_categories
-      query = query.aws_ec2_key_pair_relationships_graph
+      type      = "graph"
+      direction = "TD"
+
+
+      nodes = [
+        node.aws_ec2_key_pair_node,
+        node.aws_ec2_key_pair_from_ec2_instance_node,
+        node.aws_ec2_key_pair_from_ec2_launch_config_node
+      ]
+
+      edges = [
+        edge.aws_ec2_key_pair_from_ec2_instance_edge,
+        edge.aws_ec2_key_pair_from_ec2_launch_config_edge
+      ]
+
       args = {
         key_name = self.input.key_name.value
       }
-      category "aws_ec2_key_pair" {}
     }
   }
 
@@ -67,6 +79,22 @@ dashboard "aws_ec2_key_pair_detail" {
     }
   }
 
+}
+
+query "ec2_key_pair_input" {
+  sql = <<-EOQ
+    select
+      key_name as label,
+      key_name as value,
+      json_build_object(
+        'account_id', account_id,
+        'region', region
+      ) as tags
+    from
+      aws_ec2_key_pair
+    order by
+      title;
+  EOQ
 }
 
 query "aws_ec2_key_pair_instances" {
@@ -134,128 +162,106 @@ query "aws_ec2_key_pair_tags" {
   param "key_name" {}
 }
 
-query "aws_ec2_key_pair_relationships_graph" {
-  sql = <<-EOQ
-    with key_pair as
-    (
-      select
-        *
-      from
-        aws_ec2_key_pair
-      where
-        key_name = $1
-    )
+node "aws_ec2_key_pair_node" {
+  category = category.aws_ec2_key_pair
 
-    -- Resource (node)
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       key_pair_id as id,
       title as title,
-      'aws_ec2_key_pair' as category,
       jsonb_build_object(
-        'Name', key_pair.key_name,
-        'ID', key_pair.key_pair_id,
-        'Fingerprint', key_pair.key_fingerprint,
+        'Name', key_name,
+        'ID', key_pair_id,
+        'Fingerprint', key_fingerprint,
         'Account ID', account_id,
         'Region', region
       ) as properties
     from
-      key_pair
+      aws_ec2_key_pair
+    where
+      key_name = $1;
+  EOQ
 
-    -- From EC2 instances (node)
-    union all
+  param "key_name" {}
+}
+
+node "aws_ec2_key_pair_from_ec2_instance_node" {
+  category = category.aws_ec2_instance
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       instances.arn as id,
       instances.title as title,
-      'aws_ec2_instance' as category,
       jsonb_build_object(
         'ARN', instances.arn,
         'Account ID', instances.account_id,
         'Region', instances.region
       ) as properties
     from
-      aws_ec2_instance instances,
-      key_pair
+      aws_ec2_instance instances
     where
-      instances.key_name = key_pair.key_name
-
-    -- From EC2 instances (edges)
-    union all
-    select
-      instances.arn as from_id,
-      key_pair.key_pair_id as to_id,
-      null as id,
-      'ec2 instance' as title,
-      'ec2_instance_to_ec2_key_pair' as category,
-      jsonb_build_object(
-        'Account ID', instances.account_id
-      ) as properties
-    from
-      aws_ec2_instance instances,
-      key_pair
-    where
-      instances.key_name = key_pair.key_name
-
-    -- From EC2 aunch configurations (node)
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      launch_config.launch_configuration_arn as id,
-      launch_config.title as title,
-      'aws_ec2_launch_configuration' as category,
-      jsonb_build_object(
-        'ARN', launch_config.launch_configuration_arn,
-        'Account ID', launch_config.account_id,
-        'Region', launch_config.region ) as properties
-    from
-      aws_ec2_launch_configuration launch_config,
-      key_pair
-    where
-      launch_config.key_name = key_pair.key_name
-
-    -- From EC2 aunch configurations (edge)
-    union all
-    select
-      launch_config.launch_configuration_arn as from_id,
-      key_pair.key_pair_id as to_id,
-      null as id,
-      'launches with' as title,
-      'ec2_launch_config_to_ec2_key_pair' as category,
-      jsonb_build_object(
-        'Account ID', launch_config.account_id
-      ) as properties
-    from
-      aws_ec2_launch_configuration launch_config,
-      key_pair
-    where
-      launch_config.key_name = key_pair.key_name
-
-    order by
-      category,
-      from_id,
-      to_id;
-
+      instances.key_name = $1;
   EOQ
 
   param "key_name" {}
 }
 
-query "ec2_key_pair_input" {
+edge "aws_ec2_key_pair_from_ec2_instance_edge" {
+  title = "ec2 instance"
+
   sql = <<-EOQ
     select
-      key_name as label,
-      key_name as value,
-      json_build_object(
-        'account_id', account_id,
-        'region', region
-      ) as tags
+      instances.arn as from_id,
+      key_pair.key_pair_id as to_id,
+      jsonb_build_object(
+        'Account ID', instances.account_id
+      ) as properties
     from
-      aws_ec2_key_pair
-    order by
-      title;
+      aws_ec2_instance instances,
+      aws_ec2_key_pair as key_pair
+    where
+      instances.key_name = $1;
   EOQ
+
+  param "key_name" {}
+}
+
+node "aws_ec2_key_pair_from_ec2_launch_config_node" {
+  category = category.aws_ec2_launch_configuration
+
+  sql = <<-EOQ
+    select
+      launch_config.launch_configuration_arn as id,
+      launch_config.title as title,
+      jsonb_build_object(
+        'ARN', launch_config.launch_configuration_arn,
+        'Account ID', launch_config.account_id,
+        'Region', launch_config.region ) as properties
+    from
+      aws_ec2_launch_configuration launch_config
+    where
+      launch_config.key_name = $1;
+  EOQ
+
+  param "key_name" {}
+}
+
+edge "aws_ec2_key_pair_from_ec2_launch_config_edge" {
+  title = "launches with"
+
+  sql = <<-EOQ
+    select
+      launch_config.launch_configuration_arn as from_id,
+      key_pair.key_pair_id as to_id,
+      jsonb_build_object(
+        'Account ID', launch_config.account_id
+      ) as properties
+    from
+      aws_ec2_launch_configuration launch_config,
+      aws_ec2_key_pair as key_pair
+    where
+      launch_config.key_name = $1;
+  EOQ
+
+  param "key_name" {}
 }

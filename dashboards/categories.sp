@@ -243,6 +243,13 @@ graph "aws_graph_categories" {
     }
   }
 
+  category "aws_ec2_key_pair" {
+    fold {
+      title     = "EC2 Key Pair"
+      threshold = 3
+    }
+  }
+
   category "aws_ecr_repository" {
     href = "aws_insights.dashboard.aws_ecr_repository_detail?input.ecr_repository_arn={{.properties.'ARN' | @uri}}"
     icon = local.aws_ecr_repository_icon
