@@ -74,9 +74,9 @@ dashboard "aws_ec2_instance_detail" {
         node.aws_ec2_instance_to_iam_role_node,
         node.aws_ec2_instance_to_ec2_key_pair_node,
         # node.aws_ec2_instance_to_ec2_ami_node
-        node.aws_ec2_instance_to_ec2_autoscaling_group_node,
-        node.aws_ec2_instance_to_ec2_classic_load_balancer_node,
-        node.aws_ec2_instance_to_ec2_target_group_node
+        node.aws_ec2_instance_from_ec2_autoscaling_group_node,
+        node.aws_ec2_instance_from_ec2_classic_load_balancer_node,
+        node.aws_ec2_instance_from_ec2_target_group_node
       ]
 
       edges = [
@@ -89,9 +89,9 @@ dashboard "aws_ec2_instance_detail" {
         edge.aws_ec2_instance_to_iam_role_edge,
         edge.aws_ec2_instance_to_ec2_key_pair_edge,
         # edge.aws_ec2_instance_to_ec2_ami_edge,
-        edge.aws_ec2_instance_to_ec2_autoscaling_group_edge,
-        edge.aws_ec2_instance_to_ec2_classic_load_balancer_edge,
-        edge.aws_ec2_instance_to_ec2_target_group_edge
+        edge.aws_ec2_instance_from_ec2_autoscaling_group_edge,
+        edge.aws_ec2_instance_from_ec2_classic_load_balancer_edge,
+        edge.aws_ec2_instance_from_ec2_target_group_edge
       ]
 
       args = {
@@ -744,7 +744,7 @@ edge "aws_ec2_instance_to_ec2_ami_edge" {
   param "arn" {}
 } */
 
-node "aws_ec2_instance_to_ec2_autoscaling_group_node" {
+node "aws_ec2_instance_from_ec2_autoscaling_group_node" {
   category = category.aws_ec2_autoscaling_group
 
   sql = <<-EOQ
@@ -768,7 +768,7 @@ node "aws_ec2_instance_to_ec2_autoscaling_group_node" {
   param "arn" {}
 }
 
-edge "aws_ec2_instance_to_ec2_autoscaling_group_edge" {
+edge "aws_ec2_instance_from_ec2_autoscaling_group_edge" {
   title = "launces"
 
   sql = <<-EOQ
@@ -790,7 +790,7 @@ edge "aws_ec2_instance_to_ec2_autoscaling_group_edge" {
   param "arn" {}
 }
 
-node "aws_ec2_instance_to_ec2_classic_load_balancer_node" {
+node "aws_ec2_instance_from_ec2_classic_load_balancer_node" {
   category = category.aws_ec2_classic_load_balancer
 
   sql = <<-EOQ
@@ -814,7 +814,7 @@ node "aws_ec2_instance_to_ec2_classic_load_balancer_node" {
   param "arn" {}
 }
 
-edge "aws_ec2_instance_to_ec2_classic_load_balancer_edge" {
+edge "aws_ec2_instance_from_ec2_classic_load_balancer_edge" {
   title = "routes to"
 
   sql = <<-EOQ
@@ -837,14 +837,7 @@ edge "aws_ec2_instance_to_ec2_classic_load_balancer_edge" {
   param "arn" {}
 }
 
-# 'arn:aws:ec2:eu-west-1:533793682495:instance/i-079fe88a8a1cf793d'
-
-/* TODO : order by
-      category,
-      from_id,
-      to_id */
-
-node "aws_ec2_instance_to_ec2_target_group_node" {
+node "aws_ec2_instance_from_ec2_target_group_node" {
   category = category.aws_ec2_target_group
 
   sql = <<-EOQ
@@ -869,7 +862,7 @@ node "aws_ec2_instance_to_ec2_target_group_node" {
   param "arn" {}
 }
 
-edge "aws_ec2_instance_to_ec2_target_group_edge" {
+edge "aws_ec2_instance_from_ec2_target_group_edge" {
   title = "routes to"
 
   sql = <<-EOQ

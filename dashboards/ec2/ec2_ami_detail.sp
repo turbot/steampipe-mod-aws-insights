@@ -58,13 +58,13 @@ dashboard "aws_ec2_ami_detail" {
 
       nodes = [
         node.aws_ec2_ami_node,
-        node.aws_ec2_ami_to_ec2_instance_node,
-        node.aws_ec2_ami_from_ebs_snapshot_node
+        node.aws_ec2_ami_from_ec2_instance_node,
+        node.aws_ec2_ami_to_ebs_snapshot_node
       ]
 
       edges = [
-        edge.aws_ec2_ami_to_ec2_instance_edge,
-        edge.aws_ec2_ami_from_ebs_snapshot_edge
+        edge.aws_ec2_ami_from_ec2_instance_edge,
+        edge.aws_ec2_ami_to_ebs_snapshot_edge
       ]
 
       args = {
@@ -319,7 +319,7 @@ node "aws_ec2_ami_node" {
   param "image_id" {}
 }
 
-node "aws_ec2_ami_to_ec2_instance_node" {
+node "aws_ec2_ami_from_ec2_instance_node" {
   category = category.aws_ec2_instance
 
   sql = <<-EOQ
@@ -342,7 +342,7 @@ node "aws_ec2_ami_to_ec2_instance_node" {
   param "image_id" {}
 }
 
-edge "aws_ec2_ami_to_ec2_instance_edge" {
+edge "aws_ec2_ami_from_ec2_instance_edge" {
   title = "launched with"
 
   sql = <<-EOQ
@@ -365,7 +365,7 @@ edge "aws_ec2_ami_to_ec2_instance_edge" {
   param "image_id" {}
 }
 
-node "aws_ec2_ami_from_ebs_snapshot_node" {
+node "aws_ec2_ami_to_ebs_snapshot_node" {
   category = category.aws_ebs_snapshot
 
   sql = <<-EOQ
@@ -391,8 +391,8 @@ node "aws_ec2_ami_from_ebs_snapshot_node" {
   param "image_id" {}
 }
 
-edge "aws_ec2_ami_from_ebs_snapshot_edge" {
-  title = "launched with"
+edge "aws_ec2_ami_to_ebs_snapshot_edge" {
+  title = "created from"
 
   sql = <<-EOQ
     select
