@@ -67,7 +67,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
         node.aws_ec2_clb_to_s3_bucket_node,
         node.aws_ec2_clb_to_vpc_security_group_node,
         node.aws_ec2_clb_to_vpc_node,
-        node.aws_ec2_lb_from_ec2_load_balancer_listener_node
+        # node.aws_ec2_lb_from_ec2_load_balancer_listener_node
       ]
 
       edges = [
@@ -75,7 +75,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
         edge.aws_ec2_clb_to_s3_bucket_edge,
         edge.aws_ec2_clb_to_vpc_security_group_edge,
         edge.aws_ec2_clb_to_vpc_edge,
-        edge.aws_ec2_lb_from_ec2_load_balancer_listener_edge
+        # edge.aws_ec2_lb_from_ec2_load_balancer_listener_edge
       ]
 
       args = {

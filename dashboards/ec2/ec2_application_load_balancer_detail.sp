@@ -70,22 +70,22 @@ dashboard "aws_ec2_application_load_balancer_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_ec2_application_load_balancer_node,
-        node.aws_ec2_alb_to_vpc_security_group_node,
-        node.aws_ec2_alb_to_s3_bucket_node,
-        node.aws_ec2_alb_to_vpc_node,
-        node.aws_ec2_lb_to_target_group_node,
-        node.aws_ec2_lb_to_ec2_instance_node,
-        node.aws_ec2_lb_from_ec2_load_balancer_listener_node
+        node.aws_ec2_network_load_balancer_node,
+        # node.aws_ec2_alb_to_vpc_security_group_node,
+        # node.aws_ec2_alb_to_s3_bucket_node,
+        # node.aws_ec2_alb_to_vpc_node,
+        # node.aws_ec2_lb_to_target_group_node,
+        # node.aws_ec2_lb_to_ec2_instance_node,
+        # node.aws_ec2_lb_from_ec2_load_balancer_listener_node
       ]
 
       edges = [
-        edge.aws_ec2_alb_to_vpc_security_group_edge,
-        edge.aws_ec2_alb_to_s3_bucket_edge,
-        edge.aws_ec2_alb_to_vpc_edge,
-        edge.aws_ec2_lb_to_target_group_edge,
-        edge.aws_ec2_lb_to_ec2_instance_edge,
-        edge.aws_ec2_lb_from_ec2_load_balancer_listener_edge
+        # edge.aws_ec2_alb_to_vpc_security_group_edge,
+        # edge.aws_ec2_alb_to_s3_bucket_edge,
+        # edge.aws_ec2_alb_to_vpc_edge,
+        # edge.aws_ec2_lb_to_target_group_edge,
+        # edge.aws_ec2_lb_to_ec2_instance_edge,
+        # edge.aws_ec2_lb_from_ec2_load_balancer_listener_edge
       ]
 
       args = {
