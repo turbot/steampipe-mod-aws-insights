@@ -154,6 +154,8 @@ query "aws_iam_group_direct_attached_policy_count_for_group" {
   param "arn" {}
 }
 
+# arn:aws:iam::533793682495:group/turbot/acm_admin
+
 node "aws_iam_group_node" {
   category = category.aws_ec2_ami
 
@@ -251,15 +253,12 @@ node "aws_iam_group_from_iam_user_node" {
 }
 
 edge "aws_iam_group_from_iam_user_edge" {
-  title = "attached"
+  title = "iam group"
 
   sql = <<-EOQ
     select
       u.name as from_id,
-      g ->> 'GroupId' as from_id,
-      null as id,
-      'iam group' as title,
-      'iam_user_to_iam_group' as category,
+      g ->> 'GroupId' as to_id,
       jsonb_build_object( 'Account ID', u.account_id ) as properties
     from
       aws_iam_user as u,
