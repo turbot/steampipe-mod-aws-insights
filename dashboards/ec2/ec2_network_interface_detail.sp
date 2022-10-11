@@ -57,15 +57,29 @@ dashboard "aws_ec2_network_interface_detail" {
   }
 
   container {
+
     graph {
-      type  = "graph"
-      base  = graph.aws_graph_categories
-      query = query.aws_ec2_eni_relationships_graph
+      type      = "graph"
+      direction = "TD"
+
+
+      nodes = [
+        node.aws_ec2_network_interface_node,
+        node.aws_ec2_network_interface_to_ec2_instance_node,
+        node.aws_ec2_network_interface_to_vpc_security_group_node,
+        node.aws_ec2_network_interface_to_vpc_subnet_node,
+        node.aws_ec2_network_interface_to_vpc_node
+      ]
+
+      edges = [
+        edge.aws_ec2_network_interface_to_ec2_instance_edge,
+        edge.aws_ec2_network_interface_to_vpc_security_group_edge,
+        edge.aws_ec2_network_interface_to_vpc_subnet_edge,
+        edge.aws_ec2_network_interface_to_vpc_edge
+      ]
+
       args = {
         network_interface_id = self.input.network_interface_id.value
-      }
-      category "aws_ec2_network_interface" {
-        icon = local.aws_ec2_network_interface_icon
       }
     }
   }
@@ -118,6 +132,23 @@ dashboard "aws_ec2_network_interface_detail" {
     }
 
   }
+}
+
+query "network_interface_id" {
+  sql = <<-EOQ
+    select
+      title as label,
+      network_interface_id as value,
+      json_build_object(
+        'type', interface_type,
+        'account_id', account_id,
+        'region', region
+      ) as tags
+    from
+      aws_ec2_network_interface
+    order by
+      title;
+  EOQ
 }
 
 query "aws_ec2_eni_status" {
@@ -283,48 +314,34 @@ query "aws_ec2_eni_tags" {
   param "network_interface_id" {}
 }
 
-query "aws_ec2_eni_relationships_graph" {
-  sql = <<-EOQ
-    with network_interface as
-    (
-      select
-        network_interface_id,
-        title,
-        attached_instance_id,
-        subnet_id,
-        vpc_id,
-        groups,
-        account_id,
-        region
-      from
-        aws_ec2_network_interface
-      where
-        network_interface_id = $1
-    )
+node "aws_ec2_network_interface_node" {
+  category = category.aws_ec2_network_interface
 
-    -- Resource (node)
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       network_interface_id as id,
       title as title,
-      'aws_ec2_network_interface' as category,
       jsonb_build_object(
-        'ID', network_interface.network_interface_id,
+        'ID', eni.network_interface_id,
         'Account ID', account_id,
         'Region', region
       ) as properties
     from
-      network_interface
+      aws_ec2_network_interface as eni
+    where
+      network_interface_id = $1;
+  EOQ
 
-    -- To EC2 Instances (node)
-    union all
+  param "network_interface_id" {}
+}
+
+node "aws_ec2_network_interface_to_ec2_instance_node" {
+  category = category.aws_ec2_instance
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       instance.instance_id as id,
       instance.title as title,
-      'aws_ec2_instance' as category,
       jsonb_build_object(
         'ID', instance.instance_id,
         'ARN', instance.arn,
@@ -337,36 +354,46 @@ query "aws_ec2_eni_relationships_graph" {
         'Region', instance.region
       ) as properties
     from
-      network_interface
+      aws_ec2_network_interface as eni
     left join
       aws_ec2_instance as instance
-      on network_interface.attached_instance_id = instance.instance_id
+      on eni.attached_instance_id = instance.instance_id
+    where
+      eni.network_interface_id = $1;
+  EOQ
 
-    -- To EC2 Instances (edge)
-    union all
+  param "network_interface_id" {}
+}
+
+edge "aws_ec2_network_interface_to_ec2_instance_edge" {
+  title = "attached to"
+
+  sql = <<-EOQ
     select
-      network_interface.network_interface_id as from_id,
+      eni.network_interface_id as from_id,
       instance.instance_id as to_id,
-      null as id,
-      'attached to' as title,
-      'ec2_network_interface_to_ec2_instance' as category,
       jsonb_build_object(
         'Account ID', instance.account_id
       ) as properties
     from
-      network_interface
+      aws_ec2_network_interface as eni
       left join
         aws_ec2_instance as instance
-        on network_interface.attached_instance_id = instance.instance_id
+        on eni.attached_instance_id = instance.instance_id
+    where
+      eni.network_interface_id = $1;
+  EOQ
 
-    -- To VPC security groups (node)
-    union all
+  param "network_interface_id" {}
+}
+
+node "aws_ec2_network_interface_to_vpc_security_group_node" {
+  category = category.aws_vpc_security_group
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       sg ->> 'GroupId' as id,
       sg ->> 'GroupName' as title,
-      'aws_vpc_security_group' as category,
       jsonb_build_object(
         'Group ID', sg ->> 'GroupId',
         'Name', sg ->> 'GroupName',
@@ -374,32 +401,42 @@ query "aws_ec2_eni_relationships_graph" {
         'Region', region
       ) as properties
     from
-      network_interface,
+      aws_ec2_network_interface as eni,
       jsonb_array_elements(groups) as sg
+    where
+      eni.network_interface_id = $1;
+  EOQ
 
-    -- To VPC security groups (edge)
-    union all
+  param "network_interface_id" {}
+}
+
+edge "aws_ec2_network_interface_to_vpc_security_group_edge" {
+  title = "security groups"
+
+  sql = <<-EOQ
     select
-      network_interface.network_interface_id as from_id,
+      eni.network_interface_id as from_id,
       sg ->> 'GroupId' as to_id,
-      null as id,
-      'security groups' as title,
-      'ec2_network_interface_to_vpc_security_group' as category,
       jsonb_build_object(
         'Account ID', account_id
       ) as properties
     from
-      network_interface,
+      aws_ec2_network_interface as eni,
       jsonb_array_elements(groups) as sg
+    where
+      eni.network_interface_id = $1;
+  EOQ
 
-    -- To VPC subnets (node)
-    union all
+  param "network_interface_id" {}
+}
+
+node "aws_ec2_network_interface_to_vpc_subnet_node" {
+  category = category.aws_vpc_subnet
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       subnet.subnet_id as id,
       subnet.title as title,
-      'aws_vpc_subnet' as category,
       jsonb_build_object(
         'Name', subnet.tags ->> 'Name',
         'Subnet ID', subnet.subnet_id ,
@@ -410,99 +447,93 @@ query "aws_ec2_eni_relationships_graph" {
         'Region', subnet.region
       ) as properties
     from
-      network_interface
+      aws_ec2_network_interface as eni
     left join
       aws_vpc_subnet as subnet
-      on network_interface.subnet_id = subnet.subnet_id
-
-    -- To VPC subnets (edge)
-    union all
-    select
-      network_interface.network_interface_id as from_id,
-      subnet.subnet_id as to_id,
-      null as id,
-      'launched in' as title,
-      'ec2_network_interface_to_vpc_subnet' as category,
-      jsonb_build_object(
-        'Account ID', network_interface.account_id,
-        'Name', subnet.tags ->> 'Name',
-        'Subnet ID', subnet.subnet_id,
-        'State', subnet.state
-      ) as properties
-    from
-      network_interface
-      left join
-        aws_vpc_subnet as subnet
-        on network_interface.subnet_id = subnet.subnet_id
-
-    -- To VPCs (node)
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      vpc.vpc_id as id,
-      vpc.title as title,
-      'aws_vpc' as category,
-      jsonb_build_object(
-        'ID', vpc.vpc_id,
-        'Name', vpc.tags ->> 'Name',
-        'CIDR Block', vpc.cidr_block,
-        'Account ID', vpc.account_id,
-        'Owner ID', vpc.owner_id,
-        'Region', vpc.region
-      ) as properties
-    from
-      network_interface
-      left join
-        aws_vpc as vpc
-        on network_interface.vpc_id = vpc.vpc_id
-
-    -- To VPCs (edge)
-    union all
-    select
-      sg ->> 'GroupId' as from_id,
-      vpc.vpc_id as to_id,
-      null as id,
-      'vpc' as title,
-      'vpc_security_group_to_vpc' as category,
-      jsonb_build_object(
-        'ID', vpc.vpc_id,
-        'Name', vpc.tags ->> 'Name',
-        'CIDR Block', vpc.cidr_block,
-        'Account ID', vpc.account_id,
-        'Owner ID', vpc.owner_id,
-        'Region', vpc.region
-      ) as properties
-    from
-      network_interface
-      cross join jsonb_array_elements(network_interface.groups) as sg
-      left join
-        aws_vpc as vpc
-        on network_interface.vpc_id = vpc.vpc_id
-
-    order by
-      category,
-      from_id,
-      to_id;
-
+      on eni.subnet_id = subnet.subnet_id
+    where
+      eni.network_interface_id = $1;
   EOQ
 
   param "network_interface_id" {}
 }
 
-query "network_interface_id" {
+edge "aws_ec2_network_interface_to_vpc_subnet_edge" {
+  title = "launched in"
+
   sql = <<-EOQ
     select
-      title as label,
-      network_interface_id as value,
-      json_build_object(
-        'type', interface_type,
-        'account_id', account_id,
-        'region', region
-      ) as tags
+      eni.network_interface_id as from_id,
+      subnet.subnet_id as to_id,
+      jsonb_build_object(
+        'Account ID', eni.account_id,
+        'Name', subnet.tags ->> 'Name',
+        'Subnet ID', subnet.subnet_id,
+        'State', subnet.state
+      ) as properties
     from
-      aws_ec2_network_interface
-    order by
-      title;
+      aws_ec2_network_interface as eni
+      left join
+        aws_vpc_subnet as subnet
+        on eni.subnet_id = subnet.subnet_id
+    where
+      eni.network_interface_id = $1;
   EOQ
+
+  param "network_interface_id" {}
+}
+
+node "aws_ec2_network_interface_to_vpc_node" {
+  category = category.aws_vpc
+
+  sql = <<-EOQ
+    select
+      vpc.vpc_id as id,
+      vpc.title as title,
+      jsonb_build_object(
+        'ID', vpc.vpc_id,
+        'Name', vpc.tags ->> 'Name',
+        'CIDR Block', vpc.cidr_block,
+        'Account ID', vpc.account_id,
+        'Owner ID', vpc.owner_id,
+        'Region', vpc.region
+      ) as properties
+    from
+      aws_ec2_network_interface as eni
+      left join
+        aws_vpc as vpc
+        on eni.vpc_id = vpc.vpc_id
+    where
+      eni.network_interface_id = $1;
+  EOQ
+
+  param "network_interface_id" {}
+}
+
+edge "aws_ec2_network_interface_to_vpc_edge" {
+  title = "vpc"
+
+  sql = <<-EOQ
+    select
+      sg ->> 'GroupId' as from_id,
+      vpc.vpc_id as to_id,
+      jsonb_build_object(
+        'ID', vpc.vpc_id,
+        'Name', vpc.tags ->> 'Name',
+        'CIDR Block', vpc.cidr_block,
+        'Account ID', vpc.account_id,
+        'Owner ID', vpc.owner_id,
+        'Region', vpc.region
+      ) as properties
+    from
+      aws_ec2_network_interface as eni
+      cross join jsonb_array_elements(eni.groups) as sg
+      left join
+        aws_vpc as vpc
+        on eni.vpc_id = vpc.vpc_id
+    where
+      eni.network_interface_id = $1;
+  EOQ
+
+  param "network_interface_id" {}
 }
