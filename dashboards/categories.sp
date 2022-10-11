@@ -351,9 +351,9 @@ category "aws_iam_group" {
   }
 }
 
-category "aws_iam_profile" {
+category "aws_iam_instance_profile" {
   fold {
-    title     = "IAM Profiles"
+    title     = "IAM Instance Profiles"
     threshold = 3
   }
 }
