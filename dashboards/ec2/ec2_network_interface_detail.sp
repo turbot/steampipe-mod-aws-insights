@@ -62,7 +62,6 @@ dashboard "aws_ec2_network_interface_detail" {
       type      = "graph"
       direction = "TD"
 
-
       nodes = [
         node.aws_ec2_network_interface_node,
         node.aws_ec2_network_interface_to_ec2_instance_node,

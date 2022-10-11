@@ -62,7 +62,6 @@ dashboard "aws_ec2_instance_detail" {
       type      = "graph"
       direction = "TD"
 
-
       nodes = [
         node.aws_ec2_instance_node,
         node.aws_ec2_instance_to_ebs_volume_node,
@@ -769,7 +768,7 @@ node "aws_ec2_instance_from_ec2_autoscaling_group_node" {
 }
 
 edge "aws_ec2_instance_from_ec2_autoscaling_group_edge" {
-  title = "launces"
+  title = "launches"
 
   sql = <<-EOQ
     select
