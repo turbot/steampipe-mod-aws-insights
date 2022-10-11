@@ -154,8 +154,6 @@ query "aws_iam_group_direct_attached_policy_count_for_group" {
   param "arn" {}
 }
 
-# arn:aws:iam::533793682495:group/turbot/acm_admin
-
 node "aws_iam_group_node" {
   category = category.aws_ec2_ami
 

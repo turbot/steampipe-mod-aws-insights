@@ -31,14 +31,28 @@ dashboard "aws_iam_policy_detail" {
   }
 
   container {
+
     graph {
-      type  = "graph"
-      base  = graph.aws_graph_categories
-      query = query.aws_iam_policy_relationships_graph
+      type      = "graph"
+      direction = "TD"
+
+
+      nodes = [
+        node.aws_iam_policy_node,
+        node.aws_iam_policy_from_iam_role_node,
+        node.aws_iam_policy_from_iam_user_node,
+        node.aws_iam_policy_from_iam_group_node
+      ]
+
+      edges = [
+        edge.aws_iam_policy_from_iam_role_edge,
+        edge.aws_iam_policy_from_iam_user_edge,
+        edge.aws_iam_policy_from_iam_group_edge
+      ]
+
       args = {
         arn = self.input.policy_arn.value
       }
-      category "aws_iam_policy" {}
     }
   }
 
@@ -129,11 +143,11 @@ query "aws_iam_policy_attached" {
   param "arn" {}
 }
 
-query "aws_iam_policy_relationships_graph" {
+node "aws_iam_policy_node" {
+  category = category.aws_iam_policy
+
   sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       policy_id as id,
       name as title,
       'aws_iam_policy' as category,
@@ -146,16 +160,19 @@ query "aws_iam_policy_relationships_graph" {
     from
       aws_iam_policy
     where
-      arn = $1
+      arn = $1;
+  EOQ
 
-    -- From IAM roles (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_iam_policy_from_iam_role_node" {
+  category = category.aws_iam_role
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       role_id as id,
       name as title,
-      'aws_iam_role' as category,
       jsonb_build_object(
         'ARN', arn,
         'Create Date', create_date,
@@ -165,16 +182,19 @@ query "aws_iam_policy_relationships_graph" {
       aws_iam_role,
       jsonb_array_elements_text(attached_policy_arns) as arns
     where
-      arns = $1
+      arns = $1;
+  EOQ
 
-    -- From IAM roles (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_iam_policy_from_iam_role_edge" {
+  title = "iam role"
+
+  sql = <<-EOQ
     select
       r.role_id as from_id,
       p.policy_id as to_id,
-      null as id,
-      'iam role' as title,
-      'iam_role_to_iam_policy' as category,
       jsonb_build_object(
         'Account ID', r.account_id ) as properties
     from
@@ -184,16 +204,19 @@ query "aws_iam_policy_relationships_graph" {
       aws_iam_policy as p
       on p.arn = arns
     where
-      p.arn = $1
+      p.arn = $1;
+  EOQ
 
-     -- From IAM users (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_iam_policy_from_iam_user_node" {
+  category = category.aws_iam_user
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       u.name as id,
       u.name as title,
-      'aws_iam_user' as category,
       jsonb_build_object(
         'ARN', u.arn,
         'path', path,
@@ -204,16 +227,19 @@ query "aws_iam_policy_relationships_graph" {
       aws_iam_user as u,
       jsonb_array_elements_text(attached_policy_arns) as arns
     where
-      arns = $1
+      arns = $1;
+  EOQ
 
-    -- From IAM users (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_iam_policy_from_iam_user_edge" {
+  title = "iam user"
+
+  sql = <<-EOQ
     select
       u.name as from_id,
       p.policy_id as to_id,
-      null as id,
-      'iam user' as title,
-      'iam_user_to_iam_policy' as category,
       jsonb_build_object(
         'Account ID', u.account_id ) as properties
     from
@@ -222,17 +248,19 @@ query "aws_iam_policy_relationships_graph" {
       aws_iam_policy as p
     where
       p.arn = arns
-      and p.arn = $1
+      and p.arn = $1;
+  EOQ
 
+  param "arn" {}
+}
 
-    -- From IAM groups (node)
-    union all
+node "aws_iam_policy_from_iam_group_node" {
+  category = category.aws_iam_group
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       g.name as id,
       g.name as title,
-      'aws_iam_group' as category,
       jsonb_build_object(
         'ARN', arn,
         'Path', path,
@@ -242,16 +270,19 @@ query "aws_iam_policy_relationships_graph" {
       aws_iam_group as g,
       jsonb_array_elements_text(attached_policy_arns) as arns
     where
-      arns = $1
+      arns = $1;
+  EOQ
 
-    -- From IAM groups (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_iam_policy_from_iam_group_edge" {
+  title = "iam group"
+
+  sql = <<-EOQ
     select
       g.name as from_id,
       p.policy_id as to_id,
-      null as id,
-      'iam group' as title,
-      'iam_group_to_iam_policy' as category,
       jsonb_build_object( 'Account ID', g.account_id ) as properties
     from
       aws_iam_group as g,
@@ -259,17 +290,11 @@ query "aws_iam_policy_relationships_graph" {
       aws_iam_policy as p
     where
       p.arn = arns
-      and p.arn = $1
-
-    order by
-      category,
-      from_id,
-      to_id;
+      and p.arn = $1;
   EOQ
 
   param "arn" {}
 }
-
 
 query "aws_iam_policy_overview" {
   sql = <<-EOQ
