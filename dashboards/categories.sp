@@ -386,6 +386,13 @@ category "aws_iam_access_key" {
   }
 }
 
+category "aws_iam_profile" {
+  fold {
+    title     = "IAM Profiles"
+    threshold = 3
+  }
+}
+
 category "aws_lambda_function" {
   href = "/aws_insights.dashboard.aws_lambda_function_detail?input.lambda_arn={{.properties.'ARN' | @uri}}"
   icon = local.aws_lambda_function_icon
