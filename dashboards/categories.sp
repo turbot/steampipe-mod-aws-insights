@@ -198,6 +198,13 @@ category "aws_rds_db_cluster_parameter_group" {
   }
 }
 
+category "aws_rds_db_parameter_group" {
+  fold {
+    title     = "RDS DB Parameter Group"
+    threshold = 3
+  }
+}
+
 category "aws_rds_db_subnet_group" {
   fold {
     title     = "RDS DB Subnet Group"
