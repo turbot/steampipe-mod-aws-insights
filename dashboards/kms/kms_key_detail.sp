@@ -53,13 +53,33 @@ dashboard "aws_kms_key_detail" {
   container {
 
     graph {
-      type  = "graph"
-      base  = graph.aws_graph_categories
-      query = query.aws_kms_key_relationships_graph
+      type      = "graph"
+      direction = "TD"
+
+      nodes = [
+        node.aws_kms_key_node,
+        node.aws_kms_key_from_cloudtrail_trail_node,
+        node.aws_kms_key_from_ebs_volume_node,
+        node.aws_kms_key_from_rds_db_cluster_snapshot_node,
+        node.aws_kms_key_from_rds_db_cluster_node,
+        node.aws_kms_key_from_rds_db_instance_node,
+        node.aws_kms_key_from_rds_db_snapshot_node,
+        node.aws_kms_key_from_redshift_cluster_node
+      ]
+
+      edges = [
+        edge.aws_kms_key_from_cloudtrail_trail_edge,
+        edge.aws_kms_key_from_ebs_volume_edge,
+        edge.aws_kms_key_from_rds_db_cluster_snapshot_edge,
+        edge.aws_kms_key_from_rds_db_cluster_edge,
+        edge.aws_kms_key_from_rds_db_instance_edge,
+        edge.aws_kms_key_from_rds_db_snapshot_edge,
+        edge.aws_kms_key_from_redshift_cluster_edge
+      ]
+
       args = {
         arn = self.input.key_arn.value
       }
-      category "aws_kms_key" {}
     }
   }
 
@@ -252,14 +272,13 @@ query "aws_kms_key_policy" {
   param "arn" {}
 }
 
-query "aws_kms_key_relationships_graph" {
+node "aws_kms_key_node" {
+  category = category.aws_kms_key
+
   sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       id as id,
-      id as title,
-      'aws_kms_key' as category,
+      title as title,
       jsonb_build_object(
         'ARN', arn,
         'Key Manager', key_manager,
@@ -270,53 +289,60 @@ query "aws_kms_key_relationships_graph" {
     from
       aws_kms_key
     where
-      arn = $1
+      arn = $1;
+  EOQ
 
-    -- From Cloud trails (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_kms_key_from_cloudtrail_trail_node" {
+  category = category.aws_cloudtrail_trail
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       t.arn as id,
       t.name as title,
-      'aws_cloudtrail_trail' as category,
       jsonb_build_object(
         'ARN', t.arn,
-        'Multi Region Trail',
-        is_multi_region_trail::text,
+        'Multi Region Trail', is_multi_region_trail::text,
         'Logging', is_logging::text,
         'Account ID', t.account_id,
         'Home Region', home_region ) as properties
     from
       aws_cloudtrail_trail as t
     where
-      t.kms_key_id = $1
+      t.kms_key_id = $1;
+  EOQ
 
-    -- From Cloud trails (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_kms_key_from_cloudtrail_trail_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
     select
       t.arn as from_id,
       k.id as to_id,
-      null as id,
-      'encrypted with' as title,
-      'cloudtrail_trail_to_kms_key' as category,
       jsonb_build_object(
         'Account ID', t.account_id ) as properties
     from
       aws_cloudtrail_trail as t,
       aws_kms_key as k
     where
-      t.kms_key_id = k.arn
-      and k.arn = $1
+      t.kms_key_id = $1;
+  EOQ
 
-    -- EBS volumes (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_kms_key_from_ebs_volume_node" {
+  category = category.aws_ebs_volume
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       volume_id as id,
       volume_id as title,
-      'aws_ebs_volume' as category,
       jsonb_build_object(
         'ARN', v.arn,
         'Volume Type', volume_type,
@@ -327,34 +353,38 @@ query "aws_kms_key_relationships_graph" {
     from
       aws_ebs_volume as v
     where
-      v.kms_key_id = $1
+      v.kms_key_id = $1;
+  EOQ
 
-    -- EBS volumes (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_kms_key_from_ebs_volume_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
     select
       volume_id as from_id,
       k.id as to_id,
-      null as id,
-      'encrypted with' as title,
-      'ebs_volume_to_kms_key' as category,
       jsonb_build_object(
         'Account ID', v.account_id ) as properties
     from
       aws_ebs_volume as v,
       aws_kms_key as k
     where
-      v.kms_key_id = k.arn
-      and k.arn = $1
+      v.kms_key_id = $1;
+  EOQ
 
+  param "arn" {}
+}
 
-    -- RDS DB cluster snapshots (node)
-    union all
+node "aws_kms_key_from_rds_db_cluster_snapshot_node" {
+  category = category.aws_rds_db_cluster_snapshot
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       db_cluster_snapshot_identifier as id,
       db_cluster_snapshot_identifier as title,
-      'aws_rds_db_cluster_snapshot' as category,
       jsonb_build_object(
         'ARN', s.arn,
         'Type', type,
@@ -365,33 +395,38 @@ query "aws_kms_key_relationships_graph" {
     from
       aws_rds_db_cluster_snapshot as s
     where
-      s.kms_key_id = $1
+      s.kms_key_id = $1;
+  EOQ
 
-    -- RDS DB cluster snapshots (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_kms_key_from_rds_db_cluster_snapshot_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
     select
       db_cluster_snapshot_identifier as from_id,
       k.id as to_id,
-      null as id,
-      'encrypted with' as title,
-      'rds_db_cluster_snapshot_to_kms_key' as category,
       jsonb_build_object(
         'Account ID', s.account_id ) as properties
     from
       aws_rds_db_cluster_snapshot as s,
       aws_kms_key as k
     where
-      s.kms_key_id = k.arn
-      and k.arn = $1
+      s.kms_key_id = $1;
+  EOQ
 
-    -- RDS DB clusters (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_kms_key_from_rds_db_cluster_node" {
+  category = category.aws_rds_db_cluster
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       db_cluster_identifier as id,
       db_cluster_identifier as title,
-      'aws_rds_db_cluster' as category,
       jsonb_build_object(
         'ARN', c.arn,
         'Status', status,
@@ -401,32 +436,37 @@ query "aws_kms_key_relationships_graph" {
     from
       aws_rds_db_cluster as c
     where
-      c.kms_key_id = $1
+      c.kms_key_id = $1;
+  EOQ
 
-    -- RDS DB Clusters (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_kms_key_from_rds_db_cluster_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
     select
       db_cluster_identifier as from_id,
       k.id as to_id,
-      null as id,
-      'encrypted with' as title,
-      'rds_db_cluster_to_kms_key' as category,
       jsonb_build_object( 'Account ID', c.account_id ) as properties
     from
       aws_rds_db_cluster as c,
       aws_kms_key as k
     where
-      c.kms_key_id = k.arn
-      and k.arn = $1
+      c.kms_key_id = $1;
+  EOQ
 
-    -- RDS DB instances (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_kms_key_from_rds_db_instance_node" {
+  category = category.aws_rds_db_instance
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       db_instance_identifier as id,
       db_instance_identifier as title,
-      'aws_rds_db_instance' as category,
       jsonb_build_object(
         'ARN', i.arn,
         'Status', status,
@@ -437,33 +477,38 @@ query "aws_kms_key_relationships_graph" {
     from
       aws_rds_db_instance as i
     where
-      i.kms_key_id = $1
+      i.kms_key_id = $1;
+  EOQ
 
-    -- RDS DB instances (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_kms_key_from_rds_db_instance_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
     select
       db_instance_identifier as from_id,
       k.id as to_id,
-      null as id,
-      'encrypted with' as title,
-      'rds_db_instance_to_kms_key' as category,
       jsonb_build_object(
         'Account ID', i.account_id ) as properties
     from
       aws_rds_db_instance as i,
       aws_kms_key as k
     where
-      i.kms_key_id = k.arn
-      and k.arn = $1
+      i.kms_key_id = $1;
+  EOQ
 
-    -- RDS DB instance snapshots (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_kms_key_from_rds_db_snapshot_node" {
+  category = category.aws_rds_db_snapshot
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       db_snapshot_identifier as id,
       db_snapshot_identifier as title,
-      'aws_rds_db_snapshot' as category,
       jsonb_build_object(
         'ARN', s.arn,
         'Type', type,
@@ -474,33 +519,38 @@ query "aws_kms_key_relationships_graph" {
     from
       aws_rds_db_snapshot as s
     where
-      s.kms_key_id = $1
+      s.kms_key_id = $1;
+  EOQ
 
-    -- RDS DB instance snapshots (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_kms_key_from_rds_db_snapshot_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
     select
       db_snapshot_identifier as from_id,
       k.id as to_id,
-      null as id,
-      'encrypted with' as title,
-      'rds_db_snapshot_to_kms_key' as category,
       jsonb_build_object(
         'Account ID', s.account_id ) as properties
     from
       aws_rds_db_snapshot as s,
       aws_kms_key as k
     where
-      s.kms_key_id = k.arn
-      and k.arn = $1
+      s.kms_key_id = $1;
+  EOQ
 
-    -- Redshift clusters (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_kms_key_from_redshift_cluster_node" {
+  category = category.aws_redshift_cluster
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       cluster_identifier as id,
       cluster_identifier as title,
-      'aws_redshift_cluster' as category,
       jsonb_build_object(
         'ARN', c.arn,
         'Cluster Availability Status', cluster_availability_status,
@@ -511,28 +561,26 @@ query "aws_kms_key_relationships_graph" {
     from
       aws_redshift_cluster as c
     where
-      c.kms_key_id = $1
+      c.kms_key_id = $1;
+  EOQ
 
-    -- Redshift clusters (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_kms_key_from_redshift_cluster_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
     select
       cluster_identifier as from_id,
       k.id as to_id,
-      null as id,
-      'encrypted with' as title,
-      'redshift_cluster_to_kms_key' as category,
-      jsonb_build_object( 'Account ID', c.account_id ) as properties
+      jsonb_build_object( 
+        'Account ID', c.account_id ) as properties
     from
       aws_redshift_cluster as c,
       aws_kms_key as k
     where
-      c.kms_key_id = k.arn
-      and k.arn = $1
-
-    order by
-      category,
-      from_id,
-      to_id;
+      c.kms_key_id = $1;
   EOQ
 
   param "arn" {}
