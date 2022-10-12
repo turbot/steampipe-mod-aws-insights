@@ -191,6 +191,27 @@ category "aws_rds_db_snapshot" {
   }
 }
 
+category "aws_rds_db_cluster_parameter_group" {
+  fold {
+    title     = "RDS DB Cluster Parameter Group"
+    threshold = 3
+  }
+}
+
+category "aws_rds_db_parameter_group" {
+  fold {
+    title     = "RDS DB Parameter Group"
+    threshold = 3
+  }
+}
+
+category "aws_rds_db_subnet_group" {
+  fold {
+    title     = "RDS DB Subnet Group"
+    threshold = 3
+  }
+}
+
 category "aws_redshift_cluster" {
   href = "/aws_insights.dashboard.aws_redshift_cluster_detail?input.cluster_arn={{.properties.'ARN' | @uri}}"
   fold {
@@ -351,14 +372,6 @@ category "aws_iam_group" {
   }
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-category "aws_iam_profile" {
-  fold {
-    title     = "IAM Profiles"
-=======
-=======
->>>>>>> new-graph-kms
 category "aws_iam_instance_profile" {
   fold {
     title     = "IAM Instance Profiles"
@@ -369,10 +382,6 @@ category "aws_iam_instance_profile" {
 category "aws_iam_access_key" {
   fold {
     title     = "IAM Access Key"
-<<<<<<< HEAD
->>>>>>> new-graph-iam
-=======
->>>>>>> new-graph-kms
     threshold = 3
   }
 }
