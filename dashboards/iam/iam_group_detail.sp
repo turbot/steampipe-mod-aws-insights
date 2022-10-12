@@ -232,7 +232,7 @@ node "aws_iam_group_from_iam_user_node" {
 
   sql = <<-EOQ
     select
-      u.name as id,
+      u.user_id as id,
       u.name as title,
       jsonb_build_object(
         'ARN', u.arn,
@@ -251,11 +251,11 @@ node "aws_iam_group_from_iam_user_node" {
 }
 
 edge "aws_iam_group_from_iam_user_edge" {
-  title = "iam group"
+  title = "attached"
 
   sql = <<-EOQ
     select
-      u.name as from_id,
+      u.user_id as from_id,
       g ->> 'GroupId' as to_id,
       jsonb_build_object( 'Account ID', u.account_id ) as properties
     from
