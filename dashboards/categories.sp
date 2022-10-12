@@ -351,9 +351,22 @@ category "aws_iam_group" {
   }
 }
 
+<<<<<<< HEAD
 category "aws_iam_profile" {
   fold {
     title     = "IAM Profiles"
+=======
+category "aws_iam_instance_profile" {
+  fold {
+    title     = "IAM Instance Profiles"
+    threshold = 3
+  }
+}
+
+category "aws_iam_access_key" {
+  fold {
+    title     = "IAM Access Key"
+>>>>>>> new-graph-iam
     threshold = 3
   }
 }

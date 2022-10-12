@@ -44,18 +44,34 @@ dashboard "aws_iam_role_detail" {
   container {
 
     graph {
-      type  = "graph"
-      base  = graph.aws_graph_categories
-      query = query.aws_iam_role_relationships_graph
+      type      = "graph"
+      direction = "TD"
+
+      nodes = [
+        node.aws_iam_role_node,
+        node.aws_iam_role_to_iam_policy_node,
+        # node.aws_iam_role_from_kinesisanalyticsv2_application_node,
+        node.aws_iam_role_from_emr_cluster_node,
+        node.aws_iam_role_from_guardduty_detector_node,
+        node.aws_iam_role_from_lambda_function_node,
+        node.aws_iam_role_from_iam_instance_profile_node,
+        node.aws_iam_role_from_ec2_instance_node
+      ]
+
+      edges = [
+        edge.aws_iam_role_to_iam_policy_edge,
+        # edge.aws_iam_role_from_kinesisanalyticsv2_application_edge,
+        edge.aws_iam_role_from_emr_cluster_edge,
+        edge.aws_iam_role_from_guardduty_detector_edge,
+        edge.aws_iam_role_from_lambda_function_edge,
+        edge.aws_iam_role_from_iam_instance_profile_edge,
+        edge.aws_iam_role_from_ec2_instance_edge
+      ]
+
       args = {
         arn = self.input.role_arn.value
       }
-      category "aws_iam_role" {
-        icon = local.aws_iam_role_icon
-      }
-
     }
-
   }
 
   container {
@@ -189,38 +205,42 @@ query "aws_iam_role_direct_attached_policy_count_for_role" {
   param "arn" {}
 }
 
-query "aws_iam_role_relationships_graph" {
+node "aws_iam_role_node" {
+  category = category.aws_iam_role
+
   sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       role_id as id,
       name as title,
-      'aws_iam_role' as category,
       jsonb_build_object(
         'ARN', arn,
         'Create Date', create_date,
         'Max Session Duration', max_session_duration,
-        'Account ID', account_id ) as properties
+        'Account ID', account_id
+      ) as properties
     from
       aws_iam_role
     where
-      arn = $1
+      arn = $1;
+  EOQ
 
-    -- To IAM policies (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_iam_role_to_iam_policy_node" {
+  category = category.aws_iam_policy
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       policy_id as id,
       name as title,
-      'aws_iam_policy' as category,
       jsonb_build_object(
         'ARN', arn,
         'AWS Managed', is_aws_managed::text,
         'Attached', is_attached::text,
         'Create Date', create_date,
-        'Account ID', account_id ) as properties
+        'Account ID', account_id 
+      ) as properties
     from
       aws_iam_policy
     where
@@ -232,18 +252,22 @@ query "aws_iam_role_relationships_graph" {
           aws_iam_role
         where
           arn = $1
-      )
+      );
+  EOQ
 
-    -- To IAM policies (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_iam_role_to_iam_policy_edge" {
+  title = "attached"
+
+  sql = <<-EOQ
     select
       r.role_id as from_id,
       p.policy_id as to_id,
-      null as id,
-      'iam policy' as title,
-      'iam_role_to_iam_policy' as category,
       jsonb_build_object(
-        'Account ID', r.account_id ) as properties
+        'Account ID', r.account_id 
+      ) as properties
     from
       aws_iam_role as r,
       jsonb_array_elements_text(attached_policy_arns) as arns
@@ -251,60 +275,71 @@ query "aws_iam_role_relationships_graph" {
         aws_iam_policy as p
         on p.arn = arns
     where
-      r.arn = $1
+      r.arn = $1;
+  EOQ
 
-    -- From Kinesis applications (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_iam_role_from_kinesisanalyticsv2_application_node" {
+  category = category.aws_kinesisanalyticsv2_application
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       application_arn as id,
       application_name as title,
-      'aws_kinesisanalyticsv2_application' as category,
       jsonb_build_object(
         'ARN', application_arn,
         'Application Status', application_status,
         'Create Timestamp', create_timestamp,
         'Runtime Environment', runtime_environment,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Region', region 
+      ) as properties
     from
       aws_kinesisanalyticsv2_application
     where
-      service_execution_role = $1
+      service_execution_role = $1;
+  EOQ
 
-    -- From Kinesis applications (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_iam_role_from_kinesisanalyticsv2_application_edge" {
+  title = "kinesis application"
+
+  sql = <<-EOQ
     select
       application_arn as from_id,
       role_id as to_id,
-      null as id,
-      'kinesis application' as title,
-      'kinesisanalyticsv2_application_to_iam_role' as category,
       jsonb_build_object(
-        'Account ID', a.account_id ) as properties
+        'Account ID', a.account_id 
+      ) as properties
     from
       aws_iam_role as r,
       aws_kinesisanalyticsv2_application as a
     where
-      r.arn = $1
-      and r.arn = a.service_execution_role
+      service_execution_role = $1;
+  EOQ
 
-    -- From EMR clusters (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_iam_role_from_emr_cluster_node" {
+  category = category.aws_emr_cluster
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       id as id,
       name as title,
-      'aws_emr_cluster' as category,
       jsonb_build_object(
         'ARN', cluster_arn,
         'State', state,
         'Log URI', log_uri,
         'Auto Terminate', auto_terminate::text,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Region', region 
+      ) as properties
     from
       aws_emr_cluster
     where
@@ -316,175 +351,205 @@ query "aws_iam_role_relationships_graph" {
           aws_iam_role
         where
           arn = $1
-      )
+      );
+  EOQ
 
-    -- From EMR clusters (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_iam_role_from_emr_cluster_edge" {
+  title = "emr cluster"
+
+  sql = <<-EOQ
     select
       c.id as from_id,
       role_id as to_id,
-      null as id,
-      'emr cluster' as title,
-      'emr_cluster_to_iam_role' as category,
       jsonb_build_object(
-        'Account ID', c.account_id ) as properties
+        'Account ID', c.account_id 
+      ) as properties
     from
       aws_iam_role as r,
       aws_emr_cluster as c
     where
       r.arn = $1
-      and r.name = c.service_role
+      and r.name = c.service_role;
+  EOQ
 
-    -- From GuardDuty detectors (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_iam_role_from_guardduty_detector_node" {
+  category = category.aws_guardduty_detector
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       detector_id as id,
       detector_id as title,
-      'aws_guardduty_detector' as category,
       jsonb_build_object(
         'ARN', arn,
         'Status', status,
         'Created At', created_at,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Region', region 
+      ) as properties
     from
       aws_guardduty_detector
     where
-      service_role = $1
+      service_role = $1;
+  EOQ
 
-    -- From GuardDuty detectors (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_iam_role_from_guardduty_detector_edge" {
+  title = "guardduty detector"
+
+  sql = <<-EOQ
     select
       detector_id as from_id,
       role_id as to_id,
-      null as id,
-      'guardduty detector' as title,
-      'guardduty_detector_to_iam_role' as category,
       jsonb_build_object(
-        'Account ID', d.account_id ) as properties
+        'Account ID', d.account_id 
+      ) as properties
     from
       aws_iam_role as r,
       aws_guardduty_detector as d
     where
-      r.arn = $1
-      and r.arn = d.service_role
+      r.arn = $1;
+  EOQ
 
-    -- From Lambda functions (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_iam_role_from_lambda_function_node" {
+  category = category.aws_lambda_function
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       arn as id,
       name as title,
-      'aws_lambda_function' as category,
       jsonb_build_object(
         'ARN', arn,
         'Last Modified', last_modified,
         'Version', version,
         'State', state,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Region', region 
+      ) as properties
     from
       aws_lambda_function
     where
-      role = $1
+      role = $1;
+  EOQ
 
-    -- From Lambda functions (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_iam_role_from_lambda_function_edge" {
+  title = "lambda function"
+
+  sql = <<-EOQ
     select
       f.arn as from_id,
       role_id as to_id,
-      null as id,
-      'lambda function' as title,
-      'lambda_function_to_iam_role' as category,
       jsonb_build_object(
-        'Account ID', f.account_id ) as properties
+        'Account ID', f.account_id 
+      ) as properties
     from
       aws_iam_role as r,
       aws_lambda_function as f
     where
-      r.arn = $1
-      and r.arn = f.role
+      r.arn = $1;
+  EOQ
 
-    -- From instance profiles (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_iam_role_from_iam_instance_profile_node" {
+  category = category.aws_iam_instance_profile
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       iam_instance_profile_arn as id,
       iam_instance_profile_arn as title,
-      'iam_instance_profile_arn' as category,
       jsonb_build_object(
-        'Instance Profile ARN', iam_instance_profile_arn ) as properties
+        'Instance Profile ARN', iam_instance_profile_arn 
+      ) as properties
     from
       aws_iam_role,
       jsonb_array_elements_text(instance_profile_arns) as iam_instance_profile_arn
     where
-      arn = $1
+      arn = $1;
+  EOQ
 
-     -- From instance profiles (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_iam_role_from_iam_instance_profile_edge" {
+  title = "instance profile"
+
+  sql = <<-EOQ
     select
       iam_instance_profile_arn as from_id,
       role_id as to_id,
-      null as id,
-      'instance profile' as title,
-      'instance_profile_to_iam_role' as category,
-      jsonb_build_object( 'Instance Profile ARN', iam_instance_profile_arn ) as properties
+      jsonb_build_object(
+        'Instance Profile ARN', iam_instance_profile_arn 
+      ) as properties
     from
       aws_iam_role,
       jsonb_array_elements_text(instance_profile_arns) as iam_instance_profile_arn
     where
-      arn = $1
+      arn = $1;
+  EOQ
 
-    -- From EC2 instances (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_iam_role_from_ec2_instance_node" {
+  category = category.aws_ec2_instance
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       i.instance_id as id,
       i.instance_id as title,
-      'aws_ec2_instance' as category,
       jsonb_build_object(
         'Name', i.tags ->> 'Name',
         'Instance ID', instance_id,
         'ARN', i.arn,
         'Account ID', i.account_id,
-        'Region', i.region ) as properties
+        'Region', i.region 
+      ) as properties
     from
       aws_ec2_instance as i,
       aws_iam_role as r,
       jsonb_array_elements_text(instance_profile_arns) as instance_profile
     where
       r.arn = $1
-      and instance_profile = i.iam_instance_profile_arn
+      and instance_profile = i.iam_instance_profile_arn;
+  EOQ
 
-    -- From EC2 instances (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_iam_role_from_ec2_instance_edge" {
+  title = "ec2 instance"
+
+  sql = <<-EOQ
     select
       i.instance_id as from_id,
       i.iam_instance_profile_arn as to_id,
-      null as id,
-      'ec2 instance' as title,
-      'ec2_instance_to_instance_profile' as category,
       jsonb_build_object(
         'Instance ARN', i.arn,
         'Instance Profile ARN', i.iam_instance_profile_arn,
-        'Account ID', i.account_id ) as properties
+        'Account ID', i.account_id 
+      ) as properties
     from
       aws_ec2_instance as i,
       aws_iam_role as r,
       jsonb_array_elements_text(instance_profile_arns) as instance_profile
     where
       r.arn = $1
-      and instance_profile = i.iam_instance_profile_arn
-
-    order by
-      category,
-      from_id,
-      to_id;
+      and instance_profile = i.iam_instance_profile_arn;
   EOQ
 
   param "arn" {}

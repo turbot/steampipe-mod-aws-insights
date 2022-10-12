@@ -52,14 +52,26 @@ dashboard "aws_iam_user_detail" {
   container {
 
     graph {
-      type  = "graph"
-      base  = graph.aws_graph_categories
-      query = query.aws_iam_user_relationships_graph
+      type      = "graph"
+      direction = "TD"
+
+      nodes = [
+        node.aws_iam_user_node,
+        node.aws_iam_user_to_iam_group_node,
+        node.aws_iam_user_to_iam_policy_node,
+        node.aws_iam_user_to_iam_group_policy_node,
+        node.aws_iam_user_to_iam_access_key_node
+      ]
+
+      edges = [
+        edge.aws_iam_user_to_iam_group_edge,
+        edge.aws_iam_user_to_iam_policy_edge,
+        edge.aws_iam_user_to_iam_group_policy_edge,
+        edge.aws_iam_user_to_iam_access_key_edge
+      ]
+
       args = {
         arn = self.input.user_arn.value
-      }
-      category "aws_iam_user" {
-        icon = local.aws_iam_user_icon
       }
     }
   }
@@ -253,74 +265,86 @@ query "aws_iam_user_direct_attached_policy_count_for_user" {
   param "arn" {}
 }
 
-query "aws_iam_user_relationships_graph" {
+node "aws_iam_user_node" {
+  category = category.aws_iam_user
+
   sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       user_id as id,
       name as title,
-      'aws_iam_user' as category,
       jsonb_build_object(
         'ARN', arn,
         'Path', path,
         'Create Date', create_date,
         'MFA Enabled', mfa_enabled::text,
-        'Account ID', account_id ) as properties
+        'Account ID', account_id 
+      ) as properties
     from
       aws_iam_user
     where
-      arn = $1
+      arn = $1;
+  EOQ
 
-    -- To IAM groups (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_iam_user_to_iam_group_node" {
+  category = category.aws_iam_group
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
-      g.name as id,
+      g.group_id as id,
       g.name as title,
-      'aws_iam_group' as category,
       jsonb_build_object(
         'ARN', arn,
         'Path', path,
         'Create Date', create_date,
-        'Account ID', account_id ) as properties
+        'Account ID', account_id 
+      ) as properties
     from
       aws_iam_group as g,
       jsonb_array_elements(users) as u
     where
-      u ->> 'Arn' = $1
+      u ->> 'Arn' = $1;
+  EOQ
 
-    -- To IAM groups (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_iam_user_to_iam_group_edge" {
+  title = "associated"
+
+  sql = <<-EOQ
     select
       u ->> 'UserId' as from_id,
-      g.name as to_id,
-      null as id,
-      'iam group' as title,
-      'iam_user_to_iam_group' as category,
+      g.group_id as to_id,
       jsonb_build_object(
-        'Account ID', g.account_id ) as properties
+        'Account ID', g.account_id 
+      ) as properties
     from
       aws_iam_group as g,
       jsonb_array_elements(users) as u
     where
-      u ->> 'Arn' = $1
+      u ->> 'Arn' = $1;
+  EOQ
 
-    -- To IAM policies (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_iam_user_to_iam_policy_node" {
+  category = category.aws_iam_policy
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       policy_id as id,
       name as title,
-      'aws_iam_policy' as category,
       jsonb_build_object(
         'ARN', arn,
         'AWS Managed', is_aws_managed::text,
         'Attached', is_attached::text,
         'Create Date', create_date,
-        'Account ID', account_id ) as properties
+        'Account ID', account_id 
+      ) as properties
     from
       aws_iam_policy
     where
@@ -332,18 +356,22 @@ query "aws_iam_user_relationships_graph" {
           aws_iam_user
         where
           arn = $1
-      )
+      );
+  EOQ
 
-    -- To IAM policies (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_iam_user_to_iam_policy_edge" {
+  title = "attached"
+
+  sql = <<-EOQ
     select
       r.user_id as from_id,
       p.policy_id as to_id,
-      null as id,
-      'iam policy' as title,
-      'iam_user_to_iam_policy' as category,
       jsonb_build_object(
-        'Account ID', p.account_id ) as properties
+        'Account ID', p.account_id 
+      ) as properties
     from
       aws_iam_user as r,
       jsonb_array_elements_text(attached_policy_arns) as arns
@@ -351,12 +379,100 @@ query "aws_iam_user_relationships_graph" {
         aws_iam_policy as p
         on p.arn = arns
     where
-      r.arn = $1
+      r.arn = $1;
+  EOQ
 
-    order by
-      category,
-      from_id,
-      to_id;
+  param "arn" {}
+}
+
+node "aws_iam_user_to_iam_group_policy_node" {
+  category = category.aws_iam_policy
+
+  sql = <<-EOQ
+    select
+      p.policy_id as id,
+      p.name as title,
+      jsonb_build_object(
+        'ARN', p.arn,
+        'AWS Managed', is_aws_managed::text,
+        'Attached', is_attached::text,
+        'Create Date', p.create_date,
+        'Account ID', p.account_id 
+      ) as properties
+    from
+      aws_iam_user as u,
+      aws_iam_policy as p,
+      jsonb_array_elements(u.groups) as user_groups
+      inner join aws_iam_group g on g.arn = user_groups ->> 'Arn'
+    where
+      g.attached_policy_arns :: jsonb ? p.arn
+      and u.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_iam_user_to_iam_group_policy_edge" {
+  title = "attached"
+
+  sql = <<-EOQ
+    select
+      g.group_id as from_id,
+      p.policy_id as to_id,
+      jsonb_build_object(
+        'Account ID', p.account_id 
+      ) as properties
+    from
+      aws_iam_user as u,
+      aws_iam_policy as p,
+      jsonb_array_elements(u.groups) as user_groups
+      inner join aws_iam_group g on g.arn = user_groups ->> 'Arn'
+    where
+      g.attached_policy_arns :: jsonb ? p.arn
+      and u.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_iam_user_to_iam_access_key_node" {
+  category = category.aws_iam_access_key
+
+  sql = <<-EOQ
+    select
+      a.access_key_id as id,
+      a.access_key_id as title,
+      jsonb_build_object(
+        'Key Id', a.access_key_id,
+        'Status', a.status,
+        'Create Date', a.create_date,
+        'Last Used Date', a.access_key_last_used_date,
+        'Last Used Service', a.access_key_last_used_service,
+        'Last Used Region', a.access_key_last_used_region 
+      ) as properties
+    from
+      aws_iam_access_key as a left join aws_iam_user as u on u.name = a.user_name
+    where
+      u.arn  = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_iam_user_to_iam_access_key_edge" {
+  title = "access key"
+
+  sql = <<-EOQ
+    select
+      u.user_id as from_id,
+      a.access_key_id as to_id,
+      jsonb_build_object(
+        'Account ID', u.account_id 
+      ) as properties
+    from
+      aws_iam_access_key as a left join aws_iam_user as u on u.name = a.user_name
+    where
+      u.arn  = $1;
   EOQ
 
   param "arn" {}
