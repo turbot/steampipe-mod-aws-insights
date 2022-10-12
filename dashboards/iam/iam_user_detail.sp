@@ -277,7 +277,8 @@ node "aws_iam_user_node" {
         'Path', path,
         'Create Date', create_date,
         'MFA Enabled', mfa_enabled::text,
-        'Account ID', account_id ) as properties
+        'Account ID', account_id 
+      ) as properties
     from
       aws_iam_user
     where
@@ -298,7 +299,8 @@ node "aws_iam_user_to_iam_group_node" {
         'ARN', arn,
         'Path', path,
         'Create Date', create_date,
-        'Account ID', account_id ) as properties
+        'Account ID', account_id 
+      ) as properties
     from
       aws_iam_group as g,
       jsonb_array_elements(users) as u
@@ -317,7 +319,8 @@ edge "aws_iam_user_to_iam_group_edge" {
       u ->> 'UserId' as from_id,
       g.group_id as to_id,
       jsonb_build_object(
-        'Account ID', g.account_id ) as properties
+        'Account ID', g.account_id 
+      ) as properties
     from
       aws_iam_group as g,
       jsonb_array_elements(users) as u
@@ -340,7 +343,8 @@ node "aws_iam_user_to_iam_policy_node" {
         'AWS Managed', is_aws_managed::text,
         'Attached', is_attached::text,
         'Create Date', create_date,
-        'Account ID', account_id ) as properties
+        'Account ID', account_id 
+      ) as properties
     from
       aws_iam_policy
     where
@@ -366,7 +370,8 @@ edge "aws_iam_user_to_iam_policy_edge" {
       r.user_id as from_id,
       p.policy_id as to_id,
       jsonb_build_object(
-        'Account ID', p.account_id ) as properties
+        'Account ID', p.account_id 
+      ) as properties
     from
       aws_iam_user as r,
       jsonb_array_elements_text(attached_policy_arns) as arns
@@ -392,7 +397,8 @@ node "aws_iam_user_to_iam_group_policy_node" {
         'AWS Managed', is_aws_managed::text,
         'Attached', is_attached::text,
         'Create Date', p.create_date,
-        'Account ID', p.account_id ) as properties
+        'Account ID', p.account_id 
+      ) as properties
     from
       aws_iam_user as u,
       aws_iam_policy as p,
@@ -414,7 +420,8 @@ edge "aws_iam_user_to_iam_group_policy_edge" {
       g.group_id as from_id,
       p.policy_id as to_id,
       jsonb_build_object(
-        'Account ID', p.account_id ) as properties
+        'Account ID', p.account_id 
+      ) as properties
     from
       aws_iam_user as u,
       aws_iam_policy as p,
@@ -441,7 +448,8 @@ node "aws_iam_user_to_iam_access_key_node" {
         'Create Date', a.create_date,
         'Last Used Date', a.access_key_last_used_date,
         'Last Used Service', a.access_key_last_used_service,
-        'Last Used Region', a.access_key_last_used_region ) as properties
+        'Last Used Region', a.access_key_last_used_region 
+      ) as properties
     from
       aws_iam_access_key as a left join aws_iam_user as u on u.name = a.user_name
     where
@@ -459,7 +467,8 @@ edge "aws_iam_user_to_iam_access_key_edge" {
       u.user_id as from_id,
       a.access_key_id as to_id,
       jsonb_build_object(
-        'Account ID', u.account_id ) as properties
+        'Account ID', u.account_id 
+      ) as properties
     from
       aws_iam_access_key as a left join aws_iam_user as u on u.name = a.user_name
     where

@@ -156,7 +156,8 @@ node "aws_iam_policy_node" {
         'AWS Managed', is_aws_managed::text,
         'Attached', is_attached::text,
         'Create Date', create_date,
-        'Account ID', account_id ) as properties
+        'Account ID', account_id 
+      ) as properties
     from
       aws_iam_policy
     where
@@ -177,7 +178,8 @@ node "aws_iam_policy_from_iam_role_node" {
         'ARN', arn,
         'Create Date', create_date,
         'Max Session Duration', max_session_duration,
-        'Account ID', account_id ) as properties
+        'Account ID', account_id 
+      ) as properties
     from
       aws_iam_role,
       jsonb_array_elements_text(attached_policy_arns) as arns
@@ -196,7 +198,8 @@ edge "aws_iam_policy_from_iam_role_edge" {
       r.role_id as from_id,
       p.policy_id as to_id,
       jsonb_build_object(
-        'Account ID', r.account_id ) as properties
+        'Account ID', r.account_id 
+      ) as properties
     from
       aws_iam_role as r,
       jsonb_array_elements_text(attached_policy_arns) as arns
@@ -222,7 +225,8 @@ node "aws_iam_policy_from_iam_user_node" {
         'path', path,
         'Create Date', create_date,
         'MFA Enabled', mfa_enabled::text,
-        'Account ID', u.account_id ) as properties
+        'Account ID', u.account_id 
+      ) as properties
     from
       aws_iam_user as u,
       jsonb_array_elements_text(attached_policy_arns) as arns
@@ -241,7 +245,8 @@ edge "aws_iam_policy_from_iam_user_edge" {
       u.name as from_id,
       p.policy_id as to_id,
       jsonb_build_object(
-        'Account ID', u.account_id ) as properties
+        'Account ID', u.account_id 
+      ) as properties
     from
       aws_iam_user as u,
       jsonb_array_elements_text(attached_policy_arns) as arns,
@@ -265,7 +270,8 @@ node "aws_iam_policy_from_iam_group_node" {
         'ARN', arn,
         'Path', path,
         'Create Date', create_date,
-        'Account ID', account_id ) as properties
+        'Account ID', account_id 
+      ) as properties
     from
       aws_iam_group as g,
       jsonb_array_elements_text(attached_policy_arns) as arns
@@ -283,7 +289,9 @@ edge "aws_iam_policy_from_iam_group_edge" {
     select
       g.name as from_id,
       p.policy_id as to_id,
-      jsonb_build_object( 'Account ID', g.account_id ) as properties
+      jsonb_build_object( 
+        'Account ID', g.account_id 
+      ) as properties
     from
       aws_iam_group as g,
       jsonb_array_elements_text(attached_policy_arns) as arns,
