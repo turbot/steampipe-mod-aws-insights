@@ -66,7 +66,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
         node.aws_ec2_clb_to_ec2_instance_node,
         node.aws_ec2_clb_to_s3_bucket_node,
         node.aws_ec2_clb_to_vpc_security_group_node,
-        node.aws_ec2_clb_to_vpc_node,
+        node.aws_ec2_clb_vpc_security_group_to_vpc_node,
         node.aws_ec2_lb_from_ec2_load_balancer_listener_node
       ]
 
@@ -74,7 +74,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
         edge.aws_ec2_clb_to_ec2_instance_edge,
         edge.aws_ec2_clb_to_s3_bucket_edge,
         edge.aws_ec2_clb_to_vpc_security_group_edge,
-        edge.aws_ec2_clb_to_vpc_edge,
+        edge.aws_ec2_clb_vpc_security_group_to_vpc_edge,
         edge.aws_ec2_lb_from_ec2_load_balancer_listener_edge
       ]
 
@@ -411,7 +411,7 @@ edge "aws_ec2_clb_to_vpc_security_group_edge" {
   param "arn" {}
 }
 
-node "aws_ec2_clb_to_vpc_node" {
+node "aws_ec2_clb_vpc_security_group_to_vpc_node" {
   category = category.aws_vpc
 
   sql = <<-EOQ
@@ -435,7 +435,7 @@ node "aws_ec2_clb_to_vpc_node" {
   param "arn" {}
 }
 
-edge "aws_ec2_clb_to_vpc_edge" {
+edge "aws_ec2_clb_vpc_security_group_to_vpc_edge" {
   title = "vpc"
 
   sql = <<-EOQ
@@ -448,8 +448,13 @@ edge "aws_ec2_clb_to_vpc_edge" {
     from
       aws_vpc vpc,
       aws_ec2_classic_load_balancer as clb
-      left join aws_vpc_security_group sg 
-        on sg.group_id in (select jsonb_array_elements_text(clb.security_groups))
+      left join 
+        aws_vpc_security_group sg 
+        on sg.group_id in 
+        (
+          select 
+            jsonb_array_elements_text(clb.security_groups)
+        )
     where
       clb.arn = $1
       and clb.vpc_id = vpc.vpc_id;

@@ -67,14 +67,14 @@ dashboard "aws_ec2_network_interface_detail" {
         node.aws_ec2_network_interface_to_ec2_instance_node,
         node.aws_ec2_network_interface_to_vpc_security_group_node,
         node.aws_ec2_network_interface_to_vpc_subnet_node,
-        node.aws_ec2_network_interface_to_vpc_node
+        node.aws_ec2_network_interface_vpc_security_group_to_vpc_node
       ]
 
       edges = [
         edge.aws_ec2_network_interface_to_ec2_instance_edge,
         edge.aws_ec2_network_interface_to_vpc_security_group_edge,
         edge.aws_ec2_network_interface_to_vpc_subnet_edge,
-        edge.aws_ec2_network_interface_to_vpc_edge
+        edge.aws_ec2_network_interface_vpc_security_group_to_vpc_edge
       ]
 
       args = {
@@ -482,7 +482,7 @@ edge "aws_ec2_network_interface_to_vpc_subnet_edge" {
   param "network_interface_id" {}
 }
 
-node "aws_ec2_network_interface_to_vpc_node" {
+node "aws_ec2_network_interface_vpc_security_group_to_vpc_node" {
   category = category.aws_vpc
 
   sql = <<-EOQ
@@ -509,7 +509,7 @@ node "aws_ec2_network_interface_to_vpc_node" {
   param "network_interface_id" {}
 }
 
-edge "aws_ec2_network_interface_to_vpc_edge" {
+edge "aws_ec2_network_interface_vpc_security_group_to_vpc_edge" {
   title = "vpc"
 
   sql = <<-EOQ
@@ -526,7 +526,8 @@ edge "aws_ec2_network_interface_to_vpc_edge" {
       ) as properties
     from
       aws_ec2_network_interface as eni
-      cross join jsonb_array_elements(eni.groups) as sg
+      cross join 
+        jsonb_array_elements(eni.groups) as sg
       left join
         aws_vpc as vpc
         on eni.vpc_id = vpc.vpc_id

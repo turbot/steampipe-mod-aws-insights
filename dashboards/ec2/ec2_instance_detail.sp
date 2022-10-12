@@ -68,7 +68,7 @@ dashboard "aws_ec2_instance_detail" {
         node.aws_ec2_instance_to_ec2_network_interface_node,
         node.aws_ec2_instance_to_vpc_security_group_node,
         node.aws_ec2_instance_to_vpc_subnet_node,
-        node.aws_ec2_instance_to_vpc_node,
+        node.aws_ec2_instance_vpc_subnet_to_vpc_node,
         node.aws_ec2_instance_to_iam_profile_node,
         node.aws_ec2_instance_to_iam_role_node,
         node.aws_ec2_instance_to_ec2_key_pair_node,
@@ -83,7 +83,7 @@ dashboard "aws_ec2_instance_detail" {
         edge.aws_ec2_instance_to_ec2_network_interface_edge,
         edge.aws_ec2_instance_to_vpc_security_group_edge,
         edge.aws_ec2_instance_to_vpc_subnet_edge,
-        edge.aws_ec2_instance_to_vpc_edge,
+        edge.aws_ec2_instance_vpc_subnet_to_vpc_edge,
         edge.aws_ec2_instance_to_iam_profile_edge,
         edge.aws_ec2_instance_to_iam_role_edge,
         edge.aws_ec2_instance_to_ec2_key_pair_edge,
@@ -513,7 +513,7 @@ edge "aws_ec2_instance_to_vpc_subnet_edge" {
   param "arn" {}
 }
 
-node "aws_ec2_instance_to_vpc_node" {
+node "aws_ec2_instance_vpc_subnet_to_vpc_node" {
   category = category.aws_vpc
 
   sql = <<-EOQ
@@ -539,7 +539,7 @@ node "aws_ec2_instance_to_vpc_node" {
   param "arn" {}
 }
 
-edge "aws_ec2_instance_to_vpc_edge" {
+edge "aws_ec2_instance_vpc_subnet_to_vpc_edge" {
   title = "vpc"
 
   sql = <<-EOQ

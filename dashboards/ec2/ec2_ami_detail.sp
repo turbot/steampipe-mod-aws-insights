@@ -55,7 +55,6 @@ dashboard "aws_ec2_ami_detail" {
       type      = "graph"
       direction = "TD"
 
-
       nodes = [
         node.aws_ec2_ami_node,
         node.aws_ec2_ami_from_ec2_instance_node,
