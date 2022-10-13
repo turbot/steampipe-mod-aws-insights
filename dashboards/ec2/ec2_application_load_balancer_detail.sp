@@ -66,6 +66,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
 
   container {
     graph {
+      title     = "Relationships"
       type      = "graph"
       direction = "TD"
 

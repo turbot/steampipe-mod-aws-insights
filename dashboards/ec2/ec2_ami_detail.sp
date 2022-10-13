@@ -52,6 +52,7 @@ dashboard "aws_ec2_ami_detail" {
   container {
 
     graph {
+      title     = "Relationships"
       type      = "graph"
       direction = "TD"
 

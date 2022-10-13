@@ -44,6 +44,7 @@ dashboard "aws_iam_role_detail" {
   container {
 
     graph {
+      title     = "Relationships"
       type      = "graph"
       direction = "TD"
 

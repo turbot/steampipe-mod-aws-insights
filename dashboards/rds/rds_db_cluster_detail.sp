@@ -52,6 +52,7 @@ dashboard "aws_rds_db_cluster_detail" {
   container {
 
     graph {
+      title     = "Relationships"
       type      = "graph"
       direction = "TD"
 

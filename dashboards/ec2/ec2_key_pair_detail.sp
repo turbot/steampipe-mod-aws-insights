@@ -35,6 +35,7 @@ dashboard "aws_ec2_key_pair_detail" {
   container {
 
     graph {
+      title     = "Relationships"
       type      = "graph"
       direction = "TD"
 

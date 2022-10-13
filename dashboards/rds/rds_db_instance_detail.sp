@@ -60,8 +60,10 @@ dashboard "aws_rds_db_instance_detail" {
   container {
 
     graph {
+      title     = "Relationships"
       type      = "graph"
       direction = "TD"
+
 
       nodes = [
         node.aws_rds_db_instance_node,

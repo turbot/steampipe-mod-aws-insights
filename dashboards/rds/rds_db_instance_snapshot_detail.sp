@@ -66,14 +66,24 @@ dashboard "aws_rds_db_snapshot_detail" {
   container {
 
     graph {
-      type  = "graph"
-      base  = graph.aws_graph_categories
-      query = query.aws_rds_db_snapshot_relationships_graph
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      nodes = [
+        node.aws_rds_db_snapshot_node,
+        node.aws_rds_db_snapshot_to_kms_key_node,
+        node.aws_rds_db_snapshot_from_rds_db_instance_node
+      ]
+
+      edges = [
+        edge.aws_rds_db_snapshot_to_kms_key_edge,
+        edge.aws_rds_db_snapshot_from_rds_db_instance_edge
+      ]
+
       args = {
         arn = self.input.db_snapshot_arn.value
       }
-      category "aws_rds_db_snapshot" {}
-
     }
   }
 
@@ -291,16 +301,13 @@ query "aws_rds_db_snapshot_storage" {
   param "arn" {}
 }
 
+node "aws_rds_db_snapshot_node" {
+  category = category.aws_rds_db_snapshot
 
-query "aws_rds_db_snapshot_relationships_graph" {
   sql = <<-EOQ
-    -- RDS DB instance snapshot (node)
     select
-      null as from_id,
-      null as to_id,
       db_snapshot_identifier as id,
       title,
-      'aws_rds_db_snapshot' as category,
       jsonb_build_object(
         'ARN', arn,
         'Status', status,
@@ -314,16 +321,19 @@ query "aws_rds_db_snapshot_relationships_graph" {
     from
       aws_rds_db_snapshot
     where
-      arn = $1
+      arn = $1;
+  EOQ
 
-    -- To KMS keys (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_rds_db_snapshot_to_kms_key_node" {
+  category = category.aws_kms_key
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
-      k.id as id,
-      COALESCE(k.aliases #>> '{0,AliasName}', k.id) as title,
-      'aws_kms_key' as category,
+      k.id,
+      k.title,
       jsonb_build_object(
         'ARN', k.arn,
         'Rotation Enabled', k.key_rotation_enabled::text,
@@ -332,18 +342,23 @@ query "aws_rds_db_snapshot_relationships_graph" {
       ) as properties
     from
       aws_rds_db_snapshot as s
-      join aws_kms_key as k on s.kms_key_id = k.arn
+      join
+        aws_kms_key as k
+        on s.kms_key_id = k.arn
     where
-      s.arn = $1
+      s.arn = $1;
+  EOQ
 
-    -- To KMS keys (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_rds_db_snapshot_to_kms_key_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
     select
       s.db_snapshot_identifier as from_id,
       k.id as to_id,
-      null as id,
-      'encrypted with' as title,
-      'rds_db_snapshot_to_kms_key' as category,
       jsonb_build_object(
         'ARN', k.arn,
         'DB Snapshot Identifier', s.db_snapshot_identifier,
@@ -352,18 +367,23 @@ query "aws_rds_db_snapshot_relationships_graph" {
       ) as properties
     from
       aws_rds_db_snapshot as s
-      join aws_kms_key as k on s.kms_key_id = k.arn
+      join 
+        aws_kms_key as k 
+        on s.kms_key_id = k.arn
     where
-      s.arn = $1
+      s.arn = $1;
+  EOQ
 
-    -- From RDS DB instance (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_rds_db_snapshot_from_rds_db_instance_node" {
+  category = category.aws_rds_db_instance
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       s.db_instance_identifier as id,
       s.title as title,
-      'aws_rds_db_instance' as category,
       jsonb_build_object(
         'ARN', i.arn,
         'Status', i.status,
@@ -377,20 +397,25 @@ query "aws_rds_db_snapshot_relationships_graph" {
       ) as properties
     from
       aws_rds_db_snapshot as s
-      join aws_rds_db_instance as i on s.db_instance_identifier = i.db_instance_identifier
+      join 
+        aws_rds_db_instance as i 
+        on s.db_instance_identifier = i.db_instance_identifier
         and s.account_id = i.account_id
         and s.region = i.region
     where
-      s.arn = $1
+      s.arn = $1;
+  EOQ
 
-    -- From RDS DB instance (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_rds_db_snapshot_from_rds_db_instance_edge" {
+  title = "snapshot"
+
+  sql = <<-EOQ
     select
       i.db_instance_identifier as from_id,
       s.db_snapshot_identifier as to_id,
-      null as id,
-      'snapshot' as title,
-      'rds_db_instance_to_rds_db_snapshot' as category,
       jsonb_build_object(
         'DB Instance Identifier', i.db_instance_identifier,
         'DB Snapshot Identifier', s.db_snapshot_identifier,
@@ -399,16 +424,13 @@ query "aws_rds_db_snapshot_relationships_graph" {
       ) as properties
     from
       aws_rds_db_snapshot as s
-      join aws_rds_db_instance as i on s.db_instance_identifier = i.db_instance_identifier
+      join 
+        aws_rds_db_instance as i 
+        on s.db_instance_identifier = i.db_instance_identifier
         and s.account_id = i.account_id
         and s.region = i.region
     where
-      s.arn = $1
-
-    order by
-      category,
-      from_id,
-      to_id;
+      s.arn = $1;
   EOQ
 
   param "arn" {}

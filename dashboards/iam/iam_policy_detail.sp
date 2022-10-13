@@ -33,6 +33,7 @@ dashboard "aws_iam_policy_detail" {
   container {
 
     graph {
+      title     = "Relationships"
       type      = "graph"
       direction = "TD"
 

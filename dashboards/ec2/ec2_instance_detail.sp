@@ -59,6 +59,7 @@ dashboard "aws_ec2_instance_detail" {
   container {
 
     graph {
+      title     = "Relationships"
       type      = "graph"
       direction = "TD"
 

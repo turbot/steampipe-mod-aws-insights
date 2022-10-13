@@ -53,6 +53,7 @@ dashboard "aws_kms_key_detail" {
   container {
 
     graph {
+      title     = "Relationships"
       type      = "graph"
       direction = "TD"
 
