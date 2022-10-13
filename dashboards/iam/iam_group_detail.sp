@@ -156,7 +156,7 @@ query "aws_iam_group_direct_attached_policy_count_for_group" {
 }
 
 node "aws_iam_group_node" {
-  category = category.aws_ec2_ami
+  category = category.aws_iam_group
 
   sql = <<-EOQ
     select

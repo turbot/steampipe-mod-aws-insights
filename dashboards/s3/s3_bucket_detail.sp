@@ -527,7 +527,7 @@ node "aws_s3_bucket_to_s3_bucket_node" {
 
   sql = <<-EOQ
     select
-      lb.title as id,
+      lb.arn as id,
       lb.title as title,
       jsonb_build_object(
         'Name', lb.name,
@@ -552,7 +552,7 @@ edge "aws_s3_bucket_to_s3_bucket_edge" {
   sql = <<-EOQ
     select
       b.arn as from_id,
-      lb.title as to_id,
+      lb.arn as to_id,
       jsonb_build_object(
         'Account ID', lb.account_id
       ) as properties
