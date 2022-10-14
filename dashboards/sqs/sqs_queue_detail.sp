@@ -50,21 +50,41 @@ dashboard "aws_sqs_queue_detail" {
 
   }
 
-  container {
+container {
 
     graph {
-      type  = "graph"
-      base  = graph.aws_graph_categories
-      query = query.aws_sqs_queue_relationships_graph
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      nodes = [
+        node.aws_sqs_queue_node
+      ]
+
+      edges = [
+        edge.aws_ec2_instance_to_ebs_volume_edge
+      ]
+
       args = {
         arn = self.input.queue_arn.value
       }
-      category "aws_sqs_queue" {
-        icon = local.aws_sqs_queue_icon
-      }
-
     }
   }
+  // container {
+
+  //   graph {
+  //     type  = "graph"
+  //     base  = graph.aws_graph_categories
+  //     query = query.aws_sqs_queue_relationships_graph
+  //     args = {
+  //       arn = self.input.queue_arn.value
+  //     }
+  //     category "aws_sqs_queue" {
+  //       icon = local.aws_sqs_queue_icon
+  //     }
+
+  //   }
+  // }
 
   container {
 
@@ -290,6 +310,27 @@ query "aws_sqs_queue_encryption_details" {
       aws_sqs_queue
     where
       queue_arn = $1;
+  EOQ
+
+  param "queue_arn" {}
+}
+
+node "aws_sqs_queue_node" {
+  category=category.aws_sqs_queue
+  sql = <<-EOQ
+    select
+      null as from_id,
+      null as to_id,
+      queue_arn as id,
+      title as title,
+      'aws_sqs_queue' as category,
+      jsonb_build_object(
+        'ARN', queue_arn,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      queue
   EOQ
 
   param "queue_arn" {}
