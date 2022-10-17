@@ -228,6 +228,20 @@ category "aws_redshift_snapshot" {
   }
 }
 
+category "aws_redshift_subnet_group" {
+  fold {
+    title     = "Redshift Subnet Groups"
+    threshold = 3
+  }
+}
+
+category "aws_redshift_parameter_group" {
+  fold {
+    title     = "Redshift Parameter Groups"
+    threshold = 3
+  }
+}
+
 category "aws_ec2_ami" {
   href = "aws_insights.dashboard.aws_ec2_ami_detail?input.ami={{.properties.'Image ID' | @uri}}"
   icon = local.aws_ec2_ami_icon
