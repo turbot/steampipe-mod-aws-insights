@@ -59,11 +59,12 @@ container {
 
       nodes = [
         node.aws_sqs_queue_node
+        // node.aws_sqs_from_sns_topic_subscription
       ]
 
-      edges = [
-        edge.aws_ec2_instance_to_ebs_volume_edge
-      ]
+      // edges = [
+      //   edge.aws_ec2_instance_to_ebs_volume_edge
+      // ]
 
       args = {
         arn = self.input.queue_arn.value
@@ -330,10 +331,35 @@ node "aws_sqs_queue_node" {
         'Region', region
       ) as properties
     from
-      queue
+        aws_sqs_queue
+    where
+      queue_arn = $1;
   EOQ
 
-  param "queue_arn" {}
+  param "arn" {}
+}
+
+node "aws_sqs_from_sns_topic_subscription" {
+  category=category.aws_sns_topic
+  sql = <<-EOQ
+    select
+      null as from_id,
+      null as to_id,
+      subscription_arn as id,
+      title as title,
+      'aws_sns_topic_subscription' as category,
+      jsonb_build_object(
+        'ARN', subscription_arn,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_sns_topic_subscription
+    where
+      endpoint = $1;
+  EOQ
+
+  param "endpoint" {}
 }
 
 query "aws_sqs_queue_relationships_graph" {
