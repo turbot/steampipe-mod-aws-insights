@@ -265,10 +265,7 @@ edge "aws_iam_role_to_iam_policy_edge" {
   sql = <<-EOQ
     select
       r.role_id as from_id,
-      p.policy_id as to_id,
-      jsonb_build_object(
-        'Account ID', r.account_id 
-      ) as properties
+      p.policy_id as to_id
     from
       aws_iam_role as r,
       jsonb_array_elements_text(attached_policy_arns) as arns
@@ -312,10 +309,7 @@ edge "aws_iam_role_from_kinesisanalyticsv2_application_edge" {
   sql = <<-EOQ
     select
       application_arn as from_id,
-      role_id as to_id,
-      jsonb_build_object(
-        'Account ID', a.account_id 
-      ) as properties
+      role_id as to_id
     from
       aws_iam_role as r,
       aws_kinesisanalyticsv2_application as a
@@ -408,10 +402,7 @@ edge "aws_iam_role_from_guardduty_detector_edge" {
   sql = <<-EOQ
     select
       detector_id as from_id,
-      role_id as to_id,
-      jsonb_build_object(
-        'Account ID', d.account_id 
-      ) as properties
+      role_id as to_id
     from
       aws_iam_role as r,
       aws_guardduty_detector as d
@@ -452,10 +443,7 @@ edge "aws_iam_role_from_lambda_function_edge" {
   sql = <<-EOQ
     select
       f.arn as from_id,
-      role_id as to_id,
-      jsonb_build_object(
-        'Account ID', f.account_id 
-      ) as properties
+      role_id as to_id
     from
       aws_iam_role as r,
       aws_lambda_function as f

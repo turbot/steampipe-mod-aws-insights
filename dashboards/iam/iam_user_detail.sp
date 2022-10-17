@@ -369,10 +369,7 @@ edge "aws_iam_user_to_iam_policy_edge" {
   sql = <<-EOQ
     select
       r.user_id as from_id,
-      p.policy_id as to_id,
-      jsonb_build_object(
-        'Account ID', p.account_id 
-      ) as properties
+      p.policy_id as to_id
     from
       aws_iam_user as r,
       jsonb_array_elements_text(attached_policy_arns) as arns
@@ -419,10 +416,7 @@ edge "aws_iam_user_to_iam_group_policy_edge" {
   sql = <<-EOQ
     select
       g.group_id as from_id,
-      p.policy_id as to_id,
-      jsonb_build_object(
-        'Account ID', p.account_id 
-      ) as properties
+      p.policy_id as to_id
     from
       aws_iam_user as u,
       aws_iam_policy as p,
@@ -466,10 +460,7 @@ edge "aws_iam_user_to_iam_access_key_edge" {
   sql = <<-EOQ
     select
       u.user_id as from_id,
-      a.access_key_id as to_id,
-      jsonb_build_object(
-        'Account ID', u.account_id 
-      ) as properties
+      a.access_key_id as to_id
     from
       aws_iam_access_key as a left join aws_iam_user as u on u.name = a.user_name
     where
