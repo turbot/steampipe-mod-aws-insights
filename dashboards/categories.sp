@@ -318,10 +318,19 @@ category "aws_vpc" {
   }
 }
 
+
 category "aws_vpc_security_group" {
   href = "/aws_insights.dashboard.aws_vpc_security_group_detail?input.security_group_id={{.properties.'Group ID' | @uri}}"
   fold {
     title     = "VPC Security Groups"
+    threshold = 3
+  }
+}
+
+category "aws_vpc_flow_log" {
+  href = "/aws_insights.dashboard.aws_vpc_flow_logs_detail?input.flow_log_id={{.properties.'Flow Log ID' | @uri}}"
+  fold {
+    title     = "VPC Flow Logs"
     threshold = 3
   }
 }
