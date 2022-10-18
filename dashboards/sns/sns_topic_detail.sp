@@ -35,7 +35,7 @@ dashboard "aws_sns_topic_detail" {
   container {
 
     graph {
-      title     = "SNS Relationships"
+      title     = "Relationships"
       type      = "graph"
       direction = "TD"
 
