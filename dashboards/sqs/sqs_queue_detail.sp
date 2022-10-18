@@ -58,13 +58,17 @@ container {
       direction = "TD"
 
       nodes = [
-        node.aws_sqs_queue_node
-        // node.aws_sqs_from_sns_topic_subscription
+        node.aws_sqs_queue_node,
+        node.aws_sqs_queue_to_sns_topic_subscription_node,
+        node.aws_sqs_queue_to_kms_key_node,
+        node.aws_sqs_queue_from_s3_bucket_node
       ]
 
-      // edges = [
-      //   edge.aws_ec2_instance_to_ebs_volume_edge
-      // ]
+      edges = [
+        edge.aws_sqs_queue_to_sns_topic_subscription_edge,
+        edge.aws_sqs_queue_to_kms_key_edge,
+        edge.aws_sqs_queue_from_s3_bucket_edge
+      ]
 
       args = {
         arn = self.input.queue_arn.value
@@ -339,7 +343,7 @@ node "aws_sqs_queue_node" {
   param "arn" {}
 }
 
-node "aws_sqs_from_sns_topic_subscription" {
+node "aws_sqs_queue_to_sns_topic_subscription_node" {
   category=category.aws_sns_topic
   sql = <<-EOQ
     select
@@ -359,7 +363,124 @@ node "aws_sqs_from_sns_topic_subscription" {
       endpoint = $1;
   EOQ
 
-  param "endpoint" {}
+  param "arn" {}
+}
+
+edge "aws_sqs_queue_to_sns_topic_subscription_edge" {
+  title = "subscibe to"
+
+  sql = <<-EOQ
+     select
+      q.queue_arn as from_id,
+      s.subscription_arn as to_id,
+      'sqs_queue_to_sns_topic_subscription' as category
+    from
+      aws_sqs_queue as q
+      left join aws_sns_topic_subscription as s on s.endpoint = q.queue_arn
+    where
+      q.queue_arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_sqs_queue_to_kms_key_node" {
+  category=category.aws_kms_key
+
+  sql = <<-EOQ
+     select
+      arn as id,
+      k.title as title,
+      jsonb_build_object(
+        'ARN', arn,
+        'Id', k.id,
+        'Enabled', enabled::text,
+        'Account ID', k.account_id,
+        'Region', k.region
+      ) as properties
+    from
+      aws_sqs_queue as q,
+      aws_kms_key as k,
+      jsonb_array_elements(aliases) as a
+    where
+      a ->> 'AliasName' = q.kms_master_key_id
+      and k.region = q.region 
+      and q.queue_arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_sqs_queue_to_kms_key_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
+     select
+      q.queue_arn as from_id,
+      k.arn as to_id
+    from
+      aws_sqs_queue as q,
+      aws_kms_key as k,
+      jsonb_array_elements(aliases) as a
+    where
+      a ->> 'AliasName' = q.kms_master_key_id
+      and k.region = q.region 
+      and q.queue_arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_sqs_queue_from_s3_bucket_node" {
+  category=category.aws_s3_bucket
+
+  sql = <<-EOQ
+     select
+      arn as id,
+      name as title,
+      'aws_s3_bucket' as category,
+      jsonb_build_object(
+        'ARN', arn,
+        'Versioning Enabled', versioning_enabled::text,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_s3_bucket,
+      jsonb_array_elements(
+        case jsonb_typeof(event_notification_configuration -> 'QueueConfigurations')
+          when 'array' then (event_notification_configuration -> 'QueueConfigurations')
+          else null end
+        )
+        as q
+    where
+      q ->> 'QueueArn' = $1
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_sqs_queue_from_s3_bucket_edge" {
+  title = "sends notifications"
+
+  sql = <<-EOQ
+    select
+      arn as from_id,
+      $1 as to_id,
+      's3_bucket_to_sqs_queue' as category
+    from
+      aws_s3_bucket,
+      jsonb_array_elements(
+        case jsonb_typeof(event_notification_configuration -> 'QueueConfigurations')
+          when 'array' then (event_notification_configuration -> 'QueueConfigurations')
+          else null end
+        )
+        as q
+    where
+      q ->> 'QueueArn' = $1
+  EOQ
+
+  param "arn" {}
 }
 
 query "aws_sqs_queue_relationships_graph" {
