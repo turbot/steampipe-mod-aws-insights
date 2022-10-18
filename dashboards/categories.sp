@@ -537,6 +537,17 @@ category "aws_dax_cluster" {
   }
 }
 
+category "aws_dynamodb_table" {
+  href = "/aws_insights.dashboard.dynamodb_table_detail?input.table_arn={{.properties.'ARN' | @uri}}"
+  icon = local.aws_dynamodb_table_icon
+  fold {
+    title     = "DynamoDB Tables"
+    icon = local.aws_dynamodb_table_icon
+    threshold = 3
+  }
+}
+
+
 category "aws_dax_subnet_group" {
   fold {
     title     = "DAX Subnet Groups"
