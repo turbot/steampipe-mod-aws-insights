@@ -243,7 +243,7 @@ category "aws_redshift_parameter_group" {
 }
 
 category "aws_ec2_ami" {
-  href = "aws_insights.dashboard.aws_ec2_ami_detail?input.ami={{.properties.'Image ID' | @uri}}"
+  href = "/aws_insights.dashboard.aws_ec2_ami_detail?input.ami={{.properties.'Image ID' | @uri}}"
   icon = local.aws_ec2_ami_icon
   fold {
     title     = "EC2 AMIs"

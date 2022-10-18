@@ -14,7 +14,7 @@ dashboard "aws_ebs_snapshot_detail" {
   }
 
   container {
-    
+
     card {
       width = 2
       query = query.aws_ebs_snapshot_state
@@ -30,7 +30,7 @@ dashboard "aws_ebs_snapshot_detail" {
         arn = self.input.snapshot_arn.value
       }
     }
-    
+
     card {
       width = 2
       query = query.aws_ebs_snapshot_encryption
@@ -50,15 +50,30 @@ dashboard "aws_ebs_snapshot_detail" {
   }
 
   container {
+
     graph {
-      type  = "graph"
-      base  = graph.aws_graph_categories
-      query = query.aws_ebs_snapshot_relationships_graph
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+
+      nodes = [
+        node.aws_ebs_snapshot_node,
+        node.aws_ebs_snapshot_from_ebs_volume_node,
+        node.aws_ebs_snapshot_from_ec2_ami_node,
+        node.aws_ebs_snapshot_from_ec2_launch_configuration_node,
+        node.aws_ebs_snapshot_to_kms_key_node
+      ]
+
+      edges = [
+        edge.aws_ebs_snapshot_from_ebs_volume_edge,
+        edge.aws_ebs_snapshot_from_ec2_ami_edge,
+        edge.aws_ebs_snapshot_from_ec2_launch_configuration_edge,
+        edge.aws_ebs_snapshot_to_kms_key_edge
+      ]
+
       args = {
         arn = self.input.snapshot_arn.value
-      }
-      category "aws_ebs_snapshot" {
-        icon = local.aws_ebs_snapshot_icon
       }
     }
   }
@@ -202,126 +217,119 @@ query "aws_ebs_snapshot_age" {
   param "arn" {}
 }
 
-query "aws_ebs_snapshot_relationships_graph" {
-  sql = <<-EOQ
-    with snapshot as
-    (
-      select
-        arn,
-        snapshot_id,
-        volume_id,
-        volume_size,
-        title,
-        account_id,
-        region,
-        kms_key_id
-      from
-        aws_ebs_snapshot
-      where
-        arn = $1
-    )
+node "aws_ebs_snapshot_node" {
+  category = category.aws_ebs_snapshot
 
-    -- Resource (node)
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       snapshot_id as id,
       title as title,
-      'aws_ebs_snapshot' as category,
       jsonb_build_object(
-        'ID', snapshot.snapshot_id,
-        'ARN', snapshot.arn,
-        'Size', snapshot.volume_size,
-        'Account ID', snapshot.account_id,
-        'Region', snapshot.region,
-        'KMS Key ID', snapshot.kms_key_id
+        'ID', s.snapshot_id,
+        'ARN', s.arn,
+        'Size', s.volume_size,
+        'KMS Key ID', s.kms_key_id
       ) as properties
     from
-      snapshot
+      aws_ebs_snapshot as s
+    where
+      arn = $1;
+  EOQ
 
-    -- From EBS volumes (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_ebs_snapshot_from_ebs_volume_node" {
+  category = category.aws_ebs_volume
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       volumes.volume_id as id,
       volumes.title as title,
-      'aws_ebs_volume' as category,
       jsonb_build_object(
         'Volume ID', volumes.volume_id,
-        'ARN', volumes.arn,
-        'Account ID', volumes.account_id,
-        'Region', volumes.region
+        'ARN', volumes.arn
       ) as properties
     from
-      snapshot
-    left join aws_ebs_volume as volumes 
-    on snapshot.volume_id = volumes.volume_id
+      aws_ebs_snapshot as s
+    left join 
+      aws_ebs_volume as volumes 
+      on s.volume_id = volumes.volume_id
+      and s.arn = $1;
+  EOQ
 
-    -- From EBS volumes (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_ebs_snapshot_from_ebs_volume_edge" {
+  title = "snapshot"
+
+  sql = <<-EOQ
     select
       volumes.volume_id as from_id,
-      snapshot.snapshot_id as to_id,
-      null as id,
-      'snapshot' as title,
-      'ebs_volume_to_ebs_snapshot' as category,
-      jsonb_build_object(
-        'Account ID', volumes.account_id
-      ) as properties
+      s.snapshot_id as to_id
     from
-      snapshot
-    left join aws_ebs_volume as volumes 
-    on snapshot.volume_id = volumes.volume_id
+      aws_ebs_snapshot as s
+    left join 
+      aws_ebs_volume as volumes 
+      on s.volume_id = volumes.volume_id
+      and s.arn = $1;
+  EOQ
 
-    -- From EC2 AMI (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_ebs_snapshot_from_ec2_ami_node" {
+  category = category.aws_ec2_ami
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       images.image_id as id,
       images.title as title,
-      'aws_ec2_ami' as category,
       jsonb_build_object(
-        'Snapshot ID', bdm -> 'Ebs' ->> 'SnapshotId',
-        'Account ID', images.account_id,
-        'Region', images.region
+        'Image ID', images.image_id,
+        'Snapshot ID', bdm -> 'Ebs' ->> 'SnapshotId'
       ) as properties
     from
       aws_ec2_ami as images,
       jsonb_array_elements(images.block_device_mappings) as bdm,
-      snapshot
+      aws_ebs_snapshot as s
     where
       bdm -> 'Ebs' is not null
-      and bdm -> 'Ebs' ->> 'SnapshotId' = snapshot.snapshot_id
+      and bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
+      and s.arn = $1;
+  EOQ
 
-    -- From EC2 AMI (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_ebs_snapshot_from_ec2_ami_edge" {
+  title = "created from"
+
+  sql = <<-EOQ
     select
       images.image_id as from_id,
-      bdm -> 'Ebs' ->> 'SnapshotId' as to_id,
-      null as id,
-      'created from' as title,
-      'ec2_ami_to_ebs_snapshot' as category,
-      jsonb_build_object(
-        'Account ID', images.account_id
-      ) as properties
+      bdm -> 'Ebs' ->> 'SnapshotId' as to_id
     from
       aws_ec2_ami as images,
       jsonb_array_elements(images.block_device_mappings) as bdm,
-      snapshot
+      aws_ebs_snapshot as s
     where
       bdm -> 'Ebs' is not null
-      and bdm -> 'Ebs' ->> 'SnapshotId' = snapshot.snapshot_id
+      and bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
+      and s.arn = $1;
+  EOQ
 
-    -- From EC2 launch configurations (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_ebs_snapshot_from_ec2_launch_configuration_node" {
+  category = category.aws_ec2_launch_configuration
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       launch_config.launch_configuration_arn as id,
       launch_config.name as title,
-      'aws_ec2_launch_configuration' as category,
       jsonb_build_object(
         'ARN', launch_config.launch_configuration_arn,
         'Account ID', launch_config.account_id,
@@ -330,87 +338,69 @@ query "aws_ebs_snapshot_relationships_graph" {
     from
       aws_ec2_launch_configuration as launch_config,
       jsonb_array_elements(launch_config.block_device_mappings) as bdm,
-      snapshot
+      aws_ebs_snapshot as s
     where
-      bdm -> 'Ebs' ->> 'SnapshotId' = snapshot.snapshot_id
+      bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
+      and s.arn = $1;
+  EOQ
 
-    -- From EC2 launch configurations (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_ebs_snapshot_from_ec2_launch_configuration_edge" {
+  title = "provisions EBS with"
+
+  sql = <<-EOQ
     select
       launch_config.launch_configuration_arn as from_id,
-      snapshot.snapshot_id as to_id,
-      null as id,
-      'provisions EBS with' as title,
-      'ec2_launch_config_to_ebs_snapshot' as category,
-      jsonb_build_object(
-        'Account ID', launch_config.account_id
-      ) as properties
+      s.snapshot_id as to_id
     from
       aws_ec2_launch_configuration as launch_config,
       jsonb_array_elements(launch_config.block_device_mappings) as bdm,
-      snapshot
+      aws_ebs_snapshot as s
     where
-      bdm -> 'Ebs' ->> 'SnapshotId' = snapshot.snapshot_id
+      bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
+      and s.arn = $1;
+  EOQ
 
-    -- To KMS keys (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_ebs_snapshot_to_kms_key_node" {
+  category = category.aws_kms_key
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       kms_keys.arn as id,
       kms_keys.title as title,
-      'aws_kms_key' as category,
       jsonb_build_object(
         'ARN', kms_keys.arn,
-        'Account ID', kms_keys.account_id,
-        'Region', kms_keys.region,
         'Key Manager', kms_keys.key_manager
       ) as properties
     from
-      snapshot
-    left join aws_kms_key as kms_keys
-    on snapshot.kms_key_id = kms_keys.arn
+      aws_ebs_snapshot as s
+    left join 
+      aws_kms_key as kms_keys
+      on s.kms_key_id = kms_keys.arn
+      and s.arn = $1;
+  EOQ
 
-    -- To KMS keys (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_ebs_snapshot_to_kms_key_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
     select
-      snapshot.snapshot_id as from_id,
-      kms_keys.arn as to_id,
-      null as id,
-      'encrypted with' as title,
-      'ebs_snapshot_to_kms_keys' as category,
-      jsonb_build_object(
-        'Account ID', kms_keys.account_id
-      ) as properties
+      s.snapshot_id as from_id,
+      kms_keys.arn as to_id
     from
-      snapshot
-    left join aws_kms_key as kms_keys
-    on snapshot.kms_key_id = kms_keys.arn
-
-    -- EBS volume > KMS key (edge)
-    union all
-    select
-      volumes.volume_id as from_id,
-      kms_keys.arn as to_id,
-      null as id,
-      'encrypted with' as title,
-      'ebs_volumes_to_kms_keys' as category,
-      jsonb_build_object(
-        'Account ID', kms_keys.account_id
-      ) as properties
-    from
-      aws_kms_key as kms_keys,
-      aws_ebs_volume as volumes,
-      snapshot
-    where
-      snapshot.volume_id = volumes.volume_id
-      and snapshot.kms_key_id = kms_keys.arn
-
-    order by
-      category,
-      from_id,
-      to_id;
-
+      aws_ebs_snapshot as s
+    left join 
+      aws_kms_key as kms_keys
+      on s.kms_key_id = kms_keys.arn
+      and s.arn = $1;
   EOQ
 
   param "arn" {}
