@@ -57,15 +57,29 @@ dashboard "acm_certificate_detail" {
   }
 
   container {
+
     graph {
-      type  = "graph"
-      base  = graph.aws_graph_categories
-      query = query.aws_acm_certificate_relationships_graph
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      nodes = [
+        node.aws_acm_certificate_node,
+        node.aws_acm_certificate_from_cloudfront_distribution_node,
+        node.aws_acm_certificate_from_ec2_classic_load_balancer_node,
+        node.aws_acm_certificate_from_ec2_application_load_balancer_node,
+        node.aws_acm_certificate_from_ec2_network_load_balancer_node
+      ]
+
+      edges = [
+        edge.aws_acm_certificate_from_cloudfront_distribution_edge,
+        edge.aws_acm_certificate_from_ec2_classic_load_balancer_edge,
+        edge.aws_acm_certificate_from_ec2_application_load_balancer_edge,
+        edge.aws_acm_certificate_from_ec2_network_load_balancer_edge
+      ]
+
       args = {
         arn = self.input.certificate_arn.value
-      }
-      category "aws_acm_certificate" {
-        icon = local.aws_acm_certificate_icon
       }
     }
   }
@@ -228,14 +242,13 @@ query "aws_acm_certificate_transparency_logging_status" {
   param "arn" {}
 }
 
-query "aws_acm_certificate_relationships_graph" {
+node "aws_acm_certificate_node" {
+  category = category.aws_acm_certificate
+
   sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       title as id,
       title as title,
-      'aws_acm_certificate' as category,
       jsonb_build_object(
         'ARN', certificate_arn,
         'Domain Name', domain_name,
@@ -246,16 +259,19 @@ query "aws_acm_certificate_relationships_graph" {
     from
       aws_acm_certificate
     where
-      certificate_arn = $1
+      certificate_arn = $1;
+  EOQ
 
-    -- From Cloudfront Distributions (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_acm_certificate_from_cloudfront_distribution_node" {
+  category = category.aws_cloudfront_distribution
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       id as id,
       id as title,
-      'aws_cloudfront_distribution' as category,
       jsonb_build_object(
         'ARN', arn,
         'Status', status,
@@ -273,18 +289,19 @@ query "aws_acm_certificate_relationships_graph" {
           aws_acm_certificate
         where
           certificate_arn = $1
-      )
+      );
+  EOQ
 
-    -- From Cloudfront Distributions (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_acm_certificate_from_cloudfront_distribution_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
     select
       d.id as from_id,
-      c.title as to_id,
-      null as id,
-      'encrypted with' as title,
-      'cloudfront_distribution_to_acm_certificate' as category,
-      jsonb_build_object(
-        'Account ID', d.account_id ) as properties
+      c.title as to_id
     from
       aws_acm_certificate as c,
       jsonb_array_elements_text(in_use_by) as arns
@@ -292,16 +309,19 @@ query "aws_acm_certificate_relationships_graph" {
         aws_cloudfront_distribution as d
         on d.arn = arns
     where
-      certificate_arn = $1
+      certificate_arn = $1;
+  EOQ
 
-    -- From EC2 Classic Load Balancers (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_acm_certificate_from_ec2_classic_load_balancer_node" {
+  category = category.aws_ec2_classic_load_balancer
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       arn as id,
       name as title,
-      'aws_ec2_classic_load_balancer' as category,
       jsonb_build_object(
         'ARN', arn,
         'VPC ID', vpc_id,
@@ -320,18 +340,19 @@ query "aws_acm_certificate_relationships_graph" {
           aws_acm_certificate
         where
           certificate_arn = $1
-      )
+      );
+  EOQ
 
-    -- From EC2 Classic Load Balancers (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_acm_certificate_from_ec2_classic_load_balancer_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
     select
       b.arn as from_id,
-      c.title as to_id,
-      null as id,
-      'encrypted with' as title,
-      'ec2_classic_load_balancer_to_acm_certificate' as category,
-      jsonb_build_object(
-        'Account ID', b.account_id ) as properties
+      c.title as to_id
     from
       aws_acm_certificate as c,
       jsonb_array_elements_text(in_use_by) as arns
@@ -339,16 +360,19 @@ query "aws_acm_certificate_relationships_graph" {
         aws_ec2_classic_load_balancer as b
         on b.arn = arns
     where
-      certificate_arn = $1
+      certificate_arn = $1;
+  EOQ
 
-    -- From EC2 Application Load Balancers (node)
-    union all
-    select
-      null as from_id,
-      null as to_id,
+  param "arn" {}
+}
+
+node "aws_acm_certificate_from_ec2_application_load_balancer_node" {
+  category = category.aws_ec2_application_load_balancer
+
+  sql = <<-EOQ
+   select
       arn as id,
       name as title,
-      'aws_ec2_application_load_balancer' as category,
       jsonb_build_object(
         'ARN', arn,
         'VPC ID', vpc_id,
@@ -368,18 +392,19 @@ query "aws_acm_certificate_relationships_graph" {
           aws_acm_certificate
         where
           certificate_arn = $1
-      )
+      );
+  EOQ
 
-    -- From EC2 Application Load Balancers (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_acm_certificate_from_ec2_application_load_balancer_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
     select
       lb.arn as from_id,
-      c.title as to_id,
-      null as id,
-      'encrypted with' as title,
-      'ec2_application_load_balancer_to_acm_certificate' as category,
-      jsonb_build_object(
-        'Account ID', lb.account_id ) as properties
+      c.title as to_id
     from
       aws_acm_certificate as c,
       jsonb_array_elements_text(in_use_by) as arns
@@ -388,16 +413,19 @@ query "aws_acm_certificate_relationships_graph" {
         on lb.arn = arns
     where
       certificate_arn = $1
-      and lb.arn like '%loadbalancer/app%'
+      and lb.arn like '%loadbalancer/app%';
+  EOQ
 
-    -- From EC2 Network Load Balancers (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_acm_certificate_from_ec2_network_load_balancer_node" {
+  category = category.aws_ec2_network_load_balancer
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       arn as id,
       name as title,
-      'aws_ec2_network_load_balancer' as category,
       jsonb_build_object(
         'ARN', arn,
         'VPC ID', vpc_id,
@@ -416,17 +444,20 @@ query "aws_acm_certificate_relationships_graph" {
           aws_acm_certificate
         where
           certificate_arn = $1
-      )
+      );
+  EOQ
 
-    -- From EC2 Network Load Balancers (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_acm_certificate_from_ec2_network_load_balancer_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
     select
       b.arn as from_id,
       c.title as to_id,
-      null as id,
-      'encrypted with' as title,
-      'ec2_network_load_balancer_to_acm_certificate' as category,
-      jsonb_build_object( 'Account ID', b.account_id ) as properties
+      'ec2_network_load_balancer_to_acm_certificate' as category
     from
       aws_acm_certificate as c,
       jsonb_array_elements_text(in_use_by) as arns
@@ -435,7 +466,6 @@ query "aws_acm_certificate_relationships_graph" {
         on b.arn = arns
     where
       certificate_arn = $1
-
     order by
       category,
       from_id,
