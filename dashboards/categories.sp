@@ -725,6 +725,34 @@ category "aws_codedeploy_app" {
   }
 }
 
+category "aws_eks_addon" {
+  fold {
+    title     = "EKS Addons"
+    threshold = 3
+  }
+}
+
+category "aws_eks_node_group" {
+  fold {
+    title     = "EKS Node Groups"
+    threshold = 3
+  }
+}
+
+category "aws_emr_instance_fleet" {
+  fold {
+    title     = "EMR instance fleets"
+    threshold = 3
+  }
+}
+
+category "aws_emr_instance_group" {
+  fold {
+    title     = "EMR instance groups"
+    threshold = 3
+  }
+}
+
 graph "aws_graph_categories" {
   type  = "graph"
   title = "Relationships"
