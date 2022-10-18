@@ -30,20 +30,40 @@ dashboard "aws_sns_topic_detail" {
         arn = self.input.topic_arn.value
       }
     }
-
   }
 
   container {
 
     graph {
-      type  = "graph"
-      base  = graph.aws_graph_categories
-      query = query.aws_sns_topic_relationships_graph
+      title     = "SNS Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      nodes = [
+        node.aws_sns_topic_node,
+        node.aws_sns_topic_to_kms_key_node,
+        node.aws_sns_topic_to_sns_topic_subscriptions_node,
+        node.aws_sns_topic_from_s3_bucket_node,
+        node.aws_sns_topic_from_rds_db_instance_node,
+        node.aws_sns_topic_from_redshift_cluster_node,
+        node.aws_sns_topic_from_cloudtrail_trail_node,
+        node.aws_sns_topic_from_cloudformation_stack_node,
+        node.aws_sns_topic_from_aws_elasticache_cluster_node
+      ]
+
+      edges = [
+        edge.aws_sns_topic_to_kms_key_edge,
+        edge.aws_sns_topic_to_sns_topic_subscriptions_edge,
+        edge.aws_sns_topic_from_s3_bucket_edge,
+        edge.aws_sns_topic_from_rds_db_instance_edge,
+        edge.aws_sns_topic_from_redshift_cluster_edge,
+        edge.aws_sns_topic_from_cloudtrail_trail_edge,
+        edge.aws_sns_topic_from_cloudformation_stack_edge,
+        edge.aws_sns_topic_from_aws_elasticache_cluster_edge
+      ]
+
       args = {
         arn = self.input.topic_arn.value
-      }
-      category "aws_sns_topic" {
-        icon = local.aws_sns_topic_icon
       }
     }
   }
@@ -243,38 +263,34 @@ query "aws_sns_topic_policy_standard" {
   param "arn" {}
 }
 
-query "aws_sns_topic_relationships_graph" {
+node "aws_sns_topic_node" {
+  category = category.aws_sns_topic
+
   sql = <<-EOQ
-    with topic as (
-      select
-        *
-      from
-        aws_sns_topic
-      where
-        topic_arn = $1
-    )
     select
-      null as from_id,
-      null as to_id,
       topic_arn as id,
       title as title,
-      'aws_sns_topic' as category,
       jsonb_build_object(
         'ARN', topic_arn,
         'Account ID', account_id,
         'Region', region
       ) as properties
     from
-      topic
+      aws_sns_topic as q
+    where
+      q.topic_arn = $1;
+  EOQ
 
-    -- To KMS keys (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_sns_topic_to_kms_key_node" {
+  category = category.aws_kms_key
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       k.arn as id,
       k.title as title,
-      'aws_kms_key' as category,
       jsonb_build_object(
         'ARN', k.arn,
         'ID', k.id,
@@ -283,39 +299,41 @@ query "aws_sns_topic_relationships_graph" {
         'Region', k.region
       ) as properties
     from
-      topic as q
+      aws_sns_topic as q
       left join aws_kms_key as k on k.id = split_part(q.kms_master_key_id, '/', 2)
     where
-      k.region = q.region
+      q.topic_arn = $1
+      and k.region = q.region;
+  EOQ
 
-    -- To KMS keys (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_sns_topic_to_kms_key_edge" {
+  title = "sns key"
+
+  sql = <<-EOQ
     select
       q.topic_arn as from_id,
-      k.arn as to_id,
-      null as id,
-      'encrypted with' as title,
-      'sns_topic_to_kms_key' as category,
-      jsonb_build_object(
-        'ARN', k.arn,
-        'ID', k.id,
-        'Account ID', k.account_id,
-        'Region', k.region
-      ) as properties
+      k.arn as to_id
     from
-      topic as q
+      aws_sns_topic as q
       left join aws_kms_key as k on k.id = split_part(q.kms_master_key_id, '/', 2)
     where
-      k.region = q.region
+      q.topic_arn = $1
+      and k.region = q.region;
+  EOQ
 
-    -- To SNS topic subscriptions (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_sns_topic_to_sns_topic_subscriptions_node" {
+  category = category.aws_sns_topic
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       subscription_arn as id,
       title as title,
-      'aws_sns_topic_subscription' as category,
       jsonb_build_object(
         'ARN', subscription_arn,
         'Pending Confirmation', pending_confirmation,
@@ -325,33 +343,36 @@ query "aws_sns_topic_relationships_graph" {
     from
       aws_sns_topic_subscription
     where
-      topic_arn = $1
+      topic_arn = $1;
+  EOQ
 
-    -- To SNS topic subscriptions (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_sns_topic_to_sns_topic_subscriptions_edge" {
+  title = "sns subscription"
+
+  sql = <<-EOQ
     select
       q.topic_arn as from_id,
-      s.subscription_arn as to_id,
-      null as id,
-      'subscibe to' as title,
-      'sns_topic_to_sns_topic_subscription' as category,
-      jsonb_build_object(
-        'ARN', s.subscription_arn,
-        'Account ID', s.account_id,
-        'Region', s.region
-      ) as properties
+      s.subscription_arn as to_id
     from
-      topic as q
+      aws_sns_topic as q
       left join aws_sns_topic_subscription as s on s.topic_arn = q.topic_arn
+    where
+      q.topic_arn = $1;
+  EOQ
 
-  -- From S3 buckets (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_sns_topic_from_s3_bucket_node" {
+  category = category.aws_s3_bucket
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       arn as id,
       title as title,
-      'aws_s3_bucket' as category,
       jsonb_build_object(
         'ARN', arn,
         'Account ID', account_id,
@@ -366,21 +387,19 @@ query "aws_sns_topic_relationships_graph" {
         )
         as t
     where
-      t ->> 'TopicArn' = $1
+      t ->> 'TopicArn' = $1;
+  EOQ
 
-    -- From S3 buckets (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_sns_topic_from_s3_bucket_edge" {
+  title = "send notifications"
+
+  sql = <<-EOQ
     select
       arn as from_id,
-      $1 as to_id,
-      null as id,
-      'send notifications' as title,
-      's3_bucket_to_sns_topic' as category,
-      jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
+      $1 as to_id
     from
       aws_s3_bucket,
       jsonb_array_elements(
@@ -390,13 +409,17 @@ query "aws_sns_topic_relationships_graph" {
         )
         as t
     where
-      t ->> 'TopicArn' = $1
+      t ->> 'TopicArn' = $1;
+  EOQ
 
-    -- From RDS DB instances (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_sns_topic_from_rds_db_instance_node" {
+  category = category.aws_rds_db_instance
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       i.arn as id,
       i.title as title,
       'aws_rds_db_instance' as category,
@@ -408,53 +431,48 @@ query "aws_sns_topic_relationships_graph" {
       ) as properties
     from
       aws_rds_db_instance as i,
-      aws_rds_db_event_subscription as e,
-      jsonb_array_elements(
-        case jsonb_typeof(source_ids_list)
-          when 'array' then (source_ids_list)
-          else null end
-      ) s
+      aws_rds_db_event_subscription as e
     where
       e.source_type = 'db-instance'
-      and (source_ids_list is null or i.db_instance_identifier = trim((s::text ), '""'))
-      and e.sns_topic_arn = $1
+      and (source_ids_list is null or i.db_instance_identifier in (select trim((s::text ), '""') from aws_rds_db_event_subscription,
+      jsonb_array_elements(source_ids_list) as s)
+      )
+      and e.sns_topic_arn = $1;
+  EOQ
 
-    -- From RDS DB instances (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_sns_topic_from_rds_db_instance_edge" {
+  title = "event subscription"
+
+  sql = <<-EOQ
     select
       i.arn as from_id,
-      t.topic_arn as to_id,
-      null as id,
-      'event subscription' as title,
-      'rds_db_instance_to_sns_topic' as category,
-      jsonb_build_object(
-        'ARN', i.arn,
-        'Event Categories List', case when event_categories_list is null then '["ALL"]' else event_categories_list end,
-        'Account ID', i.account_id,
-        'Region', i.region
-      ) as properties
+      t.topic_arn as to_id
     from
-      topic as t,
+      aws_sns_topic as t,
       aws_rds_db_instance as i,
-      aws_rds_db_event_subscription as e,
-      jsonb_array_elements(
-        case jsonb_typeof(e.source_ids_list)
-          when 'array' then (e.source_ids_list)
-          else null end
-      ) as s
+      aws_rds_db_event_subscription as e
     where
       e.source_type = 'db-instance'
-      and (e.source_ids_list is null or i.db_instance_identifier = trim((s::text ), '""'))
+      and (source_ids_list is null or i.db_instance_identifier in (select trim((s::text ), '""') from aws_rds_db_event_subscription,
+      jsonb_array_elements(source_ids_list) as s)
+      )
       and t.topic_arn = e.sns_topic_arn
+      and topic_arn = $1;
+  EOQ
 
-    -- From Redshift clusters (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_sns_topic_from_redshift_cluster_node" {
+  category = category.aws_redshift_cluster
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       c.arn as id,
       c.title as title,
-      'aws_redshift_cluster' as category,
       jsonb_build_object(
         'ARN', c.arn,
         'Cluster Identifier', c.cluster_identifier,
@@ -464,33 +482,27 @@ query "aws_sns_topic_relationships_graph" {
       ) as properties
     from
       aws_redshift_cluster as c,
-      aws_redshift_event_subscription as e,
-      jsonb_array_elements(
-        case jsonb_typeof(source_ids_list)
-          when 'array' then (source_ids_list)
-          else null end
-      ) s
+      aws_redshift_event_subscription as e
     where
       (e.source_type = 'cluster' or e.source_type is null)
-      and (source_ids_list is null or c.cluster_identifier = trim((s::text ), '""'))
-      and e.sns_topic_arn = $1
+      and (source_ids_list is null or c.cluster_identifier in (select trim((s::text ), '""') from aws_redshift_event_subscription,
+      jsonb_array_elements(source_ids_list) as s)
+      )
+      and e.sns_topic_arn = $1;
+  EOQ
 
-    -- From Redshift clusters (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_sns_topic_from_redshift_cluster_edge" {
+  title = "event subscription"
+
+  sql = <<-EOQ
     select
       c.arn as from_id,
-      t.topic_arn as to_id,
-      null as id,
-      'event subscription' as title,
-      'redshift_cluster_to_sns_topic' as category,
-      jsonb_build_object(
-        'ARN', c.arn,
-        'Cluster Identifier', c.cluster_identifier,
-        'Account ID', c.account_id,
-        'Region', c.region
-      ) as properties
+      t.topic_arn as to_id
     from
-      topic as t,
+      aws_sns_topic as t,
       aws_redshift_cluster as c,
       aws_redshift_event_subscription as e,
       jsonb_array_elements(
@@ -500,14 +512,21 @@ query "aws_sns_topic_relationships_graph" {
       ) as s
     where
       (e.source_type = 'cluster' or e.source_type is null)
-      and (e.source_ids_list is null or c.cluster_identifier = trim((s::text ), '""'))
+      and (source_ids_list is null or c.cluster_identifier in (select trim((s::text ), '""') from aws_redshift_event_subscription,
+      jsonb_array_elements(source_ids_list) as s)
+      )
       and t.topic_arn = e.sns_topic_arn
+      and t.topic_arn = $1;
+  EOQ
 
-    -- From Cloudtrail trails (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_sns_topic_from_cloudtrail_trail_node" {
+  category = category.aws_cloudtrail_trail
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       arn as id,
       title as title,
       'aws_cloudtrail_trail' as category,
@@ -520,33 +539,37 @@ query "aws_sns_topic_relationships_graph" {
     from
       aws_cloudtrail_trail as t
     where
-      t.sns_topic_arn = $1
+      t.sns_topic_arn = $1;
 
-    -- From Cloudtrail trails (edge)
-    union all
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_sns_topic_from_cloudtrail_trail_edge" {
+  title = "send notifications"
+
+  sql = <<-EOQ
     select
       c.arn as from_id,
-      $1 as to_id,
-      null as id,
-      'send notifications' as title,
-      'cloudtrail_trail_to_sns_topic' as category,
-      jsonb_build_object(
-        'ARN', c.arn,
-        'Account ID', c.account_id,
-        'Region', c.region
-      ) as properties
+      $1 as to_id
     from
-      topic as t
+      aws_sns_topic as t
       left join aws_cloudtrail_trail as c on t.topic_arn = c.sns_topic_arn
+    where
+      t.topic_arn = $1;
+  EOQ
 
-    -- From Clouformation stacks (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_sns_topic_from_cloudformation_stack_node" {
+  category = category.aws_cloudformation_stack
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       s.id as id,
-      s.title as title,
-      'aws_cloudformation_stack' as category,
+      title as title,
       jsonb_build_object(
         'ARN', s.id,
         'Last Updated Time', s.last_updated_time,
@@ -562,23 +585,23 @@ query "aws_sns_topic_relationships_graph" {
           else null end
       ) n
     where
-      trim((n::text ), '""') = $1
+      trim((n::text ), '""') = $1;
 
-    -- From Clouformation stacks (edge)
-    union all
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_sns_topic_from_cloudformation_stack_edge" {
+  title = "send notifications"
+
+  sql = <<-EOQ
     select
       s.id as from_id,
-      t.topic_arn as to_id,
-      null as id,
-      'send notifications' as title,
-      'cloudformation_stack_to_sns_topic' as category,
-      jsonb_build_object(
-        'ID', s.id ,
-        'Account ID', s.account_id,
-        'Region', s.region
-      ) as properties
+      t.topic_arn as to_id
+
     from
-      topic as t,
+      aws_sns_topic as t,
       aws_cloudformation_stack as s,
       jsonb_array_elements(
         case jsonb_typeof(notification_arns)
@@ -587,12 +610,18 @@ query "aws_sns_topic_relationships_graph" {
       ) n
     where
       t.topic_arn = trim((n::text ), '""')
+      and t.topic_arn = $1;
 
-    -- From ElastiCache clusters (node)
-    union all
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_sns_topic_from_aws_elasticache_cluster_node" {
+  category = category.aws_elasticache_cluster
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       c.arn as id,
       c.title as title,
       'aws_elasticache_cluster' as category,
@@ -606,27 +635,26 @@ query "aws_sns_topic_relationships_graph" {
     from
       aws_elasticache_cluster as c
     where
-      c.notification_configuration ->> 'TopicArn' = $1
+      c.notification_configuration ->> 'TopicArn' = $1;
 
-    -- From ElastiCache clusters (edge)
-    union all
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_sns_topic_from_aws_elasticache_cluster_edge" {
+  title = "send notifications"
+
+  sql = <<-EOQ
     select
       c.arn as from_id,
-      t.topic_arn as to_id,
-      null as id,
-      'send notifications' as title,
-      'elasticache_cluster_to_sns_topic' as category,
-      jsonb_build_object(
-        'ARN', c.arn,
-        'Account ID', c.account_id,
-        'Region', c.region
-      ) as properties
+      t.topic_arn as to_id
     from
-      topic as t,
+      aws_sns_topic as t,
       aws_elasticache_cluster as c
     where
       t.topic_arn = (c.notification_configuration ->> 'TopicArn')
-
+      and t.topic_arn = $1
     order by
       from_id,
       to_id;
