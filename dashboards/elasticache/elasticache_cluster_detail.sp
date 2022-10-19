@@ -266,8 +266,8 @@ node "aws_elasticache_cluster_to_sns_topic_node" {
         from
           aws_elasticache_cluster
         where
-          arn = $1;
-      )
+          arn = $1
+      );
   EOQ
 
   param "arn" {}
