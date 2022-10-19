@@ -598,11 +598,7 @@ edge "aws_elasticache_cluster_subnet_to_vpc_edge" {
       jsonb_array_elements(subnets) as subnet
     where
       g.cache_subnet_group_name = c.cache_subnet_group_name
-      and c.arn = $1
-    order by
-      category,
-      from_id,
-      to_id;
+      and c.arn = $1;
   EOQ
 
   param "arn" {}

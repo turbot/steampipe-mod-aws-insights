@@ -513,7 +513,7 @@ query "aws_iam_user_console_password" {
     from
       aws_iam_user
     where
-      arn  = $1
+      arn = $1
   EOQ
 
   param "arn" {}
@@ -522,13 +522,13 @@ query "aws_iam_user_console_password" {
 query "aws_iam_user_access_keys" {
   sql = <<-EOQ
     select
-      access_key_id  as "Access Key ID",
+      access_key_id as "Access Key ID",
       a.status as "Status",
       a.create_date as "Create Date"
     from
-      aws_iam_access_key as a left join aws_iam_user as u on u.name = a.user_name
+      aws_iam_access_key as a left join aws_iam_user as u on u.name = a.user_name and u.account_id = a.account_id
     where
-      u.arn  = $1
+      u.arn = $1
   EOQ
 
   param "arn" {}
@@ -544,7 +544,7 @@ query "aws_iam_user_mfa_devices" {
       aws_iam_user as u,
       jsonb_array_elements(mfa_devices) as mfa
     where
-      arn  = $1
+      arn = $1
   EOQ
 
   param "arn" {}

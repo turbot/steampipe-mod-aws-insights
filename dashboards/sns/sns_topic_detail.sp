@@ -70,6 +70,21 @@ dashboard "aws_sns_topic_detail" {
 
   container {
 
+    graph {
+      type  = "graph"
+      base  = graph.aws_graph_categories
+      query = query.aws_sns_topic_relationships_graph
+      args = {
+        arn = self.input.topic_arn.value
+      }
+      category "aws_sns_topic" {
+        icon = local.aws_sns_topic_icon
+      }
+    }
+  }
+
+  container {
+
     container {
       width = 6
 

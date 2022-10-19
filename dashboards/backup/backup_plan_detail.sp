@@ -224,11 +224,7 @@ edge "aws_backup_plan_from_backup_selection_edge" {
       aws_backup_plan as p
     where
       s.backup_plan_id = p.backup_plan_id
-      and p.arn = $1
-    order by
-      category,
-      from_id,
-      to_id;
+      and p.arn = $1;
   EOQ
 
   param "arn" {}

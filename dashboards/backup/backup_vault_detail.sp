@@ -273,11 +273,7 @@ edge "aws_backup_vault_from_sns_topic_edge" {
         aws_sns_topic as t
         on t.topic_arn = v.sns_topic_arn
     where
-      arn = $1
-    order by
-      category,
-      from_id,
-      to_id;
+      arn = $1;
   EOQ
 
   param "arn" {}

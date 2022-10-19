@@ -584,11 +584,7 @@ edge "aws_codepipeline_pipeline_from_codedeploy_app_edge" {
       s ->> 'Name' = 'Deploy'
       and a -> 'ActionTypeId' ->> 'Provider' = 'CodeDeploy'
       and a -> 'Configuration' ->> 'ApplicationName' = app.application_name
-      and p.arn = $1
-    order by
-      category,
-      from_id,
-      to_id;
+      and p.arn = $1;
   EOQ
 
   param "arn" {}

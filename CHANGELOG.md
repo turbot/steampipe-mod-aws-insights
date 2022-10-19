@@ -1,3 +1,9 @@
+## v0.7 [2022-09-19]
+
+_Bug fixes_
+
+- Fixed `AWS IAM User Detail` dashboard showing access keys for users with same name from other connections' accounts.
+
 ## v0.6 [2022-06-01]
 
 _Enhancements_
