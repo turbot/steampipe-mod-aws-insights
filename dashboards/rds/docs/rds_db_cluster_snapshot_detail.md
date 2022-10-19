@@ -5,3 +5,4 @@ This dashboard answers the following questions for each cluster snapshot:
 - How is encryption configured?
 - What is the status of the cluster snapshot?
 - What is the IAM authentication status?
+- What relationships does the cluster snapshot have with other resources?

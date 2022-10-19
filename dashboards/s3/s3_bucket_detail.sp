@@ -67,6 +67,40 @@ dashboard "aws_s3_bucket_detail" {
 
   container {
 
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      nodes = [
+        node.aws_s3_bucket_node,
+        node.aws_s3_bucket_from_cloudtrail_trail_node,
+        node.aws_s3_bucket_from_s3_bucket_node,
+        node.aws_s3_bucket_from_ec2_alb_node,
+        node.aws_s3_bucket_from_ec2_nlb_node,
+        node.aws_s3_bucket_from_ec2_clb_node,
+        # node.aws_s3_bucket_from_s3_access_point_node,
+        node.aws_s3_bucket_to_s3_bucket_node
+      ]
+
+      edges = [
+        edge.aws_s3_bucket_from_cloudtrail_trail_edge,
+        edge.aws_s3_bucket_from_s3_bucket_edge,
+        edge.aws_s3_bucket_from_ec2_alb_edge,
+        edge.aws_s3_bucket_from_ec2_nlb_edge,
+        edge.aws_s3_bucket_from_ec2_clb_edge,
+        # edge.aws_s3_bucket_from_s3_access_point_edge,
+        edge.aws_s3_bucket_to_s3_bucket_edge
+      ]
+
+      args = {
+        arn = self.input.bucket_arn.value
+      }
+    }
+  }
+
+  container {
+
     container {
       width = 6
 
@@ -163,6 +197,374 @@ query "aws_s3_bucket_input" {
     order by
       title;
   EOQ
+}
+
+node "aws_s3_bucket_node" {
+  category = category.aws_s3_bucket
+
+  sql = <<-EOQ
+    select
+      arn as id,
+      title as title,
+      jsonb_build_object(
+        'Name', name,
+        'ARN', arn,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_s3_bucket
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_s3_bucket_from_cloudtrail_trail_node" {
+  category = category.aws_cloudtrail_trail
+
+  sql = <<-EOQ
+    select
+      trail.arn as id,
+      trail.title as title,
+      jsonb_build_object(
+        'ARN', trail.arn,
+        'Account ID', trail.account_id,
+        'Region', trail.region,
+        'Latest Delivery Time', trail.latest_delivery_time
+      ) as properties
+    from
+      aws_cloudtrail_trail as trail,
+      aws_s3_bucket as b
+    where
+      b.arn = $1
+      and trail.s3_bucket_name = b.name;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_s3_bucket_from_cloudtrail_trail_edge" {
+  title = "logs to"
+
+  sql = <<-EOQ
+    select
+      trail.arn as from_id,
+      b.arn as to_id,
+      jsonb_build_object(
+        'Account ID', trail.account_id
+      ) as properties
+    from
+      aws_cloudtrail_trail as trail,
+      aws_s3_bucket as b
+    where
+      b.arn = $1
+      and trail.s3_bucket_name = b.name;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_s3_bucket_from_s3_bucket_node" {
+  category = category.aws_s3_bucket
+
+  sql = <<-EOQ
+    select
+      lb.arn as id,
+      lb.title as title,
+      jsonb_build_object(
+        'Name', lb.name,
+        'ARN', lb.arn,
+        'Account ID', lb.account_id,
+        'Region', lb.region
+      ) as properties
+    from
+      aws_s3_bucket as lb,
+      aws_s3_bucket as b
+    where
+      b.arn = $1
+      and lb.logging ->> 'TargetBucket' = b.name;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_s3_bucket_from_s3_bucket_edge" {
+  title = "logs to"
+
+  sql = <<-EOQ
+    select
+      b.arn as to_id,
+      lb.arn as from_id,
+      jsonb_build_object(
+        'Account ID', lb.account_id
+      ) as properties
+    from
+      aws_s3_bucket as lb,
+      aws_s3_bucket as b
+    where
+      b.arn = $1
+      and lb.logging ->> 'TargetBucket' = b.name;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_s3_bucket_from_ec2_alb_node" {
+  category = category.aws_ec2_application_load_balancer
+
+  sql = <<-EOQ
+    select
+      alb.arn as id,
+      alb.title as title,
+      jsonb_build_object(
+        'Name', alb.name,
+        'ARN', alb.arn,
+        'Account ID', alb.account_id,
+        'Region', alb.region
+      ) as properties
+    from
+      aws_ec2_application_load_balancer alb,
+      jsonb_array_elements(alb.load_balancer_attributes) as attributes,
+      aws_s3_bucket as b
+    where
+      b.arn = $1
+      and attributes ->> 'Key' = 'access_logs.s3.bucket'
+      and attributes ->> 'Value' = b.name;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_s3_bucket_from_ec2_alb_edge" {
+  title = "logs to"
+
+  sql = <<-EOQ
+    select
+      alb.arn as from_id,
+      b.arn as to_id,
+      jsonb_build_object(
+        'Account ID', alb.account_id,
+        'Log to', attributes ->> 'Value',
+        'Log Prefix', (
+          select
+            a ->> 'Value'
+          from
+            jsonb_array_elements(alb.load_balancer_attributes) as a
+          where
+            a ->> 'Key' = 'access_logs.s3.prefix'
+        )
+      ) as properties
+    from
+      aws_ec2_application_load_balancer alb,
+      jsonb_array_elements(alb.load_balancer_attributes) as attributes,
+      aws_s3_bucket as b
+    where
+      b.arn = $1
+      and attributes ->> 'Key' = 'access_logs.s3.bucket'
+      and attributes ->> 'Value' = b.name;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_s3_bucket_from_ec2_nlb_node" {
+  category = category.aws_ec2_network_load_balancer
+
+  sql = <<-EOQ
+    select
+      nlb.arn as id,
+      nlb.title as title,
+      jsonb_build_object(
+        'Name', nlb.name,
+        'ARN', nlb.arn,
+        'Account ID', nlb.account_id,
+        'Region', nlb.region,
+        'Log to', attributes ->> 'Value'
+      ) as properties
+    from
+      aws_ec2_network_load_balancer nlb,
+      jsonb_array_elements(nlb.load_balancer_attributes) as attributes,
+      aws_s3_bucket as b
+    where
+      b.arn = $1
+      and attributes ->> 'Key' = 'access_logs.s3.bucket'
+      and attributes ->> 'Value' = b.name;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_s3_bucket_from_ec2_nlb_edge" {
+  title = "logs to"
+
+  sql = <<-EOQ
+    select
+      nlb.arn as from_id,
+      b.arn as to_id,
+      jsonb_build_object(
+        'Account ID', nlb.account_id,
+        'logs to', attributes ->> 'Value',
+        'Log Prefix', (
+          select
+            a ->> 'Value'
+          from
+            jsonb_array_elements(nlb.load_balancer_attributes) as a
+          where
+            a ->> 'Key' = 'access_logs.s3.prefix'
+        )
+      ) as properties
+    from
+      aws_ec2_network_load_balancer nlb,
+      jsonb_array_elements(nlb.load_balancer_attributes) as attributes,
+      aws_s3_bucket as b
+    where
+      b.arn = $1
+      and attributes ->> 'Key' = 'access_logs.s3.bucket'
+      and attributes ->> 'Value' = b.name;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_s3_bucket_from_ec2_clb_node" {
+  category = category.aws_ec2_classic_load_balancer
+
+  sql = <<-EOQ
+    select
+      clb.arn as id,
+      clb.title as title,
+      jsonb_build_object(
+        'Name', clb.name,
+        'ARN', clb.arn,
+        'Account ID', clb.account_id,
+        'Region', clb.region,
+        'Log Prefix', clb.access_log_s3_bucket_prefix
+      ) as properties
+    from
+      aws_ec2_classic_load_balancer clb,
+      aws_s3_bucket as b
+    where
+      b.arn = $1
+      and clb.access_log_s3_bucket_name = b.name;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_s3_bucket_from_ec2_clb_edge" {
+  title = "logs to"
+
+  sql = <<-EOQ
+    select
+      clb.arn as from_id,
+      b.arn as to_id,
+      jsonb_build_object(
+        'Account ID', clb.account_id,
+        'Log Prefix', clb.access_log_s3_bucket_prefix
+      ) as properties
+    from
+      aws_ec2_classic_load_balancer clb,
+      aws_s3_bucket as b
+    where
+      b.arn = $1
+      and clb.access_log_s3_bucket_name = b.name
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_s3_bucket_from_s3_access_point_node" {
+  category = category.aws_s3_access_point
+
+  sql = <<-EOQ
+    select
+      ap.access_point_arn as id,
+      ap.title as title,
+      jsonb_build_object(
+        'Name', ap.name,
+        'ARN', ap.access_point_arn,
+        'Account ID', ap.account_id,
+        'Region', ap.region
+      ) as properties
+    from
+      aws_s3_access_point ap,
+      aws_s3_bucket as b
+    where
+      b.arn = $1
+      and ap.bucket_name = b.name
+      and ap.region = b.region;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_s3_bucket_from_s3_access_point_edge" {
+  title = "access point"
+
+  sql = <<-EOQ
+    select
+      ap.access_point_arn as from_id,
+      b.arn as to_id,
+      jsonb_build_object(
+        'Account ID', ap.account_id
+      ) as properties
+    from
+      aws_s3_access_point ap,
+      aws_s3_bucket as b
+    where
+      b.arn = $1
+      and ap.bucket_name = b.name
+      and ap.region = b.region;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_s3_bucket_to_s3_bucket_node" {
+  category = category.aws_s3_bucket
+
+  sql = <<-EOQ
+    select
+      lb.arn as id,
+      lb.title as title,
+      jsonb_build_object(
+        'Name', lb.name,
+        'ARN', lb.arn,
+        'Account ID', lb.account_id,
+        'Region', lb.region
+      ) as properties
+    from
+      aws_s3_bucket as lb,
+      aws_s3_bucket as b
+    where
+      b.arn = $1
+      and lb.name = b.logging ->> 'TargetBucket';
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_s3_bucket_to_s3_bucket_edge" {
+  title = "logs to"
+
+  sql = <<-EOQ
+    select
+      b.arn as from_id,
+      lb.arn as to_id,
+      jsonb_build_object(
+        'Account ID', lb.account_id
+      ) as properties
+    from
+      aws_s3_bucket as lb,
+      aws_s3_bucket as b
+    where
+      b.arn = $1
+      and lb.name = b.logging ->> 'TargetBucket';
+  EOQ
+
+  param "arn" {}
 }
 
 query "aws_s3_bucket_versioning" {

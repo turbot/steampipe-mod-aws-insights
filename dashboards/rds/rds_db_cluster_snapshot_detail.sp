@@ -67,6 +67,30 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
 
   container {
 
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      nodes = [
+        node.aws_rds_db_cluster_snapshot_node,
+        node.aws_rds_db_cluster_snapshot_to_kms_key_node,
+        node.aws_rds_db_cluster_snapshot_from_rds_db_cluster_node
+      ]
+
+      edges = [
+        edge.aws_rds_db_cluster_snapshot_to_kms_key_edge,
+        edge.aws_rds_db_cluster_snapshot_from_rds_db_cluster_edge
+      ]
+
+      args = {
+        arn = self.input.snapshot_arn.value
+      }
+    }
+  }
+
+  container {
+
     container {
       width = 6
 
@@ -261,6 +285,141 @@ query "aws_rds_db_cluster_snapshot_attributes" {
       jsonb_array_elements(db_cluster_snapshot_attributes) as attributes
     where
       arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_rds_db_cluster_snapshot_node" {
+  category = category.aws_rds_db_cluster_snapshot
+
+  sql = <<-EOQ
+    select
+      db_cluster_snapshot_identifier as id,
+      title,
+      jsonb_build_object(
+        'ARN', arn,
+        'Status', status,
+        'Type', type,
+        'DB Cluster Identifier', db_cluster_identifier,
+        'Create Time', create_time,
+        'Encrypted', storage_encrypted::text,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_rds_db_cluster_snapshot
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_rds_db_cluster_snapshot_to_kms_key_node" {
+  category = category.aws_kms_key
+
+  sql = <<-EOQ
+    select
+      k.id,
+      k.title,
+      'aws_kms_key' as category,
+      jsonb_build_object(
+        'ARN', k.arn,
+        'Rotation Enabled', k.key_rotation_enabled::text,
+        'Account ID', k.account_id,
+        'Region', k.region
+      ) as properties
+    from
+      aws_rds_db_cluster_snapshot as s
+      join
+        aws_kms_key as k
+        on s.kms_key_id = k.arn
+    where
+      s.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_rds_db_cluster_snapshot_to_kms_key_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
+    select
+      s.db_cluster_snapshot_identifier as from_id,
+      k.id as to_id,
+      jsonb_build_object(
+        'ARN', k.arn,
+        'DB Cluster Snapshot Identifier', s.db_cluster_snapshot_identifier,
+        'Account ID', k.account_id,
+        'Region', k.region
+      ) as properties
+    from
+      aws_rds_db_cluster_snapshot as s
+      join
+        aws_kms_key as k
+        on s.kms_key_id = k.arn
+    where
+      s.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_rds_db_cluster_snapshot_from_rds_db_cluster_node" {
+  category = category.aws_rds_db_cluster
+
+  sql = <<-EOQ
+    select
+      c.db_cluster_identifier as id,
+      c.title as title,
+      jsonb_build_object(
+        'ARN', c.arn,
+        'Status', c.status,
+        'Availability Zones', c.availability_zones::text,
+        'Create Time', c.create_time,
+        'Is Multi AZ', c.multi_az::text,
+        'Account ID', c.account_id,
+        'Region', c.region
+      ) as properties
+    from
+      aws_rds_db_cluster_snapshot as s
+      join 
+        aws_rds_db_cluster as c 
+        on s.db_cluster_identifier = c.db_cluster_identifier
+        and s.account_id = c.account_id
+        and s.region = c.region
+    where
+      s.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_rds_db_cluster_snapshot_from_rds_db_cluster_edge" {
+  title = "snapshot"
+
+  sql = <<-EOQ
+    select
+      c.db_cluster_identifier as from_id,
+      s.db_cluster_snapshot_identifier as to_id,
+      jsonb_build_object(
+        'DB Cluster Identifier', c.db_cluster_identifier,
+        'DB Cluster Snapshot Identifier', s.db_cluster_snapshot_identifier,
+        'Status', s.status,
+        'Account ID', c.account_id,
+        'Region', c.region
+      ) as properties
+    from
+      aws_rds_db_cluster_snapshot as s
+      join 
+        aws_rds_db_cluster as c
+        on s.db_cluster_identifier = c.db_cluster_identifier
+        and s.account_id = c.account_id
+        and s.region = c.region
+    where
+      s.arn = $1;
   EOQ
 
   param "arn" {}

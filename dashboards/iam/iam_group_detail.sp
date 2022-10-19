@@ -1,6 +1,6 @@
 dashboard "aws_iam_group_detail" {
 
-  title = "AWS IAM Group Detail"
+  title         = "AWS IAM Group Detail"
   documentation = file("./dashboards/iam/docs/iam_group_detail.md")
 
 
@@ -19,7 +19,7 @@ dashboard "aws_iam_group_detail" {
     card {
       width = 2
       query = query.aws_iam_group_inline_policy_count_for_group
-      args  = {
+      args = {
         arn = self.input.group_arn.value
       }
     }
@@ -27,11 +27,36 @@ dashboard "aws_iam_group_detail" {
     card {
       width = 2
       query = query.aws_iam_group_direct_attached_policy_count_for_group
-      args  = {
+      args = {
         arn = self.input.group_arn.value
       }
     }
 
+  }
+
+  container {
+
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+
+      nodes = [
+        node.aws_iam_group_node,
+        node.aws_iam_group_to_iam_policy_node,
+        node.aws_iam_group_from_iam_user_node
+      ]
+
+      edges = [
+        edge.aws_iam_group_to_iam_policy_edge,
+        edge.aws_iam_group_from_iam_user_edge
+      ]
+
+      args = {
+        arn = self.input.group_arn.value
+      }
+    }
   }
 
   container {
@@ -44,7 +69,7 @@ dashboard "aws_iam_group_detail" {
         type  = "line"
         width = 6
         query = query.aws_iam_group_overview
-        args  = {
+        args = {
           arn = self.input.group_arn.value
         }
 
@@ -66,7 +91,7 @@ dashboard "aws_iam_group_detail" {
       }
 
       query = query.aws_iam_users_for_group
-      args  = {
+      args = {
         arn = self.input.group_arn.value
       }
 
@@ -76,7 +101,7 @@ dashboard "aws_iam_group_detail" {
       title = "Policies"
       width = 6
       query = query.aws_iam_all_policies_for_group
-      args  = {
+      args = {
         arn = self.input.group_arn.value
       }
     }
@@ -125,6 +150,126 @@ query "aws_iam_group_direct_attached_policy_count_for_group" {
       aws_iam_group
     where
       arn = $1
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_iam_group_node" {
+  category = category.aws_iam_group
+
+  sql = <<-EOQ
+    select
+      group_id as id,
+      name as title,
+      jsonb_build_object(
+        'ARN', arn,
+        'Path', path,
+        'Create Date', create_date,
+        'Account ID', account_id 
+      ) as properties
+    from
+      aws_iam_group
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_iam_group_to_iam_policy_node" {
+  category = category.aws_iam_policy
+
+  sql = <<-EOQ
+    select
+      policy_id as id,
+      name as title,
+      jsonb_build_object(
+        'ARN', arn,
+        'AWS Managed', is_aws_managed::text,
+        'Attached', is_attached::text,
+        'Create Date', create_date,
+        'Account ID', account_id 
+      ) as properties
+    from
+      aws_iam_policy
+    where
+      arn in
+      (
+        select
+          jsonb_array_elements_text(attached_policy_arns)
+        from
+          aws_iam_group
+        where
+          arn = $1
+      );
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_iam_group_to_iam_policy_edge" {
+  title = "attached"
+
+  sql = <<-EOQ
+    select
+      r.group_id as from_id,
+      p.policy_id as to_id,
+      jsonb_build_object(
+        'Account ID', p.account_id 
+      ) as properties
+    from
+      aws_iam_group as r,
+      jsonb_array_elements_text(attached_policy_arns) as arns
+      left join
+        aws_iam_policy as p
+        on p.arn = arns
+    where
+      r.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_iam_group_from_iam_user_node" {
+  category = category.aws_iam_user
+
+  sql = <<-EOQ
+    select
+      u.user_id as id,
+      u.name as title,
+      jsonb_build_object(
+        'ARN', u.arn,
+        'path', path,
+        'Create Date', create_date,
+        'MFA Enabled', mfa_enabled::text,
+        'Account ID', u.account_id 
+      ) as properties
+    from
+      aws_iam_user as u,
+      jsonb_array_elements(groups) as g
+    where
+      g ->> 'Arn' = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_iam_group_from_iam_user_edge" {
+  title = "attached"
+
+  sql = <<-EOQ
+    select
+      u.user_id as from_id,
+      g ->> 'GroupId' as to_id,
+      jsonb_build_object( 
+        'Account ID', u.account_id 
+      ) as properties
+    from
+      aws_iam_user as u,
+      jsonb_array_elements(groups) as g
+    where
+      g ->> 'Arn' = $1;
   EOQ
 
   param "arn" {}

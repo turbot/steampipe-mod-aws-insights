@@ -52,6 +52,36 @@ dashboard "aws_lambda_function_detail" {
 
   container {
 
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      nodes = [
+        node.aws_lambda_function_node,
+        node.aws_lambda_to_vpc_node,
+        node.aws_lambda_to_vpc_security_group_node,
+        node.aws_lambda_to_kms_key_node,
+        node.aws_lambda_to_iam_role_node,
+        node.aws_lambda_from_s3_bucket_node
+      ]
+
+      edges = [
+        edge.aws_lambda_to_vpc_edge,
+        edge.aws_lambda_to_vpc_security_group_edge,
+        edge.aws_lambda_to_kms_key_edge,
+        edge.aws_lambda_to_iam_role_edge,
+        edge.aws_lambda_from_s3_bucket_edge
+      ]
+
+      args = {
+        arn = self.input.lambda_arn.value
+      }
+    }
+  }
+
+  container {
+
     container {
 
       width = 6
@@ -302,6 +332,287 @@ query "aws_lambda_function_tags" {
     order by
       key;
     EOQ
+
+  param "arn" {}
+}
+
+node "aws_lambda_function_node" {
+  category = category.aws_lambda_function
+
+  sql = <<-EOQ
+    select
+      arn as id,
+      title as title,
+      'aws_lambda_function' as category,
+      jsonb_build_object(
+        'ARN', arn,
+        'Runtime', runtime,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_lambda_function
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_lambda_to_vpc_node" {
+  category = category.aws_vpc
+
+  sql = <<-EOQ
+    select
+      v.arn as id,
+      v.title as title,
+      jsonb_build_object(
+        'ARN', v.arn,
+        'VPC ID', v.vpc_id,
+        'Account ID', v.account_id,
+        'Region', v.region
+      ) as properties
+    from
+      aws_lambda_function as l
+      left join 
+        aws_vpc as v
+        on l.arn = $1
+        and v.vpc_id = l.vpc_id;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_lambda_to_vpc_edge" {
+  title = "vpc"
+
+  sql = <<-EOQ
+    select
+      l.arn as from_id,
+      v.arn as to_id,
+      jsonb_build_object(
+        'ARN', v.arn,
+        'Account ID', v.account_id,
+        'Region', v.region
+      ) as properties
+    from
+      aws_lambda_function as l
+      left join 
+        aws_vpc as v
+        on l.arn = $1
+        and v.vpc_id = l.vpc_id;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_lambda_to_vpc_security_group_node" {
+  category = category.aws_vpc_security_group
+
+  sql = <<-EOQ
+    select
+      sg.arn as id,
+      sg.group_id as title,
+      jsonb_build_object(
+        'ARN', sg.arn,
+        'Group ID', sg.group_id,
+        'Account ID', sg.account_id,
+        'Region', sg.region
+      ) as properties
+    from
+      aws_lambda_function as l,
+      jsonb_array_elements_text(vpc_security_group_ids) as s
+      left join
+        aws_vpc_security_group as sg
+        on sg.group_id = s
+      where
+        l.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_lambda_to_vpc_security_group_edge" {
+  title = "security group"
+
+  sql = <<-EOQ
+    select
+      l.arn as from_id,
+      sg.arn as to_id,
+      jsonb_build_object(
+        'ARN', sg.arn, 'Account ID',
+        sg.account_id,
+        'Region', sg.region
+      ) as properties
+    from
+      aws_lambda_function as l,
+      jsonb_array_elements_text(vpc_security_group_ids) as s
+      left join
+        aws_vpc_security_group as sg
+        on sg.group_id = s
+      where
+        l.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_lambda_to_kms_key_node" {
+  category = category.aws_kms_key
+
+  sql = <<-EOQ
+    select
+      k.arn as id,
+      k.title as title,
+      jsonb_build_object(
+        'ARN', k.arn,
+        'Key Manager', k.key_manager,
+        'Creation Date', k.creation_date,
+        'Enabled', k.enabled::text,
+        'Account ID', k.account_id,
+        'Region', k.region
+      ) as properties
+    from
+      aws_lambda_function as l
+      left join 
+        aws_kms_key as k 
+        on l.arn = $1
+        and k.arn = l.kms_key_arn;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_lambda_to_kms_key_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
+    select
+      l.arn as from_id,
+      k.arn as to_id,
+      jsonb_build_object(
+        'ARN', k.arn,
+        'Account ID', k.account_id,
+        'Region', k.region
+      ) as properties
+    from
+      aws_lambda_function as l
+      left join 
+        aws_kms_key as k 
+        on l.arn = $1
+        and k.arn = l.kms_key_arn;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_lambda_to_iam_role_node" {
+  category = category.aws_iam_role
+
+  sql = <<-EOQ
+    select
+      r.arn as id,
+      r.title as title,
+      jsonb_build_object(
+        'ARN', r.arn,
+        'Create Date', r.create_date,
+        'Max Session Duration', r.max_session_duration,
+        'Account ID', r.account_id
+      ) as properties
+    from
+      aws_lambda_function as l
+      left join
+        aws_iam_role as r
+        on l.arn = $1
+        and r.arn = l.role;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_lambda_to_iam_role_edge" {
+  title = "assumes"
+
+  sql = <<-EOQ
+    select
+      l.arn as from_id,
+      r.arn as to_id,
+      jsonb_build_object(
+        'ARN', r.arn,
+        'Account ID', r.account_id
+      ) as properties
+    from
+      aws_lambda_function as l
+      left join
+        aws_iam_role as r
+        on l.arn = $1
+        and r.arn = l.role;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_lambda_from_s3_bucket_node" {
+  category = category.aws_s3_bucket
+
+  sql = <<-EOQ
+    select
+      arn as id,
+      title as title,
+      jsonb_build_object(
+        'ARN', arn,
+        'Account ID', account_id,
+        'Region', region,
+        'Public', bucket_policy_is_public::text
+      ) as properties
+    from
+      aws_s3_bucket,
+      jsonb_array_elements(
+      case
+        jsonb_typeof(event_notification_configuration -> 'LambdaFunctionConfigurations')
+        when
+          'array'
+        then (event_notification_configuration -> 'LambdaFunctionConfigurations')
+        else
+          null
+      end
+      ) as t
+    where
+      t ->> 'LambdaFunctionArn' = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_lambda_from_s3_bucket_edge" {
+  title = "send notifications"
+
+  sql = <<-EOQ
+    select
+      arn as from_id,
+      $1 as to_id,
+      jsonb_build_object(
+        'ARN', arn,
+        'Account ID', account_id,
+        'Event Notification Configuration ID', t ->> 'Id',
+        'Events Configured', t -> 'Events',
+        'Region', region
+      ) as properties
+    from
+      aws_s3_bucket,
+      jsonb_array_elements(
+      case
+        jsonb_typeof(event_notification_configuration -> 'LambdaFunctionConfigurations')
+        when
+          'array'
+        then (event_notification_configuration -> 'LambdaFunctionConfigurations')
+        else
+          null
+      end
+      ) as t
+    where
+      t ->> 'LambdaFunctionArn' = $1;
+  EOQ
 
   param "arn" {}
 }

@@ -35,6 +35,21 @@ dashboard "aws_sns_topic_detail" {
 
   container {
 
+    graph {
+      type  = "graph"
+      base  = graph.aws_graph_categories
+      query = query.aws_sns_topic_relationships_graph
+      args = {
+        arn = self.input.topic_arn.value
+      }
+      category "aws_sns_topic" {
+        icon = local.aws_sns_topic_icon
+      }
+    }
+  }
+
+  container {
+
     container {
       width = 6
 
@@ -223,6 +238,398 @@ query "aws_sns_topic_policy_standard" {
       jsonb_array_elements(policy_std -> 'Statement') as statement
     where
       topic_arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+query "aws_sns_topic_relationships_graph" {
+  sql = <<-EOQ
+    with topic as (
+      select
+        *
+      from
+        aws_sns_topic
+      where
+        topic_arn = $1
+    )
+    select
+      null as from_id,
+      null as to_id,
+      topic_arn as id,
+      title as title,
+      'aws_sns_topic' as category,
+      jsonb_build_object(
+        'ARN', topic_arn,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      topic
+
+    -- To KMS keys (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      k.arn as id,
+      k.title as title,
+      'aws_kms_key' as category,
+      jsonb_build_object(
+        'ARN', k.arn,
+        'ID', k.id,
+        'enabled', k.enabled,
+        'Account ID', k.account_id,
+        'Region', k.region
+      ) as properties
+    from
+      topic as q
+      left join aws_kms_key as k on k.id = split_part(q.kms_master_key_id, '/', 2)
+    where
+      k.region = q.region
+
+    -- To KMS keys (edge)
+    union all
+    select
+      q.topic_arn as from_id,
+      k.arn as to_id,
+      null as id,
+      'encrypted with' as title,
+      'sns_topic_to_kms_key' as category,
+      jsonb_build_object(
+        'ARN', k.arn,
+        'ID', k.id,
+        'Account ID', k.account_id,
+        'Region', k.region
+      ) as properties
+    from
+      topic as q
+      left join aws_kms_key as k on k.id = split_part(q.kms_master_key_id, '/', 2)
+    where
+      k.region = q.region
+
+    -- To SNS topic subscriptions (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      subscription_arn as id,
+      title as title,
+      'aws_sns_topic_subscription' as category,
+      jsonb_build_object(
+        'ARN', subscription_arn,
+        'Pending Confirmation', pending_confirmation,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_sns_topic_subscription
+    where
+      topic_arn = $1
+
+    -- To SNS topic subscriptions (edge)
+    union all
+    select
+      q.topic_arn as from_id,
+      s.subscription_arn as to_id,
+      null as id,
+      'subscibe to' as title,
+      'sns_topic_to_sns_topic_subscription' as category,
+      jsonb_build_object(
+        'ARN', s.subscription_arn,
+        'Account ID', s.account_id,
+        'Region', s.region
+      ) as properties
+    from
+      topic as q
+      left join aws_sns_topic_subscription as s on s.topic_arn = q.topic_arn
+
+  -- From S3 buckets (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      arn as id,
+      title as title,
+      'aws_s3_bucket' as category,
+      jsonb_build_object(
+        'ARN', arn,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_s3_bucket,
+      jsonb_array_elements(
+        case jsonb_typeof(event_notification_configuration -> 'TopicConfigurations')
+          when 'array' then (event_notification_configuration -> 'TopicConfigurations')
+          else null end
+        )
+        as t
+    where
+      t ->> 'TopicArn' = $1
+
+    -- From S3 buckets (edge)
+    union all
+    select
+      arn as from_id,
+      $1 as to_id,
+      null as id,
+      'send notifications' as title,
+      's3_bucket_to_sns_topic' as category,
+      jsonb_build_object(
+        'ARN', arn,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_s3_bucket,
+      jsonb_array_elements(
+        case jsonb_typeof(event_notification_configuration -> 'TopicConfigurations')
+          when 'array' then (event_notification_configuration -> 'TopicConfigurations')
+          else null end
+        )
+        as t
+    where
+      t ->> 'TopicArn' = $1
+
+    -- From RDS DB instances (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      i.arn as id,
+      i.title as title,
+      'aws_rds_db_instance' as category,
+      jsonb_build_object(
+        'ARN', i.arn,
+        'DB Instance Identifier', i.db_instance_identifier,
+        'Account ID', i.account_id,
+        'Region', i.region
+      ) as properties
+    from
+      aws_rds_db_instance as i,
+      aws_rds_db_event_subscription as e,
+      jsonb_array_elements(
+        case jsonb_typeof(source_ids_list)
+          when 'array' then (source_ids_list)
+          else null end
+      ) s
+    where
+      e.source_type = 'db-instance'
+      and (source_ids_list is null or i.db_instance_identifier = trim((s::text ), '""'))
+      and e.sns_topic_arn = $1
+
+    -- From RDS DB instances (edge)
+    union all
+    select
+      i.arn as from_id,
+      t.topic_arn as to_id,
+      null as id,
+      'event subscription' as title,
+      'rds_db_instance_to_sns_topic' as category,
+      jsonb_build_object(
+        'ARN', i.arn,
+        'Event Categories List', case when event_categories_list is null then '["ALL"]' else event_categories_list end,
+        'Account ID', i.account_id,
+        'Region', i.region
+      ) as properties
+    from
+      topic as t,
+      aws_rds_db_instance as i,
+      aws_rds_db_event_subscription as e,
+      jsonb_array_elements(
+        case jsonb_typeof(e.source_ids_list)
+          when 'array' then (e.source_ids_list)
+          else null end
+      ) as s
+    where
+      e.source_type = 'db-instance'
+      and (e.source_ids_list is null or i.db_instance_identifier = trim((s::text ), '""'))
+      and t.topic_arn = e.sns_topic_arn
+
+    -- From Redshift clusters (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      c.arn as id,
+      c.title as title,
+      'aws_redshift_cluster' as category,
+      jsonb_build_object(
+        'ARN', c.arn,
+        'Cluster Identifier', c.cluster_identifier,
+        'Event Categories List', case when event_categories_list is null then '["ALL"]' else event_categories_list end,
+        'Account ID', c.account_id,
+        'Region', c.region
+      ) as properties
+    from
+      aws_redshift_cluster as c,
+      aws_redshift_event_subscription as e,
+      jsonb_array_elements(
+        case jsonb_typeof(source_ids_list)
+          when 'array' then (source_ids_list)
+          else null end
+      ) s
+    where
+      (e.source_type = 'cluster' or e.source_type is null)
+      and (source_ids_list is null or c.cluster_identifier = trim((s::text ), '""'))
+      and e.sns_topic_arn = $1
+
+    -- From Redshift clusters (edge)
+    union all
+    select
+      c.arn as from_id,
+      t.topic_arn as to_id,
+      null as id,
+      'event subscription' as title,
+      'redshift_cluster_to_sns_topic' as category,
+      jsonb_build_object(
+        'ARN', c.arn,
+        'Cluster Identifier', c.cluster_identifier,
+        'Account ID', c.account_id,
+        'Region', c.region
+      ) as properties
+    from
+      topic as t,
+      aws_redshift_cluster as c,
+      aws_redshift_event_subscription as e,
+      jsonb_array_elements(
+        case jsonb_typeof(e.source_ids_list)
+          when 'array' then (e.source_ids_list)
+          else null end
+      ) as s
+    where
+      (e.source_type = 'cluster' or e.source_type is null)
+      and (e.source_ids_list is null or c.cluster_identifier = trim((s::text ), '""'))
+      and t.topic_arn = e.sns_topic_arn
+
+    -- From Cloudtrail trails (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      arn as id,
+      title as title,
+      'aws_cloudtrail_trail' as category,
+      jsonb_build_object(
+        'ARN', t.arn,
+        'Is Logging', t.is_logging,
+        'Account ID', t.account_id,
+        'Region', t.region
+      ) as properties
+    from
+      aws_cloudtrail_trail as t
+    where
+      t.sns_topic_arn = $1
+
+    -- From Cloudtrail trails (edge)
+    union all
+    select
+      c.arn as from_id,
+      $1 as to_id,
+      null as id,
+      'send notifications' as title,
+      'cloudtrail_trail_to_sns_topic' as category,
+      jsonb_build_object(
+        'ARN', c.arn,
+        'Account ID', c.account_id,
+        'Region', c.region
+      ) as properties
+    from
+      topic as t
+      left join aws_cloudtrail_trail as c on t.topic_arn = c.sns_topic_arn
+
+    -- From Clouformation stacks (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      s.id as id,
+      s.title as title,
+      'aws_cloudformation_stack' as category,
+      jsonb_build_object(
+        'ARN', s.id,
+        'Last Updated Time', s.last_updated_time,
+        'Status', s.status,
+        'Account ID', s.account_id,
+        'Region', s.region
+      ) as properties
+    from
+      aws_cloudformation_stack as s,
+      jsonb_array_elements(
+        case jsonb_typeof(notification_arns)
+          when 'array' then (notification_arns)
+          else null end
+      ) n
+    where
+      trim((n::text ), '""') = $1
+
+    -- From Clouformation stacks (edge)
+    union all
+    select
+      s.id as from_id,
+      t.topic_arn as to_id,
+      null as id,
+      'send notifications' as title,
+      'cloudformation_stack_to_sns_topic' as category,
+      jsonb_build_object(
+        'ID', s.id ,
+        'Account ID', s.account_id,
+        'Region', s.region
+      ) as properties
+    from
+      topic as t,
+      aws_cloudformation_stack as s,
+      jsonb_array_elements(
+        case jsonb_typeof(notification_arns)
+          when 'array' then (notification_arns)
+          else null end
+      ) n
+    where
+      t.topic_arn = trim((n::text ), '""')
+
+    -- From ElastiCache clusters (node)
+    union all
+    select
+      null as from_id,
+      null as to_id,
+      c.arn as id,
+      c.title as title,
+      'aws_elasticache_cluster' as category,
+      jsonb_build_object(
+        'ARN', c.arn,
+        'ID', c.cache_cluster_id,
+        'Status', c.cache_cluster_status,
+        'Account ID', c.account_id,
+        'Region', c.region
+      ) as properties
+    from
+      aws_elasticache_cluster as c
+    where
+      c.notification_configuration ->> 'TopicArn' = $1
+
+    -- From ElastiCache clusters (edge)
+    union all
+    select
+      c.arn as from_id,
+      t.topic_arn as to_id,
+      null as id,
+      'send notifications' as title,
+      'elasticache_cluster_to_sns_topic' as category,
+      jsonb_build_object(
+        'ARN', c.arn,
+        'Account ID', c.account_id,
+        'Region', c.region
+      ) as properties
+    from
+      topic as t,
+      aws_elasticache_cluster as c
+    where
+      t.topic_arn = (c.notification_configuration ->> 'TopicArn')
+
+    order by
+      from_id,
+      to_id;
   EOQ
 
   param "arn" {}
