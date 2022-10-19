@@ -36,16 +36,22 @@ dashboard "glacier_vault_detail" {
   container {
 
     graph {
-      base  = graph.aws_graph_categories
-      query = query.aws_glacier_vault_relationships_graph
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      nodes = [
+        node.aws_glacier_vault_node,
+        node.aws_glacier_vault_to_sns_topic_node
+      ]
+
+      edges = [
+        edge.aws_glacier_vault_to_sns_topic_edge
+      ]
+
       args = {
         arn = self.input.vault_arn.value
       }
-
-      category "glacier_vault" {
-        icon = local.aws_glacier_vault_icon
-      }
-
     }
   }
 
@@ -141,81 +147,6 @@ query "aws_glacier_vault_size" {
   param "arn" {}
 }
 
-query "aws_glacier_vault_relationships_graph" {
-  sql = <<-EOQ
-    with vault as(
-      select
-        *
-      from
-        aws_glacier_vault
-      where
-        vault_arn = $1
-    )
-    -- Glacier vault (node)
-    select
-      null as from_id,
-      null as to_id,
-      vault_arn as id,
-      title,
-      'aws_glacier_vault' as category,
-      jsonb_build_object(
-        'Vault Name', vault_name,
-        'Create Time', creation_date,
-        'Account ID', account_id
-      ) as properties
-    from
-      vault
-
-    -- To SNS topic (node)
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      topic.topic_arn as id,
-      topic.title as title,
-      'aws_sns_topic' as category,
-      jsonb_build_object(
-        'ARN', topic.topic_arn,
-        'Account ID', topic.account_id,
-        'Region', topic.region
-      ) as properties
-    from
-      aws_sns_topic as topic,
-      vault as v
-    where
-      v.vault_notification_config is not null
-      and v.vault_notification_config ->> 'SNSTopic' = topic.topic_arn
-
-    -- To SNS topic (edges)
-    union all
-    select
-      v.vault_arn as from_id,
-      topic.topic_arn as to_id,
-      null as id,
-      'Logs to' as title,
-      'uses' as category,
-      jsonb_build_object(
-        'ARN', v.vault_arn,
-        'Account ID', v.account_id,
-        'Region', v.region,
-        'Events', v.vault_notification_config ->> 'Events'
-      ) as properties
-    from
-      aws_sns_topic as topic,
-      vault as v
-    where
-      v.vault_notification_config is not null
-      and v.vault_notification_config ->> 'SNSTopic' = topic.topic_arn
-
-    order by
-      category,
-      from_id,
-      to_id;
-  EOQ
-
-  param "arn" {}
-}
-
 query "aws_glacier_vault_overview" {
   sql = <<-EOQ
     select
@@ -289,4 +220,76 @@ query "aws_glacier_vault_lock_public_policy" {
     order by
       v.vault_name;
   EOQ
+}
+
+node "aws_glacier_vault_node" {
+  category = category.aws_glacier_vault
+
+  sql = <<-EOQ
+    select
+      vault_arn as id,
+      title,
+      jsonb_build_object(
+        'Vault Name', vault_name,
+        'Create Time', creation_date,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_glacier_vault
+    where
+      vault_arn = $1
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_glacier_vault_to_sns_topic_node" {
+  category = category.aws_sns_topic
+
+  sql = <<-EOQ
+    select
+      t.topic_arn as id,
+      t.title as title,
+      jsonb_build_object(
+        'ARN', t.topic_arn,
+        'Account ID', t.account_id,
+        'Region', t.region
+      ) as properties
+    from
+      aws_sns_topic as t,
+      aws_glacier_vault as v
+    where
+      v.vault_notification_config is not null
+      and v.vault_notification_config ->> 'SNSTopic' = t.topic_arn
+      and v.vault_arn = $1
+
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_glacier_vault_to_sns_topic_edge" {
+  title = "logs to"
+
+  sql = <<-EOQ
+    select
+      v.vault_arn as from_id,
+      topic.topic_arn as to_id,
+      jsonb_build_object(
+        'ARN', v.vault_arn,
+        'Account ID', v.account_id,
+        'Region', v.region,
+        'Events', v.vault_notification_config ->> 'Events'
+      ) as properties
+    from
+      aws_sns_topic as topic,
+      aws_glacier_vault as v
+    where
+      v.vault_notification_config is not null
+      and v.vault_notification_config ->> 'SNSTopic' = topic.topic_arn
+      and v.vault_arn = $1
+  EOQ
+
+  param "arn" {}
 }

@@ -311,7 +311,7 @@ node "aws_iam_user_node" {
         'Path', path,
         'Create Date', create_date,
         'MFA Enabled', mfa_enabled::text,
-        'Account ID', account_id 
+        'Account ID', account_id
       ) as properties
     from
       aws_iam_user
@@ -333,7 +333,7 @@ node "aws_iam_user_to_iam_group_node" {
         'ARN', arn,
         'Path', path,
         'Create Date', create_date,
-        'Account ID', account_id 
+        'Account ID', account_id
       ) as properties
     from
       aws_iam_group as g,
@@ -353,7 +353,7 @@ edge "aws_iam_user_to_iam_group_edge" {
       u ->> 'UserId' as from_id,
       g.group_id as to_id,
       jsonb_build_object(
-        'Account ID', g.account_id 
+        'Account ID', g.account_id
       ) as properties
     from
       aws_iam_group as g,
@@ -377,7 +377,7 @@ node "aws_iam_user_to_iam_policy_node" {
         'AWS Managed', is_aws_managed::text,
         'Attached', is_attached::text,
         'Create Date', create_date,
-        'Account ID', account_id 
+        'Account ID', account_id
       ) as properties
     from
       aws_iam_policy
@@ -428,7 +428,7 @@ node "aws_iam_user_to_iam_group_policy_node" {
         'AWS Managed', is_aws_managed::text,
         'Attached', is_attached::text,
         'Create Date', p.create_date,
-        'Account ID', p.account_id 
+        'Account ID', p.account_id
       ) as properties
     from
       aws_iam_user as u,
@@ -476,7 +476,7 @@ node "aws_iam_user_to_iam_access_key_node" {
         'Create Date', a.create_date,
         'Last Used Date', a.access_key_last_used_date,
         'Last Used Service', a.access_key_last_used_service,
-        'Last Used Region', a.access_key_last_used_region 
+        'Last Used Region', a.access_key_last_used_region
       ) as properties
     from
       aws_iam_access_key as a left join aws_iam_user as u on u.name = a.user_name

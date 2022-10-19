@@ -111,50 +111,6 @@ dashboard "aws_redshift_cluster_detail" {
 
   container {
 
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
-
-
-      nodes = [
-        node.aws_redshift_cluster_node,
-        node.aws_redshift_cluster_to_redshift_subnet_group_node,
-        node.aws_redshift_cluster_to_vpc_subnet_node,
-        node.aws_redshift_cluster_to_vpc_node,
-        node.aws_redshift_cluster_to_vpc_security_group_node,
-        node.aws_redshift_cluster_to_kms_key_node,
-        node.aws_redshift_cluster_to_iam_role_node,
-        node.aws_redshift_cluster_to_vpc_eip_node,
-        node.aws_redshift_cluster_to_cloudwatch_log_group_node,
-        node.aws_redshift_cluster_to_s3_bucket_node,
-        node.aws_redshift_cluster_to_redshift_parameter_group_node,
-        node.aws_redshift_cluster_from_redshift_snapshot_node
-      ]
-
-      edges = [
-        edge.aws_redshift_cluster_to_redshift_subnet_group_edge,
-        edge.aws_redshift_cluster_to_vpc_subnet_edge,
-        edge.aws_redshift_cluster_subnet_to_vpc_edge,
-        edge.aws_redshift_cluster_vpc_security_group_to_vpc_edge,
-        edge.aws_redshift_cluster_to_vpc_security_group_edge,
-        edge.aws_redshift_cluster_to_kms_key_edge,
-        edge.aws_redshift_cluster_to_iam_role_edge,
-        edge.aws_redshift_cluster_to_vpc_eip_edge,
-        edge.aws_redshift_cluster_to_cloudwatch_log_group_edge,
-        edge.aws_redshift_cluster_to_s3_bucket_edge,
-        edge.aws_redshift_cluster_to_redshift_parameter_group_edge,
-        edge.aws_redshift_cluster_from_redshift_snapshot_edge
-      ]
-
-      args = {
-        arn = self.input.cluster_arn.value
-      }
-    }
-  }
-
-  container {
-
     container {
 
       width = 6
@@ -490,7 +446,7 @@ node "aws_redshift_cluster_to_redshift_subnet_group_node" {
       ) as properties
     from
       aws_redshift_cluster as c
-      left join 
+      left join
         aws_redshift_subnet_group as s
         on c.vpc_id = s.vpc_id
         and c.cluster_subnet_group_name = s.cluster_subnet_group_name
@@ -509,7 +465,7 @@ edge "aws_redshift_cluster_to_redshift_subnet_group_edge" {
       s.cluster_subnet_group_name as to_id
     from
       aws_redshift_cluster as c
-      left join 
+      left join
         aws_redshift_subnet_group as s
         on c.vpc_id = s.vpc_id
         and c.cluster_subnet_group_name = s.cluster_subnet_group_name
@@ -534,7 +490,7 @@ node "aws_redshift_cluster_to_vpc_subnet_node" {
       ) as properties
     from
       aws_redshift_cluster as c
-      left join 
+      left join
         aws_redshift_subnet_group as s
         on c.vpc_id = s.vpc_id
         and c.cluster_subnet_group_name = s.cluster_subnet_group_name
@@ -554,7 +510,7 @@ edge "aws_redshift_cluster_to_vpc_subnet_edge" {
       subnet ->> 'SubnetIdentifier' as to_id
     from
       aws_redshift_cluster as c
-      left join 
+      left join
         aws_redshift_subnet_group as s
         on c.vpc_id = s.vpc_id
         and c.cluster_subnet_group_name = s.cluster_subnet_group_name
@@ -580,8 +536,8 @@ node "aws_redshift_cluster_to_vpc_node" {
       ) as properties
     from
       aws_redshift_cluster as c
-      left join 
-        aws_vpc as v 
+      left join
+        aws_vpc as v
         on v.vpc_id = c.vpc_id
         and c.arn = $1;
   EOQ
@@ -598,12 +554,12 @@ edge "aws_redshift_cluster_subnet_to_vpc_edge" {
       v.arn as to_id
     from
       aws_redshift_cluster as c
-      left join 
+      left join
         aws_redshift_subnet_group as s
         on c.vpc_id = s.vpc_id
         and c.cluster_subnet_group_name = s.cluster_subnet_group_name
-      left join 
-        aws_vpc as v 
+      left join
+        aws_vpc as v
         on v.vpc_id = c.vpc_id,
       jsonb_array_elements(s.subnets) as subnet
     where
@@ -622,12 +578,12 @@ edge "aws_redshift_cluster_vpc_security_group_to_vpc_edge" {
       v.arn as to_id
     from
       aws_redshift_cluster as c
-      left join 
-        aws_vpc as v 
+      left join
+        aws_vpc as v
         on v.vpc_id = c.vpc_id,
       jsonb_array_elements(c.vpc_security_groups) as s
-      left join 
-        aws_vpc_security_group as sg 
+      left join
+        aws_vpc_security_group as sg
         on sg.group_id = s ->> 'VpcSecurityGroupId'
     where
       c.arn = $1;
@@ -653,8 +609,8 @@ node "aws_redshift_cluster_to_vpc_security_group_node" {
     from
       aws_redshift_cluster as c,
       jsonb_array_elements(vpc_security_groups) as s
-      left join 
-        aws_vpc_security_group as sg 
+      left join
+        aws_vpc_security_group as sg
         on sg.group_id = s ->> 'VpcSecurityGroupId'
       where
         c.arn = $1
@@ -673,8 +629,8 @@ edge "aws_redshift_cluster_to_vpc_security_group_edge" {
     from
       aws_redshift_cluster as c,
       jsonb_array_elements(vpc_security_groups) as s
-      left join 
-        aws_vpc_security_group as sg 
+      left join
+        aws_vpc_security_group as sg
         on sg.group_id = s ->> 'VpcSecurityGroupId'
       where
           c.arn = $1;
@@ -699,8 +655,8 @@ node "aws_redshift_cluster_to_kms_key_node" {
       ) as properties
     from
       aws_redshift_cluster as c
-      left join 
-        aws_kms_key as k 
+      left join
+        aws_kms_key as k
         on k.arn = c.kms_key_id
         and c.arn = $1;
   EOQ
@@ -717,8 +673,8 @@ edge "aws_redshift_cluster_to_kms_key_edge" {
       k.arn as to_id
     from
       aws_redshift_cluster as c
-      left join 
-        aws_kms_key as k 
+      left join
+        aws_kms_key as k
         on k.arn = c.kms_key_id
         and c.arn = $1;
   EOQ
@@ -742,8 +698,8 @@ node "aws_redshift_cluster_to_iam_role_node" {
     from
       aws_redshift_cluster as c,
       jsonb_array_elements(iam_roles) as ir
-      left join 
-        aws_iam_role as r 
+      left join
+        aws_iam_role as r
         on r.arn = ir ->> 'IamRoleArn'
       where
         c.arn = $1;
@@ -762,8 +718,8 @@ edge "aws_redshift_cluster_to_iam_role_edge" {
     from
       aws_redshift_cluster as c,
       jsonb_array_elements(iam_roles) as ir
-      left join 
-        aws_iam_role as r 
+      left join
+        aws_iam_role as r
         on r.arn = ir ->> 'IamRoleArn'
       where
         c.arn = $1;
@@ -786,8 +742,8 @@ node "aws_redshift_cluster_to_vpc_eip_node" {
       ) as properties
     from
       aws_redshift_cluster as c
-      left join 
-        aws_vpc_eip as e 
+      left join
+        aws_vpc_eip as e
         on e.public_ip = (c.elastic_ip_status ->> 'ElasticIp')::inet
     where
       c.elastic_ip_status is not null
@@ -806,8 +762,8 @@ edge "aws_redshift_cluster_to_vpc_eip_edge" {
       e.arn as to_id
     from
       aws_redshift_cluster as c
-      left join 
-        aws_vpc_eip as e 
+      left join
+        aws_vpc_eip as e
         on e.public_ip = (c.elastic_ip_status ->> 'ElasticIp')::inet
     where
       c.elastic_ip_status is not null
@@ -830,7 +786,7 @@ node "aws_redshift_cluster_to_cloudwatch_log_group_node" {
       ) as properties
     from
       aws_redshift_cluster as c
-      left join 
+      left join
         aws_cloudwatch_log_group as g
         on g.title like '%' || c.title || '%'
         and c.arn = $1;
@@ -848,7 +804,7 @@ edge "aws_redshift_cluster_to_cloudwatch_log_group_edge" {
       g.arn as to_id
     from
       aws_redshift_cluster as c
-      left join 
+      left join
         aws_cloudwatch_log_group as g
         on g.title like '%' || c.title || '%'
         and c.arn = $1;
@@ -870,8 +826,8 @@ node "aws_redshift_cluster_to_s3_bucket_node" {
       ) as properties
     from
       aws_redshift_cluster as c
-      left join 
-        aws_s3_bucket as bucket 
+      left join
+        aws_s3_bucket as bucket
         on bucket.name = c.logging_status ->> 'BucketName'
         and c.arn = $1;
   EOQ
@@ -888,8 +844,8 @@ edge "aws_redshift_cluster_to_s3_bucket_edge" {
       bucket.arn as to_id
     from
       aws_redshift_cluster as c
-      left join 
-        aws_s3_bucket as bucket 
+      left join
+        aws_s3_bucket as bucket
         on bucket.name = c.logging_status ->> 'BucketName'
         and c.arn = $1;
   EOQ
@@ -912,8 +868,8 @@ node "aws_redshift_cluster_to_redshift_parameter_group_node" {
     from
       aws_redshift_cluster as c,
       jsonb_array_elements(cluster_parameter_groups) as p
-      left join 
-        aws_redshift_parameter_group as g 
+      left join
+        aws_redshift_parameter_group as g
         on g.name = p ->> 'ParameterGroupName'
       where
         c.arn = $1;
@@ -932,8 +888,8 @@ edge "aws_redshift_cluster_to_redshift_parameter_group_edge" {
     from
       aws_redshift_cluster as c,
       jsonb_array_elements(cluster_parameter_groups) as p
-      left join 
-        aws_redshift_parameter_group as g 
+      left join
+        aws_redshift_parameter_group as g
         on g.name = p ->> 'ParameterGroupName'
       where
         c.arn = $1;
@@ -957,7 +913,7 @@ node "aws_redshift_cluster_from_redshift_snapshot_node" {
       ) as properties
     from
       aws_redshift_cluster as c
-      left join 
+      left join
         aws_redshift_snapshot as snapshot
         on snapshot.cluster_identifier = c.cluster_identifier
         and snapshot.region = c.region
@@ -976,7 +932,7 @@ edge "aws_redshift_cluster_from_redshift_snapshot_edge" {
       c.arn as to_id
     from
       aws_redshift_cluster as c
-      left join 
+      left join
         aws_redshift_snapshot as snapshot
         on snapshot.cluster_identifier = c.cluster_identifier
         and snapshot.region = c.region

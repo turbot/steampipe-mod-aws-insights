@@ -14,7 +14,6 @@ dashboard "aws_ebs_snapshot_detail" {
   }
 
   container {
-
     card {
       width = 2
       query = query.aws_ebs_snapshot_state
@@ -30,7 +29,6 @@ dashboard "aws_ebs_snapshot_detail" {
         arn = self.input.snapshot_arn.value
       }
     }
-
     card {
       width = 2
       query = query.aws_ebs_snapshot_encryption
@@ -252,8 +250,8 @@ node "aws_ebs_snapshot_from_ebs_volume_node" {
       ) as properties
     from
       aws_ebs_snapshot as s
-    left join 
-      aws_ebs_volume as volumes 
+    left join
+      aws_ebs_volume as volumes
       on s.volume_id = volumes.volume_id
       and s.arn = $1;
   EOQ
@@ -270,8 +268,8 @@ edge "aws_ebs_snapshot_from_ebs_volume_edge" {
       s.snapshot_id as to_id
     from
       aws_ebs_snapshot as s
-    left join 
-      aws_ebs_volume as volumes 
+    left join
+      aws_ebs_volume as volumes
       on s.volume_id = volumes.volume_id
       and s.arn = $1;
   EOQ
@@ -379,7 +377,7 @@ node "aws_ebs_snapshot_to_kms_key_node" {
       ) as properties
     from
       aws_ebs_snapshot as s
-    left join 
+    left join
       aws_kms_key as kms_keys
       on s.kms_key_id = kms_keys.arn
       and s.arn = $1;
@@ -397,7 +395,7 @@ edge "aws_ebs_snapshot_to_kms_key_edge" {
       kms_keys.arn as to_id
     from
       aws_ebs_snapshot as s
-    left join 
+    left join
       aws_kms_key as kms_keys
       on s.kms_key_id = kms_keys.arn
       and s.arn = $1;
