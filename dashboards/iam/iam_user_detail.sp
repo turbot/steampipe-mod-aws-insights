@@ -79,6 +79,34 @@ dashboard "aws_iam_user_detail" {
 
   container {
 
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      nodes = [
+        node.aws_iam_user_node,
+        node.aws_iam_user_to_iam_group_node,
+        node.aws_iam_user_to_iam_policy_node,
+        node.aws_iam_user_to_iam_group_policy_node,
+        node.aws_iam_user_to_iam_access_key_node
+      ]
+
+      edges = [
+        edge.aws_iam_user_to_iam_group_edge,
+        edge.aws_iam_user_to_iam_policy_edge,
+        edge.aws_iam_user_to_iam_group_policy_edge,
+        edge.aws_iam_user_to_iam_access_key_edge
+      ]
+
+      args = {
+        arn = self.input.user_arn.value
+      }
+    }
+  }
+
+  container {
+
     container {
 
       width = 6
@@ -266,8 +294,13 @@ query "aws_iam_user_direct_attached_policy_count_for_user" {
   param "arn" {}
 }
 
+category "aws_iam_user_base" {
+  icon = local.aws_iam_user_icon
+}
+
 node "aws_iam_user_node" {
-  category = category.aws_iam_user
+
+  category = category.aws_iam_user_base
 
   sql = <<-EOQ
     select

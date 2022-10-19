@@ -227,15 +227,15 @@ node "aws_redshift_snapshot_node" {
     select
       title as id,
       title,
-      jsonb_build_object(
-        'Status', status,
-        'Cluster Identifier', cluster_identifier,
-        'Create Time', cluster_create_time,
-        'Type', snapshot_type,
-        'Encrypted', encrypted::text,
-        'Account ID', account_id,
-        'Source Region', source_region
-      ) as properties
+      jsonb_build_object( 
+        'Status', status, 
+        'Cluster Identifier', cluster_identifier, 
+        'Create Time', cluster_create_time, 
+        'Type', snapshot_type, 
+        'Encrypted', encrypted::text, 
+        'Account ID', account_id, 
+        'Source Region', source_region 
+      ) as properties 
     from
       aws_redshift_snapshot
     where
@@ -252,16 +252,16 @@ node "aws_redshift_snapshot_to_kms_key_node" {
     select
       k.id,
       k.title,
-      jsonb_build_object(
-        'ARN', k.arn,
-        'Rotation Enabled', k.key_rotation_enabled::text,
-        'Account ID', k.account_id,
-        'Region', k.region
-      ) as properties
+      jsonb_build_object( 
+        'ARN', k.arn, 
+        'Rotation Enabled', k.key_rotation_enabled::text, 
+        'Account ID', k.account_id, 
+        'Region', k.region 
+      ) as properties 
     from
-      aws_redshift_snapshot as s
+      aws_redshift_snapshot as s 
       join
-        aws_kms_key as k
+        aws_kms_key as k 
         on s.kms_key_id = k.arn
         and s.akas::text = $1;
   EOQ
@@ -277,9 +277,9 @@ edge "aws_redshift_snapshot_to_kms_key_edge" {
       s.snapshot_identifier as from_id,
       k.id as to_id
     from
-      aws_redshift_snapshot as s
+      aws_redshift_snapshot as s 
       join
-        aws_kms_key as k
+        aws_kms_key as k 
         on s.kms_key_id = k.arn
         and s.akas::text = $1;
   EOQ
@@ -294,20 +294,20 @@ node "aws_redshift_snapshot_from_redshift_cluster_node" {
     select
       c.cluster_identifier as id,
       c.title as title,
-      jsonb_build_object(
-        'ARN', c.arn,
-        'Status', c.cluster_status,
-        'Availability Zone', c.availability_zone,
-        'Create Time', c.cluster_create_time,
-        'Account ID', c.account_id,
-        'Region', c.region
-      ) as properties
+      jsonb_build_object( 
+        'ARN', c.arn, 
+        'Status', c.cluster_status, 
+        'Availability Zone', c.availability_zone, 
+        'Create Time', c.cluster_create_time, 
+        'Account ID', c.account_id, 
+        'Region', c.region 
+      ) as properties 
     from
-      aws_redshift_snapshot as s
+      aws_redshift_snapshot as s 
       join
-        aws_redshift_cluster as c
-        on s.cluster_identifier = c.cluster_identifier
-        and s.account_id = c.account_id
+        aws_redshift_cluster as c 
+        on s.cluster_identifier = c.cluster_identifier 
+        and s.account_id = c.account_id 
         and s.region = c.region
         and s.akas::text = $1;
   EOQ
@@ -323,11 +323,11 @@ edge "aws_redshift_snapshot_from_redshift_cluster_edge" {
       c.cluster_identifier as from_id,
       s.snapshot_identifier as to_id
     from
-      aws_redshift_snapshot as s
+      aws_redshift_snapshot as s 
       join
-        aws_redshift_cluster as c
-        on s.cluster_identifier = c.cluster_identifier
-        and s.account_id = c.account_id
+        aws_redshift_cluster as c 
+        on s.cluster_identifier = c.cluster_identifier 
+        and s.account_id = c.account_id 
         and s.region = c.region
         and s.akas::text = $1;
   EOQ
