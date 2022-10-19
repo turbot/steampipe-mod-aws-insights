@@ -243,7 +243,7 @@ category "aws_redshift_parameter_group" {
 }
 
 category "aws_ec2_ami" {
-  href = "/aws_insights.dashboard.aws_ec2_ami_detail?input.ami={{.properties.'Image ID' | @uri}}"
+  href = "aws_insights.dashboard.aws_ec2_ami_detail?input.ami={{.properties.'Image ID' | @uri}}"
   icon = local.aws_ec2_ami_icon
   fold {
     title     = "EC2 AMIs"
@@ -274,7 +274,7 @@ category "aws_ec2_key_pair" {
 }
 
 category "aws_ecr_repository" {
-  href = "/aws_insights.dashboard.aws_ecr_repository_detail?input.ecr_repository_arn={{.properties.'ARN' | @uri}}"
+  href = "aws_insights.dashboard.aws_ecr_repository_detail?input.ecr_repository_arn={{.properties.'ARN' | @uri}}"
   icon = local.aws_ecr_repository_icon
   fold {
     title     = "ECR repositories"
@@ -445,6 +445,13 @@ category "aws_elasticache_cluster" {
   }
 }
 
+category "aws_elasticache_subnet_group" {
+  fold {
+    title     = "elasticache Subnet Groups"
+    threshold = 3
+  }
+}
+
 category "aws_vpc_eip" {
   href = "/aws_insights.dashboard.aws_vpc_eip_detail?input.eip_arn={{.properties.'ARN' | @uri}}"
   icon = local.aws_vpc_eip_icon
@@ -533,6 +540,16 @@ category "aws_dax_cluster" {
   href = "/aws_insights.dashboard.dax_cluster_detail?input.dax_cluster_arn={{.properties.'ARN' | @uri}}"
   fold {
     title     = "DAX Clusters"
+    threshold = 3
+  }
+}
+
+category "aws_dynamodb_table" {
+  href = "/aws_insights.dashboard.dynamodb_table_detail?input.table_arn={{.properties.'ARN' | @uri}}"
+  icon = local.aws_dynamodb_table_icon
+  fold {
+    title     = "DynamoDB Tables"
+    icon      = local.aws_dynamodb_table_icon
     threshold = 3
   }
 }
@@ -735,6 +752,34 @@ category "aws_ecs_task" {
 category "aws_codedeploy_app" {
   fold {
     title     = "CodeDeploy Applications"
+    threshold = 3
+  }
+}
+
+category "aws_eks_addon" {
+  fold {
+    title     = "EKS Addons"
+    threshold = 3
+  }
+}
+
+category "aws_eks_node_group" {
+  fold {
+    title     = "EKS Node Groups"
+    threshold = 3
+  }
+}
+
+category "aws_emr_instance_fleet" {
+  fold {
+    title     = "EMR instance fleets"
+    threshold = 3
+  }
+}
+
+category "aws_emr_instance_group" {
+  fold {
+    title     = "EMR instance groups"
     threshold = 3
   }
 }

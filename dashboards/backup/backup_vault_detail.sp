@@ -25,15 +25,27 @@ dashboard "backup_vault_detail" {
   }
 
   container {
+
     graph {
-      type  = "graph"
-      base  = graph.aws_graph_categories
-      query = query.aws_backup_vault_relationships_graph
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      nodes = [
+        node.aws_backup_vault_node,
+        node.aws_backup_vault_from_backup_plan_node,
+        node.aws_backup_vault_from_kms_key_node,
+        node.aws_backup_vault_from_sns_topic_node
+      ]
+
+      edges = [
+        edge.aws_backup_vault_from_backup_plan_edge,
+        edge.aws_backup_vault_from_kms_key_edge,
+        edge.aws_backup_vault_from_sns_topic_edge,
+      ]
+
       args = {
         arn = self.input.backup_vault_arn.value
-      }
-      category "aws_backup_vault" {
-        icon = local.aws_backup_vault_icon
       }
     }
   }
@@ -96,14 +108,13 @@ query "aws_backup_vault_recovery_points" {
   param "arn" {}
 }
 
-query "aws_backup_vault_relationships_graph" {
+node "aws_backup_vault_node" {
+  category = category.aws_backup_vault
+
   sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       arn as id,
       title as title,
-      'aws_backup_vault' as category,
       jsonb_build_object(
         'ARN', arn,
         'Name', name,
@@ -113,16 +124,19 @@ query "aws_backup_vault_relationships_graph" {
     from
       aws_backup_vault
     where
-      arn = $1
+      arn = $1;
+  EOQ
 
-    -- From Backup plans (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_backup_vault_from_backup_plan_node" {
+  category = category.aws_backup_plan
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       arn as id,
       title as title,
-      'aws_backup_plan' as category,
       jsonb_build_object(
         'ARN', arn,
         'Name', name,
@@ -142,34 +156,38 @@ query "aws_backup_vault_relationships_graph" {
           aws_backup_vault
         where
           arn = $1
-      )
+      );
+  EOQ
 
-    -- From Backup plans (edge)
-    union all
-     select
+  param "arn" {}
+}
+
+edge "aws_backup_vault_from_backup_plan_edge" {
+  title = "backup plan"
+
+  sql = <<-EOQ
+    select
       p.arn as from_id,
-      v.arn as to_id,
-      null as id,
-      'backup plan' as title,
-      'backup_plan_to_backup_vault' as category,
-      jsonb_build_object(
-        'Account ID', v.account_id ) as properties
+      v.arn as to_id
     from
       aws_backup_vault as v,
       aws_backup_plan as p,
       jsonb_array_elements(backup_plan -> 'Rules') as r
     where
       r ->> 'TargetBackupVaultName' = v.name
-      and v.arn = $1
+      and v.arn = $1;
+  EOQ
 
-    -- From KMS keys (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_backup_vault_from_kms_key_node" {
+  category = category.aws_kms_key
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       id as id,
       title as title,
-      'aws_kms_key' as category,
       jsonb_build_object(
         'ARN', arn,
         'Key Manager', key_manager,
@@ -188,34 +206,38 @@ query "aws_backup_vault_relationships_graph" {
           aws_backup_vault
         where
           arn = $1
-      )
+      );
+  EOQ
 
-    -- From KMS keys (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_backup_vault_from_kms_key_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
     select
       v.arn as from_id,
-      k.id as to_id,
-      null as id,
-      'encrypted with' as title,
-      'backup_vault_to_kms_key' as category,
-      jsonb_build_object(
-        'Account ID', v.account_id ) as properties
+      k.id as to_id
     from
       aws_backup_vault as v
       left join
         aws_kms_key as k
         on k.arn = v.encryption_key_arn
     where
-      v.arn = $1
+      v.arn = $1;
+  EOQ
 
-    -- From SNS topics (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_backup_vault_from_sns_topic_node" {
+  category = category.aws_sns_topic
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       topic_arn as id,
       title as title,
-      'aws_sns_topic' as category,
       jsonb_build_object(
         'ARN', topic_arn,
         'Account ID', account_id,
@@ -231,30 +253,27 @@ query "aws_backup_vault_relationships_graph" {
           aws_backup_vault
         where
           arn = $1
-      )
+      );
+  EOQ
 
-    -- From SNS topics (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_backup_vault_from_sns_topic_edge" {
+  title = "publishes to"
+
+  sql = <<-EOQ
     select
       v.arn as from_id,
       t.topic_arn as to_id,
-      null as id,
-      'publishes to' as title,
-      'backup_vault_to_sns_topic' as category,
-      jsonb_build_object(
-        'Account ID', v.account_id ) as properties
+      'backup_vault_to_sns_topic' as category
     from
       aws_backup_vault as v
       left join
         aws_sns_topic as t
         on t.topic_arn = v.sns_topic_arn
     where
-      arn = $1
-
-    order by
-      category,
-      from_id,
-      to_id;
+      arn = $1;
   EOQ
 
   param "arn" {}

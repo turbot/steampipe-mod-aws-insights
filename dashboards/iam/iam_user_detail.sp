@@ -79,6 +79,34 @@ dashboard "aws_iam_user_detail" {
 
   container {
 
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      nodes = [
+        node.aws_iam_user_node,
+        node.aws_iam_user_to_iam_group_node,
+        node.aws_iam_user_to_iam_policy_node,
+        node.aws_iam_user_to_iam_group_policy_node,
+        node.aws_iam_user_to_iam_access_key_node
+      ]
+
+      edges = [
+        edge.aws_iam_user_to_iam_group_edge,
+        edge.aws_iam_user_to_iam_policy_edge,
+        edge.aws_iam_user_to_iam_group_policy_edge,
+        edge.aws_iam_user_to_iam_access_key_edge
+      ]
+
+      args = {
+        arn = self.input.user_arn.value
+      }
+    }
+  }
+
+  container {
+
     container {
 
       width = 6
@@ -518,7 +546,7 @@ query "aws_iam_user_console_password" {
     from
       aws_iam_user
     where
-      arn  = $1
+      arn = $1
   EOQ
 
   param "arn" {}
@@ -527,13 +555,13 @@ query "aws_iam_user_console_password" {
 query "aws_iam_user_access_keys" {
   sql = <<-EOQ
     select
-      access_key_id  as "Access Key ID",
+      access_key_id as "Access Key ID",
       a.status as "Status",
       a.create_date as "Create Date"
     from
-      aws_iam_access_key as a left join aws_iam_user as u on u.name = a.user_name
+      aws_iam_access_key as a left join aws_iam_user as u on u.name = a.user_name and u.account_id = a.account_id
     where
-      u.arn  = $1
+      u.arn = $1
   EOQ
 
   param "arn" {}
@@ -549,7 +577,7 @@ query "aws_iam_user_mfa_devices" {
       aws_iam_user as u,
       jsonb_array_elements(mfa_devices) as mfa
     where
-      arn  = $1
+      arn = $1
   EOQ
 
   param "arn" {}

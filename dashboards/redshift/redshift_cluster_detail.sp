@@ -111,6 +111,50 @@ dashboard "aws_redshift_cluster_detail" {
 
   container {
 
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+
+      nodes = [
+        node.aws_redshift_cluster_node,
+        node.aws_redshift_cluster_to_redshift_subnet_group_node,
+        node.aws_redshift_cluster_to_vpc_subnet_node,
+        node.aws_redshift_cluster_to_vpc_node,
+        node.aws_redshift_cluster_to_vpc_security_group_node,
+        node.aws_redshift_cluster_to_kms_key_node,
+        node.aws_redshift_cluster_to_iam_role_node,
+        node.aws_redshift_cluster_to_vpc_eip_node,
+        node.aws_redshift_cluster_to_cloudwatch_log_group_node,
+        node.aws_redshift_cluster_to_s3_bucket_node,
+        node.aws_redshift_cluster_to_redshift_parameter_group_node,
+        node.aws_redshift_cluster_from_redshift_snapshot_node
+      ]
+
+      edges = [
+        edge.aws_redshift_cluster_to_redshift_subnet_group_edge,
+        edge.aws_redshift_cluster_to_vpc_subnet_edge,
+        edge.aws_redshift_cluster_subnet_to_vpc_edge,
+        edge.aws_redshift_cluster_vpc_security_group_to_vpc_edge,
+        edge.aws_redshift_cluster_to_vpc_security_group_edge,
+        edge.aws_redshift_cluster_to_kms_key_edge,
+        edge.aws_redshift_cluster_to_iam_role_edge,
+        edge.aws_redshift_cluster_to_vpc_eip_edge,
+        edge.aws_redshift_cluster_to_cloudwatch_log_group_edge,
+        edge.aws_redshift_cluster_to_s3_bucket_edge,
+        edge.aws_redshift_cluster_to_redshift_parameter_group_edge,
+        edge.aws_redshift_cluster_from_redshift_snapshot_edge
+      ]
+
+      args = {
+        arn = self.input.cluster_arn.value
+      }
+    }
+  }
+
+  container {
+
     container {
 
       width = 6
