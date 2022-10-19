@@ -82,8 +82,8 @@ dashboard "aws_eks_cluster_detail" {
         edge.aws_eks_cluster_to_vpc_subnet_edge,
         edge.aws_vpc_security_group_to_vpc_edge,
         edge.aws_vpc_subnet_to_vpc_edge
-
       ]
+      
       args = {
         arn = self.input.eks_cluster_arn.value
       }
