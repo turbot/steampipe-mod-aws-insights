@@ -266,8 +266,13 @@ query "aws_iam_user_direct_attached_policy_count_for_user" {
   param "arn" {}
 }
 
+category "aws_iam_user_base" {
+  icon = local.aws_iam_user_icon
+}
+
 node "aws_iam_user_node" {
-  category = category.aws_iam_user
+
+  category = category.aws_iam_user_base
 
   sql = <<-EOQ
     select
