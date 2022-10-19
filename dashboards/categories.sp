@@ -542,11 +542,10 @@ category "aws_dynamodb_table" {
   icon = local.aws_dynamodb_table_icon
   fold {
     title     = "DynamoDB Tables"
-    icon = local.aws_dynamodb_table_icon
+    icon      = local.aws_dynamodb_table_icon
     threshold = 3
   }
 }
-
 
 category "aws_dax_subnet_group" {
   fold {
@@ -746,6 +745,34 @@ category "aws_ecs_task" {
 category "aws_codedeploy_app" {
   fold {
     title     = "CodeDeploy Applications"
+    threshold = 3
+  }
+}
+
+category "aws_eks_addon" {
+  fold {
+    title     = "EKS Addons"
+    threshold = 3
+  }
+}
+
+category "aws_eks_node_group" {
+  fold {
+    title     = "EKS Node Groups"
+    threshold = 3
+  }
+}
+
+category "aws_emr_instance_fleet" {
+  fold {
+    title     = "EMR instance fleets"
+    threshold = 3
+  }
+}
+
+category "aws_emr_instance_group" {
+  fold {
+    title     = "EMR instance groups"
     threshold = 3
   }
 }

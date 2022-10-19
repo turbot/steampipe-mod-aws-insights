@@ -296,7 +296,7 @@ query "aws_dynamodb_table_autoscaling_state" {
 node "aws_dynamodb_table_node" {
   category = category.aws_dynamodb_table
 
-sql = <<-EOQ
+  sql = <<-EOQ
     select
       table_id as id,
       name as title,
@@ -373,7 +373,7 @@ node "aws_dynamodb_table_to_s3_bucket_node" {
 node "aws_dynamodb_table_to_kinesis_stream_node" {
   category = category.aws_kinesis_stream
 
-sql = <<-EOQ
+  sql = <<-EOQ
   select
     s.stream_arn as id,
     s.title as title,
