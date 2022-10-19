@@ -68,13 +68,25 @@ dashboard "aws_redshift_snapshot_detail" {
   container {
 
     graph {
-      type  = "graph"
-      base  = graph.aws_graph_categories
-      query = query.aws_redshift_snapshot_relationships_graph
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+
+      nodes = [
+        node.aws_redshift_snapshot_node,
+        node.aws_redshift_snapshot_to_kms_key_node,
+        node.aws_redshift_snapshot_from_redshift_cluster_node
+      ]
+
+      edges = [
+        edge.aws_redshift_snapshot_to_kms_key_edge,
+        edge.aws_redshift_snapshot_from_redshift_cluster_edge
+      ]
+
       args = {
         arn = self.input.snapshot_arn.value
       }
-      category "aws_redshift_snapshot" {}
     }
   }
 
@@ -208,124 +220,116 @@ query "aws_redshift_snapshot_unencrypted" {
   param "arn" {}
 }
 
-query "aws_redshift_snapshot_relationships_graph" {
+node "aws_redshift_snapshot_node" {
+  category = category.aws_redshift_snapshot
+
   sql = <<-EOQ
-    with snapshot as(
-      select
-        *
-      from
-        aws_redshift_snapshot
-      where
-        akas::text = $1
-    )
-    -- Redshift cluster snapshot (node)
     select
-      null as from_id,
-      null as to_id,
       title as id,
       title,
-      'snapshot' as category,
-      jsonb_build_object( 
-        'Status', status, 
-        'Cluster Identifier', cluster_identifier, 
-        'Create Time', cluster_create_time, 
-        'Type', snapshot_type, 
-        'Encrypted', encrypted::text, 
-        'Account ID', account_id, 
-        'Source Region', source_region 
-      ) as properties 
+      jsonb_build_object(
+        'Status', status,
+        'Cluster Identifier', cluster_identifier,
+        'Create Time', cluster_create_time,
+        'Type', snapshot_type,
+        'Encrypted', encrypted::text,
+        'Account ID', account_id,
+        'Source Region', source_region
+      ) as properties
     from
-      snapshot
+      aws_redshift_snapshot
+    where
+      akas::text = $1;
+  EOQ
 
-    -- To KMS keys (node)
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      k.id as id,
-      coalesce(k.aliases #>> '{0,AliasName}', k.id) as title,
-      'kms_key' as category,
-      jsonb_build_object( 
-        'ARN', k.arn, 
-        'Rotation Enabled', k.key_rotation_enabled::text, 
-        'Account ID', k.account_id, 
-        'Region', k.region 
-      ) as properties 
-    from
-      snapshot as s 
-      join
-        aws_kms_key as k 
-        on s.kms_key_id = k.arn
+  param "arn" {}
+}
 
-    -- To KMS keys (edge)
-    union all
+node "aws_redshift_snapshot_to_kms_key_node" {
+  category = category.aws_kms_key
+
+  sql = <<-EOQ
     select
-      s.snapshot_identifier as from_id,
-      k.id as to_id,
-      null as id,
-      'encrypted with' as title,
-      'redshift_snapshot_to_kms_key' as category,
+      k.id,
+      k.title,
       jsonb_build_object(
         'ARN', k.arn,
-        'Cluster Snapshot Identifier', s.snapshot_identifier,
+        'Rotation Enabled', k.key_rotation_enabled::text,
         'Account ID', k.account_id,
         'Region', k.region
       ) as properties
     from
-      snapshot as s
-      join aws_kms_key as k on s.kms_key_id = k.arn
+      aws_redshift_snapshot as s
+      join
+        aws_kms_key as k
+        on s.kms_key_id = k.arn
+        and s.akas::text = $1;
+  EOQ
 
-    -- From Redshift cluster (node)
-    union all
+  param "arn" {}
+}
+
+edge "aws_redshift_snapshot_to_kms_key_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
+      s.snapshot_identifier as from_id,
+      k.id as to_id
+    from
+      aws_redshift_snapshot as s
+      join
+        aws_kms_key as k
+        on s.kms_key_id = k.arn
+        and s.akas::text = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_redshift_snapshot_from_redshift_cluster_node" {
+  category = category.aws_redshift_cluster
+
+  sql = <<-EOQ
+    select
       c.cluster_identifier as id,
       c.title as title,
-      'aws_redshift_cluster' as category,
-      jsonb_build_object( 
-        'ARN', c.arn, 
-        'Status', c.cluster_status, 
-        'Availability Zone', c.availability_zone, 
-        'Create Time', c.cluster_create_time, 
-        'Account ID', c.account_id, 
-        'Region', c.region 
-      ) as properties 
-    from
-      snapshot as s 
-      join
-        aws_redshift_cluster as c 
-        on s.cluster_identifier = c.cluster_identifier 
-        and s.account_id = c.account_id 
-        and s.region = c.region
-
-    -- From Redshift cluster (edge)
-    union all
-    select
-      c.cluster_identifier as from_id,
-      s.snapshot_identifier as to_id,
-      null as id,
-      'snapshot' as title,
-      'redshift_cluster_to_redshift_snapshot' as category,
       jsonb_build_object(
-        'Cluster Identifier', c.cluster_identifier,
-        'Cluster Snapshot Identifier', s.snapshot_identifier,
-        'Status', s.status,
+        'ARN', c.arn,
+        'Status', c.cluster_status,
+        'Availability Zone', c.availability_zone,
+        'Create Time', c.cluster_create_time,
         'Account ID', c.account_id,
         'Region', c.region
       ) as properties
     from
-      snapshot as s 
+      aws_redshift_snapshot as s
       join
-        aws_redshift_cluster as c 
-        on s.cluster_identifier = c.cluster_identifier 
-        and s.account_id = c.account_id 
+        aws_redshift_cluster as c
+        on s.cluster_identifier = c.cluster_identifier
+        and s.account_id = c.account_id
         and s.region = c.region
-        
-    order by
-      category,
-      from_id,
-      to_id;
+        and s.akas::text = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_redshift_snapshot_from_redshift_cluster_edge" {
+  title = "snapshot"
+
+  sql = <<-EOQ
+    select
+      c.cluster_identifier as from_id,
+      s.snapshot_identifier as to_id
+    from
+      aws_redshift_snapshot as s
+      join
+        aws_redshift_cluster as c
+        on s.cluster_identifier = c.cluster_identifier
+        and s.account_id = c.account_id
+        and s.region = c.region
+        and s.akas::text = $1;
   EOQ
 
   param "arn" {}

@@ -228,6 +228,20 @@ category "aws_redshift_snapshot" {
   }
 }
 
+category "aws_redshift_subnet_group" {
+  fold {
+    title     = "Redshift Subnet Groups"
+    threshold = 3
+  }
+}
+
+category "aws_redshift_parameter_group" {
+  fold {
+    title     = "Redshift Parameter Groups"
+    threshold = 3
+  }
+}
+
 category "aws_ec2_ami" {
   href = "aws_insights.dashboard.aws_ec2_ami_detail?input.ami={{.properties.'Image ID' | @uri}}"
   icon = local.aws_ec2_ami_icon
@@ -519,6 +533,16 @@ category "aws_dax_cluster" {
   href = "/aws_insights.dashboard.dax_cluster_detail?input.dax_cluster_arn={{.properties.'ARN' | @uri}}"
   fold {
     title     = "DAX Clusters"
+    threshold = 3
+  }
+}
+
+category "aws_dynamodb_table" {
+  href = "/aws_insights.dashboard.dynamodb_table_detail?input.table_arn={{.properties.'ARN' | @uri}}"
+  icon = local.aws_dynamodb_table_icon
+  fold {
+    title     = "DynamoDB Tables"
+    icon      = local.aws_dynamodb_table_icon
     threshold = 3
   }
 }
