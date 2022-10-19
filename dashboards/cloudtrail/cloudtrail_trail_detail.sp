@@ -65,14 +65,16 @@ dashboard "aws_cloudtrail_trail_detail" {
         node.aws_cloudtrail_trail_to_s3_bucket_node,
         node.aws_cloudtrail_trail_to_kms_key_node,
         node.aws_cloudtrail_trail_to_sns_topic_node,
-        node.aws_cloudtrail_trail_to_cloudwatch_log_group_node
+        node.aws_cloudtrail_trail_to_cloudwatch_log_group_node,
+        node.aws_cloudtrail_trail_from_guardduty_detector_node
       ]
 
       edges = [
         edge.aws_cloudtrail_trail_to_s3_bucket_edge,
         edge.aws_cloudtrail_trail_to_kms_key_edge,
         edge.aws_cloudtrail_trail_to_sns_topic_edge,
-        edge.aws_cloudtrail_trail_to_cloudwatch_log_group_edge
+        edge.aws_cloudtrail_trail_to_cloudwatch_log_group_edge,
+        edge.aws_cloudtrail_trail_from_guardduty_detector_edge
       ]
 
       args = {
@@ -399,7 +401,6 @@ node "aws_cloudtrail_trail_to_sns_topic_node" {
     select
       st.topic_arn as id,
       st.title as title,
-      'aws_sns_topic' as category,
       jsonb_build_object(
         'ARN', st.topic_arn,
         'Account ID', st.account_id,
@@ -479,6 +480,57 @@ edge "aws_cloudtrail_trail_to_cloudwatch_log_group_edge" {
       right join aws_cloudtrail_trail as t on t.log_group_arn = g.arn
     where
       t.arn = $1
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_cloudtrail_trail_from_guardduty_detector_node" {
+  category = category.aws_guardduty_detector
+
+  sql = <<-EOQ
+    select
+      detector.arn as id,
+      detector.detector_id as title,
+      jsonb_build_object(
+        'ARN', detector.arn,
+        'Account ID', detector.account_id,
+        'Region', detector.region,
+        'Status', detector.status
+      ) as properties
+    from
+      aws_guardduty_detector as detector,
+      aws_cloudtrail_trail as t
+    where
+      detector.status = 'ENABLED'
+      and detector.data_sources is not null
+      and detector.data_sources -> 'CloudTrail' ->> 'Status' = 'ENABLED'
+      and t.arn = $1
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_cloudtrail_trail_from_guardduty_detector_edge" {
+  title = "guardduty detector"
+
+  sql = <<-EOQ
+    select
+      detector.arn as from_id,
+      t.arn as to_id,
+      jsonb_build_object(
+        'ARN', t.arn,
+        'Account ID', t.account_id,
+        'Region', t.region
+      ) as properties
+    from
+      aws_guardduty_detector as detector,
+      aws_cloudtrail_trail as t
+    where
+      detector.status = 'ENABLED'
+      and detector.data_sources is not null
+      and detector.data_sources -> 'CloudTrail' ->> 'Status' = 'ENABLED'
+      and t.arn = $1
   EOQ
 
   param "arn" {}

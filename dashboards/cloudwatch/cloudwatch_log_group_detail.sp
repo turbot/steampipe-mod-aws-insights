@@ -284,7 +284,6 @@ node "aws_cloudwatch_log_group_to_kms_key_node" {
     select
       k.arn as id,
       k.title as title,
-      'aws_kms_key' as category,
       jsonb_build_object(
         'ARN', k.arn,
         'ID', k.id,
@@ -425,11 +424,8 @@ node "aws_cloudwatch_log_group_from_vpc_flow_logs_node" {
 
   sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       f.flow_log_id as id,
       f.title as title,
-      'aws_vpc_flow_log' as category,
       jsonb_build_object(
         'Flow Log ID', f.flow_log_id ,
         'Traffic Type', f.traffic_type,
@@ -455,9 +451,6 @@ edge "aws_cloudwatch_log_group_from_vpc_flow_logs_edge" {
    select
       f.flow_log_id as from_id,
       $1 as to_id,
-      null as id,
-      'logs to' as title,
-      'vpc_flow_log_to_cloudwatch_log_group' as category,
       jsonb_build_object(
         'Flow Log ID', f.flow_log_id,
         'Account ID', f.account_id,

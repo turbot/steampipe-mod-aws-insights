@@ -394,7 +394,6 @@ edge "aws_ecr_repository_to_kms_key_edge" {
       left join aws_kms_key as k on k.arn = r.encryption_configuration ->> 'KmsKey'
     where
       r.arn = $1
-
   EOQ
 
   param "arn" {}
