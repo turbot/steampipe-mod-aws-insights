@@ -401,9 +401,9 @@ node "aws_ecs_cluster_to_ec2_launch_type_node" {
       aws_ecs_cluster
     where
       'EC2' in (
-        select 
-          launch_type 
-        from 
+        select
+          launch_type
+        from
           task_definition_launch_type
       )
       and cluster_arn = $1;
@@ -445,9 +445,9 @@ edge "aws_ecs_cluster_to_ec2_launch_type_edge" {
         aws_ecs_cluster
       where
         'EC2' in (
-          select 
-            launch_type 
-          from 
+          select
+            launch_type
+          from
             task_definition_launch_type
         )
         and cluster_arn = $1;
@@ -492,9 +492,9 @@ node "aws_ecs_cluster_to_fargate_launch_type_node" {
         aws_ecs_cluster
       where
         'FARGATE' in (
-          select 
-            launch_type 
-          from 
+          select
+            launch_type
+          from
             task_definition_launch_type
         )
         and cluster_arn = $1;
@@ -536,9 +536,9 @@ edge "aws_ecs_cluster_to_fargate_launch_type_edge" {
         aws_ecs_cluster
       where
         'FARGATE' in (
-          select 
-            launch_type 
-          from 
+          select
+            launch_type
+          from
             task_definition_launch_type
         )
         and cluster_arn = $1;
@@ -583,9 +583,9 @@ node "aws_ecs_cluster_to_external_launch_type_node" {
         aws_ecs_cluster
       where
         'EXTERNAL' in (
-          select 
-            launch_type 
-          from 
+          select
+            launch_type
+          from
             task_definition_launch_type
         )
         and cluster_arn = $1;
@@ -627,9 +627,9 @@ edge "aws_ecs_cluster_to_external_launch_type_edge" {
         aws_ecs_cluster
       where
         'EXTERNAL' in (
-          select 
-            launch_type 
-          from 
+          select
+            launch_type
+          from
             task_definition_launch_type
         )
         and cluster_arn = $1;
@@ -668,9 +668,9 @@ node "aws_ecs_cluster_to_ecs_task_definition_node" {
       aws_ecs_task_definition as d
     where
       d.task_definition_arn in (
-        select 
-          distinct task_definition 
-        from 
+        select
+          distinct task_definition
+        from
           list_all_task_definitions
       );
   EOQ
@@ -703,10 +703,10 @@ edge "aws_ecs_cluster_to_ecs_task_definition_edge" {
       aws_ecs_task_definition as d
     where
       d.task_definition_arn in (
-        select 
-          task_definition 
-        from 
-          list_all_task_definitions 
+        select
+          task_definition
+        from
+          list_all_task_definitions
       );
   EOQ
 
@@ -767,8 +767,8 @@ node "aws_ecs_cluster_to_ecs_container_instance_node" {
       ) as properties
     from
       aws_ecs_container_instance as i
-      left join 
-        aws_ec2_instance as e 
+      left join
+        aws_ec2_instance as e
         on i.ec2_instance_id = e.instance_id
     where
       i.cluster_arn = $1;
@@ -808,11 +808,11 @@ node "aws_ecs_cluster_ecs_container_instance_to_vpc_subnet_node" {
       ) as properties
     from
       aws_ecs_container_instance as i
-      right join 
-        aws_ec2_instance as c 
+      right join
+        aws_ec2_instance as c
         on c.instance_id = i.ec2_instance_id
-      right join 
-        aws_vpc_subnet as s 
+      right join
+        aws_vpc_subnet as s
         on s.subnet_id = c.subnet_id
     where
       i.cluster_arn = $1;
@@ -830,11 +830,11 @@ edge "aws_ecs_cluster_ecs_container_instance_to_vpc_subnet_edge" {
       s.subnet_arn as to_id
     from
       aws_ecs_container_instance as i
-      right join 
-        aws_ec2_instance as c 
+      right join
+        aws_ec2_instance as c
         on c.instance_id = i.ec2_instance_id
-      right join 
-        aws_vpc_subnet as s 
+      right join
+        aws_vpc_subnet as s
         on s.subnet_id = c.subnet_id
     where
       i.cluster_arn = $1;
@@ -859,14 +859,14 @@ node "aws_ecs_cluster_vpc_subnet_to_vpc_node" {
       ) as properties
     from
       aws_ecs_container_instance as i
-      right join 
-        aws_ec2_instance as c 
+      right join
+        aws_ec2_instance as c
         on c.instance_id = i.ec2_instance_id
-      right join 
-        aws_vpc_subnet as s 
+      right join
+        aws_vpc_subnet as s
         on s.subnet_id = c.subnet_id
-      right join 
-        aws_vpc as v 
+      right join
+        aws_vpc as v
         on v.vpc_id = s.vpc_id
     where
       i.cluster_arn = $1;
@@ -884,14 +884,14 @@ edge "aws_ecs_cluster_vpc_subnet_to_vpc_edge" {
       v.vpc_id as to_id
     from
       aws_ecs_container_instance as i
-      right join 
-        aws_ec2_instance as c 
+      right join
+        aws_ec2_instance as c
         on c.instance_id = i.ec2_instance_id
-      right join 
-        aws_vpc_subnet as s 
+      right join
+        aws_vpc_subnet as s
         on s.subnet_id = c.subnet_id
-      right join 
-        aws_vpc as v 
+      right join
+        aws_vpc as v
         on v.vpc_id = s.vpc_id
     where
       i.cluster_arn = $1;
@@ -916,8 +916,8 @@ node "aws_ecs_cluster_ecs_service_to_vpc_subnet_node" {
     from
       aws_ecs_service as e,
       jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
-      left join 
-        aws_vpc_subnet as sb 
+      left join
+        aws_vpc_subnet as sb
         on sb.subnet_id = trim((s::text ), '""')
     where
       e.network_configuration is not null
@@ -937,8 +937,8 @@ edge "aws_ecs_cluster_ecs_service_to_vpc_subnet_edge" {
     from
       aws_ecs_service as e,
       jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
-      left join 
-        aws_vpc_subnet as sb 
+      left join
+        aws_vpc_subnet as sb
         on sb.subnet_id = trim((s::text ), '""')
     where
       e.network_configuration is not null
@@ -964,8 +964,8 @@ node "aws_ecs_cluster_ecs_service_subnet_to_vpc_node" {
     from
       aws_ecs_service as e,
       jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
-      left join 
-        aws_vpc_subnet as sb 
+      left join
+        aws_vpc_subnet as sb
         on sb.subnet_id = trim((s::text ), '""'),
       aws_vpc as v
     where
@@ -987,8 +987,8 @@ edge "aws_ecs_cluster_ecs_service_subnet_to_vpc_edge" {
     from
       aws_ecs_service as e,
       jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
-      left join 
-        aws_vpc_subnet as sb 
+      left join
+        aws_vpc_subnet as sb
         on sb.subnet_id = trim((s::text ), '""'),
       aws_vpc as v
     where

@@ -80,8 +80,8 @@ dashboard "aws_eks_cluster_detail" {
         edge.aws_eks_cluster_to_eks_addons_edge,
         edge.aws_eks_cluster_to_vpc_security_group_edge,
         edge.aws_eks_cluster_to_vpc_subnet_edge,
-        edge.aws_vpc_security_group_to_vpc_edge,
-        edge.aws_vpc_subnet_to_vpc_edge
+        edge.aws_eks_cluster_to_vpc_security_group_to_vpc_edge,
+        edge.aws_eks_cluster_to_vpc_subnet_to_vpc_edge
       ]
 
       args = {
@@ -688,7 +688,7 @@ node "aws_eks_cluster_to_vpc_node" {
   param "arn" {}
 }
 
-edge "aws_vpc_security_group_to_vpc_edge" {
+edge "aws_eks_cluster_to_vpc_security_group_to_vpc_edge" {
   title = "vpc"
 
   sql = <<-EOQ
@@ -705,7 +705,7 @@ edge "aws_vpc_security_group_to_vpc_edge" {
   param "arn" {}
 }
 
-edge "aws_vpc_subnet_to_vpc_edge" {
+edge "aws_eks_cluster_to_vpc_subnet_to_vpc_edge" {
   title = "vpc"
 
   sql = <<-EOQ
