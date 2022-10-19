@@ -70,21 +70,6 @@ dashboard "aws_sns_topic_detail" {
 
   container {
 
-    graph {
-      type  = "graph"
-      base  = graph.aws_graph_categories
-      query = query.aws_sns_topic_relationships_graph
-      args = {
-        arn = self.input.topic_arn.value
-      }
-      category "aws_sns_topic" {
-        icon = local.aws_sns_topic_icon
-      }
-    }
-  }
-
-  container {
-
     container {
       width = 6
 
@@ -669,10 +654,7 @@ edge "aws_sns_topic_from_aws_elasticache_cluster_edge" {
       aws_elasticache_cluster as c
     where
       t.topic_arn = (c.notification_configuration ->> 'TopicArn')
-      and t.topic_arn = $1
-    order by
-      from_id,
-      to_id;
+      and t.topic_arn = $1;
   EOQ
 
   param "arn" {}

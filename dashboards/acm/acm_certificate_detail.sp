@@ -465,11 +465,7 @@ edge "aws_acm_certificate_from_ec2_network_load_balancer_edge" {
         aws_ec2_network_load_balancer as b
         on b.arn = arns
     where
-      certificate_arn = $1
-    order by
-      category,
-      from_id,
-      to_id;
+      certificate_arn = $1;
   EOQ
 
   param "arn" {}
