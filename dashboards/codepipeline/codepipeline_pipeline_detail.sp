@@ -26,15 +26,38 @@ dashboard "codepipeline_pipeline_detail" {
   }
 
   container {
+
     graph {
+      title     = "Relationships"
       type      = "graph"
-      direction = "LR"
-      base      = graph.aws_graph_categories
-      query     = query.aws_codepipeline_pipeline_relationships_graph
+      direction = "TD"
+
+      nodes = [
+        node.aws_codepipeline_pipeline_node,
+        node.aws_codepipeline_pipeline_from_iam_role_node,
+        node.aws_codepipeline_pipeline_from_kms_key_node,
+        node.aws_codepipeline_pipeline_from_codecommit_repository_node,
+        node.aws_codepipeline_pipeline_from_ecr_repository_node,
+        node.aws_codepipeline_pipeline_from_s3_bucket_source_node,
+        node.aws_codepipeline_pipeline_from_codebuild_project_node,
+        node.aws_codepipeline_pipeline_from_s3_bucket_deploy_node,
+        node.aws_codepipeline_pipeline_from_codedeploy_app_node
+      ]
+
+      edges = [
+        edge.aws_codepipeline_pipeline_from_iam_role_edge,
+        edge.aws_codepipeline_pipeline_from_kms_key_edge,
+        edge.aws_codepipeline_pipeline_from_codecommit_repository_edge,
+        edge.aws_codepipeline_pipeline_from_ecr_repository_edge,
+        edge.aws_codepipeline_pipeline_from_s3_bucket_source_edge,
+        edge.aws_codepipeline_pipeline_from_codebuild_project_edge,
+        edge.aws_codepipeline_pipeline_from_s3_bucket_deploy_edge,
+        edge.aws_codepipeline_pipeline_from_codedeploy_app_edge
+      ]
+
       args = {
         arn = self.input.pipeline_arn.value
       }
-      category "aws_codepipeline_pipeline" {}
     }
   }
 
@@ -109,14 +132,13 @@ query "aws_codepipeline_pipeline_encryption" {
   param "arn" {}
 }
 
-query "aws_codepipeline_pipeline_relationships_graph" {
+node "aws_codepipeline_pipeline_node" {
+  category = category.aws_codepipeline_pipeline
+
   sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       arn as id,
       title as title,
-      'aws_codepipeline_pipeline' as category,
       jsonb_build_object(
         'ARN', arn,
         'Name', name,
@@ -126,16 +148,19 @@ query "aws_codepipeline_pipeline_relationships_graph" {
     from
       aws_codepipeline_pipeline
     where
-      arn = $1
+      arn = $1;
+  EOQ
 
-    -- From IAM roles (node)
-    union all
-     select
-      null as from_id,
-      null as to_id,
+  param "arn" {}
+}
+
+node "aws_codepipeline_pipeline_from_iam_role_node" {
+  category = category.aws_iam_role
+
+  sql = <<-EOQ
+    select
       role_id as id,
       name as title,
-      'aws_iam_role' as category,
       jsonb_build_object(
         'ARN', arn,
         'Create Date', create_date,
@@ -152,33 +177,37 @@ query "aws_codepipeline_pipeline_relationships_graph" {
           aws_codepipeline_pipeline
         where
           arn = $1
-      )
+      );
+  EOQ
 
-    -- From IAM roles (edge)
-    union all
-     select
+  param "arn" {}
+}
+
+edge "aws_codepipeline_pipeline_from_iam_role_edge" {
+  title = "iam role"
+
+  sql = <<-EOQ
+    select
       p.arn as from_id,
-      r.role_id as to_id,
-      null as id,
-      'iam role' as title,
-      'codepipeline_pipeline_to_iam_role' as category,
-      jsonb_build_object(
-        'Account ID', p.account_id ) as properties
+      r.role_id as to_id
     from
       aws_iam_role as r,
       aws_codepipeline_pipeline as p
     where
       r.arn = p.role_arn
-      and p.arn = $1
+      and p.arn = $1;
+  EOQ
 
-    -- From KMS keys (node)
-    union all
-     select
-      null as from_id,
-      null as to_id,
+  param "arn" {}
+}
+
+node "aws_codepipeline_pipeline_from_kms_key_node" {
+  category = category.aws_kms_key
+
+  sql = <<-EOQ
+    select
       id as id,
       title as title,
-      'aws_kms_key' as category,
       jsonb_build_object(
         'ARN', arn,
         'Key Manager', key_manager,
@@ -198,34 +227,38 @@ query "aws_codepipeline_pipeline_relationships_graph" {
           aws_codepipeline_pipeline
         where
           arn = $1
-      )
+      );
+  EOQ
 
-    -- From KMS keys (edge)
-    union all
-     select
+  param "arn" {}
+}
+
+edge "aws_codepipeline_pipeline_from_kms_key_edge" {
+  title = "encrypted"
+
+  sql = <<-EOQ
+    select
       p.arn as from_id,
-      k.id as to_id,
-      null as id,
-      'encrypted' as title,
-      'codepipeline_pipeline_to_kms_key' as category,
-      jsonb_build_object(
-        'Account ID', p.account_id ) as properties
+      k.id as to_id
     from
       aws_codepipeline_pipeline as p,
       aws_kms_key as k,
       jsonb_array_elements(aliases) as a
     where
       a ->> 'AliasArn' = p.encryption_key ->> 'Id'
-      and p.arn = $1
+      and p.arn = $1;
+  EOQ
 
-    -- From CodeCommit repositories (node)
-    union all
-     select
-      null as from_id,
-      null as to_id,
+  param "arn" {}
+}
+
+node "aws_codepipeline_pipeline_from_codecommit_repository_node" {
+  category = category.aws_codecommit_repository
+
+  sql = <<-EOQ
+    select
       arn as id,
       title as title,
-      'aws_codecommit_repository' as category,
       jsonb_build_object(
         'ARN', arn,
         'Name', repository_name,
@@ -247,18 +280,19 @@ query "aws_codepipeline_pipeline_relationships_graph" {
           s ->> 'Name' = 'Source'
           and a -> 'ActionTypeId' ->> 'Provider' = 'CodeCommit'
           and arn = $1
-      )
+      );
+  EOQ
 
-     -- From CodeCommit repositories (edge)
-    union all
-     select
+  param "arn" {}
+}
+
+edge "aws_codepipeline_pipeline_from_codecommit_repository_edge" {
+  title = "source"
+
+  sql = <<-EOQ
+    select
       r.arn as from_id,
-      p.arn as to_id,
-      null as id,
-      'source' as title,
-      'codecommit_repository_to_codepipeline_pipeline' as category,
-      jsonb_build_object(
-        'Account ID', p.account_id ) as properties
+      p.arn as to_id
     from
       aws_codecommit_repository as r,
       aws_codepipeline_pipeline as p,
@@ -268,16 +302,19 @@ query "aws_codepipeline_pipeline_relationships_graph" {
       s ->> 'Name' = 'Source'
       and a -> 'ActionTypeId' ->> 'Provider' = 'CodeCommit'
       and a -> 'Configuration' ->> 'RepositoryName' = r.repository_name
-      and p.arn = $1
+      and p.arn = $1;
+  EOQ
 
-     -- From ECR repositories (node)
-    union all
-     select
-      null as from_id,
-      null as to_id,
+  param "arn" {}
+}
+
+node "aws_codepipeline_pipeline_from_ecr_repository_node" {
+  category = category.aws_ecr_repository
+
+  sql = <<-EOQ
+    select
       arn as id,
       title as title,
-      'aws_ecr_repository' as category,
       jsonb_build_object(
         'ARN', arn,
         'Name', repository_name,
@@ -299,18 +336,19 @@ query "aws_codepipeline_pipeline_relationships_graph" {
           s ->> 'Name' = 'Source'
           and a -> 'ActionTypeId' ->> 'Provider' = 'ECR'
           and arn = $1
-      )
+      );
+  EOQ
 
-     -- From ECR repositories (edge)
-    union all
-     select
+  param "arn" {}
+}
+
+edge "aws_codepipeline_pipeline_from_ecr_repository_edge" {
+  title = "source"
+
+  sql = <<-EOQ
+    select
       r.arn as from_id,
-      p.arn as to_id,
-      null as id,
-      'source' as title,
-      'ecr_repository_to_codepipeline_pipeline' as category,
-      jsonb_build_object(
-        'Account ID', p.account_id ) as properties
+      p.arn as to_id
     from
       aws_ecr_repository as r,
       aws_codepipeline_pipeline as p,
@@ -320,16 +358,19 @@ query "aws_codepipeline_pipeline_relationships_graph" {
       s ->> 'Name' = 'Source'
       and a -> 'ActionTypeId' ->> 'Provider' = 'ECR'
       and a -> 'Configuration' ->> 'RepositoryName' = r.repository_name
-      and p.arn = $1
+      and p.arn = $1;
+  EOQ
 
-    -- From S3 buckets -source (node)
-    union all
-     select
-      null as from_id,
-      null as to_id,
+  param "arn" {}
+}
+
+node "aws_codepipeline_pipeline_from_s3_bucket_source_node" {
+  category = category.aws_s3_bucket
+
+  sql = <<-EOQ
+    select
       arn as id,
       title as title,
-      'aws_s3_bucket' as category,
       jsonb_build_object(
         'ARN', arn,
         'Name', name,
@@ -351,18 +392,19 @@ query "aws_codepipeline_pipeline_relationships_graph" {
           s ->> 'Name' = 'Source'
           and a -> 'ActionTypeId' ->> 'Provider' = 'S3'
           and arn = $1
-      )
+      );
+  EOQ
 
-    -- From S3 buckets - source (edge)
-    union all
-     select
+  param "arn" {}
+}
+
+edge "aws_codepipeline_pipeline_from_s3_bucket_source_edge" {
+  title = "source"
+
+  sql = <<-EOQ
+    select
       b.arn as from_id,
-      p.arn as to_id,
-      null as id,
-      'source' as title,
-      's3_bucket_to_codepipeline_pipeline' as category,
-      jsonb_build_object(
-        'Account ID', p.account_id ) as properties
+      p.arn as to_id
     from
       aws_s3_bucket as b,
       aws_codepipeline_pipeline as p,
@@ -372,17 +414,19 @@ query "aws_codepipeline_pipeline_relationships_graph" {
       s ->> 'Name' = 'Source'
       and a -> 'ActionTypeId' ->> 'Provider' = 'S3'
       and a -> 'Configuration' ->> 'S3Bucket' = b.name
-      and p.arn = $1
+      and p.arn = $1;
+  EOQ
 
+  param "arn" {}
+}
 
-    -- From CodeBuild projects (node)
-    union all
-     select
-      null as from_id,
-      null as to_id,
+node "aws_codepipeline_pipeline_from_codebuild_project_node" {
+  category = category.aws_codebuild_project
+
+  sql = <<-EOQ
+    select
       arn as id,
       title as title,
-      'aws_codebuild_project' as category,
       jsonb_build_object(
         'ARN', arn,
         'Name', name,
@@ -404,18 +448,19 @@ query "aws_codepipeline_pipeline_relationships_graph" {
           s ->> 'Name' = 'Build'
           and a -> 'ActionTypeId' ->> 'Provider' = 'CodeBuild'
           and arn = $1
-      )
+      );
+  EOQ
 
-    -- From CodeBuild projects (edge)
-    union all
-     select
+  param "arn" {}
+}
+
+edge "aws_codepipeline_pipeline_from_codebuild_project_edge" {
+  title = "build"
+
+  sql = <<-EOQ
+    select
       b.arn as from_id,
-      p.arn as to_id,
-      null as id,
-      'build' as title,
-      'codebuild_project_to_codepipeline_pipeline' as category,
-      jsonb_build_object(
-        'Account ID', p.account_id ) as properties
+      p.arn as to_id
     from
       aws_codebuild_project as b,
       aws_codepipeline_pipeline as p,
@@ -425,16 +470,19 @@ query "aws_codepipeline_pipeline_relationships_graph" {
       s ->> 'Name' = 'Build'
       and a -> 'ActionTypeId' ->> 'Provider' = 'CodeBuild'
       and a -> 'Configuration' ->> 'ProjectName' = b.name
-      and p.arn = $1
+      and p.arn = $1;
+  EOQ
 
-    -- From S3 buckets - deploy (node)
-    union all
-     select
-      null as from_id,
-      null as to_id,
+  param "arn" {}
+}
+
+node "aws_codepipeline_pipeline_from_s3_bucket_deploy_node" {
+  category = category.aws_s3_bucket
+
+  sql = <<-EOQ
+    select
       arn as id,
       title as title,
-      'aws_s3_bucket' as category,
       jsonb_build_object(
         'ARN', arn,
         'Name', name,
@@ -456,18 +504,19 @@ query "aws_codepipeline_pipeline_relationships_graph" {
           s ->> 'Name' = 'Deploy'
           and a -> 'ActionTypeId' ->> 'Provider' = 'S3'
           and arn = $1
-      )
+      );
+  EOQ
 
-    -- From S3 buckets - deploy (edge)
-    union all
-     select
+  param "arn" {}
+}
+
+edge "aws_codepipeline_pipeline_from_s3_bucket_deploy_edge" {
+  title = "deploy"
+
+  sql = <<-EOQ
+   select
       p.arn as from_id,
-      b.arn as to_id,
-      null as id,
-      'deploy' as title,
-      'codepipeline_pipeline_to_s3_bucket' as category,
-      jsonb_build_object(
-        'Account ID', p.account_id ) as properties
+      b.arn as to_id
     from
       aws_s3_bucket as b,
       aws_codepipeline_pipeline as p,
@@ -477,16 +526,19 @@ query "aws_codepipeline_pipeline_relationships_graph" {
       s ->> 'Name' = 'Deploy'
       and a -> 'ActionTypeId' ->> 'Provider' = 'S3'
       and a -> 'Configuration' ->> 'BucketName' = b.name
-      and p.arn = $1
+      and p.arn = $1;
+  EOQ
 
-    -- From CodeDeploy Applications (node)
-    union all
-     select
-      null as from_id,
-      null as to_id,
+  param "arn" {}
+}
+
+node "aws_codepipeline_pipeline_from_codedeploy_app_node" {
+  category = category.aws_codedeploy_app
+
+  sql = <<-EOQ
+    select
       arn as id,
       title as title,
-      'aws_codedeploy_app' as category,
       jsonb_build_object(
         'ARN', arn,
         'Name', application_name,
@@ -509,18 +561,20 @@ query "aws_codepipeline_pipeline_relationships_graph" {
           s ->> 'Name' = 'Deploy'
           and a -> 'ActionTypeId' ->> 'Provider' = 'CodeDeploy'
           and arn = $1
-      )
+      );
+  EOQ
 
-    -- From CodeDeploy Applications (edge)
-    union all
-     select
+  param "arn" {}
+}
+
+edge "aws_codepipeline_pipeline_from_codedeploy_app_edge" {
+  title = "deploy"
+
+  sql = <<-EOQ
+   select
       p.arn as from_id,
       app.arn as to_id,
-      null as id,
-      'deploy' as title,
-      'codepipeline_pipeline_to_codedeploy_app' as category,
-      jsonb_build_object(
-        'Account ID', p.account_id ) as properties
+      'codepipeline_pipeline_to_codedeploy_app' as category
     from
       aws_codedeploy_app as app,
       aws_codepipeline_pipeline as p,
@@ -530,12 +584,7 @@ query "aws_codepipeline_pipeline_relationships_graph" {
       s ->> 'Name' = 'Deploy'
       and a -> 'ActionTypeId' ->> 'Provider' = 'CodeDeploy'
       and a -> 'Configuration' ->> 'ApplicationName' = app.application_name
-      and p.arn = $1
-
-    order by
-      category,
-      from_id,
-      to_id;
+      and p.arn = $1;
   EOQ
 
   param "arn" {}

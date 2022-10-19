@@ -445,6 +445,13 @@ category "aws_elasticache_cluster" {
   }
 }
 
+category "aws_elasticache_subnet_group" {
+  fold {
+    title     = "elasticache Subnet Groups"
+    threshold = 3
+  }
+}
+
 category "aws_vpc_eip" {
   href = "/aws_insights.dashboard.aws_vpc_eip_detail?input.eip_arn={{.properties.'ARN' | @uri}}"
   icon = local.aws_vpc_eip_icon

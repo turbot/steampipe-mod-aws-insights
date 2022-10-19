@@ -43,14 +43,23 @@ dashboard "aws_vpc_eip_detail" {
   container {
 
     graph {
-      type  = "graph"
-      base  = graph.aws_graph_categories
-      query = query.aws_vpc_eip_relationships_graph
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      nodes = [
+        node.aws_vpc_eip_node,
+        node.aws_vpc_eip_from_ec2_network_interface_node,
+        node.aws_vpc_eip_from_ec2_instance_node
+      ]
+
+      edges = [
+        edge.aws_vpc_eip_from_ec2_network_interface_edge,
+        edge.aws_vpc_eip_network_interface_from_ec2_instance_edge
+      ]
+
       args = {
         arn = self.input.eip_arn.value
-      }
-      category "aws_vpc_eip" {
-        icon = local.aws_vpc_eip_icon
       }
     }
   }
@@ -135,22 +144,12 @@ query "aws_vpc_eip_input" {
   EOQ
 }
 
-query "aws_vpc_eip_relationships_graph" {
+node "aws_vpc_eip_node" {
+  category = category.aws_vpc_eip
+
   sql = <<-EOQ
-    with eip as (
-      select
-        *
-      from
-        aws_vpc_eip
-      where
-        arn = $1
-    )
     select
-      null as from_id,
-      null as to_id,
       arn as id,
-      title as title,
-      'aws_vpc_eip' as category,
       jsonb_build_object(
         'ARN', arn,
         'Allocation Id', allocation_id,
@@ -159,54 +158,61 @@ query "aws_vpc_eip_relationships_graph" {
         'Region', region
       ) as properties
     from
-      eip
+      aws_vpc_eip
+    where
+      arn = $1;
+  EOQ
 
-    -- From EC2 network interfaces (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_vpc_eip_from_ec2_network_interface_node" {
+  category = category.aws_ec2_network_interface
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       i.network_interface_id as id,
       i.title as title,
-      'aws_ec2_network_interface' as category,
       jsonb_build_object(
         'ID', i.network_interface_id,
         'Account ID', i.account_id,
         'Region', i.region
       ) as properties
     from
-      eip as e
+      aws_vpc_eip as e
       left join aws_ec2_network_interface as i on e.network_interface_id = i.network_interface_id
     where
       e.network_interface_id is not null
+      and e.arn = $1;
+  EOQ
 
-    -- From EC2 network interfaces (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_vpc_eip_from_ec2_network_interface_edge" {
+  title = "eni"
+
+  sql = <<-EOQ
     select
       i.network_interface_id as from_id,
-      e.arn as to_id,
-      null as id,
-      'eni' as title,
-      'ec2_network_interface_to_vpc_eip' as category,
-      jsonb_build_object(
-        'ID', i.network_interface_id,
-        'Account ID', i.account_id,
-        'Region', i.region
-      ) as properties
+      e.arn as to_id
     from
-      eip as e
+      aws_vpc_eip as e
       left join aws_ec2_network_interface as i on e.network_interface_id = i.network_interface_id
     where
       e.network_interface_id is not null
+      and e.arn = $1;
+  EOQ
 
-    -- From EC2 instances (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_vpc_eip_from_ec2_instance_node" {
+  category = category.aws_ec2_instance
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       i.arn as id,
       i.title as title,
-      'aws_ec2_instance' as category,
       jsonb_build_object(
         'ARN', i.arn,
         'ID', i.instance_id,
@@ -215,29 +221,29 @@ query "aws_vpc_eip_relationships_graph" {
         'Region', i.region
       ) as properties
     from
-      eip as e
+      aws_vpc_eip as e
       left join aws_ec2_instance as i on e.instance_id = i.instance_id
     where
       e.network_interface_id is not null
+      and e.arn = $1;
+  EOQ
 
-    -- From EC2 instances (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_vpc_eip_network_interface_from_ec2_instance_edge" {
+  title = "ec2 instance"
+
+  sql = <<-EOQ
     select
       i.arn as from_id,
-      e.network_interface_id as to_id,
-      null as id,
-      'ec2 instance' as title,
-      'ec2_instance_to_ec2_network_interface' as category,
-      jsonb_build_object(
-        'ID', e.network_interface_id,
-        'Account ID', i.account_id,
-        'Region', i.region
-      ) as properties
+      e.network_interface_id as to_id
     from
-      eip as e
+      aws_vpc_eip as e
       left join aws_ec2_instance as i on e.instance_id = i.instance_id
     where
       e.network_interface_id is not null
+      and e.arn = $1;
   EOQ
 
   param "arn" {}

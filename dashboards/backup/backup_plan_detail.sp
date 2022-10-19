@@ -25,15 +25,25 @@ dashboard "backup_plan_detail" {
   }
 
   container {
+
     graph {
-      type  = "graph"
-      base  = graph.aws_graph_categories
-      query = query.aws_backup_plan_relationships_graph
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      nodes = [
+        node.aws_backup_plan_node,
+        node.aws_backup_plan_from_backup_vault_node,
+        node.aws_backup_plan_from_backup_selection_node
+      ]
+
+      edges = [
+        edge.aws_backup_plan_from_backup_vault_edge,
+        edge.aws_backup_plan_from_backup_selection_edge
+      ]
+
       args = {
         arn = self.input.backup_plan_arn.value
-      }
-      category "aws_backup_plan" {
-        icon = local.aws_backup_plan_icon
       }
     }
   }
@@ -100,14 +110,13 @@ query "aws_backup_plan_resource_assignment" {
   param "arn" {}
 }
 
-query "aws_backup_plan_relationships_graph" {
+node "aws_backup_plan_node" {
+  category = category.aws_backup_plan
+
   sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       arn as id,
       title as title,
-      'aws_backup_plan' as category,
       jsonb_build_object(
         'ARN', arn,
         'Name', name,
@@ -117,16 +126,18 @@ query "aws_backup_plan_relationships_graph" {
     from
       aws_backup_plan
     where
-      arn = $1
+      arn = $1;
+  EOQ
 
-    -- From Backup vaults (node)
-    union all
-     select
-      null as from_id,
-      null as to_id,
-      arn as id,
+  param "arn" {}
+}
+
+node "aws_backup_plan_from_backup_vault_node" {
+  category = category.aws_backup_vault
+
+  sql = <<-EOQ
+    select
       title as title,
-      'aws_backup_vault' as category,
       jsonb_build_object(
         'ARN', arn,
         'Name', name,
@@ -145,34 +156,38 @@ query "aws_backup_plan_relationships_graph" {
           jsonb_array_elements(backup_plan -> 'Rules') as r
         where
           arn = $1
-      )
+      );
+  EOQ
 
-    -- From Backup vaults (edge)
-    union all
-     select
+  param "arn" {}
+}
+
+edge "aws_backup_plan_from_backup_vault_edge" {
+  title = "backup vault"
+
+  sql = <<-EOQ
+    select
       p.arn as from_id,
-      v.arn as to_id,
-      null as id,
-      'backup vault' as title,
-      'backup_plan_to_backup_vault' as category,
-      jsonb_build_object(
-        'Account ID', v.account_id ) as properties
+      v.arn as to_id
     from
       aws_backup_vault as v,
       aws_backup_plan as p,
       jsonb_array_elements(backup_plan -> 'Rules') as r
     where
       r ->> 'TargetBackupVaultName' = v.name
-      and p.arn = $1
+      and p.arn = $1;
+  EOQ
 
-    -- From Backup selections (node)
-    union all
-     select
-      null as from_id,
-      null as to_id,
+  param "arn" {}
+}
+
+node "aws_backup_plan_from_backup_selection_node" {
+  category = category.aws_backup_selection
+
+  sql = <<-EOQ
+    select
       arn as id,
       title as title,
-      'aws_backup_selection' as category,
       jsonb_build_object(
         'ARN', arn,
         'Name', selection_name,
@@ -190,29 +205,26 @@ query "aws_backup_plan_relationships_graph" {
           aws_backup_plan
         where
           arn = $1
-      )
+      );
+  EOQ
 
-    -- From Backup selections (edge)
-    union all
-     select
+  param "arn" {}
+}
+
+edge "aws_backup_plan_from_backup_selection_edge" {
+  title = "backup selection"
+
+  sql = <<-EOQ
+    select
       p.arn as from_id,
       s.arn as to_id,
-      null as id,
-      'backup selection' as title,
-      'backup_plan_to_backup_selection' as category,
-      jsonb_build_object(
-        'Account ID', p.account_id ) as properties
+      'backup_plan_to_backup_selection' as category
     from
       aws_backup_selection as s,
       aws_backup_plan as p
     where
       s.backup_plan_id = p.backup_plan_id
-      and p.arn = $1
-
-    order by
-      category,
-      from_id,
-      to_id;
+      and p.arn = $1;
   EOQ
 
   param "arn" {}
