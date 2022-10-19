@@ -58,17 +58,36 @@ dashboard "aws_elasticache_cluster_detail" {
   }
 
   container {
+
     graph {
-      type  = "graph"
-      base  = graph.aws_graph_categories
-      query = query.aws_elasticache_cluster_relationships_graph
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      nodes = [
+        node.aws_elasticache_cluster_node,
+        node.aws_elasticache_cluster_to_sns_topic_node,
+        node.aws_elasticache_cluster_to_kms_key_node,
+        node.aws_elasticache_cluster_to_vpc_security_group_node,
+        node.aws_elasticache_cluster_to_vpc_node,
+        node.aws_elasticache_cluster_to_subnet_group_node,
+        node.aws_elasticache_cluster_to_vpc_subnet_node,
+        node.aws_elasticache_cluster_subnet_to_vpc_node
+      ]
+
+      edges = [
+        edge.aws_elasticache_cluster_to_sns_topic_edge,
+        edge.aws_elasticache_cluster_to_kms_key_edge,
+        edge.aws_elasticache_cluster_to_vpc_security_group_edge,
+        edge.aws_elasticache_cluster_to_vpc_edge,
+        edge.aws_elasticache_cluster_to_subnet_group_edge,
+        edge.aws_elasticache_cluster_to_vpc_subnet_edge,
+        edge.aws_elasticache_cluster_subnet_to_vpc_edge
+      ]
+
       args = {
         arn = self.input.elasticache_cluster_arn.value
       }
-      category "aws_elasticache_cluster" {
-        icon = local.aws_elasticache_cluster_icon
-      }
-
     }
   }
 
@@ -200,16 +219,16 @@ query "aws_elasticache_cluster_encryption_rest" {
   EOQ
 
   param "arn" {}
+
 }
 
-query "aws_elasticache_cluster_relationships_graph" {
+node "aws_elasticache_cluster_node" {
+  category = category.aws_elasticache_cluster
+
   sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       cache_cluster_id as id,
       title as title,
-      'aws_elasticache_cluster' as category,
       jsonb_build_object(
         'ARN', arn,
         'Status', cache_cluster_status,
@@ -220,16 +239,19 @@ query "aws_elasticache_cluster_relationships_graph" {
     from
       aws_elasticache_cluster
     where
-      arn = $1
+      arn = $1;
+  EOQ
 
-    -- To SNS topics (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_elasticache_cluster_to_sns_topic_node" {
+  category = category.aws_sns_topic
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       topic_arn as id,
       title as title,
-      'aws_sns_topic' as category,
       jsonb_build_object(
         'ARN', topic_arn,
         'Account ID', account_id,
@@ -244,35 +266,39 @@ query "aws_elasticache_cluster_relationships_graph" {
         from
           aws_elasticache_cluster
         where
-          arn = $1
+          arn = $1;
       )
+  EOQ
 
-    -- To SNS topics (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_elasticache_cluster_to_sns_topic_edge" {
+  title = "publishes"
+
+  sql = <<-EOQ
     select
       cache_cluster_id as from_id,
-      topic_arn as to_id,
-      null as id,
-      'publishes to' as title,
-      'elasticache_cluster_to_sns_topic' as category,
-      jsonb_build_object(
-        'Account ID', c.account_id ) as properties
+      topic_arn as to_id
     from
       aws_elasticache_cluster as c
       left join
         aws_sns_topic as t
         on notification_configuration ->> 'TopicArn' = topic_arn
     where
-      c.arn = $1
+      c.arn = $1;
+  EOQ
 
-    -- To KMS keys (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_elasticache_cluster_to_kms_key_node" {
+  category = category.aws_kms_key
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       id as id,
       title as title,
-      'aws_kms_key' as category,
       jsonb_build_object(
         'ARN', arn,
         'Key Manager', key_manager,
@@ -293,18 +319,19 @@ query "aws_elasticache_cluster_relationships_graph" {
         where
           c.arn = $1
           and c.replication_group_id = g.replication_group_id
-      )
+      );
+  EOQ
 
-    -- To KMS keys (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_elasticache_cluster_to_kms_key_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
     select
       cache_cluster_id as from_id,
-      k.id as to_id,
-      null as id,
-      'encrypted with' as title,
-      'elasticache_cluster_to_kms_key' as category,
-      jsonb_build_object(
-        'Account ID', c.account_id ) as properties
+      k.id as to_id
     from
       aws_elasticache_cluster as c
       left join
@@ -314,16 +341,19 @@ query "aws_elasticache_cluster_relationships_graph" {
         aws_kms_key as k
         on g.kms_key_id = k.arn
     where
-      c.arn = $1
+      c.arn = $1;
+  EOQ
 
-    -- To VPC security groups (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_elasticache_cluster_to_vpc_security_group_node" {
+  category = category.aws_vpc_security_group
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       group_id as id,
       title as title,
-      'aws_vpc_security_group' as category,
       jsonb_build_object(
         'ARN', arn,
         'VPC ID', vpc_id,
@@ -342,34 +372,38 @@ query "aws_elasticache_cluster_relationships_graph" {
           jsonb_array_elements(security_groups) as sg
         where
           arn = $1
-      )
+      );
+  EOQ
 
-    -- To VPC security groups (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_elasticache_cluster_to_vpc_security_group_edge" {
+  title = "security group"
+
+  sql = <<-EOQ
     select
       c.cache_cluster_id as from_id,
-      g.group_id as to_id,
-      null as id,
-      'security group' as title,
-      'elasticache_cluster_to_vpc_security_group' as category,
-      jsonb_build_object(
-        'Account ID', c.account_id ) as properties
+      g.group_id as to_id
     from
       aws_vpc_security_group as g,
       aws_elasticache_cluster as c,
       jsonb_array_elements(security_groups) as sg
     where
       sg ->> 'SecurityGroupId' = g.group_id
-      and c.arn = $1
+      and c.arn = $1;
+  EOQ
 
-    -- To VPC (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_elasticache_cluster_to_vpc_node" {
+  category = category.aws_vpc
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       vpc_id as id,
       title as title,
-      'aws_vpc' as category,
       jsonb_build_object(
         'VPC ID', vpc_id,
         'ARN', arn,
@@ -391,34 +425,38 @@ query "aws_elasticache_cluster_relationships_graph" {
         where
           sg ->> 'SecurityGroupId' = g.group_id
           and c.arn = $1
-      )
+      );
+  EOQ
 
-    -- To security groups -> VPC (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_elasticache_cluster_to_vpc_edge" {
+  title = "vpc"
+
+  sql = <<-EOQ
     select
       g.group_id as from_id,
-      g.vpc_id as to_id,
-      null as id,
-      'vpc' as title,
-      'vpc_security_group_to_vpc' as category,
-      jsonb_build_object(
-        'Account ID', c.account_id ) as properties
+      g.vpc_id as to_id
     from
       aws_vpc_security_group as g,
       aws_elasticache_cluster as c,
       jsonb_array_elements(security_groups) as sg
     where
       sg ->> 'SecurityGroupId' = g.group_id
-      and c.arn = $1
+      and c.arn = $1;
+  EOQ
 
-    -- To Elasticache subnet groups (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_elasticache_cluster_to_subnet_group_node" {
+  category = category.aws_elasticache_subnet_group
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       cache_subnet_group_name as id,
       title as title,
-      'aws_elasticache_subnet_group' as category,
       jsonb_build_object(
         'ARN', arn,
         'VPC ID', vpc_id,
@@ -435,32 +473,37 @@ query "aws_elasticache_cluster_relationships_graph" {
           aws_elasticache_cluster
         where
           arn = $1
-      )
+      );
+  EOQ
 
-    -- To Elasticache subnet groups (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_elasticache_cluster_to_subnet_group_edge" {
+  title = "launched into"
+
+  sql = <<-EOQ
     select
       c.cache_cluster_id as from_id,
-      g.cache_subnet_group_name as to_id,
-      null as id,
-      'launched into' as title,
-      'elasticache_cluster_to_elasticache_subnet_group' as category,
-      jsonb_build_object( 'Account ID', c.account_id ) as properties
+      g.cache_subnet_group_name as to_id
     from
       aws_elasticache_cluster as c,
       aws_elasticache_subnet_group as g
     where
       g.cache_subnet_group_name = c.cache_subnet_group_name
-      and c.arn = $1
+      and c.arn = $1;
+  EOQ
 
-    -- To VPC subnets (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_elasticache_cluster_to_vpc_subnet_node" {
+  category = category.aws_vpc_subnet
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       subnet_id as id,
       title as title,
-      'aws_vpc_subnet' as category,
       jsonb_build_object(
         'Subnet ID', subnet_id,
         'ARN', subnet_arn,
@@ -481,17 +524,19 @@ query "aws_elasticache_cluster_relationships_graph" {
         where
           g.cache_subnet_group_name = c.cache_subnet_group_name
           and c.arn = $1
-      )
+      );
+  EOQ
 
-    -- To VPC subnets (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_elasticache_cluster_to_vpc_subnet_edge" {
+  title = "subnet"
+
+  sql = <<-EOQ
     select
       g.cache_subnet_group_name as from_id,
-      s.subnet_id as to_id,
-      null as id,
-      'subnet' as title,
-      'elasticache_subnet_group_to_vpc_subnet' as category,
-      jsonb_build_object( 'Account ID', c.account_id ) as properties
+      s.subnet_id as to_id
     from
       aws_elasticache_cluster as c,
       aws_vpc_subnet as s,
@@ -500,16 +545,19 @@ query "aws_elasticache_cluster_relationships_graph" {
     where
       g.cache_subnet_group_name = c.cache_subnet_group_name
       and subnet ->> 'SubnetIdentifier' = s.subnet_id
-      and c.arn = $1
+      and c.arn = $1;
+  EOQ
 
-    -- To subnet -> VPC (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_elasticache_cluster_subnet_to_vpc_node" {
+  category = category.aws_vpc
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       vpc_id as id,
       title as title,
-      'aws_vpc' as category,
       jsonb_build_object(
         'VPC ID', vpc_id,
         'ARN', arn,
@@ -528,18 +576,22 @@ query "aws_elasticache_cluster_relationships_graph" {
           aws_elasticache_cluster as c,
           aws_elasticache_subnet_group as g
         where
-          g.cache_subnet_group_name = c.cache_subnet_group_name and c.arn = $1
-      )
+          g.cache_subnet_group_name = c.cache_subnet_group_name
+          and c.arn = $1
+      );
+  EOQ
 
-    -- To subnet -> VPC (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_elasticache_cluster_subnet_to_vpc_edge" {
+  title = "vpc"
+
+  sql = <<-EOQ
     select
       subnet ->> 'SubnetIdentifier' as from_id,
       g.vpc_id as to_id,
-      null as id,
-      'vpc' as title,
-      'elasticache_subnet_to_vpc' as category,
-      jsonb_build_object( 'Account ID', c.account_id ) as properties
+      'elasticache_subnet_to_vpc' as category
     from
       aws_elasticache_cluster as c,
       aws_elasticache_subnet_group as g,
@@ -547,7 +599,6 @@ query "aws_elasticache_cluster_relationships_graph" {
     where
       g.cache_subnet_group_name = c.cache_subnet_group_name
       and c.arn = $1
-
     order by
       category,
       from_id,
