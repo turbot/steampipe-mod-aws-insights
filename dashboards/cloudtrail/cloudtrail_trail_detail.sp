@@ -56,15 +56,31 @@ dashboard "aws_cloudtrail_trail_detail" {
   container {
 
     graph {
-      type  = "graph"
-      base  = graph.aws_graph_categories
-      query = query.aws_cloudtrail_trail_relationship_graph
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      nodes = [
+        node.aws_cloudtrail_trail_node,
+        node.aws_cloudtrail_trail_to_s3_bucket_node,
+        node.aws_cloudtrail_trail_to_kms_key_node,
+        node.aws_cloudtrail_trail_to_sns_topic_node,
+        node.aws_cloudtrail_trail_to_cloudwatch_log_group_node,
+        node.aws_cloudtrail_trail_from_guardduty_detector_node
+      ]
+
+      edges = [
+        edge.aws_cloudtrail_trail_to_s3_bucket_edge,
+        edge.aws_cloudtrail_trail_to_kms_key_edge,
+        edge.aws_cloudtrail_trail_to_sns_topic_edge,
+        edge.aws_cloudtrail_trail_to_cloudwatch_log_group_edge,
+        edge.aws_cloudtrail_trail_from_guardduty_detector_edge
+      ]
+
       args = {
         arn = self.input.trail_arn.value
       }
-      category "aws_cloudtrail_trail" {}
     }
-
   }
 
   container {
@@ -263,178 +279,194 @@ query "aws_cloudtrail_trail_bucket" {
   param "arn" {}
 }
 
-query "aws_cloudtrail_trail_relationship_graph" {
+node "aws_cloudtrail_trail_node" {
+  category = category.aws_cloudtrail_trail
+
   sql = <<-EOQ
-    with trails as
-    (
-      select
-        *
-      from
-        aws_cloudtrail_trail
-      where
-        arn = $1
-    )
     select
-      null as from_id,
-      null as to_id,
       arn as id,
       name as title,
-      'aws_cloudtrail_trail' as category,
       jsonb_build_object(
         'ARN', arn,
-        'Account ID', account_id,
-        'Region', region,
         'Logging', is_logging::text,
-        'Latest notification time', latest_notification_time
+        'Latest notification time', latest_notification_time,
+        'Account ID', account_id,
+        'Region', region
       ) as properties
     from
-      trails
-
-    -- S3 buckets (nodes)
-    union all
-    select
-      null as from_id,
-      null as to_id,
-      bucket.arn as id,
-      bucket.name as title,
-      'aws_s3_bucket' as category,
-      jsonb_build_object(
-        'ARN', bucket.arn,
-        'Account ID', bucket.account_id,
-        'Region', bucket.region,
-        'Public', bucket_policy_is_public::text
-      ) as properties
-    from
-      aws_s3_bucket as bucket,
-      trails as t
+      aws_cloudtrail_trail
     where
-      t.s3_bucket_name = bucket.name
+      arn = $1
+  EOQ
 
-    -- S3 Buckets - edges
-    union all
+  param "arn" {}
+}
+
+node "aws_cloudtrail_trail_to_s3_bucket_node" {
+  category = category.aws_s3_bucket
+
+  sql = <<-EOQ
+    select
+      b.arn as id,
+      b.name as title,
+      jsonb_build_object(
+        'ARN', b.arn,
+        'Public', bucket_policy_is_public::text,
+        'Account ID', b.account_id,
+        'Region', b.region
+      ) as properties
+    from
+      aws_s3_bucket as b
+      right join aws_cloudtrail_trail as t on t.s3_bucket_name = b.name
+    where
+      t.arn = $1
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_cloudtrail_trail_to_s3_bucket_edge" {
+  title = "logs to"
+
+  sql = <<-EOQ
     select
       t.arn as from_id,
-      bucket.arn as to_id,
-      null as id,
-      'logs to' as title,
-      'cloudtrail_trail_to_s3_bucket' as category,
+      b.arn as to_id,
       jsonb_build_object(
         'ARN', t.arn,
+        'Log Prefix', t.s3_key_prefix,
         'Account ID', t.account_id,
-        'Region', t.region,
-        'Log Prefix', t.s3_key_prefix
+        'Region', t.region
       ) as properties
     from
-      aws_s3_bucket as bucket,
-      trails as t
+      aws_s3_bucket as b
+      right join aws_cloudtrail_trail as t on t.s3_bucket_name = b.name
     where
-      t.s3_bucket_name = bucket.name
+      t.arn = $1
+  EOQ
 
-    -- KMS key (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_cloudtrail_trail_to_kms_key_node" {
+  category = category.aws_kms_key
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
-      key.arn as id,
-      key.title as title,
-      'aws_kms_key' as category,
+      k.arn as id,
+      k.title as title,
       jsonb_build_object(
-        'ARN', key.arn,
-        'Account ID', key.account_id,
-        'Region', key.region,
+        'ARN', k.arn,
         'Key Manager', key_manager,
-        'Enabled', enabled::text
+        'Enabled', enabled::text,
+        'Account ID', k.account_id,
+        'Region', k.region
       ) as properties
     from
-      aws_kms_key as key,
-      trails as t
+      aws_kms_key as k
+      right join aws_cloudtrail_trail as t on t.kms_key_id = k.arn
     where
-      t.kms_key_id = key.arn
+      t.arn = $1
+  EOQ
 
-    -- KMS key (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_cloudtrail_trail_to_kms_key_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
     select
       t.arn as from_id,
-      key.arn as to_id,
-      null as id,
-      'encrypted with' as title,
-      'cloudtrail_trail_to_kms_key' as category,
+      k.arn as to_id,
       jsonb_build_object(
         'ARN', t.arn,
         'Account ID', t.account_id,
         'Region', t.region
       ) as properties
     from
-      aws_kms_key as key,
-      trails as t
+      aws_kms_key as k
+      right join aws_cloudtrail_trail as t on t.kms_key_id = k.arn
     where
-      t.kms_key_id = key.arn
+      t.arn = $1
+  EOQ
 
-    -- SNS topics (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_cloudtrail_trail_to_sns_topic_node" {
+  category = category.aws_sns_topic
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
-      topic.topic_arn as id,
-      topic.title as title,
-      'aws_sns_topic' as category,
+      st.topic_arn as id,
+      st.title as title,
       jsonb_build_object(
-        'ARN', topic.topic_arn,
-        'Account ID', topic.account_id,
-        'Region', topic.region
+        'ARN', st.topic_arn,
+        'Account ID', st.account_id,
+        'Region', st.region
       ) as properties
     from
-      aws_sns_topic as topic,
-      trails as t
+      aws_sns_topic as st
+      right join aws_cloudtrail_trail as t on t.sns_topic_arn = st.topic_arn
     where
-      t.sns_topic_arn = topic.topic_arn
+      t.arn = $1
+  EOQ
 
-    -- SNS topics (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_cloudtrail_trail_to_sns_topic_edge" {
+  title = "logs to"
+
+  sql = <<-EOQ
     select
       t.arn as from_id,
-      topic.topic_arn as to_id,
-      null as id,
-      'logs to' as title,
-      'cloudtrail_trail_to_sns_topic' as category,
+      st.topic_arn as to_id,
       jsonb_build_object(
         'ARN', t.arn,
         'Account ID', t.account_id,
         'Region', t.region
       ) as properties
     from
-      aws_sns_topic as topic,
-      trails as t
+      aws_sns_topic as st
+      right join aws_cloudtrail_trail as t on t.sns_topic_arn = st.topic_arn
     where
-      t.sns_topic_arn = topic.topic_arn
+      t.arn = $1
+  EOQ
 
-    -- Cloudwatch log groups (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_cloudtrail_trail_to_cloudwatch_log_group_node" {
+  category = category.aws_cloudwatch_log_group
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
-      grp.arn as id,
-      grp.title as title,
-      'aws_cloudwatch_log_group' as category,
+      g.arn as id,
+      g.title as title,
       jsonb_build_object(
-        'ARN', grp.arn,
-        'Account ID', grp.account_id,
-        'Region', grp.region
+        'ARN', g.arn,
+        'Account ID', g.account_id,
+        'Region', g.region
       ) as properties
     from
-      aws_cloudwatch_log_group as grp,
-      trails as t
+      aws_cloudwatch_log_group as g
+      right join aws_cloudtrail_trail as t on t.log_group_arn = g.arn
     where
-      t.log_group_arn = grp.arn
+      t.arn = $1
+  EOQ
 
-    -- Cloudwatch log group (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_cloudtrail_trail_to_cloudwatch_log_group_edge" {
+  title = "logs to"
+
+  sql = <<-EOQ
     select
       t.arn as from_id,
-      grp.arn as to_id,
-      null as id,
-      'logs to' as title,
-      'cloudtrail_trail_to_cloudwatch_log_group' as category,
+      g.arn as to_id,
       jsonb_build_object(
         'ARN', t.arn,
         'Account ID', t.account_id,
@@ -443,20 +475,23 @@ query "aws_cloudtrail_trail_relationship_graph" {
         'Latest cloudwatch logs delivery time', t.latest_cloudwatch_logs_delivery_time,
         'Retention days', retention_in_days
       ) as properties
-    from
-      aws_cloudwatch_log_group as grp,
-      trails as t
+   from
+      aws_cloudwatch_log_group as g
+      right join aws_cloudtrail_trail as t on t.log_group_arn = g.arn
     where
-      t.log_group_arn = grp.arn
+      t.arn = $1
+  EOQ
 
-    -- GuardDuty (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_cloudtrail_trail_from_guardduty_detector_node" {
+  category = category.aws_guardduty_detector
+
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       detector.arn as id,
       detector.detector_id as title,
-      'aws_guardduty_detector' as category,
       jsonb_build_object(
         'ARN', detector.arn,
         'Account ID', detector.account_id,
@@ -465,20 +500,24 @@ query "aws_cloudtrail_trail_relationship_graph" {
       ) as properties
     from
       aws_guardduty_detector as detector,
-      trails as t
+      aws_cloudtrail_trail as t
     where
       detector.status = 'ENABLED'
       and detector.data_sources is not null
       and detector.data_sources -> 'CloudTrail' ->> 'Status' = 'ENABLED'
+      and t.arn = $1
+  EOQ
 
-    -- GuardDuty (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_cloudtrail_trail_from_guardduty_detector_edge" {
+  title = "guardduty detector"
+
+  sql = <<-EOQ
     select
       detector.arn as from_id,
       t.arn as to_id,
-      null as id,
-      'guardduty detector' as title,
-      'guardduty_detector_cloudtrail_trail' as category,
       jsonb_build_object(
         'ARN', t.arn,
         'Account ID', t.account_id,
@@ -486,16 +525,12 @@ query "aws_cloudtrail_trail_relationship_graph" {
       ) as properties
     from
       aws_guardduty_detector as detector,
-      trails as t
+      aws_cloudtrail_trail as t
     where
       detector.status = 'ENABLED'
       and detector.data_sources is not null
       and detector.data_sources -> 'CloudTrail' ->> 'Status' = 'ENABLED'
-
-    order by
-      category,
-      from_id,
-      to_id;
+      and t.arn = $1
   EOQ
 
   param "arn" {}

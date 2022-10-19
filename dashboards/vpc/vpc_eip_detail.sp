@@ -209,7 +209,7 @@ edge "aws_vpc_eip_from_ec2_network_interface_edge" {
 
 node "aws_vpc_eip_from_ec2_instance_node" {
   category = category.aws_ec2_instance
-  sql = <<-EOQ
+  sql      = <<-EOQ
     select
       i.arn as id,
       i.title as title,
