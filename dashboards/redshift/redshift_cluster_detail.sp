@@ -177,18 +177,6 @@ dashboard "aws_redshift_cluster_detail" {
 
   }
 
-  container {
-
-    graph {
-      type  = "graph"
-      base  = graph.aws_graph_categories
-      query = query.aws_redshift_cluster_relationship_graph
-      args = {
-        arn = self.input.cluster_arn.value
-      }
-      category "aws_redshift_cluster" {}
-    }
-  }
 }
 
 query "aws_redshift_cluster_input" {
