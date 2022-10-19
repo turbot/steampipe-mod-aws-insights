@@ -1,3 +1,10 @@
+category "aws_docdb_cluster" {
+  fold {
+    title     = "DocumentDB Cluster"
+    threshold = 3
+  }
+}
+
 category "aws_ec2_classic_load_balancer" {
   href = "/aws_insights.dashboard.aws_ec2_classic_load_balancer_detail?input.clb={{.properties.'ARN' | @uri}}"
   icon = local.aws_ec2_classic_load_balancer_icon
