@@ -214,23 +214,14 @@ edge "aws_iam_policy_from_iam_role_edge" {
 node "aws_iam_policy_from_iam_user_node" {
   category = category.aws_iam_user
 
-  sql = <<-EOQ
-    select
-      u.name as id,
-      u.name as title,
-      jsonb_build_object(
-        'ARN', u.arn,
-        'path', path,
-        'Create Date', create_date,
-        'MFA Enabled', mfa_enabled::text,
-        'Account ID', u.account_id 
-      ) as properties
+  sql = replace(local.aws_iam_user_mandatory_sql, "__QUERY_PREDICATE__", <<EOT
     from
       aws_iam_user as u,
       jsonb_array_elements_text(attached_policy_arns) as arns
     where
       arns = $1;
-  EOQ
+  EOT
+  )
 
   param "arn" {}
 }
@@ -240,7 +231,7 @@ edge "aws_iam_policy_from_iam_user_edge" {
 
   sql = <<-EOQ
     select
-      u.name as from_id,
+      u.user_id as from_id,
       p.policy_id as to_id
     from
       aws_iam_user as u,

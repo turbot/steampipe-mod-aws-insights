@@ -243,7 +243,7 @@ category "aws_redshift_parameter_group" {
 }
 
 category "aws_ec2_ami" {
-  href = "aws_insights.dashboard.aws_ec2_ami_detail?input.ami={{.properties.'Image ID' | @uri}}"
+  href = "/aws_insights.dashboard.aws_ec2_ami_detail?input.ami={{.properties.'Image ID' | @uri}}"
   icon = local.aws_ec2_ami_icon
   fold {
     title     = "EC2 AMIs"
@@ -274,7 +274,7 @@ category "aws_ec2_key_pair" {
 }
 
 category "aws_ecr_repository" {
-  href = "aws_insights.dashboard.aws_ecr_repository_detail?input.ecr_repository_arn={{.properties.'ARN' | @uri}}"
+  href = "/aws_insights.dashboard.aws_ecr_repository_detail?input.ecr_repository_arn={{.properties.'ARN' | @uri}}"
   icon = local.aws_ecr_repository_icon
   fold {
     title     = "ECR repositories"
