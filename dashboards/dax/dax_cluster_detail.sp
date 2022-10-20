@@ -43,13 +43,33 @@ dashboard "dax_cluster_detail" {
 
   container {
     graph {
+      title = "Relationships"
       type  = "graph"
-      base  = graph.aws_graph_categories
-      query = query.aws_dax_cluster_relationships_graph
+      direction = "TD"
+
+      nodes =[
+        node.aws_dax_cluster_node,
+        node.aws_dax_cluster_to_iam_role_node,
+        node.aws_dax_cluster_to_vpc_security_group_node,
+        node.aws_dax_cluster_to_dax_subnet_group_node,
+        node.aws_dax_subnet_group_to_vpc_subnet_node,
+        node.aws_dax_cluster_to_sns_topic_node,
+        node.aws_dax_cluster_vpc_security_group_to_vpc_node
+      ]
+
+      edges = [
+        edge.aws_dax_cluster_to_iam_role_edge,
+        edge.aws_dax_cluster_to_vpc_security_group_edge,
+        edge.aws_dax_cluster_to_dax_subnet_group_edge,
+        edge.aws_dax_subnet_group_to_vpc_subnet_edge,
+        edge.aws_dax_cluster_to_sns_topic_edge,
+        edge.aws_dax_cluster_vpc_security_group_to_vpc_edge,
+        edge.aws_dax_cluster_vpc_subnet_to_vpc_edge
+      ]
+      
       args = {
         arn = self.input.dax_cluster_arn.value
       }
-      category "aws_dax_cluster" {}
     }
   }
 
@@ -161,87 +181,84 @@ query "aws_dax_cluster_encryption" {
   param "arn" {}
 }
 
-query "aws_dax_cluster_relationships_graph" {
+node "aws_dax_cluster_node" {
+  category = category.aws_dax_cluster
+
   sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       arn as id,
       title as title,
-      'aws_dax_cluster' as category,
       jsonb_build_object(
         'ARN', arn,
-        'Name', cluster_name,
-        'Status', status,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Name', title,
+        'Region', region,
+        'Status', status
+      ) as properties
     from
       aws_dax_cluster
     where
-      arn = $1
+      arn = $1;
+  EOQ
 
-    -- From IAM roles (node)
-    union all
-     select
-      null as from_id,
-      null as to_id,
-      role_id as id,
-      name as title,
-      'aws_iam_role' as category,
-      jsonb_build_object(
-        'ARN', arn,
-        'Create Date', create_date,
-        'Max Session Duration', max_session_duration,
-        'Account ID', account_id ) as properties
-    from
-      aws_iam_role
+  param "arn" {}
+}
+
+node "aws_dax_cluster_to_iam_role_node" {
+  category = category.aws_iam_role
+  sql = <<-EOQ
+    select
+      r.arn as id,
+      r.name as title,
+      json_build_object(
+        'ARN', r.arn,
+        'Account ID', r.account_id,
+        'Create Date', r.create_date,
+        'Max Session Duration', r.max_session_duration
+      ) as properties
+    from 
+      aws_dax_cluster as c,
+      aws_iam_role as r
     where
-      arn in
-      (
-        select
-          iam_role_arn
-        from
-          aws_dax_cluster
-        where
-          arn = $1
-      )
+      c.arn = $1
+      and c.iam_role_arn = r.arn;
+  EOQ
 
-    -- From IAM roles (edge)
-    union all
-     select
-      c.arn as from_id,
-      r.role_id as to_id,
-      null as id,
-      'iam role' as title,
-      'dax_cluster_to_iam_role' as category,
-      jsonb_build_object(
-        'Account ID', c.account_id ) as properties
+  param "arn" {}
+}
+
+edge "aws_dax_cluster_to_iam_role_edge" {
+  title = "iam role"
+  sql = <<-EOQ
+    select
+      arn as from_id,
+      iam_role_arn as to_id
     from
-      aws_iam_role as r,
-      aws_dax_cluster as c
+      aws_dax_cluster
     where
-      r.arn = c.iam_role_arn
-      and c.arn = $1
+      arn = $1;
+  EOQ
 
-    -- From VPC security groups (node)
-    union all
-     select
-      null as from_id,
-      null as to_id,
+  param "arn" {}
+}
+
+node "aws_dax_cluster_to_vpc_security_group_node" {
+  category = category.aws_vpc_security_group
+  sql = <<-EOQ
+    select
       arn as id,
       title as title,
-      'aws_vpc_security_group' as category,
-      jsonb_build_object(
-        'Group ID', group_id,
-        'Description', description,
+      json_build_object(
         'ARN', arn,
         'Account ID', account_id,
+        'Description', description,
+        'Group ID', group_id,
         'Region', region
       ) as properties
     from
       aws_vpc_security_group
     where
-      group_id in
+      group_id in 
       (
         select
           sg ->> 'SecurityGroupIdentifier'
@@ -250,38 +267,41 @@ query "aws_dax_cluster_relationships_graph" {
           jsonb_array_elements(security_groups) as sg
         where
           arn = $1
-      )
+      );
+  EOQ
 
-    -- From VPC security groups (edge)
-    union all
-     select
+  param "arn" {}
+}
+
+edge "aws_dax_cluster_to_vpc_security_group_edge" {
+  title = "security group"
+  sql = <<-EOQ
+    select
       c.arn as from_id,
-      sg.arn as to_id,
-      null as id,
-      'security group' as title,
-      'dax_cluster_to_vpc_security_group' as category,
-      jsonb_build_object(
-        'Account ID', c.account_id) as properties
+      sg.arn as to_id
     from
       aws_dax_cluster as c,
       jsonb_array_elements(security_groups) as s
       join aws_vpc_security_group sg
         on sg.group_id = s ->> 'SecurityGroupIdentifier'
     where
-      c.arn = $1
+      c.arn = $1;
+  EOQ
 
-    -- From Subnet groups (node)
-    union all
-     select
-      null as from_id,
-      null as to_id,
+  param "arn" {}
+}
+
+node "aws_dax_cluster_to_dax_subnet_group_node" {
+  category = category.aws_dax_subnet_group
+  sql = <<-EOQ
+    select
       subnet_group_name as id,
       title as title,
-      'aws_dax_subnet_group' as category,
       jsonb_build_object(
         'Name', subnet_group_name,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Region', region 
+      ) as properties
     from
       aws_dax_subnet_group
     where
@@ -293,39 +313,42 @@ query "aws_dax_cluster_relationships_graph" {
           aws_dax_cluster
         where
           arn = $1
-      )
+      );
+  EOQ
 
-    -- From Subnet groups (edge)
-    union all
-     select
+  param "arn" {}
+}
+
+edge "aws_dax_cluster_to_dax_subnet_group_edge" {
+  title = "subnet group"
+  sql = <<-EOQ
+    select
       c.arn as from_id,
-      g.title as to_id,
-      null as id,
-      'subnet group' as title,
-      'dax_cluster_to_dax_subnet_group' as category,
-      jsonb_build_object(
-        'Account ID', c.account_id ) as properties
+      g.title as to_id
     from
       aws_dax_cluster as c
       left join
         aws_dax_subnet_group as g
         on g.subnet_group_name = c.subnet_group
     where
-      c.arn = $1
+      c.arn = $1;
+  EOQ
 
-    -- From VPC subnets (node)
-    union all
-     select
-      null as from_id,
-      null as to_id,
+  param "arn" {}
+}
+
+node "aws_dax_subnet_group_to_vpc_subnet_node" {
+  category = category.aws_vpc_subnet
+  sql = <<-EOQ
+    select
       subnet_arn as id,
       title as title,
-      'aws_vpc_subnet' as category,
       jsonb_build_object(
         'ARN', subnet_arn,
         'Subnet ID', subnet_id,
         'Account ID', account_id,
-        'Region', region) as properties
+        'Region', region
+      ) as properties
     from
       aws_vpc_subnet
     where
@@ -340,18 +363,18 @@ query "aws_dax_cluster_relationships_graph" {
         where
           g.subnet_group_name = c.subnet_group
           and c.arn = $1
-      )
+      );
+  EOQ
 
-     -- From VPC subnets (edge)
-    union all
-     select
+  param "arn" {}
+}
+
+edge "aws_dax_subnet_group_to_vpc_subnet_edge" {
+  title = "subnet"
+  sql = <<-EOQ
+    select
       g.title as from_id,
-      sub.subnet_arn as to_id,
-      null as id,
-      'subnet' as title,
-      'dax_subnet_group_vpc_subnet' as category,
-      jsonb_build_object(
-        'Account ID', c.account_id ) as properties
+      sub.subnet_arn as to_id
     from
       aws_vpc_subnet as sub,
       aws_dax_cluster as c,
@@ -360,20 +383,23 @@ query "aws_dax_cluster_relationships_graph" {
     where
       g.subnet_group_name = c.subnet_group
       and s ->> 'SubnetIdentifier' = sub.subnet_id
-      and c.arn = $1
+      and c.arn = $1;
+  EOQ
 
-    -- From SNS topics (node)
-    union all
-     select
-      null as from_id,
-      null as to_id,
+  param "arn" {}
+}
+
+node "aws_dax_cluster_to_sns_topic_node" {
+  category = category.aws_sns_topic
+  sql = <<-EOQ
+    select
       topic_arn as id,
       title as title,
-      'aws_sns_topic' as category,
       jsonb_build_object(
         'ARN', topic_arn,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Region', region 
+      ) as properties
     from
       aws_sns_topic
     where
@@ -385,39 +411,42 @@ query "aws_dax_cluster_relationships_graph" {
           aws_dax_cluster
         where
           arn = $1
-      )
+      );
+  EOQ
 
-     -- From SNS topics (edge)
-    union all
-     select
+  param "arn" {}
+}
+
+edge "aws_dax_cluster_to_sns_topic_edge" {
+  title = "publishes to"
+  sql = <<-EOQ
+    select
       c.arn as from_id,
-      t.topic_arn as to_id,
-      null as id,
-      'publishes to' as title,
-      'dax_cluster_to_sns_topic' as category,
-      jsonb_build_object(
-        'Account ID', c.account_id ) as properties
+      t.topic_arn as to_id
     from
       aws_dax_cluster as c
       left join
         aws_sns_topic as t
         on t.topic_arn = c.notification_configuration ->> 'TopicArn'
     where
-      c.arn = $1
+      c.arn = $1;
+  EOQ
 
-     -- From VPCs (node)
-    union all
-     select
-      null as from_id,
-      null as to_id,
+  param "arn" {}
+}
+
+node "aws_dax_cluster_vpc_security_group_to_vpc_node" {
+  category = category.aws_vpc
+  sql = <<-EOQ
+    select
       arn as id,
       title as title,
-      'aws_vpc' as category,
       jsonb_build_object(
         'ARN', arn,
         'VPC ID', vpc_id,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Region', region
+      ) as properties
     from
       aws_vpc
     where
@@ -432,18 +461,18 @@ query "aws_dax_cluster_relationships_graph" {
             on sg.group_id = s ->> 'SecurityGroupIdentifier'
         where
           c.arn = $1
-      )
+      );
+  EOQ
 
-     -- From Security group - VPC (edge)
-    union all
-     select
+  param "arn" {}
+}
+
+edge "aws_dax_cluster_vpc_security_group_to_vpc_edge" {
+  title = "vpc"
+  sql = <<-EOQ
+    select
       sg.arn as from_id,
-      v.arn as to_id,
-      null as id,
-      'vpc' as title,
-      'vpc_security_group_to_vpc' as category,
-      jsonb_build_object(
-        'Account ID', c.account_id) as properties
+      v.arn as to_id
     from
       aws_dax_cluster as c,
       jsonb_array_elements(security_groups) as s
@@ -452,18 +481,18 @@ query "aws_dax_cluster_relationships_graph" {
       join aws_vpc v
         on v.vpc_id = sg.vpc_id
     where
-      c.arn = $1
+      c.arn = $1;
+  EOQ
 
-    -- From Subnet - VPC (edge)
-    union all
-     select
+  param "arn" {}
+}
+
+edge "aws_dax_cluster_vpc_subnet_to_vpc_edge"{
+  title = "vpc"
+  sql = <<-EOQ
+    select
       sub.subnet_arn as from_id,
-      v.arn as to_id,
-      null as id,
-      'vpc' as title,
-      'vpc_subnet_to_vpc' as category,
-      jsonb_build_object(
-        'Account ID', c.account_id) as properties
+      v.arn as to_id
     from
       aws_vpc as v,
       aws_vpc_subnet as sub,
@@ -474,12 +503,7 @@ query "aws_dax_cluster_relationships_graph" {
       g.subnet_group_name = c.subnet_group
       and s ->> 'SubnetIdentifier' = sub.subnet_id
       and g.vpc_id = v.vpc_id
-      and c.arn = $1
-
-    order by
-      category,
-      from_id,
-      to_id;
+      and c.arn = $1;
   EOQ
 
   param "arn" {}
