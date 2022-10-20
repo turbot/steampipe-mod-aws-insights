@@ -58,16 +58,28 @@ dashboard "aws_cloudfront_distribution_detail" {
 
   container {
     graph {
+      title = "Relationships"
       type  = "graph"
-      base  = graph.aws_graph_categories
-      query = query.aws_cloudfront_distribution_relationships_graph
+      direction = "TD"
+
+      nodes = [
+        node.aws_cloudfront_distribution_node,
+        node.aws_cloudfront_distribution_to_acm_certificate_node,
+        node.aws_cloudfront_distribution_from_s3_bucket_node,
+        node.aws_cloudfront_distribution_from_ec2_application_load_balancer_node,
+        node.aws_cloudfront_distribution_from_media_store_container_node
+      ]
+
+      edges = [
+        edge.aws_cloudfront_distribution_to_acm_certificate_edge,
+        edge.aws_cloudfront_distribution_from_s3_bucket_edge,
+        edge.aws_cloudfront_distribution_from_ec2_application_load_balancer_edge,
+        edge.aws_cloudfront_distribution_from_media_store_container_edge
+      ]
+
       args = {
         arn = self.input.distribution_arn.value
       }
-      category "aws_cloudfront_distribution" {
-        icon = local.aws_cloudfront_distribution_icon
-      }
-
     }
   }
 
@@ -123,7 +135,7 @@ query "aws_cloudfront_distribution_input" {
       aws_cloudfront_distribution
     order by
       title;
-EOQ
+  EOQ
 }
 
 query "aws_cloudfront_distribution_status" {
@@ -199,30 +211,32 @@ query "aws_cloudfront_distribution_sni" {
   param "arn" {}
 }
 
-query "aws_cloudfront_distribution_relationships_graph" {
+node "aws_cloudfront_distribution_node" {
+  category = category.aws_cloudfront_distribution
   sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       id as id,
       id as title,
-      'aws_cloudfront_distribution' as category,
       jsonb_build_object(
         'ARN', arn,
         'Status', status,
         'Enabled', enabled::text,
         'Domain Name', domain_name,
-        'Account ID', account_id ) as properties
+        'Account ID', account_id
+      ) as properties
     from
       aws_cloudfront_distribution
     where
-      arn = $1
+      arn = $1;
+  EOQ
 
-    -- To ACM Certificates (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_cloudfront_distribution_to_acm_certificate_node" {
+  category = category.aws_acm_certificate
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       title as id,
       title as title,
       'aws_acm_certificate' as category,
@@ -231,7 +245,8 @@ query "aws_cloudfront_distribution_relationships_graph" {
         'Domain Name', domain_name,
         'Certificate Transparency Logging Preference', certificate_transparency_logging_preference,
         'Created At', created_at,
-        'Account ID', account_id ) as properties
+        'Account ID', account_id
+      ) as properties
     from
       aws_acm_certificate
     where
@@ -243,39 +258,42 @@ query "aws_cloudfront_distribution_relationships_graph" {
           aws_cloudfront_distribution
         where
           arn = $1
-      )
+      );
+  EOQ
 
-    -- To ACM Certificates (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_cloudfront_distribution_to_acm_certificate_edge" {
+  title = "encrypted with"
+  sql = <<-EOQ
     select
       d.id as from_id,
-      c.title as to_id,
-      null as id,
-      'encrypted with' as title,
-      'cloudfront_distribution_to_acm_certificate' as category,
-      jsonb_build_object(
-        'Account ID', d.account_id ) as properties
+      c.title as to_id
     from
       aws_acm_certificate as c
       left join
         aws_cloudfront_distribution as d
         on viewer_certificate ->> 'ACMCertificateArn' = certificate_arn
     where
-      d.arn = $1
+      d.arn = $1;
+  EOQ
 
-    -- From S3 buckets (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_cloudfront_distribution_from_s3_bucket_node" {
+  category = category.aws_s3_bucket
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       arn as id,
       title as title,
-      'aws_s3_bucket' as category,
       jsonb_build_object(
         'Name', name,
         'ARN', arn,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Region', region
+      ) as properties
     from
       aws_s3_bucket
     where
@@ -289,18 +307,18 @@ query "aws_cloudfront_distribution_relationships_graph" {
         where
           origin ->> 'DomainName' like '%s3%'
           and arn = $1
-      )
+      );
+  EOQ
 
-    -- From S3 Buckets (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_cloudfront_distribution_from_s3_bucket_edge" {
+  title = "origin for"
+  sql = <<-EOQ
     select
       b.arn as from_id,
-      d.id as to_id,
-      null as id,
-      'origin for' as title,
-      's3_bucket_to_cloudfront_distribution' as category,
-      jsonb_build_object(
-        'Account ID', d.account_id ) as properties
+      d.id as to_id
     from
       aws_cloudfront_distribution as d,
       jsonb_array_elements(origins) as origin
@@ -308,22 +326,25 @@ query "aws_cloudfront_distribution_relationships_graph" {
         aws_s3_bucket as b
         on origin ->> 'DomainName' like '%' || b.name || '%'
     where
-      d.arn = $1
+      d.arn = $1;
+  EOQ
 
-    -- From EC2 Application Load Balancers (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_cloudfront_distribution_from_ec2_application_load_balancer_node" {
+  category = category.aws_ec2_application_load_balancer
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       arn as id,
       name as title,
-      'aws_ec2_application_load_balancer' as category,
       jsonb_build_object(
         'ARN', arn,
         'VPC ID', vpc_id,
         'DNS Name', dns_name,
         'Created Time', created_time,
-        'Account ID', account_id ) as properties
+        'Account ID', account_id 
+      ) as properties
     from
       aws_ec2_application_load_balancer
     where
@@ -336,17 +357,18 @@ query "aws_cloudfront_distribution_relationships_graph" {
           jsonb_array_elements(origins) as origin
         where
           arn = $1
-      )
+      );
+  EOQ
 
-    -- From EC2 Application Load Balancers (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_cloudfront_distribution_from_ec2_application_load_balancer_edge" {
+  title = "origin for"
+  sql = <<-EOQ
     select
       b.arn as from_id,
-      d.id as to_id,
-      null as id,
-      'origin for' as title,
-      'ec2_application_load_balancer_to_cloudfront_distribution' as category,
-      jsonb_build_object( 'Account ID', d.account_id ) as properties
+      d.id as to_id
     from
       aws_cloudfront_distribution as d,
       jsonb_array_elements(origins) as origin
@@ -354,22 +376,25 @@ query "aws_cloudfront_distribution_relationships_graph" {
         aws_ec2_application_load_balancer as b
         on b.dns_name = origin ->> 'DomainName'
     where
-      d.arn = $1
+      d.arn = $1;
+  EOQ
 
-    -- From Media Store Containers (node)
-    union all
+  param "arn" {}
+}
+
+node "aws_cloudfront_distribution_from_media_store_container_node" {
+  category = category.aws_media_store_container
+  sql = <<-EOQ
     select
-      null as from_id,
-      null as to_id,
       arn as id,
       name as title,
-      'aws_media_store_container' as category,
       jsonb_build_object(
         'ARN', arn,
         'Status', status,
         'Access Logging Enabled', access_logging_enabled::text,
         'Creation Time', creation_time,
-        'Account ID', account_id ) as properties
+        'Account ID', account_id 
+      ) as properties
     from
       aws_media_store_container
     where
@@ -382,17 +407,18 @@ query "aws_cloudfront_distribution_relationships_graph" {
           jsonb_array_elements(origins) as origin
         where
           arn = $1
-      )
+      );
+  EOQ
 
-    -- From Media Store Containers (edge)
-    union all
+  param "arn" {}
+}
+
+edge "aws_cloudfront_distribution_from_media_store_container_edge" {
+  title = "origin for"
+  sql = <<-EOQ
     select
       c.arn as from_id,
-      d.id as to_id,
-      null as id,
-      'origin for' as title,
-      'media_store_container_to_cloudfront_distribution' as category,
-      jsonb_build_object( 'Account ID', d.account_id ) as properties
+      d.id as to_id
     from
       aws_cloudfront_distribution as d,
       jsonb_array_elements(origins) as origin
@@ -400,12 +426,7 @@ query "aws_cloudfront_distribution_relationships_graph" {
         aws_media_store_container as c
         on c.endpoint = 'https://' || (origin ->> 'DomainName')
     where
-      d.arn = $1
-
-    order by
-      category,
-      from_id,
-      to_id;
+      d.arn = $1;
   EOQ
 
   param "arn" {}
