@@ -49,6 +49,7 @@ dashboard "aws_vpc_detail" {
 
   }
 
+
   container {
 
     graph {
@@ -92,7 +93,8 @@ dashboard "aws_vpc_detail" {
       type  = "graph"
 
       nodes = [
-        node.aws_vpc_node,
+        //node.aws_vpc_node,
+        node.aws_vpc_node_base,
         node.aws_vpc_az_node,
         node.aws_vpc_subnet_node,
         node.aws_vpc_ec2_instance_node,
@@ -158,6 +160,8 @@ dashboard "aws_vpc_detail" {
     
   }
 
+
+/**/
 
   container {
 
@@ -239,12 +243,33 @@ dashboard "aws_vpc_detail" {
 
     title = "Routing"
 
+
+    flow {
+      nodes = [
+        //node.aws_vpc_routing_subnet_or_vpc_node,
+        node.aws_vpc_routing_vpc_node,
+        //node.aws_vpc_routing_subnet_node,
+        //node.aws_vpc_routing_cidr_node
+      ]
+
+      edges = [
+        //edge.aws_vpc_routing_subnet_vpc_to_cidr_edge,
+      ]
+
+      args = {
+        vpc_id = self.input.vpc_id.value
+      }
+
+    }
+
     flow {
       query = query.aws_vpc_routes_for_vpc_sankey
       args = {
         vpc_id = self.input.vpc_id.value
       }
     }
+
+
 
     table {
       title = "Route Tables"
@@ -550,76 +575,6 @@ query "aws_vpc_route_tables_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_routes_for_vpc_sankey" {
-  sql = <<-EOQ
-    with routes as (
-    select
-        route_table_id,
-        vpc_id,
-        r ->> 'State' as state,
-        case
-          when r ->> 'GatewayId' is not null then r ->> 'GatewayId'
-          when r ->> 'InstanceId' is not null then r ->> 'InstanceId'
-          when r ->> 'NatGatewayId' is not null then r ->> 'NatGatewayId'
-          when r ->> 'LocalGatewayId' is not null then r ->> 'LocalGatewayId'
-          when r ->> 'CarrierGatewayId' is not null then r ->> 'CarrierGatewayId'
-          when r ->> 'TransitGatewayId' is not null then r ->> 'TransitGatewayId'
-          when r ->> 'VpcPeeringConnectionId' is not null then r ->> 'VpcPeeringConnectionId'
-          when r ->> 'DestinationPrefixListId' is not null then r ->> 'DestinationPrefixListId'
-          when r ->> 'DestinationIpv6CidrBlock' is not null then r ->> 'DestinationIpv6CidrBlock'
-          when r ->> 'EgressOnlyInternetGatewayId' is not null then r ->> 'EgressOnlyInternetGatewayId'
-          when r ->> 'NetworkInterfaceId' is not null then r ->> 'NetworkInterfaceId'
-          when r ->> 'CoreNetworkArn' is not null then r ->> 'CoreNetworkArn'
-          when r ->> 'InstanceOwnerId' is not null then r ->> 'InstanceOwnerId'
-        end as gateway,
-        case
-          when r ->> 'DestinationCidrBlock' is not null then r ->> 'DestinationCidrBlock'
-          when r ->> 'DestinationIpv6CidrBlock' is not null then r ->> 'DestinationIpv6CidrBlock'
-          else '???'
-        end as destination_cidr,
-        case
-          when a ->> 'Main' = 'true' then vpc_id
-          when a ->> 'SubnetId' is not null then  a->> 'SubnetId'
-          else '??'
-        end as associated_to
-
-      from
-        aws_vpc_route_table,
-        jsonb_array_elements(routes) as r,
-        jsonb_array_elements(associations) as a
-      where
-        vpc_id = $1
-    )
-      select
-        null as from_id,
-        associated_to as id,
-        associated_to as title,
-        'aws_vpc_route_table' as category,
-        0 as depth
-      from
-        routes
-      union
-        select
-          associated_to as from_id,
-          destination_cidr as id,
-          destination_cidr as title,
-          'vpc_or_subnet' as category,
-          1 as depth
-        from
-          routes
-      union
-        select
-          destination_cidr as from_id,
-          gateway as id,
-          gateway as title,
-          'gateway' as category,
-          2 as depth
-        from
-          routes
-  EOQ
-
-  param "vpc_id" {}
-}
 
 query "aws_vpc_routes_for_vpc" {
   sql = <<-EOQ
@@ -1183,6 +1138,192 @@ query "aws_vpc_subnet_by_az" {
       availability_zone
     order by
       availability_zone
+  EOQ
+
+  param "vpc_id" {}
+}
+
+
+
+
+#### Old format Flow queries ############
+
+
+query "aws_vpc_routes_for_vpc_sankey" {
+  sql = <<-EOQ
+    with routes as (
+    select
+        route_table_id,
+        vpc_id,
+        r ->> 'State' as state,
+        case
+          when r ->> 'GatewayId' is not null then r ->> 'GatewayId'
+          when r ->> 'InstanceId' is not null then r ->> 'InstanceId'
+          when r ->> 'NatGatewayId' is not null then r ->> 'NatGatewayId'
+          when r ->> 'LocalGatewayId' is not null then r ->> 'LocalGatewayId'
+          when r ->> 'CarrierGatewayId' is not null then r ->> 'CarrierGatewayId'
+          when r ->> 'TransitGatewayId' is not null then r ->> 'TransitGatewayId'
+          when r ->> 'VpcPeeringConnectionId' is not null then r ->> 'VpcPeeringConnectionId'
+          when r ->> 'DestinationPrefixListId' is not null then r ->> 'DestinationPrefixListId'
+          when r ->> 'DestinationIpv6CidrBlock' is not null then r ->> 'DestinationIpv6CidrBlock'
+          when r ->> 'EgressOnlyInternetGatewayId' is not null then r ->> 'EgressOnlyInternetGatewayId'
+          when r ->> 'NetworkInterfaceId' is not null then r ->> 'NetworkInterfaceId'
+          when r ->> 'CoreNetworkArn' is not null then r ->> 'CoreNetworkArn'
+          when r ->> 'InstanceOwnerId' is not null then r ->> 'InstanceOwnerId'
+        end as gateway,
+        case
+          when r ->> 'DestinationCidrBlock' is not null then r ->> 'DestinationCidrBlock'
+          when r ->> 'DestinationIpv6CidrBlock' is not null then r ->> 'DestinationIpv6CidrBlock'
+          else '???'
+        end as destination_cidr,
+        case
+          when a ->> 'Main' = 'true' then vpc_id
+          when a ->> 'SubnetId' is not null then  a->> 'SubnetId'
+          else '??'
+        end as associated_to
+
+      from
+        aws_vpc_route_table,
+        jsonb_array_elements(routes) as r,
+        jsonb_array_elements(associations) as a
+      where
+        vpc_id = $1
+    )
+      select
+        null as from_id,
+        associated_to as id,
+        associated_to as title,
+        'aws_vpc_route_table' as category,
+        0 as depth
+      from
+        routes
+      union
+        select
+          associated_to as from_id,
+          destination_cidr as id,
+          destination_cidr as title,
+          'vpc_or_subnet' as category,
+          1 as depth
+        from
+          routes
+      union
+        select
+          destination_cidr as from_id,
+          gateway as id,
+          gateway as title,
+          'gateway' as category,
+          2 as depth
+        from
+          routes
+  EOQ
+
+  param "vpc_id" {}
+}
+
+#### New Node/Edge format Flow queries ############
+
+
+# node "aws_vpc_routing_subnet_or_vpc_node" {
+#   //category = category.aws_vpc_subnet
+
+#   sql = <<-EOQ
+#     select
+#       distinct on (coalesce(a ->> 'SubnetId', vpc_id))
+#       coalesce(a ->> 'SubnetId', vpc_id) as id,
+#       coalesce(a ->> 'SubnetId', vpc_id) as title,
+#       case
+#         when a ->> 'Main' = 'true' then 'aws_vpc_route_table'
+#         else 'aws_vpc_subnet'
+#       end as category,
+#       0 as depth
+#     from
+#       aws_vpc_route_table,
+#       jsonb_array_elements(routes) as r,
+#       jsonb_array_elements(associations) as a
+#     where
+#       vpc_id = $1
+#   EOQ
+
+#   param "vpc_id" {}
+# }
+
+
+node "aws_vpc_routing_subnet_node" {
+  category = category.aws_vpc_subnet
+
+  sql = <<-EOQ
+    select
+      a ->> 'SubnetId' as id,
+      a ->> 'SubnetId' as title --,
+      --0 as depth
+    from
+      aws_vpc_route_table,
+      jsonb_array_elements(routes) as r,
+      jsonb_array_elements(associations) as a
+    where
+      vpc_id = $1
+      and a ->> 'SubnetId' is not null
+  EOQ
+
+  param "vpc_id" {}
+}
+
+node "aws_vpc_routing_vpc_node" {
+  category = category.aws_vpc_subnet
+
+  sql = <<-EOQ
+    select
+      vpc_id as id,
+      vpc_id as title,
+      0 as depth
+    from
+      aws_vpc_route_table,
+      jsonb_array_elements(routes) as r,
+      jsonb_array_elements(associations) as a
+    where
+      vpc_id = $1
+      and a ->> 'SubnetId' is null
+
+  EOQ
+
+  param "vpc_id" {}
+}
+
+node "aws_vpc_routing_cidr_node" {
+  //category = category.cidr_block
+
+  sql = <<-EOQ
+    select
+      coalesce(r ->> 'DestinationCidrBlock' , r ->> 'DestinationIpv6CidrBlock') as id,
+      coalesce(r ->> 'DestinationCidrBlock' , r ->> 'DestinationIpv6CidrBlock') as title,
+      'cider_block' as category,
+      1 as depth
+    from
+      aws_vpc_route_table,
+      jsonb_array_elements(routes) as r,
+      jsonb_array_elements(associations) as a
+    where
+      vpc_id = $1
+  EOQ
+
+  param "vpc_id" {}
+}
+
+
+
+edge "aws_vpc_routing_subnet_vpc_to_cidr_edge" {
+  title = "az"
+
+  sql = <<-EOQ
+    select
+      coalesce(a ->> 'SubnetId', vpc_id) as from_id,
+      coalesce(r ->> 'DestinationCidrBlock' , r ->> 'DestinationIpv6CidrBlock') as to_id
+    from
+      aws_vpc_route_table,
+      jsonb_array_elements(routes) as r,
+      jsonb_array_elements(associations) as a
+    where
+      vpc_id = $1
   EOQ
 
   param "vpc_id" {}
@@ -2066,6 +2207,18 @@ node "aws_vpc_node" {
   EOQ
 
   param "vpc_id" {}
+}
+
+
+
+node "aws_vpc_node_base" {
+  base = node.aws_vpc_node
+  category = category.aws_vpc_base
+}
+
+
+category "aws_vpc_base" {
+  icon = local.aws_vpc_icon
 }
 
 

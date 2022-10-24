@@ -10,6 +10,7 @@ category "aws_vpc" {
 }
 
 
+
 category "aws_availability_zone" {
   icon = "text:AZ"
   fold {

@@ -273,12 +273,16 @@ graph "aws_graph_categories" {
     }
   }
 
+  # category "aws_vpc" {
+  #   href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.properties.'VPC ID' | @uri}}"
+  #   fold {
+  #     title     = "VPCs"
+  #     threshold = 3
+  #   }
+  # }
+
   category "aws_vpc" {
-    href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.properties.'VPC ID' | @uri}}"
-    fold {
-      title     = "VPCs"
-      threshold = 3
-    }
+    base = category.aws_vpc
   }
 
   category "aws_vpc_security_group" {
