@@ -2,7 +2,7 @@
 
 _Dependencies_
 
-- AWS plugin `v0.80.0` or higher is now required. ([]()) 
+- AWS plugin `v0.80.0` or higher is now required. ([#208](https://github.com/turbot/steampipe-mod-aws-insights/pull/208)) 
 
 _Enhancements_
 
