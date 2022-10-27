@@ -253,7 +253,7 @@ node "aws_ec2_classic_load_balancer_node" {
         'Scheme', clb.scheme
       ) as properties
     from
-      aws_ec2_classic_load_balancer
+      aws_ec2_classic_load_balancer clb
     where
       arn = $1;
   EOQ
@@ -266,20 +266,20 @@ node "aws_ec2_clb_to_ec2_instance_node" {
 
   sql = <<-EOQ
     select
-      instances.arn as id,
-      instances.title as title,
+      i.arn as id,
+      i.title as title,
       jsonb_build_object(
-        'Instance ID', instances.instance_id,
-        'ARN', instances.arn,
-        'Account ID', instances.account_id,
-        'Region', instances.region
+        'Instance ID', i.instance_id,
+        'ARN', i.arn,
+        'Account ID', i.account_id,
+        'Region', i.region
       ) as properties
     from
       aws_ec2_classic_load_balancer as clb
-      cross join jsonb_array_elements(clb.instances) as i
+      cross join jsonb_array_elements(clb.instances) as ci
     left join
-      aws_ec2_instance instances
-      on instances.instance_id = i ->> 'InstanceId'
+      aws_ec2_instance i
+      on i.instance_id = ci ->> 'InstanceId'
     where
       clb.arn = $1;
   EOQ
@@ -293,16 +293,16 @@ edge "aws_ec2_clb_to_ec2_instance_edge" {
   sql = <<-EOQ
     select
       clb.arn as from_id,
-      instances.arn as to_id,
+      i.arn as to_id,
       jsonb_build_object(
-        'Account ID', instances.account_id
+        'Account ID', i.account_id
       ) as properties
     from
       aws_ec2_classic_load_balancer as clb
-      cross join jsonb_array_elements(clb.instances) as i
+      cross join jsonb_array_elements(clb.instances) as ci
     left join
-      aws_ec2_instance instances
-      on instances.instance_id = i ->> 'InstanceId'
+      aws_ec2_instance i
+      on i.instance_id = ci ->> 'InstanceId'
     where
       clb.arn = $1;
   EOQ
@@ -315,21 +315,21 @@ node "aws_ec2_clb_to_s3_bucket_node" {
 
   sql = <<-EOQ
     select
-      buckets.arn as id,
-      buckets.title as title,
+      b.arn as id,
+      b.title as title,
       jsonb_build_object(
-        'Name', buckets.name,
-        'ARN', buckets.arn,
-        'Account ID', buckets.account_id,
-        'Region', buckets.region,
+        'Name', b.name,
+        'ARN', b.arn,
+        'Account ID', b.account_id,
+        'Region', b.region,
         'Logs to', clb.access_log_s3_bucket_name
       ) as properties
     from
-      aws_s3_bucket buckets,
+      aws_s3_bucket b,
       aws_ec2_classic_load_balancer as clb
     where
       clb.arn = $1
-      and buckets.name = clb.access_log_s3_bucket_name;
+      and b.name = clb.access_log_s3_bucket_name;
   EOQ
 
   param "arn" {}
@@ -341,17 +341,17 @@ edge "aws_ec2_clb_to_s3_bucket_edge" {
   sql = <<-EOQ
     select
       clb.arn as from_id,
-      buckets.arn as to_id,
+      b.arn as to_id,
       jsonb_build_object(
-        'Account ID', buckets.account_id,
+        'Account ID', b.account_id,
         'Log Prefix', clb.access_log_s3_bucket_prefix
       ) as properties
     from
-      aws_s3_bucket buckets,
+      aws_s3_bucket b,
       aws_ec2_classic_load_balancer as clb
     where
       clb.arn = $1
-      and buckets.name = clb.access_log_s3_bucket_name;
+      and b.name = clb.access_log_s3_bucket_name;
   EOQ
 
   param "arn" {}
@@ -449,11 +449,11 @@ edge "aws_ec2_clb_vpc_security_group_to_vpc_edge" {
     from
       aws_vpc vpc,
       aws_ec2_classic_load_balancer as clb
-      left join 
-        aws_vpc_security_group sg 
-        on sg.group_id in 
+      left join
+        aws_vpc_security_group sg
+        on sg.group_id in
         (
-          select 
+          select
             jsonb_array_elements_text(clb.security_groups)
         )
     where

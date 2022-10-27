@@ -167,23 +167,23 @@ node "aws_codecommit_repository_to_codebuild_project_node" {
 
   sql = <<-EOQ
     select
-      cbproject.arn as id,
-      cbproject.title as title,
+      c.arn as id,
+      c.title as title,
       jsonb_build_object(
-        'ARN', cbproject.arn,
-        'Account ID', cbproject.account_id,
-        'Region', cbproject.region
+        'ARN', c.arn,
+        'Account ID', c.account_id,
+        'Region', c.region
       ) as properties
     from
-      aws_codecommit_repository
-    left join aws_codebuild_project cbproject
-      on repository.clone_url_http in (
+      aws_codecommit_repository r
+    left join aws_codebuild_project c
+      on r.clone_url_http in (
         select source ->> 'Location' as "l" from aws_codebuild_project
         union all
         select s ->> 'Location' as "l" from aws_codebuild_project, jsonb_array_elements(aws_codebuild_project.secondary_sources) as s
       )
     where
-      arn = $1;
+      r.arn = $1;
   EOQ
 
   param "arn" {}
@@ -193,19 +193,24 @@ edge "aws_codecommit_repository_to_codebuild_project_edge" {
   title = "codebuild project"
 
   sql = <<-EOQ
-     select
-      repository.arn as from_id,
-      cbproject.arn as to_id
+    select
+      r.arn as from_id,
+      p.arn as to_id
     from
-      aws_codecommit_repository
-    left join aws_codebuild_project cbproject
-      on repository.clone_url_http in (
-        select source ->> 'Location' as "l" from aws_codebuild_project
+      aws_codecommit_repository r
+      left join aws_codebuild_project p
+      on r.clone_url_http in (
+        select
+          source ->> 'Location' as "l"
+        from aws_codebuild_project
         union all
-        select s ->> 'Location' as "l" from aws_codebuild_project, jsonb_array_elements(aws_codebuild_project.secondary_sources) as s
+        select
+          s ->> 'Location' as "l"
+        from aws_codebuild_project,
+          jsonb_array_elements(aws_codebuild_project.secondary_sources) as s
       )
     where
-      arn = $1;
+      r.arn = $1;
   EOQ
 
   param "arn" {}
@@ -224,10 +229,10 @@ node "aws_codecommit_repository_to_codepipeline_pipeline_node" {
         'Region', p.region
       ) as properties
     from
-      aws_codecommit_repository
+      aws_codecommit_repository r
       cross join aws_codepipeline_pipeline as p
-    where arn = $1 and p.stages is not null
-    and repository.repository_name in (
+    where r.arn = $1 and p.stages is not null
+      and r.repository_name in (
       select jsonb_path_query(p.stages, '$[*].Actions[*].Configuration.RepositoryName')::text
     );
   EOQ
@@ -239,14 +244,14 @@ edge "aws_codecommit_repository_to_codepipeline_pipeline_edge" {
   title = "codepipeline pipeline"
 
   sql = <<-EOQ
-     select
-      repository.arn as from_id,
+    select
+      r.arn as from_id,
       p.arn as to_id
     from
-      repository
+      aws_codecommit_repository as r
       cross join aws_codepipeline_pipeline as p
-    where arn = $1 and p.stages is not null
-    and repository.repository_name in (
+    where r.arn = $1 and p.stages is not null
+      and r.repository_name in (
       select jsonb_path_query(p.stages, '$[*].Actions[*].Configuration.RepositoryName')::text
     );
   EOQ

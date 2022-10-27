@@ -320,18 +320,18 @@ node "aws_codebuild_project_to_cloudwatch_group_node" {
 
   sql = <<-EOQ
     select
-      cloudwatch.arn as id,
-      cloudwatch.title as title,
+      c.arn as id,
+      c.title as title,
       jsonb_build_object(
-        'ARN', cloudwatch.arn,
-        'Account ID', cloudwatch.account_id,
-        'Region', cloudwatch.region,
-        'Retention days', cloudwatch.retention_in_days
+        'ARN', c.arn,
+        'Account ID', c.account_id,
+        'Region', c.region,
+        'Retention days', c.retention_in_days
       ) as properties
     from
       aws_codebuild_project as p
-      left join aws_cloudwatch_log_group cloudwatch
-      on cloudwatch.name = logs_config -> 'CloudWatchLogs' ->> 'GroupName'
+      left join aws_cloudwatch_log_group c
+      on c.name = logs_config -> 'CloudWatchLogs' ->> 'GroupName'
     where
       p.arn = $1;
   EOQ
@@ -345,11 +345,11 @@ edge "aws_codebuild_project_to_cloudwatch_group_edge" {
   sql = <<-EOQ
     select
       p.arn as from_id,
-      cloudwatch.arn as to_id
+      c.arn as to_id
     from
       aws_codebuild_project as p
-      left join aws_cloudwatch_log_group cloudwatch on
-      cloudwatch.name = logs_config -> 'CloudWatchLogs' ->> 'GroupName'
+      left join aws_cloudwatch_log_group c on
+      c.name = logs_config -> 'CloudWatchLogs' ->> 'GroupName'
     where
       p.arn = $1;
   EOQ
@@ -362,20 +362,20 @@ node "aws_codebuild_project_to_kms_key_node" {
 
   sql = <<-EOQ
     select
-      kms_key.arn as id,
-      kms_key.title as title,
+      k.arn as id,
+      k.title as title,
       jsonb_build_object(
-        'ARN', kms_key.arn,
-        'Key Manager',kms_key. key_manager,
-        'Creation Date', kms_key.creation_date,
-        'Enabled', kms_key.enabled::text,
-        'Account ID', kms_key.account_id,
-        'Region', kms_key.region
+        'ARN', k.arn,
+        'Key Manager',k. key_manager,
+        'Creation Date', k.creation_date,
+        'Enabled', k.enabled::text,
+        'Account ID', k.account_id,
+        'Region', k.region
       ) as properties
     from
       aws_codebuild_project as p
-      left join aws_kms_key as kms_key
-      on kms_key.arn = encryption_key
+      left join aws_kms_key as k
+      on k.arn = encryption_key
     where
       p.arn = $1;
   EOQ
@@ -389,11 +389,11 @@ edge "aws_codebuild_project_to_kms_key_edge" {
   sql = <<-EOQ
     select
       p.arn as from_id,
-      kms_key.arn as to_id
+      k.arn as to_id
     from
       aws_codebuild_project as p
-      left join aws_kms_key as kms_key
-      on kms_key.arn = p.encryption_key
+      left join aws_kms_key as k
+      on k.arn = p.encryption_key
     where
       p.arn = $1;
   EOQ
@@ -406,18 +406,18 @@ node "aws_codebuild_project_to_iam_role_node" {
 
   sql = <<-EOQ
     select
-      iam_role.arn as id,
-      iam_role.title as title,
+      r.arn as id,
+      r.title as title,
       jsonb_build_object(
-        'ARN', iam_role.arn,
-        'Path', iam_role.path,
-        'Account ID', iam_role.account_id,
-        'Region', iam_role.region
+        'ARN', r.arn,
+        'Path', r.path,
+        'Account ID', r.account_id,
+        'Region', r.region
       ) as properties
     from
       aws_codebuild_project as p
-      left join aws_iam_role as iam_role
-      on iam_role.arn = p.service_role
+      left join aws_iam_role as r
+      on r.arn = p.service_role
     where
       p.arn = $1;
   EOQ
@@ -448,19 +448,19 @@ node "aws_codebuild_project_to_ecr_repository_node" {
 
   sql = <<-EOQ
     select
-      repository.arn as id,
-      repository.repository_name as title,
+      r.arn as id,
+      r.repository_name as title,
       jsonb_build_object(
-        'ARN', repository.arn,
-        'Created At', repository.created_at,
-        'Repository URI', repository.repository_uri,
-        'Account ID', repository.account_id,
-        'Region', repository.region
+        'ARN', r.arn,
+        'Created At', r.created_at,
+        'Repository URI', r.repository_uri,
+        'Account ID', r.account_id,
+        'Region', r.region
       ) as properties
     from
       aws_codebuild_project as p
-      left join aws_ecr_repository as repository
-      on repository.repository_uri = split_part(p.environment ->> 'Image', ':', 1)
+      left join aws_ecr_repository as r
+      on r.repository_uri = split_part(p.environment ->> 'Image', ':', 1)
     where
       p.arn = $1;
   EOQ
@@ -474,11 +474,11 @@ edge "aws_codebuild_project_to_ecr_repository_edge" {
   sql = <<-EOQ
     select
       p.arn as from_id,
-      repository.arn as to_id
+      r.arn as to_id
     from
       aws_codebuild_project as p
-      left join aws_ecr_repository as repository
-      on repository.repository_uri = split_part(p.environment ->> 'Image', ':', 1)
+      left join aws_ecr_repository as r
+      on r.repository_uri = split_part(p.environment ->> 'Image', ':', 1)
     where
       p.arn = $1;
   EOQ
@@ -491,20 +491,20 @@ node "aws_codebuild_project_to_codecommit_repository_node" {
 
   sql = <<-EOQ
     select
-      repository.arn as id,
-      repository.repository_name as title,
+      r.arn as id,
+      r.repository_name as title,
       jsonb_build_object(
-        'ARN', repository.arn,
-        'Default Branch', repository.default_branch,
-        'Repository Clone HTTP URL', repository.clone_url_http,
-        'Repository Clone SSH URL', repository.clone_url_ssh,
-        'Account ID', repository.account_id,
-        'Region', repository.region
+        'ARN', r.arn,
+        'Default Branch', r.default_branch,
+        'Repository Clone HTTP URL', r.clone_url_http,
+        'Repository Clone SSH URL', r.clone_url_ssh,
+        'Account ID', r.account_id,
+        'Region', r.region
       ) as properties
     from
       aws_codebuild_project as p
-      left join aws_codecommit_repository as repository
-      on repository.clone_url_http in (
+      left join aws_codecommit_repository as r
+      on r.clone_url_http in (
         with code_sources as (
           select
             source,
@@ -531,11 +531,11 @@ edge "aws_codebuild_project_to_codecommit_repository_edge" {
   sql = <<-EOQ
     select
       p.arn as from_id,
-      repository.arn as to_id
+      r.arn as to_id
     from
       aws_codebuild_project as p
-      left join aws_codecommit_repository as repository
-      on repository.clone_url_http in (
+      left join aws_codecommit_repository as r
+      on r.clone_url_http in (
         with code_sources as (
           select
             source,

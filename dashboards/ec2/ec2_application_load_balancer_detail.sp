@@ -373,23 +373,23 @@ node "aws_ec2_alb_to_s3_bucket_node" {
 
   sql = <<-EOQ
     select
-      buckets.arn as id,
-      buckets.title as title,
+      b.arn as id,
+      b.title as title,
       jsonb_build_object(
-        'Name', buckets.name,
-        'ARN', buckets.arn,
+        'Name', b.name,
+        'ARN', b.arn,
         'Account ID', alb.account_id,
         'Region', alb.region,
         'Logs to', attributes ->> 'Value'
       ) as properties
     from
-      aws_s3_bucket buckets,
+      aws_s3_bucket b,
       aws_ec2_application_load_balancer as alb,
       jsonb_array_elements(alb.load_balancer_attributes) attributes
     where
       alb.arn = $1
       and attributes ->> 'Key' = 'access_logs.s3.bucket'
-      and buckets.name = attributes ->> 'Value';
+      and b.name = attributes ->> 'Value';
   EOQ
 
   param "arn" {}
@@ -401,7 +401,7 @@ edge "aws_ec2_alb_to_s3_bucket_edge" {
   sql = <<-EOQ
     select
       alb.arn as from_id,
-      buckets.arn as to_id,
+      b.arn as to_id,
       jsonb_build_object(
         'Account ID', alb.account_id,
         'Log Prefix', (
@@ -414,13 +414,13 @@ edge "aws_ec2_alb_to_s3_bucket_edge" {
         )
       ) as properties
     from
-      aws_s3_bucket buckets,
+      aws_s3_bucket b,
       aws_ec2_application_load_balancer as alb,
       jsonb_array_elements(alb.load_balancer_attributes) attributes
     where
       alb.arn = $1
       and attributes ->> 'Key' = 'access_logs.s3.bucket'
-      and buckets.name = attributes ->> 'Value';
+      and b.name = attributes ->> 'Value';
   EOQ
 
   param "arn" {}
@@ -464,8 +464,8 @@ edge "aws_ec2_alb_vpc_security_group_to_vpc_edge" {
       aws_vpc vpc,
       aws_ec2_application_load_balancer as alb
       left join
-        aws_vpc_security_group sg 
-        on sg.group_id in 
+        aws_vpc_security_group sg
+        on sg.group_id in
         (
           select
             jsonb_array_elements_text(alb.security_groups)
