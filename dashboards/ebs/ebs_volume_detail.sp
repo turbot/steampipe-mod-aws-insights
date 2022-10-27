@@ -248,7 +248,7 @@ query "aws_ebs_volume_attached_instances_count" {
     select
       'Attached Instances' as label,
       case
-        when attachments is null then 0
+        when jsonb_array_length(attachments) = 0 then 0
         else jsonb_array_length(attachments)
       end as value,
       case
