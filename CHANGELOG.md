@@ -1,3 +1,13 @@
+## v0.8 [2022-10-27]
+
+_Enhancements_
+
+- Updated the `aws_ebs_volume_unattached_count` and `aws_ebs_volume_attached_instances_count` queries in `AWS EBS Volume Dashboard` and `AWS EBS Volume Detail` dashboards respectively to handle the `attachments` column correctly when empty in the `aws_ebs_volume` table. ([#206](https://github.com/turbot/steampipe-mod-aws-insights/pull/206))
+
+_Dependencies_
+
+- AWS plugin `v0.80.0` or higher is now required. ([#208](https://github.com/turbot/steampipe-mod-aws-insights/pull/208))
+
 ## v0.7 [2022-09-19]
 
 _Bug fixes_
