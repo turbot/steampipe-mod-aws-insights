@@ -234,8 +234,8 @@ query "aws_elasticache_cluster_auth_token" {
   sql = <<-EOQ
     select
       'Auth Token' as label,
-      case when at_rest_encryption_enabled then 'Enabled' else 'Disabled' end as value,
-      case when at_rest_encryption_enabled then 'ok' else 'alert' end as type
+      case when auth_token_enabled then 'Enabled' else 'Disabled' end as value,
+      case when auth_token_enabled then 'ok' else 'alert' end as type
     from
       aws_elasticache_cluster
     where
