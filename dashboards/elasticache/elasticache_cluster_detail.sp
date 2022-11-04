@@ -55,6 +55,14 @@ dashboard "aws_elasticache_cluster_detail" {
       }
     }
 
+    card {
+      query = query.aws_elasticache_cluster_auth_token
+      width = 2
+      args = {
+        arn = self.input.elasticache_cluster_arn.value
+      }
+    }
+
   }
 
   container {
@@ -212,6 +220,22 @@ query "aws_elasticache_cluster_encryption_rest" {
       'Encryption at Rest' as label,
       case when at_rest_encryption_enabled then 'Enabled' else 'Disabled' end as value,
       case when at_rest_encryption_enabled then 'ok' else 'alert' end as type
+    from
+      aws_elasticache_cluster
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+
+}
+
+query "aws_elasticache_cluster_auth_token" {
+  sql = <<-EOQ
+    select
+      'Auth Token' as label,
+      case when auth_token_enabled then 'Enabled' else 'Disabled' end as value,
+      case when auth_token_enabled then 'ok' else 'alert' end as type
     from
       aws_elasticache_cluster
     where
