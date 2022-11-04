@@ -131,7 +131,7 @@ query "aws_elasticache_cluster_age_table" {
       e.cache_cluster_id as "Cluster ID",
       e.tags ->> 'Name' as "Name",
       now()::date - e.cache_cluster_create_time::date as "Age in Days",
-      e.cache_cluster_create_time as "Launch Time",
+      e.cache_cluster_create_time as "Create Time",
       e.cache_cluster_status as "Status",
       a.title as "Account",
       e.account_id as "Account ID",

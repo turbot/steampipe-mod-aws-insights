@@ -22,12 +22,12 @@ dashboard "aws_elasticache_cluster_dashboard" {
 
     # Assessments
     card {
-      sql   = query.aws_elasticache_cluster_unencrypted_at_rest_count.sql
+      sql   = query.aws_elasticache_cluster_encryption_at_rest_disabled_count.sql
       width = 2
     }
 
     card {
-      sql   = query.aws_elasticache_cluster_unencrypted_at_transit_count.sql
+      sql   = query.aws_elasticache_cluster_encryption_at_transit_disabled_count.sql
       width = 2
     }
 
@@ -46,7 +46,7 @@ dashboard "aws_elasticache_cluster_dashboard" {
     width = 6
 
     chart {
-      title = "Encryption At Rest Status"
+      title = "Encryption at Rest"
       sql   = query.aws_elasticache_cluster_by_encryption_at_rest_status.sql
       type  = "donut"
       width = 4
@@ -62,7 +62,7 @@ dashboard "aws_elasticache_cluster_dashboard" {
     }
 
     chart {
-      title = "Encryption At Transit Status"
+      title = "Encryption in Transit"
       sql   = query.aws_elasticache_cluster_by_encryption_at_transit_status.sql
       type  = "donut"
       width = 4
@@ -177,12 +177,13 @@ query "aws_elasticache_cluster_cache_node_count" {
   EOQ
 }
 
-query "aws_elasticache_cluster_unencrypted_at_rest_count" {
+query "aws_elasticache_cluster_encryption_at_rest_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Unencrypted At Rest' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as "type"
+      'Encryption at Rest Disabled' as label,
+      case
+        when count(*) > 0 then 'alert' else 'ok' end as "type"
     from
       aws_elasticache_cluster
     where
@@ -190,12 +191,13 @@ query "aws_elasticache_cluster_unencrypted_at_rest_count" {
   EOQ
 }
 
-query "aws_elasticache_cluster_unencrypted_at_transit_count" {
+query "aws_elasticache_cluster_encryption_at_transit_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Unencrypted At Transit' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as "type"
+      'Encryption in Transit Disabled' as label,
+      case
+        when count(*) > 0 then 'alert' else 'ok' end as "type"
     from
       aws_elasticache_cluster
     where
