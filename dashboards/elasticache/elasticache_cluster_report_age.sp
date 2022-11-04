@@ -1,7 +1,7 @@
 dashboard "aws_elasticache_cluster_age_report" {
 
   title         = "AWS Elasticache Age Report"
-  documentation = file("./dashboards/ec2/docs/elasticache_cluster_report_age.md")
+  documentation = file("./dashboards/elasticache/docs/elasticache_cluster_report_age.md")
 
   tags = merge(local.elasticache_common_tags, {
     type     = "Report"
