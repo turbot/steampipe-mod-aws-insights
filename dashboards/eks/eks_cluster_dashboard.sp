@@ -75,7 +75,7 @@ dashboard "aws_eks_cluster_dashboard" {
     }
 
     chart {
-      title = "Audit Logging Status"
+      title = "Cluster Audit Logging Status"
       sql   = query.aws_eks_cluster_audit_logging_status.sql
       type  = "donut"
       width = 4
