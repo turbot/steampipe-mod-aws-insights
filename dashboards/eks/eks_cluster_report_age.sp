@@ -48,6 +48,14 @@ dashboard "aws_eks_cluster_age_report" {
   }
 
   table {
+    column "Account ID" {
+      display = "none"
+    }
+
+    column "ARN" {
+      display = "none"
+    }
+    
     column "Name" {
       href = "${dashboard.aws_eks_cluster_detail.url_path}?input.eks_cluster_arn={{.ARN | @uri}}"
     }
