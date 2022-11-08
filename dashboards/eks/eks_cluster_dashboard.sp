@@ -11,7 +11,6 @@ dashboard "aws_eks_cluster_dashboard" {
 
   container {
 
-    # Analysis
     card {
       sql   = query.aws_eks_cluster_count.sql
       width = 2
@@ -75,7 +74,7 @@ dashboard "aws_eks_cluster_dashboard" {
     }
 
     chart {
-      title = "Cluster Audit Logging Status"
+      title = "Audit Logging Status"
       sql   = query.aws_eks_cluster_audit_logging_status.sql
       type  = "donut"
       width = 4
@@ -121,42 +120,42 @@ dashboard "aws_eks_cluster_dashboard" {
       title = "Clusters by Account"
       sql   = query.aws_eks_cluster_by_account.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Clusters by Region"
       sql   = query.aws_eks_cluster_by_region.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Clusters by Status"
       sql   = query.aws_eks_cluster_by_status.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Clusters by Creation Month"
       sql   = query.aws_eks_cluste_by_creation_month.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Clusters by Platform Version"
       sql   = query.aws_eks_cluster_by_platform_version.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Clusters by IP Family"
       sql   = query.aws_eks_cluster_by_ip_family.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
   }
