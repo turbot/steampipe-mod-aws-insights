@@ -48,28 +48,28 @@ dashboard "aws_api_gatewayv2_api_dashboard" {
     chart {
       title = "APIs by Account"
       type  = "column"
-      width = 4
+      width = 3
       query = query.aws_api_gatewayv2_api_by_account
     }
 
     chart {
       title = "APIs by Region"
       type  = "column"
-      width = 4
+      width = 3
       query = query.aws_api_gatewayv2_api_by_region
     }
 
     chart {
       title = "APIs by Age"
       type  = "column"
-      width = 4
+      width = 3
       query = query.aws_api_gatewayv2_api_by_age
     }
 
     chart {
       title = "APIs by Protocol"
       type  = "column"
-      width = 4
+      width = 3
       query = query.aws_api_gatewayv2_api_by_protocol
     }
 
