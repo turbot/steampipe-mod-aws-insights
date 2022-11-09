@@ -378,7 +378,7 @@ query "aws_vpc_is_default" {
   sql = <<-EOQ
     select
       'Default VPC' as label,
-      case when not is_default then 'ok' else 'Default VPC' end as value,
+      case when not is_default then 'Ok' else 'Default VPC' end as value,
       case when not is_default then 'ok' else 'alert' end as type
     from
       aws_vpc
