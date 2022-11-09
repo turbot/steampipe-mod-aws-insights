@@ -196,10 +196,12 @@ query "aws_codebuild_project_overview" {
   sql = <<-EOQ
     select
       name as "Name",
-      arn as "ARN",
       description as "Description",
       project_visibility as "Project Visibility",
-      concurrent_build_limit as "Concurrent build limit"
+      concurrent_build_limit as "Concurrent build limit",
+      region as "Region",
+      account_id as "Account ID",
+      arn as "ARN"
     from
       aws_codebuild_project
     where
