@@ -12,28 +12,28 @@ dashboard "aws_codebuild_project_dashboard" {
   container {
 
     card {
-      sql   = query.aws_codebuild_project_count.sql
+      query   = query.aws_codebuild_project_count
       width = 2
     }
 
     #Assessments
     card {
-      sql   = query.aws_codebuild_project_encryption_disabled.sql
+      query   = query.aws_codebuild_project_encryption_disabled
       width = 2
     }
 
     card {
-      sql   = query.aws_codebuild_project_logging_disabled.sql
+      query   = query.aws_codebuild_project_logging_disabled
       width = 2
     }
 
     card {
-      sql   = query.aws_codebuild_project_privileged_mode_disabled.sql
+      query   = query.aws_codebuild_project_privileged_mode_disabled
       width = 2
     }
 
     card {
-      sql   = query.aws_codebuild_project_badge_disabled.sql
+      query   = query.aws_codebuild_project_badge_disabled
       width = 2
     }
 
@@ -48,7 +48,7 @@ dashboard "aws_codebuild_project_dashboard" {
 
     chart {
       title = "Encryption Status"
-      sql   = query.aws_codebuild_project_encryption_status.sql
+      query   = query.aws_codebuild_project_encryption_status
       type  = "donut"
       width = 3
 
@@ -64,7 +64,7 @@ dashboard "aws_codebuild_project_dashboard" {
 
     chart {
       title = "Logging Status"
-      sql   = query.aws_codebuild_project_logging_status.sql
+      query   = query.aws_codebuild_project_logging_status
       type  = "donut"
       width = 3
 
@@ -80,7 +80,7 @@ dashboard "aws_codebuild_project_dashboard" {
 
     chart {
       title = "Privileged Mode Status"
-      sql   = query.aws_codebuild_project_privileged_mode_status.sql
+      query   = query.aws_codebuild_project_privileged_mode_status
       type  = "donut"
       width = 3
 
@@ -96,7 +96,7 @@ dashboard "aws_codebuild_project_dashboard" {
 
     chart {
       title = "Badge Status"
-      sql   = query.aws_codebuild_project_badge_status.sql
+      query   = query.aws_codebuild_project_badge_status
       type  = "donut"
       width = 3
 
@@ -116,11 +116,17 @@ dashboard "aws_codebuild_project_dashboard" {
     title = "Cost"
     width = 6
 
+    table {
+      width = 6
+      title = "Forecast"
+      query   = query.aws_codebuild_project_forecast_table
+    }
+
     chart {
       width = 4
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      sql   = query.aws_codebuild_project_cost_per_month.sql
+      query   = query.aws_codebuild_project_cost_per_month
     }
 
   }
@@ -133,42 +139,42 @@ dashboard "aws_codebuild_project_dashboard" {
 
     chart {
       title = "Projects by Account"
-      sql   = query.aws_codebuild_project_by_account.sql
+      query   = query.aws_codebuild_project_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Projects by Region"
-      sql   = query.aws_codebuild_project_by_region.sql
+      query   = query.aws_codebuild_project_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Projects by Visibility"
-      sql   = query.aws_codebuild_project_by_visibility.sql
+      query   = query.aws_codebuild_project_by_visibility
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Projects by Creation Month"
-      sql   = query.aws_codebuild_project_by_creation_month.sql
+      query   = query.aws_codebuild_project_by_creation_month
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Projects by Environment Type"
-      sql   = query.aws_codebuild_project_by_environment_type.sql
+      query   = query.aws_codebuild_project_by_environment_type
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Projects by Source Type"
-      sql   = query.aws_codebuild_project_by_source_type.sql
+      query   = query.aws_codebuild_project_by_source_type
       type  = "column"
       width = 4
     }
@@ -176,7 +182,6 @@ dashboard "aws_codebuild_project_dashboard" {
   }
 
 }
-
 
 # Card Queries
 
@@ -330,6 +335,46 @@ query "aws_codebuild_project_badge_status" {
 }
 
 // # Cost Queries
+
+query "aws_codebuild_project_forecast_table" {
+  sql = <<-EOQ
+    with monthly_costs as (
+      select
+        period_start,
+        period_end,
+        case
+          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp) then 'Month to Date'
+          when date_trunc('month', period_start) = date_trunc('month', CURRENT_DATE::timestamp - interval '1 month') then 'Previous Month'
+          else to_char (period_start, 'Month')
+        end as period_label,
+        period_end::date - period_start::date as days,
+        sum(unblended_cost_amount)::numeric::money as unblended_cost_amount,
+        (sum(unblended_cost_amount) / (period_end::date - period_start::date ) )::numeric::money as average_daily_cost,
+        date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval ) as days_in_month,
+        sum(unblended_cost_amount) / (period_end::date - period_start::date ) * date_part('days', date_trunc ('month', period_start) + '1 MONTH'::interval  - '1 DAY'::interval )::numeric::money  as forecast_amount
+      from
+        aws_cost_by_service_usage_type_monthly as c
+      where
+        service = 'CodeBuild'
+        and usage_type like '%Build%'
+        -- and date_trunc('month', period_start) >= date_trunc('month', CURRENT_DATE::timestamp - interval '1 month')
+      group by
+        period_start,
+        period_end
+    )
+    select
+      period_label as "Period",
+      unblended_cost_amount as "Cost",
+      average_daily_cost as "Daily Avg Cost"
+    from
+      monthly_costs
+    union all
+    select
+      'This Month (Forecast)' as "Period",
+      (select forecast_amount from monthly_costs where period_label = 'Month to Date') as "Cost",
+      (select average_daily_cost from monthly_costs where period_label = 'Month to Date') as "Daily Avg Cost";
+  EOQ
+}
 
 query "aws_codebuild_project_cost_per_month" {
   sql = <<-EOQ
