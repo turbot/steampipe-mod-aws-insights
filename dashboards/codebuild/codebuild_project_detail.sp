@@ -144,7 +144,7 @@ query "aws_codebuild_project_sources" {
 query "aws_codebuild_project_encrypted" {
   sql = <<-EOQ
     select
-      'Encrypted' as label,
+      'Encryption' as label,
       case when encryption_key is null then 'Disabled' else 'Enabled' end as value,
       case when encryption_key is null then 'alert' else 'ok' end as type
     from
