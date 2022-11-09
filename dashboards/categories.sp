@@ -53,10 +53,10 @@ category "aws_ec2_load_balancer_listener" {
 }
 
 category "aws_ec2_transit_gateway" {
-  icon = local.aws_vpc_endpoint_icon
+  icon = local.aws_ec2_transit_gateway_icon
   fold {
     title     = "EC2 Transit Gateways"
-    icon = local.aws_vpc_endpoint_icon
+    icon = local.aws_ec2_transit_gateway_icon
     threshold = 3
   }
 }
