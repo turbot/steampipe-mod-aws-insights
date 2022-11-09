@@ -52,6 +52,15 @@ category "aws_ec2_load_balancer_listener" {
   }
 }
 
+category "aws_ec2_transit_gateway" {
+  icon = local.aws_ec2_transit_gateway_icon
+  fold {
+    title     = "EC2 Transit Gateways"
+    icon = local.aws_ec2_transit_gateway_icon
+    threshold = 3
+  }
+}
+
 category "aws_ecs_cluster" {
   href = "/aws_insights.dashboard.aws_ecs_cluster_detail?input.ecs_cluster_arn={{.properties.'ARN' | @uri}}"
   fold {
@@ -350,8 +359,10 @@ category "aws_vpc_security_group" {
 
 category "aws_vpc_flow_log" {
   href = "/aws_insights.dashboard.aws_vpc_flow_logs_detail?input.flow_log_id={{.properties.'Flow Log ID' | @uri}}"
+  icon = local.aws_vpc_flow_log_icon
   fold {
     title     = "VPC Flow Logs"
+    icon = local.aws_vpc_flow_log_icon
     threshold = 3
   }
 }
@@ -800,7 +811,26 @@ category "aws_emr_instance_group" {
   }
 }
 
+category "aws_fsx_file_system" {
+  icon = local.aws_fsx_file_system_icon
+  fold {
+    title     = "FSX File Systems"
+    icon = local.aws_fsx_file_system_icon
+    threshold = 3
+  }
+}
+
+category "aws_vpc_peering_connection" {
+  icon = local.aws_vpc_peering_connection_icon
+  fold {
+    title     = "VPC Peering Connections"
+    icon = local.aws_vpc_peering_connection_icon
+    threshold = 3
+  }
+}
+
 graph "aws_graph_categories" {
   type  = "graph"
   title = "Relationships"
 }
+
