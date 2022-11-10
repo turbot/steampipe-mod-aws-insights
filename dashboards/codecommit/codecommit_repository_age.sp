@@ -1,6 +1,6 @@
 dashboard "aws_codecommit_repository_age_report" {
 
-  title         = "AWS Codecommit Age Report"
+  title         = "AWS Codecommit Repository Age Report"
   documentation = file("./dashboards/codecommit/docs/codecommit_repository_report_age.md")
 
   tags = merge(local.codecommit_common_tags, {
@@ -56,7 +56,7 @@ dashboard "aws_codecommit_repository_age_report" {
       display = "none"
     }
 
-    column "Name" {
+    column "Repository ID" {
       href = "${dashboard.aws_codecommit_repository_detail.url_path}?input.codecommit_repository_arn={{.ARN | @uri}}"
     }
     query = query.aws_codecommit_repository_age_table
@@ -127,19 +127,20 @@ query "aws_codecommit_repository_1_year_count" {
 query "aws_codecommit_repository_age_table" {
   sql = <<-EOQ
     select
-      p.repository_name as "Name",
-      now()::date - p.creation_date::date as "Age in Days",
-      p.creation_date as "creation_date Time",
-      p.title as "Account",
-      p.repository_id as "Account ID",
-      p.region as "Region",
-      p.arn as "ARN"
+      r.repository_id as "Repository ID",
+      r.repository_name as "Repository Name",
+      now()::date - r.creation_date::date as "Age in Days",
+      r.creation_date as "Create Time",
+      a.title as "Account",
+      r.account_id as "Account ID",
+      r.region as "Region",
+      r.arn as "ARN"
     from
-      aws_codecommit_repository as p,
+      aws_codecommit_repository as r,
       aws_account as a
     where
-      p.account_id = a.account_id
+      r.account_id = a.account_id
     order by
-      p.arn;
+      r.repository_id;
   EOQ
 }

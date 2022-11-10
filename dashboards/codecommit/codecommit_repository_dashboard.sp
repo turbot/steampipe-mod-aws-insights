@@ -1,6 +1,6 @@
 dashboard "aws_codecommit_repository_dashboard" {
 
-  title         = "AWS Codecommit Dashboard"
+  title         = "AWS Codecommit Repository Dashboard"
   documentation = file("./dashboards/codecommit/docs/codecommit_repository_dashboard.md")
 
   tags = merge(local.codecommit_common_tags, {
@@ -21,6 +21,7 @@ dashboard "aws_codecommit_repository_dashboard" {
       query = query.aws_codecommit_repository_untagged_count
       width = 2
     }
+
     # Costs
     card {
       type  = "info"
@@ -37,7 +38,7 @@ dashboard "aws_codecommit_repository_dashboard" {
     chart {
       title = "Untagged Repository Status"
       type  = "donut"
-      width = 4
+      width = 6
       query = query.aws_codecommit_repository_untagged_count_status
 
       series "count" {
@@ -75,32 +76,26 @@ dashboard "aws_codecommit_repository_dashboard" {
     title = "Analysis"
 
     chart {
-      title = "Tables by Account"
+      title = "Repositories by Account"
       type  = "column"
-      width = 3
+      width = 4
       query   = query.aws_codecommit_repository_by_account
     }
 
     chart {
-      title = "Tables by Region"
+      title = "Repositories by Region"
       type  = "column"
-      width = 3
+      width = 4
       query  = query.aws_codecommit_repository_by_region
     }
 
     chart {
-      title = "Tables by Age"
+      title = "Repositories by Age"
       query   = query.aws_codecommit_repository_by_creation_month
       type  = "column"
-      width = 3
+      width = 4
     }
 
-    chart {
-      title = "Tables by Partition"
-      query   = query.aws_codecommit_repository_by_partition
-      type  = "column"
-      width = 3
-    }
   }
 
 }
@@ -109,7 +104,7 @@ dashboard "aws_codecommit_repository_dashboard" {
 
 query "aws_codecommit_repository_count" {
   sql = <<-EOQ
-    select count(*) as "Tables" from aws_codecommit_repository;
+    select count(*) as "Repositories" from aws_codecommit_repository;
   EOQ
 }
 
@@ -225,8 +220,10 @@ query "aws_codecommit_repository_by_account" {
       aws_account as a
     where
       a.account_id = t.account_id
-    group by account
-    order by account;
+    group by
+      account
+    order by
+      account;
   EOQ
 }
 
@@ -237,20 +234,10 @@ query "aws_codecommit_repository_by_region" {
       count(*) as "tables"
     from
       aws_codecommit_repository
-    group by region
-    order by region;
-  EOQ
-}
-
-query "aws_codecommit_repository_by_partition" {
-  sql = <<-EOQ
-    select
-      partition as "Partition",
-      count(*) as "tables"
-    from
-      aws_codecommit_repository
-    group by partition
-    order by partition;
+    group by
+      region
+    order by
+      region;
   EOQ
 }
 
