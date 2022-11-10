@@ -231,7 +231,7 @@ query "aws_codecommit_repository_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
-      count(*) as "tables"
+      count(*) as "repositories"
     from
       aws_codecommit_repository
     group by
@@ -243,7 +243,7 @@ query "aws_codecommit_repository_by_region" {
 
 query "aws_codecommit_repository_by_creation_month" {
   sql = <<-EOQ
-    with volumes as (
+    with repositories as (
       select
         title,
         creation_date,
@@ -262,27 +262,27 @@ query "aws_codecommit_repository_by_creation_month" {
             select
               min(creation_date)
             from
-              volumes
+              repositories
           )),
           date_trunc('month',
             current_date),
           interval '1 month') as d
     ),
-    tables_by_month as (
+    repositories_by_month as (
       select
         creation_month,
         count(*)
       from
-        volumes
+        repositories
       group by
         creation_month
     )
     select
       months.month,
-      tables_by_month.count
+      repositories_by_month.count
     from
       months
-      left join tables_by_month on months.month = tables_by_month.creation_month
+      left join repositories_by_month on months.month = repositories_by_month.creation_month
     order by
       months.month;
   EOQ
