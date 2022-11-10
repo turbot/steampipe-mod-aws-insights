@@ -12,38 +12,38 @@ dashboard "aws_codepipeline_pipeline_age_report" {
   container {
 
     card {
-      sql   = query.aws_codepipeline_pipeline_count.sql
+      query   = query.aws_codepipeline_pipeline_count
       width = 2
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_codepipeline_pipeline_24_hours_count.sql
+      query   = query.aws_codepipeline_pipeline_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_codepipeline_pipeline_30_days_count.sql
+      query   = query.aws_codepipeline_pipeline_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_codepipeline_pipeline_30_90_days_count.sql
+      query   = query.aws_codepipeline_pipeline_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_codepipeline_pipeline_90_365_days_count.sql
+      query   = query.aws_codepipeline_pipeline_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_codepipeline_pipeline_1_year_count.sql
+      query   = query.aws_codepipeline_pipeline_1_year_count
     }
 
   }
@@ -61,7 +61,7 @@ dashboard "aws_codepipeline_pipeline_age_report" {
       href = "${dashboard.aws_codepipeline_pipeline_detail.url_path}?input.pipeline_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_codepipeline_pipeline_age_table.sql
+    query = query.aws_codepipeline_pipeline_age_table
   }
 
 }
