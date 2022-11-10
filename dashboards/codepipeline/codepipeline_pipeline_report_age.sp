@@ -2,7 +2,7 @@ dashboard "aws_codepipeline_pipeline_age_report" {
 
   title         = "AWS CodePipeline Pipeline Age Report"
   documentation = file("./dashboards/codepipeline/docs/codepipeline_pipeline_report_age.md")
-  
+
 
   tags = merge(local.codepipeline_common_tags, {
     type     = "Report"
@@ -58,7 +58,7 @@ dashboard "aws_codepipeline_pipeline_age_report" {
     }
 
     column "Name" {
-      href = "${dashboard.codepipeline_pipeline_detail.url_path}?input.pipeline_arn={{.ARN | @uri}}"
+      href = "${dashboard.aws_codepipeline_pipeline_detail.url_path}?input.pipeline_arn={{.ARN | @uri}}"
     }
 
     sql = query.aws_codepipeline_pipeline_age_table.sql
