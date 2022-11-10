@@ -63,7 +63,7 @@ dashboard "aws_codecommit_repository_dashboard" {
     }
 
     chart {
-      width = 4
+      width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
       query = query.aws_codecommit_repository_cost_per_month
