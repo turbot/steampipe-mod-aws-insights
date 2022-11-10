@@ -59,14 +59,14 @@ dashboard "aws_codecommit_repository_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      query = query.aws_dynamodb_monthly_forecast_table
+      query = query.aws_codecommit_repository_monthly_forecast_table
     }
 
     chart {
-      width = 6
+      width = 4
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      query = query.aws_dynamodb_table_cost_per_month
+      query = query.aws_codecommit_repository_cost_per_month
     }
 
   }
@@ -97,7 +97,7 @@ dashboard "aws_codecommit_repository_dashboard" {
 
     chart {
       title = "Tables by Partition"
-      query   = query.aws_codecommit_repository_by_creation_month
+      query   = query.aws_codecommit_repository_by_partition
       type  = "column"
       width = 3
     }
@@ -239,6 +239,18 @@ query "aws_codecommit_repository_by_region" {
       aws_codecommit_repository
     group by region
     order by region;
+  EOQ
+}
+
+query "aws_codecommit_repository_by_partition" {
+  sql = <<-EOQ
+    select
+      partition as "Partition",
+      count(*) as "tables"
+    from
+      aws_codecommit_repository
+    group by partition
+    order by partition;
   EOQ
 }
 
