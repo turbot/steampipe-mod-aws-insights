@@ -357,7 +357,7 @@ query "aws_ecr_repository_by_account" {
   sql = <<-EOQ
     select
       a.title as "account",
-      count(p.*) as "projects"
+      count(p.*) as "ecr repositories"
     from
       aws_ecr_repository as p,
       aws_account as a
@@ -374,7 +374,7 @@ query "aws_ecr_repository_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
-      count(*) as "projects"
+      count(*) as "ecr repositories"
     from
       aws_ecr_repository
     group by
@@ -384,23 +384,9 @@ query "aws_ecr_repository_by_region" {
   EOQ
 }
 
-query "aws_ecr_repository_by_visibility" {
-  sql = <<-EOQ
-    select
-      project_visibility as "Visibility",
-      count(*) as "projects"
-    from
-      aws_ecr_repository
-    group by
-      project_visibility
-    order by
-      project_visibility;
-  EOQ
-}
-
 query "aws_ecr_repository_by_creation_month" {
   sql = <<-EOQ
-    with clusters as (
+    with ecr_repositories as (
       select
         title,
         created_at,
@@ -418,26 +404,26 @@ query "aws_ecr_repository_by_creation_month" {
             (
               select
                 min(created_at)
-                from clusters)),
+                from ecr_repositories)),
             date_trunc('month',
               current_date),
             interval '1 month') as d
     ),
-    clusters_by_month as (
+    ecr_repositories_by_month as (
       select
         creation_month,
         count(*)
       from
-        clusters
+        ecr_repositories
       group by
         creation_month
     )
     select
       months.month,
-      clusters_by_month.count
+      ecr_repositories_by_month.count
     from
       months
-      left join clusters_by_month on months.month = clusters_by_month.creation_month
+      left join ecr_repositories_by_month on months.month = ecr_repositories_by_month.creation_month
     order by
       months.month;
   EOQ

@@ -127,19 +127,19 @@ query "aws_ecr_repository_1_year_count" {
 query "aws_ecr_repository_age_table" {
   sql = <<-EOQ
     select
-      p.repository_name as "Name",
-      now()::date - p.created_at::date as "Age in Days",
-      p.created_at as "Created Time",
-      p.title as "Account",
-      p.account_id as "Account ID",
-      p.region as "Region",
-      p.arn as "ARN"
+      e.repository_name as "Name",
+      now()::date - e.created_at::date as "Age in Days",
+      e.created_at as "Created Time",
+      e.title as "Account",
+      e.account_id as "Account ID",
+      e.region as "Region",
+      e.arn as "ARN"
     from
-      aws_ecr_repository as p,
+      aws_ecr_repository as e,
       aws_account as a
     where
-      p.account_id = a.account_id
+      e.account_id = a.account_id
     order by
-      p.arn;
+      e.arn;
   EOQ
 }
