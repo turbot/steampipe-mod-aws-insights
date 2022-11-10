@@ -78,7 +78,7 @@ dashboard "aws_ecr_repository_dashboard" {
     }
 
     chart {
-      title = "Tagging Status"
+      title = "Untagged"
       query   = query.aws_ecr_repository_tagging_status
       type  = "donut"
       width = 3
@@ -182,7 +182,7 @@ query "aws_ecr_repository_tagging_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Tagging Disabled' as label,
+      'Untagged' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       aws_ecr_repository
