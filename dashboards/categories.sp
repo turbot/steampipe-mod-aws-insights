@@ -725,7 +725,9 @@ category "aws_vpc_endpoint" {
 }
 
 category "aws_vpc_internet_gateway" {
-  icon = local.aws_vpc_internet_gateway_icon
+  icon  = local.aws_vpc_internet_gateway_icon
+  color = "purple"
+
   fold {
     title     = "VPC Internet Gateways"
     icon      = local.aws_vpc_internet_gateway_icon
@@ -734,7 +736,8 @@ category "aws_vpc_internet_gateway" {
 }
 
 category "aws_vpc_route_table" {
-  icon = local.aws_vpc_route_table_icon
+  icon  = local.aws_vpc_route_table_icon
+  color = "purple"
   fold {
     title     = "VPC Route Tables"
     icon      = local.aws_vpc_route_table_icon
@@ -743,7 +746,9 @@ category "aws_vpc_route_table" {
 }
 
 category "aws_vpc_nat_gateway" {
-  icon = local.aws_vpc_nat_gateway_icon
+  icon  = local.aws_vpc_nat_gateway_icon
+  color = "purple"
+
   fold {
     title     = "VPC NAT Gateways"
     icon      = local.aws_vpc_nat_gateway_icon
@@ -752,7 +757,9 @@ category "aws_vpc_nat_gateway" {
 }
 
 category "aws_vpc_vpn_gateway" {
-  icon = local.aws_vpc_vpn_gateway_icon
+  icon  = local.aws_vpc_vpn_gateway_icon
+  color = "purple"
+
   fold {
     title     = "VPC VPN Gateways"
     icon      = local.aws_vpc_vpn_gateway_icon
@@ -761,7 +768,9 @@ category "aws_vpc_vpn_gateway" {
 }
 
 category "aws_vpc_network_acl" {
-  icon = local.aws_vpc_network_acl_icon
+  icon  = local.aws_vpc_network_acl_icon
+  color = "purple"
+
   fold {
     title     = "VPC Network ACLs"
     icon      = local.aws_vpc_network_acl_icon
@@ -895,4 +904,43 @@ category "aws_emr_instance_group" {
 graph "aws_graph_categories" {
   type  = "graph"
   title = "Relationships"
+}
+
+
+
+
+
+
+category "aws_fsx_file_system" {
+  icon  = "heroicons-outline:document-duplicate"
+  color = "green"
+
+  fold {
+    title     = "FSX Filesystem"
+    icon = "heroicons-outline:document-duplicate"
+    threshold = 3
+  }
+}
+
+
+category "aws_ec2_transit_gateway" {
+  icon  = "heroicons-outline:arrows-right-left"
+  color = "purple"
+
+  fold {
+    title     = "Transit Gateways"
+    icon      = "heroicons-outline:arrows-right-left"
+    threshold = 3
+  }
+}
+
+category "aws_availability_zone" {
+  icon = "heroicons-outline:building-office"
+  color = "purple"
+
+  fold {
+    title     = "Availability Zones"
+    icon      = "heroicons-outline:building-office"
+    threshold = 3
+  }
 }
