@@ -79,7 +79,7 @@ dashboard "aws_s3_bucket_detail" {
         node.aws_s3_bucket_from_ec2_alb_node,
         node.aws_s3_bucket_from_ec2_nlb_node,
         node.aws_s3_bucket_from_ec2_clb_node,
-        # node.aws_s3_bucket_from_s3_access_point_node,
+        node.aws_s3_bucket_from_s3_access_point_node,
         node.aws_s3_bucket_to_s3_bucket_node
       ]
 
@@ -89,7 +89,7 @@ dashboard "aws_s3_bucket_detail" {
         edge.aws_s3_bucket_from_ec2_alb_edge,
         edge.aws_s3_bucket_from_ec2_nlb_edge,
         edge.aws_s3_bucket_from_ec2_clb_edge,
-        # edge.aws_s3_bucket_from_s3_access_point_edge,
+        edge.aws_s3_bucket_from_s3_access_point_edge,
         edge.aws_s3_bucket_to_s3_bucket_edge
       ]
 
@@ -199,8 +199,12 @@ query "aws_s3_bucket_input" {
   EOQ
 }
 
+category "aws_s3_bucket_no_link" {
+  icon = local.aws_s3_bucket_icon
+}
+
 node "aws_s3_bucket_node" {
-  category = category.aws_s3_bucket
+  category = category.aws_s3_bucket_no_link
 
   sql = <<-EOQ
     select
@@ -251,10 +255,7 @@ edge "aws_s3_bucket_from_cloudtrail_trail_edge" {
   sql = <<-EOQ
     select
       trail.arn as from_id,
-      b.arn as to_id,
-      jsonb_build_object(
-        'Account ID', trail.account_id
-      ) as properties
+      b.arn as to_id
     from
       aws_cloudtrail_trail as trail,
       aws_s3_bucket as b
@@ -296,10 +297,7 @@ edge "aws_s3_bucket_from_s3_bucket_edge" {
   sql = <<-EOQ
     select
       b.arn as to_id,
-      lb.arn as from_id,
-      jsonb_build_object(
-        'Account ID', lb.account_id
-      ) as properties
+      lb.arn as from_id
     from
       aws_s3_bucket as lb,
       aws_s3_bucket as b
@@ -345,8 +343,6 @@ edge "aws_s3_bucket_from_ec2_alb_edge" {
       alb.arn as from_id,
       b.arn as to_id,
       jsonb_build_object(
-        'Account ID', alb.account_id,
-        'Log to', attributes ->> 'Value',
         'Log Prefix', (
           select
             a ->> 'Value'
@@ -404,8 +400,6 @@ edge "aws_s3_bucket_from_ec2_nlb_edge" {
       nlb.arn as from_id,
       b.arn as to_id,
       jsonb_build_object(
-        'Account ID', nlb.account_id,
-        'logs to', attributes ->> 'Value',
         'Log Prefix', (
           select
             a ->> 'Value'
@@ -461,7 +455,6 @@ edge "aws_s3_bucket_from_ec2_clb_edge" {
       clb.arn as from_id,
       b.arn as to_id,
       jsonb_build_object(
-        'Account ID', clb.account_id,
         'Log Prefix', clb.access_log_s3_bucket_prefix
       ) as properties
     from
@@ -506,10 +499,7 @@ edge "aws_s3_bucket_from_s3_access_point_edge" {
   sql = <<-EOQ
     select
       ap.access_point_arn as from_id,
-      b.arn as to_id,
-      jsonb_build_object(
-        'Account ID', ap.account_id
-      ) as properties
+      b.arn as to_id
     from
       aws_s3_access_point ap,
       aws_s3_bucket as b
@@ -552,10 +542,7 @@ edge "aws_s3_bucket_to_s3_bucket_edge" {
   sql = <<-EOQ
     select
       b.arn as from_id,
-      lb.arn as to_id,
-      jsonb_build_object(
-        'Account ID', lb.account_id
-      ) as properties
+      lb.arn as to_id
     from
       aws_s3_bucket as lb,
       aws_s3_bucket as b
