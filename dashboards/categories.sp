@@ -6,8 +6,9 @@ category "aws_docdb_cluster" {
 }
 
 category "aws_ec2_classic_load_balancer" {
-  href = "/aws_insights.dashboard.aws_ec2_classic_load_balancer_detail?input.clb={{.properties.'ARN' | @uri}}"
-  icon = local.aws_ec2_classic_load_balancer_icon
+  href  = "/aws_insights.dashboard.aws_ec2_classic_load_balancer_detail?input.clb={{.properties.'ARN' | @uri}}"
+  color = "orange"
+  icon  = local.aws_ec2_classic_load_balancer_icon
   fold {
     title     = "EC2 Classic Load Balancers"
     icon      = local.aws_ec2_classic_load_balancer_icon
@@ -16,8 +17,9 @@ category "aws_ec2_classic_load_balancer" {
 }
 
 category "aws_ec2_application_load_balancer" {
-  href = "/aws_insights.dashboard.aws_ec2_application_load_balancer_detail?input.alb={{.properties.'ARN' | @uri}}"
-  icon = local.aws_ec2_application_load_balancer_icon
+  href  = "/aws_insights.dashboard.aws_ec2_application_load_balancer_detail?input.alb={{.properties.'ARN' | @uri}}"
+  color = "orange"
+  icon  = local.aws_ec2_application_load_balancer_icon
   fold {
     title     = "EC2 Application Load Balancers"
     icon      = local.aws_ec2_application_load_balancer_icon
@@ -26,8 +28,9 @@ category "aws_ec2_application_load_balancer" {
 }
 
 category "aws_ec2_network_load_balancer" {
-  href = "/aws_insights.dashboard.aws_ec2_network_load_balancer_detail?input.nlb={{.properties.'ARN' | @uri}}"
-  icon = local.aws_ec2_network_load_balancer_icon
+  href  = "/aws_insights.dashboard.aws_ec2_network_load_balancer_detail?input.nlb={{.properties.'ARN' | @uri}}"
+  color = "orange"
+  icon  = local.aws_ec2_network_load_balancer_icon
   fold {
     title     = "EC2 Network Load Balancers"
     icon      = local.aws_ec2_network_load_balancer_icon
@@ -36,8 +39,9 @@ category "aws_ec2_network_load_balancer" {
 }
 
 category "aws_ec2_gateway_load_balancer" {
-  href = "/aws_insights.dashboard.aws_ec2_gateway_load_balancer_detail?input.glb={{.properties.'ARN' | @uri}}"
-  icon = local.aws_ec2_gateway_load_balancer_icon
+  href  = "/aws_insights.dashboard.aws_ec2_gateway_load_balancer_detail?input.glb={{.properties.'ARN' | @uri}}"
+  color = "orange"
+  icon  = local.aws_ec2_gateway_load_balancer_icon
   fold {
     title     = "EC2 Gateway Load Balancers"
     icon      = local.aws_ec2_gateway_load_balancer_icon
@@ -46,6 +50,7 @@ category "aws_ec2_gateway_load_balancer" {
 }
 
 category "aws_ec2_load_balancer_listener" {
+  color = "orange"
   fold {
     title     = "EC2 Load Balancer Listeners"
     threshold = 3
@@ -53,10 +58,11 @@ category "aws_ec2_load_balancer_listener" {
 }
 
 category "aws_ec2_transit_gateway" {
-  icon = local.aws_ec2_transit_gateway_icon
+  color = "orange"
+  icon  = local.aws_ec2_transit_gateway_icon
   fold {
     title     = "EC2 Transit Gateways"
-    icon = local.aws_ec2_transit_gateway_icon
+    icon      = local.aws_ec2_transit_gateway_icon
     threshold = 3
   }
 }
@@ -152,8 +158,9 @@ category "aws_cloudtrail_trail" {
 }
 
 category "aws_ebs_volume" {
-  href = "/aws_insights.dashboard.aws_ebs_volume_detail?input.volume_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_ebs_volume_icon
+  href  = "/aws_insights.dashboard.aws_ebs_volume_detail?input.volume_arn={{.properties.'ARN' | @uri}}"
+  color = "green"
+  icon  = local.aws_ebs_volume_icon
   fold {
     title     = "EBS Volumes"
     icon      = local.aws_ebs_volume_icon
@@ -162,8 +169,9 @@ category "aws_ebs_volume" {
 }
 
 category "aws_ebs_snapshot" {
-  href = "/aws_insights.dashboard.aws_ebs_snapshot_detail?input.snapshot_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_ebs_snapshot_icon
+  href  = "/aws_insights.dashboard.aws_ebs_snapshot_detail?input.snapshot_arn={{.properties.'ARN' | @uri}}"
+  color = "green"
+  icon  = local.aws_ebs_snapshot_icon
   fold {
     title     = "EBS Snapshots"
     icon      = local.aws_ebs_snapshot_icon
@@ -259,8 +267,9 @@ category "aws_redshift_parameter_group" {
 }
 
 category "aws_ec2_ami" {
-  href = "aws_insights.dashboard.aws_ec2_ami_detail?input.ami={{.properties.'Image ID' | @uri}}"
-  icon = local.aws_ec2_ami_icon
+  href  = "aws_insights.dashboard.aws_ec2_ami_detail?input.ami={{.properties.'Image ID' | @uri}}"
+  color = "orange"
+  icon  = local.aws_ec2_ami_icon
   fold {
     title     = "EC2 AMIs"
     icon      = local.aws_ec2_ami_icon
@@ -269,6 +278,7 @@ category "aws_ec2_ami" {
 }
 
 category "aws_ec2_autoscaling_group" {
+  color = "orange"
   fold {
     title     = "EC2 Autoscaling Groups"
     threshold = 3
@@ -276,6 +286,7 @@ category "aws_ec2_autoscaling_group" {
 }
 
 category "aws_ec2_target_group" {
+  color = "orange"
   fold {
     title     = "EC2 Autoscaling Groups"
     threshold = 3
@@ -283,6 +294,7 @@ category "aws_ec2_target_group" {
 }
 
 category "aws_ec2_key_pair" {
+  color = "orange"
   fold {
     title     = "EC2 Key Pair"
     threshold = 3
@@ -321,8 +333,9 @@ category "aws_efs_mount_target" {
 }
 
 category "aws_ec2_instance" {
-  href = "/aws_insights.dashboard.aws_ec2_instance_detail?input.instance_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_ec2_instance_icon
+  href  = "/aws_insights.dashboard.aws_ec2_instance_detail?input.instance_arn={{.properties.'ARN' | @uri}}"
+  color = "orange"
+  icon  = local.aws_ec2_instance_icon
   fold {
     title     = "EC2 Instances"
     icon      = local.aws_ec2_instance_icon
@@ -331,8 +344,9 @@ category "aws_ec2_instance" {
 }
 
 category "aws_ec2_network_interface" {
-  href = "/aws_insights.dashboard.aws_ec2_network_interface_detail?input.network_interface_id={{.properties.'Interface ID' | @uri}}"
-  icon = local.aws_ec2_network_interface_icon
+  href  = "/aws_insights.dashboard.aws_ec2_network_interface_detail?input.network_interface_id={{.properties.'Interface ID' | @uri}}"
+  color = "orange"
+  icon  = local.aws_ec2_network_interface_icon
   fold {
     title     = "EC2 Network Interfaces"
     icon      = local.aws_ec2_network_interface_icon
@@ -341,7 +355,8 @@ category "aws_ec2_network_interface" {
 }
 
 category "aws_vpc" {
-  href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.properties.'VPC ID' | @uri}}"
+  href  = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.properties.'VPC ID' | @uri}}"
+  color = "purple"
   fold {
     title     = "VPCs"
     threshold = 3
@@ -350,7 +365,8 @@ category "aws_vpc" {
 
 
 category "aws_vpc_security_group" {
-  href = "/aws_insights.dashboard.aws_vpc_security_group_detail?input.security_group_id={{.properties.'Group ID' | @uri}}"
+  href  = "/aws_insights.dashboard.aws_vpc_security_group_detail?input.security_group_id={{.properties.'Group ID' | @uri}}"
+  color = "purple"
   fold {
     title     = "VPC Security Groups"
     threshold = 3
@@ -358,18 +374,20 @@ category "aws_vpc_security_group" {
 }
 
 category "aws_vpc_flow_log" {
-  href = "/aws_insights.dashboard.aws_vpc_flow_logs_detail?input.flow_log_id={{.properties.'Flow Log ID' | @uri}}"
-  icon = local.aws_vpc_flow_log_icon
+  href  = "/aws_insights.dashboard.aws_vpc_flow_logs_detail?input.flow_log_id={{.properties.'Flow Log ID' | @uri}}"
+  color = "purple"
+  icon  = local.aws_vpc_flow_log_icon
   fold {
     title     = "VPC Flow Logs"
-    icon = local.aws_vpc_flow_log_icon
+    icon      = local.aws_vpc_flow_log_icon
     threshold = 3
   }
 }
 
 category "aws_iam_role" {
-  href = "/aws_insights.dashboard.aws_iam_role_detail?input.role_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_iam_role_icon
+  href  = "/aws_insights.dashboard.aws_iam_role_detail?input.role_arn={{.properties.'ARN' | @uri}}"
+  color = "red"
+  icon  = local.aws_iam_role_icon
   fold {
     title     = "IAM Roles"
     icon      = local.aws_iam_role_icon
@@ -388,7 +406,8 @@ category "aws_emr_instance" {
 }
 
 category "aws_iam_policy" {
-  href = "/aws_insights.dashboard.aws_iam_policy_detail?input.policy_arn={{.properties.'ARN' | @uri}}"
+  href  = "/aws_insights.dashboard.aws_iam_policy_detail?input.policy_arn={{.properties.'ARN' | @uri}}"
+  color = "red"
   fold {
     title     = "IAM Policies"
     threshold = 3
@@ -396,8 +415,9 @@ category "aws_iam_policy" {
 }
 
 category "aws_iam_user" {
-  href = "/aws_insights.dashboard.aws_iam_user_detail?input.user_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_iam_user_icon
+  href  = "/aws_insights.dashboard.aws_iam_user_detail?input.user_arn={{.properties.'ARN' | @uri}}"
+  color = "red"
+  icon  = local.aws_iam_user_icon
   fold {
     title     = "IAM Users"
     icon      = local.aws_iam_user_icon
@@ -406,7 +426,8 @@ category "aws_iam_user" {
 }
 
 category "aws_iam_group" {
-  href = "/aws_insights.dashboard.aws_iam_group_detail?input.group_arn={{.properties.'ARN' | @uri}}"
+  href  = "/aws_insights.dashboard.aws_iam_group_detail?input.group_arn={{.properties.'ARN' | @uri}}"
+  color = "red"
   fold {
     title     = "IAM Groups"
     threshold = 3
@@ -414,6 +435,7 @@ category "aws_iam_group" {
 }
 
 category "aws_iam_instance_profile" {
+  color = "red"
   fold {
     title     = "IAM Instance Profiles"
     threshold = 3
@@ -421,6 +443,7 @@ category "aws_iam_instance_profile" {
 }
 
 category "aws_iam_access_key" {
+  color = "red"
   fold {
     title     = "IAM Access Key"
     threshold = 3
@@ -428,6 +451,7 @@ category "aws_iam_access_key" {
 }
 
 category "aws_iam_profile" {
+  color = "red"
   fold {
     title     = "IAM Profiles"
     threshold = 3
@@ -455,7 +479,8 @@ category "aws_emr_cluster" {
 }
 
 category "aws_vpc_subnet" {
-  href = "/aws_insights.dashboard.aws_vpc_subnet_detail?input.subnet_id={{.properties.'Subnet ID' | @uri}}"
+  href  = "/aws_insights.dashboard.aws_vpc_subnet_detail?input.subnet_id={{.properties.'Subnet ID' | @uri}}"
+  color = "purple"
   fold {
     title     = "VPC Subnets"
     threshold = 3
@@ -480,8 +505,9 @@ category "aws_elasticache_subnet_group" {
 }
 
 category "aws_vpc_eip" {
-  href = "/aws_insights.dashboard.aws_vpc_eip_detail?input.eip_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_vpc_eip_icon
+  href  = "/aws_insights.dashboard.aws_vpc_eip_detail?input.eip_arn={{.properties.'ARN' | @uri}}"
+  color = "purple"
+  icon  = local.aws_vpc_eip_icon
   fold {
     title     = "VPC EIPs"
     icon      = local.aws_vpc_eip_icon
@@ -635,7 +661,8 @@ category "aws_kinesis_stream" {
 }
 
 category "aws_vpc_endpoint" {
-  icon = local.aws_vpc_endpoint_icon
+  color = "purple"
+  icon  = local.aws_vpc_endpoint_icon
   fold {
     title     = "VPC Endpoints"
     icon      = local.aws_vpc_endpoint_icon
@@ -644,7 +671,8 @@ category "aws_vpc_endpoint" {
 }
 
 category "aws_vpc_internet_gateway" {
-  icon = local.aws_vpc_internet_gateway_icon
+  color = "purple"
+  icon  = local.aws_vpc_internet_gateway_icon
   fold {
     title     = "VPC Internet Gateways"
     icon      = local.aws_vpc_internet_gateway_icon
@@ -653,7 +681,8 @@ category "aws_vpc_internet_gateway" {
 }
 
 category "aws_vpc_route_table" {
-  icon = local.aws_vpc_route_table_icon
+  color = "purple"
+  icon  = local.aws_vpc_route_table_icon
   fold {
     title     = "VPC Route Tables"
     icon      = local.aws_vpc_route_table_icon
@@ -662,7 +691,8 @@ category "aws_vpc_route_table" {
 }
 
 category "aws_vpc_nat_gateway" {
-  icon = local.aws_vpc_nat_gateway_icon
+  color = "purple"
+  icon  = local.aws_vpc_nat_gateway_icon
   fold {
     title     = "VPC NAT Gateways"
     icon      = local.aws_vpc_nat_gateway_icon
@@ -671,7 +701,8 @@ category "aws_vpc_nat_gateway" {
 }
 
 category "aws_vpc_vpn_gateway" {
-  icon = local.aws_vpc_vpn_gateway_icon
+  color = "purple"
+  icon  = local.aws_vpc_vpn_gateway_icon
   fold {
     title     = "VPC VPN Gateways"
     icon      = local.aws_vpc_vpn_gateway_icon
@@ -680,7 +711,8 @@ category "aws_vpc_vpn_gateway" {
 }
 
 category "aws_vpc_network_acl" {
-  icon = local.aws_vpc_network_acl_icon
+  color = "purple"
+  icon  = local.aws_vpc_network_acl_icon
   fold {
     title     = "VPC Network ACLs"
     icon      = local.aws_vpc_network_acl_icon
@@ -740,6 +772,7 @@ category "aws_sfn_state_machine" {
 }
 
 category "aws_ec2_launch_configuration" {
+  color = "orange"
   fold {
     title     = "EC2 Launch Configurations"
     threshold = 3
@@ -815,16 +848,17 @@ category "aws_fsx_file_system" {
   icon = local.aws_fsx_file_system_icon
   fold {
     title     = "FSX File Systems"
-    icon = local.aws_fsx_file_system_icon
+    icon      = local.aws_fsx_file_system_icon
     threshold = 3
   }
 }
 
 category "aws_vpc_peering_connection" {
-  icon = local.aws_vpc_peering_connection_icon
+  color = "purple"
+  icon  = local.aws_vpc_peering_connection_icon
   fold {
     title     = "VPC Peering Connections"
-    icon = local.aws_vpc_peering_connection_icon
+    icon      = local.aws_vpc_peering_connection_icon
     threshold = 3
   }
 }
