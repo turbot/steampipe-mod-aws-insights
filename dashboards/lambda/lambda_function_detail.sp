@@ -71,6 +71,7 @@ dashboard "aws_lambda_function_detail" {
         node.aws_lambda_alias_node,
         node.aws_lambda_from_sns_subscription_node,
         node.aws_lambda_from_sns_topic_node,
+        node.aws_lambda_from_api_gateway_integration_node,
         node.aws_lambda_from_api_gateway_node,
 
 
@@ -88,6 +89,7 @@ dashboard "aws_lambda_function_detail" {
         edge.aws_lambda_alias_edge,
         edge.aws_lambda_sns_subscription_edge,
         edge.aws_lambda_sns_topic_edge,
+        edge.aws_lambda_api_gateway_integration_edge,
         edge.aws_lambda_api_gateway_edge,
 
       ]
@@ -806,7 +808,7 @@ node "aws_lambda_from_sns_subscription_node" {
   sql = <<-EOQ
     select
       subscription_arn as id,
-      left(title, 30) as title,
+      split_part(title, '-', 1) as title,
       jsonb_build_object(
         'ARN', subscription_arn,
         'Endpoint', endpoint,
@@ -817,7 +819,11 @@ node "aws_lambda_from_sns_subscription_node" {
       aws_sns_topic_subscription
     where
       protocol = 'lambda'
-      and endpoint = $1
+      and (
+        endpoint = $1 
+        or endpoint like $1 || ':%'
+      )
+      
   EOQ
 
   param "arn" {}
@@ -838,13 +844,60 @@ edge "aws_lambda_sns_subscription_edge" {
       aws_sns_topic_subscription
     where
       protocol = 'lambda'
-      and endpoint = $1
+      and (
+        endpoint = $1 
+        or endpoint like $1 || ':%'
+      )
   EOQ
 
   param "arn" {}
 }
 
 
+
+node "aws_lambda_from_api_gateway_integration_node" {
+  category = category.aws_api_gatewayv2_integration
+
+  sql = <<-EOQ
+    select
+      i.integration_id as id,
+      i.title as title,
+      jsonb_build_object(
+        'ID', i.integration_id,
+        'ARN', i.arn,
+        'Integration Method', i.integration_method,
+        'Integration Type', i.integration_type,        
+        'Integration URI', i.integration_URI,
+        'Region', i.region,
+        'Account ID', i.account_id
+      ) as properties
+    from
+      aws_api_gatewayv2_integration as i
+    where
+      i.integration_uri = $1
+  EOQ
+
+  param "arn" {}
+}
+
+
+
+
+edge "aws_lambda_api_gateway_integration_edge" {
+  title = "invokes"
+
+  sql = <<-EOQ
+    select
+     i.integration_id as from_id,
+     i.integration_uri as to_id
+    from
+      aws_api_gatewayv2_integration as i
+    where
+      i.integration_uri = $1
+  EOQ
+
+  param "arn" {}
+}
 
 
 node "aws_lambda_from_api_gateway_node" {
@@ -874,14 +927,13 @@ node "aws_lambda_from_api_gateway_node" {
 
 
 
-
 edge "aws_lambda_api_gateway_edge" {
-  title = "invokes"
+  title = "integration"
 
   sql = <<-EOQ
     select
      api.api_id as from_id,
-     i.integration_uri as to_id
+     i.integration_id as to_id
     from
       aws_api_gatewayv2_integration as i,
       aws_api_gatewayv2_api as api
@@ -892,3 +944,4 @@ edge "aws_lambda_api_gateway_edge" {
 
   param "arn" {}
 }
+

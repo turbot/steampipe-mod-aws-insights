@@ -944,3 +944,40 @@ category "aws_availability_zone" {
     threshold = 3
   }
 }
+
+
+
+category "aws_account" {
+  icon = "heroicons-outline:globe-alt"
+  color = "orange"
+
+  fold {
+    title     = "Accounts"
+    icon      = "heroicons-outline:globe-alt"
+    threshold = 3
+  }
+}
+
+
+category "aws_region" {
+  icon = "heroicons-outline:globe-americas"
+  color = "orange"
+
+  fold {
+    title     = "Regions"
+    icon      = "heroicons-outline:globe-americas"
+    threshold = 3
+  }
+}
+
+
+category "aws_api_gatewayv2_integration" {
+  icon  = "heroicons-outline:puzzle-piece"
+  color = "red"
+
+  fold {
+    icon       = "heroicons-outline:bolt"
+    title      = "API Gatewayv2 puzzle-piece"
+    threshold  = 3
+  }
+}
