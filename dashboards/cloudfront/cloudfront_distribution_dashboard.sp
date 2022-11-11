@@ -45,7 +45,7 @@ dashboard "aws_cloudfront_distribution_dashboard" {
       title = "Logging Status"
       query   = query.aws_cloudfront_distribution_logging_status
       type  = "donut"
-      width = 4
+      width = 3
 
       series "count" {
         point "Enabled" {
@@ -61,7 +61,7 @@ dashboard "aws_cloudfront_distribution_dashboard" {
       title = "SNI Status"
       query   = query.aws_cloudfront_distribution_sni_status
       type  = "donut"
-      width = 4
+      width = 3
 
       series "count" {
         point "Enabled" {
@@ -77,7 +77,7 @@ dashboard "aws_cloudfront_distribution_dashboard" {
       title = "Encryption in Transit Status"
       query   = query.aws_cloudfront_distribution_encryption_in_transit_status
       type  = "donut"
-      width = 4
+      width = 3
 
       series "count" {
         point "Enabled" {
@@ -93,7 +93,7 @@ dashboard "aws_cloudfront_distribution_dashboard" {
       title = "WAF Status"
       query   = query.aws_cloudfront_distribution_waf_status
       type  = "donut"
-      width = 4
+      width = 3
 
       series "count" {
         point "Enabled" {
@@ -250,7 +250,7 @@ query "aws_cloudfront_distribution_waf_status" {
     select
       case when web_acl_id = '' then 'Disabled' else 'Enabled' end as waf_status,
       count(*)
-    from 
+    from
       aws_cloudfront_distribution
     group by
       waf_status
