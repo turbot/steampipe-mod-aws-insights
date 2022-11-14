@@ -210,13 +210,18 @@ query "aws_ecs_service_tags" {
   param "arn" {}
 }
 
+category "aws_ecs_service_no_link" {
+  color = "orange"
+  icon  = local.aws_ecs_service_icon
+}
+
 node "aws_ecs_service_node" {
-  category = category.aws_ecs_service
+  category = category.aws_ecs_service_no_link
 
   sql = <<-EOQ
     select
       arn as id,
-      service_name as title,
+      title as title,
       jsonb_build_object(
         'ARN', arn,
         'Status', status,
@@ -281,7 +286,7 @@ node "aws_ecs_service_to_iam_role_node" {
   sql = <<-EOQ
     select
       r.arn as id,
-      r.name as title,
+      r.title as title,
       jsonb_build_object(
         'ARN', r.arn,
         'Create Date', r.create_date,
@@ -289,10 +294,7 @@ node "aws_ecs_service_to_iam_role_node" {
       ) as properties
     from
       aws_ecs_service as s
-      left join
-        aws_iam_role as r
-        on r.arn = s.role_arn
-        and s.arn = $1;
+      left join aws_iam_role as r on r.arn = s.role_arn and s.arn = $1;
   EOQ
 
   param "arn" {}
@@ -307,10 +309,7 @@ edge "aws_ecs_service_to_iam_role_edge" {
       s.role_arn as to_id
     from
       aws_ecs_service as s
-      left join
-        aws_iam_role as r
-        on r.arn = s.role_arn
-        and s.arn = $1;
+      left join aws_iam_role as r on r.arn = s.role_arn and s.arn = $1;
   EOQ
 
   param "arn" {}
@@ -322,7 +321,7 @@ node "aws_ecs_service_to_ec2_target_group_node" {
   sql = <<-EOQ
     select
       t.target_group_arn as id,
-      t.target_group_name as title,
+      t.title as title,
       jsonb_build_object(
         'ARN', t.target_group_arn,
         'VPC ID', t.vpc_id,
@@ -333,9 +332,7 @@ node "aws_ecs_service_to_ec2_target_group_node" {
     from
       aws_ecs_service as s,
       jsonb_array_elements(load_balancers) as l
-      left join
-        aws_ec2_target_group as t
-        on t.target_group_arn = l ->> 'TargetGroupArn'
+      left join aws_ec2_target_group as t on t.target_group_arn = l ->> 'TargetGroupArn'
     where
       s.arn = $1;
   EOQ
@@ -353,9 +350,7 @@ edge "aws_ecs_service_to_ec2_target_group_edge" {
     from
       aws_ecs_service as s,
       jsonb_array_elements(load_balancers) as l
-      left join
-        aws_ec2_target_group as t
-        on t.target_group_arn = l ->> 'TargetGroupArn'
+      left join aws_ec2_target_group as t on t.target_group_arn = l ->> 'TargetGroupArn'
     where
       s.arn = $1;
   EOQ
@@ -369,18 +364,16 @@ node "aws_ecs_service_from_ecs_cluster_node" {
   sql = <<-EOQ
     select
       c.cluster_arn as id,
-      c.cluster_name as title,
+      c.title as title,
       jsonb_build_object(
         'ARN', c.cluster_arn,
         'Status', c.status,
         'Account ID', c.account_id,
-        'Region', c.region ) as properties
+        'Region', c.region
+      ) as properties
     from
       aws_ecs_service as s
-      left join
-        aws_ecs_cluster as c
-        on s.cluster_arn = c.cluster_arn
-        and s.arn = $1;
+      left join aws_ecs_cluster as c on s.cluster_arn = c.cluster_arn and s.arn = $1;
   EOQ
 
   param "arn" {}
@@ -395,10 +388,7 @@ edge "aws_ecs_service_from_ecs_cluster_edge" {
       s.arn to_id
     from
       aws_ecs_service as s
-      left join
-        aws_ecs_cluster as c
-        on s.cluster_arn = c.cluster_arn
-        and s.arn = $1;
+      left join aws_ecs_cluster as c on s.cluster_arn = c.cluster_arn and s.arn = $1;
   EOQ
 
   param "arn" {}
@@ -414,16 +404,14 @@ node "aws_ecs_service_to_ecs_container_instance_node" {
       jsonb_build_object(
         'ARN', i.arn,
         'Instance ID', i.ec2_instance_id,
-        'Status', i.status
+        'Status', i.status,
+        'Account ID', i.account_id,
+        'Region', i.region
       ) as properties
     from
       aws_ecs_service as s
-      left join
-        aws_ecs_container_instance as i
-        on s.cluster_arn = i.cluster_arn
-      left join
-        aws_ec2_instance as e
-        on i.ec2_instance_id = e.instance_id
+      left join aws_ecs_container_instance as i on s.cluster_arn = i.cluster_arn
+      left join aws_ec2_instance as e on i.ec2_instance_id = e.instance_id
     where
       s.arn = $1;
   EOQ
@@ -440,12 +428,8 @@ edge "aws_ecs_service_to_ecs_container_instance_edge" {
       i.arn as to_id
     from
       aws_ecs_service as s
-      left join
-        aws_ecs_container_instance as i
-        on s.cluster_arn = i.cluster_arn
-      left join
-        aws_ec2_instance as e
-        on i.ec2_instance_id = e.instance_id
+      left join aws_ecs_container_instance as i on s.cluster_arn = i.cluster_arn
+      left join aws_ec2_instance as e on i.ec2_instance_id = e.instance_id
     where
       s.arn = $1;
   EOQ
@@ -469,9 +453,7 @@ node "aws_ecs_service_to_vpc_subnet_node" {
     from
       aws_ecs_service as e,
       jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
-      left join
-        aws_vpc_subnet as sb
-        on sb.subnet_id = trim((s::text ), '""')
+      left join aws_vpc_subnet as sb on sb.subnet_id = trim((s::text ), '""')
     where
       e.arn = $1
       and e.network_configuration is not null;
@@ -490,9 +472,7 @@ edge "aws_ecs_service_to_vpc_subnet_edge" {
     from
       aws_ecs_service as e,
       jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
-      left join
-        aws_vpc_subnet as sb
-        on sb.subnet_id = trim((s::text ), '""')
+      left join aws_vpc_subnet as sb on sb.subnet_id = trim((s::text ), '""')
     where
       e.arn = $1
       and e.network_configuration is not null;
@@ -517,9 +497,7 @@ node "aws_ecs_service_vpc_subnet_to_vpc_node" {
     from
       aws_ecs_service as e,
       jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
-      left join
-        aws_vpc_subnet as sb
-        on sb.subnet_id = trim((s::text ), '""'),
+      left join aws_vpc_subnet as sb on sb.subnet_id = trim((s::text ), '""'),
       aws_vpc as v
     where
       e.arn = $1
@@ -540,9 +518,7 @@ edge "aws_ecs_service_vpc_subnet_to_vpc_edge" {
     from
       aws_ecs_service as e,
       jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
-      left join
-        aws_vpc_subnet as sb
-        on sb.subnet_id = trim((s::text ), '""'),
+      left join aws_vpc_subnet as sb on sb.subnet_id = trim((s::text ), '""'),
       aws_vpc as v
     where
       e.arn = $1

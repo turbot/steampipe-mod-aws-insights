@@ -239,18 +239,25 @@ query "aws_glb_state" {
   param "arn" {}
 }
 
+category "aws_ec2_gateway_load_balancer_no_link" {
+  color = "orange"
+  icon  = local.aws_ec2_gateway_load_balancer_icon
+}
+
 node "aws_ec2_gateway_load_balancer_node" {
-  category = category.aws_ec2_gateway_load_balancer
+  category = category.aws_ec2_gateway_load_balancer_no_link
 
   sql = <<-EOQ
     select
       arn as id,
-      name as title,
+      title as title,
       jsonb_build_object(
         'ARN', arn,
+        'State Code', state_code,
         'Account ID', account_id,
         'Region', region,
-        'DNS Name', dns_name
+        'DNS Name', dns_name,
+        'VPC ID', vpc_id
       ) as properties
     from
       aws_ec2_gateway_load_balancer
@@ -297,10 +304,7 @@ edge "aws_ec2_glb_to_vpc_security_group_edge" {
   sql = <<-EOQ
     select
       glb.arn as from_id,
-      sg.arn as to_id,
-      jsonb_build_object(
-        'Account ID', sg.account_id
-      ) as properties
+      sg.arn as to_id
     from
       aws_vpc_security_group sg,
       aws_ec2_gateway_load_balancer as glb
@@ -349,18 +353,7 @@ edge "aws_ec2_glb_to_s3_bucket_edge" {
   sql = <<-EOQ
     select
       glb.arn as from_id,
-      b.arn as to_id,
-      jsonb_build_object(
-        'Account ID', glb.account_id,
-        'Log Prefix', (
-          select
-            a ->> 'Value'
-          from
-            jsonb_array_elements(glb.load_balancer_attributes) as a
-          where
-            a ->> 'Key' = 'access_logs.s3.prefix'
-        )
-      ) as properties
+      b.arn as to_id
     from
       aws_s3_bucket b,
       aws_ec2_gateway_load_balancer as glb,
@@ -404,10 +397,7 @@ edge "aws_ec2_glb_vpc_security_group_to_vpc_edge" {
   sql = <<-EOQ
     select
       sg.arn as from_id,
-      vpc.vpc_id as to_id,
-      jsonb_build_object(
-        'Account ID', vpc.account_id
-      ) as properties
+      vpc.vpc_id as to_id
     from
       aws_vpc vpc,
       aws_ec2_gateway_load_balancer as glb

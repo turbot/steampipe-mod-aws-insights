@@ -291,15 +291,22 @@ query "aws_nlb_scheme" {
   param "arn" {}
 }
 
+category "aws_ec2_network_load_balancer_no_link" {
+  color = "orange"
+  icon  = local.aws_ec2_network_load_balancer_icon
+}
+
 node "aws_ec2_network_load_balancer_node" {
-  category = category.aws_ec2_network_load_balancer
+  category = category.aws_ec2_network_load_balancer_no_link
 
   sql = <<-EOQ
     select
       arn as id,
-      name as title,
+      title as title,
       jsonb_build_object(
         'ARN', arn,
+        'VPC ID', vpc_id,
+        'State Code', state_code,
         'Account ID', account_id,
         'Region', region,
         'DNS Name', dns_name
@@ -349,10 +356,7 @@ edge "aws_ec2_nlb_to_vpc_security_group_edge" {
   sql = <<-EOQ
     select
       nlb.arn as from_id,
-      sg.arn as to_id,
-      jsonb_build_object(
-        'Account ID', sg.account_id
-      ) as properties
+      sg.arn as to_id
     from
       aws_vpc_security_group sg,
       aws_ec2_network_load_balancer as nlb
@@ -373,23 +377,23 @@ node "aws_ec2_nlb_to_s3_bucket_node" {
 
   sql = <<-EOQ
     select
-      buckets.arn as id,
-      buckets.title as title,
+      b.arn as id,
+      b.title as title,
       jsonb_build_object(
-        'Name', buckets.name,
-        'ARN', buckets.arn,
+        'Name', b.name,
+        'ARN', b.arn,
         'Account ID', nlb.account_id,
         'Region', nlb.region,
         'Logs to', attributes ->> 'Value'
       ) as properties
     from
-      aws_s3_bucket buckets,
+      aws_s3_bucket b,
       aws_ec2_network_load_balancer as nlb,
       jsonb_array_elements(nlb.load_balancer_attributes) attributes
     where
       nlb.arn = $1
       and attributes ->> 'Key' = 'access_logs.s3.bucket'
-      and buckets.name = attributes ->> 'Value';
+      and b.name = attributes ->> 'Value';
   EOQ
 
   param "arn" {}
@@ -401,18 +405,7 @@ edge "aws_ec2_nlb_to_s3_bucket_edge" {
   sql = <<-EOQ
     select
       nlb.arn as from_id,
-      buckets.arn as to_id,
-      jsonb_build_object(
-        'Account ID', nlb.account_id,
-        'Log Prefix', (
-          select
-            a ->> 'Value'
-          from
-            jsonb_array_elements(nlb.load_balancer_attributes) as a
-          where
-            a ->> 'Key' = 'access_logs.s3.prefix'
-        )
-      ) as properties
+      buckets.arn as to_id
     from
       aws_s3_bucket buckets,
       aws_ec2_network_load_balancer as nlb,
@@ -456,18 +449,15 @@ edge "aws_ec2_nlb_vpc_security_group_to_vpc_edge" {
   sql = <<-EOQ
     select
       sg.arn as from_id,
-      vpc.vpc_id as to_id,
-      jsonb_build_object(
-        'Account ID', vpc.account_id
-      ) as properties
+      vpc.vpc_id as to_id
     from
       aws_vpc vpc,
       aws_ec2_network_load_balancer as nlb
-      left join 
-        aws_vpc_security_group sg 
-        on sg.group_id in 
+      left join
+        aws_vpc_security_group sg
+        on sg.group_id in
         (
-          select 
+          select
             jsonb_array_elements_text(nlb.security_groups)
         )
     where

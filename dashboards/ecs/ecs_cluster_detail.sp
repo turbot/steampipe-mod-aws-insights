@@ -340,13 +340,17 @@ query "aws_ecs_cluster_container_instances" {
   param "arn" {}
 }
 
+category "aws_ecs_cluster_no_link" {
+  color = "orange"
+}
+
 node "aws_ecs_cluster_node" {
-  category = category.aws_ecs_cluster
+  category = category.aws_ecs_cluster_no_link
 
   sql = <<-EOQ
     select
       cluster_arn as id,
-      cluster_name as title,
+      title as title,
       jsonb_build_object(
         'ARN', cluster_arn,
         'Status', status,
@@ -656,12 +660,17 @@ node "aws_ecs_cluster_to_ecs_task_definition_node" {
         aws_ecs_service
       where
         cluster_arn = $1
-    ) select
+    )
+    select
       d.task_definition_arn as id,
       d.title as title,
       jsonb_build_object(
         'ARN', d.task_definition_arn,
         'Account ID', d.account_id,
+        'Status', d.status,
+        'Memory', d.memory,
+        'CPU', d.cpu,
+        'Revision', d.revision,
         'Region', d.region
       ) as properties
     from
@@ -719,7 +728,7 @@ node "aws_ecs_cluster_to_ecs_service_node" {
   sql = <<-EOQ
     select
       s.arn as id,
-      s.service_name as title,
+      s.title as title,
       jsonb_build_object(
         'ARN', s.arn,
         'launch_type', s.launch_type,
@@ -767,9 +776,7 @@ node "aws_ecs_cluster_to_ecs_container_instance_node" {
       ) as properties
     from
       aws_ecs_container_instance as i
-      left join
-        aws_ec2_instance as e
-        on i.ec2_instance_id = e.instance_id
+      left join aws_ec2_instance as e on i.ec2_instance_id = e.instance_id
     where
       i.cluster_arn = $1;
   EOQ
@@ -850,7 +857,6 @@ node "aws_ecs_cluster_vpc_subnet_to_vpc_node" {
     select
       v.vpc_id as id,
       v.title as title,
-      'aws_vpc' as category,
       jsonb_build_object(
         'ARN', v.arn,
         'VPC ID', v.vpc_id,
@@ -859,15 +865,9 @@ node "aws_ecs_cluster_vpc_subnet_to_vpc_node" {
       ) as properties
     from
       aws_ecs_container_instance as i
-      right join
-        aws_ec2_instance as c
-        on c.instance_id = i.ec2_instance_id
-      right join
-        aws_vpc_subnet as s
-        on s.subnet_id = c.subnet_id
-      right join
-        aws_vpc as v
-        on v.vpc_id = s.vpc_id
+      right join aws_ec2_instance as c on c.instance_id = i.ec2_instance_id
+      right join aws_vpc_subnet as s on s.subnet_id = c.subnet_id
+      right join aws_vpc as v on v.vpc_id = s.vpc_id
     where
       i.cluster_arn = $1;
   EOQ
@@ -884,15 +884,9 @@ edge "aws_ecs_cluster_vpc_subnet_to_vpc_edge" {
       v.vpc_id as to_id
     from
       aws_ecs_container_instance as i
-      right join
-        aws_ec2_instance as c
-        on c.instance_id = i.ec2_instance_id
-      right join
-        aws_vpc_subnet as s
-        on s.subnet_id = c.subnet_id
-      right join
-        aws_vpc as v
-        on v.vpc_id = s.vpc_id
+      right join aws_ec2_instance as c  on c.instance_id = i.ec2_instance_id
+      right join aws_vpc_subnet as s on s.subnet_id = c.subnet_id
+      right join aws_vpc as v on v.vpc_id = s.vpc_id
     where
       i.cluster_arn = $1;
   EOQ
@@ -987,9 +981,7 @@ edge "aws_ecs_cluster_ecs_service_subnet_to_vpc_edge" {
     from
       aws_ecs_service as e,
       jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
-      left join
-        aws_vpc_subnet as sb
-        on sb.subnet_id = trim((s::text ), '""'),
+      left join aws_vpc_subnet as sb on sb.subnet_id = trim((s::text ), '""'),
       aws_vpc as v
     where
       e.network_configuration is not null
