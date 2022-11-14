@@ -211,13 +211,18 @@ query "aws_cloudfront_distribution_sni" {
   param "arn" {}
 }
 
+category "aws_cloudfront_distribution_no_link" {
+  color = "purple"
+  icon = local.aws_cloudfront_distribution_icon
+}
+
 node "aws_cloudfront_distribution_node" {
-  category = category.aws_cloudfront_distribution
+  category = category.aws_cloudfront_distribution_no_link
   sql = <<-EOQ
     select
       id as id,
-      id as title,
-      jsonb_build_object(
+      title as title,
+      jsonb_build_object (
         'ARN', arn,
         'Status', status,
         'Enabled', enabled::text,
@@ -237,10 +242,9 @@ node "aws_cloudfront_distribution_to_acm_certificate_node" {
   category = category.aws_acm_certificate
   sql = <<-EOQ
     select
-      title as id,
+      certificate_arn as id,
       title as title,
-      'aws_acm_certificate' as category,
-      jsonb_build_object(
+      jsonb_build_object (
         'ARN', certificate_arn,
         'Domain Name', domain_name,
         'Certificate Transparency Logging Preference', certificate_transparency_logging_preference,
@@ -269,12 +273,10 @@ edge "aws_cloudfront_distribution_to_acm_certificate_edge" {
   sql = <<-EOQ
     select
       d.id as from_id,
-      c.title as to_id
+      c.certificate_arn as to_id
     from
       aws_acm_certificate as c
-      left join
-        aws_cloudfront_distribution as d
-        on viewer_certificate ->> 'ACMCertificateArn' = certificate_arn
+      left join aws_cloudfront_distribution as d on viewer_certificate ->> 'ACMCertificateArn' = certificate_arn
     where
       d.arn = $1;
   EOQ
@@ -288,7 +290,7 @@ node "aws_cloudfront_distribution_from_s3_bucket_node" {
     select
       arn as id,
       title as title,
-      jsonb_build_object(
+      jsonb_build_object (
         'Name', name,
         'ARN', arn,
         'Account ID', account_id,
@@ -322,9 +324,7 @@ edge "aws_cloudfront_distribution_from_s3_bucket_edge" {
     from
       aws_cloudfront_distribution as d,
       jsonb_array_elements(origins) as origin
-      left join
-        aws_s3_bucket as b
-        on origin ->> 'DomainName' like '%' || b.name || '%'
+      left join aws_s3_bucket as b on origin ->> 'DomainName' like '%' || b.name || '%'
     where
       d.arn = $1;
   EOQ
@@ -338,12 +338,12 @@ node "aws_cloudfront_distribution_from_ec2_application_load_balancer_node" {
     select
       arn as id,
       name as title,
-      jsonb_build_object(
+      jsonb_build_object (
         'ARN', arn,
         'VPC ID', vpc_id,
         'DNS Name', dns_name,
         'Created Time', created_time,
-        'Account ID', account_id 
+        'Account ID', account_id
       ) as properties
     from
       aws_ec2_application_load_balancer
@@ -372,9 +372,7 @@ edge "aws_cloudfront_distribution_from_ec2_application_load_balancer_edge" {
     from
       aws_cloudfront_distribution as d,
       jsonb_array_elements(origins) as origin
-      left join
-        aws_ec2_application_load_balancer as b
-        on b.dns_name = origin ->> 'DomainName'
+      left join aws_ec2_application_load_balancer as b on b.dns_name = origin ->> 'DomainName'
     where
       d.arn = $1;
   EOQ
@@ -388,12 +386,12 @@ node "aws_cloudfront_distribution_from_media_store_container_node" {
     select
       arn as id,
       name as title,
-      jsonb_build_object(
+      jsonb_build_object (
         'ARN', arn,
         'Status', status,
         'Access Logging Enabled', access_logging_enabled::text,
         'Creation Time', creation_time,
-        'Account ID', account_id 
+        'Account ID', account_id
       ) as properties
     from
       aws_media_store_container
@@ -422,9 +420,7 @@ edge "aws_cloudfront_distribution_from_media_store_container_edge" {
     from
       aws_cloudfront_distribution as d,
       jsonb_array_elements(origins) as origin
-      left join
-        aws_media_store_container as c
-        on c.endpoint = 'https://' || (origin ->> 'DomainName')
+      left join aws_media_store_container as c on c.endpoint = 'https://' || (origin ->> 'DomainName')
     where
       d.arn = $1;
   EOQ

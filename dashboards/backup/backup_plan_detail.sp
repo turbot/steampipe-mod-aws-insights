@@ -110,19 +110,25 @@ query "aws_backup_plan_resource_assignment" {
   param "arn" {}
 }
 
+category "aws_backup_plan_no_link" {
+  color = "green"
+  icon  = local.aws_backup_plan_icon
+}
+
 node "aws_backup_plan_node" {
-  category = category.aws_backup_plan
+  category = category.aws_backup_plan_no_link
 
   sql = <<-EOQ
     select
       arn as id,
       title as title,
-      jsonb_build_object(
+      jsonb_build_object (
         'ARN', arn,
         'Name', name,
         'Creation Date', creation_date,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Region', region
+      ) as properties
     from
       aws_backup_plan
     where
@@ -137,13 +143,15 @@ node "aws_backup_plan_from_backup_vault_node" {
 
   sql = <<-EOQ
     select
+      arn as id,
       title as title,
-      jsonb_build_object(
+      jsonb_build_object (
         'ARN', arn,
         'Name', name,
         'Creation Date', creation_date,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Region', region
+      ) as properties
     from
       aws_backup_vault
     where
@@ -193,7 +201,8 @@ node "aws_backup_plan_from_backup_selection_node" {
         'Name', selection_name,
         'Creation Date', creation_date,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Region', region
+      ) as properties
     from
       aws_backup_selection
     where
@@ -217,8 +226,7 @@ edge "aws_backup_plan_from_backup_selection_edge" {
   sql = <<-EOQ
     select
       p.arn as from_id,
-      s.arn as to_id,
-      'backup_plan_to_backup_selection' as category
+      s.arn as to_id
     from
       aws_backup_selection as s,
       aws_backup_plan as p

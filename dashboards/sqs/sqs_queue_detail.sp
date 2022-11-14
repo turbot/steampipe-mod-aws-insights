@@ -315,9 +315,15 @@ query "aws_sqs_queue_encryption_details" {
   param "queue_arn" {}
 }
 
+category "aws_sqs_queue_no_link" {
+  color = "pink"
+  icon  = local.aws_sqs_queue_icon
+}
+
 node "aws_sqs_queue_node" {
-  category = category.aws_sqs_queue
-  sql      = <<-EOQ
+  category = category.aws_sqs_queue_no_link
+
+  sql = <<-EOQ
     select
       queue_arn as id,
       title as title,
@@ -327,7 +333,7 @@ node "aws_sqs_queue_node" {
         'Region', region
       ) as properties
     from
-        aws_sqs_queue
+      aws_sqs_queue
     where
       queue_arn = $1;
   EOQ
@@ -337,7 +343,8 @@ node "aws_sqs_queue_node" {
 
 node "aws_sqs_queue_to_sns_topic_subscription_node" {
   category = category.aws_sns_topic
-  sql      = <<-EOQ
+  
+  sql = <<-EOQ
     select
       subscription_arn as id,
       title as title,
@@ -356,7 +363,7 @@ node "aws_sqs_queue_to_sns_topic_subscription_node" {
 }
 
 edge "aws_sqs_queue_to_sns_topic_subscription_edge" {
-  title = "subscibe to"
+  title = "subscribe to"
 
   sql = <<-EOQ
     select
@@ -376,9 +383,8 @@ node "aws_sqs_queue_to_sqs_queue_node" {
 
   sql = <<-EOQ
     select
-      split_part(redrive_policy ->> 'deadLetterTargetArn', ':', 6) as id,
+      redrive_policy ->> 'deadLetterTargetArn' as id,
       split_part(redrive_policy ->> 'deadLetterTargetArn', ':', 6) as title,
-      'aws_sqs_queue' as category,
       jsonb_build_object(
         'ARN', queue_arn,
         'Account ID', account_id,
@@ -400,7 +406,7 @@ edge "aws_sqs_queue_to_sqs_queue_edge" {
   sql = <<-EOQ
     select
       queue_arn as from_id,
-      split_part(redrive_policy ->> 'deadLetterTargetArn', ':', 6) as to_id
+      redrive_policy ->> 'deadLetterTargetArn' as to_id
     from
       aws_sqs_queue
     where
@@ -462,7 +468,7 @@ node "aws_sqs_queue_from_s3_bucket_node" {
   sql = <<-EOQ
     select
       arn as id,
-      name as title,
+      title as title,
       jsonb_build_object(
         'ARN', arn,
         'Versioning Enabled', versioning_enabled::text,
@@ -571,7 +577,7 @@ node "aws_sqs_queue_from_vpc_endpoint_node" {
 }
 
 edge "aws_sqs_queue_from_vpc_endpoint_edge" {
-  title = "vpc endpoint"
+  title = "sqs queue"
 
   sql = <<-EOQ
     select
@@ -594,7 +600,7 @@ node "aws_sqs_queue_from_vpc_node" {
   sql = <<-EOQ
     select
       e.vpc_id as id,
-      e.vpc_id as title,
+      v.title as title,
       jsonb_build_object(
         'VPC ARN', v.arn,
         'VPC ID', v.vpc_id,
@@ -604,8 +610,8 @@ node "aws_sqs_queue_from_vpc_node" {
     from
       aws_vpc_endpoint as e,
       jsonb_array_elements(e.policy_std -> 'Statement') as s,
-      jsonb_array_elements_text(s -> 'Resource') as r
-      ,aws_vpc as v
+      jsonb_array_elements_text(s -> 'Resource') as r,
+      aws_vpc as v
     where
       v.vpc_id = e.vpc_id
       and r = $1;
@@ -615,7 +621,7 @@ node "aws_sqs_queue_from_vpc_node" {
 }
 
 edge "aws_sqs_queue_vpc_endpoint_from_vpc_edge" {
-  title = "vpc"
+  title = "vpc endpoint"
 
   sql = <<-EOQ
     select
@@ -640,7 +646,7 @@ node "aws_sqs_queue_from_eventbridge_rule_node" {
   sql = <<-EOQ
     select
       arn as id,
-      name as title,
+      title as title,
       jsonb_build_object(
         'ARN', arn,
         'State', state,

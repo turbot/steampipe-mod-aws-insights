@@ -1,4 +1,5 @@
 category "aws_docdb_cluster" {
+  color = "blue"
   fold {
     title     = "DocumentDB Cluster"
     threshold = 3
@@ -6,8 +7,8 @@ category "aws_docdb_cluster" {
 }
 
 category "aws_ec2_classic_load_balancer" {
-  href  = "/aws_insights.dashboard.aws_ec2_classic_load_balancer_detail?input.clb={{.properties.'ARN' | @uri}}"
   color = "orange"
+  href  = "/aws_insights.dashboard.aws_ec2_classic_load_balancer_detail?input.clb={{.properties.'ARN' | @uri}}"
   icon  = local.aws_ec2_classic_load_balancer_icon
   fold {
     title     = "EC2 Classic Load Balancers"
@@ -17,8 +18,8 @@ category "aws_ec2_classic_load_balancer" {
 }
 
 category "aws_ec2_application_load_balancer" {
-  href  = "/aws_insights.dashboard.aws_ec2_application_load_balancer_detail?input.alb={{.properties.'ARN' | @uri}}"
   color = "orange"
+  href  = "/aws_insights.dashboard.aws_ec2_application_load_balancer_detail?input.alb={{.properties.'ARN' | @uri}}"
   icon  = local.aws_ec2_application_load_balancer_icon
   fold {
     title     = "EC2 Application Load Balancers"
@@ -28,8 +29,8 @@ category "aws_ec2_application_load_balancer" {
 }
 
 category "aws_ec2_network_load_balancer" {
-  href  = "/aws_insights.dashboard.aws_ec2_network_load_balancer_detail?input.nlb={{.properties.'ARN' | @uri}}"
   color = "orange"
+  href  = "/aws_insights.dashboard.aws_ec2_network_load_balancer_detail?input.nlb={{.properties.'ARN' | @uri}}"
   icon  = local.aws_ec2_network_load_balancer_icon
   fold {
     title     = "EC2 Network Load Balancers"
@@ -39,8 +40,8 @@ category "aws_ec2_network_load_balancer" {
 }
 
 category "aws_ec2_gateway_load_balancer" {
-  href  = "/aws_insights.dashboard.aws_ec2_gateway_load_balancer_detail?input.glb={{.properties.'ARN' | @uri}}"
   color = "orange"
+  href  = "/aws_insights.dashboard.aws_ec2_gateway_load_balancer_detail?input.glb={{.properties.'ARN' | @uri}}"
   icon  = local.aws_ec2_gateway_load_balancer_icon
   fold {
     title     = "EC2 Gateway Load Balancers"
@@ -68,6 +69,7 @@ category "aws_ec2_transit_gateway" {
 }
 
 category "aws_ecs_cluster" {
+  color = "orange"
   href = "/aws_insights.dashboard.aws_ecs_cluster_detail?input.ecs_cluster_arn={{.properties.'ARN' | @uri}}"
   fold {
     title     = "ECS Clusters"
@@ -76,6 +78,7 @@ category "aws_ecs_cluster" {
 }
 
 category "aws_ecs_container_instance" {
+  color = "orange"
   fold {
     title     = "ECS Container Instances"
     threshold = 3
@@ -83,6 +86,7 @@ category "aws_ecs_container_instance" {
 }
 
 category "aws_ecs_task_definition" {
+  color = "orange"
   href = "/aws_insights.dashboard.aws_ecs_task_definition_detail?input.task_definition_arn={{.properties.'ARN' | @uri}}"
   icon = local.aws_ecs_task_definition_icon
   fold {
@@ -92,8 +96,9 @@ category "aws_ecs_task_definition" {
 }
 
 category "aws_ecs_service" {
-  href = "/aws_insights.dashboard.aws_ecs_service_detail?input.service_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_ecs_service_icon
+  color = "orange"
+  icon  = local.aws_ecs_service_icon
+  href  = "/aws_insights.dashboard.aws_ecs_service_detail?input.service_arn={{.properties.'ARN' | @uri}}"
   fold {
     threshold = 3
     title     = "ECS Services"
@@ -102,8 +107,9 @@ category "aws_ecs_service" {
 }
 
 category "aws_s3_bucket" {
-  href = "/aws_insights.dashboard.aws_s3_bucket_detail?input.bucket_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_s3_bucket_icon
+  color = "green"
+  href  = "/aws_insights.dashboard.aws_s3_bucket_detail?input.bucket_arn={{.properties.'ARN' | @uri}}"
+  icon  = local.aws_s3_bucket_icon
   fold {
     title     = "S3 Buckets"
     icon      = local.aws_s3_bucket_icon
@@ -112,7 +118,8 @@ category "aws_s3_bucket" {
 }
 
 category "aws_cloudfront_distribution" {
-  href = "/aws_insights.dashboard.aws_cloudfront_distribution_detail?input.distribution_arn={{.properties.'ARN' | @uri}}"
+  color = "purple"
+  href  = "/aws_insights.dashboard.aws_cloudfront_distribution_detail?input.distribution_arn={{.properties.'ARN' | @uri}}"
   icon = local.aws_cloudfront_distribution_icon
   fold {
     title     = "CloudFront Distributions"
@@ -122,7 +129,8 @@ category "aws_cloudfront_distribution" {
 }
 
 category "aws_acm_certificate" {
-  href = "/aws_insights.dashboard.acm_certificate_detail?input.certificate_arn={{.properties.'ARN' | @uri}}"
+  color = "red"
+  href  = "/aws_insights.dashboard.acm_certificate_detail?input.certificate_arn={{.properties.'ARN' | @uri}}"
   icon = local.aws_acm_certificate_icon
   fold {
     title     = "ACM Certificates"
@@ -132,6 +140,7 @@ category "aws_acm_certificate" {
 }
 
 category "aws_sns_topic" {
+  color = "pink"
   href = "/aws_insights.dashboard.aws_sns_topic_detail?input.topic_arn={{.properties.'ARN' | @uri}}"
   icon = local.aws_sns_topic_icon
   fold {
@@ -141,8 +150,17 @@ category "aws_sns_topic" {
   }
 }
 
+category "aws_sns_topic_subscription" {
+  color = "pink"
+  fold {
+    title     = "SNS Topic Subscriptions"
+    threshold = 3
+  }
+}
+
 category "aws_kms_key" {
-  href = "/aws_insights.dashboard.aws_kms_key_detail?input.key_arn={{.properties.'ARN' | @uri}}"
+  color = "red"
+  href  = "/aws_insights.dashboard.aws_kms_key_detail?input.key_arn={{.properties.'ARN' | @uri}}"
   fold {
     title     = "KMS Keys"
     threshold = 3
@@ -150,7 +168,9 @@ category "aws_kms_key" {
 }
 
 category "aws_cloudtrail_trail" {
-  href = "/aws_insights.dashboard.aws_cloudtrail_trail_detail?input.trail_arn={{.properties.'ARN' | @uri}}"
+  color = "pink"
+  href  = "/aws_insights.dashboard.aws_cloudtrail_trail_detail?input.trail_arn={{.properties.'ARN' | @uri}}"
+  icon  = local.aws_cloudtrail_trail_icon
   fold {
     title     = "CloudTrail Trails"
     threshold = 3
@@ -180,7 +200,8 @@ category "aws_ebs_snapshot" {
 }
 
 category "aws_rds_db_cluster" {
-  href = "/aws_insights.dashboard.aws_rds_db_cluster_detail.url_path?input.db_cluster_arn={{.properties.ARN | @uri}}"
+  color = "blue"
+  href  = "/aws_insights.dashboard.aws_rds_db_cluster_detail.url_path?input.db_cluster_arn={{.properties.ARN | @uri}}"
   icon = local.aws_rds_db_cluster_icon
   fold {
     title     = "RDS DB Clusters"
@@ -190,7 +211,8 @@ category "aws_rds_db_cluster" {
 }
 
 category "aws_rds_db_cluster_snapshot" {
-  href = "/aws_insights.dashboard.aws_rds_db_cluster_snapshot_detail.url_path?input.snapshot_arn={{.properties.ARN | @uri}}"
+  color = "blue"
+  href  = "/aws_insights.dashboard.aws_rds_db_cluster_snapshot_detail.url_path?input.snapshot_arn={{.properties.ARN | @uri}}"
   fold {
     title     = "RDS DB Cluster Snapshots"
     threshold = 3
@@ -198,8 +220,9 @@ category "aws_rds_db_cluster_snapshot" {
 }
 
 category "aws_rds_db_instance" {
-  href = "/aws_insights.dashboard.aws_rds_db_instance_detail.url_path?input.db_instance_arn={{.properties.ARN | @uri}}"
-  icon = local.aws_rds_db_instance_icon
+  color = "blue"
+  href  = "/aws_insights.dashboard.aws_rds_db_instance_detail.url_path?input.db_instance_arn={{.properties.ARN | @uri}}"
+  icon  = local.aws_rds_db_instance_icon
   fold {
     title     = "RDS DB Instances"
     icon      = local.aws_rds_db_instance_icon
@@ -208,7 +231,8 @@ category "aws_rds_db_instance" {
 }
 
 category "aws_rds_db_snapshot" {
-  href = "/aws_insights.dashboard.aws_rds_db_snapshot_detail.url_path?input.db_snapshot_arn={{.properties.ARN | @uri}}"
+  color = "blue"
+  href  = "/aws_insights.dashboard.aws_rds_db_snapshot_detail.url_path?input.db_snapshot_arn={{.properties.ARN | @uri}}"
   fold {
     title     = "RDS DB Snapshots"
     threshold = 3
@@ -216,6 +240,7 @@ category "aws_rds_db_snapshot" {
 }
 
 category "aws_rds_db_cluster_parameter_group" {
+  color = "blue"
   fold {
     title     = "RDS DB Cluster Parameter Group"
     threshold = 3
@@ -223,6 +248,7 @@ category "aws_rds_db_cluster_parameter_group" {
 }
 
 category "aws_rds_db_parameter_group" {
+  color = "blue"
   fold {
     title     = "RDS DB Parameter Group"
     threshold = 3
@@ -230,6 +256,7 @@ category "aws_rds_db_parameter_group" {
 }
 
 category "aws_rds_db_subnet_group" {
+  color = "blue"
   fold {
     title     = "RDS DB Subnet Group"
     threshold = 3
@@ -237,7 +264,8 @@ category "aws_rds_db_subnet_group" {
 }
 
 category "aws_redshift_cluster" {
-  href = "/aws_insights.dashboard.aws_redshift_cluster_detail?input.cluster_arn={{.properties.'ARN' | @uri}}"
+  color = "purple"
+  href  = "/aws_insights.dashboard.aws_redshift_cluster_detail?input.cluster_arn={{.properties.'ARN' | @uri}}"
   fold {
     title     = "Redshift Clusters"
     threshold = 3
@@ -245,7 +273,8 @@ category "aws_redshift_cluster" {
 }
 
 category "aws_redshift_snapshot" {
-  href = "/aws_insights.dashboard.aws_redshift_snapshot_detail?input.snapshot_arn={{.properties.'ARN' | @uri}}"
+  color = "purple"
+  href  = "/aws_insights.dashboard.aws_redshift_snapshot_detail?input.snapshot_arn={{.properties.'ARN' | @uri}}"
   fold {
     title     = "Redshift Snapshots"
     threshold = 3
@@ -253,6 +282,7 @@ category "aws_redshift_snapshot" {
 }
 
 category "aws_redshift_subnet_group" {
+  color = "purple"
   fold {
     title     = "Redshift Subnet Groups"
     threshold = 3
@@ -260,6 +290,7 @@ category "aws_redshift_subnet_group" {
 }
 
 category "aws_redshift_parameter_group" {
+  color = "purple"
   fold {
     title     = "Redshift Parameter Groups"
     threshold = 3
@@ -279,6 +310,7 @@ category "aws_ec2_ami" {
 
 category "aws_ec2_autoscaling_group" {
   color = "orange"
+  icon  = local.aws_ec2_autoscaling_group_icon
   fold {
     title     = "EC2 Autoscaling Groups"
     threshold = 3
@@ -302,8 +334,9 @@ category "aws_ec2_key_pair" {
 }
 
 category "aws_ecr_repository" {
-  href = "aws_insights.dashboard.aws_ecr_repository_detail?input.ecr_repository_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_ecr_repository_icon
+  color = "orange"
+  href  = "aws_insights.dashboard.aws_ecr_repository_detail?input.ecr_repository_arn={{.properties.'ARN' | @uri}}"
+  icon  = local.aws_ecr_repository_icon
   fold {
     title     = "ECR repositories"
     threshold = 3
@@ -311,7 +344,8 @@ category "aws_ecr_repository" {
 }
 
 category "aws_ecr_image" {
-  icon = local.aws_ecr_image_icon
+  color = "orange"
+  icon  = local.aws_ecr_image_icon
   fold {
     title     = "ECR images"
     threshold = 3
@@ -319,6 +353,7 @@ category "aws_ecr_image" {
 }
 
 category "aws_efs_file_system" {
+  color = "green"
   fold {
     title     = "EFS File Systems"
     threshold = 3
@@ -326,6 +361,7 @@ category "aws_efs_file_system" {
 }
 
 category "aws_efs_mount_target" {
+  color = "green"
   fold {
     title     = "EFS Mount Targets"
     threshold = 3
@@ -396,6 +432,7 @@ category "aws_iam_role" {
 }
 
 category "aws_emr_instance" {
+  color = "purple"
   href = "/aws_insights.dashboard.aws_ec2_instance_detail?input.instance_arn={{.properties.'EC2 Instance ARN' | @uri}}"
   icon = local.aws_ec2_instance_icon
   fold {
@@ -406,8 +443,8 @@ category "aws_emr_instance" {
 }
 
 category "aws_iam_policy" {
-  href  = "/aws_insights.dashboard.aws_iam_policy_detail?input.policy_arn={{.properties.'ARN' | @uri}}"
   color = "red"
+  href  = "/aws_insights.dashboard.aws_iam_policy_detail?input.policy_arn={{.properties.'ARN' | @uri}}"
   fold {
     title     = "IAM Policies"
     threshold = 3
@@ -415,8 +452,8 @@ category "aws_iam_policy" {
 }
 
 category "aws_iam_user" {
-  href  = "/aws_insights.dashboard.aws_iam_user_detail?input.user_arn={{.properties.'ARN' | @uri}}"
   color = "red"
+  href  = "/aws_insights.dashboard.aws_iam_user_detail?input.user_arn={{.properties.'ARN' | @uri}}"
   icon  = local.aws_iam_user_icon
   fold {
     title     = "IAM Users"
@@ -426,8 +463,8 @@ category "aws_iam_user" {
 }
 
 category "aws_iam_group" {
-  href  = "/aws_insights.dashboard.aws_iam_group_detail?input.group_arn={{.properties.'ARN' | @uri}}"
   color = "red"
+  href  = "/aws_insights.dashboard.aws_iam_group_detail?input.group_arn={{.properties.'ARN' | @uri}}"
   fold {
     title     = "IAM Groups"
     threshold = 3
@@ -459,6 +496,7 @@ category "aws_iam_profile" {
 }
 
 category "aws_lambda_function" {
+  color = "orange"
   href = "/aws_insights.dashboard.aws_lambda_function_detail?input.lambda_arn={{.properties.'ARN' | @uri}}"
   icon = local.aws_lambda_function_icon
   fold {
@@ -469,6 +507,7 @@ category "aws_lambda_function" {
 }
 
 category "aws_emr_cluster" {
+  color = "purple"
   href = "/aws_insights.dashboard.aws_emr_cluster_detail?input.emr_cluster_arn={{.properties.'ARN' | @uri}}"
   icon = local.aws_emr_cluster_icon
   fold {
@@ -479,8 +518,8 @@ category "aws_emr_cluster" {
 }
 
 category "aws_vpc_subnet" {
-  href  = "/aws_insights.dashboard.aws_vpc_subnet_detail?input.subnet_id={{.properties.'Subnet ID' | @uri}}"
   color = "purple"
+  href  = "/aws_insights.dashboard.aws_vpc_subnet_detail?input.subnet_id={{.properties.'Subnet ID' | @uri}}"
   fold {
     title     = "VPC Subnets"
     threshold = 3
@@ -488,8 +527,9 @@ category "aws_vpc_subnet" {
 }
 
 category "aws_elasticache_cluster" {
-  href = "/aws_insights.dashboard.aws_elasticache_cluster_detail.url_path?input.elasticache_cluster_arn={{.properties.ARN | @uri}}"
-  icon = local.aws_elasticache_cluster_icon
+  color = "blue"
+  href  = "/aws_insights.dashboard.aws_elasticache_cluster_detail.url_path?input.elasticache_cluster_arn={{.properties.ARN | @uri}}"
+  icon  = local.aws_elasticache_cluster_icon
   fold {
     title     = "ElastiCache Clusters"
     icon      = local.aws_elasticache_cluster_icon
@@ -498,6 +538,7 @@ category "aws_elasticache_cluster" {
 }
 
 category "aws_elasticache_subnet_group" {
+  color = "blue"
   fold {
     title     = "elasticache Subnet Groups"
     threshold = 3
@@ -505,8 +546,8 @@ category "aws_elasticache_subnet_group" {
 }
 
 category "aws_vpc_eip" {
-  href  = "/aws_insights.dashboard.aws_vpc_eip_detail?input.eip_arn={{.properties.'ARN' | @uri}}"
   color = "purple"
+  href  = "/aws_insights.dashboard.aws_vpc_eip_detail?input.eip_arn={{.properties.'ARN' | @uri}}"
   icon  = local.aws_vpc_eip_icon
   fold {
     title     = "VPC EIPs"
@@ -516,7 +557,8 @@ category "aws_vpc_eip" {
 }
 
 category "aws_eks_cluster" {
-  href = "/aws_insights.dashboard.aws_eks_cluster_detail?input.eks_cluster_arn={{.properties.'ARN' | @uri}}"
+  color = "orange"
+  href  = "/aws_insights.dashboard.aws_eks_cluster_detail?input.eks_cluster_arn={{.properties.'ARN' | @uri}}"
   fold {
     title     = "EKS Clusters"
     threshold = 3
@@ -524,8 +566,9 @@ category "aws_eks_cluster" {
 }
 
 category "aws_sqs_queue" {
-  href = "/aws_insights.dashboard.aws_sqs_queue_detail?input.queue_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_sqs_queue_icon
+  color = "pink"
+  href  = "/aws_insights.dashboard.aws_sqs_queue_detail?input.queue_arn={{.properties.'ARN' | @uri}}"
+  icon  = local.aws_sqs_queue_icon
   fold {
     title     = "SQS Queues"
     icon      = local.aws_sqs_queue_icon
@@ -534,6 +577,7 @@ category "aws_sqs_queue" {
 }
 
 category "aws_eventbridge_rule" {
+  color = "pink"
   href = "/aws_insights.dashboard.aws_eventbridge_rule_detail?input.eventbridge_rule_arn={{.properties.'ARN' | @uri}}"
   icon = local.aws_eventbridge_rule_icon
   fold {
@@ -544,6 +588,7 @@ category "aws_eventbridge_rule" {
 }
 
 category "aws_api_gatewayv2_api" {
+  color = "purple"
   href = "/aws_insights.dashboard.api_gatewayv2_api_detail?input.api_id={{.properties.'ID' | @uri}}"
   fold {
     title     = "API Gatewayv2 APIs"
@@ -552,6 +597,7 @@ category "aws_api_gatewayv2_api" {
 }
 
 category "aws_backup_plan" {
+  color = "green"
   href = "/aws_insights.dashboard.backup_plan_detail?input.backup_plan_arn={{.properties.'ARN' | @uri}}"
   icon = local.aws_backup_plan_icon
   fold {
@@ -562,6 +608,7 @@ category "aws_backup_plan" {
 }
 
 category "aws_backup_vault" {
+  color = "green"
   href = "/aws_insights.dashboard.backup_vault_detail?input.backup_vault_arn={{.properties.'ARN' | @uri}}"
   icon = local.aws_backup_vault_icon
   fold {
@@ -572,6 +619,7 @@ category "aws_backup_vault" {
 }
 
 category "aws_glacier_vault" {
+  color = "green"
   href = "/aws_insights.dashboard.glacier_vault_detail?input.vault_arn={{.properties.'ARN' | @uri}}"
   icon = local.aws_glacier_vault_icon
   fold {
@@ -582,6 +630,7 @@ category "aws_glacier_vault" {
 }
 
 category "aws_codepipeline_pipeline" {
+  color = "blue"
   href = "/aws_insights.dashboard.codepipeline_pipeline_detail?input.pipeline_arn={{.properties.'ARN' | @uri}}"
   fold {
     title     = "CodePipeline Pipelines"
@@ -590,6 +639,7 @@ category "aws_codepipeline_pipeline" {
 }
 
 category "aws_dax_cluster" {
+  color = "blue"
   href = "/aws_insights.dashboard.dax_cluster_detail?input.dax_cluster_arn={{.properties.'ARN' | @uri}}"
   fold {
     title     = "DAX Clusters"
@@ -598,6 +648,7 @@ category "aws_dax_cluster" {
 }
 
 category "aws_dynamodb_table" {
+  color = "blue"
   href = "/aws_insights.dashboard.dynamodb_table_detail?input.table_arn={{.properties.'ARN' | @uri}}"
   icon = local.aws_dynamodb_table_icon
   fold {
@@ -608,6 +659,7 @@ category "aws_dynamodb_table" {
 }
 
 category "aws_dax_subnet_group" {
+  color = "blue"
   fold {
     title     = "DAX Subnet Groups"
     threshold = 3
@@ -615,6 +667,8 @@ category "aws_dax_subnet_group" {
 }
 
 category "aws_codecommit_repository" {
+  href = "/aws_insights.dashboard.aws_codecommit_repository_detail?input.codecommit_repository_arn={{.properties.'ARN' | @uri}}"
+  color = "blue"
   fold {
     title     = "CodeCommit Repositories"
     threshold = 3
@@ -622,6 +676,8 @@ category "aws_codecommit_repository" {
 }
 
 category "aws_codebuild_project" {
+  color = "blue"
+  href = "/aws_insights.dashboard.aws_codebuild_project_detail?input.codebuild_project_arn={{.properties.'ARN' | @uri}}"
   fold {
     title     = "CodeBuild Projects"
     threshold = 3
@@ -629,6 +685,7 @@ category "aws_codebuild_project" {
 }
 
 category "aws_kinesisanalyticsv2_application" {
+  color = "purple"
   fold {
     title     = "Kinesis Analytics Applications"
     threshold = 3
@@ -636,6 +693,7 @@ category "aws_kinesisanalyticsv2_application" {
 }
 
 category "aws_s3_access_point" {
+  color = "green"
   icon = local.aws_s3_access_point_icon
   fold {
     title     = "S3 Access Points"
@@ -645,7 +703,8 @@ category "aws_s3_access_point" {
 }
 
 category "aws_cloudformation_stack" {
-  icon = local.aws_cloudformation_stack_icon
+  color = "pink"
+  icon  = local.aws_cloudformation_stack_icon
   fold {
     title     = "CloudFormation Stacks"
     icon      = local.aws_cloudformation_stack_icon
@@ -654,6 +713,7 @@ category "aws_cloudformation_stack" {
 }
 
 category "aws_kinesis_stream" {
+  color = "purple"
   fold {
     title     = "Kinesis Streams"
     threshold = 3
@@ -721,6 +781,8 @@ category "aws_vpc_network_acl" {
 }
 
 category "aws_cloudwatch_log_group" {
+  color = "pink"
+  href  = "/aws_insights.dashboard.aws_cloudwatch_log_group_detail?input.log_group_arn={{.properties.'ARN' | @uri}}"
   fold {
     title     = "CloudWatch Log Groups"
     threshold = 3
@@ -728,6 +790,7 @@ category "aws_cloudwatch_log_group" {
 }
 
 category "aws_guardduty_detector" {
+  color = "red"
   fold {
     title     = "GuardDuty Detectors"
     threshold = 3
@@ -735,6 +798,7 @@ category "aws_guardduty_detector" {
 }
 
 category "aws_media_store_container" {
+  color = "orange"
   fold {
     title     = "Media Store Containers"
     threshold = 3
@@ -742,6 +806,7 @@ category "aws_media_store_container" {
 }
 
 category "aws_eventbridge_bus" {
+  color = "pink"
   icon = local.aws_eventbridge_bus_icon
   fold {
     title     = "EventBridge Buses"
@@ -751,6 +816,7 @@ category "aws_eventbridge_bus" {
 }
 
 category "aws_appconfig_application" {
+  color = "pink"
   fold {
     title     = "AppConfig Applications"
     threshold = 3
@@ -758,6 +824,7 @@ category "aws_appconfig_application" {
 }
 
 category "aws_api_gatewayv2_stage" {
+  color = "purple"
   fold {
     title     = "API Gatewayv2 Stages"
     threshold = 3
@@ -765,6 +832,7 @@ category "aws_api_gatewayv2_stage" {
 }
 
 category "aws_sfn_state_machine" {
+  color = "#B0084D"
   fold {
     title     = "Step Function State Machines"
     threshold = 3
@@ -780,6 +848,7 @@ category "aws_ec2_launch_configuration" {
 }
 
 category "aws_dms_replication_instance" {
+  color = "blue"
   fold {
     title     = "DMS Replication Instances"
     threshold = 3
@@ -787,6 +856,7 @@ category "aws_dms_replication_instance" {
 }
 
 category "aws_sagemaker_notebook_instance" {
+  color = "light green"
   fold {
     title     = "Sagemaker Notebook Instances"
     threshold = 3
@@ -794,6 +864,7 @@ category "aws_sagemaker_notebook_instance" {
 }
 
 category "aws_backup_selection" {
+  color = "green"
   fold {
     title     = "Backup Selections"
     threshold = 3
@@ -801,7 +872,8 @@ category "aws_backup_selection" {
 }
 
 category "aws_ecs_task" {
-  icon = local.aws_ecs_task_icon
+  color = "orange"
+  icon  = local.aws_ecs_task_icon
   fold {
     title     = "ECS Tasks"
     icon      = local.aws_ecs_task_icon
@@ -810,6 +882,7 @@ category "aws_ecs_task" {
 }
 
 category "aws_codedeploy_app" {
+  color = "blue"
   fold {
     title     = "CodeDeploy Applications"
     threshold = 3
@@ -817,6 +890,7 @@ category "aws_codedeploy_app" {
 }
 
 category "aws_eks_addon" {
+  color = "orange"
   fold {
     title     = "EKS Addons"
     threshold = 3
@@ -824,6 +898,7 @@ category "aws_eks_addon" {
 }
 
 category "aws_eks_node_group" {
+  color = "orange"
   fold {
     title     = "EKS Node Groups"
     threshold = 3
@@ -831,6 +906,7 @@ category "aws_eks_node_group" {
 }
 
 category "aws_emr_instance_fleet" {
+  color = "purple"
   fold {
     title     = "EMR instance fleets"
     threshold = 3
@@ -838,6 +914,7 @@ category "aws_emr_instance_fleet" {
 }
 
 category "aws_emr_instance_group" {
+  color = "purple"
   fold {
     title     = "EMR instance groups"
     threshold = 3
@@ -845,7 +922,8 @@ category "aws_emr_instance_group" {
 }
 
 category "aws_fsx_file_system" {
-  icon = local.aws_fsx_file_system_icon
+  color = "green"
+  icon  = local.aws_fsx_file_system_icon
   fold {
     title     = "FSX File Systems"
     icon      = local.aws_fsx_file_system_icon
@@ -867,4 +945,3 @@ graph "aws_graph_categories" {
   type  = "graph"
   title = "Relationships"
 }
-

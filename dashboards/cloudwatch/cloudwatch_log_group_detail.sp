@@ -256,14 +256,20 @@ query "aws_cloudwatch_log_group_encryption_details" {
   param "log_group_arn" {}
 }
 
+category "aws_cloudwatch_log_group_no_link" {
+  color = "pink"
+}
+
 node "aws_cloudwatch_log_group_node" {
-  category = category.aws_cloudwatch_log_group
+  category = category.aws_cloudwatch_log_group_no_link
 
   sql = <<-EOQ
     select
       arn as id,
       title as title,
       jsonb_build_object(
+        'Name', name,
+        'ARN', arn,
         'Creation Time', creation_time,
         'Account ID', account_id,
         'Region', region
@@ -271,7 +277,7 @@ node "aws_cloudwatch_log_group_node" {
     from
       aws_cloudwatch_log_group
     where
-      arn = $1
+      arn = $1;
   EOQ
 
   param "log_group_arn" {}
@@ -295,7 +301,7 @@ node "aws_cloudwatch_log_group_to_kms_key_node" {
       left join aws_kms_key as k on k.arn = g.kms_key_id
     where
       k.region = g.region
-      and g.arn =  $1
+      and g.arn = $1;
   EOQ
 
   param "log_group_arn" {}
@@ -307,19 +313,13 @@ edge "aws_cloudwatch_log_group_to_kms_key_edge" {
   sql = <<-EOQ
     select
       g.arn as from_id,
-      k.arn as to_id,
-      jsonb_build_object(
-        'ARN', k.arn,
-        'ID', k.id,
-        'Account ID', k.account_id,
-        'Region', k.region
-      ) as properties
+      k.arn as to_id
     from
       aws_cloudwatch_log_group as g
       left join aws_kms_key as k on k.arn = g.kms_key_id
     where
       k.region = g.region
-      and g.arn =  $1
+      and g.arn = $1;
   EOQ
 
   param "log_group_arn" {}
@@ -341,7 +341,7 @@ node "aws_cloudwatch_log_group_from_cloudtrail_trail_node" {
     from
       aws_cloudtrail_trail as t
     where
-      t.log_group_arn = $1
+      t.log_group_arn = $1;
   EOQ
 
   param "log_group_arn" {}
@@ -353,17 +353,11 @@ edge "aws_cloudwatch_log_group_from_cloudtrail_trail_edge" {
   sql = <<-EOQ
     select
       t.arn as from_id,
-      $1 as to_id,
-      jsonb_build_object(
-        'ARN', t.arn,
-        'Is Logging', t.is_logging,
-        'Account ID', t.account_id,
-        'Region', t.region
-      ) as properties
+      $1 as to_id
     from
       aws_cloudtrail_trail as t
     where
-      t.log_group_arn = $1
+      t.log_group_arn = $1;
   EOQ
 
   param "log_group_arn" {}
@@ -389,7 +383,7 @@ node "aws_cloudwatch_log_group_from_lambda_function_node" {
     where
       g.name like '/aws/lambda/%'
       and g.region = f.region
-      and g.arn = $1
+      and g.arn = $1;
   EOQ
 
   param "log_group_arn" {}
@@ -401,19 +395,14 @@ edge "aws_cloudwatch_log_group_from_lambda_function_edge" {
   sql = <<-EOQ
     select
       f.arn as from_id,
-      $1 as to_id,
-      jsonb_build_object(
-        'ARN', f.arn,
-        'Account ID', f.account_id,
-        'Region', f.region
-      ) as properties
+      $1 as to_id
     from
       aws_cloudwatch_log_group as g
       left join aws_lambda_function as f on f.name = split_part(g.name, '/', 4)
     where
       g.name like '/aws/lambda/%'
       and g.region = f.region
-      and g.arn = $1
+      and g.arn = $1;
   EOQ
 
   param "log_group_arn" {}
@@ -438,7 +427,7 @@ node "aws_cloudwatch_log_group_from_vpc_flow_logs_node" {
       left join aws_vpc_flow_log as f on g.name = f.log_group_name
     where
       f.region = g.region
-      and g.arn = $1
+      and g.arn = $1;
   EOQ
 
   param "log_group_arn" {}
@@ -448,20 +437,15 @@ edge "aws_cloudwatch_log_group_from_vpc_flow_logs_edge" {
   title = "logs to"
 
   sql = <<-EOQ
-   select
+    select
       f.flow_log_id as from_id,
-      $1 as to_id,
-      jsonb_build_object(
-        'Flow Log ID', f.flow_log_id,
-        'Account ID', f.account_id,
-        'Region', f.region
-      ) as properties
+      $1 as to_id
     from
       aws_cloudwatch_log_group as g
       left join aws_vpc_flow_log as f on g.name = f.log_group_name
     where
       f.region = g.region
-      and g.arn = $1
+      and g.arn = $1;
   EOQ
 
   param "log_group_arn" {}
@@ -473,7 +457,7 @@ node "aws_cloudwatch_log_group_from_kinesis_stream_node" {
   sql = <<-EOQ
     select
       s.stream_arn as id,
-      s.stream_name as title,
+      s.title as title,
       jsonb_build_object(
         'ARN', s.stream_arn,
         'Stream Status', s.stream_status,
@@ -487,7 +471,7 @@ node "aws_cloudwatch_log_group_from_kinesis_stream_node" {
       right join aws_kinesis_stream as s on s.stream_arn = f.destination_arn
     where
       f.region = g.region
-      and g.arn = $1
+      and g.arn = $1;
   EOQ
 
   param "log_group_arn" {}
@@ -499,21 +483,14 @@ edge "aws_cloudwatch_log_group_from_kinesis_stream_edge" {
   sql = <<-EOQ
     select
       s.stream_arn as from_id,
-      $1 as to_id,
-      jsonb_build_object(
-        'ARN', s.stream_arn,
-        'Stream Status', s.stream_status,
-        'Creation Timestamp', s.stream_creation_timestamp,
-        'Region', s.region,
-        'Account ID', f.account_id
-      ) as properties
+      $1 as to_id
     from
       aws_cloudwatch_log_group as g
       left join aws_cloudwatch_log_subscription_filter as f on g.name = f.log_group_name
       right join aws_kinesis_stream as s on s.stream_arn = f.destination_arn
     where
       f.region = g.region
-      and g.arn = $1
+      and g.arn = $1;
   EOQ
 
   param "log_group_arn" {}
@@ -539,7 +516,7 @@ node "aws_cloudwatch_log_group_subscription_filter_from_lambda_function_node" {
       right join aws_lambda_function as l on l.arn = f.destination_arn
     where
       f.region = g.region
-      and g.arn = $1
+      and g.arn = $1;
   EOQ
 
   param "log_group_arn" {}
@@ -551,21 +528,14 @@ edge "aws_cloudwatch_log_group_subscription_filter_from_lambda_function_edge" {
   sql = <<-EOQ
     select
       l.arn as from_id,
-      $1 as to_id,
-      jsonb_build_object(
-        'ARN', l.arn,
-        'State', l.state,
-        'runtime', l.runtime,
-        'Account ID', l.account_id,
-        'Region', l.region
-      ) as properties
+      $1 as to_id
     from
       aws_cloudwatch_log_group as g
       left join aws_cloudwatch_log_subscription_filter as f on g.name = f.log_group_name
       right join aws_lambda_function as l on l.arn = f.destination_arn
     where
       f.region = g.region
-      and g.arn = $1
+      and g.arn = $1;
   EOQ
 
   param "log_group_arn" {}

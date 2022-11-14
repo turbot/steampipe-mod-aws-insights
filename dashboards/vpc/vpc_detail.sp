@@ -1143,8 +1143,12 @@ query "aws_vpc_subnet_by_az" {
   param "vpc_id" {}
 }
 
+category "aws_vpc_no_link" {
+  color = "purple"
+}
+
 node "aws_vpc_node" {
-  category = category.aws_vpc
+  category = category.aws_vpc_no_link
 
   sql = <<-EOQ
     select
@@ -1153,7 +1157,7 @@ node "aws_vpc_node" {
       jsonb_build_object(
         'ARN', arn,
         'VPC ID', vpc_id,
-        'Is default', is_default,
+        'Is Default', is_default,
         'State', state,
         'CIDR Block', cidr_block,
         'DHCP Options ID', dhcp_options_id,
@@ -1164,7 +1168,7 @@ node "aws_vpc_node" {
     from
       aws_vpc
     where
-      vpc_id = $1
+      vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1228,7 +1232,7 @@ node "aws_vpc_to_vpc_internet_gateway_node" {
       aws_vpc_internet_gateway,
       jsonb_array_elements(attachments) as a
     where
-      a ->> 'VpcId' = $1
+      a ->> 'VpcId' = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1245,7 +1249,7 @@ edge "aws_vpc_to_vpc_internet_gateway_edge" {
       aws_vpc_internet_gateway as i,
       jsonb_array_elements(attachments) as a
     where
-      a ->> 'VpcId' = $1
+      a ->> 'VpcId' = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1266,7 +1270,7 @@ node "aws_vpc_to_vpc_route_table_node" {
     from
       aws_vpc_route_table
     where
-      vpc_id = $1
+      vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1283,7 +1287,7 @@ edge "aws_vpc_to_vpc_route_table_edge" {
       aws_vpc as v
       left join aws_vpc_route_table as rt on rt.vpc_id = v.vpc_id
     where
-      v.vpc_id = $1
+      v.vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1304,7 +1308,7 @@ node "aws_vpc_to_vpc_endpoint_node" {
     from
       aws_vpc_endpoint
     where
-      vpc_id = $1
+      vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1320,7 +1324,7 @@ edge "aws_vpc_to_vpc_endpoint_edge" {
     from
       aws_vpc_endpoint
     where
-      vpc_id = $1
+      vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1342,7 +1346,7 @@ node "aws_vpc_to_vpc_network_acl_node" {
     from
       aws_vpc_network_acl
     where
-      vpc_id = $1
+      vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1358,7 +1362,7 @@ edge "aws_vpc_to_vpc_network_acl_edge" {
     from
       aws_vpc_network_acl
     where
-      vpc_id = $1
+      vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1383,7 +1387,7 @@ node "aws_vpc_to_ec2_transit_gateway_node" {
       aws_ec2_transit_gateway_vpc_attachment as t
       left join aws_ec2_transit_gateway as g on t.transit_gateway_id = g.transit_gateway_id
     where
-      t.resource_id = $1 and resource_type = 'vpc'
+      t.resource_id = $1 and resource_type = 'vpc';
   EOQ
 
   param "vpc_id" {}
@@ -1399,7 +1403,7 @@ edge "aws_vpc_to_ec2_transit_gateway_edge" {
     from
       aws_ec2_transit_gateway_vpc_attachment as a
     where
-      a.resource_id = $1
+      a.resource_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1412,7 +1416,6 @@ node "aws_vpc_to_vpc_nat_gateway_node" {
     select
       arn as id,
       title as title,
-      'aws_vpc_nat_gateway' as category,
       jsonb_build_object(
         'ARN', arn,
         'ID', nat_gateway_id,
@@ -1422,7 +1425,7 @@ node "aws_vpc_to_vpc_nat_gateway_node" {
     from
       aws_vpc_nat_gateway
     where
-      vpc_id = $1
+      vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1438,7 +1441,7 @@ edge "aws_vpc_to_vpc_nat_gateway_edge" {
     from
       aws_vpc_nat_gateway as n
     where
-      n.vpc_id = $1
+      n.vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1460,7 +1463,7 @@ node "aws_vpc_to_vpc_vpn_gateway_node" {
       aws_vpc_vpn_gateway,
       jsonb_array_elements(vpc_attachments) as a
     where
-      a ->> 'VpcId' = $1
+      a ->> 'VpcId' = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1477,7 +1480,7 @@ edge "aws_vpc_to_vpc_vpn_gateway_edge" {
       aws_vpc_vpn_gateway as g,
       jsonb_array_elements(vpc_attachments) as a
     where
-      a ->> 'VpcId' = $1
+      a ->> 'VpcId' = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1499,7 +1502,7 @@ node "aws_vpc_to_vpc_security_group_node" {
     from
       aws_vpc_security_group
     where
-      vpc_id = $1
+      vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1515,7 +1518,7 @@ edge "aws_vpc_to_vpc_security_group_edge" {
     from
       aws_vpc_security_group as sg
     where
-      sg.vpc_id = $1
+      sg.vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1575,7 +1578,7 @@ node "aws_vpc_from_ec2_instance_node" {
     from
       aws_ec2_instance as i
     where
-      i.vpc_id  = $1
+      i.vpc_id  = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1591,7 +1594,7 @@ edge "aws_vpc_from_ec2_instance_edge" {
     from
       aws_ec2_instance as i
     where
-      i.vpc_id = $1
+      i.vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1612,7 +1615,7 @@ node "aws_vpc_from_lambda_function_node" {
     from
       aws_lambda_function as l
     where
-      l.vpc_id  = $1
+      l.vpc_id  = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1665,7 +1668,7 @@ edge "aws_vpc_from_ec2_application_load_balancer_edge" {
     from
       aws_ec2_application_load_balancer as a
     where
-      a.vpc_id = $1
+      a.vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1686,7 +1689,7 @@ node "aws_vpc_from_ec2_network_load_balancer_node" {
     from
       aws_ec2_network_load_balancer as n
     where
-      n.vpc_id  = $1
+      n.vpc_id  = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1702,7 +1705,7 @@ edge "aws_vpc_from_ec2_network_load_balancer_edge" {
     from
       aws_ec2_network_load_balancer as n
     where
-      n.vpc_id = $1
+      n.vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1797,7 +1800,7 @@ node "aws_vpc_from_rds_db_instance_node" {
     from
       aws_rds_db_instance as i
     where
-      i.vpc_id  = $1
+      i.vpc_id  = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1813,7 +1816,7 @@ edge "aws_vpc_from_rds_db_instance_edge" {
     from
       aws_rds_db_instance as i
     where
-      i.vpc_id = $1
+      i.vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1834,7 +1837,7 @@ node "aws_vpc_from_redshift_cluster_node" {
     from
       aws_redshift_cluster as c
     where
-      c.vpc_id  = $1
+      c.vpc_id  = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1850,7 +1853,7 @@ edge "aws_vpc_from_redshift_cluster_edge" {
     from
       aws_redshift_cluster as c
     where
-      c.vpc_id = $1
+      c.vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1871,7 +1874,7 @@ node "aws_vpc_from_ec2_target_group_node" {
     from
       aws_ec2_target_group as t
     where
-      t.vpc_id  = $1
+      t.vpc_id  = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1887,7 +1890,7 @@ edge "aws_vpc_from_ec2_target_group_edge" {
     from
       aws_ec2_target_group as t
     where
-      t.vpc_id = $1
+      t.vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1908,7 +1911,7 @@ node "aws_vpc_from_fsx_file_system_node" {
     from
       aws_fsx_file_system as f
     where
-      f.vpc_id  = $1
+      f.vpc_id  = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1924,7 +1927,7 @@ edge "aws_vpc_from_fsx_file_system_edge" {
     from
       aws_fsx_file_system as f
     where
-      f.vpc_id = $1
+      f.vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1945,7 +1948,7 @@ node "aws_vpc_from_s3_access_point_node" {
     from
       aws_s3_access_point as a
     where
-      a.vpc_id  = $1
+      a.vpc_id  = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1987,7 +1990,7 @@ node "aws_vpc_from_vpc_peering_connection_node" {
       aws_vpc_peering_connection
     where
       requester_vpc_id = $1
-      or accepter_vpc_id = $1
+      or accepter_vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -2004,7 +2007,7 @@ edge "aws_vpc_from_vpc_peering_connection_edge" {
       aws_vpc_peering_connection
     where
       requester_vpc_id = $1
-      or accepter_vpc_id = $1
+      or accepter_vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -2033,7 +2036,7 @@ node "aws_vpc_peering_connection_to_vpc_node" {
       left join aws_vpc as v on v.vpc_id = c.requester_vpc_id or v.vpc_id = c.accepter_vpc_id
     where
       requester_vpc_id = $1
-      or accepter_vpc_id = $1
+      or accepter_vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -2051,9 +2054,8 @@ edge "aws_vpc_peering_connection_to_vpc_edge" {
       left join aws_vpc as v on v.vpc_id = c.requester_vpc_id or v.vpc_id = c.accepter_vpc_id
     where
       requester_vpc_id = $1
-      or accepter_vpc_id = $1
+      or accepter_vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
 }
-

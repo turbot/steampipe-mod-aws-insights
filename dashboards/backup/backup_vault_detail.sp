@@ -108,19 +108,25 @@ query "aws_backup_vault_recovery_points" {
   param "arn" {}
 }
 
+category "aws_backup_vault_no_link" {
+  color = "green"
+  icon = local.aws_backup_vault_icon
+}
+
 node "aws_backup_vault_node" {
-  category = category.aws_backup_vault
+  category = category.aws_backup_vault_no_link
 
   sql = <<-EOQ
     select
       arn as id,
       title as title,
-      jsonb_build_object(
+      jsonb_build_object (
         'ARN', arn,
         'Name', name,
         'Creation Date', creation_date,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Region', region
+      ) as properties
     from
       aws_backup_vault
     where
@@ -137,13 +143,14 @@ node "aws_backup_vault_from_backup_plan_node" {
     select
       arn as id,
       title as title,
-      jsonb_build_object(
+      jsonb_build_object (
         'ARN', arn,
         'Name', name,
         'Backup Plan ID', backup_plan_id,
         'Creation Date', creation_date,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Region', region
+      ) as properties
     from
       aws_backup_plan,
       jsonb_array_elements(backup_plan -> 'Rules') as r
@@ -163,7 +170,7 @@ node "aws_backup_vault_from_backup_plan_node" {
 }
 
 edge "aws_backup_vault_from_backup_plan_edge" {
-  title = "backup plan"
+  title = "backup vault"
 
   sql = <<-EOQ
     select
@@ -188,13 +195,14 @@ node "aws_backup_vault_from_kms_key_node" {
     select
       id as id,
       title as title,
-      jsonb_build_object(
+      jsonb_build_object (
         'ARN', arn,
         'Key Manager', key_manager,
         'Creation Date', creation_date,
         'Enabled', enabled::text,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Region', region
+      ) as properties
     from
       aws_kms_key
     where
@@ -221,9 +229,7 @@ edge "aws_backup_vault_from_kms_key_edge" {
       k.id as to_id
     from
       aws_backup_vault as v
-      left join
-        aws_kms_key as k
-        on k.arn = v.encryption_key_arn
+      left join aws_kms_key as k on k.arn = v.encryption_key_arn
     where
       v.arn = $1;
   EOQ
@@ -241,7 +247,8 @@ node "aws_backup_vault_from_sns_topic_node" {
       jsonb_build_object(
         'ARN', topic_arn,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Region', region
+      ) as properties
     from
       aws_sns_topic
     where
@@ -265,13 +272,10 @@ edge "aws_backup_vault_from_sns_topic_edge" {
   sql = <<-EOQ
     select
       v.arn as from_id,
-      t.topic_arn as to_id,
-      'backup_vault_to_sns_topic' as category
+      t.topic_arn as to_id
     from
       aws_backup_vault as v
-      left join
-        aws_sns_topic as t
-        on t.topic_arn = v.sns_topic_arn
+      left join aws_sns_topic as t on t.topic_arn = v.sns_topic_arn
     where
       arn = $1;
   EOQ

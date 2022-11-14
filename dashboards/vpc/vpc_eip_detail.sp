@@ -144,12 +144,18 @@ query "aws_vpc_eip_input" {
   EOQ
 }
 
+category "aws_vpc_eip_no_link" {
+  color = "purple"
+  icon  = local.aws_vpc_eip_icon
+}
+
 node "aws_vpc_eip_node" {
-  category = category.aws_vpc_eip
+  category = category.aws_vpc_eip_no_link
 
   sql = <<-EOQ
     select
       arn as id,
+      title as title,
       jsonb_build_object(
         'ARN', arn,
         'Allocation Id', allocation_id,
@@ -190,7 +196,7 @@ node "aws_vpc_eip_from_ec2_network_interface_node" {
 }
 
 edge "aws_vpc_eip_from_ec2_network_interface_edge" {
-  title = "eni"
+  title = "eip"
 
   sql = <<-EOQ
     select
@@ -232,7 +238,7 @@ node "aws_vpc_eip_from_ec2_instance_node" {
 }
 
 edge "aws_vpc_eip_network_interface_from_ec2_instance_edge" {
-  title = "ec2 instance"
+  title = "network interface"
 
   sql = <<-EOQ
     select

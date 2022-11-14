@@ -215,8 +215,13 @@ query "aws_ebs_snapshot_age" {
   param "arn" {}
 }
 
+category "aws_ebs_snapshot_no_link" {
+  color = "green"
+  icon  = local.aws_ebs_snapshot_icon
+}
+
 node "aws_ebs_snapshot_node" {
-  category = category.aws_ebs_snapshot
+  category = category.aws_ebs_snapshot_no_link
 
   sql = <<-EOQ
     select
@@ -226,7 +231,9 @@ node "aws_ebs_snapshot_node" {
         'ID', s.snapshot_id,
         'ARN', s.arn,
         'Size', s.volume_size,
-        'KMS Key ID', s.kms_key_id
+        'KMS Key ID', s.kms_key_id,
+        'Account ID', s.account_id,
+        'Region', s.region
       ) as properties
     from
       aws_ebs_snapshot as s
@@ -242,18 +249,18 @@ node "aws_ebs_snapshot_from_ebs_volume_node" {
 
   sql = <<-EOQ
     select
-      volumes.volume_id as id,
-      volumes.title as title,
+      v.volume_id as id,
+      v.title as title,
       jsonb_build_object(
-        'Volume ID', volumes.volume_id,
-        'ARN', volumes.arn
+        'Volume ID', v.volume_id,
+        'ARN', v.arn,
+        'Size', v.size,
+        'Account ID', v.account_id,
+        'Region', v.region
       ) as properties
     from
       aws_ebs_snapshot as s
-    left join
-      aws_ebs_volume as volumes
-      on s.volume_id = volumes.volume_id
-      and s.arn = $1;
+      left join aws_ebs_volume as v on s.volume_id = v.volume_id and s.arn = $1;
   EOQ
 
   param "arn" {}
@@ -264,14 +271,11 @@ edge "aws_ebs_snapshot_from_ebs_volume_edge" {
 
   sql = <<-EOQ
     select
-      volumes.volume_id as from_id,
+      v.volume_id as from_id,
       s.snapshot_id as to_id
     from
       aws_ebs_snapshot as s
-    left join
-      aws_ebs_volume as volumes
-      on s.volume_id = volumes.volume_id
-      and s.arn = $1;
+      left join aws_ebs_volume as v on s.volume_id = v.volume_id and s.arn = $1;
   EOQ
 
   param "arn" {}
@@ -327,7 +331,7 @@ node "aws_ebs_snapshot_from_ec2_launch_configuration_node" {
   sql = <<-EOQ
     select
       launch_config.launch_configuration_arn as id,
-      launch_config.name as title,
+      launch_config.title as title,
       jsonb_build_object(
         'ARN', launch_config.launch_configuration_arn,
         'Account ID', launch_config.account_id,
@@ -369,18 +373,17 @@ node "aws_ebs_snapshot_to_kms_key_node" {
 
   sql = <<-EOQ
     select
-      kms_keys.arn as id,
-      kms_keys.title as title,
+      k.arn as id,
+      k.title as title,
       jsonb_build_object(
-        'ARN', kms_keys.arn,
-        'Key Manager', kms_keys.key_manager
+        'ARN', k.arn,
+        'ID', k.id,
+        'Enabled', k.enabled,
+        'Key Manager', k.key_manager
       ) as properties
     from
       aws_ebs_snapshot as s
-    left join
-      aws_kms_key as kms_keys
-      on s.kms_key_id = kms_keys.arn
-      and s.arn = $1;
+      left join aws_kms_key as k on s.kms_key_id = k.arn and s.arn = $1;
   EOQ
 
   param "arn" {}
@@ -392,13 +395,10 @@ edge "aws_ebs_snapshot_to_kms_key_edge" {
   sql = <<-EOQ
     select
       s.snapshot_id as from_id,
-      kms_keys.arn as to_id
+      k.arn as to_id
     from
       aws_ebs_snapshot as s
-    left join
-      aws_kms_key as kms_keys
-      on s.kms_key_id = kms_keys.arn
-      and s.arn = $1;
+      left join aws_kms_key as k on s.kms_key_id = k.arn and s.arn = $1;
   EOQ
 
   param "arn" {}

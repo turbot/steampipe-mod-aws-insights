@@ -53,20 +53,20 @@ dashboard "aws_vpc_subnet_detail" {
         node.aws_vpc_subnet_to_vpc_node,
         node.aws_vpc_subnet_to_vpc_route_table_node,
         node.aws_vpc_subnet_to_vpc_network_acl_node,
-        node.aws_vpc_subnet_to_rds_db_instance_node,
-        node.aws_vpc_subnet_to_ec2_instance_node,
-        node.aws_vpc_subnet_to_lambda_function_node,
-        node.aws_vpc_subnet_to_sagemaker_notebook_instance_node
+        node.aws_vpc_subnet_from_rds_db_instance_node,
+        node.aws_vpc_subnet_from_ec2_instance_node,
+        node.aws_vpc_subnet_from_lambda_function_node,
+        node.aws_vpc_subnet_from_sagemaker_notebook_instance_node
       ]
 
       edges = [
         edge.aws_vpc_subnet_to_vpc_edge,
         edge.aws_vpc_subnet_to_vpc_route_table_edge,
         edge.aws_vpc_subnet_to_vpc_network_acl_edge,
-        edge.aws_vpc_subnet_to_rds_db_instance_edge,
-        edge.aws_vpc_subnet_to_ec2_instance_edge,
-        edge.aws_vpc_subnet_to_lambda_function_edge,
-        edge.aws_vpc_subnet_to_sagemaker_notebook_instance_edge
+        edge.aws_vpc_subnet_from_rds_db_instance_edge,
+        edge.aws_vpc_subnet_from_ec2_instance_edge,
+        edge.aws_vpc_subnet_from_lambda_function_edge,
+        edge.aws_vpc_subnet_from_sagemaker_notebook_instance_edge
       ]
 
       args = {
@@ -306,8 +306,12 @@ query "aws_vpc_subnet_association" {
   param "subnet_id" {}
 }
 
+category "aws_vpc_subnet_no_link" {
+  color = "purple"
+}
+
 node "aws_vpc_subnet_node" {
-  category = category.aws_vpc_subnet
+  category = category.aws_vpc_subnet_no_link
 
   sql = <<-EOQ
     select
@@ -323,7 +327,7 @@ node "aws_vpc_subnet_node" {
     from
       aws_vpc_subnet
     where
-      subnet_id = $1
+      subnet_id = $1;
   EOQ
 
   param "subnet_id" {}
@@ -347,7 +351,7 @@ node "aws_vpc_subnet_to_vpc_node" {
       aws_vpc_subnet as s
       left join aws_vpc as v on v.vpc_id = s.vpc_id
     where
-      s.subnet_id = $1
+      s.subnet_id = $1;
   EOQ
 
   param "subnet_id" {}
@@ -370,7 +374,7 @@ edge "aws_vpc_subnet_to_vpc_edge" {
       aws_vpc_subnet as s
       left join aws_vpc as v on v.vpc_id = s.vpc_id
     where
-      s.subnet_id = $1
+      s.subnet_id = $1;
   EOQ
 
   param "subnet_id" {}
@@ -392,7 +396,7 @@ node "aws_vpc_subnet_to_vpc_route_table_node" {
       aws_vpc_route_table,
       jsonb_array_elements(associations) as a
     where
-      a ->> 'SubnetId' = $1
+      a ->> 'SubnetId' = $1;
   EOQ
 
   param "subnet_id" {}
@@ -413,7 +417,7 @@ edge "aws_vpc_subnet_to_vpc_route_table_edge" {
       aws_vpc_route_table,
       jsonb_array_elements(associations) as a
     where
-      a ->> 'SubnetId' = $1
+      a ->> 'SubnetId' = $1;
   EOQ
 
   param "subnet_id" {}
@@ -437,7 +441,7 @@ node "aws_vpc_subnet_to_vpc_network_acl_node" {
       aws_vpc_network_acl,
       jsonb_array_elements(associations) as a
     where
-      a ->> 'SubnetId' = $1
+      a ->> 'SubnetId' = $1;
   EOQ
 
   param "subnet_id" {}
@@ -459,13 +463,13 @@ edge "aws_vpc_subnet_to_vpc_network_acl_edge" {
       aws_vpc_network_acl,
       jsonb_array_elements(associations) as a
     where
-      a ->> 'SubnetId' = $1
+      a ->> 'SubnetId' = $1;
   EOQ
 
   param "subnet_id" {}
 }
 
-node "aws_vpc_subnet_to_rds_db_instance_node" {
+node "aws_vpc_subnet_from_rds_db_instance_node" {
   category = category.aws_rds_db_instance
 
   sql = <<-EOQ
@@ -483,14 +487,14 @@ node "aws_vpc_subnet_to_rds_db_instance_node" {
       aws_rds_db_instance,
       jsonb_array_elements(subnets) as s
     where
-      s ->> 'SubnetIdentifier' = $1
+      s ->> 'SubnetIdentifier' = $1;
   EOQ
 
   param "subnet_id" {}
 }
 
-edge "aws_vpc_subnet_to_rds_db_instance_edge" {
-  title = "rds db instance"
+edge "aws_vpc_subnet_from_rds_db_instance_edge" {
+  title = "subnet"
 
   sql = <<-EOQ
     select
@@ -505,13 +509,13 @@ edge "aws_vpc_subnet_to_rds_db_instance_edge" {
       aws_rds_db_instance,
       jsonb_array_elements(subnets) as s
     where
-      s ->> 'SubnetIdentifier' = $1
+      s ->> 'SubnetIdentifier' = $1;
   EOQ
 
   param "subnet_id" {}
 }
 
-node "aws_vpc_subnet_to_ec2_instance_node" {
+node "aws_vpc_subnet_from_ec2_instance_node" {
   category = category.aws_ec2_instance
 
   sql = <<-EOQ
@@ -527,14 +531,14 @@ node "aws_vpc_subnet_to_ec2_instance_node" {
     from
       aws_ec2_instance
     where
-      subnet_id = $1
+      subnet_id = $1;
   EOQ
 
   param "subnet_id" {}
 }
 
-edge "aws_vpc_subnet_to_ec2_instance_edge" {
-  title = "ec2 instance"
+edge "aws_vpc_subnet_from_ec2_instance_edge" {
+  title = "subnet"
 
   sql = <<-EOQ
     select
@@ -548,13 +552,13 @@ edge "aws_vpc_subnet_to_ec2_instance_edge" {
     from
       aws_ec2_instance
     where
-      subnet_id = $1
+      subnet_id = $1;
   EOQ
 
   param "subnet_id" {}
 }
 
-node "aws_vpc_subnet_to_lambda_function_node" {
+node "aws_vpc_subnet_from_lambda_function_node" {
   category = category.aws_lambda_function
 
   sql = <<-EOQ
@@ -572,14 +576,14 @@ node "aws_vpc_subnet_to_lambda_function_node" {
       aws_lambda_function,
       jsonb_array_elements(vpc_subnet_ids) as s
     where
-      trim((s::text ), '""') = $1
+      trim((s::text ), '""') = $1;
   EOQ
 
   param "subnet_id" {}
 }
 
-edge "aws_vpc_subnet_to_lambda_function_edge" {
-  title = "lambda function"
+edge "aws_vpc_subnet_from_lambda_function_edge" {
+  title = "subnet"
 
   sql = <<-EOQ
     select
@@ -600,7 +604,7 @@ edge "aws_vpc_subnet_to_lambda_function_edge" {
   param "subnet_id" {}
 }
 
-node "aws_vpc_subnet_to_sagemaker_notebook_instance_node" {
+node "aws_vpc_subnet_from_sagemaker_notebook_instance_node" {
   category = category.aws_sagemaker_notebook_instance
 
   sql = <<-EOQ
@@ -623,8 +627,8 @@ node "aws_vpc_subnet_to_sagemaker_notebook_instance_node" {
   param "subnet_id" {}
 }
 
-edge "aws_vpc_subnet_to_sagemaker_notebook_instance_edge" {
-  title = "notebook instance"
+edge "aws_vpc_subnet_from_sagemaker_notebook_instance_edge" {
+  title = "subnet"
 
   sql = <<-EOQ
    select

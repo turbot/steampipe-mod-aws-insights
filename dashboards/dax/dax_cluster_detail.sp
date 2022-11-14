@@ -66,7 +66,7 @@ dashboard "dax_cluster_detail" {
         edge.aws_dax_cluster_vpc_security_group_to_vpc_edge,
         edge.aws_dax_cluster_vpc_subnet_to_vpc_edge
       ]
-      
+
       args = {
         arn = self.input.dax_cluster_arn.value
       }
@@ -181,14 +181,19 @@ query "aws_dax_cluster_encryption" {
   param "arn" {}
 }
 
+category "aws_dax_cluster_no_link" {
+  color = "blue"
+}
+
 node "aws_dax_cluster_node" {
-  category = category.aws_dax_cluster
+  category = category.aws_dax_cluster_no_link
 
   sql = <<-EOQ
     select
       arn as id,
       title as title,
       jsonb_build_object(
+        'Cluster Name', cluster_name,
         'ARN', arn,
         'Account ID', account_id,
         'Name', title,
@@ -209,14 +214,15 @@ node "aws_dax_cluster_to_iam_role_node" {
   sql = <<-EOQ
     select
       r.arn as id,
-      r.name as title,
+      r.title as title,
       json_build_object(
+        'Name', name,
         'ARN', r.arn,
         'Account ID', r.account_id,
         'Create Date', r.create_date,
         'Max Session Duration', r.max_session_duration
       ) as properties
-    from 
+    from
       aws_dax_cluster as c,
       aws_iam_role as r
     where
@@ -258,7 +264,7 @@ node "aws_dax_cluster_to_vpc_security_group_node" {
     from
       aws_vpc_security_group
     where
-      group_id in 
+      group_id in
       (
         select
           sg ->> 'SecurityGroupIdentifier'
@@ -282,8 +288,7 @@ edge "aws_dax_cluster_to_vpc_security_group_edge" {
     from
       aws_dax_cluster as c,
       jsonb_array_elements(security_groups) as s
-      join aws_vpc_security_group sg
-        on sg.group_id = s ->> 'SecurityGroupIdentifier'
+      join aws_vpc_security_group sg on sg.group_id = s ->> 'SecurityGroupIdentifier'
     where
       c.arn = $1;
   EOQ
@@ -299,8 +304,9 @@ node "aws_dax_cluster_to_dax_subnet_group_node" {
       title as title,
       jsonb_build_object(
         'Name', subnet_group_name,
+        'VPC ID', vpc_id,
         'Account ID', account_id,
-        'Region', region 
+        'Region', region
       ) as properties
     from
       aws_dax_subnet_group
@@ -324,12 +330,10 @@ edge "aws_dax_cluster_to_dax_subnet_group_edge" {
   sql = <<-EOQ
     select
       c.arn as from_id,
-      g.title as to_id
+      g.subnet_group_name as to_id
     from
       aws_dax_cluster as c
-      left join
-        aws_dax_subnet_group as g
-        on g.subnet_group_name = c.subnet_group
+      left join aws_dax_subnet_group as g on g.subnet_group_name = c.subnet_group
     where
       c.arn = $1;
   EOQ
@@ -373,7 +377,7 @@ edge "aws_dax_subnet_group_to_vpc_subnet_edge" {
   title = "subnet"
   sql = <<-EOQ
     select
-      g.title as from_id,
+      g.subnet_group_name as from_id,
       sub.subnet_arn as to_id
     from
       aws_vpc_subnet as sub,
@@ -398,7 +402,7 @@ node "aws_dax_cluster_to_sns_topic_node" {
       jsonb_build_object(
         'ARN', topic_arn,
         'Account ID', account_id,
-        'Region', region 
+        'Region', region
       ) as properties
     from
       aws_sns_topic
@@ -425,9 +429,7 @@ edge "aws_dax_cluster_to_sns_topic_edge" {
       t.topic_arn as to_id
     from
       aws_dax_cluster as c
-      left join
-        aws_sns_topic as t
-        on t.topic_arn = c.notification_configuration ->> 'TopicArn'
+      left join aws_sns_topic as t on t.topic_arn = c.notification_configuration ->> 'TopicArn'
     where
       c.arn = $1;
   EOQ
@@ -476,10 +478,8 @@ edge "aws_dax_cluster_vpc_security_group_to_vpc_edge" {
     from
       aws_dax_cluster as c,
       jsonb_array_elements(security_groups) as s
-      join aws_vpc_security_group sg
-        on sg.group_id = s ->> 'SecurityGroupIdentifier'
-      join aws_vpc v
-        on v.vpc_id = sg.vpc_id
+      join aws_vpc_security_group sg on sg.group_id = s ->> 'SecurityGroupIdentifier'
+      join aws_vpc v on v.vpc_id = sg.vpc_id
     where
       c.arn = $1;
   EOQ

@@ -242,20 +242,26 @@ query "aws_acm_certificate_transparency_logging_status" {
   param "arn" {}
 }
 
+category "aws_acm_certificate_no_link" {
+  color = "red"
+  icon = local.aws_acm_certificate_icon
+}
+
 node "aws_acm_certificate_node" {
-  category = category.aws_acm_certificate
+  category = category.aws_acm_certificate_no_link
 
   sql = <<-EOQ
     select
-      title as id,
+      certificate_arn as id,
       title as title,
-      jsonb_build_object(
+      jsonb_build_object (
         'ARN', certificate_arn,
         'Domain Name', domain_name,
         'Certificate Transparency Logging Preference', certificate_transparency_logging_preference,
         'Created At', created_at,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Region', region
+      ) as properties
     from
       aws_acm_certificate
     where
@@ -271,13 +277,14 @@ node "aws_acm_certificate_from_cloudfront_distribution_node" {
   sql = <<-EOQ
     select
       id as id,
-      id as title,
+      title as title,
       jsonb_build_object(
         'ARN', arn,
         'Status', status,
         'Enabled', enabled::text,
         'Domain Name', domain_name,
-        'Account ID', account_id ) as properties
+        'Account ID', account_id
+      ) as properties
     from
       aws_cloudfront_distribution
     where
@@ -301,13 +308,11 @@ edge "aws_acm_certificate_from_cloudfront_distribution_edge" {
   sql = <<-EOQ
     select
       d.id as from_id,
-      c.title as to_id
+      c.certificate_arn as to_id
     from
       aws_acm_certificate as c,
       jsonb_array_elements_text(in_use_by) as arns
-      left join
-        aws_cloudfront_distribution as d
-        on d.arn = arns
+      left join aws_cloudfront_distribution as d on d.arn = arns
     where
       certificate_arn = $1;
   EOQ
@@ -321,14 +326,15 @@ node "aws_acm_certificate_from_ec2_classic_load_balancer_node" {
   sql = <<-EOQ
     select
       arn as id,
-      name as title,
+      title as title,
       jsonb_build_object(
         'ARN', arn,
         'VPC ID', vpc_id,
         'DNS Name', dns_name,
         'Created Time', created_time,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Region', region
+      ) as properties
     from
       aws_ec2_classic_load_balancer
     where
@@ -352,13 +358,11 @@ edge "aws_acm_certificate_from_ec2_classic_load_balancer_edge" {
   sql = <<-EOQ
     select
       b.arn as from_id,
-      c.title as to_id
+      c.certificate_arn as to_id
     from
       aws_acm_certificate as c,
       jsonb_array_elements_text(in_use_by) as arns
-      left join
-        aws_ec2_classic_load_balancer as b
-        on b.arn = arns
+      left join aws_ec2_classic_load_balancer as b on b.arn = arns
     where
       certificate_arn = $1;
   EOQ
@@ -372,14 +376,15 @@ node "aws_acm_certificate_from_ec2_application_load_balancer_node" {
   sql = <<-EOQ
    select
       arn as id,
-      name as title,
-      jsonb_build_object(
+      title as title,
+      jsonb_build_object (
         'ARN', arn,
         'VPC ID', vpc_id,
         'DNS Name', dns_name,
         'Created Time', created_time,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Region', region
+      ) as properties
     from
       aws_ec2_application_load_balancer
     where
@@ -404,13 +409,11 @@ edge "aws_acm_certificate_from_ec2_application_load_balancer_edge" {
   sql = <<-EOQ
     select
       lb.arn as from_id,
-      c.title as to_id
+      c.certificate_arn as to_id
     from
       aws_acm_certificate as c,
       jsonb_array_elements_text(in_use_by) as arns
-      left join
-        aws_ec2_application_load_balancer as lb
-        on lb.arn = arns
+      left join aws_ec2_application_load_balancer as lb on lb.arn = arns
     where
       certificate_arn = $1
       and lb.arn like '%loadbalancer/app%';
@@ -425,14 +428,15 @@ node "aws_acm_certificate_from_ec2_network_load_balancer_node" {
   sql = <<-EOQ
     select
       arn as id,
-      name as title,
+      title as title,
       jsonb_build_object(
         'ARN', arn,
         'VPC ID', vpc_id,
         'DNS Name', dns_name,
         'Created Time', created_time,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Region', region
+      ) as properties
     from
       aws_ec2_network_load_balancer
     where
@@ -456,14 +460,11 @@ edge "aws_acm_certificate_from_ec2_network_load_balancer_edge" {
   sql = <<-EOQ
     select
       b.arn as from_id,
-      c.title as to_id,
-      'ec2_network_load_balancer_to_acm_certificate' as category
+      c.certificate_arn as to_id
     from
       aws_acm_certificate as c,
       jsonb_array_elements_text(in_use_by) as arns
-      left join
-        aws_ec2_network_load_balancer as b
-        on b.arn = arns
+      left join aws_ec2_network_load_balancer as b on b.arn = arns
     where
       certificate_arn = $1;
   EOQ
