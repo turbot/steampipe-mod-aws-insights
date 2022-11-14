@@ -1865,7 +1865,7 @@ node "aws_vpc_az_route_table" {
           then concat(title,' [Default]')
         else
           title
-        end as title,
+      end as title,
       jsonb_build_object(
         'ID', route_table_id,
         'Region', region,
