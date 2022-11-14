@@ -1567,12 +1567,7 @@ edge "aws_vpc_security_group_from_redshift_cluster_edge" {
   sql = <<-EOQ
     select
       rc.arn as from_id,
-      vsg.arn as to_id,
-      jsonb_build_object(
-        'ID', rc.cluster_identifier,
-        'Account ID', rc.account_id,
-        'Region', rc.region
-      ) as properties
+      vsg.arn as to_id
     from
       aws_redshift_cluster as rc,
       jsonb_array_elements(rc.vpc_security_groups) as sg

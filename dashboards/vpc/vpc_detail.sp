@@ -1585,7 +1585,7 @@ node "aws_vpc_from_ec2_instance_node" {
 }
 
 edge "aws_vpc_from_ec2_instance_edge" {
-  title = "ec2 instance"
+  title = "vpc"
 
   sql = <<-EOQ
     select
@@ -1622,7 +1622,7 @@ node "aws_vpc_from_lambda_function_node" {
 }
 
 edge "aws_vpc_from_lambda_function_edge" {
-  title = "lambda function"
+  title = "vpc"
 
   sql = <<-EOQ
     select
@@ -1659,7 +1659,7 @@ node "aws_vpc_from_ec2_application_load_balancer_node" {
 }
 
 edge "aws_vpc_from_ec2_application_load_balancer_edge" {
-  title = "ec2 application lb"
+  title = "vpc"
 
   sql = <<-EOQ
     select
@@ -1696,7 +1696,7 @@ node "aws_vpc_from_ec2_network_load_balancer_node" {
 }
 
 edge "aws_vpc_from_ec2_network_load_balancer_edge" {
-  title = "network lb"
+  title = "vpc"
 
   sql = <<-EOQ
      select
@@ -1733,7 +1733,7 @@ node "aws_vpc_from_ec2_classic_load_balancer_node" {
 }
 
 edge "aws_vpc_from_ec2_classic_load_balancer_edge" {
-  title = "ec2 classic lb"
+  title = "vpc"
 
   sql = <<-EOQ
     select
@@ -1770,7 +1770,7 @@ node "aws_vpc_from_ec2_gateway_load_balancer_node" {
 }
 
 edge "aws_vpc_from_ec2_gateway_load_balancer_edge" {
-  title = "gateway lb"
+  title = "vpc"
 
   sql = <<-EOQ
    select
@@ -1807,7 +1807,7 @@ node "aws_vpc_from_rds_db_instance_node" {
 }
 
 edge "aws_vpc_from_rds_db_instance_edge" {
-  title = "rds db instance"
+  title = "vpc"
 
   sql = <<-EOQ
     select
@@ -1844,7 +1844,7 @@ node "aws_vpc_from_redshift_cluster_node" {
 }
 
 edge "aws_vpc_from_redshift_cluster_edge" {
-  title = "redshift cluster"
+  title = "vpc"
 
   sql = <<-EOQ
     select
@@ -1881,7 +1881,7 @@ node "aws_vpc_from_ec2_target_group_node" {
 }
 
 edge "aws_vpc_from_ec2_target_group_edge" {
-  title = "target group"
+  title = "vpc"
 
   sql = <<-EOQ
     select
@@ -1918,7 +1918,7 @@ node "aws_vpc_from_fsx_file_system_node" {
 }
 
 edge "aws_vpc_from_fsx_file_system_edge" {
-  title = "fsx file system"
+  title = "vpc"
 
   sql = <<-EOQ
     select
@@ -1955,7 +1955,7 @@ node "aws_vpc_from_s3_access_point_node" {
 }
 
 edge "aws_vpc_from_s3_access_point_edge" {
-  title = "s3 access point"
+  title = "vpc"
 
   sql = <<-EOQ
     select
@@ -1997,7 +1997,7 @@ node "aws_vpc_from_vpc_peering_connection_node" {
 }
 
 edge "aws_vpc_from_vpc_peering_connection_edge" {
-  title = "peering connection"
+  title = "vpc"
 
   sql = <<-EOQ
     select
@@ -2043,7 +2043,7 @@ node "aws_vpc_peering_connection_to_vpc_node" {
 }
 
 edge "aws_vpc_peering_connection_to_vpc_edge" {
-  title = "vpn gateway"
+  title = "vpc"
 
   sql = <<-EOQ
    select

@@ -342,8 +342,8 @@ node "aws_sqs_queue_node" {
 }
 
 node "aws_sqs_queue_to_sns_topic_subscription_node" {
-  category = category.aws_sns_topic
-  
+  category = category.aws_sns_topic_subscription
+
   sql = <<-EOQ
     select
       subscription_arn as id,
