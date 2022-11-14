@@ -7,7 +7,7 @@ category "aws_docdb_cluster" {
 }
 
 category "aws_ec2_classic_load_balancer" {
-  color = "orange"
+  color = "purple"
   href  = "/aws_insights.dashboard.aws_ec2_classic_load_balancer_detail?input.clb={{.properties.'ARN' | @uri}}"
   icon  = local.aws_ec2_classic_load_balancer_icon
   fold {
@@ -18,7 +18,7 @@ category "aws_ec2_classic_load_balancer" {
 }
 
 category "aws_ec2_application_load_balancer" {
-  color = "orange"
+  color = "purple"
   href  = "/aws_insights.dashboard.aws_ec2_application_load_balancer_detail?input.alb={{.properties.'ARN' | @uri}}"
   icon  = local.aws_ec2_application_load_balancer_icon
   fold {
@@ -29,7 +29,7 @@ category "aws_ec2_application_load_balancer" {
 }
 
 category "aws_ec2_network_load_balancer" {
-  color = "orange"
+  color = "purple"
   href  = "/aws_insights.dashboard.aws_ec2_network_load_balancer_detail?input.nlb={{.properties.'ARN' | @uri}}"
   icon  = local.aws_ec2_network_load_balancer_icon
   fold {
@@ -40,7 +40,7 @@ category "aws_ec2_network_load_balancer" {
 }
 
 category "aws_ec2_gateway_load_balancer" {
-  color = "orange"
+  color = "purple"
   href  = "/aws_insights.dashboard.aws_ec2_gateway_load_balancer_detail?input.glb={{.properties.'ARN' | @uri}}"
   icon  = local.aws_ec2_gateway_load_balancer_icon
   fold {
@@ -51,7 +51,7 @@ category "aws_ec2_gateway_load_balancer" {
 }
 
 category "aws_ec2_load_balancer_listener" {
-  color = "orange"
+  color = "purple"
   fold {
     title     = "EC2 Load Balancer Listeners"
     threshold = 3
@@ -59,7 +59,7 @@ category "aws_ec2_load_balancer_listener" {
 }
 
 category "aws_ec2_transit_gateway" {
-  color = "orange"
+  color = "purple"
   icon  = local.aws_ec2_transit_gateway_icon
   fold {
     title     = "EC2 Transit Gateways"
