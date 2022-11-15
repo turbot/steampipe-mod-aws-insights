@@ -244,7 +244,7 @@ query "aws_acm_certificate_transparency_logging_status" {
 
 category "aws_acm_certificate_no_link" {
   color = "red"
-  icon = local.aws_acm_certificate_icon
+  icon  = local.aws_acm_certificate_icon
 }
 
 node "aws_acm_certificate_node" {

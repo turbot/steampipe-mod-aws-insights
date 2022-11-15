@@ -50,8 +50,8 @@ dashboard "aws_vpc_detail" {
   }
 
 
-container {
-  graph {
+  container {
+    graph {
       title = "Relationships"
       width = 12
       type  = "graph"
@@ -1704,7 +1704,10 @@ query "aws_vpc_subnet_by_az" {
 
 # }
 
-
+category "aws_vpc_no_link" {
+  icon  = "heroicons-outline:cloud" //"text:vpc"
+  color = "purple"
+}
 
 #### New Node/Edge format Graph queries ############
 
@@ -2479,8 +2482,8 @@ node "aws_vpc_redshift_cluster_node" {
 
 
 
-   # -- Subnet -> Redshift Clusters (edge)
-   # -- TO DO: These should connect to subnets, not vpcs (dont have any to test with right now...)
+# -- Subnet -> Redshift Clusters (edge)
+# -- TO DO: These should connect to subnets, not vpcs (dont have any to test with right now...)
 edge "aws_vpc_subnet_redshift_edge" {
   title = "redshift cluster"
 
@@ -2519,8 +2522,8 @@ node "aws_vpc_fsx_filesystem_node" {
 }
 
 
-   # -- Subnet -> FSX File Systems (edge)
-   # -- TO DO: These should connect to subnets, not vpcs (dont have any to test with right now...)
+# -- Subnet -> FSX File Systems (edge)
+# -- TO DO: These should connect to subnets, not vpcs (dont have any to test with right now...)
 edge "aws_vpc_subnet_fxs_edge" {
   title = "fsx file system"
 
@@ -2715,7 +2718,7 @@ node "aws_vpc_routing_gateway_node" {
 edge "aws_vpc_routing_cidr_to_gateway_edge" {
 
   title = "gateway"
-  sql = <<-EOQ
+  sql   = <<-EOQ
       select
         coalesce(
             r ->> 'DestinationCidrBlock',

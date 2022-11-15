@@ -69,14 +69,14 @@ dashboard "aws_ebs_volume_detail" {
         node.aws_ebs_volume_node,
         node.aws_ebs_volume_to_kms_key_node,
         node.aws_ebs_volume_to_ebs_snapshot_node,
-        node.aws_ebs_volume_to_ec2_instance_node,
+        node.aws_ebs_volume_from_ec2_instance_node,
         node.aws_ebs_volume_ebs_snapshots_to_ec2_ami_node
       ]
 
       edges = [
         edge.aws_ebs_volume_to_kms_key_edge,
         edge.aws_ebs_volume_to_ebs_snapshot_edge,
-        edge.aws_ebs_volume_to_ec2_instance_edge,
+        edge.aws_ebs_volume_from_ec2_instance_edge,
         edge.aws_ebs_volume_ebs_snapshots_to_ec2_ami_edge
       ]
 
@@ -328,7 +328,7 @@ edge "aws_ebs_volume_to_ebs_snapshot_edge" {
   param "arn" {}
 }
 
-node "aws_ebs_volume_to_ec2_instance_node" {
+node "aws_ebs_volume_from_ec2_instance_node" {
   category = category.aws_ec2_instance
 
   sql = <<-EOQ
@@ -360,13 +360,13 @@ node "aws_ebs_volume_to_ec2_instance_node" {
   param "arn" {}
 }
 
-edge "aws_ebs_volume_to_ec2_instance_edge" {
+edge "aws_ebs_volume_from_ec2_instance_edge" {
   title = "mounts"
 
   sql = <<-EOQ
     select
-      $1 as from_id,
-      i.arn as to_id
+      i.arn as from_id,
+      $1 as to_id
     from
       aws_ec2_instance as i,
       jsonb_array_elements(i.block_device_mappings) as bdm
