@@ -114,6 +114,7 @@ query "aws_clb_input" {
   sql = <<-EOQ
     select
       title as label,
+      arn as value,
       json_build_object(
         'account_id', account_id,
         'region', region
@@ -291,7 +292,7 @@ node "aws_ec2_clb_to_ec2_instance_node" {
 }
 
 edge "aws_ec2_clb_to_ec2_instance_edge" {
-  title = "ec2 instance"
+  title = "routes to"
 
   sql = <<-EOQ
     select
