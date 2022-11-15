@@ -274,6 +274,7 @@ node "aws_api_gatewayv2_api_node" {
       jsonb_build_object(
         'Name', name,
         'API Endpoint', api_endpoint,
+        'ID', api_id,
         'Created Date', created_date,
         'Account ID', account_id,
         'Region', region,

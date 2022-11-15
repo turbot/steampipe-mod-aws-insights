@@ -144,7 +144,7 @@ query "aws_codebuild_project_sources" {
 query "aws_codebuild_project_encrypted" {
   sql = <<-EOQ
     select
-      'Encrypted' as label,
+      'Encryption' as label,
       case when encryption_key is null then 'Disabled' else 'Enabled' end as value,
       case when encryption_key is null then 'alert' else 'ok' end as type
     from
@@ -196,10 +196,12 @@ query "aws_codebuild_project_overview" {
   sql = <<-EOQ
     select
       name as "Name",
-      arn as "ARN",
       description as "Description",
       project_visibility as "Project Visibility",
-      concurrent_build_limit as "Concurrent build limit"
+      concurrent_build_limit as "Concurrent build limit",
+      region as "Region",
+      account_id as "Account ID",
+      arn as "ARN"
     from
       aws_codebuild_project
     where

@@ -106,14 +106,14 @@ container {
 
         edge.aws_vpc_peered_vpc_edge
       ]
-      
+
       args = {
         vpc_id = self.input.vpc_id.value
       }
     }
-    
 
-    
+
+
   }
 
 
@@ -326,7 +326,6 @@ container {
 
 }
 
-
 flow "nacl_flow" {
   width = 6
   type  = "sankey"
@@ -378,7 +377,7 @@ query "aws_vpc_is_default" {
   sql = <<-EOQ
     select
       'Default VPC' as label,
-      case when not is_default then 'ok' else 'Default VPC' end as value,
+      case when not is_default then 'Ok' else 'Default VPC' end as value,
       case when not is_default then 'ok' else 'alert' end as type
     from
       aws_vpc
@@ -1717,8 +1716,13 @@ node "aws_vpc_node" {
       vpc_id as id,
       title as title,
       jsonb_build_object(
-        'VPC ID', vpc_id,
         'ARN', arn,
+        'VPC ID', vpc_id,
+        'Is default', is_default,
+        'State', state,
+        'CIDR Block', cidr_block,
+        'DHCP Options ID', dhcp_options_id,
+        'Owner ID', owner_id,
         'Account ID', account_id,
         'Region', region
       ) as properties
@@ -1860,8 +1864,8 @@ node "aws_vpc_az_route_table" {
   sql = <<-EOQ
     select
       route_table_id as id,
-      case 
-        when associations @> '[{"Main": true}]' 
+      case
+        when associations @> '[{"Main": true}]'
           then concat(title,' [Default]')
         else
           title
@@ -2025,7 +2029,7 @@ edge "aws_vpc_subnet_nat_gateway_edge" {
       subnet_id as from_id,
       arn as to_id
     from
-      aws_vpc_nat_gateway 
+      aws_vpc_nat_gateway
     where
       vpc_id = $1
   EOQ
@@ -2133,7 +2137,7 @@ node "aws_vpc_peered_vpc_node" {
       where
         accepter_vpc_id = vpc.vpc_id
         and requester_vpc_id = $1
-        
+
       union all select
         requester_vpc_id as id,
         vpc.title as title,
@@ -2150,7 +2154,7 @@ node "aws_vpc_peered_vpc_node" {
       where
         requester_vpc_id = vpc.vpc_id
         and accepter_vpc_id = $1
-        
+
 
   EOQ
 
@@ -2166,13 +2170,13 @@ edge "aws_vpc_peered_vpc_edge" {
   sql = <<-EOQ
     select
       $1 as to_id,
-      case 
+      case
         when accepter_vpc_id = $1 then requester_vpc_id
         else accepter_vpc_id
       end as from_id
     from
       aws_vpc_peering_connection
-    where 
+    where
       accepter_vpc_id = $1
       or requester_vpc_id = $1
   EOQ
@@ -2211,8 +2215,8 @@ edge "aws_vpc_subnet_instance_edge" {
       subnet_id as from_id,
       arn as to_id
     from
-      aws_ec2_instance 
-    where 
+      aws_ec2_instance
+    where
       vpc_id = $1
   EOQ
 
@@ -2251,7 +2255,7 @@ edge "aws_vpc_subnet_lambda_edge" {
     from
       aws_lambda_function as l,
       jsonb_array_elements_text(l.vpc_subnet_ids) as s
-    where 
+    where
       l.vpc_id = $1
   EOQ
 
@@ -2287,7 +2291,7 @@ edge "aws_vpc_subnet_alb_edge" {
       az ->> 'SubnetId' as from_id,
       a.arn as to_id
     from
-      aws_ec2_application_load_balancer as a, 
+      aws_ec2_application_load_balancer as a,
       jsonb_array_elements(availability_zones) as az
     where
       a.vpc_id = $1
@@ -2365,7 +2369,7 @@ edge "aws_vpc_subnet_elb_edge" {
     from
       aws_ec2_classic_load_balancer as c,
       jsonb_array_elements_text(subnets) as s
-    where 
+    where
       c.vpc_id = $1
   EOQ
 
@@ -2485,7 +2489,7 @@ edge "aws_vpc_subnet_redshift_edge" {
       arn as from_id,
       vpc_id as to_id
     from
-      aws_redshift_cluster 
+      aws_redshift_cluster
     where
      vpc_id = $1
   EOQ
@@ -2714,7 +2718,7 @@ edge "aws_vpc_routing_cidr_to_gateway_edge" {
   sql = <<-EOQ
       select
         coalesce(
-            r ->> 'DestinationCidrBlock', 
+            r ->> 'DestinationCidrBlock',
             r ->> 'DestinationIpv6CidrBlock'
         ) as from_id,
         coalesce(
@@ -2742,3 +2746,4 @@ edge "aws_vpc_routing_cidr_to_gateway_edge" {
 
   param "vpc_id" {}
 }
+
