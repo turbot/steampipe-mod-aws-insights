@@ -7,9 +7,9 @@ category "aws_docdb_cluster" {
 }
 
 category "aws_ec2_classic_load_balancer" {
+  href = "/aws_insights.dashboard.aws_ec2_classic_load_balancer_detail?input.clb={{.properties.'ARN' | @uri}}"
+  icon = local.aws_ec2_classic_load_balancer_icon
   color = "purple"
-  href  = "/aws_insights.dashboard.aws_ec2_classic_load_balancer_detail?input.clb={{.properties.'ARN' | @uri}}"
-  icon  = local.aws_ec2_classic_load_balancer_icon
   fold {
     title     = "EC2 Classic Load Balancers"
     icon      = local.aws_ec2_classic_load_balancer_icon
@@ -18,9 +18,10 @@ category "aws_ec2_classic_load_balancer" {
 }
 
 category "aws_ec2_application_load_balancer" {
+  href = "/aws_insights.dashboard.aws_ec2_application_load_balancer_detail?input.alb={{.properties.'ARN' | @uri}}"
+  icon = local.aws_ec2_application_load_balancer_icon
   color = "purple"
-  href  = "/aws_insights.dashboard.aws_ec2_application_load_balancer_detail?input.alb={{.properties.'ARN' | @uri}}"
-  icon  = local.aws_ec2_application_load_balancer_icon
+
   fold {
     title     = "EC2 Application Load Balancers"
     icon      = local.aws_ec2_application_load_balancer_icon
@@ -29,9 +30,10 @@ category "aws_ec2_application_load_balancer" {
 }
 
 category "aws_ec2_network_load_balancer" {
+  href = "/aws_insights.dashboard.aws_ec2_network_load_balancer_detail?input.nlb={{.properties.'ARN' | @uri}}"
+  icon = local.aws_ec2_network_load_balancer_icon
   color = "purple"
-  href  = "/aws_insights.dashboard.aws_ec2_network_load_balancer_detail?input.nlb={{.properties.'ARN' | @uri}}"
-  icon  = local.aws_ec2_network_load_balancer_icon
+
   fold {
     title     = "EC2 Network Load Balancers"
     icon      = local.aws_ec2_network_load_balancer_icon
@@ -40,9 +42,10 @@ category "aws_ec2_network_load_balancer" {
 }
 
 category "aws_ec2_gateway_load_balancer" {
+  href = "/aws_insights.dashboard.aws_ec2_gateway_load_balancer_detail?input.glb={{.properties.'ARN' | @uri}}"
+  icon = local.aws_ec2_gateway_load_balancer_icon
   color = "purple"
-  href  = "/aws_insights.dashboard.aws_ec2_gateway_load_balancer_detail?input.glb={{.properties.'ARN' | @uri}}"
-  icon  = local.aws_ec2_gateway_load_balancer_icon
+
   fold {
     title     = "EC2 Gateway Load Balancers"
     icon      = local.aws_ec2_gateway_load_balancer_icon
@@ -69,9 +72,12 @@ category "aws_ec2_transit_gateway" {
 }
 
 category "aws_ecs_cluster" {
+  href  = "/aws_insights.dashboard.aws_ecs_cluster_detail?input.ecs_cluster_arn={{.properties.'ARN' | @uri}}"
+  icon  = local.aws_ecs_task_definition_icon
   color = "orange"
-  href = "/aws_insights.dashboard.aws_ecs_cluster_detail?input.ecs_cluster_arn={{.properties.'ARN' | @uri}}"
+
   fold {
+    icon = local.aws_ecs_task_definition_icon
     title     = "ECS Clusters"
     threshold = 3
   }
@@ -107,9 +113,10 @@ category "aws_ecs_service" {
 }
 
 category "aws_s3_bucket" {
+  href = "/aws_insights.dashboard.aws_s3_bucket_detail?input.bucket_arn={{.properties.'ARN' | @uri}}"
+  icon = local.aws_s3_bucket_icon
   color = "green"
-  href  = "/aws_insights.dashboard.aws_s3_bucket_detail?input.bucket_arn={{.properties.'ARN' | @uri}}"
-  icon  = local.aws_s3_bucket_icon
+
   fold {
     title     = "S3 Buckets"
     icon      = local.aws_s3_bucket_icon
@@ -132,6 +139,7 @@ category "aws_acm_certificate" {
   color = "red"
   href  = "/aws_insights.dashboard.acm_certificate_detail?input.certificate_arn={{.properties.'ARN' | @uri}}"
   icon = local.aws_acm_certificate_icon
+  color = "red"
   fold {
     title     = "ACM Certificates"
     icon      = local.aws_acm_certificate_icon
@@ -143,6 +151,8 @@ category "aws_sns_topic" {
   color = "pink"
   href = "/aws_insights.dashboard.aws_sns_topic_detail?input.topic_arn={{.properties.'ARN' | @uri}}"
   icon = local.aws_sns_topic_icon
+  color = "red"
+
   fold {
     title     = "SNS Topics"
     icon      = local.aws_sns_topic_icon
@@ -151,16 +161,22 @@ category "aws_sns_topic" {
 }
 
 category "aws_sns_topic_subscription" {
-  color = "pink"
+  icon = "heroicons-outline:rss"
+  color = "red"
+
   fold {
-    title     = "SNS Topic Subscriptions"
+    title     = "SNS Subscription"
+    icon = "heroicons-outline:rss"
     threshold = 3
   }
 }
 
+
 category "aws_kms_key" {
-  color = "red"
   href  = "/aws_insights.dashboard.aws_kms_key_detail?input.key_arn={{.properties.'ARN' | @uri}}"
+  icon  = "heroicons-outline:key"
+  color = "red"
+
   fold {
     title     = "KMS Keys"
     threshold = 3
@@ -179,8 +195,8 @@ category "aws_cloudtrail_trail" {
 
 category "aws_ebs_volume" {
   href  = "/aws_insights.dashboard.aws_ebs_volume_detail?input.volume_arn={{.properties.'ARN' | @uri}}"
-  color = "green"
   icon  = local.aws_ebs_volume_icon
+  color = "green"
   fold {
     title     = "EBS Volumes"
     icon      = local.aws_ebs_volume_icon
@@ -309,25 +325,32 @@ category "aws_ec2_ami" {
 }
 
 category "aws_ec2_autoscaling_group" {
+  icon  = "heroicons-outline:square-2-stack"
   color = "orange"
-  icon  = local.aws_ec2_autoscaling_group_icon
+
   fold {
+    icon  = "heroicons-outline:square-2-stack"
     title     = "EC2 Autoscaling Groups"
     threshold = 3
   }
 }
 
 category "aws_ec2_target_group" {
-  color = "orange"
+  icon  = "heroicons-outline:arrow-down-on-square"
+  color = "purple"
+
   fold {
+    icon  = "heroicons-outline:arrow-down-on-square"
     title     = "EC2 Autoscaling Groups"
     threshold = 3
   }
 }
 
 category "aws_ec2_key_pair" {
+  icon  = "heroicons-outline:key"
   color = "orange"
   fold {
+    icon = "heroicons-outline:key"
     title     = "EC2 Key Pair"
     threshold = 3
   }
@@ -370,8 +393,9 @@ category "aws_efs_mount_target" {
 
 category "aws_ec2_instance" {
   href  = "/aws_insights.dashboard.aws_ec2_instance_detail?input.instance_arn={{.properties.'ARN' | @uri}}"
-  color = "orange"
   icon  = local.aws_ec2_instance_icon
+  color = "orange"
+
   fold {
     title     = "EC2 Instances"
     icon      = local.aws_ec2_instance_icon
@@ -381,8 +405,8 @@ category "aws_ec2_instance" {
 
 category "aws_ec2_network_interface" {
   href  = "/aws_insights.dashboard.aws_ec2_network_interface_detail?input.network_interface_id={{.properties.'Interface ID' | @uri}}"
-  color = "orange"
   icon  = local.aws_ec2_network_interface_icon
+  color = "purple"
   fold {
     title     = "EC2 Network Interfaces"
     icon      = local.aws_ec2_network_interface_icon
@@ -392,8 +416,11 @@ category "aws_ec2_network_interface" {
 
 category "aws_vpc" {
   href  = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.properties.'VPC ID' | @uri}}"
+  icon  = "heroicons-outline:cloud"  //"text:vpc"
   color = "purple"
+
   fold {
+    icon  = "heroicons-outline:cloud"  //"text:vpc"
     title     = "VPCs"
     threshold = 3
   }
@@ -401,9 +428,12 @@ category "aws_vpc" {
 
 
 category "aws_vpc_security_group" {
-  href  = "/aws_insights.dashboard.aws_vpc_security_group_detail?input.security_group_id={{.properties.'Group ID' | @uri}}"
+  href = "/aws_insights.dashboard.aws_vpc_security_group_detail?input.security_group_id={{.properties.'Group ID' | @uri}}"
+  icon  = "heroicons-solid:lock-closed"
   color = "purple"
+
   fold {
+    icon  = "heroicons-outline:lock-closed"
     title     = "VPC Security Groups"
     threshold = 3
   }
@@ -422,8 +452,8 @@ category "aws_vpc_flow_log" {
 
 category "aws_iam_role" {
   href  = "/aws_insights.dashboard.aws_iam_role_detail?input.role_arn={{.properties.'ARN' | @uri}}"
-  color = "red"
   icon  = local.aws_iam_role_icon
+  color = "red"
   fold {
     title     = "IAM Roles"
     icon      = local.aws_iam_role_icon
@@ -488,23 +518,49 @@ category "aws_iam_access_key" {
 }
 
 category "aws_iam_profile" {
+  icon  = "heroicons-outline:user-plus"
   color = "red"
   fold {
+    icon = "heroicons-outline:user-plus"
     title     = "IAM Profiles"
     threshold = 3
   }
 }
 
 category "aws_lambda_function" {
+  href  = "/aws_insights.dashboard.aws_lambda_function_detail?input.lambda_arn={{.properties.'ARN' | @uri}}"
+  icon  = local.aws_lambda_function_icon
   color = "orange"
-  href = "/aws_insights.dashboard.aws_lambda_function_detail?input.lambda_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_lambda_function_icon
+
   fold {
     title     = "Lambda Functions"
     icon      = local.aws_lambda_function_icon
     threshold = 3
   }
 }
+
+category "aws_lambda_alias" {
+  icon  = "heroicons-outline:at-symbol"
+  color = "orange"
+
+  fold {
+    title     = "Lambda Aliases"
+    icon      = "heroicons-outline:at-symbol"
+    threshold = 3
+  }
+}
+
+category "aws_lambda_version" {
+  icon  = "heroicons-outline:document-duplicate"
+  color = "orange"
+
+  fold {
+    title     = "Lambda Aliases"
+    icon      = "heroicons-outline:document-duplicate"
+    threshold = 3
+  }
+}
+
 
 category "aws_emr_cluster" {
   color = "purple"
@@ -518,9 +574,13 @@ category "aws_emr_cluster" {
 }
 
 category "aws_vpc_subnet" {
-  color = "purple"
   href  = "/aws_insights.dashboard.aws_vpc_subnet_detail?input.subnet_id={{.properties.'Subnet ID' | @uri}}"
-  fold {
+  icon  = "heroicons-solid:share"
+  color = "purple"
+
+fold {
+    icon  = "heroicons-solid:share"
+    //color = "purple"
     title     = "VPC Subnets"
     threshold = 3
   }
@@ -588,11 +648,14 @@ category "aws_eventbridge_rule" {
 }
 
 category "aws_api_gatewayv2_api" {
-  color = "purple"
-  href = "/aws_insights.dashboard.api_gatewayv2_api_detail?input.api_id={{.properties.'ID' | @uri}}"
+  href  = "/aws_insights.dashboard.api_gatewayv2_api_detail?input.api_id={{.properties.'ID' | @uri}}"
+  icon  = "heroicons-outline:bolt"
+  color = "red"
+
   fold {
-    title     = "API Gatewayv2 APIs"
-    threshold = 3
+    icon       = "heroicons-outline:bolt"
+    title      = "API Gatewayv2 APIs"
+    threshold  = 3
   }
 }
 
@@ -731,8 +794,9 @@ category "aws_vpc_endpoint" {
 }
 
 category "aws_vpc_internet_gateway" {
-  color = "purple"
   icon  = local.aws_vpc_internet_gateway_icon
+  color = "purple"
+
   fold {
     title     = "VPC Internet Gateways"
     icon      = local.aws_vpc_internet_gateway_icon
@@ -741,8 +805,8 @@ category "aws_vpc_internet_gateway" {
 }
 
 category "aws_vpc_route_table" {
-  color = "purple"
   icon  = local.aws_vpc_route_table_icon
+  color = "purple"
   fold {
     title     = "VPC Route Tables"
     icon      = local.aws_vpc_route_table_icon
@@ -751,8 +815,9 @@ category "aws_vpc_route_table" {
 }
 
 category "aws_vpc_nat_gateway" {
-  color = "purple"
   icon  = local.aws_vpc_nat_gateway_icon
+  color = "purple"
+
   fold {
     title     = "VPC NAT Gateways"
     icon      = local.aws_vpc_nat_gateway_icon
@@ -761,8 +826,9 @@ category "aws_vpc_nat_gateway" {
 }
 
 category "aws_vpc_vpn_gateway" {
-  color = "purple"
   icon  = local.aws_vpc_vpn_gateway_icon
+  color = "purple"
+
   fold {
     title     = "VPC VPN Gateways"
     icon      = local.aws_vpc_vpn_gateway_icon
@@ -771,8 +837,9 @@ category "aws_vpc_vpn_gateway" {
 }
 
 category "aws_vpc_network_acl" {
-  color = "purple"
   icon  = local.aws_vpc_network_acl_icon
+  color = "purple"
+
   fold {
     title     = "VPC Network ACLs"
     icon      = local.aws_vpc_network_acl_icon
@@ -944,4 +1011,75 @@ category "aws_vpc_peering_connection" {
 graph "aws_graph_categories" {
   type  = "graph"
   title = "Relationships"
+}
+
+category "aws_fsx_file_system" {
+  icon  = "heroicons-outline:document-duplicate"
+  color = "green"
+
+  fold {
+    title     = "FSX Filesystem"
+    icon = "heroicons-outline:document-duplicate"
+    threshold = 3
+  }
+}
+
+
+category "aws_ec2_transit_gateway" {
+  icon  = "heroicons-outline:arrows-right-left"
+  color = "purple"
+
+  fold {
+    title     = "Transit Gateways"
+    icon      = "heroicons-outline:arrows-right-left"
+    threshold = 3
+  }
+}
+
+category "aws_availability_zone" {
+  icon = "heroicons-outline:building-office"
+  color = "purple"
+
+  fold {
+    title     = "Availability Zones"
+    icon      = "heroicons-outline:building-office"
+    threshold = 3
+  }
+}
+
+
+
+category "aws_account" {
+  icon = "heroicons-outline:globe-alt"
+  color = "orange"
+
+  fold {
+    title     = "Accounts"
+    icon      = "heroicons-outline:globe-alt"
+    threshold = 3
+  }
+}
+
+
+category "aws_region" {
+  icon = "heroicons-outline:globe-americas"
+  color = "orange"
+
+  fold {
+    title     = "Regions"
+    icon      = "heroicons-outline:globe-americas"
+    threshold = 3
+  }
+}
+
+
+category "aws_api_gatewayv2_integration" {
+  icon  = "heroicons-outline:puzzle-piece"
+  color = "red"
+
+  fold {
+    icon       = "heroicons-outline:bolt"
+    title      = "API Gatewayv2 puzzle-piece"
+    threshold  = 3
+  }
 }

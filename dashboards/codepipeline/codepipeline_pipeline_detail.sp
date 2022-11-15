@@ -1,4 +1,4 @@
-dashboard "codepipeline_pipeline_detail" {
+dashboard "aws_codepipeline_pipeline_detail" {
 
   title         = "AWS CodePipeline Pipeline Detail"
   documentation = file("./dashboards/codepipeline/docs/codepipeline_pipeline_detail.md")
