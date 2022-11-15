@@ -193,7 +193,7 @@ node "aws_vpc_eip_from_ec2_network_interface_node" {
       left join aws_ec2_network_interface as i on e.network_interface_id = i.network_interface_id
     where
       e.network_interface_id is not null
-      and e.arn = 'arn:aws:ec2:us-east-1:533793682495:eip/eipalloc-084f24c36a6072d86';
+      and e.arn = $1;
   EOQ
 
   param "arn" {}

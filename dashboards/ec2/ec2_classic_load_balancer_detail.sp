@@ -114,6 +114,7 @@ query "aws_clb_input" {
   sql = <<-EOQ
     select
       title as label,
+      arn as value,
       json_build_object(
         'account_id', account_id,
         'region', region
