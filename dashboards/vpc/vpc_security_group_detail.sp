@@ -1245,6 +1245,7 @@ query "aws_vpc_security_group_tags" {
 
 category "aws_vpc_security_group_no_link" {
   color = "purple"
+  icon  = "heroicons-solid:lock-closed"
 }
 
 node "aws_vpc_security_group_node" {
@@ -1408,6 +1409,7 @@ node "aws_vpc_security_group_from_ec2_instance_node" {
 
   sql = <<-EOQ
    select
+    sg,
       i.arn as id,
       i.title as title,
       jsonb_build_object(

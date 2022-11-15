@@ -1845,7 +1845,7 @@ node "aws_vpc_igw_node" {
 }
 
 edge "aws_vpc_igw_edge" {
-  title = "internet gateway"
+  title = "vpc"
 
   sql = <<-EOQ
     select
@@ -2485,7 +2485,7 @@ node "aws_vpc_redshift_cluster_node" {
 # -- Subnet -> Redshift Clusters (edge)
 # -- TO DO: These should connect to subnets, not vpcs (dont have any to test with right now...)
 edge "aws_vpc_subnet_redshift_edge" {
-  title = "redshift cluster"
+  title = "vpc"
 
   sql = <<-EOQ
     select

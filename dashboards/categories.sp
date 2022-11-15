@@ -281,6 +281,7 @@ category "aws_rds_db_subnet_group" {
 category "aws_redshift_cluster" {
   color = "purple"
   href  = "/aws_insights.dashboard.aws_redshift_cluster_detail?input.cluster_arn={{.properties.'ARN' | @uri}}"
+  icon  = "text:redshift"
   fold {
     title     = "Redshift Clusters"
     threshold = 3
