@@ -236,7 +236,7 @@ query "aws_efs_file_system_automatic_backup" {
 
 category "aws_efs_file_system_no_link" {
   color = "green"
-  icon = local.aws_efs_file_system_icon
+  icon = "heroicons-outline:folder-open"
 }
 
 node "aws_efs_file_system_node" {

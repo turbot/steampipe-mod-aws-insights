@@ -170,7 +170,6 @@ category "aws_kms_key" {
 
   fold {
     title     = "KMS Keys"
-    icon = local.aws_kms_key_icon
     threshold = 3
   }
 }
@@ -352,8 +351,10 @@ category "aws_ecr_image" {
 
 category "aws_efs_file_system" {
   href = "/aws_insights.dashboard.aws_efs_file_system_detail?input.efs_file_system_arn={{.properties.'ARN' | @uri}}"
+  icon = "heroicons-outline:folder-open"
   fold {
     title     = "EFS File Systems"
+    icon = "heroicons-outline:folder-open"
     threshold = 3
   }
 }
