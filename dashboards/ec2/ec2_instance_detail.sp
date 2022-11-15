@@ -76,7 +76,13 @@ dashboard "aws_ec2_instance_detail" {
         # node.aws_ec2_instance_to_ec2_ami_node
         node.aws_ec2_instance_from_ec2_autoscaling_group_node,
         node.aws_ec2_instance_from_ec2_classic_load_balancer_node,
-        node.aws_ec2_instance_from_ec2_target_group_node
+        node.aws_ec2_instance_from_ec2_target_group_node,
+
+        node.aws_ec2_instance_from_ec2_alb_node,
+        node.aws_ec2_instance_from_ec2_nlb_node,
+        node.aws_ec2_instance_from_ec2_gwlb_node,
+        node.aws_ec2_instance_ecs_cluster_node
+
       ]
 
       edges = [
@@ -91,7 +97,10 @@ dashboard "aws_ec2_instance_detail" {
         # edge.aws_ec2_instance_to_ec2_ami_edge,
         edge.aws_ec2_instance_from_ec2_autoscaling_group_edge,
         edge.aws_ec2_instance_from_ec2_classic_load_balancer_edge,
-        edge.aws_ec2_instance_from_ec2_target_group_edge
+        edge.aws_ec2_instance_from_ec2_target_group_edge,
+
+        edge.aws_ec2_instance_lb_target_group_edge,
+        edge.aws_ec2_instance_from_cluster_edge
       ]
 
       args = {
@@ -296,10 +305,10 @@ node "aws_ec2_instance_node" {
   sql = <<-EOQ
     select
       instance_id as id,
-      instance_id as title,
+      title,
       jsonb_build_object(
-        'Name', tags ->> 'Name',
         'Instance ID', instance_id,
+        'Name', tags ->> 'Name',
         'ARN', arn,
         'Account ID', account_id,
         'Region', region
@@ -319,7 +328,7 @@ node "aws_ec2_instance_to_ebs_volume_node" {
   sql = <<-EOQ
     select
       bd -> 'Ebs' ->> 'VolumeId' as id,
-      bd -> 'Ebs' ->> 'VolumeId' as title,
+      v.title as title,
       jsonb_build_object(
         'ARN', v.arn,
         'Account ID', v.account_id,
@@ -331,24 +340,22 @@ node "aws_ec2_instance_to_ebs_volume_node" {
       jsonb_array_elements(block_device_mappings) as bd,
       aws_ebs_volume as v
     where
-      i.arn = $1
-      and v.volume_id = bd -> 'Ebs' ->> 'VolumeId';
+      v.volume_id = bd -> 'Ebs' ->> 'VolumeId'
+      and i.arn = $1
+
   EOQ
 
   param "arn" {}
 }
 
 edge "aws_ec2_instance_to_ebs_volume_edge" {
-  title = "attached"
+  title = "mounts"
 
   sql = <<-EOQ
     select
       instance_id as from_id,
       bd -> 'Ebs' ->> 'VolumeId' as to_id,
       jsonb_build_object(
-        'Account ID', i.account_id,
-        'Volume ID', bd -> 'Ebs' ->> 'VolumeId',
-        'Device Name', bd ->> 'DeviceName',
         'Status', bd -> 'Ebs' ->> 'Status',
         'Attach Time', bd -> 'Ebs' ->> 'AttachTime',
         'Delete On Termination', bd -> 'Ebs' ->> 'DeleteOnTermination'
@@ -369,7 +376,7 @@ node "aws_ec2_instance_to_ec2_network_interface_node" {
   sql = <<-EOQ
     select
       eni.network_interface_id as id,
-      eni.network_interface_id as title,
+      eni.title as title,
       jsonb_build_object(
         'Name', eni.tags ->> 'Name',
         'Description', eni.description,
@@ -394,14 +401,13 @@ node "aws_ec2_instance_to_ec2_network_interface_node" {
 }
 
 edge "aws_ec2_instance_to_ec2_network_interface_edge" {
-  title = "mounts"
+  title = "eni"
 
   sql = <<-EOQ
     select
       instance_id as from_id,
       eni.network_interface_id as to_id,
       jsonb_build_object(
-        'Account ID', i.account_id,
         'Status', status,
         'Attachment ID', attachment_id,
         'Attachment Status', attachment_status,
@@ -426,7 +432,7 @@ node "aws_ec2_instance_to_vpc_security_group_node" {
   sql = <<-EOQ
     select
       sg ->> 'GroupId' as id,
-      sg ->> 'GroupId' as title,
+      sg ->> 'GroupName' as title,
       jsonb_build_object(
         'Group ID', sg ->> 'GroupId',
         'Name', sg ->> 'GroupName',
@@ -443,19 +449,42 @@ node "aws_ec2_instance_to_vpc_security_group_node" {
   param "arn" {}
 }
 
+# edge "aws_ec2_instance_to_vpc_security_group_edge" {
+#   title = "security groups"
+
+#   sql = <<-EOQ
+#     select
+#       instance_id as from_id,
+#       sg ->> 'GroupId' as to_id,
+#       jsonb_build_object(
+#         'Account ID', account_id
+#       ) as properties
+#     from
+#       aws_ec2_instance as i,
+#       jsonb_array_elements(security_groups) as sg
+#     where
+#       i.arn = $1;
+#   EOQ
+
+#   param "arn" {}
+# }
+
+
+
 edge "aws_ec2_instance_to_vpc_security_group_edge" {
   title = "security groups"
 
   sql = <<-EOQ
     select
-      instance_id as from_id,
-      sg ->> 'GroupId' as to_id,
-      jsonb_build_object(
-        'Account ID', account_id
-      ) as properties
+      coalesce(
+        eni.network_interface_id,
+        i.instance_id
+      ) as from_id,      
+      sg ->> 'GroupId' as to_id
     from
-      aws_ec2_instance as i,
-      jsonb_array_elements(security_groups) as sg
+      aws_ec2_instance as i
+      left join aws_ec2_network_interface as eni on i.instance_id = eni.attached_instance_id
+      join jsonb_array_elements(security_groups) as sg on true
     where
       i.arn = $1;
   EOQ
@@ -469,7 +498,7 @@ node "aws_ec2_instance_to_vpc_subnet_node" {
   sql = <<-EOQ
     select
       subnet.subnet_id as id,
-      subnet.subnet_id as title,
+      subnet.title as title,
       jsonb_build_object(
         'Name', subnet.tags ->> 'Name',
         'Subnet ID', subnet.subnet_id ,
@@ -490,25 +519,41 @@ node "aws_ec2_instance_to_vpc_subnet_node" {
   param "arn" {}
 }
 
+# edge "aws_ec2_instance_to_vpc_subnet_edge" {
+#   title = "subnet"
+
+#   sql = <<-EOQ
+#     select
+#       coalesce(
+#         eni.network_interface_id,
+#         i.instance_id
+#       ) as from_id,
+#       i.subnet_id as to_id 
+#     from
+#       aws_ec2_instance as i
+#       left join aws_ec2_network_interface as eni on i.instance_id = eni.attached_instance_id
+#     where
+#       arn = $1
+#   EOQ
+
+#   param "arn" {}
+# }
+
+
+
 edge "aws_ec2_instance_to_vpc_subnet_edge" {
-  title = "launched in"
+  title = "subnet"
 
   sql = <<-EOQ
     select
-      i.instance_id as from_id,
-      i.subnet_id as to_id,
-      jsonb_build_object(
-        'Account ID', i.account_id,
-        'Name', subnet.tags ->> 'Name',
-        'Subnet ID', subnet.subnet_id,
-        'State', subnet.state
-      ) as properties
+      sg ->> 'GroupId' as from_id,
+      i.subnet_id as to_id 
     from
-      aws_ec2_instance as i,
-      aws_vpc_subnet as subnet
-    where
-      i.arn = $1
-      and i.subnet_id = subnet.subnet_id;
+      aws_ec2_instance as i
+      join jsonb_array_elements(security_groups) as sg on true
+
+  where
+      arn = $1
   EOQ
 
   param "arn" {}
@@ -520,7 +565,7 @@ node "aws_ec2_instance_vpc_subnet_to_vpc_node" {
   sql = <<-EOQ
     select
       vpc.vpc_id as id,
-      vpc.tags ->> 'Name' as title,
+      vpc.title as title,
       jsonb_build_object(
         'ID', vpc.vpc_id,
         'Name', vpc.tags ->> 'Name',
@@ -545,22 +590,14 @@ edge "aws_ec2_instance_vpc_subnet_to_vpc_edge" {
 
   sql = <<-EOQ
     select
-      i.subnet_id as from_id,
-      vpc.vpc_id as to_id,
-      jsonb_build_object(
-        'ID', vpc.vpc_id,
-        'Name', vpc.tags ->> 'Name',
-        'CIDR Block', vpc.cidr_block,
-        'Account ID', vpc.account_id,
-        'Owner ID', vpc.owner_id,
-        'Region', vpc.region
-      ) as properties
+      subnet_id as from_id,
+      vpc_id as to_id
     from
-      aws_ec2_instance as i,
-      aws_vpc as vpc
+      aws_ec2_instance as i
     where
-      i.arn = $1
-      and i.vpc_id = vpc.vpc_id;
+      subnet_id is not null
+      and vpc_id is not null
+      and arn = $1
   EOQ
 
   param "arn" {}
@@ -572,7 +609,7 @@ node "aws_ec2_instance_to_iam_profile_node" {
   sql = <<-EOQ
     select
       iam_instance_profile_arn as id,
-      split_part(iam_instance_profile_arn, ':', 6) as title,
+      split_part(iam_instance_profile_arn, ':instance-profile/',2) as title,
       jsonb_build_object(
         'Instance Profile ARN', iam_instance_profile_arn,
         'Instance Profile ID', iam_instance_profile_id
@@ -580,28 +617,25 @@ node "aws_ec2_instance_to_iam_profile_node" {
     from
       aws_ec2_instance as i
     where
-      i.arn = $1;
+      iam_instance_profile_arn is not null
+      and i.arn = $1;
   EOQ
 
   param "arn" {}
 }
 
 edge "aws_ec2_instance_to_iam_profile_edge" {
-  title = "iam profile"
+  title = "runs as"
 
   sql = <<-EOQ
     select
       instance_id as from_id,
-      iam_instance_profile_arn as to_id,
-      jsonb_build_object(
-        'Account ID', i.account_id,
-        'Instance Profile ARN', iam_instance_profile_arn,
-        'Instance Profile ID', iam_instance_profile_id
-      ) as properties
+      iam_instance_profile_arn as to_id
     from
       aws_ec2_instance as i
     where
-      i.arn = $1;
+      iam_instance_profile_arn is not null
+      and i.arn = $1;
   EOQ
 
   param "arn" {}
@@ -613,7 +647,7 @@ node "aws_ec2_instance_to_iam_role_node" {
   sql = <<-EOQ
     select
       r.arn as id,
-      r.name as title,
+      r.title as title,
       jsonb_build_object(
         'Name', r.name,
         'Description', r.description,
@@ -625,8 +659,9 @@ node "aws_ec2_instance_to_iam_role_node" {
       aws_iam_role as r,
       jsonb_array_elements_text(instance_profile_arns) as instance_profile
     where
-      i.arn = $1
-      and instance_profile = i.iam_instance_profile_arn;
+      instance_profile = i.iam_instance_profile_arn
+      and i.arn = $1
+
   EOQ
 
   param "arn" {}
@@ -638,12 +673,7 @@ edge "aws_ec2_instance_to_iam_role_edge" {
   sql = <<-EOQ
     select
       i.iam_instance_profile_arn as from_id,
-      r.arn as to_id,
-      jsonb_build_object(
-        'Role ARN', r.arn,
-        'Instance Profile ARN', i.iam_instance_profile_arn,
-        'Account ID', r.account_id
-      ) as properties
+      r.arn as to_id
     from
       aws_ec2_instance as i,
       aws_iam_role as r,
@@ -662,7 +692,7 @@ node "aws_ec2_instance_to_ec2_key_pair_node" {
   sql = <<-EOQ
     select
       i.key_name as id,
-      i.key_name as title,
+      i.title as title,
       jsonb_build_object(
         'Name', k.key_name,
         'ID', k.key_pair_id,
@@ -672,10 +702,10 @@ node "aws_ec2_instance_to_ec2_key_pair_node" {
       aws_ec2_instance as i,
       aws_ec2_key_pair as k
     where
-      i.arn = $1
-      and i.key_name = k.key_name
+      i.key_name = k.key_name
       and i.account_id = k.account_id
-      and i.region = k.region;
+      and i.region = k.region
+      and i.arn = $1
   EOQ
 
   param "arn" {}
@@ -687,16 +717,12 @@ edge "aws_ec2_instance_to_ec2_key_pair_edge" {
   sql = <<-EOQ
     select
       instance_id as from_id,
-      key_name as to_id,
-      jsonb_build_object(
-        'Account ID', i.account_id,
-        'Name', key_name,
-        'Instance ID', instance_id
-      ) as properties
+      key_name as to_id
     from
       aws_ec2_instance as i
     where
-      i.arn = $1;
+      key_name is not null
+      and i.arn = $1;
   EOQ
 
   param "arn" {}
@@ -774,10 +800,7 @@ edge "aws_ec2_instance_from_ec2_autoscaling_group_edge" {
   sql = <<-EOQ
     select
       k.autoscaling_group_arn as from_id,
-      i.instance_id as to_id,
-      jsonb_build_object(
-        'Account ID', i.account_id
-      ) as properties
+      i.instance_id as to_id
     from
       aws_ec2_autoscaling_group as k,
       jsonb_array_elements(k.instances) as group_instance,
@@ -820,11 +843,7 @@ edge "aws_ec2_instance_from_ec2_classic_load_balancer_edge" {
   sql = <<-EOQ
     select
       k.arn as from_id,
-      i.instance_id as to_id,
-      jsonb_build_object(
-        'Account ID', i.account_id,
-        'Instance ID', group_instance ->> 'InstanceId'
-      ) as properties
+      i.instance_id as to_id
     from
       aws_ec2_classic_load_balancer as k,
       jsonb_array_elements(k.instances) as group_instance,
@@ -847,6 +866,7 @@ node "aws_ec2_instance_from_ec2_target_group_node" {
       jsonb_build_object(
         'Name', target.target_group_name,
         'ARN', target.target_group_arn,
+        'Health Check Enabled', target.health_check_enabled,
         'Region', target.region,
         'Account ID', target.account_id
       ) as properties
@@ -868,14 +888,7 @@ edge "aws_ec2_instance_from_ec2_target_group_edge" {
   sql = <<-EOQ
     select
       target.target_group_arn as from_id,
-      i.instance_id as to_id,
-      jsonb_build_object(
-        'Name', target.target_group_name,
-        'ARN', target.target_group_arn,
-        'Region', target.region,
-        'Account ID', target.account_id,
-        'Health Check Enabled', target.health_check_enabled
-      ) as properties
+      i.instance_id as to_id
     from
       aws_ec2_instance as i,
       aws_ec2_target_group as target,
@@ -887,6 +900,175 @@ edge "aws_ec2_instance_from_ec2_target_group_edge" {
 
   param "arn" {}
 }
+
+
+
+
+node "aws_ec2_instance_from_ec2_alb_node" {
+  category = category.aws_ec2_application_load_balancer
+
+  sql = <<-EOQ
+    select
+      distinct on (lb.arn)
+      lb.arn as id,
+      lb.name as title,
+      jsonb_build_object(
+        'Name', lb.name,
+        'ARN', lb.arn,
+        'Region', lb.region,
+        'Account ID', lb.account_id
+      ) as properties
+    from
+      aws_ec2_instance as i,
+      aws_ec2_target_group as target,
+      jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
+      jsonb_array_elements_text(target.load_balancer_arns) as l,
+      aws_ec2_application_load_balancer as lb
+    where
+      health_descriptions -> 'Target' ->> 'Id' = i.instance_id
+      and l = lb.arn
+      and i.arn = $1
+      
+  EOQ
+
+  param "arn" {}
+}
+
+
+node "aws_ec2_instance_from_ec2_nlb_node" {
+  category = category.aws_ec2_network_load_balancer
+
+  sql = <<-EOQ
+    select
+      distinct on (lb.arn)
+      lb.arn as id,
+      lb.name as title,
+      jsonb_build_object(
+        'Name', lb.name,
+        'ARN', lb.arn,
+        'Region', lb.region,
+        'Account ID', lb.account_id
+      ) as properties
+    from
+      aws_ec2_instance as i,
+      aws_ec2_target_group as target,
+      jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
+      jsonb_array_elements_text(target.load_balancer_arns) as l,
+      aws_ec2_network_load_balancer as lb
+    where
+      health_descriptions -> 'Target' ->> 'Id' = i.instance_id
+      and l = lb.arn
+      and i.arn = $1
+      
+  EOQ
+
+  param "arn" {}
+}
+
+
+node "aws_ec2_instance_from_ec2_gwlb_node" {
+  category = category.aws_ec2_gateway_load_balancer
+
+  sql = <<-EOQ
+    select
+      distinct on (lb.arn)
+      lb.arn as id,
+      lb.name as title,
+      jsonb_build_object(
+        'Name', lb.name,
+        'ARN', lb.arn,
+        'Region', lb.region,
+        'Account ID', lb.account_id
+      ) as properties
+    from
+      aws_ec2_instance as i,
+      aws_ec2_target_group as target,
+      jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
+      jsonb_array_elements_text(target.load_balancer_arns) as l,
+      aws_ec2_gateway_load_balancer as lb
+    where
+      health_descriptions -> 'Target' ->> 'Id' = i.instance_id
+      and l = lb.arn
+      and i.arn = $1
+      
+  EOQ
+
+  param "arn" {}
+}
+
+
+edge "aws_ec2_instance_lb_target_group_edge" {
+  title = "target group"
+
+  sql = <<-EOQ
+    select
+      l as from_id,
+      target.target_group_arn as to_id
+    from
+      aws_ec2_instance as i,
+      aws_ec2_target_group as target,
+      jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
+      jsonb_array_elements_text(target.load_balancer_arns) as l
+    where
+      health_descriptions -> 'Target' ->> 'Id' = i.instance_id
+      and i.arn = $1
+  EOQ
+
+  param "arn" {}
+}
+
+
+node "aws_ec2_instance_ecs_cluster_node" {
+  category = category.aws_ecs_cluster
+
+  sql = <<-EOQ
+    select
+      cluster.cluster_arn as id,
+      cluster.cluster_name as title,
+      jsonb_build_object(
+        'Name', cluster.cluster_name,
+        'ARN', cluster.cluster_arn,
+        'Region', cluster.region,
+        'Account ID', cluster.account_id
+      ) as properties
+    from
+      aws_ec2_instance as i,
+      aws_ecs_container_instance as ci,
+      aws_ecs_cluster as cluster
+    where
+      ci.ec2_instance_id = i.instance_id
+      and ci.cluster_arn = cluster.cluster_arn
+      and i.arn = $1
+      
+  EOQ
+
+  param "arn" {}
+}
+
+
+
+
+edge "aws_ec2_instance_from_cluster_edge" {
+  title = "container instance"
+
+  sql = <<-EOQ
+    select
+      cluster.cluster_arn as from_id,
+      i.instance_id as to_id
+    from
+      aws_ec2_instance as i,
+      aws_ecs_container_instance as ci,
+      aws_ecs_cluster as cluster
+    where
+      ci.ec2_instance_id = i.instance_id
+      and ci.cluster_arn = cluster.cluster_arn
+      and i.arn = $1
+  EOQ
+
+  param "arn" {}
+}
+//***********
+
 
 query "aws_ec2_instance_overview" {
   sql = <<-EOQ

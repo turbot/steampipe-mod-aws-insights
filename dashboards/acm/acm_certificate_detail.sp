@@ -248,7 +248,7 @@ node "aws_acm_certificate_node" {
   sql = <<-EOQ
     select
       title as id,
-      title as title,
+      domain_name as title, --id as title,
       jsonb_build_object(
         'ARN', certificate_arn,
         'Domain Name', domain_name,
