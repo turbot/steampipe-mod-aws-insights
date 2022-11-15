@@ -308,6 +308,7 @@ query "aws_vpc_subnet_association" {
 
 category "aws_vpc_subnet_no_link" {
   color = "purple"
+  icon  = "heroicons-solid:share"
 }
 
 node "aws_vpc_subnet_node" {
