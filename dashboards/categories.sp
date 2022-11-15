@@ -137,8 +137,11 @@ category "aws_sns_topic" {
 
 category "aws_kms_key" {
   href = "/aws_insights.dashboard.aws_kms_key_detail?input.key_arn={{.properties.'ARN' | @uri}}"
+  icon = local.aws_kms_key_icon
+  color = "red"
   fold {
     title     = "KMS Keys"
+    icon = local.aws_kms_key_icon
     threshold = 3
   }
 }
@@ -259,7 +262,7 @@ category "aws_redshift_parameter_group" {
 }
 
 category "aws_ec2_ami" {
-  href = "aws_insights.dashboard.aws_ec2_ami_detail?input.ami={{.properties.'Image ID' | @uri}}"
+  href = "/aws_insights.dashboard.aws_ec2_ami_detail?input.ami={{.properties.'Image ID' | @uri}}"
   icon = local.aws_ec2_ami_icon
   fold {
     title     = "EC2 AMIs"
@@ -290,7 +293,7 @@ category "aws_ec2_key_pair" {
 }
 
 category "aws_ecr_repository" {
-  href = "aws_insights.dashboard.aws_ecr_repository_detail?input.ecr_repository_arn={{.properties.'ARN' | @uri}}"
+  href = "/aws_insights.dashboard.aws_ecr_repository_detail?input.ecr_repository_arn={{.properties.'ARN' | @uri}}"
   icon = local.aws_ecr_repository_icon
   fold {
     title     = "ECR repositories"
@@ -307,6 +310,7 @@ category "aws_ecr_image" {
 }
 
 category "aws_efs_file_system" {
+  href = "/aws_insights.dashboard.aws_efs_file_system_detail?input.efs_file_system_arn={{.properties.'ARN' | @uri}}"
   fold {
     title     = "EFS File Systems"
     threshold = 3
