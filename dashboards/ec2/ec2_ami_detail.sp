@@ -352,7 +352,7 @@ node "aws_ec2_ami_to_ec2_instance_node" {
 }
 
 edge "aws_ec2_ami_to_ec2_instance_edge" {
-  title = "launched with"
+  title = "instance"
 
   sql = <<-EOQ
     select
@@ -394,7 +394,7 @@ node "aws_ec2_ami_from_ebs_snapshot_node" {
 }
 
 edge "aws_ec2_ami_from_ebs_snapshot_edge" {
-  title = "created from"
+  title = "ami"
 
   sql = <<-EOQ
     select

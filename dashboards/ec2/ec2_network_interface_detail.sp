@@ -65,17 +65,17 @@ dashboard "aws_ec2_network_interface_detail" {
 
       nodes = [
         node.aws_ec2_network_interface_node,
-        node.aws_ec2_network_interface_to_ec2_instance_node,
+        node.aws_ec2_network_interface_from_ec2_instance_node,
         node.aws_ec2_network_interface_to_vpc_security_group_node,
         node.aws_ec2_network_interface_to_vpc_subnet_node,
-        node.aws_ec2_network_interface_vpc_security_group_to_vpc_node
+        node.aws_ec2_network_interface_to_vpc_node
       ]
 
       edges = [
-        edge.aws_ec2_network_interface_to_ec2_instance_edge,
+        edge.aws_ec2_network_interface_from_ec2_instance_edge,
         edge.aws_ec2_network_interface_to_vpc_security_group_edge,
-        edge.aws_ec2_network_interface_to_vpc_subnet_edge,
-        edge.aws_ec2_network_interface_vpc_security_group_to_vpc_edge
+        edge.aws_ec2_network_interface_to_security_group_to_subnet_edge,
+        edge.aws_ec2_network_interface_to_security_group_subnet_to_vpc_edge
       ]
 
       args = {
@@ -342,7 +342,7 @@ node "aws_ec2_network_interface_node" {
   param "network_interface_id" {}
 }
 
-node "aws_ec2_network_interface_to_ec2_instance_node" {
+node "aws_ec2_network_interface_from_ec2_instance_node" {
   category = category.aws_ec2_instance
 
   sql = <<-EOQ
@@ -367,18 +367,19 @@ node "aws_ec2_network_interface_to_ec2_instance_node" {
   param "network_interface_id" {}
 }
 
-edge "aws_ec2_network_interface_to_ec2_instance_edge" {
-  title = "attached to"
+edge "aws_ec2_network_interface_from_ec2_instance_edge" {
+  title = "eni"
 
   sql = <<-EOQ
     select
-      eni.network_interface_id as from_id,
-      instance.instance_id as to_id,
+      instance.instance_id as from_id,
+      eni.network_interface_id as to_id,
       jsonb_build_object(
-        'Association ID', eni.association_id,
-        'Association Allocation ID', eni.association_allocation_id,
-        'Association IP Owner ID', eni.association_ip_owner_id,
-        'Association Public IP', eni.association_public_ip
+        'Attachment ID', attachment_id,
+        'Attachment Status', attachment_status,
+        'Attachment Time', attachment_time,
+        'Delete on Instance Termination', delete_on_instance_termination,
+        'Device Index', device_index
       ) as properties
     from
       aws_ec2_network_interface as eni
@@ -455,18 +456,20 @@ node "aws_ec2_network_interface_to_vpc_subnet_node" {
   param "network_interface_id" {}
 }
 
-edge "aws_ec2_network_interface_to_vpc_subnet_edge" {
-  title = "launched in"
+edge "aws_ec2_network_interface_to_security_group_to_subnet_edge" {
+  title = "subnet"
 
   sql = <<-EOQ
     select
-      eni.network_interface_id as from_id,
+      coalesce(
+        sg ->> 'GroupId',
+        network_interface_id
+      ) as from_id,
       subnet.subnet_id as to_id
     from
       aws_ec2_network_interface as eni
-      left join
-        aws_vpc_subnet as subnet
-        on eni.subnet_id = subnet.subnet_id
+      left join aws_vpc_subnet as subnet on eni.subnet_id = subnet.subnet_id
+      left join jsonb_array_elements(eni.groups) as sg on true
     where
       eni.network_interface_id = $1;
   EOQ
@@ -474,7 +477,7 @@ edge "aws_ec2_network_interface_to_vpc_subnet_edge" {
   param "network_interface_id" {}
 }
 
-node "aws_ec2_network_interface_vpc_security_group_to_vpc_node" {
+node "aws_ec2_network_interface_to_vpc_node" {
   category = category.aws_vpc
 
   sql = <<-EOQ
@@ -499,19 +502,17 @@ node "aws_ec2_network_interface_vpc_security_group_to_vpc_node" {
   param "network_interface_id" {}
 }
 
-edge "aws_ec2_network_interface_vpc_security_group_to_vpc_edge" {
+edge "aws_ec2_network_interface_to_security_group_subnet_to_vpc_edge" {
   title = "vpc"
 
   sql = <<-EOQ
     select
-      sg ->> 'GroupId' as from_id,
-      vpc.vpc_id as to_id
+      subnet_id as from_id,
+      vpc_id as to_id
     from
-      aws_ec2_network_interface as eni
-      cross join jsonb_array_elements(eni.groups) as sg
-      left join aws_vpc as vpc on eni.vpc_id = vpc.vpc_id
+      aws_ec2_network_interface
     where
-      eni.network_interface_id = $1;
+      network_interface_id = $1;
   EOQ
 
   param "network_interface_id" {}

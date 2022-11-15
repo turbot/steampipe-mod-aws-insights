@@ -55,6 +55,7 @@ category "aws_ec2_gateway_load_balancer" {
 
 category "aws_ec2_load_balancer_listener" {
   color = "purple"
+  icon  = "text:LBL"
   fold {
     title     = "EC2 Load Balancer Listeners"
     threshold = 3
@@ -906,6 +907,7 @@ category "aws_sfn_state_machine" {
 
 category "aws_ec2_launch_configuration" {
   color = "orange"
+  icon  = "text:launch_config"
   fold {
     title     = "EC2 Launch Configurations"
     threshold = 3

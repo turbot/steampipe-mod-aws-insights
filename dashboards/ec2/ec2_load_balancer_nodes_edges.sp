@@ -74,7 +74,7 @@ node "aws_ec2_lb_to_ec2_instance_node" {
 }
 
 edge "aws_ec2_lb_to_ec2_instance_edge" {
-  title = "ec2 instance"
+  title = "routes to"
 
   sql = <<-EOQ
     select

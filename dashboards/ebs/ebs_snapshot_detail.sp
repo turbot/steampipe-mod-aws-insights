@@ -306,7 +306,7 @@ node "aws_ebs_snapshot_from_ec2_ami_node" {
 }
 
 edge "aws_ebs_snapshot_from_ec2_ami_edge" {
-  title = "created from"
+  title = "snapshot"
 
   sql = <<-EOQ
     select
@@ -350,7 +350,7 @@ node "aws_ebs_snapshot_from_ec2_launch_configuration_node" {
 }
 
 edge "aws_ebs_snapshot_from_ec2_launch_configuration_edge" {
-  title = "provisions EBS with"
+  title = "snapshot"
 
   sql = <<-EOQ
     select

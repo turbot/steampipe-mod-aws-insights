@@ -408,7 +408,6 @@ edge "aws_ec2_instance_to_ec2_network_interface_edge" {
       instance_id as from_id,
       eni.network_interface_id as to_id,
       jsonb_build_object(
-        'Status', status,
         'Attachment ID', attachment_id,
         'Attachment Status', attachment_status,
         'Attachment Time', attachment_time,
