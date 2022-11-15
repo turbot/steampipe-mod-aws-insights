@@ -1,7 +1,7 @@
 dashboard "aws_efs_file_system_dashboard" {
 
   title         = "AWS EFS File System Dashboard"
-  documentation = file("./dashboards/acm/docs/acm_certificate_dashboard.md")
+  documentation = file("./dashboards/efs/docs/efs_file_system_dashboard.md")
 
   tags = merge(local.efs_common_tags, {
     type = "Dashboard"

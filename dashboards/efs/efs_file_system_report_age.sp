@@ -1,6 +1,6 @@
 dashboard "efs_file_system_report_age" {
   title         = "AWS EFS File System Age Report"
-  documentation = file("./dashboards/api_gatewayv2/docs/api_gatewayv2_api_report_age.md")
+  documentation = file("./dashboards/efs/docs/efs_file_system_report_age.md")
 
   tags = merge(local.efs_common_tags, {
     type     = "Report"

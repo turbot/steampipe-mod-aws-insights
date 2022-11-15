@@ -1,7 +1,7 @@
 dashboard "aws_efs_file_system_detail" {
 
   title         = "AWS EFS File System Detail"
-  documentation = file("./dashboards/ecs/docs/ecs_cluster_detail.md")
+  documentation = file("./dashboards/efs/docs/efs_file_system_detail.md")
 
   tags = merge(local.efs_common_tags, {
     type = "Detail"
