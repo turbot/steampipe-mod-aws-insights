@@ -1635,6 +1635,7 @@ node "aws_vpc_security_group_from_ec2_application_load_balancer_node" {
       jsonb_build_object(
         'ARN', alb.arn,
         'VPC ID', alb.vpc_id,
+        'Type', alb.type,
         'DNS Name', alb.dns_name,
         'Created Time', alb.created_time,
         'Account ID', alb.account_id,
@@ -1679,6 +1680,7 @@ node "aws_vpc_security_group_from_ec2_network_load_balancer_node" {
       jsonb_build_object(
         'ARN', nlb.arn,
         'VPC ID', nlb.vpc_id,
+        'Type', nlb.type,
         'DNS Name', nlb.dns_name,
         'Created Time', nlb.created_time,
         'Account ID', nlb.account_id,
@@ -1723,6 +1725,7 @@ node "aws_vpc_security_group_from_ec2_gateway_load_balancer_node" {
       jsonb_build_object(
         'ARN', glb.arn,
         'VPC ID', glb.vpc_id,
+        'Type', glb.type,
         'DNS Name', glb.dns_name,
         'Created Time', glb.created_time,
         'Account ID', glb.account_id,
