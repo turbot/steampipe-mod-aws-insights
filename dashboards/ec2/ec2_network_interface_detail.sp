@@ -415,7 +415,7 @@ node "aws_ec2_network_interface_to_vpc_security_group_node" {
 }
 
 edge "aws_ec2_network_interface_to_vpc_security_group_edge" {
-  title = "security groups"
+  title = "security group"
 
   sql = <<-EOQ
     select

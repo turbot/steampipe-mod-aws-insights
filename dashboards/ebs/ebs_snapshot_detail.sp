@@ -230,8 +230,7 @@ node "aws_ebs_snapshot_node" {
       jsonb_build_object(
         'ID', s.snapshot_id,
         'ARN', s.arn,
-        'Size', s.volume_size,
-        'KMS Key ID', s.kms_key_id,
+        'Start Time', s.start_time,
         'Account ID', s.account_id,
         'Region', s.region
       ) as properties

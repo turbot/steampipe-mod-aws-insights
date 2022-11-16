@@ -121,7 +121,7 @@ node "aws_ec2_lb_from_ec2_load_balancer_listener_node" {
 }
 
 edge "aws_ec2_lb_from_ec2_load_balancer_listener_edge" {
-  title = "listens with"
+  title = "listener for"
 
   sql = <<-EOQ
     select

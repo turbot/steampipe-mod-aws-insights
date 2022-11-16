@@ -296,7 +296,7 @@ node "aws_ebs_volume_to_ebs_snapshot_node" {
       s.title as title,
       jsonb_build_object(
         'ARN', s.arn,
-        'Volume Size', s.volume_size,
+        'Start Time', s.start_time,
         'Snapshot ID', s.snapshot_id
       ) as properties
     from
