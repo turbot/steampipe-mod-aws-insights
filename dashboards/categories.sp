@@ -444,38 +444,59 @@ category "aws_emr_instance" {
 
 category "aws_iam_policy" {
   href = "/aws_insights.dashboard.aws_iam_policy_detail?input.policy_arn={{.properties.'ARN' | @uri}}"
+  icon  = "heroicons-outline:clipboard-document-check"
+  color = "red"
+  title = "IAM Policy"
+
   fold {
-    title     = "IAM Policies"
-    threshold = 3
+     title     = "IAM Policy"
+     icon      = "heroicons-outline:clipboard-document-check"
+     threshold = 3
   }
 }
 
 category "aws_iam_user" {
-  href = "/aws_insights.dashboard.aws_iam_user_detail?input.user_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_iam_user_icon
+  href  = "/aws_insights.dashboard.aws_iam_user_detail?input.user_arn={{.properties.'ARN' | @uri}}"
+  icon  = "heroicons-outline:user"
+  title = "IAM User"
+  color = "red"
+
   fold {
-    title     = "IAM Users"
-    icon      = local.aws_iam_user_icon
+    title     = "IAM User"
+    icon      = "heroicons-outline:user"
     threshold = 3
   }
 }
 
 category "aws_iam_group" {
   href = "/aws_insights.dashboard.aws_iam_group_detail?input.group_arn={{.properties.'ARN' | @uri}}"
+  icon  = "heroicons-outline:users"
+  title = "IAM Group"
+  color = "red"
   fold {
-    title     = "IAM Groups"
+    title     = "IAM Group"
     threshold = 3
+    icon  = "heroicons-outline:users"
   }
 }
 
 category "aws_iam_instance_profile" {
+  icon  = "heroicons-outline:user-plus"
+  title = "Instance Profile"
+  color = "red"
+
   fold {
-    title     = "IAM Instance Profiles"
+    title     = "IAM Instance Profile"
     threshold = 3
+    icon = "heroicons-outline:user-plus"
   }
 }
 
 category "aws_iam_access_key" {
+  icon  = "heroicons-outline:key"
+  color = "red"
+  title = "IAM Access Key"
+
   fold {
     title     = "IAM Access Key"
     threshold = 3
@@ -974,9 +995,10 @@ category "aws_availability_zone" {
 category "aws_account" {
   icon = "heroicons-outline:globe-alt"
   color = "orange"
+  title     = "Account"
 
   fold {
-    title     = "Accounts"
+    title     = "Account"
     icon      = "heroicons-outline:globe-alt"
     threshold = 3
   }
@@ -986,9 +1008,10 @@ category "aws_account" {
 category "aws_region" {
   icon = "heroicons-outline:globe-americas"
   color = "orange"
+  title     = "Region"
 
   fold {
-    title     = "Regions"
+    title     = "Region"
     icon      = "heroicons-outline:globe-americas"
     threshold = 3
   }
@@ -1005,3 +1028,30 @@ category "aws_api_gatewayv2_integration" {
     threshold  = 3
   }
 }
+
+
+category "aws_service" {
+  icon = "heroicons-outline:cog-6-tooth"
+  color = "orange"
+  title     = "Service"
+
+  fold {
+    title     = "Service"
+    icon      = "heroicons-outline:cog-6-tooth"
+    threshold = 3
+  }
+}
+
+
+category "aws_federated" {
+  icon = "heroicons-outline:user-group"
+  color = "orange"
+  title     = "Federated"
+
+  fold {
+    title     = "Federated"
+    icon      = "heroicons-outline:user-group"
+    threshold = 3
+  }
+}
+

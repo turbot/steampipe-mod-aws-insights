@@ -60,14 +60,14 @@ dashboard "aws_iam_user_detail" {
         node.aws_iam_user_node,
         node.aws_iam_user_to_iam_group_node,
         node.aws_iam_user_to_iam_policy_node,
-        node.aws_iam_user_to_iam_group_policy_node,
+        //node.aws_iam_user_to_iam_group_policy_node,
         node.aws_iam_user_to_iam_access_key_node
       ]
 
       edges = [
         edge.aws_iam_user_to_iam_group_edge,
         edge.aws_iam_user_to_iam_policy_edge,
-        edge.aws_iam_user_to_iam_group_policy_edge,
+        //edge.aws_iam_user_to_iam_group_policy_edge,
         edge.aws_iam_user_to_iam_access_key_edge
       ]
 
@@ -266,13 +266,10 @@ query "aws_iam_user_direct_attached_policy_count_for_user" {
   param "arn" {}
 }
 
-category "aws_iam_user_base" {
-  icon = local.aws_iam_user_icon
-}
 
 node "aws_iam_user_node" {
 
-  category = category.aws_iam_user_base
+  category = category.aws_iam_user
 
   sql = <<-EOQ
     select
@@ -318,15 +315,12 @@ node "aws_iam_user_to_iam_group_node" {
 }
 
 edge "aws_iam_user_to_iam_group_edge" {
-  title = "associated"
+  title = "has member"
 
   sql = <<-EOQ
     select
-      u ->> 'UserId' as from_id,
-      g.group_id as to_id,
-      jsonb_build_object(
-        'Account ID', g.account_id
-      ) as properties
+      u ->> 'UserId' as to_id,
+      g.group_id as from_id
     from
       aws_iam_group as g,
       jsonb_array_elements(users) as u
@@ -369,7 +363,7 @@ node "aws_iam_user_to_iam_policy_node" {
 }
 
 edge "aws_iam_user_to_iam_policy_edge" {
-  title = "attached"
+  title = "policy"
 
   sql = <<-EOQ
     select
@@ -388,52 +382,52 @@ edge "aws_iam_user_to_iam_policy_edge" {
   param "arn" {}
 }
 
-node "aws_iam_user_to_iam_group_policy_node" {
-  category = category.aws_iam_policy
+# node "aws_iam_user_to_iam_group_policy_node" {
+#   category = category.aws_iam_policy
 
-  sql = <<-EOQ
-    select
-      p.policy_id as id,
-      p.name as title,
-      jsonb_build_object(
-        'ARN', p.arn,
-        'AWS Managed', is_aws_managed::text,
-        'Attached', is_attached::text,
-        'Create Date', p.create_date,
-        'Account ID', p.account_id
-      ) as properties
-    from
-      aws_iam_user as u,
-      aws_iam_policy as p,
-      jsonb_array_elements(u.groups) as user_groups
-      inner join aws_iam_group g on g.arn = user_groups ->> 'Arn'
-    where
-      g.attached_policy_arns :: jsonb ? p.arn
-      and u.arn = $1;
-  EOQ
+#   sql = <<-EOQ
+#     select
+#       p.policy_id as id,
+#       p.name as title,
+#       jsonb_build_object(
+#         'ARN', p.arn,
+#         'AWS Managed', is_aws_managed::text,
+#         'Attached', is_attached::text,
+#         'Create Date', p.create_date,
+#         'Account ID', p.account_id
+#       ) as properties
+#     from
+#       aws_iam_user as u,
+#       aws_iam_policy as p,
+#       jsonb_array_elements(u.groups) as user_groups
+#       inner join aws_iam_group g on g.arn = user_groups ->> 'Arn'
+#     where
+#       g.attached_policy_arns :: jsonb ? p.arn
+#       and u.arn = $1;
+#   EOQ
 
-  param "arn" {}
-}
+#   param "arn" {}
+# }
 
-edge "aws_iam_user_to_iam_group_policy_edge" {
-  title = "attached"
+# edge "aws_iam_user_to_iam_group_policy_edge" {
+#   title = "attached to"
 
-  sql = <<-EOQ
-    select
-      g.group_id as from_id,
-      p.policy_id as to_id
-    from
-      aws_iam_user as u,
-      aws_iam_policy as p,
-      jsonb_array_elements(u.groups) as user_groups
-      inner join aws_iam_group g on g.arn = user_groups ->> 'Arn'
-    where
-      g.attached_policy_arns :: jsonb ? p.arn
-      and u.arn = $1;
-  EOQ
+#   sql = <<-EOQ
+#     select
+#       g.group_id as to_id,
+#       p.policy_id as from_id
+#     from
+#       aws_iam_user as u,
+#       aws_iam_policy as p,
+#       jsonb_array_elements(u.groups) as user_groups
+#       inner join aws_iam_group g on g.arn = user_groups ->> 'Arn'
+#     where
+#       g.attached_policy_arns :: jsonb ? p.arn
+#       and u.arn = $1;
+#   EOQ
 
-  param "arn" {}
-}
+#   param "arn" {}
+# }
 
 node "aws_iam_user_to_iam_access_key_node" {
   category = category.aws_iam_access_key
