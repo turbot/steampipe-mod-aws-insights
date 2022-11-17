@@ -102,16 +102,36 @@ dashboard "aws_iam_policy_detail" {
 
 query "aws_iam_policy_input" {
   sql = <<-EOQ
-    select
-      title as label,
-      arn as value,
-      json_build_object(
-        'account_id', account_id
-      ) as tags
-    from
-      aws_iam_policy
+    with policies as (
+      select
+        title as label,
+        arn as value,
+        json_build_object(
+          'account_id', account_id
+        ) as tags
+      from
+        aws_iam_policy
+      where
+        not is_aws_managed
+
+      union all select
+        distinct on (arn)
+        title as label,
+        arn as value,
+        json_build_object(
+          'account_id', 'AWS Managed'
+        ) as tags
+      from
+        aws_iam_policy
+      where
+        is_aws_managed
+    )
+    select 
+      *
+    from 
+      policies
     order by
-      title;
+      label;
   EOQ
 }
 
@@ -305,11 +325,15 @@ query "aws_iam_policy_overview" {
       update_date as "Update Date",
       policy_id as "Policy ID",
       arn as "ARN",
-      account_id as "Account ID"
+      case is_aws_managed
+        when true then 'AWS Managed'
+        else account_id 
+      end as "Account ID"
     from
       aws_iam_policy
     where
       arn = $1
+    limit 1
   EOQ
 
   param "arn" {}
