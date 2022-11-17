@@ -58,8 +58,8 @@ dashboard "aws_cloudfront_distribution_detail" {
 
   container {
     graph {
-      title = "Relationships"
-      type  = "graph"
+      title     = "Relationships"
+      type      = "graph"
       direction = "TD"
 
       nodes = [
@@ -211,14 +211,9 @@ query "aws_cloudfront_distribution_sni" {
   param "arn" {}
 }
 
-category "aws_cloudfront_distribution_no_link" {
-  color = "purple"
-  icon = local.aws_cloudfront_distribution_icon
-}
-
 node "aws_cloudfront_distribution_node" {
-  category = category.aws_cloudfront_distribution_no_link
-  sql = <<-EOQ
+  category = category.aws_cloudfront_distribution
+  sql      = <<-EOQ
     select
       id as id,
       title as title,
@@ -240,7 +235,7 @@ node "aws_cloudfront_distribution_node" {
 
 node "aws_cloudfront_distribution_to_acm_certificate_node" {
   category = category.aws_acm_certificate
-  sql = <<-EOQ
+  sql      = <<-EOQ
     select
       certificate_arn as id,
       title as title,
@@ -270,7 +265,7 @@ node "aws_cloudfront_distribution_to_acm_certificate_node" {
 
 edge "aws_cloudfront_distribution_to_acm_certificate_edge" {
   title = "encrypted with"
-  sql = <<-EOQ
+  sql   = <<-EOQ
     select
       d.id as from_id,
       c.certificate_arn as to_id
@@ -286,7 +281,7 @@ edge "aws_cloudfront_distribution_to_acm_certificate_edge" {
 
 node "aws_cloudfront_distribution_from_s3_bucket_node" {
   category = category.aws_s3_bucket
-  sql = <<-EOQ
+  sql      = <<-EOQ
     select
       arn as id,
       title as title,
@@ -317,7 +312,7 @@ node "aws_cloudfront_distribution_from_s3_bucket_node" {
 
 edge "aws_cloudfront_distribution_from_s3_bucket_edge" {
   title = "origin for"
-  sql = <<-EOQ
+  sql   = <<-EOQ
     select
       b.arn as from_id,
       d.id as to_id
@@ -334,7 +329,7 @@ edge "aws_cloudfront_distribution_from_s3_bucket_edge" {
 
 node "aws_cloudfront_distribution_from_ec2_application_load_balancer_node" {
   category = category.aws_ec2_application_load_balancer
-  sql = <<-EOQ
+  sql      = <<-EOQ
     select
       arn as id,
       name as title,
@@ -365,7 +360,7 @@ node "aws_cloudfront_distribution_from_ec2_application_load_balancer_node" {
 
 edge "aws_cloudfront_distribution_from_ec2_application_load_balancer_edge" {
   title = "origin for"
-  sql = <<-EOQ
+  sql   = <<-EOQ
     select
       b.arn as from_id,
       d.id as to_id
@@ -382,7 +377,7 @@ edge "aws_cloudfront_distribution_from_ec2_application_load_balancer_edge" {
 
 node "aws_cloudfront_distribution_from_media_store_container_node" {
   category = category.aws_media_store_container
-  sql = <<-EOQ
+  sql      = <<-EOQ
     select
       arn as id,
       name as title,
@@ -413,7 +408,7 @@ node "aws_cloudfront_distribution_from_media_store_container_node" {
 
 edge "aws_cloudfront_distribution_from_media_store_container_edge" {
   title = "origin for"
-  sql = <<-EOQ
+  sql   = <<-EOQ
     select
       c.arn as from_id,
       d.id as to_id

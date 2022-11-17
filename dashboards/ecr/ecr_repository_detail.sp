@@ -240,13 +240,8 @@ query "aws_ecr_repository_input" {
   EOQ
 }
 
-category "aws_ecr_repository_no_link" {
-  color = "orange"
-  icon  = local.aws_ecr_repository_icon
-}
-
 node "aws_ecr_repository_node" {
-  category = category.aws_ecr_repository_no_link
+  category = category.aws_ecr_repository
 
   sql = <<-EOQ
     select

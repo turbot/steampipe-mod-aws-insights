@@ -108,13 +108,8 @@ query "aws_backup_vault_recovery_points" {
   param "arn" {}
 }
 
-category "aws_backup_vault_no_link" {
-  color = "green"
-  icon = local.aws_backup_vault_icon
-}
-
 node "aws_backup_vault_node" {
-  category = category.aws_backup_vault_no_link
+  category = category.aws_backup_vault
 
   sql = <<-EOQ
     select

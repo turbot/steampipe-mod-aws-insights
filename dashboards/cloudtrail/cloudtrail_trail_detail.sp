@@ -279,13 +279,8 @@ query "aws_cloudtrail_trail_bucket" {
   param "arn" {}
 }
 
-category "aws_cloudtrail_trail_no_link" {
-  color = "pink"
-  icon  = local.aws_cloudtrail_trail_icon
-}
-
 node "aws_cloudtrail_trail_node" {
-  category = category.aws_cloudtrail_trail_no_link
+  category = category.aws_cloudtrail_trail
 
   sql = <<-EOQ
     select

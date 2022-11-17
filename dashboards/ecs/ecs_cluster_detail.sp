@@ -340,12 +340,8 @@ query "aws_ecs_cluster_container_instances" {
   param "arn" {}
 }
 
-category "aws_ecs_cluster_no_link" {
-  color = "orange"
-}
-
 node "aws_ecs_cluster_node" {
-  category = category.aws_ecs_cluster_no_link
+  category = category.aws_ecs_cluster
 
   sql = <<-EOQ
     select

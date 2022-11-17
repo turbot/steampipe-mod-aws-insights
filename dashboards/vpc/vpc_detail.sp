@@ -1704,15 +1704,10 @@ query "aws_vpc_subnet_by_az" {
 
 # }
 
-category "aws_vpc_no_link" {
-  icon  = "heroicons-outline:cloud" //"text:vpc"
-  color = "purple"
-}
-
 #### New Node/Edge format Graph queries ############
 
 node "aws_vpc_node" {
-  category = category.aws_vpc_no_link
+  category = category.aws_vpc
 
   sql = <<-EOQ
     select

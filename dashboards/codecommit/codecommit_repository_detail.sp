@@ -141,12 +141,8 @@ query "aws_codecommit_repository_input" {
   EOQ
 }
 
-category "aws_codecommit_repository_no_link" {
-  color = "blue"
-}
-
 node "aws_codecommit_repository_node" {
-  category = category.aws_codecommit_repository_no_link
+  category = category.aws_codecommit_repository
 
   sql = <<-EOQ
     select

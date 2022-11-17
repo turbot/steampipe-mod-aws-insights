@@ -245,12 +245,8 @@ query "aws_codebuild_project_input" {
   EOQ
 }
 
-category "aws_codebuild_project_no_link" {
-  color = "blue"
-}
-
 node "aws_codebuild_project_node" {
-  category = category.aws_codebuild_project_no_link
+  category = category.aws_codebuild_project
 
   sql = <<-EOQ
     select

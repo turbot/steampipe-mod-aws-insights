@@ -263,13 +263,8 @@ query "aws_api_gatewayv2_api_integrations" {
   param "api_id" {}
 }
 
-category "aws_api_gatewayv2_api_no_link" {
-  color = "purple"
-  icon = local.aws_acm_certificate_icon
-}
-
 node "aws_api_gatewayv2_api_node" {
-  category = category.aws_api_gatewayv2_api_no_link
+  category = category.aws_api_gatewayv2_api
 
   sql = <<-EOQ
     select

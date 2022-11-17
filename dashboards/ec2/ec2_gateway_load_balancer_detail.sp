@@ -239,13 +239,8 @@ query "aws_glb_state" {
   param "arn" {}
 }
 
-category "aws_ec2_gateway_load_balancer_no_link" {
-  color = "orange"
-  icon  = local.aws_ec2_gateway_load_balancer_icon
-}
-
 node "aws_ec2_gateway_load_balancer_node" {
-  category = category.aws_ec2_gateway_load_balancer_no_link
+  category = category.aws_ec2_gateway_load_balancer
 
   sql = <<-EOQ
     select

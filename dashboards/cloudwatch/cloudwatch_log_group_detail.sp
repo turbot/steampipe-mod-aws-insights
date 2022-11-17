@@ -256,12 +256,8 @@ query "aws_cloudwatch_log_group_encryption_details" {
   param "log_group_arn" {}
 }
 
-category "aws_cloudwatch_log_group_no_link" {
-  color = "pink"
-}
-
 node "aws_cloudwatch_log_group_node" {
-  category = category.aws_cloudwatch_log_group_no_link
+  category = category.aws_cloudwatch_log_group
 
   sql = <<-EOQ
     select

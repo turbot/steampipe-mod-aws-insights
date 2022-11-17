@@ -216,13 +216,15 @@ query "aws_ebs_volume_input" {
   EOQ
 }
 
-category "aws_ebs_volume_no_link" {
+category "aws_ebs_volume" {
+  base =
+  href  = ""
+  icon  = "text:volume"
   color = "green"
-  icon  = local.aws_ebs_volume_icon
 }
 
 node "aws_ebs_volume_node" {
-  category = category.aws_ebs_volume_no_link
+  category = category.aws_ebs_volume
 
   sql = <<-EOQ
     select

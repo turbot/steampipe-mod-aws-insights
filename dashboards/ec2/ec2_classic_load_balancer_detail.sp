@@ -239,13 +239,8 @@ query "aws_clb_scheme" {
   param "arn" {}
 }
 
-category "aws_ec2_classic_load_balancer_no_link" {
-  color = "orange"
-  icon  = local.aws_ec2_classic_load_balancer_icon
-}
-
 node "aws_ec2_classic_load_balancer_node" {
-  category = category.aws_ec2_classic_load_balancer_no_link
+  category = category.aws_ec2_classic_load_balancer
 
   sql = <<-EOQ
     select

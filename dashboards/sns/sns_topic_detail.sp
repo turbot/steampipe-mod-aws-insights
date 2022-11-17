@@ -263,13 +263,8 @@ query "aws_sns_topic_policy_standard" {
   param "arn" {}
 }
 
-category "aws_sns_topic_no_link" {
-  color = "pink"
-  icon = local.aws_sns_topic_icon
-}
-
 node "aws_sns_topic_node" {
-  category = category.aws_sns_topic_no_link
+  category = category.aws_sns_topic
 
   sql = <<-EOQ
     select

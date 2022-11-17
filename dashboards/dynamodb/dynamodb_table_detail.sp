@@ -293,13 +293,8 @@ query "aws_dynamodb_table_autoscaling_state" {
   param "arn" {}
 }
 
-category "aws_dynamodb_table_no_link" {
-  color = "blue"
-  icon = local.aws_dynamodb_table_icon
-}
-
 node "aws_dynamodb_table_node" {
-  category = category.aws_dynamodb_table_no_link
+  category = category.aws_dynamodb_table
 
   sql = <<-EOQ
     select

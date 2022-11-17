@@ -215,13 +215,8 @@ query "aws_ebs_snapshot_age" {
   param "arn" {}
 }
 
-category "aws_ebs_snapshot_no_link" {
-  color = "green"
-  icon  = local.aws_ebs_snapshot_icon
-}
-
 node "aws_ebs_snapshot_node" {
-  category = category.aws_ebs_snapshot_no_link
+  category = category.aws_ebs_snapshot
 
   sql = <<-EOQ
     select

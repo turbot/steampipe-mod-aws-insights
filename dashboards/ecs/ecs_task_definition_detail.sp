@@ -232,13 +232,8 @@ query "aws_ecs_task_definition_tags" {
   param "arn" {}
 }
 
-category "aws_ecs_task_definition_no_link" {
-  color = "orange"
-  icon = local.aws_ecs_task_definition_icon
-}
-
 node "aws_ecs_task_definition_node" {
-  category = category.aws_ecs_task_definition_no_link
+  category = category.aws_ecs_task_definition
 
   sql = <<-EOQ
     select

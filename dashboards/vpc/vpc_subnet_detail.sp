@@ -306,13 +306,8 @@ query "aws_vpc_subnet_association" {
   param "subnet_id" {}
 }
 
-category "aws_vpc_subnet_no_link" {
-  color = "purple"
-  icon  = "heroicons-solid:share"
-}
-
 node "aws_vpc_subnet_node" {
-  category = category.aws_vpc_subnet_no_link
+  category = category.aws_vpc_subnet
 
   sql = <<-EOQ
     select

@@ -110,13 +110,8 @@ query "aws_backup_plan_resource_assignment" {
   param "arn" {}
 }
 
-category "aws_backup_plan_no_link" {
-  color = "green"
-  icon  = local.aws_backup_plan_icon
-}
-
 node "aws_backup_plan_node" {
-  category = category.aws_backup_plan_no_link
+  category = category.aws_backup_plan
 
   sql = <<-EOQ
     select

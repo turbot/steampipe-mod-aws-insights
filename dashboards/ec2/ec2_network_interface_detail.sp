@@ -314,13 +314,8 @@ query "aws_ec2_eni_tags" {
   param "network_interface_id" {}
 }
 
-category "aws_ec2_network_interface_no_link" {
-  color = "orange"
-  icon  = local.aws_ec2_network_interface_icon
-}
-
 node "aws_ec2_network_interface_node" {
-  category = category.aws_ec2_network_interface_no_link
+  category = category.aws_ec2_network_interface
 
   sql = <<-EOQ
     select

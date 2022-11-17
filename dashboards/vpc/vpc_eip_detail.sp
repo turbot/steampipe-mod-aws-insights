@@ -146,13 +146,8 @@ query "aws_vpc_eip_input" {
   EOQ
 }
 
-category "aws_vpc_eip_no_link" {
-  color = "purple"
-  icon  = local.aws_vpc_eip_icon
-}
-
 node "aws_vpc_eip_node" {
-  category = category.aws_vpc_eip_no_link
+  category = category.aws_vpc_eip
 
   sql = <<-EOQ
     select

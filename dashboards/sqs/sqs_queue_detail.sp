@@ -315,13 +315,8 @@ query "aws_sqs_queue_encryption_details" {
   param "queue_arn" {}
 }
 
-category "aws_sqs_queue_no_link" {
-  color = "pink"
-  icon  = local.aws_sqs_queue_icon
-}
-
 node "aws_sqs_queue_node" {
-  category = category.aws_sqs_queue_no_link
+  category = category.aws_sqs_queue
 
   sql = <<-EOQ
     select

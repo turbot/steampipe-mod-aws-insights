@@ -210,13 +210,8 @@ query "aws_ecs_service_tags" {
   param "arn" {}
 }
 
-category "aws_ecs_service_no_link" {
-  color = "orange"
-  icon  = local.aws_ecs_service_icon
-}
-
 node "aws_ecs_service_node" {
-  category = category.aws_ecs_service_no_link
+  category = category.aws_ecs_service
 
   sql = <<-EOQ
     select

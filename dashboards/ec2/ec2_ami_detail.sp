@@ -299,13 +299,8 @@ query "aws_ec2_ami_tags" {
   param "image_id" {}
 }
 
-category "aws_ec2_ami_no_link" {
-  color = "orange"
-  icon  = local.aws_ec2_ami_icon
-}
-
 node "aws_ec2_ami_node" {
-  category = category.aws_ec2_ami_no_link
+  category = category.aws_ec2_ami
 
   sql = <<-EOQ
     select

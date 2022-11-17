@@ -199,12 +199,8 @@ query "aws_s3_bucket_input" {
   EOQ
 }
 
-category "aws_s3_bucket_no_link" {
-  icon = local.aws_s3_bucket_icon
-}
-
 node "aws_s3_bucket_node" {
-  category = category.aws_s3_bucket_no_link
+  category = category.aws_s3_bucket
 
   sql = <<-EOQ
     select

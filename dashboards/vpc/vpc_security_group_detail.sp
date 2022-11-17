@@ -1243,13 +1243,8 @@ query "aws_vpc_security_group_tags" {
   param "group_id" {}
 }
 
-category "aws_vpc_security_group_no_link" {
-  color = "purple"
-  icon  = "heroicons-solid:lock-closed"
-}
-
 node "aws_vpc_security_group_node" {
-  category = category.aws_vpc_security_group_no_link
+  category = category.aws_vpc_security_group
 
   sql = <<-EOQ
     select

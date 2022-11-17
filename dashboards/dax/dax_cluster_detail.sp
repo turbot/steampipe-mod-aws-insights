@@ -43,11 +43,11 @@ dashboard "dax_cluster_detail" {
 
   container {
     graph {
-      title = "Relationships"
-      type  = "graph"
+      title     = "Relationships"
+      type      = "graph"
       direction = "TD"
 
-      nodes =[
+      nodes = [
         node.aws_dax_cluster_node,
         node.aws_dax_cluster_to_iam_role_node,
         node.aws_dax_cluster_to_vpc_security_group_node,
@@ -181,12 +181,8 @@ query "aws_dax_cluster_encryption" {
   param "arn" {}
 }
 
-category "aws_dax_cluster_no_link" {
-  color = "blue"
-}
-
 node "aws_dax_cluster_node" {
-  category = category.aws_dax_cluster_no_link
+  category = category.aws_dax_cluster
 
   sql = <<-EOQ
     select
@@ -211,7 +207,7 @@ node "aws_dax_cluster_node" {
 
 node "aws_dax_cluster_to_iam_role_node" {
   category = category.aws_iam_role
-  sql = <<-EOQ
+  sql      = <<-EOQ
     select
       r.arn as id,
       r.title as title,
@@ -235,7 +231,7 @@ node "aws_dax_cluster_to_iam_role_node" {
 
 edge "aws_dax_cluster_to_iam_role_edge" {
   title = "iam role"
-  sql = <<-EOQ
+  sql   = <<-EOQ
     select
       arn as from_id,
       iam_role_arn as to_id
@@ -250,7 +246,7 @@ edge "aws_dax_cluster_to_iam_role_edge" {
 
 node "aws_dax_cluster_to_vpc_security_group_node" {
   category = category.aws_vpc_security_group
-  sql = <<-EOQ
+  sql      = <<-EOQ
     select
       arn as id,
       title as title,
@@ -281,7 +277,7 @@ node "aws_dax_cluster_to_vpc_security_group_node" {
 
 edge "aws_dax_cluster_to_vpc_security_group_edge" {
   title = "security group"
-  sql = <<-EOQ
+  sql   = <<-EOQ
     select
       c.arn as from_id,
       sg.arn as to_id
@@ -298,7 +294,7 @@ edge "aws_dax_cluster_to_vpc_security_group_edge" {
 
 node "aws_dax_cluster_to_dax_subnet_group_node" {
   category = category.aws_dax_subnet_group
-  sql = <<-EOQ
+  sql      = <<-EOQ
     select
       subnet_group_name as id,
       title as title,
@@ -327,7 +323,7 @@ node "aws_dax_cluster_to_dax_subnet_group_node" {
 
 edge "aws_dax_cluster_to_dax_subnet_group_edge" {
   title = "subnet group"
-  sql = <<-EOQ
+  sql   = <<-EOQ
     select
       c.arn as from_id,
       g.subnet_group_name as to_id
@@ -343,7 +339,7 @@ edge "aws_dax_cluster_to_dax_subnet_group_edge" {
 
 node "aws_dax_subnet_group_to_vpc_subnet_node" {
   category = category.aws_vpc_subnet
-  sql = <<-EOQ
+  sql      = <<-EOQ
     select
       subnet_arn as id,
       title as title,
@@ -375,7 +371,7 @@ node "aws_dax_subnet_group_to_vpc_subnet_node" {
 
 edge "aws_dax_subnet_group_to_vpc_subnet_edge" {
   title = "subnet"
-  sql = <<-EOQ
+  sql   = <<-EOQ
     select
       g.subnet_group_name as from_id,
       sub.subnet_arn as to_id
@@ -395,7 +391,7 @@ edge "aws_dax_subnet_group_to_vpc_subnet_edge" {
 
 node "aws_dax_cluster_to_sns_topic_node" {
   category = category.aws_sns_topic
-  sql = <<-EOQ
+  sql      = <<-EOQ
     select
       topic_arn as id,
       title as title,
@@ -423,7 +419,7 @@ node "aws_dax_cluster_to_sns_topic_node" {
 
 edge "aws_dax_cluster_to_sns_topic_edge" {
   title = "publishes to"
-  sql = <<-EOQ
+  sql   = <<-EOQ
     select
       c.arn as from_id,
       t.topic_arn as to_id
@@ -439,7 +435,7 @@ edge "aws_dax_cluster_to_sns_topic_edge" {
 
 node "aws_dax_cluster_vpc_security_group_to_vpc_node" {
   category = category.aws_vpc
-  sql = <<-EOQ
+  sql      = <<-EOQ
     select
       arn as id,
       title as title,
@@ -471,7 +467,7 @@ node "aws_dax_cluster_vpc_security_group_to_vpc_node" {
 
 edge "aws_dax_cluster_vpc_security_group_to_vpc_edge" {
   title = "vpc"
-  sql = <<-EOQ
+  sql   = <<-EOQ
     select
       sg.arn as from_id,
       v.arn as to_id
@@ -487,9 +483,9 @@ edge "aws_dax_cluster_vpc_security_group_to_vpc_edge" {
   param "arn" {}
 }
 
-edge "aws_dax_cluster_vpc_subnet_to_vpc_edge"{
+edge "aws_dax_cluster_vpc_subnet_to_vpc_edge" {
   title = "vpc"
-  sql = <<-EOQ
+  sql   = <<-EOQ
     select
       sub.subnet_arn as from_id,
       v.arn as to_id

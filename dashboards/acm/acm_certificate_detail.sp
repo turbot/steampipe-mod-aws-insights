@@ -242,13 +242,8 @@ query "aws_acm_certificate_transparency_logging_status" {
   param "arn" {}
 }
 
-category "aws_acm_certificate_no_link" {
-  color = "red"
-  icon  = local.aws_acm_certificate_icon
-}
-
 node "aws_acm_certificate_node" {
-  category = category.aws_acm_certificate_no_link
+  category = category.aws_acm_certificate
 
   sql = <<-EOQ
     select

@@ -132,12 +132,8 @@ query "aws_codepipeline_pipeline_encryption" {
   param "arn" {}
 }
 
-category "aws_codepipeline_pipeline_no_link" {
-  color = "blue"
-}
-
 node "aws_codepipeline_pipeline_node" {
-  category = category.aws_codepipeline_pipeline_no_link
+  category = category.aws_codepipeline_pipeline
 
   sql = <<-EOQ
     select
