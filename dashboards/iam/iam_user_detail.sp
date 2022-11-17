@@ -60,15 +60,15 @@ dashboard "aws_iam_user_detail" {
         node.aws_iam_user_node,
         node.aws_iam_user_to_iam_group_node,
         node.aws_iam_user_to_iam_policy_node,
-        //node.aws_iam_user_to_iam_group_policy_node,
-        node.aws_iam_user_to_iam_access_key_node
+        node.aws_iam_user_to_iam_access_key_node,
+        node.aws_iam_user_to_inline_policy_node,
       ]
 
       edges = [
-        edge.aws_iam_user_to_iam_group_edge,
+        edge.aws_iam_user_from_iam_group_edge,
         edge.aws_iam_user_to_iam_policy_edge,
-        //edge.aws_iam_user_to_iam_group_policy_edge,
-        edge.aws_iam_user_to_iam_access_key_edge
+        edge.aws_iam_user_to_iam_access_key_edge,
+        edge.aws_iam_user_to_inline_policy_edge,
       ]
 
       args = {
@@ -152,6 +152,34 @@ dashboard "aws_iam_user_detail" {
         color = "ok"
       }
     }
+
+
+    # flow {
+    #   title     = "Attached Policies"
+
+    #   nodes = [
+    #     node.aws_iam_user_node,
+    #     node.aws_iam_user_to_iam_group_node,
+    #     node.aws_iam_user_to_iam_group_policy_node,
+    #     node.aws_iam_user_to_iam_policy_node,
+    #     node.aws_iam_user_to_inline_policy_node,
+    #     node.aws_iam_user_to_iam_group_inline_policy_node,
+
+    #   ]
+
+    #   edges = [
+    #     edge.aws_iam_user_to_iam_group_edge,
+    #     edge.aws_iam_user_to_iam_group_policy_edge,
+    #     edge.aws_iam_user_to_iam_policy_edge,
+    #     edge.aws_iam_user_to_inline_policy_edge,
+    #     edge.aws_iam_user_to_iam_group_inline_policy_edge,
+    #   ]
+
+    #   args = {
+    #     arn = self.input.user_arn.value
+    #   }
+    # }
+
 
     table {
       title = "Groups"
@@ -314,7 +342,7 @@ node "aws_iam_user_to_iam_group_node" {
   param "arn" {}
 }
 
-edge "aws_iam_user_to_iam_group_edge" {
+edge "aws_iam_user_from_iam_group_edge" {
   title = "has member"
 
   sql = <<-EOQ
@@ -331,103 +359,96 @@ edge "aws_iam_user_to_iam_group_edge" {
   param "arn" {}
 }
 
+
+
 node "aws_iam_user_to_iam_policy_node" {
   category = category.aws_iam_policy
 
   sql = <<-EOQ
     select
-      policy_id as id,
-      name as title,
+      p.policy_id as id,
+      p.name as title,
       jsonb_build_object(
-        'ARN', arn,
-        'AWS Managed', is_aws_managed::text,
-        'Attached', is_attached::text,
-        'Create Date', create_date,
-        'Account ID', account_id
+        'ARN', p.arn,
+        'AWS Managed', p.is_aws_managed::text,
+        'Attached', p.is_attached::text,
+        'Create Date', p.create_date,
+        'Account ID', p.account_id
       ) as properties
     from
-      aws_iam_policy
+      aws_iam_user as u,
+      jsonb_array_elements_text(attached_policy_arns) as pol,
+      aws_iam_policy as p
     where
-      arn in
-      (
-        select
-          jsonb_array_elements_text(attached_policy_arns)
-        from
-          aws_iam_user
-        where
-          arn = $1
-      );
+      p.arn = pol
+      and p.account_id = u.account_id
+      and u.arn = $1
+
   EOQ
 
   param "arn" {}
 }
 
 edge "aws_iam_user_to_iam_policy_edge" {
-  title = "policy"
+  title = "managed policy"
 
   sql = <<-EOQ
     select
-      r.user_id as from_id,
+      u.user_id as from_id,
       p.policy_id as to_id
     from
-      aws_iam_user as r,
-      jsonb_array_elements_text(attached_policy_arns) as arns
-      left join
-        aws_iam_policy as p
-        on p.arn = arns
+      aws_iam_user as u,
+      jsonb_array_elements_text(attached_policy_arns) as pol,
+      aws_iam_policy as p
     where
-      r.arn = $1;
+      p.arn = pol
+      and p.account_id = u.account_id
+      and u.arn = $1
   EOQ
 
   param "arn" {}
 }
 
-# node "aws_iam_user_to_iam_group_policy_node" {
-#   category = category.aws_iam_policy
 
-#   sql = <<-EOQ
-#     select
-#       p.policy_id as id,
-#       p.name as title,
-#       jsonb_build_object(
-#         'ARN', p.arn,
-#         'AWS Managed', is_aws_managed::text,
-#         'Attached', is_attached::text,
-#         'Create Date', p.create_date,
-#         'Account ID', p.account_id
-#       ) as properties
-#     from
-#       aws_iam_user as u,
-#       aws_iam_policy as p,
-#       jsonb_array_elements(u.groups) as user_groups
-#       inner join aws_iam_group g on g.arn = user_groups ->> 'Arn'
-#     where
-#       g.attached_policy_arns :: jsonb ? p.arn
-#       and u.arn = $1;
-#   EOQ
 
-#   param "arn" {}
-# }
+node "aws_iam_user_to_inline_policy_node" {
+  category = category.aws_iam_inline_policy
 
-# edge "aws_iam_user_to_iam_group_policy_edge" {
-#   title = "attached to"
+  sql = <<-EOQ
+    select
+      concat('inline_', i ->> 'PolicyName') as id,
+      i ->> 'PolicyName' as title,
+      jsonb_build_object(
+        'PolicyName', i ->> 'PolicyName',
+        'Type', 'Inline Policy'
+      ) as properties
+    from
+      aws_iam_user as u,
+      jsonb_array_elements(inline_policies_std) as i
+    where
+      u.arn = $1
+  EOQ
 
-#   sql = <<-EOQ
-#     select
-#       g.group_id as to_id,
-#       p.policy_id as from_id
-#     from
-#       aws_iam_user as u,
-#       aws_iam_policy as p,
-#       jsonb_array_elements(u.groups) as user_groups
-#       inner join aws_iam_group g on g.arn = user_groups ->> 'Arn'
-#     where
-#       g.attached_policy_arns :: jsonb ? p.arn
-#       and u.arn = $1;
-#   EOQ
+  param "arn" {}
+}
 
-#   param "arn" {}
-# }
+edge "aws_iam_user_to_inline_policy_edge" {
+  title = "inline policy"
+
+  sql = <<-EOQ
+    select
+      u.user_id as from_id,
+      concat('inline_', i ->> 'PolicyName') as to_id
+    from
+      aws_iam_user as u,
+      jsonb_array_elements(inline_policies_std) as i
+    where
+      u.arn = $1
+  EOQ
+
+  param "arn" {}
+}
+
 
 node "aws_iam_user_to_iam_access_key_node" {
   category = category.aws_iam_access_key
@@ -716,6 +737,130 @@ query "aws_iam_all_policies_for_user" {
       jsonb_array_elements(inline_policies_std) as i
     where
       u.arn = $1
+  EOQ
+
+  param "arn" {}
+}
+
+
+
+
+//***
+
+
+
+edge "aws_iam_user_to_iam_group_edge" {
+  title = "has member"
+
+  sql = <<-EOQ
+    select
+      u ->> 'UserId' as from_id,
+      g.group_id as to_id
+    from
+      aws_iam_group as g,
+      jsonb_array_elements(users) as u
+    where
+      u ->> 'Arn' = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+
+
+
+
+node "aws_iam_user_to_iam_group_policy_node" {
+  category = category.aws_iam_policy
+
+  sql = <<-EOQ
+    select
+      p.policy_id as id,
+      p.name as title,
+      jsonb_build_object(
+        'ARN', p.arn,
+        'AWS Managed', p.is_aws_managed::text,
+        'Attached', p.is_attached::text,
+        'Create Date', p.create_date,
+        'Account ID', p.account_id
+      ) as properties
+    from
+      aws_iam_user as u,
+      jsonb_array_elements(u.groups) as user_groups,
+      aws_iam_group as g,
+      jsonb_array_elements_text(g.attached_policy_arns) as gp_arn,
+      aws_iam_policy as p
+    where
+      g.arn = user_groups ->> 'Arn'
+      and gp_arn = p.arn
+      and p.account_id = u.account_id
+      and u.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_iam_user_to_iam_group_policy_edge" {
+  title = "attached"
+
+  sql = <<-EOQ
+    select
+      g.group_id as from_id,
+      p.policy_id as to_id
+    from
+      aws_iam_user as u,
+      jsonb_array_elements(u.groups) as user_groups,
+      aws_iam_group as g,
+      jsonb_array_elements_text(g.attached_policy_arns) as gp_arn,
+      aws_iam_policy as p
+    where
+      g.arn = user_groups ->> 'Arn'
+      and gp_arn = p.arn
+      and p.account_id = u.account_id
+      and u.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+
+
+node "aws_iam_user_to_iam_group_inline_policy_node" {
+  category = category.aws_iam_inline_policy
+
+  sql = <<-EOQ
+    select
+      concat(grp.group_id, '_' , i ->> 'PolicyName') as id,
+      i ->> 'PolicyName' as title
+      --2 as depth
+    from
+      aws_iam_user as u,
+      jsonb_array_elements(u.groups) as g,
+      aws_iam_group as grp,
+      jsonb_array_elements(grp.inline_policies_std) as i
+    where
+      grp.arn = g ->> 'Arn'
+      and u.arn = $1
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_iam_user_to_iam_group_inline_policy_edge" {
+  title = "attached"
+
+  sql = <<-EOQ
+   select
+      concat(grp.group_id, '_' , i ->> 'PolicyName') as to_id,
+      grp.group_id as from_id
+    from
+      aws_iam_user as u,
+      jsonb_array_elements(u.groups) as g,
+      aws_iam_group as grp,
+      jsonb_array_elements(grp.inline_policies_std) as i
+    where
+      grp.arn = g ->> 'Arn'
+      and u.arn = $1
   EOQ
 
   param "arn" {}

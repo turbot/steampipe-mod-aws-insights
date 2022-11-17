@@ -1042,6 +1042,18 @@ category "aws_service" {
   }
 }
 
+category "aws_action" {
+  icon = "heroicons-outline:cog-8-tooth"
+  color = "orange"
+  title     = "Action"
+
+  fold {
+    title     = "Action"
+    icon      = "heroicons-outline:cog-8-tooth"
+    threshold = 3
+  }
+}
+
 
 category "aws_federated" {
   icon = "heroicons-outline:user-group"
@@ -1053,5 +1065,11 @@ category "aws_federated" {
     icon      = "heroicons-outline:user-group"
     threshold = 3
   }
+}
+
+category "aws_iam_inline_policy" {
+  icon  = "heroicons-outline:clipboard-document"
+  color = "red"
+  title = "IAM Policy"
 }
 
