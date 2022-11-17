@@ -677,7 +677,6 @@ category "aws_availability_zone" {
 }
 
 
-
 category "aws_account" {
   title = "Account"
   icon  = "globe-alt"
