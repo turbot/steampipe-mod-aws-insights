@@ -68,7 +68,7 @@ category "aws_ecs_service" {
 category "aws_s3_bucket" {
   title = "S3 Bucket"
   href  = "/aws_insights.dashboard.aws_s3_bucket_detail?input.bucket_arn={{.properties.'ARN' | @uri}}"
-  icon  = "text:Bucket"
+  icon  = "archive-box"
   color = local.storage_color
 }
 
@@ -89,7 +89,7 @@ category "aws_acm_certificate" {
 category "aws_sns_topic" {
   title = "SNS Topic"
   href  = "/aws_insights.dashboard.aws_sns_topic_detail?input.topic_arn={{.properties.'ARN' | @uri}}"
-  icon  = "text:SNS"
+  icon  = "text:Topic"
   color = local.integration_color
 }
 
@@ -117,7 +117,7 @@ category "aws_cloudtrail_trail" {
 category "aws_ebs_volume" {
   title = "EBS Volume"
   href  = "/aws_insights.dashboard.aws_ebs_volume_detail?input.volume_arn={{.properties.'ARN' | @uri}}"
-  icon  = "text:Volume"
+  icon  = "inbox-stack"
   color = local.storage_color
 }
 
@@ -125,7 +125,7 @@ category "aws_ebs_snapshot" {
   title = "EBS Snapshot"
   href  = "/aws_insights.dashboard.aws_ebs_snapshot_detail?input.snapshot_arn={{.properties.'ARN' | @uri}}"
   color = local.storage_color
-  icon  = "text:Snapshot"
+  icon  = "viewfinder-circle"
 }
 
 category "aws_rds_db_cluster" {
@@ -146,7 +146,7 @@ category "aws_rds_db_instance" {
   title = "RDS DB Instance"
   color = local.database_color
   href  = "/aws_insights.dashboard.aws_rds_db_instance_detail.url_path?input.db_instance_arn={{.properties.ARN | @uri}}"
-  icon  = "text:RDS"
+  icon  = "circle-stack"
 }
 
 category "aws_rds_db_snapshot" {
@@ -204,7 +204,7 @@ category "aws_ec2_ami" {
   title = "EC2 AMI"
   href  = "aws_insights.dashboard.aws_ec2_ami_detail?input.ami={{.properties.'Image ID' | @uri}}"
   color = local.compute_color
-  icon  = "text:AMI"
+  icon  = "text:image"
 }
 
 category "aws_ec2_autoscaling_group" {
@@ -289,7 +289,7 @@ category "aws_vpc_flow_log" {
 category "aws_iam_role" {
   title = "IAM Role"
   href  = "/aws_insights.dashboard.aws_iam_role_detail?input.role_arn={{.properties.'ARN' | @uri}}"
-  icon  = "text:Role"
+  icon  = "user-plus"
   color = local.iam_color
 }
 
@@ -311,14 +311,14 @@ category "aws_iam_user" {
   title = "IAM User"
   color = local.iam_color
   href  = "/aws_insights.dashboard.aws_iam_user_detail?input.user_arn={{.properties.'ARN' | @uri}}"
-  icon  = "text:User"
+  icon  = "user"
 }
 
 category "aws_iam_group" {
   title = "IAM Group"
   color = local.iam_color
   href  = "/aws_insights.dashboard.aws_iam_group_detail?input.group_arn={{.properties.'ARN' | @uri}}"
-  icon  = "text:Group"
+  icon  = "user-group"
 }
 
 category "aws_iam_instance_profile" {
@@ -521,7 +521,7 @@ category "aws_vpc_internet_gateway" {
 
 category "aws_vpc_route_table" {
   title = "VPC Route Table"
-  icon  = "text:Table"
+  icon  = "arrows-right-left"
   color = local.network_color
 }
 
@@ -589,7 +589,7 @@ category "aws_sfn_state_machine" {
 category "aws_ec2_launch_configuration" {
   title = "EC2 Launch Configuration"
   color = local.compute_color
-  icon  = "text:LC"
+  icon  = "newspaper"
 }
 
 category "aws_dms_replication_instance" {
