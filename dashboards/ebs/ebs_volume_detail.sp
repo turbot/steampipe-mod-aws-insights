@@ -216,13 +216,6 @@ query "aws_ebs_volume_input" {
   EOQ
 }
 
-category "aws_ebs_volume" {
-  base =
-  href  = ""
-  icon  = "text:volume"
-  color = "green"
-}
-
 node "aws_ebs_volume_node" {
   category = category.aws_ebs_volume
 
