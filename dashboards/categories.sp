@@ -696,3 +696,9 @@ category "aws_api_gatewayv2_integration" {
   icon  = "puzzle-piece"
   color = local.frontend_web_color
 }
+
+category "aws_opensearch_domain" {
+  title = "OpenSearch Domain"
+  icon  = "text:OS"
+  color = local.analytics_color
+}
