@@ -13,5 +13,4 @@ locals {
   mg_color           = "blue"
   ml_color           = "green"
   cd_color           = "purple"
-
 }

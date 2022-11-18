@@ -68,14 +68,16 @@ dashboard "acm_certificate_detail" {
         node.aws_acm_certificate_from_cloudfront_distribution_node,
         node.aws_acm_certificate_from_ec2_classic_load_balancer_node,
         node.aws_acm_certificate_from_ec2_application_load_balancer_node,
-        node.aws_acm_certificate_from_ec2_network_load_balancer_node
+        node.aws_acm_certificate_from_ec2_network_load_balancer_node,
+        node.aws_acm_certificate_from_opensearch_domain_node
       ]
 
       edges = [
         edge.aws_acm_certificate_from_cloudfront_distribution_edge,
         edge.aws_acm_certificate_from_ec2_classic_load_balancer_edge,
         edge.aws_acm_certificate_from_ec2_application_load_balancer_edge,
-        edge.aws_acm_certificate_from_ec2_network_load_balancer_edge
+        edge.aws_acm_certificate_from_ec2_network_load_balancer_edge,
+        edge.aws_acm_certificate_from_opensearch_domain_edge
       ]
 
       args = {
@@ -253,7 +255,10 @@ node "aws_acm_certificate_node" {
         'ARN', certificate_arn,
         'Domain Name', domain_name,
         'Certificate Transparency Logging Preference', certificate_transparency_logging_preference,
+        'Status', status,
         'Created At', created_at,
+        'Issued At', issued_at,
+        'Type', type,
         'Account ID', account_id,
         'Region', region
       ) as properties
@@ -462,6 +467,46 @@ edge "aws_acm_certificate_from_ec2_network_load_balancer_edge" {
       left join aws_ec2_network_load_balancer as b on b.arn = arns
     where
       certificate_arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_acm_certificate_from_opensearch_domain_node" {
+  category = category.aws_opensearch_domain
+
+  sql = <<-EOQ
+    select
+      arn as id,
+      title as title,
+      jsonb_build_object(
+        'ARN', arn,
+        'Domain ID', domain_id,
+        'Domain Name', domain_name,
+        'Engine Version', engine_version,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_opensearch_domain
+    where
+     domain_endpoint_options ->> 'CustomEndpointCertificateArn' = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_acm_certificate_from_opensearch_domain_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
+    select
+      d.arn as from_id,
+      $1 as to_id
+    from
+      aws_opensearch_domain as d
+    where
+     d.domain_endpoint_options ->> 'CustomEndpointCertificateArn' = $1;
   EOQ
 
   param "arn" {}
