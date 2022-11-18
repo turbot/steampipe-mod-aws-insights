@@ -358,17 +358,11 @@ edge "aws_rds_db_snapshot_to_kms_key_edge" {
   sql = <<-EOQ
     select
       s.db_snapshot_identifier as from_id,
-      k.id as to_id,
-      jsonb_build_object(
-        'ARN', k.arn,
-        'DB Snapshot Identifier', s.db_snapshot_identifier,
-        'Account ID', k.account_id,
-        'Region', k.region
-      ) as properties
+      k.id as to_id
     from
       aws_rds_db_snapshot as s
-      join 
-        aws_kms_key as k 
+      join
+        aws_kms_key as k
         on s.kms_key_id = k.arn
     where
       s.arn = $1;
@@ -397,8 +391,8 @@ node "aws_rds_db_snapshot_from_rds_db_instance_node" {
       ) as properties
     from
       aws_rds_db_snapshot as s
-      join 
-        aws_rds_db_instance as i 
+      join
+        aws_rds_db_instance as i
         on s.db_instance_identifier = i.db_instance_identifier
         and s.account_id = i.account_id
         and s.region = i.region
@@ -415,17 +409,11 @@ edge "aws_rds_db_snapshot_from_rds_db_instance_edge" {
   sql = <<-EOQ
     select
       i.db_instance_identifier as from_id,
-      s.db_snapshot_identifier as to_id,
-      jsonb_build_object(
-        'DB Instance Identifier', i.db_instance_identifier,
-        'DB Snapshot Identifier', s.db_snapshot_identifier,
-        'Account ID', s.account_id,
-        'Region', s.region
-      ) as properties
+      s.db_snapshot_identifier as to_id
     from
       aws_rds_db_snapshot as s
-      join 
-        aws_rds_db_instance as i 
+      join
+        aws_rds_db_instance as i
         on s.db_instance_identifier = i.db_instance_identifier
         and s.account_id = i.account_id
         and s.region = i.region

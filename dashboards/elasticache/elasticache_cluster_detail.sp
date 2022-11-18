@@ -614,8 +614,7 @@ edge "aws_elasticache_cluster_subnet_to_vpc_edge" {
   sql = <<-EOQ
     select
       subnet ->> 'SubnetIdentifier' as from_id,
-      g.vpc_id as to_id,
-      'elasticache_subnet_to_vpc' as category
+      g.vpc_id as to_id
     from
       aws_elasticache_cluster as c,
       aws_elasticache_subnet_group as g,

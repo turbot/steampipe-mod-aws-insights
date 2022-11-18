@@ -62,7 +62,7 @@ dashboard "aws_lambda_function_detail" {
         node.aws_lambda_to_vpc_security_group_node,
         node.aws_lambda_vpc_subnet_node,
         node.aws_lambda_to_vpc_node,
-        
+
         node.aws_lambda_to_kms_key_node,
         node.aws_lambda_to_iam_role_node,
         node.aws_lambda_from_s3_bucket_node,
@@ -84,14 +84,12 @@ dashboard "aws_lambda_function_detail" {
         edge.aws_lambda_to_kms_key_edge,
         edge.aws_lambda_to_iam_role_edge,
         edge.aws_lambda_from_s3_bucket_edge,
-
         edge.aws_lambda_version_edge,
         edge.aws_lambda_alias_edge,
         edge.aws_lambda_sns_subscription_edge,
         edge.aws_lambda_sns_topic_edge,
         edge.aws_lambda_api_gateway_integration_edge,
-        edge.aws_lambda_api_gateway_edge,
-
+        edge.aws_lambda_api_gateway_edge
       ]
 
       args = {
@@ -407,7 +405,7 @@ node "aws_lambda_to_vpc_node" {
 
 edge "aws_lambda_to_vpc_edge" {
   title = "vpc"
-  # a lambda can only be in one subnet, so we 
+  # a lambda can only be in one subnet, so we
   # can assume all the vpc_subnet_ids are in the lambda's vpc
   sql = <<-EOQ
     select
@@ -531,7 +529,7 @@ node "aws_lambda_to_kms_key_node" {
       ) as properties
     from
       aws_lambda_function as l,
-      aws_kms_key as k 
+      aws_kms_key as k
     where
       k.arn = l.kms_key_arn
       and l.arn = $1
@@ -671,7 +669,7 @@ node "aws_lambda_version_node" {
       aws_lambda_function as l,
       aws_lambda_version as v
     where
-      l.name = v.function_name 
+      l.name = v.function_name
       and l.account_id = v.account_id
       and l.region = v.region
       and l.arn = $1
@@ -694,7 +692,7 @@ edge "aws_lambda_version_edge" {
       aws_lambda_function as l,
       aws_lambda_version as v
     where
-      l.name = v.function_name 
+      l.name = v.function_name
       and l.account_id = v.account_id
       and l.region = v.region
       and l.arn = $1
@@ -820,10 +818,10 @@ node "aws_lambda_from_sns_subscription_node" {
     where
       protocol = 'lambda'
       and (
-        endpoint = $1 
+        endpoint = $1
         or endpoint like $1 || ':%'
       )
-      
+
   EOQ
 
   param "arn" {}
@@ -845,7 +843,7 @@ edge "aws_lambda_sns_subscription_edge" {
     where
       protocol = 'lambda'
       and (
-        endpoint = $1 
+        endpoint = $1
         or endpoint like $1 || ':%'
       )
   EOQ
@@ -866,7 +864,7 @@ node "aws_lambda_from_api_gateway_integration_node" {
         'ID', i.integration_id,
         'ARN', i.arn,
         'Integration Method', i.integration_method,
-        'Integration Type', i.integration_type,        
+        'Integration Type', i.integration_type,
         'Integration URI', i.integration_URI,
         'Region', i.region,
         'Account ID', i.account_id

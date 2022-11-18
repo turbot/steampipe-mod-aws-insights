@@ -286,7 +286,7 @@ node "aws_kms_key_node" {
         'Creation Date', creation_date,
         'Enabled', enabled::text,
         'Account ID', account_id,
-        'Region', region 
+        'Region', region
       ) as properties
     from
       aws_kms_key
@@ -309,7 +309,7 @@ node "aws_kms_key_from_cloudtrail_trail_node" {
         'Multi Region Trail', is_multi_region_trail::text,
         'Logging', is_logging::text,
         'Account ID', t.account_id,
-        'Home Region', home_region 
+        'Home Region', home_region
       ) as properties
     from
       aws_cloudtrail_trail as t
@@ -326,10 +326,7 @@ edge "aws_kms_key_from_cloudtrail_trail_edge" {
   sql = <<-EOQ
     select
       t.arn as from_id,
-      k.id as to_id,
-      jsonb_build_object(
-        'Account ID', t.account_id 
-      ) as properties
+      k.id as to_id
     from
       aws_cloudtrail_trail as t,
       aws_kms_key as k
@@ -353,7 +350,7 @@ node "aws_kms_key_from_ebs_volume_node" {
         'State', state,
         'Create Time', create_time,
         'Account ID', v.account_id,
-        'Region', v.region 
+        'Region', v.region
       ) as properties
     from
       aws_ebs_volume as v
@@ -370,10 +367,7 @@ edge "aws_kms_key_from_ebs_volume_edge" {
   sql = <<-EOQ
     select
       volume_id as from_id,
-      k.id as to_id,
-      jsonb_build_object(
-        'Account ID', v.account_id 
-      ) as properties
+      k.id as to_id
     from
       aws_ebs_volume as v,
       aws_kms_key as k
@@ -397,7 +391,7 @@ node "aws_kms_key_from_rds_db_cluster_snapshot_node" {
         'Status', status,
         'Create Time', create_time,
         'Account ID', s.account_id,
-        'Region', s.region 
+        'Region', s.region
       ) as properties
     from
       aws_rds_db_cluster_snapshot as s
@@ -414,10 +408,7 @@ edge "aws_kms_key_from_rds_db_cluster_snapshot_edge" {
   sql = <<-EOQ
     select
       db_cluster_snapshot_identifier as from_id,
-      k.id as to_id,
-      jsonb_build_object(
-        'Account ID', s.account_id 
-      ) as properties
+      k.id as to_id
     from
       aws_rds_db_cluster_snapshot as s,
       aws_kms_key as k
@@ -440,7 +431,7 @@ node "aws_kms_key_from_rds_db_cluster_node" {
         'Status', status,
         'Create Time', create_time,
         'Account ID', c.account_id,
-        'Region', c.region 
+        'Region', c.region
       ) as properties
     from
       aws_rds_db_cluster as c
@@ -457,10 +448,7 @@ edge "aws_kms_key_from_rds_db_cluster_edge" {
   sql = <<-EOQ
     select
       db_cluster_identifier as from_id,
-      k.id as to_id,
-      jsonb_build_object( 
-        'Account ID', c.account_id 
-      ) as properties
+      k.id as to_id
     from
       aws_rds_db_cluster as c,
       aws_kms_key as k
@@ -484,7 +472,7 @@ node "aws_kms_key_from_rds_db_instance_node" {
         'Class', class,
         'Engine', engine,
         'Account ID', i.account_id,
-        'Region', i.region 
+        'Region', i.region
       ) as properties
     from
       aws_rds_db_instance as i
@@ -501,10 +489,7 @@ edge "aws_kms_key_from_rds_db_instance_edge" {
   sql = <<-EOQ
     select
       db_instance_identifier as from_id,
-      k.id as to_id,
-      jsonb_build_object(
-        'Account ID', i.account_id 
-      ) as properties
+      k.id as to_id
     from
       aws_rds_db_instance as i,
       aws_kms_key as k
@@ -528,7 +513,7 @@ node "aws_kms_key_from_rds_db_snapshot_node" {
         'Status', status,
         'Create Time', create_time,
         'Account ID', s.account_id,
-        'Region', s.region 
+        'Region', s.region
       ) as properties
     from
       aws_rds_db_snapshot as s
@@ -545,10 +530,7 @@ edge "aws_kms_key_from_rds_db_snapshot_edge" {
   sql = <<-EOQ
     select
       db_snapshot_identifier as from_id,
-      k.id as to_id,
-      jsonb_build_object(
-        'Account ID', s.account_id 
-      ) as properties
+      k.id as to_id
     from
       aws_rds_db_snapshot as s,
       aws_kms_key as k
@@ -572,7 +554,7 @@ node "aws_kms_key_from_redshift_cluster_node" {
         'Cluster Create Time', cluster_create_time,
         'Cluster Status', cluster_status,
         'Account ID', c.account_id,
-        'Region', c.region 
+        'Region', c.region
       ) as properties
     from
       aws_redshift_cluster as c
@@ -589,10 +571,7 @@ edge "aws_kms_key_from_redshift_cluster_edge" {
   sql = <<-EOQ
     select
       cluster_identifier as from_id,
-      k.id as to_id,
-      jsonb_build_object( 
-        'Account ID', c.account_id 
-      ) as properties
+      k.id as to_id
     from
       aws_redshift_cluster as c,
       aws_kms_key as k

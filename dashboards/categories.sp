@@ -480,7 +480,7 @@ category "aws_codebuild_project" {
   title = "CodeBuild Project"
   color = local.dev_tool_color
   href  = "/aws_insights.dashboard.aws_codebuild_project_detail?input.codebuild_project_arn={{.properties.'ARN' | @uri}}"
-  icon  = "text:Project"
+  icon  = "code-bracket-square"
 }
 
 category "aws_kinesisanalyticsv2_application" {

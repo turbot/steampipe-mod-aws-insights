@@ -348,13 +348,7 @@ edge "aws_rds_db_cluster_snapshot_to_kms_key_edge" {
   sql = <<-EOQ
     select
       s.db_cluster_snapshot_identifier as from_id,
-      k.id as to_id,
-      jsonb_build_object(
-        'ARN', k.arn,
-        'DB Cluster Snapshot Identifier', s.db_cluster_snapshot_identifier,
-        'Account ID', k.account_id,
-        'Region', k.region
-      ) as properties
+      k.id as to_id
     from
       aws_rds_db_cluster_snapshot as s
       join
@@ -385,8 +379,8 @@ node "aws_rds_db_cluster_snapshot_from_rds_db_cluster_node" {
       ) as properties
     from
       aws_rds_db_cluster_snapshot as s
-      join 
-        aws_rds_db_cluster as c 
+      join
+        aws_rds_db_cluster as c
         on s.db_cluster_identifier = c.db_cluster_identifier
         and s.account_id = c.account_id
         and s.region = c.region
@@ -403,17 +397,10 @@ edge "aws_rds_db_cluster_snapshot_from_rds_db_cluster_edge" {
   sql = <<-EOQ
     select
       c.db_cluster_identifier as from_id,
-      s.db_cluster_snapshot_identifier as to_id,
-      jsonb_build_object(
-        'DB Cluster Identifier', c.db_cluster_identifier,
-        'DB Cluster Snapshot Identifier', s.db_cluster_snapshot_identifier,
-        'Status', s.status,
-        'Account ID', c.account_id,
-        'Region', c.region
-      ) as properties
+      s.db_cluster_snapshot_identifier as to_id
     from
       aws_rds_db_cluster_snapshot as s
-      join 
+      join
         aws_rds_db_cluster as c
         on s.db_cluster_identifier = c.db_cluster_identifier
         and s.account_id = c.account_id
