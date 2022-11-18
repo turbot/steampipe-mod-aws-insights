@@ -68,7 +68,8 @@ dashboard "aws_kms_key_detail" {
         node.aws_kms_key_from_redshift_cluster_node,
         node.aws_kms_key_from_sns_topic_node,
         node.aws_kms_key_from_sqs_queue_node,
-        node.aws_kms_key_from_lambda_function_node
+        node.aws_kms_key_from_lambda_function_node,
+        node.aws_kms_key_from_s3_bucket_node
       ]
 
       edges = [
@@ -81,7 +82,8 @@ dashboard "aws_kms_key_detail" {
         edge.aws_kms_key_from_redshift_cluster_edge,
         edge.aws_kms_key_from_sns_topic_edge,
         edge.aws_kms_key_from_sqs_queue_edge,
-        edge.aws_kms_key_from_lambda_function_edge
+        edge.aws_kms_key_from_lambda_function_edge,
+        edge.aws_kms_key_from_s3_bucket_edge
       ]
 
       args = {
@@ -750,6 +752,50 @@ edge "aws_kms_key_from_lambda_function_edge" {
     where
       k.arn = l.kms_key_arn
       and k.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_kms_key_from_s3_bucket_node" {
+  category = category.aws_s3_bucket
+
+  sql = <<-EOQ
+    select
+      b.arn as id,
+      b.title as title,
+      jsonb_build_object(
+        'Name', b.name,
+        'ARN', b.arn,
+        'Account ID', b.account_id,
+        'Region', b.region
+      ) as properties
+    from
+      aws_s3_bucket as b
+      cross join jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as r
+      join aws_kms_key as k
+      on k.arn = r -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID'
+    where
+      k.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_kms_key_from_s3_bucket_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
+    select
+      b.arn as from_id,
+      k.id as to_id
+    from
+      aws_s3_bucket as b
+      cross join jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as r
+      join aws_kms_key as k
+      on k.arn = r -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID'
+    where
+      k.arn = $1;
   EOQ
 
   param "arn" {}
