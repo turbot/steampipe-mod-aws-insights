@@ -1,6 +1,6 @@
 dashboard "aws_iam_user_dashboard" {
 
-  title = "AWS IAM User Dashboard"
+  title         = "AWS IAM User Dashboard"
   documentation = file("./dashboards/iam/docs/iam_user_dashboard.md")
 
   tags = merge(local.iam_common_tags, {
@@ -11,29 +11,29 @@ dashboard "aws_iam_user_dashboard" {
 
     # Analysis
     card {
-      sql   = query.aws_iam_user_count.sql
+      query = query.aws_iam_user_count
       width = 2
     }
 
     # Assessments
     card {
-      sql   = query.aws_iam_user_no_mfa_count.sql
+      query = query.aws_iam_user_no_mfa_count
       width = 2
       href  = dashboard.aws_iam_user_mfa_report.url_path
     }
 
     card {
-      sql   = query.aws_iam_user_no_boundary_count.sql
+      query = query.aws_iam_user_no_boundary_count
       width = 2
     }
 
     card {
-      sql   = query.aws_iam_users_with_direct_attached_policy_count.sql
+      query = query.aws_iam_users_with_direct_attached_policy_count
       width = 2
     }
 
     card {
-      sql   = query.aws_iam_users_with_inline_policy_count.sql
+      query = query.aws_iam_users_with_inline_policy_count
       width = 2
     }
 
@@ -44,7 +44,7 @@ dashboard "aws_iam_user_dashboard" {
 
     chart {
       title = "MFA Status"
-      sql   = query.aws_iam_users_by_mfa_enabled.sql
+      query = query.aws_iam_users_by_mfa_enabled
       type  = "donut"
       width = 3
 
@@ -60,7 +60,7 @@ dashboard "aws_iam_user_dashboard" {
 
     chart {
       title = "Boundary Policy"
-      sql   = query.aws_iam_users_by_boundary_policy.sql
+      query = query.aws_iam_users_by_boundary_policy
       type  = "donut"
       width = 3
 
@@ -76,7 +76,7 @@ dashboard "aws_iam_user_dashboard" {
 
     chart {
       title = "Attached Policies"
-      sql   = query.aws_iam_users_with_direct_attached_policy.sql
+      query = query.aws_iam_users_with_direct_attached_policy
       type  = "donut"
       width = 3
 
@@ -92,7 +92,7 @@ dashboard "aws_iam_user_dashboard" {
 
     chart {
       title = "Inline Policies"
-      sql   = query.aws_iam_users_with_inline_policy.sql
+      query = query.aws_iam_users_with_inline_policy
       type  = "donut"
       width = 3
 
@@ -113,21 +113,21 @@ dashboard "aws_iam_user_dashboard" {
 
     chart {
       title = "Users by Account"
-      sql   = query.aws_iam_users_by_account.sql
+      query = query.aws_iam_users_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Users by Path"
-      sql   = query.aws_iam_user_by_path.sql
+      query = query.aws_iam_user_by_path
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Users by Age"
-      sql   = query.aws_iam_user_by_creation_month.sql
+      query = query.aws_iam_user_by_creation_month
       type  = "column"
       width = 4
     }

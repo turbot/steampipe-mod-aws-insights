@@ -9,7 +9,7 @@ dashboard "aws_ecs_service_detail" {
 
   input "service_arn" {
     title = "Select a service:"
-    sql   = query.aws_ecs_service_input.sql
+    query = query.aws_ecs_service_input
     width = 4
   }
 

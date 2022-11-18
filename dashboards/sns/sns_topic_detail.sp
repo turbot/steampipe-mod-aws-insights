@@ -9,7 +9,7 @@ dashboard "aws_sns_topic_detail" {
 
   input "topic_arn" {
     title = "Select a topic:"
-    sql   = query.aws_sns_topic_input.sql
+    query = query.aws_sns_topic_input
     width = 4
   }
 

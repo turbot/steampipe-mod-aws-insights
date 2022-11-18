@@ -11,38 +11,38 @@ dashboard "aws_s3_bucket_dashboard" {
 
     # Analysis
     card {
-      sql   = query.aws_s3_bucket_count.sql
+      query = query.aws_s3_bucket_count
       width = 2
     }
 
     # Assessments
     card {
-      sql   = query.aws_s3_bucket_public_block_count.sql
+      query = query.aws_s3_bucket_public_block_count
       width = 2
       href  = dashboard.aws_s3_bucket_public_access_report.url_path
     }
 
     card {
-      sql   = query.aws_s3_bucket_unencrypted_count.sql
+      query = query.aws_s3_bucket_unencrypted_count
       width = 2
       href  = dashboard.aws_s3_bucket_encryption_report.url_path
     }
 
     card {
-      sql   = query.aws_s3_bucket_logging_disabled_count.sql
+      query = query.aws_s3_bucket_logging_disabled_count
       width = 2
       href  = dashboard.aws_s3_bucket_logging_report.url_path
     }
 
     card {
-      sql   = query.aws_s3_bucket_versioning_disabled_count.sql
+      query = query.aws_s3_bucket_versioning_disabled_count
       width = 2
       href  = dashboard.aws_s3_bucket_lifecycle_report.url_path
     }
 
     # Costs
     card {
-      sql   = query.aws_s3_bucket_cost_mtd.sql
+      query = query.aws_s3_bucket_cost_mtd
       type  = "info"
       icon  = "currency-dollar"
       width = 2
@@ -55,7 +55,7 @@ dashboard "aws_s3_bucket_dashboard" {
 
     chart {
       title = "Public Access Blocked"
-      sql   = query.aws_s3_bucket_public_access_blocked.sql
+      query = query.aws_s3_bucket_public_access_blocked
       type  = "donut"
       width = 4
 
@@ -71,7 +71,7 @@ dashboard "aws_s3_bucket_dashboard" {
 
     chart {
       title = "Default Encryption Status"
-      sql   = query.aws_s3_bucket_by_default_encryption_status.sql
+      query = query.aws_s3_bucket_by_default_encryption_status
       type  = "donut"
       width = 4
 
@@ -87,7 +87,7 @@ dashboard "aws_s3_bucket_dashboard" {
 
     chart {
       title = "Logging Status"
-      sql   = query.aws_s3_bucket_logging_status.sql
+      query = query.aws_s3_bucket_logging_status
       type  = "donut"
       width = 4
 
@@ -103,7 +103,7 @@ dashboard "aws_s3_bucket_dashboard" {
 
     chart {
       title = "Versioning Status"
-      sql   = query.aws_s3_bucket_versioning_status.sql
+      query = query.aws_s3_bucket_versioning_status
       type  = "donut"
       width = 4
 
@@ -119,7 +119,7 @@ dashboard "aws_s3_bucket_dashboard" {
 
     chart {
       title = "Versioning MFA Status"
-      sql   = query.aws_s3_bucket_versioning_mfa_status.sql
+      query = query.aws_s3_bucket_versioning_mfa_status
       type  = "donut"
       width = 4
 
@@ -135,7 +135,7 @@ dashboard "aws_s3_bucket_dashboard" {
 
     chart {
       title = "Cross-Region Replication"
-      sql   = query.aws_s3_bucket_cross_region_replication_status.sql
+      query = query.aws_s3_bucket_cross_region_replication_status
       type  = "donut"
       width = 4
 
@@ -158,14 +158,14 @@ dashboard "aws_s3_bucket_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      sql   = query.aws_s3_monthly_forecast_table.sql
+      query = query.aws_s3_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      sql   = query.aws_s3_bucket_cost_per_month.sql
+      query = query.aws_s3_bucket_cost_per_month
     }
 
   }
@@ -175,21 +175,21 @@ dashboard "aws_s3_bucket_dashboard" {
 
     chart {
       title = "Buckets by Account"
-      sql   = query.aws_s3_bucket_by_account.sql
+      query = query.aws_s3_bucket_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Buckets by Region"
-      sql   = query.aws_s3_bucket_by_region.sql
+      query = query.aws_s3_bucket_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Buckets by Age"
-      sql   = query.aws_s3_bucket_by_creation_month.sql
+      query = query.aws_s3_bucket_by_creation_month
       type  = "column"
       width = 4
     }

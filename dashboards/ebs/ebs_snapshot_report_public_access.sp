@@ -11,12 +11,12 @@ dashboard "aws_ebs_snapshot_public_access_report" {
   container {
 
     card {
-      sql   = query.aws_ebs_snapshot_count.sql
+      query = query.aws_ebs_snapshot_count
       width = 2
     }
 
     card {
-      sql   = query.aws_ebs_snapshot_public_count.sql
+      query = query.aws_ebs_snapshot_public_count
       width = 2
     }
 
@@ -31,7 +31,7 @@ dashboard "aws_ebs_snapshot_public_access_report" {
       display = "none"
     }
 
-    sql = query.aws_ebs_snapshot_public_table.sql
+    query = query.aws_ebs_snapshot_public_table
   }
 
 }

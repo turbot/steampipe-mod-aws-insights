@@ -1,6 +1,6 @@
 dashboard "aws_vpc_flow_logs_report" {
 
-  title = "AWS VPC Flow Logs Report"
+  title         = "AWS VPC Flow Logs Report"
   documentation = file("./dashboards/vpc/docs/vpc_report_flow_logs.md")
 
   tags = merge(local.vpc_common_tags, {
@@ -11,12 +11,12 @@ dashboard "aws_vpc_flow_logs_report" {
   container {
 
     card {
-      sql   = query.aws_vpc_count.sql
+      query = query.aws_vpc_count
       width = 2
     }
 
     card {
-      sql = query.aws_vpc_no_flow_logs_count.sql
+      query = query.aws_vpc_no_flow_logs_count
       width = 2
     }
 
@@ -35,7 +35,7 @@ dashboard "aws_vpc_flow_logs_report" {
       href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_vpc_flow_logs_table.sql
+    query = query.aws_vpc_flow_logs_table
   }
 
 }

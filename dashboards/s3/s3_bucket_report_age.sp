@@ -11,36 +11,36 @@ dashboard "aws_s3_bucket_age_report" {
   container {
 
     card {
-      sql   = query.aws_s3_bucket_count.sql
+      query = query.aws_s3_bucket_count
       width = 2
     }
 
     card {
-      sql   = query.aws_s3_bucket_24_hours_count.sql
-      width = 2
-      type  = "info"
-    }
-
-    card {
-      sql   = query.aws_s3_bucket_30_days_count.sql
+      query = query.aws_s3_bucket_24_hours_count
       width = 2
       type  = "info"
     }
 
     card {
-      sql   = query.aws_s3_bucket_30_90_days_count.sql
+      query = query.aws_s3_bucket_30_days_count
       width = 2
       type  = "info"
     }
 
     card {
-      sql   = query.aws_s3_bucket_90_365_days_count.sql
+      query = query.aws_s3_bucket_30_90_days_count
       width = 2
       type  = "info"
     }
 
     card {
-      sql   = query.aws_s3_bucket_1_year_count.sql
+      query = query.aws_s3_bucket_90_365_days_count
+      width = 2
+      type  = "info"
+    }
+
+    card {
+      query = query.aws_s3_bucket_1_year_count
       width = 2
       type  = "info"
     }
@@ -60,7 +60,7 @@ dashboard "aws_s3_bucket_age_report" {
       href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_s3_bucket_age_table.sql
+    query = query.aws_s3_bucket_age_table
   }
 
 }

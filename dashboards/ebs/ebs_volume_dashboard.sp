@@ -11,24 +11,24 @@ dashboard "aws_ebs_volume_dashboard" {
 
     # Analysis
     card {
-      sql   = query.aws_ebs_volume_count.sql
+      query = query.aws_ebs_volume_count
       width = 2
     }
 
     card {
-      sql   = query.aws_ebs_volume_storage_total.sql
+      query = query.aws_ebs_volume_storage_total
       width = 2
     }
 
     # Assessments
     card {
-      sql   = query.aws_ebs_volume_unencrypted_count.sql
+      query = query.aws_ebs_volume_unencrypted_count
       width = 2
       href  = dashboard.aws_ebs_volume_encryption_report.url_path
     }
 
     card {
-      sql   = query.aws_ebs_volume_unattached_count.sql
+      query = query.aws_ebs_volume_unattached_count
       width = 2
     }
 
@@ -37,7 +37,7 @@ dashboard "aws_ebs_volume_dashboard" {
       type  = "info"
       icon  = "currency-dollar"
       width = 2
-      sql   = query.aws_ebs_volume_cost_mtd.sql
+      query = query.aws_ebs_volume_cost_mtd
     }
 
   }
@@ -49,7 +49,7 @@ dashboard "aws_ebs_volume_dashboard" {
 
     chart {
       title = "Encryption Status"
-      sql   = query.aws_ebs_volume_by_encryption_status.sql
+      query = query.aws_ebs_volume_by_encryption_status
       type  = "donut"
       width = 4
 
@@ -65,7 +65,7 @@ dashboard "aws_ebs_volume_dashboard" {
 
     chart {
       title = "Volume State"
-      sql   = query.aws_ebs_volume_by_state.sql
+      query = query.aws_ebs_volume_by_state
       type  = "donut"
       width = 4
 
@@ -89,14 +89,14 @@ dashboard "aws_ebs_volume_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      sql   = query.aws_ebs_volume_monthly_forecast_table.sql
+      query = query.aws_ebs_volume_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      sql   = query.aws_ebs_volume_cost_per_month.sql
+      query = query.aws_ebs_volume_cost_per_month
     }
 
   }
@@ -107,28 +107,28 @@ dashboard "aws_ebs_volume_dashboard" {
 
     chart {
       title = "Volumes by Account"
-      sql   = query.aws_ebs_volume_by_account.sql
+      query = query.aws_ebs_volume_by_account
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Volumes by Region"
-      sql   = query.aws_ebs_volume_by_region.sql
+      query = query.aws_ebs_volume_by_region
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Volumes by Type"
-      sql   = query.aws_ebs_volume_by_type.sql
+      query = query.aws_ebs_volume_by_type
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Volumes by Age"
-      sql   = query.aws_ebs_volume_by_creation_month.sql
+      query = query.aws_ebs_volume_by_creation_month
       type  = "column"
       width = 3
     }
@@ -139,7 +139,7 @@ dashboard "aws_ebs_volume_dashboard" {
 
     chart {
       title = "Storage by Account (GB)"
-      sql   = query.aws_ebs_volume_storage_by_account.sql
+      query = query.aws_ebs_volume_storage_by_account
       type  = "column"
       width = 3
 
@@ -150,7 +150,7 @@ dashboard "aws_ebs_volume_dashboard" {
 
     chart {
       title = "Storage by Region (GB)"
-      sql   = query.aws_ebs_volume_storage_by_region.sql
+      query = query.aws_ebs_volume_storage_by_region
       type  = "column"
       width = 3
 
@@ -161,7 +161,7 @@ dashboard "aws_ebs_volume_dashboard" {
 
     chart {
       title = "Storage by Type (GB)"
-      sql   = query.aws_ebs_volume_storage_by_type.sql
+      query = query.aws_ebs_volume_storage_by_type
       type  = "column"
       width = 3
 
@@ -172,7 +172,7 @@ dashboard "aws_ebs_volume_dashboard" {
 
     chart {
       title = "Storage by Age (GB)"
-      sql   = query.aws_ebs_volume_storage_by_creation_month.sql
+      query = query.aws_ebs_volume_storage_by_creation_month
       type  = "column"
       width = 3
 
@@ -191,14 +191,14 @@ dashboard "aws_ebs_volume_dashboard" {
       title = "Top 10 Average Read IOPS - Last 7 days"
       type  = "line"
       width = 6
-      sql   = query.aws_ebs_volume_top_10_read_ops_avg.sql
+      query = query.aws_ebs_volume_top_10_read_ops_avg
     }
 
     chart {
       title = "Top 10 Average Write IOPS - Last 7 days"
       type  = "line"
       width = 6
-      sql   = query.aws_ebs_volume_top_10_write_ops_avg.sql
+      query = query.aws_ebs_volume_top_10_write_ops_avg
     }
 
   }

@@ -11,19 +11,19 @@ dashboard "aws_redshift_cluster_dashboard" {
 
     # Analysis
     card {
-      sql = query.aws_redshift_cluster_count.sql
+      query = query.aws_redshift_cluster_count
       width = 2
     }
 
     # Assessments
     card {
-      sql = query.aws_redshift_cluster_unencrypted_count.sql
+      query = query.aws_redshift_cluster_unencrypted_count
       width = 2
       href  = dashboard.aws_redshift_cluster_encryption_report.url_path
     }
 
     card {
-      sql = query.aws_redshift_cluster_publicly_accessible.sql
+      query = query.aws_redshift_cluster_publicly_accessible
       width = 2
       href  = dashboard.aws_redshift_cluster_public_access_report.url_path
     }
@@ -33,7 +33,7 @@ dashboard "aws_redshift_cluster_dashboard" {
       type  = "info"
       icon  = "currency-dollar"
       width = 2
-      sql   = query.aws_redshift_cluster_cost_mtd.sql
+      query = query.aws_redshift_cluster_cost_mtd
     }
 
   }
@@ -45,7 +45,7 @@ dashboard "aws_redshift_cluster_dashboard" {
 
     chart {
       title = "Encryption Status"
-      sql = query.aws_redshift_cluster_by_encryption_status.sql
+      query = query.aws_redshift_cluster_by_encryption_status
       type  = "donut"
       width = 4
 
@@ -61,7 +61,7 @@ dashboard "aws_redshift_cluster_dashboard" {
 
     chart {
       title = "Public Accessibility Status"
-      sql = query.aws_redshift_cluster_by_publicly_accessible_status.sql
+      query = query.aws_redshift_cluster_by_publicly_accessible_status
       type  = "donut"
       width = 4
 
@@ -82,16 +82,16 @@ dashboard "aws_redshift_cluster_dashboard" {
     title = "Cost"
     width = 6
 
-    table  {
+    table {
       width = 6
       title = "Forecast"
-      sql   = query.aws_redshift_cluster_monthly_forecast_table.sql
+      query = query.aws_redshift_cluster_monthly_forecast_table
     }
 
     chart {
       title = "Monthly Cost - 12 Months"
       type  = "column"
-      sql   = query.aws_redshift_cluster_cost_per_month.sql
+      query = query.aws_redshift_cluster_cost_per_month
       width = 6
     }
 
@@ -103,28 +103,28 @@ dashboard "aws_redshift_cluster_dashboard" {
 
     chart {
       title = "Clusters by Account"
-      sql = query.aws_redshift_cluster_by_account.sql
+      query = query.aws_redshift_cluster_by_account
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Clusters by Region"
-      sql = query.aws_redshift_cluster_by_region.sql
+      query = query.aws_redshift_cluster_by_region
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Clusters by State"
-      sql = query.aws_redshift_cluster_by_state.sql
+      query = query.aws_redshift_cluster_by_state
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Clusters by Age"
-      sql = query.aws_redshift_cluster_by_creation_month.sql
+      query = query.aws_redshift_cluster_by_creation_month
       type  = "column"
       width = 3
     }
@@ -133,20 +133,20 @@ dashboard "aws_redshift_cluster_dashboard" {
 
   container {
 
-    title  = "Performance & Utilization"
+    title = "Performance & Utilization"
 
     chart {
       title = "Top 10 CPU - Last 7 days"
       type  = "line"
       width = 6
-      sql = query.aws_redshift_cluster_top10_cpu_past_week.sql
+      query = query.aws_redshift_cluster_top10_cpu_past_week
     }
 
     chart {
       title = "Average max daily CPU - Last 30 days"
       type  = "line"
       width = 6
-      sql = query.aws_redshift_cluster_by_cpu_utilization_category.sql
+      query = query.aws_redshift_cluster_by_cpu_utilization_category
     }
 
   }

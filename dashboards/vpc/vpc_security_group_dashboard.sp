@@ -1,6 +1,6 @@
 dashboard "aws_vpc_security_group_dashboard" {
 
-  title = "AWS VPC Security Group Dashboard"
+  title         = "AWS VPC Security Group Dashboard"
   documentation = file("./dashboards/vpc/docs/vpc_security_group_dashboard.md")
 
   tags = merge(local.vpc_common_tags, {
@@ -10,23 +10,23 @@ dashboard "aws_vpc_security_group_dashboard" {
   container {
 
     card {
-      sql = query.aws_vpc_security_group_count.sql
+      query = query.aws_vpc_security_group_count
       width = 2
     }
 
     card {
-      sql = query.aws_vpc_security_group_unassociated_count.sql
+      query = query.aws_vpc_security_group_unassociated_count
       width = 2
     }
 
     card {
-      sql = query.aws_vpc_security_unrestricted_ingress_count.sql
+      query = query.aws_vpc_security_unrestricted_ingress_count
       width = 2
     }
 
 
     card {
-      sql = query.aws_vpc_security_unrestricted_egress_count.sql
+      query = query.aws_vpc_security_unrestricted_egress_count
       width = 2
     }
 
@@ -40,7 +40,7 @@ dashboard "aws_vpc_security_group_dashboard" {
       title = "Association Status"
       type  = "donut"
       width = 3
-      sql   = query.aws_vpc_security_group_unassociated_status.sql
+      query = query.aws_vpc_security_group_unassociated_status
 
       series "count" {
         point "associated" {
@@ -56,7 +56,7 @@ dashboard "aws_vpc_security_group_dashboard" {
       title = "With Unrestricted Ingress (Excludes ICMP)"
       type  = "donut"
       width = 3
-      sql   = query.aws_vpc_security_group_unrestricted_ingress_status.sql
+      query = query.aws_vpc_security_group_unrestricted_ingress_status
 
       series "count" {
         point "restricted" {
@@ -72,7 +72,7 @@ dashboard "aws_vpc_security_group_dashboard" {
       title = "With Unrestricted Egress (Excludes ICMP)"
       type  = "donut"
       width = 3
-      sql   = query.aws_vpc_security_group_unrestricted_egress_status.sql
+      query = query.aws_vpc_security_group_unrestricted_egress_status
 
       series "count" {
         point "restricted" {
@@ -88,7 +88,7 @@ dashboard "aws_vpc_security_group_dashboard" {
       title = "Default Security Group"
       type  = "donut"
       width = 3
-      sql   = query.aws_vpc_default_security_group_status.sql
+      query = query.aws_vpc_default_security_group_status
 
       series "count" {
         point "default" {
@@ -108,21 +108,21 @@ dashboard "aws_vpc_security_group_dashboard" {
 
     chart {
       title = "Security Groups by Account"
-      sql   = query.aws_vpc_security_group_by_acount.sql
+      query = query.aws_vpc_security_group_by_acount
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Security Groups by Region"
-      sql = query.aws_vpc_security_group_by_region.sql
+      query = query.aws_vpc_security_group_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Security Groups by VPC"
-      sql = query.aws_vpc_security_group_by_vpc.sql
+      query = query.aws_vpc_security_group_by_vpc
       type  = "column"
       width = 4
     }

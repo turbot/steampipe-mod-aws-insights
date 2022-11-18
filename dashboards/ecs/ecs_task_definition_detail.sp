@@ -9,7 +9,7 @@ dashboard "aws_ecs_task_definition_detail" {
 
   input "task_definition_arn" {
     title = "Select a task definition:"
-    sql   = query.aws_ecs_task_definition_input.sql
+    query = query.aws_ecs_task_definition_input
     width = 4
   }
 

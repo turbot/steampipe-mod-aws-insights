@@ -8,41 +8,41 @@ dashboard "aws_rds_db_instance_age_report" {
     category = "Age"
   })
 
-   container {
+  container {
 
     card {
-      sql   = query.aws_rds_db_instance_count.sql
+      query = query.aws_rds_db_instance_count
       width = 2
-    }
-
-     card {
-      type  = "info"
-      width = 2
-      sql   = query.aws_rds_db_instance_24_hours_count.sql
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_rds_db_instance_30_days_count.sql
+      query = query.aws_rds_db_instance_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_rds_db_instance_30_90_days_count.sql
+      query = query.aws_rds_db_instance_30_days_count
+    }
+
+    card {
+      type  = "info"
+      width = 2
+      query = query.aws_rds_db_instance_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_rds_db_instance_90_365_days_count.sql
+      query = query.aws_rds_db_instance_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_rds_db_instance_1_year_count.sql
+      query = query.aws_rds_db_instance_1_year_count
     }
 
   }
@@ -60,7 +60,7 @@ dashboard "aws_rds_db_instance_age_report" {
       href = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arnn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_rds_db_instance_age_table.sql
+    query = query.aws_rds_db_instance_age_table
   }
 
 }

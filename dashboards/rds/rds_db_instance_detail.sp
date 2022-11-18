@@ -9,7 +9,7 @@ dashboard "aws_rds_db_instance_detail" {
 
   input "db_instance_arn" {
     title = "Select a DB Instance:"
-    sql   = query.aws_rds_db_instance_input.sql
+    query = query.aws_rds_db_instance_input
     width = 4
   }
 

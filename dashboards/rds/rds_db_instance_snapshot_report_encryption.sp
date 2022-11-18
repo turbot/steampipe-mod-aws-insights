@@ -11,12 +11,12 @@ dashboard "aws_rds_db_instace_snapshot_encryption_report" {
   container {
 
     card {
-      sql   = query.aws_rds_db_instance_snapshot_count.sql
+      query = query.aws_rds_db_instance_snapshot_count
       width = 2
     }
 
     card {
-      sql   = query.aws_rds_db_instance_snapshot_unencrypted_count.sql
+      query = query.aws_rds_db_instance_snapshot_unencrypted_count
       width = 2
     }
 
@@ -36,7 +36,7 @@ dashboard "aws_rds_db_instace_snapshot_encryption_report" {
       href = "${dashboard.aws_rds_db_snapshot_detail.url_path}?input.db_snapshot_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_rds_db_instance_snapshot_encryption_table.sql
+    query = query.aws_rds_db_instance_snapshot_encryption_table
   }
 
 }

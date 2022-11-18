@@ -10,7 +10,7 @@ dashboard "aws_sqs_queue_detail" {
 
   input "queue_arn" {
     title = "Select a Queue:"
-    sql   = query.aws_sqs_queue_input.sql
+    query = query.aws_sqs_queue_input
     width = 4
   }
 

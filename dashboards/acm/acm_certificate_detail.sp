@@ -9,7 +9,7 @@ dashboard "acm_certificate_detail" {
 
   input "certificate_arn" {
     title = "Select a certificate:"
-    sql   = query.aws_acm_certificate_input.sql
+    query = query.aws_acm_certificate_input
     width = 4
   }
 

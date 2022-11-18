@@ -1,6 +1,6 @@
 dashboard "aws_sqs_queue_dashboard" {
 
-  title = "AWS SQS Queue Dashboard"
+  title         = "AWS SQS Queue Dashboard"
   documentation = file("./dashboards/sqs/docs/sqs_queue_dashboard.md")
 
   tags = merge(local.sqs_common_tags, {
@@ -11,25 +11,25 @@ dashboard "aws_sqs_queue_dashboard" {
 
     # Analysis
     card {
-      sql   = query.aws_sqs_queue_count.sql
+      query = query.aws_sqs_queue_count
       width = 2
     }
 
     card {
-      sql   = query.aws_sqs_queue_fifo_count.sql
+      query = query.aws_sqs_queue_fifo_count
       width = 2
     }
 
 
     # Assessments
     card {
-      sql   = query.aws_sqs_queue_unencrypted_count.sql
+      query = query.aws_sqs_queue_unencrypted_count
       width = 2
       href  = dashboard.aws_sqs_queue_encryption_report.url_path
     }
 
     card {
-      sql   = query.aws_sqs_queue_anonymous_access_count.sql
+      query = query.aws_sqs_queue_anonymous_access_count
       width = 2
     }
 
@@ -38,7 +38,7 @@ dashboard "aws_sqs_queue_dashboard" {
       type  = "info"
       icon  = "currency-dollar"
       width = 2
-      sql   = query.aws_sqs_queue_cost_mtd.sql
+      query = query.aws_sqs_queue_cost_mtd
     }
 
   }
@@ -50,7 +50,7 @@ dashboard "aws_sqs_queue_dashboard" {
 
     chart {
       title = "Encryption Status"
-      sql   = query.aws_sqs_queue_by_encryption_status.sql
+      query = query.aws_sqs_queue_by_encryption_status
       type  = "donut"
       width = 4
 
@@ -66,7 +66,7 @@ dashboard "aws_sqs_queue_dashboard" {
 
     chart {
       title = "DLQ Configuration"
-      sql   = query.aws_sqs_queue_by_dlq_status.sql
+      query = query.aws_sqs_queue_by_dlq_status
       type  = "donut"
       width = 4
 
@@ -82,7 +82,7 @@ dashboard "aws_sqs_queue_dashboard" {
 
     chart {
       title = "Public/Private Status"
-      sql   = query.aws_sqs_queue_public_access_status.sql
+      query = query.aws_sqs_queue_public_access_status
       type  = "donut"
       width = 4
 
@@ -106,14 +106,14 @@ dashboard "aws_sqs_queue_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      sql   = query.aws_sqs_queue_monthly_forecast_table.sql
+      query = query.aws_sqs_queue_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      sql   = query.aws_sqs_queue_cost_per_month.sql
+      query = query.aws_sqs_queue_cost_per_month
     }
 
   }
@@ -124,21 +124,21 @@ dashboard "aws_sqs_queue_dashboard" {
 
     chart {
       title = "Queues by Account"
-      sql   = query.aws_sqs_queue_by_account.sql
+      query = query.aws_sqs_queue_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Queues by Region"
-      sql   = query.aws_sqs_queue_by_region.sql
+      query = query.aws_sqs_queue_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Queues by Type"
-      sql   = query.aws_sqs_queue_by_type.sql
+      query = query.aws_sqs_queue_by_type
       type  = "column"
       width = 4
     }

@@ -11,38 +11,38 @@ dashboard "aws_elasticache_cluster_age_report" {
   container {
 
     card {
-      sql   = query.aws_elasticache_cluster_count.sql
+      query = query.aws_elasticache_cluster_count
       width = 2
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_elasticache_cluster_24_hours_count.sql
+      query = query.aws_elasticache_cluster_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_elasticache_cluster_30_days_count.sql
+      query = query.aws_elasticache_cluster_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_elasticache_cluster_30_90_days_count.sql
+      query = query.aws_elasticache_cluster_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_elasticache_cluster_90_365_days_count.sql
+      query = query.aws_elasticache_cluster_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_elasticache_cluster_1_year_count.sql
+      query = query.aws_elasticache_cluster_1_year_count
     }
 
   }
@@ -60,7 +60,7 @@ dashboard "aws_elasticache_cluster_age_report" {
       href = "${dashboard.aws_elasticache_cluster_detail.url_path}?input.elasticache_cluster_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_elasticache_cluster_age_table.sql
+    query = query.aws_elasticache_cluster_age_table
   }
 
 }

@@ -9,7 +9,7 @@ dashboard "aws_cloudtrail_trail_detail" {
 
   input "trail_arn" {
     title = "Select a trail:"
-    sql   = query.aws_cloudtrail_trail_input.sql
+    query = query.aws_cloudtrail_trail_input
     width = 4
   }
 

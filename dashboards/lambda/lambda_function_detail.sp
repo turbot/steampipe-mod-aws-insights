@@ -10,7 +10,7 @@ dashboard "aws_lambda_function_detail" {
 
   input "lambda_arn" {
     title = "Select a lambda function:"
-    sql   = query.aws_lambda_function_input.sql
+    query = query.aws_lambda_function_input
     width = 4
   }
 

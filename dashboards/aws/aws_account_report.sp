@@ -11,7 +11,7 @@ dashboard "aws_account_report" {
   container {
 
     card {
-      sql   = query.aws_account_count.sql
+      query = query.aws_account_count
       width = 2
     }
 
@@ -22,7 +22,7 @@ dashboard "aws_account_report" {
       display = "none"
     }
 
-    sql = query.aws_account_table.sql
+    query = query.aws_account_table
   }
 
 }

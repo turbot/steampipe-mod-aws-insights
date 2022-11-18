@@ -1,6 +1,6 @@
 dashboard "aws_iam_credential_report" {
 
-  title = "AWS IAM Credential Report"
+  title         = "AWS IAM Credential Report"
   documentation = file("./dashboards/iam/docs/iam_credential_report.md")
 
   tags = merge(local.iam_common_tags, {
@@ -40,7 +40,7 @@ dashboard "aws_iam_credential_report" {
       href = "${dashboard.aws_iam_user_detail.url_path}?input.user_arn={{.'User ARN' | @uri}}"
     }
 
-    sql = query.aws_iam_credential_entities_root_access_keys_table.sql
+    query = query.aws_iam_credential_entities_root_access_keys_table
   }
 
 }

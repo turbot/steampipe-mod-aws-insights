@@ -10,22 +10,22 @@ dashboard "aws_ebs_snapshot_dashboard" {
   container {
 
     card {
-      sql   = query.aws_ebs_snapshot_count.sql
+      query = query.aws_ebs_snapshot_count
       width = 2
     }
 
     card {
-      sql   = query.aws_ebs_snapshot_storage_total.sql
+      query = query.aws_ebs_snapshot_storage_total
       width = 2
     }
 
     card {
-      sql   = query.aws_ebs_unencrypted_snapshot_count.sql
+      query = query.aws_ebs_unencrypted_snapshot_count
       width = 2
     }
 
     card {
-      sql   = query.aws_ebs_snapshot_public_count.sql
+      query = query.aws_ebs_snapshot_public_count
       width = 2
       href  = dashboard.aws_ebs_snapshot_public_access_report.url_path
     }
@@ -35,7 +35,7 @@ dashboard "aws_ebs_snapshot_dashboard" {
       type  = "info"
       icon  = "currency-dollar"
       width = 2
-      sql   = query.aws_ebs_snapshot_cost_mtd.sql
+      query = query.aws_ebs_snapshot_cost_mtd
     }
 
   }
@@ -47,7 +47,7 @@ dashboard "aws_ebs_snapshot_dashboard" {
 
     chart {
       title = "Encryption Status"
-      sql   = query.aws_ebs_snapshot_by_encryption_status.sql
+      query = query.aws_ebs_snapshot_by_encryption_status
       type  = "donut"
       width = 4
 
@@ -63,7 +63,7 @@ dashboard "aws_ebs_snapshot_dashboard" {
 
     chart {
       title = "Public/Private"
-      sql   = query.aws_ebs_snapshot_by_public_status.sql
+      query = query.aws_ebs_snapshot_by_public_status
       type  = "donut"
       width = 4
 
@@ -88,14 +88,14 @@ dashboard "aws_ebs_snapshot_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      sql   = query.aws_ebs_snapshot_monthly_forecast_table.sql
+      query = query.aws_ebs_snapshot_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      sql   = query.aws_ebs_snapshot_cost_per_month.sql
+      query = query.aws_ebs_snapshot_cost_per_month
     }
 
   }
@@ -106,21 +106,21 @@ dashboard "aws_ebs_snapshot_dashboard" {
 
     chart {
       title = "Snapshots by Account"
-      sql   = query.aws_ebs_snapshot_by_account.sql
+      query = query.aws_ebs_snapshot_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Snapshots by Region"
-      sql   = query.aws_ebs_snapshot_by_region.sql
+      query = query.aws_ebs_snapshot_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Snapshots by Age"
-      sql   = query.aws_ebs_snapshot_by_creation_month.sql
+      query = query.aws_ebs_snapshot_by_creation_month
       type  = "column"
       width = 4
     }
@@ -131,7 +131,7 @@ dashboard "aws_ebs_snapshot_dashboard" {
 
     chart {
       title = "Storage by Account (GB)"
-      sql   = query.aws_ebs_snapshot_storage_by_account.sql
+      query = query.aws_ebs_snapshot_storage_by_account
       type  = "column"
       width = 4
 
@@ -142,7 +142,7 @@ dashboard "aws_ebs_snapshot_dashboard" {
 
     chart {
       title = "Storage by Region (GB)"
-      sql   = query.aws_ebs_snapshot_storage_by_region.sql
+      query = query.aws_ebs_snapshot_storage_by_region
       type  = "column"
       width = 4
 
@@ -153,7 +153,7 @@ dashboard "aws_ebs_snapshot_dashboard" {
 
     chart {
       title = "Storage by Age (GB)"
-      sql   = query.aws_ebs_snapshot_storage_by_age.sql
+      query = query.aws_ebs_snapshot_storage_by_age
       type  = "column"
       width = 4
 

@@ -9,7 +9,7 @@ dashboard "aws_iam_user_detail" {
 
   input "user_arn" {
     title = "Select a user:"
-    sql   = query.aws_iam_user_input.sql
+    query = query.aws_iam_user_input
     width = 4
   }
 

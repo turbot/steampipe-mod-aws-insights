@@ -11,38 +11,38 @@ dashboard "aws_rds_db_instance_snapshot_age_report" {
   container {
 
     card {
-      sql   = query.aws_rds_db_instance_snapshot_count.sql
+      query = query.aws_rds_db_instance_snapshot_count
       width = 2
-    }
-
-   card {
-      type  = "info"
-      width = 2
-      sql   = query.aws_rds_db_instance_snapshot_24_hours_count.sql
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_rds_db_instance_snapshot_30_days_count.sql
+      query = query.aws_rds_db_instance_snapshot_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_rds_db_instance_snapshot_30_90_days_count.sql
+      query = query.aws_rds_db_instance_snapshot_30_days_count
+    }
+
+    card {
+      type  = "info"
+      width = 2
+      query = query.aws_rds_db_instance_snapshot_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_rds_db_instance_snapshot_90_365_days_count.sql
+      query = query.aws_rds_db_instance_snapshot_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_rds_db_instance_snapshot_1_year_count.sql
+      query = query.aws_rds_db_instance_snapshot_1_year_count
     }
 
   }
@@ -61,7 +61,7 @@ dashboard "aws_rds_db_instance_snapshot_age_report" {
       href = "${dashboard.aws_rds_db_snapshot_detail.url_path}?input.db_snapshot_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_rds_db_instance_snapshot_age_table.sql
+    query = query.aws_rds_db_instance_snapshot_age_table
   }
 
 }

@@ -9,7 +9,7 @@ dashboard "aws_vpc_detail" {
 
   input "vpc_id" {
     title = "Select a VPC:"
-    sql   = query.aws_vpc_input.sql
+    query = query.aws_vpc_input
     width = 4
   }
 

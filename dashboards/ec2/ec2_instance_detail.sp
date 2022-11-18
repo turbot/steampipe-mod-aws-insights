@@ -9,7 +9,7 @@ dashboard "aws_ec2_instance_detail" {
 
   input "instance_arn" {
     title = "Select an instance:"
-    sql   = query.aws_ec2_instance_input.sql
+    query = query.aws_ec2_instance_input
     width = 4
   }
 

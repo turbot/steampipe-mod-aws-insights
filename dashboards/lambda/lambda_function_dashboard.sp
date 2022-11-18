@@ -11,19 +11,19 @@ dashboard "aws_lambda_function_dashboard" {
 
     # Analysis
     card {
-      sql   = query.aws_lambda_function_count.sql
+      query = query.aws_lambda_function_count
       width = 2
     }
 
     # Assessments
     card {
-      sql   = query.aws_lambda_function_unencrypted_count.sql
+      query = query.aws_lambda_function_unencrypted_count
       width = 2
       href  = dashboard.aws_lambda_function_encryption_report.url_path
     }
 
     card {
-      sql   = query.aws_lambda_function_public_count.sql
+      query = query.aws_lambda_function_public_count
       width = 2
       href  = dashboard.aws_lambda_function_public_access_report.url_path
     }
@@ -33,7 +33,7 @@ dashboard "aws_lambda_function_dashboard" {
       type  = "info"
       icon  = "currency-dollar"
       width = 2
-      sql   = query.aws_lambda_function_cost_mtd.sql
+      query = query.aws_lambda_function_cost_mtd
     }
 
   }
@@ -45,7 +45,7 @@ dashboard "aws_lambda_function_dashboard" {
 
     chart {
       title = "Encryption Status"
-      sql   = query.aws_lambda_function_by_encryption_status.sql
+      query = query.aws_lambda_function_by_encryption_status
       type  = "donut"
       width = 4
 
@@ -61,7 +61,7 @@ dashboard "aws_lambda_function_dashboard" {
 
     chart {
       title = "Public/Private Status"
-      sql   = query.aws_lambda_function_public_status.sql
+      query = query.aws_lambda_function_public_status
       type  = "donut"
       width = 4
 
@@ -77,7 +77,7 @@ dashboard "aws_lambda_function_dashboard" {
 
     chart {
       title = "Runtime Version"
-      sql   = query.aws_lambda_function_uses_latest_runtime_status.sql
+      query = query.aws_lambda_function_uses_latest_runtime_status
       type  = "donut"
       width = 4
 
@@ -93,7 +93,7 @@ dashboard "aws_lambda_function_dashboard" {
 
     chart {
       title = "DLQ Configuration"
-      sql   = query.aws_lambda_function_dead_letter_config_status.sql
+      query = query.aws_lambda_function_dead_letter_config_status
       type  = "donut"
       width = 4
 
@@ -117,14 +117,14 @@ dashboard "aws_lambda_function_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      sql   = query.aws_lambda_monthly_forecast_table.sql
+      query = query.aws_lambda_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      sql   = query.aws_lambda_function_cost_per_month.sql
+      query = query.aws_lambda_function_cost_per_month
     }
 
   }
@@ -135,28 +135,28 @@ dashboard "aws_lambda_function_dashboard" {
 
     chart {
       title = "Functions by Account"
-      sql   = query.aws_lambda_function_by_account.sql
+      query = query.aws_lambda_function_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Functions by Region"
-      sql   = query.aws_lambda_function_by_region.sql
+      query = query.aws_lambda_function_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Functions by Runtime"
-      sql   = query.aws_lambda_function_by_runtime.sql
+      query = query.aws_lambda_function_by_runtime
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Function Code Size by Account (MB)"
-      sql   = query.aws_lambda_function_code_size_by_account.sql
+      query = query.aws_lambda_function_code_size_by_account
       type  = "column"
       width = 4
 
@@ -167,7 +167,7 @@ dashboard "aws_lambda_function_dashboard" {
 
     chart {
       title = "Function Code Size by Region (MB)"
-      sql   = query.aws_lambda_function_code_size_by_region.sql
+      query = query.aws_lambda_function_code_size_by_region
       type  = "column"
       width = 4
 
@@ -178,7 +178,7 @@ dashboard "aws_lambda_function_dashboard" {
 
     chart {
       title = "Function Code Size by Runtime (MB)"
-      sql   = query.aws_lambda_function_code_size_by_runtime.sql
+      query = query.aws_lambda_function_code_size_by_runtime
       type  = "column"
       width = 4
 
@@ -189,7 +189,7 @@ dashboard "aws_lambda_function_dashboard" {
 
     chart {
       title = "Function Memory Usage by Account (GB)"
-      sql   = query.aws_lambda_function_memory_size_by_account.sql
+      query = query.aws_lambda_function_memory_size_by_account
       type  = "column"
       width = 4
 
@@ -200,7 +200,7 @@ dashboard "aws_lambda_function_dashboard" {
 
     chart {
       title = "Function Memory Usage by Region (GB)"
-      sql   = query.aws_lambda_function_memory_size_by_region.sql
+      query = query.aws_lambda_function_memory_size_by_region
       type  = "column"
       width = 4
 
@@ -211,7 +211,7 @@ dashboard "aws_lambda_function_dashboard" {
 
     chart {
       title = "Function Memory Usage by Runtime (GB)"
-      sql   = query.aws_lambda_function_memory_size_by_runtime.sql
+      query = query.aws_lambda_function_memory_size_by_runtime
       type  = "column"
       width = 4
 
@@ -229,14 +229,14 @@ dashboard "aws_lambda_function_dashboard" {
 
     chart {
       title = "High Error Rate (> 10 In Last 1 Month)"
-      sql   = query.aws_lambda_high_error_rate.sql
+      query = query.aws_lambda_high_error_rate
       type  = "line"
       width = 6
     }
 
     chart {
       title = "Top 10 Average Invocation Rate"
-      sql   = query.aws_lambda_function_invocation_rate.sql
+      query = query.aws_lambda_function_invocation_rate
       type  = "line"
       width = 6
     }

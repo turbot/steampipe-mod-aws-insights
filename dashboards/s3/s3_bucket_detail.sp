@@ -9,7 +9,7 @@ dashboard "aws_s3_bucket_detail" {
 
   input "bucket_arn" {
     title = "Select a bucket:"
-    sql   = query.aws_s3_bucket_input.sql
+    query = query.aws_s3_bucket_input
     width = 4
   }
 

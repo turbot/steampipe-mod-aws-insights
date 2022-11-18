@@ -9,7 +9,7 @@ dashboard "aws_vpc_security_group_detail" {
 
   input "security_group_id" {
     title = "Select a security group:"
-    sql   = query.aws_vpc_security_group_input.sql
+    query = query.aws_vpc_security_group_input
     width = 4
   }
 

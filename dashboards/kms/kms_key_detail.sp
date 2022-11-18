@@ -10,7 +10,7 @@ dashboard "aws_kms_key_detail" {
 
   input "key_arn" {
     title = "Select a key:"
-    sql   = query.aws_kms_key_input.sql
+    query = query.aws_kms_key_input
     width = 4
   }
 

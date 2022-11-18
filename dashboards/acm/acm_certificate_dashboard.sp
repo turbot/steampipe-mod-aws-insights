@@ -1,6 +1,6 @@
 dashboard "aws_acm_certificate_dashboard" {
 
-  title = "AWS ACM Certificate Dashboard"
+  title         = "AWS ACM Certificate Dashboard"
   documentation = file("./dashboards/acm/docs/acm_certificate_dashboard.md")
 
   tags = merge(local.acm_common_tags, {
@@ -11,28 +11,28 @@ dashboard "aws_acm_certificate_dashboard" {
 
     # Analysis
     card {
-      sql   = query.aws_acm_certificate_count.sql
+      query = query.aws_acm_certificate_count
       width = 2
     }
 
     card {
-      sql   = query.aws_acm_certificate_revoked_count.sql
+      query = query.aws_acm_certificate_revoked_count
       width = 2
     }
 
     # Assessments
     card {
-      sql   = query.aws_acm_certificate_renewal_eligibility_ineligible.sql
+      query = query.aws_acm_certificate_renewal_eligibility_ineligible
       width = 2
     }
 
     card {
-      sql   = query.aws_acm_certificate_invalid.sql
+      query = query.aws_acm_certificate_invalid
       width = 2
     }
 
     card {
-      sql   = query.aws_acm_certificate_transparency_logging_disabled.sql
+      query = query.aws_acm_certificate_transparency_logging_disabled
       width = 2
     }
   }
@@ -43,7 +43,7 @@ dashboard "aws_acm_certificate_dashboard" {
 
     chart {
       title = "Certificate Validity"
-      sql   = query.aws_acm_certificate_by_validity.sql
+      query = query.aws_acm_certificate_by_validity
       type  = "donut"
       width = 3
 
@@ -59,7 +59,7 @@ dashboard "aws_acm_certificate_dashboard" {
 
     chart {
       title = "Transparency Logging Status"
-      sql   = query.aws_acm_certificate_by_transparency_logging_preference.sql
+      query = query.aws_acm_certificate_by_transparency_logging_preference
       type  = "donut"
       width = 3
 
@@ -81,28 +81,28 @@ dashboard "aws_acm_certificate_dashboard" {
 
     chart {
       title = "Certificates by Account"
-      sql   = query.aws_acm_certificate_by_account.sql
+      query = query.aws_acm_certificate_by_account
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Certificates by Region"
-      sql   = query.aws_acm_certificate_by_region.sql
+      query = query.aws_acm_certificate_by_region
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Certificates by Type"
-      sql   = query.aws_acm_certificate_by_type.sql
+      query = query.aws_acm_certificate_by_type
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Certificates by Age"
-      sql   = query.aws_acm_certificate_by_age.sql
+      query = query.aws_acm_certificate_by_age
       type  = "column"
       width = 3
     }

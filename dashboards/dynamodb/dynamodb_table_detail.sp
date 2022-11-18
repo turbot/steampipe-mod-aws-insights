@@ -9,7 +9,7 @@ dashboard "aws_dynamodb_table_detail" {
 
   input "table_arn" {
     title = "Select a table:"
-    sql   = query.aws_dynamodb_table_input.sql
+    query = query.aws_dynamodb_table_input
     width = 4
   }
 

@@ -9,7 +9,7 @@ dashboard "aws_cloudwatch_log_group_detail" {
 
   input "log_group_arn" {
     title = "Select a log group:"
-    sql   = query.aws_cloudwatch_log_group_input.sql
+    query = query.aws_cloudwatch_log_group_input
     width = 4
   }
 

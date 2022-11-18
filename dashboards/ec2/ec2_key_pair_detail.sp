@@ -8,7 +8,7 @@ dashboard "aws_ec2_key_pair_detail" {
 
   input "key_name" {
     title = "Select a Key:"
-    sql   = query.ec2_key_pair_input.sql
+    query = query.ec2_key_pair_input
     width = 4
   }
 
