@@ -83,7 +83,8 @@ dashboard "aws_s3_bucket_detail" {
         node.aws_s3_bucket_to_s3_bucket_node,
         node.aws_s3_bucket_to_lambda_function_node,
         node.aws_s3_bucket_to_sns_topic_node,
-        node.aws_s3_bucket_to_sqs_queue_node
+        node.aws_s3_bucket_to_sqs_queue_node,
+        node.aws_s3_bucket_to_kms_key_node
       ]
 
       edges = [
@@ -96,7 +97,8 @@ dashboard "aws_s3_bucket_detail" {
         edge.aws_s3_bucket_to_s3_bucket_edge,
         edge.aws_s3_bucket_to_lambda_function_edge,
         edge.aws_s3_bucket_to_sns_topic_edge,
-        edge.aws_s3_bucket_to_sqs_queue_edge
+        edge.aws_s3_bucket_to_sqs_queue_edge,
+        edge.aws_s3_bucket_to_kms_key_edge
       ]
 
       args = {
@@ -696,6 +698,52 @@ edge "aws_s3_bucket_to_sqs_queue_edge" {
         )
         as t
       left join aws_sqs_queue as q on q.queue_arn = t ->> 'QueueArn'
+    where
+      b.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_s3_bucket_to_kms_key_node" {
+  category = category.aws_kms_key
+
+  sql = <<-EOQ
+    select
+      k.id as id,
+      k.title as title,
+      jsonb_build_object(
+        'ARN', k.arn,
+        'Key Manager', k.key_manager,
+        'Creation Date', k.creation_date,
+        'Enabled', k.enabled::text,
+        'Account ID', k.account_id,
+        'Region', k.region
+      ) as properties
+    from
+      aws_s3_bucket as b
+      cross join jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as r
+      join aws_kms_key as k
+      on k.arn = r -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID'
+    where
+      b.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_s3_bucket_to_kms_key_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
+    select
+      b.arn as from_id,
+      k.id as to_id
+    from
+      aws_s3_bucket as b
+      cross join jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as r
+      join aws_kms_key as k
+      on k.arn = r -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID'
     where
       b.arn = $1;
   EOQ
