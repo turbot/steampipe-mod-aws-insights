@@ -65,7 +65,10 @@ dashboard "aws_kms_key_detail" {
         node.aws_kms_key_from_rds_db_cluster_node,
         node.aws_kms_key_from_rds_db_instance_node,
         node.aws_kms_key_from_rds_db_snapshot_node,
-        node.aws_kms_key_from_redshift_cluster_node
+        node.aws_kms_key_from_redshift_cluster_node,
+        node.aws_kms_key_from_sns_topic_node,
+        node.aws_kms_key_from_sqs_queue_node,
+        node.aws_kms_key_from_lambda_function_node
       ]
 
       edges = [
@@ -75,7 +78,10 @@ dashboard "aws_kms_key_detail" {
         edge.aws_kms_key_from_rds_db_cluster_edge,
         edge.aws_kms_key_from_rds_db_instance_edge,
         edge.aws_kms_key_from_rds_db_snapshot_edge,
-        edge.aws_kms_key_from_redshift_cluster_edge
+        edge.aws_kms_key_from_redshift_cluster_edge,
+        edge.aws_kms_key_from_sns_topic_edge,
+        edge.aws_kms_key_from_sqs_queue_edge,
+        edge.aws_kms_key_from_lambda_function_edge
       ]
 
       args = {
@@ -612,6 +618,139 @@ query "aws_kms_key_tags" {
     order by
       tag ->> 'Key';
     EOQ
+
+  param "arn" {}
+}
+
+
+node "aws_kms_key_from_sns_topic_node" {
+  category = category.aws_sns_topic
+
+  sql = <<-EOQ
+    select
+      t.topic_arn as id,
+      t.title as title,
+      jsonb_build_object(
+        'ARN', t.topic_arn,
+        'Account ID', t.account_id,
+        'Region', t.region
+      ) as properties
+    from
+      aws_sns_topic as t
+      left join aws_kms_key as k on k.id = split_part(t.kms_master_key_id, '/', 2)
+    where
+      k.arn = $1
+      and k.region = t.region
+      and k.account_id = t.account_id;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_kms_key_from_sns_topic_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
+    select
+      t.topic_arn as from_id,
+      k.id as to_id
+    from
+      aws_sns_topic as t
+      left join aws_kms_key as k on k.id = split_part(t.kms_master_key_id, '/', 2)
+    where
+      k.arn = $1
+      and k.region = t.region
+      and k.account_id = t.account_id;
+  EOQ
+
+  param "arn" {}
+}
+
+
+node "aws_kms_key_from_sqs_queue_node" {
+  category = category.aws_sqs_queue
+
+  sql = <<-EOQ
+    select
+      q.queue_arn as id,
+      q.title as title,
+      jsonb_build_object(
+        'ARN', q.queue_arn,
+        'Account ID', q.account_id,
+        'Region', q.region
+      ) as properties
+    from
+      aws_kms_key as k
+      cross join jsonb_array_elements(aliases) as a
+      join aws_sqs_queue as q on a ->> 'AliasName' = q.kms_master_key_id
+      and k.region = q.region
+      and k.account_id = q.account_id
+    where
+      k.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_kms_key_from_sqs_queue_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
+    select
+      q.queue_arn as from_id,
+      k.id as to_id
+    from
+      aws_kms_key as k
+      cross join jsonb_array_elements(aliases) as a
+      join aws_sqs_queue as q on a ->> 'AliasName' = q.kms_master_key_id
+      and k.region = q.region
+      and k.account_id = q.account_id
+    where
+      k.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+
+node "aws_kms_key_from_lambda_function_node" {
+  category = category.aws_lambda_function
+
+  sql = <<-EOQ
+    select
+      l.arn as id,
+      l.title as title,
+      jsonb_build_object(
+        'ARN', l.arn,
+        'Runtime', l.runtime,
+        'Account ID', l.account_id,
+        'Region', l.region
+      ) as properties
+    from
+      aws_lambda_function as l,
+      aws_kms_key as k
+    where
+      k.arn = l.kms_key_arn
+      and k.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_kms_key_from_lambda_function_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
+    select
+      l.arn as from_id,
+      k.id as to_id
+    from
+      aws_lambda_function as l,
+      aws_kms_key as k
+    where
+      k.arn = l.kms_key_arn
+      and k.arn = $1;
+  EOQ
 
   param "arn" {}
 }
