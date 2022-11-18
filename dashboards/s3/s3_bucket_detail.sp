@@ -80,7 +80,10 @@ dashboard "aws_s3_bucket_detail" {
         node.aws_s3_bucket_from_ec2_nlb_node,
         node.aws_s3_bucket_from_ec2_clb_node,
         node.aws_s3_bucket_from_s3_access_point_node,
-        node.aws_s3_bucket_to_s3_bucket_node
+        node.aws_s3_bucket_to_s3_bucket_node,
+        node.aws_s3_bucket_to_lambda_function_node,
+        node.aws_s3_bucket_to_sns_topic_node,
+        node.aws_s3_bucket_to_sqs_queue_node
       ]
 
       edges = [
@@ -90,7 +93,10 @@ dashboard "aws_s3_bucket_detail" {
         edge.aws_s3_bucket_from_ec2_nlb_edge,
         edge.aws_s3_bucket_from_ec2_clb_edge,
         edge.aws_s3_bucket_from_s3_access_point_edge,
-        edge.aws_s3_bucket_to_s3_bucket_edge
+        edge.aws_s3_bucket_to_s3_bucket_edge,
+        edge.aws_s3_bucket_to_lambda_function_edge,
+        edge.aws_s3_bucket_to_sns_topic_edge,
+        edge.aws_s3_bucket_to_sqs_queue_edge
       ]
 
       args = {
@@ -545,6 +551,153 @@ edge "aws_s3_bucket_to_s3_bucket_edge" {
     where
       b.arn = $1
       and lb.name = b.logging ->> 'TargetBucket';
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_s3_bucket_to_lambda_function_node" {
+  category = category.aws_lambda_function
+
+  sql = <<-EOQ
+    select
+      f.arn as id,
+      f.title as title,
+      jsonb_build_object(
+        'Version', f.version,
+        'ARN', f.arn,
+        'Runtime', f.runtime,
+        'Region', f.region,
+        'Account ID', f.account_id
+      ) as properties
+     from
+      aws_s3_bucket as b,
+      jsonb_array_elements(event_notification_configuration -> 'LambdaFunctionConfigurations') as t
+      left join aws_lambda_function as f on f.arn = t ->> 'LambdaFunctionArn'
+    where
+      event_notification_configuration -> 'LambdaFunctionConfigurations' <> 'null'
+      and b.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_s3_bucket_to_lambda_function_edge" {
+  title = "lambda function"
+
+  sql = <<-EOQ
+    select
+      b.arn as from_id,
+      f.arn as to_id
+     from
+      aws_s3_bucket as b,
+      jsonb_array_elements(event_notification_configuration -> 'LambdaFunctionConfigurations') as t
+      left join aws_lambda_function as f on f.arn = t ->> 'LambdaFunctionArn'
+    where
+      event_notification_configuration -> 'LambdaFunctionConfigurations' <> 'null'
+      and b.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_s3_bucket_to_sns_topic_node" {
+  category = category.aws_sns_topic
+
+  sql = <<-EOQ
+    select
+      q.topic_arn as id,
+      q.title as title,
+      jsonb_build_object(
+        'ARN', q.topic_arn,
+        'Account ID', q.account_id,
+        'Region',q.region
+      ) as properties
+    from
+      aws_s3_bucket as b,
+      jsonb_array_elements(
+        case jsonb_typeof(event_notification_configuration -> 'TopicConfigurations')
+          when 'array' then (event_notification_configuration -> 'TopicConfigurations')
+          else null end
+        )
+        as t
+      left join aws_sns_topic as q on q.topic_arn = t ->> 'TopicArn'
+    where
+      b.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_s3_bucket_to_sns_topic_edge" {
+  title = "sns topic"
+
+  sql = <<-EOQ
+    select
+      b.arn as from_id,
+      q.topic_arn as to_id
+    from
+      aws_s3_bucket as b,
+      jsonb_array_elements(
+        case jsonb_typeof(event_notification_configuration -> 'TopicConfigurations')
+          when 'array' then (event_notification_configuration -> 'TopicConfigurations')
+          else null end
+        )
+        as t
+      left join aws_sns_topic as q on q.topic_arn = t ->> 'TopicArn'
+    where
+      b.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_s3_bucket_to_sqs_queue_node" {
+  category = category.aws_sqs_queue
+
+  sql = <<-EOQ
+    select
+      q.queue_arn as id,
+      q.title as title,
+      jsonb_build_object(
+        'ARN', q.queue_arn,
+        'Account ID', q.account_id,
+        'Region', q.region
+      ) as properties
+    from
+      aws_s3_bucket as b,
+      jsonb_array_elements(
+        case jsonb_typeof(event_notification_configuration -> 'QueueConfigurations')
+          when 'array' then (event_notification_configuration -> 'QueueConfigurations')
+          else null end
+        )
+        as t
+      left join aws_sqs_queue as q on q.queue_arn = t ->> 'QueueArn'
+    where
+      b.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_s3_bucket_to_sqs_queue_edge" {
+  title = "sqs queue"
+
+  sql = <<-EOQ
+    select
+      b.arn as from_id,
+      q.queue_arn as to_id
+    from
+      aws_s3_bucket as b,
+      jsonb_array_elements(
+        case jsonb_typeof(event_notification_configuration -> 'QueueConfigurations')
+          when 'array' then (event_notification_configuration -> 'QueueConfigurations')
+          else null end
+        )
+        as t
+      left join aws_sqs_queue as q on q.queue_arn = t ->> 'QueueArn'
+    where
+      b.arn = $1;
   EOQ
 
   param "arn" {}
