@@ -154,31 +154,31 @@ dashboard "aws_iam_user_detail" {
     }
 
 
-    # flow {
-    #   title     = "Attached Policies"
+    flow {
+      title     = "Attached Policies"
 
-    #   nodes = [
-    #     node.aws_iam_user_node,
-    #     node.aws_iam_user_to_iam_group_node,
-    #     node.aws_iam_user_to_iam_group_policy_node,
-    #     node.aws_iam_user_to_iam_policy_node,
-    #     node.aws_iam_user_to_inline_policy_node,
-    #     node.aws_iam_user_to_iam_group_inline_policy_node,
+      nodes = [
+        node.aws_iam_user_node,
+        node.aws_iam_user_to_iam_group_node,
+        node.aws_iam_user_to_iam_group_policy_node,
+        node.aws_iam_user_to_iam_policy_node,
+        node.aws_iam_user_to_inline_policy_node,
+        node.aws_iam_user_to_iam_group_inline_policy_node,
 
-    #   ]
+      ]
 
-    #   edges = [
-    #     edge.aws_iam_user_to_iam_group_edge,
-    #     edge.aws_iam_user_to_iam_group_policy_edge,
-    #     edge.aws_iam_user_to_iam_policy_edge,
-    #     edge.aws_iam_user_to_inline_policy_edge,
-    #     edge.aws_iam_user_to_iam_group_inline_policy_edge,
-    #   ]
+      edges = [
+        edge.aws_iam_user_to_iam_group_edge,
+        edge.aws_iam_user_to_iam_group_policy_edge,
+        edge.aws_iam_user_to_iam_policy_edge,
+        edge.aws_iam_user_to_inline_policy_edge,
+        edge.aws_iam_user_to_iam_group_inline_policy_edge,
+      ]
 
-    #   args = {
-    #     arn = self.input.user_arn.value
-    #   }
-    # }
+      args = {
+        arn = self.input.user_arn.value
+      }
+    }
 
 
     table {
