@@ -10,7 +10,7 @@ locals {
   integration_color  = "deeppink"
   storage_color      = "green"
   database_color     = "blue"
-  mg_color           = "blue"
+  mg_color           = "pink"
   ml_color           = "green"
   cd_color           = "purple"
 

@@ -111,7 +111,7 @@ category "aws_cloudtrail_trail" {
   title = "CloudTrail Trail"
   color = local.mg_color
   href  = "/aws_insights.dashboard.aws_cloudtrail_trail_detail?input.trail_arn={{.properties.'ARN' | @uri}}"
-  icon  = "text:Trail"
+  icon  = "text:CT"
 }
 
 category "aws_ebs_volume" {
@@ -132,14 +132,14 @@ category "aws_rds_db_cluster" {
   title = "RDS DB Cluster"
   color = local.database_color
   href  = "/aws_insights.dashboard.aws_rds_db_cluster_detail.url_path?input.db_cluster_arn={{.properties.ARN | @uri}}"
-  icon  = "text:RDS"
+  icon  = "circle-stack"
 }
 
 category "aws_rds_db_cluster_snapshot" {
   title = "RDS DB Cluster Snapshot"
   color = local.database_color
   href  = "/aws_insights.dashboard.aws_rds_db_cluster_snapshot_detail.url_path?input.snapshot_arn={{.properties.ARN | @uri}}"
-  icon  = "text:RDS"
+  icon  = "viewfinder-circle"
 }
 
 category "aws_rds_db_instance" {
@@ -153,7 +153,7 @@ category "aws_rds_db_snapshot" {
   title = "RDS DB Snapshot"
   color = local.database_color
   href  = "/aws_insights.dashboard.aws_rds_db_snapshot_detail.url_path?input.db_snapshot_arn={{.properties.ARN | @uri}}"
-  icon  = "text:RDS"
+  icon  = "viewfinder-circle"
 }
 
 category "aws_rds_db_cluster_parameter_group" {
@@ -178,14 +178,14 @@ category "aws_redshift_cluster" {
   title = "Redshift Cluster"
   color = local.database_color
   href  = "/aws_insights.dashboard.aws_redshift_cluster_detail?input.cluster_arn={{.properties.'ARN' | @uri}}"
-  icon  = "text:Redshift"
+  icon  = "circle-stack"
 }
 
 category "aws_redshift_snapshot" {
   title = "Redshift Snapshot"
   color = local.database_color
   href  = "/aws_insights.dashboard.aws_redshift_snapshot_detail?input.snapshot_arn={{.properties.'ARN' | @uri}}"
-  icon  = "text:Snapshot"
+  icon  = "viewfinder-circle"
 }
 
 category "aws_redshift_subnet_group" {
@@ -297,14 +297,14 @@ category "aws_emr_instance" {
   title = "EMR Instances"
   color = local.analytics_color
   href  = "/aws_insights.dashboard.aws_ec2_instance_detail?input.instance_arn={{.properties.'EC2 Instance ARN' | @uri}}"
-  icon  = "text:EMR"
+  icon  = "cpu-chip"
 }
 
 category "aws_iam_policy" {
   title = "IAM Policy"
   color = local.iam_color
   href  = "/aws_insights.dashboard.aws_iam_policy_detail?input.policy_arn={{.properties.'ARN' | @uri}}"
-  icon  = "text:Policy"
+  icon  = "document-check"
 }
 
 category "aws_iam_user" {
@@ -377,7 +377,7 @@ category "aws_elasticache_cluster" {
   title = "ElastiCache Cluster"
   color = local.database_color
   href  = "/aws_insights.dashboard.aws_elasticache_cluster_detail.url_path?input.elasticache_cluster_arn={{.properties.ARN | @uri}}"
-  icon  = "text:ElastiCache"
+  icon  = "circle-stack"
 }
 
 category "aws_elasticache_subnet_group" {
@@ -404,7 +404,7 @@ category "aws_sqs_queue" {
   title = "SQS Queue"
   color = local.integration_color
   href  = "/aws_insights.dashboard.aws_sqs_queue_detail?input.queue_arn={{.properties.'ARN' | @uri}}"
-  icon  = "text:SQS"
+  icon  = "text:Queue"
 }
 
 category "aws_eventbridge_rule" {
@@ -446,21 +446,21 @@ category "aws_codepipeline_pipeline" {
   title = "CodePipeline Pipeline"
   color = local.dev_tool_color
   href  = "/aws_insights.dashboard.codepipeline_pipeline_detail?input.pipeline_arn={{.properties.'ARN' | @uri}}"
-  icon  = "text:Pipeline"
+  icon  = "text:CICD"
 }
 
 category "aws_dax_cluster" {
   title = "DAX Cluster"
   color = local.database_color
   href  = "/aws_insights.dashboard.dax_cluster_detail?input.dax_cluster_arn={{.properties.'ARN' | @uri}}"
-  icon  = "text:DAX"
+  icon  = "clipboard-document-check"
 }
 
 category "aws_dynamodb_table" {
   title = "DynamoDB Table"
   color = local.database_color
   href  = "/aws_insights.dashboard.dynamodb_table_detail?input.table_arn={{.properties.'ARN' | @uri}}"
-  icon  = "text:DDB"
+  icon  = "circle-stack"
 }
 
 category "aws_dax_subnet_group" {
@@ -473,7 +473,7 @@ category "aws_codecommit_repository" {
   title = "CodeCommit Repository"
   href  = "/aws_insights.dashboard.aws_codecommit_repository_detail?input.codecommit_repository_arn={{.properties.'ARN' | @uri}}"
   color = local.dev_tool_color
-  icon  = "text:Repo"
+  icon  = "text:CICD"
 }
 
 category "aws_codebuild_project" {
@@ -492,13 +492,13 @@ category "aws_kinesisanalyticsv2_application" {
 category "aws_s3_access_point" {
   title = "S3 Access Point"
   color = local.storage_color
-  icon  = "text:s3"
+  icon  = "text:AP"
 }
 
 category "aws_cloudformation_stack" {
   title = "CloudFormation Stack"
   color = local.mg_color
-  icon  = "text:Stack"
+  icon  = "text:CFN"
 }
 
 category "aws_kinesis_stream" {
@@ -515,7 +515,7 @@ category "aws_vpc_endpoint" {
 
 category "aws_vpc_internet_gateway" {
   title = "VPC Internet Gateway"
-  icon  = "text:Gateway"
+  icon  = "text:IGW"
   color = local.network_color
 }
 
@@ -547,7 +547,7 @@ category "aws_cloudwatch_log_group" {
   title = "CloudWatch Log Group"
   color = local.mg_color
   href  = "/aws_insights.dashboard.aws_cloudwatch_log_group_detail?input.log_group_arn={{.properties.'ARN' | @uri}}"
-  icon  = "text:LOG"
+  icon  = "text:CW"
 }
 
 category "aws_guardduty_detector" {
@@ -559,7 +559,7 @@ category "aws_guardduty_detector" {
 category "aws_media_store_container" {
   title = "Media Store Container"
   color = local.container_color
-  icon  = "text:Container"
+  icon  = "building-storefront"
 }
 
 category "aws_eventbridge_bus" {
@@ -571,7 +571,7 @@ category "aws_eventbridge_bus" {
 category "aws_appconfig_application" {
   title = "AppConfig Application"
   color = local.integration_color
-  icon  = "text:Application"
+  icon  = "cog-6-tooth"
 }
 
 category "aws_api_gatewayv2_stage" {
@@ -582,7 +582,7 @@ category "aws_api_gatewayv2_stage" {
 
 category "aws_sfn_state_machine" {
   title = "Step Function State Machine"
-  color = "#B0084D"
+  color = local.integration_color
   icon  = "text:SFN"
 }
 
@@ -619,7 +619,7 @@ category "aws_ecs_task" {
 category "aws_codedeploy_app" {
   title = "CodeDeploy Application"
   color = local.dev_tool_color
-  icon  = "text:App"
+  icon  = "text:CICD"
 }
 
 category "aws_eks_addon" {
@@ -643,7 +643,7 @@ category "aws_emr_instance_fleet" {
 category "aws_emr_instance_group" {
   title = "EMR instance group"
   color = local.analytics_color
-  icon  = "text:EMR"
+  icon  = "rectangle-group"
 }
 
 category "aws_vpc_peering_connection" {
@@ -659,7 +659,7 @@ graph "aws_graph_categories" {
 
 category "aws_fsx_file_system" {
   title = "FSX File System"
-  icon  = "document-duplicate"
+  icon  = "document-arrowup"
   color = local.storage_color
 }
 
