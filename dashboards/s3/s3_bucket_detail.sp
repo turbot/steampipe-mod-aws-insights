@@ -17,7 +17,7 @@ dashboard "aws_s3_bucket_detail" {
 
     card {
       width = 2
-      query = query.aws_s3_bucket_versioning
+      query = query.aws_s3_bucket_public
       args = {
         arn = self.input.bucket_arn.value
       }
@@ -25,7 +25,7 @@ dashboard "aws_s3_bucket_detail" {
 
     card {
       width = 2
-      query = query.aws_s3_bucket_versioning_mfa
+      query = query.aws_s3_bucket_versioning
       args = {
         arn = self.input.bucket_arn.value
       }
@@ -80,7 +80,11 @@ dashboard "aws_s3_bucket_detail" {
         node.aws_s3_bucket_from_ec2_nlb_node,
         node.aws_s3_bucket_from_ec2_clb_node,
         node.aws_s3_bucket_from_s3_access_point_node,
-        node.aws_s3_bucket_to_s3_bucket_node
+        node.aws_s3_bucket_to_s3_bucket_node,
+        node.aws_s3_bucket_to_lambda_function_node,
+        node.aws_s3_bucket_to_sns_topic_node,
+        node.aws_s3_bucket_to_sqs_queue_node,
+        node.aws_s3_bucket_to_kms_key_node
       ]
 
       edges = [
@@ -90,7 +94,11 @@ dashboard "aws_s3_bucket_detail" {
         edge.aws_s3_bucket_from_ec2_nlb_edge,
         edge.aws_s3_bucket_from_ec2_clb_edge,
         edge.aws_s3_bucket_from_s3_access_point_edge,
-        edge.aws_s3_bucket_to_s3_bucket_edge
+        edge.aws_s3_bucket_to_s3_bucket_edge,
+        edge.aws_s3_bucket_to_lambda_function_edge,
+        edge.aws_s3_bucket_to_sns_topic_edge,
+        edge.aws_s3_bucket_to_sqs_queue_edge,
+        edge.aws_s3_bucket_to_kms_key_edge
       ]
 
       args = {
@@ -550,6 +558,199 @@ edge "aws_s3_bucket_to_s3_bucket_edge" {
   param "arn" {}
 }
 
+node "aws_s3_bucket_to_lambda_function_node" {
+  category = category.aws_lambda_function
+
+  sql = <<-EOQ
+    select
+      f.arn as id,
+      f.title as title,
+      jsonb_build_object(
+        'Version', f.version,
+        'ARN', f.arn,
+        'Runtime', f.runtime,
+        'Region', f.region,
+        'Account ID', f.account_id
+      ) as properties
+     from
+      aws_s3_bucket as b,
+      jsonb_array_elements(event_notification_configuration -> 'LambdaFunctionConfigurations') as t
+      left join aws_lambda_function as f on f.arn = t ->> 'LambdaFunctionArn'
+    where
+      event_notification_configuration -> 'LambdaFunctionConfigurations' <> 'null'
+      and b.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_s3_bucket_to_lambda_function_edge" {
+  title = "lambda function"
+
+  sql = <<-EOQ
+    select
+      b.arn as from_id,
+      f.arn as to_id
+     from
+      aws_s3_bucket as b,
+      jsonb_array_elements(event_notification_configuration -> 'LambdaFunctionConfigurations') as t
+      left join aws_lambda_function as f on f.arn = t ->> 'LambdaFunctionArn'
+    where
+      event_notification_configuration -> 'LambdaFunctionConfigurations' <> 'null'
+      and b.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_s3_bucket_to_sns_topic_node" {
+  category = category.aws_sns_topic
+
+  sql = <<-EOQ
+    select
+      q.topic_arn as id,
+      q.title as title,
+      jsonb_build_object(
+        'ARN', q.topic_arn,
+        'Account ID', q.account_id,
+        'Region',q.region
+      ) as properties
+    from
+      aws_s3_bucket as b,
+      jsonb_array_elements(
+        case jsonb_typeof(event_notification_configuration -> 'TopicConfigurations')
+          when 'array' then (event_notification_configuration -> 'TopicConfigurations')
+          else null end
+        )
+        as t
+      left join aws_sns_topic as q on q.topic_arn = t ->> 'TopicArn'
+    where
+      b.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_s3_bucket_to_sns_topic_edge" {
+  title = "sns topic"
+
+  sql = <<-EOQ
+    select
+      b.arn as from_id,
+      q.topic_arn as to_id
+    from
+      aws_s3_bucket as b,
+      jsonb_array_elements(
+        case jsonb_typeof(event_notification_configuration -> 'TopicConfigurations')
+          when 'array' then (event_notification_configuration -> 'TopicConfigurations')
+          else null end
+        )
+        as t
+      left join aws_sns_topic as q on q.topic_arn = t ->> 'TopicArn'
+    where
+      b.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_s3_bucket_to_sqs_queue_node" {
+  category = category.aws_sqs_queue
+
+  sql = <<-EOQ
+    select
+      q.queue_arn as id,
+      q.title as title,
+      jsonb_build_object(
+        'ARN', q.queue_arn,
+        'Account ID', q.account_id,
+        'Region', q.region
+      ) as properties
+    from
+      aws_s3_bucket as b,
+      jsonb_array_elements(
+        case jsonb_typeof(event_notification_configuration -> 'QueueConfigurations')
+          when 'array' then (event_notification_configuration -> 'QueueConfigurations')
+          else null end
+        )
+        as t
+      left join aws_sqs_queue as q on q.queue_arn = t ->> 'QueueArn'
+    where
+      b.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_s3_bucket_to_sqs_queue_edge" {
+  title = "sqs queue"
+
+  sql = <<-EOQ
+    select
+      b.arn as from_id,
+      q.queue_arn as to_id
+    from
+      aws_s3_bucket as b,
+      jsonb_array_elements(
+        case jsonb_typeof(event_notification_configuration -> 'QueueConfigurations')
+          when 'array' then (event_notification_configuration -> 'QueueConfigurations')
+          else null end
+        )
+        as t
+      left join aws_sqs_queue as q on q.queue_arn = t ->> 'QueueArn'
+    where
+      b.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_s3_bucket_to_kms_key_node" {
+  category = category.aws_kms_key
+
+  sql = <<-EOQ
+    select
+      k.id as id,
+      k.title as title,
+      jsonb_build_object(
+        'ARN', k.arn,
+        'Key Manager', k.key_manager,
+        'Creation Date', k.creation_date,
+        'Enabled', k.enabled::text,
+        'Account ID', k.account_id,
+        'Region', k.region
+      ) as properties
+    from
+      aws_s3_bucket as b
+      cross join jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as r
+      join aws_kms_key as k
+      on k.arn = r -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID'
+    where
+      b.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_s3_bucket_to_kms_key_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
+    select
+      b.arn as from_id,
+      k.id as to_id
+    from
+      aws_s3_bucket as b
+      cross join jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as r
+      join aws_kms_key as k
+      on k.arn = r -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID'
+    where
+      b.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
 query "aws_s3_bucket_versioning" {
   sql = <<-EOQ
     select
@@ -565,12 +766,12 @@ query "aws_s3_bucket_versioning" {
   param "arn" {}
 }
 
-query "aws_s3_bucket_versioning_mfa" {
+query "aws_s3_bucket_public" {
   sql = <<-EOQ
     select
-      'Versioning MFA' as label,
-      case when versioning_mfa_delete then 'Enabled' else 'Disabled' end as value,
-      case when versioning_mfa_delete then 'ok' else 'alert' end as type
+      'Public Access' as label,
+      case when block_public_acls and block_public_policy and ignore_public_acls and restrict_public_buckets then 'Disabled' else 'Enabled' end as value,
+      case when block_public_acls and block_public_policy and ignore_public_acls and restrict_public_buckets then 'ok' else 'alert' end as type
     from
       aws_s3_bucket
     where
@@ -655,7 +856,7 @@ query "aws_s3_bucket_https_enforce" {
     )
     select
       'HTTPS' as label,
-      case when s.name is not null then 'Enabled' else 'Disabled' end as value,
+      case when s.name is not null then 'Enforced' else 'Not Enforced' end as value,
       case when s.name is not null then 'ok' else 'alert' end as type
     from
       aws_s3_bucket as b
