@@ -400,6 +400,18 @@ category "aws_eks_cluster" {
   icon  = "cog"
 }
 
+category "aws_eks_identity_provider_config" {
+  title = "EKS Identity Provider Config"
+  color = local.container_color
+  icon  = "IPC"
+}
+
+category "aws_eks_fargate_profile" {
+  title = "EKS Farget Profile"
+  color = local.container_color
+  icon  = "FP"
+}
+
 category "aws_sqs_queue" {
   title = "SQS Queue"
   color = local.integration_color

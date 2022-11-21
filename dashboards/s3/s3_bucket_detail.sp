@@ -79,7 +79,7 @@ dashboard "aws_s3_bucket_detail" {
         node.aws_s3_bucket_from_ec2_alb_node,
         node.aws_s3_bucket_from_ec2_nlb_node,
         node.aws_s3_bucket_from_ec2_clb_node,
-        node.aws_s3_bucket_from_s3_access_point_node,
+        #node.aws_s3_bucket_from_s3_access_point_node,
         node.aws_s3_bucket_to_s3_bucket_node,
         node.aws_s3_bucket_to_lambda_function_node,
         node.aws_s3_bucket_to_sns_topic_node,
@@ -93,7 +93,7 @@ dashboard "aws_s3_bucket_detail" {
         edge.aws_s3_bucket_from_ec2_alb_edge,
         edge.aws_s3_bucket_from_ec2_nlb_edge,
         edge.aws_s3_bucket_from_ec2_clb_edge,
-        edge.aws_s3_bucket_from_s3_access_point_edge,
+        #edge.aws_s3_bucket_from_s3_access_point_edge,
         edge.aws_s3_bucket_to_s3_bucket_edge,
         edge.aws_s3_bucket_to_lambda_function_edge,
         edge.aws_s3_bucket_to_sns_topic_edge,
@@ -585,7 +585,7 @@ node "aws_s3_bucket_to_lambda_function_node" {
 }
 
 edge "aws_s3_bucket_to_lambda_function_edge" {
-  title = "lambda function"
+  title = "triggers"
 
   sql = <<-EOQ
     select
@@ -632,7 +632,7 @@ node "aws_s3_bucket_to_sns_topic_node" {
 }
 
 edge "aws_s3_bucket_to_sns_topic_edge" {
-  title = "sns topic"
+  title = "notifies"
 
   sql = <<-EOQ
     select
@@ -683,7 +683,7 @@ node "aws_s3_bucket_to_sqs_queue_node" {
 }
 
 edge "aws_s3_bucket_to_sqs_queue_edge" {
-  title = "sqs queue"
+  title = "queues"
 
   sql = <<-EOQ
     select

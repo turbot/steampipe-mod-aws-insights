@@ -87,6 +87,7 @@ dashboard "aws_rds_db_instance_detail" {
         edge.aws_rds_db_instance_to_vpc_security_group_edge,
         edge.aws_rds_db_instance_vpc_subnet_to_vpc_edge,
         edge.aws_rds_db_instance_vpc_security_group_to_vpc_edge,
+        edge.aws_rds_db_instance_rds_db_subnet_group_to_vpc_active_subnet_edge,
         edge.aws_rds_db_instance_from_rds_db_cluster_edge
       ]
 
@@ -619,7 +620,7 @@ node "aws_rds_db_instance_rds_db_subnet_group_to_vpc_subnet_node" {
 }
 
 edge "aws_rds_db_instance_rds_db_subnet_group_to_vpc_subnet_edge" {
-  title = "subnet"
+  title = "failover subnet"
 
   sql = <<-EOQ
     select
@@ -638,7 +639,34 @@ edge "aws_rds_db_instance_rds_db_subnet_group_to_vpc_subnet_edge" {
         and rdb.region = rdsg.region
         and rdb.account_id = rdsg.account_id
     where
-      rdb.arn = $1;
+      rdb.arn = $1
+      and rdb.availability_zone <> vs.availability_zone;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_rds_db_instance_rds_db_subnet_group_to_vpc_active_subnet_edge" {
+  title = "active subnet"
+
+  sql = <<-EOQ
+    select
+      rdsg.arn as from_id,
+      vs.subnet_id as to_id
+    from
+      aws_rds_db_instance as rdb
+      cross join
+        jsonb_array_elements(subnets) as subnet
+      join
+        aws_vpc_subnet as vs
+        on subnet ->> 'SubnetIdentifier' = vs.subnet_id
+      join
+        aws_rds_db_subnet_group as rdsg
+        on rdb.db_subnet_group_name = rdsg.name
+        and rdb.region = rdsg.region
+        and rdb.account_id = rdsg.account_id
+    where
+       rdb.availability_zone = vs.availability_zone;
   EOQ
 
   param "arn" {}

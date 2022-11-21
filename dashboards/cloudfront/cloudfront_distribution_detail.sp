@@ -264,7 +264,7 @@ node "aws_cloudfront_distribution_to_acm_certificate_node" {
 }
 
 edge "aws_cloudfront_distribution_to_acm_certificate_edge" {
-  title = "encrypted with"
+  title = "ssl via"
   sql   = <<-EOQ
     select
       d.id as from_id,
