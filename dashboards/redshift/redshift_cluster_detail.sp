@@ -860,7 +860,7 @@ node "aws_redshift_cluster_to_redshift_parameter_group_node" {
 }
 
 edge "aws_redshift_cluster_to_redshift_parameter_group_edge" {
-  title = "configured"
+  title = "parameter group"
 
   sql = <<-EOQ
     select
