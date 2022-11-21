@@ -862,7 +862,7 @@ node "aws_rds_db_instance_to_sns_topic_node" {
 }
 
 edge "aws_rds_db_instance_to_sns_topic_edge" {
-  title = "topic"
+  title = "notifies"
 
   sql = <<-EOQ
     select

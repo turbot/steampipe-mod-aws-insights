@@ -303,7 +303,7 @@ node "aws_acm_certificate_from_cloudfront_distribution_node" {
 }
 
 edge "aws_acm_certificate_from_cloudfront_distribution_edge" {
-  title = "encrypted with"
+  title = "ssl via"
 
   sql = <<-EOQ
     select
@@ -353,7 +353,7 @@ node "aws_acm_certificate_from_ec2_classic_load_balancer_node" {
 }
 
 edge "aws_acm_certificate_from_ec2_classic_load_balancer_edge" {
-  title = "encrypted with"
+  title = "ssl via"
 
   sql = <<-EOQ
     select
@@ -404,7 +404,7 @@ node "aws_acm_certificate_from_ec2_application_load_balancer_node" {
 }
 
 edge "aws_acm_certificate_from_ec2_application_load_balancer_edge" {
-  title = "encrypted with"
+  title = "ssl via"
 
   sql = <<-EOQ
     select
@@ -455,7 +455,7 @@ node "aws_acm_certificate_from_ec2_network_load_balancer_node" {
 }
 
 edge "aws_acm_certificate_from_ec2_network_load_balancer_edge" {
-  title = "encrypted with"
+  title = "ssl via"
 
   sql = <<-EOQ
     select
@@ -497,7 +497,7 @@ node "aws_acm_certificate_from_opensearch_domain_node" {
 }
 
 edge "aws_acm_certificate_from_opensearch_domain_edge" {
-  title = "encrypted with"
+  title = "ssl via"
 
   sql = <<-EOQ
     select
