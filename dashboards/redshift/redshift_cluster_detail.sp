@@ -89,10 +89,9 @@ dashboard "aws_redshift_cluster_detail" {
       ]
 
       edges = [
-        edge.aws_redshift_cluster_to_redshift_subnet_group_edge,
-        edge.aws_redshift_cluster_to_vpc_subnet_edge,
+        edge.aws_redshift_cluster_subnet_group_to_vpc_subnet_edge,
         edge.aws_redshift_cluster_subnet_to_vpc_edge,
-        edge.aws_redshift_cluster_vpc_security_group_to_vpc_edge,
+        edge.aws_redshift_cluster_vpc_security_group_to_subnet_group_edge,
         edge.aws_redshift_cluster_to_vpc_security_group_edge,
         edge.aws_redshift_cluster_to_kms_key_edge,
         edge.aws_redshift_cluster_to_iam_role_edge,
@@ -456,25 +455,6 @@ node "aws_redshift_cluster_to_redshift_subnet_group_node" {
   param "arn" {}
 }
 
-edge "aws_redshift_cluster_to_redshift_subnet_group_edge" {
-  title = "subnet group"
-
-  sql = <<-EOQ
-    select
-      c.arn as from_id,
-      s.cluster_subnet_group_name as to_id
-    from
-      aws_redshift_cluster as c
-      left join
-        aws_redshift_subnet_group as s
-        on c.vpc_id = s.vpc_id
-        and c.cluster_subnet_group_name = s.cluster_subnet_group_name
-        and c.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
 node "aws_redshift_cluster_to_vpc_subnet_node" {
   category = category.aws_vpc_subnet
 
@@ -501,7 +481,7 @@ node "aws_redshift_cluster_to_vpc_subnet_node" {
   param "arn" {}
 }
 
-edge "aws_redshift_cluster_to_vpc_subnet_edge" {
+edge "aws_redshift_cluster_subnet_group_to_vpc_subnet_edge" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -569,24 +549,25 @@ edge "aws_redshift_cluster_subnet_to_vpc_edge" {
   param "arn" {}
 }
 
-edge "aws_redshift_cluster_vpc_security_group_to_vpc_edge" {
-  title = "vpc"
+edge "aws_redshift_cluster_vpc_security_group_to_subnet_group_edge" {
+  title = "subnet group"
 
   sql = <<-EOQ
     select
       sg.arn as from_id,
-      v.arn as to_id
+      sub.cluster_subnet_group_name as to_id
     from
       aws_redshift_cluster as c
-      left join
-        aws_vpc as v
-        on v.vpc_id = c.vpc_id,
-      jsonb_array_elements(c.vpc_security_groups) as s
-      left join
+      cross join
+        jsonb_array_elements(c.vpc_security_groups) as s
+      join
         aws_vpc_security_group as sg
         on sg.group_id = s ->> 'VpcSecurityGroupId'
-    where
-      c.arn = $1;
+      join  
+        aws_redshift_subnet_group as sub
+        on c.vpc_id = sub.vpc_id
+        and c.cluster_subnet_group_name = sub.cluster_subnet_group_name
+        and c.arn = $1;
   EOQ
 
   param "arn" {}
@@ -924,7 +905,7 @@ node "aws_redshift_cluster_from_redshift_snapshot_node" {
 }
 
 edge "aws_redshift_cluster_from_redshift_snapshot_edge" {
-  title = "snapshot"
+  title = "cluster"
 
   sql = <<-EOQ
     select
