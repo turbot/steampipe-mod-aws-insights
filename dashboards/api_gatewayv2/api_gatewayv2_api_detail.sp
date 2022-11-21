@@ -314,7 +314,7 @@ node "aws_api_gatewayv2_api_to_lambda_function_node" {
 }
 
 edge "aws_api_gatewayv2_api_to_lambda_function_edge" {
-  title = "integrated with"
+  title = "lambda function"
 
   sql = <<-EOQ
      select
@@ -355,7 +355,7 @@ node "aws_api_gatewayv2_api_to_sqs_queue_node" {
 }
 
 edge "aws_api_gatewayv2_api_to_sqs_queue_edge" {
-  title = "integrated with"
+  title = "sqs queue"
 
   sql = <<-EOQ
      select
@@ -398,7 +398,7 @@ node "aws_api_gatewayv2_api_to_sfn_state_machine_node" {
 }
 
 edge "aws_api_gatewayv2_api_to_sfn_state_machine_edge" {
-  title = "integrated with"
+  title = "sfn state machine"
 
   sql = <<-EOQ
      select
@@ -441,7 +441,7 @@ node "aws_api_gatewayv2_api_to_kinesis_stream_node" {
 }
 
 edge "aws_api_gatewayv2_api_to_kinesis_stream_edge" {
-  title = "integrated with"
+  title = "kinesis stream"
 
   sql = <<-EOQ
      select
@@ -485,7 +485,7 @@ node "aws_api_gatewayv2_api_to_ec2_load_balancer_listener_node" {
 }
 
 edge "aws_api_gatewayv2_api_to_ec2_load_balancer_listener_edge" {
-  title = "integrated with"
+  title = "lb listener"
 
   sql = <<-EOQ
      select
