@@ -12,37 +12,37 @@ dashboard "aws_ebs_volume_age_report" {
 
     card {
       width = 2
-      sql   = query.aws_ebs_volume_count.sql
+      query = query.aws_ebs_volume_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_ebs_volume_24_hours_count.sql
+      query = query.aws_ebs_volume_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_ebs_volume_30_days_count.sql
+      query = query.aws_ebs_volume_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_ebs_volume_30_90_days_count.sql
+      query = query.aws_ebs_volume_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_ebs_volume_90_365_days_count.sql
+      query = query.aws_ebs_volume_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_ebs_volume_1_year_count.sql
+      query = query.aws_ebs_volume_1_year_count
     }
 
   }
@@ -60,7 +60,7 @@ dashboard "aws_ebs_volume_age_report" {
       href = "${dashboard.aws_ebs_volume_detail.url_path}?input.volume_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_ebs_volume_age_table.sql
+    query = query.aws_ebs_volume_age_table
   }
 
 }

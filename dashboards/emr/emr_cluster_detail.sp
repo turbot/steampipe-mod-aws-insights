@@ -669,12 +669,7 @@ edge "aws_emr_instance_group_to_emr_instance_edge" {
   sql = <<-EOQ
      select
       instance_group_id as from_id,
-      i.id as to_id,
-      null as id,
-      'ec2 instance' as title,
-      'instance_group_to_ec2_instance' as category,
-      jsonb_build_object(
-        'Account ID', c.account_id ) as properties
+      i.id as to_id
     from
       aws_emr_cluster as c
       left join

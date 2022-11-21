@@ -11,13 +11,13 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
 
     # Analysis
     card {
-      sql   = query.aws_rds_db_instance_snapshot_count.sql
+      query = query.aws_rds_db_instance_snapshot_count
       width = 2
     }
 
     # Assessments
     card {
-      sql   = query.aws_rds_db_instance_snapshot_unencrypted_count.sql
+      query = query.aws_rds_db_instance_snapshot_unencrypted_count
       width = 2
       href  = dashboard.aws_rds_db_instace_snapshot_encryption_report.url_path
     }
@@ -27,7 +27,7 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
       type  = "info"
       icon  = "currency-dollar"
       width = 2
-      sql   = query.aws_rds_db_instance_snapshot_cost_mtd.sql
+      query = query.aws_rds_db_instance_snapshot_cost_mtd
     }
 
   }
@@ -39,7 +39,7 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
 
     chart {
       title = "Encryption Status"
-      sql   = query.aws_rds_db_instance_snapshot_by_encryption_status.sql
+      query = query.aws_rds_db_instance_snapshot_by_encryption_status
       type  = "donut"
       width = 4
 
@@ -55,7 +55,7 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
 
     chart {
       title = "IAM Authentication Status"
-      sql   = query.aws_rds_db_instance_snapshot_iam_authentication_enabled.sql
+      query = query.aws_rds_db_instance_snapshot_iam_authentication_enabled
       type  = "donut"
       width = 4
 
@@ -76,17 +76,17 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
     title = "Cost"
     width = 6
 
-    table  {
+    table {
       width = 6
       title = "Forecast"
-      sql   = query.aws_rds_db_instance_snapshot_monthly_forecast_table.sql
+      query = query.aws_rds_db_instance_snapshot_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      sql   = query.aws_rds_db_instance_snapshot_cost_per_month.sql
+      query = query.aws_rds_db_instance_snapshot_cost_per_month
     }
 
   }
@@ -97,35 +97,35 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
 
     chart {
       title = "Snapshots by Account"
-      sql   = query.aws_rds_db_instance_snapshot_by_account.sql
+      query = query.aws_rds_db_instance_snapshot_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Snapshots by Region"
-      sql   = query.aws_rds_db_instance_snapshot_by_region.sql
+      query = query.aws_rds_db_instance_snapshot_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Snapshots by State"
-      sql   = query.aws_rds_db_instance_snapshot_by_state.sql
+      query = query.aws_rds_db_instance_snapshot_by_state
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Snapshots by Age"
-      sql   = query.aws_rds_db_instance_snapshot_by_creation_month.sql
+      query = query.aws_rds_db_instance_snapshot_by_creation_month
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Snapshots by Engine Type"
-      sql   = query.aws_rds_db_instance_snapshot_by_engine_type.sql
+      query = query.aws_rds_db_instance_snapshot_by_engine_type
       type  = "column"
       width = 4
     }

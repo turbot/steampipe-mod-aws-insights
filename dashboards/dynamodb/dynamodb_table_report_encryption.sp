@@ -11,22 +11,22 @@ dashboard "aws_dynamodb_table_encryption_report" {
   container {
 
     card {
-      sql   = query.aws_dynamodb_table_count.sql
+      query = query.aws_dynamodb_table_count
       width = 2
     }
 
     card {
-      sql   = query.aws_dynamodb_table_default_encryption.sql
+      query = query.aws_dynamodb_table_default_encryption
       width = 2
     }
 
     card {
-      sql   = query.aws_dynamodb_table_aws_managed_key_encryption.sql
+      query = query.aws_dynamodb_table_aws_managed_key_encryption
       width = 2
     }
 
     card {
-      sql   = query.aws_dynamodb_table_customer_managed_key_encryption.sql
+      query = query.aws_dynamodb_table_customer_managed_key_encryption
       width = 2
     }
 
@@ -45,7 +45,7 @@ dashboard "aws_dynamodb_table_encryption_report" {
       href = "${dashboard.aws_dynamodb_table_detail.url_path}?input.table_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_dynamodb_table_encryption_table.sql
+    query = query.aws_dynamodb_table_encryption_table
   }
 
 }

@@ -9,7 +9,7 @@ dashboard "aws_dynamodb_table_detail" {
 
   input "table_arn" {
     title = "Select a table:"
-    sql   = query.aws_dynamodb_table_input.sql
+    query = query.aws_dynamodb_table_input
     width = 4
   }
 
@@ -299,8 +299,9 @@ node "aws_dynamodb_table_node" {
   sql = <<-EOQ
     select
       table_id as id,
-      name as title,
+      title as title,
       jsonb_build_object(
+        'Name', name,
         'ARN', arn,
         'Creation Date', creation_date_time,
         'Table Status', table_status,
@@ -309,7 +310,7 @@ node "aws_dynamodb_table_node" {
     from
       aws_dynamodb_table
     where
-      arn = $1
+      arn = $1;
   EOQ
 
   param "arn" {}
@@ -321,7 +322,7 @@ node "aws_dynamodb_table_to_kms_key_node" {
   sql = <<-EOQ
     select
       id as id,
-      id as title,
+      title as title,
       jsonb_build_object(
         'ARN', arn,
         'Key Manager', key_manager,
@@ -340,7 +341,25 @@ node "aws_dynamodb_table_to_kms_key_node" {
           aws_dynamodb_table
         where
           arn = $1
-      )
+      );
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_dynamodb_table_to_kms_key_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
+    select
+      table_id as from_id,
+      k.id as to_id
+    from
+      aws_dynamodb_table as t,
+      aws_kms_key as k
+    where
+      sse_description ->> 'KMSMasterKeyArn' = k.arn
+      and t.arn = $1;
   EOQ
 
   param "arn" {}
@@ -353,7 +372,8 @@ node "aws_dynamodb_table_to_s3_bucket_node" {
     select
       b.arn as id,
       title as title,
-      jsonb_build_object( 'ARN', b.arn,
+      jsonb_build_object(
+        'ARN', b.arn,
         'Versioning', versioning_enabled,
         'Creation Date', creation_date,
         'Region', b.region ,
@@ -363,8 +383,26 @@ node "aws_dynamodb_table_to_s3_bucket_node" {
       aws_s3_bucket as b,
       aws_dynamodb_table_export as t
     where
-        b.name = t.s3_bucket
-        and t.table_arn = $1
+      b.name = t.s3_bucket
+      and t.table_arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_dynamodb_table_to_s3_bucket_edge" {
+  title = "exports to"
+
+  sql = <<-EOQ
+    select
+      table_id as from_id,
+      b.arn as to_id
+    from
+      aws_dynamodb_table_export as t,
+      aws_s3_bucket as b
+    where
+      b.name = t.s3_bucket
+      and t.table_arn = $1;
   EOQ
 
   param "arn" {}
@@ -389,44 +427,8 @@ node "aws_dynamodb_table_to_kinesis_stream_node" {
     aws_dynamodb_table as t,
     jsonb_array_elements(t.streaming_destination -> 'KinesisDataStreamDestinations') as d
   where
-      d ->> 'StreamArn' = s.stream_arn
-      and t.arn = $1
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_dynamodb_table_to_kms_key_edge" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      table_id as from_id,
-      k.id as to_id
-    from
-      aws_dynamodb_table as t,
-      aws_kms_key as k
-    where
-      sse_description ->> 'KMSMasterKeyArn' = k.arn
-      and t.arn = $1
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_dynamodb_table_to_s3_bucket_edge" {
-  title = "exports to"
-
-  sql = <<-EOQ
-    select
-      table_id as from_id,
-      b.arn as to_id
-    from
-      aws_dynamodb_table_export as t,
-      aws_s3_bucket as b
-    where
-        b.name = t.s3_bucket
-        and t.table_arn = $1
+    d ->> 'StreamArn' = s.stream_arn
+    and t.arn = $1;
   EOQ
 
   param "arn" {}
@@ -444,8 +446,8 @@ edge "aws_dynamodb_table_to_kinesis_stream_edge" {
     aws_dynamodb_table as t,
     jsonb_array_elements(t.streaming_destination -> 'KinesisDataStreamDestinations') as d
   where
-      d ->> 'StreamArn' = s.stream_arn
-      and t.arn = $1
+    d ->> 'StreamArn' = s.stream_arn
+    and t.arn = $1;
   EOQ
 
   param "arn" {}

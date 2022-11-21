@@ -9,7 +9,7 @@ dashboard "aws_redshift_snapshot_detail" {
 
   input "snapshot_arn" {
     title = "Select a snapshot:"
-    sql   = query.aws_redshift_snapshot_input.sql
+    query = query.aws_redshift_snapshot_input
     width = 4
   }
 

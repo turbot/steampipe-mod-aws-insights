@@ -9,7 +9,7 @@ dashboard "aws_iam_role_detail" {
 
   input "role_arn" {
     title = "Select a role:"
-    sql   = query.aws_iam_role_input.sql
+    query = query.aws_iam_role_input
     width = 2
   }
 
@@ -240,7 +240,7 @@ node "aws_iam_role_to_iam_policy_node" {
         'AWS Managed', is_aws_managed::text,
         'Attached', is_attached::text,
         'Create Date', create_date,
-        'Account ID', account_id 
+        'Account ID', account_id
       ) as properties
     from
       aws_iam_policy
@@ -292,7 +292,7 @@ node "aws_iam_role_from_kinesisanalyticsv2_application_node" {
         'Create Timestamp', create_timestamp,
         'Runtime Environment', runtime_environment,
         'Account ID', account_id,
-        'Region', region 
+        'Region', region
       ) as properties
     from
       aws_kinesisanalyticsv2_application
@@ -333,7 +333,7 @@ node "aws_iam_role_from_emr_cluster_node" {
         'Log URI', log_uri,
         'Auto Terminate', auto_terminate::text,
         'Account ID', account_id,
-        'Region', region 
+        'Region', region
       ) as properties
     from
       aws_emr_cluster
@@ -360,7 +360,7 @@ edge "aws_iam_role_from_emr_cluster_edge" {
       c.id as from_id,
       role_id as to_id,
       jsonb_build_object(
-        'Account ID', c.account_id 
+        'Account ID', c.account_id
       ) as properties
     from
       aws_iam_role as r,
@@ -385,7 +385,7 @@ node "aws_iam_role_from_guardduty_detector_node" {
         'Status', status,
         'Created At', created_at,
         'Account ID', account_id,
-        'Region', region 
+        'Region', region
       ) as properties
     from
       aws_guardduty_detector
@@ -426,7 +426,7 @@ node "aws_iam_role_from_lambda_function_node" {
         'Version', version,
         'State', state,
         'Account ID', account_id,
-        'Region', region 
+        'Region', region
       ) as properties
     from
       aws_lambda_function
@@ -462,7 +462,7 @@ node "aws_iam_role_from_iam_instance_profile_node" {
       iam_instance_profile_arn as id,
       iam_instance_profile_arn as title,
       jsonb_build_object(
-        'Instance Profile ARN', iam_instance_profile_arn 
+        'Instance Profile ARN', iam_instance_profile_arn
       ) as properties
     from
       aws_iam_role,
@@ -482,7 +482,7 @@ edge "aws_iam_role_from_iam_instance_profile_edge" {
       iam_instance_profile_arn as from_id,
       role_id as to_id,
       jsonb_build_object(
-        'Instance Profile ARN', iam_instance_profile_arn 
+        'Instance Profile ARN', iam_instance_profile_arn
       ) as properties
     from
       aws_iam_role,
@@ -506,7 +506,7 @@ node "aws_iam_role_from_ec2_instance_node" {
         'Instance ID', instance_id,
         'ARN', i.arn,
         'Account ID', i.account_id,
-        'Region', i.region 
+        'Region', i.region
       ) as properties
     from
       aws_ec2_instance as i,
@@ -530,7 +530,7 @@ edge "aws_iam_role_from_ec2_instance_edge" {
       jsonb_build_object(
         'Instance ARN', i.arn,
         'Instance Profile ARN', i.iam_instance_profile_arn,
-        'Account ID', i.account_id 
+        'Account ID', i.account_id
       ) as properties
     from
       aws_ec2_instance as i,

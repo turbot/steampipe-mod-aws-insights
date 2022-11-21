@@ -9,7 +9,7 @@ dashboard "aws_vpc_detail" {
 
   input "vpc_id" {
     title = "Select a VPC:"
-    sql   = query.aws_vpc_input.sql
+    query = query.aws_vpc_input
     width = 4
   }
 
@@ -50,8 +50,8 @@ dashboard "aws_vpc_detail" {
   }
 
 
-container {
-  graph {
+  container {
+    graph {
       title = "Relationships"
       width = 12
       type  = "graph"
@@ -1704,8 +1704,6 @@ query "aws_vpc_subnet_by_az" {
 
 # }
 
-
-
 #### New Node/Edge format Graph queries ############
 
 node "aws_vpc_node" {
@@ -1718,7 +1716,7 @@ node "aws_vpc_node" {
       jsonb_build_object(
         'ARN', arn,
         'VPC ID', vpc_id,
-        'Is default', is_default,
+        'Is Default', is_default,
         'State', state,
         'CIDR Block', cidr_block,
         'DHCP Options ID', dhcp_options_id,
@@ -1729,7 +1727,7 @@ node "aws_vpc_node" {
     from
       aws_vpc
     where
-      vpc_id = $1
+      vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1835,14 +1833,14 @@ node "aws_vpc_igw_node" {
       aws_vpc_internet_gateway,
       jsonb_array_elements(attachments) as a
     where
-      a ->> 'VpcId' = $1
+      a ->> 'VpcId' = $1;
   EOQ
 
   param "vpc_id" {}
 }
 
 edge "aws_vpc_igw_edge" {
-  title = "internet gateway"
+  title = "vpc"
 
   sql = <<-EOQ
     select
@@ -1852,7 +1850,7 @@ edge "aws_vpc_igw_edge" {
       aws_vpc_internet_gateway as i,
       jsonb_array_elements(attachments) as a
     where
-      a ->> 'VpcId' = $1
+      a ->> 'VpcId' = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1878,7 +1876,7 @@ node "aws_vpc_az_route_table" {
     from
       aws_vpc_route_table
     where
-      vpc_id = $1
+      vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1935,7 +1933,7 @@ node "aws_vpc_vcp_endpoint_node" {
     from
       aws_vpc_endpoint
     where
-      vpc_id = $1
+      vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -1978,7 +1976,7 @@ node "aws_vpc_transit_gateway_node" {
       aws_ec2_transit_gateway_vpc_attachment as t
       left join aws_ec2_transit_gateway as g on t.transit_gateway_id = g.transit_gateway_id
     where
-      t.resource_id = $1 and resource_type = 'vpc'
+      t.resource_id = $1 and resource_type = 'vpc';
   EOQ
 
   param "vpc_id" {}
@@ -2015,7 +2013,7 @@ node "aws_vpc_nat_gateway_node" {
     from
       aws_vpc_nat_gateway
     where
-      vpc_id = $1
+      vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -2053,7 +2051,7 @@ node "aws_vpc_vpn_gateway_node" {
       aws_vpc_vpn_gateway,
       jsonb_array_elements(vpc_attachments) as a
     where
-      a ->> 'VpcId' = $1
+      a ->> 'VpcId' = $1;
   EOQ
 
   param "vpc_id" {}
@@ -2070,7 +2068,7 @@ edge "aws_vpc_vpn_gateway_edge" {
       aws_vpc_vpn_gateway as g,
       jsonb_array_elements(vpc_attachments) as a
     where
-      a ->> 'VpcId' = $1
+      a ->> 'VpcId' = $1;
   EOQ
 
   param "vpc_id" {}
@@ -2092,7 +2090,7 @@ node "aws_vpc_vpc_security_group_node" {
     from
       aws_vpc_security_group
     where
-      vpc_id = $1
+      vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -2294,7 +2292,7 @@ edge "aws_vpc_subnet_alb_edge" {
       aws_ec2_application_load_balancer as a,
       jsonb_array_elements(availability_zones) as az
     where
-      a.vpc_id = $1
+      a.vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -2449,7 +2447,7 @@ edge "aws_vpc_subnet_rds_edge" {
       aws_rds_db_instance as i,
       jsonb_array_elements(subnets) as s
     where
-      i.vpc_id = $1
+      i.vpc_id = $1;
   EOQ
 
   param "vpc_id" {}
@@ -2479,10 +2477,10 @@ node "aws_vpc_redshift_cluster_node" {
 
 
 
-   # -- Subnet -> Redshift Clusters (edge)
-   # -- TO DO: These should connect to subnets, not vpcs (dont have any to test with right now...)
+# -- Subnet -> Redshift Clusters (edge)
+# -- TO DO: These should connect to subnets, not vpcs (dont have any to test with right now...)
 edge "aws_vpc_subnet_redshift_edge" {
-  title = "redshift cluster"
+  title = "vpc"
 
   sql = <<-EOQ
     select
@@ -2519,8 +2517,8 @@ node "aws_vpc_fsx_filesystem_node" {
 }
 
 
-   # -- Subnet -> FSX File Systems (edge)
-   # -- TO DO: These should connect to subnets, not vpcs (dont have any to test with right now...)
+# -- Subnet -> FSX File Systems (edge)
+# -- TO DO: These should connect to subnets, not vpcs (dont have any to test with right now...)
 edge "aws_vpc_subnet_fxs_edge" {
   title = "fsx file system"
 
@@ -2715,7 +2713,7 @@ node "aws_vpc_routing_gateway_node" {
 edge "aws_vpc_routing_cidr_to_gateway_edge" {
 
   title = "gateway"
-  sql = <<-EOQ
+  sql   = <<-EOQ
       select
         coalesce(
             r ->> 'DestinationCidrBlock',
@@ -2746,4 +2744,3 @@ edge "aws_vpc_routing_cidr_to_gateway_edge" {
 
   param "vpc_id" {}
 }
-

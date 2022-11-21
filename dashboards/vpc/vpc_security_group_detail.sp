@@ -9,7 +9,7 @@ dashboard "aws_vpc_security_group_detail" {
 
   input "security_group_id" {
     title = "Select a security group:"
-    sql   = query.aws_vpc_security_group_input.sql
+    query = query.aws_vpc_security_group_input
     width = 4
   }
 
@@ -66,43 +66,43 @@ dashboard "aws_vpc_security_group_detail" {
 
       nodes = [
         node.aws_vpc_security_group_node,
-        node.aws_vpc_security_group_to_vpc_node,
-        node.aws_vpc_security_group_from_rds_db_cluster_node,
-        node.aws_vpc_security_group_from_rds_db_instance_node,
-        node.aws_vpc_security_group_from_ec2_instance_node,
-        node.aws_vpc_security_group_from_lambda_function_node,
-        node.aws_vpc_security_group_from_efs_mount_target_node,
-        node.aws_vpc_security_group_from_redshift_cluster_node,
-        node.aws_vpc_security_group_from_ec2_classic_load_balancer_node,
-        node.aws_vpc_security_group_from_ec2_application_load_balancer_node,
-        node.aws_vpc_security_group_from_ec2_network_load_balancer_node,
-        node.aws_vpc_security_group_from_ec2_gateway_load_balancer_node,
-        node.aws_vpc_security_group_from_ec2_launch_configuration_node,
-        node.aws_vpc_security_group_from_dax_cluster_node,
-        node.aws_vpc_security_group_from_dms_replication_instance_node,
-        node.aws_vpc_security_group_from_elasticache_cluster_node,
-        node.aws_vpc_security_group_from_sagemaker_notebook_instance_node,
-        node.aws_vpc_security_group_from_docdb_cluster_node
+        node.aws_vpc_security_group_from_vpc_node,
+        node.aws_vpc_security_group_to_rds_db_cluster_node,
+        node.aws_vpc_security_group_to_rds_db_instance_node,
+        node.aws_vpc_security_group_to_ec2_instance_node,
+        node.aws_vpc_security_group_to_lambda_function_node,
+        node.aws_vpc_security_group_to_efs_mount_target_node,
+        node.aws_vpc_security_group_to_redshift_cluster_node,
+        node.aws_vpc_security_group_to_ec2_classic_load_balancer_node,
+        node.aws_vpc_security_group_to_ec2_application_load_balancer_node,
+        node.aws_vpc_security_group_to_ec2_network_load_balancer_node,
+        node.aws_vpc_security_group_to_ec2_gateway_load_balancer_node,
+        node.aws_vpc_security_group_to_ec2_launch_configuration_node,
+        node.aws_vpc_security_group_to_dax_cluster_node,
+        node.aws_vpc_security_group_to_dms_replication_instance_node,
+        node.aws_vpc_security_group_to_elasticache_cluster_node,
+        node.aws_vpc_security_group_to_sagemaker_notebook_instance_node,
+        node.aws_vpc_security_group_to_docdb_cluster_node
       ]
 
       edges = [
-        edge.aws_vpc_security_group_to_vpc_edge,
-        edge.aws_vpc_security_group_from_rds_db_cluster_edge,
-        edge.aws_vpc_security_group_from_rds_db_instance_edge,
-        edge.aws_vpc_security_group_from_ec2_instance_edge,
-        edge.aws_vpc_security_group_from_lambda_function_edge,
-        edge.aws_vpc_security_group_from_efs_mount_target_edge,
-        edge.aws_vpc_security_group_from_redshift_cluster_edge,
-        edge.aws_vpc_security_group_from_ec2_classic_load_balancer_edge,
-        edge.aws_vpc_security_group_from_ec2_application_load_balancer_edge,
-        edge.aws_vpc_security_group_from_ec2_network_load_balancer_edge,
-        edge.aws_vpc_security_group_from_ec2_gateway_load_balancer_edge,
-        edge.aws_vpc_security_group_from_ec2_launch_configuration_edge,
-        edge.aws_vpc_security_group_from_dax_cluster_edge,
-        edge.aws_vpc_security_group_from_dms_replication_instance_edge,
-        edge.aws_vpc_security_group_from_elasticache_cluster_edge,
-        edge.aws_vpc_security_group_from_sagemaker_notebook_instance_edge,
-        edge.aws_vpc_security_group_from_docdb_cluster_edge
+        edge.aws_vpc_security_group_from_vpc_edge,
+        edge.aws_vpc_security_group_to_rds_db_cluster_edge,
+        edge.aws_vpc_security_group_to_rds_db_instance_edge,
+        edge.aws_vpc_security_group_to_ec2_instance_edge,
+        edge.aws_vpc_security_group_to_lambda_function_edge,
+        edge.aws_vpc_security_group_to_efs_mount_target_edge,
+        edge.aws_vpc_security_group_to_redshift_cluster_edge,
+        edge.aws_vpc_security_group_to_ec2_classic_load_balancer_edge,
+        edge.aws_vpc_security_group_to_ec2_application_load_balancer_edge,
+        edge.aws_vpc_security_group_to_ec2_network_load_balancer_edge,
+        edge.aws_vpc_security_group_to_ec2_gateway_load_balancer_edge,
+        edge.aws_vpc_security_group_to_ec2_launch_configuration_edge,
+        edge.aws_vpc_security_group_to_dax_cluster_edge,
+        edge.aws_vpc_security_group_to_dms_replication_instance_edge,
+        edge.aws_vpc_security_group_to_elasticache_cluster_edge,
+        edge.aws_vpc_security_group_to_sagemaker_notebook_instance_edge,
+        edge.aws_vpc_security_group_to_docdb_cluster_edge
       ]
 
       args = {
@@ -1260,21 +1260,21 @@ node "aws_vpc_security_group_node" {
     from
       aws_vpc_security_group
     where
-      group_id = $1
+      group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-node "aws_vpc_security_group_to_vpc_node" {
+node "aws_vpc_security_group_from_vpc_node" {
   category = category.aws_vpc
 
   sql = <<-EOQ
     select
       v.vpc_id as id,
-      v.tags ->> 'Name' as title,
+      v.title as title,
       jsonb_build_object(
-        'ID', v.vpc_id,
+        'VPC ID', v.vpc_id,
         'Name', v.tags ->> 'Name',
         'CIDR Block', v.cidr_block,
         'Owner ID', v.owner_id,
@@ -1286,45 +1286,37 @@ node "aws_vpc_security_group_to_vpc_node" {
       aws_vpc as v
     where
       sg.vpc_id = v.vpc_id
-      and sg.group_id = $1
+      and sg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-edge "aws_vpc_security_group_to_vpc_edge" {
+edge "aws_vpc_security_group_from_vpc_edge" {
   title = "vpc"
 
   sql = <<-EOQ
     select
-      sg.arn as from_id,
-      v.vpc_id as to_id,
-      jsonb_build_object(
-        'ID', v.vpc_id,
-        'Name', v.tags ->> 'Name',
-        'CIDR Block', v.cidr_block,
-        'Account ID', v.account_id,
-        'Owner ID', v.owner_id,
-        'Region', v.region
-      ) as properties
+      v.vpc_id as from_id,
+      sg.arn as to_id
     from
       aws_vpc_security_group as sg,
       aws_vpc as v
     where
       sg.vpc_id = v.vpc_id
-      and sg.group_id = $1
+      and sg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-node "aws_vpc_security_group_from_rds_db_cluster_node" {
+node "aws_vpc_security_group_to_rds_db_cluster_node" {
   category = category.aws_rds_db_cluster
 
   sql = <<-EOQ
     select
       c.arn as id,
-      db_cluster_identifier as title,
+      c.title as title,
       jsonb_build_object(
         'ARN', c.arn,
         'Status', status,
@@ -1336,37 +1328,31 @@ node "aws_vpc_security_group_from_rds_db_cluster_node" {
       jsonb_array_elements(vpc_security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg ->> 'VpcSecurityGroupId'
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-edge "aws_vpc_security_group_from_rds_db_cluster_edge" {
-  title = "rds db cluster"
+edge "aws_vpc_security_group_to_rds_db_cluster_edge" {
+  title = "rds cluster"
 
   sql = <<-EOQ
     select
-      c.arn as from_id,
-      vsg.arn as to_id,
-      jsonb_build_object(
-        'ARN', c.arn,
-        'Status', status,
-        'Create Time', create_time,
-        'Account ID', c.account_id,
-        'Region', c.region ) as properties
+      vsg.arn as from_id,
+      c.arn as to_id
     from
       aws_rds_db_cluster as c,
       jsonb_array_elements(vpc_security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg ->> 'VpcSecurityGroupId'
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-node "aws_vpc_security_group_from_rds_db_instance_node" {
+node "aws_vpc_security_group_to_rds_db_instance_node" {
   category = category.aws_rds_db_instance
 
   sql = <<-EOQ
@@ -1389,48 +1375,38 @@ node "aws_vpc_security_group_from_rds_db_instance_node" {
       jsonb_array_elements(vpc_security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg ->> 'VpcSecurityGroupId'
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-edge "aws_vpc_security_group_from_rds_db_instance_edge" {
-  title = "rds db instance"
+edge "aws_vpc_security_group_to_rds_db_instance_edge" {
+  title = "rds instance"
 
   sql = <<-EOQ
     select
-      i.arn as from_id,
-      vsg.arn as to_id,
-      jsonb_build_object(
-        'ARN', i.arn,
-        'Status', i.status,
-        'Public Access', i.publicly_accessible::text,
-        'Availability Zone', i.availability_zone,
-        'Create Time', i.create_time,
-        'Is Multi AZ', i.multi_az::text,
-        'Class', i.class,
-        'Account ID', i.account_id,
-        'Region', i.region
-      ) as properties
+      vsg.arn as from_id,
+      i.arn as to_id
     from
       aws_rds_db_instance i,
       jsonb_array_elements(vpc_security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg ->> 'VpcSecurityGroupId'
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-node "aws_vpc_security_group_from_ec2_instance_node" {
+node "aws_vpc_security_group_to_ec2_instance_node" {
   category = category.aws_ec2_instance
 
   sql = <<-EOQ
    select
+    sg,
       i.arn as id,
-      i.instance_id as title,
+      i.title as title,
       jsonb_build_object(
         'Name', i.tags ->> 'Name',
         'Instance ID', instance_id,
@@ -1443,36 +1419,31 @@ node "aws_vpc_security_group_from_ec2_instance_node" {
       jsonb_array_elements(security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg ->> 'GroupId'
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-edge "aws_vpc_security_group_from_ec2_instance_edge" {
+edge "aws_vpc_security_group_to_ec2_instance_edge" {
   title = "ec2 instance"
 
   sql = <<-EOQ
     select
-      i.arn as from_id,
-      vsg.arn as to_id,
-      jsonb_build_object(
-        'Instance ARN', i.arn,
-        'Instance Profile ARN', i.iam_instance_profile_arn,
-        'Account ID', i.account_id
-      ) as properties
+      vsg.arn as from_id,
+      i.arn as to_id
     from
       aws_ec2_instance as i,
       jsonb_array_elements(security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg ->> 'GroupId'
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-node "aws_vpc_security_group_from_lambda_function_node" {
+node "aws_vpc_security_group_to_lambda_function_node" {
   category = category.aws_lambda_function
 
   sql = <<-EOQ
@@ -1489,36 +1460,31 @@ node "aws_vpc_security_group_from_lambda_function_node" {
       jsonb_array_elements_text(l.vpc_security_group_ids) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-edge "aws_vpc_security_group_from_lambda_function_edge" {
+edge "aws_vpc_security_group_to_lambda_function_edge" {
   title = "lambda function"
 
   sql = <<-EOQ
     select
-      l.arn as from_id,
-      vsg.arn as to_id,
-      jsonb_build_object(
-        'ARN', l.arn,
-        'Account ID', l.account_id,
-        'Region', l.region
-      ) as properties
+      vsg.arn as from_id,
+      l.arn as to_id
     from
       aws_lambda_function as l,
       jsonb_array_elements_text(l.vpc_security_group_ids) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-node "aws_vpc_security_group_from_efs_mount_target_node" {
+node "aws_vpc_security_group_to_efs_mount_target_node" {
   category = category.aws_efs_mount_target
 
   sql = <<-EOQ
@@ -1540,41 +1506,31 @@ node "aws_vpc_security_group_from_efs_mount_target_node" {
       jsonb_array_elements_text(mt.security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-edge "aws_vpc_security_group_from_efs_mount_target_edge" {
+edge "aws_vpc_security_group_to_efs_mount_target_edge" {
   title = "efs mount target"
 
   sql = <<-EOQ
     select
-      mt.mount_target_id as from_id,
-      vsg.arn as to_id,
-      jsonb_build_object(
-        'ID', mt.mount_target_id,
-        'Availability Zone', mt.availability_zone_name,
-        'File System ID', mt.file_system_id,
-        'IP Address', mt.ip_address,
-        'Life Cycle State', mt.life_cycle_state,
-        'ENI ID' ,network_interface_id,
-        'Account ID', mt.account_id,
-        'Region', mt.region
-      ) as properties
+      vsg.arn as from_id,
+      mt.mount_target_id as to_id
     from
       aws_efs_mount_target as mt,
       jsonb_array_elements_text(mt.security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-node "aws_vpc_security_group_from_redshift_cluster_node" {
+node "aws_vpc_security_group_to_redshift_cluster_node" {
   category = category.aws_redshift_cluster
 
   sql = <<-EOQ
@@ -1596,36 +1552,31 @@ node "aws_vpc_security_group_from_redshift_cluster_node" {
       jsonb_array_elements(rc.vpc_security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg ->> 'VpcSecurityGroupId'
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-edge "aws_vpc_security_group_from_redshift_cluster_edge" {
+edge "aws_vpc_security_group_to_redshift_cluster_edge" {
   title = "redshift cluster"
 
   sql = <<-EOQ
     select
-      rc.arn as from_id,
-      vsg.arn as to_id,
-      jsonb_build_object(
-        'ID', rc.cluster_identifier,
-        'Account ID', rc.account_id,
-        'Region', rc.region
-      ) as properties
+      vsg.arn as from_id,
+      rc.arn as to_id
     from
       aws_redshift_cluster as rc,
       jsonb_array_elements(rc.vpc_security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg ->> 'VpcSecurityGroupId'
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-node "aws_vpc_security_group_from_ec2_classic_load_balancer_node" {
+node "aws_vpc_security_group_to_ec2_classic_load_balancer_node" {
   category = category.aws_ec2_classic_load_balancer
 
   sql = <<-EOQ
@@ -1645,24 +1596,19 @@ node "aws_vpc_security_group_from_ec2_classic_load_balancer_node" {
       jsonb_array_elements_text(elb.security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-edge "aws_vpc_security_group_from_ec2_classic_load_balancer_edge" {
-  title = "classic load balancer"
+edge "aws_vpc_security_group_to_ec2_classic_load_balancer_edge" {
+  title = "classic lb"
 
   sql = <<-EOQ
     select
-      elb.arn as from_id,
-      vsg.arn as to_id,
-      jsonb_build_object(
-        'ARN', elb.arn,
-        'Account ID', elb.account_id,
-        'Region', elb.region
-      ) as properties
+      vsg.arn as from_id,
+      elb.arn as to_id
     from
       aws_ec2_classic_load_balancer elb,
       jsonb_array_elements_text(elb.security_groups) as sg
@@ -1674,16 +1620,17 @@ edge "aws_vpc_security_group_from_ec2_classic_load_balancer_edge" {
   param "group_id" {}
 }
 
-node "aws_vpc_security_group_from_ec2_application_load_balancer_node" {
+node "aws_vpc_security_group_to_ec2_application_load_balancer_node" {
   category = category.aws_ec2_application_load_balancer
 
   sql = <<-EOQ
     select
       alb.arn as id,
-      alb.name as title,
+      alb.title as title,
       jsonb_build_object(
         'ARN', alb.arn,
         'VPC ID', alb.vpc_id,
+        'Type', alb.type,
         'DNS Name', alb.dns_name,
         'Created Time', alb.created_time,
         'Account ID', alb.account_id,
@@ -1694,45 +1641,41 @@ node "aws_vpc_security_group_from_ec2_application_load_balancer_node" {
       jsonb_array_elements_text(alb.security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-edge "aws_vpc_security_group_from_ec2_application_load_balancer_edge" {
-  title = "application load balancer"
+edge "aws_vpc_security_group_to_ec2_application_load_balancer_edge" {
+  title = "application lb"
 
   sql = <<-EOQ
     select
-      alb.arn as from_id,
-      vsg.arn as to_id,
-      jsonb_build_object(
-        'ARN', alb.arn,
-        'Account ID', alb.account_id,
-        'Region', alb.region
-      ) as properties
+      vsg.arn as from_id,
+      alb.arn as to_id
     from
       aws_ec2_application_load_balancer alb,
       jsonb_array_elements_text(alb.security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-node "aws_vpc_security_group_from_ec2_network_load_balancer_node" {
+node "aws_vpc_security_group_to_ec2_network_load_balancer_node" {
   category = category.aws_ec2_network_load_balancer
 
   sql = <<-EOQ
      select
       nlb.arn as id,
-      nlb.name as title,
+      nlb.title as title,
       jsonb_build_object(
         'ARN', nlb.arn,
         'VPC ID', nlb.vpc_id,
+        'Type', nlb.type,
         'DNS Name', nlb.dns_name,
         'Created Time', nlb.created_time,
         'Account ID', nlb.account_id,
@@ -1743,91 +1686,82 @@ node "aws_vpc_security_group_from_ec2_network_load_balancer_node" {
       jsonb_array_elements_text(nlb.security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-edge "aws_vpc_security_group_from_ec2_network_load_balancer_edge" {
-  title = "network load balancer"
+edge "aws_vpc_security_group_to_ec2_network_load_balancer_edge" {
+  title = "network lb"
 
   sql = <<-EOQ
     select
-      nlb.arn as from_id,
-      vsg.title as to_id,
-      jsonb_build_object(
-        'ARN', nlb.arn,
-        'Account ID', nlb.account_id,
-        'Region', nlb.region
-      ) as properties
+      vsg.arn as from_id,
+      nlb.arn as to_id
     from
       aws_ec2_network_load_balancer as nlb,
       jsonb_array_elements_text(nlb.security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-node "aws_vpc_security_group_from_ec2_gateway_load_balancer_node" {
+node "aws_vpc_security_group_to_ec2_gateway_load_balancer_node" {
   category = category.aws_ec2_gateway_load_balancer
 
   sql = <<-EOQ
     select
       glb.arn as id,
-      glb.name as title,
+      glb.title as title,
       jsonb_build_object(
         'ARN', glb.arn,
         'VPC ID', glb.vpc_id,
+        'Type', glb.type,
         'DNS Name', glb.dns_name,
         'Created Time', glb.created_time,
         'Account ID', glb.account_id,
         'Region', glb.region
       ) as properties
     from
-      aws_ec2_gateway_load_balancer glb,
+      aws_ec2_gateway_load_balancer as glb,
       jsonb_array_elements_text(glb.security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-edge "aws_vpc_security_group_from_ec2_gateway_load_balancer_edge" {
-  title = "gateway load balancer"
+edge "aws_vpc_security_group_to_ec2_gateway_load_balancer_edge" {
+  title = "gateway lb"
 
   sql = <<-EOQ
     select
-      glb.arn as from_id,
-      vsg.title as to_id,
-      jsonb_build_object(
-        'ARN', glb.arn,
-        'Account ID', glb.account_id,
-        'Region', glb.region
-      ) as properties
+      vsg.arn as from_id,
+      glb.arn as to_id
     from
       aws_ec2_gateway_load_balancer glb,
       jsonb_array_elements_text(glb.security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-node "aws_vpc_security_group_from_ec2_launch_configuration_node" {
+node "aws_vpc_security_group_to_ec2_launch_configuration_node" {
   category = category.aws_ec2_launch_configuration
 
   sql = <<-EOQ
     select
       c.launch_configuration_arn as id,
-      c.name as title,
+      c.title as title,
       jsonb_build_object(
         'ARN', c.launch_configuration_arn,
         'Account ID', c.account_id,
@@ -1838,35 +1772,31 @@ node "aws_vpc_security_group_from_ec2_launch_configuration_node" {
       jsonb_array_elements_text(c.security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-edge "aws_vpc_security_group_from_ec2_launch_configuration_edge" {
-  title = "ec2 launch configuration"
+edge "aws_vpc_security_group_to_ec2_launch_configuration_edge" {
+  title = "launch configuration"
 
   sql = <<-EOQ
     select
-      c.launch_configuration_arn as from_id,
-      vsg.arn as to_id,
-      null as id,
-      jsonb_build_object(
-        'Account ID', c.account_id
-      ) as properties
+      vsg.arn as from_id,
+      c.launch_configuration_arn as to_id
     from
       aws_ec2_launch_configuration as c,
       jsonb_array_elements_text(c.security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-node "aws_vpc_security_group_from_dax_cluster_node" {
+node "aws_vpc_security_group_to_dax_cluster_node" {
   category = category.aws_dax_cluster
 
   sql = <<-EOQ
@@ -1886,36 +1816,31 @@ node "aws_vpc_security_group_from_dax_cluster_node" {
       jsonb_array_elements(dc.security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg ->> 'SecurityGroupIdentifier'
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-edge "aws_vpc_security_group_from_dax_cluster_edge" {
+edge "aws_vpc_security_group_to_dax_cluster_edge" {
   title = "dax cluster"
 
   sql = <<-EOQ
     select
-      dc.arn as from_id,
-      vsg.arn as to_id,
-      jsonb_build_object(
-        'Cluster Name', dc.cluster_name,
-        'Account ID', dc.account_id,
-        'Region', dc.region
-      ) as properties
+      vsg.arn as from_id,
+      dc.arn as to_id
     from
       aws_dax_cluster as dc,
       jsonb_array_elements(dc.security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg ->> 'SecurityGroupIdentifier'
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-node "aws_vpc_security_group_from_dms_replication_instance_node" {
+node "aws_vpc_security_group_to_dms_replication_instance_node" {
   category = category.aws_dms_replication_instance
 
   sql = <<-EOQ
@@ -1936,36 +1861,31 @@ node "aws_vpc_security_group_from_dms_replication_instance_node" {
       jsonb_array_elements(ri.vpc_security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg ->> 'VpcSecurityGroupId'
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-edge "aws_vpc_security_group_from_dms_replication_instance_edge" {
-  title = "dms replication instance"
+edge "aws_vpc_security_group_to_dms_replication_instance_edge" {
+  title = "replication instance"
 
   sql = <<-EOQ
     select
-      ri.arn as from_id,
-      vsg.arn as to_id,
-      jsonb_build_object(
-        'ID', ri.replication_instance_identifier,
-        'Account ID', ri.account_id,
-        'Region', ri.region
-      ) as properties
+      vsg.arn as from_id,
+      ri.arn as to_id
     from
       aws_dms_replication_instance as ri,
       jsonb_array_elements(ri.vpc_security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg ->> 'VpcSecurityGroupId'
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-node "aws_vpc_security_group_from_elasticache_cluster_node" {
+node "aws_vpc_security_group_to_elasticache_cluster_node" {
   category = category.aws_elasticache_cluster
 
   sql = <<-EOQ
@@ -1986,36 +1906,31 @@ node "aws_vpc_security_group_from_elasticache_cluster_node" {
       jsonb_array_elements(ec.security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg ->> 'SecurityGroupId'
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-edge "aws_vpc_security_group_from_elasticache_cluster_edge" {
+edge "aws_vpc_security_group_to_elasticache_cluster_edge" {
   title = "elasticache cluster"
 
   sql = <<-EOQ
     select
-      ec.arn as from_id,
-      vsg.arn as to_id,
-      jsonb_build_object(
-        'ID', ec.cache_cluster_id,
-        'Account ID', ec.account_id,
-        'Region', ec.region
-      ) as properties
+      vsg.arn as from_id,
+      ec.arn as to_id
     from
       aws_elasticache_cluster as ec,
       jsonb_array_elements(ec.security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg ->> 'SecurityGroupId'
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-node "aws_vpc_security_group_from_sagemaker_notebook_instance_node" {
+node "aws_vpc_security_group_to_sagemaker_notebook_instance_node" {
   category = category.aws_sagemaker_notebook_instance
 
   sql = <<-EOQ
@@ -2034,79 +1949,69 @@ node "aws_vpc_security_group_from_sagemaker_notebook_instance_node" {
       jsonb_array_elements_text(ni.security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-edge "aws_vpc_security_group_from_sagemaker_notebook_instance_edge" {
+edge "aws_vpc_security_group_to_sagemaker_notebook_instance_edge" {
   title = "notebook instance"
 
   sql = <<-EOQ
     select
-      ni.arn as from_id,
-      vsg.arn as to_id,
-      jsonb_build_object(
-        'ARN', ni.arn,
-        'Account ID', ni.account_id,
-        'Region', ni.region
-      ) as properties
+      vsg.arn as from_id,
+      ni.arn as to_id
     from
       aws_sagemaker_notebook_instance ni,
       jsonb_array_elements_text(ni.security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-node "aws_vpc_security_group_from_docdb_cluster_node" {
+node "aws_vpc_security_group_to_docdb_cluster_node" {
   category = category.aws_docdb_cluster
 
   sql = <<-EOQ
     select
-      rc.arn as id,
-      rc.title as title,
+      c.arn as id,
+      c.title as title,
       jsonb_build_object(
-        'ID', rc.db_cluster_identifier,
-        'Availability Zone', rc.availability_zones,
-        'Create Time', rc.cluster_create_time,
-        'Encrypted', rc.storage_encrypted,
-        'Account ID', rc.account_id,
-        'Region', rc.region
+        'ID', c.db_cluster_identifier,
+        'Availability Zone', c.availability_zones,
+        'Create Time', c.cluster_create_time,
+        'Encrypted', c.storage_encrypted,
+        'Account ID', c.account_id,
+        'Region', c.region
       ) as properties
     from
-      aws_docdb_cluster as rc,
-      jsonb_array_elements(rc.vpc_security_groups) as sg
+      aws_docdb_cluster as c,
+      jsonb_array_elements(c.vpc_security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg ->> 'VpcSecurityGroupId'
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}
 }
 
-edge "aws_vpc_security_group_from_docdb_cluster_edge" {
+edge "aws_vpc_security_group_to_docdb_cluster_edge" {
   title = "docdb cluster"
 
   sql = <<-EOQ
     select
-      rc.arn as from_id,
-      vsg.arn as to_id,
-      jsonb_build_object(
-        'ID', rc.db_cluster_identifier,
-        'Account ID', rc.account_id,
-        'Region', rc.region
-      ) as properties
+      vsg.arn as from_id,
+      c.arn as to_id
     from
-      aws_docdb_cluster as rc,
-      jsonb_array_elements(rc.vpc_security_groups) as sg
+      aws_docdb_cluster as c,
+      jsonb_array_elements(c.vpc_security_groups) as sg
       join aws_vpc_security_group vsg on vsg.group_id = sg ->> 'VpcSecurityGroupId'
     where
-      vsg.group_id = $1
+      vsg.group_id = $1;
   EOQ
 
   param "group_id" {}

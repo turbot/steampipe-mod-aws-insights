@@ -11,12 +11,12 @@ dashboard "aws_rds_db_cluster_logging_report" {
   container {
 
     card {
-      sql   = query.aws_rds_db_cluster_count.sql
+      query = query.aws_rds_db_cluster_count
       width = 2
     }
 
     card {
-      sql = query.aws_rds_db_cluster_logging_disabled_count.sql
+      query = query.aws_rds_db_cluster_logging_disabled_count
       width = 2
     }
 
@@ -31,7 +31,7 @@ dashboard "aws_rds_db_cluster_logging_report" {
       display = "none"
     }
 
-    sql = query.aws_rds_db_cluster_logging_table.sql
+    query = query.aws_rds_db_cluster_logging_table
   }
 
 }

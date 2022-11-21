@@ -11,28 +11,28 @@ dashboard "aws_elasticache_cluster_dashboard" {
 
     # Analysis
     card {
-      sql   = query.aws_elasticache_cluster_count.sql
+      query = query.aws_elasticache_cluster_count
       width = 2
     }
 
     card {
-      sql   = query.aws_elasticache_cluster_cache_node_count.sql
+      query = query.aws_elasticache_cluster_cache_node_count
       width = 2
     }
 
     # Assessments
     card {
-      sql   = query.aws_elasticache_cluster_encryption_at_rest_disabled_count.sql
+      query = query.aws_elasticache_cluster_encryption_at_rest_disabled_count
       width = 2
     }
 
     card {
-      sql   = query.aws_elasticache_cluster_encryption_at_transit_disabled_count.sql
+      query = query.aws_elasticache_cluster_encryption_at_transit_disabled_count
       width = 2
     }
 
     card {
-      sql   = query.aws_elasticache_cluster_automatic_backup_disabled_count.sql
+      query = query.aws_elasticache_cluster_automatic_backup_disabled_count
       width = 2
     }
 
@@ -47,7 +47,7 @@ dashboard "aws_elasticache_cluster_dashboard" {
 
     chart {
       title = "Encryption at Rest"
-      sql   = query.aws_elasticache_cluster_by_encryption_at_rest_status.sql
+      query = query.aws_elasticache_cluster_by_encryption_at_rest_status
       type  = "donut"
       width = 4
 
@@ -63,7 +63,7 @@ dashboard "aws_elasticache_cluster_dashboard" {
 
     chart {
       title = "Encryption in Transit"
-      sql   = query.aws_elasticache_cluster_by_encryption_at_transit_status.sql
+      query = query.aws_elasticache_cluster_by_encryption_at_transit_status
       type  = "donut"
       width = 4
 
@@ -79,7 +79,7 @@ dashboard "aws_elasticache_cluster_dashboard" {
 
     chart {
       title = "Automatic Backup Status"
-      sql   = query.aws_elasticache_cluster_by_automatic_backup_status.sql
+      query = query.aws_elasticache_cluster_by_automatic_backup_status
       type  = "donut"
       width = 4
 
@@ -102,14 +102,14 @@ dashboard "aws_elasticache_cluster_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      sql   = query.aws_elasticache_cluster_monthly_forecast_table.sql
+      query = query.aws_elasticache_cluster_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      sql   = query.aws_elasticache_cluster_cost_per_month.sql
+      query = query.aws_elasticache_cluster_cost_per_month
     }
 
   }
@@ -120,35 +120,35 @@ dashboard "aws_elasticache_cluster_dashboard" {
 
     chart {
       title = "Clusters by Account"
-      sql   = query.aws_elasticache_cluster_by_account.sql
+      query = query.aws_elasticache_cluster_by_account
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Clusters by Region"
-      sql   = query.aws_elasticache_cluster_by_region.sql
+      query = query.aws_elasticache_cluster_by_region
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Clusters by Engine"
-      sql   = query.aws_elasticache_cluster_by_engine.sql
+      query = query.aws_elasticache_cluster_by_engine
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Clusters by Age"
-      sql   = query.aws_elasticache_cluste_by_creation_month.sql
+      query = query.aws_elasticache_cluste_by_creation_month
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Clusters by Node Type"
-      sql   = query.aws_elasticache_cluster_by_node_type.sql
+      query = query.aws_elasticache_cluster_by_node_type
       type  = "column"
       width = 3
     }

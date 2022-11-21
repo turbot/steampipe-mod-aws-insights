@@ -11,12 +11,12 @@ dashboard "aws_rds_db_instance_encryption_report" {
   container {
 
     card {
-      sql   = query.aws_rds_db_instance_count.sql
+      query = query.aws_rds_db_instance_count
       width = 2
     }
 
     card {
-      sql = query.aws_rds_db_instance_unencrypted_count.sql
+      query = query.aws_rds_db_instance_unencrypted_count
       width = 2
     }
 
@@ -36,7 +36,7 @@ dashboard "aws_rds_db_instance_encryption_report" {
       href = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_rds_db_instance_encryption_table.sql
+    query = query.aws_rds_db_instance_encryption_table
   }
 
 }

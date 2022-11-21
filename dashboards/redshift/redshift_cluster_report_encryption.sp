@@ -11,12 +11,12 @@ dashboard "aws_redshift_cluster_encryption_report" {
   container {
 
     card {
-      sql = query.aws_redshift_cluster_count.sql
+      query = query.aws_redshift_cluster_count
       width = 2
     }
 
     card {
-      sql = query.aws_redshift_cluster_unencrypted_count.sql
+      query = query.aws_redshift_cluster_unencrypted_count
       width = 2
     }
   }
@@ -35,7 +35,7 @@ dashboard "aws_redshift_cluster_encryption_report" {
       href = "${dashboard.aws_redshift_cluster_detail.url_path}?input.cluster_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_redshift_cluster_encryption_table.sql
+    query = query.aws_redshift_cluster_encryption_table
   }
 
 }

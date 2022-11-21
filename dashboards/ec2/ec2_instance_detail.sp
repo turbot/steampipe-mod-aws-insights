@@ -9,7 +9,7 @@ dashboard "aws_ec2_instance_detail" {
 
   input "instance_arn" {
     title = "Select an instance:"
-    sql   = query.aws_ec2_instance_input.sql
+    query = query.aws_ec2_instance_input
     width = 4
   }
 
@@ -230,7 +230,7 @@ query "aws_ec2_instance_status" {
   sql = <<-EOQ
     select
       'Status' as label,
-      instance_state as value
+      initcap(instance_state) as value
     from
       aws_ec2_instance
     where
@@ -408,7 +408,6 @@ edge "aws_ec2_instance_to_ec2_network_interface_edge" {
       instance_id as from_id,
       eni.network_interface_id as to_id,
       jsonb_build_object(
-        'Status', status,
         'Attachment ID', attachment_id,
         'Attachment Status', attachment_status,
         'Attachment Time', attachment_time,
@@ -479,7 +478,7 @@ edge "aws_ec2_instance_to_vpc_security_group_edge" {
       coalesce(
         eni.network_interface_id,
         i.instance_id
-      ) as from_id,      
+      ) as from_id,
       sg ->> 'GroupId' as to_id
     from
       aws_ec2_instance as i
@@ -528,7 +527,7 @@ node "aws_ec2_instance_to_vpc_subnet_node" {
 #         eni.network_interface_id,
 #         i.instance_id
 #       ) as from_id,
-#       i.subnet_id as to_id 
+#       i.subnet_id as to_id
 #     from
 #       aws_ec2_instance as i
 #       left join aws_ec2_network_interface as eni on i.instance_id = eni.attached_instance_id
@@ -547,7 +546,7 @@ edge "aws_ec2_instance_to_vpc_subnet_edge" {
   sql = <<-EOQ
     select
       sg ->> 'GroupId' as from_id,
-      i.subnet_id as to_id 
+      i.subnet_id as to_id
     from
       aws_ec2_instance as i
       join jsonb_array_elements(security_groups) as sg on true
@@ -691,8 +690,8 @@ node "aws_ec2_instance_to_ec2_key_pair_node" {
 
   sql = <<-EOQ
     select
-      i.key_name as id,
-      i.title as title,
+      k.key_name as id,
+      k.title as title,
       jsonb_build_object(
         'Name', k.key_name,
         'ID', k.key_pair_id,
@@ -928,7 +927,7 @@ node "aws_ec2_instance_from_ec2_alb_node" {
       health_descriptions -> 'Target' ->> 'Id' = i.instance_id
       and l = lb.arn
       and i.arn = $1
-      
+
   EOQ
 
   param "arn" {}
@@ -959,7 +958,7 @@ node "aws_ec2_instance_from_ec2_nlb_node" {
       health_descriptions -> 'Target' ->> 'Id' = i.instance_id
       and l = lb.arn
       and i.arn = $1
-      
+
   EOQ
 
   param "arn" {}
@@ -990,7 +989,7 @@ node "aws_ec2_instance_from_ec2_gwlb_node" {
       health_descriptions -> 'Target' ->> 'Id' = i.instance_id
       and l = lb.arn
       and i.arn = $1
-      
+
   EOQ
 
   param "arn" {}
@@ -1039,7 +1038,7 @@ node "aws_ec2_instance_ecs_cluster_node" {
       ci.ec2_instance_id = i.instance_id
       and ci.cluster_arn = cluster.cluster_arn
       and i.arn = $1
-      
+
   EOQ
 
   param "arn" {}

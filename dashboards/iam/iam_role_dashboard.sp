@@ -1,6 +1,6 @@
 dashboard "aws_iam_role_dashboard" {
 
-  title = "AWS IAM Role Dashboard"
+  title         = "AWS IAM Role Dashboard"
   documentation = file("./dashboards/iam/docs/iam_role_dashboard.md")
 
   tags = merge(local.iam_common_tags, {
@@ -11,33 +11,33 @@ dashboard "aws_iam_role_dashboard" {
 
     # Analysis
     card {
-      sql   = query.aws_iam_role_count.sql
+      query = query.aws_iam_role_count
       width = 2
     }
 
     # Assessments
     card {
-      sql   = query.aws_iam_roles_with_inline_policy_count.sql
+      query = query.aws_iam_roles_with_inline_policy_count
       width = 2
     }
 
     card {
-      sql   = query.aws_iam_roles_without_direct_attached_policy_count.sql
+      query = query.aws_iam_roles_without_direct_attached_policy_count
       width = 2
     }
 
     card {
-      sql   = query.aws_iam_roles_allow_all_action_count.sql
+      query = query.aws_iam_roles_allow_all_action_count
       width = 2
     }
 
     card {
-      sql   = query.aws_iam_role_no_boundary_count.sql
+      query = query.aws_iam_role_no_boundary_count
       width = 2
     }
 
     card {
-      sql   = query.aws_iam_role_allows_assume_role_to_all_principal_count.sql
+      query = query.aws_iam_role_allows_assume_role_to_all_principal_count
       width = 2
     }
 
@@ -48,7 +48,7 @@ dashboard "aws_iam_role_dashboard" {
 
     chart {
       title = "Inline Policies"
-      sql   = query.aws_iam_roles_with_inline_policy.sql
+      query = query.aws_iam_roles_with_inline_policy
       type  = "donut"
       width = 3
 
@@ -64,7 +64,7 @@ dashboard "aws_iam_role_dashboard" {
 
     chart {
       title = "Attached Policies"
-      sql   = query.aws_iam_roles_with_direct_attached_policy.sql
+      query = query.aws_iam_roles_with_direct_attached_policy
       type  = "donut"
       width = 3
 
@@ -80,7 +80,7 @@ dashboard "aws_iam_role_dashboard" {
 
     chart {
       title = "Allows All Actions"
-      sql   = query.aws_iam_roles_allow_all_action.sql
+      query = query.aws_iam_roles_allow_all_action
       type  = "donut"
       width = 3
 
@@ -96,7 +96,7 @@ dashboard "aws_iam_role_dashboard" {
 
     chart {
       title = "Boundary Policy"
-      sql   = query.aws_iam_roles_by_boundary_policy.sql
+      query = query.aws_iam_roles_by_boundary_policy
       type  = "donut"
       width = 3
 
@@ -118,21 +118,21 @@ dashboard "aws_iam_role_dashboard" {
 
     chart {
       title = "Roles by Account"
-      sql   = query.aws_iam_roles_by_account.sql
+      query = query.aws_iam_roles_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Roles by Path"
-      sql   = query.aws_iam_roles_by_path.sql
+      query = query.aws_iam_roles_by_path
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Roles by Age"
-      sql   = query.aws_iam_roles_by_creation_month.sql
+      query = query.aws_iam_roles_by_creation_month
       type  = "column"
       width = 4
     }

@@ -249,7 +249,9 @@ node "aws_ecr_repository_node" {
       title as title,
       jsonb_build_object(
         'ARN', arn,
-        'Image Details', image_details,
+        'Registry ID', registry_id,
+        'Repository URI', repository_uri,
+        'Image Tag Mutability', image_tag_mutability,
         'Account ID', account_id,
         'Region', region
       ) as properties
@@ -268,21 +270,19 @@ node "aws_ecr_repository_to_ecr_image_node" {
   sql = <<-EOQ
     select
       i.image_digest as id,
-      i.repository_name as title,
+      i.image_digest as title,
       jsonb_build_object(
         'Manifest Media Type', i.image_manifest_media_type,
         'Artifact Media Type', i.artifact_media_type,
-        'Image Digest', i.image_digest,
         'Image Size (in Bytes)', i.image_size_in_bytes,
         'Account ID', i.account_id,
         'Region', i.region
       ) as properties
     from
       aws_ecr_repository as r
-      left join aws_ecr_image i on i.registry_id = i.registry_id
-      and i.repository_name = r.repository_name
+      left join aws_ecr_image i on i.registry_id = i.registry_id and i.repository_name = r.repository_name
     where
-      r.arn = $1
+      r.arn = $1;
   EOQ
 
   param "arn" {}
@@ -294,15 +294,12 @@ edge "aws_ecr_repository_to_ecr_image_edge" {
   sql = <<-EOQ
     select
       r.arn as from_id,
-      i.image_digest as to_id,
-      jsonb_build_object(
-        'Account ID', i.account_id
-      ) as properties
+      i.image_digest as to_id
     from
       aws_ecr_repository as r
       left join aws_ecr_image i on i.registry_id = r.registry_id and i.repository_name = r.repository_name
     where
-      r.arn = $1
+      r.arn = $1;
   EOQ
 
   param "arn" {}
@@ -340,10 +337,7 @@ edge "aws_ecr_repository_to_ecs_task_definition_edge" {
   sql = <<-EOQ
     select
       r.arn as from_id,
-      t.task_definition_arn as to_id,
-      jsonb_build_object(
-        'Account ID', t.account_id
-      ) as properties
+      t.task_definition_arn as to_id
     from
       aws_ecr_repository as r,
       aws_ecs_task_definition as t,
@@ -365,6 +359,8 @@ node "aws_ecr_repository_to_kms_key_node" {
       k.title as title,
       jsonb_build_object(
         'ARN', k.arn,
+        'Enabled', enabled,
+        'ID', id,
         'Account ID', k.account_id,
         'Region', k.region,
         'Key Manager', k.key_manager
@@ -373,7 +369,7 @@ node "aws_ecr_repository_to_kms_key_node" {
       aws_ecr_repository as r
       left join aws_kms_key as k on k.arn = r.encryption_configuration ->> 'KmsKey'
     where
-      r.arn = $1
+      r.arn = $1;
   EOQ
 
   param "arn" {}
@@ -385,15 +381,12 @@ edge "aws_ecr_repository_to_kms_key_edge" {
   sql = <<-EOQ
     select
       r.arn as from_id,
-      k.arn as to_id,
-      jsonb_build_object(
-        'Account ID', k.account_id
-      ) as properties
+      k.arn as to_id
     from
       aws_ecr_repository as r
       left join aws_kms_key as k on k.arn = r.encryption_configuration ->> 'KmsKey'
     where
-      r.arn = $1
+      r.arn = $1;
   EOQ
 
   param "arn" {}

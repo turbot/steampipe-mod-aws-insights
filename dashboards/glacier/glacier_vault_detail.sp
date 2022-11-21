@@ -275,13 +275,7 @@ edge "aws_glacier_vault_to_sns_topic_edge" {
   sql = <<-EOQ
     select
       v.vault_arn as from_id,
-      topic.topic_arn as to_id,
-      jsonb_build_object(
-        'ARN', v.vault_arn,
-        'Account ID', v.account_id,
-        'Region', v.region,
-        'Events', v.vault_notification_config ->> 'Events'
-      ) as properties
+      topic.topic_arn as to_id
     from
       aws_sns_topic as topic,
       aws_glacier_vault as v

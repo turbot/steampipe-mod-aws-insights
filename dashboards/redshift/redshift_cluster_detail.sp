@@ -9,7 +9,7 @@ dashboard "aws_redshift_cluster_detail" {
 
   input "cluster_arn" {
     title = "Select a Cluster:"
-    sql   = query.aws_redshift_cluster_input.sql
+    query = query.aws_redshift_cluster_input
     width = 4
   }
 

@@ -263,14 +263,13 @@ query "aws_api_gatewayv2_api_integrations" {
   param "api_id" {}
 }
 
-
 node "aws_api_gatewayv2_api_node" {
   category = category.aws_api_gatewayv2_api
 
   sql = <<-EOQ
     select
       api_id as id,
-      title,
+      title as title,
       jsonb_build_object(
         'Name', name,
         'API Endpoint', api_endpoint,
@@ -278,7 +277,8 @@ node "aws_api_gatewayv2_api_node" {
         'Created Date', created_date,
         'Account ID', account_id,
         'Region', region,
-        'Protocol Type', protocol_type) as properties
+        'Protocol Type', protocol_type
+      ) as properties
     from
       aws_api_gatewayv2_api
     where
@@ -295,20 +295,17 @@ node "aws_api_gatewayv2_api_to_lambda_function_node" {
     select
       f.arn as id,
       f.title as title,
-      jsonb_build_object(
+      jsonb_build_object (
         'ARN', f.arn,
         'Runtime', runtime,
         'Architectures', architectures,
         'Region', f.region,
-        'Account ID', f.account_id ) as properties
+        'Account ID', f.account_id
+      ) as properties
     from
-      aws_api_gatewayv2_integration i
-      join
-        aws_lambda_function f
-        on i.integration_uri = f.arn
-      join
-        aws_api_gatewayv2_api a
-        on a.api_id = i.api_id
+      aws_api_gatewayv2_integration as i
+      join aws_lambda_function as f on i.integration_uri = f.arn
+      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
     where
       a.api_id = $1;
   EOQ
@@ -317,20 +314,16 @@ node "aws_api_gatewayv2_api_to_lambda_function_node" {
 }
 
 edge "aws_api_gatewayv2_api_to_lambda_function_edge" {
-  title = "integrated with"
+  title = "lambda function"
 
   sql = <<-EOQ
      select
       a.api_id as from_id,
       f.arn as to_id
     from
-      aws_api_gatewayv2_integration i
-      join
-        aws_lambda_function f
-        on i.integration_uri = f.arn
-      join
-        aws_api_gatewayv2_api a
-        on a.api_id = i.api_id
+      aws_api_gatewayv2_integration as i
+      join aws_lambda_function as f on i.integration_uri = f.arn
+      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
     where
       a.api_id = $1;
   EOQ
@@ -345,18 +338,15 @@ node "aws_api_gatewayv2_api_to_sqs_queue_node" {
     select
       q.queue_arn as id,
       q.title as title,
-      jsonb_build_object(
+      jsonb_build_object (
         'ARN', queue_arn,
         'Region', q.region,
-        'Account ID', q.account_id ) as properties
+        'Account ID', q.account_id
+      ) as properties
     from
-      aws_api_gatewayv2_integration i
-      join
-        aws_sqs_queue q
-        on i.request_parameters ->> 'QueueUrl' = q.queue_url
-      join
-        aws_api_gatewayv2_api a
-        on a.api_id = i.api_id
+      aws_api_gatewayv2_integration as i
+      join aws_sqs_queue as q on i.request_parameters ->> 'QueueUrl' = q.queue_url
+      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
     where
       integration_subtype like '%SQS-%' and a.api_id = $1;
   EOQ
@@ -365,20 +355,16 @@ node "aws_api_gatewayv2_api_to_sqs_queue_node" {
 }
 
 edge "aws_api_gatewayv2_api_to_sqs_queue_edge" {
-  title = "integrated with"
+  title = "sqs queue"
 
   sql = <<-EOQ
      select
       a.api_id as from_id,
       q.queue_arn as to_id
     from
-      aws_api_gatewayv2_integration i
-      join
-        aws_sqs_queue q
-        on i.request_parameters ->> 'QueueUrl' = q.queue_url
-      join
-        aws_api_gatewayv2_api a
-        on a.api_id = i.api_id
+      aws_api_gatewayv2_integration as i
+      join aws_sqs_queue as q on i.request_parameters ->> 'QueueUrl' = q.queue_url
+      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
     where
       integration_subtype like '%SQS-%' and a.api_id = $1;
   EOQ
@@ -393,20 +379,17 @@ node "aws_api_gatewayv2_api_to_sfn_state_machine_node" {
     select
       sm.arn as id,
       sm.title as title,
-      jsonb_build_object(
+      jsonb_build_object (
         'ARN', sm.arn,
         'Region', sm.region,
         'Account ID', sm.account_id,
         'Status', sm.status,
-        'Type', sm.type ) as properties
+        'Type', sm.type
+      ) as properties
     from
-      aws_api_gatewayv2_integration i
-      join
-        aws_sfn_state_machine sm
-        on i.request_parameters ->> 'StateMachineArn' = sm.arn
-      join
-        aws_api_gatewayv2_api a
-        on a.api_id = i.api_id
+      aws_api_gatewayv2_integration as i
+      join aws_sfn_state_machine as sm on i.request_parameters ->> 'StateMachineArn' = sm.arn
+      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
     where
       integration_subtype like '%StepFunctions-%' and a.api_id = $1;
   EOQ
@@ -415,20 +398,16 @@ node "aws_api_gatewayv2_api_to_sfn_state_machine_node" {
 }
 
 edge "aws_api_gatewayv2_api_to_sfn_state_machine_edge" {
-  title = "integrated with"
+  title = "sfn state machine"
 
   sql = <<-EOQ
      select
       a.api_id as from_id,
       sm.arn as to_id
     from
-      aws_api_gatewayv2_integration i
-      join
-        aws_sfn_state_machine sm
-        on i.request_parameters ->> 'StateMachineArn' = sm.arn
-      join
-        aws_api_gatewayv2_api a
-        on a.api_id = i.api_id
+      aws_api_gatewayv2_integration as i
+      join aws_sfn_state_machine as sm on i.request_parameters ->> 'StateMachineArn' = sm.arn
+      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
     where
       integration_subtype like '%StepFunctions-%' and a.api_id = $1;
   EOQ
@@ -443,20 +422,17 @@ node "aws_api_gatewayv2_api_to_kinesis_stream_node" {
     select
       s.stream_arn as id,
       s.title as title,
-      jsonb_build_object(
+      jsonb_build_object (
         'ARN', s.stream_arn,
         'Region', s.region,
         'Account ID', s.account_id,
         'Status', s.stream_status,
-        'Encryption Type', s.encryption_type ) as properties
+        'Encryption Type', s.encryption_type
+      ) as properties
     from
-      aws_api_gatewayv2_integration i
-      join
-        aws_kinesis_stream s
-        on i.request_parameters ->> 'StreamName' = s.stream_name
-      join
-        aws_api_gatewayv2_api a
-        on a.api_id = i.api_id
+      aws_api_gatewayv2_integration as i
+      join aws_kinesis_stream as s on i.request_parameters ->> 'StreamName' = s.stream_name
+      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
     where
       integration_subtype like '%Kinesis-%' and a.api_id = $1;
   EOQ
@@ -465,20 +441,16 @@ node "aws_api_gatewayv2_api_to_kinesis_stream_node" {
 }
 
 edge "aws_api_gatewayv2_api_to_kinesis_stream_edge" {
-  title = "integrated with"
+  title = "kinesis stream"
 
   sql = <<-EOQ
      select
       a.api_id as from_id,
       s.stream_arn as to_id
     from
-      aws_api_gatewayv2_integration i
-      join
-        aws_kinesis_stream s
-        on i.request_parameters ->> 'StreamName' = s.stream_name
-      join
-        aws_api_gatewayv2_api a
-        on a.api_id = i.api_id
+      aws_api_gatewayv2_integration as i
+      join aws_kinesis_stream as s on i.request_parameters ->> 'StreamName' = s.stream_name
+      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
     where
       integration_subtype like '%Kinesis-%' and a.api_id = $1;
   EOQ
@@ -493,45 +465,38 @@ node "aws_api_gatewayv2_api_to_ec2_load_balancer_listener_node" {
     select
       lb.arn as id,
       lb.title as title,
-      jsonb_build_object(
+      jsonb_build_object (
         'ARN', lb.arn,
         'Account ID', lb.account_id,
         'Region', lb.region,
         'Protocol', lb.protocol,
         'Port', lb.port,
-        'SSL Policy', coalesce(lb.ssl_policy, 'None') ) as properties
+        'SSL Policy', coalesce(lb.ssl_policy, 'None')
+      ) as properties
     from
-      aws_api_gatewayv2_integration i
-      join
-        aws_ec2_load_balancer_listener lb
-        on i.integration_uri = lb.arn
-      join
-        aws_api_gatewayv2_api a
-        on a.api_id = i.api_id
+      aws_api_gatewayv2_integration as i
+      join aws_ec2_load_balancer_listener as lb on i.integration_uri = lb.arn
+      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
     where
-        a.api_id = $1;
+      a.api_id = $1;
   EOQ
 
   param "api_id" {}
 }
 
 edge "aws_api_gatewayv2_api_to_ec2_load_balancer_listener_edge" {
-  title = "integrated with"
+  title = "lb listener"
 
   sql = <<-EOQ
      select
       a.api_id as from_id,
       lb.arn as to_id
     from
-      aws_api_gatewayv2_integration i
-      join
-        aws_ec2_load_balancer_listener lb
-        on i.integration_uri = lb.arn
-      join
-        aws_api_gatewayv2_api a
-        on a.api_id = i.api_id
+      aws_api_gatewayv2_integration as i
+      join aws_ec2_load_balancer_listener as lb on i.integration_uri = lb.arn
+      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
     where
-        a.api_id = $1;
+      a.api_id = $1;
   EOQ
 
   param "api_id" {}
@@ -544,19 +509,18 @@ node "aws_api_gatewayv2_api_from_api_gatewayv2_stage_node" {
     select
       s.stage_name as id,
       s.title as title,
-      jsonb_build_object(
+      jsonb_build_object (
         'Deployment ID', s.deployment_id,
         'Auto Deploy', s.auto_deploy,
         'Created Time', s.created_date,
         'Region', s.region,
-        'Account ID', s.account_id ) as properties
+        'Account ID', s.account_id
+      ) as properties
     from
-      aws_api_gatewayv2_stage s
-      join
-        aws_api_gatewayv2_api a
-        on a.api_id = s.api_id
+      aws_api_gatewayv2_stage as s
+      join aws_api_gatewayv2_api as a on a.api_id = s.api_id
     where
-        a.api_id = $1;
+      a.api_id = $1;
   EOQ
 
   param "api_id" {}
@@ -566,16 +530,14 @@ edge "aws_api_gatewayv2_api_from_api_gatewayv2_stage_edge" {
   title = "deploys"
 
   sql = <<-EOQ
-     select
+    select
       s.stage_name as from_id,
       a.api_id as to_id
     from
-      aws_api_gatewayv2_stage s
-      join
-        aws_api_gatewayv2_api a
-        on a.api_id = s.api_id
+      aws_api_gatewayv2_stage as s
+      join aws_api_gatewayv2_api as a on a.api_id = s.api_id
     where
-        a.api_id = $1;
+      a.api_id = $1;
   EOQ
 
   param "api_id" {}

@@ -11,12 +11,12 @@ dashboard "aws_ec2_instance_public_access_report" {
   container {
 
     card {
-      sql   = query.aws_ec2_instance_count.sql
+      query = query.aws_ec2_instance_count
       width = 2
     }
 
     card {
-      sql   = query.aws_ec2_instance_public_access_count.sql
+      query = query.aws_ec2_instance_public_access_count
       width = 2
     }
 
@@ -35,7 +35,7 @@ dashboard "aws_ec2_instance_public_access_report" {
       href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_ec2_instance_public_access_table.sql
+    query = query.aws_ec2_instance_public_access_table
   }
 
 }

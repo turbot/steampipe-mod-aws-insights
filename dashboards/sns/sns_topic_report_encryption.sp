@@ -11,12 +11,12 @@ dashboard "aws_sns_topic_encryption_report" {
   container {
 
     card {
-      sql   = query.aws_sns_topic_count.sql
+      query = query.aws_sns_topic_count
       width = 2
     }
 
     card {
-      sql   = query.aws_sns_topic_encrypted_count.sql
+      query = query.aws_sns_topic_encrypted_count
       width = 2
     }
 
@@ -36,7 +36,7 @@ dashboard "aws_sns_topic_encryption_report" {
       href = "${dashboard.aws_sns_topic_detail.url_path}?input.topic_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_sns_topic_encryption_table.sql
+    query = query.aws_sns_topic_encryption_table
   }
 
 }

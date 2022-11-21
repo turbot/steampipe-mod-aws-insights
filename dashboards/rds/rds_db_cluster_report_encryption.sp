@@ -11,12 +11,12 @@ dashboard "aws_rds_db_cluster_encryption_report" {
   container {
 
     card {
-      sql   = query.aws_rds_db_cluster_count.sql
+      query = query.aws_rds_db_cluster_count
       width = 2
     }
 
     card {
-      sql = query.aws_rds_db_cluster_unencrypted_count.sql
+      query = query.aws_rds_db_cluster_unencrypted_count
       width = 2
     }
 
@@ -31,7 +31,7 @@ dashboard "aws_rds_db_cluster_encryption_report" {
       display = "none"
     }
 
-    sql = query.aws_rds_db_cluster_encryption_table.sql
+    query = query.aws_rds_db_cluster_encryption_table
   }
 
 }

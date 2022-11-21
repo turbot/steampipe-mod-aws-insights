@@ -305,8 +305,12 @@ node "aws_ec2_ami_node" {
   sql = <<-EOQ
     select
       image_id as id,
-      name as title,
+      title as title,
       jsonb_build_object(
+        'Image ID', image_id,
+        'Image Location', image_location,
+        'State', state,
+        'public', public::text,
         'Account ID', account_id,
         'Region', region
       ) as properties
@@ -324,17 +328,17 @@ node "aws_ec2_ami_to_ec2_instance_node" {
 
   sql = <<-EOQ
     select
-      instances.instance_id as id,
-      instances.tags->>'Name' as title,
+      i.instance_id as id,
+      i.title as title,
       jsonb_build_object(
-        'Name', instances.tags ->> 'Name',
-        'Instance ID', instances.instance_id,
-        'ARN', instances.arn,
-        'Account ID', instances.account_id,
-        'Region', instances.region
+        'Name', i.tags ->> 'Name',
+        'Instance ID', i.instance_id,
+        'ARN', i.arn,
+        'Account ID', i.account_id,
+        'Region', i.region
       ) as properties
     from
-      aws_ec2_instance as instances
+      aws_ec2_instance as i
     where
       image_id = $1;
   EOQ
@@ -343,23 +347,16 @@ node "aws_ec2_ami_to_ec2_instance_node" {
 }
 
 edge "aws_ec2_ami_to_ec2_instance_edge" {
-  title = "launched with"
+  title = "instance"
 
   sql = <<-EOQ
     select
       image_id as from_id,
-      instances.instance_id as to_id,
-      jsonb_build_object(
-        'Name', instances.tags ->> 'Name',
-        'Instance ID', instances.instance_id,
-        'ARN', instances.arn,
-        'Account ID', instances.account_id,
-        'Region', instances.region
-      ) as properties
+      instance_id as to_id
     from
-      aws_ec2_instance as instances
+      aws_ec2_instance as i
     where
-      instances.image_id = $1;
+      image_id = $1;
   EOQ
 
   param "image_id" {}
@@ -371,20 +368,20 @@ node "aws_ec2_ami_from_ebs_snapshot_node" {
   sql = <<-EOQ
     select
       device_mappings -> 'Ebs' ->> 'SnapshotId' as id,
-      snapshot.title as title,
+      s.title as title,
       jsonb_build_object(
-        'ARN', snapshot.arn,
+        'ARN', s.arn,
         'SnapshotId', device_mappings -> 'Ebs' ->> 'SnapshotId',
-        'Account ID', snapshot.account_id,
-        'Region', snapshot.region
+        'Account ID', s.account_id,
+        'Region', s.region
       ) as properties
     from
-      aws_ebs_snapshot as snapshot,
+      aws_ebs_snapshot as s,
       aws_ec2_ami as ami,
       jsonb_array_elements(ami.block_device_mappings) as device_mappings
     where
       device_mappings -> 'Ebs' is not null
-      and snapshot.snapshot_id = device_mappings -> 'Ebs' ->> 'SnapshotId'
+      and s.snapshot_id = device_mappings -> 'Ebs' ->> 'SnapshotId'
       and ami.image_id = $1
   EOQ
 
@@ -392,16 +389,12 @@ node "aws_ec2_ami_from_ebs_snapshot_node" {
 }
 
 edge "aws_ec2_ami_from_ebs_snapshot_edge" {
-  title = "created from"
+  title = "ami"
 
   sql = <<-EOQ
     select
       device_mappings -> 'Ebs' ->> 'SnapshotId' as from_id,
-      ami.image_id as to_id,
-      'created from' as title,
-      jsonb_build_object(
-        'SnapshotId', device_mappings -> 'Ebs' ->> 'SnapshotId'
-      ) as properties
+      ami.image_id as to_id
     from
       aws_ec2_ami as ami,
       jsonb_array_elements(ami.block_device_mappings) as device_mappings

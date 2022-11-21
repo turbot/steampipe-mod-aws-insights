@@ -11,38 +11,38 @@ dashboard "aws_codebuild_project_age_report" {
   container {
 
     card {
-      sql   = query.aws_codebuild_project_count.sql
+      query = query.aws_codebuild_project_count
       width = 2
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_codebuild_project_24_hours_count.sql
+      query = query.aws_codebuild_project_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_codebuild_project_30_days_count.sql
+      query = query.aws_codebuild_project_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_codebuild_project_30_90_days_count.sql
+      query = query.aws_codebuild_project_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_codebuild_project_90_365_days_count.sql
+      query = query.aws_codebuild_project_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_codebuild_project_1_year_count.sql
+      query = query.aws_codebuild_project_1_year_count
     }
 
   }
@@ -59,7 +59,7 @@ dashboard "aws_codebuild_project_age_report" {
     column "Name" {
       href = "${dashboard.aws_codebuild_project_detail.url_path}?input.codebuild_project_arn={{.ARN | @uri}}"
     }
-    sql = query.aws_codebuild_project_age_table.sql
+    query = query.aws_codebuild_project_age_table
   }
 
 }

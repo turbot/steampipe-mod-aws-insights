@@ -1,6 +1,6 @@
 dashboard "aws_redshift_cluster_public_access_report" {
 
-  title = "AWS Redshift Cluster Public Access Report"
+  title         = "AWS Redshift Cluster Public Access Report"
   documentation = file("./dashboards/redshift/docs/redshift_cluster_report_public_access.md")
 
   tags = merge(local.redshift_common_tags, {
@@ -11,12 +11,12 @@ dashboard "aws_redshift_cluster_public_access_report" {
   container {
 
     card {
-      sql = query.aws_redshift_cluster_count.sql
+      query = query.aws_redshift_cluster_count
       width = 2
     }
 
     card {
-      sql = query.aws_redshift_cluster_publicly_accessible.sql
+      query = query.aws_redshift_cluster_publicly_accessible
       width = 2
     }
 
@@ -28,14 +28,14 @@ dashboard "aws_redshift_cluster_public_access_report" {
     }
 
     column "ARN" {
-    display = "none"
+      display = "none"
     }
 
     column "Cluster Identifier" {
       href = "${dashboard.aws_redshift_cluster_detail.url_path}?input.cluster_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_redshift_cluster_publicly_accessible_table.sql
+    query = query.aws_redshift_cluster_publicly_accessible_table
   }
 
 }

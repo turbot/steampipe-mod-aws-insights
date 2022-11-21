@@ -1,6 +1,6 @@
 dashboard "aws_iam_root_access_report" {
 
-  title = "AWS IAM Root Access Report"
+  title         = "AWS IAM Root Access Report"
   documentation = file("./dashboards/iam/docs/iam_root_access_report.md")
 
   tags = merge(local.iam_common_tags, {
@@ -12,12 +12,12 @@ dashboard "aws_iam_root_access_report" {
 
     card {
       width = 2
-      sql   = query.aws_iam_root_access_keys_count.sql
+      query = query.aws_iam_root_access_keys_count
     }
 
     card {
       width = 2
-      sql   = query.aws_iam_accounts_without_root_mfa.sql
+      query = query.aws_iam_accounts_without_root_mfa
     }
 
   }
@@ -28,7 +28,7 @@ dashboard "aws_iam_root_access_report" {
       display = "none"
     }
 
-    sql   = query.aws_iam_root_access_keys_table.sql
+    query = query.aws_iam_root_access_keys_table
   }
 
 }

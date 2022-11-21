@@ -50,12 +50,14 @@ dashboard "aws_vpc_eip_detail" {
       nodes = [
         node.aws_vpc_eip_node,
         node.aws_vpc_eip_from_ec2_network_interface_node,
-        node.aws_vpc_eip_from_ec2_instance_node
+        node.aws_vpc_eip_from_ec2_instance_node,
+        node.aws_vpc_eip_network_interface_from_nat_gateway_node
       ]
 
       edges = [
         edge.aws_vpc_eip_from_ec2_network_interface_edge,
-        edge.aws_vpc_eip_network_interface_from_ec2_instance_edge
+        edge.aws_vpc_eip_network_interface_from_ec2_instance_edge,
+        edge.aws_vpc_eip_network_interface_from_nat_gateway_edge
       ]
 
       args = {
@@ -150,10 +152,13 @@ node "aws_vpc_eip_node" {
   sql = <<-EOQ
     select
       arn as id,
+      title as title,
       jsonb_build_object(
         'ARN', arn,
         'Allocation Id', allocation_id,
         'Association Id', association_id,
+        'Public IP', public_ip,
+        'Domain', domain,
         'Account ID', account_id,
         'Region', region
       ) as properties
@@ -174,7 +179,7 @@ node "aws_vpc_eip_from_ec2_network_interface_node" {
       i.network_interface_id as id,
       i.title as title,
       jsonb_build_object(
-        'ID', i.network_interface_id,
+        'Interface ID', i.network_interface_id,
         'Account ID', i.account_id,
         'Region', i.region
       ) as properties
@@ -190,7 +195,7 @@ node "aws_vpc_eip_from_ec2_network_interface_node" {
 }
 
 edge "aws_vpc_eip_from_ec2_network_interface_edge" {
-  title = "eni"
+  title = "eip"
 
   sql = <<-EOQ
     select
@@ -232,7 +237,7 @@ node "aws_vpc_eip_from_ec2_instance_node" {
 }
 
 edge "aws_vpc_eip_network_interface_from_ec2_instance_edge" {
-  title = "ec2 instance"
+  title = "network interface"
 
   sql = <<-EOQ
     select
@@ -241,6 +246,52 @@ edge "aws_vpc_eip_network_interface_from_ec2_instance_edge" {
     from
       aws_vpc_eip as e
       left join aws_ec2_instance as i on e.instance_id = i.instance_id
+    where
+      e.network_interface_id is not null
+      and e.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_vpc_eip_network_interface_from_nat_gateway_node" {
+  category = category.aws_vpc_nat_gateway
+
+  sql = <<-EOQ
+    select
+      n.arn as id,
+      n.title as title,
+      jsonb_build_object(
+        'ARN', n.arn,
+        'NAT Gateway ID', n.nat_gateway_id,
+        'State', n.state,
+        'Account ID', n.account_id,
+        'Region', n.region
+      ) as properties
+    from
+      aws_vpc_nat_gateway as n,
+      jsonb_array_elements(nat_gateway_addresses) as a
+      left join aws_vpc_eip as e on e.network_interface_id = a ->> 'NetworkInterfaceId'
+    where
+      e.network_interface_id is not null
+      and e.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+
+edge "aws_vpc_eip_network_interface_from_nat_gateway_edge" {
+  title = "network interface"
+
+  sql = <<-EOQ
+    select
+      n.arn as from_id,
+      e.network_interface_id as to_id
+    from
+      aws_vpc_nat_gateway as n,
+      jsonb_array_elements(nat_gateway_addresses) as a
+      left join aws_vpc_eip as e on e.network_interface_id = a ->> 'NetworkInterfaceId'
     where
       e.network_interface_id is not null
       and e.arn = $1;

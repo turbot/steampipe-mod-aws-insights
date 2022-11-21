@@ -12,19 +12,19 @@ dashboard "aws_sns_topic_dashboard" {
 
     # Analysis
     card {
-      sql   = query.aws_sns_topic_count.sql
+      query = query.aws_sns_topic_count
       width = 2
     }
 
     # Assessments
     card {
-      sql   = query.aws_sns_topic_encrypted_count.sql
+      query = query.aws_sns_topic_encrypted_count
       width = 2
       href  = dashboard.aws_sns_topic_encryption_report.url_path
     }
 
     card {
-      sql   = query.aws_sns_topic_by_subscription_count.sql
+      query = query.aws_sns_topic_by_subscription_count
       width = 2
     }
 
@@ -33,7 +33,7 @@ dashboard "aws_sns_topic_dashboard" {
       type  = "info"
       icon  = "currency-dollar"
       width = 2
-      sql   = query.aws_sns_topic_cost_mtd.sql
+      query = query.aws_sns_topic_cost_mtd
     }
 
   }
@@ -45,7 +45,7 @@ dashboard "aws_sns_topic_dashboard" {
 
     chart {
       title = "Encryption Status"
-      sql   = query.aws_sns_topic_by_encryption_status.sql
+      query = query.aws_sns_topic_by_encryption_status
       type  = "donut"
       width = 4
 
@@ -61,7 +61,7 @@ dashboard "aws_sns_topic_dashboard" {
 
     chart {
       title = "Subscriptions Status"
-      sql   = query.aws_sns_topic_by_subscription_status.sql
+      query = query.aws_sns_topic_by_subscription_status
       type  = "donut"
       width = 4
 
@@ -85,14 +85,14 @@ dashboard "aws_sns_topic_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      sql   = query.aws_sns_topic_monthly_forecast_table.sql
+      query = query.aws_sns_topic_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      sql   = query.aws_sns_topic_cost_per_month.sql
+      query = query.aws_sns_topic_cost_per_month
     }
 
   }
@@ -103,14 +103,14 @@ dashboard "aws_sns_topic_dashboard" {
 
     chart {
       title = "Topics by Account"
-      sql   = query.aws_sns_topic_by_account.sql
+      query = query.aws_sns_topic_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Topics by Region"
-      sql   = query.aws_sns_topic_by_region.sql
+      query = query.aws_sns_topic_by_region
       type  = "column"
       width = 4
     }

@@ -253,19 +253,20 @@ node "aws_codebuild_project_node" {
       arn as id,
       title as title,
       jsonb_build_object(
+        'Name', name,
         'ARN', arn,
+        'Project Visibility', project_visibility,
         'Account ID', account_id,
         'region', region
       ) as properties
     from
       aws_codebuild_project
     where
-      arn = $1
+      arn = $1;
   EOQ
 
   param "arn" {}
 }
-
 
 node "aws_codebuild_project_to_s3_bucket_node" {
   category = category.aws_s3_bucket
@@ -286,10 +287,10 @@ node "aws_codebuild_project_to_s3_bucket_node" {
     where
       p.arn = $1
       and (s3.name = split_part(p.cache ->> 'Location', '/', 1)
-           or s3.name = p.artifacts ->> 'Location'
-           or s3.name = split_part(p.logs_config -> 'S3Logs' ->> 'Location', '/', 1)
-           or s3.name = split_part(p.source ->> 'Location', '/', 1)
-          )
+        or s3.name = p.artifacts ->> 'Location'
+        or s3.name = split_part(p.logs_config -> 'S3Logs' ->> 'Location', '/', 1)
+        or s3.name = split_part(p.source ->> 'Location', '/', 1)
+      );
   EOQ
 
   param "arn" {}
@@ -308,10 +309,10 @@ edge "aws_codebuild_project_to_s3_bucket_edge" {
     where
       p.arn = $1
       and (s3.name = split_part(p.cache ->> 'Location', '/', 1)
-           or s3.name = p.artifacts ->> 'Location'
-           or s3.name = split_part(p.logs_config -> 'S3Logs' ->> 'Location', '/', 1)
-           or s3.name = split_part(p.source ->> 'Location', '/', 1)
-          );
+        or s3.name = p.artifacts ->> 'Location'
+        or s3.name = split_part(p.logs_config -> 'S3Logs' ->> 'Location', '/', 1)
+        or s3.name = split_part(p.source ->> 'Location', '/', 1)
+      );
   EOQ
 
   param "arn" {}
@@ -350,8 +351,7 @@ edge "aws_codebuild_project_to_cloudwatch_group_edge" {
       c.arn as to_id
     from
       aws_codebuild_project as p
-      left join aws_cloudwatch_log_group c on
-      c.name = logs_config -> 'CloudWatchLogs' ->> 'GroupName'
+      left join aws_cloudwatch_log_group c on c.name = logs_config -> 'CloudWatchLogs' ->> 'GroupName'
     where
       p.arn = $1;
   EOQ
@@ -418,8 +418,7 @@ node "aws_codebuild_project_to_iam_role_node" {
       ) as properties
     from
       aws_codebuild_project as p
-      left join aws_iam_role as r
-      on r.arn = p.service_role
+      left join aws_iam_role as r on r.arn = p.service_role
     where
       p.arn = $1;
   EOQ
@@ -433,11 +432,10 @@ edge "aws_codebuild_project_to_iam_role_edge" {
   sql = <<-EOQ
     select
       p.arn as from_id,
-      iam_role.arn as to_id
+      r.arn as to_id
     from
       aws_codebuild_project as p
-      left join aws_iam_role as iam_role
-      on iam_role.arn = p.service_role
+      left join aws_iam_role as r on r.arn = p.service_role
     where
       p.arn = $1;
   EOQ
@@ -461,8 +459,7 @@ node "aws_codebuild_project_to_ecr_repository_node" {
       ) as properties
     from
       aws_codebuild_project as p
-      left join aws_ecr_repository as r
-      on r.repository_uri = split_part(p.environment ->> 'Image', ':', 1)
+      left join aws_ecr_repository as r on r.repository_uri = split_part(p.environment ->> 'Image', ':', 1)
     where
       p.arn = $1;
   EOQ
@@ -479,8 +476,7 @@ edge "aws_codebuild_project_to_ecr_repository_edge" {
       r.arn as to_id
     from
       aws_codebuild_project as p
-      left join aws_ecr_repository as r
-      on r.repository_uri = split_part(p.environment ->> 'Image', ':', 1)
+      left join aws_ecr_repository as r on r.repository_uri = split_part(p.environment ->> 'Image', ':', 1)
     where
       p.arn = $1;
   EOQ
@@ -505,8 +501,7 @@ node "aws_codebuild_project_to_codecommit_repository_node" {
       ) as properties
     from
       aws_codebuild_project as p
-      left join aws_codecommit_repository as r
-      on r.clone_url_http in (
+      left join aws_codecommit_repository as r on r.clone_url_http in (
         with code_sources as (
           select
             source,
@@ -536,8 +531,7 @@ edge "aws_codebuild_project_to_codecommit_repository_edge" {
       r.arn as to_id
     from
       aws_codebuild_project as p
-      left join aws_codecommit_repository as r
-      on r.clone_url_http in (
+      left join aws_codecommit_repository as r on r.clone_url_http in (
         with code_sources as (
           select
             source,

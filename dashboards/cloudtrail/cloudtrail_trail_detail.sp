@@ -9,7 +9,7 @@ dashboard "aws_cloudtrail_trail_detail" {
 
   input "trail_arn" {
     title = "Select a trail:"
-    sql   = query.aws_cloudtrail_trail_input.sql
+    query = query.aws_cloudtrail_trail_input
     width = 4
   }
 
@@ -285,8 +285,8 @@ node "aws_cloudtrail_trail_node" {
   sql = <<-EOQ
     select
       arn as id,
-      name as title,
-      jsonb_build_object(
+      title as title,
+      jsonb_build_object (
         'ARN', arn,
         'Logging', is_logging::text,
         'Latest notification time', latest_notification_time,
@@ -296,7 +296,7 @@ node "aws_cloudtrail_trail_node" {
     from
       aws_cloudtrail_trail
     where
-      arn = $1
+      arn = $1;
   EOQ
 
   param "arn" {}
@@ -308,7 +308,7 @@ node "aws_cloudtrail_trail_to_s3_bucket_node" {
   sql = <<-EOQ
     select
       b.arn as id,
-      b.name as title,
+      b.title as title,
       jsonb_build_object(
         'ARN', b.arn,
         'Public', bucket_policy_is_public::text,
@@ -319,7 +319,7 @@ node "aws_cloudtrail_trail_to_s3_bucket_node" {
       aws_s3_bucket as b
       right join aws_cloudtrail_trail as t on t.s3_bucket_name = b.name
     where
-      t.arn = $1
+      t.arn = $1;
   EOQ
 
   param "arn" {}
@@ -342,7 +342,7 @@ edge "aws_cloudtrail_trail_to_s3_bucket_edge" {
       aws_s3_bucket as b
       right join aws_cloudtrail_trail as t on t.s3_bucket_name = b.name
     where
-      t.arn = $1
+      t.arn = $1;
   EOQ
 
   param "arn" {}
@@ -366,7 +366,7 @@ node "aws_cloudtrail_trail_to_kms_key_node" {
       aws_kms_key as k
       right join aws_cloudtrail_trail as t on t.kms_key_id = k.arn
     where
-      t.arn = $1
+      t.arn = $1;
   EOQ
 
   param "arn" {}
@@ -378,17 +378,12 @@ edge "aws_cloudtrail_trail_to_kms_key_edge" {
   sql = <<-EOQ
     select
       t.arn as from_id,
-      k.arn as to_id,
-      jsonb_build_object(
-        'ARN', t.arn,
-        'Account ID', t.account_id,
-        'Region', t.region
-      ) as properties
+      k.arn as to_id
     from
       aws_kms_key as k
       right join aws_cloudtrail_trail as t on t.kms_key_id = k.arn
     where
-      t.arn = $1
+      t.arn = $1;
   EOQ
 
   param "arn" {}
@@ -410,7 +405,7 @@ node "aws_cloudtrail_trail_to_sns_topic_node" {
       aws_sns_topic as st
       right join aws_cloudtrail_trail as t on t.sns_topic_arn = st.topic_arn
     where
-      t.arn = $1
+      t.arn = $1;
   EOQ
 
   param "arn" {}
@@ -422,17 +417,12 @@ edge "aws_cloudtrail_trail_to_sns_topic_edge" {
   sql = <<-EOQ
     select
       t.arn as from_id,
-      st.topic_arn as to_id,
-      jsonb_build_object(
-        'ARN', t.arn,
-        'Account ID', t.account_id,
-        'Region', t.region
-      ) as properties
+      st.topic_arn as to_id
     from
       aws_sns_topic as st
       right join aws_cloudtrail_trail as t on t.sns_topic_arn = st.topic_arn
     where
-      t.arn = $1
+      t.arn = $1;
   EOQ
 
   param "arn" {}
@@ -454,7 +444,7 @@ node "aws_cloudtrail_trail_to_cloudwatch_log_group_node" {
       aws_cloudwatch_log_group as g
       right join aws_cloudtrail_trail as t on t.log_group_arn = g.arn
     where
-      t.arn = $1
+      t.arn = $1;
   EOQ
 
   param "arn" {}
@@ -466,20 +456,12 @@ edge "aws_cloudtrail_trail_to_cloudwatch_log_group_edge" {
   sql = <<-EOQ
     select
       t.arn as from_id,
-      g.arn as to_id,
-      jsonb_build_object(
-        'ARN', t.arn,
-        'Account ID', t.account_id,
-        'Region', t.region,
-        'Logs Role ARN', t.cloudwatch_logs_role_arn,
-        'Latest cloudwatch logs delivery time', t.latest_cloudwatch_logs_delivery_time,
-        'Retention days', retention_in_days
-      ) as properties
+      g.arn as to_id
    from
       aws_cloudwatch_log_group as g
       right join aws_cloudtrail_trail as t on t.log_group_arn = g.arn
     where
-      t.arn = $1
+      t.arn = $1;
   EOQ
 
   param "arn" {}
@@ -491,7 +473,7 @@ node "aws_cloudtrail_trail_from_guardduty_detector_node" {
   sql = <<-EOQ
     select
       detector.arn as id,
-      detector.detector_id as title,
+      detector.title as title,
       jsonb_build_object(
         'ARN', detector.arn,
         'Account ID', detector.account_id,
@@ -505,24 +487,19 @@ node "aws_cloudtrail_trail_from_guardduty_detector_node" {
       detector.status = 'ENABLED'
       and detector.data_sources is not null
       and detector.data_sources -> 'CloudTrail' ->> 'Status' = 'ENABLED'
-      and t.arn = $1
+      and t.arn = $1;
   EOQ
 
   param "arn" {}
 }
 
 edge "aws_cloudtrail_trail_from_guardduty_detector_edge" {
-  title = "guardduty detector"
+  title = "cloudtrail trail"
 
   sql = <<-EOQ
     select
       detector.arn as from_id,
-      t.arn as to_id,
-      jsonb_build_object(
-        'ARN', t.arn,
-        'Account ID', t.account_id,
-        'Region', t.region
-      ) as properties
+      t.arn as to_id
     from
       aws_guardduty_detector as detector,
       aws_cloudtrail_trail as t

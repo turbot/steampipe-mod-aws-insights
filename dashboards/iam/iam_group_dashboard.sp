@@ -1,6 +1,6 @@
 dashboard "aws_iam_group_dashboard" {
 
-  title = "AWS IAM Group Dashboard"
+  title         = "AWS IAM Group Dashboard"
   documentation = file("./dashboards/iam/docs/iam_group_dashboard.md")
 
 
@@ -12,18 +12,18 @@ dashboard "aws_iam_group_dashboard" {
 
     # Analysis
     card {
-      sql   = query.aws_iam_group_count.sql
+      query = query.aws_iam_group_count
       width = 2
     }
 
     # Assessments
     card {
-      sql   = query.aws_iam_groups_without_users_count.sql
+      query = query.aws_iam_groups_without_users_count
       width = 2
     }
 
     card {
-      sql   = query.aws_iam_groups_with_inline_policy_count.sql
+      query = query.aws_iam_groups_with_inline_policy_count
       width = 2
     }
 
@@ -35,7 +35,7 @@ dashboard "aws_iam_group_dashboard" {
 
     chart {
       title = "Groups Without Users"
-      sql   = query.aws_iam_groups_without_users.sql
+      query = query.aws_iam_groups_without_users
       type  = "donut"
       width = 3
 
@@ -51,7 +51,7 @@ dashboard "aws_iam_group_dashboard" {
 
     chart {
       title = "Inline Policies"
-      sql   = query.aws_iam_groups_with_inline_policy.sql
+      query = query.aws_iam_groups_with_inline_policy
       type  = "donut"
       width = 3
 
@@ -73,21 +73,21 @@ dashboard "aws_iam_group_dashboard" {
 
     chart {
       title = "Groups by Account"
-      sql   = query.aws_iam_groups_by_account.sql
+      query = query.aws_iam_groups_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Groups by Path"
-      sql   = query.aws_iam_groups_by_path.sql
+      query = query.aws_iam_groups_by_path
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Groups by Age"
-      sql   = query.aws_iam_groups_by_creation_month.sql
+      query = query.aws_iam_groups_by_creation_month
       type  = "column"
       width = 4
     }

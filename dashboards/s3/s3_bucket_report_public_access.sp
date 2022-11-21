@@ -10,32 +10,32 @@ dashboard "aws_s3_bucket_public_access_report" {
   container {
 
     card {
-      sql   = query.aws_s3_bucket_count.sql
+      query = query.aws_s3_bucket_count
       width = 2
     }
 
     card {
-      sql   = query.aws_s3_bucket_public_policy_count.sql
+      query = query.aws_s3_bucket_public_policy_count
       width = 2
     }
 
     card {
-      sql   = query.aws_s3_bucket_block_public_acls_disabled_count.sql
+      query = query.aws_s3_bucket_block_public_acls_disabled_count
       width = 2
     }
 
     card {
-      sql   = query.aws_s3_bucket_block_public_policy_disabled_count.sql
+      query = query.aws_s3_bucket_block_public_policy_disabled_count
       width = 2
     }
 
     card {
-      sql   = query.aws_s3_bucket_ignore_public_acls_disabled_count.sql
+      query = query.aws_s3_bucket_ignore_public_acls_disabled_count
       width = 2
     }
 
     card {
-      sql   = query.aws_s3_bucket_restrict_public_buckets_disabled_count.sql
+      query = query.aws_s3_bucket_restrict_public_buckets_disabled_count
       width = 2
     }
 
@@ -54,7 +54,7 @@ dashboard "aws_s3_bucket_public_access_report" {
       href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_s3_bucket_public_access_table.sql
+    query = query.aws_s3_bucket_public_access_table
   }
 
 }
