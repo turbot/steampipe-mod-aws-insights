@@ -930,12 +930,12 @@ node "aws_redshift_cluster_from_redshift_snapshot_node" {
 }
 
 edge "aws_redshift_cluster_from_redshift_snapshot_edge" {
-  title = "cluster"
+  title = "snapshot"
 
   sql = <<-EOQ
     select
-      snapshot.snapshot_identifier as from_id,
-      c.arn as to_id
+      c.arn as from_id,
+      snapshot.snapshot_identifier as to_id
     from
       aws_redshift_cluster as c
       left join
