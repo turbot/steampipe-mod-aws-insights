@@ -91,7 +91,6 @@ dashboard "aws_elasticache_cluster_detail" {
         edge.aws_elasticache_cluster_to_vpc_security_group_edge,
         edge.aws_elasticache_cluster_to_subnet_group_edge,
         edge.aws_elasticache_cluster_to_vpc_subnet_edge,
-        edge.aws_elasticache_cluster_to_vpc_active_subnet_edge,
         edge.aws_elasticache_cluster_subnet_to_vpc_edge
       ]
 
@@ -597,29 +596,6 @@ edge "aws_elasticache_cluster_to_vpc_subnet_edge" {
     where
       g.cache_subnet_group_name = c.cache_subnet_group_name
       and subnet ->> 'SubnetIdentifier' = s.subnet_id
-      and c.preferred_availability_zone = subnet -> 'SubnetAvailabilityZone' ->> 'Name'
-      and c.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_elasticache_cluster_to_vpc_active_subnet_edge" {
-  title = "active subnet"
-
-  sql = <<-EOQ
-    select
-      g.arn as from_id,
-      s.subnet_id as to_id
-    from
-      aws_elasticache_cluster as c,
-      aws_vpc_subnet as s,
-      aws_elasticache_subnet_group as g,
-      jsonb_array_elements(subnets) as subnet
-    where
-      g.cache_subnet_group_name = c.cache_subnet_group_name
-      and subnet ->> 'SubnetIdentifier' = s.subnet_id
-      and c.preferred_availability_zone <> subnet -> 'SubnetAvailabilityZone' ->> 'Name'
       and c.arn = $1;
   EOQ
 

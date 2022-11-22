@@ -159,16 +159,19 @@ dashboard "aws_kms_key_detail" {
 query "aws_kms_key_input" {
   sql = <<-EOQ
     select
-      title as label,
-      arn as value,
+      coalesce(a.title, k.title) as label,
+      k.arn as value,
       json_build_object(
-        'account_id', account_id,
-        'region', region
+        'target_key_id', a.target_key_id,
+        'account_id', a.account_id,
+        'region', a.region
       ) as tags
     from
-      aws_kms_key
+      aws_kms_key as k
+      left join aws_kms_alias as a
+      on a.target_key_id = k.id
     order by
-      title;
+      a.title;
   EOQ
 }
 
@@ -289,7 +292,7 @@ node "aws_kms_key_node" {
   sql = <<-EOQ
     select
       id as id,
-      title as title,
+      id as title,
       jsonb_build_object(
         'ARN', arn,
         'Key Manager', key_manager,
