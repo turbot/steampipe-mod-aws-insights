@@ -462,21 +462,21 @@ node "aws_elasticache_cluster_to_subnet_group_node" {
 
   sql = <<-EOQ
     select
-      arn as id,
-      title as title,
+      g.arn as id,
+      g.title as title,
       jsonb_build_object(
-        'ARN', arn,
-        'VPC ID', vpc_id,
-        'Account ID', account_id,
-        'Region', region ) as properties
+        'ARN', g.arn,
+        'VPC ID', g.vpc_id,
+        'Account ID', g.account_id,
+        'Region', g.region ) as properties
     from
-      aws_elasticache_cluster as c,
-      aws_elasticache_subnet_group as g,
-      jsonb_array_elements(security_groups) as sg
+      aws_elasticache_cluster as c
+      cross join jsonb_array_elements(security_groups) as sg
+      join aws_elasticache_subnet_group as g
+      on g.cache_subnet_group_name = c.cache_subnet_group_name
+      and g.region = c.region
     where
-      g.cache_subnet_group_name = c.cache_subnet_group_name
-      g.region = c.region
-      and c.arn = $1;
+      c.arn = $1;
   EOQ
 
   param "arn" {}
@@ -493,13 +493,13 @@ edge "aws_elasticache_cluster_to_subnet_group_edge" {
       ) as from_id,
       g.arn as to_id
     from
-      aws_elasticache_cluster as c,
-      aws_elasticache_subnet_group as g,
-      jsonb_array_elements(security_groups) as sg
+      aws_elasticache_cluster as c
+      cross join jsonb_array_elements(security_groups) as sg
+      join aws_elasticache_subnet_group as g
+      on g.cache_subnet_group_name = c.cache_subnet_group_name
+      and g.region = c.region
     where
-      g.cache_subnet_group_name = c.cache_subnet_group_name
-      g.region = c.region
-      and c.arn = $1;
+      c.arn = $1;
   EOQ
 
   param "arn" {}
@@ -587,7 +587,7 @@ edge "aws_elasticache_cluster_to_vpc_subnet_edge" {
 
   sql = <<-EOQ
     select
-      g.cache_subnet_group_name as from_id,
+      g.arn as from_id,
       s.subnet_id as to_id
     from
       aws_elasticache_cluster as c,
@@ -609,7 +609,7 @@ edge "aws_elasticache_cluster_to_vpc_active_subnet_edge" {
 
   sql = <<-EOQ
     select
-      g.cache_subnet_group_name as from_id,
+      g.arn as from_id,
       s.subnet_id as to_id
     from
       aws_elasticache_cluster as c,

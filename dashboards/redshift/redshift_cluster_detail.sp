@@ -99,6 +99,7 @@ dashboard "aws_redshift_cluster_detail" {
         edge.aws_redshift_cluster_to_cloudwatch_log_group_edge,
         edge.aws_redshift_cluster_to_s3_bucket_edge,
         edge.aws_redshift_cluster_to_redshift_parameter_group_edge,
+        edge.aws_redshift_cluster_subnet_group_to_vpc_active_subnet_edge,
         edge.aws_redshift_cluster_from_redshift_snapshot_edge
       ]
 
@@ -481,6 +482,29 @@ node "aws_redshift_cluster_to_vpc_subnet_node" {
   param "arn" {}
 }
 
+edge "aws_redshift_cluster_subnet_group_to_vpc_active_subnet_edge" {
+  title = "active subnet"
+
+  sql = <<-EOQ
+    select
+      s.cluster_subnet_group_name as from_id,
+      subnet ->> 'SubnetIdentifier' as to_id,
+      s.region,
+      subnet -> 'SubnetAvailabilityZone' ->> 'Name'
+    from
+      aws_redshift_subnet_group as s
+      cross join jsonb_array_elements(s.subnets) subnet
+      join
+        aws_redshift_cluster as c
+        on c.cluster_subnet_group_name = s.cluster_subnet_group_name
+        and c.availability_zone = subnet -> 'SubnetAvailabilityZone' ->> 'Name'
+        and c.region = s.region
+        and c.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
 edge "aws_redshift_cluster_subnet_group_to_vpc_subnet_edge" {
   title = "subnet"
 
@@ -489,13 +513,14 @@ edge "aws_redshift_cluster_subnet_group_to_vpc_subnet_edge" {
       s.cluster_subnet_group_name as from_id,
       subnet ->> 'SubnetIdentifier' as to_id
     from
-      aws_redshift_cluster as c
-      left join
-        aws_redshift_subnet_group as s
-        on c.vpc_id = s.vpc_id
-        and c.cluster_subnet_group_name = s.cluster_subnet_group_name
-        and c.arn = $1,
-      jsonb_array_elements(s.subnets) subnet;
+      aws_redshift_subnet_group as s
+      cross join jsonb_array_elements(s.subnets) subnet
+      join
+        aws_redshift_cluster as c
+        on c.cluster_subnet_group_name = s.cluster_subnet_group_name
+        and c.availability_zone <> subnet -> 'SubnetAvailabilityZone' ->> 'Name'
+        and c.region = s.region
+        and c.arn = $1;
   EOQ
 
   param "arn" {}
@@ -563,7 +588,7 @@ edge "aws_redshift_cluster_vpc_security_group_to_subnet_group_edge" {
       join
         aws_vpc_security_group as sg
         on sg.group_id = s ->> 'VpcSecurityGroupId'
-      join  
+      join
         aws_redshift_subnet_group as sub
         on c.vpc_id = sub.vpc_id
         and c.cluster_subnet_group_name = sub.cluster_subnet_group_name

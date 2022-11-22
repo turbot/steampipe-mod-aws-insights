@@ -289,7 +289,7 @@ query "aws_sqs_queue_policy" {
 query "aws_sqs_queue_message" {
   sql = <<-EOQ
     select
-      max_message_size  as "Max Message Size",
+      max_message_size as "Max Message Size",
       message_retention_seconds as "Message Retention Seconds",
       visibility_timeout_seconds as "Visibility Timeout Seconds"
     from
@@ -486,7 +486,7 @@ node "aws_sqs_queue_from_s3_bucket_node" {
 }
 
 edge "aws_sqs_queue_from_s3_bucket_edge" {
-  title = "notifies"
+  title = "queues"
 
   sql = <<-EOQ
     select
@@ -531,7 +531,7 @@ node "aws_sqs_queue_from_lambda_function_node" {
 }
 
 edge "aws_sqs_queue_from_lambda_function_edge" {
-  title = "dead letter config"
+  title = "queues"
 
   sql = <<-EOQ
     select
@@ -572,7 +572,7 @@ node "aws_sqs_queue_from_vpc_endpoint_node" {
 }
 
 edge "aws_sqs_queue_from_vpc_endpoint_edge" {
-  title = "sqs queue"
+  title = "queues"
 
   sql = <<-EOQ
     select
