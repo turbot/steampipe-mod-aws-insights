@@ -358,7 +358,7 @@ node "aws_sqs_queue_to_sns_topic_subscription_node" {
 }
 
 edge "aws_sqs_queue_to_sns_topic_subscription_edge" {
-  title = "subscribe to"
+  title = "subscribes"
 
   sql = <<-EOQ
     select
@@ -486,7 +486,7 @@ node "aws_sqs_queue_from_s3_bucket_node" {
 }
 
 edge "aws_sqs_queue_from_s3_bucket_edge" {
-  title = "sends notifications"
+  title = "notifies"
 
   sql = <<-EOQ
     select

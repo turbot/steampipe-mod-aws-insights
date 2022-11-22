@@ -350,7 +350,7 @@ node "aws_sns_topic_to_sns_topic_subscriptions_node" {
 }
 
 edge "aws_sns_topic_to_sns_topic_subscriptions_edge" {
-  title = "subscribe to"
+  title = "subscribes"
 
   sql = <<-EOQ
     select
@@ -394,7 +394,7 @@ node "aws_sns_topic_from_s3_bucket_node" {
 }
 
 edge "aws_sns_topic_from_s3_bucket_edge" {
-  title = "send notifications"
+  title = "notifies"
 
   sql = <<-EOQ
     select
@@ -444,7 +444,7 @@ node "aws_sns_topic_from_rds_db_instance_node" {
 }
 
 edge "aws_sns_topic_from_rds_db_instance_edge" {
-  title = "event subscription"
+  title = "notifies"
 
   sql = <<-EOQ
     select
@@ -501,7 +501,7 @@ node "aws_sns_topic_from_redshift_cluster_node" {
 }
 
 edge "aws_sns_topic_from_redshift_cluster_edge" {
-  title = "event subscription"
+  title = "notifies"
 
   sql = <<-EOQ
     select
@@ -551,7 +551,7 @@ node "aws_sns_topic_from_cloudtrail_trail_node" {
 }
 
 edge "aws_sns_topic_from_cloudtrail_trail_edge" {
-  title = "send notifications"
+  title = "notifies"
 
   sql = <<-EOQ
     select
@@ -596,7 +596,7 @@ node "aws_sns_topic_from_cloudformation_stack_node" {
 }
 
 edge "aws_sns_topic_from_cloudformation_stack_edge" {
-  title = "send notifications"
+  title = "notifies"
 
   sql = <<-EOQ
     select
@@ -642,7 +642,7 @@ node "aws_sns_topic_from_aws_elasticache_cluster_node" {
 }
 
 edge "aws_sns_topic_from_aws_elasticache_cluster_edge" {
-  title = "send notifications"
+  title = "notifies"
 
   sql = <<-EOQ
     select

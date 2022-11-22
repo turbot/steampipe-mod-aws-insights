@@ -666,7 +666,8 @@ edge "aws_rds_db_instance_rds_db_subnet_group_to_vpc_active_subnet_edge" {
         and rdb.region = rdsg.region
         and rdb.account_id = rdsg.account_id
     where
-       rdb.availability_zone = vs.availability_zone;
+       rdb.arn = $1
+       and rdb.availability_zone = vs.availability_zone;
   EOQ
 
   param "arn" {}
