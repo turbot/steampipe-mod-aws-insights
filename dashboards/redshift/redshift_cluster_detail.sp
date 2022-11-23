@@ -489,13 +489,13 @@ edge "aws_redshift_cluster_subnet_group_to_vpc_subnet_edge" {
       s.cluster_subnet_group_name as from_id,
       subnet ->> 'SubnetIdentifier' as to_id
     from
-      aws_redshift_cluster as c
-      left join
-        aws_redshift_subnet_group as s
-        on c.vpc_id = s.vpc_id
-        and c.cluster_subnet_group_name = s.cluster_subnet_group_name
-        and c.arn = $1,
-      jsonb_array_elements(s.subnets) subnet;
+      aws_redshift_subnet_group as s
+      cross join jsonb_array_elements(s.subnets) subnet
+      join
+        aws_redshift_cluster as c
+        on c.cluster_subnet_group_name = s.cluster_subnet_group_name
+        and c.region = s.region
+        and c.arn = $1;
   EOQ
 
   param "arn" {}
@@ -563,7 +563,7 @@ edge "aws_redshift_cluster_vpc_security_group_to_subnet_group_edge" {
       join
         aws_vpc_security_group as sg
         on sg.group_id = s ->> 'VpcSecurityGroupId'
-      join  
+      join
         aws_redshift_subnet_group as sub
         on c.vpc_id = sub.vpc_id
         and c.cluster_subnet_group_name = sub.cluster_subnet_group_name
@@ -905,12 +905,12 @@ node "aws_redshift_cluster_from_redshift_snapshot_node" {
 }
 
 edge "aws_redshift_cluster_from_redshift_snapshot_edge" {
-  title = "cluster"
+  title = "snapshot"
 
   sql = <<-EOQ
     select
-      snapshot.snapshot_identifier as from_id,
-      c.arn as to_id
+      c.arn as from_id,
+      snapshot.snapshot_identifier as to_id
     from
       aws_redshift_cluster as c
       left join

@@ -59,6 +59,7 @@ dashboard "aws_kms_key_detail" {
 
       nodes = [
         node.aws_kms_key_node,
+        node.aws_kms_key_to_kms_alias_node,
         node.aws_kms_key_from_cloudtrail_trail_node,
         node.aws_kms_key_from_ebs_volume_node,
         node.aws_kms_key_from_rds_db_cluster_snapshot_node,
@@ -73,6 +74,7 @@ dashboard "aws_kms_key_detail" {
       ]
 
       edges = [
+        edge.aws_kms_key_to_kms_alias_edge,
         edge.aws_kms_key_from_cloudtrail_trail_edge,
         edge.aws_kms_key_from_ebs_volume_edge,
         edge.aws_kms_key_from_rds_db_cluster_snapshot_edge,
@@ -157,16 +159,19 @@ dashboard "aws_kms_key_detail" {
 query "aws_kms_key_input" {
   sql = <<-EOQ
     select
-      title as label,
-      arn as value,
+      coalesce(a.title, k.title) as label,
+      k.arn as value,
       json_build_object(
-        'account_id', account_id,
-        'region', region
+        'target_key_id', a.target_key_id,
+        'account_id', a.account_id,
+        'region', a.region
       ) as tags
     from
-      aws_kms_key
+      aws_kms_key as k
+      left join aws_kms_alias as a
+      on a.target_key_id = k.id
     order by
-      title;
+      a.title;
   EOQ
 }
 
@@ -287,7 +292,7 @@ node "aws_kms_key_node" {
   sql = <<-EOQ
     select
       id as id,
-      title as title,
+      id as title,
       jsonb_build_object(
         'ARN', arn,
         'Key Manager', key_manager,
@@ -683,8 +688,10 @@ node "aws_kms_key_from_sqs_queue_node" {
       ) as properties
     from
       aws_kms_key as k
-      cross join jsonb_array_elements(aliases) as a
-      join aws_sqs_queue as q on a ->> 'AliasName' = q.kms_master_key_id
+      join aws_kms_alias as a
+      on a.target_key_id = k.id
+      join aws_sqs_queue as q
+      on a.alias_name = q.kms_master_key_id
       and k.region = q.region
       and k.account_id = q.account_id
     where
@@ -700,11 +707,13 @@ edge "aws_kms_key_from_sqs_queue_edge" {
   sql = <<-EOQ
     select
       q.queue_arn as from_id,
-      k.id as to_id
+      a.arn as to_id
     from
-      aws_kms_key as k
-      cross join jsonb_array_elements(aliases) as a
-      join aws_sqs_queue as q on a ->> 'AliasName' = q.kms_master_key_id
+       aws_kms_key as k
+      join aws_kms_alias as a
+      on a.target_key_id = k.id
+      join aws_sqs_queue as q
+      on a.alias_name = q.kms_master_key_id
       and k.region = q.region
       and k.account_id = q.account_id
     where
@@ -794,6 +803,48 @@ edge "aws_kms_key_from_s3_bucket_edge" {
       cross join jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as r
       join aws_kms_key as k
       on k.arn = r -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID'
+    where
+      k.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_kms_key_to_kms_alias_node" {
+  category = category.aws_kms_alias
+
+  sql = <<-EOQ
+    select
+      a.arn as id,
+      a.title as title,
+      jsonb_build_object(
+        'ARN', a.arn,
+        'Create Date', a.creation_date,
+        'Account ID', a.account_id,
+        'Region', a.region
+      ) as properties
+    from
+      aws_kms_alias as a
+      join aws_kms_key as k
+      on a.target_key_id = k.id
+    where
+      k.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_kms_key_to_kms_alias_edge" {
+  title = "key"
+
+  sql = <<-EOQ
+    select
+      a.arn as from_id,
+      k.id as to_id
+    from
+      aws_kms_alias as a
+      join aws_kms_key as k
+      on a.target_key_id = k.id
     where
       k.arn = $1;
   EOQ
