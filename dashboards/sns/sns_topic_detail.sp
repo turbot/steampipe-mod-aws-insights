@@ -333,7 +333,7 @@ node "aws_sns_topic_to_sns_topic_subscriptions_node" {
   sql = <<-EOQ
     select
       subscription_arn as id,
-      title as title,
+      left(title,8) as title,
       jsonb_build_object(
         'ARN', subscription_arn,
         'Pending Confirmation', pending_confirmation,

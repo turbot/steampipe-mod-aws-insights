@@ -342,7 +342,7 @@ node "aws_sqs_queue_to_sns_topic_subscription_node" {
   sql = <<-EOQ
     select
       subscription_arn as id,
-      title as title,
+      left(title,8) as title,
       jsonb_build_object(
         'ARN', subscription_arn,
         'Account ID', account_id,

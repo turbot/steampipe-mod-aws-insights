@@ -62,8 +62,7 @@ dashboard "aws_cloudwatch_log_group_detail" {
         node.aws_cloudwatch_log_group_from_cloudtrail_trail_node,
         node.aws_cloudwatch_log_group_from_lambda_function_node,
         node.aws_cloudwatch_log_group_from_vpc_flow_logs_node,
-        node.aws_cloudwatch_log_group_from_kinesis_stream_node,
-        node.aws_cloudwatch_log_group_subscription_filter_from_lambda_function_node
+        node.aws_cloudwatch_log_group_from_kinesis_stream_node
       ]
 
       edges = [
@@ -71,8 +70,7 @@ dashboard "aws_cloudwatch_log_group_detail" {
         edge.aws_cloudwatch_log_group_from_cloudtrail_trail_edge,
         edge.aws_cloudwatch_log_group_from_lambda_function_edge,
         edge.aws_cloudwatch_log_group_from_vpc_flow_logs_edge,
-        edge.aws_cloudwatch_log_group_from_kinesis_stream_edge,
-        edge.aws_cloudwatch_log_group_subscription_filter_from_lambda_function_edge
+        edge.aws_cloudwatch_log_group_from_kinesis_stream_edge
       ]
 
       args = {
@@ -474,7 +472,7 @@ node "aws_cloudwatch_log_group_from_kinesis_stream_node" {
 }
 
 edge "aws_cloudwatch_log_group_from_kinesis_stream_edge" {
-  title = "subscription filter"
+  title = "logs to"
 
   sql = <<-EOQ
     select
@@ -492,47 +490,3 @@ edge "aws_cloudwatch_log_group_from_kinesis_stream_edge" {
   param "log_group_arn" {}
 }
 
-node "aws_cloudwatch_log_group_subscription_filter_from_lambda_function_node" {
-  category = category.aws_lambda_function
-
-  sql = <<-EOQ
-    select
-      l.arn as id,
-      l.name as title,
-      jsonb_build_object(
-        'ARN', l.arn,
-        'State', l.state,
-        'runtime', l.runtime,
-        'Account ID', l.account_id,
-        'Region', l.region
-      ) as properties
-    from
-      aws_cloudwatch_log_group as g
-      left join aws_cloudwatch_log_subscription_filter as f on g.name = f.log_group_name
-      right join aws_lambda_function as l on l.arn = f.destination_arn
-    where
-      f.region = g.region
-      and g.arn = $1;
-  EOQ
-
-  param "log_group_arn" {}
-}
-
-edge "aws_cloudwatch_log_group_subscription_filter_from_lambda_function_edge" {
-  title = "subscription filter"
-
-  sql = <<-EOQ
-    select
-      l.arn as from_id,
-      $1 as to_id
-    from
-      aws_cloudwatch_log_group as g
-      left join aws_cloudwatch_log_subscription_filter as f on g.name = f.log_group_name
-      right join aws_lambda_function as l on l.arn = f.destination_arn
-    where
-      f.region = g.region
-      and g.arn = $1;
-  EOQ
-
-  param "log_group_arn" {}
-}

@@ -792,7 +792,7 @@ edge "aws_lambda_sns_topic_edge" {
       aws_sns_topic_subscription
     where
       protocol = 'lambda'
-      and endpoint = $1
+      and endpoint = $1;
   EOQ
 
   param "arn" {}
