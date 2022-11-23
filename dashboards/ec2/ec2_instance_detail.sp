@@ -77,6 +77,7 @@ dashboard "aws_ec2_instance_detail" {
         node.aws_ec2_instance_from_ec2_autoscaling_group_node,
         node.aws_ec2_instance_from_ec2_classic_load_balancer_node,
         node.aws_ec2_instance_from_ec2_target_group_node,
+        node.aws_ec2_instance_to_vpc_eip_node,
 
         node.aws_ec2_instance_from_ec2_alb_node,
         node.aws_ec2_instance_from_ec2_nlb_node,
@@ -86,6 +87,7 @@ dashboard "aws_ec2_instance_detail" {
       ]
 
       edges = [
+        edge.aws_ec2_instance_to_vpc_eip_edge,
         edge.aws_ec2_instance_to_ebs_volume_edge,
         edge.aws_ec2_instance_to_ec2_network_interface_edge,
         edge.aws_ec2_instance_to_vpc_security_group_edge,
@@ -425,6 +427,52 @@ edge "aws_ec2_instance_to_ec2_network_interface_edge" {
   param "arn" {}
 }
 
+node "aws_ec2_instance_to_vpc_eip_node" {
+  category = category.aws_vpc_eip
+
+  sql = <<-EOQ
+    select
+      e.arn as id,
+      e.title as title,
+      jsonb_build_object(
+        'ARN', e.arn,
+        'Allocation Id', e.allocation_id,
+        'Association Id', e.association_id,
+        'Public IP', e.public_ip,
+        'Domain', e.domain,
+        'Account ID', e.account_id,
+        'Region', e.region
+      ) as properties
+    from
+      aws_vpc_eip as e
+      left join aws_ec2_instance as i on e.instance_id = i.instance_id
+    where
+      e.network_interface_id is not null
+      and i.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_ec2_instance_to_vpc_eip_edge" {
+  title = "eip"
+
+  sql = <<-EOQ
+    select
+      eni.network_interface_id as from_id,
+      e.arn as to_id
+    from
+      aws_vpc_eip as e
+      left join aws_ec2_instance as i on e.instance_id = i.instance_id
+      left join aws_ec2_network_interface as eni on i.instance_id = eni.attached_instance_id
+    where
+      e.network_interface_id is not null
+      and i.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
 node "aws_ec2_instance_to_vpc_security_group_node" {
   category = category.aws_vpc_security_group
 
@@ -447,28 +495,6 @@ node "aws_ec2_instance_to_vpc_security_group_node" {
 
   param "arn" {}
 }
-
-# edge "aws_ec2_instance_to_vpc_security_group_edge" {
-#   title = "security groups"
-
-#   sql = <<-EOQ
-#     select
-#       instance_id as from_id,
-#       sg ->> 'GroupId' as to_id,
-#       jsonb_build_object(
-#         'Account ID', account_id
-#       ) as properties
-#     from
-#       aws_ec2_instance as i,
-#       jsonb_array_elements(security_groups) as sg
-#     where
-#       i.arn = $1;
-#   EOQ
-
-#   param "arn" {}
-# }
-
-
 
 edge "aws_ec2_instance_to_vpc_security_group_edge" {
   title = "security groups"
@@ -517,28 +543,6 @@ node "aws_ec2_instance_to_vpc_subnet_node" {
 
   param "arn" {}
 }
-
-# edge "aws_ec2_instance_to_vpc_subnet_edge" {
-#   title = "subnet"
-
-#   sql = <<-EOQ
-#     select
-#       coalesce(
-#         eni.network_interface_id,
-#         i.instance_id
-#       ) as from_id,
-#       i.subnet_id as to_id
-#     from
-#       aws_ec2_instance as i
-#       left join aws_ec2_network_interface as eni on i.instance_id = eni.attached_instance_id
-#     where
-#       arn = $1
-#   EOQ
-
-#   param "arn" {}
-# }
-
-
 
 edge "aws_ec2_instance_to_vpc_subnet_edge" {
   title = "subnet"

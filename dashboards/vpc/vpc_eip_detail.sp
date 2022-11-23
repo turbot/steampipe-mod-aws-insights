@@ -224,7 +224,7 @@ node "aws_vpc_eip_from_ec2_instance_node" {
         'State', i.instance_state,
         'Account ID', i.account_id,
         'Region', i.region
-      ) as properties
+      ) as properties   
     from
       aws_vpc_eip as e
       left join aws_ec2_instance as i on e.instance_id = i.instance_id

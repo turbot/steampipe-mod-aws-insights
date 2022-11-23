@@ -331,13 +331,7 @@ edge "aws_cloudtrail_trail_to_s3_bucket_edge" {
   sql = <<-EOQ
     select
       t.arn as from_id,
-      b.arn as to_id,
-      jsonb_build_object(
-        'ARN', t.arn,
-        'Log Prefix', t.s3_key_prefix,
-        'Account ID', t.account_id,
-        'Region', t.region
-      ) as properties
+      b.arn as to_id
     from
       aws_s3_bucket as b
       right join aws_cloudtrail_trail as t on t.s3_bucket_name = b.name
@@ -473,7 +467,7 @@ node "aws_cloudtrail_trail_from_guardduty_detector_node" {
   sql = <<-EOQ
     select
       detector.arn as id,
-      detector.title as title,
+      left(detector.title,8) as title,
       jsonb_build_object(
         'ARN', detector.arn,
         'Account ID', detector.account_id,

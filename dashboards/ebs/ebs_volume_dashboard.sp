@@ -247,7 +247,7 @@ query "aws_ebs_volume_unattached_count" {
     from
       aws_ebs_volume
     where
-      attachments is null;
+      jsonb_array_length(attachments) = 0;
   EOQ
 }
 

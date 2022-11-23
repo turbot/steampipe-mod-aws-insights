@@ -292,7 +292,7 @@ node "aws_kms_key_node" {
   sql = <<-EOQ
     select
       id as id,
-      id as title,
+      left(id,8) as title,
       jsonb_build_object(
         'ARN', arn,
         'Key Manager', key_manager,

@@ -240,7 +240,7 @@ node "aws_cloudfront_distribution_to_acm_certificate_node" {
   sql      = <<-EOQ
     select
       certificate_arn as id,
-      title as title,
+      left(title,8) as title,
       jsonb_build_object (
         'ARN', certificate_arn,
         'Domain Name', domain_name,
