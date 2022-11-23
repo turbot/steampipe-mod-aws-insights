@@ -525,6 +525,12 @@ category "aws_cloudformation_stack" {
   icon  = "text:CFN"
 }
 
+category "aws_efs_access_point" {
+  title = "EFS Access Point"
+  color = local.storage_color
+  icon  = "text:AP"
+}
+
 category "aws_kinesis_stream" {
   title = "Kinesis Stream"
   color = local.analytics_color
