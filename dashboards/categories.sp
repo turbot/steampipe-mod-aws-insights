@@ -493,6 +493,12 @@ category "aws_dynamodb_table" {
   icon  = "circle-stack"
 }
 
+category "aws_dynamodb_backup" {
+  title = "DynamoDB Backup"
+  color = local.database_color
+  icon  = "text:backup"
+}
+
 category "aws_dax_subnet_group" {
   title = "DAX Subnet Group"
   color = local.database_color

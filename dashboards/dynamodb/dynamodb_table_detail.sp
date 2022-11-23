@@ -76,12 +76,14 @@ dashboard "aws_dynamodb_table_detail" {
         node.aws_dynamodb_table_node,
         node.aws_dynamodb_table_to_kms_key_node,
         node.aws_dynamodb_table_to_s3_bucket_node,
+        node.aws_dynamodb_table_to_dynamodb_backup_node,
         node.aws_dynamodb_table_to_kinesis_stream_node
       ]
 
       edges = [
         edge.aws_dynamodb_table_to_kms_key_edge,
         edge.aws_dynamodb_table_to_s3_bucket_edge,
+        edge.aws_dynamodb_table_to_dynamodb_backup_edge,
         edge.aws_dynamodb_table_to_kinesis_stream_edge
       ]
 
@@ -403,6 +405,49 @@ edge "aws_dynamodb_table_to_s3_bucket_edge" {
     where
       b.name = t.s3_bucket
       and t.table_arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_dynamodb_table_to_dynamodb_backup_node" {
+  category = category.aws_dynamodb_backup
+  
+  sql = <<-EOQ
+  select
+    b.arn as id,
+    b.title as title,
+    jsonb_build_object(
+      'ARN', b.arn,
+      'Status', b.backup_status,
+      'Creation Date', b.backup_creation_datetime,
+      'Region', b.region ,
+      'Account ID', b.account_id
+    ) as properties
+  from
+    aws_dynamodb_backup as b,
+    aws_dynamodb_table as t
+  where
+    t.arn = b.table_arn 
+    and t.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_dynamodb_table_to_dynamodb_backup_edge" {
+  title = "backup"
+
+  sql = <<-EOQ
+  select
+    t.table_id as from_id,
+    b.arn as to_id
+  from
+    aws_dynamodb_backup as b,
+    aws_dynamodb_table as t
+  where
+    t.arn = b.table_arn 
+    and t.arn = $1;
   EOQ
 
   param "arn" {}
