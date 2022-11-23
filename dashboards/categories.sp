@@ -459,6 +459,12 @@ category "aws_backup_vault" {
   icon  = "archive-box-arrow-down"
 }
 
+category "aws_backup_recovery_point" {
+  title = "Backup Recovery Point"
+  color = local.storage_color
+  icon  = "text:recovery"
+}
+
 category "aws_glacier_vault" {
   title = "Glacier Vault"
   color = local.storage_color
