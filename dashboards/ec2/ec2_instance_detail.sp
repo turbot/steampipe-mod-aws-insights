@@ -502,18 +502,16 @@ edge "aws_ec2_instance_to_vpc_security_group_edge" {
   sql = <<-EOQ
     select
       coalesce(
-        e.arn,
-        eni.network_interface_id
+        eni.network_interface_id,
+        i.instance_id
       ) as from_id,
       sg ->> 'GroupId' as to_id
     from
       aws_ec2_instance as i
-      left join aws_vpc_eip as e on e.instance_id = i.instance_id
       left join aws_ec2_network_interface as eni on i.instance_id = eni.attached_instance_id
       join jsonb_array_elements(security_groups) as sg on true
     where
-      e.network_interface_id is not null
-      and i.arn = $1;
+      i.arn = $1;
   EOQ
 
   param "arn" {}
