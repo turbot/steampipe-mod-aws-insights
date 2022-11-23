@@ -11,7 +11,7 @@ dashboard "aws_kms_key_detail" {
   input "key_arn" {
     title = "Select a key:"
     query = query.aws_kms_key_input
-    width = 4
+    width = 6
   }
 
   container {
@@ -163,8 +163,8 @@ query "aws_kms_key_input" {
       k.arn as value,
       json_build_object(
         'target_key_id', a.target_key_id,
-        'account_id', a.account_id,
-        'region', a.region
+        'account_id', k.account_id,
+        'region', k.region
       ) as tags
     from
       aws_kms_key as k
