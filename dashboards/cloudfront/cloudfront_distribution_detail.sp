@@ -67,14 +67,16 @@ dashboard "aws_cloudfront_distribution_detail" {
         node.aws_cloudfront_distribution_to_acm_certificate_node,
         node.aws_cloudfront_distribution_from_s3_bucket_node,
         node.aws_cloudfront_distribution_from_ec2_application_load_balancer_node,
-        node.aws_cloudfront_distribution_from_media_store_container_node
+        node.aws_cloudfront_distribution_from_media_store_container_node,
+        node.aws_cloudfront_distribution_to_wafv2_web_acl_node
       ]
 
       edges = [
         edge.aws_cloudfront_distribution_to_acm_certificate_edge,
         edge.aws_cloudfront_distribution_from_s3_bucket_edge,
         edge.aws_cloudfront_distribution_from_ec2_application_load_balancer_edge,
-        edge.aws_cloudfront_distribution_from_media_store_container_edge
+        edge.aws_cloudfront_distribution_from_media_store_container_edge,
+        edge.aws_cloudfront_distribution_to_wafv2_web_acl_edge
       ]
 
       args = {
@@ -332,7 +334,7 @@ node "aws_cloudfront_distribution_from_ec2_application_load_balancer_node" {
   sql      = <<-EOQ
     select
       arn as id,
-      name as title,
+      title as title,
       jsonb_build_object (
         'ARN', arn,
         'VPC ID', vpc_id,
@@ -380,7 +382,7 @@ node "aws_cloudfront_distribution_from_media_store_container_node" {
   sql      = <<-EOQ
     select
       arn as id,
-      name as title,
+      title as title,
       jsonb_build_object (
         'ARN', arn,
         'Status', status,
@@ -422,6 +424,53 @@ edge "aws_cloudfront_distribution_from_media_store_container_edge" {
 
   param "arn" {}
 }
+
+node "aws_cloudfront_distribution_to_wafv2_web_acl_node" {
+  category = category.aws_wafv2_web_acl
+  sql      = <<-EOQ
+    select
+      arn as id,
+      title as title,
+      jsonb_build_object (
+        'ARN', arn,
+        'Title', title,
+        'Cloud Watch Metrics Enabled', visibility_config->> 'CloudWatchMetricsEnabled',
+        'Capacity', capacity,
+        'Account ID', account_id
+      ) as properties
+    from
+      aws_wafv2_web_acl
+    where
+      arn in
+      (
+        select
+          web_acl_id
+        from
+          aws_cloudfront_distribution
+        where
+          arn = $1
+      );
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_cloudfront_distribution_to_wafv2_web_acl_edge" {
+  title = "web acl"
+  sql   = <<-EOQ
+    select
+      d.id as from_id,
+      c.arn as to_id
+    from
+      aws_wafv2_web_acl as c
+      left join aws_cloudfront_distribution as d on d.web_acl_id = c.arn
+    where
+      d.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
 
 query "aws_cloudfront_distribution_overview" {
   sql = <<-EOQ

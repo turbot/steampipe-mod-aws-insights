@@ -726,3 +726,9 @@ category "aws_opensearch_domain" {
   icon  = "text:OS"
   color = local.analytics_color
 }
+
+category "aws_wafv2_web_acl" {
+  title = "WAFV2 Web Acl"
+  icon  = "text:ACL"
+  color = local.frontend_web_color
+}
