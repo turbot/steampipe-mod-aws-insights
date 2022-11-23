@@ -835,12 +835,12 @@ node "aws_kms_key_to_kms_alias_node" {
 }
 
 edge "aws_kms_key_to_kms_alias_edge" {
-  title = "alias"
+  title = "key"
 
   sql = <<-EOQ
     select
-      k.id as from_id,
-      a.arn as to_id
+      a.arn as from_id,
+      k.id as to_id
     from
       aws_kms_alias as a
       join aws_kms_key as k
