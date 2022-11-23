@@ -70,6 +70,7 @@ dashboard "aws_eks_cluster_detail" {
         node.aws_eks_cluster_to_eks_addons_node,
         node.aws_eks_cluster_to_vpc_security_group_node,
         node.aws_eks_cluster_to_vpc_subnet_node,
+        node.aws_eks_cluster_to_eks_identity_provider_config_node,
         node.aws_eks_cluster_to_vpc_node
       ]
 
@@ -79,8 +80,8 @@ dashboard "aws_eks_cluster_detail" {
         edge.aws_eks_cluster_to_eks_node_group_edge,
         edge.aws_eks_cluster_to_eks_addons_edge,
         edge.aws_eks_cluster_to_vpc_security_group_edge,
-        edge.aws_eks_cluster_to_vpc_subnet_edge,
         edge.aws_eks_cluster_to_vpc_security_group_to_vpc_edge,
+        edge.aws_eks_cluster_to_eks_identity_provider_config_edge,
         edge.aws_eks_cluster_to_vpc_subnet_to_vpc_edge
       ]
 
@@ -640,23 +641,6 @@ node "aws_eks_cluster_to_vpc_subnet_node" {
   param "arn" {}
 }
 
-edge "aws_eks_cluster_to_vpc_subnet_edge" {
-  title = "subnet"
-
-  sql = <<-EOQ
-    select
-      arn as from_id,
-      subnet_id as to_id
-    from
-      aws_eks_cluster as c,
-      jsonb_array_elements_text(resources_vpc_config -> 'SubnetIds') as subnet_id
-    where
-      arn = $1
-  EOQ
-
-  param "arn" {}
-}
-
 node "aws_eks_cluster_to_vpc_node" {
   category = category.aws_vpc
 
@@ -689,15 +673,16 @@ node "aws_eks_cluster_to_vpc_node" {
 }
 
 edge "aws_eks_cluster_to_vpc_security_group_to_vpc_edge" {
-  title = "vpc"
+  title = "subnet"
 
   sql = <<-EOQ
     select
       group_id as from_id,
-      resources_vpc_config ->> 'VpcId' as to_id
+      subnet_id as to_id
     from
       aws_eks_cluster as c,
-      jsonb_array_elements_text(resources_vpc_config -> 'SecurityGroupIds') as group_id
+      jsonb_array_elements_text(resources_vpc_config -> 'SecurityGroupIds') as group_id,
+      jsonb_array_elements_text(resources_vpc_config -> 'SubnetIds') as subnet_id
     where
       arn = $1
   EOQ
@@ -717,6 +702,57 @@ edge "aws_eks_cluster_to_vpc_subnet_to_vpc_edge" {
       jsonb_array_elements_text(resources_vpc_config -> 'SubnetIds') as subnet_id
     where
       arn = $1
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_eks_cluster_to_eks_identity_provider_config_node" {
+  category = category.aws_eks_identity_provider_config
+
+  sql = <<-EOQ
+    select
+      arn as id,
+      title as title,
+      jsonb_build_object(
+        'ARN', arn,
+        'Type ', type,
+        'Client ID', client_id,
+        'Status', status,
+        'Account ID', account_id,
+        'Region', region
+        ) as properties
+    from
+      aws_eks_identity_provider_config
+    where
+      cluster_name in
+      (
+        select
+          name
+        from
+          aws_eks_cluster
+        where
+          arn = $1
+      )
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_eks_cluster_to_eks_identity_provider_config_edge" {
+  title = "identity provider config"
+
+  sql = <<-EOQ
+    select
+      c.arn as from_id,
+      i.arn as to_id
+    from
+      aws_eks_cluster as c
+      left join
+        aws_eks_identity_provider_config as i
+        on i.cluster_name = c.name
+    where
+      c.arn = $1;
   EOQ
 
   param "arn" {}

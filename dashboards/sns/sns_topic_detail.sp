@@ -9,7 +9,7 @@ dashboard "aws_sns_topic_detail" {
 
   input "topic_arn" {
     title = "Select a topic:"
-    sql   = query.aws_sns_topic_input.sql
+    query = query.aws_sns_topic_input
     width = 4
   }
 
@@ -310,7 +310,7 @@ node "aws_sns_topic_to_kms_key_node" {
 }
 
 edge "aws_sns_topic_to_kms_key_edge" {
-  title = "sns key"
+  title = "encrypted with"
 
   sql = <<-EOQ
     select
@@ -328,7 +328,7 @@ edge "aws_sns_topic_to_kms_key_edge" {
 }
 
 node "aws_sns_topic_to_sns_topic_subscriptions_node" {
-  category = category.aws_sns_topic
+  category = category.aws_sns_topic_subscription
 
   sql = <<-EOQ
     select
@@ -350,7 +350,7 @@ node "aws_sns_topic_to_sns_topic_subscriptions_node" {
 }
 
 edge "aws_sns_topic_to_sns_topic_subscriptions_edge" {
-  title = "sns subscription"
+  title = "subscription"
 
   sql = <<-EOQ
     select
@@ -394,7 +394,7 @@ node "aws_sns_topic_from_s3_bucket_node" {
 }
 
 edge "aws_sns_topic_from_s3_bucket_edge" {
-  title = "send notifications"
+  title = "notifies"
 
   sql = <<-EOQ
     select
@@ -444,7 +444,7 @@ node "aws_sns_topic_from_rds_db_instance_node" {
 }
 
 edge "aws_sns_topic_from_rds_db_instance_edge" {
-  title = "event subscription"
+  title = "notifies"
 
   sql = <<-EOQ
     select
@@ -456,8 +456,14 @@ edge "aws_sns_topic_from_rds_db_instance_edge" {
       aws_rds_db_event_subscription as e
     where
       e.source_type = 'db-instance'
-      and (source_ids_list is null or i.db_instance_identifier in (select trim((s::text ), '""') from aws_rds_db_event_subscription,
-      jsonb_array_elements(source_ids_list) as s)
+      and (source_ids_list is null or i.db_instance_identifier in
+        (
+        select
+          trim((s::text ), '""')
+        from
+          aws_rds_db_event_subscription,
+          jsonb_array_elements(source_ids_list) as s
+        )
       )
       and t.topic_arn = e.sns_topic_arn
       and topic_arn = $1;
@@ -495,7 +501,7 @@ node "aws_sns_topic_from_redshift_cluster_node" {
 }
 
 edge "aws_sns_topic_from_redshift_cluster_edge" {
-  title = "event subscription"
+  title = "notifies"
 
   sql = <<-EOQ
     select
@@ -529,7 +535,6 @@ node "aws_sns_topic_from_cloudtrail_trail_node" {
     select
       arn as id,
       title as title,
-      'aws_cloudtrail_trail' as category,
       jsonb_build_object(
         'ARN', t.arn,
         'Is Logging', t.is_logging,
@@ -540,14 +545,13 @@ node "aws_sns_topic_from_cloudtrail_trail_node" {
       aws_cloudtrail_trail as t
     where
       t.sns_topic_arn = $1;
-
   EOQ
 
   param "arn" {}
 }
 
 edge "aws_sns_topic_from_cloudtrail_trail_edge" {
-  title = "send notifications"
+  title = "notifies"
 
   sql = <<-EOQ
     select
@@ -586,20 +590,18 @@ node "aws_sns_topic_from_cloudformation_stack_node" {
       ) n
     where
       trim((n::text ), '""') = $1;
-
   EOQ
 
   param "arn" {}
 }
 
 edge "aws_sns_topic_from_cloudformation_stack_edge" {
-  title = "send notifications"
+  title = "notifies"
 
   sql = <<-EOQ
     select
       s.id as from_id,
       t.topic_arn as to_id
-
     from
       aws_sns_topic as t,
       aws_cloudformation_stack as s,
@@ -611,7 +613,6 @@ edge "aws_sns_topic_from_cloudformation_stack_edge" {
     where
       t.topic_arn = trim((n::text ), '""')
       and t.topic_arn = $1;
-
   EOQ
 
   param "arn" {}
@@ -624,7 +625,6 @@ node "aws_sns_topic_from_aws_elasticache_cluster_node" {
     select
       c.arn as id,
       c.title as title,
-      'aws_elasticache_cluster' as category,
       jsonb_build_object(
         'ARN', c.arn,
         'ID', c.cache_cluster_id,
@@ -636,14 +636,13 @@ node "aws_sns_topic_from_aws_elasticache_cluster_node" {
       aws_elasticache_cluster as c
     where
       c.notification_configuration ->> 'TopicArn' = $1;
-
   EOQ
 
   param "arn" {}
 }
 
 edge "aws_sns_topic_from_aws_elasticache_cluster_edge" {
-  title = "send notifications"
+  title = "notifies"
 
   sql = <<-EOQ
     select

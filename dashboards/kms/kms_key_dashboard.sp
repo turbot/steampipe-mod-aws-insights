@@ -11,23 +11,23 @@ dashboard "aws_kms_key_dashboard" {
 
     # Analysis
     card {
-      sql   = query.aws_kms_key_count.sql
+      query = query.aws_kms_key_count
       width = 2
     }
 
     card {
-      sql   = query.aws_kms_customer_managed_key_count.sql
+      query = query.aws_kms_customer_managed_key_count
       width = 2
     }
 
     # Assessments
     card {
-      sql   = query.aws_kms_key_disabled_count.sql
+      query = query.aws_kms_key_disabled_count
       width = 2
     }
 
     card {
-      sql   = query.aws_kms_cmk_rotation_disabled_count.sql
+      query = query.aws_kms_cmk_rotation_disabled_count
       width = 2
       href  = dashboard.aws_kms_key_lifecycle_report.url_path
     }
@@ -37,7 +37,7 @@ dashboard "aws_kms_key_dashboard" {
       type  = "info"
       icon  = "currency-dollar"
       width = 2
-      sql   = query.aws_kms_key_cost_mtd.sql
+      query = query.aws_kms_key_cost_mtd
     }
 
   }
@@ -49,7 +49,7 @@ dashboard "aws_kms_key_dashboard" {
 
     chart {
       title = "Enabled/Disabled Status"
-      sql   = query.aws_kms_key_disabled_status.sql
+      query = query.aws_kms_key_disabled_status
       type  = "donut"
       width = 4
 
@@ -65,7 +65,7 @@ dashboard "aws_kms_key_dashboard" {
 
     chart {
       title = "CMK Rotation Status"
-      sql   = query.aws_kms_key_rotation_status.sql
+      query = query.aws_kms_key_rotation_status
       type  = "donut"
       width = 4
 
@@ -89,14 +89,14 @@ dashboard "aws_kms_key_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      sql   = query.aws_kms_monthly_forecast_table.sql
+      query = query.aws_kms_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      sql   = query.aws_kms_key_cost_per_month.sql
+      query = query.aws_kms_key_cost_per_month
     }
 
   }
@@ -107,28 +107,28 @@ dashboard "aws_kms_key_dashboard" {
 
     chart {
       title = "Keys by Account"
-      sql   = query.aws_kms_key_by_account.sql
+      query = query.aws_kms_key_by_account
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Keys by Region"
-      sql   = query.aws_kms_key_by_region.sql
+      query = query.aws_kms_key_by_region
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Keys by State"
-      sql   = query.aws_kms_key_by_state.sql
+      query = query.aws_kms_key_by_state
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Keys by Age"
-      sql   = query.aws_kms_key_by_creation_month.sql
+      query = query.aws_kms_key_by_creation_month
       type  = "column"
       width = 3
     }

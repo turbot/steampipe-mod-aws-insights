@@ -11,12 +11,12 @@ dashboard "aws_lambda_function_encryption_report" {
   container {
 
     card {
-      sql   = query.aws_lambda_function_count.sql
+      query = query.aws_lambda_function_count
       width = 2
     }
 
     card {
-      sql = query.aws_lambda_function_unencrypted_count.sql
+      query = query.aws_lambda_function_unencrypted_count
       width = 2
     }
 
@@ -36,7 +36,7 @@ dashboard "aws_lambda_function_encryption_report" {
       href = "/aws_insights.dashboard.aws_lambda_function_detail?input.lambda_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_lambda_function_encryption_table.sql
+    query = query.aws_lambda_function_encryption_table
   }
 
 }

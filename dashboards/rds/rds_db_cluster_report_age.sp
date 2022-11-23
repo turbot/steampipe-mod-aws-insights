@@ -11,38 +11,38 @@ dashboard "aws_rds_db_cluster_age_report" {
   container {
 
     card {
-      sql   = query.aws_rds_db_cluster_count.sql
+      query = query.aws_rds_db_cluster_count
       width = 2
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_rds_db_cluster_24_hours_count.sql
+      query = query.aws_rds_db_cluster_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_rds_db_cluster_30_days_count.sql
+      query = query.aws_rds_db_cluster_30_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_ebs_volume_30_90_days_count.sql
+      query = query.aws_ebs_volume_30_90_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_rds_db_clustere_90_365_days_count.sql
+      query = query.aws_rds_db_clustere_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_rds_db_cluster_1_year_count.sql
+      query = query.aws_rds_db_cluster_1_year_count
     }
 
   }
@@ -56,7 +56,7 @@ dashboard "aws_rds_db_cluster_age_report" {
       display = "none"
     }
 
-    sql = query.aws_rds_db_cluster_age_table.sql
+    query = query.aws_rds_db_cluster_age_table
   }
 
 }

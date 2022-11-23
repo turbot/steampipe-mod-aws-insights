@@ -8,40 +8,40 @@ dashboard "acm_certificate_age_report" {
     category = "Age"
   })
 
-   container {
+  container {
 
     card {
-      sql   = query.aws_acm_certificate_count.sql
+      query = query.aws_acm_certificate_count
       width = 2
     }
 
     card {
-      type = "info"
-      sql = query.aws_acm_certificate_24_hours_count.sql
+      type  = "info"
+      query = query.aws_acm_certificate_24_hours_count
       width = 2
     }
 
     card {
-      type = "info"
-      sql = query.aws_acm_certificate_30_days_count.sql
+      type  = "info"
+      query = query.aws_acm_certificate_30_days_count
       width = 2
     }
 
     card {
-      type = "info"
-      sql = query.aws_acm_certificate_30_90_days_count.sql
+      type  = "info"
+      query = query.aws_acm_certificate_30_90_days_count
       width = 2
     }
 
     card {
-      type = "info"
-      sql = query.aws_acm_certificate_90_365_days_count.sql
+      type  = "info"
+      query = query.aws_acm_certificate_90_365_days_count
       width = 2
     }
 
     card {
-      type = "info"
-      sql = query.aws_acm_certificate_1_year_count.sql
+      type  = "info"
+      query = query.aws_acm_certificate_1_year_count
       width = 2
     }
 
@@ -60,7 +60,7 @@ dashboard "acm_certificate_age_report" {
       href = "${dashboard.acm_certificate_detail.url_path}?input.certificate_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_acm_certificate_age_table.sql
+    query = query.aws_acm_certificate_age_table
 
   }
 

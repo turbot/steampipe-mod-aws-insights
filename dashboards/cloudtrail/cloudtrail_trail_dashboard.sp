@@ -10,28 +10,28 @@ dashboard "aws_cloudtrail_trail_dashboard" {
   container {
 
     card {
-      sql   = query.aws_cloudtrail_trail_count.sql
+      query = query.aws_cloudtrail_trail_count
       width = 2
     }
 
     card {
-      sql   = query.aws_cloudtrail_regional_trail_count.sql
+      query = query.aws_cloudtrail_regional_trail_count
       width = 2
     }
 
     card {
-      sql   = query.aws_cloudtrail_trail_multi_region_count.sql
+      query = query.aws_cloudtrail_trail_multi_region_count
       width = 2
     }
 
     card {
-      sql   = query.aws_cloudtrail_trail_unencrypted_count.sql
+      query = query.aws_cloudtrail_trail_unencrypted_count
       width = 2
       href  = dashboard.aws_cloudtrail_trail_encryption_report.url_path
     }
 
     card {
-      sql   = query.aws_cloudtrail_trail_log_file_validation_disabled_count.sql
+      query = query.aws_cloudtrail_trail_log_file_validation_disabled_count
       width = 2
       href  = dashboard.aws_cloudtrail_trail_logging_report.url_path
     }
@@ -41,7 +41,7 @@ dashboard "aws_cloudtrail_trail_dashboard" {
       type  = "info"
       icon  = "currency-dollar"
       width = 2
-      sql   = query.aws_cloudtrail_trail_cost_mtd.sql
+      query = query.aws_cloudtrail_trail_cost_mtd
     }
 
   }
@@ -55,7 +55,7 @@ dashboard "aws_cloudtrail_trail_dashboard" {
       title = "Encryption Status"
       type  = "donut"
       width = 4
-      sql   = query.aws_cloudtrail_trail_encryption_status.sql
+      query = query.aws_cloudtrail_trail_encryption_status
 
       series "count" {
         point "enabled" {
@@ -71,7 +71,7 @@ dashboard "aws_cloudtrail_trail_dashboard" {
       title = "Log File Validation Status"
       type  = "donut"
       width = 4
-      sql   = query.aws_cloudtrail_trail_log_file_validation_status.sql
+      query = query.aws_cloudtrail_trail_log_file_validation_status
 
       series "count" {
         point "enabled" {
@@ -87,7 +87,7 @@ dashboard "aws_cloudtrail_trail_dashboard" {
       title = "Logging Status"
       type  = "donut"
       width = 4
-      sql   = query.aws_cloudtrail_trail_logging_status.sql
+      query = query.aws_cloudtrail_trail_logging_status
 
       series "count" {
         point "enabled" {
@@ -103,7 +103,7 @@ dashboard "aws_cloudtrail_trail_dashboard" {
       title = "Trail Bucket Public Access"
       type  = "donut"
       width = 4
-      sql   = query.aws_cloudtrail_trail_bucket_publicly_accessible.sql
+      query = query.aws_cloudtrail_trail_bucket_publicly_accessible
 
       series "count" {
         point "private" {
@@ -123,17 +123,17 @@ dashboard "aws_cloudtrail_trail_dashboard" {
     width = 6
 
     # Costs
-    table  {
+    table {
       width = 6
       title = "Forecast"
-      sql   = query.aws_cloudtrail_trail_monthly_forecast_table.sql
+      query = query.aws_cloudtrail_trail_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      sql   = query.aws_cloudtrail_trail_cost_per_month.sql
+      query = query.aws_cloudtrail_trail_cost_per_month
     }
 
   }
@@ -146,14 +146,14 @@ dashboard "aws_cloudtrail_trail_dashboard" {
       title = "Trails by Account"
       type  = "column"
       width = 4
-      sql   = query.aws_cloudtrail_trail_per_account.sql
+      query = query.aws_cloudtrail_trail_per_account
     }
 
     chart {
       title = "Trails by Region"
       type  = "column"
       width = 4
-      sql   = query.aws_cloudtrail_trail_per_region.sql
+      query = query.aws_cloudtrail_trail_per_region
     }
 
   }

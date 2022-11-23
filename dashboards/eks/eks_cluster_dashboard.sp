@@ -12,23 +12,23 @@ dashboard "aws_eks_cluster_dashboard" {
   container {
 
     card {
-      sql   = query.aws_eks_cluster_count.sql
+      query = query.aws_eks_cluster_count
       width = 2
     }
 
     #Assessments
     card {
-      sql   = query.aws_eks_cluster_secrets_encryption_disabled.sql
+      query = query.aws_eks_cluster_secrets_encryption_disabled
       width = 2
     }
 
     card {
-      sql   = query.aws_eks_cluster_endpoint_endpoint_public_access_disabled.sql
+      query = query.aws_eks_cluster_endpoint_endpoint_public_access_disabled
       width = 2
     }
 
     card {
-      sql   = query.aws_eks_cluster_audit_logging_disabled.sql
+      query = query.aws_eks_cluster_audit_logging_disabled
       width = 2
     }
 
@@ -43,7 +43,7 @@ dashboard "aws_eks_cluster_dashboard" {
 
     chart {
       title = "Secrets Encryption Status"
-      sql   = query.aws_eks_cluster_secrets_encryption_status.sql
+      query = query.aws_eks_cluster_secrets_encryption_status
       type  = "donut"
       width = 4
 
@@ -59,7 +59,7 @@ dashboard "aws_eks_cluster_dashboard" {
 
     chart {
       title = "Endpoint Public Access Status"
-      sql   = query.aws_eks_cluster_endpoint_public_access_status.sql
+      query = query.aws_eks_cluster_endpoint_public_access_status
       type  = "donut"
       width = 4
 
@@ -75,7 +75,7 @@ dashboard "aws_eks_cluster_dashboard" {
 
     chart {
       title = "Audit Logging Status"
-      sql   = query.aws_eks_cluster_audit_logging_status.sql
+      query = query.aws_eks_cluster_audit_logging_status
       type  = "donut"
       width = 4
 
@@ -98,14 +98,14 @@ dashboard "aws_eks_cluster_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      sql   = query.aws_eks_monthly_forecast_table.sql
+      query = query.aws_eks_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      sql   = query.aws_eks_cost_per_month.sql
+      query = query.aws_eks_cost_per_month
     }
 
   }
@@ -118,42 +118,42 @@ dashboard "aws_eks_cluster_dashboard" {
 
     chart {
       title = "Clusters by Account"
-      sql   = query.aws_eks_cluster_by_account.sql
+      query = query.aws_eks_cluster_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Clusters by Region"
-      sql   = query.aws_eks_cluster_by_region.sql
+      query = query.aws_eks_cluster_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Clusters by Status"
-      sql   = query.aws_eks_cluster_by_status.sql
+      query = query.aws_eks_cluster_by_status
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Clusters by Creation Month"
-      sql   = query.aws_eks_cluste_by_creation_month.sql
+      query = query.aws_eks_cluste_by_creation_month
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Clusters by Platform Version"
-      sql   = query.aws_eks_cluster_by_platform_version.sql
+      query = query.aws_eks_cluster_by_platform_version
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Clusters by IP Family"
-      sql   = query.aws_eks_cluster_by_ip_family.sql
+      query = query.aws_eks_cluster_by_ip_family
       type  = "column"
       width = 4
     }

@@ -1,6 +1,6 @@
 dashboard "aws_iam_access_key_age_report" {
 
-  title = "AWS IAM Access Key Age Report"
+  title         = "AWS IAM Access Key Age Report"
   documentation = file("./dashboards/iam/docs/iam_access_key_report_age.md")
 
   tags = merge(local.iam_common_tags, {
@@ -12,37 +12,37 @@ dashboard "aws_iam_access_key_age_report" {
 
     card {
       width = 2
-      sql   = query.aws_iam_access_count.sql
+      query = query.aws_iam_access_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_iam_access_key_24_hours_count.sql
+      query = query.aws_iam_access_key_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_iam_access_key_30_days_count.sql
+      query = query.aws_iam_access_key_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_iam_access_key_30_90_days_count.sql
+      query = query.aws_iam_access_key_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_iam_access_key_90_365_days_count.sql
+      query = query.aws_iam_access_key_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_iam_access_key_1_year_count.sql
+      query = query.aws_iam_access_key_1_year_count
     }
 
   }
@@ -60,7 +60,7 @@ dashboard "aws_iam_access_key_age_report" {
       href = "${dashboard.aws_iam_user_detail.url_path}?input.user_arn={{.'User ARN' | @uri}}"
     }
 
-    sql = query.aws_iam_access_key_age_table.sql
+    query = query.aws_iam_access_key_age_table
   }
 
 }
@@ -150,7 +150,7 @@ query "aws_iam_access_key_age_table" {
         aws_iam_access_key as k,
         aws_iam_user as u
       where
-        u.name = k.user_name   
+        u.name = k.user_name
       )
       select
         ak.user as "User",

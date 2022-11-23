@@ -10,7 +10,7 @@ dashboard "aws_iam_group_detail" {
 
   input "group_arn" {
     title = "Select a group:"
-    sql   = query.aws_iam_group_input.sql
+    query = query.aws_iam_group_input
     width = 2
   }
 
@@ -166,7 +166,7 @@ node "aws_iam_group_node" {
         'ARN', arn,
         'Path', path,
         'Create Date', create_date,
-        'Account ID', account_id 
+        'Account ID', account_id
       ) as properties
     from
       aws_iam_group
@@ -189,7 +189,7 @@ node "aws_iam_group_to_iam_policy_node" {
         'AWS Managed', is_aws_managed::text,
         'Attached', is_attached::text,
         'Create Date', create_date,
-        'Account ID', account_id 
+        'Account ID', account_id
       ) as properties
     from
       aws_iam_policy
@@ -216,7 +216,7 @@ edge "aws_iam_group_to_iam_policy_edge" {
       r.group_id as from_id,
       p.policy_id as to_id,
       jsonb_build_object(
-        'Account ID', p.account_id 
+        'Account ID', p.account_id
       ) as properties
     from
       aws_iam_group as r,
@@ -243,7 +243,7 @@ node "aws_iam_group_from_iam_user_node" {
         'path', path,
         'Create Date', create_date,
         'MFA Enabled', mfa_enabled::text,
-        'Account ID', u.account_id 
+        'Account ID', u.account_id
       ) as properties
     from
       aws_iam_user as u,
@@ -262,8 +262,8 @@ edge "aws_iam_group_from_iam_user_edge" {
     select
       u.user_id as from_id,
       g ->> 'GroupId' as to_id,
-      jsonb_build_object( 
-        'Account ID', u.account_id 
+      jsonb_build_object(
+        'Account ID', u.account_id
       ) as properties
     from
       aws_iam_user as u,

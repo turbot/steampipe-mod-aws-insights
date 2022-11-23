@@ -11,12 +11,12 @@ dashboard "aws_ebs_volume_encryption_report" {
   container {
 
     card {
-      sql   = query.aws_ebs_volume_count.sql
+      query = query.aws_ebs_volume_count
       width = 2
     }
 
     card {
-      sql   = query.aws_ebs_volume_unencrypted_count.sql
+      query = query.aws_ebs_volume_unencrypted_count
       width = 2
     }
 
@@ -35,7 +35,7 @@ dashboard "aws_ebs_volume_encryption_report" {
       href = "${dashboard.aws_ebs_volume_detail.url_path}?input.volume_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_ebs_volume_encryption_table.sql
+    query = query.aws_ebs_volume_encryption_table
   }
 
 }

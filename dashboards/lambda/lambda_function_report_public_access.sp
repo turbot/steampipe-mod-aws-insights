@@ -11,12 +11,12 @@ dashboard "aws_lambda_function_public_access_report" {
   container {
 
     card {
-      sql   = query.aws_lambda_function_count.sql
+      query = query.aws_lambda_function_count
       width = 2
     }
 
     card {
-      sql = query.aws_lambda_function_public_count.sql
+      query = query.aws_lambda_function_public_count
       width = 2
     }
 
@@ -34,10 +34,10 @@ dashboard "aws_lambda_function_public_access_report" {
 
     column "Name" {
       href = "${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn={{.ARN | @uri}}"
-      
+
     }
 
-    sql = query.aws_lambda_function_public_access_table.sql
+    query = query.aws_lambda_function_public_access_table
   }
 
 }

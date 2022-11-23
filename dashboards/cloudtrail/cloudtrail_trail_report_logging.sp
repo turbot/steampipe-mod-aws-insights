@@ -11,17 +11,17 @@ dashboard "aws_cloudtrail_trail_logging_report" {
   container {
 
     card {
-      sql   = query.aws_cloudtrail_trail_count.sql
+      query = query.aws_cloudtrail_trail_count
       width = 2
     }
 
     card {
-      sql = query.aws_cloudtrail_trail_logging_disabled_count.sql
+      query = query.aws_cloudtrail_trail_logging_disabled_count
       width = 2
     }
 
     card {
-      sql = query.aws_cloudtrail_trail_log_file_validation_disabled_count.sql
+      query = query.aws_cloudtrail_trail_log_file_validation_disabled_count
       width = 2
     }
 
@@ -40,7 +40,7 @@ dashboard "aws_cloudtrail_trail_logging_report" {
       href = "${dashboard.aws_cloudtrail_trail_detail.url_path}?input.trail_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_cloudtrail_trail_logging_table.sql
+    query = query.aws_cloudtrail_trail_logging_table
 
   }
 

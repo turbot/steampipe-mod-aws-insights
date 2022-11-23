@@ -1,6 +1,6 @@
 dashboard "aws_sqs_queue_encryption_report" {
 
-  title = "AWS SQS Queue Encryption Report"
+  title         = "AWS SQS Queue Encryption Report"
   documentation = file("./dashboards/sqs/docs/sqs_queue_report_encryption.md")
 
   tags = merge(local.sqs_common_tags, {
@@ -11,12 +11,12 @@ dashboard "aws_sqs_queue_encryption_report" {
   container {
 
     card {
-      sql   = query.aws_sqs_queue_count.sql
+      query = query.aws_sqs_queue_count
       width = 2
     }
 
     card {
-      sql   = query.aws_sqs_queue_unencrypted_count.sql
+      query = query.aws_sqs_queue_unencrypted_count
       width = 2
     }
 
@@ -36,7 +36,7 @@ dashboard "aws_sqs_queue_encryption_report" {
       href = "${dashboard.aws_sqs_queue_detail.url_path}?input.queue_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_sqs_queue_encryption_table.sql
+    query = query.aws_sqs_queue_encryption_table
   }
 
 }

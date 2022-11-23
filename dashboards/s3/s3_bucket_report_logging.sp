@@ -11,12 +11,12 @@ dashboard "aws_s3_bucket_logging_report" {
   container {
 
     card {
-      sql   = query.aws_s3_bucket_count.sql
+      query = query.aws_s3_bucket_count
       width = 2
     }
 
     card {
-      sql   = query.aws_s3_bucket_logging_disabled_count.sql
+      query = query.aws_s3_bucket_logging_disabled_count
       width = 2
     }
 
@@ -35,7 +35,7 @@ dashboard "aws_s3_bucket_logging_report" {
       href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_s3_bucket_logging_table.sql
+    query = query.aws_s3_bucket_logging_table
   }
 
 }

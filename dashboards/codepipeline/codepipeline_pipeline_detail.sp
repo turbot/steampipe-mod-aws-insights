@@ -1,4 +1,4 @@
-dashboard "codepipeline_pipeline_detail" {
+dashboard "aws_codepipeline_pipeline_detail" {
 
   title         = "AWS CodePipeline Pipeline Detail"
   documentation = file("./dashboards/codepipeline/docs/codepipeline_pipeline_detail.md")
@@ -144,7 +144,8 @@ node "aws_codepipeline_pipeline_node" {
         'Name', name,
         'Created At', created_at,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Region', region
+      ) as properties
     from
       aws_codepipeline_pipeline
     where
@@ -160,12 +161,15 @@ node "aws_codepipeline_pipeline_from_iam_role_node" {
   sql = <<-EOQ
     select
       role_id as id,
-      name as title,
+      title as title,
       jsonb_build_object(
+        'Name', name,
         'ARN', arn,
+        'Path', path,
         'Create Date', create_date,
         'Max Session Duration', max_session_duration,
-        'Account ID', account_id ) as properties
+        'Account ID', account_id
+      ) as properties
     from
       aws_iam_role
     where
@@ -214,7 +218,8 @@ node "aws_codepipeline_pipeline_from_kms_key_node" {
         'Creation Date', creation_date,
         'Enabled', enabled::text,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Region', region
+      ) as properties
     from
       aws_kms_key,
       jsonb_array_elements(aliases) as a
@@ -264,7 +269,8 @@ node "aws_codepipeline_pipeline_from_codecommit_repository_node" {
         'Name', repository_name,
         'Creation Date', creation_date,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Region', region
+      ) as properties
     from
       aws_codecommit_repository
     where
@@ -320,7 +326,8 @@ node "aws_codepipeline_pipeline_from_ecr_repository_node" {
         'Name', repository_name,
         'Created At', created_at,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Region', region
+      ) as properties
     from
       aws_ecr_repository
     where
@@ -376,7 +383,8 @@ node "aws_codepipeline_pipeline_from_s3_bucket_source_node" {
         'Name', name,
         'Creation Date', creation_date,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Region', region
+      ) as properties
     from
       aws_s3_bucket
     where
@@ -432,7 +440,8 @@ node "aws_codepipeline_pipeline_from_codebuild_project_node" {
         'Name', name,
         'Created', created,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Region', region
+      ) as properties
     from
       aws_codebuild_project
     where
@@ -488,7 +497,8 @@ node "aws_codepipeline_pipeline_from_s3_bucket_deploy_node" {
         'Name', name,
         'Creation Date', creation_date,
         'Account ID', account_id,
-        'Region', region ) as properties
+        'Region', region
+      ) as properties
     from
       aws_s3_bucket
     where
@@ -573,8 +583,7 @@ edge "aws_codepipeline_pipeline_from_codedeploy_app_edge" {
   sql = <<-EOQ
    select
       p.arn as from_id,
-      app.arn as to_id,
-      'codepipeline_pipeline_to_codedeploy_app' as category
+      app.arn as to_id
     from
       aws_codedeploy_app as app,
       aws_codepipeline_pipeline as p,

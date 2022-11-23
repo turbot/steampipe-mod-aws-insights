@@ -11,25 +11,25 @@ dashboard "aws_rds_db_cluster_dashboard" {
 
     # Analysis
     card {
-      sql   = query.aws_rds_db_cluster_count.sql
+      query = query.aws_rds_db_cluster_count
       width = 2
     }
 
     # Assessments
     card {
-      sql   = query.aws_rds_db_cluster_unencrypted_count.sql
+      query = query.aws_rds_db_cluster_unencrypted_count
       width = 2
       href  = dashboard.aws_rds_db_cluster_encryption_report.url_path
     }
 
     card {
-      sql   = query.aws_rds_db_cluster_logging_disabled_count.sql
+      query = query.aws_rds_db_cluster_logging_disabled_count
       width = 2
       href  = dashboard.aws_rds_db_cluster_logging_report.url_path
     }
 
     card {
-      sql   = query.aws_rds_db_cluster_no_deletion_protection_count.sql
+      query = query.aws_rds_db_cluster_no_deletion_protection_count
       width = 2
     }
 
@@ -38,7 +38,7 @@ dashboard "aws_rds_db_cluster_dashboard" {
       type  = "info"
       icon  = "currency-dollar"
       width = 2
-      sql   = query.aws_rds_db_cluster_cost_mtd.sql
+      query = query.aws_rds_db_cluster_cost_mtd
     }
 
   }
@@ -50,7 +50,7 @@ dashboard "aws_rds_db_cluster_dashboard" {
 
     chart {
       title = "Encryption Status"
-      sql   = query.aws_rds_db_cluster_by_encryption_status.sql
+      query = query.aws_rds_db_cluster_by_encryption_status
       type  = "donut"
       width = 4
 
@@ -66,7 +66,7 @@ dashboard "aws_rds_db_cluster_dashboard" {
 
     chart {
       title = "Logging Status"
-      sql   = query.aws_rds_db_cluster_logging_status.sql
+      query = query.aws_rds_db_cluster_logging_status
       type  = "donut"
       width = 4
 
@@ -82,7 +82,7 @@ dashboard "aws_rds_db_cluster_dashboard" {
 
     chart {
       title = "Deletion Protection Status"
-      sql   = query.aws_rds_db_cluster_deletion_protection_status.sql
+      query = query.aws_rds_db_cluster_deletion_protection_status
       type  = "donut"
       width = 4
 
@@ -98,7 +98,7 @@ dashboard "aws_rds_db_cluster_dashboard" {
 
     chart {
       title = "Multi-AZ Status"
-      sql   = query.aws_rds_db_cluster_multiple_az_status.sql
+      query = query.aws_rds_db_cluster_multiple_az_status
       type  = "donut"
       width = 4
 
@@ -122,14 +122,14 @@ dashboard "aws_rds_db_cluster_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      sql   = query.aws_rds_db_cluster_monthly_forecast_table.sql
+      query = query.aws_rds_db_cluster_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      sql   = query.aws_rds_db_cluster_cost_per_month.sql
+      query = query.aws_rds_db_cluster_cost_per_month
     }
 
   }
@@ -140,35 +140,35 @@ dashboard "aws_rds_db_cluster_dashboard" {
 
     chart {
       title = "Clusters by Account"
-      sql   = query.aws_rds_db_cluster_by_account.sql
+      query = query.aws_rds_db_cluster_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Clusters by Region"
-      sql   = query.aws_rds_db_cluster_by_region.sql
+      query = query.aws_rds_db_cluster_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Clusters by State"
-      sql   = query.aws_rds_db_cluster_by_state.sql
+      query = query.aws_rds_db_cluster_by_state
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Clusters by Age"
-      sql   = query.aws_rds_db_cluster_by_creation_month.sql
+      query = query.aws_rds_db_cluster_by_creation_month
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Clusters by Type"
-      sql   = query.aws_rds_db_cluster_by_engine_type.sql
+      query = query.aws_rds_db_cluster_by_engine_type
       type  = "column"
       width = 4
     }

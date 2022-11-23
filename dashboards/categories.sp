@@ -1,832 +1,679 @@
 category "aws_docdb_cluster" {
-  fold {
-    title     = "DocumentDB Cluster"
-    threshold = 3
-  }
+  title = "DocumentDB Cluster"
+  icon  = "text:DDB"
+  color = local.database_color
 }
 
 category "aws_ec2_classic_load_balancer" {
-  href = "/aws_insights.dashboard.aws_ec2_classic_load_balancer_detail?input.clb={{.properties.'ARN' | @uri}}"
-  icon = local.aws_ec2_classic_load_balancer_icon
-  fold {
-    title     = "EC2 Classic Load Balancers"
-    icon      = local.aws_ec2_classic_load_balancer_icon
-    threshold = 3
-  }
+  title = "EC2 Classic Load Balancer"
+  href  = "/aws_insights.dashboard.aws_ec2_classic_load_balancer_detail?input.clb={{.properties.'ARN' | @uri}}"
+  icon  = "text:CLB"
+  color = local.network_color
 }
 
 category "aws_ec2_application_load_balancer" {
-  href = "/aws_insights.dashboard.aws_ec2_application_load_balancer_detail?input.alb={{.properties.'ARN' | @uri}}"
-  icon = local.aws_ec2_application_load_balancer_icon
-  fold {
-    title     = "EC2 Application Load Balancers"
-    icon      = local.aws_ec2_application_load_balancer_icon
-    threshold = 3
-  }
+  title = "EC2 Application Load Balancer"
+  href  = "/aws_insights.dashboard.aws_ec2_application_load_balancer_detail?input.alb={{.properties.'ARN' | @uri}}"
+  icon  = "text:ALB"
+  color = local.network_color
 }
 
 category "aws_ec2_network_load_balancer" {
-  href = "/aws_insights.dashboard.aws_ec2_network_load_balancer_detail?input.nlb={{.properties.'ARN' | @uri}}"
-  icon = local.aws_ec2_network_load_balancer_icon
-  fold {
-    title     = "EC2 Network Load Balancers"
-    icon      = local.aws_ec2_network_load_balancer_icon
-    threshold = 3
-  }
+  title = "EC2 Network Load Balancer"
+  href  = "/aws_insights.dashboard.aws_ec2_network_load_balancer_detail?input.nlb={{.properties.'ARN' | @uri}}"
+  icon  = "text:NLB"
+  color = local.network_color
 }
 
 category "aws_ec2_gateway_load_balancer" {
-  href = "/aws_insights.dashboard.aws_ec2_gateway_load_balancer_detail?input.glb={{.properties.'ARN' | @uri}}"
-  icon = local.aws_ec2_gateway_load_balancer_icon
-  fold {
-    title     = "EC2 Gateway Load Balancers"
-    icon      = local.aws_ec2_gateway_load_balancer_icon
-    threshold = 3
-  }
+  title = "EC2 Gateway Load Balancer"
+  href  = "/aws_insights.dashboard.aws_ec2_gateway_load_balancer_detail?input.glb={{.properties.'ARN' | @uri}}"
+  icon  = "text:GLB"
+  color = local.network_color
 }
 
 category "aws_ec2_load_balancer_listener" {
-  fold {
-    title     = "EC2 Load Balancer Listeners"
-    threshold = 3
-  }
-}
-
-category "aws_ec2_transit_gateway" {
-  icon = local.aws_ec2_transit_gateway_icon
-  fold {
-    title     = "EC2 Transit Gateways"
-    icon = local.aws_ec2_transit_gateway_icon
-    threshold = 3
-  }
+  title = "EC2 Load Balancer Listener"
+  color = local.network_color
+  icon  = "text:LBL"
 }
 
 category "aws_ecs_cluster" {
-  href = "/aws_insights.dashboard.aws_ecs_cluster_detail?input.ecs_cluster_arn={{.properties.'ARN' | @uri}}"
-  fold {
-    title     = "ECS Clusters"
-    threshold = 3
-  }
+  title = "ECS Cluster"
+  href  = "/aws_insights.dashboard.aws_ecs_cluster_detail?input.ecs_cluster_arn={{.properties.'ARN' | @uri}}"
+  icon  = "text:ECS"
+  color = local.compute_color
 }
 
 category "aws_ecs_container_instance" {
-  fold {
-    title     = "ECS Container Instances"
-    threshold = 3
-  }
+  title = "ECS Container Instance"
+  icon  = "text:ECS"
+  color = local.compute_color
 }
 
 category "aws_ecs_task_definition" {
-  href = "/aws_insights.dashboard.aws_ecs_task_definition_detail?input.task_definition_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_ecs_task_definition_icon
-  fold {
-    title     = "ECS Tasks Definitions"
-    threshold = 3
-  }
+  title = "ECS Tasks Definition"
+  color = local.compute_color
+  href  = "/aws_insights.dashboard.aws_ecs_task_definition_detail?input.task_definition_arn={{.properties.'ARN' | @uri}}"
+  icon  = "text:ECS"
 }
 
 category "aws_ecs_service" {
-  href = "/aws_insights.dashboard.aws_ecs_service_detail?input.service_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_ecs_service_icon
-  fold {
-    threshold = 3
-    title     = "ECS Services"
-    icon      = local.aws_ecs_service_icon
-  }
+  title = "ECS Service"
+  color = local.compute_color
+  icon  = "text:ECS"
+  href  = "/aws_insights.dashboard.aws_ecs_service_detail?input.service_arn={{.properties.'ARN' | @uri}}"
 }
 
 category "aws_s3_bucket" {
-  href = "/aws_insights.dashboard.aws_s3_bucket_detail?input.bucket_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_s3_bucket_icon
-  fold {
-    title     = "S3 Buckets"
-    icon      = local.aws_s3_bucket_icon
-    threshold = 3
-  }
+  title = "S3 Bucket"
+  href  = "/aws_insights.dashboard.aws_s3_bucket_detail?input.bucket_arn={{.properties.'ARN' | @uri}}"
+  icon  = "archive-box"
+  color = local.storage_color
 }
 
 category "aws_cloudfront_distribution" {
-  href = "/aws_insights.dashboard.aws_cloudfront_distribution_detail?input.distribution_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_cloudfront_distribution_icon
-  fold {
-    title     = "CloudFront Distributions"
-    icon      = local.aws_cloudfront_distribution_icon
-    threshold = 3
-  }
+  title = "CloudFront Distribution"
+  color = local.cd_color
+  href  = "/aws_insights.dashboard.aws_cloudfront_distribution_detail?input.distribution_arn={{.properties.'ARN' | @uri}}"
+  icon  = "text:CD"
 }
 
 category "aws_acm_certificate" {
-  href = "/aws_insights.dashboard.acm_certificate_detail?input.certificate_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_acm_certificate_icon
-  fold {
-    title     = "ACM Certificates"
-    icon      = local.aws_acm_certificate_icon
-    threshold = 3
-  }
+  title = "ACM Certificate"
+  href  = "/aws_insights.dashboard.acm_certificate_detail?input.certificate_arn={{.properties.'ARN' | @uri}}"
+  icon  = "text:ACM"
+  color = local.security_color
 }
 
 category "aws_sns_topic" {
-  href = "/aws_insights.dashboard.aws_sns_topic_detail?input.topic_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_sns_topic_icon
-  fold {
-    title     = "SNS Topics"
-    icon      = local.aws_sns_topic_icon
-    threshold = 3
-  }
+  title = "SNS Topic"
+  href  = "/aws_insights.dashboard.aws_sns_topic_detail?input.topic_arn={{.properties.'ARN' | @uri}}"
+  icon  = "text:Topic"
+  color = local.integration_color
 }
 
+category "aws_sns_topic_subscription" {
+  title = "SNS Subscription"
+  icon  = "rss"
+  color = local.integration_color
+}
+
+
 category "aws_kms_key" {
-  href = "/aws_insights.dashboard.aws_kms_key_detail?input.key_arn={{.properties.'ARN' | @uri}}"
-  fold {
-    title     = "KMS Keys"
-    threshold = 3
-  }
+  title = "KMS Key"
+  href  = "/aws_insights.dashboard.aws_kms_key_detail?input.key_arn={{.properties.'ARN' | @uri}}"
+  icon  = "key"
+  color = local.security_color
+}
+
+category "aws_kms_alias" {
+  title = "KMS Key Alias"
+  icon  = "key"
+  color = local.security_color
 }
 
 category "aws_cloudtrail_trail" {
-  href = "/aws_insights.dashboard.aws_cloudtrail_trail_detail?input.trail_arn={{.properties.'ARN' | @uri}}"
-  fold {
-    title     = "CloudTrail Trails"
-    threshold = 3
-  }
+  title = "CloudTrail Trail"
+  color = local.mg_color
+  href  = "/aws_insights.dashboard.aws_cloudtrail_trail_detail?input.trail_arn={{.properties.'ARN' | @uri}}"
+  icon  = "text:CT"
 }
 
 category "aws_ebs_volume" {
-  href = "/aws_insights.dashboard.aws_ebs_volume_detail?input.volume_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_ebs_volume_icon
-  fold {
-    title     = "EBS Volumes"
-    icon      = local.aws_ebs_volume_icon
-    threshold = 3
-  }
+  title = "EBS Volume"
+  href  = "/aws_insights.dashboard.aws_ebs_volume_detail?input.volume_arn={{.properties.'ARN' | @uri}}"
+  icon  = "inbox-stack"
+  color = local.storage_color
 }
 
 category "aws_ebs_snapshot" {
-  href = "/aws_insights.dashboard.aws_ebs_snapshot_detail?input.snapshot_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_ebs_snapshot_icon
-  fold {
-    title     = "EBS Snapshots"
-    icon      = local.aws_ebs_snapshot_icon
-    threshold = 3
-  }
+  title = "EBS Snapshot"
+  href  = "/aws_insights.dashboard.aws_ebs_snapshot_detail?input.snapshot_arn={{.properties.'ARN' | @uri}}"
+  color = local.storage_color
+  icon  = "viewfinder-circle"
 }
 
 category "aws_rds_db_cluster" {
-  href = "/aws_insights.dashboard.aws_rds_db_cluster_detail.url_path?input.db_cluster_arn={{.properties.ARN | @uri}}"
-  icon = local.aws_rds_db_cluster_icon
-  fold {
-    title     = "RDS DB Clusters"
-    icon      = local.aws_rds_db_cluster_icon
-    threshold = 3
-  }
+  title = "RDS DB Cluster"
+  color = local.database_color
+  href  = "/aws_insights.dashboard.aws_rds_db_cluster_detail.url_path?input.db_cluster_arn={{.properties.ARN | @uri}}"
+  icon  = "circle-stack"
 }
 
 category "aws_rds_db_cluster_snapshot" {
-  href = "/aws_insights.dashboard.aws_rds_db_cluster_snapshot_detail.url_path?input.snapshot_arn={{.properties.ARN | @uri}}"
-  fold {
-    title     = "RDS DB Cluster Snapshots"
-    threshold = 3
-  }
+  title = "RDS DB Cluster Snapshot"
+  color = local.database_color
+  href  = "/aws_insights.dashboard.aws_rds_db_cluster_snapshot_detail.url_path?input.snapshot_arn={{.properties.ARN | @uri}}"
+  icon  = "viewfinder-circle"
 }
 
 category "aws_rds_db_instance" {
-  href = "/aws_insights.dashboard.aws_rds_db_instance_detail.url_path?input.db_instance_arn={{.properties.ARN | @uri}}"
-  icon = local.aws_rds_db_instance_icon
-  fold {
-    title     = "RDS DB Instances"
-    icon      = local.aws_rds_db_instance_icon
-    threshold = 3
-  }
+  title = "RDS DB Instance"
+  color = local.database_color
+  href  = "/aws_insights.dashboard.aws_rds_db_instance_detail.url_path?input.db_instance_arn={{.properties.ARN | @uri}}"
+  icon  = "circle-stack"
 }
 
 category "aws_rds_db_snapshot" {
-  href = "/aws_insights.dashboard.aws_rds_db_snapshot_detail.url_path?input.db_snapshot_arn={{.properties.ARN | @uri}}"
-  fold {
-    title     = "RDS DB Snapshots"
-    threshold = 3
-  }
+  title = "RDS DB Snapshot"
+  color = local.database_color
+  href  = "/aws_insights.dashboard.aws_rds_db_snapshot_detail.url_path?input.db_snapshot_arn={{.properties.ARN | @uri}}"
+  icon  = "viewfinder-circle"
 }
 
 category "aws_rds_db_cluster_parameter_group" {
-  fold {
-    title     = "RDS DB Cluster Parameter Group"
-    threshold = 3
-  }
+  title = "RDS DB Cluster Parameter Group"
+  color = local.database_color
+  icon  = "text:PG"
 }
 
 category "aws_rds_db_parameter_group" {
-  fold {
-    title     = "RDS DB Parameter Group"
-    threshold = 3
-  }
+  title = "RDS DB Parameter Group"
+  color = local.database_color
+  icon  = "text:PG"
 }
 
 category "aws_rds_db_subnet_group" {
-  fold {
-    title     = "RDS DB Subnet Group"
-    threshold = 3
-  }
+  title = "RDS DB Subnet Group"
+  color = local.database_color
+  icon  = "text:SG"
 }
 
 category "aws_redshift_cluster" {
-  href = "/aws_insights.dashboard.aws_redshift_cluster_detail?input.cluster_arn={{.properties.'ARN' | @uri}}"
-  fold {
-    title     = "Redshift Clusters"
-    threshold = 3
-  }
+  title = "Redshift Cluster"
+  color = local.database_color
+  href  = "/aws_insights.dashboard.aws_redshift_cluster_detail?input.cluster_arn={{.properties.'ARN' | @uri}}"
+  icon  = "circle-stack"
 }
 
 category "aws_redshift_snapshot" {
-  href = "/aws_insights.dashboard.aws_redshift_snapshot_detail?input.snapshot_arn={{.properties.'ARN' | @uri}}"
-  fold {
-    title     = "Redshift Snapshots"
-    threshold = 3
-  }
+  title = "Redshift Snapshot"
+  color = local.database_color
+  href  = "/aws_insights.dashboard.aws_redshift_snapshot_detail?input.snapshot_arn={{.properties.'ARN' | @uri}}"
+  icon  = "viewfinder-circle"
 }
 
 category "aws_redshift_subnet_group" {
-  fold {
-    title     = "Redshift Subnet Groups"
-    threshold = 3
-  }
+  title = "Redshift Subnet Group"
+  color = local.database_color
+  icon  = "text:SG"
 }
 
 category "aws_redshift_parameter_group" {
-  fold {
-    title     = "Redshift Parameter Groups"
-    threshold = 3
-  }
+  title = "Redshift Parameter Group"
+  color = local.database_color
+  icon  = "text:PG"
 }
 
 category "aws_ec2_ami" {
-  href = "aws_insights.dashboard.aws_ec2_ami_detail?input.ami={{.properties.'Image ID' | @uri}}"
-  icon = local.aws_ec2_ami_icon
-  fold {
-    title     = "EC2 AMIs"
-    icon      = local.aws_ec2_ami_icon
-    threshold = 3
-  }
+  title = "EC2 AMI"
+  href  = "aws_insights.dashboard.aws_ec2_ami_detail?input.ami={{.properties.'Image ID' | @uri}}"
+  color = local.compute_color
+  icon  = "text:image"
 }
 
 category "aws_ec2_autoscaling_group" {
-  fold {
-    title     = "EC2 Autoscaling Groups"
-    threshold = 3
-  }
+  title = "EC2 Autoscaling Group"
+  icon  = "square-2-stack"
+  color = local.compute_color
 }
 
 category "aws_ec2_target_group" {
-  fold {
-    title     = "EC2 Autoscaling Groups"
-    threshold = 3
-  }
+  title = "EC2 Target Group"
+  icon  = "arrow-down-on-square"
+  color = local.network_color
 }
 
 category "aws_ec2_key_pair" {
-  fold {
-    title     = "EC2 Key Pair"
-    threshold = 3
-  }
+  title = "EC2 Key Pair"
+  icon  = "key"
+  color = local.compute_color
 }
 
 category "aws_ecr_repository" {
-  href = "aws_insights.dashboard.aws_ecr_repository_detail?input.ecr_repository_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_ecr_repository_icon
-  fold {
-    title     = "ECR repositories"
-    threshold = 3
-  }
+  title = "ECR repository"
+  color = local.container_color
+  href  = "aws_insights.dashboard.aws_ecr_repository_detail?input.ecr_repository_arn={{.properties.'ARN' | @uri}}"
+  icon  = "text:ECR"
 }
 
 category "aws_ecr_image" {
-  icon = local.aws_ecr_image_icon
-  fold {
-    title     = "ECR images"
-    threshold = 3
-  }
+  title = "ECR image"
+  color = local.container_color
+  icon  = "text:Image"
 }
 
 category "aws_efs_file_system" {
-  fold {
-    title     = "EFS File Systems"
-    threshold = 3
-  }
+  title = "EFS File System"
+  color = local.storage_color
+  icon  = "text:File"
 }
 
 category "aws_efs_mount_target" {
-  fold {
-    title     = "EFS Mount Targets"
-    threshold = 3
-  }
+  title = "EFS Mount Target"
+  color = local.storage_color
+  icon  = "text:Target"
 }
 
 category "aws_ec2_instance" {
-  href = "/aws_insights.dashboard.aws_ec2_instance_detail?input.instance_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_ec2_instance_icon
-  fold {
-    title     = "EC2 Instances"
-    icon      = local.aws_ec2_instance_icon
-    threshold = 3
-  }
+  title = "EC2 Instance"
+  href  = "/aws_insights.dashboard.aws_ec2_instance_detail?input.instance_arn={{.properties.'ARN' | @uri}}"
+  icon  = "cpu-chip"
+  color = local.compute_color
 }
 
 category "aws_ec2_network_interface" {
-  href = "/aws_insights.dashboard.aws_ec2_network_interface_detail?input.network_interface_id={{.properties.'Interface ID' | @uri}}"
-  icon = local.aws_ec2_network_interface_icon
-  fold {
-    title     = "EC2 Network Interfaces"
-    icon      = local.aws_ec2_network_interface_icon
-    threshold = 3
-  }
+  title = "EC2 Network Interface"
+  href  = "/aws_insights.dashboard.aws_ec2_network_interface_detail?input.network_interface_id={{.properties.'Interface ID' | @uri}}"
+  icon  = "text:ENI"
+  color = local.compute_color
 }
 
 category "aws_vpc" {
-  href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.properties.'VPC ID' | @uri}}"
-  fold {
-    title     = "VPCs"
-    threshold = 3
-  }
+  title = "VPC"
+  href  = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.properties.'VPC ID' | @uri}}"
+  icon  = "cloud" //"text:vpc"
+  color = local.network_color
 }
 
 
 category "aws_vpc_security_group" {
-  href = "/aws_insights.dashboard.aws_vpc_security_group_detail?input.security_group_id={{.properties.'Group ID' | @uri}}"
-  fold {
-    title     = "VPC Security Groups"
-    threshold = 3
-  }
+  title = "VPC Security Group"
+  href  = "/aws_insights.dashboard.aws_vpc_security_group_detail?input.security_group_id={{.properties.'Group ID' | @uri}}"
+  icon  = "lock-closed"
+  color = local.network_color
 }
 
 category "aws_vpc_flow_log" {
-  href = "/aws_insights.dashboard.aws_vpc_flow_logs_detail?input.flow_log_id={{.properties.'Flow Log ID' | @uri}}"
-  icon = local.aws_vpc_flow_log_icon
-  fold {
-    title     = "VPC Flow Logs"
-    icon = local.aws_vpc_flow_log_icon
-    threshold = 3
-  }
+  title = "VPC Flow Log"
+  href  = "/aws_insights.dashboard.aws_vpc_flow_logs_detail?input.flow_log_id={{.properties.'Flow Log ID' | @uri}}"
+  color = local.network_color
+  icon  = "text:FlowLog"
 }
 
 category "aws_iam_role" {
-  href = "/aws_insights.dashboard.aws_iam_role_detail?input.role_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_iam_role_icon
-  fold {
-    title     = "IAM Roles"
-    icon      = local.aws_iam_role_icon
-    threshold = 3
-  }
+  title = "IAM Role"
+  href  = "/aws_insights.dashboard.aws_iam_role_detail?input.role_arn={{.properties.'ARN' | @uri}}"
+  icon  = "user-plus"
+  color = local.iam_color
 }
 
 category "aws_emr_instance" {
-  href = "/aws_insights.dashboard.aws_ec2_instance_detail?input.instance_arn={{.properties.'EC2 Instance ARN' | @uri}}"
-  icon = local.aws_ec2_instance_icon
-  fold {
-    title     = "EMR Instances"
-    icon      = local.aws_ec2_instance_icon
-    threshold = 3
-  }
+  title = "EMR Instances"
+  color = local.analytics_color
+  href  = "/aws_insights.dashboard.aws_ec2_instance_detail?input.instance_arn={{.properties.'EC2 Instance ARN' | @uri}}"
+  icon  = "cpu-chip"
 }
 
 category "aws_iam_policy" {
-  href = "/aws_insights.dashboard.aws_iam_policy_detail?input.policy_arn={{.properties.'ARN' | @uri}}"
-  fold {
-    title     = "IAM Policies"
-    threshold = 3
-  }
+  title = "IAM Policy"
+  color = local.iam_color
+  href  = "/aws_insights.dashboard.aws_iam_policy_detail?input.policy_arn={{.properties.'ARN' | @uri}}"
+  icon  = "document-check"
 }
 
 category "aws_iam_user" {
-  href = "/aws_insights.dashboard.aws_iam_user_detail?input.user_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_iam_user_icon
-  fold {
-    title     = "IAM Users"
-    icon      = local.aws_iam_user_icon
-    threshold = 3
-  }
+  title = "IAM User"
+  color = local.iam_color
+  href  = "/aws_insights.dashboard.aws_iam_user_detail?input.user_arn={{.properties.'ARN' | @uri}}"
+  icon  = "user"
 }
 
 category "aws_iam_group" {
-  href = "/aws_insights.dashboard.aws_iam_group_detail?input.group_arn={{.properties.'ARN' | @uri}}"
-  fold {
-    title     = "IAM Groups"
-    threshold = 3
-  }
+  title = "IAM Group"
+  color = local.iam_color
+  href  = "/aws_insights.dashboard.aws_iam_group_detail?input.group_arn={{.properties.'ARN' | @uri}}"
+  icon  = "user-group"
 }
 
 category "aws_iam_instance_profile" {
-  fold {
-    title     = "IAM Instance Profiles"
-    threshold = 3
-  }
+  title = "IAM Instance Profile"
+  color = local.iam_color
+  icon  = "text:Profile"
 }
 
 category "aws_iam_access_key" {
-  fold {
-    title     = "IAM Access Key"
-    threshold = 3
-  }
+  title = "IAM Access Key"
+  color = local.iam_color
+  icon  = "text:Accesskey"
 }
 
 category "aws_iam_profile" {
-  fold {
-    title     = "IAM Profiles"
-    threshold = 3
-  }
+  title = "IAM Profile"
+  icon  = "user-plus"
+  color = local.iam_color
 }
 
 category "aws_lambda_function" {
-  href = "/aws_insights.dashboard.aws_lambda_function_detail?input.lambda_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_lambda_function_icon
-  fold {
-    title     = "Lambda Functions"
-    icon      = local.aws_lambda_function_icon
-    threshold = 3
-  }
+  title = "Lambda Function"
+  href  = "/aws_insights.dashboard.aws_lambda_function_detail?input.lambda_arn={{.properties.'ARN' | @uri}}"
+  icon  = "text:Lambda"
+  color = local.compute_color
 }
 
+category "aws_lambda_alias" {
+  title = "Lambda Alias"
+  icon  = "at-symbol"
+  color = local.compute_color
+}
+
+category "aws_lambda_version" {
+  title = "Lambda Version"
+  icon  = "document-duplicate"
+  color = local.compute_color
+}
+
+
 category "aws_emr_cluster" {
-  href = "/aws_insights.dashboard.aws_emr_cluster_detail?input.emr_cluster_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_emr_cluster_icon
-  fold {
-    title     = "EMR Clusters"
-    icon      = local.aws_emr_cluster_icon
-    threshold = 3
-  }
+  title = "EMR Cluster"
+  color = local.analytics_color
+  href  = "/aws_insights.dashboard.aws_emr_cluster_detail?input.emr_cluster_arn={{.properties.'ARN' | @uri}}"
+  icon  = "text:EMR"
 }
 
 category "aws_vpc_subnet" {
-  href = "/aws_insights.dashboard.aws_vpc_subnet_detail?input.subnet_id={{.properties.'Subnet ID' | @uri}}"
-  fold {
-    title     = "VPC Subnets"
-    threshold = 3
-  }
+  title = "VPC Subnet"
+  href  = "/aws_insights.dashboard.aws_vpc_subnet_detail?input.subnet_id={{.properties.'Subnet ID' | @uri}}"
+  icon  = "share"
+  color = local.network_color
 }
 
 category "aws_elasticache_cluster" {
-  href = "/aws_insights.dashboard.aws_elasticache_cluster_detail.url_path?input.elasticache_cluster_arn={{.properties.ARN | @uri}}"
-  icon = local.aws_elasticache_cluster_icon
-  fold {
-    title     = "ElastiCache Clusters"
-    icon      = local.aws_elasticache_cluster_icon
-    threshold = 3
-  }
+  title = "ElastiCache Cluster"
+  color = local.database_color
+  href  = "/aws_insights.dashboard.aws_elasticache_cluster_detail.url_path?input.elasticache_cluster_arn={{.properties.ARN | @uri}}"
+  icon  = "circle-stack"
+}
+
+category "aws_elasticache_parameter_group" {
+  title = "elasticache Parameter Group"
+  color = local.database_color
+  icon  = "text:PG"
 }
 
 category "aws_elasticache_subnet_group" {
-  fold {
-    title     = "elasticache Subnet Groups"
-    threshold = 3
-  }
+  title = "elasticache Subnet Group"
+  color = local.database_color
+  icon  = "text:SG"
 }
 
 category "aws_vpc_eip" {
-  href = "/aws_insights.dashboard.aws_vpc_eip_detail?input.eip_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_vpc_eip_icon
-  fold {
-    title     = "VPC EIPs"
-    icon      = local.aws_vpc_eip_icon
-    threshold = 3
-  }
+  title = "VPC EIP"
+  color = local.network_color
+  href  = "/aws_insights.dashboard.aws_vpc_eip_detail?input.eip_arn={{.properties.'ARN' | @uri}}"
+  icon  = "text:EIP"
 }
 
 category "aws_eks_cluster" {
-  href = "/aws_insights.dashboard.aws_eks_cluster_detail?input.eks_cluster_arn={{.properties.'ARN' | @uri}}"
-  fold {
-    title     = "EKS Clusters"
-    threshold = 3
-  }
+  title = "EKS Cluster"
+  color = local.container_color
+  href  = "/aws_insights.dashboard.aws_eks_cluster_detail?input.eks_cluster_arn={{.properties.'ARN' | @uri}}"
+  icon  = "cog"
+}
+
+category "aws_eks_identity_provider_config" {
+  title = "EKS Identity Provider Config"
+  color = local.container_color
+  icon  = "IPC"
+}
+
+category "aws_eks_fargate_profile" {
+  title = "EKS Farget Profile"
+  color = local.container_color
+  icon  = "FP"
 }
 
 category "aws_sqs_queue" {
-  href = "/aws_insights.dashboard.aws_sqs_queue_detail?input.queue_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_sqs_queue_icon
-  fold {
-    title     = "SQS Queues"
-    icon      = local.aws_sqs_queue_icon
-    threshold = 3
-  }
+  title = "SQS Queue"
+  color = local.integration_color
+  href  = "/aws_insights.dashboard.aws_sqs_queue_detail?input.queue_arn={{.properties.'ARN' | @uri}}"
+  icon  = "text:Queue"
 }
 
 category "aws_eventbridge_rule" {
-  href = "/aws_insights.dashboard.aws_eventbridge_rule_detail?input.eventbridge_rule_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_eventbridge_rule_icon
-  fold {
-    title     = "EventBridge Rules"
-    icon      = local.aws_eventbridge_rule_icon
-    threshold = 3
-  }
+  title = "EventBridge Rule"
+  color = local.integration_color
+  href  = "/aws_insights.dashboard.aws_eventbridge_rule_detail?input.eventbridge_rule_arn={{.properties.'ARN' | @uri}}"
+  icon  = "text:Rule"
 }
 
 category "aws_api_gatewayv2_api" {
-  href = "/aws_insights.dashboard.api_gatewayv2_api_detail?input.api_id={{.properties.'ID' | @uri}}"
-  fold {
-    title     = "API Gatewayv2 APIs"
-    threshold = 3
-  }
+  title = "API Gatewayv2 API"
+  href  = "/aws_insights.dashboard.api_gatewayv2_api_detail?input.api_id={{.properties.'ID' | @uri}}"
+  icon  = "bolt"
+  color = local.frontend_web_color
 }
 
 category "aws_backup_plan" {
-  href = "/aws_insights.dashboard.backup_plan_detail?input.backup_plan_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_backup_plan_icon
-  fold {
-    title     = "Backup Plans"
-    icon      = local.aws_backup_plan_icon
-    threshold = 3
-  }
+  title = "Backup Plan"
+  color = local.storage_color
+  href  = "/aws_insights.dashboard.backup_plan_detail?input.backup_plan_arn={{.properties.'ARN' | @uri}}"
+  icon  = "text:Backup"
 }
 
 category "aws_backup_vault" {
-  href = "/aws_insights.dashboard.backup_vault_detail?input.backup_vault_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_backup_vault_icon
-  fold {
-    title     = "Backup Vaults"
-    icon      = local.aws_backup_vault_icon
-    threshold = 3
-  }
+  title = "Backup Vault"
+  color = local.storage_color
+  href  = "/aws_insights.dashboard.backup_vault_detail?input.backup_vault_arn={{.properties.'ARN' | @uri}}"
+  icon  = "archive-box-arrow-down"
 }
 
 category "aws_glacier_vault" {
-  href = "/aws_insights.dashboard.glacier_vault_detail?input.vault_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_glacier_vault_icon
-  fold {
-    title     = "Glacier Vaults"
-    icon      = local.aws_glacier_vault_icon
-    threshold = 3
-  }
+  title = "Glacier Vault"
+  color = local.storage_color
+  href  = "/aws_insights.dashboard.glacier_vault_detail?input.vault_arn={{.properties.'ARN' | @uri}}"
+  icon  = "text:Glacier"
 }
 
 category "aws_codepipeline_pipeline" {
-  href = "/aws_insights.dashboard.codepipeline_pipeline_detail?input.pipeline_arn={{.properties.'ARN' | @uri}}"
-  fold {
-    title     = "CodePipeline Pipelines"
-    threshold = 3
-  }
+  title = "CodePipeline Pipeline"
+  color = local.dev_tool_color
+  href  = "/aws_insights.dashboard.codepipeline_pipeline_detail?input.pipeline_arn={{.properties.'ARN' | @uri}}"
+  icon  = "text:CICD"
 }
 
 category "aws_dax_cluster" {
-  href = "/aws_insights.dashboard.dax_cluster_detail?input.dax_cluster_arn={{.properties.'ARN' | @uri}}"
-  fold {
-    title     = "DAX Clusters"
-    threshold = 3
-  }
+  title = "DAX Cluster"
+  color = local.database_color
+  href  = "/aws_insights.dashboard.dax_cluster_detail?input.dax_cluster_arn={{.properties.'ARN' | @uri}}"
+  icon  = "clipboard-document-check"
 }
 
 category "aws_dynamodb_table" {
-  href = "/aws_insights.dashboard.dynamodb_table_detail?input.table_arn={{.properties.'ARN' | @uri}}"
-  icon = local.aws_dynamodb_table_icon
-  fold {
-    title     = "DynamoDB Tables"
-    icon      = local.aws_dynamodb_table_icon
-    threshold = 3
-  }
+  title = "DynamoDB Table"
+  color = local.database_color
+  href  = "/aws_insights.dashboard.dynamodb_table_detail?input.table_arn={{.properties.'ARN' | @uri}}"
+  icon  = "circle-stack"
 }
 
 category "aws_dax_subnet_group" {
-  fold {
-    title     = "DAX Subnet Groups"
-    threshold = 3
-  }
+  title = "DAX Subnet Group"
+  color = local.database_color
+  icon  = "text:SG"
 }
 
 category "aws_codecommit_repository" {
-  fold {
-    title     = "CodeCommit Repositories"
-    threshold = 3
-  }
+  title = "CodeCommit Repository"
+  href  = "/aws_insights.dashboard.aws_codecommit_repository_detail?input.codecommit_repository_arn={{.properties.'ARN' | @uri}}"
+  color = local.dev_tool_color
+  icon  = "text:CICD"
 }
 
 category "aws_codebuild_project" {
-  fold {
-    title     = "CodeBuild Projects"
-    threshold = 3
-  }
+  title = "CodeBuild Project"
+  color = local.dev_tool_color
+  href  = "/aws_insights.dashboard.aws_codebuild_project_detail?input.codebuild_project_arn={{.properties.'ARN' | @uri}}"
+  icon  = "code-bracket-square"
 }
 
 category "aws_kinesisanalyticsv2_application" {
-  fold {
-    title     = "Kinesis Analytics Applications"
-    threshold = 3
-  }
+  title = "Kinesis Analytics Applications"
+  color = local.analytics_color
+  icon  = "text:Application"
 }
 
 category "aws_s3_access_point" {
-  icon = local.aws_s3_access_point_icon
-  fold {
-    title     = "S3 Access Points"
-    icon      = local.aws_s3_access_point_icon
-    threshold = 3
-  }
+  title = "S3 Access Point"
+  color = local.storage_color
+  icon  = "text:AP"
 }
 
 category "aws_cloudformation_stack" {
-  icon = local.aws_cloudformation_stack_icon
-  fold {
-    title     = "CloudFormation Stacks"
-    icon      = local.aws_cloudformation_stack_icon
-    threshold = 3
-  }
+  title = "CloudFormation Stack"
+  color = local.mg_color
+  icon  = "text:CFN"
 }
 
 category "aws_kinesis_stream" {
-  fold {
-    title     = "Kinesis Streams"
-    threshold = 3
-  }
+  title = "Kinesis Stream"
+  color = local.analytics_color
+  icon  = "text:Stream"
 }
 
 category "aws_vpc_endpoint" {
-  icon = local.aws_vpc_endpoint_icon
-  fold {
-    title     = "VPC Endpoints"
-    icon      = local.aws_vpc_endpoint_icon
-    threshold = 3
-  }
+  title = "VPC Endpoint"
+  color = local.network_color
+  icon  = "text:Endpoint"
 }
 
 category "aws_vpc_internet_gateway" {
-  icon = local.aws_vpc_internet_gateway_icon
-  fold {
-    title     = "VPC Internet Gateways"
-    icon      = local.aws_vpc_internet_gateway_icon
-    threshold = 3
-  }
+  title = "VPC Internet Gateway"
+  icon  = "text:IGW"
+  color = local.network_color
 }
 
 category "aws_vpc_route_table" {
-  icon = local.aws_vpc_route_table_icon
-  fold {
-    title     = "VPC Route Tables"
-    icon      = local.aws_vpc_route_table_icon
-    threshold = 3
-  }
+  title = "VPC Route Table"
+  icon  = "arrows-right-left"
+  color = local.network_color
 }
 
 category "aws_vpc_nat_gateway" {
-  icon = local.aws_vpc_nat_gateway_icon
-  fold {
-    title     = "VPC NAT Gateways"
-    icon      = local.aws_vpc_nat_gateway_icon
-    threshold = 3
-  }
+  title = "VPC NAT Gateway"
+  icon  = "text:NAT"
+  color = local.network_color
 }
 
 category "aws_vpc_vpn_gateway" {
-  icon = local.aws_vpc_vpn_gateway_icon
-  fold {
-    title     = "VPC VPN Gateways"
-    icon      = local.aws_vpc_vpn_gateway_icon
-    threshold = 3
-  }
+  title = "VPC VPN Gateway"
+  icon  = "text:VPN"
+  color = local.network_color
 }
 
 category "aws_vpc_network_acl" {
-  icon = local.aws_vpc_network_acl_icon
-  fold {
-    title     = "VPC Network ACLs"
-    icon      = local.aws_vpc_network_acl_icon
-    threshold = 3
-  }
+  title = "VPC Network ACL"
+  icon  = "text:ACL"
+  color = local.network_color
 }
 
 category "aws_cloudwatch_log_group" {
-  fold {
-    title     = "CloudWatch Log Groups"
-    threshold = 3
-  }
+  title = "CloudWatch Log Group"
+  color = local.mg_color
+  href  = "/aws_insights.dashboard.aws_cloudwatch_log_group_detail?input.log_group_arn={{.properties.'ARN' | @uri}}"
+  icon  = "text:CW"
 }
 
 category "aws_guardduty_detector" {
-  fold {
-    title     = "GuardDuty Detectors"
-    threshold = 3
-  }
+  title = "GuardDuty Detector"
+  color = local.security_color
+  icon  = "text:Detector"
 }
 
 category "aws_media_store_container" {
-  fold {
-    title     = "Media Store Containers"
-    threshold = 3
-  }
+  title = "Media Store Container"
+  color = local.container_color
+  icon  = "building-storefront"
 }
 
 category "aws_eventbridge_bus" {
-  icon = local.aws_eventbridge_bus_icon
-  fold {
-    title     = "EventBridge Buses"
-    icon      = local.aws_eventbridge_bus_icon
-    threshold = 3
-  }
+  title = "EventBridge Bus"
+  color = local.integration_color
+  icon  = "text:Bus"
 }
 
 category "aws_appconfig_application" {
-  fold {
-    title     = "AppConfig Applications"
-    threshold = 3
-  }
+  title = "AppConfig Application"
+  color = local.integration_color
+  icon  = "cog-6-tooth"
 }
 
 category "aws_api_gatewayv2_stage" {
-  fold {
-    title     = "API Gatewayv2 Stages"
-    threshold = 3
-  }
+  title = "API Gatewayv2 Stage"
+  color = local.frontend_web_color
+  icon  = "text:Stage"
 }
 
 category "aws_sfn_state_machine" {
-  fold {
-    title     = "Step Function State Machines"
-    threshold = 3
-  }
+  title = "Step Function State Machine"
+  color = local.integration_color
+  icon  = "text:SFN"
 }
 
 category "aws_ec2_launch_configuration" {
-  fold {
-    title     = "EC2 Launch Configurations"
-    threshold = 3
-  }
+  title = "EC2 Launch Configuration"
+  color = local.compute_color
+  icon  = "newspaper"
 }
 
 category "aws_dms_replication_instance" {
-  fold {
-    title     = "DMS Replication Instances"
-    threshold = 3
-  }
+  title = "DMS Replication Instance"
+  color = local.database_color
+  icon  = "text:DMS"
 }
 
 category "aws_sagemaker_notebook_instance" {
-  fold {
-    title     = "Sagemaker Notebook Instances"
-    threshold = 3
-  }
+  title = "Sagemaker Notebook Instance"
+  color = local.ml_color
+  icon  = "text:Instance"
 }
 
 category "aws_backup_selection" {
-  fold {
-    title     = "Backup Selections"
-    threshold = 3
-  }
+  title = "Backup Selection"
+  color = local.storage_color
+  icon  = "text:Selection"
 }
 
 category "aws_ecs_task" {
-  icon = local.aws_ecs_task_icon
-  fold {
-    title     = "ECS Tasks"
-    icon      = local.aws_ecs_task_icon
-    threshold = 3
-  }
+  title = "ECS Task"
+  color = local.compute_color
+  icon  = "text:Task"
 }
 
 category "aws_codedeploy_app" {
-  fold {
-    title     = "CodeDeploy Applications"
-    threshold = 3
-  }
+  title = "CodeDeploy Application"
+  color = local.dev_tool_color
+  icon  = "text:CICD"
 }
 
 category "aws_eks_addon" {
-  fold {
-    title     = "EKS Addons"
-    threshold = 3
-  }
+  title = "EKS Addon"
+  color = local.container_color
+  icon  = "text:Addon"
 }
 
 category "aws_eks_node_group" {
-  fold {
-    title     = "EKS Node Groups"
-    threshold = 3
-  }
+  title = "EKS Node Group"
+  color = local.container_color
+  icon  = "rectangle-group"
 }
 
 category "aws_emr_instance_fleet" {
-  fold {
-    title     = "EMR instance fleets"
-    threshold = 3
-  }
+  title = "EMR instance fleet"
+  color = local.analytics_color
+  icon  = "text:EMR"
 }
 
 category "aws_emr_instance_group" {
-  fold {
-    title     = "EMR instance groups"
-    threshold = 3
-  }
-}
-
-category "aws_fsx_file_system" {
-  icon = local.aws_fsx_file_system_icon
-  fold {
-    title     = "FSX File Systems"
-    icon = local.aws_fsx_file_system_icon
-    threshold = 3
-  }
+  title = "EMR instance group"
+  color = local.analytics_color
+  icon  = "rectangle-group"
 }
 
 category "aws_vpc_peering_connection" {
-  icon = local.aws_vpc_peering_connection_icon
-  fold {
-    title     = "VPC Peering Connections"
-    icon = local.aws_vpc_peering_connection_icon
-    threshold = 3
-  }
+  title = "VPC Peering Connection"
+  color = local.network_color
+  icon  = "text:Peering"
 }
 
 graph "aws_graph_categories" {
@@ -834,3 +681,48 @@ graph "aws_graph_categories" {
   title = "Relationships"
 }
 
+category "aws_fsx_file_system" {
+  title = "FSX File System"
+  icon  = "document-arrowup"
+  color = local.storage_color
+}
+
+
+category "aws_ec2_transit_gateway" {
+  title = "Transit Gateway"
+  icon  = "arrows-right-left"
+  color = local.network_color
+}
+
+category "aws_availability_zone" {
+  title = "Availability Zone"
+  icon  = "building-office"
+  color = local.network_color
+}
+
+
+category "aws_account" {
+  title = "Account"
+  icon  = "globe-alt"
+  color = local.compute_color
+}
+
+
+category "aws_region" {
+  title = "Region"
+  icon  = "globe-americas"
+  color = local.compute_color
+}
+
+
+category "aws_api_gatewayv2_integration" {
+  title = "API Gatewayv2 integration"
+  icon  = "puzzle-piece"
+  color = local.frontend_web_color
+}
+
+category "aws_opensearch_domain" {
+  title = "OpenSearch Domain"
+  icon  = "text:OS"
+  color = local.analytics_color
+}

@@ -9,7 +9,7 @@ dashboard "aws_vpc_subnet_detail" {
 
   input "subnet_id" {
     title = "Select a subnet:"
-    sql   = query.aws_vpc_subnet_input.sql
+    query = query.aws_vpc_subnet_input
     width = 4
   }
 
@@ -50,7 +50,7 @@ dashboard "aws_vpc_subnet_detail" {
 
       nodes = [
         node.aws_vpc_subnet_node,
-        node.aws_vpc_subnet_to_vpc_node,
+        node.aws_vpc_subnet_from_vpc_node,
         node.aws_vpc_subnet_to_vpc_route_table_node,
         node.aws_vpc_subnet_to_vpc_network_acl_node,
         node.aws_vpc_subnet_to_rds_db_instance_node,
@@ -60,7 +60,7 @@ dashboard "aws_vpc_subnet_detail" {
       ]
 
       edges = [
-        edge.aws_vpc_subnet_to_vpc_edge,
+        edge.aws_vpc_subnet_from_vpc_edge,
         edge.aws_vpc_subnet_to_vpc_route_table_edge,
         edge.aws_vpc_subnet_to_vpc_network_acl_edge,
         edge.aws_vpc_subnet_to_rds_db_instance_edge,
@@ -323,13 +323,13 @@ node "aws_vpc_subnet_node" {
     from
       aws_vpc_subnet
     where
-      subnet_id = $1
+      subnet_id = $1;
   EOQ
 
   param "subnet_id" {}
 }
 
-node "aws_vpc_subnet_to_vpc_node" {
+node "aws_vpc_subnet_from_vpc_node" {
   category = category.aws_vpc
 
   sql = <<-EOQ
@@ -347,30 +347,24 @@ node "aws_vpc_subnet_to_vpc_node" {
       aws_vpc_subnet as s
       left join aws_vpc as v on v.vpc_id = s.vpc_id
     where
-      s.subnet_id = $1
+      s.subnet_id = $1;
   EOQ
 
   param "subnet_id" {}
 }
 
-edge "aws_vpc_subnet_to_vpc_edge" {
-  title = "vpc"
+edge "aws_vpc_subnet_from_vpc_edge" {
+  title = "subnet"
 
   sql = <<-EOQ
      select
-      s.subnet_id as from_id,
-      v.vpc_id as to_id,
-      jsonb_build_object(
-        'VPC ID', v.vpc_id,
-        'ARN', v.arn,
-        'Account ID', v.account_id,
-        'Region', v.region
-      ) as properties
+      v.vpc_id as from_id,
+      s.subnet_id as to_id
     from
       aws_vpc_subnet as s
       left join aws_vpc as v on v.vpc_id = s.vpc_id
     where
-      s.subnet_id = $1
+      s.subnet_id = $1;
   EOQ
 
   param "subnet_id" {}
@@ -392,7 +386,7 @@ node "aws_vpc_subnet_to_vpc_route_table_node" {
       aws_vpc_route_table,
       jsonb_array_elements(associations) as a
     where
-      a ->> 'SubnetId' = $1
+      a ->> 'SubnetId' = $1;
   EOQ
 
   param "subnet_id" {}
@@ -404,16 +398,12 @@ edge "aws_vpc_subnet_to_vpc_route_table_edge" {
   sql = <<-EOQ
     select
       $1 as from_id,
-      route_table_id as to_id,
-      jsonb_build_object(
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
+      route_table_id as to_id
     from
       aws_vpc_route_table,
       jsonb_array_elements(associations) as a
     where
-      a ->> 'SubnetId' = $1
+      a ->> 'SubnetId' = $1;
   EOQ
 
   param "subnet_id" {}
@@ -437,7 +427,7 @@ node "aws_vpc_subnet_to_vpc_network_acl_node" {
       aws_vpc_network_acl,
       jsonb_array_elements(associations) as a
     where
-      a ->> 'SubnetId' = $1
+      a ->> 'SubnetId' = $1;
   EOQ
 
   param "subnet_id" {}
@@ -449,17 +439,12 @@ edge "aws_vpc_subnet_to_vpc_network_acl_edge" {
   sql = <<-EOQ
     select
       $1 as from_id,
-      network_acl_id as to_id,
-      jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
+      network_acl_id as to_id
     from
       aws_vpc_network_acl,
       jsonb_array_elements(associations) as a
     where
-      a ->> 'SubnetId' = $1
+      a ->> 'SubnetId' = $1;
   EOQ
 
   param "subnet_id" {}
@@ -483,29 +468,24 @@ node "aws_vpc_subnet_to_rds_db_instance_node" {
       aws_rds_db_instance,
       jsonb_array_elements(subnets) as s
     where
-      s ->> 'SubnetIdentifier' = $1
+      s ->> 'SubnetIdentifier' = $1;
   EOQ
 
   param "subnet_id" {}
 }
 
 edge "aws_vpc_subnet_to_rds_db_instance_edge" {
-  title = "rds db instance"
+  title = "subnet"
 
   sql = <<-EOQ
     select
-      db_instance_identifier as from_id,
-      $1 as to_id,
-      jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
+      $1 as from_id,
+      db_instance_identifier as to_id
     from
       aws_rds_db_instance,
       jsonb_array_elements(subnets) as s
     where
-      s ->> 'SubnetIdentifier' = $1
+      s ->> 'SubnetIdentifier' = $1;
   EOQ
 
   param "subnet_id" {}
@@ -527,7 +507,7 @@ node "aws_vpc_subnet_to_ec2_instance_node" {
     from
       aws_ec2_instance
     where
-      subnet_id = $1
+      subnet_id = $1;
   EOQ
 
   param "subnet_id" {}
@@ -538,17 +518,12 @@ edge "aws_vpc_subnet_to_ec2_instance_edge" {
 
   sql = <<-EOQ
     select
-      instance_id as from_id,
-      $1 as to_id,
-      jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
+      $1 as from_id,
+      instance_id as to_id
     from
       aws_ec2_instance
     where
-      subnet_id = $1
+      subnet_id = $1;
   EOQ
 
   param "subnet_id" {}
@@ -572,7 +547,7 @@ node "aws_vpc_subnet_to_lambda_function_node" {
       aws_lambda_function,
       jsonb_array_elements(vpc_subnet_ids) as s
     where
-      trim((s::text ), '""') = $1
+      trim((s::text ), '""') = $1;
   EOQ
 
   param "subnet_id" {}
@@ -583,13 +558,8 @@ edge "aws_vpc_subnet_to_lambda_function_edge" {
 
   sql = <<-EOQ
     select
-      arn as from_id,
-      $1 as to_id,
-      jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
+      $1 as from_id,
+      arn as to_id
     from
       aws_lambda_function,
       jsonb_array_elements(vpc_subnet_ids) as s
@@ -628,13 +598,8 @@ edge "aws_vpc_subnet_to_sagemaker_notebook_instance_edge" {
 
   sql = <<-EOQ
    select
-      arn as from_id,
-      $1 as to_id,
-      jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
+      $1 as from_id,
+      arn as to_id
     from
       aws_sagemaker_notebook_instance
     where

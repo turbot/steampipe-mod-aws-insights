@@ -11,35 +11,35 @@ dashboard "aws_rds_db_instance_dashboard" {
 
     # Analysis
     card {
-      sql   = query.aws_rds_db_instance_count.sql
+      query = query.aws_rds_db_instance_count
       width = 2
     }
 
     # Assessments
     card {
-      sql   = query.aws_rds_db_instance_public_count.sql
+      query = query.aws_rds_db_instance_public_count
       width = 2
       href  = dashboard.aws_rds_db_instance_public_access_report.url_path
     }
 
     card {
-      sql   = query.aws_rds_db_instance_unencrypted_count.sql
+      query = query.aws_rds_db_instance_unencrypted_count
       width = 2
       href  = dashboard.aws_rds_db_instance_encryption_report.url_path
     }
 
     card {
-      sql   = query.aws_rds_db_instance_logging_disabled_count.sql
+      query = query.aws_rds_db_instance_logging_disabled_count
       width = 2
       href  = dashboard.aws_rds_db_instance_logging_report.url_path
     }
 
     # Costs
     card {
-      type = "info"
-      icon = "currency-dollar"
+      type  = "info"
+      icon  = "currency-dollar"
       width = 2
-      sql = query.aws_rds_db_instance_cost_mtd.sql
+      query = query.aws_rds_db_instance_cost_mtd
     }
 
   }
@@ -51,7 +51,7 @@ dashboard "aws_rds_db_instance_dashboard" {
 
     chart {
       title = "Public/Private Status"
-      sql   = query.aws_rds_db_instance_public_status.sql
+      query = query.aws_rds_db_instance_public_status
       type  = "donut"
       width = 4
 
@@ -67,7 +67,7 @@ dashboard "aws_rds_db_instance_dashboard" {
 
     chart {
       title = "Encryption Status"
-      sql = query.aws_rds_db_instance_by_encryption_status.sql
+      query = query.aws_rds_db_instance_by_encryption_status
       type  = "donut"
       width = 4
 
@@ -83,7 +83,7 @@ dashboard "aws_rds_db_instance_dashboard" {
 
     chart {
       title = "Logging Status"
-      sql = query.aws_rds_db_instance_logging_status.sql
+      query = query.aws_rds_db_instance_logging_status
       type  = "donut"
       width = 4
 
@@ -99,7 +99,7 @@ dashboard "aws_rds_db_instance_dashboard" {
 
     chart {
       title = "Multi-AZ Status"
-      sql = query.aws_rds_db_instance_multiple_az_status.sql
+      query = query.aws_rds_db_instance_multiple_az_status
       type  = "donut"
       width = 4
 
@@ -115,7 +115,7 @@ dashboard "aws_rds_db_instance_dashboard" {
 
     chart {
       title = "Deletion Protection Status"
-      sql = query.aws_rds_db_instance_deletion_protection_status.sql
+      query = query.aws_rds_db_instance_deletion_protection_status
       type  = "donut"
       width = 4
 
@@ -137,17 +137,17 @@ dashboard "aws_rds_db_instance_dashboard" {
     title = "Cost"
     width = 6
 
-    table  {
+    table {
       width = 6
       title = "Forecast"
-      sql   = query.aws_rds_db_instance_monthly_forecast_table.sql
+      query = query.aws_rds_db_instance_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      sql   = query.aws_rds_db_instance_cost_per_month.sql
+      query = query.aws_rds_db_instance_cost_per_month
     }
 
   }
@@ -158,42 +158,42 @@ dashboard "aws_rds_db_instance_dashboard" {
 
     chart {
       title = "Instances by Account"
-      sql   = query.aws_rds_db_instance_by_account.sql
+      query = query.aws_rds_db_instance_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Instances by Region"
-      sql   = query.aws_rds_db_instance_by_region.sql
+      query = query.aws_rds_db_instance_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Instances by State"
-      sql   = query.aws_rds_db_instance_by_state.sql
+      query = query.aws_rds_db_instance_by_state
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Instances by Age"
-      sql   = query.aws_rds_db_instance_by_creation_month.sql
+      query = query.aws_rds_db_instance_by_creation_month
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Instances by Engine Type"
-      sql   = query.aws_rds_db_instance_by_engine_type.sql
+      query = query.aws_rds_db_instance_by_engine_type
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Instances by Class"
-      sql   = query.aws_rds_db_instance_by_class.sql
+      query = query.aws_rds_db_instance_by_class
       type  = "column"
       width = 4
     }
@@ -202,19 +202,19 @@ dashboard "aws_rds_db_instance_dashboard" {
 
   container {
 
-    title  = "Performance & Utilization"
+    title = "Performance & Utilization"
     width = 12
 
     chart {
       title = "Top 10 CPU - Last 7 days"
-      sql   = query.aws_rds_db_instance_top10_cpu_past_week.sql
+      query = query.aws_rds_db_instance_top10_cpu_past_week
       type  = "line"
       width = 6
     }
 
     chart {
       title = "Average max daily CPU - Last 30 days"
-      sql   = query.aws_rds_db_instance_by_cpu_utilization_category.sql
+      query = query.aws_rds_db_instance_by_cpu_utilization_category
       type  = "column"
       width = 6
     }

@@ -11,12 +11,12 @@ dashboard "aws_rds_db_instance_logging_report" {
   container {
 
     card {
-      sql   = query.aws_rds_db_instance_count.sql
+      query = query.aws_rds_db_instance_count
       width = 2
     }
 
     card {
-      sql = query.aws_rds_db_instance_logging_disabled_count.sql
+      query = query.aws_rds_db_instance_logging_disabled_count
       width = 2
     }
 
@@ -36,7 +36,7 @@ dashboard "aws_rds_db_instance_logging_report" {
       href = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arnn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_rds_db_instance_logging_table.sql
+    query = query.aws_rds_db_instance_logging_table
   }
 
 }

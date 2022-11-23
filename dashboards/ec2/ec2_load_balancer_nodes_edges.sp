@@ -30,10 +30,7 @@ edge "aws_ec2_lb_to_target_group_edge" {
   sql = <<-EOQ
     select
       $1 as from_id,
-      tg.target_group_arn as to_id,
-      jsonb_build_object(
-        'Account ID', tg.account_id
-      ) as properties
+      tg.target_group_arn as to_id
     from
       aws_ec2_target_group tg
     where
@@ -77,17 +74,12 @@ node "aws_ec2_lb_to_ec2_instance_node" {
 }
 
 edge "aws_ec2_lb_to_ec2_instance_edge" {
-  title = "ec2 instance"
+  title = "routes to"
 
   sql = <<-EOQ
     select
       tg.target_group_arn as from_id,
-      instance.instance_id as to_id,
-      jsonb_build_object(
-        'Account ID', instance.account_id,
-        'Health Check Port', thd['HealthCheckPort'],
-        'Health Check State', thd['TargetHealth']['State']
-      ) as properties
+      instance.instance_id as to_id
     from
       aws_ec2_target_group tg,
       aws_ec2_instance instance,
@@ -129,15 +121,12 @@ node "aws_ec2_lb_from_ec2_load_balancer_listener_node" {
 }
 
 edge "aws_ec2_lb_from_ec2_load_balancer_listener_edge" {
-  title = "listens with"
+  title = "listener for"
 
   sql = <<-EOQ
     select
       lblistener.arn as from_id,
-      $1 as to_id,
-      jsonb_build_object(
-        'Account ID', lblistener.account_id
-      ) as properties
+      $1 as to_id
     from
       aws_ec2_load_balancer_listener lblistener
     where

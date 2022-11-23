@@ -11,38 +11,38 @@ dashboard "aws_eks_cluster_age_report" {
   container {
 
     card {
-      sql   = query.aws_eks_cluster_count.sql
+      query = query.aws_eks_cluster_count
       width = 2
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_eks_cluster_24_hours_count.sql
+      query = query.aws_eks_cluster_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_eks_cluster_30_days_count.sql
+      query = query.aws_eks_cluster_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_eks_cluster_30_90_days_count.sql
+      query = query.aws_eks_cluster_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_eks_cluster_90_365_days_count.sql
+      query = query.aws_eks_cluster_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_eks_cluster_1_year_count.sql
+      query = query.aws_eks_cluster_1_year_count
     }
 
   }
@@ -55,11 +55,11 @@ dashboard "aws_eks_cluster_age_report" {
     column "ARN" {
       display = "none"
     }
-    
+
     column "Name" {
       href = "${dashboard.aws_eks_cluster_detail.url_path}?input.eks_cluster_arn={{.ARN | @uri}}"
     }
-    sql = query.aws_eks_cluster_age_table.sql
+    query = query.aws_eks_cluster_age_table
   }
 
 }

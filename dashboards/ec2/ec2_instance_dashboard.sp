@@ -11,24 +11,24 @@ dashboard "aws_ec2_instance_dashboard" {
 
     # Analysis
     card {
-      sql   = query.aws_ec2_instance_count.sql
+      query = query.aws_ec2_instance_count
       width = 2
     }
 
     card {
-      sql   = query.aws_ec2_instance_total_cores.sql
+      query = query.aws_ec2_instance_total_cores
       width = 2
     }
 
     # Assessments
     card {
-      sql   = query.aws_ec2_public_instance_count.sql
+      query = query.aws_ec2_public_instance_count
       width = 2
       href  = dashboard.aws_ec2_instance_public_access_report.url_path
     }
 
     card {
-      sql   = query.aws_ec2_ebs_optimized_count.sql
+      query = query.aws_ec2_ebs_optimized_count
       width = 2
     }
 
@@ -36,7 +36,7 @@ dashboard "aws_ec2_instance_dashboard" {
     card {
       type  = "info"
       icon  = "currency-dollar"
-      sql   = query.aws_ec2_instance_cost_mtd.sql
+      query = query.aws_ec2_instance_cost_mtd
       width = 2
     }
 
@@ -49,7 +49,7 @@ dashboard "aws_ec2_instance_dashboard" {
 
     chart {
       title = "Public/Private"
-      sql   = query.aws_ec2_instance_by_public_ip.sql
+      query = query.aws_ec2_instance_by_public_ip
       type  = "donut"
       width = 4
 
@@ -65,7 +65,7 @@ dashboard "aws_ec2_instance_dashboard" {
 
     chart {
       title = "EBS Optimized Status"
-      sql   = query.aws_ec2_instance_ebs_optimized_status.sql
+      query = query.aws_ec2_instance_ebs_optimized_status
       type  = "donut"
       width = 4
 
@@ -81,7 +81,7 @@ dashboard "aws_ec2_instance_dashboard" {
 
     chart {
       title = "Detailed Monitoring Status"
-      sql   = query.aws_ec2_instance_detailed_monitoring_enabled.sql
+      query = query.aws_ec2_instance_detailed_monitoring_enabled
       type  = "donut"
       width = 4
 
@@ -105,14 +105,14 @@ dashboard "aws_ec2_instance_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      sql   = query.aws_ec2_monthly_forecast_table.sql
+      query = query.aws_ec2_monthly_forecast_table
     }
 
     chart {
       width = 6
       title = "EC2 Compute Monthly Unblended Cost"
       type  = "column"
-      sql   = query.aws_ec2_instance_cost_per_month.sql
+      query = query.aws_ec2_instance_cost_per_month
     }
 
   }
@@ -123,35 +123,35 @@ dashboard "aws_ec2_instance_dashboard" {
 
     chart {
       title = "Instances by Account"
-      sql   = query.aws_ec2_instance_by_account.sql
+      query = query.aws_ec2_instance_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Instances by Region"
-      sql   = query.aws_ec2_instance_by_region.sql
+      query = query.aws_ec2_instance_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Instances by State"
-      sql   = query.aws_ec2_instance_by_state.sql
+      query = query.aws_ec2_instance_by_state
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Instances by Age"
-      sql   = query.aws_ec2_instance_by_creation_month.sql
+      query = query.aws_ec2_instance_by_creation_month
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Instances by Type"
-      sql   = query.aws_ec2_instance_by_type.sql
+      query = query.aws_ec2_instance_by_type
       type  = "column"
       width = 4
     }
@@ -164,14 +164,14 @@ dashboard "aws_ec2_instance_dashboard" {
 
     chart {
       title = "Top 10 CPU - Last 7 days"
-      sql   = query.aws_ec2_top10_cpu_past_week.sql
+      query = query.aws_ec2_top10_cpu_past_week
       type  = "line"
       width = 6
     }
 
     chart {
       title = "Average Max Daily CPU - Last 30 days"
-      sql   = query.aws_ec2_instance_by_cpu_utilization_category.sql
+      query = query.aws_ec2_instance_by_cpu_utilization_category
       type  = "column"
       width = 6
     }

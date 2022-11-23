@@ -11,17 +11,17 @@ dashboard "aws_s3_bucket_encryption_report" {
   container {
 
     card {
-      sql   = query.aws_s3_bucket_count.sql
+      query = query.aws_s3_bucket_count
       width = 2
     }
 
     card {
-      sql   = query.aws_s3_bucket_unencrypted_count.sql
+      query = query.aws_s3_bucket_unencrypted_count
       width = 2
     }
 
     card {
-      sql   = query.aws_s3_bucket_https_unenforced_count.sql
+      query = query.aws_s3_bucket_https_unenforced_count
       width = 2
     }
 
@@ -40,7 +40,7 @@ dashboard "aws_s3_bucket_encryption_report" {
       href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_s3_bucket_encryption_table.sql
+    query = query.aws_s3_bucket_encryption_table
   }
 
 }
