@@ -337,7 +337,7 @@ node "aws_ecs_service_to_ec2_target_group_node" {
 }
 
 edge "aws_ecs_service_to_ec2_target_group_edge" {
-  title = "load balancing"
+  title = "target group"
 
   sql = <<-EOQ
     select
@@ -600,8 +600,8 @@ edge "aws_ecs_service_to_ecs_task_definition_edge" {
 
   sql = <<-EOQ
     select
-      $1 as from_id,
-      d.task_definition_arn as to_id
+      $1 as to_id,
+      d.task_definition_arn as from_id
     from
       aws_ecs_task_definition as d,
       aws_ecs_service as s

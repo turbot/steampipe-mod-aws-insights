@@ -527,6 +527,12 @@ category "aws_cloudwatch_log_group" {
   href  = "/aws_insights.dashboard.aws_cloudwatch_log_group_detail?input.log_group_arn={{.properties.'ARN' | @uri}}"
 }
 
+category "aws_cloudwatch_log_metric_filter" {
+  title = "CloudWatch Log Metric Filter"
+  color = local.management_governance_color
+  icon  = "text:LMF"
+}
+
 category "aws_guardduty_detector" {
   title = "GuardDuty Detector"
   color = local.security_color
@@ -542,7 +548,7 @@ category "aws_media_store_container" {
 category "aws_eventbridge_bus" {
   title = "EventBridge Bus"
   color = local.application_integration_color
-  icon  = "text:Bus"
+  icon  = "text:EventBus"
 }
 
 category "aws_appconfig_application" {

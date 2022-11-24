@@ -244,7 +244,7 @@ node "aws_eventbridge_rule_to_sns_topic_node" {
 }
 
 edge "aws_eventbridge_rule_to_sns_topic_edge" {
-  title = "send events"
+  title = "notifies"
 
   sql = <<-EOQ
      select
@@ -287,7 +287,7 @@ node "aws_eventbridge_rule_to_lambda_function_node" {
 }
 
 edge "aws_eventbridge_rule_to_lambda_function_edge" {
-  title = "send events"
+  title = "triggers"
 
   sql = <<-EOQ
      select
@@ -378,7 +378,7 @@ node "aws_eventbridge_rule_to_eventbridge_bus_node" {
 }
 
 edge "aws_eventbridge_rule_to_eventbridge_bus_edge" {
-  title = "eventbridge bus"
+  title = "eventbridge rule"
 
   sql = <<-EOQ
      select

@@ -188,7 +188,7 @@ node "aws_codepipeline_pipeline_from_iam_role_node" {
 }
 
 edge "aws_codepipeline_pipeline_from_iam_role_edge" {
-  title = "iam role"
+  title = "assumes"
 
   sql = <<-EOQ
     select
@@ -239,7 +239,7 @@ node "aws_codepipeline_pipeline_from_kms_key_node" {
 }
 
 edge "aws_codepipeline_pipeline_from_kms_key_edge" {
-  title = "encrypted"
+  title = "encrypted with"
 
   sql = <<-EOQ
     select
@@ -293,7 +293,7 @@ node "aws_codepipeline_pipeline_from_codecommit_repository_node" {
 }
 
 edge "aws_codepipeline_pipeline_from_codecommit_repository_edge" {
-  title = "source"
+  title = "source provider"
 
   sql = <<-EOQ
     select
@@ -350,7 +350,7 @@ node "aws_codepipeline_pipeline_from_ecr_repository_node" {
 }
 
 edge "aws_codepipeline_pipeline_from_ecr_repository_edge" {
-  title = "source"
+  title = "source provider"
 
   sql = <<-EOQ
     select
@@ -407,7 +407,7 @@ node "aws_codepipeline_pipeline_from_s3_bucket_source_node" {
 }
 
 edge "aws_codepipeline_pipeline_from_s3_bucket_source_edge" {
-  title = "source"
+  title = "source provider"
 
   sql = <<-EOQ
     select
@@ -521,7 +521,7 @@ node "aws_codepipeline_pipeline_from_s3_bucket_deploy_node" {
 }
 
 edge "aws_codepipeline_pipeline_from_s3_bucket_deploy_edge" {
-  title = "deploy"
+  title = "deploys"
 
   sql = <<-EOQ
    select
@@ -578,7 +578,7 @@ node "aws_codepipeline_pipeline_from_codedeploy_app_node" {
 }
 
 edge "aws_codepipeline_pipeline_from_codedeploy_app_edge" {
-  title = "deploy"
+  title = "deploys"
 
   sql = <<-EOQ
    select

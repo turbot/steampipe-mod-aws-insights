@@ -238,7 +238,7 @@ node "aws_glacier_vault_node" {
     from
       aws_glacier_vault
     where
-      vault_arn = $1
+      vault_arn = $1;
   EOQ
 
   param "arn" {}
@@ -270,7 +270,7 @@ node "aws_glacier_vault_to_sns_topic_node" {
 }
 
 edge "aws_glacier_vault_to_sns_topic_edge" {
-  title = "logs to"
+  title = "notifies"
 
   sql = <<-EOQ
     select

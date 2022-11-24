@@ -62,7 +62,8 @@ dashboard "aws_cloudwatch_log_group_detail" {
         node.aws_cloudwatch_log_group_from_cloudtrail_trail_node,
         node.aws_cloudwatch_log_group_from_lambda_function_node,
         node.aws_cloudwatch_log_group_from_vpc_flow_logs_node,
-        node.aws_cloudwatch_log_group_from_kinesis_stream_node
+        node.aws_cloudwatch_log_group_from_kinesis_stream_node,
+        # node.aws_cloudwatch_log_group_to_log_metric_filter_node
       ]
 
       edges = [
@@ -70,7 +71,8 @@ dashboard "aws_cloudwatch_log_group_detail" {
         edge.aws_cloudwatch_log_group_from_cloudtrail_trail_edge,
         edge.aws_cloudwatch_log_group_from_lambda_function_edge,
         edge.aws_cloudwatch_log_group_from_vpc_flow_logs_edge,
-        edge.aws_cloudwatch_log_group_from_kinesis_stream_edge
+        edge.aws_cloudwatch_log_group_from_kinesis_stream_edge,
+        # edge.aws_cloudwatch_log_group_to_log_metric_filter_edge
       ]
 
       args = {
@@ -490,3 +492,47 @@ edge "aws_cloudwatch_log_group_from_kinesis_stream_edge" {
   param "log_group_arn" {}
 }
 
+node "aws_cloudwatch_log_group_to_log_metric_filter_node" {
+  category = category.aws_cloudwatch_log_metric_filter
+
+  sql = <<-EOQ
+    select
+      f.name as id,
+      f.title as title,
+      jsonb_build_object(
+        'Creation Time', f.creation_time,
+        'Metric Transformation Name', f.metric_transformation_name,
+        'Metric Transformation Namespace', f.metric_transformation_namespace,
+        'Metric Transformation Value', f.metric_transformation_value,
+        'Account ID', f.account_id,
+        'Region', f.region
+      ) as properties
+    from
+      aws_cloudwatch_log_group as g
+      left join aws_cloudwatch_log_metric_filter as f on g.name = f.log_group_name
+    where
+      f.region = g.region
+      and g.arn = $1;
+  EOQ
+
+  param "log_group_arn" {}
+}
+
+edge "aws_cloudwatch_log_group_to_log_metric_filter_edge" {
+  title = "metric filter"
+
+  sql = <<-EOQ
+    select
+      g.arn as from_id,
+      f.name as to_id
+    from
+     aws_cloudwatch_log_group as g,
+     aws_cloudwatch_log_metric_filter as f
+    where
+      g.name = f.log_group_name
+      and f.region = g.region
+      and g.arn = $1;
+  EOQ
+
+  param "log_group_arn" {}
+}

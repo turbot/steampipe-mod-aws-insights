@@ -332,7 +332,7 @@ node "aws_ecr_repository_to_ecs_task_definition_node" {
 }
 
 edge "aws_ecr_repository_to_ecs_task_definition_edge" {
-  title = "defined with"
+  title = "task definition"
 
   sql = <<-EOQ
     select
