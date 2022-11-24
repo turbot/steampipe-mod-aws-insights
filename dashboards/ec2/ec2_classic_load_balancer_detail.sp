@@ -64,6 +64,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
 
       nodes = [
         node.aws_ec2_classic_load_balancer_node,
+        node.aws_ec2_clb_to_vpc_subnet_node,
         node.aws_ec2_clb_to_ec2_instance_node,
         node.aws_ec2_clb_to_s3_bucket_node,
         node.aws_ec2_clb_to_vpc_security_group_node,
@@ -72,6 +73,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
       ]
 
       edges = [
+        edge.aws_ec2_clb_to_vpc_subnet_edge,
         edge.aws_ec2_clb_to_ec2_instance_edge,
         edge.aws_ec2_clb_to_s3_bucket_edge,
         edge.aws_ec2_clb_to_vpc_security_group_edge,
@@ -352,7 +354,7 @@ node "aws_ec2_clb_to_vpc_security_group_node" {
 
   sql = <<-EOQ
     select
-      sg.arn as id,
+      sg.group_id as id,
       sg.title as title,
       jsonb_build_object(
         'Group Name', sg.group_name,
@@ -383,7 +385,7 @@ edge "aws_ec2_clb_to_vpc_security_group_edge" {
   sql = <<-EOQ
     select
       clb.arn as from_id,
-      sg.arn as to_id
+      sg.group_id as to_id
     from
       aws_vpc_security_group sg,
       aws_ec2_classic_load_balancer as clb
@@ -423,24 +425,61 @@ node "aws_ec2_clb_vpc_security_group_to_vpc_node" {
   param "arn" {}
 }
 
+node "aws_ec2_clb_to_vpc_subnet_node" {
+  category = category.aws_vpc_subnet
+
+  sql = <<-EOQ
+    select
+      s.subnet_id as id,
+      s.title as title,
+      jsonb_build_object(
+        'Subnet ID', s.subnet_id,
+        'ARN', s.subnet_arn,
+        'VPC ID', s.vpc_id,
+        'Account ID', s.account_id,
+        'Region', s.region
+      ) as properties
+    from
+      aws_vpc_subnet s,
+      aws_ec2_classic_load_balancer as clb,
+      jsonb_array_elements_text(subnets) as subnet
+    where
+      clb.arn = $1
+      and s.subnet_id = subnet;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_ec2_clb_to_vpc_subnet_edge" {
+  title = "subnet"
+
+  sql = <<-EOQ
+    select
+      sg as from_id,
+      s as to_id
+    from
+      aws_ec2_classic_load_balancer,
+      jsonb_array_elements_text(security_groups) as sg,
+      jsonb_array_elements_text(subnets) as s
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
 edge "aws_ec2_clb_vpc_security_group_to_vpc_edge" {
   title = "vpc"
 
   sql = <<-EOQ
     select
-      sg.arn as from_id,
-      vpc.vpc_id as to_id
+      jsonb_array_elements_text(subnets) as from_id,
+      vpc_id as to_id
     from
-      aws_vpc vpc,
-      aws_ec2_classic_load_balancer as clb
-      left join aws_vpc_security_group sg on sg.group_id in
-      (
-        select
-          jsonb_array_elements_text(clb.security_groups)
-      )
+      aws_ec2_classic_load_balancer
     where
-      clb.arn = $1
-      and clb.vpc_id = vpc.vpc_id;
+      arn = $1;
   EOQ
 
   param "arn" {}

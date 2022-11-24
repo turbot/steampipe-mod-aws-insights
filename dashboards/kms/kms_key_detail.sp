@@ -11,7 +11,7 @@ dashboard "aws_kms_key_detail" {
   input "key_arn" {
     title = "Select a key:"
     query = query.aws_kms_key_input
-    width = 6
+    width = 4
   }
 
   container {
