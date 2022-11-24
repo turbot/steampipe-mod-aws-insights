@@ -68,10 +68,12 @@ dashboard "aws_ec2_network_interface_detail" {
         node.aws_ec2_network_interface_from_ec2_instance_node,
         node.aws_ec2_network_interface_to_vpc_security_group_node,
         node.aws_ec2_network_interface_to_vpc_subnet_node,
-        node.aws_ec2_network_interface_to_vpc_node
+        node.aws_ec2_network_interface_to_vpc_node,
+        node.aws_ec2_network_interface_to_vpc_eip_node
       ]
 
       edges = [
+        edge.aws_ec2_network_interface_to_vpc_eip_edge,
         edge.aws_ec2_network_interface_from_ec2_instance_edge,
         edge.aws_ec2_network_interface_to_vpc_security_group_edge,
         edge.aws_ec2_network_interface_to_security_group_to_subnet_edge,
@@ -381,6 +383,48 @@ edge "aws_ec2_network_interface_from_ec2_instance_edge" {
       left join aws_ec2_instance as instance on eni.attached_instance_id = instance.instance_id
     where
       eni.network_interface_id = $1;
+  EOQ
+
+  param "network_interface_id" {}
+}
+
+node "aws_ec2_network_interface_to_vpc_eip_node" {
+  category = category.aws_vpc_eip
+
+  sql = <<-EOQ
+    select
+      e.arn as id,
+      e.title as title,
+      jsonb_build_object(
+        'ARN', e.arn,
+        'Allocation Id', e.allocation_id,
+        'Association Id', e.association_id,
+        'Public IP', e.public_ip,
+        'Domain', e.domain,
+        'Account ID', e.account_id,
+        'Region', e.region
+      ) as properties
+    from
+      aws_vpc_eip as e
+    where
+      network_interface_id = $1;
+  EOQ
+
+  param "network_interface_id" {}
+}
+
+edge "aws_ec2_network_interface_to_vpc_eip_edge" {
+  title = "eip"
+
+  sql = <<-EOQ
+    select
+      i.network_interface_id as from_id,
+      e.arn as to_id
+    from
+      aws_vpc_eip as e
+      left join aws_ec2_network_interface as i on e.network_interface_id = i.network_interface_id
+    where
+      i.network_interface_id = $1;
   EOQ
 
   param "network_interface_id" {}

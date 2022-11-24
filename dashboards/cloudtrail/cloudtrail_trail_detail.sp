@@ -406,7 +406,7 @@ node "aws_cloudtrail_trail_to_sns_topic_node" {
 }
 
 edge "aws_cloudtrail_trail_to_sns_topic_edge" {
-  title = "logs to"
+  title = "notifies"
 
   sql = <<-EOQ
     select

@@ -48,7 +48,7 @@ dashboard "aws_ec2_gateway_load_balancer_detail" {
 
       nodes = [
         node.aws_ec2_gateway_load_balancer_node,
-        node.aws_ec2_glb_to_vpc_security_group_node,
+        node.aws_ec2_glb_to_vpc_subnet_node,
         node.aws_ec2_glb_to_s3_bucket_node,
         node.aws_ec2_glb_vpc_security_group_to_vpc_node,
         node.aws_ec2_lb_to_target_group_node,
@@ -57,7 +57,7 @@ dashboard "aws_ec2_gateway_load_balancer_detail" {
       ]
 
       edges = [
-        edge.aws_ec2_glb_to_vpc_security_group_edge,
+        edge.aws_ec2_glb_to_vpc_subnet_edge,
         edge.aws_ec2_glb_to_s3_bucket_edge,
         edge.aws_ec2_glb_vpc_security_group_to_vpc_edge,
         edge.aws_ec2_lb_to_target_group_edge,
@@ -263,53 +263,46 @@ node "aws_ec2_gateway_load_balancer_node" {
   param "arn" {}
 }
 
-node "aws_ec2_glb_to_vpc_security_group_node" {
-  category = category.aws_vpc_security_group
+node "aws_ec2_glb_to_vpc_subnet_node" {
+  category = category.aws_vpc_subnet
 
   sql = <<-EOQ
     select
-      sg.arn as id,
-      sg.title as title,
+      s.subnet_id as id,
+      s.title as title,
       jsonb_build_object(
-        'Group Name', sg.group_name,
-        'Group ID', sg.group_id,
-        'ARN', sg.arn,
-        'Account ID', sg.account_id,
-        'Region', sg.region,
-        'VPC ID', sg.vpc_id
+        'Subnet ID', s.subnet_id,
+        'ARN', s.subnet_arn,
+        'VPC ID', s.vpc_id,
+        'Account ID', s.account_id,
+        'Region', s.region
       ) as properties
     from
-      aws_vpc_security_group sg,
-      aws_ec2_gateway_load_balancer as glb
+      aws_vpc_subnet s,
+      aws_ec2_gateway_load_balancer as glb,
+      jsonb_array_elements(availability_zones) as az
     where
       glb.arn = $1
-      and sg.group_id in
-      (
-        select
-          jsonb_array_elements_text(glb.security_groups)
-      );
+      and s.subnet_id = az ->> 'SubnetId';
   EOQ
 
   param "arn" {}
 }
 
-edge "aws_ec2_glb_to_vpc_security_group_edge" {
-  title = "security group"
+edge "aws_ec2_glb_to_vpc_subnet_edge" {
+  title = "subnet"
 
   sql = <<-EOQ
     select
       glb.arn as from_id,
-      sg.arn as to_id
+      s.subnet_id as to_id
     from
-      aws_vpc_security_group sg,
-      aws_ec2_gateway_load_balancer as glb
+      aws_vpc_subnet s,
+      aws_ec2_gateway_load_balancer as glb,
+      jsonb_array_elements(availability_zones) as az
     where
       glb.arn = $1
-      and sg.group_id in
-      (
-        select
-          jsonb_array_elements_text(glb.security_groups)
-      );
+      and s.subnet_id = az ->> 'SubnetId';
   EOQ
 
   param "arn" {}
@@ -391,21 +384,13 @@ edge "aws_ec2_glb_vpc_security_group_to_vpc_edge" {
 
   sql = <<-EOQ
     select
-      sg.arn as from_id,
-      vpc.vpc_id as to_id
+      az ->> 'SubnetId' as from_id,
+      vpc_id as to_id
     from
-      aws_vpc vpc,
-      aws_ec2_gateway_load_balancer as glb
-      left join
-        aws_vpc_security_group sg
-        on sg.group_id in
-        (
-          select
-            jsonb_array_elements_text(glb.security_groups)
-        )
+      aws_ec2_gateway_load_balancer as glb,
+      jsonb_array_elements(availability_zones) as az
     where
-      glb.arn = $1
-      and glb.vpc_id = vpc.vpc_id;
+      arn = $1;
   EOQ
 
   param "arn" {}
