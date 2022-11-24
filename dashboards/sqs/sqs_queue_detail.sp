@@ -76,7 +76,7 @@ dashboard "aws_sqs_queue_detail" {
         edge.aws_sqs_queue_from_s3_bucket_edge,
         edge.aws_sqs_queue_from_lambda_function_edge,
         edge.aws_sqs_queue_from_vpc_endpoint_edge,
-        edge.aws_sqs_queue_vpc_endpoint_from_vpc_edge,
+        edge.aws_sqs_queue_vpc_endpoint_to_vpc_edge,
         edge.aws_sqs_queue_from_eventbridge_rule_edge
       ]
 
@@ -572,12 +572,12 @@ node "aws_sqs_queue_from_vpc_endpoint_node" {
 }
 
 edge "aws_sqs_queue_from_vpc_endpoint_edge" {
-  title = "queues"
+  title = "endpoint"
 
   sql = <<-EOQ
     select
-      vpc_endpoint_id as from_id,
-      $1 as to_id
+      $1 as from_id,
+      vpc_endpoint_id as to_id
     from
       aws_vpc_endpoint,
       jsonb_array_elements(policy_std -> 'Statement') as s,
@@ -615,13 +615,13 @@ node "aws_sqs_queue_from_vpc_node" {
   param "arn" {}
 }
 
-edge "aws_sqs_queue_vpc_endpoint_from_vpc_edge" {
-  title = "vpc endpoint"
+edge "aws_sqs_queue_vpc_endpoint_to_vpc_edge" {
+  title = "vpc"
 
   sql = <<-EOQ
     select
-      e.vpc_id as from_id,
-      e.vpc_endpoint_id as to_id
+      e.vpc_endpoint_id as from_id,
+      e.vpc_id as to_id
     from
       aws_vpc_endpoint as e,
       jsonb_array_elements(policy_std -> 'Statement') as s,
@@ -659,7 +659,7 @@ node "aws_sqs_queue_from_eventbridge_rule_node" {
 }
 
 edge "aws_sqs_queue_from_eventbridge_rule_edge" {
-  title = "target as"
+  title = "queues"
 
   sql = <<-EOQ
     select

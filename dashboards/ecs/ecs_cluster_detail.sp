@@ -70,7 +70,7 @@ dashboard "aws_ecs_cluster_detail" {
     graph {
       title     = "Relationships"
       type      = "graph"
-      direction = "LR"
+      direction = "TD"
 
 
       nodes = [
@@ -86,7 +86,7 @@ dashboard "aws_ecs_cluster_detail" {
         node.aws_ecs_cluster_ecs_service_to_vpc_subnet_node,
         node.aws_ecs_cluster_ecs_service_subnet_to_vpc_node
       ]
-
+      // LB, Auto Scaling, Security group
       edges = [
         edge.aws_ecs_cluster_to_ec2_launch_type_edge,
         edge.aws_ecs_cluster_to_fargate_launch_type_edge,

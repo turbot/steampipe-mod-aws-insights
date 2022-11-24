@@ -18,31 +18,31 @@ dashboard "aws_emr_cluster_age_report" {
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_emr_cluster_24_hours_count.sql
+      query = query.aws_emr_cluster_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_emr_cluster_30_days_count.sql
+      query = query.aws_emr_cluster_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_emr_cluster_30_90_days_count.sql
+      query = query.aws_emr_cluster_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_emr_cluster_90_365_days_count.sql
+      query = query.aws_emr_cluster_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_emr_cluster_1_year_count.sql
+      query = query.aws_emr_cluster_1_year_count
     }
 
   }
@@ -60,7 +60,7 @@ dashboard "aws_emr_cluster_age_report" {
       href = "${dashboard.aws_emr_cluster_detail.url_path}?input.emr_cluster_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_emr_cluster_age_table.sql
+    query = query.aws_emr_cluster_age_table
   }
 
 }

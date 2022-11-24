@@ -46,8 +46,8 @@ dashboard "aws_ecs_service_detail" {
         node.aws_ecs_service_to_ecs_task_node,
         node.aws_ecs_service_to_ec2_target_group_node,
         node.aws_ecs_service_from_ecs_cluster_node,
-        node.aws_ecs_cluster_to_ecs_task_definition_node,
         node.aws_ecs_service_to_ecs_container_instance_node,
+        node.aws_ecs_service_to_vpc_security_group_node,
         node.aws_ecs_service_to_vpc_subnet_node,
         node.aws_ecs_service_vpc_subnet_to_vpc_node,
         node.aws_ecs_service_to_ecs_task_definition_node
@@ -59,6 +59,7 @@ dashboard "aws_ecs_service_detail" {
         edge.aws_ecs_service_to_ec2_target_group_edge,
         edge.aws_ecs_service_from_ecs_cluster_edge,
         edge.aws_ecs_service_to_ecs_container_instance_edge,
+        edge.aws_ecs_service_to_vpc_security_group_edge,
         edge.aws_ecs_service_to_vpc_subnet_edge,
         edge.aws_ecs_service_vpc_subnet_to_vpc_edge,
         edge.aws_ecs_service_to_ecs_task_definition_edge
@@ -432,12 +433,57 @@ edge "aws_ecs_service_to_ecs_container_instance_edge" {
   param "arn" {}
 }
 
+node "aws_ecs_service_to_vpc_security_group_node" {
+  category = category.aws_vpc_security_group
+
+  sql = <<-EOQ
+    select
+      sg.group_id as id,
+      sg.title as title,
+      jsonb_build_object(
+        'Group ID', sg.group_id,
+        'Description', sg.description,
+        'ARN', sg.arn,
+        'Account ID', sg.account_id,
+        'Region', sg.region
+      ) as properties
+    from
+      aws_ecs_service as e,
+      jsonb_array_elements_text(e.network_configuration -> 'AwsvpcConfiguration' -> 'SecurityGroups') as s
+      left join aws_vpc_security_group as sg on sg.group_id = s
+    where
+      e.arn = $1
+      and e.network_configuration is not null;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_ecs_service_to_vpc_security_group_edge" {
+  title = "security group"
+
+  sql = <<-EOQ
+    select
+      e.arn as from_id,
+      s as to_id
+    from
+      aws_ecs_service as e,
+      jsonb_array_elements_text(e.network_configuration -> 'AwsvpcConfiguration' -> 'SecurityGroups') as s
+    where
+      e.arn = $1
+      and e.network_configuration is not null;
+  EOQ
+
+  param "arn" {}
+}
+
+
 node "aws_ecs_service_to_vpc_subnet_node" {
   category = category.aws_vpc_subnet
 
   sql = <<-EOQ
     select
-      sb.subnet_arn as id,
+      sb.subnet_id as id,
       sb.title as title,
       jsonb_build_object(
         'ARN', sb.subnet_arn,
@@ -462,12 +508,12 @@ edge "aws_ecs_service_to_vpc_subnet_edge" {
 
   sql = <<-EOQ
     select
-      e.arn as from_id,
-      sb.subnet_arn as to_id
+      coalesce(sg, e.arn) as from_id,
+      s as to_id
     from
       aws_ecs_service as e,
-      jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
-      left join aws_vpc_subnet as sb on sb.subnet_id = trim((s::text ), '""')
+      jsonb_array_elements_text(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s,
+      jsonb_array_elements_text(e.network_configuration -> 'AwsvpcConfiguration' -> 'SecurityGroups') as sg
     where
       e.arn = $1
       and e.network_configuration is not null;
@@ -508,7 +554,7 @@ edge "aws_ecs_service_vpc_subnet_to_vpc_edge" {
 
   sql = <<-EOQ
     select
-      sb.subnet_arn as from_id,
+      sb.subnet_id as from_id,
       v.arn as to_id
     from
       aws_ecs_service as e,
