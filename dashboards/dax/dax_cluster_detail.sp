@@ -51,7 +51,7 @@ dashboard "dax_cluster_detail" {
         node.aws_dax_cluster_node,
         node.aws_dax_cluster_to_iam_role_node,
         node.aws_dax_cluster_to_vpc_security_group_node,
-        node.aws_dax_cluster_to_dax_subnet_group_node,
+        node.aws_dax_cluster_vpc_security_group_to_dax_subnet_group_node,
         node.aws_dax_subnet_group_to_vpc_subnet_node,
         node.aws_dax_cluster_to_sns_topic_node,
         node.aws_dax_cluster_vpc_security_group_to_vpc_node
@@ -60,10 +60,9 @@ dashboard "dax_cluster_detail" {
       edges = [
         edge.aws_dax_cluster_to_iam_role_edge,
         edge.aws_dax_cluster_to_vpc_security_group_edge,
-        edge.aws_dax_cluster_to_dax_subnet_group_edge,
+        edge.aws_dax_cluster_vpc_security_group_to_dax_subnet_group_edge,
         edge.aws_dax_subnet_group_to_vpc_subnet_edge,
         edge.aws_dax_cluster_to_sns_topic_edge,
-        edge.aws_dax_cluster_vpc_security_group_to_vpc_edge,
         edge.aws_dax_cluster_vpc_subnet_to_vpc_edge
       ]
 
@@ -292,7 +291,7 @@ edge "aws_dax_cluster_to_vpc_security_group_edge" {
   param "arn" {}
 }
 
-node "aws_dax_cluster_to_dax_subnet_group_node" {
+node "aws_dax_cluster_vpc_security_group_to_dax_subnet_group_node" {
   category = category.aws_dax_subnet_group
   sql      = <<-EOQ
     select
@@ -321,14 +320,16 @@ node "aws_dax_cluster_to_dax_subnet_group_node" {
   param "arn" {}
 }
 
-edge "aws_dax_cluster_to_dax_subnet_group_edge" {
+edge "aws_dax_cluster_vpc_security_group_to_dax_subnet_group_edge" {
   title = "subnet group"
   sql   = <<-EOQ
     select
-      c.arn as from_id,
+      sg.arn as from_id,
       g.subnet_group_name as to_id
     from
       aws_dax_cluster as c
+      cross join jsonb_array_elements(c.security_groups) as csg
+      left join aws_vpc_security_group as sg on sg.group_id = csg ->> 'SecurityGroupIdentifier'
       left join aws_dax_subnet_group as g on g.subnet_group_name = c.subnet_group
     where
       c.arn = $1;

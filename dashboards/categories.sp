@@ -394,6 +394,12 @@ category "aws_backup_vault" {
   icon  = "archive-box-arrow-down"
 }
 
+category "aws_backup_recovery_point" {
+  title = "Backup Recovery Point"
+  color = local.storage_color
+  icon  = "text:recovery"
+}
+
 category "aws_glacier_vault" {
   title = "Glacier Vault"
   color = local.storage_color
@@ -420,6 +426,12 @@ category "aws_dynamodb_table" {
   color = local.database_color
   href  = "/aws_insights.dashboard.dynamodb_table_detail?input.table_arn={{.properties.'ARN' | @uri}}"
   icon  = "circle-stack"
+}
+
+category "aws_dynamodb_backup" {
+  title = "DynamoDB Backup"
+  color = local.database_color
+  icon  = "text:backup"
 }
 
 category "aws_dax_subnet_group" {
