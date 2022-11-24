@@ -55,7 +55,10 @@ dashboard "aws_codebuild_project_detail" {
         node.aws_codebuild_project_to_kms_key_node,
         node.aws_codebuild_project_to_iam_role_node,
         node.aws_codebuild_project_to_ecr_repository_node,
-        node.aws_codebuild_project_to_codecommit_repository_node
+        node.aws_codebuild_project_to_codecommit_repository_node,
+        node.aws_codebuild_project_to_vpc_security_group_node,
+        node.aws_codebuild_project_vpc_security_group_to_subnet_node,
+        node.aws_codebuild_project_vpc_security_group_subnet_to_vpc_node
       ]
 
       edges = [
@@ -64,7 +67,10 @@ dashboard "aws_codebuild_project_detail" {
         edge.aws_codebuild_project_to_kms_key_edge,
         edge.aws_codebuild_project_to_iam_role_edge,
         edge.aws_codebuild_project_to_ecr_repository_edge,
-        edge.aws_codebuild_project_to_codecommit_repository_edge
+        edge.aws_codebuild_project_to_codecommit_repository_edge,
+        edge.aws_codebuild_project_to_vpc_security_group_edge,
+        edge.aws_codebuild_project_vpc_security_group_to_subnet_edge,
+        edge.aws_codebuild_project_vpc_security_group_subnet_to_vpc_edge
       ]
 
       args = {
@@ -449,7 +455,7 @@ node "aws_codebuild_project_to_ecr_repository_node" {
   sql = <<-EOQ
     select
       r.arn as id,
-      r.repository_name as title,
+      r.title as title,
       jsonb_build_object(
         'ARN', r.arn,
         'Created At', r.created_at,
@@ -490,7 +496,7 @@ node "aws_codebuild_project_to_codecommit_repository_node" {
   sql = <<-EOQ
     select
       r.arn as id,
-      r.repository_name as title,
+      r.title as title,
       jsonb_build_object(
         'ARN', r.arn,
         'Default Branch', r.default_branch,
@@ -547,6 +553,184 @@ edge "aws_codebuild_project_to_codecommit_repository_edge" {
       )
     where
       p.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_codebuild_project_to_vpc_security_group_node" {
+  category = category.aws_vpc_security_group
+
+  sql = <<-EOQ
+    with sg_id as (
+      select
+        vpc_config -> 'SecurityGroupIds' as sg,
+        arn
+      from
+        aws_codebuild_project
+    )
+    select
+      s.group_id as id,
+      s.title as title,
+      jsonb_build_object(
+        'ARN', s.arn,
+        'Group Name', s.group_name,
+        'Account ID', s.account_id,
+        'Region', s.region
+      ) as properties
+    from
+      sg_id as c,
+      aws_vpc_security_group as s
+    where
+      sg ?& array[s.group_id]
+      and c.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_codebuild_project_to_vpc_security_group_edge" {
+  title = "security group"
+
+  sql = <<-EOQ
+    with sg_id as (
+      select
+        vpc_config -> 'SecurityGroupIds' as sg,
+        arn
+      from
+        aws_codebuild_project
+    )
+    select
+      c.arn as from_id,
+      s.group_id as to_id
+    from
+      sg_id as c,
+      aws_vpc_security_group as s
+    where
+      sg ?& array[s.group_id]
+      and c.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_codebuild_project_vpc_security_group_to_subnet_node" {
+  category = category.aws_vpc_subnet
+
+  sql = <<-EOQ
+    with sn_id as (
+      select
+        trim((s::text), '""') as subnet_id
+      from
+        aws_codebuild_project,
+        jsonb_array_elements( vpc_config -> 'Subnets') as s
+      where
+        arn = $1
+    )
+    select
+      s.subnet_id as id,
+      s.title as title,
+      jsonb_build_object(
+        'ARN', s.subnet_arn,
+        'CIDR Block', s.cidr_block,
+        'Account ID', s.account_id,
+        'Region', s.region
+      ) as properties
+    from
+      sn_id as c
+      left join aws_vpc_subnet as s on c.subnet_id = s.subnet_id
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_codebuild_project_vpc_security_group_to_subnet_edge" {
+  title = "subnet"
+
+  sql = <<-EOQ
+    with subnet_list as (
+      select
+        trim((s::text), '""') as subnet_id
+      from
+        aws_codebuild_project,
+        jsonb_array_elements(vpc_config -> 'Subnets') as s
+      where
+        arn = $1
+    ),
+    sg_list as (
+      select
+        trim((s::text), '""') as sg_id
+      from
+        aws_codebuild_project,
+        jsonb_array_elements(vpc_config -> 'SecurityGroupIds') as s
+      where
+        arn = $1
+    )
+    select
+      sgl.sg_id as from_id,
+      sl.subnet_id as to_id
+    from
+      subnet_list as sl,
+      sg_list as sgl
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_codebuild_project_vpc_security_group_subnet_to_vpc_node" {
+  category = category.aws_vpc
+
+  sql = <<-EOQ
+    with vpc_list as (
+      select
+        vpc_config ->>'VpcId' as v_id
+      from
+        aws_codebuild_project
+      where
+        arn = $1
+    )
+    select
+      vp.vpc_id as id,
+      vp.title as title,
+      jsonb_build_object(
+        'ARN', vp.arn,
+        'CIDR Block', vp.cidr_block,
+        'Account ID', vp.account_id,
+        'Region', vp.region
+      ) as properties
+    from
+      vpc_list as v
+      left join aws_vpc as vp on v.v_id = vp.vpc_id
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_codebuild_project_vpc_security_group_subnet_to_vpc_edge" {
+  title = "vpc"
+
+  sql = <<-EOQ
+    with vpc_list as (
+      select
+        vpc_config ->>'VpcId' as v_id
+      from
+        aws_codebuild_project
+       where
+        arn = $1
+    ),
+    subnet_list as (
+      select
+        trim((s::text), '""') as subnet_id
+      from
+        aws_codebuild_project,
+        jsonb_array_elements(vpc_config -> 'Subnets') as s
+    )
+    select
+      sl.subnet_id as from_id,
+      vpcl.v_id as to_id
+    from
+      subnet_list as sl,
+      vpc_list as vpcl
   EOQ
 
   param "arn" {}

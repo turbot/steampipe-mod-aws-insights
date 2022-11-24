@@ -460,6 +460,12 @@ category "aws_cloudformation_stack" {
   icon  = "text:CFN"
 }
 
+category "aws_efs_access_point" {
+  title = "EFS Access Point"
+  color = local.storage_color
+  icon  = "text:AP"
+}
+
 category "aws_kinesis_stream" {
   title = "Kinesis Stream"
   color = local.analytics_color
@@ -622,4 +628,10 @@ category "aws_opensearch_domain" {
   title = "OpenSearch Domain"
   icon  = "text:OS"
   color = local.analytics_color
+}
+
+category "aws_wafv2_web_acl" {
+  title = "WAFV2 Web Acl"
+  icon  = "text:ACL"
+  color = local.frontend_web_color
 }
