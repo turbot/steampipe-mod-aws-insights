@@ -1,3 +1,9 @@
+// this is just for testing while `with` is in development... 
+locals {
+  test_policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+}
+
+
 dashboard "aws_iam_policy_detail" {
   title         = "AWS IAM Policy Detail"
   documentation = file("./dashboards/iam/docs/iam_policy_detail.md")
@@ -17,7 +23,7 @@ dashboard "aws_iam_policy_detail" {
       width = 2
       query = query.aws_iam_policy_aws_managed
       args = {
-        arn = self.input.policy_arn.value
+        policy_arn = self.input.policy_arn.value
       }
     }
 
@@ -25,7 +31,7 @@ dashboard "aws_iam_policy_detail" {
       width = 2
       query = query.aws_iam_policy_attached
       args = {
-        arn = self.input.policy_arn.value
+        policy_arn = self.input.policy_arn.value
       }
     }
   }
@@ -35,16 +41,103 @@ dashboard "aws_iam_policy_detail" {
     graph {
       title     = "Relationships"
       type      = "graph"
-      direction = "TD"
+      direction = "left_right" //"TD"
 
+
+    with "attached_roles" {
+        sql = <<-EOQ
+          select
+            arn as role_arn
+          from
+            aws_iam_role,
+            jsonb_array_elements_text(attached_policy_arns) as policy_arn
+          where
+            policy_arn = $1;
+        EOQ
+
+        #args = [self.input.policy_arn.value]
+        #args = [local.test_policy_arn]
+
+        param policy_arn {
+          //default = self.input.policy_arn.value
+          default = local.test_policy_arn
+        }
+      }
+
+
+      with "attached_users" {
+        sql = <<-EOQ
+          select
+            arn as user_arn
+          from
+            aws_iam_user,
+            jsonb_array_elements_text(attached_policy_arns) as policy_arn
+          where
+            policy_arn = $1;
+        EOQ
+
+        # ### alternate format.... wjhy does this not work?
+
+        #args = [self.input.policy_arn.value]
+        #args = [local.test_policy_arn]
+
+        param policy_arn {
+          //default = self.input.policy_arn.value
+          default = local.test_policy_arn
+        }
+      }
+
+
+  
+      with "attached_groups" {
+        sql = <<-EOQ
+          select
+            arn as group_arn
+          from
+            aws_iam_group,
+            jsonb_array_elements_text(attached_policy_arns) as policy_arn
+          where
+            policy_arn = $1;
+        EOQ
+
+        #args = [self.input.policy_arn.value]
+        #args = [local.test_policy_arn]
+
+        param policy_arn {
+          //default = self.input.policy_arn.value
+          default = local.test_policy_arn
+        }
+      }
+
+
+      with "policy_std" {
+        sql = <<-EOQ
+          select
+            policy_std
+          from
+            aws_iam_policy
+          where
+            arn = $1
+          limit 1;  -- aws managed policies will appear once for each connection in the aggregator, but we only need one...
+        EOQ
+
+        #args = [self.input.policy_arn.value]
+        #args = [local.test_policy_arn]
+
+        param policy_arn {
+          //default = self.input.policy_arn.value
+          default = local.test_policy_arn
+        }
+      }
 
       nodes = [
-        node.aws_iam_policy_node,
-        node.aws_iam_policy_from_iam_role_node,
-        node.aws_iam_policy_from_iam_user_node,
-        node.aws_iam_policy_from_iam_group_node,
+        node.aws_iam_policy_nodes,
+        node.aws_iam_role_nodes,
+        node.aws_iam_user_nodes,
+        node.aws_iam_group_nodes,
 
-
+        // to update for 'with' reuse
+        //node.aws_iam_policy_statement_nodes,
         node.aws_iam_policy_statement_node,
         node.aws_iam_policy_statement_action_notaction_node,
         node.aws_iam_policy_statement_resource_notresource_node,
@@ -55,10 +148,11 @@ dashboard "aws_iam_policy_detail" {
       ]
 
       edges = [
-        edge.aws_iam_policy_from_iam_role_edge,
-        edge.aws_iam_policy_from_iam_user_edge,
-        edge.aws_iam_policy_from_iam_group_edge,
+        edge.aws_iam_policy_from_iam_role_edges,
+        edge.aws_iam_policy_from_iam_user_edges,
+        edge.aws_iam_policy_from_iam_group_edges,
 
+        // to update for 'with' reuse
         edge.aws_iam_policy_statement_edge,
         edge.aws_iam_policy_statement_action_edge,
         edge.aws_iam_policy_statement_resource_edge,
@@ -67,62 +161,24 @@ dashboard "aws_iam_policy_detail" {
         edge.aws_iam_policy_statement_condition_edge,
         edge.aws_iam_policy_statement_condition_key_edge,
         edge.aws_iam_policy_statement_condition_key_value_edge,
-
       ]
 
       args = {
-        arn = self.input.policy_arn.value
+        policy_arn  = local.test_policy_arn //self.input.policy_arn.value
+        policy_arns  = [local.test_policy_arn]
+        //policy_arns  = [self.input.policy_arn.value]
+
+
+        role_arns   = with.attached_roles.rows[*].role_arn
+        user_arns   = with.attached_users.rows[*].user_arn
+        group_arns    = with.attached_groups.rows[*].group_arn
+        policy_std    = with.policy_std.rows[0].policy_std
+        //policy_std    = with.policy_std.rows[*].policy_std
+
       }
     }
 
 
-    flow {
-      title     = "Policy"
-
-      category "allow" {
-        color = "green"
-      }
-
-      category "deny" {
-        color = "red"
-      }
-  
-      nodes = [
-        node.aws_iam_policy_node,
-     
-        # node.aws_iam_policy_allowed_service_node,
-        # node.aws_iam_policy_allowed_action_node,
-
-        node.aws_iam_policy_statement_node,
-        node.aws_iam_policy_statement_action_notaction_node,
-        // for now... node.aws_iam_policy_statement_resource_notresource_node,
-        //// never?... node.aws_iam_policy_statement_condition_node,
-
-
-        node.aws_iam_policy_globbed_action_node,
-        node.aws_iam_policy_globbed_notaction_node,
-
-      ]
-
-      edges = [
-        # edge.aws_iam_policy_allowed_service_edge,
-        # edge.aws_iam_policy_allowed_action_edge,
-
-        edge.aws_iam_policy_statement_edge,
-        edge.aws_iam_policy_statement_action_edge,
-        edge.aws_iam_policy_statement_resource_edge,
-        edge.aws_iam_policy_statement_notaction_edge,
-        // for now... edge.aws_iam_policy_statement_notresource_edge,
-        ////edge.aws_iam_policy_statement_condition_edge,
-
-        edge.aws_iam_policy_globbed_action_edge,
-        edge.aws_iam_policy_globbed_notaction_edge,
-      ]
-
-      args = {
-        arn = self.input.policy_arn.value
-      }
-    }
 
   }
 
@@ -137,7 +193,7 @@ dashboard "aws_iam_policy_detail" {
         width = 6
         query = query.aws_iam_policy_overview
         args = {
-          arn = self.input.policy_arn.value
+          policy_arn = self.input.policy_arn.value
         }
 
       }
@@ -147,8 +203,9 @@ dashboard "aws_iam_policy_detail" {
         width = 6
         query = query.aws_iam_policy_tags
         args = {
-          arn = self.input.policy_arn.value
+          policy_arn = self.input.policy_arn.value
         }
+
       }
 
     }
@@ -159,9 +216,15 @@ dashboard "aws_iam_policy_detail" {
         title = "Policy Statement"
         query = query.aws_iam_policy_statement
         args = {
-          arn = self.input.policy_arn.value
+          policy_arn = self.input.policy_arn.value
         }
 
+        column "Action" {
+          href = "/aws_insights.dashboard.aws_iam_action_glob_report?input.action_glob={{.\"Action\" | @uri}}"
+        }
+        column "NotAction" {
+          href = "/aws_insights.dashboard.aws_iam_action_glob_report?input.action_glob={{.\"NotAction\" | @uri}}"
+        }
       }
 
     }
@@ -215,7 +278,7 @@ query "aws_iam_policy_aws_managed" {
       arn = $1
   EOQ
 
-  param "arn" {}
+  param "policy_arn" {}
 }
 
 query "aws_iam_policy_attached" {
@@ -230,164 +293,9 @@ query "aws_iam_policy_attached" {
       arn = $1
   EOQ
 
-  param "arn" {}
+  param "policy_arn" {}
 }
 
-node "aws_iam_policy_node" {
-  category = category.aws_iam_policy
-
-  sql = <<-EOQ
-    select
-      distinct on (arn)
-      arn as id,
-      name as title,
-      'aws_iam_policy' as category,
-      jsonb_build_object(
-        'ARN', arn,
-        'AWS Managed', is_aws_managed::text,
-        'Attached', is_attached::text,
-        'Create Date', create_date,
-        'Account ID', account_id 
-      ) as properties
-    from
-      aws_iam_policy
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "aws_iam_policy_from_iam_role_node" {
-  category = category.aws_iam_role
-
-  sql = <<-EOQ
-    select
-      role_id as id,
-      name as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Create Date', create_date,
-        'Max Session Duration', max_session_duration,
-        'Account ID', account_id 
-      ) as properties
-    from
-      aws_iam_role,
-      jsonb_array_elements_text(attached_policy_arns) as arns
-    where
-      arns = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_iam_policy_from_iam_role_edge" {
-  title = "iam role"
-
-  sql = <<-EOQ
-    select
-      r.role_id as from_id,
-      p.arn as to_id
-    from
-      aws_iam_role as r,
-      jsonb_array_elements_text(attached_policy_arns) as arns
-    left join
-      aws_iam_policy as p
-      on p.arn = arns
-    where
-      p.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "aws_iam_policy_from_iam_user_node" {
-  category = category.aws_iam_user
-
-  sql = <<-EOQ
-    select
-      u.name as id,
-      u.name as title,
-      jsonb_build_object(
-        'ARN', u.arn,
-        'path', path,
-        'Create Date', create_date,
-        'MFA Enabled', mfa_enabled::text,
-        'Account ID', u.account_id 
-      ) as properties
-    from
-      aws_iam_user as u,
-      jsonb_array_elements_text(attached_policy_arns) as arns
-    where
-      arns = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_iam_policy_from_iam_user_edge" {
-  title = "iam user"
-
-  sql = <<-EOQ
-    select
-      u.name as from_id,
-      p.arn as to_id
-    from
-      aws_iam_user as u,
-      jsonb_array_elements_text(attached_policy_arns) as arns,
-      aws_iam_policy as p
-    where
-      p.arn = arns
-      and p.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "aws_iam_policy_from_iam_group_node" {
-  category = category.aws_iam_group
-
-  sql = <<-EOQ
-    select
-      g.name as id,
-      g.name as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Path', path,
-        'Create Date', create_date,
-        'Account ID', account_id 
-      ) as properties
-    from
-      aws_iam_group as g,
-      jsonb_array_elements_text(attached_policy_arns) as arns
-    where
-      arns = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_iam_policy_from_iam_group_edge" {
-  title = "iam group"
-
-  sql = <<-EOQ
-    select
-      g.name as from_id,
-      policy_arn as to_id
-    from
-      aws_iam_group as g,
-      jsonb_array_elements_text(attached_policy_arns) as policy_arn
-    where
-      policy_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-
-
-
-//*****
 
 query "aws_iam_policy_overview" {
   sql = <<-EOQ
@@ -409,7 +317,7 @@ query "aws_iam_policy_overview" {
     limit 1
   EOQ
 
-  param "arn" {}
+  param "policy_arn" {}
 }
 
 query "aws_iam_policy_tags" {
@@ -426,32 +334,39 @@ query "aws_iam_policy_tags" {
       tag ->> 'Key'
   EOQ
 
-  param "arn" {}
+  param "policy_arn" {}
 }
 
 query "aws_iam_policy_statement" {
   sql = <<-EOQ
+    with policy as (
+      select 
+        distinct on (arn)
+        *
+      from
+        aws_iam_policy
+      where
+        arn =  $1
+    )
     select
-      distinct on (arn,p)
-      p ->> 'Sid' as "Sid",
-      p -> 'Action' as "Action",
-      p ->> 'Effect' as "Effect",
-      p -> 'Resource' as "Resource",
-      p -> 'Condition' as "Condition"
+      coalesce(t.stmt ->> 'Sid', concat('[', i::text, ']')) as "Statement",
+      t.stmt ->> 'Effect' as "Effect",
+      action as "Action",
+      notaction as "NotAction",
+      resource as "Resource",
+      notresource as "NotResource",
+      t.stmt ->> 'Condition' as "Condition"
     from
-      aws_iam_policy,
-      jsonb_array_elements(policy_std -> 'Statement') as p
-    where
-      arn = $1
+      policy as p, --aws_iam_policy as p,
+      jsonb_array_elements(p.policy_std -> 'Statement') with ordinality as t(stmt,i)
+      left join jsonb_array_elements_text(t.stmt -> 'Action') as action on true
+      left join jsonb_array_elements_text(t.stmt -> 'NotAction') as notaction on true
+      left join jsonb_array_elements_text(t.stmt -> 'Resource') as resource on true
+      left join jsonb_array_elements_text(t.stmt -> 'NotResource') as notresource on true
   EOQ
 
-  param "arn" {}
+  param "policy_arn" {}
 }
-
-
-//*******
-
-
 
 
 node "aws_iam_policy_statement_node" {
@@ -470,11 +385,9 @@ node "aws_iam_policy_statement_node" {
       jsonb_array_elements(p.policy_std -> 'Statement') with ordinality as t(stmt,i)
     where
       p.arn = $1
-    order by 
-      i
   EOQ
 
-  param "arn" {}
+  param "policy_arn" {}
 }
 
 edge "aws_iam_policy_statement_edge" {
@@ -493,10 +406,8 @@ edge "aws_iam_policy_statement_edge" {
       p.arn = $1
   EOQ
 
-  param "arn" {}
+  param "policy_arn" {}
 }
-
-
 
 node "aws_iam_policy_statement_action_node" {
   category = category.aws_iam_policy_action
@@ -514,9 +425,8 @@ node "aws_iam_policy_statement_action_node" {
       p.arn = $1
   EOQ
 
-  param "arn" {}
+  param "policy_arn" {}
 }
-
 
 edge "aws_iam_policy_statement_action_edge" {
   //title = "allows"
@@ -526,7 +436,8 @@ edge "aws_iam_policy_statement_action_edge" {
       distinct on (p.arn,action)
       concat('action:', action) as to_id,
       concat('statement:', i) as from_id,
-      concat(t.stmt ->> 'Effect', ' action') as title,
+      --concat(lower(t.stmt ->> 'Effect'), ' action') as title,
+      lower(t.stmt ->> 'Effect') as title,
       lower(t.stmt ->> 'Effect') as category
     from
       aws_iam_policy as p,
@@ -536,20 +447,17 @@ edge "aws_iam_policy_statement_action_edge" {
       p.arn = $1
   EOQ
 
-  param "arn" {}
+  param "policy_arn" {}
 }
 
-
-
 edge "aws_iam_policy_statement_notaction_edge" {
-  //title = "allows"
   sql = <<-EOQ
     
     select
       distinct on (p.arn,notaction)
       concat('action:', notaction) as to_id,
       concat('statement:', i) as from_id,
-      concat(t.stmt ->> 'Effect', ' not action') as title,
+      concat(lower(t.stmt ->> 'Effect'), ' not action') as title,
       lower(t.stmt ->> 'Effect') as category
     from
       aws_iam_policy as p,
@@ -559,9 +467,8 @@ edge "aws_iam_policy_statement_notaction_edge" {
       p.arn = $1
   EOQ
 
-  param "arn" {}
+  param "policy_arn" {}
 }
-
 
 node "aws_iam_policy_statement_resource_node" {
   category = category.aws_iam_policy_resource
@@ -580,9 +487,8 @@ node "aws_iam_policy_statement_resource_node" {
       p.arn =  $1
   EOQ
 
-  param "arn" {}
+  param "policy_arn" {}
 }
-
 
 edge "aws_iam_policy_statement_resource_edge" {
   title = "resource"
@@ -602,10 +508,8 @@ edge "aws_iam_policy_statement_resource_edge" {
       p.arn = $1
   EOQ
 
-  param "arn" {}
+  param "policy_arn" {}
 }
-
-
 
 edge "aws_iam_policy_statement_notresource_edge" {
   title = "not resource"
@@ -625,10 +529,8 @@ edge "aws_iam_policy_statement_notresource_edge" {
       p.arn = $1
   EOQ
 
-  param "arn" {}
+  param "policy_arn" {}
 }
-
-
 
 node "aws_iam_policy_statement_condition_node" {
   category = category.aws_iam_policy_condition
@@ -647,9 +549,8 @@ node "aws_iam_policy_statement_condition_node" {
       and p.arn = $1
   EOQ
 
-  param "arn" {}
+  param "policy_arn" {}
 }
-
 
 edge "aws_iam_policy_statement_condition_edge" {
   title = "condition"
@@ -667,11 +568,8 @@ edge "aws_iam_policy_statement_condition_edge" {
       and p.arn = $1
   EOQ
 
-  param "arn" {}
+  param "policy_arn" {}
 }
-
-
-
 
 node "aws_iam_policy_statement_condition_key_node" {
   category = category.aws_iam_policy_condition_key
@@ -691,12 +589,11 @@ node "aws_iam_policy_statement_condition_key_node" {
       and p.arn = $1
   EOQ
 
-  param "arn" {}
+  param "policy_arn" {}
 }
 
-
 edge "aws_iam_policy_statement_condition_key_edge" {
-  title = "condition key" //"and"
+  title = "all of" 
   sql = <<-EOQ
     select
       concat('statement:', i, ':condition:', condition.key, ':', condition_key.key  ) as to_id,
@@ -711,9 +608,8 @@ edge "aws_iam_policy_statement_condition_key_edge" {
       and p.arn = $1
   EOQ
 
-  param "arn" {}
+  param "policy_arn" {}
 }
-
 
 node "aws_iam_policy_statement_condition_key_value_node" {
   category = category.aws_iam_policy_condition_value
@@ -733,13 +629,11 @@ node "aws_iam_policy_statement_condition_key_value_node" {
       and p.arn = $1
   EOQ
 
-  param "arn" {}
+  param "policy_arn" {}
 }
 
-
-
 edge "aws_iam_policy_statement_condition_key_value_edge" {
-  title = "condition value" // "or"
+  title = "any of"
   sql = <<-EOQ
     select
       concat('statement:', i, ':condition:', condition.key, ':', condition_key.key, ':', condition_value  ) as to_id,
@@ -755,58 +649,8 @@ edge "aws_iam_policy_statement_condition_key_value_edge" {
       and p.arn = $1
   EOQ
 
-  param "arn" {}
+  param "policy_arn" {}
 }
-
-
-/*
-// original....
-
-
-node "aws_iam_policy_statement_condition_node" {
-  category = category.aws_iam_policy_condition
-
-  sql = <<-EOQ
-    select
-      'condition' as title,
-      concat('statement:', i, ':condition') as id,
-      --jsonb_build_object(
-      --  'Condition', stmt -> 'Condition'
-      --) as properties
-      stmt -> 'Condition' as properties
-    from
-      aws_iam_policy as p,
-      jsonb_array_elements(p.policy_std -> 'Statement') with ordinality as t(stmt,i)
-    where
-      stmt -> 'Condition' <> 'null'
-      and p.arn = $1
-  EOQ
-
-  param "arn" {}
-}
-
-
-edge "aws_iam_policy_statement_condition_edge" {
-  title = "condition"
-  sql = <<-EOQ
-    
-    select
-      concat('statement:', i, ':condition') as to_id,
-      concat('statement:', i) as from_id
-    from
-      aws_iam_policy as p,
-      jsonb_array_elements(p.policy_std -> 'Statement') with ordinality as t(stmt,i)
-    where
-      stmt -> 'Condition' <> 'null'
-      and p.arn = $1
-  EOQ
-
-  param "arn" {}
-}
-
-*/
-
-
 
 node "aws_iam_policy_statement_action_notaction_node" {
   category = category.aws_iam_policy_action
@@ -824,10 +668,8 @@ node "aws_iam_policy_statement_action_notaction_node" {
       p.arn = $1
   EOQ
 
-  param "arn" {}
+  param "policy_arn" {}
 }
-
-
 
 node "aws_iam_policy_statement_resource_notresource_node" {
   category = category.aws_iam_policy_resource
@@ -845,355 +687,8 @@ node "aws_iam_policy_statement_resource_notresource_node" {
       p.arn =  $1
   EOQ
 
-  param "arn" {}
+  param "policy_arn" {}
 }
-
-
-
-
-
-
-
-//*****
-
-
-# node "aws_iam_policy_allowed_service_node" {
-#   category = category.aws_service
-
-#   sql = <<-EOQ
-#     with prefix as (
-#       select distinct prefix from aws_iam_action
-#     )
-#     select
-#       distinct on (a.prefix)
-#       -- action_glob,
-#       -- split_part(action_glob, ':', 1) as prefix_glob,
-#       a.prefix as id,
-#       a.prefix as title
-#       --stmt
-#     from
-#       aws_iam_policy as p,
-#       jsonb_array_elements(p.policy_std -> 'Statement') as stmt,
-#       jsonb_array_elements_text(stmt -> 'Action') as action_glob,
-#       prefix as a 
-#     where
-#       stmt ->> 'Effect' = 'Allow'
-#       and a.prefix like glob(split_part(action_glob, ':', 1)) 
-#       and p.arn = $1
-#   EOQ
-
-#   param "arn" {}
-# }
-
-# edge "aws_iam_policy_allowed_service_edge" {
-#   title = "allows"
-
-#   sql = <<-EOQ
-    
-#     with prefix as (
-#       select distinct prefix from aws_iam_action
-#     )
-#     select
-#       distinct on (a.prefix)
-#       p.arn as from_id,
-#       a.prefix as to_id
-#     from
-#       aws_iam_policy as p,
-#       jsonb_array_elements(p.policy_std -> 'Statement') as stmt,
-#       jsonb_array_elements_text(stmt -> 'Action') as action_glob,
-#       prefix as a 
-#     where
-#       stmt ->> 'Effect' = 'Allow'
-#       and a.prefix like glob(split_part(action_glob, ':', 1)) 
-#       and p.arn = $1;
-#   EOQ
-
-#   param "arn" {}
-# }
-
-
-
-
-# node "aws_iam_policy_allowed_action_node" {
-#   category = category.aws_action
-
-#   sql = <<-EOQ
-#     select
-#       distinct on (a.action)
-#       a.action as id,
-#       a.action as title
-#     from
-#       aws_iam_policy as p,
-#       jsonb_array_elements(p.policy_std -> 'Statement') as stmt,
-#       jsonb_array_elements_text(stmt -> 'Action') as action_glob,
-#       aws_iam_action as a 
-#     where
-#       stmt ->> 'Effect' = 'Allow'
-#       and a.action like glob(action_glob)
-#       and p.arn = $1
-#   EOQ
-
-#   param "arn" {}
-# }
-
-# edge "aws_iam_policy_allowed_action_edge" {
-#   title = "action"
-
-#   sql = <<-EOQ
-    
-#     select
-#       distinct on (a.action)
-#       concat('action:', a.action) as to_id,
-#       split_part(a.action, ':', 1) as from_id
-#     from
-#       aws_iam_policy as p,
-#       jsonb_array_elements(p.policy_std -> 'Statement') as stmt,
-#       jsonb_array_elements_text(stmt -> 'Action') as action_glob,
-#       aws_iam_action as a 
-#     where
-#       stmt ->> 'Effect' = 'Allow'
-#       and a.action like glob(action_glob)
-#       and p.arn = $1
-#   EOQ
-
-#   param "arn" {}
-# }
-
-
-
-
-
-
-
-
-
-
-# node "aws_iam_policy_allowed_service_node" {
-#   category = category.aws_service
-
-#   sql = <<-EOQ
-#     with prefix as (
-#       select distinct prefix from aws_iam_action
-#     )
-#     select
-#       distinct on (a.prefix)
-#       -- action_glob,
-#       -- split_part(action_glob, ':', 1) as prefix_glob,
-#       a.prefix as id,
-#       a.prefix as title
-#       --stmt
-#     from
-#       aws_iam_policy as p,
-#       jsonb_array_elements(p.policy_std -> 'Statement') as stmt,
-#       jsonb_array_elements_text(stmt -> 'Action') as action_glob,
-#       prefix as a 
-#     where
-#       stmt ->> 'Effect' = 'Allow'
-#       and a.prefix like glob(split_part(action_glob, ':', 1)) 
-#       and p.arn = $1
-#   EOQ
-
-#   param "arn" {}
-# }
-
-# edge "aws_iam_policy_allowed_service_edge" {
-#   title = "allows"
-
-#   sql = <<-EOQ
-    
-#     with prefix as (
-#       select distinct prefix from aws_iam_action
-#     )
-#     select
-#       distinct on (a.prefix)
-#       p.arn as from_id,
-#       a.prefix as to_id
-#     from
-#       aws_iam_policy as p,
-#       jsonb_array_elements(p.policy_std -> 'Statement') as stmt,
-#       jsonb_array_elements_text(stmt -> 'Action') as action_glob,
-#       prefix as a 
-#     where
-#       stmt ->> 'Effect' = 'Allow'
-#       and a.prefix like glob(split_part(action_glob, ':', 1)) 
-#       and p.arn = $1;
-#   EOQ
-
-#   param "arn" {}
-# }
-
-
-
-
-# node "aws_iam_policy_allowed_action_node" {
-#   category = category.aws_action
-
-#   sql = <<-EOQ
-#     select
-#       distinct on (a.action)
-#       a.action as id,
-#       a.action as title
-#     from
-#       aws_iam_policy as p,
-#       jsonb_array_elements(p.policy_std -> 'Statement') as stmt,
-#       jsonb_array_elements_text(stmt -> 'Action') as action_glob,
-#       aws_iam_action as a 
-#     where
-#       stmt ->> 'Effect' = 'Allow'
-#       and a.action like glob(action_glob)
-#       and p.arn = $1
-#   EOQ
-
-#   param "arn" {}
-# }
-
-# edge "aws_iam_policy_allowed_action_edge" {
-#   title = "action"
-
-#   sql = <<-EOQ
-    
-#     select
-#       distinct on (a.action)
-#       concat('action:', a.action) as to_id,
-#       split_part(a.action, ':', 1) as from_id
-#     from
-#       aws_iam_policy as p,
-#       jsonb_array_elements(p.policy_std -> 'Statement') as stmt,
-#       jsonb_array_elements_text(stmt -> 'Action') as action_glob,
-#       aws_iam_action as a 
-#     where
-#       stmt ->> 'Effect' = 'Allow'
-#       and a.action like glob(action_glob)
-#       and p.arn = $1
-#   EOQ
-
-#   param "arn" {}
-# }
-
-
-//###
-
-
-
-node "aws_iam_policy_globbed_action_node" {
-  category = category.aws_iam_policy_action
-
-  sql = <<-EOQ
-    select
-      distinct on (a.action)
-      concat ('action:', a.action) as id,
-      a.action as title
-    from
-      aws_iam_policy as p,
-      jsonb_array_elements(p.policy_std -> 'Statement') as stmt,
-      jsonb_array_elements_text(stmt -> 'Action') as action_glob,
-      aws_iam_action as a 
-    where
-      a.action like glob(action_glob)
-      and p.arn = $1
-  EOQ
-
-  param "arn" {}
-}
-
-
-
-edge "aws_iam_policy_globbed_action_edge" {
-  //title = "action"
-
-  sql = <<-EOQ
-    
-    select
-      distinct on (a.action)
-      concat('action:', a.action) as to_id,
-      concat('statement:', i) as from_id,
-      lower(t.stmt ->> 'Effect') as category,
-      t.stmt ->> 'Effect' as title
-    from
-      aws_iam_policy as p,
-      jsonb_array_elements(p.policy_std -> 'Statement') with ordinality as t(stmt,i),
-      jsonb_array_elements_text(t.stmt -> 'Action') as action_glob,
-      aws_iam_action as a 
-    where
-      a.action like glob(action_glob)
-      and p.arn = $1
-  EOQ
-
-  param "arn" {}
-}
-
-
-
-  # node "aws_iam_policy_resource_node" {
-  #   //category = category.aws_iam_policy_action
-
-  #   sql = <<-EOQ
-  #     select
-  #       concat ('resource:', resource) as id,
-  #       resource as title
-  #     from
-  #       aws_iam_policy as p,
-  #       jsonb_array_elements(p.policy_std -> 'Statement') as stmt,
-  #       jsonb_array_elements_text(stmt -> 'Resource') as resource
-  #     where
-  #       and p.arn = $1
-  #   EOQ
-
-  #   param "arn" {}
-  # }
-
-
-
-# node "aws_iam_policy_globbed_notaction_node" {
-#   category = category.aws_iam_policy_notaction
-
-#   sql = <<-EOQ
-#     select
-#       distinct on (a.action)
-#       concat ('notaction:', a.action) as id,
-#       concat ('!', a.action) as title
-#     from
-#       aws_iam_policy as p,
-#       jsonb_array_elements(p.policy_std -> 'Statement') as stmt,
-#       jsonb_array_elements_text(stmt -> 'NotAction') as action_glob,
-#       aws_iam_action as a 
-#     where
-#       --stmt ->> 'Effect' = 'Allow'
-#       a.action like glob(action_glob)
-#       and p.arn = $1
-#   EOQ
-
-#   param "arn" {}
-# }
-
-# edge "aws_iam_policy_globbed_notaction_edge" {
-#   //title = "action"
-
-#   sql = <<-EOQ
-    
-#     select
-#       distinct on (a.action)
-#       concat('notaction:', a.action) as to_id,
-#       concat('statement:', i) as from_id,
-#       --split_part(a.action, ':', 1) as from_id,
-#       lower(t.stmt ->> 'Effect') as category,
-#       t.stmt ->> 'Effect' as title
-#     from
-#       aws_iam_policy as p,
-#       jsonb_array_elements(p.policy_std -> 'Statement') with ordinality as t(stmt,i),
-#       jsonb_array_elements_text(t.stmt -> 'NotAction') as action_glob,
-#       aws_iam_action as a 
-#     where
-#       --t.stmt ->> 'Effect' = 'Allow'
-#       a.action like glob(action_glob)
-#       and p.arn = $1
-#   EOQ
-
-#   param "arn" {}
-# }
-
-
-
 
 node "aws_iam_policy_globbed_notaction_node" {
   category = category.aws_iam_policy_notaction
@@ -1213,11 +708,10 @@ node "aws_iam_policy_globbed_notaction_node" {
       and p.arn = $1
   EOQ
 
-  param "arn" {}
+  param "policy_arn" {}
 }
 
 edge "aws_iam_policy_globbed_notaction_edge" {
-  //title = "action"
 
   sql = <<-EOQ
     
@@ -1237,5 +731,106 @@ edge "aws_iam_policy_globbed_notaction_edge" {
       and p.arn = $1
   EOQ
 
-  param "arn" {}
+  param "policy_arn" {}
 }
+
+
+
+///************  with....
+
+node "aws_iam_policy_nodes" {
+  category = category.aws_iam_policy
+
+  sql = <<-EOQ
+    select
+      distinct on (arn)
+      arn as id,
+      name as title,
+      'aws_iam_policy' as category,
+      jsonb_build_object(
+        'ARN', arn,
+        'AWS Managed', is_aws_managed::text,
+        'Attached', is_attached::text,
+        'Create Date', create_date,
+        'Account ID', account_id 
+      ) as properties
+    from
+      aws_iam_policy
+    where
+      arn = any($1);
+  EOQ
+
+  param "policy_arns" {}
+}
+
+edge "aws_iam_policy_from_iam_user_edges" {
+  title = "attaches"
+
+  sql = <<-EOQ
+   select
+      policy_arns as to_id,
+      user_arns as from_id
+    from
+      unnest($1::text[]) as policy_arns,
+      unnest($2::text[]) as user_arns
+  EOQ
+
+  param "policy_arns" {}
+  param "user_arns" {}
+
+}
+
+edge "aws_iam_policy_from_iam_role_edges" {
+  title = "attaches"
+
+  sql = <<-EOQ
+   select
+      policy_arns as to_id,
+      role_arns as from_id
+    from
+      unnest($1::text[]) as policy_arns,
+      unnest($2::text[]) as role_arns
+  EOQ
+
+  param "policy_arns" {}
+  param "role_arns" {}
+}
+
+edge "aws_iam_policy_from_iam_group_edges" {
+  title = "attaches"
+
+  sql = <<-EOQ
+   select
+      policy_arns as to_id,
+      group_arns as from_id
+    from
+      unnest($1::text[]) as policy_arns,
+      unnest($2::text[]) as group_arns
+  EOQ
+
+  param "policy_arns" {}
+  param "group_arns" {}
+
+}
+
+node "aws_iam_policy_statement_nodes" {
+  category = category.aws_iam_policy_statement
+
+  sql = <<-EOQ
+
+    select
+      concat('statement:', i) as id,
+      coalesce (
+        t.stmt ->> 'Sid',
+        concat('[', i::text, ']')
+        ) as title
+    from
+      (select $1) as p,
+      jsonb_array_elements(to_jsonb(p) -> 'jsonb' -> 'Statement') with ordinality as t(stmt,i)
+
+  EOQ
+
+  param "policy_std" {}
+}
+
+

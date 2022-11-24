@@ -799,3 +799,29 @@ query "aws_iam_user_manage_policies_hierarchy" {
 
   param "arn" {}
 }
+
+
+//******
+
+
+node "aws_iam_role_nodes" {
+  category = category.aws_iam_role
+
+  sql = <<-EOQ
+    select
+      arn as id,
+      name as title,
+      jsonb_build_object(
+        'ARN', arn,
+        'Create Date', create_date,
+        'Max Session Duration', max_session_duration,
+        'Account ID', account_id
+      ) as properties
+    from
+      aws_iam_role
+    where
+      arn = any($1);
+  EOQ
+
+  param "role_arns" {}
+}

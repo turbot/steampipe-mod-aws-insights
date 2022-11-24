@@ -1,3 +1,10 @@
+// this is just for testing while `with` is in development... 
+locals {
+  test_user_arn = "arn:aws:iam::876515858155:user/jsmyth"
+}
+
+
+
 dashboard "aws_iam_user_detail" {
 
   title         = "AWS IAM User Detail"
@@ -56,23 +63,61 @@ dashboard "aws_iam_user_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "groups" {
+        sql = <<-EOQ
+          select
+            g ->> 'Arn' as group_arn
+          from
+            aws_iam_user,
+            jsonb_array_elements(groups) as g
+          where
+            arn = $1
+        EOQ
+
+        #args = [self.input.user_arn.value]
+        args = [local.test_user_arn]
+      }
+
+
+      with "attached_policies" {
+        sql = <<-EOQ
+          select
+            jsonb_array_elements_text(attached_policy_arns) as policy_arn
+          from
+            aws_iam_user
+          where
+            arn = $1
+        EOQ
+
+        #args = [self.input.group_arn.value]
+        args = [local.test_user_arn]
+      }
+
+
       nodes = [
-        node.aws_iam_user_node,
-        node.aws_iam_user_to_iam_group_node,
-        node.aws_iam_user_to_iam_policy_node,
+        node.aws_iam_user_nodes,
+        node.aws_iam_group_nodes,
+        node.aws_iam_policy_nodes,
+
+        // to update for 'with' reuse
         node.aws_iam_user_to_iam_access_key_node,
         node.aws_iam_user_to_inline_policy_node,
       ]
 
       edges = [
-        edge.aws_iam_user_from_iam_group_edge,
-        edge.aws_iam_user_to_iam_policy_edge,
+        edge.aws_iam_group_to_iam_user_edges,
+        edge.aws_iam_user_to_iam_policy_edges,
+
+        // to update for 'with' reuse
         edge.aws_iam_user_to_iam_access_key_edge,
         edge.aws_iam_user_to_inline_policy_edge,
       ]
 
       args = {
         arn = self.input.user_arn.value
+        group_arns = with.groups.rows[*].group_arn
+        policy_arns = with.attached_policies.rows[*].policy_arn
+        user_arns = [local.test_user_arn] // [self.input.user_arn.value]
       }
     }
   }
@@ -342,24 +387,6 @@ node "aws_iam_user_to_iam_group_node" {
   param "arn" {}
 }
 
-edge "aws_iam_user_from_iam_group_edge" {
-  title = "has member"
-
-  sql = <<-EOQ
-    select
-      u ->> 'UserId' as to_id,
-      g.group_id as from_id
-    from
-      aws_iam_group as g,
-      jsonb_array_elements(users) as u
-    where
-      u ->> 'Arn' = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-
 
 node "aws_iam_user_to_iam_policy_node" {
   category = category.aws_iam_policy
@@ -437,7 +464,7 @@ edge "aws_iam_user_to_inline_policy_edge" {
 
   sql = <<-EOQ
     select
-      u.user_id as from_id,
+      u.arn as from_id,
       concat('inline_', i ->> 'PolicyName') as to_id
     from
       aws_iam_user as u,
@@ -479,12 +506,15 @@ edge "aws_iam_user_to_iam_access_key_edge" {
 
   sql = <<-EOQ
     select
-      u.user_id as from_id,
+      u.arn as from_id,
       a.access_key_id as to_id
     from
-      aws_iam_access_key as a left join aws_iam_user as u on u.name = a.user_name
+      aws_iam_access_key as a, 
+      aws_iam_user as u
     where
-      u.arn  = $1;
+      u.name = a.user_name
+      and u.account_id = a.account_id
+      and u.arn  = $1;
   EOQ
 
   param "arn" {}
@@ -864,4 +894,50 @@ edge "aws_iam_user_to_iam_group_inline_policy_edge" {
   EOQ
 
   param "arn" {}
+}
+
+//******
+
+node "aws_iam_user_nodes" {
+
+  category = category.aws_iam_user
+
+  sql = <<-EOQ
+    select
+      arn as id,
+      name as title,
+      jsonb_build_object(
+        'ARN', arn,
+        'Path', path,
+        'Create Date', create_date,
+        'MFA Enabled', mfa_enabled::text,
+        'Account ID', account_id
+      ) as properties
+    from
+      aws_iam_user
+    where
+      arn = any($1);
+  EOQ
+
+  param "user_arns" {}
+}
+
+
+
+
+edge "aws_iam_user_to_iam_policy_edges" {
+  title = "has member"
+
+  sql = <<-EOQ
+   select
+      user_arn as from_id,
+      policy_arn as to_id
+    from
+      unnest($1::text[]) as user_arn,
+      unnest($2::text[]) as policy_arn
+  EOQ
+
+  param "user_arns" {}
+  param "policy_arns" {}
+
 }
