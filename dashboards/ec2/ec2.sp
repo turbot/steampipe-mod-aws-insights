@@ -43,7 +43,7 @@ category "aws_ec2_gateway_load_balancer" {
 category "aws_ec2_instance" {
   title = "EC2 Instance"
   href  = "/aws_insights.dashboard.aws_ec2_instance_detail?input.instance_arn={{.properties.'ARN' | @uri}}"
-  icon  = "cpuchip"
+  icon  = "cpu-chip"
   color = local.compute_color
 }
 
@@ -81,7 +81,7 @@ category "aws_ec2_network_load_balancer" {
 
 category "aws_ec2_target_group" {
   title = "EC2 Target Group"
-  icon  = "arrowdownonsquare"
+  icon  = "arrow-down-on-square"
   color = local.networking_color
 }
 

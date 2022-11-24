@@ -35,14 +35,12 @@ dashboard "backup_vault_detail" {
         node.aws_backup_vault_node,
         node.aws_backup_vault_from_backup_plan_node,
         node.aws_backup_vault_to_kms_key_node,
-        node.aws_backup_vault_to_backup_recovery_point_node,
         node.aws_backup_vault_to_sns_topic_node
       ]
 
       edges = [
         edge.aws_backup_vault_from_backup_plan_edge,
         edge.aws_backup_vault_to_kms_key_edge,
-        edge.aws_backup_vault_to_backup_recovery_point_edge,
         edge.aws_backup_vault_to_sns_topic_edge,
       ]
 
@@ -234,46 +232,6 @@ edge "aws_backup_vault_to_kms_key_edge" {
   param "arn" {}
 }
 
-node "aws_backup_vault_to_backup_recovery_point_node"{
-  category = category.aws_backup_recovery_point
-
-  sql = <<-EOQ
-    select
-      r.recovery_point_arn as id,
-      jsonb_build_object (
-        'ARN', r.recovery_point_arn,
-        'Creation Date', r.creation_date,
-        'Account ID', r.account_id,
-        'Type', r.resource_type,
-        'Region', r.region
-      ) as properties
-    from
-      aws_backup_recovery_point as r
-      left join aws_backup_vault as v on v.arn = r.backup_vault_arn
-    where
-      v.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_backup_vault_to_backup_recovery_point_edge"{
-  title = "recovery point"
-
-  sql = <<-EOQ
-    select
-      v.arn as from_id,
-      r.recovery_point_arn as to_id
-    from
-      aws_backup_recovery_point as r
-      left join aws_backup_vault as v on v.arn = r.backup_vault_arn
-    where
-      v.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
 node "aws_backup_vault_to_sns_topic_node" {
   category = category.aws_sns_topic
 
@@ -304,7 +262,7 @@ node "aws_backup_vault_to_sns_topic_node" {
 }
 
 edge "aws_backup_vault_to_sns_topic_edge" {
-  title = "publishes to"
+  title = "notifies"
 
   sql = <<-EOQ
     select

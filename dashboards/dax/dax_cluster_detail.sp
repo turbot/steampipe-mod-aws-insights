@@ -229,7 +229,7 @@ node "aws_dax_cluster_to_iam_role_node" {
 }
 
 edge "aws_dax_cluster_to_iam_role_edge" {
-  title = "iam role"
+  title = "assumes"
   sql   = <<-EOQ
     select
       arn as from_id,
@@ -419,7 +419,7 @@ node "aws_dax_cluster_to_sns_topic_node" {
 }
 
 edge "aws_dax_cluster_to_sns_topic_edge" {
-  title = "publishes to"
+  title = "notifies"
   sql   = <<-EOQ
     select
       c.arn as from_id,

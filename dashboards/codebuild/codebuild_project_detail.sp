@@ -63,6 +63,9 @@ dashboard "aws_codebuild_project_detail" {
 
       edges = [
         edge.aws_codebuild_project_to_s3_bucket_edge,
+        edge.aws_codebuild_project_to_artifact_s3_bucket_edge,
+        edge.aws_codebuild_project_to_cache_s3_bucket_edge,
+        edge.aws_codebuild_project_from_s3_bucket_edge,
         edge.aws_codebuild_project_to_cloudwatch_group_edge,
         edge.aws_codebuild_project_to_kms_key_edge,
         edge.aws_codebuild_project_to_iam_role_edge,
@@ -303,7 +306,7 @@ node "aws_codebuild_project_to_s3_bucket_node" {
 }
 
 edge "aws_codebuild_project_to_s3_bucket_edge" {
-  title = "s3 bucket"
+  title = "logs to"
 
   sql = <<-EOQ
     select
@@ -314,11 +317,61 @@ edge "aws_codebuild_project_to_s3_bucket_edge" {
       aws_s3_bucket as s3
     where
       p.arn = $1
-      and (s3.name = split_part(p.cache ->> 'Location', '/', 1)
-        or s3.name = p.artifacts ->> 'Location'
-        or s3.name = split_part(p.logs_config -> 'S3Logs' ->> 'Location', '/', 1)
-        or s3.name = split_part(p.source ->> 'Location', '/', 1)
-      );
+      and  s3.name = split_part(p.logs_config -> 'S3Logs' ->> 'Location', '/', 1);
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_codebuild_project_to_artifact_s3_bucket_edge" {
+  title = "artifact"
+
+  sql = <<-EOQ
+    select
+      p.arn as from_id,
+      s3.arn as to_id
+    from
+      aws_codebuild_project as p,
+      aws_s3_bucket as s3
+    where
+      p.arn = $1
+      and s3.name = p.artifacts ->> 'Location';
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_codebuild_project_to_cache_s3_bucket_edge" {
+  title = "cache"
+
+  sql = <<-EOQ
+    select
+      p.arn as from_id,
+      s3.arn as to_id
+    from
+      aws_codebuild_project as p,
+      aws_s3_bucket as s3
+    where
+      p.arn = $1
+      and s3.name = split_part(p.cache ->> 'Location', '/', 1);
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_codebuild_project_from_s3_bucket_edge" {
+  title = "source provider"
+
+  sql = <<-EOQ
+    select
+      s3.arn as from_id,
+      p.arn as to_id
+    from
+      aws_codebuild_project as p,
+      aws_s3_bucket as s3
+    where
+      p.arn = $1
+      and s3.name = split_part(p.source ->> 'Location', '/', 1);
   EOQ
 
   param "arn" {}
