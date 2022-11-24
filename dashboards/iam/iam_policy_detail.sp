@@ -76,15 +76,14 @@ dashboard "aws_iam_policy_detail" {
             policy_arn = $1;
         EOQ
 
-        # ### alternate format.... wjhy does this not work?
-
         #args = [self.input.policy_arn.value]
-        #args = [local.test_policy_arn]
+        args = [local.test_policy_arn]
 
-        param policy_arn {
-          //default = self.input.policy_arn.value
-          default = local.test_policy_arn
-        }
+        # ### alternate format....
+        # param policy_arn {
+        #   //default = self.input.policy_arn.value
+        #   default = local.test_policy_arn
+        # }
       }
 
 
@@ -101,12 +100,7 @@ dashboard "aws_iam_policy_detail" {
         EOQ
 
         #args = [self.input.policy_arn.value]
-        #args = [local.test_policy_arn]
-
-        param policy_arn {
-          //default = self.input.policy_arn.value
-          default = local.test_policy_arn
-        }
+        args = [local.test_policy_arn]
       }
 
 
@@ -122,12 +116,7 @@ dashboard "aws_iam_policy_detail" {
         EOQ
 
         #args = [self.input.policy_arn.value]
-        #args = [local.test_policy_arn]
-
-        param policy_arn {
-          //default = self.input.policy_arn.value
-          default = local.test_policy_arn
-        }
+        args = [local.test_policy_arn]
       }
 
       nodes = [
@@ -168,17 +157,13 @@ dashboard "aws_iam_policy_detail" {
         policy_arns  = [local.test_policy_arn]
         //policy_arns  = [self.input.policy_arn.value]
 
-
         role_arns   = with.attached_roles.rows[*].role_arn
         user_arns   = with.attached_users.rows[*].user_arn
         group_arns    = with.attached_groups.rows[*].group_arn
         policy_std    = with.policy_std.rows[0].policy_std
         //policy_std    = with.policy_std.rows[*].policy_std
-
       }
     }
-
-
 
   }
 
