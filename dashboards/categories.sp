@@ -10,13 +10,6 @@ category "aws_docdb_cluster" {
   color = local.database_color
 }
 
-category "aws_ec2_network_interface" {
-  title = "EC2 Network Interface"
-  href  = "/aws_insights.dashboard.aws_ec2_network_interface_detail?input.network_interface_id={{.properties.'ID' | @uri}}"
-  icon  = "text:ENI"
-  color = local.networking_color
-}
-
 category "aws_ecs_cluster" {
   title = "ECS Cluster"
   href  = "/aws_insights.dashboard.aws_ecs_cluster_detail?input.ecs_cluster_arn={{.properties.'ARN' | @uri}}"
