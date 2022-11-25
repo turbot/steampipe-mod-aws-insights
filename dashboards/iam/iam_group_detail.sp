@@ -1,9 +1,3 @@
-// this is just for testing while `with` is in development... 
-locals {
-  test_group_arn = "arn:aws:iam::533793682495:group/turbot/admin"
-}
-
-
 dashboard "aws_iam_group_detail" {
 
   title         = "AWS IAM Group Detail"
@@ -58,8 +52,7 @@ dashboard "aws_iam_group_detail" {
             arn = $1
         EOQ
 
-        #args = [self.input.group_arn.value]
-        args = [local.test_group_arn]
+        args = [self.input.group_arn.value]
       }
 
       with "members" {
@@ -74,27 +67,24 @@ dashboard "aws_iam_group_detail" {
 
         EOQ
 
-        #args = [self.input.group_arn.value]
-        args = [local.test_group_arn]
+        args = [self.input.group_arn.value]
       }
 
       nodes = [
         node.aws_iam_group_nodes,
         node.aws_iam_policy_nodes,
         node.aws_iam_user_nodes,
-
-        // Add inline policies...
-        // node.aws_iam_inline_policy_nodes
+        node.aws_iam_group_inline_policy_nodes,
       ]
 
       edges = [
         edge.aws_iam_policy_from_iam_group_edges,
         edge.aws_iam_group_to_iam_user_edges,
-
+        edge.aws_iam_group_to_inline_policy_edges,
       ]
 
       args = {
-        group_arns = [local.test_group_arn] //[self.input.group_arn.value]
+        group_arns = [self.input.group_arn.value]
         policy_arns = with.attached_policies.rows[*].policy_arn
         user_arns = with.members.rows[*].user_arn
       }
@@ -298,4 +288,43 @@ edge "aws_iam_group_to_iam_user_edges" {
   param "user_arns" {}
   param "group_arns" {}
 
+}
+
+node "aws_iam_group_inline_policy_nodes" {
+  category = category.aws_iam_inline_policy
+
+  sql = <<-EOQ
+    select
+      concat(g.arn, ':inline_', i ->> 'PolicyName') as id,
+      i ->> 'PolicyName' as title,
+      jsonb_build_object(
+        'PolicyName', i ->> 'PolicyName',
+        'Type', 'Inline Policy'
+      ) as properties
+    from
+      aws_iam_group as g,
+      jsonb_array_elements(inline_policies_std) as i
+    where
+      g.arn = any($1)
+  EOQ
+//      jsonb_array_elements(($1 :: jsonb) ->  'Statement') with ordinality as t(stmt,i)
+
+  param "group_arns" {}
+}
+
+edge "aws_iam_group_to_inline_policy_edges" {
+  title = "inline policy"
+
+  sql = <<-EOQ
+    select
+      g.arn as from_id,
+      concat(g.arn, ':inline_', i ->> 'PolicyName') as to_id
+    from
+      aws_iam_group as g,
+      jsonb_array_elements(inline_policies_std) as i
+    where
+      g.arn = any($1)
+  EOQ
+
+  param "group_arns" {}
 }
