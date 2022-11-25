@@ -79,9 +79,7 @@ dashboard "aws_ec2_network_interface_detail" {
         edge.aws_ec2_network_interface_to_vpc_security_group_edge,
         edge.aws_ec2_network_interface_to_security_group_to_subnet_edge,
         edge.aws_ec2_network_interface_to_security_group_subnet_to_vpc_edge,
-        edge.aws_ec2_network_interface_to_flow_log_edge,
-        edge.aws_ec2_network_interface_to_subnet_flow_log_edge,
-        edge.aws_ec2_network_interface_to_vpc_flow_log_edge
+        edge.aws_ec2_network_interface_to_flow_log_edge
       ]
 
       args = {
@@ -576,16 +574,14 @@ node "aws_ec2_network_interface_to_flow_log_node" {
     from
       aws_vpc_flow_log
     where
-      resource_id = $1
-      or resource_id in (select subnet_id from aws_ec2_network_interface where network_interface_id = $1)
-      or resource_id in (select vpc_id from aws_ec2_network_interface where network_interface_id = $1);
+      resource_id = $1;
   EOQ
 
   param "network_interface_id" {}
 }
 
 edge "aws_ec2_network_interface_to_flow_log_edge" {
-  title = "eni flow log"
+  title = "flow log"
 
   sql = <<-EOQ
    select
@@ -595,38 +591,6 @@ edge "aws_ec2_network_interface_to_flow_log_edge" {
       aws_vpc_flow_log
     where
       resource_id = $1;
-  EOQ
-
-  param "network_interface_id" {}
-}
-
-edge "aws_ec2_network_interface_to_subnet_flow_log_edge" {
-  title = "subnet flow log"
-
-  sql = <<-EOQ
-   select
-      $1 as from_id,
-      flow_log_id as to_id
-    from
-      aws_vpc_flow_log
-    where
-      resource_id in (select subnet_id from aws_ec2_network_interface where network_interface_id = $1);
-  EOQ
-
-  param "network_interface_id" {}
-}
-
-edge "aws_ec2_network_interface_to_vpc_flow_log_edge" {
-  title = "vpc flow log"
-
-  sql = <<-EOQ
-   select
-      $1 as from_id,
-      flow_log_id as to_id
-    from
-      aws_vpc_flow_log
-    where
-      resource_id in (select vpc_id from aws_ec2_network_interface where network_interface_id = $1);
   EOQ
 
   param "network_interface_id" {}

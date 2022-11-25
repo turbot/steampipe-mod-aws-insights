@@ -46,10 +46,7 @@ dashboard "aws_vpc_flow_logs_detail" {
         node.aws_vpc_flow_log_to_cloudwatch_log_group_node,
         node.aws_vpc_flow_log_to_iam_role_node,
         node.aws_vpc_flow_log_from_ec2_network_interface_node,
-        node.aws_vpc_flow_log_from_ec2_network_interface_vpc_subnet_node,
-        node.aws_vpc_flow_log_from_ec2_network_interface_vpc_subnet_vpc_node,
         node.aws_vpc_flow_log_from_vpc_subnet_node,
-        node.aws_vpc_flow_log_from_vpc_subnet_vpc_node,
         node.aws_vpc_flow_log_from_vpc_node
       ]
 
@@ -58,10 +55,7 @@ dashboard "aws_vpc_flow_logs_detail" {
         edge.aws_vpc_flow_log_to_cloudwatch_log_group_edge,
         edge.aws_vpc_flow_log_to_iam_role_edge,
         edge.aws_vpc_flow_log_from_ec2_network_interface_edge,
-        edge.aws_vpc_flow_log_from_ec2_network_interface_vpc_subnet_edge,
-        edge.aws_vpc_flow_log_from_ec2_network_interface_vpc_subnet_vpc_edge,
         edge.aws_vpc_flow_log_from_vpc_subnet_edge,
-        edge.aws_vpc_flow_log_from_vpc_subnet_vpc_edge,
         edge.aws_vpc_flow_log_from_vpc_edge
       ]
 
@@ -342,93 +336,6 @@ edge "aws_vpc_flow_log_from_ec2_network_interface_edge" {
   param "flow_log_id" {}
 }
 
-node "aws_vpc_flow_log_from_ec2_network_interface_vpc_subnet_node" {
-  category = category.aws_vpc_subnet
-  sql = <<-EOQ
-     select
-      s.subnet_arn as id,
-      s.title as title,
-      jsonb_build_object(
-        'ARN', s.subnet_arn,
-        'Subnet ID' , s.subnet_id,
-        'Region', s.region,
-        'Account ID', s.account_id
-      ) as properties
-    from
-      aws_vpc_flow_log as f
-      left join aws_ec2_network_interface as i on f.resource_id = i.network_interface_id
-      left join aws_vpc_subnet as s on s.subnet_id = i.subnet_id
-    where
-      resource_id like 'eni-%'
-      and f.flow_log_id = $1;
-  EOQ
-
-  param "flow_log_id" {}
-}
-
-edge "aws_vpc_flow_log_from_ec2_network_interface_vpc_subnet_edge" {
-  title = "eni"
-  sql = <<-EOQ
-    select
-      subnet_arn as from_id,
-      i.network_interface_id as to_id
-    from
-      aws_vpc_flow_log as f
-      left join aws_ec2_network_interface as i on f.resource_id = i.network_interface_id
-      left join aws_vpc_subnet as s on s.subnet_id = i.subnet_id
-    where
-      resource_id like 'eni-%'
-      and f.flow_log_id = $1;
-  EOQ
-
-  param "flow_log_id" {}
-}
-
-node "aws_vpc_flow_log_from_ec2_network_interface_vpc_subnet_vpc_node" {
-  category = category.aws_vpc
-  sql = <<-EOQ
-     select
-      v.arn as id,
-      v.title as title,
-      jsonb_build_object(
-        'ARN', v.arn,
-        'VPC ID' , v.vpc_id,
-        'Region', v.region,
-        'Default', v.is_default,
-        'Account ID', v.account_id
-      ) as properties
-    from
-      aws_vpc_flow_log as f
-      left join aws_ec2_network_interface as i on f.resource_id = i.network_interface_id
-      left join aws_vpc as v on v.vpc_id = i.vpc_id
-      left join aws_vpc_subnet as s on s.subnet_id = i.subnet_id
-    where
-      resource_id like 'eni-%'
-      and f.flow_log_id = $1;
-  EOQ
-
-  param "flow_log_id" {}
-}
-
-edge "aws_vpc_flow_log_from_ec2_network_interface_vpc_subnet_vpc_edge" {
-  title = "subnet"
-  sql = <<-EOQ
-    select
-      v.arn as from_id,
-      s.subnet_arn as to_id
-    from
-      aws_vpc_flow_log as f
-      left join aws_ec2_network_interface as i on f.resource_id = i.network_interface_id
-      left join aws_vpc as v on v.vpc_id = i.vpc_id
-      left join aws_vpc_subnet as s on s.subnet_id = i.subnet_id
-    where
-      resource_id like 'eni-%'
-      and f.flow_log_id = $1;
-  EOQ
-
-  param "flow_log_id" {}
-}
-
 node "aws_vpc_flow_log_from_vpc_subnet_node" {
   category = category.aws_vpc_subnet
   sql = <<-EOQ
@@ -461,50 +368,6 @@ edge "aws_vpc_flow_log_from_vpc_subnet_edge" {
     from
       aws_vpc_flow_log as f
       left join aws_vpc_subnet as s on f.resource_id = s.subnet_id
-    where
-      resource_id like 'subnet-%'
-      and f.flow_log_id = $1;
-  EOQ
-
-  param "flow_log_id" {}
-}
-
-node "aws_vpc_flow_log_from_vpc_subnet_vpc_node" {
-  category = category.aws_vpc
-  sql = <<-EOQ
-    select
-      v.arn as id,
-      v.title as title,
-      jsonb_build_object(
-        'ARN', v.arn,
-        'VPC ID' , v.vpc_id,
-        'Region', v.region,
-        'Default', v.is_default,
-        'Account ID', v.account_id
-      ) as properties
-    from
-      aws_vpc_flow_log as f
-      right join aws_vpc_subnet as s on f.resource_id = s.subnet_id
-      right join aws_vpc as v on v.vpc_id = s.vpc_id
-    where
-      resource_id like 'subnet-%'
-      and f.flow_log_id = $1;
-  EOQ
-
-  param "flow_log_id" {}
-}
-
-
-edge "aws_vpc_flow_log_from_vpc_subnet_vpc_edge" {
-  title = "flow log"
-  sql = <<-EOQ
-    select
-      v.arn as from_id,
-      s.subnet_arn as to_id
-    from
-      aws_vpc_flow_log as f
-      right join aws_vpc_subnet as s on f.resource_id = s.subnet_id
-      right join aws_vpc as v on v.vpc_id = s.vpc_id
     where
       resource_id like 'subnet-%'
       and f.flow_log_id = $1;

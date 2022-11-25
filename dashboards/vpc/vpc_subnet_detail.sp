@@ -64,7 +64,6 @@ dashboard "aws_vpc_subnet_detail" {
       edges = [
         edge.aws_vpc_subnet_from_vpc_edge,
         edge.aws_vpc_subnet_to_flow_log_edge,
-        edge.aws_vpc_subnet_to_vpc_flow_log_edge,
         edge.aws_vpc_subnet_to_vpc_route_table_edge,
         edge.aws_vpc_subnet_to_vpc_network_acl_edge,
         edge.aws_vpc_subnet_to_rds_db_instance_edge,
@@ -629,15 +628,14 @@ node "aws_vpc_subnet_to_flow_log_node" {
     from
       aws_vpc_flow_log
     where
-      resource_id = $1
-      or resource_id in (select vpc_id from aws_vpc_subnet where subnet_id = $1);
+      resource_id = $1;
   EOQ
 
   param "subnet_id" {}
 }
 
 edge "aws_vpc_subnet_to_flow_log_edge" {
-  title = "subnet flow log"
+  title = "flow log"
 
   sql = <<-EOQ
    select
@@ -647,22 +645,6 @@ edge "aws_vpc_subnet_to_flow_log_edge" {
       aws_vpc_flow_log
     where
       resource_id = $1;
-  EOQ
-
-  param "subnet_id" {}
-}
-
-edge "aws_vpc_subnet_to_vpc_flow_log_edge" {
-  title = "vpc flow log"
-
-  sql = <<-EOQ
-   select
-      $1 as from_id,
-      flow_log_id as to_id
-    from
-      aws_vpc_flow_log
-    where
-      resource_id in (select vpc_id from aws_vpc_subnet where subnet_id = $1);
   EOQ
 
   param "subnet_id" {}
