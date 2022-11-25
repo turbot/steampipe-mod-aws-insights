@@ -820,7 +820,7 @@ node "aws_iam_role_nodes" {
     from
       aws_iam_role
     where
-      arn = any($1);
+      arn = any($1 ::text[]);
   EOQ
 
   param "role_arns" {}

@@ -74,8 +74,12 @@ dashboard "aws_iam_user_detail" {
             arn = $1
         EOQ
 
-        #args = [self.input.user_arn.value]
+        //args = [self.input.user_arn.value]
         args = [local.test_user_arn]
+
+        param "user_arn" {
+         // default = self.input.user_arn.value
+        }
       }
 
 
@@ -89,8 +93,12 @@ dashboard "aws_iam_user_detail" {
             arn = $1
         EOQ
 
-        #args = [self.input.group_arn.value]
+        //args = [self.input.user_arn.value]
         args = [local.test_user_arn]
+
+        # param "user_arn" {
+        #   //default = self.input.user_arn.value
+        # }
       }
 
 
@@ -114,10 +122,13 @@ dashboard "aws_iam_user_detail" {
       ]
 
       args = {
-        arn = self.input.user_arn.value
+        //arn = self.input.user_arn.value
+        arn = local.test_user_arn
+
         group_arns = with.groups.rows[*].group_arn
         policy_arns = with.attached_policies.rows[*].policy_arn
-        user_arns = [local.test_user_arn] // [self.input.user_arn.value]
+        user_arns = [local.test_user_arn] 
+        //user_arns = [self.input.user_arn.value]
       }
     }
   }

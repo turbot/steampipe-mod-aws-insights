@@ -82,6 +82,9 @@ dashboard "aws_iam_group_detail" {
         node.aws_iam_group_nodes,
         node.aws_iam_policy_nodes,
         node.aws_iam_user_nodes,
+
+        // Add inline policies...
+        // node.aws_iam_inline_policy_nodes
       ]
 
       edges = [

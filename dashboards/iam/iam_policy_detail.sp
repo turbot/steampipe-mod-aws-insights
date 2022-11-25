@@ -55,13 +55,12 @@ dashboard "aws_iam_policy_detail" {
             policy_arn = $1;
         EOQ
 
-        #args = [self.input.policy_arn.value]
-        #args = [local.test_policy_arn]
-
-        param policy_arn {
-          //default = self.input.policy_arn.value
-          default = local.test_policy_arn
-        }
+        args = [self.input.policy_arn.value]
+ 
+         # ### alternate format....
+        # param policy_arn {
+        #   default = self.input.policy_arn.value
+        # }
       }
 
 
@@ -76,14 +75,7 @@ dashboard "aws_iam_policy_detail" {
             policy_arn = $1;
         EOQ
 
-        #args = [self.input.policy_arn.value]
-        args = [local.test_policy_arn]
-
-        # ### alternate format....
-        # param policy_arn {
-        #   //default = self.input.policy_arn.value
-        #   default = local.test_policy_arn
-        # }
+        args = [self.input.policy_arn.value]
       }
 
 
@@ -99,8 +91,7 @@ dashboard "aws_iam_policy_detail" {
             policy_arn = $1;
         EOQ
 
-        #args = [self.input.policy_arn.value]
-        args = [local.test_policy_arn]
+        args = [self.input.policy_arn.value]
       }
 
 
@@ -115,8 +106,7 @@ dashboard "aws_iam_policy_detail" {
           limit 1;  -- aws managed policies will appear once for each connection in the aggregator, but we only need one...
         EOQ
 
-        #args = [self.input.policy_arn.value]
-        args = [local.test_policy_arn]
+        args = [self.input.policy_arn.value]
       }
 
       nodes = [
@@ -153,14 +143,17 @@ dashboard "aws_iam_policy_detail" {
       ]
 
       args = {
-        policy_arn  = local.test_policy_arn //self.input.policy_arn.value
-        policy_arns  = [local.test_policy_arn]
-        //policy_arns  = [self.input.policy_arn.value]
+        policy_arn  = self.input.policy_arn.value
 
+        // this should work but currently fails with 'cannot serialize unknown values'
+        // hard-coding to avoid it for now...
+        //policy_arns  = [self.input.policy_arn.value]
+        policy_arns  = [local.test_policy_arn]
+        
         role_arns   = with.attached_roles.rows[*].role_arn
         user_arns   = with.attached_users.rows[*].user_arn
-        group_arns    = with.attached_groups.rows[*].group_arn
-        policy_std    = with.policy_std.rows[0].policy_std
+        group_arns  = with.attached_groups.rows[*].group_arn
+        policy_std  = with.policy_std.rows[0].policy_std
         //policy_std    = with.policy_std.rows[*].policy_std
       }
     }
