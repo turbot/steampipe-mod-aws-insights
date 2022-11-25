@@ -71,6 +71,7 @@ dashboard "aws_eks_cluster_detail" {
         node.aws_eks_cluster_to_vpc_security_group_node,
         node.aws_eks_cluster_to_vpc_subnet_node,
         node.aws_eks_cluster_to_eks_identity_provider_config_node,
+        node.aws_eks_cluster_to_eks_fargate_profile_node,
         node.aws_eks_cluster_to_vpc_node
       ]
 
@@ -82,6 +83,7 @@ dashboard "aws_eks_cluster_detail" {
         edge.aws_eks_cluster_to_vpc_security_group_edge,
         edge.aws_eks_cluster_to_vpc_security_group_to_vpc_edge,
         edge.aws_eks_cluster_to_eks_identity_provider_config_edge,
+        edge.aws_eks_cluster_to_eks_fargate_profile_edge,
         edge.aws_eks_cluster_to_vpc_subnet_to_vpc_edge
       ]
 
@@ -753,6 +755,52 @@ edge "aws_eks_cluster_to_eks_identity_provider_config_edge" {
         on i.cluster_name = c.name
     where
       c.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "aws_eks_cluster_to_eks_fargate_profile_node" {
+  category = category.aws_eks_fargate_profile
+
+  sql = <<-EOQ
+    select
+      p.fargate_profile_arn as id,
+      p.title as title,
+      jsonb_build_object(
+        'ARN', p.fargate_profile_arn,
+        'Status', p.status,
+        'Account ID', p.account_id,
+        'Region', p.region
+        ) as properties
+    from
+     aws_eks_cluster as c
+      left join
+        aws_eks_fargate_profile as p
+        on p.cluster_name = c.name
+    where
+      p.region = c.region
+      and c.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "aws_eks_cluster_to_eks_fargate_profile_edge" {
+  title = "fargate profile"
+
+  sql = <<-EOQ
+    select
+      c.arn as from_id,
+      p.fargate_profile_arn as to_id
+    from
+      aws_eks_cluster as c
+      left join
+        aws_eks_fargate_profile as p
+        on p.cluster_name = c.name
+    where
+      p.region = c.region
+      and c.arn = $1;
   EOQ
 
   param "arn" {}

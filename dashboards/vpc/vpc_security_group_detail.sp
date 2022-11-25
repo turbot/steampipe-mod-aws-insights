@@ -1293,7 +1293,7 @@ node "aws_vpc_security_group_from_vpc_node" {
 }
 
 edge "aws_vpc_security_group_from_vpc_edge" {
-  title = "vpc"
+  title = "security group"
 
   sql = <<-EOQ
     select
