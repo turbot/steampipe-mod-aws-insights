@@ -350,7 +350,7 @@ category "aws_eks_cluster" {
 category "aws_eks_identity_provider_config" {
   title = "EKS Identity Provider Config"
   color = local.containers_color
-  icon  = "IPC"
+  icon  = "text:IPC"
 }
 
 category "aws_eks_fargate_profile" {
