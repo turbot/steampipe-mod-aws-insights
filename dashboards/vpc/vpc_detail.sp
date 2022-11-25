@@ -1225,19 +1225,28 @@ node "aws_vpc_vcp_endpoint_node" {
   param "vpc_id" {}
 }
 
-
 edge "aws_vpc_subnet_endpoint_edge" {
   title = "vpc endpoint"
 
   sql = <<-EOQ
     select
-      coalesce(s, e.vpc_id) as from_id,
+      s as from_id,
       e.vpc_endpoint_id as to_id
     from
       aws_vpc_endpoint as e,
       jsonb_array_elements_text(e.subnet_ids) as s
     where
       e.vpc_id = $1
+    union
+    select
+      vpc_id as from_id,
+      vpc_endpoint_id as to_id
+    from
+      aws_vpc_endpoint as e
+    where
+      jsonb_array_length(subnet_ids) = 0
+      and vpc_id = $1;
+
   EOQ
 
   param "vpc_id" {}
