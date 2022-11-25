@@ -56,11 +56,14 @@ dashboard "aws_vpc_subnet_detail" {
         node.aws_vpc_subnet_to_rds_db_instance_node,
         node.aws_vpc_subnet_to_ec2_instance_node,
         node.aws_vpc_subnet_to_lambda_function_node,
+        node.aws_vpc_subnet_to_flow_log_node,
         node.aws_vpc_subnet_to_sagemaker_notebook_instance_node
       ]
 
       edges = [
         edge.aws_vpc_subnet_from_vpc_edge,
+        edge.aws_vpc_subnet_to_flow_log_edge,
+        edge.aws_vpc_subnet_to_vpc_flow_log_edge,
         edge.aws_vpc_subnet_to_vpc_route_table_edge,
         edge.aws_vpc_subnet_to_vpc_network_acl_edge,
         edge.aws_vpc_subnet_to_rds_db_instance_edge,
@@ -604,6 +607,60 @@ edge "aws_vpc_subnet_to_sagemaker_notebook_instance_edge" {
       aws_sagemaker_notebook_instance
     where
       subnet_id = $1
+  EOQ
+
+  param "subnet_id" {}
+}
+
+node "aws_vpc_subnet_to_flow_log_node" {
+  category = category.aws_vpc_flow_log
+
+  sql = <<-EOQ
+    select
+      flow_log_id as id,
+      title as title,
+      jsonb_build_object(
+        'Flow Log ID', flow_log_id,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_vpc_flow_log
+    where
+      resource_id = $1
+      or resource_id in (select vpc_id from aws_vpc_subnet where subnet_id = $1);
+  EOQ
+
+  param "subnet_id" {}
+}
+
+edge "aws_vpc_subnet_to_flow_log_edge" {
+  title = "subnet flow log"
+
+  sql = <<-EOQ
+   select
+      $1 as from_id,
+      flow_log_id as to_id
+    from
+      aws_vpc_flow_log
+    where
+      resource_id = $1;
+  EOQ
+
+  param "subnet_id" {}
+}
+
+edge "aws_vpc_subnet_to_vpc_flow_log_edge" {
+  title = "vpc flow log"
+
+  sql = <<-EOQ
+   select
+      $1 as from_id,
+      flow_log_id as to_id
+    from
+      aws_vpc_flow_log
+    where
+      resource_id in (select vpc_id from aws_vpc_subnet where subnet_id = $1);
   EOQ
 
   param "subnet_id" {}

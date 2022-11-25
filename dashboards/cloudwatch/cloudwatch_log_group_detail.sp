@@ -63,7 +63,7 @@ dashboard "aws_cloudwatch_log_group_detail" {
         node.aws_cloudwatch_log_group_from_lambda_function_node,
         node.aws_cloudwatch_log_group_from_vpc_flow_logs_node,
         node.aws_cloudwatch_log_group_from_kinesis_stream_node,
-        # node.aws_cloudwatch_log_group_to_log_metric_filter_node
+        node.aws_cloudwatch_log_group_to_log_metric_filter_node
       ]
 
       edges = [
@@ -72,7 +72,7 @@ dashboard "aws_cloudwatch_log_group_detail" {
         edge.aws_cloudwatch_log_group_from_lambda_function_edge,
         edge.aws_cloudwatch_log_group_from_vpc_flow_logs_edge,
         edge.aws_cloudwatch_log_group_from_kinesis_stream_edge,
-        # edge.aws_cloudwatch_log_group_to_log_metric_filter_edge
+        edge.aws_cloudwatch_log_group_to_log_metric_filter_edge
       ]
 
       args = {

@@ -223,7 +223,7 @@ category "aws_vpc_flow_log" {
   title = "VPC Flow Log"
   href  = "/aws_insights.dashboard.aws_vpc_flow_logs_detail?input.flow_log_id={{.properties.'Flow Log ID' | @uri}}"
   color = local.networking_color
-  icon  = "text:FlowLog"
+  icon  = "text:FL"
 }
 
 category "aws_iam_role" {
