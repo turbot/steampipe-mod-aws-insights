@@ -57,7 +57,8 @@ dashboard "aws_vpc_subnet_detail" {
         node.aws_vpc_subnet_to_ec2_instance_node,
         node.aws_vpc_subnet_to_lambda_function_node,
         node.aws_vpc_subnet_to_flow_log_node,
-        node.aws_vpc_subnet_to_sagemaker_notebook_instance_node
+        node.aws_vpc_subnet_to_sagemaker_notebook_instance_node,
+        node.aws_vpc_subnet_to_network_interface_node
       ]
 
       edges = [
@@ -69,7 +70,8 @@ dashboard "aws_vpc_subnet_detail" {
         edge.aws_vpc_subnet_to_rds_db_instance_edge,
         edge.aws_vpc_subnet_to_ec2_instance_edge,
         edge.aws_vpc_subnet_to_lambda_function_edge,
-        edge.aws_vpc_subnet_to_sagemaker_notebook_instance_edge
+        edge.aws_vpc_subnet_to_sagemaker_notebook_instance_edge,
+        edge.aws_vpc_subnet_to_network_interface_edge
       ]
 
       args = {
@@ -661,6 +663,45 @@ edge "aws_vpc_subnet_to_vpc_flow_log_edge" {
       aws_vpc_flow_log
     where
       resource_id in (select vpc_id from aws_vpc_subnet where subnet_id = $1);
+  EOQ
+
+  param "subnet_id" {}
+}
+
+node "aws_vpc_subnet_to_network_interface_node" {
+  category = category.aws_ec2_network_interface
+
+  sql = <<-EOQ
+    select
+      network_interface_id as id,
+      title as title,
+      jsonb_build_object(
+        'Network Interface ID', network_interface_id,
+        'Availability Zone', availability_zone,
+        'Attachment Status', attachment_status,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_ec2_network_interface
+    where
+      subnet_id = $1;
+  EOQ
+
+  param "subnet_id" {}
+}
+
+edge "aws_vpc_subnet_to_network_interface_edge" {
+  title = "eni"
+
+  sql = <<-EOQ
+   select
+      $1 as from_id,
+      network_interface_id as to_id
+    from
+      aws_ec2_network_interface
+    where
+      subnet_id = $1;
   EOQ
 
   param "subnet_id" {}
