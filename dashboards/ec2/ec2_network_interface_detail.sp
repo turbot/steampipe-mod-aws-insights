@@ -595,3 +595,29 @@ edge "aws_ec2_network_interface_to_flow_log_edge" {
 
   param "network_interface_id" {}
 }
+
+//******
+
+
+node "aws_ec2_network_interface_nodes" {
+  category = category.aws_ec2_network_interface
+
+  sql = <<-EOQ
+    select
+      network_interface_id as id,
+      title as title,
+      jsonb_build_object(
+        'ID', network_interface_id,
+        'Interface Type', interface_type,
+        'Status', status,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_ec2_network_interface
+    where
+      network_interface_id = any($1 ::text[]);
+  EOQ
+
+  param "eni_ids" {}
+}

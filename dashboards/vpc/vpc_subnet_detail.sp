@@ -688,3 +688,29 @@ edge "aws_vpc_subnet_to_network_interface_edge" {
 
   param "subnet_id" {}
 }
+
+//******
+
+
+node "aws_vpc_subnet_nodes" {
+  category = category.aws_vpc_subnet
+
+  sql = <<-EOQ
+   select
+      subnet_id as id,
+      title as title,
+      jsonb_build_object(
+        'Subnet ID', subnet_id,
+        'ARN', subnet_arn,
+        'VPC ID', vpc_id,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_vpc_subnet
+    where
+      subnet_id = any($1 ::text[]);
+  EOQ
+
+  param "subnet_ids" {}
+}
