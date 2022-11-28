@@ -465,7 +465,7 @@ edge "aws_iam_role_from_lambda_function_edge" {
 }
 
 node "aws_iam_role_from_iam_instance_profile_node" {
-  category = category.aws_iam_instance_profile
+  category = category.aws_iam_profile
 
   sql = <<-EOQ
     select

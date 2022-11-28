@@ -224,7 +224,7 @@ node "aws_vpc_eip_from_ec2_instance_node" {
         'State', i.instance_state,
         'Account ID', i.account_id,
         'Region', i.region
-      ) as properties   
+      ) as properties
     from
       aws_vpc_eip as e
       left join aws_ec2_instance as i on e.instance_id = i.instance_id
@@ -410,3 +410,28 @@ query "aws_vpc_eip_other_ip" {
   param "arn" {}
 }
 
+
+node "aws_vpc_eip_nodes" {
+  category = category.aws_vpc_eip
+
+  sql = <<-EOQ
+   select
+      arn as id,
+      title as title,
+      jsonb_build_object(
+        'ARN', arn,
+        'Allocation Id', allocation_id,
+        'Association Id', association_id,
+        'Public IP', public_ip,
+        'Domain', domain,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_vpc_eip
+    where
+      arn = any($1 ::text[]);
+  EOQ
+
+  param "eip_arns" {}
+}
