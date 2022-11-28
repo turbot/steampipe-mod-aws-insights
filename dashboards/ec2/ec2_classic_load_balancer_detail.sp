@@ -242,29 +242,6 @@ query "aws_clb_scheme" {
   param "arn" {}
 }
 
-node "aws_ec2_classic_load_balancer_nodes" {
-  category = category.aws_ec2_classic_load_balancer
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'VPC ID', vpc_id,
-        'Scheme', scheme,
-        'Region', region,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_ec2_classic_load_balancer
-    where
-      arn = any($1);
-  EOQ
-
-  param "clb_arns" {}
-}
-
 node "aws_ec2_clb_to_ec2_instance_node" {
   category = category.aws_ec2_instance
 

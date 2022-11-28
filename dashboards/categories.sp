@@ -1,9 +1,3 @@
-# TODO: What is this graph used for?
-graph "aws_graph_categories" {
-  type  = "graph"
-  title = "Relationships"
-}
-
 category "aws_appconfig_application" {
   title = "AppConfig Application"
   color = local.application_integration_color

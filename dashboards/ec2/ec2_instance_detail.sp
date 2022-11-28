@@ -506,29 +506,6 @@ query "aws_ec2_instance_ebs_optimized" {
   param "arn" {}
 }
 
-node "aws_ec2_instance_nodes" {
-
-  category = category.aws_ec2_instance
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title,
-      jsonb_build_object(
-        'Instance ID', instance_id,
-        'Name', tags ->> 'Name',
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_ec2_instance
-    where
-      arn = any($1);
-  EOQ
-
-  param "instance_arns" {}
-}
 
 edge "aws_ec2_instance_to_ebs_volume_edges" {
   title = "mounts"
