@@ -9,8 +9,8 @@ dashboard "aws_iam_role_detail" {
 
   input "role_arn" {
     title = "Select a role:"
-    query = query.aws_iam_role_input
-    width = 2
+    sql   = query.aws_iam_role_input.sql
+    width = 4
   }
 
   container {
@@ -56,7 +56,12 @@ dashboard "aws_iam_role_detail" {
         node.aws_iam_role_from_guardduty_detector_node,
         node.aws_iam_role_from_lambda_function_node,
         node.aws_iam_role_from_iam_instance_profile_node,
-        node.aws_iam_role_from_ec2_instance_node
+        node.aws_iam_role_from_ec2_instance_node,
+
+        node.aws_iam_role_trusted_aws_node,
+        node.aws_iam_role_trusted_service_node,
+        node.aws_iam_role_trusted_federated_node,
+
       ]
 
       edges = [
@@ -66,7 +71,12 @@ dashboard "aws_iam_role_detail" {
         edge.aws_iam_role_from_guardduty_detector_edge,
         edge.aws_iam_role_from_lambda_function_edge,
         edge.aws_iam_role_from_iam_instance_profile_edge,
-        edge.aws_iam_role_from_ec2_instance_edge
+        edge.aws_iam_role_from_ec2_instance_edge,
+
+        edge.aws_iam_role_trusted_aws_edge,
+        edge.aws_iam_role_trusted_service_edge,
+        edge.aws_iam_role_trusted_federated_edge,
+
       ]
 
       args = {
@@ -260,7 +270,7 @@ node "aws_iam_role_to_iam_policy_node" {
 }
 
 edge "aws_iam_role_to_iam_policy_edge" {
-  title = "attached"
+  title = "policy"
 
   sql = <<-EOQ
     select
@@ -285,7 +295,7 @@ node "aws_iam_role_from_kinesisanalyticsv2_application_node" {
   sql = <<-EOQ
     select
       application_arn as id,
-      application_name as title,
+      title as title,
       jsonb_build_object(
         'ARN', application_arn,
         'Application Status', application_status,
@@ -304,7 +314,7 @@ node "aws_iam_role_from_kinesisanalyticsv2_application_node" {
 }
 
 edge "aws_iam_role_from_kinesisanalyticsv2_application_edge" {
-  title = "kinesis application"
+  title = "runs as"
 
   sql = <<-EOQ
     select
@@ -326,7 +336,7 @@ node "aws_iam_role_from_emr_cluster_node" {
   sql = <<-EOQ
     select
       id as id,
-      name as title,
+      title,
       jsonb_build_object(
         'ARN', cluster_arn,
         'State', state,
@@ -353,7 +363,7 @@ node "aws_iam_role_from_emr_cluster_node" {
 }
 
 edge "aws_iam_role_from_emr_cluster_edge" {
-  title = "emr cluster"
+  title = "runs as"
 
   sql = <<-EOQ
     select
@@ -379,7 +389,7 @@ node "aws_iam_role_from_guardduty_detector_node" {
   sql = <<-EOQ
     select
       detector_id as id,
-      detector_id as title,
+      title,
       jsonb_build_object(
         'ARN', arn,
         'Status', status,
@@ -397,7 +407,7 @@ node "aws_iam_role_from_guardduty_detector_node" {
 }
 
 edge "aws_iam_role_from_guardduty_detector_edge" {
-  title = "guardduty detector"
+  title = "runs as"
 
   sql = <<-EOQ
     select
@@ -438,7 +448,7 @@ node "aws_iam_role_from_lambda_function_node" {
 }
 
 edge "aws_iam_role_from_lambda_function_edge" {
-  title = "lambda function"
+  title = "runs as"
 
   sql = <<-EOQ
     select
@@ -460,7 +470,7 @@ node "aws_iam_role_from_iam_instance_profile_node" {
   sql = <<-EOQ
     select
       iam_instance_profile_arn as id,
-      iam_instance_profile_arn as title,
+      split_part(iam_instance_profile_arn,':',6) as title,
       jsonb_build_object(
         'Instance Profile ARN', iam_instance_profile_arn
       ) as properties
@@ -475,7 +485,7 @@ node "aws_iam_role_from_iam_instance_profile_node" {
 }
 
 edge "aws_iam_role_from_iam_instance_profile_edge" {
-  title = "instance profile"
+  title = "assumes"
 
   sql = <<-EOQ
     select
@@ -500,7 +510,7 @@ node "aws_iam_role_from_ec2_instance_node" {
   sql = <<-EOQ
     select
       i.instance_id as id,
-      i.instance_id as title,
+      i.title as title,
       jsonb_build_object(
         'Name', i.tags ->> 'Name',
         'Instance ID', instance_id,
@@ -521,7 +531,7 @@ node "aws_iam_role_from_ec2_instance_node" {
 }
 
 edge "aws_iam_role_from_ec2_instance_edge" {
-  title = "ec2 instance"
+  title = "runs as"
 
   sql = <<-EOQ
     select
@@ -543,6 +553,140 @@ edge "aws_iam_role_from_ec2_instance_edge" {
 
   param "arn" {}
 }
+//*********
+
+
+node "aws_iam_role_trusted_aws_node" {
+  category = category.aws_account
+
+  sql = <<-EOQ
+    select
+      aws as id,
+      concat(
+        split_part(aws,':',5),
+        ':',
+        split_part(aws,':',6)
+      ) as title,
+      jsonb_build_object(
+        'ARN', aws,
+        'Principal Type', 'AWS'
+      ) as properties
+    from
+      aws_iam_role as r,
+      jsonb_array_elements(assume_role_policy_std -> 'Statement') as s,
+      jsonb_array_elements_text( (s -> 'Principal' ->> 'AWS')::jsonb ) as aws
+   where
+      r.arn = $1
+  EOQ
+
+  param "arn" {}
+}
+
+
+edge "aws_iam_role_trusted_aws_edge" {
+  title = "can assume"
+
+  sql = <<-EOQ
+    select
+      role_id as to_id,
+      aws as from_id
+    from
+      aws_iam_role as r,
+      jsonb_array_elements(assume_role_policy_std -> 'Statement') as s,
+      jsonb_array_elements_text( (s -> 'Principal' ->> 'AWS')::jsonb ) as aws
+   where
+      r.arn = $1
+  EOQ
+
+  param "arn" {}
+}
+
+
+node "aws_iam_role_trusted_service_node" {
+  category = category.aws_service
+
+  sql = <<-EOQ
+    select
+      svc as id,
+      svc as title,
+      jsonb_build_object(
+        'ARN', svc,
+        'Principal Type', 'Service'
+      ) as properties
+    from
+      aws_iam_role as r,
+      jsonb_array_elements(assume_role_policy_std -> 'Statement') as s,
+      jsonb_array_elements_text( (s -> 'Principal' ->> 'Service')::jsonb ) as svc
+    where
+      r.arn = $1
+  EOQ
+
+  param "arn" {}
+}
+
+
+edge "aws_iam_role_trusted_service_edge" {
+  title = "can assume"
+
+  sql = <<-EOQ
+    select
+      role_id as to_id,
+      svc as from_id
+    from
+      aws_iam_role as r,
+      jsonb_array_elements(assume_role_policy_std -> 'Statement') as s,
+      jsonb_array_elements_text( (s -> 'Principal' ->> 'Service')::jsonb ) as svc
+   where
+      r.arn = $1
+  EOQ
+
+  param "arn" {}
+}
+
+
+
+node "aws_iam_role_trusted_federated_node" {
+  category = category.aws_federated
+
+  sql = <<-EOQ
+    select
+      fed as id,
+      fed as title,
+      jsonb_build_object(
+        'ARN', fed,
+        'Principal Type', 'Federated'
+      ) as properties
+    from
+      aws_iam_role as r,
+      jsonb_array_elements(assume_role_policy_std -> 'Statement') as s,
+      jsonb_array_elements_text( (s -> 'Principal' ->> 'Federated')::jsonb ) as fed
+    where
+      r.arn = $1
+  EOQ
+
+  param "arn" {}
+}
+
+
+edge "aws_iam_role_trusted_federated_edge" {
+  title = "can assume"
+
+  sql = <<-EOQ
+    select
+      role_id as to_id,
+      fed as from_id
+    from
+      aws_iam_role as r,
+      jsonb_array_elements(assume_role_policy_std -> 'Statement') as s,
+      jsonb_array_elements_text( (s -> 'Principal' ->> 'Federated')::jsonb ) as fed
+   where
+      r.arn = $1
+  EOQ
+
+  param "arn" {}
+}
+
+//*******
 
 query "aws_iam_role_overview" {
   sql = <<-EOQ
@@ -576,7 +720,6 @@ query "aws_iam_all_policies_for_role" {
     where
       p.arn = policy_arn
       and r.arn = $1
-
     -- Inline Policies (defined on role)
     union select
       i ->> 'PolicyName' as "Policy",
@@ -616,7 +759,6 @@ query "aws_iam_user_manage_policies_hierarchy" {
       $1 as title,
       'role' as category,
       null as from_id
-
     -- Policies (attached to groups)
     union select
       policy_arn as id,
@@ -630,7 +772,6 @@ query "aws_iam_user_manage_policies_hierarchy" {
     where
       p.arn = policy_arn
       and r.arn = $1
-
     -- Inline Policies (defined on role)
     union select
       concat('inline_', i ->> 'PolicyName') as id,
@@ -645,4 +786,30 @@ query "aws_iam_user_manage_policies_hierarchy" {
   EOQ
 
   param "arn" {}
+}
+
+
+//******
+
+
+node "aws_iam_role_nodes" {
+  category = category.aws_iam_role
+
+  sql = <<-EOQ
+    select
+      arn as id,
+      name as title,
+      jsonb_build_object(
+        'ARN', arn,
+        'Create Date', create_date,
+        'Max Session Duration', max_session_duration,
+        'Account ID', account_id
+      ) as properties
+    from
+      aws_iam_role
+    where
+      arn = any($1 ::text[]);
+  EOQ
+
+  param "role_arns" {}
 }

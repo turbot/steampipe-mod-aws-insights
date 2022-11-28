@@ -87,3 +87,21 @@ category "aws_wafv2_web_acl" {
   icon  = "text:ACL"
   color = local.front_end_web_color
 }
+
+category "aws_federated" {
+  icon  = "heroicons-outline:user-group"
+  color = "orange"
+  title = "Federated"
+}
+
+category "aws_service" {
+  icon  = "heroicons-outline:cog-6-tooth"
+  color = "orange"
+  title = "Service"
+}
+
+category "aws_action" {
+  icon  = "heroicons-outline:cog-8-tooth"
+  color = "orange"
+  title = "Action"
+}
