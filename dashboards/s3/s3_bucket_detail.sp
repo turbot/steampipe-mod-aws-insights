@@ -72,37 +72,181 @@ dashboard "aws_s3_bucket_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "trails" {
+        sql = <<-EOQ
+          select
+            trail.arn as trail_arn
+          from
+            aws_cloudtrail_trail as trail,
+            aws_s3_bucket as b
+          where
+            b.arn = $1
+            and trail.s3_bucket_name = b.name;
+        EOQ
+
+        args = [self.input.bucket_arn.value]
+      }
+
+      with "albs" {
+        sql = <<-EOQ
+          select
+            alb.arn as alb_arn
+          from
+            aws_ec2_application_load_balancer as alb,
+            jsonb_array_elements(alb.load_balancer_attributes) as attributes,
+            aws_s3_bucket as b
+          where
+            b.arn = $1
+            and attributes ->> 'Key' = 'access_logs.s3.bucket'
+            and attributes ->> 'Value' = b.name;
+        EOQ
+
+        args = [self.input.bucket_arn.value]
+      }
+
+      with "nlbs" {
+        sql = <<-EOQ
+          select
+            nlb.arn as nlb_arn
+          from
+            aws_ec2_network_load_balancer as nlb,
+            jsonb_array_elements(nlb.load_balancer_attributes) as attributes,
+            aws_s3_bucket as b
+          where
+            b.arn = $1
+            and attributes ->> 'Key' = 'access_logs.s3.bucket'
+            and attributes ->> 'Value' = b.name;
+        EOQ
+
+        args = [self.input.bucket_arn.value]
+      }
+
+      with "clbs" {
+        sql = <<-EOQ
+          select
+            clb.arn as clb_arn
+          from
+            aws_ec2_classic_load_balancer clb,
+            aws_s3_bucket as b
+          where
+            b.arn = $1
+            and clb.access_log_s3_bucket_name = b.name;
+        EOQ
+
+        args = [self.input.bucket_arn.value]
+      }
+
+      with "keys" {
+        sql = <<-EOQ
+          select
+            k.arn as key_arn
+          from
+            aws_s3_bucket as b
+            cross join jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as r
+            join aws_kms_key as k
+            on k.arn = r -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID'
+          where
+            b.arn = $1;
+        EOQ
+
+        args = [self.input.bucket_arn.value]
+      }
+
+      with "functions" {
+        sql = <<-EOQ
+          select
+            f.arn as function_arn
+          from
+            aws_s3_bucket as b,
+            jsonb_array_elements(event_notification_configuration -> 'LambdaFunctionConfigurations') as t
+            left join aws_lambda_function as f on f.arn = t ->> 'LambdaFunctionArn'
+          where
+            event_notification_configuration -> 'LambdaFunctionConfigurations' <> 'null'
+            and b.arn = $1;
+        EOQ
+
+        args = [self.input.bucket_arn.value]
+      }
+
+      with "topics" {
+        sql = <<-EOQ
+          select
+            q.topic_arn as topic_arn
+          from
+            aws_s3_bucket as b,
+            jsonb_array_elements(
+              case jsonb_typeof(event_notification_configuration -> 'TopicConfigurations')
+                when 'array' then (event_notification_configuration -> 'TopicConfigurations')
+                else null end
+              )
+              as t
+            left join aws_sns_topic as q on q.topic_arn = t ->> 'TopicArn'
+          where
+            b.arn = $1;
+        EOQ
+
+        args = [self.input.bucket_arn.value]
+      }
+
+      with "queues" {
+        sql = <<-EOQ
+          select
+            q.queue_arn as queue_arn
+          from
+            aws_s3_bucket as b,
+            jsonb_array_elements(
+              case jsonb_typeof(event_notification_configuration -> 'QueueConfigurations')
+                when 'array' then (event_notification_configuration -> 'QueueConfigurations')
+                else null end
+              )
+              as t
+            left join aws_sqs_queue as q on q.queue_arn = t ->> 'QueueArn'
+          where
+            b.arn = $1;
+        EOQ
+
+        args = [self.input.bucket_arn.value]
+      }
+
       nodes = [
-        node.aws_s3_bucket_node,
-        node.aws_s3_bucket_from_cloudtrail_trail_node,
-        node.aws_s3_bucket_from_s3_bucket_node,
-        node.aws_s3_bucket_from_ec2_alb_node,
-        node.aws_s3_bucket_from_ec2_nlb_node,
-        node.aws_s3_bucket_from_ec2_clb_node,
-        #node.aws_s3_bucket_from_s3_access_point_node,
-        node.aws_s3_bucket_to_s3_bucket_node,
-        node.aws_s3_bucket_to_lambda_function_node,
-        node.aws_s3_bucket_to_sns_topic_node,
-        node.aws_s3_bucket_to_sqs_queue_node,
-        node.aws_s3_bucket_to_kms_key_node
+        node.aws_s3_bucket_nodes,
+        node.aws_cloudtrail_trail_nodes,
+        node.aws_ec2_application_load_balancer_nodes,
+        node.aws_ec2_network_load_balancer_nodes,
+        node.aws_ec2_classic_load_balancer_nodes,
+        node.aws_kms_key_nodes,
+        node.aws_lambda_function_nodes,
+        node.aws_sns_topic_nodes,
+        node.aws_sqs_queue_nodes,
+        node.aws_s3_bucket_from_s3_bucket_nodes,
+        node.aws_s3_bucket_to_s3_bucket_nodes
+        # node.aws_s3_bucket_from_s3_access_point_node,
       ]
 
       edges = [
-        edge.aws_s3_bucket_from_cloudtrail_trail_edge,
-        edge.aws_s3_bucket_from_s3_bucket_edge,
-        edge.aws_s3_bucket_from_ec2_alb_edge,
-        edge.aws_s3_bucket_from_ec2_nlb_edge,
-        edge.aws_s3_bucket_from_ec2_clb_edge,
-        #edge.aws_s3_bucket_from_s3_access_point_edge,
-        edge.aws_s3_bucket_to_s3_bucket_edge,
-        edge.aws_s3_bucket_to_lambda_function_edge,
-        edge.aws_s3_bucket_to_sns_topic_edge,
-        edge.aws_s3_bucket_to_sqs_queue_edge,
-        edge.aws_s3_bucket_to_kms_key_edge
+        edge.aws_s3_bucket_from_cloudtrail_trail_edges,
+        edge.aws_s3_bucket_from_ec2_alb_edges,
+        edge.aws_s3_bucket_from_ec2_nlb_edges,
+        edge.aws_s3_bucket_from_ec2_clb_edges,
+        edge.aws_s3_bucket_to_kms_key_edges,
+        edge.aws_s3_bucket_to_lambda_function_edges,
+        edge.aws_s3_bucket_to_sns_topic_edges,
+        edge.aws_s3_bucket_to_sqs_queue_edges,
+        edge.aws_s3_bucket_from_s3_bucket_edges,
+        edge.aws_s3_bucket_to_s3_bucket_edges
+        # #edge.aws_s3_bucket_from_s3_access_point_edge,
       ]
 
       args = {
-        arn = self.input.bucket_arn.value
+        bucket_arns   = [self.input.bucket_arn.value]
+        trail_arns    = with.trails.rows[*].trail_arn
+        alb_arns      = with.albs.rows[*].alb_arn
+        nlb_arns      = with.nlbs.rows[*].nlb_arn
+        clb_arns      = with.clbs.rows[*].clb_arn
+        key_arns      = with.keys.rows[*].key_arn
+        function_arns = with.functions.rows[*].function_arn
+        topic_arns    = with.topics.rows[*].topic_arn
+        queue_arns    = with.queues.rows[*].queue_arn
       }
     }
   }
@@ -191,6 +335,7 @@ dashboard "aws_s3_bucket_detail" {
   }
 
 }
+
 query "aws_s3_bucket_input" {
   sql = <<-EOQ
     select
@@ -207,7 +352,7 @@ query "aws_s3_bucket_input" {
   EOQ
 }
 
-node "aws_s3_bucket_node" {
+node "aws_s3_bucket_nodes" {
   category = category.aws_s3_bucket
 
   sql = <<-EOQ
@@ -223,339 +368,74 @@ node "aws_s3_bucket_node" {
     from
       aws_s3_bucket
     where
-      arn = $1;
+      arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "bucket_arns" {}
 }
 
-node "aws_s3_bucket_from_cloudtrail_trail_node" {
-  category = category.aws_cloudtrail_trail
-
-  sql = <<-EOQ
-    select
-      trail.arn as id,
-      trail.title as title,
-      jsonb_build_object(
-        'ARN', trail.arn,
-        'Account ID', trail.account_id,
-        'Region', trail.region,
-        'Latest Delivery Time', trail.latest_delivery_time
-      ) as properties
-    from
-      aws_cloudtrail_trail as trail,
-      aws_s3_bucket as b
-    where
-      b.arn = $1
-      and trail.s3_bucket_name = b.name;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_s3_bucket_from_cloudtrail_trail_edge" {
+edge "aws_s3_bucket_from_cloudtrail_trail_edges" {
   title = "logs to"
 
   sql = <<-EOQ
     select
-      trail.arn as from_id,
-      b.arn as to_id
+      trail_arn as from_id,
+      bucket_arn as to_id
     from
-      aws_cloudtrail_trail as trail,
-      aws_s3_bucket as b
-    where
-      b.arn = $1
-      and trail.s3_bucket_name = b.name;
+      unnest($1::text[]) as bucket_arn,
+      unnest($2::text[]) as trail_arn
   EOQ
 
-  param "arn" {}
+  param "bucket_arns" {}
+  param "trail_arns" {}
 }
 
-node "aws_s3_bucket_from_s3_bucket_node" {
-  category = category.aws_s3_bucket
-
-  sql = <<-EOQ
-    select
-      lb.arn as id,
-      lb.title as title,
-      jsonb_build_object(
-        'Name', lb.name,
-        'ARN', lb.arn,
-        'Account ID', lb.account_id,
-        'Region', lb.region
-      ) as properties
-    from
-      aws_s3_bucket as lb,
-      aws_s3_bucket as b
-    where
-      b.arn = $1
-      and lb.logging ->> 'TargetBucket' = b.name;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_s3_bucket_from_s3_bucket_edge" {
+edge "aws_s3_bucket_from_ec2_alb_edges" {
   title = "logs to"
 
   sql = <<-EOQ
     select
-      b.arn as to_id,
-      lb.arn as from_id
+      alb_arn as from_id,
+      bucket_arn as to_id
     from
-      aws_s3_bucket as lb,
-      aws_s3_bucket as b
-    where
-      b.arn = $1
-      and lb.logging ->> 'TargetBucket' = b.name;
+      unnest($1::text[]) as bucket_arn,
+      unnest($2::text[]) as alb_arn
   EOQ
 
-  param "arn" {}
+  param "bucket_arns" {}
+  param "alb_arns" {}
 }
 
-node "aws_s3_bucket_from_ec2_alb_node" {
-  category = category.aws_ec2_application_load_balancer
-
-  sql = <<-EOQ
-    select
-      alb.arn as id,
-      alb.title as title,
-      jsonb_build_object(
-        'Name', alb.name,
-        'ARN', alb.arn,
-        'Account ID', alb.account_id,
-        'Region', alb.region
-      ) as properties
-    from
-      aws_ec2_application_load_balancer alb,
-      jsonb_array_elements(alb.load_balancer_attributes) as attributes,
-      aws_s3_bucket as b
-    where
-      b.arn = $1
-      and attributes ->> 'Key' = 'access_logs.s3.bucket'
-      and attributes ->> 'Value' = b.name;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_s3_bucket_from_ec2_alb_edge" {
+edge "aws_s3_bucket_from_ec2_nlb_edges" {
   title = "logs to"
 
   sql = <<-EOQ
     select
-      alb.arn as from_id,
-      b.arn as to_id,
-      jsonb_build_object(
-        'Log Prefix', (
-          select
-            a ->> 'Value'
-          from
-            jsonb_array_elements(alb.load_balancer_attributes) as a
-          where
-            a ->> 'Key' = 'access_logs.s3.prefix'
-        )
-      ) as properties
+      nlb_arn as from_id,
+      bucket_arn as to_id
     from
-      aws_ec2_application_load_balancer alb,
-      jsonb_array_elements(alb.load_balancer_attributes) as attributes,
-      aws_s3_bucket as b
-    where
-      b.arn = $1
-      and attributes ->> 'Key' = 'access_logs.s3.bucket'
-      and attributes ->> 'Value' = b.name;
+      unnest($1::text[]) as bucket_arn,
+      unnest($2::text[]) as nlb_arn
   EOQ
 
-  param "arn" {}
+  param "bucket_arns" {}
+  param "nlb_arns" {}
 }
 
-node "aws_s3_bucket_from_ec2_nlb_node" {
-  category = category.aws_ec2_network_load_balancer
-
-  sql = <<-EOQ
-    select
-      nlb.arn as id,
-      nlb.title as title,
-      jsonb_build_object(
-        'Name', nlb.name,
-        'ARN', nlb.arn,
-        'Account ID', nlb.account_id,
-        'Region', nlb.region,
-        'Log to', attributes ->> 'Value'
-      ) as properties
-    from
-      aws_ec2_network_load_balancer nlb,
-      jsonb_array_elements(nlb.load_balancer_attributes) as attributes,
-      aws_s3_bucket as b
-    where
-      b.arn = $1
-      and attributes ->> 'Key' = 'access_logs.s3.bucket'
-      and attributes ->> 'Value' = b.name;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_s3_bucket_from_ec2_nlb_edge" {
+edge "aws_s3_bucket_from_ec2_clb_edges" {
   title = "logs to"
 
   sql = <<-EOQ
     select
-      nlb.arn as from_id,
-      b.arn as to_id,
-      jsonb_build_object(
-        'Log Prefix', (
-          select
-            a ->> 'Value'
-          from
-            jsonb_array_elements(nlb.load_balancer_attributes) as a
-          where
-            a ->> 'Key' = 'access_logs.s3.prefix'
-        )
-      ) as properties
+      clb_arn as from_id,
+      bucket_arn as to_id
     from
-      aws_ec2_network_load_balancer nlb,
-      jsonb_array_elements(nlb.load_balancer_attributes) as attributes,
-      aws_s3_bucket as b
-    where
-      b.arn = $1
-      and attributes ->> 'Key' = 'access_logs.s3.bucket'
-      and attributes ->> 'Value' = b.name;
+      unnest($1::text[]) as bucket_arn,
+      unnest($2::text[]) as clb_arn
   EOQ
 
-  param "arn" {}
-}
-
-node "aws_s3_bucket_from_ec2_clb_node" {
-  category = category.aws_ec2_classic_load_balancer
-
-  sql = <<-EOQ
-    select
-      clb.arn as id,
-      clb.title as title,
-      jsonb_build_object(
-        'Name', clb.name,
-        'ARN', clb.arn,
-        'Account ID', clb.account_id,
-        'Region', clb.region,
-        'Log Prefix', clb.access_log_s3_bucket_prefix
-      ) as properties
-    from
-      aws_ec2_classic_load_balancer clb,
-      aws_s3_bucket as b
-    where
-      b.arn = $1
-      and clb.access_log_s3_bucket_name = b.name;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_s3_bucket_from_ec2_clb_edge" {
-  title = "logs to"
-
-  sql = <<-EOQ
-    select
-      clb.arn as from_id,
-      b.arn as to_id,
-      jsonb_build_object(
-        'Log Prefix', clb.access_log_s3_bucket_prefix
-      ) as properties
-    from
-      aws_ec2_classic_load_balancer clb,
-      aws_s3_bucket as b
-    where
-      b.arn = $1
-      and clb.access_log_s3_bucket_name = b.name
-  EOQ
-
-  param "arn" {}
-}
-
-node "aws_s3_bucket_from_s3_access_point_node" {
-  category = category.aws_s3_access_point
-
-  sql = <<-EOQ
-    select
-      ap.access_point_arn as id,
-      ap.title as title,
-      jsonb_build_object(
-        'Name', ap.name,
-        'ARN', ap.access_point_arn,
-        'Account ID', ap.account_id,
-        'Region', ap.region
-      ) as properties
-    from
-      aws_s3_access_point ap,
-      aws_s3_bucket as b
-    where
-      b.arn = $1
-      and ap.bucket_name = b.name
-      and ap.region = b.region;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_s3_bucket_from_s3_access_point_edge" {
-  title = "access point"
-
-  sql = <<-EOQ
-    select
-      ap.access_point_arn as from_id,
-      b.arn as to_id
-    from
-      aws_s3_access_point ap,
-      aws_s3_bucket as b
-    where
-      b.arn = $1
-      and ap.bucket_name = b.name
-      and ap.region = b.region;
-  EOQ
-
-  param "arn" {}
-}
-
-node "aws_s3_bucket_to_s3_bucket_node" {
-  category = category.aws_s3_bucket
-
-  sql = <<-EOQ
-    select
-      lb.arn as id,
-      lb.title as title,
-      jsonb_build_object(
-        'Name', lb.name,
-        'ARN', lb.arn,
-        'Account ID', lb.account_id,
-        'Region', lb.region
-      ) as properties
-    from
-      aws_s3_bucket as lb,
-      aws_s3_bucket as b
-    where
-      b.arn = $1
-      and lb.name = b.logging ->> 'TargetBucket';
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_s3_bucket_to_s3_bucket_edge" {
-  title = "logs to"
-
-  sql = <<-EOQ
-    select
-      b.arn as from_id,
-      lb.arn as to_id
-    from
-      aws_s3_bucket as lb,
-      aws_s3_bucket as b
-    where
-      b.arn = $1
-      and lb.name = b.logging ->> 'TargetBucket';
-  EOQ
-
-  param "arn" {}
+  param "bucket_arns" {}
+  param "clb_arns" {}
 }
 
 node "aws_s3_bucket_to_lambda_function_node" {
@@ -584,168 +464,193 @@ node "aws_s3_bucket_to_lambda_function_node" {
   param "arn" {}
 }
 
-edge "aws_s3_bucket_to_lambda_function_edge" {
+edge "aws_s3_bucket_to_lambda_function_edges" {
   title = "triggers"
 
   sql = <<-EOQ
     select
-      b.arn as from_id,
-      f.arn as to_id
-     from
-      aws_s3_bucket as b,
-      jsonb_array_elements(event_notification_configuration -> 'LambdaFunctionConfigurations') as t
-      left join aws_lambda_function as f on f.arn = t ->> 'LambdaFunctionArn'
-    where
-      event_notification_configuration -> 'LambdaFunctionConfigurations' <> 'null'
-      and b.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "aws_s3_bucket_to_sns_topic_node" {
-  category = category.aws_sns_topic
-
-  sql = <<-EOQ
-    select
-      q.topic_arn as id,
-      q.title as title,
-      jsonb_build_object(
-        'ARN', q.topic_arn,
-        'Account ID', q.account_id,
-        'Region',q.region
-      ) as properties
+      bucket_arn as from_id,
+      function_arn as to_id
     from
-      aws_s3_bucket as b,
-      jsonb_array_elements(
-        case jsonb_typeof(event_notification_configuration -> 'TopicConfigurations')
-          when 'array' then (event_notification_configuration -> 'TopicConfigurations')
-          else null end
-        )
-        as t
-      left join aws_sns_topic as q on q.topic_arn = t ->> 'TopicArn'
-    where
-      b.arn = $1;
+      unnest($1::text[]) as bucket_arn,
+      unnest($2::text[]) as function_arn
   EOQ
 
-  param "arn" {}
+  param "bucket_arns" {}
+  param "function_arns" {}
 }
 
-edge "aws_s3_bucket_to_sns_topic_edge" {
+edge "aws_s3_bucket_to_sns_topic_edges" {
   title = "notifies"
 
   sql = <<-EOQ
     select
-      b.arn as from_id,
-      q.topic_arn as to_id
+      bucket_arn as from_id,
+      topic_arn as to_id
     from
-      aws_s3_bucket as b,
-      jsonb_array_elements(
-        case jsonb_typeof(event_notification_configuration -> 'TopicConfigurations')
-          when 'array' then (event_notification_configuration -> 'TopicConfigurations')
-          else null end
-        )
-        as t
-      left join aws_sns_topic as q on q.topic_arn = t ->> 'TopicArn'
-    where
-      b.arn = $1;
+      unnest($1::text[]) as bucket_arn,
+      unnest($2::text[]) as topic_arn
   EOQ
 
-  param "arn" {}
+  param "bucket_arns" {}
+  param "topic_arns" {}
 }
 
-node "aws_s3_bucket_to_sqs_queue_node" {
-  category = category.aws_sqs_queue
-
-  sql = <<-EOQ
-    select
-      q.queue_arn as id,
-      q.title as title,
-      jsonb_build_object(
-        'ARN', q.queue_arn,
-        'Account ID', q.account_id,
-        'Region', q.region
-      ) as properties
-    from
-      aws_s3_bucket as b,
-      jsonb_array_elements(
-        case jsonb_typeof(event_notification_configuration -> 'QueueConfigurations')
-          when 'array' then (event_notification_configuration -> 'QueueConfigurations')
-          else null end
-        )
-        as t
-      left join aws_sqs_queue as q on q.queue_arn = t ->> 'QueueArn'
-    where
-      b.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_s3_bucket_to_sqs_queue_edge" {
+edge "aws_s3_bucket_to_sqs_queue_edges" {
   title = "queues"
 
   sql = <<-EOQ
     select
-      b.arn as from_id,
-      q.queue_arn as to_id
+      bucket_arn as from_id,
+      queue_arn as to_id
     from
-      aws_s3_bucket as b,
-      jsonb_array_elements(
-        case jsonb_typeof(event_notification_configuration -> 'QueueConfigurations')
-          when 'array' then (event_notification_configuration -> 'QueueConfigurations')
-          else null end
-        )
-        as t
-      left join aws_sqs_queue as q on q.queue_arn = t ->> 'QueueArn'
-    where
-      b.arn = $1;
+      unnest($1::text[]) as bucket_arn,
+      unnest($2::text[]) as queue_arn
   EOQ
 
-  param "arn" {}
+  param "bucket_arns" {}
+  param "queue_arns" {}
 }
 
-node "aws_s3_bucket_to_kms_key_node" {
-  category = category.aws_kms_key
-
-  sql = <<-EOQ
-    select
-      k.id as id,
-      k.title as title,
-      jsonb_build_object(
-        'ARN', k.arn,
-        'Key Manager', k.key_manager,
-        'Creation Date', k.creation_date,
-        'Enabled', k.enabled::text,
-        'Account ID', k.account_id,
-        'Region', k.region
-      ) as properties
-    from
-      aws_s3_bucket as b
-      cross join jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as r
-      join aws_kms_key as k
-      on k.arn = r -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID'
-    where
-      b.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_s3_bucket_to_kms_key_edge" {
+edge "aws_s3_bucket_to_kms_key_edges" {
   title = "encrypted with"
 
   sql = <<-EOQ
     select
-      b.arn as from_id,
-      k.id as to_id
+      bucket_arn as from_id,
+      key_arn as to_id
     from
+      unnest($1::text[]) as bucket_arn,
+      unnest($2::text[]) as key_arn
+  EOQ
+
+  param "bucket_arns" {}
+  param "key_arns" {}
+}
+
+node "aws_s3_bucket_from_s3_bucket_nodes" {
+  category = category.aws_s3_bucket
+
+  sql = <<-EOQ
+    select
+      lb.arn as id,
+      lb.title as title,
+      jsonb_build_object(
+        'Name', lb.name,
+        'ARN', lb.arn,
+        'Account ID', lb.account_id,
+        'Region', lb.region
+      ) as properties
+    from
+      aws_s3_bucket as lb,
       aws_s3_bucket as b
-      cross join jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as r
-      join aws_kms_key as k
-      on k.arn = r -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID'
     where
-      b.arn = $1;
+      b.arn = any($1)
+      and lb.logging ->> 'TargetBucket' = b.name;
+  EOQ
+
+  param "bucket_arns" {}
+}
+
+edge "aws_s3_bucket_from_s3_bucket_edges" {
+  title = "logs to"
+
+  sql = <<-EOQ
+    select
+      b.arn as to_id,
+      lb.arn as from_id
+    from
+      aws_s3_bucket as lb,
+      aws_s3_bucket as b
+    where
+      b.arn = any($1)
+      and lb.logging ->> 'TargetBucket' = b.name;
+  EOQ
+
+  param "bucket_arns" {}
+}
+
+node "aws_s3_bucket_to_s3_bucket_nodes" {
+  category = category.aws_s3_bucket
+
+  sql = <<-EOQ
+    select
+      lb.arn as id,
+      lb.title as title,
+      jsonb_build_object(
+        'Name', lb.name,
+        'ARN', lb.arn,
+        'Account ID', lb.account_id,
+        'Region', lb.region
+      ) as properties
+    from
+      aws_s3_bucket as lb,
+      aws_s3_bucket as b
+    where
+      b.arn = any($1)
+      and lb.name = b.logging ->> 'TargetBucket';
+  EOQ
+
+  param "bucket_arns" {}
+}
+
+edge "aws_s3_bucket_to_s3_bucket_edges" {
+  title = "logs to"
+
+  sql = <<-EOQ
+    select
+      b.arn as from_id,
+      lb.arn as to_id
+    from
+      aws_s3_bucket as lb,
+      aws_s3_bucket as b
+    where
+      b.arn = any($1)
+      and lb.name = b.logging ->> 'TargetBucket';
+  EOQ
+
+  param "bucket_arns" {}
+}
+
+node "aws_s3_bucket_from_s3_access_point_node" {
+  category = category.aws_s3_access_point
+
+  sql = <<-EOQ
+    select
+      ap.access_point_arn as id,
+      ap.title as title,
+      jsonb_build_object(
+        'Name', ap.name,
+        'ARN', ap.access_point_arn,
+        'Account ID', ap.account_id,
+        'Region', ap.region
+      ) as properties
+    from
+      aws_s3_access_point ap,
+      aws_s3_bucket as b
+    where
+      b.arn = any($1)
+      and ap.bucket_name = b.name
+      and ap.region = b.region;
+  EOQ
+
+  param "bucket_arns" {}
+}
+
+edge "aws_s3_bucket_from_s3_access_point_edge" {
+  title = "access point"
+
+  sql = <<-EOQ
+    select
+      ap.access_point_arn as from_id,
+      b.arn as to_id
+    from
+      aws_s3_access_point ap,
+      aws_s3_bucket as b
+    where
+      b.arn = $1
+      and ap.bucket_name = b.name
+      and ap.region = b.region;
   EOQ
 
   param "arn" {}
@@ -950,7 +855,6 @@ query "aws_s3_bucket_public_access" {
 
   param "arn" {}
 }
-
 
 query "aws_s3_bucket_policy" {
   sql = <<-EOQ

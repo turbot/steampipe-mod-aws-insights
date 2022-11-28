@@ -61,7 +61,7 @@ dashboard "aws_cloudtrail_trail_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_cloudtrail_trail_node,
+        node.aws_cloudtrail_trail_nodes,
         node.aws_cloudtrail_trail_to_s3_bucket_node,
         node.aws_cloudtrail_trail_to_kms_key_node,
         node.aws_cloudtrail_trail_to_sns_topic_node,
@@ -78,6 +78,7 @@ dashboard "aws_cloudtrail_trail_detail" {
       ]
 
       args = {
+        trail_arns = [self.input.trail_arn.value]
         arn = self.input.trail_arn.value
       }
     }
@@ -279,7 +280,7 @@ query "aws_cloudtrail_trail_bucket" {
   param "arn" {}
 }
 
-node "aws_cloudtrail_trail_node" {
+node "aws_cloudtrail_trail_nodes" {
   category = category.aws_cloudtrail_trail
 
   sql = <<-EOQ
@@ -296,10 +297,10 @@ node "aws_cloudtrail_trail_node" {
     from
       aws_cloudtrail_trail
     where
-      arn = $1;
+      arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "trail_arns" {}
 }
 
 node "aws_cloudtrail_trail_to_s3_bucket_node" {
