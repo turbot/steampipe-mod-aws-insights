@@ -72,7 +72,7 @@ dashboard "aws_ec2_network_load_balancer_detail" {
 
 
       nodes = [
-        node.aws_ec2_network_load_balancer_node,
+        node.aws_ec2_network_load_balancer_nodes,
         node.aws_ec2_nlb_to_vpc_subnet_node,
         node.aws_ec2_nlb_to_s3_bucket_node,
         node.aws_ec2_nlb_vpc_security_group_to_vpc_node,
@@ -91,6 +91,7 @@ dashboard "aws_ec2_network_load_balancer_detail" {
       ]
 
       args = {
+        nlb_arns = [self.input.nlb.value]
         arn = self.input.nlb.value
       }
     }
@@ -291,7 +292,7 @@ query "aws_nlb_scheme" {
   param "arn" {}
 }
 
-node "aws_ec2_network_load_balancer_node" {
+node "aws_ec2_network_load_balancer_nodes" {
   category = category.aws_ec2_network_load_balancer
 
   sql = <<-EOQ
@@ -309,10 +310,10 @@ node "aws_ec2_network_load_balancer_node" {
     from
       aws_ec2_network_load_balancer
     where
-      arn = $1;
+      arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "nlb_arns" {}
 }
 
 node "aws_ec2_nlb_to_vpc_subnet_node" {

@@ -58,7 +58,7 @@ dashboard "aws_sqs_queue_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_sqs_queue_node,
+        node.aws_sqs_queue_nodes,
         node.aws_sqs_queue_to_sns_topic_subscription_node,
         node.aws_sqs_queue_to_sqs_queue_node,
         node.aws_sqs_queue_to_kms_key_node,
@@ -81,6 +81,7 @@ dashboard "aws_sqs_queue_detail" {
       ]
 
       args = {
+        queue_arns = [self.input.queue_arn.value]
         arn = self.input.queue_arn.value
       }
     }
@@ -315,7 +316,7 @@ query "aws_sqs_queue_encryption_details" {
   param "queue_arn" {}
 }
 
-node "aws_sqs_queue_node" {
+node "aws_sqs_queue_nodes" {
   category = category.aws_sqs_queue
 
   sql = <<-EOQ
@@ -330,10 +331,10 @@ node "aws_sqs_queue_node" {
     from
       aws_sqs_queue
     where
-      queue_arn = $1;
+      queue_arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "queue_arns" {}
 }
 
 node "aws_sqs_queue_to_sns_topic_subscription_node" {
