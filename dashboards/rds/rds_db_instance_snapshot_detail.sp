@@ -306,7 +306,7 @@ node "aws_rds_db_snapshot_nodes" {
 
   sql = <<-EOQ
     select
-      db_snapshot_identifier as id,
+      arn as id,
       title,
       jsonb_build_object(
         'ARN', arn,
@@ -357,7 +357,7 @@ edge "aws_rds_db_snapshot_to_kms_key_edge" {
 
   sql = <<-EOQ
     select
-      s.db_snapshot_identifier as from_id,
+      s.arn as from_id,
       k.id as to_id
     from
       aws_rds_db_snapshot as s
@@ -409,7 +409,7 @@ edge "aws_rds_db_snapshot_from_rds_db_instance_edge" {
   sql = <<-EOQ
     select
       i.db_instance_identifier as from_id,
-      s.db_snapshot_identifier as to_id
+      s.arn as to_id
     from
       aws_rds_db_snapshot as s
       join
