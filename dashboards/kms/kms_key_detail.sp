@@ -89,7 +89,8 @@ dashboard "aws_kms_key_detail" {
       ]
 
       args = {
-        kms_key_arns = [self.input.key_arn.value]
+        key_arns = [self.input.key_arn.value]
+        arn      = self.input.key_arn.value
       }
     }
   }
@@ -307,7 +308,7 @@ node "aws_kms_key_nodes" {
       arn = any($1);
   EOQ
 
-  param "kms_key_arns" {}
+  param "key_arns" {}
 }
 
 node "aws_kms_key_from_cloudtrail_trail_node" {
@@ -709,7 +710,7 @@ edge "aws_kms_key_from_sqs_queue_edge" {
       q.queue_arn as from_id,
       a.arn as to_id
     from
-       aws_kms_key as k
+      aws_kms_key as k
       join aws_kms_alias as a
       on a.target_key_id = k.id
       join aws_sqs_queue as q

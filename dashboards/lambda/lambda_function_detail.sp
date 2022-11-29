@@ -58,7 +58,7 @@ dashboard "aws_lambda_function_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_lambda_function_node,
+        node.aws_lambda_function_nodes,
         node.aws_lambda_to_vpc_security_group_node,
         node.aws_lambda_vpc_subnet_node,
         node.aws_lambda_to_vpc_node,
@@ -93,6 +93,7 @@ dashboard "aws_lambda_function_detail" {
       ]
 
       args = {
+        function_arns = [self.input.lambda_arn.value]
         arn = self.input.lambda_arn.value
       }
     }
@@ -357,7 +358,7 @@ query "aws_lambda_function_tags" {
 
 //******
 
-node "aws_lambda_function_node" {
+node "aws_lambda_function_nodes" {
   category = category.aws_lambda_function
 
   sql = <<-EOQ
@@ -373,10 +374,10 @@ node "aws_lambda_function_node" {
     from
       aws_lambda_function
     where
-      arn = $1;
+      arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "function_arns" {}
 }
 
 node "aws_lambda_to_vpc_node" {

@@ -17,12 +17,6 @@ category "aws_iam_group" {
   icon  = "user-group"
 }
 
-category "aws_iam_instance_profile" {
-  title = "IAM Instance Profile"
-  color = local.iam_color
-  icon  = "text:Profile"
-}
-
 category "aws_iam_policy" {
   title = "IAM Policy"
   color = local.iam_color

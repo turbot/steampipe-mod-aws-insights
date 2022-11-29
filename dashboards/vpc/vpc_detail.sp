@@ -2071,4 +2071,29 @@ edge "aws_vpc_routing_cidr_to_gateway_edge" {
   param "vpc_id" {}
 }
 
+node "aws_vpc_nodes" {
+  category = category.aws_vpc
 
+  sql = <<-EOQ
+   select
+      vpc_id as id,
+      title as title,
+      jsonb_build_object(
+        'ARN', arn,
+        'VPC ID', vpc_id,
+        'Is Default', is_default,
+        'State', state,
+        'CIDR Block', cidr_block,
+        'DHCP Options ID', dhcp_options_id,
+        'Owner ID', owner_id,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_vpc
+    where
+      vpc_id = any($1 ::text[]);
+  EOQ
+
+  param "vpc_ids" {}
+}
