@@ -236,13 +236,13 @@ dashboard "aws_kms_key_detail" {
         edge.aws_kms_key_to_kms_alias_edge,
         edge.aws_kms_key_from_cloudtrail_trail_edges,
         edge.aws_kms_key_from_ebs_volume_edges,
-        edge.aws_kms_key_from_rds_db_cluster_snapshot_edges,
+        edge.aws_rds_db_cluster_snapshot_to_kms_key_edges,
         edge.aws_kms_key_from_rds_db_cluster_edges,
         edge.aws_kms_key_from_redshift_cluster_edges,
         edge.aws_kms_key_from_sns_topic_edges,
         edge.aws_kms_key_from_sqs_queue_edges,
         edge.aws_rds_db_instance_to_kms_key_edge,
-        edge.aws_kms_key_from_rds_db_snapshot_edges,
+        edge.aws_rds_db_snapshot_to_kms_key_edges,
         edge.aws_kms_key_from_lambda_function_edges,
         edge.aws_s3_bucket_to_kms_key_edges
       ]
@@ -513,22 +513,6 @@ edge "aws_kms_key_from_ebs_volume_edges" {
   param "volume_arns" {}
 }
 
-edge "aws_kms_key_from_rds_db_cluster_snapshot_edges" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      db_cluster_snapshot_arn as from_id,
-      key_arn as to_id
-    from
-      unnest($1::text[]) as key_arn,
-      unnest($2::text[]) as db_cluster_snapshot_arn
-  EOQ
-
-  param "key_arns" {}
-  param "rds_db_cluster_snapshot_arns" {}
-}
-
 edge "aws_kms_key_from_rds_db_cluster_edges" {
   title = "encrypted with"
 
@@ -543,22 +527,6 @@ edge "aws_kms_key_from_rds_db_cluster_edges" {
 
   param "key_arns" {}
   param "rds_db_cluster_arns" {}
-}
-
-edge "aws_kms_key_from_rds_db_snapshot_edges" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      rds_db_snapshots_arn as from_id,
-      key_arn as to_id
-    from
-      unnest($1::text[]) as key_arn,
-      unnest($2::text[]) as rds_db_snapshots_arn;
-  EOQ
-
-  param "key_arns" {}
-  param "rds_db_snapshot_arns" {}
 }
 
 edge "aws_kms_key_from_redshift_cluster_edges" {

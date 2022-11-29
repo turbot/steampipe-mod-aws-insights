@@ -73,7 +73,7 @@ dashboard "aws_rds_db_cluster_detail" {
       edges = [
         edge.aws_rds_db_cluster_to_sns_topic_edge,
         edge.aws_rds_db_cluster_to_iam_role_edge,
-        edge.aws_rds_db_cluster_to_rds_db_cluster_snapshot_edge,
+        edge.aws_rds_db_cluster_to_rds_db_cluster_snapshot_edges,
         edge.aws_rds_db_cluster_to_rds_db_instance_edge,
         edge.aws_rds_db_cluster_to_rds_db_cluster_parameter_group_edge,
         edge.aws_rds_db_cluster_to_kms_key_edge,
@@ -85,6 +85,7 @@ dashboard "aws_rds_db_cluster_detail" {
 
       args = {
         rds_db_cluster_arns = [self.input.db_cluster_arn.value]
+        arn                 = self.input.db_cluster_arn.value
       }
     }
   }
@@ -668,23 +669,20 @@ node "aws_rds_db_cluster_to_rds_db_cluster_snapshot_node" {
   param "arn" {}
 }
 
-edge "aws_rds_db_cluster_to_rds_db_cluster_snapshot_edge" {
+edge "aws_rds_db_cluster_to_rds_db_cluster_snapshot_edges" {
   title = "snapshot"
 
   sql = <<-EOQ
     select
-      c.arn as from_id,
-      s.db_cluster_snapshot_identifier as to_id
+      rds_db_cluster_arns as from_id,
+      rds_db_cluster_snapshot_arns as to_id
     from
-      aws_rds_db_cluster as c
-      join
-        aws_rds_db_cluster_snapshot as s
-        on s.db_cluster_identifier = c.db_cluster_identifier
-    where
-      c.arn = $1;
+     unnest($1::text[]) as rds_db_cluster_arns,
+      unnest($2::text[]) as rds_db_cluster_snapshot_arns
   EOQ
 
-  param "arn" {}
+  param "rds_db_cluster_arns" {}
+  param "rds_db_cluster_snapshot_arns" {}
 }
 
 node "aws_rds_db_cluster_to_sns_topic_node" {

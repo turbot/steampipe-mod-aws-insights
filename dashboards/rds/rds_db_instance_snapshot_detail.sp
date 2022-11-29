@@ -70,18 +70,48 @@ dashboard "aws_rds_db_snapshot_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "rds_instances" {
+        sql = <<-EOQ
+          select
+            i.arn as rds_instance_arn
+          from
+            aws_rds_db_instance as i
+            join aws_rds_db_snapshot as s
+              on s.dbi_resource_id = i.resource_id
+          where
+            s.arn = $1;
+        EOQ
+
+        args = [self.input.db_snapshot_arn.value]
+      }
+
+      with "kms_keys" {
+        sql = <<-EOQ
+          select
+            kms_key_id as key_arn
+          from
+            aws_rds_db_snapshot
+          where
+            arn = $1;
+        EOQ
+
+        args = [self.input.db_snapshot_arn.value]
+      }
+
       nodes = [
         node.aws_rds_db_snapshot_nodes,
-        node.aws_rds_db_snapshot_to_kms_key_node,
-        node.aws_rds_db_snapshot_from_rds_db_instance_node
+        node.aws_kms_key_nodes,
+        node.aws_rds_db_instance_nodes
       ]
 
       edges = [
-        edge.aws_rds_db_snapshot_to_kms_key_edge,
-        edge.aws_rds_db_snapshot_from_rds_db_instance_edge
+        edge.aws_rds_db_snapshot_to_kms_key_edges,
+        edge.aws_rds_db_instance_to_rds_db_snapshot_edges
       ]
 
       args = {
+        rds_db_instance_arns = with.rds_instances.rows[*].rds_instance_arn
+        key_arns             = with.kms_keys.rows[*].key_arn
         rds_db_snapshot_arns = [self.input.db_snapshot_arn.value]
       }
     }
@@ -327,99 +357,18 @@ node "aws_rds_db_snapshot_nodes" {
   param "rds_db_snapshot_arns" {}
 }
 
-node "aws_rds_db_snapshot_to_kms_key_node" {
-  category = category.aws_kms_key
-
-  sql = <<-EOQ
-    select
-      k.id,
-      k.title,
-      jsonb_build_object(
-        'ARN', k.arn,
-        'Rotation Enabled', k.key_rotation_enabled::text,
-        'Account ID', k.account_id,
-        'Region', k.region
-      ) as properties
-    from
-      aws_rds_db_snapshot as s
-      join
-        aws_kms_key as k
-        on s.kms_key_id = k.arn
-    where
-      s.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_rds_db_snapshot_to_kms_key_edge" {
+edge "aws_rds_db_snapshot_to_kms_key_edges" {
   title = "encrypted with"
 
   sql = <<-EOQ
     select
-      s.arn as from_id,
-      k.id as to_id
+      rds_db_snapshots_arn as from_id,
+      key_arn as to_id
     from
-      aws_rds_db_snapshot as s
-      join
-        aws_kms_key as k
-        on s.kms_key_id = k.arn
-    where
-      s.arn = $1;
+      unnest($1::text[]) as key_arn,
+      unnest($2::text[]) as rds_db_snapshots_arn;
   EOQ
 
-  param "arn" {}
-}
-
-node "aws_rds_db_snapshot_from_rds_db_instance_node" {
-  category = category.aws_rds_db_instance
-
-  sql = <<-EOQ
-    select
-      s.db_instance_identifier as id,
-      s.title as title,
-      jsonb_build_object(
-        'ARN', i.arn,
-        'Status', i.status,
-        'Public Access', i.publicly_accessible::text,
-        'Availability Zone', i.availability_zone,
-        'Create Time', i.create_time,
-        'Is Multi AZ', i.multi_az::text,
-        'Class', i.class,
-        'Account ID', i.account_id,
-        'Region', i.region
-      ) as properties
-    from
-      aws_rds_db_snapshot as s
-      join
-        aws_rds_db_instance as i
-        on s.db_instance_identifier = i.db_instance_identifier
-        and s.account_id = i.account_id
-        and s.region = i.region
-    where
-      s.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_rds_db_snapshot_from_rds_db_instance_edge" {
-  title = "snapshot"
-
-  sql = <<-EOQ
-    select
-      i.db_instance_identifier as from_id,
-      s.arn as to_id
-    from
-      aws_rds_db_snapshot as s
-      join
-        aws_rds_db_instance as i
-        on s.db_instance_identifier = i.db_instance_identifier
-        and s.account_id = i.account_id
-        and s.region = i.region
-    where
-      s.arn = $1;
-  EOQ
-
-  param "arn" {}
+  param "key_arns" {}
+  param "rds_db_snapshot_arns" {}
 }

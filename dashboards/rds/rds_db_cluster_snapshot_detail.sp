@@ -72,6 +72,34 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "rds_clusters" {
+        sql = <<-EOQ
+          select
+            c.arn as rds_cluster_arn
+          from
+            aws_rds_db_cluster as c
+            join aws_rds_db_cluster_snapshot as s
+            on s.db_cluster_identifier = c.db_cluster_identifier
+          where
+            s.arn = $1;
+        EOQ
+
+        args = [self.input.snapshot_arn.value]
+      }
+
+      with "kms_keys" {
+        sql = <<-EOQ
+          select
+            kms_key_id as key_arn
+          from
+            aws_rds_db_cluster_snapshot
+          where
+            arn = $1;
+        EOQ
+
+        args = [self.input.snapshot_arn.value]
+      }
+
       nodes = [
         node.aws_rds_db_cluster_snapshot_nodes,
         node.aws_kms_key_nodes,
@@ -79,11 +107,13 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
       ]
 
       edges = [
-        edge.aws_rds_db_cluster_snapshot_to_kms_key_edge,
-        edge.aws_rds_db_cluster_snapshot_from_rds_db_cluster_edge
+        edge.aws_rds_db_cluster_snapshot_to_kms_key_edges,
+        edge.aws_rds_db_cluster_to_rds_db_cluster_snapshot_edges
       ]
 
       args = {
+        rds_db_cluster_arns          = with.rds_clusters.rows[*].rds_cluster_arn
+        key_arns                     = with.kms_keys.rows[*].key_arn
         rds_db_cluster_snapshot_arns = [self.input.snapshot_arn.value]
       }
     }
@@ -316,98 +346,19 @@ node "aws_rds_db_cluster_snapshot_nodes" {
   param "rds_db_cluster_snapshot_arns" {}
 }
 
-node "aws_rds_db_cluster_snapshot_to_kms_key_node" {
-  category = category.aws_kms_key
-
-  sql = <<-EOQ
-    select
-      k.id,
-      k.title,
-      'aws_kms_key' as category,
-      jsonb_build_object(
-        'ARN', k.arn,
-        'Rotation Enabled', k.key_rotation_enabled::text,
-        'Account ID', k.account_id,
-        'Region', k.region
-      ) as properties
-    from
-      aws_rds_db_cluster_snapshot as s
-      join
-        aws_kms_key as k
-        on s.kms_key_id = k.arn
-    where
-      s.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_rds_db_cluster_snapshot_to_kms_key_edge" {
+edge "aws_rds_db_cluster_snapshot_to_kms_key_edges" {
   title = "encrypted with"
 
   sql = <<-EOQ
     select
-      s.arn as from_id,
-      k.id as to_id
+      db_cluster_snapshot_arn as from_id,
+      key_arn as to_id
     from
-      aws_rds_db_cluster_snapshot as s
-      join
-        aws_kms_key as k
-        on s.kms_key_id = k.arn
-    where
-      s.arn = $1;
+      unnest($1::text[]) as key_arn,
+      unnest($2::text[]) as db_cluster_snapshot_arn
   EOQ
 
-  param "arn" {}
+  param "key_arns" {}
+  param "rds_db_cluster_snapshot_arns" {}
 }
 
-node "aws_rds_db_cluster_snapshot_from_rds_db_cluster_node" {
-  category = category.aws_rds_db_cluster
-
-  sql = <<-EOQ
-    select
-      c.db_cluster_identifier as id,
-      c.title as title,
-      jsonb_build_object(
-        'ARN', c.arn,
-        'Status', c.status,
-        'Availability Zones', c.availability_zones::text,
-        'Create Time', c.create_time,
-        'Is Multi AZ', c.multi_az::text,
-        'Account ID', c.account_id,
-        'Region', c.region
-      ) as properties
-    from
-      aws_rds_db_cluster_snapshot as s
-      join
-        aws_rds_db_cluster as c
-        on s.db_cluster_identifier = c.db_cluster_identifier
-        and s.account_id = c.account_id
-        and s.region = c.region
-    where
-      s.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_rds_db_cluster_snapshot_from_rds_db_cluster_edge" {
-  title = "snapshot"
-
-  sql = <<-EOQ
-    select
-      c.db_cluster_identifier as from_id,
-      s.arn as to_id
-    from
-      aws_rds_db_cluster_snapshot as s
-      join
-        aws_rds_db_cluster as c
-        on s.db_cluster_identifier = c.db_cluster_identifier
-        and s.account_id = c.account_id
-        and s.region = c.region
-    where
-      s.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
