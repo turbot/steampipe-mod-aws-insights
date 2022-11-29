@@ -74,7 +74,7 @@ dashboard "aws_redshift_cluster_detail" {
 
 
       nodes = [
-        node.aws_redshift_cluster_node,
+        node.aws_redshift_cluster_nodes,
         node.aws_redshift_cluster_to_redshift_subnet_group_node,
         node.aws_redshift_cluster_to_vpc_subnet_node,
         node.aws_redshift_cluster_to_vpc_node,
@@ -141,7 +141,7 @@ dashboard "aws_redshift_cluster_detail" {
 
       table {
         title = "Cluster Nodes"
-        query = query.aws_redshift_cluster_nodes
+        query = query.aws_redshift_cluster_node_details
         args = {
           arn = self.input.cluster_arn.value
         }
@@ -280,7 +280,7 @@ query "aws_redshift_cluster_public" {
   param "arn" {}
 }
 
-query "aws_redshift_cluster_nodes" {
+query "aws_redshift_cluster_node_details" {
   sql = <<-EOQ
     select
       p ->> 'NodeRole' as "Node Role",
@@ -405,7 +405,7 @@ query "aws_redshift_cluster_tags" {
   param "arn" {}
 }
 
-node "aws_redshift_cluster_node" {
+node "aws_redshift_cluster_nodes" {
   category = category.aws_redshift_cluster
 
   sql = <<-EOQ
@@ -424,10 +424,10 @@ node "aws_redshift_cluster_node" {
     from
       aws_redshift_cluster
     where
-      arn = $1;
+      arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "redshift_cluster_arns" {}
 }
 
 node "aws_redshift_cluster_to_redshift_subnet_group_node" {

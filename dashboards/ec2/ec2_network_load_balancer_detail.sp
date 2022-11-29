@@ -448,3 +448,19 @@ edge "aws_ec2_nlb_vpc_security_group_to_vpc_edge" {
 
   param "arn" {}
 }
+
+edge "aws_ec2_network_load_balancer_to_acm_certificate_edges" {
+  title = "ssl via"
+
+  sql = <<-EOQ
+    select
+      certificate_arns as to_id,
+      nlb_arns as from_id
+    from
+      unnest($1::text[]) as certificate_arns,
+      unnest($2::text[]) as nlb_arns
+  EOQ
+
+  param "certificate_arns" {}
+  param "nlb_arns" {}
+}

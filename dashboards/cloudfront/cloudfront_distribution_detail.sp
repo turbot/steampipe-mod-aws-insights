@@ -63,7 +63,7 @@ dashboard "aws_cloudfront_distribution_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_cloudfront_distribution_node,
+        node.aws_cloudfront_distribution_nodes,
         node.aws_cloudfront_distribution_to_acm_certificate_node,
         node.aws_cloudfront_distribution_from_s3_bucket_node,
         node.aws_cloudfront_distribution_from_ec2_application_load_balancer_node,
@@ -204,28 +204,6 @@ query "aws_cloudfront_distribution_sni" {
       'SNI' as label,
       case when viewer_certificate ->> 'SSLSupportMethod' <> 'sni-only' then 'Disabled' else 'Enabled' end as value,
       case when viewer_certificate ->> 'SSLSupportMethod' <> 'sni-only' then 'alert' else 'ok' end as type
-    from
-      aws_cloudfront_distribution
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "aws_cloudfront_distribution_node" {
-  category = category.aws_cloudfront_distribution
-  sql      = <<-EOQ
-    select
-      id as id,
-      title as title,
-      jsonb_build_object (
-        'ARN', arn,
-        'Status', status,
-        'Enabled', enabled::text,
-        'Domain Name', domain_name,
-        'Account ID', account_id
-      ) as properties
     from
       aws_cloudfront_distribution
     where
@@ -471,6 +449,21 @@ edge "aws_cloudfront_distribution_to_wafv2_web_acl_edge" {
   param "arn" {}
 }
 
+edge "aws_cloudfront_distribution_to_acm_certificate_edges" {
+  title = "ssl via"
+
+  sql = <<-EOQ
+   select
+      cloudfront_arns as from_id,
+      certificate_arns as to_id
+    from
+      unnest($1::text[]) as cloudfront_arns,
+      unnest($2::text[]) as certificate_arns
+  EOQ
+
+  param "cloudfront_arns" {}
+  param "certificate_arns" {}
+}
 
 query "aws_cloudfront_distribution_overview" {
   sql = <<-EOQ

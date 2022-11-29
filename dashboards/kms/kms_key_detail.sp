@@ -57,40 +57,210 @@ dashboard "aws_kms_key_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "trails" {
+        sql = <<-EOQ
+          select
+            t.arn as trail_arn
+          from
+            aws_cloudtrail_trail as t
+          where
+            t.kms_key_id = $1;
+        EOQ
+
+        args = [self.input.key_arn.value]
+      }
+
+      with "volumes" {
+        sql = <<-EOQ
+          select
+            v.arn as volume_arn
+          from
+            aws_ebs_volume as v
+          where
+            v.kms_key_id = $1;
+        EOQ
+
+        args = [self.input.key_arn.value]
+      }
+
+      with "rds_db_cluster_snapshots" {
+        sql = <<-EOQ
+          select
+            s.arn as cluster_snapshot_arn
+          from
+            aws_rds_db_cluster_snapshot as s
+          where
+            s.kms_key_id = $1;
+        EOQ
+
+        args = [self.input.key_arn.value]
+      }
+
+      with "rds_db_clusters" {
+        sql = <<-EOQ
+          select
+            arn as cluster_arn
+          from
+            aws_rds_db_cluster as c
+          where
+            c.kms_key_id = $1;
+        EOQ
+
+        args = [self.input.key_arn.value]
+      }
+
+      with "rds_db_instances" {
+        sql = <<-EOQ
+          select
+            arn as db_instance_arn
+          from
+            aws_rds_db_instance as i
+          where
+            i.kms_key_id = $1;
+        EOQ
+
+        args = [self.input.key_arn.value]
+      }
+
+      with "redshift_clusters" {
+        sql = <<-EOQ
+          select
+            arn as redshift_cluster_arn
+          from
+            aws_redshift_cluster as c
+          where
+            c.kms_key_id = $1;
+        EOQ
+
+        args = [self.input.key_arn.value]
+      }
+
+      with "topics" {
+        sql = <<-EOQ
+          select
+            t.topic_arn as topic_arn
+          from
+            aws_sns_topic as t
+            left join aws_kms_key as k on k.id = split_part(t.kms_master_key_id, '/', 2)
+          where
+            k.arn = $1
+            and k.region = t.region
+            and k.account_id = t.account_id;
+        EOQ
+
+        args = [self.input.key_arn.value]
+      }
+
+      with "queues" {
+        sql = <<-EOQ
+          select
+            q.queue_arn as queue_arn
+          from
+            aws_kms_key as k
+            join aws_kms_alias as a
+            on a.target_key_id = k.id
+            join aws_sqs_queue as q
+            on a.alias_name = q.kms_master_key_id
+            and k.region = q.region
+            and k.account_id = q.account_id
+          where
+            k.arn = $1;
+        EOQ
+
+        args = [self.input.key_arn.value]
+      }
+
+      with "functions" {
+        sql = <<-EOQ
+          select
+            l.arn as function_arn
+          from
+            aws_lambda_function as l,
+            aws_kms_key as k
+          where
+            k.arn = l.kms_key_arn
+            and k.arn = $1;
+        EOQ
+
+        args = [self.input.key_arn.value]
+      }
+
+      with "rds_db_snapshots" {
+        sql = <<-EOQ
+          select
+            arn as db_snapshot_arn
+          from
+            aws_rds_db_snapshot as s
+          where
+            s.kms_key_id = $1;
+        EOQ
+
+        args = [self.input.key_arn.value]
+
+      }
+
+      with "buckets" {
+        sql = <<-EOQ
+          select
+            b.arn as bucket_arn
+          from
+            aws_s3_bucket as b
+            cross join jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as r
+            join aws_kms_key as k
+            on k.arn = r -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID'
+          where
+            k.arn = $1;
+        EOQ
+
+        args = [self.input.key_arn.value]
+
+      }
+
       nodes = [
         node.aws_kms_key_nodes,
-        node.aws_kms_key_to_kms_alias_node,
-        node.aws_kms_key_from_cloudtrail_trail_node,
-        node.aws_kms_key_from_ebs_volume_node,
-        node.aws_kms_key_from_rds_db_cluster_snapshot_node,
-        node.aws_kms_key_from_rds_db_cluster_node,
-        node.aws_kms_key_from_rds_db_instance_node,
-        node.aws_kms_key_from_rds_db_snapshot_node,
-        node.aws_kms_key_from_redshift_cluster_node,
-        node.aws_kms_key_from_sns_topic_node,
-        node.aws_kms_key_from_sqs_queue_node,
-        node.aws_kms_key_from_lambda_function_node,
-        node.aws_kms_key_from_s3_bucket_node
+        node.aws_kms_key_alias_nodes,
+        node.aws_cloudtrail_trail_nodes,
+        node.aws_ebs_volume_nodes,
+        node.aws_rds_db_cluster_snapshot_nodes,
+        node.aws_rds_db_cluster_nodes,
+        node.aws_redshift_cluster_nodes,
+        node.aws_sns_topic_nodes,
+        node.aws_sqs_queue_nodes,
+        node.aws_rds_db_instance_nodes,
+        node.aws_rds_db_snapshot_nodes,
+        node.aws_lambda_function_nodes,
+        node.aws_s3_bucket_nodes
       ]
 
       edges = [
         edge.aws_kms_key_to_kms_alias_edge,
-        edge.aws_kms_key_from_cloudtrail_trail_edge,
-        edge.aws_kms_key_from_ebs_volume_edge,
-        edge.aws_kms_key_from_rds_db_cluster_snapshot_edge,
-        edge.aws_kms_key_from_rds_db_cluster_edge,
-        edge.aws_kms_key_from_rds_db_instance_edge,
-        edge.aws_kms_key_from_rds_db_snapshot_edge,
-        edge.aws_kms_key_from_redshift_cluster_edge,
-        edge.aws_kms_key_from_sns_topic_edge,
-        edge.aws_kms_key_from_sqs_queue_edge,
-        edge.aws_kms_key_from_lambda_function_edge,
-        edge.aws_kms_key_from_s3_bucket_edge
+        edge.aws_kms_key_from_cloudtrail_trail_edges,
+        edge.aws_kms_key_from_ebs_volume_edges,
+        edge.aws_kms_key_from_rds_db_cluster_snapshot_edges,
+        edge.aws_kms_key_from_rds_db_cluster_edges,
+        edge.aws_kms_key_from_redshift_cluster_edges,
+        edge.aws_kms_key_from_sns_topic_edges,
+        edge.aws_kms_key_from_sqs_queue_edges,
+        edge.aws_rds_db_instance_to_kms_key_edge,
+        edge.aws_kms_key_from_rds_db_snapshot_edges,
+        edge.aws_kms_key_from_lambda_function_edges,
+        edge.aws_s3_bucket_to_kms_key_edges
       ]
 
       args = {
-        key_arns = [self.input.key_arn.value]
-        arn      = self.input.key_arn.value
+        key_arns                     = [self.input.key_arn.value]
+        trail_arns                   = with.trails.rows[*].trail_arn
+        volume_arns                  = with.volumes.rows[*].volume_arn
+        rds_db_cluster_snapshot_arns = with.rds_db_cluster_snapshots.rows[*].cluster_snapshot_arn
+        rds_db_cluster_arns          = with.rds_db_clusters.rows[*].cluster_arn
+        rds_db_instance_arns         = with.rds_db_instances.rows[*].db_instance_arn
+        rds_db_snapshot_arns         = with.rds_db_snapshots.rows[*].db_snapshot_arn
+        redshift_cluster_arns        = with.redshift_clusters.rows[*].redshift_cluster_arn
+        topic_arns                   = with.topics.rows[*].topic_arn
+        queue_arns                   = with.queues.rows[*].queue_arn
+        function_arns                = with.functions.rows[*].function_arn
+        bucket_arns                  = with.buckets.rows[*].bucket_arn
+        arn                          = self.input.key_arn.value
       }
     }
   }
@@ -311,289 +481,196 @@ node "aws_kms_key_nodes" {
   param "key_arns" {}
 }
 
-node "aws_kms_key_from_cloudtrail_trail_node" {
-  category = category.aws_cloudtrail_trail
-
-  sql = <<-EOQ
-    select
-      t.arn as id,
-      t.name as title,
-      jsonb_build_object(
-        'ARN', t.arn,
-        'Multi Region Trail', is_multi_region_trail::text,
-        'Logging', is_logging::text,
-        'Account ID', t.account_id,
-        'Home Region', home_region
-      ) as properties
-    from
-      aws_cloudtrail_trail as t
-    where
-      t.kms_key_id = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_kms_key_from_cloudtrail_trail_edge" {
+edge "aws_kms_key_from_cloudtrail_trail_edges" {
   title = "encrypted with"
 
   sql = <<-EOQ
     select
-      t.arn as from_id,
-      k.arn as to_id
+      trail_arn as from_id,
+      key_arn as to_id
     from
-      aws_cloudtrail_trail as t,
-      aws_kms_key as k
-    where
-      t.kms_key_id = $1;
+      unnest($1::text[]) as key_arn,
+      unnest($2::text[]) as trail_arn
   EOQ
 
-  param "arn" {}
+  param "key_arns" {}
+  param "trail_arns" {}
 }
 
-node "aws_kms_key_from_ebs_volume_node" {
-  category = category.aws_ebs_volume
-
-  sql = <<-EOQ
-    select
-      volume_id as id,
-      volume_id as title,
-      jsonb_build_object(
-        'ARN', v.arn,
-        'Volume Type', volume_type,
-        'State', state,
-        'Create Time', create_time,
-        'Account ID', v.account_id,
-        'Region', v.region
-      ) as properties
-    from
-      aws_ebs_volume as v
-    where
-      v.kms_key_id = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_kms_key_from_ebs_volume_edge" {
+edge "aws_kms_key_from_ebs_volume_edges" {
   title = "encrypted with"
 
   sql = <<-EOQ
     select
-      volume_id as from_id,
-      k.arn as to_id
+      volume_arn as from_id,
+      key_arn as to_id
     from
-      aws_ebs_volume as v,
-      aws_kms_key as k
-    where
-      v.kms_key_id = $1;
+      unnest($1::text[]) as key_arn,
+      unnest($2::text[]) as volume_arn
   EOQ
 
-  param "arn" {}
+  param "key_arns" {}
+  param "volume_arns" {}
 }
 
-node "aws_kms_key_from_rds_db_cluster_snapshot_node" {
-  category = category.aws_rds_db_cluster_snapshot
-
-  sql = <<-EOQ
-    select
-      db_cluster_snapshot_identifier as id,
-      db_cluster_snapshot_identifier as title,
-      jsonb_build_object(
-        'ARN', s.arn,
-        'Type', type,
-        'Status', status,
-        'Create Time', create_time,
-        'Account ID', s.account_id,
-        'Region', s.region
-      ) as properties
-    from
-      aws_rds_db_cluster_snapshot as s
-    where
-      s.kms_key_id = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_kms_key_from_rds_db_cluster_snapshot_edge" {
+edge "aws_kms_key_from_rds_db_cluster_snapshot_edges" {
   title = "encrypted with"
 
   sql = <<-EOQ
     select
-      db_cluster_snapshot_identifier as from_id,
-      k.arn as to_id
+      db_cluster_snapshot_arn as from_id,
+      key_arn as to_id
     from
-      aws_rds_db_cluster_snapshot as s,
-      aws_kms_key as k
-    where
-      s.kms_key_id = $1;
+      unnest($1::text[]) as key_arn,
+      unnest($2::text[]) as db_cluster_snapshot_arn
   EOQ
 
-  param "arn" {}
+  param "key_arns" {}
+  param "rds_db_cluster_snapshot_arns" {}
 }
 
-node "aws_kms_key_from_rds_db_cluster_node" {
-  category = category.aws_rds_db_cluster
-
-  sql = <<-EOQ
-    select
-      db_cluster_identifier as id,
-      db_cluster_identifier as title,
-      jsonb_build_object(
-        'ARN', c.arn,
-        'Status', status,
-        'Create Time', create_time,
-        'Account ID', c.account_id,
-        'Region', c.region
-      ) as properties
-    from
-      aws_rds_db_cluster as c
-    where
-      c.kms_key_id = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_kms_key_from_rds_db_cluster_edge" {
+edge "aws_kms_key_from_rds_db_cluster_edges" {
   title = "encrypted with"
 
   sql = <<-EOQ
     select
-      db_cluster_identifier as from_id,
-      k.arn as to_id
+      rds_cluster_arn as from_id,
+      key_arn as to_id
     from
-      aws_rds_db_cluster as c,
-      aws_kms_key as k
-    where
-      c.kms_key_id = $1;
+      unnest($1::text[]) as key_arn,
+      unnest($2::text[]) as rds_cluster_arn
   EOQ
 
-  param "arn" {}
+  param "key_arns" {}
+  param "rds_db_cluster_arns" {}
 }
 
-node "aws_kms_key_from_rds_db_instance_node" {
-  category = category.aws_rds_db_instance
-
-  sql = <<-EOQ
-    select
-      db_instance_identifier as id,
-      db_instance_identifier as title,
-      jsonb_build_object(
-        'ARN', i.arn,
-        'Status', status,
-        'Class', class,
-        'Engine', engine,
-        'Account ID', i.account_id,
-        'Region', i.region
-      ) as properties
-    from
-      aws_rds_db_instance as i
-    where
-      i.kms_key_id = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_kms_key_from_rds_db_instance_edge" {
+edge "aws_kms_key_from_rds_db_snapshot_edges" {
   title = "encrypted with"
 
   sql = <<-EOQ
     select
-      db_instance_identifier as from_id,
-      k.arn as to_id
+      rds_db_snapshots_arn as from_id,
+      key_arn as to_id
     from
-      aws_rds_db_instance as i,
-      aws_kms_key as k
-    where
-      i.kms_key_id = $1;
+      unnest($1::text[]) as key_arn,
+      unnest($2::text[]) as rds_db_snapshots_arn;
   EOQ
 
-  param "arn" {}
+  param "key_arns" {}
+  param "rds_db_snapshot_arns" {}
 }
 
-node "aws_kms_key_from_rds_db_snapshot_node" {
-  category = category.aws_rds_db_snapshot
-
-  sql = <<-EOQ
-    select
-      db_snapshot_identifier as id,
-      db_snapshot_identifier as title,
-      jsonb_build_object(
-        'ARN', s.arn,
-        'Type', type,
-        'Status', status,
-        'Create Time', create_time,
-        'Account ID', s.account_id,
-        'Region', s.region
-      ) as properties
-    from
-      aws_rds_db_snapshot as s
-    where
-      s.kms_key_id = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_kms_key_from_rds_db_snapshot_edge" {
+edge "aws_kms_key_from_redshift_cluster_edges" {
   title = "encrypted with"
 
   sql = <<-EOQ
     select
-      db_snapshot_identifier as from_id,
-      k.arn as to_id
+      redshift_cluster_arn as from_id,
+      key_arn as to_id
     from
-      aws_rds_db_snapshot as s,
-      aws_kms_key as k
-    where
-      s.kms_key_id = $1;
+      unnest($1::text[]) as key_arn,
+      unnest($2::text[]) as redshift_cluster_arn
   EOQ
 
-  param "arn" {}
+  param "key_arns" {}
+  param "redshift_cluster_arns" {}
 }
 
-node "aws_kms_key_from_redshift_cluster_node" {
-  category = category.aws_redshift_cluster
-
-  sql = <<-EOQ
-    select
-      cluster_identifier as id,
-      cluster_identifier as title,
-      jsonb_build_object(
-        'ARN', c.arn,
-        'Cluster Availability Status', cluster_availability_status,
-        'Cluster Create Time', cluster_create_time,
-        'Cluster Status', cluster_status,
-        'Account ID', c.account_id,
-        'Region', c.region
-      ) as properties
-    from
-      aws_redshift_cluster as c
-    where
-      c.kms_key_id = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_kms_key_from_redshift_cluster_edge" {
+edge "aws_kms_key_from_sns_topic_edges" {
   title = "encrypted with"
 
   sql = <<-EOQ
     select
-      cluster_identifier as from_id,
-      k.arn as to_id
+      topic_arn as from_id,
+      key_arn as to_id
     from
-      aws_redshift_cluster as c,
-      aws_kms_key as k
-    where
-      c.kms_key_id = $1;
+      unnest($1::text[]) as key_arn,
+      unnest($2::text[]) as topic_arn
   EOQ
 
-  param "arn" {}
+  param "key_arns" {}
+  param "topic_arns" {}
+}
+
+edge "aws_kms_key_from_sqs_queue_edges" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
+    select
+      q.queue_arn as from_id,
+      a.arn as to_id
+    from
+      aws_kms_key as k
+      join aws_kms_alias as a
+      on a.target_key_id = k.id
+      join aws_sqs_queue as q
+      on a.alias_name = q.kms_master_key_id
+      and k.region = q.region
+      and k.account_id = q.account_id
+    where
+      k.arn = any($1);
+  EOQ
+
+  param "key_arns" {}
+}
+
+edge "aws_kms_key_from_lambda_function_edges" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
+    select
+      function_arn as from_id,
+      key_arn as to_id
+    from
+      unnest($1::text[]) as key_arn,
+      unnest($2::text[]) as function_arn
+  EOQ
+
+  param "key_arns" {}
+  param "function_arns" {}
+}
+
+node "aws_kms_key_alias_nodes" {
+  category = category.aws_kms_alias
+
+  sql = <<-EOQ
+    select
+      a.arn as id,
+      a.title as title,
+      jsonb_build_object(
+        'ARN', a.arn,
+        'Create Date', a.creation_date,
+        'Account ID', a.account_id,
+        'Region', a.region
+      ) as properties
+    from
+      aws_kms_alias as a
+      join aws_kms_key as k
+      on a.target_key_id = k.id
+    where
+      k.arn = any($1);
+  EOQ
+
+  param "key_arns" {}
+}
+
+edge "aws_kms_key_to_kms_alias_edge" {
+  title = "key"
+
+  sql = <<-EOQ
+    select
+      a.arn as from_id,
+      k.arn as to_id
+    from
+      aws_kms_alias as a
+      join aws_kms_key as k
+      on a.target_key_id = k.id
+    where
+      k.arn = any($1);
+  EOQ
+
+  param "key_arns" {}
 }
 
 query "aws_kms_key_overview" {
@@ -626,229 +703,6 @@ query "aws_kms_key_tags" {
     order by
       tag ->> 'Key';
     EOQ
-
-  param "arn" {}
-}
-
-
-node "aws_kms_key_from_sns_topic_node" {
-  category = category.aws_sns_topic
-
-  sql = <<-EOQ
-    select
-      t.topic_arn as id,
-      t.title as title,
-      jsonb_build_object(
-        'ARN', t.topic_arn,
-        'Account ID', t.account_id,
-        'Region', t.region
-      ) as properties
-    from
-      aws_sns_topic as t
-      left join aws_kms_key as k on k.arn = split_part(t.kms_master_key_id, '/', 2)
-    where
-      k.arn = $1
-      and k.region = t.region
-      and k.account_id = t.account_id;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_kms_key_from_sns_topic_edge" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      t.topic_arn as from_id,
-      k.arn as to_id
-    from
-      aws_sns_topic as t
-      left join aws_kms_key as k on k.id = split_part(t.kms_master_key_id, '/', 2)
-    where
-      k.arn = $1
-      and k.region = t.region
-      and k.account_id = t.account_id;
-  EOQ
-
-  param "arn" {}
-}
-
-
-node "aws_kms_key_from_sqs_queue_node" {
-  category = category.aws_sqs_queue
-
-  sql = <<-EOQ
-    select
-      q.queue_arn as id,
-      q.title as title,
-      jsonb_build_object(
-        'ARN', q.queue_arn,
-        'Account ID', q.account_id,
-        'Region', q.region
-      ) as properties
-    from
-      aws_kms_key as k
-      join aws_kms_alias as a
-      on a.target_key_id = k.id
-      join aws_sqs_queue as q
-      on a.alias_name = q.kms_master_key_id
-      and k.region = q.region
-      and k.account_id = q.account_id
-    where
-      k.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_kms_key_from_sqs_queue_edge" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      q.queue_arn as from_id,
-      a.arn as to_id
-    from
-      aws_kms_key as k
-      join aws_kms_alias as a
-      on a.target_key_id = k.id
-      join aws_sqs_queue as q
-      on a.alias_name = q.kms_master_key_id
-      and k.region = q.region
-      and k.account_id = q.account_id
-    where
-      k.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-
-node "aws_kms_key_from_lambda_function_node" {
-  category = category.aws_lambda_function
-
-  sql = <<-EOQ
-    select
-      l.arn as id,
-      l.title as title,
-      jsonb_build_object(
-        'ARN', l.arn,
-        'Runtime', l.runtime,
-        'Account ID', l.account_id,
-        'Region', l.region
-      ) as properties
-    from
-      aws_lambda_function as l,
-      aws_kms_key as k
-    where
-      k.arn = l.kms_key_arn
-      and k.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_kms_key_from_lambda_function_edge" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      l.arn as from_id,
-      k.arn as to_id
-    from
-      aws_lambda_function as l,
-      aws_kms_key as k
-    where
-      k.arn = l.kms_key_arn
-      and k.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "aws_kms_key_from_s3_bucket_node" {
-  category = category.aws_s3_bucket
-
-  sql = <<-EOQ
-    select
-      b.arn as id,
-      b.title as title,
-      jsonb_build_object(
-        'Name', b.name,
-        'ARN', b.arn,
-        'Account ID', b.account_id,
-        'Region', b.region
-      ) as properties
-    from
-      aws_s3_bucket as b
-      cross join jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as r
-      join aws_kms_key as k
-      on k.arn = r -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID'
-    where
-      k.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_kms_key_from_s3_bucket_edge" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      b.arn as from_id,
-      k.arn as to_id
-    from
-      aws_s3_bucket as b
-      cross join jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as r
-      join aws_kms_key as k
-      on k.arn = r -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID'
-    where
-      k.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "aws_kms_key_to_kms_alias_node" {
-  category = category.aws_kms_alias
-
-  sql = <<-EOQ
-    select
-      a.arn as id,
-      a.title as title,
-      jsonb_build_object(
-        'ARN', a.arn,
-        'Create Date', a.creation_date,
-        'Account ID', a.account_id,
-        'Region', a.region
-      ) as properties
-    from
-      aws_kms_alias as a
-      join aws_kms_key as k
-      on a.target_key_id = k.id
-    where
-      k.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_kms_key_to_kms_alias_edge" {
-  title = "key"
-
-  sql = <<-EOQ
-    select
-      a.arn as from_id,
-      k.arn as to_id
-    from
-      aws_kms_alias as a
-      join aws_kms_key as k
-      on a.target_key_id = k.id
-    where
-      k.arn = $1;
-  EOQ
 
   param "arn" {}
 }
