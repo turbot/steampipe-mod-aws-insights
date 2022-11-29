@@ -565,7 +565,7 @@ node "aws_iam_user_nodes" {
 }
 
 edge "aws_iam_user_to_iam_policy_edges" {
-  title = "has member"
+  title = "has policy"
 
   sql = <<-EOQ
    select

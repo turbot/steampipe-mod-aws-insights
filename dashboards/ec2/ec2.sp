@@ -65,7 +65,7 @@ category "aws_ec2_load_balancer_listener" {
 
 category "aws_ec2_network_interface" {
   title = "EC2 Network Interface"
-  href  = "/aws_insights.dashboard.aws_ec2_network_interface_detail?input.network_interface_id={{.properties.'Interface ID' | @uri}}"
+  href  = "/aws_insights.dashboard.aws_ec2_network_interface_detail?input.network_interface_id={{.properties.'ID' | @uri}}"
   icon  = "text:ENI"
   color = local.compute_color
 }

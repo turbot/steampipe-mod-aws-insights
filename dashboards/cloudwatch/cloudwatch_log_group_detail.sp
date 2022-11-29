@@ -536,3 +536,26 @@ edge "aws_cloudwatch_log_group_to_log_metric_filter_edge" {
 
   param "log_group_arn" {}
 }
+
+node "aws_cloudwatch_log_group_nodes" {
+  category = category.aws_cloudwatch_log_group
+
+  sql = <<-EOQ
+    select
+      arn as id,
+      title as title,
+      jsonb_build_object(
+        'Name', name,
+        'ARN', arn,
+        'Creation Time', creation_time,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_cloudwatch_log_group
+    where
+      arn = any($1 ::text[]);
+  EOQ
+
+  param "log_group_arns" {}
+}

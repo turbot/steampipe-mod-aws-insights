@@ -47,21 +47,54 @@ dashboard "aws_vpc_eip_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "instances" {
+        sql = <<-EOQ
+          select
+            i.arn as instance_arn
+          from
+            aws_vpc_eip as e,
+            aws_ec2_instance as i
+          where
+            e.instance_id = i.instance_id
+            and e.arn = $1;
+        EOQ
+
+        args = [self.input.eip_arn.value]
+      }
+
+      with "enis" {
+        sql = <<-EOQ
+          select
+            network_interface_id as eni_id
+          from
+            aws_vpc_eip
+          where
+            network_interface_id is not null
+            and arn = $1;
+        EOQ
+
+        args = [self.input.eip_arn.value]
+      }
+
       nodes = [
-        node.aws_vpc_eip_node,
-        node.aws_vpc_eip_from_ec2_network_interface_node,
-        node.aws_vpc_eip_from_ec2_instance_node,
-        node.aws_vpc_eip_network_interface_from_nat_gateway_node
+        node.aws_vpc_eip_nodes,
+        node.aws_ec2_network_interface_nodes,
+        node.aws_ec2_instance_nodes,
+
+        node.aws_ec2_network_interface_vpc_nat_gateway_nodes
       ]
 
       edges = [
-        edge.aws_vpc_eip_from_ec2_network_interface_edge,
-        edge.aws_vpc_eip_network_interface_from_ec2_instance_edge,
-        edge.aws_vpc_eip_network_interface_from_nat_gateway_edge
+        edge.aws_ec2_network_interface_to_vpc_eip_edges,
+        edge.aws_ec2_instance_to_ec2_network_interface_edges,
+
+        edge.aws_vpc_nat_gateway_to_ec2_network_interface_edges
       ]
 
       args = {
-        arn = self.input.eip_arn.value
+        instance_arns = with.instances.rows[*].instance_arn
+        eni_ids       = with.enis.rows[*].eni_id
+        eip_arns      = [self.input.eip_arn.value]
       }
     }
   }
@@ -146,11 +179,11 @@ query "aws_vpc_eip_input" {
   EOQ
 }
 
-node "aws_vpc_eip_node" {
+node "aws_vpc_eip_nodes" {
   category = category.aws_vpc_eip
 
   sql = <<-EOQ
-    select
+   select
       arn as id,
       title as title,
       jsonb_build_object(
@@ -165,139 +198,10 @@ node "aws_vpc_eip_node" {
     from
       aws_vpc_eip
     where
-      arn = $1;
+      arn = any($1 ::text[]);
   EOQ
 
-  param "arn" {}
-}
-
-node "aws_vpc_eip_from_ec2_network_interface_node" {
-  category = category.aws_ec2_network_interface
-
-  sql = <<-EOQ
-    select
-      i.network_interface_id as id,
-      i.title as title,
-      jsonb_build_object(
-        'Interface ID', i.network_interface_id,
-        'Account ID', i.account_id,
-        'Region', i.region
-      ) as properties
-    from
-      aws_vpc_eip as e
-      left join aws_ec2_network_interface as i on e.network_interface_id = i.network_interface_id
-    where
-      e.network_interface_id is not null
-      and e.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_vpc_eip_from_ec2_network_interface_edge" {
-  title = "eip"
-
-  sql = <<-EOQ
-    select
-      i.network_interface_id as from_id,
-      e.arn as to_id
-    from
-      aws_vpc_eip as e
-      left join aws_ec2_network_interface as i on e.network_interface_id = i.network_interface_id
-    where
-      e.network_interface_id is not null
-      and e.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "aws_vpc_eip_from_ec2_instance_node" {
-  category = category.aws_ec2_instance
-  sql      = <<-EOQ
-    select
-      i.arn as id,
-      i.title as title,
-      jsonb_build_object(
-        'ARN', i.arn,
-        'ID', i.instance_id,
-        'State', i.instance_state,
-        'Account ID', i.account_id,
-        'Region', i.region
-      ) as properties
-    from
-      aws_vpc_eip as e
-      left join aws_ec2_instance as i on e.instance_id = i.instance_id
-    where
-      e.network_interface_id is not null
-      and e.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_vpc_eip_network_interface_from_ec2_instance_edge" {
-  title = "network interface"
-
-  sql = <<-EOQ
-    select
-      i.arn as from_id,
-      e.network_interface_id as to_id
-    from
-      aws_vpc_eip as e
-      left join aws_ec2_instance as i on e.instance_id = i.instance_id
-    where
-      e.network_interface_id is not null
-      and e.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "aws_vpc_eip_network_interface_from_nat_gateway_node" {
-  category = category.aws_vpc_nat_gateway
-
-  sql = <<-EOQ
-    select
-      n.arn as id,
-      n.title as title,
-      jsonb_build_object(
-        'ARN', n.arn,
-        'NAT Gateway ID', n.nat_gateway_id,
-        'State', n.state,
-        'Account ID', n.account_id,
-        'Region', n.region
-      ) as properties
-    from
-      aws_vpc_nat_gateway as n,
-      jsonb_array_elements(nat_gateway_addresses) as a
-      left join aws_vpc_eip as e on e.network_interface_id = a ->> 'NetworkInterfaceId'
-    where
-      e.network_interface_id is not null
-      and e.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-
-edge "aws_vpc_eip_network_interface_from_nat_gateway_edge" {
-  title = "network interface"
-
-  sql = <<-EOQ
-    select
-      n.arn as from_id,
-      e.network_interface_id as to_id
-    from
-      aws_vpc_nat_gateway as n,
-      jsonb_array_elements(nat_gateway_addresses) as a
-      left join aws_vpc_eip as e on e.network_interface_id = a ->> 'NetworkInterfaceId'
-    where
-      e.network_interface_id is not null
-      and e.arn = $1;
-  EOQ
-
-  param "arn" {}
+  param "eip_arns" {}
 }
 
 query "aws_vpc_eip_association" {
@@ -410,28 +314,3 @@ query "aws_vpc_eip_other_ip" {
   param "arn" {}
 }
 
-
-node "aws_vpc_eip_nodes" {
-  category = category.aws_vpc_eip
-
-  sql = <<-EOQ
-   select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Allocation Id', allocation_id,
-        'Association Id', association_id,
-        'Public IP', public_ip,
-        'Domain', domain,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_vpc_eip
-    where
-      arn = any($1 ::text[]);
-  EOQ
-
-  param "eip_arns" {}
-}

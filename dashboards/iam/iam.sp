@@ -24,7 +24,7 @@ category "aws_iam_policy" {
   icon  = "document-check"
 }
 
-category "aws_iam_profile" {
+category "aws_iam_instance_profile" {
   title = "IAM Profile"
   icon  = "user-plus"
   color = local.iam_color

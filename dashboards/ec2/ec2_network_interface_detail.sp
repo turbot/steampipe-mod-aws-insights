@@ -63,27 +63,118 @@ dashboard "aws_ec2_network_interface_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "instances" {
+        sql = <<-EOQ
+          select
+            i.arn as instance_arn
+          from
+            aws_ec2_instance as i,
+            jsonb_array_elements(network_interfaces) as eni
+          where
+            eni ->> 'NetworkInterfaceId' = $1;
+        EOQ
+
+        args = [self.input.network_interface_id.value]
+      }
+
+      with "security_groups" {
+        sql = <<-EOQ
+          select
+           distinct sg ->> 'GroupId' as security_group_id
+          from
+            aws_ec2_network_interface as eni,
+            jsonb_array_elements(groups) as sg
+          where
+            eni.network_interface_id = $1;
+        EOQ
+
+        args = [self.input.network_interface_id.value]
+      }
+
+      with "subnets" {
+        sql = <<-EOQ
+          select
+            subnet_id as subnet_id
+          from
+            aws_ec2_network_interface
+          where
+            network_interface_id = $1;
+        EOQ
+
+        args = [self.input.network_interface_id.value]
+      }
+
+      with "eips" {
+        sql = <<-EOQ
+          select
+            arn as eip_arn
+          from
+            aws_vpc_eip
+          where
+            network_interface_id = $1;
+        EOQ
+
+        args = [self.input.network_interface_id.value]
+      }
+
+      with "vpcs" {
+        sql = <<-EOQ
+          select
+            vpc_id as vpc_id
+          from
+            aws_ec2_network_interface
+          where
+            network_interface_id = $1;
+        EOQ
+
+        args = [self.input.network_interface_id.value]
+      }
+
+      with "flow_logs" {
+        sql = <<-EOQ
+          select
+            flow_log_id as flow_log_id
+          from
+            aws_vpc_flow_log
+          where
+            resource_id = $1;
+        EOQ
+
+        args = [self.input.network_interface_id.value]
+      }
+
       nodes = [
-        node.aws_ec2_network_interface_node,
-        node.aws_ec2_network_interface_from_ec2_instance_node,
-        node.aws_ec2_network_interface_to_vpc_security_group_node,
-        node.aws_ec2_network_interface_to_vpc_subnet_node,
-        node.aws_ec2_network_interface_to_vpc_node,
-        node.aws_ec2_network_interface_to_vpc_eip_node,
-        node.aws_ec2_network_interface_to_flow_log_node
+        node.aws_ec2_network_interface_nodes,
+        node.aws_ec2_instance_nodes,
+        node.aws_vpc_security_group_nodes,
+        node.aws_vpc_subnet_nodes,
+        node.aws_vpc_nodes,
+        node.aws_vpc_eip_nodes,
+        node.aws_vpc_flow_log_nodes,
+
+        node.aws_ec2_network_interface_vpc_nat_gateway_nodes
       ]
 
       edges = [
-        edge.aws_ec2_network_interface_to_vpc_eip_edge,
-        edge.aws_ec2_network_interface_from_ec2_instance_edge,
-        edge.aws_ec2_network_interface_to_vpc_security_group_edge,
-        edge.aws_ec2_network_interface_to_security_group_to_subnet_edge,
-        edge.aws_ec2_network_interface_to_security_group_subnet_to_vpc_edge,
-        edge.aws_ec2_network_interface_to_flow_log_edge
+        edge.aws_ec2_network_interface_to_vpc_eip_edges,
+        edge.aws_ec2_instance_to_ec2_network_interface_edges,
+        edge.aws_ec2_network_interface_to_vpc_security_group_edges,
+        edge.aws_ec2_network_interface_to_vpc_subnet_edges,
+        edge.aws_vpc_subnet_to_vpc_edges,
+        edge.aws_ec2_network_interface_to_vpc_flow_log_edges,
+
+        edge.aws_vpc_nat_gateway_to_ec2_network_interface_edges
       ]
 
       args = {
-        network_interface_id = self.input.network_interface_id.value
+        eni_ids            = [self.input.network_interface_id.value]
+        instance_arns      = with.instances.rows[*].instance_arn
+        security_group_ids = with.security_groups.rows[*].security_group_id
+        subnet_ids         = with.subnets.rows[*].subnet_id
+        eip_arns           = with.eips.rows[*].eip_arn
+        vpc_ids            = with.vpcs.rows[*].vpc_id
+        flow_log_ids       = with.flow_logs.rows[*].flow_log_id
+
       }
     }
   }
@@ -318,287 +409,6 @@ query "aws_ec2_eni_tags" {
   param "network_interface_id" {}
 }
 
-node "aws_ec2_network_interface_node" {
-  category = category.aws_ec2_network_interface
-
-  sql = <<-EOQ
-    select
-      network_interface_id as id,
-      title as title,
-      jsonb_build_object(
-        'ID', network_interface_id,
-        'Interface Type', interface_type,
-        'Status', status,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_ec2_network_interface
-    where
-      network_interface_id = $1;
-  EOQ
-
-  param "network_interface_id" {}
-}
-
-node "aws_ec2_network_interface_from_ec2_instance_node" {
-  category = category.aws_ec2_instance
-
-  sql = <<-EOQ
-    select
-      instance.instance_id as id,
-      instance.title as title,
-      jsonb_build_object(
-        'ID', instance.instance_id,
-        'ARN', instance.arn,
-        'State', instance.instance_state,
-        'Public IP Address', instance.private_ip_address,
-        'Account ID', instance.account_id,
-        'Region', instance.region
-      ) as properties
-    from
-      aws_ec2_network_interface as eni
-      left join aws_ec2_instance as instance on eni.attached_instance_id = instance.instance_id
-    where
-      eni.network_interface_id = $1;
-  EOQ
-
-  param "network_interface_id" {}
-}
-
-edge "aws_ec2_network_interface_from_ec2_instance_edge" {
-  title = "eni"
-
-  sql = <<-EOQ
-    select
-      instance.instance_id as from_id,
-      eni.network_interface_id as to_id,
-      jsonb_build_object(
-        'Attachment ID', attachment_id,
-        'Attachment Status', attachment_status,
-        'Attachment Time', attachment_time,
-        'Delete on Instance Termination', delete_on_instance_termination,
-        'Device Index', device_index
-      ) as properties
-    from
-      aws_ec2_network_interface as eni
-      left join aws_ec2_instance as instance on eni.attached_instance_id = instance.instance_id
-    where
-      eni.network_interface_id = $1;
-  EOQ
-
-  param "network_interface_id" {}
-}
-
-node "aws_ec2_network_interface_to_vpc_eip_node" {
-  category = category.aws_vpc_eip
-
-  sql = <<-EOQ
-    select
-      e.arn as id,
-      e.title as title,
-      jsonb_build_object(
-        'ARN', e.arn,
-        'Allocation Id', e.allocation_id,
-        'Association Id', e.association_id,
-        'Public IP', e.public_ip,
-        'Domain', e.domain,
-        'Account ID', e.account_id,
-        'Region', e.region
-      ) as properties
-    from
-      aws_vpc_eip as e
-    where
-      network_interface_id = $1;
-  EOQ
-
-  param "network_interface_id" {}
-}
-
-edge "aws_ec2_network_interface_to_vpc_eip_edge" {
-  title = "eip"
-
-  sql = <<-EOQ
-    select
-      i.network_interface_id as from_id,
-      e.arn as to_id
-    from
-      aws_vpc_eip as e
-      left join aws_ec2_network_interface as i on e.network_interface_id = i.network_interface_id
-    where
-      i.network_interface_id = $1;
-  EOQ
-
-  param "network_interface_id" {}
-}
-
-node "aws_ec2_network_interface_to_vpc_security_group_node" {
-  category = category.aws_vpc_security_group
-
-  sql = <<-EOQ
-    select
-      sg ->> 'GroupId' as id,
-      sg ->> 'GroupName' as title,
-      jsonb_build_object(
-        'Group ID', sg ->> 'GroupId',
-        'Name', sg ->> 'GroupName',
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_ec2_network_interface as eni,
-      jsonb_array_elements(groups) as sg
-    where
-      eni.network_interface_id = $1;
-  EOQ
-
-  param "network_interface_id" {}
-}
-
-edge "aws_ec2_network_interface_to_vpc_security_group_edge" {
-  title = "security group"
-
-  sql = <<-EOQ
-    select
-      eni.network_interface_id as from_id,
-      sg ->> 'GroupId' as to_id
-    from
-      aws_ec2_network_interface as eni,
-      jsonb_array_elements(groups) as sg
-    where
-      eni.network_interface_id = $1;
-  EOQ
-
-  param "network_interface_id" {}
-}
-
-node "aws_ec2_network_interface_to_vpc_subnet_node" {
-  category = category.aws_vpc_subnet
-
-  sql = <<-EOQ
-    select
-      subnet.subnet_id as id,
-      subnet.title as title,
-      jsonb_build_object(
-        'Subnet ID', subnet.subnet_id ,
-        'VPC ID', subnet.vpc_id ,
-        'CIDR Block', subnet.cidr_block,
-        'AZ', subnet.availability_zone,
-        'Account ID', subnet.account_id,
-        'Region', subnet.region
-      ) as properties
-    from
-      aws_ec2_network_interface as eni
-      left join aws_vpc_subnet as subnet on eni.subnet_id = subnet.subnet_id
-    where
-      eni.network_interface_id = $1;
-  EOQ
-
-  param "network_interface_id" {}
-}
-
-edge "aws_ec2_network_interface_to_security_group_to_subnet_edge" {
-  title = "subnet"
-
-  sql = <<-EOQ
-    select
-      coalesce(
-        sg ->> 'GroupId',
-        network_interface_id
-      ) as from_id,
-      subnet.subnet_id as to_id
-    from
-      aws_ec2_network_interface as eni
-      left join aws_vpc_subnet as subnet on eni.subnet_id = subnet.subnet_id
-      left join jsonb_array_elements(eni.groups) as sg on true
-    where
-      eni.network_interface_id = $1;
-  EOQ
-
-  param "network_interface_id" {}
-}
-
-node "aws_ec2_network_interface_to_vpc_node" {
-  category = category.aws_vpc
-
-  sql = <<-EOQ
-    select
-      vpc.vpc_id as id,
-      vpc.title as title,
-      jsonb_build_object(
-        'VPC ID', vpc.vpc_id,
-        'Name', vpc.tags ->> 'Name',
-        'CIDR Block', vpc.cidr_block,
-        'Account ID', vpc.account_id,
-        'Owner ID', vpc.owner_id,
-        'Region', vpc.region
-      ) as properties
-    from
-      aws_ec2_network_interface as eni
-      left join aws_vpc as vpc on eni.vpc_id = vpc.vpc_id
-    where
-      eni.network_interface_id = $1;
-  EOQ
-
-  param "network_interface_id" {}
-}
-
-edge "aws_ec2_network_interface_to_security_group_subnet_to_vpc_edge" {
-  title = "vpc"
-
-  sql = <<-EOQ
-    select
-      subnet_id as from_id,
-      vpc_id as to_id
-    from
-      aws_ec2_network_interface
-    where
-      network_interface_id = $1;
-  EOQ
-
-  param "network_interface_id" {}
-}
-
-node "aws_ec2_network_interface_to_flow_log_node" {
-  category = category.aws_vpc_flow_log
-
-  sql = <<-EOQ
-    select
-      flow_log_id as id,
-      title as title,
-      jsonb_build_object(
-        'Flow Log ID', flow_log_id,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_vpc_flow_log
-    where
-      resource_id = $1;
-  EOQ
-
-  param "network_interface_id" {}
-}
-
-edge "aws_ec2_network_interface_to_flow_log_edge" {
-  title = "flow log"
-
-  sql = <<-EOQ
-   select
-      $1 as from_id,
-      flow_log_id as to_id
-    from
-      aws_vpc_flow_log
-    where
-      resource_id = $1;
-  EOQ
-
-  param "network_interface_id" {}
-}
-
-//******
-
-
 node "aws_ec2_network_interface_nodes" {
   category = category.aws_ec2_network_interface
 
@@ -617,6 +427,135 @@ node "aws_ec2_network_interface_nodes" {
       aws_ec2_network_interface
     where
       network_interface_id = any($1 ::text[]);
+  EOQ
+
+  param "eni_ids" {}
+}
+
+edge "aws_ec2_network_interface_to_vpc_eip_edges" {
+  title = "eip"
+
+  sql = <<-EOQ
+    select
+      eni_ids as from_id,
+      eip_arns as to_id
+    from
+      unnest($1::text[]) as eni_ids,
+      unnest($2::text[]) as eip_arns
+  EOQ
+
+  param "eni_ids" {}
+  param "eip_arns" {}
+}
+
+
+edge "aws_ec2_network_interface_to_vpc_security_group_edges" {
+  title = "security group"
+
+  sql = <<-EOQ
+    select
+      eni_ids as from_id,
+      security_group_ids as to_id
+    from
+      unnest($1::text[]) as eni_ids,
+      unnest($2::text[]) as security_group_ids
+  EOQ
+
+  param "eni_ids" {}
+  param "security_group_ids" {}
+}
+
+edge "aws_ec2_network_interface_to_vpc_subnet_edges" {
+  title = "subnet"
+
+  sql = <<-EOQ
+    select
+      coalesce(
+        security_group_ids,
+        eni_ids
+      ) as from_id,
+      subnet_ids as to_id
+    from
+      unnest($1::text[]) as eni_ids,
+      unnest($2::text[]) as subnet_ids,
+      unnest($3::text[]) as security_group_ids
+  EOQ
+
+  param "eni_ids" {}
+  param "subnet_ids" {}
+  param "security_group_ids" {}
+}
+
+
+edge "aws_vpc_subnet_to_vpc_edges" {
+  title = "vpc"
+
+  sql = <<-EOQ
+    select
+      subnet_ids as from_id,
+      vpc_ids as to_id
+    from
+      unnest($1::text[]) as subnet_ids,
+      unnest($2::text[]) as vpc_ids
+  EOQ
+
+  param "subnet_ids" {}
+  param "vpc_ids" {}
+}
+
+
+edge "aws_ec2_network_interface_to_vpc_flow_log_edges" {
+  title = "flow log"
+
+  sql = <<-EOQ
+   select
+      eni_ids as from_id,
+      flow_log_ids as to_id
+    from
+      unnest($1::text[]) as eni_ids,
+      unnest($2::text[]) as flow_log_ids
+  EOQ
+
+  param "eni_ids" {}
+  param "flow_log_ids" {}
+}
+
+node "aws_ec2_network_interface_vpc_nat_gateway_nodes" {
+  category = category.aws_vpc_nat_gateway
+
+  sql = <<-EOQ
+    select
+      n.arn as id,
+      n.title as title,
+      jsonb_build_object(
+        'ARN', n.arn,
+        'NAT Gateway ID', n.nat_gateway_id,
+        'State', n.state,
+        'Account ID', n.account_id,
+        'Region', n.region
+      ) as properties
+    from
+      aws_vpc_nat_gateway as n,
+      jsonb_array_elements(nat_gateway_addresses) as a
+    where
+      a ->> 'NetworkInterfaceId' = any($1);
+  EOQ
+
+  param "eni_ids" {}
+}
+
+edge "aws_vpc_nat_gateway_to_ec2_network_interface_edges" {
+  title = "eni"
+
+  sql = <<-EOQ
+    select
+      n.arn as from_id,
+      a ->> 'NetworkInterfaceId' as to_id
+    from
+      aws_vpc_nat_gateway as n,
+      jsonb_array_elements(nat_gateway_addresses) as a
+    where
+      a ->> 'NetworkInterfaceId' = any($1);
   EOQ
 
   param "eni_ids" {}
