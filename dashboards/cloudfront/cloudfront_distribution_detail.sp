@@ -62,25 +62,132 @@ dashboard "aws_cloudfront_distribution_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "certificates" {
+        sql = <<-EOQ
+          select
+            viewer_certificate ->> 'ACMCertificateArn' as certificate_arn
+          from
+            aws_cloudfront_distribution
+          where
+            viewer_certificate ->> 'ACMCertificateArn' is not null
+            and arn = $1
+        EOQ
+
+        args = [self.input.distribution_arn.value]
+      }
+
+      with "buckets" {
+        sql = <<-EOQ
+          select
+            arn as bucket_arn
+          from
+            aws_s3_bucket
+          where
+            name in
+            (
+              select distinct
+                split_part(origin ->> 'DomainName', '.', 1) as bucket_name
+              from
+                aws_cloudfront_distribution,
+                jsonb_array_elements(origins) as origin
+              where
+                origin ->> 'DomainName' like '%s3%'
+                and arn = $1
+            );
+        EOQ
+
+        args = [self.input.distribution_arn.value]
+      }
+
+      with "albs" {
+        sql = <<-EOQ
+          select
+            arn as alb_arn
+          from
+            aws_ec2_application_load_balancer
+          where
+            dns_name in
+            (
+              select
+                origin ->> 'DomainName'
+              from
+                aws_cloudfront_distribution,
+                jsonb_array_elements(origins) as origin
+              where
+                arn = $1
+            );
+        EOQ
+
+        args = [self.input.distribution_arn.value]
+      }
+
+      with "media_stores" {
+        sql = <<-EOQ
+          select
+            arn as mediastore_arn
+          from
+            aws_media_store_container
+          where
+            endpoint in
+            (
+              select
+                'https://' || (origin ->> 'DomainName')
+              from
+                aws_cloudfront_distribution,
+                jsonb_array_elements(origins) as origin
+              where
+                arn = $1
+            );
+        EOQ
+
+        args = [self.input.distribution_arn.value]
+      }
+
+      with "wafv2_web_acls" {
+        sql = <<-EOQ
+          select
+            arn as wafv2_acl_arn
+          from
+            aws_wafv2_web_acl
+          where
+            arn in
+            (
+              select
+                web_acl_id
+              from
+                aws_cloudfront_distribution
+              where
+                arn = $1
+            );
+        EOQ
+
+        args = [self.input.distribution_arn.value]
+      }
+
       nodes = [
         node.aws_cloudfront_distribution_nodes,
-        node.aws_cloudfront_distribution_to_acm_certificate_node,
-        node.aws_cloudfront_distribution_from_s3_bucket_node,
-        node.aws_cloudfront_distribution_from_ec2_application_load_balancer_node,
-        node.aws_cloudfront_distribution_from_media_store_container_node,
-        node.aws_cloudfront_distribution_to_wafv2_web_acl_node
+        node.aws_acm_certificate_nodes,
+        node.aws_s3_bucket_nodes,
+        node.aws_ec2_application_load_balancer_nodes,
+        node.aws_media_store_container_nodes,
+        node.aws_wafv2_web_acl_nodes
       ]
 
       edges = [
-        edge.aws_cloudfront_distribution_to_acm_certificate_edge,
-        edge.aws_cloudfront_distribution_from_s3_bucket_edge,
-        edge.aws_cloudfront_distribution_from_ec2_application_load_balancer_edge,
-        edge.aws_cloudfront_distribution_from_media_store_container_edge,
-        edge.aws_cloudfront_distribution_to_wafv2_web_acl_edge
+        edge.aws_cloudfront_distribution_to_acm_certificate_edges,
+        edge.aws_s3_bucket_to_cloudfront_distribution_edges,
+        edge.aws_ec2_application_load_balancer_to_cloudfront_distribution_edges,
+        edge.aws_media_store_container_to_cloudfront_distribution_edges,
+        edge.aws_cloudfront_distribution_to_wafv2_web_acl_edges
       ]
 
       args = {
-        arn = self.input.distribution_arn.value
+        distribution_arns = [self.input.distribution_arn.value]
+        bucket_arns       = with.buckets.rows[*].bucket_arn
+        certificate_arns  = with.certificates.rows[*].certificate_arn
+        alb_arns          = with.albs.rows[*].alb_arn
+        mediastore_arns   = with.media_stores.rows[*].mediastore_arn
+        wafv2_acl_arns    = with.wafv2_web_acls.rows[*].wafv2_acl_arn
       }
     }
   }
@@ -213,256 +320,80 @@ query "aws_cloudfront_distribution_sni" {
   param "arn" {}
 }
 
-node "aws_cloudfront_distribution_to_acm_certificate_node" {
-  category = category.aws_acm_certificate
-  sql      = <<-EOQ
-    select
-      certificate_arn as id,
-      left(title,8) as title,
-      jsonb_build_object (
-        'ARN', certificate_arn,
-        'Domain Name', domain_name,
-        'Certificate Transparency Logging Preference', certificate_transparency_logging_preference,
-        'Created At', created_at,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_acm_certificate
-    where
-      certificate_arn in
-      (
-        select
-          viewer_certificate ->> 'ACMCertificateArn'
-        from
-          aws_cloudfront_distribution
-        where
-          arn = $1
-      );
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_cloudfront_distribution_to_acm_certificate_edge" {
-  title = "ssl via"
-  sql   = <<-EOQ
-    select
-      d.id as from_id,
-      c.certificate_arn as to_id
-    from
-      aws_acm_certificate as c
-      left join aws_cloudfront_distribution as d on viewer_certificate ->> 'ACMCertificateArn' = certificate_arn
-    where
-      d.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "aws_cloudfront_distribution_from_s3_bucket_node" {
-  category = category.aws_s3_bucket
-  sql      = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object (
-        'Name', name,
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_s3_bucket
-    where
-      name in
-      (
-        select distinct
-          split_part(origin ->> 'DomainName', '.', 1) as bucket_name
-        from
-          aws_cloudfront_distribution,
-          jsonb_array_elements(origins) as origin
-        where
-          origin ->> 'DomainName' like '%s3%'
-          and arn = $1
-      );
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_cloudfront_distribution_from_s3_bucket_edge" {
-  title = "origin for"
-  sql   = <<-EOQ
-    select
-      b.arn as from_id,
-      d.id as to_id
-    from
-      aws_cloudfront_distribution as d,
-      jsonb_array_elements(origins) as origin
-      left join aws_s3_bucket as b on origin ->> 'DomainName' like '%' || b.name || '%'
-    where
-      d.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "aws_cloudfront_distribution_from_ec2_application_load_balancer_node" {
-  category = category.aws_ec2_application_load_balancer
-  sql      = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object (
-        'ARN', arn,
-        'VPC ID', vpc_id,
-        'DNS Name', dns_name,
-        'Created Time', created_time,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_ec2_application_load_balancer
-    where
-      dns_name in
-      (
-        select
-          origin ->> 'DomainName'
-        from
-          aws_cloudfront_distribution,
-          jsonb_array_elements(origins) as origin
-        where
-          arn = $1
-      );
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_cloudfront_distribution_from_ec2_application_load_balancer_edge" {
-  title = "origin for"
-  sql   = <<-EOQ
-    select
-      b.arn as from_id,
-      d.id as to_id
-    from
-      aws_cloudfront_distribution as d,
-      jsonb_array_elements(origins) as origin
-      left join aws_ec2_application_load_balancer as b on b.dns_name = origin ->> 'DomainName'
-    where
-      d.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "aws_cloudfront_distribution_from_media_store_container_node" {
-  category = category.aws_media_store_container
-  sql      = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object (
-        'ARN', arn,
-        'Status', status,
-        'Access Logging Enabled', access_logging_enabled::text,
-        'Creation Time', creation_time,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_media_store_container
-    where
-      endpoint in
-      (
-        select
-          'https://' || (origin ->> 'DomainName')
-        from
-          aws_cloudfront_distribution,
-          jsonb_array_elements(origins) as origin
-        where
-          arn = $1
-      );
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_cloudfront_distribution_from_media_store_container_edge" {
-  title = "origin for"
-  sql   = <<-EOQ
-    select
-      c.arn as from_id,
-      d.id as to_id
-    from
-      aws_cloudfront_distribution as d,
-      jsonb_array_elements(origins) as origin
-      left join aws_media_store_container as c on c.endpoint = 'https://' || (origin ->> 'DomainName')
-    where
-      d.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "aws_cloudfront_distribution_to_wafv2_web_acl_node" {
-  category = category.aws_wafv2_web_acl
-  sql      = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object (
-        'ARN', arn,
-        'Title', title,
-        'Cloud Watch Metrics Enabled', visibility_config->> 'CloudWatchMetricsEnabled',
-        'Capacity', capacity,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_wafv2_web_acl
-    where
-      arn in
-      (
-        select
-          web_acl_id
-        from
-          aws_cloudfront_distribution
-        where
-          arn = $1
-      );
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_cloudfront_distribution_to_wafv2_web_acl_edge" {
-  title = "web acl"
-  sql   = <<-EOQ
-    select
-      d.id as from_id,
-      c.arn as to_id
-    from
-      aws_wafv2_web_acl as c
-      left join aws_cloudfront_distribution as d on d.web_acl_id = c.arn
-    where
-      d.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
 edge "aws_cloudfront_distribution_to_acm_certificate_edges" {
   title = "ssl via"
 
   sql = <<-EOQ
    select
-      cloudfront_arns as from_id,
+      distribution_arns as from_id,
       certificate_arns as to_id
     from
-      unnest($1::text[]) as cloudfront_arns,
+      unnest($1::text[]) as distribution_arns,
       unnest($2::text[]) as certificate_arns
   EOQ
 
-  param "cloudfront_arns" {}
+  param "distribution_arns" {}
   param "certificate_arns" {}
+}
+
+edge "aws_s3_bucket_to_cloudfront_distribution_edges" {
+  title = "origin for"
+  sql   = <<-EOQ
+    select
+      distribution_arns as to_id,
+      bucket_arns as from_id
+    from
+      unnest($1::text[]) as distribution_arns,
+      unnest($2::text[]) as bucket_arns
+  EOQ
+
+  param "distribution_arns" {}
+  param "bucket_arns" {}
+}
+
+edge "aws_ec2_application_load_balancer_to_cloudfront_distribution_edges" {
+  title = "origin for"
+  sql   = <<-EOQ
+    select
+      distribution_arns as to_id,
+      alb_arns as from_id
+    from
+      unnest($1::text[]) as distribution_arns,
+      unnest($2::text[]) as alb_arns
+  EOQ
+
+  param "distribution_arns" {}
+  param "alb_arns" {}
+}
+
+edge "aws_media_store_container_to_cloudfront_distribution_edges" {
+  title = "origin for"
+  sql   = <<-EOQ
+    select
+      distribution_arns as to_id,
+      mediastore_arns as from_id
+    from
+      unnest($1::text[]) as distribution_arns,
+      unnest($2::text[]) as mediastore_arns
+  EOQ
+
+  param "distribution_arns" {}
+  param "mediastore_arns" {}
+}
+
+edge "aws_cloudfront_distribution_to_wafv2_web_acl_edges" {
+  title = "web acl"
+  sql   = <<-EOQ
+    select
+      distribution_arns as from_id,
+      wafv2_acl_arns as to_id
+    from
+      unnest($1::text[]) as distribution_arns,
+      unnest($2::text[]) as wafv2_acl_arns
+  EOQ
+
+  param "distribution_arns" {}
+  param "wafv2_acl_arns" {}
 }
 
 query "aws_cloudfront_distribution_overview" {

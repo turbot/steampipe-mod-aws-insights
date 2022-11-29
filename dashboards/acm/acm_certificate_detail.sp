@@ -66,7 +66,7 @@ dashboard "acm_certificate_detail" {
       with "cloudfront_distributions" {
         sql = <<-EOQ
         select
-          arn as cloudfront_arn
+          arn as distribution_arn
         from
           aws_cloudfront_distribution
         where
@@ -178,12 +178,12 @@ dashboard "acm_certificate_detail" {
       ]
 
       args = {
-        alb_arns         = with.albs.rows[*].alb_arn
-        certificate_arns = [self.input.certificate_arn.value]
-        clb_arns         = with.clbs.rows[*].clb_arn
-        cloudfront_arns  = with.cloudfront_distributions.rows[*].cloudfront_arn
-        nlb_arns         = with.nlbs.rows[*].nlb_arn
-        opensearch_arns  = with.opensearch_domains.rows[*].opensearch_arn
+        alb_arns          = with.albs.rows[*].alb_arn
+        certificate_arns  = [self.input.certificate_arn.value]
+        clb_arns          = with.clbs.rows[*].clb_arn
+        distribution_arns = with.cloudfront_distributions.rows[*].distribution_arn
+        nlb_arns          = with.nlbs.rows[*].nlb_arn
+        opensearch_arns   = with.opensearch_domains.rows[*].opensearch_arn
       }
     }
   }
