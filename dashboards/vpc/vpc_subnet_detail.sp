@@ -49,7 +49,7 @@ dashboard "aws_vpc_subnet_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_vpc_subnet_node,
+        node.aws_vpc_subnet_nodes,
         node.aws_vpc_subnet_from_vpc_node,
         node.aws_vpc_subnet_to_vpc_route_table_node,
         node.aws_vpc_subnet_to_vpc_network_acl_node,
@@ -74,7 +74,7 @@ dashboard "aws_vpc_subnet_detail" {
       ]
 
       args = {
-        subnet_id = self.input.subnet_id.value
+        subnet_ids = [self.input.subnet_id.value]
       }
     }
   }
@@ -310,7 +310,7 @@ query "aws_vpc_subnet_association" {
   param "subnet_id" {}
 }
 
-node "aws_vpc_subnet_node" {
+node "aws_vpc_subnet_nodes" {
   category = category.aws_vpc_subnet
 
   sql = <<-EOQ
@@ -327,10 +327,10 @@ node "aws_vpc_subnet_node" {
     from
       aws_vpc_subnet
     where
-      subnet_id = $1;
+      subnet_id = any($1);
   EOQ
 
-  param "subnet_id" {}
+  param "subnet_ids" {}
 }
 
 node "aws_vpc_subnet_from_vpc_node" {

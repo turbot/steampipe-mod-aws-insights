@@ -56,7 +56,7 @@ dashboard "aws_vpc_detail" {
       width = 12
       type  = "graph"
       nodes = [
-        node.aws_vpc_node,
+        node.aws_vpc_nodes,
         node.aws_vpc_az_node,
         node.aws_vpc_to_flow_log_node,
         node.aws_vpc_vpc_subnet_node,
@@ -110,7 +110,7 @@ dashboard "aws_vpc_detail" {
       ]
 
       args = {
-        vpc_id = self.input.vpc_id.value
+        vpc_ids = [self.input.vpc_id.value]
       }
     }
 
@@ -992,7 +992,7 @@ query "aws_vpc_subnet_by_az" {
   param "vpc_id" {}
 }
 
-node "aws_vpc_node" {
+node "aws_vpc_nodes" {
   category = category.aws_vpc
 
   sql = <<-EOQ
@@ -1013,10 +1013,10 @@ node "aws_vpc_node" {
     from
       aws_vpc
     where
-      vpc_id = $1;
+      vpc_id = any($1);
   EOQ
 
-  param "vpc_id" {}
+  param "vpc_ids" {}
 }
 
 

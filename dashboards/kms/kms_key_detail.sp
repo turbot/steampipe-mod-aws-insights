@@ -58,7 +58,7 @@ dashboard "aws_kms_key_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_kms_key_node,
+        node.aws_kms_key_nodes,
         node.aws_kms_key_to_kms_alias_node,
         node.aws_kms_key_from_cloudtrail_trail_node,
         node.aws_kms_key_from_ebs_volume_node,
@@ -89,7 +89,7 @@ dashboard "aws_kms_key_detail" {
       ]
 
       args = {
-        arn = self.input.key_arn.value
+        kms_key_arns = [self.input.key_arn.value]
       }
     }
   }
@@ -286,12 +286,12 @@ query "aws_kms_key_policy" {
   param "arn" {}
 }
 
-node "aws_kms_key_node" {
+node "aws_kms_key_nodes" {
   category = category.aws_kms_key
 
   sql = <<-EOQ
     select
-      id as id,
+      arn as id,
       left(id,8) as title,
       jsonb_build_object(
         'ARN', arn,
@@ -304,10 +304,10 @@ node "aws_kms_key_node" {
     from
       aws_kms_key
     where
-      arn = $1;
+      arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "kms_key_arns" {}
 }
 
 node "aws_kms_key_from_cloudtrail_trail_node" {
@@ -339,7 +339,7 @@ edge "aws_kms_key_from_cloudtrail_trail_edge" {
   sql = <<-EOQ
     select
       t.arn as from_id,
-      k.id as to_id
+      k.arn as to_id
     from
       aws_cloudtrail_trail as t,
       aws_kms_key as k
@@ -380,7 +380,7 @@ edge "aws_kms_key_from_ebs_volume_edge" {
   sql = <<-EOQ
     select
       volume_id as from_id,
-      k.id as to_id
+      k.arn as to_id
     from
       aws_ebs_volume as v,
       aws_kms_key as k
@@ -421,7 +421,7 @@ edge "aws_kms_key_from_rds_db_cluster_snapshot_edge" {
   sql = <<-EOQ
     select
       db_cluster_snapshot_identifier as from_id,
-      k.id as to_id
+      k.arn as to_id
     from
       aws_rds_db_cluster_snapshot as s,
       aws_kms_key as k
@@ -461,7 +461,7 @@ edge "aws_kms_key_from_rds_db_cluster_edge" {
   sql = <<-EOQ
     select
       db_cluster_identifier as from_id,
-      k.id as to_id
+      k.arn as to_id
     from
       aws_rds_db_cluster as c,
       aws_kms_key as k
@@ -502,7 +502,7 @@ edge "aws_kms_key_from_rds_db_instance_edge" {
   sql = <<-EOQ
     select
       db_instance_identifier as from_id,
-      k.id as to_id
+      k.arn as to_id
     from
       aws_rds_db_instance as i,
       aws_kms_key as k
@@ -543,7 +543,7 @@ edge "aws_kms_key_from_rds_db_snapshot_edge" {
   sql = <<-EOQ
     select
       db_snapshot_identifier as from_id,
-      k.id as to_id
+      k.arn as to_id
     from
       aws_rds_db_snapshot as s,
       aws_kms_key as k
@@ -584,7 +584,7 @@ edge "aws_kms_key_from_redshift_cluster_edge" {
   sql = <<-EOQ
     select
       cluster_identifier as from_id,
-      k.id as to_id
+      k.arn as to_id
     from
       aws_redshift_cluster as c,
       aws_kms_key as k
@@ -644,7 +644,7 @@ node "aws_kms_key_from_sns_topic_node" {
       ) as properties
     from
       aws_sns_topic as t
-      left join aws_kms_key as k on k.id = split_part(t.kms_master_key_id, '/', 2)
+      left join aws_kms_key as k on k.arn = split_part(t.kms_master_key_id, '/', 2)
     where
       k.arn = $1
       and k.region = t.region
@@ -660,7 +660,7 @@ edge "aws_kms_key_from_sns_topic_edge" {
   sql = <<-EOQ
     select
       t.topic_arn as from_id,
-      k.id as to_id
+      k.arn as to_id
     from
       aws_sns_topic as t
       left join aws_kms_key as k on k.id = split_part(t.kms_master_key_id, '/', 2)
@@ -754,7 +754,7 @@ edge "aws_kms_key_from_lambda_function_edge" {
   sql = <<-EOQ
     select
       l.arn as from_id,
-      k.id as to_id
+      k.arn as to_id
     from
       aws_lambda_function as l,
       aws_kms_key as k
@@ -797,7 +797,7 @@ edge "aws_kms_key_from_s3_bucket_edge" {
   sql = <<-EOQ
     select
       b.arn as from_id,
-      k.id as to_id
+      k.arn as to_id
     from
       aws_s3_bucket as b
       cross join jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as r
@@ -840,7 +840,7 @@ edge "aws_kms_key_to_kms_alias_edge" {
   sql = <<-EOQ
     select
       a.arn as from_id,
-      k.id as to_id
+      k.arn as to_id
     from
       aws_kms_alias as a
       join aws_kms_key as k

@@ -40,7 +40,7 @@ dashboard "aws_sns_topic_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_sns_topic_node,
+        node.aws_sns_topic_nodes,
         node.aws_sns_topic_to_kms_key_node,
         node.aws_sns_topic_to_sns_topic_subscriptions_node,
         node.aws_sns_topic_from_s3_bucket_node,
@@ -63,7 +63,7 @@ dashboard "aws_sns_topic_detail" {
       ]
 
       args = {
-        arn = self.input.topic_arn.value
+        sns_topic_arns = [self.input.topic_arn.value]
       }
     }
   }
@@ -263,7 +263,7 @@ query "aws_sns_topic_policy_standard" {
   param "arn" {}
 }
 
-node "aws_sns_topic_node" {
+node "aws_sns_topic_nodes" {
   category = category.aws_sns_topic
 
   sql = <<-EOQ
@@ -278,10 +278,10 @@ node "aws_sns_topic_node" {
     from
       aws_sns_topic as q
     where
-      q.topic_arn = $1;
+      q.topic_arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "sns_topic_arns" {}
 }
 
 node "aws_sns_topic_to_kms_key_node" {
