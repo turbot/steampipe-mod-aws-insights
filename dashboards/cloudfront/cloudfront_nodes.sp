@@ -17,5 +17,5 @@ node "aws_cloudfront_distribution_nodes" {
       arn = any($1);
   EOQ
 
-  param "cloudfront_arns" {}
+  param "distribution_arns" {}
 }
