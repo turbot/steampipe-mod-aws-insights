@@ -63,13 +63,36 @@ dashboard "acm_certificate_detail" {
       type      = "graph"
       direction = "TD"
 
+    with "cloudfront_distributions" {
+      sql = <<-EOQ
+        select
+          arn as cloudfront_arn
+        from
+          aws_cloudfront_distribution
+        where
+          arn in
+          (
+            select
+              jsonb_array_elements_text(in_use_by)
+            from
+              aws_acm_certificate
+            where
+              certificate_arn = $1
+          );
+      EOQ
+
+      args = [self.input.certificate_arn.value]
+    }
+# Add opensearch_domain
+
+
       nodes = [
-        node.aws_acm_certificate_node,
-        node.aws_acm_certificate_from_cloudfront_distribution_node,
+        node.aws_acm_certificate_nodes,
+        node.aws_cloudfront_distribution_nodes,
         node.aws_acm_certificate_from_ec2_classic_load_balancer_node,
         node.aws_acm_certificate_from_ec2_application_load_balancer_node,
         node.aws_acm_certificate_from_ec2_network_load_balancer_node,
-        node.aws_acm_certificate_from_opensearch_domain_node
+        node.aws_acm_certificate_from_opensearch_domain_nodes
       ]
 
       edges = [
@@ -80,10 +103,14 @@ dashboard "acm_certificate_detail" {
         edge.aws_acm_certificate_from_opensearch_domain_edge
       ]
 
+      # args = {
+      #   arn = self.input.certificate_arn.value
+      # }
       args = {
-        arn = self.input.certificate_arn.value
+        certificate_arns  = [self.input.certificate_arn.value]
+        cloudfront_arns = with.cloudfront_distributions.rows[*].cloudfront_arn
       }
-    }
+    }   
   }
 
   container {
@@ -244,7 +271,7 @@ query "aws_acm_certificate_transparency_logging_status" {
   param "arn" {}
 }
 
-node "aws_acm_certificate_node" {
+node "aws_acm_certificate_nodes" {
   category = category.aws_acm_certificate
 
   sql = <<-EOQ
@@ -265,60 +292,78 @@ node "aws_acm_certificate_node" {
     from
       aws_acm_certificate
     where
-      certificate_arn = $1;
+      certificate_arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "certificate_arn" {}
 }
 
-node "aws_acm_certificate_from_cloudfront_distribution_node" {
-  category = category.aws_cloudfront_distribution
+# node "aws_acm_certificate_from_cloudfront_distribution_node" {
+#   category = category.aws_cloudfront_distribution
 
-  sql = <<-EOQ
-    select
-      id as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Status', status,
-        'Enabled', enabled::text,
-        'Domain Name', domain_name,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_cloudfront_distribution
-    where
-      arn in
-      (
-        select
-          jsonb_array_elements_text(in_use_by)
-        from
-          aws_acm_certificate
-        where
-          certificate_arn = $1
-      );
-  EOQ
+#   sql = <<-EOQ
+#     select
+#       id as id,
+#       title as title,
+#       jsonb_build_object(
+#         'ARN', arn,
+#         'Status', status,
+#         'Enabled', enabled::text,
+#         'Domain Name', domain_name,
+#         'Account ID', account_id
+#       ) as properties
+#     from
+#       aws_cloudfront_distribution
+#     where
+#       arn in
+#       (
+#         select
+#           jsonb_array_elements_text(in_use_by)
+#         from
+#           aws_acm_certificate
+#         where
+#           certificate_arn = $1
+#       );
+#   EOQ
 
-  param "arn" {}
-}
+#   param "arn" {}
+# }
+
+# edge "aws_acm_certificate_from_cloudfront_distribution_edge" {
+#   title = "ssl via"
+
+#   sql = <<-EOQ
+#     select
+#       d.id as from_id,
+#       c.certificate_arn as to_id
+#     from
+#       aws_acm_certificate as c,
+#       jsonb_array_elements_text(in_use_by) as arns
+#       left join aws_cloudfront_distribution as d on d.arn = arns
+#     where
+#       certificate_arn = $1;
+#   EOQ
+
+#   param "arn" {}
+# }
 
 edge "aws_acm_certificate_from_cloudfront_distribution_edge" {
   title = "ssl via"
 
   sql = <<-EOQ
-    select
-      d.id as from_id,
-      c.certificate_arn as to_id
+   select
+      cloudfront_arn as from_id,
+      certificate_arn as to_id
     from
-      aws_acm_certificate as c,
-      jsonb_array_elements_text(in_use_by) as arns
-      left join aws_cloudfront_distribution as d on d.arn = arns
-    where
-      certificate_arn = $1;
+      unnest($1::text[]) as cloudfront_arns,
+      unnest($2::text[]) as certificate_arns
   EOQ
 
-  param "arn" {}
+  param "cloudfront_arns" {}
+  param "certificate_arns" {}
 }
+
+
 
 node "aws_acm_certificate_from_ec2_classic_load_balancer_node" {
   category = category.aws_ec2_classic_load_balancer
@@ -472,7 +517,7 @@ edge "aws_acm_certificate_from_ec2_network_load_balancer_edge" {
   param "arn" {}
 }
 
-node "aws_acm_certificate_from_opensearch_domain_node" {
+node "aws_acm_certificate_from_opensearch_domain_nodes" {
   category = category.aws_opensearch_domain
 
   sql = <<-EOQ
@@ -490,7 +535,7 @@ node "aws_acm_certificate_from_opensearch_domain_node" {
     from
       aws_opensearch_domain
     where
-     domain_endpoint_options ->> 'CustomEndpointCertificateArn' = $1;
+     domain_endpoint_options ->> 'CustomEndpointCertificateArn' = any($1);
   EOQ
 
   param "arn" {}

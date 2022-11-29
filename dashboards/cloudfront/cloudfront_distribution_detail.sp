@@ -63,7 +63,7 @@ dashboard "aws_cloudfront_distribution_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_cloudfront_distribution_node,
+        node.aws_cloudfront_distribution_nodes,
         node.aws_cloudfront_distribution_to_acm_certificate_node,
         node.aws_cloudfront_distribution_from_s3_bucket_node,
         node.aws_cloudfront_distribution_from_ec2_application_load_balancer_node,
@@ -213,11 +213,12 @@ query "aws_cloudfront_distribution_sni" {
   param "arn" {}
 }
 
-node "aws_cloudfront_distribution_node" {
+node "aws_cloudfront_distribution_nodes" {
   category = category.aws_cloudfront_distribution
   sql      = <<-EOQ
     select
-      id as id,
+      # id as id,
+      arn as id,
       title as title,
       jsonb_build_object (
         'ARN', arn,
@@ -229,10 +230,10 @@ node "aws_cloudfront_distribution_node" {
     from
       aws_cloudfront_distribution
     where
-      arn = $1;
+      arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "cloudfront_arns" {}
 }
 
 node "aws_cloudfront_distribution_to_acm_certificate_node" {
