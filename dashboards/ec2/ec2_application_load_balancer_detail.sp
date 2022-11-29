@@ -505,3 +505,20 @@ edge "aws_ec2_alb_vpc_security_group_to_vpc_edge" {
 
   param "arn" {}
 }
+
+
+edge "aws_ec2_application_load_balancer_to_acm_certificate_edges" {
+  title = "ssl via"
+
+  sql = <<-EOQ
+    select
+      certificate_arns as to_id,
+      alb_arns as from_id
+    from
+      unnest($1::text[]) as certificate_arns,
+      unnest($2::text[]) as alb_arns
+  EOQ
+
+  param "certificate_arns" {}
+  param "alb_arns" {}
+}
