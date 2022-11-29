@@ -82,13 +82,12 @@ dashboard "aws_ec2_instance_detail" {
       with "enis" {
         sql = <<-EOQ
           select
-            eni.network_interface_id as eni_id
+            eni ->> 'NetworkInterfaceId' as eni_id
           from
             aws_ec2_instance as i,
-            aws_ec2_network_interface as eni
+            jsonb_array_elements(network_interfaces) as eni
           where
-            i.arn = $1
-            and eni.attached_instance_id = i.instance_id;
+            i.arn = $1;
         EOQ
 
         args = [self.input.instance_arn.value]
