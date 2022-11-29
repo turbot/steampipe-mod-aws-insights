@@ -48,33 +48,120 @@ dashboard "aws_vpc_subnet_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "vpcs" {
+        sql = <<-EOQ
+          select
+            vpc_id as vpc_id
+          from
+            aws_vpc_subnet
+          where
+            subnet_id = $1;
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
+      with "rds_db_instances" {
+        sql = <<-EOQ
+          select
+            arn as rds_instance_arn
+          from
+            aws_rds_db_instance,
+            jsonb_array_elements(subnets) as s
+          where
+            s ->> 'SubnetIdentifier' = $1;
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
+      with "ec2_instances" {
+        sql = <<-EOQ
+          select
+            arn as instance_arn
+          from
+            aws_ec2_instance
+          where
+            subnet_id = $1;
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
+      with "lambda_functions" {
+        sql = <<-EOQ
+          select
+            arn as lambda_arn
+          from
+            aws_lambda_function,
+            jsonb_array_elements_text(vpc_subnet_ids) as s
+          where
+            s = $1;
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
+      with "flow_logs" {
+        sql = <<-EOQ
+          select
+            flow_log_id as flow_log_id
+          from
+            aws_vpc_flow_log
+          where
+            resource_id = $1;
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
+      with "enis" {
+        sql = <<-EOQ
+          select
+            network_interface_id as eni_id
+          from
+            aws_ec2_network_interface
+          where
+            subnet_id = $1;
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
       nodes = [
         node.aws_vpc_subnet_nodes,
-        node.aws_vpc_subnet_from_vpc_node,
-        node.aws_vpc_subnet_to_vpc_route_table_node,
-        node.aws_vpc_subnet_to_vpc_network_acl_node,
-        node.aws_vpc_subnet_to_rds_db_instance_node,
-        node.aws_vpc_subnet_to_ec2_instance_node,
-        node.aws_vpc_subnet_to_lambda_function_node,
-        node.aws_vpc_subnet_to_flow_log_node,
-        node.aws_vpc_subnet_to_sagemaker_notebook_instance_node,
-        node.aws_vpc_subnet_to_network_interface_node
+        node.aws_vpc_nodes,
+        node.aws_rds_db_instance_nodes,
+        node.aws_ec2_instance_nodes,
+        node.aws_lambda_function_nodes,
+        node.aws_vpc_flow_log_nodes,
+        node.aws_ec2_network_interface_nodes,
+
+        node.aws_vpc_subnet_vpc_route_table_nodes,
+        node.aws_vpc_subnet_vpc_network_acl_nodes,
+        node.aws_vpc_subnet_sagemaker_notebook_instance_nodes,
       ]
 
       edges = [
-        edge.aws_vpc_subnet_from_vpc_edge,
-        edge.aws_vpc_subnet_to_flow_log_edge,
-        edge.aws_vpc_subnet_to_vpc_route_table_edge,
-        edge.aws_vpc_subnet_to_vpc_network_acl_edge,
-        edge.aws_vpc_subnet_to_rds_db_instance_edge,
-        edge.aws_vpc_subnet_to_ec2_instance_edge,
-        edge.aws_vpc_subnet_to_lambda_function_edge,
-        edge.aws_vpc_subnet_to_sagemaker_notebook_instance_edge,
-        edge.aws_vpc_subnet_to_network_interface_edge
+        edge.aws_vpc_to_vpc_subnet_edges,
+        edge.aws_vpc_subnet_to_flow_log_edges,
+        edge.aws_vpc_subnet_to_vpc_route_table_edges,
+        edge.aws_vpc_subnet_to_vpc_network_acl_edges,
+        edge.aws_vpc_subnet_to_rds_db_instance_edges,
+        edge.aws_vpc_subnet_to_ec2_instance_edges,
+        edge.aws_vpc_subnet_to_lambda_function_edges,
+        edge.aws_vpc_subnet_to_sagemaker_notebook_instance_edges,
+        edge.aws_vpc_subnet_to_network_interface_edges
       ]
 
       args = {
-        subnet_ids = [self.input.subnet_id.value]
+        subnet_ids           = [self.input.subnet_id.value]
+        eni_ids              = with.enis.rows[*].eni_id
+        flow_log_ids         = with.flow_logs.rows[*].flow_log_id
+        function_arns        = with.lambda_functions.rows[*].lambda_arn
+        instance_arns        = with.ec2_instances.rows[*].instance_arn
+        rds_db_instance_arns = with.rds_db_instances.rows[*].rds_instance_arn
+        vpc_ids              = with.vpcs.rows[*].vpc_id
       }
     }
   }
@@ -310,365 +397,6 @@ query "aws_vpc_subnet_association" {
   param "subnet_id" {}
 }
 
-node "aws_vpc_subnet_from_vpc_node" {
-  category = category.aws_vpc
-
-  sql = <<-EOQ
-     select
-      v.vpc_id as id,
-      v.title as title,
-      jsonb_build_object(
-        'VPC ID', s.vpc_id,
-        'ARN', v.arn,
-        'Region', v.region,
-        'CIDR Block', v.cidr_block,
-        'Account ID', v.account_id
-      ) as properties
-    from
-      aws_vpc_subnet as s
-      left join aws_vpc as v on v.vpc_id = s.vpc_id
-    where
-      s.subnet_id = $1;
-  EOQ
-
-  param "subnet_id" {}
-}
-
-edge "aws_vpc_subnet_from_vpc_edge" {
-  title = "subnet"
-
-  sql = <<-EOQ
-     select
-      v.vpc_id as from_id,
-      s.subnet_id as to_id
-    from
-      aws_vpc_subnet as s
-      left join aws_vpc as v on v.vpc_id = s.vpc_id
-    where
-      s.subnet_id = $1;
-  EOQ
-
-  param "subnet_id" {}
-}
-
-node "aws_vpc_subnet_to_vpc_route_table_node" {
-  category = category.aws_vpc_route_table
-
-  sql = <<-EOQ
-    select
-      route_table_id as id,
-      title as title,
-      jsonb_build_object(
-        'Owner ID', owner_id,
-        'Region', region,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_vpc_route_table,
-      jsonb_array_elements(associations) as a
-    where
-      a ->> 'SubnetId' = $1;
-  EOQ
-
-  param "subnet_id" {}
-}
-
-edge "aws_vpc_subnet_to_vpc_route_table_edge" {
-  title = "route to"
-
-  sql = <<-EOQ
-    select
-      $1 as from_id,
-      route_table_id as to_id
-    from
-      aws_vpc_route_table,
-      jsonb_array_elements(associations) as a
-    where
-      a ->> 'SubnetId' = $1;
-  EOQ
-
-  param "subnet_id" {}
-}
-
-node "aws_vpc_subnet_to_vpc_network_acl_node" {
-  category = category.aws_vpc_network_acl
-
-  sql = <<-EOQ
-    select
-      network_acl_id as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Is Default', is_default,
-        'Association Id', a ->> 'NetworkAclAssociationId',
-        'Region', region,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_vpc_network_acl,
-      jsonb_array_elements(associations) as a
-    where
-      a ->> 'SubnetId' = $1;
-  EOQ
-
-  param "subnet_id" {}
-}
-
-edge "aws_vpc_subnet_to_vpc_network_acl_edge" {
-  title = "network acl"
-
-  sql = <<-EOQ
-    select
-      $1 as from_id,
-      network_acl_id as to_id
-    from
-      aws_vpc_network_acl,
-      jsonb_array_elements(associations) as a
-    where
-      a ->> 'SubnetId' = $1;
-  EOQ
-
-  param "subnet_id" {}
-}
-
-node "aws_vpc_subnet_to_rds_db_instance_node" {
-  category = category.aws_rds_db_instance
-
-  sql = <<-EOQ
-    select
-      db_instance_identifier as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Status', status,
-        'Engine', engine,
-        'Region', region,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_rds_db_instance,
-      jsonb_array_elements(subnets) as s
-    where
-      s ->> 'SubnetIdentifier' = $1;
-  EOQ
-
-  param "subnet_id" {}
-}
-
-edge "aws_vpc_subnet_to_rds_db_instance_edge" {
-  title = "subnet"
-
-  sql = <<-EOQ
-    select
-      $1 as from_id,
-      db_instance_identifier as to_id
-    from
-      aws_rds_db_instance,
-      jsonb_array_elements(subnets) as s
-    where
-      s ->> 'SubnetIdentifier' = $1;
-  EOQ
-
-  param "subnet_id" {}
-}
-
-node "aws_vpc_subnet_to_ec2_instance_node" {
-  category = category.aws_ec2_instance
-
-  sql = <<-EOQ
-    select
-      instance_id as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'State', instance_state,
-        'Region', region,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_ec2_instance
-    where
-      subnet_id = $1;
-  EOQ
-
-  param "subnet_id" {}
-}
-
-edge "aws_vpc_subnet_to_ec2_instance_edge" {
-  title = "ec2 instance"
-
-  sql = <<-EOQ
-    select
-      $1 as from_id,
-      instance_id as to_id
-    from
-      aws_ec2_instance
-    where
-      subnet_id = $1;
-  EOQ
-
-  param "subnet_id" {}
-}
-
-node "aws_vpc_subnet_to_lambda_function_node" {
-  category = category.aws_lambda_function
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Runtime', runtime,
-        'Architectures', architectures,
-        'Region', region,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_lambda_function,
-      jsonb_array_elements(vpc_subnet_ids) as s
-    where
-      trim((s::text ), '""') = $1;
-  EOQ
-
-  param "subnet_id" {}
-}
-
-edge "aws_vpc_subnet_to_lambda_function_edge" {
-  title = "lambda function"
-
-  sql = <<-EOQ
-    select
-      $1 as from_id,
-      arn as to_id
-    from
-      aws_lambda_function,
-      jsonb_array_elements(vpc_subnet_ids) as s
-    where
-      trim((s::text ), '""') = $1
-  EOQ
-
-  param "subnet_id" {}
-}
-
-node "aws_vpc_subnet_to_sagemaker_notebook_instance_node" {
-  category = category.aws_sagemaker_notebook_instance
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Status', notebook_instance_status,
-        'Instance Type', instance_type,
-        'Region', region,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_sagemaker_notebook_instance
-    where
-      subnet_id = $1
-  EOQ
-
-  param "subnet_id" {}
-}
-
-edge "aws_vpc_subnet_to_sagemaker_notebook_instance_edge" {
-  title = "notebook instance"
-
-  sql = <<-EOQ
-   select
-      $1 as from_id,
-      arn as to_id
-    from
-      aws_sagemaker_notebook_instance
-    where
-      subnet_id = $1
-  EOQ
-
-  param "subnet_id" {}
-}
-
-node "aws_vpc_subnet_to_flow_log_node" {
-  category = category.aws_vpc_flow_log
-
-  sql = <<-EOQ
-    select
-      flow_log_id as id,
-      title as title,
-      jsonb_build_object(
-        'Flow Log ID', flow_log_id,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_vpc_flow_log
-    where
-      resource_id = $1;
-  EOQ
-
-  param "subnet_id" {}
-}
-
-edge "aws_vpc_subnet_to_flow_log_edge" {
-  title = "flow log"
-
-  sql = <<-EOQ
-   select
-      $1 as from_id,
-      flow_log_id as to_id
-    from
-      aws_vpc_flow_log
-    where
-      resource_id = $1;
-  EOQ
-
-  param "subnet_id" {}
-}
-
-node "aws_vpc_subnet_to_network_interface_node" {
-  category = category.aws_ec2_network_interface
-
-  sql = <<-EOQ
-    select
-      network_interface_id as id,
-      title as title,
-      jsonb_build_object(
-        'Network Interface ID', network_interface_id,
-        'Availability Zone', availability_zone,
-        'Attachment Status', attachment_status,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_ec2_network_interface
-    where
-      subnet_id = $1;
-  EOQ
-
-  param "subnet_id" {}
-}
-
-edge "aws_vpc_subnet_to_network_interface_edge" {
-  title = "eni"
-
-  sql = <<-EOQ
-   select
-      $1 as from_id,
-      network_interface_id as to_id
-    from
-      aws_ec2_network_interface
-    where
-      subnet_id = $1;
-  EOQ
-
-  param "subnet_id" {}
-}
-
-//******
-
-
 node "aws_vpc_subnet_nodes" {
   category = category.aws_vpc_subnet
 
@@ -691,3 +419,223 @@ node "aws_vpc_subnet_nodes" {
 
   param "subnet_ids" {}
 }
+
+edge "aws_vpc_to_vpc_subnet_edges" {
+  title = "subnet"
+
+  sql = <<-EOQ
+     select
+      vpc_ids as from_id,
+      subnet_ids as to_id
+    from
+      unnest($1::text[]) as vpc_ids,
+      unnest($2::text[]) as subnet_ids;
+  EOQ
+
+  param "vpc_ids" {}
+  param "subnet_ids" {}
+}
+
+node "aws_vpc_subnet_vpc_route_table_nodes" {
+  category = category.aws_vpc_route_table
+
+  sql = <<-EOQ
+    select
+      route_table_id as id,
+      title as title,
+      jsonb_build_object(
+        'Owner ID', owner_id,
+        'Region', region,
+        'Account ID', account_id
+      ) as properties
+    from
+      aws_vpc_route_table,
+      jsonb_array_elements(associations) as a
+    where
+      a ->> 'SubnetId' = any($1);
+  EOQ
+
+  param "subnet_ids" {}
+}
+
+edge "aws_vpc_subnet_to_vpc_route_table_edges" {
+  title = "route to"
+
+  sql = <<-EOQ
+    select
+      a ->> 'SubnetId' as from_id,
+      route_table_id as to_id
+    from
+      aws_vpc_route_table,
+      jsonb_array_elements(associations) as a
+    where
+      a ->> 'SubnetId' = any($1);
+  EOQ
+
+  param "subnet_ids" {}
+}
+
+node "aws_vpc_subnet_vpc_network_acl_nodes" {
+  category = category.aws_vpc_network_acl
+
+  sql = <<-EOQ
+    select
+      network_acl_id as id,
+      title as title,
+      jsonb_build_object(
+        'ARN', arn,
+        'Is Default', is_default,
+        'Association Id', a ->> 'NetworkAclAssociationId',
+        'Region', region,
+        'Account ID', account_id
+      ) as properties
+    from
+      aws_vpc_network_acl,
+      jsonb_array_elements(associations) as a
+    where
+      a ->> 'SubnetId' = any($1);
+  EOQ
+
+  param "subnet_ids" {}
+}
+
+edge "aws_vpc_subnet_to_vpc_network_acl_edges" {
+  title = "network acl"
+
+  sql = <<-EOQ
+    select
+      a ->> 'SubnetId' as from_id,
+      network_acl_id as to_id
+    from
+      aws_vpc_network_acl,
+      jsonb_array_elements(associations) as a
+    where
+      a ->> 'SubnetId' = any($1);
+  EOQ
+
+  param "subnet_ids" {}
+}
+
+
+edge "aws_vpc_subnet_to_rds_db_instance_edges" {
+  title = "rds db instance"
+
+  sql = <<-EOQ
+    select
+      subnet_ids as from_id,
+      rds_db_instance_arns as to_id
+    from
+      unnest($1::text[]) as rds_db_instance_arns,
+      unnest($2::text[]) as subnet_ids;
+  EOQ
+
+  param "rds_db_instance_arns" {}
+  param "subnet_ids" {}
+}
+
+
+
+edge "aws_vpc_subnet_to_ec2_instance_edges" {
+  title = "ec2 instance"
+
+  sql = <<-EOQ
+    select
+      subnet_ids as from_id,
+      instance_arns as to_id
+    from
+      unnest($1::text[]) as instance_arns,
+      unnest($2::text[]) as subnet_ids;
+  EOQ
+
+  param "instance_arns" {}
+  param "subnet_ids" {}
+}
+
+edge "aws_vpc_subnet_to_lambda_function_edges" {
+  title = "lambda function"
+
+  sql = <<-EOQ
+    select
+      subnet_ids as from_id,
+      function_arns as to_id
+    from
+      unnest($1::text[]) as function_arns,
+      unnest($2::text[]) as subnet_ids;
+  EOQ
+
+  param "function_arns" {}
+  param "subnet_ids" {}
+}
+
+node "aws_vpc_subnet_sagemaker_notebook_instance_nodes" {
+  category = category.aws_sagemaker_notebook_instance
+
+  sql = <<-EOQ
+    select
+      arn as id,
+      title as title,
+      jsonb_build_object(
+        'ARN', arn,
+        'Status', notebook_instance_status,
+        'Instance Type', instance_type,
+        'Region', region,
+        'Account ID', account_id
+      ) as properties
+    from
+      aws_sagemaker_notebook_instance
+    where
+      subnet_id = any($1);
+  EOQ
+
+  param "subnet_ids" {}
+}
+
+edge "aws_vpc_subnet_to_sagemaker_notebook_instance_edges" {
+  title = "notebook instance"
+
+  sql = <<-EOQ
+   select
+      subnet_id as from_id,
+      arn as to_id
+    from
+      aws_sagemaker_notebook_instance
+    where
+      subnet_id = any($1);
+  EOQ
+
+  param "subnet_ids" {}
+}
+
+edge "aws_vpc_subnet_to_flow_log_edges" {
+  title = "flow log"
+
+  sql = <<-EOQ
+   select
+      subnet_ids as from_id,
+      flow_log_ids as to_id
+    from
+      unnest($1::text[]) as flow_log_ids,
+      unnest($2::text[]) as subnet_ids;
+  EOQ
+
+  param "flow_log_ids" {}
+  param "subnet_ids" {}
+}
+
+edge "aws_vpc_subnet_to_network_interface_edges" {
+  title = "eni"
+
+  sql = <<-EOQ
+   select
+      subnet_ids as from_id,
+      eni_ids as to_id
+    from
+      unnest($1::text[]) as eni_ids,
+      unnest($2::text[]) as subnet_ids;
+  EOQ
+
+  param "eni_ids" {}
+  param "subnet_ids" {}
+}
+
+

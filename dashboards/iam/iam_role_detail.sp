@@ -9,7 +9,7 @@ dashboard "aws_iam_role_detail" {
 
   input "role_arn" {
     title = "Select a role:"
-    sql   = query.aws_iam_role_input.sql
+    query = query.aws_iam_role_input
     width = 4
   }
 
@@ -465,7 +465,7 @@ edge "aws_iam_role_from_lambda_function_edge" {
 }
 
 node "aws_iam_role_from_iam_instance_profile_node" {
-  category = category.aws_iam_profile
+  category = category.aws_iam_instance_profile
 
   sql = <<-EOQ
     select

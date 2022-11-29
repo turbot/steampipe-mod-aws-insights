@@ -82,13 +82,12 @@ dashboard "aws_ec2_instance_detail" {
       with "enis" {
         sql = <<-EOQ
           select
-            eni.network_interface_id as eni_id
+            eni ->> 'NetworkInterfaceId' as eni_id
           from
             aws_ec2_instance as i,
-            aws_ec2_network_interface as eni
+            jsonb_array_elements(network_interfaces) as eni
           where
-            i.arn = $1
-            and eni.attached_instance_id = i.instance_id;
+            i.arn = $1;
         EOQ
 
         args = [self.input.instance_arn.value]
@@ -124,7 +123,7 @@ dashboard "aws_ec2_instance_detail" {
       with "eips" {
         sql = <<-EOQ
           select
-            e.arn as id
+            e.arn as eip_arn
           from
             aws_vpc_eip as e,
             aws_ec2_instance as i
@@ -152,7 +151,7 @@ dashboard "aws_ec2_instance_detail" {
       with "clbs" {
         sql = <<-EOQ
           select
-            clb.arn as clb_arn
+            distinct clb.arn as clb_arn
           from
             aws_ec2_classic_load_balancer as clb,
             jsonb_array_elements(clb.instances) as instance,
@@ -225,7 +224,7 @@ dashboard "aws_ec2_instance_detail" {
       with "ecs_clusters" {
         sql = <<-EOQ
           select
-            cluster.cluster_arn as cluster_arn
+            distinct cluster.cluster_arn as cluster_arn
           from
             aws_ec2_instance as i,
             aws_ecs_container_instance as ci,
@@ -242,7 +241,7 @@ dashboard "aws_ec2_instance_detail" {
       with "iam_roles" {
         sql = <<-EOQ
           select
-            r.arn as role_arn
+            distinct r.arn as role_arn
           from
             aws_ec2_instance as i,
             aws_iam_role as r,
@@ -270,15 +269,15 @@ dashboard "aws_ec2_instance_detail" {
         node.aws_ecs_cluster_nodes,
         node.aws_iam_role_nodes,
 
-        node.aws_ec2_instance_to_iam_profile_nodes,
-        node.aws_ec2_instance_to_ec2_key_pair_nodes,
-        node.aws_ec2_instance_from_ec2_autoscaling_group_nodes,
-        node.aws_ec2_instance_from_ec2_target_group_nodes,
+        node.aws_ec2_instance_iam_instance_profile_nodes,
+        node.aws_ec2_instance_ec2_key_pair_nodes,
+        node.aws_ec2_instance_ec2_autoscaling_group_nodes,
+        node.aws_ec2_instance_ec2_target_group_nodes,
 
       ]
 
       edges = [
-        edge.aws_ec2_instance_to_vpc_eip_edges,
+        edge.aws_ec2_network_interface_to_vpc_eip_edges,
         edge.aws_ec2_instance_to_ebs_volume_edges,
         edge.aws_ec2_instance_to_ec2_network_interface_edges,
         edge.aws_ec2_instance_to_vpc_security_group_edges,
@@ -506,7 +505,6 @@ query "aws_ec2_instance_ebs_optimized" {
   param "arn" {}
 }
 
-
 edge "aws_ec2_instance_to_ebs_volume_edges" {
   title = "mounts"
 
@@ -537,22 +535,6 @@ edge "aws_ec2_instance_to_ec2_network_interface_edges" {
 
   param "instance_arns" {}
   param "eni_ids" {}
-}
-
-edge "aws_ec2_instance_to_vpc_eip_edges" {
-  title = "eip"
-
-  sql = <<-EOQ
-    select
-      eni_ids as from_id,
-      eip_arns as to_id
-    from
-      unnest($1::text[]) as eni_ids,
-      unnest($2::text[]) as eip_arns
-  EOQ
-
-  param "eni_ids" {}
-  param "eip_arns" {}
 }
 
 edge "aws_ec2_instance_to_vpc_security_group_edges" {
@@ -608,8 +590,8 @@ edge "aws_ec2_instance_vpc_subnet_to_vpc_edges" {
   param "vpc_ids" {}
 }
 
-node "aws_ec2_instance_to_iam_profile_nodes" {
-  category = category.aws_iam_profile
+node "aws_ec2_instance_iam_instance_profile_nodes" {
+  category = category.aws_iam_instance_profile
 
   sql = <<-EOQ
     select
@@ -665,7 +647,7 @@ edge "aws_ec2_instance_to_iam_role_edges" {
   param "role_arns" {}
 }
 
-node "aws_ec2_instance_to_ec2_key_pair_nodes" {
+node "aws_ec2_instance_ec2_key_pair_nodes" {
   category = category.aws_ec2_key_pair
 
   sql = <<-EOQ
@@ -707,7 +689,7 @@ edge "aws_ec2_instance_to_ec2_key_pair_edges" {
   param "instance_arns" {}
 }
 
-node "aws_ec2_instance_from_ec2_autoscaling_group_nodes" {
+node "aws_ec2_instance_ec2_autoscaling_group_nodes" {
   category = category.aws_ec2_autoscaling_group
 
   sql = <<-EOQ
@@ -814,7 +796,7 @@ edge "aws_ec2_instance_from_ec2_gateway_load_balancer_edges" {
   param "instance_arns" {}
 }
 
-node "aws_ec2_instance_from_ec2_target_group_nodes" {
+node "aws_ec2_instance_ec2_target_group_nodes" {
   category = category.aws_ec2_target_group
 
   sql = <<-EOQ

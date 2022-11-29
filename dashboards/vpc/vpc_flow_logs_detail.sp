@@ -40,27 +40,122 @@ dashboard "aws_vpc_flow_logs_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "buckets" {
+        sql = <<-EOQ
+          select
+            distinct s.arn as bucket_arn
+          from
+            aws_vpc_flow_log as f,
+            aws_s3_bucket as s
+          where
+            f.bucket_name = s.name
+            and f.log_destination_type = 's3'
+            and f.flow_log_id = $1;
+        EOQ
+
+        args = [self.input.flow_log_id.value]
+      }
+
+      with "log_groups" {
+        sql = <<-EOQ
+          select
+            distinct g.arn as log_group_arn
+          from
+            aws_vpc_flow_log as f,
+            aws_cloudwatch_log_group as g
+          where
+            f.log_group_name = g.name
+            and f.log_destination_type = 'cloud-watch-logs'
+            and f.region = g.region
+            and f.flow_log_id = $1;
+        EOQ
+
+        args = [self.input.flow_log_id.value]
+      }
+
+      with "roles" {
+        sql = <<-EOQ
+          select
+            deliver_logs_permission_arn as role_arn
+          from
+            aws_vpc_flow_log
+          where
+            deliver_logs_permission_arn is not null
+            and flow_log_id = $1;
+        EOQ
+
+        args = [self.input.flow_log_id.value]
+      }
+
+      with "enis" {
+        sql = <<-EOQ
+          select
+            resource_id as eni_id
+          from
+            aws_vpc_flow_log
+          where
+            resource_id like 'eni-%'
+            and flow_log_id = $1;
+        EOQ
+
+        args = [self.input.flow_log_id.value]
+      }
+
+      with "subnets" {
+        sql = <<-EOQ
+          select
+            resource_id as subnet_id
+          from
+            aws_vpc_flow_log
+          where
+            resource_id like 'subnet-%'
+            and flow_log_id = $1;
+        EOQ
+
+        args = [self.input.flow_log_id.value]
+      }
+
+      with "vpcs" {
+        sql = <<-EOQ
+          select
+            resource_id as vpc_id
+          from
+            aws_vpc_flow_log
+          where
+            resource_id like 'vpc-%'
+            and flow_log_id = $1;
+        EOQ
+
+        args = [self.input.flow_log_id.value]
+      }
+
       nodes = [
-        node.aws_vpc_flow_log_node,
-        node.aws_vpc_flow_log_to_s3_bucket_node,
-        node.aws_vpc_flow_log_to_cloudwatch_log_group_node,
-        node.aws_vpc_flow_log_to_iam_role_node,
-        node.aws_vpc_flow_log_from_ec2_network_interface_node,
-        node.aws_vpc_flow_log_from_vpc_subnet_node,
-        node.aws_vpc_flow_log_from_vpc_node
+        node.aws_vpc_flow_log_nodes,
+        node.aws_s3_bucket_nodes,
+        node.aws_cloudwatch_log_group_nodes,
+        node.aws_iam_role_nodes,
+        node.aws_ec2_network_interface_nodes,
+        node.aws_vpc_subnet_nodes,
+        node.aws_vpc_nodes
       ]
 
       edges = [
-        edge.aws_vpc_flow_log_to_s3_bucket_edge,
-        edge.aws_vpc_flow_log_to_cloudwatch_log_group_edge,
-        edge.aws_vpc_flow_log_to_iam_role_edge,
-        edge.aws_vpc_flow_log_from_ec2_network_interface_edge,
-        edge.aws_vpc_flow_log_from_vpc_subnet_edge,
-        edge.aws_vpc_flow_log_from_vpc_edge
+        edge.aws_vpc_flow_log_to_s3_bucket_edges,
+        edge.aws_vpc_flow_log_to_cloudwatch_log_group_edges,
+        edge.aws_vpc_flow_log_to_iam_role_edges,
+        edge.aws_ec2_network_interface_to_vpc_flow_log_edges,
+        edge.aws_vpc_subnet_to_vpc_flow_log_edges,
+        edge.aws_vpc_to_vpc_flow_log_edges
       ]
 
       args = {
-        flow_log_id = self.input.flow_log_id.value
+        role_arns      = with.roles.rows[*].role_arn
+        bucket_arns    = with.buckets.rows[*].bucket_arn
+        eni_ids        = with.enis.rows[*].eni_id
+        subnet_ids     = with.subnets.rows[*].subnet_id
+        vpc_ids        = with.vpcs.rows[*].vpc_id
+        log_group_arns = with.log_groups.rows[*].log_group_arn
+        flow_log_ids   = [self.input.flow_log_id.value]
       }
     }
   }
@@ -161,8 +256,9 @@ query "aws_vpc_flow_log_deliver_logs_status" {
   param "flow_log_id" {}
 }
 
-node "aws_vpc_flow_log_node" {
+node "aws_vpc_flow_log_nodes" {
   category = category.aws_vpc_flow_log
+
   sql = <<-EOQ
     select
       flow_log_id as id,
@@ -176,245 +272,90 @@ node "aws_vpc_flow_log_node" {
     from
       aws_vpc_flow_log
     where
-      flow_log_id = $1
+      flow_log_id = any($1 ::text[]);
   EOQ
 
-  param "flow_log_id" {}
+  param "flow_log_ids" {}
 }
 
-node "aws_vpc_flow_log_to_s3_bucket_node" {
-  category = category.aws_s3_bucket
-  sql = <<-EOQ
-    select
-      s.arn as id,
-      s.title as title,
-      jsonb_build_object(
-        'ARN', s.arn,
-        'Region', s.region,
-        'Account ID', s.account_id
-      ) as properties
-    from
-      aws_vpc_flow_log as f
-      left join aws_s3_bucket as s on f.bucket_name = s.name
-    where
-      f.log_destination_type = 's3'
-      and f.flow_log_id = $1;
-  EOQ
-
-  param "flow_log_id" {}
-}
-
-edge "aws_vpc_flow_log_to_s3_bucket_edge" {
+edge "aws_vpc_flow_log_to_s3_bucket_edges" {
   title = "logs to"
+
   sql = <<-EOQ
     select
-      f.flow_log_id as from_id,
-      s.arn as to_id
+      flow_log_ids as from_id,
+      bucket_arns as to_id
     from
-      aws_vpc_flow_log as f
-      left join aws_s3_bucket as s on f.bucket_name = s.name
-    where
-      f.log_destination_type = 's3'
-      and f.flow_log_id = $1;
+      unnest($1::text[]) as flow_log_ids,
+      unnest($2::text[]) as bucket_arns
   EOQ
 
-  param "flow_log_id" {}
+  param "flow_log_ids" {}
+  param "bucket_arns" {}
 }
 
-node "aws_vpc_flow_log_to_cloudwatch_log_group_node" {
-  category = category.aws_cloudwatch_log_group
-  sql = <<-EOQ
-    select
-      c.arn as id,
-      c.title as title,
-      jsonb_build_object(
-        'ARN', c.arn,
-        'Region', c.region,
-        'Account ID', c.account_id
-      ) as properties
-    from
-      aws_vpc_flow_log as f
-      left join aws_cloudwatch_log_group as c on f.log_group_name = c.name
-    where
-      f.log_destination_type = 'cloud-watch-logs'
-      and f.region = c.region
-      and f.flow_log_id = $1;
-  EOQ
-
-  param "flow_log_id" {}
-}
-
-edge "aws_vpc_flow_log_to_cloudwatch_log_group_edge" {
+edge "aws_vpc_flow_log_to_cloudwatch_log_group_edges" {
   title = "logs to"
+
   sql = <<-EOQ
     select
-      f.flow_log_id as from_id,
-      c.arn as to_id
+      flow_log_ids as from_id,
+      log_group_arns as to_id
     from
-      aws_vpc_flow_log as f
-      left join aws_cloudwatch_log_group as c on f.log_group_name = c.name
-    where
-      f.log_destination_type = 'cloud-watch-logs'
-      and f.region = c.region
-      and f.flow_log_id = $1;
+      unnest($1::text[]) as flow_log_ids,
+      unnest($2::text[]) as log_group_arns
   EOQ
 
-  param "flow_log_id" {}
+  param "flow_log_ids" {}
+  param "log_group_arns" {}
 }
 
-node "aws_vpc_flow_log_to_iam_role_node" {
-  category = category.aws_iam_role
-  sql = <<-EOQ
-    select
-      r.arn as id,
-      r.title as title,
-      jsonb_build_object(
-        'ARN', r.arn,
-        'Account ID', r.account_id
-      ) as properties
-    from
-      aws_vpc_flow_log as f
-      left join aws_iam_role as r on f.deliver_logs_permission_arn = r.arn
-      and f.flow_log_id = $1;
-  EOQ
-
-  param "flow_log_id" {}
-}
-
-edge "aws_vpc_flow_log_to_iam_role_edge" {
+edge "aws_vpc_flow_log_to_iam_role_edges" {
   title = "assumes"
+
   sql = <<-EOQ
     select
-      f.flow_log_id as from_id,
-      r.arn as to_id
+      flow_log_ids as from_id,
+      role_arns as to_id
     from
-      aws_vpc_flow_log as f
-      left join aws_iam_role as r on f.deliver_logs_permission_arn = r.arn
-      and f.flow_log_id = $1;
+      unnest($1::text[]) as flow_log_ids,
+      unnest($2::text[]) as role_arns
   EOQ
 
-  param "flow_log_id" {}
+  param "flow_log_ids" {}
+  param "role_arns" {}
 }
 
-node "aws_vpc_flow_log_from_ec2_network_interface_node" {
-  category = category.aws_ec2_network_interface
-  sql = <<-EOQ
-    select
-      network_interface_id as id,
-      i.title as title,
-      'aws_ec2_network_interface' as category,
-      jsonb_build_object(
-        'ID' , i.network_interface_id,
-        'Region', i.region,
-        'Account ID', i.account_id
-      ) as properties
-    from
-      aws_vpc_flow_log as f
-      left join aws_ec2_network_interface as i on f.resource_id = i.network_interface_id
-    where
-      f.resource_id like 'eni-%'
-      and f.flow_log_id = $1;
-  EOQ
-
-  param "flow_log_id" {}
-}
-
-edge "aws_vpc_flow_log_from_ec2_network_interface_edge" {
+edge "aws_vpc_subnet_to_vpc_flow_log_edges" {
   title = "flow log"
+
   sql = <<-EOQ
     select
-      i.network_interface_id as from_id,
-      f.flow_log_id as to_id
+      subnet_ids as from_id,
+      flow_log_ids as to_id
     from
-      aws_vpc_flow_log as f
-      left join aws_ec2_network_interface as i on f.resource_id = i.network_interface_id
-    where
-      resource_id like 'eni-%'
-      and f.flow_log_id = $1;
+      unnest($1::text[]) as flow_log_ids,
+      unnest($2::text[]) as subnet_ids
   EOQ
 
-  param "flow_log_id" {}
+  param "flow_log_ids" {}
+  param "subnet_ids" {}
 }
 
-node "aws_vpc_flow_log_from_vpc_subnet_node" {
-  category = category.aws_vpc_subnet
-  sql = <<-EOQ
-     select
-      s.subnet_arn as id,
-      s.title as title,
-      jsonb_build_object(
-        'ARN', s.subnet_arn,
-        'Subnet ID' , s.subnet_id,
-        'Region', s.region,
-        'Account ID', s.account_id
-      ) as properties
-    from
-      aws_vpc_flow_log as f
-      left join aws_vpc_subnet as s on f.resource_id = s.subnet_id
-    where
-      resource_id like 'subnet-%'
-      and f.flow_log_id = $1;
-  EOQ
-
-  param "flow_log_id" {}
-}
-
-edge "aws_vpc_flow_log_from_vpc_subnet_edge" {
+edge "aws_vpc_to_vpc_flow_log_edges" {
   title = "flow log"
+
   sql = <<-EOQ
     select
-      s.subnet_arn as from_id,
-      f.flow_log_id as to_id
+      vpc_ids as from_id,
+      flow_log_ids as to_id
     from
-      aws_vpc_flow_log as f
-      left join aws_vpc_subnet as s on f.resource_id = s.subnet_id
-    where
-      resource_id like 'subnet-%'
-      and f.flow_log_id = $1;
+      unnest($1::text[]) as flow_log_ids,
+      unnest($2::text[]) as vpc_ids
   EOQ
 
-  param "flow_log_id" {}
-}
-
-node "aws_vpc_flow_log_from_vpc_node" {
-  category = category.aws_vpc
-  sql = <<-EOQ
-     select
-      v.arn as id,
-      v.title as title,
-      jsonb_build_object(
-        'ARN', v.arn,
-        'VPC ID' , v.vpc_id,
-        'Region', v.region,
-        'Default', v.is_default,
-        'Account ID', v.account_id
-      ) as properties
-    from
-      aws_vpc_flow_log as f
-      left join aws_vpc as v on f.resource_id = v.vpc_id
-    where
-      resource_id like 'vpc-%'
-      and f.flow_log_id = $1;
-  EOQ
-
-  param "flow_log_id" {}
-}
-
-edge "aws_vpc_flow_log_from_vpc_edge" {
-  title = "flow log"
-  sql = <<-EOQ
-    select
-      v.arn as from_id,
-      f.flow_log_id as to_id
-    from
-      aws_vpc_flow_log as f
-      left join aws_vpc as v on f.resource_id = v.vpc_id
-    where
-      resource_id like 'vpc-%'
-      and f.flow_log_id = $1;
-  EOQ
-
-  param "flow_log_id" {}
+  param "flow_log_ids" {}
+  param "vpc_ids" {}
 }
 
 query "aws_vpc_flow_log_overview" {
