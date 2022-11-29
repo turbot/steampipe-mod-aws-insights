@@ -170,10 +170,10 @@ dashboard "acm_certificate_detail" {
       ]
 
       edges = [
-        edge.aws_ec2_network_load_balancer_to_acm_certificate_edges,
         edge.aws_cloudfront_distribution_to_acm_certificate_edges,
         edge.aws_ec2_application_load_balancer_to_acm_certificate_edges,
         edge.aws_ec2_classic_load_balancer_to_acm_certificate_edges,
+        edge.aws_ec2_network_load_balancer_to_acm_certificate_edges,
         edge.aws_opensearch_domain_to_acm_certificate_edges
       ]
 
@@ -182,7 +182,7 @@ dashboard "acm_certificate_detail" {
         certificate_arns = [self.input.certificate_arn.value]
         clb_arns         = with.clbs.rows[*].clb_arn
         cloudfront_arns  = with.cloudfront_distributions.rows[*].cloudfront_arn
-        nlb_arns         = with.nlbs.rows[*].clb_arn
+        nlb_arns         = with.nlbs.rows[*].nlb_arn
         opensearch_arns  = with.opensearch_domains.rows[*].opensearch_arn
       }
     }
