@@ -1243,29 +1243,6 @@ query "aws_vpc_security_group_tags" {
   param "group_id" {}
 }
 
-node "aws_vpc_security_group_nodes" {
-  category = category.aws_vpc_security_group
-
-  sql = <<-EOQ
-    select
-      group_id as id,
-      title as title,
-      jsonb_build_object(
-        'Group ID', group_id,
-        'Description', description,
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_vpc_security_group
-    where
-      group_id = any($1);
-  EOQ
-
-  param "security_group_ids" {}
-}
-
 node "aws_vpc_security_group_from_vpc_node" {
   category = category.aws_vpc
 
