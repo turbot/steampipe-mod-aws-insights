@@ -630,7 +630,7 @@ node "aws_ebs_volume_nodes" {
     from
       aws_ebs_volume
     where
-      arn = any($1 ::text[]);
+      arn = any($1);
   EOQ
 
   param "volume_arns" {}
