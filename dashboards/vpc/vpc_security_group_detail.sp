@@ -65,7 +65,7 @@ dashboard "aws_vpc_security_group_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_vpc_security_group_node,
+        node.aws_vpc_security_group_nodes,
         node.aws_vpc_security_group_from_vpc_node,
         node.aws_vpc_security_group_to_rds_db_cluster_node,
         node.aws_vpc_security_group_to_rds_db_instance_node,
@@ -106,7 +106,7 @@ dashboard "aws_vpc_security_group_detail" {
       ]
 
       args = {
-        group_id = self.input.security_group_id.value
+        security_group_ids = [self.input.security_group_id.value]
       }
     }
   }
@@ -1243,29 +1243,6 @@ query "aws_vpc_security_group_tags" {
   param "group_id" {}
 }
 
-node "aws_vpc_security_group_node" {
-  category = category.aws_vpc_security_group
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'Group ID', group_id,
-        'Description', description,
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_vpc_security_group
-    where
-      group_id = $1;
-  EOQ
-
-  param "group_id" {}
-}
-
 node "aws_vpc_security_group_from_vpc_node" {
   category = category.aws_vpc
 
@@ -1298,7 +1275,7 @@ edge "aws_vpc_security_group_from_vpc_edge" {
   sql = <<-EOQ
     select
       v.vpc_id as from_id,
-      sg.arn as to_id
+      sg.group_id as to_id
     from
       aws_vpc_security_group as sg,
       aws_vpc as v
@@ -1339,7 +1316,7 @@ edge "aws_vpc_security_group_to_rds_db_cluster_edge" {
 
   sql = <<-EOQ
     select
-      vsg.arn as from_id,
+      vsg.group_id as from_id,
       c.arn as to_id
     from
       aws_rds_db_cluster as c,
@@ -1386,7 +1363,7 @@ edge "aws_vpc_security_group_to_rds_db_instance_edge" {
 
   sql = <<-EOQ
     select
-      vsg.arn as from_id,
+      vsg.group_id as from_id,
       i.arn as to_id
     from
       aws_rds_db_instance i,
@@ -1430,7 +1407,7 @@ edge "aws_vpc_security_group_to_ec2_instance_edge" {
 
   sql = <<-EOQ
     select
-      vsg.arn as from_id,
+      vsg.group_id as from_id,
       i.arn as to_id
     from
       aws_ec2_instance as i,
@@ -1471,7 +1448,7 @@ edge "aws_vpc_security_group_to_lambda_function_edge" {
 
   sql = <<-EOQ
     select
-      vsg.arn as from_id,
+      vsg.group_id as from_id,
       l.arn as to_id
     from
       aws_lambda_function as l,
@@ -1517,7 +1494,7 @@ edge "aws_vpc_security_group_to_efs_mount_target_edge" {
 
   sql = <<-EOQ
     select
-      vsg.arn as from_id,
+      vsg.group_id as from_id,
       mt.mount_target_id as to_id
     from
       aws_efs_mount_target as mt,
@@ -1563,7 +1540,7 @@ edge "aws_vpc_security_group_to_redshift_cluster_edge" {
 
   sql = <<-EOQ
     select
-      vsg.arn as from_id,
+      vsg.group_id as from_id,
       rc.arn as to_id
     from
       aws_redshift_cluster as rc,
@@ -1607,7 +1584,7 @@ edge "aws_vpc_security_group_to_ec2_classic_load_balancer_edge" {
 
   sql = <<-EOQ
     select
-      vsg.arn as from_id,
+      vsg.group_id as from_id,
       elb.arn as to_id
     from
       aws_ec2_classic_load_balancer elb,
@@ -1652,7 +1629,7 @@ edge "aws_vpc_security_group_to_ec2_application_load_balancer_edge" {
 
   sql = <<-EOQ
     select
-      vsg.arn as from_id,
+      vsg.group_id as from_id,
       alb.arn as to_id
     from
       aws_ec2_application_load_balancer alb,
@@ -1697,7 +1674,7 @@ edge "aws_vpc_security_group_to_ec2_network_load_balancer_edge" {
 
   sql = <<-EOQ
     select
-      vsg.arn as from_id,
+      vsg.group_id as from_id,
       nlb.arn as to_id
     from
       aws_ec2_network_load_balancer as nlb,
@@ -1742,7 +1719,7 @@ edge "aws_vpc_security_group_to_ec2_gateway_load_balancer_edge" {
 
   sql = <<-EOQ
     select
-      vsg.arn as from_id,
+      vsg.group_id as from_id,
       glb.arn as to_id
     from
       aws_ec2_gateway_load_balancer glb,
@@ -1783,7 +1760,7 @@ edge "aws_vpc_security_group_to_ec2_launch_configuration_edge" {
 
   sql = <<-EOQ
     select
-      vsg.arn as from_id,
+      vsg.group_id as from_id,
       c.launch_configuration_arn as to_id
     from
       aws_ec2_launch_configuration as c,
@@ -1827,7 +1804,7 @@ edge "aws_vpc_security_group_to_dax_cluster_edge" {
 
   sql = <<-EOQ
     select
-      vsg.arn as from_id,
+      vsg.group_id as from_id,
       dc.arn as to_id
     from
       aws_dax_cluster as dc,
@@ -1872,7 +1849,7 @@ edge "aws_vpc_security_group_to_dms_replication_instance_edge" {
 
   sql = <<-EOQ
     select
-      vsg.arn as from_id,
+      vsg.group_id as from_id,
       ri.arn as to_id
     from
       aws_dms_replication_instance as ri,
@@ -1917,7 +1894,7 @@ edge "aws_vpc_security_group_to_elasticache_cluster_edge" {
 
   sql = <<-EOQ
     select
-      vsg.arn as from_id,
+      vsg.group_id as from_id,
       ec.arn as to_id
     from
       aws_elasticache_cluster as ec,
@@ -1960,7 +1937,7 @@ edge "aws_vpc_security_group_to_sagemaker_notebook_instance_edge" {
 
   sql = <<-EOQ
     select
-      vsg.arn as from_id,
+      vsg.group_id as from_id,
       ni.arn as to_id
     from
       aws_sagemaker_notebook_instance ni,
@@ -2004,7 +1981,7 @@ edge "aws_vpc_security_group_to_docdb_cluster_edge" {
 
   sql = <<-EOQ
     select
-      vsg.arn as from_id,
+      vsg.group_id as from_id,
       c.arn as to_id
     from
       aws_docdb_cluster as c,

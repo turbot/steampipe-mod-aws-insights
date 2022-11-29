@@ -64,7 +64,7 @@ dashboard "aws_sns_topic_detail" {
 
       args = {
         topic_arns = [self.input.topic_arn.value]
-        arn = self.input.topic_arn.value
+        arn        = self.input.topic_arn.value
       }
     }
   }

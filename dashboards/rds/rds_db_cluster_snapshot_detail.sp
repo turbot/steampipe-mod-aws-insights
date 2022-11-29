@@ -73,9 +73,9 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_rds_db_cluster_snapshot_node,
-        node.aws_rds_db_cluster_snapshot_to_kms_key_node,
-        node.aws_rds_db_cluster_snapshot_from_rds_db_cluster_node
+        node.aws_rds_db_cluster_snapshot_nodes,
+        node.aws_kms_key_nodes,
+        node.aws_rds_db_cluster_nodes
       ]
 
       edges = [
@@ -84,7 +84,7 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
       ]
 
       args = {
-        arn = self.input.snapshot_arn.value
+        rds_db_cluster_snapshot_arns = [self.input.snapshot_arn.value]
       }
     }
   }
@@ -290,7 +290,7 @@ query "aws_rds_db_cluster_snapshot_attributes" {
   param "arn" {}
 }
 
-node "aws_rds_db_cluster_snapshot_node" {
+node "aws_rds_db_cluster_snapshot_nodes" {
   category = category.aws_rds_db_cluster_snapshot
 
   sql = <<-EOQ
@@ -310,10 +310,10 @@ node "aws_rds_db_cluster_snapshot_node" {
     from
       aws_rds_db_cluster_snapshot
     where
-      arn = $1;
+      arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "rds_db_cluster_snapshot_arns" {}
 }
 
 node "aws_rds_db_cluster_snapshot_to_kms_key_node" {

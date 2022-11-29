@@ -90,7 +90,7 @@ dashboard "aws_kms_key_detail" {
 
       args = {
         key_arns = [self.input.key_arn.value]
-        arn = self.input.key_arn.value
+        arn      = self.input.key_arn.value
       }
     }
   }
@@ -645,7 +645,7 @@ node "aws_kms_key_from_sns_topic_node" {
       ) as properties
     from
       aws_sns_topic as t
-      left join aws_kms_key as k on k.id = split_part(t.kms_master_key_id, '/', 2)
+      left join aws_kms_key as k on k.arn = split_part(t.kms_master_key_id, '/', 2)
     where
       k.arn = $1
       and k.region = t.region
