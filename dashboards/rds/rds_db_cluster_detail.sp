@@ -57,7 +57,7 @@ dashboard "aws_rds_db_cluster_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_rds_db_cluster_node,
+        node.aws_rds_db_cluster_nodes,
         node.aws_rds_db_cluster_to_iam_role_node,
         node.aws_rds_db_cluster_to_sns_topic_node,
         node.aws_rds_db_cluster_to_rds_db_cluster_snapshot_node,
@@ -84,7 +84,7 @@ dashboard "aws_rds_db_cluster_detail" {
       ]
 
       args = {
-        arn = self.input.db_cluster_arn.value
+        rds_db_cluster_arns = [self.input.db_cluster_arn.value]
       }
     }
   }
@@ -231,7 +231,7 @@ query "aws_rds_db_cluster_tags" {
   param "arn" {}
 }
 
-node "aws_rds_db_cluster_node" {
+node "aws_rds_db_cluster_nodes" {
   category = category.aws_rds_db_cluster
 
   sql = <<-EOQ
@@ -250,10 +250,10 @@ node "aws_rds_db_cluster_node" {
     from
       aws_rds_db_cluster
     where
-      arn = $1;
+      arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "rds_db_cluster_arns" {}
 }
 
 node "aws_rds_db_cluster_to_rds_db_instance_node" {

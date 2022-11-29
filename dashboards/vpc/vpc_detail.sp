@@ -56,7 +56,7 @@ dashboard "aws_vpc_detail" {
       width = 12
       type  = "graph"
       nodes = [
-        node.aws_vpc_node,
+        node.aws_vpc_nodes,
         node.aws_vpc_az_node,
         node.aws_vpc_to_flow_log_node,
         node.aws_vpc_vpc_subnet_node,
@@ -110,7 +110,7 @@ dashboard "aws_vpc_detail" {
       ]
 
       args = {
-        vpc_id = self.input.vpc_id.value
+        vpc_ids = [self.input.vpc_id.value]
       }
     }
 
@@ -991,34 +991,6 @@ query "aws_vpc_subnet_by_az" {
 
   param "vpc_id" {}
 }
-
-node "aws_vpc_node" {
-  category = category.aws_vpc
-
-  sql = <<-EOQ
-    select
-      vpc_id as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'VPC ID', vpc_id,
-        'Is Default', is_default,
-        'State', state,
-        'CIDR Block', cidr_block,
-        'DHCP Options ID', dhcp_options_id,
-        'Owner ID', owner_id,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_vpc
-    where
-      vpc_id = $1;
-  EOQ
-
-  param "vpc_id" {}
-}
-
 
 node "aws_vpc_az_node" {
   category = category.aws_availability_zone

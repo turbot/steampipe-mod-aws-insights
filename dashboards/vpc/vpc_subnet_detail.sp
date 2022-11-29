@@ -49,7 +49,7 @@ dashboard "aws_vpc_subnet_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_vpc_subnet_node,
+        node.aws_vpc_subnet_nodes,
         node.aws_vpc_subnet_from_vpc_node,
         node.aws_vpc_subnet_to_vpc_route_table_node,
         node.aws_vpc_subnet_to_vpc_network_acl_node,
@@ -74,7 +74,7 @@ dashboard "aws_vpc_subnet_detail" {
       ]
 
       args = {
-        subnet_id = self.input.subnet_id.value
+        subnet_ids = [self.input.subnet_id.value]
       }
     }
   }
@@ -305,29 +305,6 @@ query "aws_vpc_subnet_association" {
       jsonb_array_elements(associations) as a
     where
       a ->> 'SubnetId' = $1;
-  EOQ
-
-  param "subnet_id" {}
-}
-
-node "aws_vpc_subnet_node" {
-  category = category.aws_vpc_subnet
-
-  sql = <<-EOQ
-    select
-      subnet_id as id,
-      title as title,
-      jsonb_build_object(
-        'Subnet ID', subnet_id,
-        'ARN', subnet_arn,
-        'VPC ID', vpc_id,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_vpc_subnet
-    where
-      subnet_id = $1;
   EOQ
 
   param "subnet_id" {}

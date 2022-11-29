@@ -4,8 +4,6 @@ locals {
   }
 }
 
-# TODO: Why do some categories have "href" but others don't?
-
 category "aws_ec2_ami" {
   title = "EC2 AMI"
   href  = "aws_insights.dashboard.aws_ec2_ami_detail?input.ami={{.properties.'Image ID' | @uri}}"
@@ -90,3 +88,5 @@ category "aws_ec2_transit_gateway" {
   icon  = "arrows-right-left"
   color = local.networking_color
 }
+
+
