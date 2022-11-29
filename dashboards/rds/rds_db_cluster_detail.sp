@@ -236,7 +236,7 @@ node "aws_rds_db_cluster_nodes" {
 
   sql = <<-EOQ
     select
-      db_cluster_identifier as id,
+      arn as id,
       title,
       jsonb_build_object(
         'ARN', arn,
@@ -291,7 +291,7 @@ edge "aws_rds_db_cluster_to_rds_db_instance_edge" {
 
   sql = <<-EOQ
     select
-      c.db_cluster_identifier as from_id,
+      c.arn as from_id,
       i.db_instance_identifier as to_id
     from
       aws_rds_db_cluster as c
@@ -337,7 +337,7 @@ edge "aws_rds_db_cluster_to_rds_db_cluster_parameter_group_edge" {
 
   sql = <<-EOQ
     select
-      rdc.db_cluster_identifier as from_id,
+      rdc.arn as from_id,
       rg.arn as to_id
     from
       aws_rds_db_cluster as rdc
@@ -410,7 +410,7 @@ edge "aws_rds_db_cluster_to_kms_key_edge" {
 
   sql = <<-EOQ
     select
-      c.db_cluster_identifier as from_id,
+      c.arn as from_id,
       k.id as to_id
     from
       aws_rds_db_cluster as c
@@ -456,7 +456,7 @@ edge "aws_rds_db_cluster_to_vpc_security_group_edge" {
 
   sql = <<-EOQ
     select
-      c.db_cluster_identifier as from_id,
+      c.arn as from_id,
       sg.group_id as to_id
     from
       aws_rds_db_cluster as c
@@ -673,7 +673,7 @@ edge "aws_rds_db_cluster_to_rds_db_cluster_snapshot_edge" {
 
   sql = <<-EOQ
     select
-      c.db_cluster_identifier as from_id,
+      c.arn as from_id,
       s.db_cluster_snapshot_identifier as to_id
     from
       aws_rds_db_cluster as c
@@ -716,7 +716,7 @@ edge "aws_rds_db_cluster_to_sns_topic_edge" {
 
   sql = <<-EOQ
     select
-      c.db_cluster_identifier as from_id,
+      c.arn as from_id,
       s.sns_topic_arn as to_id
     from
       aws_rds_db_event_subscription as s,
@@ -760,7 +760,7 @@ edge "aws_rds_db_cluster_to_iam_role_edge" {
 
   sql = <<-EOQ
     select
-      c.db_cluster_identifier as from_id,
+      c.arn as from_id,
       r.role_id as to_id
     from
       aws_rds_db_cluster as c
