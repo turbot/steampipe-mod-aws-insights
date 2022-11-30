@@ -9,14 +9,14 @@ dashboard "backup_vault_detail" {
 
   input "backup_vault_arn" {
     title = "Select a vault:"
-    query = query.aws_backup_vault_input
+    query = query.backup_vault_input
     width = 4
   }
 
   container {
 
     card {
-      query = query.aws_backup_vault_recovery_points
+      query = query.backup_vault_recovery_points
       width = 2
       args = {
         arn = self.input.backup_vault_arn.value
@@ -32,16 +32,16 @@ dashboard "backup_vault_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_backup_vault_node,
-        node.aws_backup_vault_from_backup_plan_node,
-        node.aws_backup_vault_to_kms_key_node,
-        node.aws_backup_vault_to_sns_topic_node
+        node.backup_vault_node,
+        node.backup_vault_from_backup_plan_node,
+        node.backup_vault_to_kms_key_node,
+        node.backup_vault_to_sns_topic_node
       ]
 
       edges = [
-        edge.aws_backup_vault_from_backup_plan_edge,
-        edge.aws_backup_vault_to_kms_key_edge,
-        edge.aws_backup_vault_to_sns_topic_edge,
+        edge.backup_vault_from_backup_plan_edge,
+        edge.backup_vault_to_kms_key_edge,
+        edge.backup_vault_to_sns_topic_edge,
       ]
 
       args = {
@@ -58,7 +58,7 @@ dashboard "backup_vault_detail" {
         title = "Overview"
         type  = "line"
         width = 3
-        query = query.aws_backup_vault_overview
+        query = query.backup_vault_overview
         args = {
           arn = self.input.backup_vault_arn.value
         }
@@ -68,7 +68,7 @@ dashboard "backup_vault_detail" {
       table {
         title = "Policy"
         width = 9
-        query = query.aws_backup_vault_policy
+        query = query.backup_vault_policy
         args = {
           arn = self.input.backup_vault_arn.value
         }
@@ -78,7 +78,7 @@ dashboard "backup_vault_detail" {
   }
 }
 
-query "aws_backup_vault_input" {
+query "backup_vault_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -94,7 +94,7 @@ query "aws_backup_vault_input" {
   EOQ
 }
 
-query "aws_backup_vault_recovery_points" {
+query "backup_vault_recovery_points" {
   sql = <<-EOQ
     select
       'Recovery Points' as label,
@@ -108,8 +108,8 @@ query "aws_backup_vault_recovery_points" {
   param "arn" {}
 }
 
-node "aws_backup_vault_node" {
-  category = category.aws_backup_vault
+node "backup_vault_node" {
+  category = category.backup_vault
 
   sql = <<-EOQ
     select
@@ -131,8 +131,8 @@ node "aws_backup_vault_node" {
   param "arn" {}
 }
 
-node "aws_backup_vault_from_backup_plan_node" {
-  category = category.aws_backup_plan
+node "backup_vault_from_backup_plan_node" {
+  category = category.backup_plan
 
   sql = <<-EOQ
     select
@@ -164,7 +164,7 @@ node "aws_backup_vault_from_backup_plan_node" {
   param "arn" {}
 }
 
-edge "aws_backup_vault_from_backup_plan_edge" {
+edge "backup_vault_from_backup_plan_edge" {
   title = "backup vault"
 
   sql = <<-EOQ
@@ -183,8 +183,8 @@ edge "aws_backup_vault_from_backup_plan_edge" {
   param "arn" {}
 }
 
-node "aws_backup_vault_to_kms_key_node" {
-  category = category.aws_kms_key
+node "backup_vault_to_kms_key_node" {
+  category = category.kms_key
 
   sql = <<-EOQ
     select
@@ -215,7 +215,7 @@ node "aws_backup_vault_to_kms_key_node" {
   param "arn" {}
 }
 
-edge "aws_backup_vault_to_kms_key_edge" {
+edge "backup_vault_to_kms_key_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -232,8 +232,8 @@ edge "aws_backup_vault_to_kms_key_edge" {
   param "arn" {}
 }
 
-node "aws_backup_vault_to_sns_topic_node" {
-  category = category.aws_sns_topic
+node "backup_vault_to_sns_topic_node" {
+  category = category.sns_topic
 
   sql = <<-EOQ
     select
@@ -261,7 +261,7 @@ node "aws_backup_vault_to_sns_topic_node" {
   param "arn" {}
 }
 
-edge "aws_backup_vault_to_sns_topic_edge" {
+edge "backup_vault_to_sns_topic_edge" {
   title = "notifies"
 
   sql = <<-EOQ
@@ -278,7 +278,7 @@ edge "aws_backup_vault_to_sns_topic_edge" {
   param "arn" {}
 }
 
-query "aws_backup_vault_overview" {
+query "backup_vault_overview" {
   sql = <<-EOQ
     select
       title as "Title",
@@ -295,7 +295,7 @@ query "aws_backup_vault_overview" {
   param "arn" {}
 }
 
-query "aws_backup_vault_policy" {
+query "backup_vault_policy" {
   sql = <<-EOQ
     select
       s -> 'Action' as "Action",

@@ -1,4 +1,4 @@
-dashboard "aws_emr_cluster_dashboard" {
+dashboard "emr_cluster_dashboard" {
 
   title         = "AWS EMR Cluster Dashboard"
   documentation = file("./dashboards/emr/docs/emr_cluster_dashboard.md")
@@ -11,22 +11,22 @@ dashboard "aws_emr_cluster_dashboard" {
 
     # Analysis
     card {
-      query = query.aws_emr_cluster_count
+      query = query.emr_cluster_count
       width = 2
     }
 
     card {
-      query = query.aws_emr_cluster_logging_disbaled_count
+      query = query.emr_cluster_logging_disbaled_count
       width = 2
     }
 
     card {
-      query = query.aws_emr_cluster_logging_encryption_disabled_count
+      query = query.emr_cluster_logging_encryption_disabled_count
       width = 2
     }
 
     card {
-      query = query.aws_emr_cluster_termination_protection_disabled_count
+      query = query.emr_cluster_termination_protection_disabled_count
       width = 2
     }
 
@@ -38,7 +38,7 @@ dashboard "aws_emr_cluster_dashboard" {
 
     chart {
       title = "Logging Status"
-      query = query.aws_emr_cluster_logging_status
+      query = query.emr_cluster_logging_status
       type  = "donut"
       width = 2
 
@@ -54,7 +54,7 @@ dashboard "aws_emr_cluster_dashboard" {
 
     chart {
       title = "Logging Encryption Status"
-      query = query.aws_emr_cluster_logging_encryption_status
+      query = query.emr_cluster_logging_encryption_status
       type  = "donut"
       width = 2
 
@@ -70,7 +70,7 @@ dashboard "aws_emr_cluster_dashboard" {
 
     chart {
       title = "Termination Protection Status"
-      query = query.aws_emr_cluster_termination_protection_status
+      query = query.emr_cluster_termination_protection_status
       type  = "donut"
       width = 2
 
@@ -92,28 +92,28 @@ dashboard "aws_emr_cluster_dashboard" {
 
     chart {
       title = "Clusters by Account"
-      query = query.aws_emr_cluster_by_account
+      query = query.emr_cluster_by_account
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Clusters by Region"
-      query = query.aws_emr_cluster_by_region
+      query = query.emr_cluster_by_region
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Clusters by Age"
-      query = query.aws_emr_cluster_by_age
+      query = query.emr_cluster_by_age
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Clusters by Status"
-      query = query.aws_emr_cluster_by_state
+      query = query.emr_cluster_by_state
       type  = "column"
       width = 3
     }
@@ -123,13 +123,13 @@ dashboard "aws_emr_cluster_dashboard" {
 
 # Card Queries
 
-query "aws_emr_cluster_count" {
+query "emr_cluster_count" {
   sql = <<-EOQ
     select count(*) as "Clusters" from aws_emr_cluster;
   EOQ
 }
 
-query "aws_emr_cluster_logging_disbaled_count" {
+query "emr_cluster_logging_disbaled_count" {
   sql = <<-EOQ
     select
       'Logging Disabled' as label,
@@ -142,7 +142,7 @@ query "aws_emr_cluster_logging_disbaled_count" {
   EOQ
 }
 
-query "aws_emr_cluster_logging_encryption_disabled_count" {
+query "emr_cluster_logging_encryption_disabled_count" {
   sql = <<-EOQ
     select
       'Logging Encryption Disabled' as label,
@@ -155,7 +155,7 @@ query "aws_emr_cluster_logging_encryption_disabled_count" {
   EOQ
 }
 
-query "aws_emr_cluster_termination_protection_disabled_count" {
+query "emr_cluster_termination_protection_disabled_count" {
   sql = <<-EOQ
     select
       'Termination Protection Disabled' as label,
@@ -170,7 +170,7 @@ query "aws_emr_cluster_termination_protection_disabled_count" {
 
 # Assessments
 
-query "aws_emr_cluster_logging_status" {
+query "emr_cluster_logging_status" {
   sql = <<-EOQ
     with clusters as (
       select
@@ -188,7 +188,7 @@ query "aws_emr_cluster_logging_status" {
   EOQ
 }
 
-query "aws_emr_cluster_logging_encryption_status" {
+query "emr_cluster_logging_encryption_status" {
   sql = <<-EOQ
     with clusters as (
       select
@@ -206,7 +206,7 @@ query "aws_emr_cluster_logging_encryption_status" {
   EOQ
 }
 
-query "aws_emr_cluster_termination_protection_status" {
+query "emr_cluster_termination_protection_status" {
   sql = <<-EOQ
     with clusters as (
       select
@@ -226,7 +226,7 @@ query "aws_emr_cluster_termination_protection_status" {
 
 # Analysis
 
-query "aws_emr_cluster_by_account" {
+query "emr_cluster_by_account" {
   sql = <<-EOQ
     select
       a.title as "account",
@@ -243,7 +243,7 @@ query "aws_emr_cluster_by_account" {
   EOQ
 }
 
-query "aws_emr_cluster_by_region" {
+query "emr_cluster_by_region" {
   sql = <<-EOQ
     select
       region,
@@ -255,7 +255,7 @@ query "aws_emr_cluster_by_region" {
   EOQ
 }
 
-query "aws_emr_cluster_by_age" {
+query "emr_cluster_by_age" {
   sql = <<-EOQ
     with clusters as (
       select
@@ -297,7 +297,7 @@ query "aws_emr_cluster_by_age" {
   EOQ
 }
 
-query "aws_emr_cluster_by_state" {
+query "emr_cluster_by_state" {
   sql = <<-EOQ
     select
       state,

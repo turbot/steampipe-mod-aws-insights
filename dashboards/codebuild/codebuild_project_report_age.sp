@@ -1,4 +1,4 @@
-dashboard "aws_codebuild_project_age_report" {
+dashboard "codebuild_project_age_report" {
 
   title         = "AWS CodeBuild Project Age Report"
   documentation = file("./dashboards/codebuild/docs/codebuild_project_report_age.md")
@@ -11,38 +11,38 @@ dashboard "aws_codebuild_project_age_report" {
   container {
 
     card {
-      query = query.aws_codebuild_project_count
+      query = query.codebuild_project_count
       width = 2
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_codebuild_project_24_hours_count
+      query = query.codebuild_project_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_codebuild_project_30_days_count
+      query = query.codebuild_project_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_codebuild_project_30_90_days_count
+      query = query.codebuild_project_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query = query.aws_codebuild_project_90_365_days_count
+      query = query.codebuild_project_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query = query.aws_codebuild_project_1_year_count
+      query = query.codebuild_project_1_year_count
     }
 
   }
@@ -57,14 +57,14 @@ dashboard "aws_codebuild_project_age_report" {
     }
 
     column "Name" {
-      href = "${dashboard.aws_codebuild_project_detail.url_path}?input.codebuild_project_arn={{.ARN | @uri}}"
+      href = "${dashboard.codebuild_project_detail.url_path}?input.codebuild_project_arn={{.ARN | @uri}}"
     }
-    query = query.aws_codebuild_project_age_table
+    query = query.codebuild_project_age_table
   }
 
 }
 
-query "aws_codebuild_project_24_hours_count" {
+query "codebuild_project_24_hours_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -76,7 +76,7 @@ query "aws_codebuild_project_24_hours_count" {
   EOQ
 }
 
-query "aws_codebuild_project_30_days_count" {
+query "codebuild_project_30_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -88,7 +88,7 @@ query "aws_codebuild_project_30_days_count" {
   EOQ
 }
 
-query "aws_codebuild_project_30_90_days_count" {
+query "codebuild_project_30_90_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -100,7 +100,7 @@ query "aws_codebuild_project_30_90_days_count" {
   EOQ
 }
 
-query "aws_codebuild_project_90_365_days_count" {
+query "codebuild_project_90_365_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -112,7 +112,7 @@ query "aws_codebuild_project_90_365_days_count" {
   EOQ
 }
 
-query "aws_codebuild_project_1_year_count" {
+query "codebuild_project_1_year_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -124,7 +124,7 @@ query "aws_codebuild_project_1_year_count" {
   EOQ
 }
 
-query "aws_codebuild_project_age_table" {
+query "codebuild_project_age_table" {
   sql = <<-EOQ
     select
       p.name as "Name",

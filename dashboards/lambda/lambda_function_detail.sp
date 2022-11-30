@@ -1,4 +1,4 @@
-dashboard "aws_lambda_function_detail" {
+dashboard "lambda_function_detail" {
 
   title         = "AWS Lambda Function Detail"
   documentation = file("./dashboards/lambda/docs/lambda_function_detail.md")
@@ -10,7 +10,7 @@ dashboard "aws_lambda_function_detail" {
 
   input "lambda_arn" {
     title = "Select a lambda function:"
-    query = query.aws_lambda_function_input
+    query = query.lambda_function_input
     width = 4
   }
 
@@ -18,7 +18,7 @@ dashboard "aws_lambda_function_detail" {
 
     card {
       width = 2
-      query = query.aws_lambda_function_memory
+      query = query.lambda_function_memory
       args = {
         arn = self.input.lambda_arn.value
       }
@@ -26,7 +26,7 @@ dashboard "aws_lambda_function_detail" {
 
     card {
       width = 2
-      query = query.aws_lambda_function_runtime
+      query = query.lambda_function_runtime
       args = {
         arn = self.input.lambda_arn.value
       }
@@ -34,7 +34,7 @@ dashboard "aws_lambda_function_detail" {
 
     card {
       width = 2
-      query = query.aws_lambda_function_encryption
+      query = query.lambda_function_encryption
       args = {
         arn = self.input.lambda_arn.value
       }
@@ -42,7 +42,7 @@ dashboard "aws_lambda_function_detail" {
 
     card {
       width = 2
-      query = query.aws_lambda_function_public
+      query = query.lambda_function_public
       args = {
         arn = self.input.lambda_arn.value
       }
@@ -58,38 +58,38 @@ dashboard "aws_lambda_function_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_lambda_function_nodes,
-        node.aws_lambda_to_vpc_security_group_node,
-        node.aws_lambda_vpc_subnet_node,
-        node.aws_lambda_to_vpc_node,
+        node.lambda_function,
+        node.lambda_to_vpc_security_group_node,
+        node.lambda_vpc_subnet_node,
+        node.lambda_to_vpc_node,
 
-        node.aws_lambda_to_kms_key_node,
-        node.aws_lambda_to_iam_role_node,
-        node.aws_lambda_from_s3_bucket_node,
+        node.lambda_to_kms_key_node,
+        node.lambda_to_iam_role_node,
+        node.lambda_from_s3_bucket_node,
 
-        node.aws_lambda_version_node,
-        node.aws_lambda_alias_node,
-        node.aws_lambda_from_sns_subscription_node,
-        node.aws_lambda_from_sns_topic_node,
-        node.aws_lambda_from_api_gateway_integration_node,
-        node.aws_lambda_from_api_gateway_node,
+        node.lambda_version_node,
+        node.lambda_alias_node,
+        node.lambda_from_sns_subscription_node,
+        node.lambda_from_sns_topic_node,
+        node.lambda_from_api_gateway_integration_node,
+        node.lambda_from_api_gateway_node,
 
 
       ]
 
       edges = [
-        edge.aws_lambda_to_vpc_security_group_edge,
-        edge.aws_lambda_vpc_subnet_edge,
-        edge.aws_lambda_to_vpc_edge,
-        edge.aws_lambda_to_kms_key_edge,
-        edge.aws_lambda_to_iam_role_edge,
-        edge.aws_lambda_from_s3_bucket_edge,
-        edge.aws_lambda_version_edge,
-        edge.aws_lambda_alias_edge,
-        edge.aws_lambda_sns_subscription_edge,
-        edge.aws_lambda_sns_topic_edge,
-        edge.aws_lambda_api_gateway_integration_edge,
-        edge.aws_lambda_api_gateway_edge
+        edge.lambda_to_vpc_security_group_edge,
+        edge.lambda_vpc_subnet_edge,
+        edge.lambda_to_vpc_edge,
+        edge.lambda_to_kms_key_edge,
+        edge.lambda_to_iam_role_edge,
+        edge.lambda_from_s3_bucket_edge,
+        edge.lambda_version_edge,
+        edge.lambda_alias_edge,
+        edge.lambda_sns_subscription_edge,
+        edge.lambda_sns_topic_edge,
+        edge.lambda_api_gateway_integration_edge,
+        edge.lambda_api_gateway_edge
       ]
 
       args = {
@@ -109,7 +109,7 @@ dashboard "aws_lambda_function_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_lambda_function_overview
+        query = query.lambda_function_overview
         args = {
           arn = self.input.lambda_arn.value
         }
@@ -119,7 +119,7 @@ dashboard "aws_lambda_function_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_lambda_function_tags
+        query = query.lambda_function_tags
         args = {
           arn = self.input.lambda_arn.value
         }
@@ -130,7 +130,7 @@ dashboard "aws_lambda_function_detail" {
     table {
       width = 6
       title = "Last Update Status"
-      query = query.aws_lambda_function_last_update_status
+      query = query.lambda_function_last_update_status
       args = {
         arn = self.input.lambda_arn.value
       }
@@ -140,7 +140,7 @@ dashboard "aws_lambda_function_detail" {
 
   table {
     title = "Policy"
-    query = query.aws_lambda_function_policy
+    query = query.lambda_function_policy
     args = {
       arn = self.input.lambda_arn.value
     }
@@ -149,7 +149,7 @@ dashboard "aws_lambda_function_detail" {
   table {
     width = 6
     title = "Security Groups"
-    query = query.aws_lambda_function_security_groups
+    query = query.lambda_function_security_groups
     args = {
       arn = self.input.lambda_arn.value
     }
@@ -158,7 +158,7 @@ dashboard "aws_lambda_function_detail" {
   table {
     width = 6
     title = "Subnets"
-    query = query.aws_lambda_function_subnet_ids
+    query = query.lambda_function_subnet_ids
     args = {
       arn = self.input.lambda_arn.value
     }
@@ -166,7 +166,7 @@ dashboard "aws_lambda_function_detail" {
 
 }
 
-query "aws_lambda_function_input" {
+query "lambda_function_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -182,7 +182,7 @@ query "aws_lambda_function_input" {
   EOQ
 }
 
-query "aws_lambda_function_memory" {
+query "lambda_function_memory" {
   sql = <<-EOQ
     select
       'Memory (MB)' as label,
@@ -196,7 +196,7 @@ query "aws_lambda_function_memory" {
   param "arn" {}
 }
 
-query "aws_lambda_function_runtime" {
+query "lambda_function_runtime" {
   sql = <<-EOQ
     select
       'Runtime' as label,
@@ -210,7 +210,7 @@ query "aws_lambda_function_runtime" {
   param "arn" {}
 }
 
-query "aws_lambda_function_public" {
+query "lambda_function_public" {
   sql = <<-EOQ
     select
       'Public Access' as label,
@@ -234,7 +234,7 @@ query "aws_lambda_function_public" {
   param "arn" {}
 }
 
-query "aws_lambda_function_encryption" {
+query "lambda_function_encryption" {
   sql = <<-EOQ
     select
       'Encryption' as label,
@@ -249,7 +249,7 @@ query "aws_lambda_function_encryption" {
   param "arn" {}
 }
 
-query "aws_lambda_function_last_update_status" {
+query "lambda_function_last_update_status" {
   sql = <<-EOQ
     select
       last_modified as "Last Modified",
@@ -265,7 +265,7 @@ query "aws_lambda_function_last_update_status" {
   param "arn" {}
 }
 
-query "aws_lambda_function_policy" {
+query "lambda_function_policy" {
   sql = <<-EOQ
     select
       p ->> 'Sid' as "Sid",
@@ -283,7 +283,7 @@ query "aws_lambda_function_policy" {
   param "arn" {}
 }
 
-query "aws_lambda_function_security_groups" {
+query "lambda_function_security_groups" {
   sql = <<-EOQ
     select
       p as "ID"
@@ -297,7 +297,7 @@ query "aws_lambda_function_security_groups" {
   param "arn" {}
 }
 
-query "aws_lambda_function_subnet_ids" {
+query "lambda_function_subnet_ids" {
   sql = <<-EOQ
     select
       p as "ID"
@@ -311,7 +311,7 @@ query "aws_lambda_function_subnet_ids" {
   param "arn" {}
 }
 
-query "aws_lambda_function_overview" {
+query "lambda_function_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -332,7 +332,7 @@ query "aws_lambda_function_overview" {
   param "arn" {}
 }
 
-query "aws_lambda_function_tags" {
+query "lambda_function_tags" {
   sql = <<-EOQ
     with jsondata as (
       select
@@ -358,8 +358,8 @@ query "aws_lambda_function_tags" {
 
 //******
 
-node "aws_lambda_function_nodes" {
-  category = category.aws_lambda_function
+node "lambda_function" {
+  category = category.lambda_function
 
   sql = <<-EOQ
     select
@@ -380,8 +380,8 @@ node "aws_lambda_function_nodes" {
   param "function_arns" {}
 }
 
-node "aws_lambda_to_vpc_node" {
-  category = category.aws_vpc
+node "lambda_to_vpc_node" {
+  category = category.vpc_vpc
 
   sql = <<-EOQ
     select
@@ -404,7 +404,7 @@ node "aws_lambda_to_vpc_node" {
   param "arn" {}
 }
 
-edge "aws_lambda_to_vpc_edge" {
+edge "lambda_to_vpc_edge" {
   title = "vpc"
   # a lambda can only be in one subnet, so we
   # can assume all the vpc_subnet_ids are in the lambda's vpc
@@ -424,8 +424,8 @@ edge "aws_lambda_to_vpc_edge" {
   param "arn" {}
 }
 
-node "aws_lambda_to_vpc_security_group_node" {
-  category = category.aws_vpc_security_group
+node "lambda_to_vpc_security_group_node" {
+  category = category.vpc_security_group
 
   sql = <<-EOQ
     select
@@ -450,7 +450,7 @@ node "aws_lambda_to_vpc_security_group_node" {
   param "arn" {}
 }
 
-edge "aws_lambda_to_vpc_security_group_edge" {
+edge "lambda_to_vpc_security_group_edge" {
   title = "security group"
 
   sql = <<-EOQ
@@ -469,8 +469,8 @@ edge "aws_lambda_to_vpc_security_group_edge" {
 
 
 
-node "aws_lambda_vpc_subnet_node" {
-  category = category.aws_vpc_subnet
+node "lambda_vpc_subnet_node" {
+  category = category.vpc_subnet
 
   sql = <<-EOQ
     select
@@ -495,7 +495,7 @@ node "aws_lambda_vpc_subnet_node" {
   param "arn" {}
 }
 
-edge "aws_lambda_vpc_subnet_edge" {
+edge "lambda_vpc_subnet_edge" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -513,8 +513,8 @@ edge "aws_lambda_vpc_subnet_edge" {
   param "arn" {}
 }
 
-node "aws_lambda_to_kms_key_node" {
-  category = category.aws_kms_key
+node "lambda_to_kms_key_node" {
+  category = category.kms_key
 
   sql = <<-EOQ
     select
@@ -539,7 +539,7 @@ node "aws_lambda_to_kms_key_node" {
   param "arn" {}
 }
 
-edge "aws_lambda_to_kms_key_edge" {
+edge "lambda_to_kms_key_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -556,8 +556,8 @@ edge "aws_lambda_to_kms_key_edge" {
   param "arn" {}
 }
 
-node "aws_lambda_to_iam_role_node" {
-  category = category.aws_iam_role
+node "lambda_to_iam_role_node" {
+  category = category.iam_role
 
   sql = <<-EOQ
     select
@@ -580,7 +580,7 @@ node "aws_lambda_to_iam_role_node" {
   param "arn" {}
 }
 
-edge "aws_lambda_to_iam_role_edge" {
+edge "lambda_to_iam_role_edge" {
   title = "assumes"
 
   sql = <<-EOQ
@@ -597,8 +597,8 @@ edge "aws_lambda_to_iam_role_edge" {
   param "arn" {}
 }
 
-node "aws_lambda_from_s3_bucket_node" {
-  category = category.aws_s3_bucket
+node "lambda_from_s3_bucket_node" {
+  category = category.s3_bucket
 
   sql = <<-EOQ
     select
@@ -623,7 +623,7 @@ node "aws_lambda_from_s3_bucket_node" {
   param "arn" {}
 }
 
-edge "aws_lambda_from_s3_bucket_edge" {
+edge "lambda_from_s3_bucket_edge" {
   title = "invokes"
 
   sql = <<-EOQ
@@ -652,8 +652,8 @@ edge "aws_lambda_from_s3_bucket_edge" {
 
 
 
-node "aws_lambda_version_node" {
-  category = category.aws_lambda_version
+node "lambda_version_node" {
+  category = category.lambda_version
 
   sql = <<-EOQ
     select
@@ -682,7 +682,7 @@ node "aws_lambda_version_node" {
 
 
 
-edge "aws_lambda_version_edge" {
+edge "lambda_version_edge" {
   title = "version"
 
   sql = <<-EOQ
@@ -703,8 +703,8 @@ edge "aws_lambda_version_edge" {
 }
 
 
-node "aws_lambda_alias_node" {
-  category = category.aws_lambda_alias
+node "lambda_alias_node" {
+  category = category.lambda_alias
 
   sql = <<-EOQ
     select
@@ -731,7 +731,7 @@ node "aws_lambda_alias_node" {
 }
 
 
-edge "aws_lambda_alias_edge" {
+edge "lambda_alias_edge" {
   title = "alias"
 
   sql = <<-EOQ
@@ -754,8 +754,8 @@ edge "aws_lambda_alias_edge" {
 
 
 
-node "aws_lambda_from_sns_topic_node" {
-  category = category.aws_sns_topic
+node "lambda_from_sns_topic_node" {
+  category = category.sns_topic
 
   sql = <<-EOQ
     select
@@ -782,7 +782,7 @@ node "aws_lambda_from_sns_topic_node" {
 
 
 
-edge "aws_lambda_sns_topic_edge" {
+edge "lambda_sns_topic_edge" {
   title = "subscription"
 
   sql = <<-EOQ
@@ -801,8 +801,8 @@ edge "aws_lambda_sns_topic_edge" {
 
 
 
-node "aws_lambda_from_sns_subscription_node" {
-  category = category.aws_sns_topic_subscription
+node "lambda_from_sns_subscription_node" {
+  category = category.sns_topic_subscription
 
   sql = <<-EOQ
     select
@@ -832,7 +832,7 @@ node "aws_lambda_from_sns_subscription_node" {
 
 
 
-edge "aws_lambda_sns_subscription_edge" {
+edge "lambda_sns_subscription_edge" {
   title = "invokes"
 
   sql = <<-EOQ
@@ -854,8 +854,8 @@ edge "aws_lambda_sns_subscription_edge" {
 
 
 
-node "aws_lambda_from_api_gateway_integration_node" {
-  category = category.aws_api_gatewayv2_integration
+node "lambda_from_api_gateway_integration_node" {
+  category = category.api_gatewayv2_integration
 
   sql = <<-EOQ
     select
@@ -882,7 +882,7 @@ node "aws_lambda_from_api_gateway_integration_node" {
 
 
 
-edge "aws_lambda_api_gateway_integration_edge" {
+edge "lambda_api_gateway_integration_edge" {
   title = "invokes"
 
   sql = <<-EOQ
@@ -899,8 +899,8 @@ edge "aws_lambda_api_gateway_integration_edge" {
 }
 
 
-node "aws_lambda_from_api_gateway_node" {
-  category = category.aws_api_gatewayv2_api
+node "lambda_from_api_gateway_node" {
+  category = category.api_gatewayv2_api
 
   sql = <<-EOQ
     select
@@ -926,7 +926,7 @@ node "aws_lambda_from_api_gateway_node" {
 
 
 
-edge "aws_lambda_api_gateway_edge" {
+edge "lambda_api_gateway_edge" {
   title = "integration"
 
   sql = <<-EOQ

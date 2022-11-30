@@ -1,4 +1,4 @@
-dashboard "aws_sqs_queue_detail" {
+dashboard "sqs_queue_detail" {
 
   title         = "AWS SQS Queue Detail"
   documentation = file("./dashboards/sqs/docs/sqs_queue_detail.md")
@@ -10,7 +10,7 @@ dashboard "aws_sqs_queue_detail" {
 
   input "queue_arn" {
     title = "Select a Queue:"
-    query = query.aws_sqs_queue_input
+    query = query.sqs_queue_input
     width = 4
   }
 
@@ -18,7 +18,7 @@ dashboard "aws_sqs_queue_detail" {
 
     card {
       width = 2
-      query = query.aws_sqs_queue_encryption
+      query = query.sqs_queue_encryption
       args = {
         queue_arn = self.input.queue_arn.value
       }
@@ -26,7 +26,7 @@ dashboard "aws_sqs_queue_detail" {
 
     card {
       width = 2
-      query = query.aws_sqs_queue_content_based_deduplication
+      query = query.sqs_queue_content_based_deduplication
       args = {
         queue_arn = self.input.queue_arn.value
       }
@@ -34,7 +34,7 @@ dashboard "aws_sqs_queue_detail" {
 
     card {
       width = 2
-      query = query.aws_sqs_queue_delay_seconds
+      query = query.sqs_queue_delay_seconds
       args = {
         queue_arn = self.input.queue_arn.value
       }
@@ -42,7 +42,7 @@ dashboard "aws_sqs_queue_detail" {
 
     card {
       width = 2
-      query = query.aws_sqs_queue_message_retention_seconds
+      query = query.sqs_queue_message_retention_seconds
       args = {
         queue_arn = self.input.queue_arn.value
       }
@@ -58,26 +58,26 @@ dashboard "aws_sqs_queue_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_sqs_queue_nodes,
-        node.aws_sqs_queue_to_sns_topic_subscription_node,
-        node.aws_sqs_queue_to_sqs_queue_node,
-        node.aws_sqs_queue_to_kms_key_node,
-        node.aws_sqs_queue_from_s3_bucket_node,
-        node.aws_sqs_queue_from_lambda_function_node,
-        node.aws_sqs_queue_from_vpc_endpoint_node,
-        node.aws_sqs_queue_from_vpc_node,
-        node.aws_sqs_queue_from_eventbridge_rule_node
+        node.sqs_queue,
+        node.sqs_queue_to_sns_topic_subscription_node,
+        node.sqs_queue_to_sqs_queue_node,
+        node.sqs_queue_to_kms_key_node,
+        node.sqs_queue_from_s3_bucket_node,
+        node.sqs_queue_from_lambda_function_node,
+        node.sqs_queue_from_vpc_endpoint_node,
+        node.sqs_queue_from_vpc_node,
+        node.sqs_queue_from_eventbridge_rule_node
       ]
 
       edges = [
-        edge.aws_sqs_queue_to_sns_topic_subscription_edge,
-        edge.aws_sqs_queue_to_sqs_queue_edge,
-        edge.aws_sqs_queue_to_kms_key_edge,
-        edge.aws_sqs_queue_from_s3_bucket_edge,
-        edge.aws_sqs_queue_from_lambda_function_edge,
-        edge.aws_sqs_queue_from_vpc_endpoint_edge,
-        edge.aws_sqs_queue_vpc_endpoint_to_vpc_edge,
-        edge.aws_sqs_queue_from_eventbridge_rule_edge
+        edge.sqs_queue_to_sns_topic_subscription_edge,
+        edge.sqs_queue_to_sqs_queue_edge,
+        edge.sqs_queue_to_kms_key_edge,
+        edge.sqs_queue_from_s3_bucket_edge,
+        edge.sqs_queue_from_lambda_function_edge,
+        edge.sqs_queue_from_vpc_endpoint_edge,
+        edge.sqs_queue_vpc_endpoint_to_vpc_edge,
+        edge.sqs_queue_from_eventbridge_rule_edge
       ]
 
       args = {
@@ -97,7 +97,7 @@ dashboard "aws_sqs_queue_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_sqs_queue_overview
+        query = query.sqs_queue_overview
         args = {
           queue_arn = self.input.queue_arn.value
         }
@@ -107,7 +107,7 @@ dashboard "aws_sqs_queue_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_sqs_queue_tags_detail
+        query = query.sqs_queue_tags_detail
         args = {
           queue_arn = self.input.queue_arn.value
         }
@@ -121,7 +121,7 @@ dashboard "aws_sqs_queue_detail" {
 
       table {
         title = "Message Details"
-        query = query.aws_sqs_queue_message
+        query = query.sqs_queue_message
         args = {
           queue_arn = self.input.queue_arn.value
         }
@@ -129,7 +129,7 @@ dashboard "aws_sqs_queue_detail" {
 
       table {
         title = "Encryption Details"
-        query = query.aws_sqs_queue_encryption_details
+        query = query.sqs_queue_encryption_details
         args = {
           queue_arn = self.input.queue_arn.value
         }
@@ -145,7 +145,7 @@ dashboard "aws_sqs_queue_detail" {
 
     table {
       title = "Policy"
-      query = query.aws_sqs_queue_policy
+      query = query.sqs_queue_policy
       args = {
         queue_arn = self.input.queue_arn.value
       }
@@ -155,7 +155,7 @@ dashboard "aws_sqs_queue_detail" {
 
 }
 
-query "aws_sqs_queue_input" {
+query "sqs_queue_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -171,7 +171,7 @@ query "aws_sqs_queue_input" {
   EOQ
 }
 
-query "aws_sqs_queue_encryption" {
+query "sqs_queue_encryption" {
   sql = <<-EOQ
     select
       'Encryption' as label,
@@ -186,7 +186,7 @@ query "aws_sqs_queue_encryption" {
   param "queue_arn" {}
 }
 
-query "aws_sqs_queue_content_based_deduplication" {
+query "sqs_queue_content_based_deduplication" {
   sql = <<-EOQ
     select
       'Content Based Deduplication' as label,
@@ -200,7 +200,7 @@ query "aws_sqs_queue_content_based_deduplication" {
   param "queue_arn" {}
 }
 
-query "aws_sqs_queue_delay_seconds" {
+query "sqs_queue_delay_seconds" {
   sql = <<-EOQ
     select
       'Delay Seconds' as label,
@@ -214,7 +214,7 @@ query "aws_sqs_queue_delay_seconds" {
   param "queue_arn" {}
 }
 
-query "aws_sqs_queue_message_retention_seconds" {
+query "sqs_queue_message_retention_seconds" {
   sql = <<-EOQ
     select
       'Message Retention Seconds' as label,
@@ -228,7 +228,7 @@ query "aws_sqs_queue_message_retention_seconds" {
   param "queue_arn" {}
 }
 
-query "aws_sqs_queue_overview" {
+query "sqs_queue_overview" {
   sql = <<-EOQ
     select
       queue_url as "Queue URL",
@@ -245,7 +245,7 @@ query "aws_sqs_queue_overview" {
   param "queue_arn" {}
 }
 
-query "aws_sqs_queue_tags_detail" {
+query "sqs_queue_tags_detail" {
   sql = <<-EOQ
     with jsondata as (
       select
@@ -268,7 +268,7 @@ query "aws_sqs_queue_tags_detail" {
   param "queue_arn" {}
 }
 
-query "aws_sqs_queue_policy" {
+query "sqs_queue_policy" {
   sql = <<-EOQ
     select
       p ->> 'Sid' as "SID",
@@ -287,7 +287,7 @@ query "aws_sqs_queue_policy" {
   param "queue_arn" {}
 }
 
-query "aws_sqs_queue_message" {
+query "sqs_queue_message" {
   sql = <<-EOQ
     select
       max_message_size as "Max Message Size",
@@ -302,7 +302,7 @@ query "aws_sqs_queue_message" {
   param "queue_arn" {}
 }
 
-query "aws_sqs_queue_encryption_details" {
+query "sqs_queue_encryption_details" {
   sql = <<-EOQ
     select
        case when kms_master_key_id is not null then 'Enabled' else 'Disabled' end as "Encryption",
@@ -316,8 +316,8 @@ query "aws_sqs_queue_encryption_details" {
   param "queue_arn" {}
 }
 
-node "aws_sqs_queue_nodes" {
-  category = category.aws_sqs_queue
+node "sqs_queue" {
+  category = category.sqs_queue
 
   sql = <<-EOQ
     select
@@ -337,8 +337,8 @@ node "aws_sqs_queue_nodes" {
   param "queue_arns" {}
 }
 
-node "aws_sqs_queue_to_sns_topic_subscription_node" {
-  category = category.aws_sns_topic_subscription
+node "sqs_queue_to_sns_topic_subscription_node" {
+  category = category.sns_topic_subscription
 
   sql = <<-EOQ
     select
@@ -358,7 +358,7 @@ node "aws_sqs_queue_to_sns_topic_subscription_node" {
   param "arn" {}
 }
 
-edge "aws_sqs_queue_to_sns_topic_subscription_edge" {
+edge "sqs_queue_to_sns_topic_subscription_edge" {
   title = "subscription"
 
   sql = <<-EOQ
@@ -374,8 +374,8 @@ edge "aws_sqs_queue_to_sns_topic_subscription_edge" {
   param "arn" {}
 }
 
-node "aws_sqs_queue_to_sqs_queue_node" {
-  category = category.aws_sqs_queue
+node "sqs_queue_to_sqs_queue_node" {
+  category = category.sqs_queue
 
   sql = <<-EOQ
     select
@@ -396,7 +396,7 @@ node "aws_sqs_queue_to_sqs_queue_node" {
   param "arn" {}
 }
 
-edge "aws_sqs_queue_to_sqs_queue_edge" {
+edge "sqs_queue_to_sqs_queue_edge" {
   title = "dead letter queue"
 
   sql = <<-EOQ
@@ -413,8 +413,8 @@ edge "aws_sqs_queue_to_sqs_queue_edge" {
   param "arn" {}
 }
 
-node "aws_sqs_queue_to_kms_key_node" {
-  category = category.aws_kms_key
+node "sqs_queue_to_kms_key_node" {
+  category = category.kms_key
 
   sql = <<-EOQ
     select
@@ -438,7 +438,7 @@ node "aws_sqs_queue_to_kms_key_node" {
   param "arn" {}
 }
 
-edge "aws_sqs_queue_to_kms_key_edge" {
+edge "sqs_queue_to_kms_key_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -458,8 +458,8 @@ edge "aws_sqs_queue_to_kms_key_edge" {
   param "arn" {}
 }
 
-node "aws_sqs_queue_from_s3_bucket_node" {
-  category = category.aws_s3_bucket
+node "sqs_queue_from_s3_bucket_node" {
+  category = category.s3_bucket
 
   sql = <<-EOQ
     select
@@ -486,7 +486,7 @@ node "aws_sqs_queue_from_s3_bucket_node" {
   param "arn" {}
 }
 
-edge "aws_sqs_queue_from_s3_bucket_edge" {
+edge "sqs_queue_from_s3_bucket_edge" {
   title = "queues"
 
   sql = <<-EOQ
@@ -508,8 +508,8 @@ edge "aws_sqs_queue_from_s3_bucket_edge" {
   param "arn" {}
 }
 
-node "aws_sqs_queue_from_lambda_function_node" {
-  category = category.aws_lambda_function
+node "sqs_queue_from_lambda_function_node" {
+  category = category.lambda_function
 
   sql = <<-EOQ
     select
@@ -531,7 +531,7 @@ node "aws_sqs_queue_from_lambda_function_node" {
   param "arn" {}
 }
 
-edge "aws_sqs_queue_from_lambda_function_edge" {
+edge "sqs_queue_from_lambda_function_edge" {
   title = "queues"
 
   sql = <<-EOQ
@@ -547,8 +547,8 @@ edge "aws_sqs_queue_from_lambda_function_edge" {
   param "arn" {}
 }
 
-node "aws_sqs_queue_from_vpc_endpoint_node" {
-  category = category.aws_vpc_endpoint
+node "sqs_queue_from_vpc_endpoint_node" {
+  category = category.vpc_endpoint
 
   sql = <<-EOQ
     select
@@ -572,7 +572,7 @@ node "aws_sqs_queue_from_vpc_endpoint_node" {
   param "arn" {}
 }
 
-edge "aws_sqs_queue_from_vpc_endpoint_edge" {
+edge "sqs_queue_from_vpc_endpoint_edge" {
   title = "endpoint"
 
   sql = <<-EOQ
@@ -590,8 +590,8 @@ edge "aws_sqs_queue_from_vpc_endpoint_edge" {
   param "arn" {}
 }
 
-node "aws_sqs_queue_from_vpc_node" {
-  category = category.aws_vpc
+node "sqs_queue_from_vpc_node" {
+  category = category.vpc_vpc
 
   sql = <<-EOQ
     select
@@ -616,7 +616,7 @@ node "aws_sqs_queue_from_vpc_node" {
   param "arn" {}
 }
 
-edge "aws_sqs_queue_vpc_endpoint_to_vpc_edge" {
+edge "sqs_queue_vpc_endpoint_to_vpc_edge" {
   title = "vpc"
 
   sql = <<-EOQ
@@ -636,8 +636,8 @@ edge "aws_sqs_queue_vpc_endpoint_to_vpc_edge" {
   param "arn" {}
 }
 
-node "aws_sqs_queue_from_eventbridge_rule_node" {
-  category = category.aws_eventbridge_rule
+node "sqs_queue_from_eventbridge_rule_node" {
+  category = category.eventbridge_rule
 
   sql = <<-EOQ
     select
@@ -659,7 +659,7 @@ node "aws_sqs_queue_from_eventbridge_rule_node" {
   param "arn" {}
 }
 
-edge "aws_sqs_queue_from_eventbridge_rule_edge" {
+edge "sqs_queue_from_eventbridge_rule_edge" {
   title = "queues"
 
   sql = <<-EOQ

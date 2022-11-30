@@ -1,4 +1,4 @@
-dashboard "aws_iam_role_dashboard" {
+dashboard "iam_role_dashboard" {
 
   title         = "AWS IAM Role Dashboard"
   documentation = file("./dashboards/iam/docs/iam_role_dashboard.md")
@@ -11,33 +11,33 @@ dashboard "aws_iam_role_dashboard" {
 
     # Analysis
     card {
-      query = query.aws_iam_role_count
+      query = query.iam_role_count
       width = 2
     }
 
     # Assessments
     card {
-      query = query.aws_iam_roles_with_inline_policy_count
+      query = query.iam_roles_with_inline_policy_count
       width = 2
     }
 
     card {
-      query = query.aws_iam_roles_without_direct_attached_policy_count
+      query = query.iam_roles_without_direct_attached_policy_count
       width = 2
     }
 
     card {
-      query = query.aws_iam_roles_allow_all_action_count
+      query = query.iam_roles_allow_all_action_count
       width = 2
     }
 
     card {
-      query = query.aws_iam_role_no_boundary_count
+      query = query.iam_role_no_boundary_count
       width = 2
     }
 
     card {
-      query = query.aws_iam_role_allows_assume_role_to_all_principal_count
+      query = query.iam_role_allows_assume_role_to_all_principal_count
       width = 2
     }
 
@@ -48,7 +48,7 @@ dashboard "aws_iam_role_dashboard" {
 
     chart {
       title = "Inline Policies"
-      query = query.aws_iam_roles_with_inline_policy
+      query = query.iam_roles_with_inline_policy
       type  = "donut"
       width = 3
 
@@ -64,7 +64,7 @@ dashboard "aws_iam_role_dashboard" {
 
     chart {
       title = "Attached Policies"
-      query = query.aws_iam_roles_with_direct_attached_policy
+      query = query.iam_roles_with_direct_attached_policy
       type  = "donut"
       width = 3
 
@@ -80,7 +80,7 @@ dashboard "aws_iam_role_dashboard" {
 
     chart {
       title = "Allows All Actions"
-      query = query.aws_iam_roles_allow_all_action
+      query = query.iam_roles_allow_all_action
       type  = "donut"
       width = 3
 
@@ -96,7 +96,7 @@ dashboard "aws_iam_role_dashboard" {
 
     chart {
       title = "Boundary Policy"
-      query = query.aws_iam_roles_by_boundary_policy
+      query = query.iam_roles_by_boundary_policy
       type  = "donut"
       width = 3
 
@@ -118,21 +118,21 @@ dashboard "aws_iam_role_dashboard" {
 
     chart {
       title = "Roles by Account"
-      query = query.aws_iam_roles_by_account
+      query = query.iam_roles_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Roles by Path"
-      query = query.aws_iam_roles_by_path
+      query = query.iam_roles_by_path
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Roles by Age"
-      query = query.aws_iam_roles_by_creation_month
+      query = query.iam_roles_by_creation_month
       type  = "column"
       width = 4
     }
@@ -143,13 +143,13 @@ dashboard "aws_iam_role_dashboard" {
 
 # Card Queries
 
-query "aws_iam_role_count" {
+query "iam_role_count" {
   sql = <<-EOQ
     select count(*) as "Roles" from aws_iam_role;
   EOQ
 }
 
-query "aws_iam_roles_with_inline_policy_count" {
+query "iam_roles_with_inline_policy_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -162,7 +162,7 @@ query "aws_iam_roles_with_inline_policy_count" {
   EOQ
 }
 
-query "aws_iam_roles_without_direct_attached_policy_count" {
+query "iam_roles_without_direct_attached_policy_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -175,7 +175,7 @@ query "aws_iam_roles_without_direct_attached_policy_count" {
   EOQ
 }
 
-query "aws_iam_roles_allow_all_action_count" {
+query "iam_roles_allow_all_action_count" {
   sql = <<-EOQ
     with roles_allow_all_actions as (
       select
@@ -204,7 +204,7 @@ query "aws_iam_roles_allow_all_action_count" {
   EOQ
 }
 
-query "aws_iam_role_no_boundary_count" {
+query "iam_role_no_boundary_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -217,7 +217,7 @@ query "aws_iam_role_no_boundary_count" {
   EOQ
 }
 
-query "aws_iam_role_allows_assume_role_to_all_principal_count" {
+query "iam_role_allows_assume_role_to_all_principal_count" {
   sql = <<-EOQ
     with roles_can_be_assumed_anonymously as (
       select
@@ -243,7 +243,7 @@ query "aws_iam_role_allows_assume_role_to_all_principal_count" {
 
 # Assessment Queries
 
-query "aws_iam_roles_with_inline_policy" {
+query "iam_roles_with_inline_policy" {
   sql = <<-EOQ
     with roles_inline_compliance as (
       select
@@ -265,7 +265,7 @@ query "aws_iam_roles_with_inline_policy" {
   EOQ
 }
 
-query "aws_iam_roles_with_direct_attached_policy" {
+query "iam_roles_with_direct_attached_policy" {
   sql = <<-EOQ
     with role_attached_compliance as (
       select
@@ -287,7 +287,7 @@ query "aws_iam_roles_with_direct_attached_policy" {
   EOQ
 }
 
-query "aws_iam_roles_allow_all_action" {
+query "iam_roles_allow_all_action" {
   sql = <<-EOQ
     with roles_allow_all_actions as (
       select
@@ -325,7 +325,7 @@ query "aws_iam_roles_allow_all_action" {
   EOQ
 }
 
-query "aws_iam_roles_by_boundary_policy" {
+query "iam_roles_by_boundary_policy" {
   sql = <<-EOQ
     select
       case
@@ -342,7 +342,7 @@ query "aws_iam_roles_by_boundary_policy" {
 
 # Analysis Queries
 
-query "aws_iam_roles_by_account" {
+query "iam_roles_by_account" {
   sql = <<-EOQ
     select
       a.title as "account",
@@ -358,7 +358,7 @@ query "aws_iam_roles_by_account" {
   EOQ
 }
 
-query "aws_iam_roles_by_creation_month" {
+query "iam_roles_by_creation_month" {
   sql = <<-EOQ
     with roles as (
       select
@@ -403,7 +403,7 @@ query "aws_iam_roles_by_creation_month" {
   EOQ
 }
 
-query "aws_iam_roles_by_path" {
+query "iam_roles_by_path" {
   sql = <<-EOQ
     select
       case when path = '/' then '/*'

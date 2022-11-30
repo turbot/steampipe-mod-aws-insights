@@ -1,5 +1,7 @@
-node "aws_ec2_lb_to_target_group_node" {
-  category = category.aws_ec2_target_group
+# TODO: These should be cleaned up and moved into ec2.sp
+
+node "ec2_lb_to_target_group_node" {
+  category = category.ec2_target_group
 
   sql = <<-EOQ
     select
@@ -24,7 +26,7 @@ node "aws_ec2_lb_to_target_group_node" {
   param "arn" {}
 }
 
-edge "aws_ec2_lb_to_target_group_edge" {
+edge "ec2_lb_to_target_group_edge" {
   title = "target group"
 
   sql = <<-EOQ
@@ -44,8 +46,8 @@ edge "aws_ec2_lb_to_target_group_edge" {
   param "arn" {}
 }
 
-node "aws_ec2_lb_to_ec2_instance_node" {
-  category = category.aws_ec2_instance
+node "ec2_lb_to_ec2_instance_node" {
+  category = category.ec2_instance
 
   sql = <<-EOQ
     select
@@ -73,7 +75,7 @@ node "aws_ec2_lb_to_ec2_instance_node" {
   param "arn" {}
 }
 
-edge "aws_ec2_lb_to_ec2_instance_edge" {
+edge "ec2_lb_to_ec2_instance_edge" {
   title = "routes to"
 
   sql = <<-EOQ
@@ -96,8 +98,8 @@ edge "aws_ec2_lb_to_ec2_instance_edge" {
   param "arn" {}
 }
 
-node "aws_ec2_lb_from_ec2_load_balancer_listener_node" {
-  category = category.aws_ec2_load_balancer_listener
+node "ec2_lb_from_ec2_load_balancer_listener_node" {
+  category = category.ec2_load_balancer_listener
 
   sql = <<-EOQ
     select
@@ -120,7 +122,7 @@ node "aws_ec2_lb_from_ec2_load_balancer_listener_node" {
   param "arn" {}
 }
 
-edge "aws_ec2_lb_from_ec2_load_balancer_listener_edge" {
+edge "ec2_lb_from_ec2_load_balancer_listener_edge" {
   title = "listener for"
 
   sql = <<-EOQ

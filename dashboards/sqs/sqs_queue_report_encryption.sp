@@ -1,4 +1,4 @@
-dashboard "aws_sqs_queue_encryption_report" {
+dashboard "sqs_queue_encryption_report" {
 
   title         = "AWS SQS Queue Encryption Report"
   documentation = file("./dashboards/sqs/docs/sqs_queue_report_encryption.md")
@@ -11,12 +11,12 @@ dashboard "aws_sqs_queue_encryption_report" {
   container {
 
     card {
-      query = query.aws_sqs_queue_count
+      query = query.sqs_queue_count
       width = 2
     }
 
     card {
-      query = query.aws_sqs_queue_unencrypted_count
+      query = query.sqs_queue_unencrypted_count
       width = 2
     }
 
@@ -33,15 +33,15 @@ dashboard "aws_sqs_queue_encryption_report" {
     }
 
     column "Queue" {
-      href = "${dashboard.aws_sqs_queue_detail.url_path}?input.queue_arn={{.ARN | @uri}}"
+      href = "${dashboard.sqs_queue_detail.url_path}?input.queue_arn={{.ARN | @uri}}"
     }
 
-    query = query.aws_sqs_queue_encryption_table
+    query = query.sqs_queue_encryption_table
   }
 
 }
 
-query "aws_sqs_queue_encryption_table" {
+query "sqs_queue_encryption_table" {
   sql = <<-EOQ
     select
       q.title as "Queue",

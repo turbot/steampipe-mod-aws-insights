@@ -1,4 +1,4 @@
-dashboard "aws_ecr_repository_dashboard" {
+dashboard "ecr_repository_dashboard" {
 
   title         = "AWS ECR Repository Dashboard"
   documentation = file("./dashboards/ecr/docs/ecr_repository_dashboard.md")
@@ -12,28 +12,28 @@ dashboard "aws_ecr_repository_dashboard" {
   container {
 
     card {
-      query   = query.aws_ecr_repository_count
+      query   = query.ecr_repository_count
       width = 2
     }
 
     #Assessments
     card {
-      query   = query.aws_ecr_repository_encryption_disabled_count
+      query   = query.ecr_repository_encryption_disabled_count
       width = 2
     }
 
     card {
-      query   = query.aws_ecr_repository_scan_on_push_disabled_count
+      query   = query.ecr_repository_scan_on_push_disabled_count
       width = 2
     }
 
     card {
-      query   = query.aws_ecr_repository_tagging_disabled_count
+      query   = query.ecr_repository_tagging_disabled_count
       width = 2
     }
 
     card {
-      query   = query.aws_ecr_repository_tag_mutability_count
+      query   = query.ecr_repository_tag_mutability_count
       width = 2
     }
 
@@ -47,7 +47,7 @@ dashboard "aws_ecr_repository_dashboard" {
     
     chart {
       title = "Encryption Status"
-      query   = query.aws_ecr_repository_encryption_status
+      query   = query.ecr_repository_encryption_status
       type  = "donut"
       width = 3
 
@@ -63,7 +63,7 @@ dashboard "aws_ecr_repository_dashboard" {
 
     chart {
       title = "Scan on Push Status"
-      query   = query.aws_ecr_repository_scan_on_push_status
+      query   = query.ecr_repository_scan_on_push_status
       type  = "donut"
       width = 3
 
@@ -79,7 +79,7 @@ dashboard "aws_ecr_repository_dashboard" {
 
     chart {
       title = "Untagged"
-      query   = query.aws_ecr_repository_tagging_status
+      query   = query.ecr_repository_tagging_status
       type  = "donut"
       width = 3
 
@@ -95,7 +95,7 @@ dashboard "aws_ecr_repository_dashboard" {
 
     chart {
       title = "Tag Immutability Status"
-      query   = query.aws_ecr_repository_tag_immutability_status
+      query   = query.ecr_repository_tag_immutability_status
       type  = "donut"
       width = 3
 
@@ -118,21 +118,21 @@ dashboard "aws_ecr_repository_dashboard" {
 
     chart {
       title = "ECR Repositories by Account"
-      query   = query.aws_ecr_repository_by_account
+      query   = query.ecr_repository_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "ECR Repositories by Region"
-      query   = query.aws_ecr_repository_by_region
+      query   = query.ecr_repository_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "ECR Repositories by Creation Month"
-      query   = query.aws_ecr_repository_by_creation_month
+      query   = query.ecr_repository_by_creation_month
       type  = "column"
       width = 4
     }
@@ -143,7 +143,7 @@ dashboard "aws_ecr_repository_dashboard" {
 
 # Card Queries
 
-query "aws_ecr_repository_count" {
+query "ecr_repository_count" {
   sql = <<-EOQ
     select
       count(*) as "Repositories"
@@ -152,7 +152,7 @@ query "aws_ecr_repository_count" {
   EOQ
 }
 
-query "aws_ecr_repository_encryption_disabled_count" {
+query "ecr_repository_encryption_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -165,7 +165,7 @@ query "aws_ecr_repository_encryption_disabled_count" {
   EOQ
 }
 
-query "aws_ecr_repository_scan_on_push_disabled_count" {
+query "ecr_repository_scan_on_push_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -178,7 +178,7 @@ query "aws_ecr_repository_scan_on_push_disabled_count" {
   EOQ
 }
 
-query "aws_ecr_repository_tagging_disabled_count" {
+query "ecr_repository_tagging_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -191,7 +191,7 @@ query "aws_ecr_repository_tagging_disabled_count" {
   EOQ
 }
 
-query "aws_ecr_repository_tag_mutability_count" {
+query "ecr_repository_tag_mutability_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -206,7 +206,7 @@ query "aws_ecr_repository_tag_mutability_count" {
 
 // # Assessment Queries
 
-query "aws_ecr_repository_encryption_status" {
+query "ecr_repository_encryption_status" {
   sql = <<-EOQ
     select
       encryption_status,
@@ -228,7 +228,7 @@ query "aws_ecr_repository_encryption_status" {
   EOQ
 }
 
-query "aws_ecr_repository_scan_on_push_status" {
+query "ecr_repository_scan_on_push_status" {
   sql = <<-EOQ
     select
       push_status,
@@ -250,7 +250,7 @@ query "aws_ecr_repository_scan_on_push_status" {
   EOQ
 }
 
-query "aws_ecr_repository_tagging_status" {
+query "ecr_repository_tagging_status" {
   sql = <<-EOQ
     select
       tag_status,
@@ -271,7 +271,7 @@ query "aws_ecr_repository_tagging_status" {
   EOQ
 }
 
-query "aws_ecr_repository_tag_immutability_status" {
+query "ecr_repository_tag_immutability_status" {
   sql = <<-EOQ
     select
       tag_mutability_status,
@@ -294,7 +294,7 @@ query "aws_ecr_repository_tag_immutability_status" {
 
 // # Cost Queries
 
-// query "aws_ecr_repository_forecast_table" {
+// query "ecr_repository_forecast_table" {
 //   sql = <<-EOQ
 //     with monthly_costs as (
 //       select
@@ -334,7 +334,7 @@ query "aws_ecr_repository_tag_immutability_status" {
 //   EOQ
 // }
 
-// query "aws_ecr_repository_cost_per_month" {
+// query "ecr_repository_cost_per_month" {
 //   sql = <<-EOQ
 //     select
 //       to_char(period_start, 'Mon-YY') as "Month",
@@ -353,7 +353,7 @@ query "aws_ecr_repository_tag_immutability_status" {
 
 # Analysis Queries
 
-query "aws_ecr_repository_by_account" {
+query "ecr_repository_by_account" {
   sql = <<-EOQ
     select
       a.title as "account",
@@ -370,7 +370,7 @@ query "aws_ecr_repository_by_account" {
   EOQ
 }
 
-query "aws_ecr_repository_by_region" {
+query "ecr_repository_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
@@ -384,7 +384,7 @@ query "aws_ecr_repository_by_region" {
   EOQ
 }
 
-query "aws_ecr_repository_by_creation_month" {
+query "ecr_repository_by_creation_month" {
   sql = <<-EOQ
     with ecr_repositories as (
       select

@@ -4,9 +4,9 @@ locals {
   }
 }
 
-category "aws_cloudtrail_trail" {
+category "cloudtrail_trail" {
   title = "CloudTrail Trail"
   color = local.management_governance_color
-  href  = "/aws_insights.dashboard.aws_cloudtrail_trail_detail?input.trail_arn={{.properties.'ARN' | @uri}}"
+  href  = "/aws_insights.dashboard.cloudtrail_trail_detail?input.trail_arn={{.properties.'ARN' | @uri}}"
   icon  = "text:CT"
 }

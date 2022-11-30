@@ -1,4 +1,4 @@
-dashboard "aws_ec2_ami_detail" {
+dashboard "ec2_ami_detail" {
 
   title         = "AWS EC2 AMI Detail"
   documentation = file("./dashboards/ec2/docs/ec2_ami_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_ec2_ami_detail" {
 
   input "ami" {
     title = "Select an image:"
-    query = query.aws_ec2_ami_input
+    query = query.ec2_ami_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "aws_ec2_ami_detail" {
 
     card {
       width = 2
-      query = query.aws_ec2_ami_state
+      query = query.ec2_ami_state
       args = {
         image_id = self.input.ami.value
       }
@@ -25,7 +25,7 @@ dashboard "aws_ec2_ami_detail" {
 
     card {
       width = 2
-      query = query.aws_ec2_ami_architecture
+      query = query.ec2_ami_architecture
       args = {
         image_id = self.input.ami.value
       }
@@ -33,7 +33,7 @@ dashboard "aws_ec2_ami_detail" {
 
     card {
       width = 2
-      query = query.aws_ec2_ami_hypervisor
+      query = query.ec2_ami_hypervisor
       args = {
         image_id = self.input.ami.value
       }
@@ -41,7 +41,7 @@ dashboard "aws_ec2_ami_detail" {
 
     card {
       width = 2
-      query = query.aws_ec2_ami_virtualization
+      query = query.ec2_ami_virtualization
       args = {
         image_id = self.input.ami.value
       }
@@ -57,14 +57,14 @@ dashboard "aws_ec2_ami_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_ec2_ami_node,
-        node.aws_ec2_ami_to_ec2_instance_node,
-        node.aws_ec2_ami_from_ebs_snapshot_node
+        node.ec2_ami_node,
+        node.ec2_ami_to_ec2_instance_node,
+        node.ec2_ami_from_ebs_snapshot_node
       ]
 
       edges = [
-        edge.aws_ec2_ami_to_ec2_instance_edge,
-        edge.aws_ec2_ami_from_ebs_snapshot_edge
+        edge.ec2_ami_to_ec2_instance_edge,
+        edge.ec2_ami_from_ebs_snapshot_edge
       ]
 
       args = {
@@ -81,7 +81,7 @@ dashboard "aws_ec2_ami_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_ec2_ami_overview
+        query = query.ec2_ami_overview
         args = {
           image_id = self.input.ami.value
         }
@@ -90,7 +90,7 @@ dashboard "aws_ec2_ami_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_ec2_ami_tags
+        query = query.ec2_ami_tags
         args = {
           image_id = self.input.ami.value
         }
@@ -102,7 +102,7 @@ dashboard "aws_ec2_ami_detail" {
 
       table {
         title = "Sharing"
-        query = query.aws_ec2_ami_shared_with
+        query = query.ec2_ami_shared_with
         args = {
           image_id = self.input.ami.value
         }
@@ -110,7 +110,7 @@ dashboard "aws_ec2_ami_detail" {
 
       table {
         title = "Instances"
-        query = query.aws_ec2_ami_instances
+        query = query.ec2_ami_instances
         args = {
           image_id = self.input.ami.value
         }
@@ -127,7 +127,7 @@ dashboard "aws_ec2_ami_detail" {
 
 }
 
-query "aws_ec2_ami_input" {
+query "ec2_ami_input" {
   sql = <<-EOQ
     select
       name as label,
@@ -143,13 +143,13 @@ query "aws_ec2_ami_input" {
   EOQ
 }
 
-query "aws_ec2_ami_instances" {
+query "ec2_ami_instances" {
   sql = <<-EOQ
     select
       instance_id as "ID",
       tags ->> 'Name' as "Name",
       instance_state as "Instance State",
-      '${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn=' || arn as link
+      '${dashboard.ec2_instance_detail.url_path}?input.instance_arn=' || arn as link
     from
       aws_ec2_instance
     where
@@ -160,7 +160,7 @@ query "aws_ec2_ami_instances" {
 
 }
 
-query "aws_ec2_ami_shared_with" {
+query "ec2_ami_shared_with" {
   sql = <<-EOQ
     with sharing as (
       select
@@ -202,7 +202,7 @@ query "aws_ec2_ami_shared_with" {
 
 }
 
-query "aws_ec2_ami_state" {
+query "ec2_ami_state" {
   sql = <<-EOQ
     select
       'State' as label,
@@ -217,7 +217,7 @@ query "aws_ec2_ami_state" {
 
 }
 
-query "aws_ec2_ami_architecture" {
+query "ec2_ami_architecture" {
   sql = <<-EOQ
     select
       'Architecture' as label,
@@ -232,7 +232,7 @@ query "aws_ec2_ami_architecture" {
 
 }
 
-query "aws_ec2_ami_hypervisor" {
+query "ec2_ami_hypervisor" {
   sql = <<-EOQ
     select
       'Hypervisor' as label,
@@ -247,7 +247,7 @@ query "aws_ec2_ami_hypervisor" {
 
 }
 
-query "aws_ec2_ami_virtualization" {
+query "ec2_ami_virtualization" {
   sql = <<-EOQ
     select
       'Virtualization Type' as label,
@@ -262,7 +262,7 @@ query "aws_ec2_ami_virtualization" {
 
 }
 
-query "aws_ec2_ami_overview" {
+query "ec2_ami_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -282,7 +282,7 @@ query "aws_ec2_ami_overview" {
   param "image_id" {}
 }
 
-query "aws_ec2_ami_tags" {
+query "ec2_ami_tags" {
   sql = <<-EOQ
     select
       t ->> 'Key' as "Key",
@@ -299,8 +299,8 @@ query "aws_ec2_ami_tags" {
   param "image_id" {}
 }
 
-node "aws_ec2_ami_node" {
-  category = category.aws_ec2_ami
+node "ec2_ami_node" {
+  category = category.ec2_ami
 
   sql = <<-EOQ
     select
@@ -323,8 +323,8 @@ node "aws_ec2_ami_node" {
   param "image_id" {}
 }
 
-node "aws_ec2_ami_to_ec2_instance_node" {
-  category = category.aws_ec2_instance
+node "ec2_ami_to_ec2_instance_node" {
+  category = category.ec2_instance
 
   sql = <<-EOQ
     select
@@ -346,7 +346,7 @@ node "aws_ec2_ami_to_ec2_instance_node" {
   param "image_id" {}
 }
 
-edge "aws_ec2_ami_to_ec2_instance_edge" {
+edge "ec2_ami_to_ec2_instance_edge" {
   title = "instance"
 
   sql = <<-EOQ
@@ -362,8 +362,8 @@ edge "aws_ec2_ami_to_ec2_instance_edge" {
   param "image_id" {}
 }
 
-node "aws_ec2_ami_from_ebs_snapshot_node" {
-  category = category.aws_ebs_snapshot
+node "ec2_ami_from_ebs_snapshot_node" {
+  category = category.ebs_snapshot
 
   sql = <<-EOQ
     select
@@ -388,7 +388,7 @@ node "aws_ec2_ami_from_ebs_snapshot_node" {
   param "image_id" {}
 }
 
-edge "aws_ec2_ami_from_ebs_snapshot_edge" {
+edge "ec2_ami_from_ebs_snapshot_edge" {
   title = "ami"
 
   sql = <<-EOQ

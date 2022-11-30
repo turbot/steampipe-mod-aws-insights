@@ -1,5 +1,5 @@
-node "aws_dynamodb_table_nodes" {
-  category = category.aws_dynamodb_table
+node "dynamodb_table" {
+  category = category.dynamodb_table
 
   sql = <<-EOQ
     select
@@ -21,8 +21,8 @@ node "aws_dynamodb_table_nodes" {
   param "table_arns" {}
 }
 
-node "aws_dynamodb_table_to_dynamodb_backup_node" {
-  category = category.aws_dynamodb_backup
+node "dynamodb_table_to_dynamodb_backup_node" {
+  category = category.dynamodb_backup
 
   sql = <<-EOQ
   select

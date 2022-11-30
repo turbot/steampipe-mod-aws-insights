@@ -1,4 +1,4 @@
-dashboard "aws_kms_key_age_report" {
+dashboard "kms_key_age_report" {
 
   title         = "AWS KMS Key Age Report"
   documentation = file("./dashboards/kms/docs/kms_key_report_age.md")
@@ -12,37 +12,37 @@ dashboard "aws_kms_key_age_report" {
 
     card {
       width = 2
-      query = query.aws_kms_key_count
+      query = query.kms_key_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_kms_key_24_hours_count
+      query = query.kms_key_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_kms_key_30_days_count
+      query = query.kms_key_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_kms_key_30_90_days_count
+      query = query.kms_key_30_90_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_kms_key_90_365_days_count
+      query = query.kms_key_90_365_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_kms_key_1_year_count
+      query = query.kms_key_1_year_count
     }
 
   }
@@ -57,15 +57,15 @@ dashboard "aws_kms_key_age_report" {
     }
 
     column "Key ID" {
-      href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.ARN | @uri}}"
+      href = "${dashboard.kms_key_detail.url_path}?input.key_arn={{.ARN | @uri}}"
     }
 
-    query = query.aws_kms_key_age_table
+    query = query.kms_key_age_table
   }
 
 }
 
-query "aws_kms_key_24_hours_count" {
+query "kms_key_24_hours_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -77,7 +77,7 @@ query "aws_kms_key_24_hours_count" {
   EOQ
 }
 
-query "aws_kms_key_30_days_count" {
+query "kms_key_30_days_count" {
   sql = <<-EOQ
      select
       count(*) as value,
@@ -89,7 +89,7 @@ query "aws_kms_key_30_days_count" {
   EOQ
 }
 
-query "aws_kms_key_30_90_days_count" {
+query "kms_key_30_90_days_count" {
   sql = <<-EOQ
      select
       count(*) as value,
@@ -101,7 +101,7 @@ query "aws_kms_key_30_90_days_count" {
   EOQ
 }
 
-query "aws_kms_key_90_365_days_count" {
+query "kms_key_90_365_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -113,7 +113,7 @@ query "aws_kms_key_90_365_days_count" {
   EOQ
 }
 
-query "aws_kms_key_1_year_count" {
+query "kms_key_1_year_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -125,7 +125,7 @@ query "aws_kms_key_1_year_count" {
   EOQ
 }
 
-query "aws_kms_key_age_table" {
+query "kms_key_age_table" {
   sql = <<-EOQ
     select
       k.id as "Key ID",

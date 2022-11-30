@@ -1,4 +1,4 @@
-dashboard "aws_ec2_application_load_balancer_detail" {
+dashboard "ec2_application_load_balancer_detail" {
   title         = "AWS EC2 Application Load Balancer Detail"
   documentation = file("./dashboards/ec2/docs/ec2_application_load_balancer_detail.md")
 
@@ -8,7 +8,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
 
   input "alb" {
     title = "Select an Application Load balancer:"
-    query = query.aws_alb_input
+    query = query.alb_input
     width = 4
   }
 
@@ -16,7 +16,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_alb_state
+      query = query.alb_state
       args = {
         arn = self.input.alb.value
       }
@@ -24,7 +24,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_alb_scheme
+      query = query.alb_scheme
       args = {
         arn = self.input.alb.value
       }
@@ -32,7 +32,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_alb_ip_type
+      query = query.alb_ip_type
       args = {
         arn = self.input.alb.value
       }
@@ -40,7 +40,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_alb_az_zone
+      query = query.alb_az_zone
       args = {
         arn = self.input.alb.value
       }
@@ -48,7 +48,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_alb_logging_enabled
+      query = query.alb_logging_enabled
       args = {
         arn = self.input.alb.value
       }
@@ -56,7 +56,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_alb_deletion_protection
+      query = query.alb_deletion_protection
       args = {
         arn = self.input.alb.value
       }
@@ -71,24 +71,24 @@ dashboard "aws_ec2_application_load_balancer_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_ec2_application_load_balancer_nodes,
-        node.aws_ec2_alb_to_vpc_security_group_node,
-        node.aws_ec2_alb_to_vpc_subnet_node,
-        node.aws_ec2_alb_to_s3_bucket_node,
-        node.aws_ec2_alb_vpc_security_group_to_vpc_node,
-        node.aws_ec2_lb_to_target_group_node,
-        node.aws_ec2_lb_to_ec2_instance_node,
-        node.aws_ec2_lb_from_ec2_load_balancer_listener_node
+        node.ec2_application_load_balancer,
+        node.ec2_alb_to_vpc_security_group_node,
+        node.ec2_alb_to_vpc_subnet_node,
+        node.ec2_alb_to_s3_bucket_node,
+        node.ec2_alb_vpc_security_group_to_vpc_node,
+        node.ec2_lb_to_target_group_node,
+        node.ec2_lb_to_ec2_instance_node,
+        node.ec2_lb_from_ec2_load_balancer_listener_node
       ]
 
       edges = [
-        edge.aws_ec2_alb_to_vpc_subnet_edge,
-        edge.aws_ec2_alb_to_vpc_security_group_edge,
-        edge.aws_ec2_alb_to_s3_bucket_edge,
-        edge.aws_ec2_alb_vpc_security_group_to_vpc_edge,
-        edge.aws_ec2_lb_to_target_group_edge,
-        edge.aws_ec2_lb_to_ec2_instance_edge,
-        edge.aws_ec2_lb_from_ec2_load_balancer_listener_edge
+        edge.ec2_alb_to_vpc_subnet_edge,
+        edge.ec2_alb_to_vpc_security_group_edge,
+        edge.ec2_alb_to_s3_bucket_edge,
+        edge.ec2_alb_vpc_security_group_to_vpc_edge,
+        edge.ec2_lb_to_target_group_edge,
+        edge.ec2_lb_to_ec2_instance_edge,
+        edge.ec2_lb_from_ec2_load_balancer_listener_edge
       ]
 
       args = {
@@ -104,7 +104,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
       title = "Overview"
       type  = "line"
       width = 3
-      query = query.aws_ec2_alb_overview
+      query = query.ec2_alb_overview
       args = {
         arn = self.input.alb.value
       }
@@ -114,7 +114,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
     table {
       title = "Tags"
       width = 3
-      query = query.aws_ec2_alb_tags
+      query = query.ec2_alb_tags
       args = {
         arn = self.input.alb.value
       }
@@ -123,7 +123,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
     table {
       title = "Attributes"
       width = 6
-      query = query.aws_ec2_alb_attributes
+      query = query.ec2_alb_attributes
       args = {
         arn = self.input.alb.value
       }
@@ -132,7 +132,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
 
 }
 
-query "aws_alb_input" {
+query "alb_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -148,7 +148,7 @@ query "aws_alb_input" {
   EOQ
 }
 
-query "aws_ec2_alb_overview" {
+query "ec2_alb_overview" {
   sql = <<-EOQ
     select
       title as "Title",
@@ -167,7 +167,7 @@ query "aws_ec2_alb_overview" {
   param "arn" {}
 }
 
-query "aws_ec2_alb_tags" {
+query "ec2_alb_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -184,7 +184,7 @@ query "aws_ec2_alb_tags" {
   param "arn" {}
 }
 
-query "aws_ec2_alb_attributes" {
+query "ec2_alb_attributes" {
   sql = <<-EOQ
     select
       lb ->> 'Key' as "Key",
@@ -202,7 +202,7 @@ query "aws_ec2_alb_attributes" {
   param "arn" {}
 }
 
-query "aws_alb_ip_type" {
+query "alb_ip_type" {
   sql = <<-EOQ
     select
       'IP Address Type' as label,
@@ -216,7 +216,7 @@ query "aws_alb_ip_type" {
   param "arn" {}
 }
 
-query "aws_alb_logging_enabled" {
+query "alb_logging_enabled" {
   sql = <<-EOQ
     select
       'Logging' as label,
@@ -233,7 +233,7 @@ query "aws_alb_logging_enabled" {
   param "arn" {}
 }
 
-query "aws_alb_deletion_protection" {
+query "alb_deletion_protection" {
   sql = <<-EOQ
     select
       'Deletion Protection' as label,
@@ -250,7 +250,7 @@ query "aws_alb_deletion_protection" {
   param "arn" {}
 }
 
-query "aws_alb_az_zone" {
+query "alb_az_zone" {
   sql = <<-EOQ
     select
       'Availibility Zones' as label,
@@ -266,7 +266,7 @@ query "aws_alb_az_zone" {
   param "arn" {}
 }
 
-query "aws_alb_state" {
+query "alb_state" {
   sql = <<-EOQ
     select
       'State' as label,
@@ -280,7 +280,7 @@ query "aws_alb_state" {
   param "arn" {}
 }
 
-query "aws_alb_scheme" {
+query "alb_scheme" {
   sql = <<-EOQ
     select
       'Scheme' as label,
@@ -294,32 +294,8 @@ query "aws_alb_scheme" {
   param "arn" {}
 }
 
-node "aws_ec2_application_load_balancer_nodes" {
-  category = category.aws_ec2_application_load_balancer
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'State Code', state_code,
-        'Account ID', account_id,
-        'VPC ID', vpc_id,
-        'Region', region,
-        'DNS Name', dns_name
-      ) as properties
-    from
-      aws_ec2_application_load_balancer
-    where
-      arn = any($1);
-  EOQ
-
-  param "alb_arns" {}
-}
-
-node "aws_ec2_alb_to_vpc_subnet_node" {
-  category = category.aws_vpc_subnet
+node "ec2_alb_to_vpc_subnet_node" {
+  category = category.vpc_subnet
 
   sql = <<-EOQ
     select
@@ -344,7 +320,7 @@ node "aws_ec2_alb_to_vpc_subnet_node" {
   param "arn" {}
 }
 
-edge "aws_ec2_alb_to_vpc_subnet_edge" {
+edge "ec2_alb_to_vpc_subnet_edge" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -364,8 +340,8 @@ edge "aws_ec2_alb_to_vpc_subnet_edge" {
   param "arn" {}
 }
 
-node "aws_ec2_alb_to_vpc_security_group_node" {
-  category = category.aws_vpc_security_group
+node "ec2_alb_to_vpc_security_group_node" {
+  category = category.vpc_security_group
 
   sql = <<-EOQ
     select
@@ -394,7 +370,7 @@ node "aws_ec2_alb_to_vpc_security_group_node" {
   param "arn" {}
 }
 
-edge "aws_ec2_alb_to_vpc_security_group_edge" {
+edge "ec2_alb_to_vpc_security_group_edge" {
   title = "security group"
 
   sql = <<-EOQ
@@ -416,8 +392,8 @@ edge "aws_ec2_alb_to_vpc_security_group_edge" {
   param "arn" {}
 }
 
-node "aws_ec2_alb_to_s3_bucket_node" {
-  category = category.aws_s3_bucket
+node "ec2_alb_to_s3_bucket_node" {
+  category = category.s3_bucket
 
   sql = <<-EOQ
     select
@@ -443,7 +419,7 @@ node "aws_ec2_alb_to_s3_bucket_node" {
   param "arn" {}
 }
 
-edge "aws_ec2_alb_to_s3_bucket_edge" {
+edge "ec2_alb_to_s3_bucket_edge" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -463,8 +439,8 @@ edge "aws_ec2_alb_to_s3_bucket_edge" {
   param "arn" {}
 }
 
-node "aws_ec2_alb_vpc_security_group_to_vpc_node" {
-  category = category.aws_vpc
+node "ec2_alb_vpc_security_group_to_vpc_node" {
+  category = category.vpc_vpc
 
   sql = <<-EOQ
     select
@@ -487,7 +463,7 @@ node "aws_ec2_alb_vpc_security_group_to_vpc_node" {
   param "arn" {}
 }
 
-edge "aws_ec2_alb_vpc_security_group_to_vpc_edge" {
+edge "ec2_alb_vpc_security_group_to_vpc_edge" {
   title = "vpc"
 
   sql = <<-EOQ
@@ -507,7 +483,7 @@ edge "aws_ec2_alb_vpc_security_group_to_vpc_edge" {
 }
 
 
-edge "aws_ec2_application_load_balancer_to_acm_certificate_edges" {
+edge "ec2_application_load_balancer_to_acm_certificate" {
   title = "ssl via"
 
   sql = <<-EOQ

@@ -4,9 +4,9 @@ locals {
   }
 }
 
-category "aws_codebuild_project" {
+category "codebuild_project" {
   title = "CodeBuild Project"
   color = local.developer_tools_color
-  href  = "/aws_insights.dashboard.aws_codebuild_project_detail?input.codebuild_project_arn={{.properties.'ARN' | @uri}}"
+  href  = "/aws_insights.dashboard.codebuild_project_detail?input.codebuild_project_arn={{.properties.'ARN' | @uri}}"
   icon  = "code-bracket-square"
 }

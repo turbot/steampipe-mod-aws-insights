@@ -1,4 +1,4 @@
-dashboard "aws_iam_policy_detail" {
+dashboard "iam_policy_detail" {
   title         = "AWS IAM Policy Detail"
   documentation = file("./dashboards/iam/docs/iam_policy_detail.md")
   tags = merge(local.iam_common_tags, {
@@ -7,7 +7,7 @@ dashboard "aws_iam_policy_detail" {
 
   input "policy_arn" {
     title = "Select a policy:"
-    query = query.aws_iam_policy_input
+    query = query.iam_policy_input
     width = 4
   }
 
@@ -15,7 +15,7 @@ dashboard "aws_iam_policy_detail" {
 
     card {
       width = 2
-      query = query.aws_iam_policy_aws_managed
+      query = query.iam_policy_aws_managed
       args = {
         policy_arn = self.input.policy_arn.value
       }
@@ -23,7 +23,7 @@ dashboard "aws_iam_policy_detail" {
 
     card {
       width = 2
-      query = query.aws_iam_policy_attached
+      query = query.iam_policy_attached
       args = {
         policy_arn = self.input.policy_arn.value
       }
@@ -97,33 +97,33 @@ dashboard "aws_iam_policy_detail" {
       }
 
       nodes = [
-        node.aws_iam_policy_nodes,
-        node.aws_iam_role_nodes,
-        node.aws_iam_user_nodes,
-        node.aws_iam_group_nodes,
+        node.iam_policy,
+        node.iam_role,
+        node.iam_user,
+        node.iam_group,
 
-        node.aws_iam_policy_statement_nodes,
-        node.aws_iam_policy_statement_action_notaction_nodes,
-        node.aws_iam_policy_statement_resource_notresource_nodes,
-        node.aws_iam_policy_statement_condition_nodes,
-        node.aws_iam_policy_statement_condition_key_nodes,
-        node.aws_iam_policy_statement_condition_key_value_nodes,
+        node.iam_policy_statement,
+        node.iam_policy_statement_action_notaction,
+        node.iam_policy_statement_resource_notresource,
+        node.iam_policy_statement_condition,
+        node.iam_policy_statement_condition_key,
+        node.iam_policy_statement_condition_key_value,
 
       ]
 
       edges = [
-        edge.aws_iam_policy_from_iam_role_edges,
-        edge.aws_iam_policy_from_iam_user_edges,
-        edge.aws_iam_policy_from_iam_group_edges,
+        edge.iam_policy_from_iam_role,
+        edge.iam_policy_from_iam_user,
+        edge.iam_policy_from_iam_group,
 
-        edge.aws_iam_policy_statement_edges,
-        edge.aws_iam_policy_statement_action_edges,
-        edge.aws_iam_policy_statement_resource_edges,
-        edge.aws_iam_policy_statement_notaction_edges,
-        edge.aws_iam_policy_statement_notresource_edges,
-        edge.aws_iam_policy_statement_condition_edges,
-        edge.aws_iam_policy_statement_condition_key_edges,
-        edge.aws_iam_policy_statement_condition_key_value_edges,
+        edge.iam_policy_statement,
+        edge.iam_policy_statement_action,
+        edge.iam_policy_statement_resource,
+        edge.iam_policy_statement_notaction,
+        edge.iam_policy_statement_notresource,
+        edge.iam_policy_statement_condition,
+        edge.iam_policy_statement_condition_key,
+        edge.iam_policy_statement_condition_key_value,
       ]
 
       args = {
@@ -146,7 +146,7 @@ dashboard "aws_iam_policy_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_iam_policy_overview
+        query = query.iam_policy_overview
         args = {
           policy_arn = self.input.policy_arn.value
         }
@@ -156,7 +156,7 @@ dashboard "aws_iam_policy_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_iam_policy_tags
+        query = query.iam_policy_tags
         args = {
           policy_arn = self.input.policy_arn.value
         }
@@ -169,16 +169,16 @@ dashboard "aws_iam_policy_detail" {
       width = 6
       table {
         title = "Policy Statement"
-        query = query.aws_iam_policy_statement
+        query = query.iam_policy_statement
         args = {
           policy_arn = self.input.policy_arn.value
         }
 
         column "Action" {
-          href = "/aws_insights.dashboard.aws_iam_action_glob_report?input.action_glob={{.\"Action\" | @uri}}"
+          href = "/aws_insights.dashboard.iam_action_glob_report?input.action_glob={{.\"Action\" | @uri}}"
         }
         column "NotAction" {
-          href = "/aws_insights.dashboard.aws_iam_action_glob_report?input.action_glob={{.\"NotAction\" | @uri}}"
+          href = "/aws_insights.dashboard.iam_action_glob_report?input.action_glob={{.\"NotAction\" | @uri}}"
         }
       }
 
@@ -187,7 +187,7 @@ dashboard "aws_iam_policy_detail" {
   }
 }
 
-query "aws_iam_policy_input" {
+query "iam_policy_input" {
   sql = <<-EOQ
     with policies as (
       select
@@ -221,7 +221,7 @@ query "aws_iam_policy_input" {
   EOQ
 }
 
-query "aws_iam_policy_aws_managed" {
+query "iam_policy_aws_managed" {
   sql = <<-EOQ
     select
       case when is_aws_managed then 'AWS' else 'Customer' end as value,
@@ -235,7 +235,7 @@ query "aws_iam_policy_aws_managed" {
   param "policy_arn" {}
 }
 
-query "aws_iam_policy_attached" {
+query "iam_policy_attached" {
   sql = <<-EOQ
     select
       case when is_attached then 'Attached' else 'Detached' end as value,
@@ -251,7 +251,7 @@ query "aws_iam_policy_attached" {
 }
 
 
-query "aws_iam_policy_overview" {
+query "iam_policy_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -274,7 +274,7 @@ query "aws_iam_policy_overview" {
   param "policy_arn" {}
 }
 
-query "aws_iam_policy_tags" {
+query "iam_policy_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -291,7 +291,7 @@ query "aws_iam_policy_tags" {
   param "policy_arn" {}
 }
 
-query "aws_iam_policy_statement" {
+query "iam_policy_statement" {
   sql = <<-EOQ
     with policy as (
       select
@@ -323,8 +323,8 @@ query "aws_iam_policy_statement" {
 }
 
 // *** Nodes and Edges
-node "aws_iam_policy_nodes" {
-  category = category.aws_iam_policy
+node "iam_policy" {
+  category = category.iam_policy
 
   sql = <<-EOQ
     select
@@ -348,7 +348,7 @@ node "aws_iam_policy_nodes" {
   param "policy_arns" {}
 }
 
-edge "aws_iam_policy_from_iam_user_edges" {
+edge "iam_policy_from_iam_user" {
   title = "attaches"
 
   sql = <<-EOQ
@@ -365,7 +365,7 @@ edge "aws_iam_policy_from_iam_user_edges" {
 
 }
 
-edge "aws_iam_policy_from_iam_role_edges" {
+edge "iam_policy_from_iam_role" {
   title = "attaches"
 
   sql = <<-EOQ
@@ -381,7 +381,7 @@ edge "aws_iam_policy_from_iam_role_edges" {
   param "role_arns" {}
 }
 
-edge "aws_iam_policy_from_iam_group_edges" {
+edge "iam_policy_from_iam_group" {
   title = "attaches"
 
   sql = <<-EOQ
@@ -398,8 +398,8 @@ edge "aws_iam_policy_from_iam_group_edges" {
 
 }
 
-node "aws_iam_policy_statement_nodes" {
-  category = category.aws_iam_policy_statement
+node "iam_policy_statement" {
+  category = category.iam_policy_statement
 
   sql = <<-EOQ
     select
@@ -415,7 +415,7 @@ node "aws_iam_policy_statement_nodes" {
   param "policy_std" {}
 }
 
-edge "aws_iam_policy_statement_edges" {
+edge "iam_policy_statement" {
   title = "statement"
 
   sql = <<-EOQ
@@ -435,7 +435,7 @@ edge "aws_iam_policy_statement_edges" {
 }
 
 
-edge "aws_iam_policy_statement_action_edges" {
+edge "iam_policy_statement_action" {
   //title = "allows"
   sql = <<-EOQ
 
@@ -453,7 +453,7 @@ edge "aws_iam_policy_statement_action_edges" {
   param "policy_std" {}
 }
 
-edge "aws_iam_policy_statement_notaction_edges" {
+edge "iam_policy_statement_notaction" {
   sql = <<-EOQ
 
     select
@@ -471,7 +471,7 @@ edge "aws_iam_policy_statement_notaction_edges" {
 }
 
 
-edge "aws_iam_policy_statement_resource_edges" {
+edge "iam_policy_statement_resource" {
   title = "resource"
 
   sql = <<-EOQ
@@ -489,7 +489,7 @@ edge "aws_iam_policy_statement_resource_edges" {
   param "policy_std" {}
 }
 
-edge "aws_iam_policy_statement_notresource_edges" {
+edge "iam_policy_statement_notresource" {
   title = "not resource"
 
   sql = <<-EOQ
@@ -507,8 +507,8 @@ edge "aws_iam_policy_statement_notresource_edges" {
   param "policy_std" {}
 }
 
-node "aws_iam_policy_statement_condition_nodes" {
-  category = category.aws_iam_policy_condition
+node "iam_policy_statement_condition" {
+  category = category.iam_policy_condition
 
   sql = <<-EOQ
     select
@@ -525,7 +525,7 @@ node "aws_iam_policy_statement_condition_nodes" {
   param "policy_std" {}
 }
 
-edge "aws_iam_policy_statement_condition_edges" {
+edge "iam_policy_statement_condition" {
   title = "condition"
   sql   = <<-EOQ
 
@@ -542,8 +542,8 @@ edge "aws_iam_policy_statement_condition_edges" {
   param "policy_std" {}
 }
 
-node "aws_iam_policy_statement_condition_key_nodes" {
-  category = category.aws_iam_policy_condition_key
+node "iam_policy_statement_condition_key" {
+  category = category.iam_policy_condition_key
 
   sql = <<-EOQ
     select
@@ -561,7 +561,7 @@ node "aws_iam_policy_statement_condition_key_nodes" {
   param "policy_std" {}
 }
 
-edge "aws_iam_policy_statement_condition_key_edges" {
+edge "iam_policy_statement_condition_key" {
   title = "all of"
   sql   = <<-EOQ
     select
@@ -578,8 +578,8 @@ edge "aws_iam_policy_statement_condition_key_edges" {
   param "policy_std" {}
 }
 
-node "aws_iam_policy_statement_condition_key_value_nodes" {
-  category = category.aws_iam_policy_condition_value
+node "iam_policy_statement_condition_key_value" {
+  category = category.iam_policy_condition_value
 
   sql = <<-EOQ
     select
@@ -597,7 +597,7 @@ node "aws_iam_policy_statement_condition_key_value_nodes" {
   param "policy_std" {}
 }
 
-edge "aws_iam_policy_statement_condition_key_value_edges" {
+edge "iam_policy_statement_condition_key_value" {
   title = "any of"
   sql   = <<-EOQ
     select
@@ -615,8 +615,8 @@ edge "aws_iam_policy_statement_condition_key_value_edges" {
   param "policy_std" {}
 }
 
-node "aws_iam_policy_statement_action_notaction_nodes" {
-  category = category.aws_iam_policy_action
+node "iam_policy_statement_action_notaction" {
+  category = category.iam_policy_action
 
   sql = <<-EOQ
 
@@ -631,8 +631,8 @@ node "aws_iam_policy_statement_action_notaction_nodes" {
   param "policy_std" {}
 }
 
-node "aws_iam_policy_statement_resource_notresource_nodes" {
-  category = category.aws_iam_policy_resource
+node "iam_policy_statement_resource_notresource" {
+  category = category.iam_policy_resource
 
   sql = <<-EOQ
     select
@@ -647,8 +647,8 @@ node "aws_iam_policy_statement_resource_notresource_nodes" {
   param "policy_std" {}
 }
 
-node "aws_iam_policy_globbed_notaction_nodes" {
-  category = category.aws_iam_policy_notaction
+node "iam_policy_globbed_notaction" {
+  category = category.iam_policy_notaction
 
   sql = <<-EOQ
     select
@@ -666,7 +666,7 @@ node "aws_iam_policy_globbed_notaction_nodes" {
   param "policy_std" {}
 }
 
-edge "aws_iam_policy_globbed_notaction_edges" {
+edge "iam_policy_globbed_notaction" {
 
   sql = <<-EOQ
 

@@ -1,4 +1,4 @@
-dashboard "aws_efs_file_system_report_age" {
+dashboard "efs_file_system_report_age" {
   title         = "AWS EFS File System Age Report"
   documentation = file("./dashboards/efs/docs/efs_file_system_report_age.md")
 
@@ -10,38 +10,38 @@ dashboard "aws_efs_file_system_report_age" {
   container {
 
     card {
-      query = query.aws_efs_file_system_count
+      query = query.efs_file_system_count
       width = 2
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_efs_file_system_24_hours_count
+      query = query.efs_file_system_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_efs_file_system_30_days_count
+      query = query.efs_file_system_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_efs_file_system_30_90_days_count
+      query = query.efs_file_system_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query = query.aws_efs_file_system_90_365_days_count
+      query = query.efs_file_system_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query = query.aws_efs_file_system_1_year_count
+      query = query.efs_file_system_1_year_count
     }
 
   }
@@ -56,14 +56,14 @@ dashboard "aws_efs_file_system_report_age" {
     }
 
     column "Name" {
-      href = "${dashboard.aws_efs_file_system_detail.url_path}?input.efs_file_system_arn={{.ARN | @uri}}"
+      href = "${dashboard.efs_file_system_detail.url_path}?input.efs_file_system_arn={{.ARN | @uri}}"
     }
 
-    query = query.aws_efs_file_system_table
+    query = query.efs_file_system_table
   }
 }
 
-query "aws_efs_file_system_24_hours_count" {
+query "efs_file_system_24_hours_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -75,7 +75,7 @@ query "aws_efs_file_system_24_hours_count" {
   EOQ
 }
 
-query "aws_efs_file_system_30_days_count" {
+query "efs_file_system_30_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -87,7 +87,7 @@ query "aws_efs_file_system_30_days_count" {
   EOQ
 }
 
-query "aws_efs_file_system_30_90_days_count" {
+query "efs_file_system_30_90_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -99,7 +99,7 @@ query "aws_efs_file_system_30_90_days_count" {
   EOQ
 }
 
-query "aws_efs_file_system_90_365_days_count" {
+query "efs_file_system_90_365_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -111,7 +111,7 @@ query "aws_efs_file_system_90_365_days_count" {
   EOQ
 }
 
-query "aws_efs_file_system_1_year_count" {
+query "efs_file_system_1_year_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -123,7 +123,7 @@ query "aws_efs_file_system_1_year_count" {
   EOQ
 }
 
-query "aws_efs_file_system_table" {
+query "efs_file_system_table" {
   sql = <<-EOQ
     select
       fs.arn as "ARN",

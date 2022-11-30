@@ -9,7 +9,7 @@ dashboard "glacier_vault_detail" {
 
   input "vault_arn" {
     title = "Select a vault:"
-    query = query.aws_glacier_vault_input
+    query = query.glacier_vault_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "glacier_vault_detail" {
 
     card {
       width = 2
-      query = query.aws_glacier_vault_archives_count
+      query = query.glacier_vault_archives_count
       args = {
         arn = self.input.vault_arn.value
       }
@@ -25,7 +25,7 @@ dashboard "glacier_vault_detail" {
 
     card {
       width = 2
-      query = query.aws_glacier_vault_size
+      query = query.glacier_vault_size
       args = {
         arn = self.input.vault_arn.value
       }
@@ -41,12 +41,12 @@ dashboard "glacier_vault_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_glacier_vault_node,
-        node.aws_glacier_vault_to_sns_topic_node
+        node.glacier_vault_node,
+        node.glacier_vault_to_sns_topic_node
       ]
 
       edges = [
-        edge.aws_glacier_vault_to_sns_topic_edge
+        edge.glacier_vault_to_sns_topic_edge
       ]
 
       args = {
@@ -65,7 +65,7 @@ dashboard "glacier_vault_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_glacier_vault_overview
+        query = query.glacier_vault_overview
         args = {
           arn = self.input.vault_arn.value
         }
@@ -75,7 +75,7 @@ dashboard "glacier_vault_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_glacier_vault_tags
+        query = query.glacier_vault_tags
         args = {
           arn = self.input.vault_arn.value
         }
@@ -86,7 +86,7 @@ dashboard "glacier_vault_detail" {
       width = 6
       table {
         title = "Policy"
-        query = query.aws_glacier_vault_public_access_table
+        query = query.glacier_vault_public_access_table
         args = {
           arn = self.input.vault_arn.value
         }
@@ -94,7 +94,7 @@ dashboard "glacier_vault_detail" {
 
       table {
         title = "Vault Lock Policy"
-        query = query.aws_glacier_vault_lock_public_policy
+        query = query.glacier_vault_lock_public_policy
         args = {
           arn = self.input.vault_arn.value
         }
@@ -103,7 +103,7 @@ dashboard "glacier_vault_detail" {
   }
 }
 
-query "aws_glacier_vault_input" {
+query "glacier_vault_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -119,7 +119,7 @@ query "aws_glacier_vault_input" {
   EOQ
 }
 
-query "aws_glacier_vault_archives_count" {
+query "glacier_vault_archives_count" {
   sql = <<-EOQ
     select
       'Archives Count' as label,
@@ -133,7 +133,7 @@ query "aws_glacier_vault_archives_count" {
   param "arn" {}
 }
 
-query "aws_glacier_vault_size" {
+query "glacier_vault_size" {
   sql = <<-EOQ
     select
       'Size (bytes)' as label,
@@ -147,7 +147,7 @@ query "aws_glacier_vault_size" {
   param "arn" {}
 }
 
-query "aws_glacier_vault_overview" {
+query "glacier_vault_overview" {
   sql = <<-EOQ
     select
       vault_name as "Name",
@@ -165,7 +165,7 @@ query "aws_glacier_vault_overview" {
   param "arn" {}
 }
 
-query "aws_glacier_vault_tags" {
+query "glacier_vault_tags" {
   sql = <<-EOQ
     with jsondata as (
     select
@@ -186,7 +186,7 @@ query "aws_glacier_vault_tags" {
   param "arn" {}
 }
 
-query "aws_glacier_vault_public_access_table" {
+query "glacier_vault_public_access_table" {
   sql = <<-EOQ
     select
       v.vault_name as "Name",
@@ -204,7 +204,7 @@ query "aws_glacier_vault_public_access_table" {
   EOQ
 }
 
-query "aws_glacier_vault_lock_public_policy" {
+query "glacier_vault_lock_public_policy" {
   sql = <<-EOQ
     select
       v.vault_name as "Name",
@@ -222,8 +222,8 @@ query "aws_glacier_vault_lock_public_policy" {
   EOQ
 }
 
-node "aws_glacier_vault_node" {
-  category = category.aws_glacier_vault
+node "glacier_vault_node" {
+  category = category.glacier_vault
 
   sql = <<-EOQ
     select
@@ -244,8 +244,8 @@ node "aws_glacier_vault_node" {
   param "arn" {}
 }
 
-node "aws_glacier_vault_to_sns_topic_node" {
-  category = category.aws_sns_topic
+node "glacier_vault_to_sns_topic_node" {
+  category = category.sns_topic
 
   sql = <<-EOQ
     select
@@ -269,7 +269,7 @@ node "aws_glacier_vault_to_sns_topic_node" {
   param "arn" {}
 }
 
-edge "aws_glacier_vault_to_sns_topic_edge" {
+edge "glacier_vault_to_sns_topic_edge" {
   title = "notifies"
 
   sql = <<-EOQ

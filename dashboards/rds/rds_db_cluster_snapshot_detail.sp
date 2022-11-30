@@ -1,4 +1,4 @@
-dashboard "aws_rds_db_cluster_snapshot_detail" {
+dashboard "rds_db_cluster_snapshot_detail" {
 
   title         = "AWS RDS DB Cluster Snapshot Detail"
   documentation = file("./dashboards/rds/docs/rds_db_cluster_snapshot_detail.md")
@@ -9,14 +9,14 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
 
   input "snapshot_arn" {
     title = "Select a snapshot:"
-    query = query.aws_rds_db_cluster_snapshot_input
+    query = query.rds_db_cluster_snapshot_input
     width = 4
   }
 
   container {
 
     card {
-      query = query.aws_rds_db_cluster_snapshot_type
+      query = query.rds_db_cluster_snapshot_type
       width = 2
       args = {
         arn = self.input.snapshot_arn.value
@@ -24,7 +24,7 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
     }
 
     card {
-      query = query.aws_rds_db_cluster_snapshot_engine
+      query = query.rds_db_cluster_snapshot_engine
       width = 2
       args = {
         arn = self.input.snapshot_arn.value
@@ -32,7 +32,7 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
     }
 
     card {
-      query = query.aws_rds_db_cluster_snapshot_allocated_storage
+      query = query.rds_db_cluster_snapshot_allocated_storage
       width = 2
       args = {
         arn = self.input.snapshot_arn.value
@@ -40,7 +40,7 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
     }
 
     card {
-      query = query.aws_rds_db_cluster_snapshot_status
+      query = query.rds_db_cluster_snapshot_status
       width = 2
       args = {
         arn = self.input.snapshot_arn.value
@@ -48,7 +48,7 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
     }
 
     card {
-      query = query.aws_rds_db_cluster_snapshot_unencrypted
+      query = query.rds_db_cluster_snapshot_unencrypted
       width = 2
       args = {
         arn = self.input.snapshot_arn.value
@@ -56,7 +56,7 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
     }
 
     card {
-      query = query.aws_rds_db_cluster_snapshot_iam_database_authentication_enabled
+      query = query.rds_db_cluster_snapshot_iam_database_authentication_enabled
       width = 2
       args = {
         arn = self.input.snapshot_arn.value
@@ -101,14 +101,14 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
       }
 
       nodes = [
-        node.aws_rds_db_cluster_snapshot_nodes,
-        node.aws_kms_key_nodes,
-        node.aws_rds_db_cluster_nodes
+        node.rds_db_cluster_snapshot,
+        node.kms_key,
+        node.rds_db_cluster
       ]
 
       edges = [
-        edge.aws_rds_db_cluster_snapshot_to_kms_key_edges,
-        edge.aws_rds_db_cluster_to_rds_db_cluster_snapshot_edges
+        edge.rds_db_cluster_snapshot_to_kms_key,
+        edge.rds_db_cluster_to_rds_db_cluster_snapshot
       ]
 
       args = {
@@ -128,7 +128,7 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_rds_db_cluster_snapshot_overview
+        query = query.rds_db_cluster_snapshot_overview
         args = {
           arn = self.input.snapshot_arn.value
         }
@@ -138,7 +138,7 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_rds_db_cluster_snapshot_tags
+        query = query.rds_db_cluster_snapshot_tags
         args = {
           arn = self.input.snapshot_arn.value
         }
@@ -151,7 +151,7 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
 
       table {
         title = "Attributes"
-        query = query.aws_rds_db_cluster_snapshot_attributes
+        query = query.rds_db_cluster_snapshot_attributes
         args = {
           arn = self.input.snapshot_arn.value
         }
@@ -162,7 +162,7 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
   }
 }
 
-query "aws_rds_db_cluster_snapshot_input" {
+query "rds_db_cluster_snapshot_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -178,7 +178,7 @@ query "aws_rds_db_cluster_snapshot_input" {
   EOQ
 }
 
-query "aws_rds_db_cluster_snapshot_type" {
+query "rds_db_cluster_snapshot_type" {
   sql = <<-EOQ
     select
       'Type' as label,
@@ -192,7 +192,7 @@ query "aws_rds_db_cluster_snapshot_type" {
   param "arn" {}
 }
 
-query "aws_rds_db_cluster_snapshot_engine" {
+query "rds_db_cluster_snapshot_engine" {
   sql = <<-EOQ
     select
       'Engine' as label,
@@ -206,7 +206,7 @@ query "aws_rds_db_cluster_snapshot_engine" {
   param "arn" {}
 }
 
-query "aws_rds_db_cluster_snapshot_allocated_storage" {
+query "rds_db_cluster_snapshot_allocated_storage" {
   sql = <<-EOQ
     select
       'Size (GB)' as label,
@@ -220,7 +220,7 @@ query "aws_rds_db_cluster_snapshot_allocated_storage" {
   param "arn" {}
 }
 
-query "aws_rds_db_cluster_snapshot_status" {
+query "rds_db_cluster_snapshot_status" {
   sql = <<-EOQ
     select
       status as value,
@@ -235,7 +235,7 @@ query "aws_rds_db_cluster_snapshot_status" {
   param "arn" {}
 }
 
-query "aws_rds_db_cluster_snapshot_unencrypted" {
+query "rds_db_cluster_snapshot_unencrypted" {
   sql = <<-EOQ
     select
       case when storage_encrypted then 'Enabled' else 'Disabled' end as value,
@@ -250,7 +250,7 @@ query "aws_rds_db_cluster_snapshot_unencrypted" {
   param "arn" {}
 }
 
-query "aws_rds_db_cluster_snapshot_iam_database_authentication_enabled" {
+query "rds_db_cluster_snapshot_iam_database_authentication_enabled" {
   sql = <<-EOQ
     select
       'IAM Database Authentication' as label,
@@ -265,7 +265,7 @@ query "aws_rds_db_cluster_snapshot_iam_database_authentication_enabled" {
   param "arn" {}
 }
 
-query "aws_rds_db_cluster_snapshot_overview" {
+query "rds_db_cluster_snapshot_overview" {
   sql = <<-EOQ
     select
       db_cluster_snapshot_identifier as "Snapshot Name",
@@ -287,7 +287,7 @@ query "aws_rds_db_cluster_snapshot_overview" {
   param "arn" {}
 }
 
-query "aws_rds_db_cluster_snapshot_tags" {
+query "rds_db_cluster_snapshot_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -304,7 +304,7 @@ query "aws_rds_db_cluster_snapshot_tags" {
   param "arn" {}
 }
 
-query "aws_rds_db_cluster_snapshot_attributes" {
+query "rds_db_cluster_snapshot_attributes" {
   sql = <<-EOQ
     select
       attributes ->> 'AttributeName' as "Name",
@@ -320,8 +320,8 @@ query "aws_rds_db_cluster_snapshot_attributes" {
   param "arn" {}
 }
 
-node "aws_rds_db_cluster_snapshot_nodes" {
-  category = category.aws_rds_db_cluster_snapshot
+node "rds_db_cluster_snapshot" {
+  category = category.rds_db_cluster_snapshot
 
   sql = <<-EOQ
     select
@@ -346,7 +346,7 @@ node "aws_rds_db_cluster_snapshot_nodes" {
   param "rds_db_cluster_snapshot_arns" {}
 }
 
-edge "aws_rds_db_cluster_snapshot_to_kms_key_edges" {
+edge "rds_db_cluster_snapshot_to_kms_key" {
   title = "encrypted with"
 
   sql = <<-EOQ

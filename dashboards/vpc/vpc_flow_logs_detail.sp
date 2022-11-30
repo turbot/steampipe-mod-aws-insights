@@ -1,4 +1,4 @@
-dashboard "aws_vpc_flow_logs_detail" {
+dashboard "vpc_flow_logs_detail" {
 
   title         = "AWS VPC Flow Logs Detail"
   documentation = file("./dashboards/vpc/docs/vpc_flow_logs_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_vpc_flow_logs_detail" {
 
   input "flow_log_id" {
     title = "Select a flow log:"
-    query = query.aws_vpc_flow_log_input
+    query = query.vpc_flow_log_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "aws_vpc_flow_logs_detail" {
 
     card {
       width = 2
-      query = query.aws_vpc_flow_log_resource_id
+      query = query.vpc_flow_log_resource_id
       args = {
         flow_log_id = self.input.flow_log_id.value
       }
@@ -25,7 +25,7 @@ dashboard "aws_vpc_flow_logs_detail" {
 
     card {
       width = 2
-      query = query.aws_vpc_flow_log_deliver_logs_status
+      query = query.vpc_flow_log_deliver_logs_status
       args = {
         flow_log_id = self.input.flow_log_id.value
       }
@@ -130,22 +130,22 @@ dashboard "aws_vpc_flow_logs_detail" {
       }
 
       nodes = [
-        node.aws_vpc_flow_log_nodes,
-        node.aws_s3_bucket_nodes,
-        node.aws_cloudwatch_log_group_nodes,
-        node.aws_iam_role_nodes,
-        node.aws_ec2_network_interface_nodes,
-        node.aws_vpc_subnet_nodes,
-        node.aws_vpc_nodes
+        node.vpc_flow_log,
+        node.s3_bucket,
+        node.cloudwatch_log_group,
+        node.iam_role,
+        node.ec2_network_interface,
+        node.vpc_subnet,
+        node.vpc_vpc
       ]
 
       edges = [
-        edge.aws_vpc_flow_log_to_s3_bucket_edges,
-        edge.aws_vpc_flow_log_to_cloudwatch_log_group_edges,
-        edge.aws_vpc_flow_log_to_iam_role_edges,
-        edge.aws_ec2_network_interface_to_vpc_flow_log_edges,
-        edge.aws_vpc_subnet_to_vpc_flow_log_edges,
-        edge.aws_vpc_to_vpc_flow_log_edges
+        edge.vpc_flow_log_to_s3_bucket,
+        edge.vpc_flow_log_to_cloudwatch_log_group,
+        edge.vpc_flow_log_to_iam_role,
+        edge.ec2_network_interface_to_vpc_flow_log,
+        edge.vpc_subnet_to_vpc_flow_log,
+        edge.vpc_to_vpc_flow_log
       ]
 
       args = {
@@ -169,7 +169,7 @@ dashboard "aws_vpc_flow_logs_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_vpc_flow_log_overview
+        query = query.vpc_flow_log_overview
         args = {
           flow_log_id = self.input.flow_log_id.value
         }
@@ -179,7 +179,7 @@ dashboard "aws_vpc_flow_logs_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_vpc_flow_tags
+        query = query.vpc_flow_tags
         args = {
           flow_log_id = self.input.flow_log_id.value
         }
@@ -193,13 +193,13 @@ dashboard "aws_vpc_flow_logs_detail" {
       table {
         title = "Log Destination"
         width = 12
-        query = query.aws_vpc_flow_log_destination
+        query = query.vpc_flow_log_destination
         args = {
           flow_log_id = self.input.flow_log_id.value
         }
 
         column "Bucket" {
-          href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.'Bucket' | @uri}}"
+          href = "${dashboard.s3_bucket_detail.url_path}?input.bucket_arn={{.'Bucket' | @uri}}"
 
         }
       }
@@ -210,7 +210,7 @@ dashboard "aws_vpc_flow_logs_detail" {
 
 }
 
-query "aws_vpc_flow_log_input" {
+query "vpc_flow_log_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -227,7 +227,7 @@ query "aws_vpc_flow_log_input" {
 
 }
 
-query "aws_vpc_flow_log_resource_id" {
+query "vpc_flow_log_resource_id" {
   sql = <<-EOQ
     select
       'Resource ID' as label,
@@ -241,7 +241,7 @@ query "aws_vpc_flow_log_resource_id" {
   param "flow_log_id" {}
 }
 
-query "aws_vpc_flow_log_deliver_logs_status" {
+query "vpc_flow_log_deliver_logs_status" {
   sql = <<-EOQ
     select
       'Deliver Logs Status' as label,
@@ -256,8 +256,8 @@ query "aws_vpc_flow_log_deliver_logs_status" {
   param "flow_log_id" {}
 }
 
-node "aws_vpc_flow_log_nodes" {
-  category = category.aws_vpc_flow_log
+node "vpc_flow_log" {
+  category = category.vpc_flow_log
 
   sql = <<-EOQ
     select
@@ -278,7 +278,7 @@ node "aws_vpc_flow_log_nodes" {
   param "flow_log_ids" {}
 }
 
-edge "aws_vpc_flow_log_to_s3_bucket_edges" {
+edge "vpc_flow_log_to_s3_bucket" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -294,7 +294,7 @@ edge "aws_vpc_flow_log_to_s3_bucket_edges" {
   param "bucket_arns" {}
 }
 
-edge "aws_vpc_flow_log_to_cloudwatch_log_group_edges" {
+edge "vpc_flow_log_to_cloudwatch_log_group" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -310,7 +310,7 @@ edge "aws_vpc_flow_log_to_cloudwatch_log_group_edges" {
   param "log_group_arns" {}
 }
 
-edge "aws_vpc_flow_log_to_iam_role_edges" {
+edge "vpc_flow_log_to_iam_role" {
   title = "assumes"
 
   sql = <<-EOQ
@@ -326,7 +326,7 @@ edge "aws_vpc_flow_log_to_iam_role_edges" {
   param "role_arns" {}
 }
 
-edge "aws_vpc_subnet_to_vpc_flow_log_edges" {
+edge "vpc_subnet_to_vpc_flow_log" {
   title = "flow log"
 
   sql = <<-EOQ
@@ -342,7 +342,7 @@ edge "aws_vpc_subnet_to_vpc_flow_log_edges" {
   param "subnet_ids" {}
 }
 
-query "aws_vpc_flow_log_overview" {
+query "vpc_flow_log_overview" {
   sql = <<-EOQ
     select
       flow_log_id as "Flow Log ID",
@@ -361,7 +361,7 @@ query "aws_vpc_flow_log_overview" {
   param "flow_log_id" {}
 }
 
-query "aws_vpc_flow_tags" {
+query "vpc_flow_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -378,7 +378,7 @@ query "aws_vpc_flow_tags" {
   param "flow_log_id" {}
 }
 
-query "aws_vpc_flow_log_destination" {
+query "vpc_flow_log_destination" {
   sql = <<-EOQ
     select
       log_destination_type as "Log Destination Type",

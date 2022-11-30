@@ -1,4 +1,4 @@
-dashboard "aws_vpc_detail" {
+dashboard "vpc_detail" {
 
   title         = "AWS VPC Detail"
   documentation = file("./dashboards/vpc/docs/vpc_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_vpc_detail" {
 
   input "vpc_id" {
     title = "Select a VPC:"
-    query = query.aws_vpc_input
+    query = query.vpc_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "aws_vpc_detail" {
 
     card {
       width = 2
-      query = query.aws_vpc_num_ips_for_vpc
+      query = query.vpc_num_ips_for_vpc
       args = {
         vpc_id = self.input.vpc_id.value
       }
@@ -25,7 +25,7 @@ dashboard "aws_vpc_detail" {
 
     card {
       width = 2
-      query = query.aws_subnet_count_for_vpc
+      query = query.subnet_count_for_vpc
       args = {
         vpc_id = self.input.vpc_id.value
       }
@@ -33,7 +33,7 @@ dashboard "aws_vpc_detail" {
 
     card {
       width = 2
-      query = query.aws_vpc_is_default
+      query = query.vpc_is_default
       args = {
         vpc_id = self.input.vpc_id.value
       }
@@ -41,7 +41,7 @@ dashboard "aws_vpc_detail" {
 
     card {
       width = 2
-      query = query.aws_flow_logs_count_for_vpc
+      query = query.flow_logs_count_for_vpc
       args = {
         vpc_id = self.input.vpc_id.value
       }
@@ -200,52 +200,52 @@ dashboard "aws_vpc_detail" {
       }
 
       nodes = [
-        node.aws_vpc_nodes,
-        node.aws_vpc_flow_log_nodes,
-        node.aws_vpc_subnet_nodes,
-        node.aws_vpc_security_group_nodes,
-        node.aws_ec2_instance_nodes,
-        node.aws_lambda_function_nodes,
-        node.aws_ec2_application_load_balancer_nodes,
-        node.aws_ec2_network_load_balancer_nodes,
-        node.aws_ec2_classic_load_balancer_nodes,
-        node.aws_ec2_gateway_load_balancer_nodes,
-        node.aws_rds_db_instance_nodes,
-        node.aws_redshift_cluster_nodes,
+        node.vpc_vpc,
+        node.vpc_flow_log,
+        node.vpc_subnet,
+        node.vpc_security_group,
+        node.ec2_instance,
+        node.lambda_function,
+        node.ec2_application_load_balancer,
+        node.ec2_network_load_balancer,
+        node.ec2_classic_load_balancer,
+        node.ec2_gateway_load_balancer,
+        node.rds_db_instance,
+        node.redshift_cluster,
 
-        node.aws_vpc_s3_access_point_nodes,
-        node.aws_vpc_peered_vpc_nodes,
-        node.aws_vpc_az_nodes,
-        node.aws_vpc_igw_nodes,
-        node.aws_vpc_az_route_table_nodes,
-        node.aws_vpc_vcp_endpoint_nodes,
-        node.aws_vpc_transit_gateway_nodes,
-        node.aws_vpc_nat_gateway_nodes,
-        node.aws_vpc_vpn_gateway_nodes,
+        node.vpc_s3_access_point,
+        node.vpc_peered_vpc,
+        node.vpc_az,
+        node.vpc_igw,
+        node.vpc_az_route_table,
+        node.vpc_vcp_endpoint,
+        node.vpc_transit_gateway,
+        node.vpc_nat_gateway,
+        node.vpc_vpn_gateway,
       ]
 
       edges = [
-        edge.aws_vpc_to_az_edges,
-        edge.aws_vpc_to_vpc_flow_log_edges,
-        edge.aws_vpc_az_to_vpc_subnet_edges,
-        edge.aws_vpc_to_igw_edges,
-        edge.aws_vpc_subnet_to_route_table_edges,
-        edge.aws_vpc_to_vpc_route_table_edges,
-        edge.aws_vpc_subnet_to_endpoint_edges,
-        edge.aws_vpc_to_transit_gateway_edges,
-        edge.aws_vpc_subnet_to_nat_gateway_edges,
-        edge.aws_vpc_to_vpn_gateway_edges,
-        edge.aws_vpc_to_vpc_security_group_edges,
+        edge.vpc_to_az,
+        edge.vpc_to_vpc_flow_log,
+        edge.vpc_az_to_vpc_subnet,
+        edge.vpc_to_igw,
+        edge.vpc_subnet_to_route_table,
+        edge.vpc_to_vpc_route_table,
+        edge.vpc_subnet_to_endpoint,
+        edge.vpc_to_transit_gateway,
+        edge.vpc_subnet_to_nat_gateway,
+        edge.vpc_to_vpn_gateway,
+        edge.vpc_to_vpc_security_group,
 
-        edge.aws_vpc_subnet_to_instance_edges,
-        edge.aws_vpc_subnet_to_lambda_edges,
-        edge.aws_vpc_subnet_to_ec2_alb_edges,
-        edge.aws_vpc_subnet_to_ec2_nlb_edges,
-        edge.aws_vpc_subnet_to_ec2_clb_edges,
-        edge.aws_vpc_subnet_to_ec2_glb_edges,
-        edge.aws_vpc_subnet_to_rds_instance_edges,
-        edge.aws_vpc_to_s3_access_point_edges,
-        edge.aws_vpc_peered_vpc_edges
+        edge.vpc_subnet_to_instance,
+        edge.vpc_subnet_to_lambda,
+        edge.vpc_subnet_to_ec2_alb,
+        edge.vpc_subnet_to_ec2_nlb,
+        edge.vpc_subnet_to_ec2_clb,
+        edge.vpc_subnet_to_ec2_glb,
+        edge.vpc_subnet_to_rds_instance,
+        edge.vpc_to_s3_access_point,
+        edge.vpc_peered_vpc
       ]
 
       args = {
@@ -280,7 +280,7 @@ dashboard "aws_vpc_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_vpc_overview
+        query = query.vpc_overview
         args = {
           vpc_id = self.input.vpc_id.value
         }
@@ -289,7 +289,7 @@ dashboard "aws_vpc_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_vpc_tags
+        query = query.vpc_tags
         args = {
           vpc_id = self.input.vpc_id.value
         }
@@ -303,7 +303,7 @@ dashboard "aws_vpc_detail" {
 
       table {
         title = "CIDR Blocks"
-        query = query.aws_vpc_cidr_blocks
+        query = query.vpc_cidr_blocks
         args = {
           vpc_id = self.input.vpc_id.value
         }
@@ -311,7 +311,7 @@ dashboard "aws_vpc_detail" {
 
       table {
         title = "DHCP Options"
-        query = query.aws_vpc_dhcp_options
+        query = query.vpc_dhcp_options
         args = {
           vpc_id = self.input.vpc_id.value
         }
@@ -329,7 +329,7 @@ dashboard "aws_vpc_detail" {
       title = "Subnets by AZ"
       type  = "column"
       width = 4
-      query = query.aws_vpc_subnet_by_az
+      query = query.vpc_subnet_by_az
       args = {
         vpc_id = self.input.vpc_id.value
       }
@@ -337,7 +337,7 @@ dashboard "aws_vpc_detail" {
     }
 
     table {
-      query = query.aws_vpc_subnets_for_vpc
+      query = query.vpc_subnets_for_vpc
       width = 6
       args = {
         vpc_id = self.input.vpc_id.value
@@ -353,15 +353,15 @@ dashboard "aws_vpc_detail" {
 
     flow {
       nodes = [
-        node.aws_vpc_routing_vpc_node,
-        node.aws_vpc_routing_subnet_node,
-        node.aws_vpc_routing_cidr_node,
-        node.aws_vpc_routing_gateway_node
+        node.vpc_routing_vpc_node,
+        node.vpc_routing_subnet_node,
+        node.vpc_routing_cidr_node,
+        node.vpc_routing_gateway_node
       ]
 
       edges = [
-        edge.aws_vpc_routing_subnet_vpc_to_cidr_edge,
-        edge.aws_vpc_routing_cidr_to_gateway_edge
+        edge.vpc_routing_subnet_vpc_to_cidr_edge,
+        edge.vpc_routing_cidr_to_gateway_edge
       ]
 
       args = {
@@ -372,7 +372,7 @@ dashboard "aws_vpc_detail" {
 
     table {
       title = "Route Tables"
-      query = query.aws_vpc_route_tables_for_vpc
+      query = query.vpc_route_tables_for_vpc
       width = 6
       args = {
         vpc_id = self.input.vpc_id.value
@@ -381,7 +381,7 @@ dashboard "aws_vpc_detail" {
 
     table {
       title = "Routes"
-      query = query.aws_vpc_routes_for_vpc
+      query = query.vpc_routes_for_vpc
       width = 6
       args = {
         vpc_id = self.input.vpc_id.value
@@ -397,7 +397,7 @@ dashboard "aws_vpc_detail" {
 
     table {
       title = "Peering Connections"
-      query = query.aws_vpc_peers_for_vpc
+      query = query.vpc_peers_for_vpc
       args = {
         vpc_id = self.input.vpc_id.value
       }
@@ -414,7 +414,7 @@ dashboard "aws_vpc_detail" {
       base  = flow.nacl_flow
       title = "Ingress NACLs"
       width = 6
-      query = query.aws_ingress_nacl_for_vpc_sankey
+      query = query.ingress_nacl_for_vpc_sankey
       args = {
         vpc_id = self.input.vpc_id.value
       }
@@ -425,7 +425,7 @@ dashboard "aws_vpc_detail" {
       base  = flow.nacl_flow
       title = "Egress NACLs"
       width = 6
-      query = query.aws_egress_nacl_for_vpc_sankey
+      query = query.egress_nacl_for_vpc_sankey
       args = {
         vpc_id = self.input.vpc_id.value
       }
@@ -441,7 +441,7 @@ dashboard "aws_vpc_detail" {
     table {
       title = "VPC Endpoints"
 
-      query = query.aws_vpc_endpoints_for_vpc
+      query = query.vpc_endpoints_for_vpc
       width = 6
       args = {
         vpc_id = self.input.vpc_id.value
@@ -450,7 +450,7 @@ dashboard "aws_vpc_detail" {
 
     table {
       title = "Gateways"
-      query = query.aws_vpc_gateways_for_vpc
+      query = query.vpc_gateways_for_vpc
       width = 6
       args = {
         vpc_id = self.input.vpc_id.value
@@ -464,14 +464,14 @@ dashboard "aws_vpc_detail" {
     title = "Security Groups"
 
     table {
-      query = query.aws_vpc_security_groups_for_vpc
+      query = query.vpc_security_groups_for_vpc
       width = 12
       args = {
         vpc_id = self.input.vpc_id.value
       }
 
       column "Group Name" {
-        href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.'Group ID' | @uri}}"
+        href = "${dashboard.vpc_security_group_detail.url_path}?input.security_group_id={{.'Group ID' | @uri}}"
       }
     }
 
@@ -494,7 +494,7 @@ flow "nacl_flow" {
 
 }
 
-query "aws_vpc_input" {
+query "vpc_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -511,7 +511,7 @@ query "aws_vpc_input" {
   EOQ
 }
 
-query "aws_subnet_count_for_vpc" {
+query "subnet_count_for_vpc" {
   sql = <<-EOQ
     select
       'Subnets' as label,
@@ -526,7 +526,7 @@ query "aws_subnet_count_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_is_default" {
+query "vpc_is_default" {
   sql = <<-EOQ
     select
       'Default VPC' as label,
@@ -541,7 +541,7 @@ query "aws_vpc_is_default" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_num_ips_for_vpc" {
+query "vpc_num_ips_for_vpc" {
   sql = <<-EOQ
     with cidrs as (
       select
@@ -563,7 +563,7 @@ query "aws_vpc_num_ips_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_flow_logs_count_for_vpc" {
+query "flow_logs_count_for_vpc" {
   sql = <<-EOQ
     select
       'Flow Logs' as label,
@@ -577,7 +577,7 @@ query "aws_flow_logs_count_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_subnets_for_vpc" {
+query "vpc_subnets_for_vpc" {
   sql = <<-EOQ
     with subnets as (
       select
@@ -609,7 +609,7 @@ query "aws_vpc_subnets_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_security_groups_for_vpc" {
+query "vpc_security_groups_for_vpc" {
   sql = <<-EOQ
     select
       group_name as "Group Name",
@@ -624,7 +624,7 @@ query "aws_vpc_security_groups_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_endpoints_for_vpc" {
+query "vpc_endpoints_for_vpc" {
   sql = <<-EOQ
     select
       vpc_endpoint_id as "VPC Endpoint ID",
@@ -641,7 +641,7 @@ query "aws_vpc_endpoints_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_route_tables_for_vpc" {
+query "vpc_route_tables_for_vpc" {
   sql = <<-EOQ
     select
       route_table_id as "Route Table ID",
@@ -657,7 +657,7 @@ query "aws_vpc_route_tables_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_routes_for_vpc" {
+query "vpc_routes_for_vpc" {
   sql = <<-EOQ
     select
       route_table_id as "Route Table ID",
@@ -698,7 +698,7 @@ query "aws_vpc_routes_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_peers_for_vpc" {
+query "vpc_peers_for_vpc" {
   sql = <<-EOQ
     select
       id as "ID",
@@ -724,7 +724,7 @@ query "aws_vpc_peers_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_gateways_for_vpc" {
+query "vpc_gateways_for_vpc" {
   sql = <<-EOQ
     select
       internet_gateway_id as "ID",
@@ -773,7 +773,7 @@ query "aws_vpc_gateways_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_ingress_nacl_for_vpc_sankey" {
+query "ingress_nacl_for_vpc_sankey" {
   sql = <<-EOQ
 
     with aces as (
@@ -905,7 +905,7 @@ query "aws_ingress_nacl_for_vpc_sankey" {
   param "vpc_id" {}
 }
 
-query "aws_egress_nacl_for_vpc_sankey" {
+query "egress_nacl_for_vpc_sankey" {
   sql = <<-EOQ
 
     with aces as (
@@ -1044,7 +1044,7 @@ query "aws_egress_nacl_for_vpc_sankey" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_overview" {
+query "vpc_overview" {
   sql = <<-EOQ
     select
       vpc_id as "VPC ID",
@@ -1061,7 +1061,7 @@ query "aws_vpc_overview" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_tags" {
+query "vpc_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -1078,7 +1078,7 @@ query "aws_vpc_tags" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_cidr_blocks" {
+query "vpc_cidr_blocks" {
   sql = <<-EOQ
     select
       b ->> 'CidrBlock' as "CIDR Block",
@@ -1102,7 +1102,7 @@ query "aws_vpc_cidr_blocks" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_dhcp_options" {
+query "vpc_dhcp_options" {
   sql = <<-EOQ
     select
       d.dhcp_options_id as "DHCP Options ID",
@@ -1125,7 +1125,7 @@ query "aws_vpc_dhcp_options" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_subnet_by_az" {
+query "vpc_subnet_by_az" {
   sql = <<-EOQ
     select
       availability_zone,
@@ -1144,8 +1144,8 @@ query "aws_vpc_subnet_by_az" {
 }
 
 
-node "aws_vpc_routing_subnet_node" {
-  category = category.aws_vpc_subnet
+node "vpc_routing_subnet_node" {
+  category = category.vpc_subnet
 
   sql = <<-EOQ
     select
@@ -1164,8 +1164,8 @@ node "aws_vpc_routing_subnet_node" {
   param "vpc_id" {}
 }
 
-node "aws_vpc_routing_vpc_node" {
-  category = category.aws_vpc_subnet
+node "vpc_routing_vpc_node" {
+  category = category.vpc_subnet
 
   sql = <<-EOQ
     select
@@ -1185,7 +1185,7 @@ node "aws_vpc_routing_vpc_node" {
   param "vpc_id" {}
 }
 
-node "aws_vpc_routing_cidr_node" {
+node "vpc_routing_cidr_node" {
   //category = category.cidr_block
 
   sql = <<-EOQ
@@ -1205,7 +1205,7 @@ node "aws_vpc_routing_cidr_node" {
   param "vpc_id" {}
 }
 
-edge "aws_vpc_routing_subnet_vpc_to_cidr_edge" {
+edge "vpc_routing_subnet_vpc_to_cidr_edge" {
   title = "cidr"
 
   sql = <<-EOQ
@@ -1223,8 +1223,8 @@ edge "aws_vpc_routing_subnet_vpc_to_cidr_edge" {
   param "vpc_id" {}
 }
 
-node "aws_vpc_routing_gateway_node" {
-  category = category.aws_vpc_internet_gateway
+node "vpc_routing_gateway_node" {
+  category = category.vpc_internet_gateway
 
   sql = <<-EOQ
       select
@@ -1268,7 +1268,7 @@ node "aws_vpc_routing_gateway_node" {
   param "vpc_id" {}
 }
 
-edge "aws_vpc_routing_cidr_to_gateway_edge" {
+edge "vpc_routing_cidr_to_gateway_edge" {
 
   title = "gateway"
   sql   = <<-EOQ
@@ -1305,8 +1305,8 @@ edge "aws_vpc_routing_cidr_to_gateway_edge" {
 
 
 // Graph queries
-node "aws_vpc_az_nodes" {
-  category = category.aws_availability_zone
+node "vpc_az" {
+  category = category.availability_zone
 
   sql = <<-EOQ
     select
@@ -1328,7 +1328,7 @@ node "aws_vpc_az_nodes" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_to_az_edges" {
+edge "vpc_to_az" {
   title = "az"
 
   sql = <<-EOQ
@@ -1345,7 +1345,7 @@ edge "aws_vpc_to_az_edges" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_az_to_vpc_subnet_edges" {
+edge "vpc_az_to_vpc_subnet" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -1361,8 +1361,8 @@ edge "aws_vpc_az_to_vpc_subnet_edges" {
   param "vpc_ids" {}
 }
 
-node "aws_vpc_igw_nodes" {
-  category = category.aws_vpc_internet_gateway
+node "vpc_igw" {
+  category = category.vpc_internet_gateway
 
   sql = <<-EOQ
     select
@@ -1384,7 +1384,7 @@ node "aws_vpc_igw_nodes" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_to_igw_edges" {
+edge "vpc_to_igw" {
   title = "vpc"
 
   sql = <<-EOQ
@@ -1401,8 +1401,8 @@ edge "aws_vpc_to_igw_edges" {
   param "vpc_ids" {}
 }
 
-node "aws_vpc_az_route_table_nodes" {
-  category = category.aws_vpc_route_table
+node "vpc_az_route_table" {
+  category = category.vpc_route_table
 
   sql = <<-EOQ
     select
@@ -1427,7 +1427,7 @@ node "aws_vpc_az_route_table_nodes" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_subnet_to_route_table_edges" {
+edge "vpc_subnet_to_route_table" {
   title = "route table"
 
   sql = <<-EOQ
@@ -1445,7 +1445,7 @@ edge "aws_vpc_subnet_to_route_table_edges" {
 }
 
 
-edge "aws_vpc_to_vpc_route_table_edges" {
+edge "vpc_to_vpc_route_table" {
   title = "route table"
 
   sql = <<-EOQ
@@ -1463,8 +1463,8 @@ edge "aws_vpc_to_vpc_route_table_edges" {
 }
 
 
-node "aws_vpc_vcp_endpoint_nodes" {
-  category = category.aws_vpc_endpoint
+node "vpc_vcp_endpoint" {
+  category = category.vpc_endpoint
 
   sql = <<-EOQ
     select
@@ -1484,7 +1484,7 @@ node "aws_vpc_vcp_endpoint_nodes" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_subnet_to_endpoint_edges" {
+edge "vpc_subnet_to_endpoint" {
   title = "vpc endpoint"
 
   sql = <<-EOQ
@@ -1511,8 +1511,8 @@ edge "aws_vpc_subnet_to_endpoint_edges" {
   param "vpc_ids" {}
 }
 
-node "aws_vpc_transit_gateway_nodes" {
-  category = category.aws_ec2_transit_gateway
+node "vpc_transit_gateway" {
+  category = category.ec2_transit_gateway
 
   sql = <<-EOQ
     select
@@ -1536,7 +1536,7 @@ node "aws_vpc_transit_gateway_nodes" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_to_transit_gateway_edges" {
+edge "vpc_to_transit_gateway" {
   title = "transit_gateway"
 
   sql = <<-EOQ
@@ -1551,8 +1551,8 @@ edge "aws_vpc_to_transit_gateway_edges" {
   param "vpc_ids" {}
 }
 
-node "aws_vpc_nat_gateway_nodes" {
-  category = category.aws_vpc_nat_gateway
+node "vpc_nat_gateway" {
+  category = category.vpc_nat_gateway
 
   sql = <<-EOQ
     select
@@ -1573,7 +1573,7 @@ node "aws_vpc_nat_gateway_nodes" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_subnet_to_nat_gateway_edges" {
+edge "vpc_subnet_to_nat_gateway" {
   title = "nat gateway"
 
   sql = <<-EOQ
@@ -1589,8 +1589,8 @@ edge "aws_vpc_subnet_to_nat_gateway_edges" {
   param "vpc_ids" {}
 }
 
-node "aws_vpc_vpn_gateway_nodes" {
-  category = category.aws_vpc_vpn_gateway
+node "vpc_vpn_gateway" {
+  category = category.vpc_vpn_gateway
 
   sql = <<-EOQ
     select
@@ -1611,7 +1611,7 @@ node "aws_vpc_vpn_gateway_nodes" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_to_vpn_gateway_edges" {
+edge "vpc_to_vpn_gateway" {
   title = "vpn gateway"
 
   sql = <<-EOQ
@@ -1628,7 +1628,7 @@ edge "aws_vpc_to_vpn_gateway_edges" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_to_vpc_security_group_edges" {
+edge "vpc_to_vpc_security_group" {
   title = "security group"
 
   sql = <<-EOQ
@@ -1644,8 +1644,66 @@ edge "aws_vpc_to_vpc_security_group_edges" {
   param "security_group_ids" {}
 }
 
-node "aws_vpc_peered_vpc_nodes" {
-  category = category.aws_vpc
+edge "vpc_peered_vpc" {
+  title = "peered with"
+
+  sql = <<-EOQ
+    select
+      $1 as to_id,
+      case
+        when accepter_vpc_id = $1 then requester_vpc_id
+        else accepter_vpc_id
+      end as from_id
+    from
+      aws_vpc_peering_connection
+    where
+      accepter_vpc_id = $1
+      or requester_vpc_id = $1
+  EOQ
+
+  param "vpc_id" {}
+}
+
+node "vpc_s3_access_point" {
+  category = category.s3_access_point
+
+  sql = <<-EOQ
+    select
+      access_point_arn as id,
+      title as title,
+      jsonb_build_object(
+        'ARN', access_point_arn,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_s3_access_point
+    where
+      vpc_id  = any($1)
+  EOQ
+
+  param "vpc_ids" {}
+}
+
+
+edge "vpc_to_s3_access_point" {
+  title = "s3 access point"
+
+  sql = <<-EOQ
+    select
+      vpc_id as from_id,
+      access_point_arn as to_id
+    from
+      aws_s3_access_point
+    where
+      vpc_id = any($1)
+  EOQ
+
+  param "vpc_ids" {}
+}
+
+node "vpc_peered_vpc" {
+  category = category.vpc_vpc
 
   sql = <<-EOQ
     -- with vpcs as (
@@ -1687,92 +1745,7 @@ node "aws_vpc_peered_vpc_nodes" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_peered_vpc_edges" {
-  title = "peered with"
-
-  sql = <<-EOQ
-    select
-      $1 as to_id,
-      case
-        when accepter_vpc_id = $1 then requester_vpc_id
-        else accepter_vpc_id
-      end as from_id
-    from
-      aws_vpc_peering_connection
-    where
-      accepter_vpc_id = $1
-      or requester_vpc_id = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-node "aws_vpc_s3_access_point_nodes" {
-  category = category.aws_s3_access_point
-
-  sql = <<-EOQ
-    select
-      access_point_arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', access_point_arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_s3_access_point
-    where
-      vpc_id  = any($1)
-  EOQ
-
-  param "vpc_ids" {}
-}
-
-
-edge "aws_vpc_to_s3_access_point_edges" {
-  title = "s3 access point"
-
-  sql = <<-EOQ
-    select
-      vpc_id as from_id,
-      access_point_arn as to_id
-    from
-      aws_s3_access_point
-    where
-      vpc_id = any($1)
-  EOQ
-
-  param "vpc_ids" {}
-}
-
-node "aws_vpc_nodes" {
-  category = category.aws_vpc
-
-  sql = <<-EOQ
-   select
-      vpc_id as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'VPC ID', vpc_id,
-        'Is Default', is_default,
-        'State', state,
-        'CIDR Block', cidr_block,
-        'DHCP Options ID', dhcp_options_id,
-        'Owner ID', owner_id,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_vpc
-    where
-      vpc_id = any($1 ::text[]);
-  EOQ
-
-  param "vpc_ids" {}
-}
-
-edge "aws_vpc_to_vpc_flow_log_edges" {
+edge "vpc_to_vpc_flow_log" {
   title = "flow log"
 
   sql = <<-EOQ
@@ -1788,7 +1761,7 @@ edge "aws_vpc_to_vpc_flow_log_edges" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_subnet_to_instance_edges" {
+edge "vpc_subnet_to_instance" {
   title = "ec2 instance"
 
   sql = <<-EOQ
@@ -1804,7 +1777,7 @@ edge "aws_vpc_subnet_to_instance_edges" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_subnet_to_lambda_edges" {
+edge "vpc_subnet_to_lambda" {
   title = "lambda function"
 
   sql = <<-EOQ
@@ -1821,7 +1794,7 @@ edge "aws_vpc_subnet_to_lambda_edges" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_subnet_to_ec2_alb_edges" {
+edge "vpc_subnet_to_ec2_alb" {
   title = "alb"
 
   sql = <<-EOQ
@@ -1838,7 +1811,7 @@ edge "aws_vpc_subnet_to_ec2_alb_edges" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_subnet_to_ec2_nlb_edges" {
+edge "vpc_subnet_to_ec2_nlb" {
   title = "nlb"
 
   sql = <<-EOQ
@@ -1854,7 +1827,7 @@ edge "aws_vpc_subnet_to_ec2_nlb_edges" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_subnet_to_ec2_clb_edges" {
+edge "vpc_subnet_to_ec2_clb" {
   title = "clb"
 
   sql = <<-EOQ
@@ -1871,7 +1844,7 @@ edge "aws_vpc_subnet_to_ec2_clb_edges" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_subnet_to_ec2_glb_edges" {
+edge "vpc_subnet_to_ec2_glb" {
   title = "glb"
 
   sql = <<-EOQ
@@ -1888,7 +1861,7 @@ edge "aws_vpc_subnet_to_ec2_glb_edges" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_subnet_to_rds_instance_edges" {
+edge "vpc_subnet_to_rds_instance" {
   title = "rds instance"
 
   sql = <<-EOQ

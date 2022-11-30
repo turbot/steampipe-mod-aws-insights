@@ -1,4 +1,4 @@
-dashboard "aws_s3_bucket_public_access_report" {
+dashboard "s3_bucket_public_access_report" {
 
   title = "AWS S3 Bucket Public Access Report"
 
@@ -10,32 +10,32 @@ dashboard "aws_s3_bucket_public_access_report" {
   container {
 
     card {
-      query = query.aws_s3_bucket_count
+      query = query.s3_bucket_count
       width = 2
     }
 
     card {
-      query = query.aws_s3_bucket_public_policy_count
+      query = query.s3_bucket_public_policy_count
       width = 2
     }
 
     card {
-      query = query.aws_s3_bucket_block_public_acls_disabled_count
+      query = query.s3_bucket_block_public_acls_disabled_count
       width = 2
     }
 
     card {
-      query = query.aws_s3_bucket_block_public_policy_disabled_count
+      query = query.s3_bucket_block_public_policy_disabled_count
       width = 2
     }
 
     card {
-      query = query.aws_s3_bucket_ignore_public_acls_disabled_count
+      query = query.s3_bucket_ignore_public_acls_disabled_count
       width = 2
     }
 
     card {
-      query = query.aws_s3_bucket_restrict_public_buckets_disabled_count
+      query = query.s3_bucket_restrict_public_buckets_disabled_count
       width = 2
     }
 
@@ -51,15 +51,15 @@ dashboard "aws_s3_bucket_public_access_report" {
     }
 
     column "Name" {
-      href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.ARN | @uri}}"
+      href = "${dashboard.s3_bucket_detail.url_path}?input.bucket_arn={{.ARN | @uri}}"
     }
 
-    query = query.aws_s3_bucket_public_access_table
+    query = query.s3_bucket_public_access_table
   }
 
 }
 
-query "aws_s3_bucket_public_policy_count" {
+query "s3_bucket_public_policy_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -73,7 +73,7 @@ query "aws_s3_bucket_public_policy_count" {
   EOQ
 }
 
-query "aws_s3_bucket_block_public_acls_disabled_count" {
+query "s3_bucket_block_public_acls_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -86,7 +86,7 @@ query "aws_s3_bucket_block_public_acls_disabled_count" {
   EOQ
 }
 
-query "aws_s3_bucket_block_public_policy_disabled_count" {
+query "s3_bucket_block_public_policy_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -99,7 +99,7 @@ query "aws_s3_bucket_block_public_policy_disabled_count" {
   EOQ
 }
 
-query "aws_s3_bucket_ignore_public_acls_disabled_count" {
+query "s3_bucket_ignore_public_acls_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -112,7 +112,7 @@ query "aws_s3_bucket_ignore_public_acls_disabled_count" {
   EOQ
 }
 
-query "aws_s3_bucket_restrict_public_buckets_disabled_count" {
+query "s3_bucket_restrict_public_buckets_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -125,7 +125,7 @@ query "aws_s3_bucket_restrict_public_buckets_disabled_count" {
   EOQ
 }
 
-query "aws_s3_bucket_public_access_table" {
+query "s3_bucket_public_access_table" {
   sql = <<-EOQ
     select
       b.name as "Name",

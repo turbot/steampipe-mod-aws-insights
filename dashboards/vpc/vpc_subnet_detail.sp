@@ -1,4 +1,4 @@
-dashboard "aws_vpc_subnet_detail" {
+dashboard "vpc_subnet_detail" {
 
   title         = "AWS VPC Subnet Detail"
   documentation = file("./dashboards/vpc/docs/vpc_subnet_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_vpc_subnet_detail" {
 
   input "subnet_id" {
     title = "Select a subnet:"
-    query = query.aws_vpc_subnet_input
+    query = query.vpc_subnet_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "aws_vpc_subnet_detail" {
 
     card {
       width = 2
-      query = query.aws_vpc_subnet_num_ips
+      query = query.vpc_subnet_num_ips
       args = {
         subnet_id = self.input.subnet_id.value
       }
@@ -25,7 +25,7 @@ dashboard "aws_vpc_subnet_detail" {
 
     card {
       width = 2
-      query = query.aws_vpc_subnet_cidr_block
+      query = query.vpc_subnet_cidr_block
       args = {
         subnet_id = self.input.subnet_id.value
       }
@@ -33,7 +33,7 @@ dashboard "aws_vpc_subnet_detail" {
 
     card {
       width = 2
-      query = query.aws_vpc_subnet_map_public_ip_on_launch_disabled
+      query = query.vpc_subnet_map_public_ip_on_launch_disabled
       args = {
         subnet_id = self.input.subnet_id.value
       }
@@ -185,37 +185,37 @@ dashboard "aws_vpc_subnet_detail" {
       }
 
       nodes = [
-        node.aws_vpc_subnet_nodes,
-        node.aws_vpc_nodes,
-        node.aws_rds_db_instance_nodes,
-        node.aws_ec2_instance_nodes,
-        node.aws_lambda_function_nodes,
-        node.aws_vpc_flow_log_nodes,
-        node.aws_ec2_network_interface_nodes,
-        node.aws_ec2_application_load_balancer_nodes,
-        node.aws_ec2_network_load_balancer_nodes,
-        node.aws_ec2_classic_load_balancer_nodes,
-        node.aws_ec2_gateway_load_balancer_nodes,
+        node.vpc_subnet,
+        node.vpc_vpc,
+        node.rds_db_instance,
+        node.ec2_instance,
+        node.lambda_function,
+        node.vpc_flow_log,
+        node.ec2_network_interface,
+        node.ec2_application_load_balancer,
+        node.ec2_network_load_balancer,
+        node.ec2_classic_load_balancer,
+        node.ec2_gateway_load_balancer,
 
-        node.aws_vpc_subnet_vpc_route_table_nodes,
-        node.aws_vpc_subnet_vpc_network_acl_nodes,
-        node.aws_vpc_subnet_sagemaker_notebook_instance_nodes,
+        node.vpc_subnet_vpc_route_table,
+        node.vpc_subnet_vpc_network_acl,
+        node.vpc_subnet_sagemaker_notebook_instance,
       ]
 
       edges = [
-        edge.aws_vpc_to_vpc_subnet_edges,
-        edge.aws_vpc_subnet_to_flow_log_edges,
-        edge.aws_vpc_subnet_to_vpc_route_table_edges,
-        edge.aws_vpc_subnet_to_vpc_network_acl_edges,
-        edge.aws_vpc_subnet_to_rds_db_instance_edges,
-        edge.aws_vpc_subnet_to_ec2_instance_edges,
-        edge.aws_vpc_subnet_to_lambda_function_edges,
-        edge.aws_vpc_subnet_to_sagemaker_notebook_instance_edges,
-        edge.aws_vpc_subnet_to_network_interface_edges,
-        edge.aws_vpc_subnet_to_alb_edges,
-        edge.aws_vpc_subnet_to_clb_edges,
-        edge.aws_vpc_subnet_to_nlb_edges,
-        edge.aws_vpc_subnet_to_glb_edges
+        edge.vpc_to_vpc_subnet,
+        edge.vpc_subnet_to_flow_log,
+        edge.vpc_subnet_to_vpc_route_table,
+        edge.vpc_subnet_to_vpc_network_acl,
+        edge.vpc_subnet_to_rds_db_instance,
+        edge.vpc_subnet_to_ec2_instance,
+        edge.vpc_subnet_to_lambda_function,
+        edge.vpc_subnet_to_sagemaker_notebook_instance,
+        edge.vpc_subnet_to_network_interface,
+        edge.vpc_subnet_to_alb,
+        edge.vpc_subnet_to_clb,
+        edge.vpc_subnet_to_nlb,
+        edge.vpc_subnet_to_glb
       ]
 
       args = {
@@ -244,7 +244,7 @@ dashboard "aws_vpc_subnet_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_vpc_subnet_overview
+        query = query.vpc_subnet_overview
         args = {
           subnet_id = self.input.subnet_id.value
         }
@@ -253,7 +253,7 @@ dashboard "aws_vpc_subnet_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_vpc_subnet_tags
+        query = query.vpc_subnet_tags
         args = {
           subnet_id = self.input.subnet_id.value
         }
@@ -266,7 +266,7 @@ dashboard "aws_vpc_subnet_detail" {
 
       table {
         title = "Launched Resources"
-        query = query.aws_vpc_subnet_association
+        query = query.vpc_subnet_association
         args = {
           subnet_id = self.input.subnet_id.value
         }
@@ -286,7 +286,7 @@ dashboard "aws_vpc_subnet_detail" {
 
 }
 
-query "aws_vpc_subnet_input" {
+query "vpc_subnet_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -304,7 +304,7 @@ query "aws_vpc_subnet_input" {
 
 }
 
-query "aws_vpc_subnet_num_ips" {
+query "vpc_subnet_num_ips" {
   sql = <<-EOQ
     select
       available_ip_address_count as "IP Addresses"
@@ -317,7 +317,7 @@ query "aws_vpc_subnet_num_ips" {
   param "subnet_id" {}
 }
 
-query "aws_vpc_subnet_cidr_block" {
+query "vpc_subnet_cidr_block" {
   sql = <<-EOQ
     select
       cidr_block as "CIDR Block"
@@ -330,7 +330,7 @@ query "aws_vpc_subnet_cidr_block" {
   param "subnet_id" {}
 }
 
-query "aws_vpc_subnet_map_public_ip_on_launch_disabled" {
+query "vpc_subnet_map_public_ip_on_launch_disabled" {
   sql = <<-EOQ
     select
       'Map Public IP on Launch' as label,
@@ -345,7 +345,7 @@ query "aws_vpc_subnet_map_public_ip_on_launch_disabled" {
   param "subnet_id" {}
 }
 
-query "aws_vpc_subnet_overview" {
+query "vpc_subnet_overview" {
   sql = <<-EOQ
     select
       subnet_id as "Subnet ID",
@@ -366,7 +366,7 @@ query "aws_vpc_subnet_overview" {
   param "subnet_id" {}
 }
 
-query "aws_vpc_subnet_tags" {
+query "vpc_subnet_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -383,7 +383,7 @@ query "aws_vpc_subnet_tags" {
   param "subnet_id" {}
 }
 
-query "aws_vpc_subnet_association" {
+query "vpc_subnet_association" {
   sql = <<-EOQ
 
     -- EC2 instances
@@ -391,7 +391,7 @@ query "aws_vpc_subnet_association" {
       title as "Title",
       'aws_ec2_instance' as "Type",
       arn as "ARN",
-      '${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn=' || arn as link
+      '${dashboard.ec2_instance_detail.url_path}?input.instance_arn=' || arn as link
     from
       aws_ec2_instance
     where
@@ -403,7 +403,7 @@ query "aws_vpc_subnet_association" {
       title as "Title",
       'aws_lambda_function' as "Type",
       arn as "ARN",
-      '${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn=' || arn as link
+      '${dashboard.lambda_function_detail.url_path}?input.lambda_arn=' || arn as link
     from
       aws_lambda_function,
       jsonb_array_elements(vpc_subnet_ids) as s
@@ -428,7 +428,7 @@ query "aws_vpc_subnet_association" {
       title as "Title",
       'aws_rds_db_instance' as "Type",
       arn as "ARN",
-      '${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn=' || arn as link
+      '${dashboard.rds_db_instance_detail.url_path}?input.db_instance_arn=' || arn as link
     from
       aws_rds_db_instance,
       jsonb_array_elements(subnets) as s
@@ -465,30 +465,7 @@ query "aws_vpc_subnet_association" {
   param "subnet_id" {}
 }
 
-node "aws_vpc_subnet_nodes" {
-  category = category.aws_vpc_subnet
-
-  sql = <<-EOQ
-   select
-      subnet_id as id,
-      title as title,
-      jsonb_build_object(
-        'Subnet ID', subnet_id,
-        'ARN', subnet_arn,
-        'VPC ID', vpc_id,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_vpc_subnet
-    where
-      subnet_id = any($1 ::text[]);
-  EOQ
-
-  param "subnet_ids" {}
-}
-
-edge "aws_vpc_to_vpc_subnet_edges" {
+edge "vpc_to_vpc_subnet" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -504,8 +481,8 @@ edge "aws_vpc_to_vpc_subnet_edges" {
   param "subnet_ids" {}
 }
 
-node "aws_vpc_subnet_vpc_route_table_nodes" {
-  category = category.aws_vpc_route_table
+node "vpc_subnet_vpc_route_table" {
+  category = category.vpc_route_table
 
   sql = <<-EOQ
     select
@@ -526,7 +503,7 @@ node "aws_vpc_subnet_vpc_route_table_nodes" {
   param "subnet_ids" {}
 }
 
-edge "aws_vpc_subnet_to_vpc_route_table_edges" {
+edge "vpc_subnet_to_vpc_route_table" {
   title = "route to"
 
   sql = <<-EOQ
@@ -543,8 +520,8 @@ edge "aws_vpc_subnet_to_vpc_route_table_edges" {
   param "subnet_ids" {}
 }
 
-node "aws_vpc_subnet_vpc_network_acl_nodes" {
-  category = category.aws_vpc_network_acl
+node "vpc_subnet_vpc_network_acl" {
+  category = category.vpc_network_acl
 
   sql = <<-EOQ
     select
@@ -567,7 +544,7 @@ node "aws_vpc_subnet_vpc_network_acl_nodes" {
   param "subnet_ids" {}
 }
 
-edge "aws_vpc_subnet_to_vpc_network_acl_edges" {
+edge "vpc_subnet_to_vpc_network_acl" {
   title = "network acl"
 
   sql = <<-EOQ
@@ -585,7 +562,7 @@ edge "aws_vpc_subnet_to_vpc_network_acl_edges" {
 }
 
 
-edge "aws_vpc_subnet_to_rds_db_instance_edges" {
+edge "vpc_subnet_to_rds_db_instance" {
   title = "rds db instance"
 
   sql = <<-EOQ
@@ -603,7 +580,7 @@ edge "aws_vpc_subnet_to_rds_db_instance_edges" {
 
 
 
-edge "aws_vpc_subnet_to_ec2_instance_edges" {
+edge "vpc_subnet_to_ec2_instance" {
   title = "ec2 instance"
 
   sql = <<-EOQ
@@ -619,7 +596,7 @@ edge "aws_vpc_subnet_to_ec2_instance_edges" {
   param "subnet_ids" {}
 }
 
-edge "aws_vpc_subnet_to_lambda_function_edges" {
+edge "vpc_subnet_to_lambda_function" {
   title = "lambda function"
 
   sql = <<-EOQ
@@ -635,8 +612,8 @@ edge "aws_vpc_subnet_to_lambda_function_edges" {
   param "subnet_ids" {}
 }
 
-node "aws_vpc_subnet_sagemaker_notebook_instance_nodes" {
-  category = category.aws_sagemaker_notebook_instance
+node "vpc_subnet_sagemaker_notebook_instance" {
+  category = category.sagemaker_notebook_instance
 
   sql = <<-EOQ
     select
@@ -658,7 +635,7 @@ node "aws_vpc_subnet_sagemaker_notebook_instance_nodes" {
   param "subnet_ids" {}
 }
 
-edge "aws_vpc_subnet_to_sagemaker_notebook_instance_edges" {
+edge "vpc_subnet_to_sagemaker_notebook_instance" {
   title = "notebook instance"
 
   sql = <<-EOQ
@@ -674,7 +651,7 @@ edge "aws_vpc_subnet_to_sagemaker_notebook_instance_edges" {
   param "subnet_ids" {}
 }
 
-edge "aws_vpc_subnet_to_flow_log_edges" {
+edge "vpc_subnet_to_flow_log" {
   title = "flow log"
 
   sql = <<-EOQ
@@ -690,7 +667,7 @@ edge "aws_vpc_subnet_to_flow_log_edges" {
   param "subnet_ids" {}
 }
 
-edge "aws_vpc_subnet_to_network_interface_edges" {
+edge "vpc_subnet_to_network_interface" {
   title = "eni"
 
   sql = <<-EOQ
@@ -706,7 +683,7 @@ edge "aws_vpc_subnet_to_network_interface_edges" {
   param "subnet_ids" {}
 }
 
-edge "aws_vpc_subnet_to_alb_edges" {
+edge "vpc_subnet_to_alb" {
   title = "alb"
 
   sql = <<-EOQ
@@ -722,7 +699,7 @@ edge "aws_vpc_subnet_to_alb_edges" {
   param "subnet_ids" {}
 }
 
-edge "aws_vpc_subnet_to_nlb_edges" {
+edge "vpc_subnet_to_nlb" {
   title = "nlb"
 
   sql = <<-EOQ
@@ -738,7 +715,7 @@ edge "aws_vpc_subnet_to_nlb_edges" {
   param "subnet_ids" {}
 }
 
-edge "aws_vpc_subnet_to_clb_edges" {
+edge "vpc_subnet_to_clb" {
   title = "clb"
 
   sql = <<-EOQ
@@ -754,7 +731,7 @@ edge "aws_vpc_subnet_to_clb_edges" {
   param "subnet_ids" {}
 }
 
-edge "aws_vpc_subnet_to_glb_edges" {
+edge "vpc_subnet_to_glb" {
   title = "glb"
 
   sql = <<-EOQ

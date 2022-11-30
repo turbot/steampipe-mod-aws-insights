@@ -1,4 +1,4 @@
-dashboard "aws_rds_db_cluster_snapshot_age_report" {
+dashboard "rds_db_cluster_snapshot_age_report" {
 
   title         = "AWS RDS DB Cluster Snapshot Age Report"
   documentation = file("./dashboards/rds/docs/rds_db_cluster_snapshot_report_age.md")
@@ -11,38 +11,38 @@ dashboard "aws_rds_db_cluster_snapshot_age_report" {
   container {
 
     card {
-      query = query.aws_rds_db_cluster_snapshot_count
+      query = query.rds_db_cluster_snapshot_count
       width = 2
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_rds_db_cluster_snapshot_24_hours_count
+      query = query.rds_db_cluster_snapshot_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_rds_db_cluster_snapshot_30_days_count
+      query = query.rds_db_cluster_snapshot_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_rds_db_cluster_snapshot_30_90_days_count
+      query = query.rds_db_cluster_snapshot_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query = query.aws_rds_db_cluster_snapshot_90_365_days_count
+      query = query.rds_db_cluster_snapshot_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query = query.aws_rds_db_cluster_snapshot_1_year_count
+      query = query.rds_db_cluster_snapshot_1_year_count
     }
 
   }
@@ -59,17 +59,17 @@ dashboard "aws_rds_db_cluster_snapshot_age_report" {
       }
 
       column "DB Cluster Snapshot Identifier" {
-        href = "${dashboard.aws_rds_db_cluster_snapshot_detail.url_path}?input.snapshot_arn={{.ARN | @uri}}"
+        href = "${dashboard.rds_db_cluster_snapshot_detail.url_path}?input.snapshot_arn={{.ARN | @uri}}"
       }
 
-      query = query.aws_rds_db_cluster_snapshot_age_table
+      query = query.rds_db_cluster_snapshot_age_table
     }
 
   }
 
 }
 
-query "aws_rds_db_cluster_snapshot_24_hours_count" {
+query "rds_db_cluster_snapshot_24_hours_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -81,7 +81,7 @@ query "aws_rds_db_cluster_snapshot_24_hours_count" {
   EOQ
 }
 
-query "aws_rds_db_cluster_snapshot_30_days_count" {
+query "rds_db_cluster_snapshot_30_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -93,7 +93,7 @@ query "aws_rds_db_cluster_snapshot_30_days_count" {
   EOQ
 }
 
-query "aws_rds_db_cluster_snapshot_30_90_days_count" {
+query "rds_db_cluster_snapshot_30_90_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -105,7 +105,7 @@ query "aws_rds_db_cluster_snapshot_30_90_days_count" {
   EOQ
 }
 
-query "aws_rds_db_cluster_snapshot_90_365_days_count" {
+query "rds_db_cluster_snapshot_90_365_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -117,7 +117,7 @@ query "aws_rds_db_cluster_snapshot_90_365_days_count" {
   EOQ
 }
 
-query "aws_rds_db_cluster_snapshot_1_year_count" {
+query "rds_db_cluster_snapshot_1_year_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -129,7 +129,7 @@ query "aws_rds_db_cluster_snapshot_1_year_count" {
   EOQ
 }
 
-query "aws_rds_db_cluster_snapshot_age_table" {
+query "rds_db_cluster_snapshot_age_table" {
   sql = <<-EOQ
     select
       s.db_cluster_snapshot_identifier as "DB Cluster Snapshot Identifier",

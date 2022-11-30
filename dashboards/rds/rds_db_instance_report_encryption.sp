@@ -1,4 +1,4 @@
-dashboard "aws_rds_db_instance_encryption_report" {
+dashboard "rds_db_instance_encryption_report" {
 
   title         = "AWS RDS DB Instance Encryption Report"
   documentation = file("./dashboards/rds/docs/rds_db_instance_report_encryption.md")
@@ -11,12 +11,12 @@ dashboard "aws_rds_db_instance_encryption_report" {
   container {
 
     card {
-      query = query.aws_rds_db_instance_count
+      query = query.rds_db_instance_count
       width = 2
     }
 
     card {
-      query = query.aws_rds_db_instance_unencrypted_count
+      query = query.rds_db_instance_unencrypted_count
       width = 2
     }
 
@@ -33,15 +33,15 @@ dashboard "aws_rds_db_instance_encryption_report" {
     }
 
     column "DB Instance Identifier" {
-      href = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn={{.ARN | @uri}}"
+      href = "${dashboard.rds_db_instance_detail.url_path}?input.db_instance_arn={{.ARN | @uri}}"
     }
 
-    query = query.aws_rds_db_instance_encryption_table
+    query = query.rds_db_instance_encryption_table
   }
 
 }
 
-query "aws_rds_db_instance_encryption_table" {
+query "rds_db_instance_encryption_table" {
   sql = <<-EOQ
     select
       i.db_instance_identifier as "DB Instance Identifier",

@@ -1,5 +1,5 @@
-node "aws_acm_certificate_nodes" {
-  category = category.aws_acm_certificate
+node "acm_certificate" {
+  category = category.acm_certificate
 
   sql = <<-EOQ
     select

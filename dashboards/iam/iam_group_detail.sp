@@ -1,4 +1,4 @@
-dashboard "aws_iam_group_detail" {
+dashboard "iam_group_detail" {
 
   title         = "AWS IAM Group Detail"
   documentation = file("./dashboards/iam/docs/iam_group_detail.md")
@@ -10,7 +10,7 @@ dashboard "aws_iam_group_detail" {
 
   input "group_arn" {
     title = "Select a group:"
-    sql   = query.aws_iam_group_input.sql
+    sql   = query.iam_group_input.sql
     width = 2
   }
 
@@ -18,7 +18,7 @@ dashboard "aws_iam_group_detail" {
 
     card {
       width = 2
-      query = query.aws_iam_group_inline_policy_count_for_group
+      query = query.iam_group_inline_policy_count_for_group
       args = {
         arn = self.input.group_arn.value
       }
@@ -26,7 +26,7 @@ dashboard "aws_iam_group_detail" {
 
     card {
       width = 2
-      query = query.aws_iam_group_direct_attached_policy_count_for_group
+      query = query.iam_group_direct_attached_policy_count_for_group
       args = {
         arn = self.input.group_arn.value
       }
@@ -70,16 +70,16 @@ dashboard "aws_iam_group_detail" {
       }
 
       nodes = [
-        node.aws_iam_group_nodes,
-        node.aws_iam_policy_nodes,
-        node.aws_iam_user_nodes,
-        node.aws_iam_group_inline_policy_nodes,
+        node.iam_group,
+        node.iam_policy,
+        node.iam_user,
+        node.iam_group_inline_policy,
       ]
 
       edges = [
-        edge.aws_iam_policy_from_iam_group_edges,
-        edge.aws_iam_group_to_iam_user_edges,
-        edge.aws_iam_group_to_inline_policy_edges,
+        edge.iam_policy_from_iam_group,
+        edge.iam_group_to_iam_user,
+        edge.iam_group_to_inline_policy,
       ]
 
       args = {
@@ -99,7 +99,7 @@ dashboard "aws_iam_group_detail" {
       table {
         type  = "line"
         width = 6
-        query = query.aws_iam_group_overview
+        query = query.iam_group_overview
         args = {
           arn = self.input.group_arn.value
         }
@@ -118,10 +118,10 @@ dashboard "aws_iam_group_detail" {
       title = "Users"
       width = 6
       column "User Name" {
-        href = "${dashboard.aws_iam_user_detail.url_path}?input.user_arn={{.'User ARN' | @uri}}"
+        href = "${dashboard.iam_user_detail.url_path}?input.user_arn={{.'User ARN' | @uri}}"
       }
 
-      query = query.aws_iam_users_for_group
+      query = query.iam_users_for_group
       args = {
         arn = self.input.group_arn.value
       }
@@ -131,7 +131,7 @@ dashboard "aws_iam_group_detail" {
     table {
       title = "Policies"
       width = 6
-      query = query.aws_iam_all_policies_for_group
+      query = query.iam_all_policies_for_group
       args = {
         arn = self.input.group_arn.value
       }
@@ -140,7 +140,7 @@ dashboard "aws_iam_group_detail" {
   }
 }
 
-query "aws_iam_group_input" {
+query "iam_group_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -155,7 +155,7 @@ query "aws_iam_group_input" {
   EOQ
 }
 
-query "aws_iam_group_inline_policy_count_for_group" {
+query "iam_group_inline_policy_count_for_group" {
   sql = <<-EOQ
     select
       case when inline_policies is null then 0 else jsonb_array_length(inline_policies) end as value,
@@ -170,7 +170,7 @@ query "aws_iam_group_inline_policy_count_for_group" {
   param "arn" {}
 }
 
-query "aws_iam_group_direct_attached_policy_count_for_group" {
+query "iam_group_direct_attached_policy_count_for_group" {
   sql = <<-EOQ
     select
       case when attached_policy_arns is null then 0 else jsonb_array_length(attached_policy_arns) end as value,
@@ -186,7 +186,7 @@ query "aws_iam_group_direct_attached_policy_count_for_group" {
 }
 
 
-query "aws_iam_group_overview" {
+query "iam_group_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -203,7 +203,7 @@ query "aws_iam_group_overview" {
   param "arn" {}
 }
 
-query "aws_iam_users_for_group" {
+query "iam_users_for_group" {
   sql = <<-EOQ
     select
       u ->> 'UserName' as "User Name",
@@ -219,7 +219,7 @@ query "aws_iam_users_for_group" {
   param "arn" {}
 }
 
-query "aws_iam_all_policies_for_group" {
+query "iam_all_policies_for_group" {
   sql = <<-EOQ
     -- Policies (attached to groups)
     select
@@ -247,8 +247,8 @@ query "aws_iam_all_policies_for_group" {
 }
 
 
-node "aws_iam_group_nodes" {
-  category = category.aws_iam_group
+node "iam_group" {
+  category = category.iam_group
 
   sql = <<-EOQ
     select
@@ -271,7 +271,7 @@ node "aws_iam_group_nodes" {
 
 
 
-edge "aws_iam_group_to_iam_user_edges" {
+edge "iam_group_to_iam_user" {
   title = "has member"
 
   sql = <<-EOQ
@@ -288,8 +288,8 @@ edge "aws_iam_group_to_iam_user_edges" {
 
 }
 
-node "aws_iam_group_inline_policy_nodes" {
-  category = category.aws_iam_inline_policy
+node "iam_group_inline_policy" {
+  category = category.iam_inline_policy
 
   sql = <<-EOQ
     select
@@ -309,7 +309,7 @@ node "aws_iam_group_inline_policy_nodes" {
   param "group_arns" {}
 }
 
-edge "aws_iam_group_to_inline_policy_edges" {
+edge "iam_group_to_inline_policy" {
   title = "inline policy"
 
   sql = <<-EOQ

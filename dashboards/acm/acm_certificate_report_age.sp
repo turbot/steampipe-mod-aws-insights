@@ -11,37 +11,37 @@ dashboard "acm_certificate_age_report" {
   container {
 
     card {
-      query = query.aws_acm_certificate_count
+      query = query.acm_certificate_count
       width = 2
     }
 
     card {
       type  = "info"
-      query = query.aws_acm_certificate_24_hours_count
+      query = query.acm_certificate_24_hours_count
       width = 2
     }
 
     card {
       type  = "info"
-      query = query.aws_acm_certificate_30_days_count
+      query = query.acm_certificate_30_days_count
       width = 2
     }
 
     card {
       type  = "info"
-      query = query.aws_acm_certificate_30_90_days_count
+      query = query.acm_certificate_30_90_days_count
       width = 2
     }
 
     card {
       type  = "info"
-      query = query.aws_acm_certificate_90_365_days_count
+      query = query.acm_certificate_90_365_days_count
       width = 2
     }
 
     card {
       type  = "info"
-      query = query.aws_acm_certificate_1_year_count
+      query = query.acm_certificate_1_year_count
       width = 2
     }
 
@@ -60,14 +60,14 @@ dashboard "acm_certificate_age_report" {
       href = "${dashboard.acm_certificate_detail.url_path}?input.certificate_arn={{.ARN | @uri}}"
     }
 
-    query = query.aws_acm_certificate_age_table
+    query = query.acm_certificate_age_table
 
   }
 
 }
 
 
-query "aws_acm_certificate_24_hours_count" {
+query "acm_certificate_24_hours_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -79,7 +79,7 @@ query "aws_acm_certificate_24_hours_count" {
   EOQ
 }
 
-query "aws_acm_certificate_30_days_count" {
+query "acm_certificate_30_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -92,7 +92,7 @@ query "aws_acm_certificate_30_days_count" {
   EOQ
 }
 
-query "aws_acm_certificate_30_90_days_count" {
+query "acm_certificate_30_90_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -104,7 +104,7 @@ query "aws_acm_certificate_30_90_days_count" {
   EOQ
 }
 
-query "aws_acm_certificate_90_365_days_count" {
+query "acm_certificate_90_365_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -116,7 +116,7 @@ query "aws_acm_certificate_90_365_days_count" {
   EOQ
 }
 
-query "aws_acm_certificate_1_year_count" {
+query "acm_certificate_1_year_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -128,7 +128,7 @@ query "aws_acm_certificate_1_year_count" {
   EOQ
 }
 
-query "aws_acm_certificate_age_table" {
+query "acm_certificate_age_table" {
   sql = <<-EOQ
     select
       c.domain_name as "Domain Name",

@@ -1,4 +1,4 @@
-dashboard "aws_iam_user_mfa_report" {
+dashboard "iam_user_mfa_report" {
 
   title         = "AWS IAM User MFA Report"
   documentation = file("./dashboards/iam/docs/iam_user_report_mfa.md")
@@ -11,12 +11,12 @@ dashboard "aws_iam_user_mfa_report" {
   container {
 
     card {
-      query = query.aws_iam_user_count
+      query = query.iam_user_count
       width = 2
     }
 
     card {
-      query = query.aws_iam_user_no_mfa_count
+      query = query.iam_user_no_mfa_count
       width = 2
     }
   }
@@ -31,15 +31,15 @@ dashboard "aws_iam_user_mfa_report" {
     }
 
     column "User Name" {
-      href = "${dashboard.aws_iam_user_detail.url_path}?input.user_arn={{.ARN | @uri}}"
+      href = "${dashboard.iam_user_detail.url_path}?input.user_arn={{.ARN | @uri}}"
     }
 
-    query = query.aws_iam_user_mfa_table
+    query = query.iam_user_mfa_table
   }
 
 }
 
-query "aws_iam_user_mfa_table" {
+query "iam_user_mfa_table" {
   sql = <<-EOQ
     select
       u.name as "User Name",

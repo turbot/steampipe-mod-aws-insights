@@ -1,4 +1,4 @@
-dashboard "aws_redshift_cluster_detail" {
+dashboard "redshift_cluster_detail" {
 
   title         = "AWS Redshift Cluster Detail"
   documentation = file("./dashboards/redshift/docs/redshift_cluster_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_redshift_cluster_detail" {
 
   input "cluster_arn" {
     title = "Select a Cluster:"
-    query = query.aws_redshift_cluster_input
+    query = query.redshift_cluster_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "aws_redshift_cluster_detail" {
 
     card {
       width = 2
-      query = query.aws_redshift_cluster_status
+      query = query.redshift_cluster_status
       args = {
         arn = self.input.cluster_arn.value
       }
@@ -25,7 +25,7 @@ dashboard "aws_redshift_cluster_detail" {
 
     card {
       width = 2
-      query = query.aws_redshift_cluster_version
+      query = query.redshift_cluster_version
       args = {
         arn = self.input.cluster_arn.value
       }
@@ -33,7 +33,7 @@ dashboard "aws_redshift_cluster_detail" {
 
     card {
       width = 2
-      query = query.aws_redshift_cluster_node_type
+      query = query.redshift_cluster_node_type
       args = {
         arn = self.input.cluster_arn.value
       }
@@ -41,7 +41,7 @@ dashboard "aws_redshift_cluster_detail" {
 
     card {
       width = 2
-      query = query.aws_redshift_cluster_number_of_nodes
+      query = query.redshift_cluster_number_of
       args = {
         arn = self.input.cluster_arn.value
       }
@@ -49,7 +49,7 @@ dashboard "aws_redshift_cluster_detail" {
 
     card {
       width = 2
-      query = query.aws_redshift_cluster_public
+      query = query.redshift_cluster_public
       args = {
         arn = self.input.cluster_arn.value
       }
@@ -57,7 +57,7 @@ dashboard "aws_redshift_cluster_detail" {
 
     card {
       width = 2
-      query = query.aws_redshift_cluster_encryption
+      query = query.redshift_cluster_encryption
       args = {
         arn = self.input.cluster_arn.value
       }
@@ -74,32 +74,32 @@ dashboard "aws_redshift_cluster_detail" {
 
 
       nodes = [
-        node.aws_redshift_cluster_nodes,
-        node.aws_redshift_cluster_to_redshift_subnet_group_node,
-        node.aws_redshift_cluster_to_vpc_subnet_node,
-        node.aws_redshift_cluster_to_vpc_node,
-        node.aws_redshift_cluster_to_vpc_security_group_node,
-        node.aws_redshift_cluster_to_kms_key_node,
-        node.aws_redshift_cluster_to_iam_role_node,
-        node.aws_redshift_cluster_to_vpc_eip_node,
-        node.aws_redshift_cluster_to_cloudwatch_log_group_node,
-        node.aws_redshift_cluster_to_s3_bucket_node,
-        node.aws_redshift_cluster_to_redshift_parameter_group_node,
-        node.aws_redshift_cluster_from_redshift_snapshot_node
+        node.redshift_cluster,
+        node.redshift_cluster_to_redshift_subnet_group_node,
+        node.redshift_cluster_to_vpc_subnet_node,
+        node.redshift_cluster_to_vpc_node,
+        node.redshift_cluster_to_vpc_security_group_node,
+        node.redshift_cluster_to_kms_key_node,
+        node.redshift_cluster_to_iam_role_node,
+        node.redshift_cluster_to_vpc_eip_node,
+        node.redshift_cluster_to_cloudwatch_log_group_node,
+        node.redshift_cluster_to_s3_bucket_node,
+        node.redshift_cluster_to_redshift_parameter_group_node,
+        node.redshift_cluster_from_redshift_snapshot_node
       ]
 
       edges = [
-        edge.aws_redshift_cluster_subnet_group_to_vpc_subnet_edge,
-        edge.aws_redshift_cluster_subnet_to_vpc_edge,
-        edge.aws_redshift_cluster_vpc_security_group_to_subnet_group_edge,
-        edge.aws_redshift_cluster_to_vpc_security_group_edge,
-        edge.aws_redshift_cluster_to_kms_key_edge,
-        edge.aws_redshift_cluster_to_iam_role_edge,
-        edge.aws_redshift_cluster_to_vpc_eip_edge,
-        edge.aws_redshift_cluster_to_cloudwatch_log_group_edge,
-        edge.aws_redshift_cluster_to_s3_bucket_edge,
-        edge.aws_redshift_cluster_to_redshift_parameter_group_edge,
-        edge.aws_redshift_cluster_from_redshift_snapshot_edge
+        edge.redshift_cluster_subnet_group_to_vpc_subnet_edge,
+        edge.redshift_cluster_subnet_to_vpc_edge,
+        edge.redshift_cluster_vpc_security_group_to_subnet_group_edge,
+        edge.redshift_cluster_to_vpc_security_group_edge,
+        edge.redshift_cluster_to_kms_key_edge,
+        edge.redshift_cluster_to_iam_role_edge,
+        edge.redshift_cluster_to_vpc_eip_edge,
+        edge.redshift_cluster_to_cloudwatch_log_group_edge,
+        edge.redshift_cluster_to_s3_bucket_edge,
+        edge.redshift_cluster_to_redshift_parameter_group_edge,
+        edge.redshift_cluster_from_redshift_snapshot_edge
       ]
 
       args = {
@@ -118,7 +118,7 @@ dashboard "aws_redshift_cluster_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_redshift_cluster_overview
+        query = query.redshift_cluster_overview
         args = {
           arn = self.input.cluster_arn.value
         }
@@ -127,7 +127,7 @@ dashboard "aws_redshift_cluster_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_redshift_cluster_tags
+        query = query.redshift_cluster_tags
         args = {
           arn = self.input.cluster_arn.value
         }
@@ -141,7 +141,7 @@ dashboard "aws_redshift_cluster_detail" {
 
       table {
         title = "Cluster Nodes"
-        query = query.aws_redshift_cluster_node_details
+        query = query.redshift_cluster_node_details
         args = {
           arn = self.input.cluster_arn.value
         }
@@ -149,7 +149,7 @@ dashboard "aws_redshift_cluster_detail" {
 
       table {
         title = "Cluster Parameter Groups"
-        query = query.aws_redshift_cluster_parameter_groups
+        query = query.redshift_cluster_parameter_groups
         args = {
           arn = self.input.cluster_arn.value
         }
@@ -160,7 +160,7 @@ dashboard "aws_redshift_cluster_detail" {
     table {
 
       title = "Logging"
-      query = query.aws_redshift_cluster_logging
+      query = query.redshift_cluster_logging
       args = {
         arn = self.input.cluster_arn.value
       }
@@ -168,7 +168,7 @@ dashboard "aws_redshift_cluster_detail" {
 
     table {
       title = "Scheduled Actions"
-      query = query.aws_redshift_cluster_scheduled_actions
+      query = query.redshift_cluster_scheduled_actions
       args = {
         arn = self.input.cluster_arn.value
       }
@@ -178,7 +178,7 @@ dashboard "aws_redshift_cluster_detail" {
 
 }
 
-query "aws_redshift_cluster_input" {
+query "redshift_cluster_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -194,7 +194,7 @@ query "aws_redshift_cluster_input" {
   EOQ
 }
 
-query "aws_redshift_cluster_status" {
+query "redshift_cluster_status" {
   sql = <<-EOQ
     select
       'Status' as label,
@@ -208,7 +208,7 @@ query "aws_redshift_cluster_status" {
   param "arn" {}
 }
 
-query "aws_redshift_cluster_version" {
+query "redshift_cluster_version" {
   sql = <<-EOQ
     select
       'Version' as label,
@@ -222,7 +222,7 @@ query "aws_redshift_cluster_version" {
   param "arn" {}
 }
 
-query "aws_redshift_cluster_node_type" {
+query "redshift_cluster_node_type" {
   sql = <<-EOQ
     select
       'Node Type' as label,
@@ -236,11 +236,11 @@ query "aws_redshift_cluster_node_type" {
   param "arn" {}
 }
 
-query "aws_redshift_cluster_number_of_nodes" {
+query "redshift_cluster_number_of" {
   sql = <<-EOQ
     select
       'Number Of Nodes' as label,
-      number_of_nodes as  value
+      number_of as  value
     from
       aws_redshift_cluster
     where
@@ -250,7 +250,7 @@ query "aws_redshift_cluster_number_of_nodes" {
   param "arn" {}
 }
 
-query "aws_redshift_cluster_encryption" {
+query "redshift_cluster_encryption" {
   sql = <<-EOQ
     select
       'Encryption' as label,
@@ -265,7 +265,7 @@ query "aws_redshift_cluster_encryption" {
   param "arn" {}
 }
 
-query "aws_redshift_cluster_public" {
+query "redshift_cluster_public" {
   sql = <<-EOQ
     select
       'Public Access' as label,
@@ -280,7 +280,7 @@ query "aws_redshift_cluster_public" {
   param "arn" {}
 }
 
-query "aws_redshift_cluster_node_details" {
+query "redshift_cluster_node_details" {
   sql = <<-EOQ
     select
       p ->> 'NodeRole' as "Node Role",
@@ -288,7 +288,7 @@ query "aws_redshift_cluster_node_details" {
       p ->> 'PublicIPAddress' as "PublicIP Address"
     from
       aws_redshift_cluster,
-      jsonb_array_elements(cluster_nodes) as p
+      jsonb_array_elements(cluster) as p
     where
       arn = $1;
   EOQ
@@ -296,7 +296,7 @@ query "aws_redshift_cluster_node_details" {
   param "arn" {}
 }
 
-query "aws_redshift_cluster_parameter_groups" {
+query "redshift_cluster_parameter_groups" {
   sql = <<-EOQ
     select
       p -> 'ClusterParameterStatusList' as "Cluster Parameter Status List",
@@ -312,7 +312,7 @@ query "aws_redshift_cluster_parameter_groups" {
   param "arn" {}
 }
 
-query "aws_redshift_cluster_scheduled_actions" {
+query "redshift_cluster_scheduled_actions" {
   sql = <<-EOQ
     select
       p ->> 'EndTime' as "End Time",
@@ -334,7 +334,7 @@ query "aws_redshift_cluster_scheduled_actions" {
   param "arn" {}
 }
 
-query "aws_redshift_cluster_logging" {
+query "redshift_cluster_logging" {
   sql = <<-EOQ
     select
       logging_status  ->> 'BucketName' as "Bucket Name",
@@ -352,7 +352,7 @@ query "aws_redshift_cluster_logging" {
   param "arn" {}
 }
 
-query "aws_redshift_cluster_security_groups" {
+query "redshift_cluster_security_groups" {
   sql = <<-EOQ
     select
       s -> 'VpcSecurityGroupId' as "VPC Security Group ID",
@@ -367,7 +367,7 @@ query "aws_redshift_cluster_security_groups" {
   param "arn" {}
 }
 
-query "aws_redshift_cluster_overview" {
+query "redshift_cluster_overview" {
   sql = <<-EOQ
     select
       cluster_identifier as "Cluster Identifier",
@@ -388,7 +388,7 @@ query "aws_redshift_cluster_overview" {
   param "arn" {}
 }
 
-query "aws_redshift_cluster_tags" {
+query "redshift_cluster_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -405,8 +405,8 @@ query "aws_redshift_cluster_tags" {
   param "arn" {}
 }
 
-node "aws_redshift_cluster_nodes" {
-  category = category.aws_redshift_cluster
+node "redshift_cluster" {
+  category = category.redshift_cluster
 
   sql = <<-EOQ
     select
@@ -430,8 +430,8 @@ node "aws_redshift_cluster_nodes" {
   param "redshift_cluster_arns" {}
 }
 
-node "aws_redshift_cluster_to_redshift_subnet_group_node" {
-  category = category.aws_redshift_subnet_group
+node "redshift_cluster_to_redshift_subnet_group_node" {
+  category = category.redshift_subnet_group
 
   sql = <<-EOQ
     select
@@ -455,8 +455,8 @@ node "aws_redshift_cluster_to_redshift_subnet_group_node" {
   param "arn" {}
 }
 
-node "aws_redshift_cluster_to_vpc_subnet_node" {
-  category = category.aws_vpc_subnet
+node "redshift_cluster_to_vpc_subnet_node" {
+  category = category.vpc_subnet
 
   sql = <<-EOQ
     select
@@ -481,7 +481,7 @@ node "aws_redshift_cluster_to_vpc_subnet_node" {
   param "arn" {}
 }
 
-edge "aws_redshift_cluster_subnet_group_to_vpc_subnet_edge" {
+edge "redshift_cluster_subnet_group_to_vpc_subnet_edge" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -501,8 +501,8 @@ edge "aws_redshift_cluster_subnet_group_to_vpc_subnet_edge" {
   param "arn" {}
 }
 
-node "aws_redshift_cluster_to_vpc_node" {
-  category = category.aws_vpc
+node "redshift_cluster_to_vpc_node" {
+  category = category.vpc_vpc
 
   sql = <<-EOQ
     select
@@ -525,7 +525,7 @@ node "aws_redshift_cluster_to_vpc_node" {
   param "arn" {}
 }
 
-edge "aws_redshift_cluster_subnet_to_vpc_edge" {
+edge "redshift_cluster_subnet_to_vpc_edge" {
   title = "vpc"
 
   sql = <<-EOQ
@@ -549,7 +549,7 @@ edge "aws_redshift_cluster_subnet_to_vpc_edge" {
   param "arn" {}
 }
 
-edge "aws_redshift_cluster_vpc_security_group_to_subnet_group_edge" {
+edge "redshift_cluster_vpc_security_group_to_subnet_group_edge" {
   title = "subnet group"
 
   sql = <<-EOQ
@@ -573,8 +573,8 @@ edge "aws_redshift_cluster_vpc_security_group_to_subnet_group_edge" {
   param "arn" {}
 }
 
-node "aws_redshift_cluster_to_vpc_security_group_node" {
-  category = category.aws_vpc_security_group
+node "redshift_cluster_to_vpc_security_group_node" {
+  category = category.vpc_security_group
 
   sql = <<-EOQ
     select
@@ -600,7 +600,7 @@ node "aws_redshift_cluster_to_vpc_security_group_node" {
   param "arn" {}
 }
 
-edge "aws_redshift_cluster_to_vpc_security_group_edge" {
+edge "redshift_cluster_to_vpc_security_group_edge" {
   title = "security group"
 
   sql = <<-EOQ
@@ -620,8 +620,8 @@ edge "aws_redshift_cluster_to_vpc_security_group_edge" {
   param "arn" {}
 }
 
-node "aws_redshift_cluster_to_kms_key_node" {
-  category = category.aws_kms_key
+node "redshift_cluster_to_kms_key_node" {
+  category = category.kms_key
 
   sql = <<-EOQ
     select
@@ -645,7 +645,7 @@ node "aws_redshift_cluster_to_kms_key_node" {
   param "arn" {}
 }
 
-edge "aws_redshift_cluster_to_kms_key_edge" {
+edge "redshift_cluster_to_kms_key_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -663,8 +663,8 @@ edge "aws_redshift_cluster_to_kms_key_edge" {
   param "arn" {}
 }
 
-node "aws_redshift_cluster_to_iam_role_node" {
-  category = category.aws_iam_role
+node "redshift_cluster_to_iam_role_node" {
+  category = category.iam_role
 
   sql = <<-EOQ
     select
@@ -689,7 +689,7 @@ node "aws_redshift_cluster_to_iam_role_node" {
   param "arn" {}
 }
 
-edge "aws_redshift_cluster_to_iam_role_edge" {
+edge "redshift_cluster_to_iam_role_edge" {
   title = "assumes"
 
   sql = <<-EOQ
@@ -709,8 +709,8 @@ edge "aws_redshift_cluster_to_iam_role_edge" {
   param "arn" {}
 }
 
-node "aws_redshift_cluster_to_vpc_eip_node" {
-  category = category.aws_vpc_eip
+node "redshift_cluster_to_vpc_eip_node" {
+  category = category.vpc_eip
 
   sql = <<-EOQ
     select
@@ -734,7 +734,7 @@ node "aws_redshift_cluster_to_vpc_eip_node" {
   param "arn" {}
 }
 
-edge "aws_redshift_cluster_to_vpc_eip_edge" {
+edge "redshift_cluster_to_vpc_eip_edge" {
   title = "eip"
 
   sql = <<-EOQ
@@ -754,8 +754,8 @@ edge "aws_redshift_cluster_to_vpc_eip_edge" {
   param "arn" {}
 }
 
-node "aws_redshift_cluster_to_cloudwatch_log_group_node" {
-  category = category.aws_cloudwatch_log_group
+node "redshift_cluster_to_cloudwatch_log_group_node" {
+  category = category.cloudwatch_log_group
 
   sql = <<-EOQ
     select
@@ -776,7 +776,7 @@ node "aws_redshift_cluster_to_cloudwatch_log_group_node" {
   param "arn" {}
 }
 
-edge "aws_redshift_cluster_to_cloudwatch_log_group_edge" {
+edge "redshift_cluster_to_cloudwatch_log_group_edge" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -794,8 +794,8 @@ edge "aws_redshift_cluster_to_cloudwatch_log_group_edge" {
   param "arn" {}
 }
 
-node "aws_redshift_cluster_to_s3_bucket_node" {
-  category = category.aws_s3_bucket
+node "redshift_cluster_to_s3_bucket_node" {
+  category = category.s3_bucket
 
   sql = <<-EOQ
     select
@@ -816,7 +816,7 @@ node "aws_redshift_cluster_to_s3_bucket_node" {
   param "arn" {}
 }
 
-edge "aws_redshift_cluster_to_s3_bucket_edge" {
+edge "redshift_cluster_to_s3_bucket_edge" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -834,8 +834,8 @@ edge "aws_redshift_cluster_to_s3_bucket_edge" {
   param "arn" {}
 }
 
-node "aws_redshift_cluster_to_redshift_parameter_group_node" {
-  category = category.aws_redshift_parameter_group
+node "redshift_cluster_to_redshift_parameter_group_node" {
+  category = category.redshift_parameter_group
 
   sql = <<-EOQ
     select
@@ -859,7 +859,7 @@ node "aws_redshift_cluster_to_redshift_parameter_group_node" {
   param "arn" {}
 }
 
-edge "aws_redshift_cluster_to_redshift_parameter_group_edge" {
+edge "redshift_cluster_to_redshift_parameter_group_edge" {
   title = "parameter group"
 
   sql = <<-EOQ
@@ -879,8 +879,8 @@ edge "aws_redshift_cluster_to_redshift_parameter_group_edge" {
   param "arn" {}
 }
 
-node "aws_redshift_cluster_from_redshift_snapshot_node" {
-  category = category.aws_redshift_snapshot
+node "redshift_cluster_from_redshift_snapshot_node" {
+  category = category.redshift_snapshot
 
   sql = <<-EOQ
     select
@@ -904,7 +904,7 @@ node "aws_redshift_cluster_from_redshift_snapshot_node" {
   param "arn" {}
 }
 
-edge "aws_redshift_cluster_from_redshift_snapshot_edge" {
+edge "redshift_cluster_from_redshift_snapshot_edge" {
   title = "snapshot"
 
   sql = <<-EOQ

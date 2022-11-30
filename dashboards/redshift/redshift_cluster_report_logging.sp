@@ -1,4 +1,4 @@
-dashboard "aws_redshift_cluster_logging_report" {
+dashboard "redshift_cluster_logging_report" {
 
   title         = "AWS Redshift Cluster Logging Report"
   documentation = file("./dashboards/redshift/docs/redshift_cluster_report_logging.md")
@@ -11,12 +11,12 @@ dashboard "aws_redshift_cluster_logging_report" {
   container {
 
     card {
-      query = query.aws_redshift_cluster_count
+      query = query.redshift_cluster_count
       width = 2
     }
 
     card {
-      query = query.aws_redshift_cluster_logging_status
+      query = query.redshift_cluster_logging_status
       width = 2
     }
 
@@ -33,15 +33,15 @@ dashboard "aws_redshift_cluster_logging_report" {
     }
 
     column "Cluster Identifier" {
-      href = "${dashboard.aws_redshift_cluster_detail.url_path}?input.cluster_arn={{.ARN | @uri}}"
+      href = "${dashboard.redshift_cluster_detail.url_path}?input.cluster_arn={{.ARN | @uri}}"
     }
 
-    query = query.aws_redshift_cluster_logging_table
+    query = query.redshift_cluster_logging_table
   }
 
 }
 
-query "aws_redshift_cluster_logging_status" {
+query "redshift_cluster_logging_status" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -54,7 +54,7 @@ query "aws_redshift_cluster_logging_status" {
   EOQ
 }
 
-query "aws_redshift_cluster_logging_table" {
+query "redshift_cluster_logging_table" {
   sql = <<-EOQ
     select
       c.cluster_identifier as "Cluster Identifier",

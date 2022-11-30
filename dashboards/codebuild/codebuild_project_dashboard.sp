@@ -1,4 +1,4 @@
-dashboard "aws_codebuild_project_dashboard" {
+dashboard "codebuild_project_dashboard" {
 
   title         = "AWS CodeBuild Project Dashboard"
   documentation = file("./dashboards/codebuild/docs/codebuild_project_dashboard.md")
@@ -12,28 +12,28 @@ dashboard "aws_codebuild_project_dashboard" {
   container {
 
     card {
-      query   = query.aws_codebuild_project_count
+      query   = query.codebuild_project_count
       width = 2
     }
 
     #Assessments
     card {
-      query   = query.aws_codebuild_project_encryption_disabled
+      query   = query.codebuild_project_encryption_disabled
       width = 2
     }
 
     card {
-      query   = query.aws_codebuild_project_logging_disabled
+      query   = query.codebuild_project_logging_disabled
       width = 2
     }
 
     card {
-      query   = query.aws_codebuild_project_privileged_mode_disabled
+      query   = query.codebuild_project_privileged_mode_disabled
       width = 2
     }
 
     card {
-      query   = query.aws_codebuild_project_badge_disabled
+      query   = query.codebuild_project_badge_disabled
       width = 2
     }
 
@@ -48,7 +48,7 @@ dashboard "aws_codebuild_project_dashboard" {
 
     chart {
       title = "Encryption Status"
-      query   = query.aws_codebuild_project_encryption_status
+      query   = query.codebuild_project_encryption_status
       type  = "donut"
       width = 3
 
@@ -64,7 +64,7 @@ dashboard "aws_codebuild_project_dashboard" {
 
     chart {
       title = "Logging Status"
-      query   = query.aws_codebuild_project_logging_status
+      query   = query.codebuild_project_logging_status
       type  = "donut"
       width = 3
 
@@ -80,7 +80,7 @@ dashboard "aws_codebuild_project_dashboard" {
 
     chart {
       title = "Privileged Mode Status"
-      query   = query.aws_codebuild_project_privileged_mode_status
+      query   = query.codebuild_project_privileged_mode_status
       type  = "donut"
       width = 3
 
@@ -96,7 +96,7 @@ dashboard "aws_codebuild_project_dashboard" {
 
     chart {
       title = "Badge Status"
-      query   = query.aws_codebuild_project_badge_status
+      query   = query.codebuild_project_badge_status
       type  = "donut"
       width = 3
 
@@ -119,14 +119,14 @@ dashboard "aws_codebuild_project_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      query   = query.aws_codebuild_project_forecast_table
+      query   = query.codebuild_project_forecast_table
     }
 
     chart {
       width = 4
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      query   = query.aws_codebuild_project_cost_per_month
+      query   = query.codebuild_project_cost_per_month
     }
 
   }
@@ -139,42 +139,42 @@ dashboard "aws_codebuild_project_dashboard" {
 
     chart {
       title = "Projects by Account"
-      query   = query.aws_codebuild_project_by_account
+      query   = query.codebuild_project_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Projects by Region"
-      query   = query.aws_codebuild_project_by_region
+      query   = query.codebuild_project_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Projects by Visibility"
-      query   = query.aws_codebuild_project_by_visibility
+      query   = query.codebuild_project_by_visibility
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Projects by Creation Month"
-      query   = query.aws_codebuild_project_by_creation_month
+      query   = query.codebuild_project_by_creation_month
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Projects by Environment Type"
-      query   = query.aws_codebuild_project_by_environment_type
+      query   = query.codebuild_project_by_environment_type
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Projects by Source Type"
-      query   = query.aws_codebuild_project_by_source_type
+      query   = query.codebuild_project_by_source_type
       type  = "column"
       width = 4
     }
@@ -185,7 +185,7 @@ dashboard "aws_codebuild_project_dashboard" {
 
 # Card Queries
 
-query "aws_codebuild_project_count" {
+query "codebuild_project_count" {
   sql = <<-EOQ
     select
       count(*) as "Projects"
@@ -194,7 +194,7 @@ query "aws_codebuild_project_count" {
   EOQ
 }
 
-query "aws_codebuild_project_encryption_disabled" {
+query "codebuild_project_encryption_disabled" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -207,7 +207,7 @@ query "aws_codebuild_project_encryption_disabled" {
   EOQ
 }
 
-query "aws_codebuild_project_logging_disabled" {
+query "codebuild_project_logging_disabled" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -220,7 +220,7 @@ query "aws_codebuild_project_logging_disabled" {
   EOQ
 }
 
-query "aws_codebuild_project_privileged_mode_disabled" {
+query "codebuild_project_privileged_mode_disabled" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -233,7 +233,7 @@ query "aws_codebuild_project_privileged_mode_disabled" {
   EOQ
 }
 
-query "aws_codebuild_project_badge_disabled" {
+query "codebuild_project_badge_disabled" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -248,7 +248,7 @@ query "aws_codebuild_project_badge_disabled" {
 
 // # Assessment Queries
 
-query "aws_codebuild_project_encryption_status" {
+query "codebuild_project_encryption_status" {
   sql = <<-EOQ
     select
       encryption_status,
@@ -269,7 +269,7 @@ query "aws_codebuild_project_encryption_status" {
   EOQ
 }
 
-query "aws_codebuild_project_logging_status" {
+query "codebuild_project_logging_status" {
   sql = <<-EOQ
     select
       logging_status,
@@ -292,7 +292,7 @@ query "aws_codebuild_project_logging_status" {
   EOQ
 }
 
-query "aws_codebuild_project_privileged_mode_status" {
+query "codebuild_project_privileged_mode_status" {
   sql = <<-EOQ
     select
       privileged_mode,
@@ -313,7 +313,7 @@ query "aws_codebuild_project_privileged_mode_status" {
   EOQ
 }
 
-query "aws_codebuild_project_badge_status" {
+query "codebuild_project_badge_status" {
   sql = <<-EOQ
     select
       badge_status,
@@ -336,7 +336,7 @@ query "aws_codebuild_project_badge_status" {
 
 // # Cost Queries
 
-query "aws_codebuild_project_forecast_table" {
+query "codebuild_project_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
       select
@@ -376,7 +376,7 @@ query "aws_codebuild_project_forecast_table" {
   EOQ
 }
 
-query "aws_codebuild_project_cost_per_month" {
+query "codebuild_project_cost_per_month" {
   sql = <<-EOQ
     select
       to_char(period_start, 'Mon-YY') as "Month",
@@ -395,7 +395,7 @@ query "aws_codebuild_project_cost_per_month" {
 
 # Analysis Queries
 
-query "aws_codebuild_project_by_account" {
+query "codebuild_project_by_account" {
   sql = <<-EOQ
     select
       a.title as "account",
@@ -412,7 +412,7 @@ query "aws_codebuild_project_by_account" {
   EOQ
 }
 
-query "aws_codebuild_project_by_region" {
+query "codebuild_project_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
@@ -426,7 +426,7 @@ query "aws_codebuild_project_by_region" {
   EOQ
 }
 
-query "aws_codebuild_project_by_visibility" {
+query "codebuild_project_by_visibility" {
   sql = <<-EOQ
     select
       project_visibility as "Visibility",
@@ -440,7 +440,7 @@ query "aws_codebuild_project_by_visibility" {
   EOQ
 }
 
-query "aws_codebuild_project_by_environment_type" {
+query "codebuild_project_by_environment_type" {
   sql = <<-EOQ
     select
       environment->'Type' as "Environment Type",
@@ -454,7 +454,7 @@ query "aws_codebuild_project_by_environment_type" {
   EOQ
 }
 
-query "aws_codebuild_project_by_source_type" {
+query "codebuild_project_by_source_type" {
   sql = <<-EOQ
     select
       source->'Type' as "Source Type",
@@ -468,7 +468,7 @@ query "aws_codebuild_project_by_source_type" {
   EOQ
 }
 
-query "aws_codebuild_project_by_creation_month" {
+query "codebuild_project_by_creation_month" {
   sql = <<-EOQ
     with clusters as (
       select

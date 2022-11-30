@@ -1,4 +1,4 @@
-dashboard "aws_cloudtrail_trail_detail" {
+dashboard "cloudtrail_trail_detail" {
 
   title         = "AWS CloudTrail Trail Detail"
   documentation = file("./dashboards/cloudtrail/docs/cloudtrail_trail_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_cloudtrail_trail_detail" {
 
   input "trail_arn" {
     title = "Select a trail:"
-    query = query.aws_cloudtrail_trail_input
+    query = query.cloudtrail_trail_input
     width = 4
   }
 
@@ -18,7 +18,7 @@ dashboard "aws_cloudtrail_trail_detail" {
     card {
       width = 2
 
-      query = query.aws_cloudtrail_trail_regional
+      query = query.cloudtrail_trail_regional
       args = {
         arn = self.input.trail_arn.value
       }
@@ -27,7 +27,7 @@ dashboard "aws_cloudtrail_trail_detail" {
     card {
       width = 2
 
-      query = query.aws_cloudtrail_trail_multi_region
+      query = query.cloudtrail_trail_multi_region
       args = {
         arn = self.input.trail_arn.value
       }
@@ -36,7 +36,7 @@ dashboard "aws_cloudtrail_trail_detail" {
     card {
       width = 2
 
-      query = query.aws_cloudtrail_trail_unencrypted
+      query = query.cloudtrail_trail_unencrypted
       args = {
         arn = self.input.trail_arn.value
       }
@@ -45,7 +45,7 @@ dashboard "aws_cloudtrail_trail_detail" {
     card {
       width = 2
 
-      query = query.aws_cloudtrail_trail_log_file_validation
+      query = query.cloudtrail_trail_log_file_validation
       args = {
         arn = self.input.trail_arn.value
       }
@@ -61,20 +61,20 @@ dashboard "aws_cloudtrail_trail_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_cloudtrail_trail_nodes,
-        node.aws_cloudtrail_trail_to_s3_bucket_node,
-        node.aws_cloudtrail_trail_to_kms_key_node,
-        node.aws_cloudtrail_trail_to_sns_topic_node,
-        node.aws_cloudtrail_trail_to_cloudwatch_log_group_node,
-        node.aws_cloudtrail_trail_from_guardduty_detector_node
+        node.cloudtrail_trail,
+        node.cloudtrail_trail_to_s3_bucket_node,
+        node.cloudtrail_trail_to_kms_key_node,
+        node.cloudtrail_trail_to_sns_topic_node,
+        node.cloudtrail_trail_to_cloudwatch_log_group_node,
+        node.cloudtrail_trail_from_guardduty_detector_node
       ]
 
       edges = [
-        edge.aws_cloudtrail_trail_to_s3_bucket_edge,
-        edge.aws_cloudtrail_trail_to_kms_key_edge,
-        edge.aws_cloudtrail_trail_to_sns_topic_edge,
-        edge.aws_cloudtrail_trail_to_cloudwatch_log_group_edge,
-        edge.aws_cloudtrail_trail_from_guardduty_detector_edge
+        edge.cloudtrail_trail_to_s3_bucket_edge,
+        edge.cloudtrail_trail_to_kms_key_edge,
+        edge.cloudtrail_trail_to_sns_topic_edge,
+        edge.cloudtrail_trail_to_cloudwatch_log_group_edge,
+        edge.cloudtrail_trail_from_guardduty_detector_edge
       ]
 
       args = {
@@ -93,7 +93,7 @@ dashboard "aws_cloudtrail_trail_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_cloudtrail_trail_overview
+        query = query.cloudtrail_trail_overview
         args = {
           arn = self.input.trail_arn.value
         }
@@ -103,7 +103,7 @@ dashboard "aws_cloudtrail_trail_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_cloudtrail_trail_tags
+        query = query.cloudtrail_trail_tags
         args = {
           arn = self.input.trail_arn.value
         }
@@ -117,7 +117,7 @@ dashboard "aws_cloudtrail_trail_detail" {
 
       table {
         title = "Logging"
-        query = query.aws_cloudtrail_trail_logging
+        query = query.cloudtrail_trail_logging
         args = {
           arn = self.input.trail_arn.value
         }
@@ -126,10 +126,10 @@ dashboard "aws_cloudtrail_trail_detail" {
       table {
         title = "Associated S3 Trail Buckets"
         column "S3 Bucket ARN" {
-          href = "{{ if .'S3 Bucket ARN' == null then null else '${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn=' + (.'S3 Bucket ARN' | @uri) end }}"
+          href = "{{ if .'S3 Bucket ARN' == null then null else '${dashboard.s3_bucket_detail.url_path}?input.bucket_arn=' + (.'S3 Bucket ARN' | @uri) end }}"
         }
 
-        query = query.aws_cloudtrail_trail_bucket
+        query = query.cloudtrail_trail_bucket
         args = {
           arn = self.input.trail_arn.value
         }
@@ -141,7 +141,7 @@ dashboard "aws_cloudtrail_trail_detail" {
 
 }
 
-query "aws_cloudtrail_trail_input" {
+query "cloudtrail_trail_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -159,7 +159,7 @@ query "aws_cloudtrail_trail_input" {
   EOQ
 }
 
-query "aws_cloudtrail_trail_regional" {
+query "cloudtrail_trail_regional" {
   sql = <<-EOQ
     select
       case when not is_multi_region_trail then 'True' else 'False' end as value,
@@ -173,7 +173,7 @@ query "aws_cloudtrail_trail_regional" {
   param "arn" {}
 }
 
-query "aws_cloudtrail_trail_multi_region" {
+query "cloudtrail_trail_multi_region" {
   sql = <<-EOQ
     select
       case when is_multi_region_trail then 'True' else 'False' end as value,
@@ -187,7 +187,7 @@ query "aws_cloudtrail_trail_multi_region" {
   param "arn" {}
 }
 
-query "aws_cloudtrail_trail_unencrypted" {
+query "cloudtrail_trail_unencrypted" {
   sql = <<-EOQ
     select
       'Encryption' as label,
@@ -202,7 +202,7 @@ query "aws_cloudtrail_trail_unencrypted" {
   param "arn" {}
 }
 
-query "aws_cloudtrail_trail_log_file_validation" {
+query "cloudtrail_trail_log_file_validation" {
   sql = <<-EOQ
     select
       case when log_file_validation_enabled then 'Enabled' else 'Disabled' end as value,
@@ -217,7 +217,7 @@ query "aws_cloudtrail_trail_log_file_validation" {
   param "arn" {}
 }
 
-query "aws_cloudtrail_trail_overview" {
+query "cloudtrail_trail_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -235,7 +235,7 @@ query "aws_cloudtrail_trail_overview" {
   param "arn" {}
 }
 
-query "aws_cloudtrail_trail_tags" {
+query "cloudtrail_trail_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -252,7 +252,7 @@ query "aws_cloudtrail_trail_tags" {
   param "arn" {}
 }
 
-query "aws_cloudtrail_trail_logging" {
+query "cloudtrail_trail_logging" {
   sql = <<-EOQ
     select
       arn as "ARN",
@@ -266,7 +266,7 @@ query "aws_cloudtrail_trail_logging" {
   param "arn" {}
 }
 
-query "aws_cloudtrail_trail_bucket" {
+query "cloudtrail_trail_bucket" {
   sql = <<-EOQ
     select
       s3_bucket_name as "S3 Bucket Name",
@@ -280,8 +280,8 @@ query "aws_cloudtrail_trail_bucket" {
   param "arn" {}
 }
 
-node "aws_cloudtrail_trail_nodes" {
-  category = category.aws_cloudtrail_trail
+node "cloudtrail_trail" {
+  category = category.cloudtrail_trail
 
   sql = <<-EOQ
     select
@@ -303,8 +303,8 @@ node "aws_cloudtrail_trail_nodes" {
   param "trail_arns" {}
 }
 
-node "aws_cloudtrail_trail_to_s3_bucket_node" {
-  category = category.aws_s3_bucket
+node "cloudtrail_trail_to_s3_bucket_node" {
+  category = category.s3_bucket
 
   sql = <<-EOQ
     select
@@ -326,7 +326,7 @@ node "aws_cloudtrail_trail_to_s3_bucket_node" {
   param "arn" {}
 }
 
-edge "aws_cloudtrail_trail_to_s3_bucket_edge" {
+edge "cloudtrail_trail_to_s3_bucket_edge" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -343,8 +343,8 @@ edge "aws_cloudtrail_trail_to_s3_bucket_edge" {
   param "arn" {}
 }
 
-node "aws_cloudtrail_trail_to_kms_key_node" {
-  category = category.aws_kms_key
+node "cloudtrail_trail_to_kms_key_node" {
+  category = category.kms_key
 
   sql = <<-EOQ
     select
@@ -367,7 +367,7 @@ node "aws_cloudtrail_trail_to_kms_key_node" {
   param "arn" {}
 }
 
-edge "aws_cloudtrail_trail_to_kms_key_edge" {
+edge "cloudtrail_trail_to_kms_key_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -384,8 +384,8 @@ edge "aws_cloudtrail_trail_to_kms_key_edge" {
   param "arn" {}
 }
 
-node "aws_cloudtrail_trail_to_sns_topic_node" {
-  category = category.aws_sns_topic
+node "cloudtrail_trail_to_sns_topic_node" {
+  category = category.sns_topic
 
   sql = <<-EOQ
     select
@@ -406,7 +406,7 @@ node "aws_cloudtrail_trail_to_sns_topic_node" {
   param "arn" {}
 }
 
-edge "aws_cloudtrail_trail_to_sns_topic_edge" {
+edge "cloudtrail_trail_to_sns_topic_edge" {
   title = "notifies"
 
   sql = <<-EOQ
@@ -423,8 +423,8 @@ edge "aws_cloudtrail_trail_to_sns_topic_edge" {
   param "arn" {}
 }
 
-node "aws_cloudtrail_trail_to_cloudwatch_log_group_node" {
-  category = category.aws_cloudwatch_log_group
+node "cloudtrail_trail_to_cloudwatch_log_group_node" {
+  category = category.cloudwatch_log_group
 
   sql = <<-EOQ
     select
@@ -445,7 +445,7 @@ node "aws_cloudtrail_trail_to_cloudwatch_log_group_node" {
   param "arn" {}
 }
 
-edge "aws_cloudtrail_trail_to_cloudwatch_log_group_edge" {
+edge "cloudtrail_trail_to_cloudwatch_log_group_edge" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -462,8 +462,8 @@ edge "aws_cloudtrail_trail_to_cloudwatch_log_group_edge" {
   param "arn" {}
 }
 
-node "aws_cloudtrail_trail_from_guardduty_detector_node" {
-  category = category.aws_guardduty_detector
+node "cloudtrail_trail_from_guardduty_detector_node" {
+  category = category.guardduty_detector
 
   sql = <<-EOQ
     select
@@ -488,7 +488,7 @@ node "aws_cloudtrail_trail_from_guardduty_detector_node" {
   param "arn" {}
 }
 
-edge "aws_cloudtrail_trail_from_guardduty_detector_edge" {
+edge "cloudtrail_trail_from_guardduty_detector_edge" {
   title = "cloudtrail trail"
 
   sql = <<-EOQ
