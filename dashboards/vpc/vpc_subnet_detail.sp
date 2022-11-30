@@ -128,6 +128,62 @@ dashboard "aws_vpc_subnet_detail" {
         args = [self.input.subnet_id.value]
       }
 
+      with "glbs" {
+        sql = <<-EOQ
+          select
+            arn as glb_arn
+          from
+            aws_ec2_gateway_load_balancer,
+            jsonb_array_elements(availability_zones) as az
+          where
+            az ->> 'SubnetId' = $1;
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
+      with "albs" {
+        sql = <<-EOQ
+          select
+            arn as alb_arn
+          from
+            aws_ec2_application_load_balancer,
+            jsonb_array_elements(availability_zones) as az
+          where
+            az ->> 'SubnetId' = $1;
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
+      with "clbs" {
+        sql = <<-EOQ
+          select
+            arn as clb_arn
+          from
+            aws_ec2_classic_load_balancer,
+            jsonb_array_elements(availability_zones) as az
+          where
+            az ->> 'SubnetId' = $1;
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
+      with "nlbs" {
+        sql = <<-EOQ
+          select
+            arn as nlb_arn
+          from
+            aws_ec2_network_load_balancer,
+            jsonb_array_elements(availability_zones) as az
+          where
+            az ->> 'SubnetId' = $1;
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
       nodes = [
         node.aws_vpc_subnet_nodes,
         node.aws_vpc_nodes,
@@ -136,6 +192,10 @@ dashboard "aws_vpc_subnet_detail" {
         node.aws_lambda_function_nodes,
         node.aws_vpc_flow_log_nodes,
         node.aws_ec2_network_interface_nodes,
+        node.aws_ec2_application_load_balancer_nodes,
+        node.aws_ec2_network_load_balancer_nodes,
+        node.aws_ec2_classic_load_balancer_nodes,
+        node.aws_ec2_gateway_load_balancer_nodes,
 
         node.aws_vpc_subnet_vpc_route_table_nodes,
         node.aws_vpc_subnet_vpc_network_acl_nodes,
@@ -151,7 +211,11 @@ dashboard "aws_vpc_subnet_detail" {
         edge.aws_vpc_subnet_to_ec2_instance_edges,
         edge.aws_vpc_subnet_to_lambda_function_edges,
         edge.aws_vpc_subnet_to_sagemaker_notebook_instance_edges,
-        edge.aws_vpc_subnet_to_network_interface_edges
+        edge.aws_vpc_subnet_to_network_interface_edges,
+        edge.aws_vpc_subnet_to_alb_edges,
+        edge.aws_vpc_subnet_to_clb_edges,
+        edge.aws_vpc_subnet_to_nlb_edges,
+        edge.aws_vpc_subnet_to_glb_edges
       ]
 
       args = {
@@ -161,6 +225,10 @@ dashboard "aws_vpc_subnet_detail" {
         function_arns        = with.lambda_functions.rows[*].lambda_arn
         instance_arns        = with.ec2_instances.rows[*].instance_arn
         rds_db_instance_arns = with.rds_db_instances.rows[*].rds_instance_arn
+        clb_arns             = with.clbs.rows[*].clb_arn
+        alb_arns             = with.albs.rows[*].alb_arn
+        nlb_arns             = with.nlbs.rows[*].nlb_arn
+        glb_arns             = with.glbs.rows[*].glb_arn
         vpc_ids              = with.vpcs.rows[*].vpc_id
       }
     }
@@ -638,4 +706,66 @@ edge "aws_vpc_subnet_to_network_interface_edges" {
   param "subnet_ids" {}
 }
 
+edge "aws_vpc_subnet_to_alb_edges" {
+  title = "alb"
 
+  sql = <<-EOQ
+    select
+      subnet_ids as from_id,
+      alb_arns as to_id
+    from
+      unnest($1::text[]) as alb_arns,
+      unnest($2::text[]) as subnet_ids;
+  EOQ
+
+  param "alb_arns" {}
+  param "subnet_ids" {}
+}
+
+edge "aws_vpc_subnet_to_nlb_edges" {
+  title = "nlb"
+
+  sql = <<-EOQ
+    select
+      subnet_ids as from_id,
+      nlb_arns as to_id
+    from
+      unnest($1::text[]) as nlb_arns,
+      unnest($2::text[]) as subnet_ids;
+  EOQ
+
+  param "nlb_arns" {}
+  param "subnet_ids" {}
+}
+
+edge "aws_vpc_subnet_to_clb_edges" {
+  title = "clb"
+
+  sql = <<-EOQ
+    select
+      subnet_ids as from_id,
+      clb_arns as to_id
+    from
+      unnest($1::text[]) as clb_arns,
+      unnest($2::text[]) as subnet_ids;
+  EOQ
+
+  param "clb_arns" {}
+  param "subnet_ids" {}
+}
+
+edge "aws_vpc_subnet_to_glb_edges" {
+  title = "glb"
+
+  sql = <<-EOQ
+    select
+      subnet_ids as from_id,
+      glb_arns as to_id
+    from
+      unnest($1::text[]) as glb_arns,
+      unnest($2::text[]) as subnet_ids;
+  EOQ
+
+  param "glb_arns" {}
+  param "subnet_ids" {}
+}

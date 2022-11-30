@@ -342,22 +342,6 @@ edge "aws_vpc_subnet_to_vpc_flow_log_edges" {
   param "subnet_ids" {}
 }
 
-edge "aws_vpc_to_vpc_flow_log_edges" {
-  title = "flow log"
-
-  sql = <<-EOQ
-    select
-      vpc_ids as from_id,
-      flow_log_ids as to_id
-    from
-      unnest($1::text[]) as flow_log_ids,
-      unnest($2::text[]) as vpc_ids
-  EOQ
-
-  param "flow_log_ids" {}
-  param "vpc_ids" {}
-}
-
 query "aws_vpc_flow_log_overview" {
   sql = <<-EOQ
     select
