@@ -54,24 +54,52 @@ dashboard "aws_ebs_snapshot_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "ebs_volumes" {
+        sql = <<-EOQ
+          select
+            v.arn as volume_arn
+          from
+            aws_ebs_snapshot as s,
+            aws_ebs_volume as v where s.snapshot_id = v.snapshot_id
+            and s.arn = $1;
+        EOQ
+
+        args = [self.input.snapshot_arn.value]
+      }
+      
+      with "kms_keys" {
+        sql = <<-EOQ
+        select
+          kms_key_id as key_arn
+        from
+          aws_ebs_snapshot
+        where
+          kms_key_id is not null
+          and arn = $1
+      EOQ
+
+        args = [self.input.snapshot_arn.value]
+      }
 
       nodes = [
-        node.aws_ebs_snapshot_node,
-        node.aws_ebs_snapshot_from_ebs_volume_node,
-        node.aws_ebs_snapshot_from_ec2_ami_node,
-        node.aws_ebs_snapshot_from_ec2_launch_configuration_node,
-        node.aws_ebs_snapshot_to_kms_key_node
+        node.aws_ebs_snapshot_nodes,
+        node.aws_ebs_volume_nodes,
+        // node.aws_ebs_snapshot_from_ec2_ami_node,
+        // node.aws_ebs_snapshot_from_ec2_launch_configuration_node,
+        node.aws_kms_key_nodes
       ]
 
       edges = [
         edge.aws_ebs_snapshot_from_ebs_volume_edge,
-        edge.aws_ebs_snapshot_from_ec2_ami_edge,
-        edge.aws_ebs_snapshot_from_ec2_launch_configuration_edge,
+        // edge.aws_ebs_snapshot_from_ec2_ami_edge,
+        // edge.aws_ebs_snapshot_from_ec2_launch_configuration_edge,
         edge.aws_ebs_snapshot_to_kms_key_edge
       ]
 
       args = {
-        arn = self.input.snapshot_arn.value
+        snapshot_arns   = [self.input.snapshot_arn.value]
+        volume_arns     = with.ebs_volumes.rows[*].volume_arn
+        key_arns        = with.kms_keys.rows[*].key_arn
       }
     }
   }
@@ -215,27 +243,27 @@ query "aws_ebs_snapshot_age" {
   param "arn" {}
 }
 
-node "aws_ebs_snapshot_node" {
+node "aws_ebs_snapshot_nodes" {
   category = category.aws_ebs_snapshot
 
   sql = <<-EOQ
     select
-      snapshot_id as id,
+      arn as id,
       title as title,
       jsonb_build_object(
-        'ID', s.snapshot_id,
-        'ARN', s.arn,
-        'Start Time', s.start_time,
-        'Account ID', s.account_id,
-        'Region', s.region
+        'ID', snapshot_id,
+        'ARN', arn,
+        'Start Time', start_time,
+        'Account ID', account_id,
+        'Region', region
       ) as properties
     from
-      aws_ebs_snapshot as s
+      aws_ebs_snapshot
     where
-      arn = $1;
+      arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "snapshot_arns" {}
 }
 
 node "aws_ebs_snapshot_from_ebs_volume_node" {
@@ -243,18 +271,11 @@ node "aws_ebs_snapshot_from_ebs_volume_node" {
 
   sql = <<-EOQ
     select
-      v.volume_id as id,
-      v.title as title,
-      jsonb_build_object(
-        'Volume ID', v.volume_id,
-        'ARN', v.arn,
-        'Size', v.size,
-        'Account ID', v.account_id,
-        'Region', v.region
-      ) as properties
+      v.volume_id as id
     from
       aws_ebs_snapshot as s
-      left join aws_ebs_volume as v on s.volume_id = v.volume_id and s.arn = $1;
+      left join aws_ebs_volume as v on s.volume_id = v.volume_id 
+      and s.arn = $1;
   EOQ
 
   param "arn" {}
@@ -265,14 +286,15 @@ edge "aws_ebs_snapshot_from_ebs_volume_edge" {
 
   sql = <<-EOQ
     select
-      v.volume_id as from_id,
-      s.snapshot_id as to_id
+      volume_arn as from_id,
+      snapshot_arn as to_id
     from
-      aws_ebs_snapshot as s
-      left join aws_ebs_volume as v on s.volume_id = v.volume_id and s.arn = $1;
+      unnest($1::text[]) as volume_arn,
+      unnest($2::text[]) as snapshot_arn
   EOQ
 
-  param "arn" {}
+  param "volume_arns" {}
+  param "snapshot_arns" {}
 }
 
 node "aws_ebs_snapshot_from_ec2_ami_node" {
@@ -367,14 +389,7 @@ node "aws_ebs_snapshot_to_kms_key_node" {
 
   sql = <<-EOQ
     select
-      k.arn as id,
-      k.title as title,
-      jsonb_build_object(
-        'ARN', k.arn,
-        'ID', k.id,
-        'Enabled', k.enabled,
-        'Key Manager', k.key_manager
-      ) as properties
+      k.arn as id
     from
       aws_ebs_snapshot as s
       left join aws_kms_key as k on s.kms_key_id = k.arn and s.arn = $1;
@@ -388,12 +403,13 @@ edge "aws_ebs_snapshot_to_kms_key_edge" {
 
   sql = <<-EOQ
     select
-      s.snapshot_id as from_id,
-      k.arn as to_id
+      snapshot_arn as to_id,
+      key_arn as from_id
     from
-      aws_ebs_snapshot as s
-      left join aws_kms_key as k on s.kms_key_id = k.arn and s.arn = $1;
+      unnest($2::text[]) as snapshot_arn,
+      unnest($1::text[]) as key_arn
   EOQ
 
-  param "arn" {}
+  param "snapshot_arns" {}
+  param "key_arns" {}
 }
