@@ -10,6 +10,12 @@ category "aws_iam_access_key" {
   icon  = "key"
 }
 
+category "aws_iam_federated_principal" {
+  icon  = "heroicons-outline:user-group"
+  color = "orange"
+  title = "Federated"
+}
+
 category "aws_iam_group" {
   title = "IAM Group"
   color = local.iam_color
@@ -37,6 +43,12 @@ category "aws_iam_role" {
   color = local.iam_color
 }
 
+category "aws_iam_service_principal" {
+  icon  = "heroicons-outline:cog-6-tooth"
+  color = "orange"
+  title = "Service"
+}
+
 category "aws_iam_user" {
   title = "IAM User"
   color = local.iam_color
@@ -56,15 +68,12 @@ category "aws_iam_policy_statement" {
   title = "Statement"
 }
 
-
 category "aws_iam_policy_action" {
   href = "/aws_insights.dashboard.aws_iam_action_glob_report?input.action_glob={{.title | @uri}}"
-
   icon  = "heroicons-outline:bolt"
   color = "red"
   title = "Action"
 }
-
 
 category "aws_iam_policy_notaction" {
   icon  = "heroicons-outline:bolt-slash"
@@ -78,14 +87,11 @@ category "aws_iam_policy_resource" {
   title = "Resource"
 }
 
-
 category "aws_iam_policy_notresource" {
   icon  = "heroicons-outline:bookmark-slash"
   color = "red"
   title = "NotResource"
 }
-
-
 
 category "aws_iam_policy_condition" {
   icon  = "heroicons-outline:question-mark-circle"
@@ -93,13 +99,11 @@ category "aws_iam_policy_condition" {
   title = "Condition"
 }
 
-
 category "aws_iam_policy_condition_key" {
   icon  = "text:key"
   color = "red"
   title = "Condition Key"
 }
-
 
 category "aws_iam_policy_condition_value" {
   icon  = "text:val"

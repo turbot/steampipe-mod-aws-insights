@@ -603,7 +603,7 @@ edge "aws_iam_role_trusted_aws_edge" {
 
 
 node "aws_iam_role_trusted_service_node" {
-  category = category.aws_service
+  category = category.aws_iam_service_principal
 
   sql = <<-EOQ
     select
@@ -646,7 +646,7 @@ edge "aws_iam_role_trusted_service_edge" {
 
 
 node "aws_iam_role_trusted_federated_node" {
-  category = category.aws_federated
+  category = category.aws_iam_federated_principal
 
   sql = <<-EOQ
     select
