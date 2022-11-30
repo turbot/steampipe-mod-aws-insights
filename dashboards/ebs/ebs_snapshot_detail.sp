@@ -84,7 +84,7 @@ dashboard "aws_ebs_snapshot_detail" {
       nodes = [
         node.aws_ebs_snapshot_nodes,
         node.aws_ebs_volume_nodes,
-        // node.aws_ebs_snapshot_from_ec2_ami_node,
+        // node.aws_ec2_ami_node,
         // node.aws_ebs_snapshot_from_ec2_launch_configuration_node,
         node.aws_kms_key_nodes
       ]

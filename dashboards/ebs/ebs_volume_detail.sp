@@ -109,19 +109,37 @@ dashboard "aws_ebs_volume_detail" {
         args = [self.input.volume_arn.value]
       }
 
+      with "amis" {
+        sql = <<-EOQ
+          select
+            a.image_id as image_id
+          from
+            aws_ebs_volume as v,
+            aws_ebs_snapshot as s,
+            aws_ec2_ami as a,
+            jsonb_array_elements(block_device_mappings) as s_id
+          where
+            v.snapshot_id = s.snapshot_id
+            and s_id -> 'Ebs'->> 'SnapshotId' = s.snapshot_id
+            and v.arn = $1
+        EOQ
+
+        args = [self.input.volume_arn.value]
+      }
+
       nodes = [
         node.aws_ebs_volume_nodes,
         node.aws_kms_key_nodes,
         node.aws_ebs_snapshot_nodes,
-        node.aws_ec2_instance_nodes
-        // node.aws_ec2_ami_nodes
+        node.aws_ec2_instance_nodes,
+        node.aws_ec2_ami_node
       ]
 
       edges = [
         edge.aws_ebs_volume_to_kms_key_edge,
         edge.aws_ebs_volume_to_ebs_snapshot_edge,
-        edge.aws_ec2_instance_to_ebs_volume_edge
-        // edge.aws_ebs_volume_ebs_snapshots_to_ec2_ami_edge
+        edge.aws_ec2_instance_to_ebs_volume_edge,
+        edge.aws_ebs_volume_ebs_snapshots_to_ec2_ami_edge
       ]
 
       args = {
@@ -129,7 +147,7 @@ dashboard "aws_ebs_volume_detail" {
         key_arns      = with.kms_keys.rows[*].key_arn
         snapshot_arns = with.snapshots.rows[*].snapshot_arn
         instance_arns = with.instances.rows[*].instance_arn
-        // image_arns      = with.amis.rows[*].ami_arn
+        image_ids     = with.amis.rows[*].image_id
       }
     }
   }
