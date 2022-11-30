@@ -10,6 +10,6 @@ edge "vpc_subnet_to_vpc_vpc" {
       unnest($2::text[]) as vpc_id
   EOQ
 
-  param "subnet_ids" {}
-  param "vpc_ids" {}
+  param "vpc_subnet_ids" {}
+  param "vpc_vpc_ids" {}
 }

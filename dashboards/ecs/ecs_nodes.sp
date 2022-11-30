@@ -19,6 +19,5 @@ node "ecs_cluster" {
       cluster_arn = any($1 ::text[]);
   EOQ
 
-  param "cluster_arns" {}
+  param "ecs_cluster_arns" {}
 }
-

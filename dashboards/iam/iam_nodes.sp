@@ -17,5 +17,5 @@ node "iam_role" {
       arn = any($1 ::text[]);
   EOQ
 
-  param "role_arns" {}
+  param "iam_role_arns" {}
 }

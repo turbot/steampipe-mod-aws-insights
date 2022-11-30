@@ -19,7 +19,7 @@ node "ec2_application_load_balancer" {
       arn = any($1);
   EOQ
 
-  param "application_load_balancer_arns" {}
+  param "ec2_application_load_balancer_arns" {}
 }
 
 node "ec2_classic_load_balancer" {
@@ -42,7 +42,7 @@ node "ec2_classic_load_balancer" {
       arn = any($1);
   EOQ
 
-  param "classic_load_balancer_arns" {}
+  param "ec2_classic_load_balancer_arns" {}
 }
 
 node "ec2_gateway_load_balancer" {
@@ -66,7 +66,7 @@ node "ec2_gateway_load_balancer" {
       arn = any($1 ::text[]);
   EOQ
 
-  param "glb_arns" {}
+  param "ec2_gateway_load_balancer_arns" {}
 }
 
 node "ec2_instance" {
@@ -89,7 +89,7 @@ node "ec2_instance" {
       arn = any($1);
   EOQ
 
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 node "ec2_network_interface" {
@@ -112,7 +112,7 @@ node "ec2_network_interface" {
       network_interface_id = any($1 ::text[]);
   EOQ
 
-  param "eni_ids" {}
+  param "ec2_network_interface_ids" {}
 }
 
 node "ec2_network_load_balancer" {
@@ -136,5 +136,5 @@ node "ec2_network_load_balancer" {
       arn = any($1);
   EOQ
 
-  param "network_load_balancer_arns" {}
+  param "ec2_network_load_balancer_arns" {}
 }

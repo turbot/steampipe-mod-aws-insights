@@ -10,8 +10,8 @@ edge "ec2_instance_to_ebs_volume" {
       unnest($2::text[]) as volume_arn
   EOQ
 
-  param "instance_arns" {}
-  param "volume_arns" {}
+  param "ec2_instance_arns" {}
+  param "ebs_volume_arns" {}
 }
 
 edge "ec2_instance_to_ec2_network_interface" {
@@ -26,8 +26,8 @@ edge "ec2_instance_to_ec2_network_interface" {
       unnest($2::text[]) as eni_id
   EOQ
 
-  param "instance_arns" {}
-  param "eni_ids" {}
+  param "ec2_instance_arns" {}
+  param "ec2_network_interface_ids" {}
 }
 
 edge "ec2_instance_to_vpc_security_group" {
@@ -46,9 +46,9 @@ edge "ec2_instance_to_vpc_security_group" {
       unnest($3::text[]) as security_group_id
   EOQ
 
-  param "instance_arns" {}
-  param "eni_ids" {}
-  param "security_group_ids" {}
+  param "ec2_instance_arns" {}
+  param "ec2_network_interface_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
 edge "ec2_instance_to_vpc_subnet" {
@@ -63,8 +63,8 @@ edge "ec2_instance_to_vpc_subnet" {
       unnest($2::text[]) as subnet_id
   EOQ
 
-  param "security_group_ids" {}
-  param "subnet_ids" {}
+  param "vpc_security_group_ids" {}
+  param "vpc_subnet_ids" {}
 }
 
 edge "ec2_instance_to_iam_instance_profile" {
@@ -81,7 +81,7 @@ edge "ec2_instance_to_iam_instance_profile" {
       and i.arn = any($1);
   EOQ
 
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 edge "ec2_instance_to_iam_role" {
@@ -99,8 +99,8 @@ edge "ec2_instance_to_iam_role" {
       and i.arn = any($1);
   EOQ
 
-  param "instance_arns" {}
-  param "role_arns" {}
+  param "ec2_instance_arns" {}
+  param "iam_role_arns" {}
 }
 
 edge "ec2_instance_to_ec2_key_pair" {
@@ -117,7 +117,7 @@ edge "ec2_instance_to_ec2_key_pair" {
       and i.arn = any($1);
   EOQ
 
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 
@@ -137,7 +137,7 @@ edge "ec2_target_group_to_ec2_instance" {
       and health_descriptions -> 'Target' ->> 'Id' = i.instance_id;
   EOQ
 
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 edge "ec2_instance_lb_target_group" {
@@ -157,7 +157,7 @@ edge "ec2_instance_lb_target_group" {
       and i.arn = any($1);
   EOQ
 
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 edge "ec2_autoscaling_group_to_ec2_instance" {
@@ -176,7 +176,7 @@ edge "ec2_autoscaling_group_to_ec2_instance" {
       and group_instance ->> 'InstanceId' = i.instance_id;
   EOQ
 
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 edge "ec2_classic_load_balancer_to_ec2_instance" {
@@ -191,8 +191,8 @@ edge "ec2_classic_load_balancer_to_ec2_instance" {
      unnest($2::text[]) as instance_arn
   EOQ
 
-  param "clb_arns" {}
-  param "instance_arns" {}
+  param "ec2_classic_load_balancer_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 edge "ec2_application_load_balancer_to_ec2_instance" {
@@ -207,8 +207,8 @@ edge "ec2_application_load_balancer_to_ec2_instance" {
      unnest($2::text[]) as instance_arn
   EOQ
 
-  param "alb_arns" {}
-  param "instance_arns" {}
+  param "ec2_application_load_balancer_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 edge "ec2_network_load_balancer_to_ec2_instance" {
@@ -223,8 +223,8 @@ edge "ec2_network_load_balancer_to_ec2_instance" {
      unnest($2::text[]) as instance_arn
   EOQ
 
-  param "nlb_arns" {}
-  param "instance_arns" {}
+  param "ec2_network_load_balancer_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 edge "ec2_gateway_load_balancer_to_ec2_instance" {
@@ -239,8 +239,8 @@ edge "ec2_gateway_load_balancer_to_ec2_instance" {
      unnest($2::text[]) as instance_arn
   EOQ
 
-  param "glb_arns" {}
-  param "instance_arns" {}
+  param "ec2_gateway_load_balancer_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 edge "ec2_network_interface_to_vpc_eip" {
@@ -255,6 +255,6 @@ edge "ec2_network_interface_to_vpc_eip" {
       unnest($2::text[]) as eip_arn
   EOQ
 
-  param "network_interface_ids" {}
-  param "eip_arns" {}
+  param "ec2_network_interface_ids" {}
+  param "vpc_eip_arns" {}
 }

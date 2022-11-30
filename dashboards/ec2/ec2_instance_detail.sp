@@ -304,12 +304,12 @@ dashboard "ec2_instance_detail" {
         ec2_classic_load_balancer_arns     = with.ec2_classic_load_balancers.rows[*].classic_load_balancer_arn
         ec2_gateway_load_balancer_arns     = with.ec2_gateway_load_balancers.rows[*].gateway_load_balancer_arn
         ec2_instance_arns                  = [self.input.instance_arn.value]
-        ec2_network_interface              = with.ec2_network_interfaces.rows[*].network_interface_id
+        ec2_network_interface_ids          = with.ec2_network_interfaces.rows[*].network_interface_id
         ec2_network_load_balancer_arns     = with.ec2_network_load_balancers.rows[*].network_load_balancer_arn
         ecs_cluster_arns                   = with.ecs_clusters.rows[*].cluster_arn
         iam_role_arns                      = with.iam_roles.rows[*].role_arn
         vpc_eip_arns                       = with.vpc_eips.rows[*].eip_arn
-        vpc_ids                            = with.vpc_vpcs.rows[*].vpc_id
+        vpc_vpc_ids                        = with.vpc_vpcs.rows[*].vpc_id
         vpc_security_group_ids             = with.vpc_security_groups.rows[*].security_group_id
         vpc_subnet_ids                     = with.vpc_subnets.rows[*].subnet_id
       }
@@ -524,7 +524,7 @@ node "ec2_instance_iam_instance_profile" {
       and i.arn = any($1);
   EOQ
 
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 node "ec2_instance_ec2_key_pair" {
@@ -549,7 +549,7 @@ node "ec2_instance_ec2_key_pair" {
       and i.arn = any($1);
   EOQ
 
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 node "ec2_instance_ec2_autoscaling_group" {
@@ -573,7 +573,7 @@ node "ec2_instance_ec2_autoscaling_group" {
       and group_instance ->> 'InstanceId' = i.instance_id;
   EOQ
 
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 node "ec2_instance_ec2_target_group" {
@@ -599,7 +599,7 @@ node "ec2_instance_ec2_target_group" {
       and health_descriptions -> 'Target' ->> 'Id' = i.instance_id
   EOQ
 
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 query "ec2_instance_overview" {

@@ -178,12 +178,12 @@ dashboard "acm_certificate_detail" {
       ]
 
       args = {
-        alb_arns          = with.albs.rows[*].alb_arn
-        certificate_arns  = [self.input.certificate_arn.value]
-        clb_arns          = with.clbs.rows[*].clb_arn
-        distribution_arns = with.cloudfront_distributions.rows[*].distribution_arn
-        nlb_arns          = with.nlbs.rows[*].nlb_arn
-        opensearch_arns   = with.opensearch_domains.rows[*].opensearch_arn
+        certificate_arns                   = [self.input.certificate_arn.value]
+        distribution_arns                  = with.cloudfront_distributions.rows[*].distribution_arn
+        ec2_application_load_balancer_arns = with.albs.rows[*].alb_arn
+        ec2_classic_load_balancer_arns     = with.clbs.rows[*].clb_arn
+        ec2_network_load_balancer_arns     = with.nlbs.rows[*].nlb_arn
+        opensearch_arns                    = with.opensearch_domains.rows[*].opensearch_arn
       }
     }
   }

@@ -20,7 +20,7 @@ node "vpc_eip" {
       arn = any($1 ::text[]);
   EOQ
 
-  param "eip_arns" {}
+  param "vpc_eip_arns" {}
 }
 
 node "vpc_security_group" {
@@ -43,7 +43,7 @@ node "vpc_security_group" {
       group_id = any($1 ::text[]);
   EOQ
 
-  param "security_group_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
 node "vpc_subnet" {
@@ -66,7 +66,7 @@ node "vpc_subnet" {
       subnet_id = any($1 ::text[]);
   EOQ
 
-  param "subnet_ids" {}
+  param "vpc_subnet_ids" {}
 }
 
 node "vpc_vpc" {
@@ -93,5 +93,5 @@ node "vpc_vpc" {
       vpc_id = any($1 ::text[]);
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
