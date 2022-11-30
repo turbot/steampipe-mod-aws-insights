@@ -12,7 +12,7 @@ category "lambda_alias" {
 
 category "lambda_function" {
   title = "Lambda Function"
-  href  = "/aws_insights.dashboard.aws_lambda_function_detail?input.lambda_arn={{.properties.'ARN' | @uri}}"
+  href  = "/aws_insights.dashboard.lambda_function_detail?input.lambda_arn={{.properties.'ARN' | @uri}}"
   icon  = "text:Lambda"
   color = local.compute_color
 }

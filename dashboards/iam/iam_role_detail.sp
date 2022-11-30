@@ -1,4 +1,4 @@
-dashboard "aws_iam_role_detail" {
+dashboard "iam_role_detail" {
 
   title         = "AWS IAM Role Detail"
   documentation = file("./dashboards/iam/docs/iam_role_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_iam_role_detail" {
 
   input "role_arn" {
     title = "Select a role:"
-    query = query.aws_iam_role_input
+    query = query.iam_role_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "aws_iam_role_detail" {
 
     card {
       width = 2
-      query = query.aws_iam_boundary_policy_for_role
+      query = query.iam_boundary_policy_for_role
       args = {
         arn = self.input.role_arn.value
       }
@@ -25,7 +25,7 @@ dashboard "aws_iam_role_detail" {
 
     card {
       width = 2
-      query = query.aws_iam_role_inline_policy_count_for_role
+      query = query.iam_role_inline_policy_count_for_role
       args = {
         arn = self.input.role_arn.value
       }
@@ -33,7 +33,7 @@ dashboard "aws_iam_role_detail" {
 
     card {
       width = 2
-      query = query.aws_iam_role_direct_attached_policy_count_for_role
+      query = query.iam_role_direct_attached_policy_count_for_role
       args = {
         arn = self.input.role_arn.value
       }
@@ -95,7 +95,7 @@ dashboard "aws_iam_role_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_iam_role_overview
+        query = query.iam_role_overview
         args = {
           arn = self.input.role_arn.value
         }
@@ -104,7 +104,7 @@ dashboard "aws_iam_role_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_iam_role_tags
+        query = query.iam_role_tags
         args = {
           arn = self.input.role_arn.value
         }
@@ -119,7 +119,7 @@ dashboard "aws_iam_role_detail" {
         type  = "tree"
         width = 6
         title = "Attached Policies"
-        query = query.aws_iam_user_manage_policies_hierarchy
+        query = query.iam_user_manage_policies_hierarchy
         args = {
           arn = self.input.role_arn.value
         }
@@ -137,7 +137,7 @@ dashboard "aws_iam_role_detail" {
       table {
         title = "Policies"
         width = 6
-        query = query.aws_iam_all_policies_for_role
+        query = query.iam_all_policies_for_role
         args = {
           arn = self.input.role_arn.value
         }
@@ -148,7 +148,7 @@ dashboard "aws_iam_role_detail" {
 
 }
 
-query "aws_iam_role_input" {
+query "iam_role_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -163,7 +163,7 @@ query "aws_iam_role_input" {
   EOQ
 }
 
-query "aws_iam_boundary_policy_for_role" {
+query "iam_boundary_policy_for_role" {
   sql = <<-EOQ
     select
       case
@@ -186,7 +186,7 @@ query "aws_iam_boundary_policy_for_role" {
   param "arn" {}
 }
 
-query "aws_iam_role_inline_policy_count_for_role" {
+query "iam_role_inline_policy_count_for_role" {
   sql = <<-EOQ
     select
       case when inline_policies is null then 0 else jsonb_array_length(inline_policies) end as value,
@@ -201,7 +201,7 @@ query "aws_iam_role_inline_policy_count_for_role" {
   param "arn" {}
 }
 
-query "aws_iam_role_direct_attached_policy_count_for_role" {
+query "iam_role_direct_attached_policy_count_for_role" {
   sql = <<-EOQ
     select
       case when attached_policy_arns is null then 0 else jsonb_array_length(attached_policy_arns) end as value,
@@ -688,7 +688,7 @@ edge "iam_role_trusted_federated_edge" {
 
 //*******
 
-query "aws_iam_role_overview" {
+query "iam_role_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -706,7 +706,7 @@ query "aws_iam_role_overview" {
   param "arn" {}
 }
 
-query "aws_iam_all_policies_for_role" {
+query "iam_all_policies_for_role" {
   sql = <<-EOQ
     -- Policies (attached to groups)
     select
@@ -735,7 +735,7 @@ query "aws_iam_all_policies_for_role" {
   param "arn" {}
 }
 
-query "aws_iam_role_tags" {
+query "iam_role_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -752,7 +752,7 @@ query "aws_iam_role_tags" {
   param "arn" {}
 }
 
-query "aws_iam_user_manage_policies_hierarchy" {
+query "iam_user_manage_policies_hierarchy" {
   sql = <<-EOQ
     select
       $1 as id,

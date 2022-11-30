@@ -1,4 +1,4 @@
-dashboard "aws_vpc_dashboard" {
+dashboard "vpc_dashboard" {
 
   title         = "AWS VPC Dashboard"
   documentation = file("./dashboards/vpc/docs/vpc_dashboard.md")
@@ -11,30 +11,30 @@ dashboard "aws_vpc_dashboard" {
 
     # Analysis
     card {
-      query = query.aws_vpc_count
+      query = query.vpc_count
       width = 2
     }
 
     # Assessments
     card {
-      query = query.aws_vpc_default_count
+      query = query.vpc_default_count
       width = 2
     }
 
     card {
-      query = query.aws_vpc_no_flow_logs_count
+      query = query.vpc_no_flow_logs_count
       width = 2
-      href  = dashboard.aws_vpc_flow_logs_report.url_path
+      href  = dashboard.vpc_flow_logs_report.url_path
     }
 
     card {
-      query = query.aws_vpc_no_subnet_count
+      query = query.vpc_no_subnet_count
       width = 2
     }
 
     # Costs
     card {
-      query = query.aws_vpc_cost_mtd
+      query = query.vpc_cost_mtd
       width = 2
       type  = "info"
       icon  = "currency-dollar"
@@ -51,7 +51,7 @@ dashboard "aws_vpc_dashboard" {
       title = "Default VPCs"
       type  = "donut"
       width = 4
-      query = query.aws_vpc_default_status
+      query = query.vpc_default_status
 
       series "count" {
         point "non-default" {
@@ -67,7 +67,7 @@ dashboard "aws_vpc_dashboard" {
       title = "VPC Flow Logs"
       type  = "donut"
       width = 4
-      query = query.aws_vpc_flow_logs_status
+      query = query.vpc_flow_logs_status
 
       series "count" {
         point "enabled" {
@@ -83,7 +83,7 @@ dashboard "aws_vpc_dashboard" {
       title = "Empty VPCs (No Subnets)"
       type  = "donut"
       width = 4
-      query = query.aws_vpc_empty_status
+      query = query.vpc_empty_status
 
       series "count" {
         point "non-empty" {
@@ -105,14 +105,14 @@ dashboard "aws_vpc_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      query = query.aws_vpc_monthly_forecast_table
+      query = query.vpc_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      query = query.aws_vpc_cost_per_month
+      query = query.vpc_cost_per_month
     }
 
   }
@@ -123,14 +123,14 @@ dashboard "aws_vpc_dashboard" {
 
     chart {
       title = "VPCs by Account"
-      query = query.aws_vpc_by_account
+      query = query.vpc_by_account
       type  = "column"
       width = 3
     }
 
     chart {
       title = "VPCs by Region"
-      query = query.aws_vpc_by_region
+      query = query.vpc_by_region
       type  = "column"
       legend {
         position = "bottom"
@@ -140,14 +140,14 @@ dashboard "aws_vpc_dashboard" {
 
     chart {
       title = "VPCs by Size"
-      query = query.aws_vpc_by_size
+      query = query.vpc_by_size
       type  = "column"
       width = 3
     }
 
     chart {
       title = "VPCs by RFC1918 Range"
-      query = query.aws_vpc_by_rfc1918_range
+      query = query.vpc_by_rfc1918_range
       type  = "column"
       width = 3
     }
@@ -158,13 +158,13 @@ dashboard "aws_vpc_dashboard" {
 
 # Card Queries
 
-query "aws_vpc_count" {
+query "vpc_count" {
   sql = <<-EOQ
     select count(*) as "VPCs" from aws_vpc;
   EOQ
 }
 
-query "aws_vpc_default_count" {
+query "vpc_default_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -177,7 +177,7 @@ query "aws_vpc_default_count" {
   EOQ
 }
 
-query "aws_vpc_no_flow_logs_count" {
+query "vpc_no_flow_logs_count" {
   sql = <<-EOQ
     select
       count(*) filter(where vpc_id not in (select resource_id from aws_vpc_flow_log)) as value,
@@ -191,7 +191,7 @@ query "aws_vpc_no_flow_logs_count" {
   EOQ
 }
 
-query "aws_vpc_no_subnet_count" {
+query "vpc_no_subnet_count" {
   sql = <<-EOQ
     select
        count(*) as value,
@@ -205,7 +205,7 @@ query "aws_vpc_no_subnet_count" {
   EOQ
 }
 
-query "aws_vpc_cost_mtd" {
+query "vpc_cost_mtd" {
   sql = <<-EOQ
     select
       'Cost - MTD' as label,
@@ -220,7 +220,7 @@ query "aws_vpc_cost_mtd" {
 
 # Assessment Queries
 
-query "aws_vpc_default_status" {
+query "vpc_default_status" {
   sql = <<-EOQ
     select
       case
@@ -235,7 +235,7 @@ query "aws_vpc_default_status" {
   EOQ
 }
 
-query "aws_vpc_flow_logs_status" {
+query "vpc_flow_logs_status" {
   sql = <<-EOQ
     with vpc_logs as (
       select
@@ -257,7 +257,7 @@ query "aws_vpc_flow_logs_status" {
   EOQ
 }
 
-query "aws_vpc_empty_status" {
+query "vpc_empty_status" {
   sql = <<-EOQ
     with by_empty as (
       select
@@ -279,7 +279,7 @@ query "aws_vpc_empty_status" {
 
 # Cost Queries
 
-query "aws_vpc_monthly_forecast_table" {
+query "vpc_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
       select
@@ -318,7 +318,7 @@ query "aws_vpc_monthly_forecast_table" {
   EOQ
 }
 
-query "aws_vpc_cost_per_month" {
+query "vpc_cost_per_month" {
   sql = <<-EOQ
     select
       to_char(period_start, 'Mon-YY') as "Month",
@@ -336,7 +336,7 @@ query "aws_vpc_cost_per_month" {
 
 # Analysis Queries
 
-query "aws_vpc_by_account" {
+query "vpc_by_account" {
   sql = <<-EOQ
     select
       a.title as "account",
@@ -353,7 +353,7 @@ query "aws_vpc_by_account" {
   EOQ
 }
 
-query "aws_vpc_by_region" {
+query "vpc_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
@@ -367,7 +367,7 @@ query "aws_vpc_by_region" {
   EOQ
 }
 
-query "aws_vpc_by_size" {
+query "vpc_by_size" {
   sql = <<-EOQ
     with vpc_size as (
       select
@@ -390,7 +390,7 @@ query "aws_vpc_by_size" {
   EOQ
 }
 
-query "aws_vpc_by_rfc1918_range" {
+query "vpc_by_rfc1918_range" {
   sql = <<-EOQ
     with cidr_buckets as (
       select

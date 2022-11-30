@@ -1,4 +1,4 @@
-dashboard "aws_sns_topic_encryption_report" {
+dashboard "sns_topic_encryption_report" {
 
   title         = "AWS SNS Topic Encryption Report"
   documentation = file("./dashboards/sns/docs/sns_topic_report_encryption.md")
@@ -11,12 +11,12 @@ dashboard "aws_sns_topic_encryption_report" {
   container {
 
     card {
-      query = query.aws_sns_topic_count
+      query = query.sns_topic_count
       width = 2
     }
 
     card {
-      query = query.aws_sns_topic_encrypted_count
+      query = query.sns_topic_encrypted_count
       width = 2
     }
 
@@ -33,15 +33,15 @@ dashboard "aws_sns_topic_encryption_report" {
     }
 
     column "Topic" {
-      href = "${dashboard.aws_sns_topic_detail.url_path}?input.topic_arn={{.ARN | @uri}}"
+      href = "${dashboard.sns_topic_detail.url_path}?input.topic_arn={{.ARN | @uri}}"
     }
 
-    query = query.aws_sns_topic_encryption_table
+    query = query.sns_topic_encryption_table
   }
 
 }
 
-query "aws_sns_topic_encryption_table" {
+query "sns_topic_encryption_table" {
   sql = <<-EOQ
     select
       t.title as "Topic",

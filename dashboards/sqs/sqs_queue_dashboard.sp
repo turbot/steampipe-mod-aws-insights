@@ -1,4 +1,4 @@
-dashboard "aws_sqs_queue_dashboard" {
+dashboard "sqs_queue_dashboard" {
 
   title         = "AWS SQS Queue Dashboard"
   documentation = file("./dashboards/sqs/docs/sqs_queue_dashboard.md")
@@ -11,25 +11,25 @@ dashboard "aws_sqs_queue_dashboard" {
 
     # Analysis
     card {
-      query = query.aws_sqs_queue_count
+      query = query.sqs_queue_count
       width = 2
     }
 
     card {
-      query = query.aws_sqs_queue_fifo_count
+      query = query.sqs_queue_fifo_count
       width = 2
     }
 
 
     # Assessments
     card {
-      query = query.aws_sqs_queue_unencrypted_count
+      query = query.sqs_queue_unencrypted_count
       width = 2
-      href  = dashboard.aws_sqs_queue_encryption_report.url_path
+      href  = dashboard.sqs_queue_encryption_report.url_path
     }
 
     card {
-      query = query.aws_sqs_queue_anonymous_access_count
+      query = query.sqs_queue_anonymous_access_count
       width = 2
     }
 
@@ -38,7 +38,7 @@ dashboard "aws_sqs_queue_dashboard" {
       type  = "info"
       icon  = "currency-dollar"
       width = 2
-      query = query.aws_sqs_queue_cost_mtd
+      query = query.sqs_queue_cost_mtd
     }
 
   }
@@ -50,7 +50,7 @@ dashboard "aws_sqs_queue_dashboard" {
 
     chart {
       title = "Encryption Status"
-      query = query.aws_sqs_queue_by_encryption_status
+      query = query.sqs_queue_by_encryption_status
       type  = "donut"
       width = 4
 
@@ -66,7 +66,7 @@ dashboard "aws_sqs_queue_dashboard" {
 
     chart {
       title = "DLQ Configuration"
-      query = query.aws_sqs_queue_by_dlq_status
+      query = query.sqs_queue_by_dlq_status
       type  = "donut"
       width = 4
 
@@ -82,7 +82,7 @@ dashboard "aws_sqs_queue_dashboard" {
 
     chart {
       title = "Public/Private Status"
-      query = query.aws_sqs_queue_public_access_status
+      query = query.sqs_queue_public_access_status
       type  = "donut"
       width = 4
 
@@ -106,14 +106,14 @@ dashboard "aws_sqs_queue_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      query = query.aws_sqs_queue_monthly_forecast_table
+      query = query.sqs_queue_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      query = query.aws_sqs_queue_cost_per_month
+      query = query.sqs_queue_cost_per_month
     }
 
   }
@@ -124,21 +124,21 @@ dashboard "aws_sqs_queue_dashboard" {
 
     chart {
       title = "Queues by Account"
-      query = query.aws_sqs_queue_by_account
+      query = query.sqs_queue_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Queues by Region"
-      query = query.aws_sqs_queue_by_region
+      query = query.sqs_queue_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Queues by Type"
-      query = query.aws_sqs_queue_by_type
+      query = query.sqs_queue_by_type
       type  = "column"
       width = 4
     }
@@ -149,19 +149,19 @@ dashboard "aws_sqs_queue_dashboard" {
 
 # Card Queries
 
-query "aws_sqs_queue_count" {
+query "sqs_queue_count" {
   sql = <<-EOQ
     select count(*) as "Queues" from aws_sqs_queue;
   EOQ
 }
 
-query "aws_sqs_queue_fifo_count" {
+query "sqs_queue_fifo_count" {
   sql = <<-EOQ
     select count(*) as "FIFO Queues" from aws_sqs_queue where fifo_queue;
   EOQ
 }
 
-query "aws_sqs_queue_unencrypted_count" {
+query "sqs_queue_unencrypted_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -174,7 +174,7 @@ query "aws_sqs_queue_unencrypted_count" {
   EOQ
 }
 
-query "aws_sqs_queue_anonymous_access_count" {
+query "sqs_queue_anonymous_access_count" {
   sql = <<-EOQ
       select
         count(*) as value,
@@ -195,7 +195,7 @@ query "aws_sqs_queue_anonymous_access_count" {
   EOQ
 }
 
-query "aws_sqs_queue_cost_mtd" {
+query "sqs_queue_cost_mtd" {
   sql = <<-EOQ
     select
       'Cost - MTD' as label,
@@ -210,7 +210,7 @@ query "aws_sqs_queue_cost_mtd" {
 
 # Assessment Queries
 
-query "aws_sqs_queue_by_encryption_status" {
+query "sqs_queue_by_encryption_status" {
   sql = <<-EOQ
     select
       encryption_status,
@@ -231,7 +231,7 @@ query "aws_sqs_queue_by_encryption_status" {
   EOQ
 }
 
-query "aws_sqs_queue_by_dlq_status" {
+query "sqs_queue_by_dlq_status" {
   sql = <<-EOQ
     select
       redrive_policy_status,
@@ -252,7 +252,7 @@ query "aws_sqs_queue_by_dlq_status" {
   EOQ
 }
 
-query "aws_sqs_queue_public_access_status" {
+query "sqs_queue_public_access_status" {
   sql = <<-EOQ
     with public_access as (
       select
@@ -295,7 +295,7 @@ query "aws_sqs_queue_public_access_status" {
 
 # Cost Queries
 
-query "aws_sqs_queue_monthly_forecast_table" {
+query "sqs_queue_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
       select
@@ -335,7 +335,7 @@ query "aws_sqs_queue_monthly_forecast_table" {
   EOQ
 }
 
-query "aws_sqs_queue_cost_per_month" {
+query "sqs_queue_cost_per_month" {
   sql = <<-EOQ
     select
        to_char(period_start, 'Mon-YY') as "Month",
@@ -353,7 +353,7 @@ query "aws_sqs_queue_cost_per_month" {
 
 # Analysis Queries
 
-query "aws_sqs_queue_by_account" {
+query "sqs_queue_by_account" {
   sql = <<-EOQ
     select
       a.title as "account",
@@ -369,7 +369,7 @@ query "aws_sqs_queue_by_account" {
   EOQ
 }
 
-query "aws_sqs_queue_by_region" {
+query "sqs_queue_by_region" {
   sql = <<-EOQ
     select
       region,
@@ -381,7 +381,7 @@ query "aws_sqs_queue_by_region" {
   EOQ
 }
 
-query "aws_sqs_queue_by_type" {
+query "sqs_queue_by_type" {
   sql = <<-EOQ
     select
       case

@@ -1,4 +1,4 @@
-dashboard "aws_ec2_application_load_balancer_detail" {
+dashboard "ec2_application_load_balancer_detail" {
   title         = "AWS EC2 Application Load Balancer Detail"
   documentation = file("./dashboards/ec2/docs/ec2_application_load_balancer_detail.md")
 
@@ -8,7 +8,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
 
   input "alb" {
     title = "Select an Application Load balancer:"
-    query = query.aws_alb_input
+    query = query.alb_input
     width = 4
   }
 
@@ -16,7 +16,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_alb_state
+      query = query.alb_state
       args = {
         arn = self.input.alb.value
       }
@@ -24,7 +24,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_alb_scheme
+      query = query.alb_scheme
       args = {
         arn = self.input.alb.value
       }
@@ -32,7 +32,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_alb_ip_type
+      query = query.alb_ip_type
       args = {
         arn = self.input.alb.value
       }
@@ -40,7 +40,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_alb_az_zone
+      query = query.alb_az_zone
       args = {
         arn = self.input.alb.value
       }
@@ -48,7 +48,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_alb_logging_enabled
+      query = query.alb_logging_enabled
       args = {
         arn = self.input.alb.value
       }
@@ -56,7 +56,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_alb_deletion_protection
+      query = query.alb_deletion_protection
       args = {
         arn = self.input.alb.value
       }
@@ -104,7 +104,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
       title = "Overview"
       type  = "line"
       width = 3
-      query = query.aws_ec2_alb_overview
+      query = query.ec2_alb_overview
       args = {
         arn = self.input.alb.value
       }
@@ -114,7 +114,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
     table {
       title = "Tags"
       width = 3
-      query = query.aws_ec2_alb_tags
+      query = query.ec2_alb_tags
       args = {
         arn = self.input.alb.value
       }
@@ -123,7 +123,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
     table {
       title = "Attributes"
       width = 6
-      query = query.aws_ec2_alb_attributes
+      query = query.ec2_alb_attributes
       args = {
         arn = self.input.alb.value
       }
@@ -132,7 +132,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
 
 }
 
-query "aws_alb_input" {
+query "alb_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -148,7 +148,7 @@ query "aws_alb_input" {
   EOQ
 }
 
-query "aws_ec2_alb_overview" {
+query "ec2_alb_overview" {
   sql = <<-EOQ
     select
       title as "Title",
@@ -167,7 +167,7 @@ query "aws_ec2_alb_overview" {
   param "arn" {}
 }
 
-query "aws_ec2_alb_tags" {
+query "ec2_alb_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -184,7 +184,7 @@ query "aws_ec2_alb_tags" {
   param "arn" {}
 }
 
-query "aws_ec2_alb_attributes" {
+query "ec2_alb_attributes" {
   sql = <<-EOQ
     select
       lb ->> 'Key' as "Key",
@@ -202,7 +202,7 @@ query "aws_ec2_alb_attributes" {
   param "arn" {}
 }
 
-query "aws_alb_ip_type" {
+query "alb_ip_type" {
   sql = <<-EOQ
     select
       'IP Address Type' as label,
@@ -216,7 +216,7 @@ query "aws_alb_ip_type" {
   param "arn" {}
 }
 
-query "aws_alb_logging_enabled" {
+query "alb_logging_enabled" {
   sql = <<-EOQ
     select
       'Logging' as label,
@@ -233,7 +233,7 @@ query "aws_alb_logging_enabled" {
   param "arn" {}
 }
 
-query "aws_alb_deletion_protection" {
+query "alb_deletion_protection" {
   sql = <<-EOQ
     select
       'Deletion Protection' as label,
@@ -250,7 +250,7 @@ query "aws_alb_deletion_protection" {
   param "arn" {}
 }
 
-query "aws_alb_az_zone" {
+query "alb_az_zone" {
   sql = <<-EOQ
     select
       'Availibility Zones' as label,
@@ -266,7 +266,7 @@ query "aws_alb_az_zone" {
   param "arn" {}
 }
 
-query "aws_alb_state" {
+query "alb_state" {
   sql = <<-EOQ
     select
       'State' as label,
@@ -280,7 +280,7 @@ query "aws_alb_state" {
   param "arn" {}
 }
 
-query "aws_alb_scheme" {
+query "alb_scheme" {
   sql = <<-EOQ
     select
       'Scheme' as label,

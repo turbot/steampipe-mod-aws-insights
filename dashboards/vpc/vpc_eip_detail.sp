@@ -1,4 +1,4 @@
-dashboard "aws_vpc_eip_detail" {
+dashboard "vpc_eip_detail" {
 
   title         = "AWS VPC Elastic IP Detail"
   documentation = file("./dashboards/vpc/docs/vpc_eip_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_vpc_eip_detail" {
 
   input "eip_arn" {
     title = "Select an eip:"
-    query = query.aws_vpc_eip_input
+    query = query.vpc_eip_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "aws_vpc_eip_detail" {
 
     card {
       width = 2
-      query = query.aws_vpc_eip_association
+      query = query.vpc_eip_association
       args = {
         arn = self.input.eip_arn.value
       }
@@ -25,7 +25,7 @@ dashboard "aws_vpc_eip_detail" {
 
     card {
       width = 2
-      query = query.aws_vpc_eip_private_ip_address
+      query = query.vpc_eip_private_ip_address
       args = {
         arn = self.input.eip_arn.value
       }
@@ -33,7 +33,7 @@ dashboard "aws_vpc_eip_detail" {
 
     card {
       width = 2
-      query = query.aws_vpc_eip_public_ip_address
+      query = query.vpc_eip_public_ip_address
       args = {
         arn = self.input.eip_arn.value
       }
@@ -109,7 +109,7 @@ dashboard "aws_vpc_eip_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_vpc_eip_overview
+        query = query.vpc_eip_overview
         args = {
           arn = self.input.eip_arn.value
         }
@@ -118,7 +118,7 @@ dashboard "aws_vpc_eip_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_vpc_eip_tags
+        query = query.vpc_eip_tags
         args = {
           arn = self.input.eip_arn.value
         }
@@ -132,7 +132,7 @@ dashboard "aws_vpc_eip_detail" {
 
       table {
         title = "Association"
-        query = query.aws_vpc_eip_association_details
+        query = query.vpc_eip_association_details
         args = {
           arn = self.input.eip_arn.value
         }
@@ -142,17 +142,17 @@ dashboard "aws_vpc_eip_detail" {
         }
 
         column "Instance ID" {
-          href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.'Instance ARN' | @uri}}"
+          href = "${dashboard.ec2_instance_detail.url_path}?input.instance_arn={{.'Instance ARN' | @uri}}"
         }
 
         column "Network Interface ID" {
-          href = "/aws_insights.dashboard.aws_ec2_network_interface_detail?input.network_interface_id={{.'Network Interface ID' | @uri}}"
+          href = "/aws_insights.dashboard.ec2_network_interface_detail?input.network_interface_id={{.'Network Interface ID' | @uri}}"
         }
       }
 
       table {
         title = "Other IP Addresses"
-        query = query.aws_vpc_eip_other_ip
+        query = query.vpc_eip_other_ip
         args = {
           arn = self.input.eip_arn.value
         }
@@ -163,7 +163,7 @@ dashboard "aws_vpc_eip_detail" {
 }
 
 
-query "aws_vpc_eip_input" {
+query "vpc_eip_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -179,7 +179,7 @@ query "aws_vpc_eip_input" {
   EOQ
 }
 
-query "aws_vpc_eip_association" {
+query "vpc_eip_association" {
   sql = <<-EOQ
     select
       'Association' as label,
@@ -194,7 +194,7 @@ query "aws_vpc_eip_association" {
   param "arn" {}
 }
 
-query "aws_vpc_eip_private_ip_address" {
+query "vpc_eip_private_ip_address" {
   sql = <<-EOQ
     select
       'Private IP Address' as label,
@@ -208,7 +208,7 @@ query "aws_vpc_eip_private_ip_address" {
   param "arn" {}
 }
 
-query "aws_vpc_eip_public_ip_address" {
+query "vpc_eip_public_ip_address" {
   sql = <<-EOQ
     select
       'Public IP Address' as label,
@@ -223,7 +223,7 @@ query "aws_vpc_eip_public_ip_address" {
 }
 
 
-query "aws_vpc_eip_overview" {
+query "vpc_eip_overview" {
   sql = <<-EOQ
     select
       allocation_id as "Allocation ID",
@@ -241,7 +241,7 @@ query "aws_vpc_eip_overview" {
   param "arn" {}
 }
 
-query "aws_vpc_eip_tags" {
+query "vpc_eip_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -258,7 +258,7 @@ query "aws_vpc_eip_tags" {
   param "arn" {}
 }
 
-query "aws_vpc_eip_association_details" {
+query "vpc_eip_association_details" {
   sql = <<-EOQ
     select
       association_id as "Association ID",
@@ -275,7 +275,7 @@ query "aws_vpc_eip_association_details" {
   param "arn" {}
 }
 
-query "aws_vpc_eip_other_ip" {
+query "vpc_eip_other_ip" {
   sql = <<-EOQ
     select
       carrier_ip as "Carrier IP",

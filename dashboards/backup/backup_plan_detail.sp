@@ -9,14 +9,14 @@ dashboard "backup_plan_detail" {
 
   input "backup_plan_arn" {
     title = "Select a plan:"
-    query = query.aws_backup_plan_input
+    query = query.backup_plan_input
     width = 4
   }
 
   container {
 
     card {
-      query = query.aws_backup_plan_resource_assignment
+      query = query.backup_plan_resource_assignment
       width = 2
       args = {
         arn = self.input.backup_plan_arn.value
@@ -56,7 +56,7 @@ dashboard "backup_plan_detail" {
         title = "Overview"
         type  = "line"
         width = 3
-        query = query.aws_backup_plan_overview
+        query = query.backup_plan_overview
         args = {
           arn = self.input.backup_plan_arn.value
         }
@@ -66,7 +66,7 @@ dashboard "backup_plan_detail" {
       table {
         title = "Rules"
         width = 9
-        query = query.aws_backup_plan_rules
+        query = query.backup_plan_rules
         args = {
           arn = self.input.backup_plan_arn.value
         }
@@ -76,7 +76,7 @@ dashboard "backup_plan_detail" {
   }
 }
 
-query "aws_backup_plan_input" {
+query "backup_plan_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -94,7 +94,7 @@ query "aws_backup_plan_input" {
   EOQ
 }
 
-query "aws_backup_plan_resource_assignment" {
+query "backup_plan_resource_assignment" {
   sql = <<-EOQ
     select
       'Resource Assignments' as label,
@@ -233,7 +233,7 @@ edge "backup_plan_to_backup_selection_edge" {
   param "arn" {}
 }
 
-query "aws_backup_plan_overview" {
+query "backup_plan_overview" {
   sql = <<-EOQ
     select
       title as "Title",
@@ -251,7 +251,7 @@ query "aws_backup_plan_overview" {
   param "arn" {}
 }
 
-query "aws_backup_plan_rules" {
+query "backup_plan_rules" {
   sql = <<-EOQ
     select
       r ->> 'RuleId' as "Rule ID",

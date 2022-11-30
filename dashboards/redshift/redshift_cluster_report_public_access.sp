@@ -1,4 +1,4 @@
-dashboard "aws_redshift_cluster_public_access_report" {
+dashboard "redshift_cluster_public_access_report" {
 
   title         = "AWS Redshift Cluster Public Access Report"
   documentation = file("./dashboards/redshift/docs/redshift_cluster_report_public_access.md")
@@ -11,12 +11,12 @@ dashboard "aws_redshift_cluster_public_access_report" {
   container {
 
     card {
-      query = query.aws_redshift_cluster_count
+      query = query.redshift_cluster_count
       width = 2
     }
 
     card {
-      query = query.aws_redshift_cluster_publicly_accessible
+      query = query.redshift_cluster_publicly_accessible
       width = 2
     }
 
@@ -32,15 +32,15 @@ dashboard "aws_redshift_cluster_public_access_report" {
     }
 
     column "Cluster Identifier" {
-      href = "${dashboard.aws_redshift_cluster_detail.url_path}?input.cluster_arn={{.ARN | @uri}}"
+      href = "${dashboard.redshift_cluster_detail.url_path}?input.cluster_arn={{.ARN | @uri}}"
     }
 
-    query = query.aws_redshift_cluster_publicly_accessible_table
+    query = query.redshift_cluster_publicly_accessible_table
   }
 
 }
 
-query "aws_redshift_cluster_publicly_accessible_table" {
+query "redshift_cluster_publicly_accessible_table" {
   sql = <<-EOQ
    select
       c.cluster_identifier as "Cluster Identifier",

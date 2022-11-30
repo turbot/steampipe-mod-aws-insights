@@ -1,4 +1,4 @@
-dashboard "aws_cloudtrail_trail_logging_report" {
+dashboard "cloudtrail_trail_logging_report" {
 
   title         = "AWS CloudTrail Trail Logging Report"
   documentation = file("./dashboards/cloudtrail/docs/cloudtrail_trail_report_logging.md")
@@ -11,17 +11,17 @@ dashboard "aws_cloudtrail_trail_logging_report" {
   container {
 
     card {
-      query = query.aws_cloudtrail_trail_count
+      query = query.cloudtrail_trail_count
       width = 2
     }
 
     card {
-      query = query.aws_cloudtrail_trail_logging_disabled_count
+      query = query.cloudtrail_trail_logging_disabled_count
       width = 2
     }
 
     card {
-      query = query.aws_cloudtrail_trail_log_file_validation_disabled_count
+      query = query.cloudtrail_trail_log_file_validation_disabled_count
       width = 2
     }
 
@@ -37,16 +37,16 @@ dashboard "aws_cloudtrail_trail_logging_report" {
     }
 
     column "Name" {
-      href = "${dashboard.aws_cloudtrail_trail_detail.url_path}?input.trail_arn={{.ARN | @uri}}"
+      href = "${dashboard.cloudtrail_trail_detail.url_path}?input.trail_arn={{.ARN | @uri}}"
     }
 
-    query = query.aws_cloudtrail_trail_logging_table
+    query = query.cloudtrail_trail_logging_table
 
   }
 
 }
 
-query "aws_cloudtrail_trail_logging_disabled_count" {
+query "cloudtrail_trail_logging_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -60,7 +60,7 @@ query "aws_cloudtrail_trail_logging_disabled_count" {
   EOQ
 }
 
-query "aws_cloudtrail_trail_logging_table" {
+query "cloudtrail_trail_logging_table" {
   sql = <<-EOQ
     select
       t.name as "Name",

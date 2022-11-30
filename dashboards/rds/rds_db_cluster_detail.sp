@@ -1,4 +1,4 @@
-dashboard "aws_rds_db_cluster_detail" {
+dashboard "rds_db_cluster_detail" {
 
   title         = "AWS RDS DB Cluster Detail"
   documentation = file("./dashboards/rds/docs/rds_db_cluster_detail.md")
@@ -9,14 +9,14 @@ dashboard "aws_rds_db_cluster_detail" {
 
   input "db_cluster_arn" {
     title = "Select a cluster:"
-    query = query.aws_rds_db_cluster_input
+    query = query.rds_db_cluster_input
     width = 4
   }
 
   container {
 
     card {
-      query = query.aws_rds_db_cluster_unencrypted
+      query = query.rds_db_cluster_unencrypted
       width = 2
       args = {
         arn = self.input.db_cluster_arn.value
@@ -24,7 +24,7 @@ dashboard "aws_rds_db_cluster_detail" {
     }
 
     card {
-      query = query.aws_rds_db_cluster_logging_disabled
+      query = query.rds_db_cluster_logging_disabled
       width = 2
       args = {
         arn = self.input.db_cluster_arn.value
@@ -32,7 +32,7 @@ dashboard "aws_rds_db_cluster_detail" {
     }
 
     card {
-      query = query.aws_rds_db_cluster_no_deletion_protection
+      query = query.rds_db_cluster_no_deletion_protection
       width = 2
       args = {
         arn = self.input.db_cluster_arn.value
@@ -40,7 +40,7 @@ dashboard "aws_rds_db_cluster_detail" {
     }
 
     card {
-      query = query.aws_rds_db_cluster_status
+      query = query.rds_db_cluster_status
       width = 2
       args = {
         arn = self.input.db_cluster_arn.value
@@ -99,7 +99,7 @@ dashboard "aws_rds_db_cluster_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_rds_db_cluster_overview
+        query = query.rds_db_cluster_overview
         args = {
           arn = self.input.db_cluster_arn.value
         }
@@ -109,7 +109,7 @@ dashboard "aws_rds_db_cluster_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_rds_db_cluster_tags
+        query = query.rds_db_cluster_tags
         args = {
           arn = self.input.db_cluster_arn.value
         }
@@ -120,7 +120,7 @@ dashboard "aws_rds_db_cluster_detail" {
   }
 }
 
-query "aws_rds_db_cluster_input" {
+query "rds_db_cluster_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -136,7 +136,7 @@ query "aws_rds_db_cluster_input" {
   EOQ
 }
 
-query "aws_rds_db_cluster_unencrypted" {
+query "rds_db_cluster_unencrypted" {
   sql = <<-EOQ
     select
       case when storage_encrypted then 'Enabled' else 'Disabled' end as value,
@@ -151,7 +151,7 @@ query "aws_rds_db_cluster_unencrypted" {
   param "arn" {}
 }
 
-query "aws_rds_db_cluster_logging_disabled" {
+query "rds_db_cluster_logging_disabled" {
   sql = <<-EOQ
     select
       case when enabled_cloudwatch_logs_exports is not null then 'Enabled' else 'Disabled' end as value,
@@ -166,7 +166,7 @@ query "aws_rds_db_cluster_logging_disabled" {
   param "arn" {}
 }
 
-query "aws_rds_db_cluster_no_deletion_protection" {
+query "rds_db_cluster_no_deletion_protection" {
   sql = <<-EOQ
     select
       case when deletion_protection then 'Enabled' else 'Disabled' end as value,
@@ -181,7 +181,7 @@ query "aws_rds_db_cluster_no_deletion_protection" {
   param "arn" {}
 }
 
-query "aws_rds_db_cluster_status" {
+query "rds_db_cluster_status" {
   sql = <<-EOQ
     select
       status as value,
@@ -196,7 +196,7 @@ query "aws_rds_db_cluster_status" {
   param "arn" {}
 }
 
-query "aws_rds_db_cluster_overview" {
+query "rds_db_cluster_overview" {
   sql = <<-EOQ
     select
       db_cluster_identifier as "Cluster Name",
@@ -215,7 +215,7 @@ query "aws_rds_db_cluster_overview" {
   param "arn" {}
 }
 
-query "aws_rds_db_cluster_tags" {
+query "rds_db_cluster_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",

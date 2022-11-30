@@ -1,4 +1,4 @@
-dashboard "aws_rds_db_cluster_age_report" {
+dashboard "rds_db_cluster_age_report" {
 
   title         = "AWS RDS DB Cluster Age Report"
   documentation = file("./dashboards/rds/docs/rds_db_cluster_report_age.md")
@@ -11,38 +11,38 @@ dashboard "aws_rds_db_cluster_age_report" {
   container {
 
     card {
-      query = query.aws_rds_db_cluster_count
+      query = query.rds_db_cluster_count
       width = 2
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_rds_db_cluster_24_hours_count
+      query = query.rds_db_cluster_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_rds_db_cluster_30_days_count
+      query = query.rds_db_cluster_30_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query = query.aws_ebs_volume_30_90_days_count
+      query = query.ebs_volume_30_90_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_rds_db_clustere_90_365_days_count
+      query = query.rds_db_clustere_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query = query.aws_rds_db_cluster_1_year_count
+      query = query.rds_db_cluster_1_year_count
     }
 
   }
@@ -56,12 +56,12 @@ dashboard "aws_rds_db_cluster_age_report" {
       display = "none"
     }
 
-    query = query.aws_rds_db_cluster_age_table
+    query = query.rds_db_cluster_age_table
   }
 
 }
 
-query "aws_rds_db_cluster_24_hours_count" {
+query "rds_db_cluster_24_hours_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -73,7 +73,7 @@ query "aws_rds_db_cluster_24_hours_count" {
   EOQ
 }
 
-query "aws_rds_db_cluster_30_days_count" {
+query "rds_db_cluster_30_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -85,7 +85,7 @@ query "aws_rds_db_cluster_30_days_count" {
   EOQ
 }
 
-query "aws_rds_db_cluster_30_90_days_count" {
+query "rds_db_cluster_30_90_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -97,7 +97,7 @@ query "aws_rds_db_cluster_30_90_days_count" {
   EOQ
 }
 
-query "aws_rds_db_clustere_90_365_days_count" {
+query "rds_db_clustere_90_365_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -109,7 +109,7 @@ query "aws_rds_db_clustere_90_365_days_count" {
   EOQ
 }
 
-query "aws_rds_db_cluster_1_year_count" {
+query "rds_db_cluster_1_year_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -121,7 +121,7 @@ query "aws_rds_db_cluster_1_year_count" {
   EOQ
 }
 
-query "aws_rds_db_cluster_age_table" {
+query "rds_db_cluster_age_table" {
   sql = <<-EOQ
     select
       c.db_cluster_identifier as "DB Cluster Identifier",

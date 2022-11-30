@@ -1,4 +1,4 @@
-dashboard "aws_rds_db_instance_logging_report" {
+dashboard "rds_db_instance_logging_report" {
 
   title         = "AWS RDS DB Instance Logging Report"
   documentation = file("./dashboards/rds/docs/rds_db_instance_report_logging.md")
@@ -11,12 +11,12 @@ dashboard "aws_rds_db_instance_logging_report" {
   container {
 
     card {
-      query = query.aws_rds_db_instance_count
+      query = query.rds_db_instance_count
       width = 2
     }
 
     card {
-      query = query.aws_rds_db_instance_logging_disabled_count
+      query = query.rds_db_instance_logging_disabled_count
       width = 2
     }
 
@@ -33,15 +33,15 @@ dashboard "aws_rds_db_instance_logging_report" {
     }
 
     column "DB Instance Identifier" {
-      href = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arnn={{.ARN | @uri}}"
+      href = "${dashboard.rds_db_instance_detail.url_path}?input.db_instance_arnn={{.ARN | @uri}}"
     }
 
-    query = query.aws_rds_db_instance_logging_table
+    query = query.rds_db_instance_logging_table
   }
 
 }
 
-query "aws_rds_db_instance_logging_table" {
+query "rds_db_instance_logging_table" {
   sql = <<-EOQ
     select
       i.db_instance_identifier as "DB Instance Identifier",

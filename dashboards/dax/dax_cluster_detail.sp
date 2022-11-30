@@ -9,14 +9,14 @@ dashboard "dax_cluster_detail" {
 
   input "dax_cluster_arn" {
     title = "Select a cluster:"
-    query = query.aws_dax_cluster_input
+    query = query.dax_cluster_input
     width = 4
   }
 
   container {
 
     card {
-      query = query.aws_dax_cluster_status
+      query = query.dax_cluster_status
       width = 2
       args = {
         arn = self.input.dax_cluster_arn.value
@@ -24,7 +24,7 @@ dashboard "dax_cluster_detail" {
     }
 
     card {
-      query = query.aws_dax_cluster_node_type
+      query = query.dax_cluster_node_type
       width = 2
       args = {
         arn = self.input.dax_cluster_arn.value
@@ -32,7 +32,7 @@ dashboard "dax_cluster_detail" {
     }
 
     card {
-      query = query.aws_dax_cluster_encryption
+      query = query.dax_cluster_encryption
       width = 2
       args = {
         arn = self.input.dax_cluster_arn.value
@@ -81,7 +81,7 @@ dashboard "dax_cluster_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_dax_cluster_overview
+        query = query.dax_cluster_overview
         args = {
           arn = self.input.dax_cluster_arn.value
         }
@@ -91,7 +91,7 @@ dashboard "dax_cluster_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_dax_cluster_tags
+        query = query.dax_cluster_tags
         args = {
           arn = self.input.dax_cluster_arn.value
         }
@@ -103,7 +103,7 @@ dashboard "dax_cluster_detail" {
 
       table {
         title = "Cluster Discovery Endpoint"
-        query = query.aws_dax_cluster_discovery_endpoint
+        query = query.dax_cluster_discovery_endpoint
         args = {
           arn = self.input.dax_cluster_arn.value
         }
@@ -111,7 +111,7 @@ dashboard "dax_cluster_detail" {
 
       table {
         title = "Nodes"
-        query = query.aws_dax_cluster_node_details
+        query = query.dax_cluster_node_details
         args = {
           arn = self.input.dax_cluster_arn.value
         }
@@ -121,7 +121,7 @@ dashboard "dax_cluster_detail" {
 
 }
 
-query "aws_dax_cluster_input" {
+query "dax_cluster_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -137,7 +137,7 @@ query "aws_dax_cluster_input" {
   EOQ
 }
 
-query "aws_dax_cluster_status" {
+query "dax_cluster_status" {
   sql = <<-EOQ
     select
       'Status' as label,
@@ -151,7 +151,7 @@ query "aws_dax_cluster_status" {
   param "arn" {}
 }
 
-query "aws_dax_cluster_node_type" {
+query "dax_cluster_node_type" {
   sql = <<-EOQ
     select
       'Node Type' as label,
@@ -165,7 +165,7 @@ query "aws_dax_cluster_node_type" {
   param "arn" {}
 }
 
-query "aws_dax_cluster_encryption" {
+query "dax_cluster_encryption" {
   sql = <<-EOQ
     select
       'Encryption' as label,
@@ -506,7 +506,7 @@ edge "dax_cluster_vpc_subnet_to_vpc_edge" {
   param "arn" {}
 }
 
-query "aws_dax_cluster_overview" {
+query "dax_cluster_overview" {
   sql = <<-EOQ
     select
       title as "Title",
@@ -524,7 +524,7 @@ query "aws_dax_cluster_overview" {
   param "arn" {}
 }
 
-query "aws_dax_cluster_tags" {
+query "dax_cluster_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -541,7 +541,7 @@ query "aws_dax_cluster_tags" {
   param "arn" {}
 }
 
-query "aws_dax_cluster_discovery_endpoint" {
+query "dax_cluster_discovery_endpoint" {
   sql = <<-EOQ
     select
       cluster_discovery_endpoint ->> 'Address' as "Address",
@@ -556,7 +556,7 @@ query "aws_dax_cluster_discovery_endpoint" {
   param "arn" {}
 }
 
-query "aws_dax_cluster_node_details" {
+query "dax_cluster_node_details" {
   sql = <<-EOQ
     select
       n ->> 'NodeId' as "Node ID",

@@ -6,7 +6,7 @@ locals {
 
 category "sns_topic" {
   title = "SNS Topic"
-  href  = "/aws_insights.dashboard.aws_sns_topic_detail?input.topic_arn={{.properties.'ARN' | @uri}}"
+  href  = "/aws_insights.dashboard.sns_topic_detail?input.topic_arn={{.properties.'ARN' | @uri}}"
   icon  = "text:Topic"
   color = local.application_integration_color
 }

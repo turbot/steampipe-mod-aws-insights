@@ -9,14 +9,14 @@ dashboard "backup_vault_detail" {
 
   input "backup_vault_arn" {
     title = "Select a vault:"
-    query = query.aws_backup_vault_input
+    query = query.backup_vault_input
     width = 4
   }
 
   container {
 
     card {
-      query = query.aws_backup_vault_recovery_points
+      query = query.backup_vault_recovery_points
       width = 2
       args = {
         arn = self.input.backup_vault_arn.value
@@ -58,7 +58,7 @@ dashboard "backup_vault_detail" {
         title = "Overview"
         type  = "line"
         width = 3
-        query = query.aws_backup_vault_overview
+        query = query.backup_vault_overview
         args = {
           arn = self.input.backup_vault_arn.value
         }
@@ -68,7 +68,7 @@ dashboard "backup_vault_detail" {
       table {
         title = "Policy"
         width = 9
-        query = query.aws_backup_vault_policy
+        query = query.backup_vault_policy
         args = {
           arn = self.input.backup_vault_arn.value
         }
@@ -78,7 +78,7 @@ dashboard "backup_vault_detail" {
   }
 }
 
-query "aws_backup_vault_input" {
+query "backup_vault_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -94,7 +94,7 @@ query "aws_backup_vault_input" {
   EOQ
 }
 
-query "aws_backup_vault_recovery_points" {
+query "backup_vault_recovery_points" {
   sql = <<-EOQ
     select
       'Recovery Points' as label,
@@ -278,7 +278,7 @@ edge "backup_vault_to_sns_topic_edge" {
   param "arn" {}
 }
 
-query "aws_backup_vault_overview" {
+query "backup_vault_overview" {
   sql = <<-EOQ
     select
       title as "Title",
@@ -295,7 +295,7 @@ query "aws_backup_vault_overview" {
   param "arn" {}
 }
 
-query "aws_backup_vault_policy" {
+query "backup_vault_policy" {
   sql = <<-EOQ
     select
       s -> 'Action' as "Action",

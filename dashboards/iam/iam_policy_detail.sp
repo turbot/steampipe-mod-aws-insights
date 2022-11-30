@@ -1,4 +1,4 @@
-dashboard "aws_iam_policy_detail" {
+dashboard "iam_policy_detail" {
   title         = "AWS IAM Policy Detail"
   documentation = file("./dashboards/iam/docs/iam_policy_detail.md")
   tags = merge(local.iam_common_tags, {
@@ -7,7 +7,7 @@ dashboard "aws_iam_policy_detail" {
 
   input "policy_arn" {
     title = "Select a policy:"
-    query = query.aws_iam_policy_input
+    query = query.iam_policy_input
     width = 4
   }
 
@@ -15,7 +15,7 @@ dashboard "aws_iam_policy_detail" {
 
     card {
       width = 2
-      query = query.aws_iam_policy_aws_managed
+      query = query.iam_policy_aws_managed
       args = {
         policy_arn = self.input.policy_arn.value
       }
@@ -23,7 +23,7 @@ dashboard "aws_iam_policy_detail" {
 
     card {
       width = 2
-      query = query.aws_iam_policy_attached
+      query = query.iam_policy_attached
       args = {
         policy_arn = self.input.policy_arn.value
       }
@@ -146,7 +146,7 @@ dashboard "aws_iam_policy_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_iam_policy_overview
+        query = query.iam_policy_overview
         args = {
           policy_arn = self.input.policy_arn.value
         }
@@ -156,7 +156,7 @@ dashboard "aws_iam_policy_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_iam_policy_tags
+        query = query.iam_policy_tags
         args = {
           policy_arn = self.input.policy_arn.value
         }
@@ -169,16 +169,16 @@ dashboard "aws_iam_policy_detail" {
       width = 6
       table {
         title = "Policy Statement"
-        query = query.aws_iam_policy_statement
+        query = query.iam_policy_statement
         args = {
           policy_arn = self.input.policy_arn.value
         }
 
         column "Action" {
-          href = "/aws_insights.dashboard.aws_iam_action_glob_report?input.action_glob={{.\"Action\" | @uri}}"
+          href = "/aws_insights.dashboard.iam_action_glob_report?input.action_glob={{.\"Action\" | @uri}}"
         }
         column "NotAction" {
-          href = "/aws_insights.dashboard.aws_iam_action_glob_report?input.action_glob={{.\"NotAction\" | @uri}}"
+          href = "/aws_insights.dashboard.iam_action_glob_report?input.action_glob={{.\"NotAction\" | @uri}}"
         }
       }
 
@@ -187,7 +187,7 @@ dashboard "aws_iam_policy_detail" {
   }
 }
 
-query "aws_iam_policy_input" {
+query "iam_policy_input" {
   sql = <<-EOQ
     with policies as (
       select
@@ -221,7 +221,7 @@ query "aws_iam_policy_input" {
   EOQ
 }
 
-query "aws_iam_policy_aws_managed" {
+query "iam_policy_aws_managed" {
   sql = <<-EOQ
     select
       case when is_aws_managed then 'AWS' else 'Customer' end as value,
@@ -235,7 +235,7 @@ query "aws_iam_policy_aws_managed" {
   param "policy_arn" {}
 }
 
-query "aws_iam_policy_attached" {
+query "iam_policy_attached" {
   sql = <<-EOQ
     select
       case when is_attached then 'Attached' else 'Detached' end as value,
@@ -251,7 +251,7 @@ query "aws_iam_policy_attached" {
 }
 
 
-query "aws_iam_policy_overview" {
+query "iam_policy_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -274,7 +274,7 @@ query "aws_iam_policy_overview" {
   param "policy_arn" {}
 }
 
-query "aws_iam_policy_tags" {
+query "iam_policy_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -291,7 +291,7 @@ query "aws_iam_policy_tags" {
   param "policy_arn" {}
 }
 
-query "aws_iam_policy_statement" {
+query "iam_policy_statement" {
   sql = <<-EOQ
     with policy as (
       select

@@ -7,7 +7,7 @@ locals {
 category "rds_db_cluster" {
   title = "RDS DB Cluster"
   color = local.database_color
-  href  = "/aws_insights.dashboard.aws_rds_db_cluster_detail.url_path?input.db_cluster_arn={{.properties.ARN | @uri}}"
+  href  = "/aws_insights.dashboard.rds_db_cluster_detail.url_path?input.db_cluster_arn={{.properties.ARN | @uri}}"
   icon  = "circle-stack"
 }
 
@@ -20,14 +20,14 @@ category "rds_db_cluster_parameter_group" {
 category "rds_db_cluster_snapshot" {
   title = "RDS DB Cluster Snapshot"
   color = local.database_color
-  href  = "/aws_insights.dashboard.aws_rds_db_cluster_snapshot_detail.url_path?input.snapshot_arn={{.properties.ARN | @uri}}"
+  href  = "/aws_insights.dashboard.rds_db_cluster_snapshot_detail.url_path?input.snapshot_arn={{.properties.ARN | @uri}}"
   icon  = "viewfinder-circle"
 }
 
 category "rds_db_instance" {
   title = "RDS DB Instance"
   color = local.database_color
-  href  = "/aws_insights.dashboard.aws_rds_db_instance_detail.url_path?input.db_instance_arn={{.properties.ARN | @uri}}"
+  href  = "/aws_insights.dashboard.rds_db_instance_detail.url_path?input.db_instance_arn={{.properties.ARN | @uri}}"
   icon  = "circle-stack"
 }
 
@@ -40,7 +40,7 @@ category "rds_db_parameter_group" {
 category "rds_db_snapshot" {
   title = "RDS DB Snapshot"
   color = local.database_color
-  href  = "/aws_insights.dashboard.aws_rds_db_snapshot_detail.url_path?input.db_snapshot_arn={{.properties.ARN | @uri}}"
+  href  = "/aws_insights.dashboard.rds_db_snapshot_detail.url_path?input.db_snapshot_arn={{.properties.ARN | @uri}}"
   icon  = "viewfinder-circle"
 }
 

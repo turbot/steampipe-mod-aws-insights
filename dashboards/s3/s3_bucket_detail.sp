@@ -1,4 +1,4 @@
-dashboard "aws_s3_bucket_detail" {
+dashboard "s3_bucket_detail" {
 
   title         = "AWS S3 Bucket Detail"
   documentation = file("./dashboards/s3/docs/s3_bucket_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_s3_bucket_detail" {
 
   input "bucket_arn" {
     title = "Select a bucket:"
-    query = query.aws_s3_bucket_input
+    query = query.s3_bucket_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "aws_s3_bucket_detail" {
 
     card {
       width = 2
-      query = query.aws_s3_bucket_public
+      query = query.s3_bucket_public
       args = {
         arn = self.input.bucket_arn.value
       }
@@ -25,14 +25,14 @@ dashboard "aws_s3_bucket_detail" {
 
     card {
       width = 2
-      query = query.aws_s3_bucket_versioning
+      query = query.s3_bucket_versioning
       args = {
         arn = self.input.bucket_arn.value
       }
     }
 
     card {
-      query = query.aws_s3_bucket_logging_enabled
+      query = query.s3_bucket_logging_enabled
       width = 2
       args = {
         arn = self.input.bucket_arn.value
@@ -41,7 +41,7 @@ dashboard "aws_s3_bucket_detail" {
 
     card {
       width = 2
-      query = query.aws_s3_bucket_encryption
+      query = query.s3_bucket_encryption
       args = {
         arn = self.input.bucket_arn.value
       }
@@ -49,7 +49,7 @@ dashboard "aws_s3_bucket_detail" {
 
     card {
       width = 2
-      query = query.aws_s3_bucket_cross_region_replication
+      query = query.s3_bucket_cross_region_replication
       args = {
         arn = self.input.bucket_arn.value
       }
@@ -57,7 +57,7 @@ dashboard "aws_s3_bucket_detail" {
 
     card {
       width = 2
-      query = query.aws_s3_bucket_https_enforce
+      query = query.s3_bucket_https_enforce
       args = {
         arn = self.input.bucket_arn.value
       }
@@ -260,7 +260,7 @@ dashboard "aws_s3_bucket_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_s3_bucket_overview
+        query = query.s3_bucket_overview
         args = {
           arn = self.input.bucket_arn.value
         }
@@ -270,7 +270,7 @@ dashboard "aws_s3_bucket_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_s3_bucket_tags_detail
+        query = query.s3_bucket_tags_detail
         param "arn" {}
         args = {
           arn = self.input.bucket_arn.value
@@ -283,7 +283,7 @@ dashboard "aws_s3_bucket_detail" {
 
       table {
         title = "Public Access"
-        query = query.aws_s3_bucket_public_access
+        query = query.s3_bucket_public_access
         args = {
           arn = self.input.bucket_arn.value
         }
@@ -291,7 +291,7 @@ dashboard "aws_s3_bucket_detail" {
 
       table {
         title = "Logging"
-        query = query.aws_s3_bucket_logging
+        query = query.s3_bucket_logging
         args = {
           arn = self.input.bucket_arn.value
         }
@@ -303,7 +303,7 @@ dashboard "aws_s3_bucket_detail" {
       width = 12
       table {
         title = "Policy"
-        query = query.aws_s3_bucket_policy
+        query = query.s3_bucket_policy
         args = {
           arn = self.input.bucket_arn.value
         }
@@ -314,7 +314,7 @@ dashboard "aws_s3_bucket_detail" {
       width = 12
       table {
         title = "Lifecycle Rules"
-        query = query.aws_s3_bucket_lifecycle_policy
+        query = query.s3_bucket_lifecycle_policy
         args = {
           arn = self.input.bucket_arn.value
         }
@@ -325,7 +325,7 @@ dashboard "aws_s3_bucket_detail" {
       width = 12
       table {
         title = "Server Side Encryption"
-        query = query.aws_s3_bucket_server_side_encryption
+        query = query.s3_bucket_server_side_encryption
         args = {
           arn = self.input.bucket_arn.value
         }
@@ -336,7 +336,7 @@ dashboard "aws_s3_bucket_detail" {
 
 }
 
-query "aws_s3_bucket_input" {
+query "s3_bucket_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -656,7 +656,7 @@ edge "s3_bucket_from_s3_access_point_edge" {
   param "arn" {}
 }
 
-query "aws_s3_bucket_versioning" {
+query "s3_bucket_versioning" {
   sql = <<-EOQ
     select
       'Versioning' as label,
@@ -671,7 +671,7 @@ query "aws_s3_bucket_versioning" {
   param "arn" {}
 }
 
-query "aws_s3_bucket_public" {
+query "s3_bucket_public" {
   sql = <<-EOQ
     select
       'Public Access' as label,
@@ -686,7 +686,7 @@ query "aws_s3_bucket_public" {
   param "arn" {}
 }
 
-query "aws_s3_bucket_logging_enabled" {
+query "s3_bucket_logging_enabled" {
   sql = <<-EOQ
     select
       'Logging' as label,
@@ -701,7 +701,7 @@ query "aws_s3_bucket_logging_enabled" {
   param "arn" {}
 }
 
-query "aws_s3_bucket_encryption" {
+query "s3_bucket_encryption" {
   sql = <<-EOQ
     select
       'Encryption' as label,
@@ -716,7 +716,7 @@ query "aws_s3_bucket_encryption" {
   param "arn" {}
 }
 
-query "aws_s3_bucket_cross_region_replication" {
+query "s3_bucket_cross_region_replication" {
   sql = <<-EOQ
     with bucket_with_replication as (
       select
@@ -740,7 +740,7 @@ query "aws_s3_bucket_cross_region_replication" {
   param "arn" {}
 }
 
-query "aws_s3_bucket_https_enforce" {
+query "s3_bucket_https_enforce" {
   sql = <<-EOQ
     with ssl_ok as (
       select
@@ -773,7 +773,7 @@ query "aws_s3_bucket_https_enforce" {
   param "arn" {}
 }
 
-query "aws_s3_bucket_overview" {
+query "s3_bucket_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -791,7 +791,7 @@ query "aws_s3_bucket_overview" {
   param "arn" {}
 }
 
-query "aws_s3_bucket_tags_detail" {
+query "s3_bucket_tags_detail" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -808,7 +808,7 @@ query "aws_s3_bucket_tags_detail" {
   param "arn" {}
 }
 
-query "aws_s3_bucket_server_side_encryption" {
+query "s3_bucket_server_side_encryption" {
   sql = <<-EOQ
     select
       rules -> 'ApplyServerSideEncryptionByDefault' -> 'KMSMasterKeyID' as "KMS Master Key ID",
@@ -824,7 +824,7 @@ query "aws_s3_bucket_server_side_encryption" {
   param "arn" {}
 }
 
-query "aws_s3_bucket_logging" {
+query "s3_bucket_logging" {
   sql = <<-EOQ
     select
       logging ->> 'TargetBucket' as "Target Bucket",
@@ -839,7 +839,7 @@ query "aws_s3_bucket_logging" {
   param "arn" {}
 }
 
-query "aws_s3_bucket_public_access" {
+query "s3_bucket_public_access" {
   sql = <<-EOQ
     select
       bucket_policy_is_public as "Has Public Bucket Policy",
@@ -856,7 +856,7 @@ query "aws_s3_bucket_public_access" {
   param "arn" {}
 }
 
-query "aws_s3_bucket_policy" {
+query "s3_bucket_policy" {
   sql = <<-EOQ
     select
       p ->> 'Sid' as "SID",
@@ -876,7 +876,7 @@ query "aws_s3_bucket_policy" {
   param "arn" {}
 }
 
-query "aws_s3_bucket_lifecycle_policy" {
+query "s3_bucket_lifecycle_policy" {
   sql = <<-EOQ
     select
       r ->> 'ID' as "ID",

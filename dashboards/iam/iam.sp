@@ -19,14 +19,14 @@ category "iam_federated_principal" {
 category "iam_group" {
   title = "IAM Group"
   color = local.iam_color
-  href  = "/aws_insights.dashboard.aws_iam_group_detail?input.group_arn={{.properties.'ARN' | @uri}}"
+  href  = "/aws_insights.dashboard.iam_group_detail?input.group_arn={{.properties.'ARN' | @uri}}"
   icon  = "user-group"
 }
 
 category "iam_policy" {
   title = "IAM Policy"
   color = local.iam_color
-  href  = "/aws_insights.dashboard.aws_iam_policy_detail?input.policy_arn={{.properties.'ARN' | @uri}}"
+  href  = "/aws_insights.dashboard.iam_policy_detail?input.policy_arn={{.properties.'ARN' | @uri}}"
   icon  = "document-check"
 }
 
@@ -38,7 +38,7 @@ category "iam_instance_profile" {
 
 category "iam_role" {
   title = "IAM Role"
-  href  = "/aws_insights.dashboard.aws_iam_role_detail?input.role_arn={{.properties.'ARN' | @uri}}"
+  href  = "/aws_insights.dashboard.iam_role_detail?input.role_arn={{.properties.'ARN' | @uri}}"
   icon  = "user-plus"
   color = local.iam_color
 }
@@ -52,7 +52,7 @@ category "iam_service_principal" {
 category "iam_user" {
   title = "IAM User"
   color = local.iam_color
-  href  = "/aws_insights.dashboard.aws_iam_user_detail?input.user_arn={{.properties.'ARN' | @uri}}"
+  href  = "/aws_insights.dashboard.iam_user_detail?input.user_arn={{.properties.'ARN' | @uri}}"
   icon  = "user"
 }
 
@@ -69,7 +69,7 @@ category "iam_policy_statement" {
 }
 
 category "iam_policy_action" {
-  href = "/aws_insights.dashboard.aws_iam_action_glob_report?input.action_glob={{.title | @uri}}"
+  href = "/aws_insights.dashboard.iam_action_glob_report?input.action_glob={{.title | @uri}}"
   icon  = "heroicons-outline:bolt"
   color = "red"
   title = "Action"

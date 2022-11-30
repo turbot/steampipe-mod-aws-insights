@@ -1,4 +1,4 @@
-dashboard "aws_lambda_function_detail" {
+dashboard "lambda_function_detail" {
 
   title         = "AWS Lambda Function Detail"
   documentation = file("./dashboards/lambda/docs/lambda_function_detail.md")
@@ -10,7 +10,7 @@ dashboard "aws_lambda_function_detail" {
 
   input "lambda_arn" {
     title = "Select a lambda function:"
-    query = query.aws_lambda_function_input
+    query = query.lambda_function_input
     width = 4
   }
 
@@ -18,7 +18,7 @@ dashboard "aws_lambda_function_detail" {
 
     card {
       width = 2
-      query = query.aws_lambda_function_memory
+      query = query.lambda_function_memory
       args = {
         arn = self.input.lambda_arn.value
       }
@@ -26,7 +26,7 @@ dashboard "aws_lambda_function_detail" {
 
     card {
       width = 2
-      query = query.aws_lambda_function_runtime
+      query = query.lambda_function_runtime
       args = {
         arn = self.input.lambda_arn.value
       }
@@ -34,7 +34,7 @@ dashboard "aws_lambda_function_detail" {
 
     card {
       width = 2
-      query = query.aws_lambda_function_encryption
+      query = query.lambda_function_encryption
       args = {
         arn = self.input.lambda_arn.value
       }
@@ -42,7 +42,7 @@ dashboard "aws_lambda_function_detail" {
 
     card {
       width = 2
-      query = query.aws_lambda_function_public
+      query = query.lambda_function_public
       args = {
         arn = self.input.lambda_arn.value
       }
@@ -109,7 +109,7 @@ dashboard "aws_lambda_function_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_lambda_function_overview
+        query = query.lambda_function_overview
         args = {
           arn = self.input.lambda_arn.value
         }
@@ -119,7 +119,7 @@ dashboard "aws_lambda_function_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_lambda_function_tags
+        query = query.lambda_function_tags
         args = {
           arn = self.input.lambda_arn.value
         }
@@ -130,7 +130,7 @@ dashboard "aws_lambda_function_detail" {
     table {
       width = 6
       title = "Last Update Status"
-      query = query.aws_lambda_function_last_update_status
+      query = query.lambda_function_last_update_status
       args = {
         arn = self.input.lambda_arn.value
       }
@@ -140,7 +140,7 @@ dashboard "aws_lambda_function_detail" {
 
   table {
     title = "Policy"
-    query = query.aws_lambda_function_policy
+    query = query.lambda_function_policy
     args = {
       arn = self.input.lambda_arn.value
     }
@@ -149,7 +149,7 @@ dashboard "aws_lambda_function_detail" {
   table {
     width = 6
     title = "Security Groups"
-    query = query.aws_lambda_function_security_groups
+    query = query.lambda_function_security_groups
     args = {
       arn = self.input.lambda_arn.value
     }
@@ -158,7 +158,7 @@ dashboard "aws_lambda_function_detail" {
   table {
     width = 6
     title = "Subnets"
-    query = query.aws_lambda_function_subnet_ids
+    query = query.lambda_function_subnet_ids
     args = {
       arn = self.input.lambda_arn.value
     }
@@ -166,7 +166,7 @@ dashboard "aws_lambda_function_detail" {
 
 }
 
-query "aws_lambda_function_input" {
+query "lambda_function_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -182,7 +182,7 @@ query "aws_lambda_function_input" {
   EOQ
 }
 
-query "aws_lambda_function_memory" {
+query "lambda_function_memory" {
   sql = <<-EOQ
     select
       'Memory (MB)' as label,
@@ -196,7 +196,7 @@ query "aws_lambda_function_memory" {
   param "arn" {}
 }
 
-query "aws_lambda_function_runtime" {
+query "lambda_function_runtime" {
   sql = <<-EOQ
     select
       'Runtime' as label,
@@ -210,7 +210,7 @@ query "aws_lambda_function_runtime" {
   param "arn" {}
 }
 
-query "aws_lambda_function_public" {
+query "lambda_function_public" {
   sql = <<-EOQ
     select
       'Public Access' as label,
@@ -234,7 +234,7 @@ query "aws_lambda_function_public" {
   param "arn" {}
 }
 
-query "aws_lambda_function_encryption" {
+query "lambda_function_encryption" {
   sql = <<-EOQ
     select
       'Encryption' as label,
@@ -249,7 +249,7 @@ query "aws_lambda_function_encryption" {
   param "arn" {}
 }
 
-query "aws_lambda_function_last_update_status" {
+query "lambda_function_last_update_status" {
   sql = <<-EOQ
     select
       last_modified as "Last Modified",
@@ -265,7 +265,7 @@ query "aws_lambda_function_last_update_status" {
   param "arn" {}
 }
 
-query "aws_lambda_function_policy" {
+query "lambda_function_policy" {
   sql = <<-EOQ
     select
       p ->> 'Sid' as "Sid",
@@ -283,7 +283,7 @@ query "aws_lambda_function_policy" {
   param "arn" {}
 }
 
-query "aws_lambda_function_security_groups" {
+query "lambda_function_security_groups" {
   sql = <<-EOQ
     select
       p as "ID"
@@ -297,7 +297,7 @@ query "aws_lambda_function_security_groups" {
   param "arn" {}
 }
 
-query "aws_lambda_function_subnet_ids" {
+query "lambda_function_subnet_ids" {
   sql = <<-EOQ
     select
       p as "ID"
@@ -311,7 +311,7 @@ query "aws_lambda_function_subnet_ids" {
   param "arn" {}
 }
 
-query "aws_lambda_function_overview" {
+query "lambda_function_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -332,7 +332,7 @@ query "aws_lambda_function_overview" {
   param "arn" {}
 }
 
-query "aws_lambda_function_tags" {
+query "lambda_function_tags" {
   sql = <<-EOQ
     with jsondata as (
       select

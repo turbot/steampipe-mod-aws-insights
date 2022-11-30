@@ -8,7 +8,7 @@ dashboard "api_gatewayv2_api_detail" {
 
   input "api_id" {
     title = "Select an API:"
-    query = query.aws_api_gatewayv2_api_input
+    query = query.api_gatewayv2_api_input
     width = 4
   }
 
@@ -16,7 +16,7 @@ dashboard "api_gatewayv2_api_detail" {
 
     card {
       width = 2
-      query = query.aws_api_gatewayv2_api_protocol
+      query = query.api_gatewayv2_api_protocol
       args = {
         api_id = self.input.api_id.value
       }
@@ -24,7 +24,7 @@ dashboard "api_gatewayv2_api_detail" {
 
     card {
       width = 2
-      query = query.aws_api_gatewayv2_stage_count
+      query = query.api_gatewayv2_stage_count
       args = {
         api_id = self.input.api_id.value
       }
@@ -32,7 +32,7 @@ dashboard "api_gatewayv2_api_detail" {
 
     card {
       width = 2
-      query = query.aws_api_gatewayv2_default_endpoint
+      query = query.api_gatewayv2_default_endpoint
       args = {
         api_id = self.input.api_id.value
       }
@@ -79,7 +79,7 @@ dashboard "api_gatewayv2_api_detail" {
         title = "Overview"
         type  = "line"
         width = 3
-        query = query.aws_api_gatewayv2_api_overview
+        query = query.api_gatewayv2_api_overview
         args = {
           api_id = self.input.api_id.value
         }
@@ -89,7 +89,7 @@ dashboard "api_gatewayv2_api_detail" {
       table {
         title = "Tags"
         width = 3
-        query = query.aws_api_gatewayv2_api_tags
+        query = query.api_gatewayv2_api_tags
         args = {
           api_id = self.input.api_id.value
         }
@@ -99,7 +99,7 @@ dashboard "api_gatewayv2_api_detail" {
       table {
         title = "Stages"
         width = 6
-        query = query.aws_api_gatewayv2_api_stages
+        query = query.api_gatewayv2_api_stages
         args = {
           api_id = self.input.api_id.value
         }
@@ -116,7 +116,7 @@ dashboard "api_gatewayv2_api_detail" {
 
       table {
         title = "Integrations"
-        query = query.aws_api_gatewayv2_api_integrations
+        query = query.api_gatewayv2_api_integrations
         args = {
           api_id = self.input.api_id.value
         }
@@ -129,7 +129,7 @@ dashboard "api_gatewayv2_api_detail" {
 
 }
 
-query "aws_api_gatewayv2_api_input" {
+query "api_gatewayv2_api_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -145,7 +145,7 @@ query "aws_api_gatewayv2_api_input" {
   EOQ
 }
 
-query "aws_api_gatewayv2_api_protocol" {
+query "api_gatewayv2_api_protocol" {
   sql = <<-EOQ
     select
       'Protocol Type' as label,
@@ -159,7 +159,7 @@ query "aws_api_gatewayv2_api_protocol" {
   param "api_id" {}
 }
 
-query "aws_api_gatewayv2_stage_count" {
+query "api_gatewayv2_stage_count" {
   sql = <<-EOQ
     select
       'Stage Count' as label,
@@ -173,7 +173,7 @@ query "aws_api_gatewayv2_stage_count" {
   param "api_id" {}
 }
 
-query "aws_api_gatewayv2_default_endpoint" {
+query "api_gatewayv2_default_endpoint" {
   sql = <<-EOQ
     select
       'Default Endpoint' as label,
@@ -188,7 +188,7 @@ query "aws_api_gatewayv2_default_endpoint" {
   param "api_id" {}
 }
 
-query "aws_api_gatewayv2_api_overview" {
+query "api_gatewayv2_api_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -207,7 +207,7 @@ query "aws_api_gatewayv2_api_overview" {
   param "api_id" {}
 }
 
-query "aws_api_gatewayv2_api_tags" {
+query "api_gatewayv2_api_tags" {
   sql = <<-EOQ
     with jsondata as (
     select
@@ -228,7 +228,7 @@ query "aws_api_gatewayv2_api_tags" {
   param "api_id" {}
 }
 
-query "aws_api_gatewayv2_api_stages" {
+query "api_gatewayv2_api_stages" {
   sql = <<-EOQ
     select
       stage_name as "Name",
@@ -245,7 +245,7 @@ query "aws_api_gatewayv2_api_stages" {
   param "api_id" {}
 }
 
-query "aws_api_gatewayv2_api_integrations" {
+query "api_gatewayv2_api_integrations" {
   sql = <<-EOQ
     select
       integration_id as "Integration ID",

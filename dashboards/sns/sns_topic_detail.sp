@@ -1,4 +1,4 @@
-dashboard "aws_sns_topic_detail" {
+dashboard "sns_topic_detail" {
 
   title         = "AWS SNS Topic Detail"
   documentation = file("./dashboards/sns/docs/sns_topic_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_sns_topic_detail" {
 
   input "topic_arn" {
     title = "Select a topic:"
-    query = query.aws_sns_topic_input
+    query = query.sns_topic_input
     width = 4
   }
 
@@ -17,14 +17,14 @@ dashboard "aws_sns_topic_detail" {
 
     card {
       width = 2
-      query = query.aws_sns_topic_encryption_status
+      query = query.sns_topic_encryption_status
       args = {
         arn = self.input.topic_arn.value
       }
     }
 
     card {
-      query = query.aws_sns_topic_subscriptions_confirmed_count
+      query = query.sns_topic_subscriptions_confirmed_count
       width = 2
       args = {
         arn = self.input.topic_arn.value
@@ -78,7 +78,7 @@ dashboard "aws_sns_topic_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_sns_topic_overview
+        query = query.sns_topic_overview
         args = {
           arn = self.input.topic_arn.value
         }
@@ -88,7 +88,7 @@ dashboard "aws_sns_topic_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_sns_topic_tags
+        query = query.sns_topic_tags
         args = {
           arn = self.input.topic_arn.value
         }
@@ -101,7 +101,7 @@ dashboard "aws_sns_topic_detail" {
 
       table {
         title = "Subscription Counts"
-        query = query.aws_sns_topic_subscriptions
+        query = query.sns_topic_subscriptions
         args = {
           arn = self.input.topic_arn.value
         }
@@ -114,7 +114,7 @@ dashboard "aws_sns_topic_detail" {
 
       table {
         title = "Effective Delivery Policy"
-        query = query.aws_sns_topic_delivery_policy
+        query = query.sns_topic_delivery_policy
         args = {
           arn = self.input.topic_arn.value
         }
@@ -122,7 +122,7 @@ dashboard "aws_sns_topic_detail" {
 
       table {
         title = "Policy"
-        query = query.aws_sns_topic_policy_standard
+        query = query.sns_topic_policy_standard
         args = {
           arn = self.input.topic_arn.value
         }
@@ -132,7 +132,7 @@ dashboard "aws_sns_topic_detail" {
   }
 }
 
-query "aws_sns_topic_input" {
+query "sns_topic_input" {
   sql = <<-EOQ
     select
       topic_arn as label,
@@ -144,7 +144,7 @@ query "aws_sns_topic_input" {
 EOQ
 }
 
-query "aws_sns_topic_encryption_status" {
+query "sns_topic_encryption_status" {
   sql = <<-EOQ
     select
       case when kms_master_key_id is not null then 'Enabled' else 'Disabled' end as value,
@@ -159,7 +159,7 @@ query "aws_sns_topic_encryption_status" {
   param "arn" {}
 }
 
-query "aws_sns_topic_subscriptions_confirmed_count" {
+query "sns_topic_subscriptions_confirmed_count" {
   sql = <<-EOQ
     select
       subscriptions_confirmed::int as value,
@@ -174,7 +174,7 @@ query "aws_sns_topic_subscriptions_confirmed_count" {
   param "arn" {}
 }
 
-query "aws_sns_topic_overview" {
+query "sns_topic_overview" {
   sql = <<-EOQ
     select
       display_name as "Display Name",
@@ -193,7 +193,7 @@ query "aws_sns_topic_overview" {
   param "arn" {}
 }
 
-query "aws_sns_topic_tags" {
+query "sns_topic_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -210,7 +210,7 @@ query "aws_sns_topic_tags" {
   param "arn" {}
 }
 
-query "aws_sns_topic_subscriptions" {
+query "sns_topic_subscriptions" {
   sql = <<-EOQ
     select
       subscriptions_confirmed as "Confirmed",
@@ -225,7 +225,7 @@ query "aws_sns_topic_subscriptions" {
   param "arn" {}
 }
 
-query "aws_sns_topic_delivery_policy" {
+query "sns_topic_delivery_policy" {
   sql = <<-EOQ
     select
       effective_delivery_policy -> 'http' -> 'defaultHealthyRetryPolicy' ->> 'numRetries' as "Retries",
@@ -245,7 +245,7 @@ query "aws_sns_topic_delivery_policy" {
   param "arn" {}
 }
 
-query "aws_sns_topic_policy_standard" {
+query "sns_topic_policy_standard" {
   sql = <<-EOQ
     select
       statement ->> 'Sid' as "SID",

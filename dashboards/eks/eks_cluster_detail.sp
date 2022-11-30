@@ -1,4 +1,4 @@
-dashboard "aws_eks_cluster_detail" {
+dashboard "eks_cluster_detail" {
   title         = "AWS EKS Cluster Detail"
   documentation = file("./dashboards/eks/docs/eks_cluster_detail.md")
 
@@ -8,7 +8,7 @@ dashboard "aws_eks_cluster_detail" {
 
   input "eks_cluster_arn" {
     title = "Select a cluster:"
-    query = query.aws_eks_cluster_input
+    query = query.eks_cluster_input
     width = 4
   }
 
@@ -16,7 +16,7 @@ dashboard "aws_eks_cluster_detail" {
 
     card {
       width = 2
-      query = query.aws_eks_cluster_status
+      query = query.eks_cluster_status
       args = {
         arn = self.input.eks_cluster_arn.value
       }
@@ -24,7 +24,7 @@ dashboard "aws_eks_cluster_detail" {
 
     card {
       width = 2
-      query = query.aws_eks_cluster_kubernetes_version
+      query = query.eks_cluster_kubernetes_version
       args = {
         arn = self.input.eks_cluster_arn.value
       }
@@ -32,7 +32,7 @@ dashboard "aws_eks_cluster_detail" {
 
     card {
       width = 2
-      query = query.aws_eks_cluster_secrets_encryption
+      query = query.eks_cluster_secrets_encryption
       args = {
         arn = self.input.eks_cluster_arn.value
       }
@@ -40,7 +40,7 @@ dashboard "aws_eks_cluster_detail" {
 
     card {
       width = 2
-      query = query.aws_eks_cluster_endpoint_restrict_public_access
+      query = query.eks_cluster_endpoint_restrict_public_access
       args = {
         arn = self.input.eks_cluster_arn.value
       }
@@ -48,7 +48,7 @@ dashboard "aws_eks_cluster_detail" {
 
     card {
       width = 2
-      query = query.aws_eks_cluster_control_plane_audit_logging
+      query = query.eks_cluster_control_plane_audit_logging
       args = {
         arn = self.input.eks_cluster_arn.value
       }
@@ -102,7 +102,7 @@ dashboard "aws_eks_cluster_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_eks_cluster_overview
+        query = query.eks_cluster_overview
         args = {
           arn = self.input.eks_cluster_arn.value
         }
@@ -112,7 +112,7 @@ dashboard "aws_eks_cluster_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_eks_cluster_tags
+        query = query.eks_cluster_tags
         args = {
           arn = self.input.eks_cluster_arn.value
         }
@@ -123,7 +123,7 @@ dashboard "aws_eks_cluster_detail" {
 
       table {
         title = "Resources VPC Config"
-        query = query.aws_eks_cluster_resources_vpc_config
+        query = query.eks_cluster_resources_vpc_config
         args = {
           arn = self.input.eks_cluster_arn.value
         }
@@ -131,7 +131,7 @@ dashboard "aws_eks_cluster_detail" {
 
       table {
         title = "Control Plane Logging"
-        query = query.aws_eks_cluster_logging
+        query = query.eks_cluster_logging
         args = {
           arn = self.input.eks_cluster_arn.value
         }
@@ -144,7 +144,7 @@ dashboard "aws_eks_cluster_detail" {
 
     table {
       title = "Node Groups"
-      query = query.aws_eks_cluster_node_group
+      query = query.eks_cluster_node_group
       args = {
         arn = self.input.eks_cluster_arn.value
       }
@@ -153,7 +153,7 @@ dashboard "aws_eks_cluster_detail" {
   }
 }
 
-query "aws_eks_cluster_input" {
+query "eks_cluster_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -169,7 +169,7 @@ query "aws_eks_cluster_input" {
 EOQ
 }
 
-query "aws_eks_cluster_status" {
+query "eks_cluster_status" {
   sql = <<-EOQ
     select
       'Status' as label,
@@ -184,7 +184,7 @@ query "aws_eks_cluster_status" {
 
 }
 
-query "aws_eks_cluster_kubernetes_version" {
+query "eks_cluster_kubernetes_version" {
   sql = <<-EOQ
     select
       'Version' as label,
@@ -199,7 +199,7 @@ query "aws_eks_cluster_kubernetes_version" {
 
 }
 
-query "aws_eks_cluster_secrets_encryption" {
+query "eks_cluster_secrets_encryption" {
   sql = <<-EOQ
     select
       'Secrets Encryption' as label,
@@ -215,7 +215,7 @@ query "aws_eks_cluster_secrets_encryption" {
 
 }
 
-query "aws_eks_cluster_endpoint_restrict_public_access" {
+query "eks_cluster_endpoint_restrict_public_access" {
   sql = <<-EOQ
     select
       'Endpoint Public Access' as label,
@@ -231,7 +231,7 @@ query "aws_eks_cluster_endpoint_restrict_public_access" {
 
 }
 
-query "aws_eks_cluster_control_plane_audit_logging" {
+query "eks_cluster_control_plane_audit_logging" {
   sql = <<-EOQ
     select
       'Control Plane Audit Logging' as label,
@@ -250,7 +250,7 @@ query "aws_eks_cluster_control_plane_audit_logging" {
 
 }
 
-query "aws_eks_cluster_overview" {
+query "eks_cluster_overview" {
   sql = <<-EOQ
     select
       title as "Title",
@@ -268,7 +268,7 @@ query "aws_eks_cluster_overview" {
   param "arn" {}
 }
 
-query "aws_eks_cluster_tags" {
+query "eks_cluster_tags" {
   sql = <<-EOQ
     with jsondata as (
     select
@@ -289,7 +289,7 @@ query "aws_eks_cluster_tags" {
   param "arn" {}
 }
 
-query "aws_eks_cluster_logging" {
+query "eks_cluster_logging" {
   sql = <<-EOQ
     select
       t as "Type",
@@ -306,7 +306,7 @@ query "aws_eks_cluster_logging" {
 
 }
 
-query "aws_eks_cluster_resources_vpc_config" {
+query "eks_cluster_resources_vpc_config" {
   sql = <<-EOQ
     select
       resources_vpc_config ->> 'ClusterSecurityGroupId' as "Cluster Security Group ID",
@@ -325,7 +325,7 @@ query "aws_eks_cluster_resources_vpc_config" {
 
 }
 
-query "aws_eks_cluster_node_group" {
+query "eks_cluster_node_group" {
   sql = <<-EOQ
     select
       g.nodegroup_name as "Name",

@@ -13,6 +13,6 @@ category "eventbridge_bus" {
 category "eventbridge_rule" {
   title = "EventBridge Rule"
   color = local.application_integration_color
-  href  = "/aws_insights.dashboard.aws_eventbridge_rule_detail?input.eventbridge_rule_arn={{.properties.'ARN' | @uri}}"
+  href  = "/aws_insights.dashboard.eventbridge_rule_detail?input.eventbridge_rule_arn={{.properties.'ARN' | @uri}}"
   icon  = "text:Rule"
 }

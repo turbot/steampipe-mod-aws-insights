@@ -13,6 +13,6 @@ category "ecr_image" {
 category "ecr_repository" {
   title = "ECR Repository"
   color = local.containers_color
-  href  = "aws_insights.dashboard.aws_ecr_repository_detail?input.ecr_repository_arn={{.properties.'ARN' | @uri}}"
+  href  = "/aws_insights.dashboard.ecr_repository_detail?input.ecr_repository_arn={{.properties.'ARN' | @uri}}"
   icon  = "text:ECR"
 }

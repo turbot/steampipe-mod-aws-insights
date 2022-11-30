@@ -1,5 +1,5 @@
 
-dashboard "aws_sns_topic_dashboard" {
+dashboard "sns_topic_dashboard" {
 
   title         = "AWS SNS Topic Dashboard"
   documentation = file("./dashboards/sns/docs/sns_topic_dashboard.md")
@@ -12,19 +12,19 @@ dashboard "aws_sns_topic_dashboard" {
 
     # Analysis
     card {
-      query = query.aws_sns_topic_count
+      query = query.sns_topic_count
       width = 2
     }
 
     # Assessments
     card {
-      query = query.aws_sns_topic_encrypted_count
+      query = query.sns_topic_encrypted_count
       width = 2
-      href  = dashboard.aws_sns_topic_encryption_report.url_path
+      href  = dashboard.sns_topic_encryption_report.url_path
     }
 
     card {
-      query = query.aws_sns_topic_by_subscription_count
+      query = query.sns_topic_by_subscription_count
       width = 2
     }
 
@@ -33,7 +33,7 @@ dashboard "aws_sns_topic_dashboard" {
       type  = "info"
       icon  = "currency-dollar"
       width = 2
-      query = query.aws_sns_topic_cost_mtd
+      query = query.sns_topic_cost_mtd
     }
 
   }
@@ -45,7 +45,7 @@ dashboard "aws_sns_topic_dashboard" {
 
     chart {
       title = "Encryption Status"
-      query = query.aws_sns_topic_by_encryption_status
+      query = query.sns_topic_by_encryption_status
       type  = "donut"
       width = 4
 
@@ -61,7 +61,7 @@ dashboard "aws_sns_topic_dashboard" {
 
     chart {
       title = "Subscriptions Status"
-      query = query.aws_sns_topic_by_subscription_status
+      query = query.sns_topic_by_subscription_status
       type  = "donut"
       width = 4
 
@@ -85,14 +85,14 @@ dashboard "aws_sns_topic_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      query = query.aws_sns_topic_monthly_forecast_table
+      query = query.sns_topic_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      query = query.aws_sns_topic_cost_per_month
+      query = query.sns_topic_cost_per_month
     }
 
   }
@@ -103,14 +103,14 @@ dashboard "aws_sns_topic_dashboard" {
 
     chart {
       title = "Topics by Account"
-      query = query.aws_sns_topic_by_account
+      query = query.sns_topic_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Topics by Region"
-      query = query.aws_sns_topic_by_region
+      query = query.sns_topic_by_region
       type  = "column"
       width = 4
     }
@@ -121,13 +121,13 @@ dashboard "aws_sns_topic_dashboard" {
 
 # Card Queries
 
-query "aws_sns_topic_count" {
+query "sns_topic_count" {
   sql = <<-EOQ
     select count(*) as "Topics" from aws_sns_topic;
   EOQ
 }
 
-query "aws_sns_topic_encrypted_count" {
+query "sns_topic_encrypted_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -140,7 +140,7 @@ query "aws_sns_topic_encrypted_count" {
   EOQ
 }
 
-query "aws_sns_topic_by_subscription_count" {
+query "sns_topic_by_subscription_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -153,7 +153,7 @@ query "aws_sns_topic_by_subscription_count" {
   EOQ
 }
 
-query "aws_sns_topic_cost_mtd" {
+query "sns_topic_cost_mtd" {
   sql = <<-EOQ
     select
       'Cost - MTD' as label,
@@ -168,7 +168,7 @@ query "aws_sns_topic_cost_mtd" {
 
 # Assessment Queries
 
-query "aws_sns_topic_by_encryption_status" {
+query "sns_topic_by_encryption_status" {
   sql = <<-EOQ
     select
       encryption_status,
@@ -189,7 +189,7 @@ query "aws_sns_topic_by_encryption_status" {
   EOQ
 }
 
-query "aws_sns_topic_by_subscription_status" {
+query "sns_topic_by_subscription_status" {
   sql = <<-EOQ
     select
       subscription_status,
@@ -210,7 +210,7 @@ query "aws_sns_topic_by_subscription_status" {
   EOQ
 }
 
-query "aws_sns_topic_monthly_forecast_table" {
+query "sns_topic_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
       select
@@ -253,7 +253,7 @@ query "aws_sns_topic_monthly_forecast_table" {
   EOQ
 }
 
-query "aws_sns_topic_cost_per_month" {
+query "sns_topic_cost_per_month" {
   sql = <<-EOQ
     select
        to_char(period_start, 'Mon-YY') as "Month",
@@ -271,7 +271,7 @@ query "aws_sns_topic_cost_per_month" {
 
 # Analysis Queries
 
-query "aws_sns_topic_by_account" {
+query "sns_topic_by_account" {
   sql = <<-EOQ
     select
       a.title as "account",
@@ -288,7 +288,7 @@ query "aws_sns_topic_by_account" {
   EOQ
 }
 
-query "aws_sns_topic_by_region" {
+query "sns_topic_by_region" {
   sql = <<-EOQ
     select
       region,

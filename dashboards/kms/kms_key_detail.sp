@@ -1,4 +1,4 @@
-dashboard "aws_kms_key_detail" {
+dashboard "kms_key_detail" {
 
   title         = "AWS KMS Key Detail"
   documentation = file("./dashboards/kms/docs/kms_key_detail.md")
@@ -10,7 +10,7 @@ dashboard "aws_kms_key_detail" {
 
   input "key_arn" {
     title = "Select a key:"
-    query = query.aws_kms_key_input
+    query = query.kms_key_input
     width = 4
   }
 
@@ -18,7 +18,7 @@ dashboard "aws_kms_key_detail" {
 
     card {
       width = 2
-      query = query.aws_kms_key_type
+      query = query.kms_key_type
       args = {
         arn = self.input.key_arn.value
       }
@@ -26,7 +26,7 @@ dashboard "aws_kms_key_detail" {
 
     card {
       width = 2
-      query = query.aws_kms_key_origin
+      query = query.kms_key_origin
       args = {
         arn = self.input.key_arn.value
       }
@@ -34,7 +34,7 @@ dashboard "aws_kms_key_detail" {
 
     card {
       width = 2
-      query = query.aws_kms_key_state
+      query = query.kms_key_state
       args = {
         arn = self.input.key_arn.value
       }
@@ -42,7 +42,7 @@ dashboard "aws_kms_key_detail" {
 
     card {
       width = 2
-      query = query.aws_kms_key_rotation_enabled
+      query = query.kms_key_rotation_enabled
       args = {
         arn = self.input.key_arn.value
       }
@@ -275,7 +275,7 @@ dashboard "aws_kms_key_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_kms_key_overview
+        query = query.kms_key_overview
         args = {
           arn = self.input.key_arn.value
         }
@@ -285,7 +285,7 @@ dashboard "aws_kms_key_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_kms_key_tags
+        query = query.kms_key_tags
         args = {
           arn = self.input.key_arn.value
         }
@@ -299,7 +299,7 @@ dashboard "aws_kms_key_detail" {
 
       table {
         title = "Key Age"
-        query = query.aws_kms_key_age
+        query = query.kms_key_age
         args = {
           arn = self.input.key_arn.value
         }
@@ -311,7 +311,7 @@ dashboard "aws_kms_key_detail" {
 
   table {
     title = "Policy"
-    query = query.aws_kms_key_policy
+    query = query.kms_key_policy
     args = {
       arn = self.input.key_arn.value
     }
@@ -319,7 +319,7 @@ dashboard "aws_kms_key_detail" {
 
   table {
     title = "Key Aliases"
-    query = query.aws_kms_key_aliases
+    query = query.kms_key_aliases
     args = {
       arn = self.input.key_arn.value
     }
@@ -327,7 +327,7 @@ dashboard "aws_kms_key_detail" {
 
 }
 
-query "aws_kms_key_input" {
+query "kms_key_input" {
   sql = <<-EOQ
     select
       coalesce(a.title, k.title) as label,
@@ -346,7 +346,7 @@ query "aws_kms_key_input" {
   EOQ
 }
 
-query "aws_kms_key_type" {
+query "kms_key_type" {
   sql = <<-EOQ
     select
       'Key Manager' as label,
@@ -360,7 +360,7 @@ query "aws_kms_key_type" {
   param "arn" {}
 }
 
-query "aws_kms_key_origin" {
+query "kms_key_origin" {
   sql = <<-EOQ
     select
       'Origin' as label,
@@ -374,7 +374,7 @@ query "aws_kms_key_origin" {
   param "arn" {}
 }
 
-query "aws_kms_key_state" {
+query "kms_key_state" {
   sql = <<-EOQ
     select
       'State' as label,
@@ -389,7 +389,7 @@ query "aws_kms_key_state" {
   param "arn" {}
 }
 
-query "aws_kms_key_rotation_enabled" {
+query "kms_key_rotation_enabled" {
   sql = <<-EOQ
     select
       'Key Rotation' as label,
@@ -406,7 +406,7 @@ query "aws_kms_key_rotation_enabled" {
   param "arn" {}
 }
 
-query "aws_kms_key_age" {
+query "kms_key_age" {
   sql = <<-EOQ
     select
       creation_date as "Creation Date",
@@ -421,7 +421,7 @@ query "aws_kms_key_age" {
   param "arn" {}
 }
 
-query "aws_kms_key_aliases" {
+query "kms_key_aliases" {
   sql = <<-EOQ
     select
       p ->> 'AliasArn' as "Alias Arn",
@@ -438,7 +438,7 @@ query "aws_kms_key_aliases" {
   param "arn" {}
 }
 
-query "aws_kms_key_policy" {
+query "kms_key_policy" {
   sql = <<-EOQ
     select
       p ->> 'Sid' as "Sid",
@@ -641,7 +641,7 @@ edge "kms_key_to_kms_alias_edge" {
   param "key_arns" {}
 }
 
-query "aws_kms_key_overview" {
+query "kms_key_overview" {
   sql = <<-EOQ
     select
       id as "ID",
@@ -658,7 +658,7 @@ query "aws_kms_key_overview" {
   param "arn" {}
 }
 
-query "aws_kms_key_tags" {
+query "kms_key_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",

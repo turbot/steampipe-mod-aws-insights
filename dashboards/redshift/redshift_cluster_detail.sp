@@ -1,4 +1,4 @@
-dashboard "aws_redshift_cluster_detail" {
+dashboard "redshift_cluster_detail" {
 
   title         = "AWS Redshift Cluster Detail"
   documentation = file("./dashboards/redshift/docs/redshift_cluster_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_redshift_cluster_detail" {
 
   input "cluster_arn" {
     title = "Select a Cluster:"
-    query = query.aws_redshift_cluster_input
+    query = query.redshift_cluster_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "aws_redshift_cluster_detail" {
 
     card {
       width = 2
-      query = query.aws_redshift_cluster_status
+      query = query.redshift_cluster_status
       args = {
         arn = self.input.cluster_arn.value
       }
@@ -25,7 +25,7 @@ dashboard "aws_redshift_cluster_detail" {
 
     card {
       width = 2
-      query = query.aws_redshift_cluster_version
+      query = query.redshift_cluster_version
       args = {
         arn = self.input.cluster_arn.value
       }
@@ -33,7 +33,7 @@ dashboard "aws_redshift_cluster_detail" {
 
     card {
       width = 2
-      query = query.aws_redshift_cluster_node_type
+      query = query.redshift_cluster_node_type
       args = {
         arn = self.input.cluster_arn.value
       }
@@ -41,7 +41,7 @@ dashboard "aws_redshift_cluster_detail" {
 
     card {
       width = 2
-      query = query.aws_redshift_cluster_number_of
+      query = query.redshift_cluster_number_of
       args = {
         arn = self.input.cluster_arn.value
       }
@@ -49,7 +49,7 @@ dashboard "aws_redshift_cluster_detail" {
 
     card {
       width = 2
-      query = query.aws_redshift_cluster_public
+      query = query.redshift_cluster_public
       args = {
         arn = self.input.cluster_arn.value
       }
@@ -57,7 +57,7 @@ dashboard "aws_redshift_cluster_detail" {
 
     card {
       width = 2
-      query = query.aws_redshift_cluster_encryption
+      query = query.redshift_cluster_encryption
       args = {
         arn = self.input.cluster_arn.value
       }
@@ -118,7 +118,7 @@ dashboard "aws_redshift_cluster_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_redshift_cluster_overview
+        query = query.redshift_cluster_overview
         args = {
           arn = self.input.cluster_arn.value
         }
@@ -127,7 +127,7 @@ dashboard "aws_redshift_cluster_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_redshift_cluster_tags
+        query = query.redshift_cluster_tags
         args = {
           arn = self.input.cluster_arn.value
         }
@@ -141,7 +141,7 @@ dashboard "aws_redshift_cluster_detail" {
 
       table {
         title = "Cluster Nodes"
-        query = query.aws_redshift_cluster_node_details
+        query = query.redshift_cluster_node_details
         args = {
           arn = self.input.cluster_arn.value
         }
@@ -149,7 +149,7 @@ dashboard "aws_redshift_cluster_detail" {
 
       table {
         title = "Cluster Parameter Groups"
-        query = query.aws_redshift_cluster_parameter_groups
+        query = query.redshift_cluster_parameter_groups
         args = {
           arn = self.input.cluster_arn.value
         }
@@ -160,7 +160,7 @@ dashboard "aws_redshift_cluster_detail" {
     table {
 
       title = "Logging"
-      query = query.aws_redshift_cluster_logging
+      query = query.redshift_cluster_logging
       args = {
         arn = self.input.cluster_arn.value
       }
@@ -168,7 +168,7 @@ dashboard "aws_redshift_cluster_detail" {
 
     table {
       title = "Scheduled Actions"
-      query = query.aws_redshift_cluster_scheduled_actions
+      query = query.redshift_cluster_scheduled_actions
       args = {
         arn = self.input.cluster_arn.value
       }
@@ -178,7 +178,7 @@ dashboard "aws_redshift_cluster_detail" {
 
 }
 
-query "aws_redshift_cluster_input" {
+query "redshift_cluster_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -194,7 +194,7 @@ query "aws_redshift_cluster_input" {
   EOQ
 }
 
-query "aws_redshift_cluster_status" {
+query "redshift_cluster_status" {
   sql = <<-EOQ
     select
       'Status' as label,
@@ -208,7 +208,7 @@ query "aws_redshift_cluster_status" {
   param "arn" {}
 }
 
-query "aws_redshift_cluster_version" {
+query "redshift_cluster_version" {
   sql = <<-EOQ
     select
       'Version' as label,
@@ -222,7 +222,7 @@ query "aws_redshift_cluster_version" {
   param "arn" {}
 }
 
-query "aws_redshift_cluster_node_type" {
+query "redshift_cluster_node_type" {
   sql = <<-EOQ
     select
       'Node Type' as label,
@@ -236,7 +236,7 @@ query "aws_redshift_cluster_node_type" {
   param "arn" {}
 }
 
-query "aws_redshift_cluster_number_of" {
+query "redshift_cluster_number_of" {
   sql = <<-EOQ
     select
       'Number Of Nodes' as label,
@@ -250,7 +250,7 @@ query "aws_redshift_cluster_number_of" {
   param "arn" {}
 }
 
-query "aws_redshift_cluster_encryption" {
+query "redshift_cluster_encryption" {
   sql = <<-EOQ
     select
       'Encryption' as label,
@@ -265,7 +265,7 @@ query "aws_redshift_cluster_encryption" {
   param "arn" {}
 }
 
-query "aws_redshift_cluster_public" {
+query "redshift_cluster_public" {
   sql = <<-EOQ
     select
       'Public Access' as label,
@@ -280,7 +280,7 @@ query "aws_redshift_cluster_public" {
   param "arn" {}
 }
 
-query "aws_redshift_cluster_node_details" {
+query "redshift_cluster_node_details" {
   sql = <<-EOQ
     select
       p ->> 'NodeRole' as "Node Role",
@@ -296,7 +296,7 @@ query "aws_redshift_cluster_node_details" {
   param "arn" {}
 }
 
-query "aws_redshift_cluster_parameter_groups" {
+query "redshift_cluster_parameter_groups" {
   sql = <<-EOQ
     select
       p -> 'ClusterParameterStatusList' as "Cluster Parameter Status List",
@@ -312,7 +312,7 @@ query "aws_redshift_cluster_parameter_groups" {
   param "arn" {}
 }
 
-query "aws_redshift_cluster_scheduled_actions" {
+query "redshift_cluster_scheduled_actions" {
   sql = <<-EOQ
     select
       p ->> 'EndTime' as "End Time",
@@ -334,7 +334,7 @@ query "aws_redshift_cluster_scheduled_actions" {
   param "arn" {}
 }
 
-query "aws_redshift_cluster_logging" {
+query "redshift_cluster_logging" {
   sql = <<-EOQ
     select
       logging_status  ->> 'BucketName' as "Bucket Name",
@@ -352,7 +352,7 @@ query "aws_redshift_cluster_logging" {
   param "arn" {}
 }
 
-query "aws_redshift_cluster_security_groups" {
+query "redshift_cluster_security_groups" {
   sql = <<-EOQ
     select
       s -> 'VpcSecurityGroupId' as "VPC Security Group ID",
@@ -367,7 +367,7 @@ query "aws_redshift_cluster_security_groups" {
   param "arn" {}
 }
 
-query "aws_redshift_cluster_overview" {
+query "redshift_cluster_overview" {
   sql = <<-EOQ
     select
       cluster_identifier as "Cluster Identifier",
@@ -388,7 +388,7 @@ query "aws_redshift_cluster_overview" {
   param "arn" {}
 }
 
-query "aws_redshift_cluster_tags" {
+query "redshift_cluster_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",

@@ -1,4 +1,4 @@
-dashboard "aws_ecs_task_definition_detail" {
+dashboard "ecs_task_definition_detail" {
 
   title         = "AWS ECS Task Definition Detail"
   documentation = file("./dashboards/ecs/docs/ecs_task_definition_detail.md")
@@ -9,14 +9,14 @@ dashboard "aws_ecs_task_definition_detail" {
 
   input "task_definition_arn" {
     title = "Select a task definition:"
-    query = query.aws_ecs_task_definition_input
+    query = query.ecs_task_definition_input
     width = 4
   }
 
   container {
 
     card {
-      query = query.aws_ecs_task_definition_network_mode
+      query = query.ecs_task_definition_network_mode
       width = 2
       args = {
         arn = self.input.task_definition_arn.value
@@ -24,7 +24,7 @@ dashboard "aws_ecs_task_definition_detail" {
     }
 
     card {
-      query = query.aws_ecs_task_definition_cpu_units
+      query = query.ecs_task_definition_cpu_units
       width = 2
       args = {
         arn = self.input.task_definition_arn.value
@@ -32,7 +32,7 @@ dashboard "aws_ecs_task_definition_detail" {
     }
 
     card {
-      query = query.aws_ecs_task_definition_memory
+      query = query.ecs_task_definition_memory
       width = 2
       args = {
         arn = self.input.task_definition_arn.value
@@ -40,7 +40,7 @@ dashboard "aws_ecs_task_definition_detail" {
     }
 
     card {
-      query = query.aws_ecs_task_definition_requires_compatibilities
+      query = query.ecs_task_definition_requires_compatibilities
       width = 2
       args = {
         arn = self.input.task_definition_arn.value
@@ -93,7 +93,7 @@ dashboard "aws_ecs_task_definition_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_ecs_task_definition_overview
+        query = query.ecs_task_definition_overview
         args = {
           arn = self.input.task_definition_arn.value
         }
@@ -103,7 +103,7 @@ dashboard "aws_ecs_task_definition_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_ecs_task_definition_tags
+        query = query.ecs_task_definition_tags
         args = {
           arn = self.input.task_definition_arn.value
         }
@@ -118,7 +118,7 @@ dashboard "aws_ecs_task_definition_detail" {
   }
 }
 
-query "aws_ecs_task_definition_input" {
+query "ecs_task_definition_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -135,7 +135,7 @@ query "aws_ecs_task_definition_input" {
     EOQ
 }
 
-query "aws_ecs_task_definition_network_mode" {
+query "ecs_task_definition_network_mode" {
   sql = <<-EOQ
     select
       network_mode as value,
@@ -149,7 +149,7 @@ query "aws_ecs_task_definition_network_mode" {
   param "arn" {}
 }
 
-query "aws_ecs_task_definition_cpu_units" {
+query "ecs_task_definition_cpu_units" {
   sql = <<-EOQ
     select
       cpu as value,
@@ -164,7 +164,7 @@ query "aws_ecs_task_definition_cpu_units" {
 }
 
 
-query "aws_ecs_task_definition_memory" {
+query "ecs_task_definition_memory" {
   sql = <<-EOQ
     select
       memory as value,
@@ -179,7 +179,7 @@ query "aws_ecs_task_definition_memory" {
 }
 
 
-query "aws_ecs_task_definition_requires_compatibilities" {
+query "ecs_task_definition_requires_compatibilities" {
   sql = <<-EOQ
     select
       jsonb_array_elements_text(requires_compatibilities) as value,
@@ -194,7 +194,7 @@ query "aws_ecs_task_definition_requires_compatibilities" {
 }
 
 
-query "aws_ecs_task_definition_overview" {
+query "ecs_task_definition_overview" {
   sql = <<-EOQ
     select
       title as "Title",
@@ -215,7 +215,7 @@ query "aws_ecs_task_definition_overview" {
   param "arn" {}
 }
 
-query "aws_ecs_task_definition_tags" {
+query "ecs_task_definition_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",

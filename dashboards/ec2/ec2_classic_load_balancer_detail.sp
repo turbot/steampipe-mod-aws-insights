@@ -1,4 +1,4 @@
-dashboard "aws_ec2_classic_load_balancer_detail" {
+dashboard "ec2_classic_load_balancer_detail" {
   title         = "AWS EC2 Classic Load Balancer Detail"
   documentation = file("./dashboards/ec2/docs/ec2_classic_load_balancer_detail.md")
 
@@ -8,7 +8,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
 
   input "clb" {
     title = "Select a Classic Load balancer:"
-    query = query.aws_clb_input
+    query = query.clb_input
     width = 4
   }
 
@@ -16,7 +16,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_clb_scheme
+      query = query.clb_scheme
       args = {
         arn = self.input.clb.value
       }
@@ -24,7 +24,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_clb_instances
+      query = query.clb_instances
       args = {
         arn = self.input.clb.value
       }
@@ -32,7 +32,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_clb_logging_enabled
+      query = query.clb_logging_enabled
       args = {
         arn = self.input.clb.value
       }
@@ -40,7 +40,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_clb_az_zone
+      query = query.clb_az_zone
       args = {
         arn = self.input.clb.value
       }
@@ -48,7 +48,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_clb_cross_zone_enabled
+      query = query.clb_cross_zone_enabled
       args = {
         arn = self.input.clb.value
       }
@@ -94,7 +94,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
       title = "Overview"
       type  = "line"
       width = 3
-      query = query.aws_ec2_clb_overview
+      query = query.ec2_clb_overview
       args = {
         arn = self.input.clb.value
       }
@@ -104,7 +104,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
     table {
       title = "Tags"
       width = 3
-      query = query.aws_ec2_clb_tags
+      query = query.ec2_clb_tags
       args = {
         arn = self.input.clb.value
       }
@@ -113,7 +113,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
 
 }
 
-query "aws_clb_input" {
+query "clb_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -129,7 +129,7 @@ query "aws_clb_input" {
   EOQ
 }
 
-query "aws_ec2_clb_overview" {
+query "ec2_clb_overview" {
   sql = <<-EOQ
     select
       title as "Title",
@@ -148,7 +148,7 @@ query "aws_ec2_clb_overview" {
   param "arn" {}
 }
 
-query "aws_ec2_clb_tags" {
+query "ec2_clb_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -165,7 +165,7 @@ query "aws_ec2_clb_tags" {
   param "arn" {}
 }
 
-query "aws_clb_logging_enabled" {
+query "clb_logging_enabled" {
   sql = <<-EOQ
     select
       'Logging' as label,
@@ -180,7 +180,7 @@ query "aws_clb_logging_enabled" {
   param "arn" {}
 }
 
-query "aws_clb_az_zone" {
+query "clb_az_zone" {
   sql = <<-EOQ
     select
       'Availibility Zones' as label,
@@ -196,7 +196,7 @@ query "aws_clb_az_zone" {
   param "arn" {}
 }
 
-query "aws_clb_cross_zone_enabled" {
+query "clb_cross_zone_enabled" {
   sql = <<-EOQ
     select
       'Cross Zone' as label,
@@ -212,7 +212,7 @@ query "aws_clb_cross_zone_enabled" {
   param "arn" {}
 }
 
-query "aws_clb_instances" {
+query "clb_instances" {
   sql = <<-EOQ
     select
       'Instances' as label,
@@ -228,7 +228,7 @@ query "aws_clb_instances" {
   param "arn" {}
 }
 
-query "aws_clb_scheme" {
+query "clb_scheme" {
   sql = <<-EOQ
     select
       'Scheme' as label,

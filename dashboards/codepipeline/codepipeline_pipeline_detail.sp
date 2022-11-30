@@ -1,4 +1,4 @@
-dashboard "aws_codepipeline_pipeline_detail" {
+dashboard "codepipeline_pipeline_detail" {
 
   title         = "AWS CodePipeline Pipeline Detail"
   documentation = file("./dashboards/codepipeline/docs/codepipeline_pipeline_detail.md")
@@ -9,14 +9,14 @@ dashboard "aws_codepipeline_pipeline_detail" {
 
   input "pipeline_arn" {
     title = "Select a pipeline:"
-    query = query.aws_codepipeline_pipeline_input
+    query = query.codepipeline_pipeline_input
     width = 4
   }
 
   container {
 
     card {
-      query = query.aws_codepipeline_pipeline_encryption
+      query = query.codepipeline_pipeline_encryption
       width = 2
       args = {
         arn = self.input.pipeline_arn.value
@@ -70,7 +70,7 @@ dashboard "aws_codepipeline_pipeline_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_codepipeline_pipeline_overview
+        query = query.codepipeline_pipeline_overview
         args = {
           arn = self.input.pipeline_arn.value
         }
@@ -80,7 +80,7 @@ dashboard "aws_codepipeline_pipeline_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_codepipeline_pipeline_tags
+        query = query.codepipeline_pipeline_tags
         args = {
           arn = self.input.pipeline_arn.value
         }
@@ -92,7 +92,7 @@ dashboard "aws_codepipeline_pipeline_detail" {
 
       table {
         title = "Stages"
-        query = query.aws_codepipeline_pipeline_stages
+        query = query.codepipeline_pipeline_stages
         args = {
           arn = self.input.pipeline_arn.value
         }
@@ -101,7 +101,7 @@ dashboard "aws_codepipeline_pipeline_detail" {
   }
 }
 
-query "aws_codepipeline_pipeline_input" {
+query "codepipeline_pipeline_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -117,7 +117,7 @@ query "aws_codepipeline_pipeline_input" {
   EOQ
 }
 
-query "aws_codepipeline_pipeline_encryption" {
+query "codepipeline_pipeline_encryption" {
   sql = <<-EOQ
     select
       'Encryption' as label,
@@ -599,7 +599,7 @@ edge "codepipeline_pipeline_from_codedeploy_app_edge" {
   param "arn" {}
 }
 
-query "aws_codepipeline_pipeline_overview" {
+query "codepipeline_pipeline_overview" {
   sql = <<-EOQ
     select
       title as "Title",
@@ -618,7 +618,7 @@ query "aws_codepipeline_pipeline_overview" {
   param "arn" {}
 }
 
-query "aws_codepipeline_pipeline_tags" {
+query "codepipeline_pipeline_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -635,7 +635,7 @@ query "aws_codepipeline_pipeline_tags" {
   param "arn" {}
 }
 
-query "aws_codepipeline_pipeline_stages" {
+query "codepipeline_pipeline_stages" {
   sql = <<-EOQ
     select
       s ->> 'Name' as "Name",

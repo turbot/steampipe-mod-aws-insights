@@ -1,4 +1,4 @@
-dashboard "aws_cloudwatch_log_group_detail" {
+dashboard "cloudwatch_log_group_detail" {
 
   title         = "AWS CloudWatch Log Group Detail"
   documentation = file("./dashboards/cloudwatch/docs/cloudwatch_log_group_detail.md")
@@ -9,14 +9,14 @@ dashboard "aws_cloudwatch_log_group_detail" {
 
   input "log_group_arn" {
     title = "Select a log group:"
-    query = query.aws_cloudwatch_log_group_input
+    query = query.cloudwatch_log_group_input
     width = 4
   }
 
   container {
 
     card {
-      query = query.aws_cloudwatch_log_group_retention_in_days
+      query = query.cloudwatch_log_group_retention_in_days
       width = 2
       args = {
         log_group_arn = self.input.log_group_arn.value
@@ -24,7 +24,7 @@ dashboard "aws_cloudwatch_log_group_detail" {
     }
 
     card {
-      query = query.aws_cloudwatch_log_group_stored_bytes
+      query = query.cloudwatch_log_group_stored_bytes
       width = 2
       args = {
         log_group_arn = self.input.log_group_arn.value
@@ -32,7 +32,7 @@ dashboard "aws_cloudwatch_log_group_detail" {
     }
 
     card {
-      query = query.aws_cloudwatch_log_group_metric_filter_count
+      query = query.cloudwatch_log_group_metric_filter_count
       width = 2
       args = {
         log_group_arn = self.input.log_group_arn.value
@@ -41,7 +41,7 @@ dashboard "aws_cloudwatch_log_group_detail" {
 
     card {
       width = 2
-      query = query.aws_cloudwatch_log_group_unencrypted
+      query = query.cloudwatch_log_group_unencrypted
       args = {
         log_group_arn = self.input.log_group_arn.value
       }
@@ -91,7 +91,7 @@ dashboard "aws_cloudwatch_log_group_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_cloudwatch_log_group_overview
+        query = query.cloudwatch_log_group_overview
         args = {
           log_group_arn = self.input.log_group_arn.value
         }
@@ -101,7 +101,7 @@ dashboard "aws_cloudwatch_log_group_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_cloudwatch_log_group_tags
+        query = query.cloudwatch_log_group_tags
         args = {
           log_group_arn = self.input.log_group_arn.value
         }
@@ -114,13 +114,13 @@ dashboard "aws_cloudwatch_log_group_detail" {
 
       table {
         title = "Encryption Details"
-        query = query.aws_cloudwatch_log_group_encryption_details
+        query = query.cloudwatch_log_group_encryption_details
         args = {
           log_group_arn = self.input.log_group_arn.value
         }
 
         column "KMS Key ID" {
-          href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.'KMS Key ID' | @uri}}"
+          href = "${dashboard.kms_key_detail.url_path}?input.key_arn={{.'KMS Key ID' | @uri}}"
         }
       }
 
@@ -130,7 +130,7 @@ dashboard "aws_cloudwatch_log_group_detail" {
 
 }
 
-query "aws_cloudwatch_log_group_input" {
+query "cloudwatch_log_group_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -147,7 +147,7 @@ query "aws_cloudwatch_log_group_input" {
   EOQ
 }
 
-query "aws_cloudwatch_log_group_retention_in_days" {
+query "cloudwatch_log_group_retention_in_days" {
   sql = <<-EOQ
     select
       retention_in_days as value,
@@ -161,7 +161,7 @@ query "aws_cloudwatch_log_group_retention_in_days" {
   param "log_group_arn" {}
 }
 
-query "aws_cloudwatch_log_group_stored_bytes" {
+query "cloudwatch_log_group_stored_bytes" {
   sql = <<-EOQ
     select
       stored_bytes as value,
@@ -175,7 +175,7 @@ query "aws_cloudwatch_log_group_stored_bytes" {
   param "log_group_arn" {}
 }
 
-query "aws_cloudwatch_log_group_metric_filter_count" {
+query "cloudwatch_log_group_metric_filter_count" {
   sql = <<-EOQ
     select
       metric_filter_count as value,
@@ -189,7 +189,7 @@ query "aws_cloudwatch_log_group_metric_filter_count" {
   param "log_group_arn" {}
 }
 
-query "aws_cloudwatch_log_group_unencrypted" {
+query "cloudwatch_log_group_unencrypted" {
   sql = <<-EOQ
     select
       'Encryption' as label,
@@ -204,7 +204,7 @@ query "aws_cloudwatch_log_group_unencrypted" {
   param "log_group_arn" {}
 }
 
-query "aws_cloudwatch_log_group_overview" {
+query "cloudwatch_log_group_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -221,7 +221,7 @@ query "aws_cloudwatch_log_group_overview" {
   param "log_group_arn" {}
 }
 
-query "aws_cloudwatch_log_group_tags" {
+query "cloudwatch_log_group_tags" {
   sql = <<-EOQ
     with jsondata as (
       select
@@ -242,7 +242,7 @@ query "aws_cloudwatch_log_group_tags" {
   param "log_group_arn" {}
 }
 
-query "aws_cloudwatch_log_group_encryption_details" {
+query "cloudwatch_log_group_encryption_details" {
   sql = <<-EOQ
     select
        case when kms_key_id is not null then 'Enabled' else 'Disabled' end as "Encryption",

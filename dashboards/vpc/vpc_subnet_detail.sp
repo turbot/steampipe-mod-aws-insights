@@ -1,4 +1,4 @@
-dashboard "aws_vpc_subnet_detail" {
+dashboard "vpc_subnet_detail" {
 
   title         = "AWS VPC Subnet Detail"
   documentation = file("./dashboards/vpc/docs/vpc_subnet_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_vpc_subnet_detail" {
 
   input "subnet_id" {
     title = "Select a subnet:"
-    query = query.aws_vpc_subnet_input
+    query = query.vpc_subnet_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "aws_vpc_subnet_detail" {
 
     card {
       width = 2
-      query = query.aws_vpc_subnet_num_ips
+      query = query.vpc_subnet_num_ips
       args = {
         subnet_id = self.input.subnet_id.value
       }
@@ -25,7 +25,7 @@ dashboard "aws_vpc_subnet_detail" {
 
     card {
       width = 2
-      query = query.aws_vpc_subnet_cidr_block
+      query = query.vpc_subnet_cidr_block
       args = {
         subnet_id = self.input.subnet_id.value
       }
@@ -33,7 +33,7 @@ dashboard "aws_vpc_subnet_detail" {
 
     card {
       width = 2
-      query = query.aws_vpc_subnet_map_public_ip_on_launch_disabled
+      query = query.vpc_subnet_map_public_ip_on_launch_disabled
       args = {
         subnet_id = self.input.subnet_id.value
       }
@@ -244,7 +244,7 @@ dashboard "aws_vpc_subnet_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_vpc_subnet_overview
+        query = query.vpc_subnet_overview
         args = {
           subnet_id = self.input.subnet_id.value
         }
@@ -253,7 +253,7 @@ dashboard "aws_vpc_subnet_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_vpc_subnet_tags
+        query = query.vpc_subnet_tags
         args = {
           subnet_id = self.input.subnet_id.value
         }
@@ -266,7 +266,7 @@ dashboard "aws_vpc_subnet_detail" {
 
       table {
         title = "Launched Resources"
-        query = query.aws_vpc_subnet_association
+        query = query.vpc_subnet_association
         args = {
           subnet_id = self.input.subnet_id.value
         }
@@ -286,7 +286,7 @@ dashboard "aws_vpc_subnet_detail" {
 
 }
 
-query "aws_vpc_subnet_input" {
+query "vpc_subnet_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -304,7 +304,7 @@ query "aws_vpc_subnet_input" {
 
 }
 
-query "aws_vpc_subnet_num_ips" {
+query "vpc_subnet_num_ips" {
   sql = <<-EOQ
     select
       available_ip_address_count as "IP Addresses"
@@ -317,7 +317,7 @@ query "aws_vpc_subnet_num_ips" {
   param "subnet_id" {}
 }
 
-query "aws_vpc_subnet_cidr_block" {
+query "vpc_subnet_cidr_block" {
   sql = <<-EOQ
     select
       cidr_block as "CIDR Block"
@@ -330,7 +330,7 @@ query "aws_vpc_subnet_cidr_block" {
   param "subnet_id" {}
 }
 
-query "aws_vpc_subnet_map_public_ip_on_launch_disabled" {
+query "vpc_subnet_map_public_ip_on_launch_disabled" {
   sql = <<-EOQ
     select
       'Map Public IP on Launch' as label,
@@ -345,7 +345,7 @@ query "aws_vpc_subnet_map_public_ip_on_launch_disabled" {
   param "subnet_id" {}
 }
 
-query "aws_vpc_subnet_overview" {
+query "vpc_subnet_overview" {
   sql = <<-EOQ
     select
       subnet_id as "Subnet ID",
@@ -366,7 +366,7 @@ query "aws_vpc_subnet_overview" {
   param "subnet_id" {}
 }
 
-query "aws_vpc_subnet_tags" {
+query "vpc_subnet_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -383,7 +383,7 @@ query "aws_vpc_subnet_tags" {
   param "subnet_id" {}
 }
 
-query "aws_vpc_subnet_association" {
+query "vpc_subnet_association" {
   sql = <<-EOQ
 
     -- EC2 instances
@@ -391,7 +391,7 @@ query "aws_vpc_subnet_association" {
       title as "Title",
       'aws_ec2_instance' as "Type",
       arn as "ARN",
-      '${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn=' || arn as link
+      '${dashboard.ec2_instance_detail.url_path}?input.instance_arn=' || arn as link
     from
       aws_ec2_instance
     where
@@ -403,7 +403,7 @@ query "aws_vpc_subnet_association" {
       title as "Title",
       'aws_lambda_function' as "Type",
       arn as "ARN",
-      '${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn=' || arn as link
+      '${dashboard.lambda_function_detail.url_path}?input.lambda_arn=' || arn as link
     from
       aws_lambda_function,
       jsonb_array_elements(vpc_subnet_ids) as s
@@ -428,7 +428,7 @@ query "aws_vpc_subnet_association" {
       title as "Title",
       'aws_rds_db_instance' as "Type",
       arn as "ARN",
-      '${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn=' || arn as link
+      '${dashboard.rds_db_instance_detail.url_path}?input.db_instance_arn=' || arn as link
     from
       aws_rds_db_instance,
       jsonb_array_elements(subnets) as s

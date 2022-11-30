@@ -1,4 +1,4 @@
-dashboard "aws_ecs_service_detail" {
+dashboard "ecs_service_detail" {
 
   title         = "AWS ECS Service Detail"
   documentation = file("./dashboards/ecs/docs/ecs_service_detail.md")
@@ -9,14 +9,14 @@ dashboard "aws_ecs_service_detail" {
 
   input "service_arn" {
     title = "Select a service:"
-    query = query.aws_ecs_service_input
+    query = query.ecs_service_input
     width = 4
   }
 
   container {
 
     card {
-      query = query.aws_ecs_service_status
+      query = query.ecs_service_status
       width = 2
       args = {
         arn = self.input.service_arn.value
@@ -24,7 +24,7 @@ dashboard "aws_ecs_service_detail" {
     }
 
     card {
-      query = query.aws_ecs_service_launch_type
+      query = query.ecs_service_launch_type
       width = 2
       args = {
         arn = self.input.service_arn.value
@@ -80,7 +80,7 @@ dashboard "aws_ecs_service_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_ecs_service_overview
+        query = query.ecs_service_overview
         args = {
           arn = self.input.service_arn.value
         }
@@ -90,7 +90,7 @@ dashboard "aws_ecs_service_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_ecs_service_tags
+        query = query.ecs_service_tags
         args = {
           arn = self.input.service_arn.value
         }
@@ -103,7 +103,7 @@ dashboard "aws_ecs_service_detail" {
 
       table {
         title = "Tasks"
-        query = query.aws_ecs_service_tasks
+        query = query.ecs_service_tasks
         args = {
           arn = self.input.service_arn.value
         }
@@ -114,7 +114,7 @@ dashboard "aws_ecs_service_detail" {
   }
 }
 
-query "aws_ecs_service_input" {
+query "ecs_service_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -131,7 +131,7 @@ query "aws_ecs_service_input" {
   EOQ
 }
 
-query "aws_ecs_service_status" {
+query "ecs_service_status" {
   sql = <<-EOQ
     select
       initcap(status) as value,
@@ -145,7 +145,7 @@ query "aws_ecs_service_status" {
   param "arn" {}
 }
 
-query "aws_ecs_service_launch_type" {
+query "ecs_service_launch_type" {
   sql = <<-EOQ
     select
       launch_type as value,
@@ -159,7 +159,7 @@ query "aws_ecs_service_launch_type" {
   param "arn" {}
 }
 
-query "aws_ecs_service_overview" {
+query "ecs_service_overview" {
   sql = <<-EOQ
     select
       service_name as "Name",
@@ -179,7 +179,7 @@ query "aws_ecs_service_overview" {
   param "arn" {}
 }
 
-query "aws_ecs_service_tasks" {
+query "ecs_service_tasks" {
   sql = <<-EOQ
     select
       desired_count as "Desired Count",
@@ -194,7 +194,7 @@ query "aws_ecs_service_tasks" {
   param "arn" {}
 }
 
-query "aws_ecs_service_tags" {
+query "ecs_service_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",

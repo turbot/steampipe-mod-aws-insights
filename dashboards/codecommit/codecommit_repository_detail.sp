@@ -1,4 +1,4 @@
-dashboard "aws_codecommit_repository_detail" {
+dashboard "codecommit_repository_detail" {
 
   title         = "AWS CodeCommit Repository Detail"
   documentation = file("./dashboards/codecommit/docs/codecommit_repository_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_codecommit_repository_detail" {
 
   input "codecommit_repository_arn" {
     title = "Select a repository:"
-    query = query.aws_codecommit_repository_input
+    query = query.codecommit_repository_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "aws_codecommit_repository_detail" {
 
     card {
       width = 2
-      query = query.aws_codecommit_repository_default_branch
+      query = query.codecommit_repository_default_branch
       args = {
         arn = self.input.codecommit_repository_arn.value
       }
@@ -56,7 +56,7 @@ dashboard "aws_codecommit_repository_detail" {
       title = "Overview"
       type  = "line"
       width = 6
-      query = query.aws_codecommit_repository_overview
+      query = query.codecommit_repository_overview
       args = {
         arn = self.input.codecommit_repository_arn.value
       }
@@ -65,7 +65,7 @@ dashboard "aws_codecommit_repository_detail" {
     table {
       title = "Tags"
       width = 6
-      query = query.aws_codecommit_repository_tags
+      query = query.codecommit_repository_tags
       args = {
         arn = self.input.codecommit_repository_arn.value
       }
@@ -73,7 +73,7 @@ dashboard "aws_codecommit_repository_detail" {
   }
 }
 
-query "aws_codecommit_repository_default_branch" {
+query "codecommit_repository_default_branch" {
   sql = <<-EOQ
     select
       'Default Branch' as "label",
@@ -87,7 +87,7 @@ query "aws_codecommit_repository_default_branch" {
   param "arn" {}
 }
 
-query "aws_codecommit_repository_overview" {
+query "codecommit_repository_overview" {
   sql = <<-EOQ
     select
       repository_name as "Repository Name",
@@ -107,7 +107,7 @@ query "aws_codecommit_repository_overview" {
   param "arn" {}
 }
 
-query "aws_codecommit_repository_tags" {
+query "codecommit_repository_tags" {
   sql = <<-EOQ
     select
       tag.Key as "Key",
@@ -124,7 +124,7 @@ query "aws_codecommit_repository_tags" {
   param "arn" {}
 }
 
-query "aws_codecommit_repository_input" {
+query "codecommit_repository_input" {
   sql = <<-EOQ
     select
       title as label,

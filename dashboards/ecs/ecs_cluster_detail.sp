@@ -1,4 +1,4 @@
-dashboard "aws_ecs_cluster_detail" {
+dashboard "ecs_cluster_detail" {
 
   title         = "AWS ECS Cluster Detail"
   documentation = file("./dashboards/ecs/docs/ecs_cluster_detail.md")
@@ -9,14 +9,14 @@ dashboard "aws_ecs_cluster_detail" {
 
   input "ecs_cluster_arn" {
     title = "Select a cluster:"
-    query = query.aws_ecs_cluster_input
+    query = query.ecs_cluster_input
     width = 4
   }
 
   container {
 
     card {
-      query = query.aws_ecs_cluster_status
+      query = query.ecs_cluster_status
       width = 2
       args = {
         arn = self.input.ecs_cluster_arn.value
@@ -24,7 +24,7 @@ dashboard "aws_ecs_cluster_detail" {
     }
 
     card {
-      query = query.aws_ecs_cluster_registered_container_instances_count
+      query = query.ecs_cluster_registered_container_instances_count
       width = 2
       args = {
         arn = self.input.ecs_cluster_arn.value
@@ -32,7 +32,7 @@ dashboard "aws_ecs_cluster_detail" {
     }
 
     card {
-      query = query.aws_ecs_cluster_active_services_count
+      query = query.ecs_cluster_active_services_count
       width = 2
       args = {
         arn = self.input.ecs_cluster_arn.value
@@ -40,7 +40,7 @@ dashboard "aws_ecs_cluster_detail" {
     }
 
     card {
-      query = query.aws_ecs_cluster_running_tasks_count
+      query = query.ecs_cluster_running_tasks_count
       width = 2
       args = {
         arn = self.input.ecs_cluster_arn.value
@@ -48,7 +48,7 @@ dashboard "aws_ecs_cluster_detail" {
     }
 
     card {
-      query = query.aws_ecs_cluster_pending_tasks_count
+      query = query.ecs_cluster_pending_tasks_count
       width = 2
       args = {
         arn = self.input.ecs_cluster_arn.value
@@ -56,7 +56,7 @@ dashboard "aws_ecs_cluster_detail" {
     }
 
     card {
-      query = query.aws_ecs_cluster_container_insights_enabled
+      query = query.ecs_cluster_container_insights_enabled
       width = 2
       args = {
         arn = self.input.ecs_cluster_arn.value
@@ -115,7 +115,7 @@ dashboard "aws_ecs_cluster_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_ecs_cluster_overview
+        query = query.ecs_cluster_overview
         args = {
           arn = self.input.ecs_cluster_arn.value
         }
@@ -125,7 +125,7 @@ dashboard "aws_ecs_cluster_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_ecs_cluster_tags
+        query = query.ecs_cluster_tags
         args = {
           arn = self.input.ecs_cluster_arn.value
         }
@@ -138,7 +138,7 @@ dashboard "aws_ecs_cluster_detail" {
 
       table {
         title = "Registered Container Instances"
-        query = query.aws_ecs_cluster_container_instances
+        query = query.ecs_cluster_container_instances
         args = {
           arn = self.input.ecs_cluster_arn.value
         }
@@ -148,14 +148,14 @@ dashboard "aws_ecs_cluster_detail" {
         }
 
         column "EC2 Instance ID" {
-          href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.'Instance ARN' | @uri}}"
+          href = "${dashboard.ec2_instance_detail.url_path}?input.instance_arn={{.'Instance ARN' | @uri}}"
         }
 
       }
 
       table {
         title = "Statistics"
-        query = query.aws_ecs_cluster_statistics
+        query = query.ecs_cluster_statistics
         args = {
           arn = self.input.ecs_cluster_arn.value
         }
@@ -168,7 +168,7 @@ dashboard "aws_ecs_cluster_detail" {
   }
 }
 
-query "aws_ecs_cluster_input" {
+query "ecs_cluster_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -185,7 +185,7 @@ query "aws_ecs_cluster_input" {
   EOQ
 }
 
-query "aws_ecs_cluster_status" {
+query "ecs_cluster_status" {
   sql = <<-EOQ
     select
       initcap(status) as value,
@@ -199,7 +199,7 @@ query "aws_ecs_cluster_status" {
   param "arn" {}
 }
 
-query "aws_ecs_cluster_registered_container_instances_count" {
+query "ecs_cluster_registered_container_instances_count" {
   sql = <<-EOQ
     select
       registered_container_instances_count as value,
@@ -213,7 +213,7 @@ query "aws_ecs_cluster_registered_container_instances_count" {
   param "arn" {}
 }
 
-query "aws_ecs_cluster_pending_tasks_count" {
+query "ecs_cluster_pending_tasks_count" {
   sql = <<-EOQ
     select
       pending_tasks_count as value,
@@ -227,7 +227,7 @@ query "aws_ecs_cluster_pending_tasks_count" {
   param "arn" {}
 }
 
-query "aws_ecs_cluster_running_tasks_count" {
+query "ecs_cluster_running_tasks_count" {
   sql = <<-EOQ
     select
       running_tasks_count as value,
@@ -241,7 +241,7 @@ query "aws_ecs_cluster_running_tasks_count" {
   param "arn" {}
 }
 
-query "aws_ecs_cluster_active_services_count" {
+query "ecs_cluster_active_services_count" {
   sql = <<-EOQ
     select
       active_services_count as value,
@@ -255,7 +255,7 @@ query "aws_ecs_cluster_active_services_count" {
   param "arn" {}
 }
 
-query "aws_ecs_cluster_container_insights_enabled" {
+query "ecs_cluster_container_insights_enabled" {
   sql = <<-EOQ
     select
       'Container Insights' as label,
@@ -271,7 +271,7 @@ query "aws_ecs_cluster_container_insights_enabled" {
   param "arn" {}
 }
 
-query "aws_ecs_cluster_overview" {
+query "ecs_cluster_overview" {
   sql = <<-EOQ
     select
       cluster_name as "Name",
@@ -287,7 +287,7 @@ query "aws_ecs_cluster_overview" {
   param "arn" {}
 }
 
-query "aws_ecs_cluster_tags" {
+query "ecs_cluster_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -304,7 +304,7 @@ query "aws_ecs_cluster_tags" {
   param "arn" {}
 }
 
-query "aws_ecs_cluster_statistics" {
+query "ecs_cluster_statistics" {
   sql = <<-EOQ
     select
       s ->> 'Name' as "Name",
@@ -321,7 +321,7 @@ query "aws_ecs_cluster_statistics" {
   param "arn" {}
 }
 
-query "aws_ecs_cluster_container_instances" {
+query "ecs_cluster_container_instances" {
   sql = <<-EOQ
     select
       c.ec2_instance_id as "EC2 Instance ID",

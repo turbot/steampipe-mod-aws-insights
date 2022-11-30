@@ -1,4 +1,4 @@
-dashboard "aws_codebuild_project_detail" {
+dashboard "codebuild_project_detail" {
 
   title         = "AWS CodeBuild Project Detail"
   documentation = file("./dashboards/codebuild/docs/codebuild_project_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_codebuild_project_detail" {
 
   input "codebuild_project_arn" {
     title = "Select a project:"
-    query = query.aws_codebuild_project_input
+    query = query.codebuild_project_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "aws_codebuild_project_detail" {
 
     card {
       width = 2
-      query = query.aws_codebuild_project_encrypted
+      query = query.codebuild_project_encrypted
       args = {
         arn = self.input.codebuild_project_arn.value
       }
@@ -25,7 +25,7 @@ dashboard "aws_codebuild_project_detail" {
 
     card {
       width = 2
-      query = query.aws_codebuild_project_logging_enabled
+      query = query.codebuild_project_logging_enabled
       args = {
         arn = self.input.codebuild_project_arn.value
       }
@@ -33,7 +33,7 @@ dashboard "aws_codebuild_project_detail" {
 
     card {
       width = 2
-      query = query.aws_codebuild_project_privileged_mode
+      query = query.codebuild_project_privileged_mode
       args = {
         arn = self.input.codebuild_project_arn.value
       }
@@ -89,7 +89,7 @@ dashboard "aws_codebuild_project_detail" {
       title = "Overview"
       type  = "line"
       width = 6
-      query = query.aws_codebuild_project_overview
+      query = query.codebuild_project_overview
       args = {
         arn = self.input.codebuild_project_arn.value
       }
@@ -98,7 +98,7 @@ dashboard "aws_codebuild_project_detail" {
     table {
       title = "Tags"
       width = 6
-      query = query.aws_codebuild_project_tags
+      query = query.codebuild_project_tags
       args = {
         arn = self.input.codebuild_project_arn.value
       }
@@ -110,7 +110,7 @@ dashboard "aws_codebuild_project_detail" {
 
     table {
       title = "Sources"
-      query = query.aws_codebuild_project_sources
+      query = query.codebuild_project_sources
       args = {
         arn = self.input.codebuild_project_arn.value
       }
@@ -120,7 +120,7 @@ dashboard "aws_codebuild_project_detail" {
 
 }
 
-query "aws_codebuild_project_sources" {
+query "codebuild_project_sources" {
   sql = <<-EOQ
     with sources as (
       select
@@ -150,7 +150,7 @@ query "aws_codebuild_project_sources" {
   param "arn" {}
 }
 
-query "aws_codebuild_project_encrypted" {
+query "codebuild_project_encrypted" {
   sql = <<-EOQ
     select
       'Encryption' as label,
@@ -165,7 +165,7 @@ query "aws_codebuild_project_encrypted" {
   param "arn" {}
 }
 
-query "aws_codebuild_project_logging_enabled" {
+query "codebuild_project_logging_enabled" {
   sql = <<-EOQ
     with enabled as (
       select
@@ -186,7 +186,7 @@ query "aws_codebuild_project_logging_enabled" {
   param "arn" {}
 }
 
-query "aws_codebuild_project_privileged_mode" {
+query "codebuild_project_privileged_mode" {
   sql = <<-EOQ
     select
       'Privileged Mode' as label,
@@ -201,7 +201,7 @@ query "aws_codebuild_project_privileged_mode" {
   param "arn" {}
 }
 
-query "aws_codebuild_project_overview" {
+query "codebuild_project_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -220,7 +220,7 @@ query "aws_codebuild_project_overview" {
   param "arn" {}
 }
 
-query "aws_codebuild_project_tags" {
+query "codebuild_project_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -237,7 +237,7 @@ query "aws_codebuild_project_tags" {
   param "arn" {}
 }
 
-query "aws_codebuild_project_input" {
+query "codebuild_project_input" {
   sql = <<-EOQ
     select
       title as label,

@@ -1,4 +1,4 @@
-dashboard "aws_cloudfront_distribution_detail" {
+dashboard "cloudfront_distribution_detail" {
   title         = "AWS CloudFront Distribution Detail"
   documentation = file("./dashboards/cloudfront/docs/cloudfront_distribution_detail.md")
 
@@ -8,14 +8,14 @@ dashboard "aws_cloudfront_distribution_detail" {
 
   input "distribution_arn" {
     title = "Select a distribution:"
-    query = query.aws_cloudfront_distribution_input
+    query = query.cloudfront_distribution_input
     width = 4
   }
 
   container {
 
     card {
-      query = query.aws_cloudfront_distribution_status
+      query = query.cloudfront_distribution_status
       width = 2
       args = {
         arn = self.input.distribution_arn.value
@@ -23,7 +23,7 @@ dashboard "aws_cloudfront_distribution_detail" {
     }
 
     card {
-      query = query.aws_cloudfront_distribution_price_class
+      query = query.cloudfront_distribution_price_class
       width = 2
       args = {
         arn = self.input.distribution_arn.value
@@ -31,7 +31,7 @@ dashboard "aws_cloudfront_distribution_detail" {
     }
 
     card {
-      query = query.aws_cloudfront_distribution_logging
+      query = query.cloudfront_distribution_logging
       width = 2
       args = {
         arn = self.input.distribution_arn.value
@@ -39,7 +39,7 @@ dashboard "aws_cloudfront_distribution_detail" {
     }
 
     card {
-      query = query.aws_cloudfront_distribution_field_level_encryption
+      query = query.cloudfront_distribution_field_level_encryption
       width = 2
       args = {
         arn = self.input.distribution_arn.value
@@ -47,7 +47,7 @@ dashboard "aws_cloudfront_distribution_detail" {
     }
 
     card {
-      query = query.aws_cloudfront_distribution_sni
+      query = query.cloudfront_distribution_sni
       width = 2
       args = {
         arn = self.input.distribution_arn.value
@@ -201,7 +201,7 @@ dashboard "aws_cloudfront_distribution_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_cloudfront_distribution_overview
+        query = query.cloudfront_distribution_overview
         args = {
           arn = self.input.distribution_arn.value
         }
@@ -211,7 +211,7 @@ dashboard "aws_cloudfront_distribution_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_cloudfront_distribution_tags
+        query = query.cloudfront_distribution_tags
         args = {
           arn = self.input.distribution_arn.value
         }
@@ -223,7 +223,7 @@ dashboard "aws_cloudfront_distribution_detail" {
 
       table {
         title = "Restrictions"
-        query = query.aws_cloudfront_distribution_restrictions
+        query = query.cloudfront_distribution_restrictions
         args = {
           arn = self.input.distribution_arn.value
         }
@@ -232,7 +232,7 @@ dashboard "aws_cloudfront_distribution_detail" {
   }
 }
 
-query "aws_cloudfront_distribution_input" {
+query "cloudfront_distribution_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -247,7 +247,7 @@ query "aws_cloudfront_distribution_input" {
   EOQ
 }
 
-query "aws_cloudfront_distribution_status" {
+query "cloudfront_distribution_status" {
   sql = <<-EOQ
     select
       'Status' as label,
@@ -261,7 +261,7 @@ query "aws_cloudfront_distribution_status" {
   param "arn" {}
 }
 
-query "aws_cloudfront_distribution_price_class" {
+query "cloudfront_distribution_price_class" {
   sql = <<-EOQ
     select
       'Price Class' as label,
@@ -275,7 +275,7 @@ query "aws_cloudfront_distribution_price_class" {
   param "arn" {}
 }
 
-query "aws_cloudfront_distribution_logging" {
+query "cloudfront_distribution_logging" {
   sql = <<-EOQ
     select
       'Logging' as label,
@@ -290,7 +290,7 @@ query "aws_cloudfront_distribution_logging" {
   param "arn" {}
 }
 
-query "aws_cloudfront_distribution_field_level_encryption" {
+query "cloudfront_distribution_field_level_encryption" {
   sql = <<-EOQ
     select
       'Field Level Encryption' as label,
@@ -305,7 +305,7 @@ query "aws_cloudfront_distribution_field_level_encryption" {
   param "arn" {}
 }
 
-query "aws_cloudfront_distribution_sni" {
+query "cloudfront_distribution_sni" {
   sql = <<-EOQ
     select
       'SNI' as label,
@@ -396,7 +396,7 @@ edge "cloudfront_distribution_to_wafv2_web_acl" {
   param "wafv2_acl_arns" {}
 }
 
-query "aws_cloudfront_distribution_overview" {
+query "cloudfront_distribution_overview" {
   sql = <<-EOQ
     select
       domain_name as "Domain Name",
@@ -416,7 +416,7 @@ query "aws_cloudfront_distribution_overview" {
   param "arn" {}
 }
 
-query "aws_cloudfront_distribution_tags" {
+query "cloudfront_distribution_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -433,7 +433,7 @@ query "aws_cloudfront_distribution_tags" {
   param "arn" {}
 }
 
-query "aws_cloudfront_distribution_restrictions" {
+query "cloudfront_distribution_restrictions" {
   sql = <<-EOQ
     select
       restrictions -> 'GeoRestriction' -> 'Items' as "Geo Restriction Items",

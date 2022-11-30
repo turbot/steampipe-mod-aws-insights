@@ -1,4 +1,4 @@
-dashboard "aws_ebs_volume_detail" {
+dashboard "ebs_volume_detail" {
 
   title         = "AWS EBS Volume Detail"
   documentation = file("./dashboards/ebs/docs/ebs_volume_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_ebs_volume_detail" {
 
   input "volume_arn" {
     title = "Select a volume:"
-    query = query.aws_ebs_volume_input
+    query = query.ebs_volume_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "aws_ebs_volume_detail" {
 
     card {
       width = 2
-      query = query.aws_ebs_volume_storage
+      query = query.ebs_volume_storage
       args = {
         arn = self.input.volume_arn.value
       }
@@ -25,7 +25,7 @@ dashboard "aws_ebs_volume_detail" {
 
     card {
       width = 2
-      query = query.aws_ebs_volume_iops
+      query = query.ebs_volume_iops
       args = {
         arn = self.input.volume_arn.value
       }
@@ -33,7 +33,7 @@ dashboard "aws_ebs_volume_detail" {
 
     card {
       width = 2
-      query = query.aws_ebs_volume_type
+      query = query.ebs_volume_type
       args = {
         arn = self.input.volume_arn.value
       }
@@ -41,7 +41,7 @@ dashboard "aws_ebs_volume_detail" {
 
     card {
       width = 2
-      query = query.aws_ebs_volume_attached_instances_count
+      query = query.ebs_volume_attached_instances_count
       args = {
         arn = self.input.volume_arn.value
       }
@@ -49,7 +49,7 @@ dashboard "aws_ebs_volume_detail" {
 
     card {
       width = 2
-      query = query.aws_ebs_volume_encryption
+      query = query.ebs_volume_encryption
       args = {
         arn = self.input.volume_arn.value
       }
@@ -96,7 +96,7 @@ dashboard "aws_ebs_volume_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_ebs_volume_overview
+        query = query.ebs_volume_overview
         args = {
           arn = self.input.volume_arn.value
         }
@@ -105,7 +105,7 @@ dashboard "aws_ebs_volume_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_ebs_volume_tags
+        query = query.ebs_volume_tags
         args = {
           arn = self.input.volume_arn.value
         }
@@ -118,7 +118,7 @@ dashboard "aws_ebs_volume_detail" {
 
       table {
         title = "Attached To"
-        query = query.aws_ebs_volume_attached_instances
+        query = query.ebs_volume_attached_instances
         args = {
           arn = self.input.volume_arn.value
         }
@@ -128,16 +128,16 @@ dashboard "aws_ebs_volume_detail" {
         }
 
         column "Instance ID" {
-          href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.'Instance ARN' | @uri}}"
+          href = "${dashboard.ec2_instance_detail.url_path}?input.instance_arn={{.'Instance ARN' | @uri}}"
         }
       }
 
       table {
         title = "Encryption Details"
         column "KMS Key ID" {
-          href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.'KMS Key ID' | @uri}}"
+          href = "${dashboard.kms_key_detail.url_path}?input.key_arn={{.'KMS Key ID' | @uri}}"
         }
-        query = query.aws_ebs_volume_encryption_status
+        query = query.ebs_volume_encryption_status
         args = {
           arn = self.input.volume_arn.value
         }
@@ -199,7 +199,7 @@ dashboard "aws_ebs_volume_detail" {
 
 }
 
-query "aws_ebs_volume_input" {
+query "ebs_volume_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -442,7 +442,7 @@ edge "ebs_volume_ebs_snapshots_to_ec2_ami_edge" {
   param "arn" {}
 }
 
-query "aws_ebs_volume_storage" {
+query "ebs_volume_storage" {
   sql = <<-EOQ
     select
       'Storage (GB)' as label,
@@ -456,7 +456,7 @@ query "aws_ebs_volume_storage" {
   param "arn" {}
 }
 
-query "aws_ebs_volume_iops" {
+query "ebs_volume_iops" {
   sql = <<-EOQ
     select
       'IOPS' as label,
@@ -470,7 +470,7 @@ query "aws_ebs_volume_iops" {
   param "arn" {}
 }
 
-query "aws_ebs_volume_type" {
+query "ebs_volume_type" {
   sql = <<-EOQ
     select
       'Type' as label,
@@ -484,7 +484,7 @@ query "aws_ebs_volume_type" {
   param "arn" {}
 }
 
-query "aws_ebs_volume_state" {
+query "ebs_volume_state" {
   sql = <<-EOQ
     select
       'State' as label,
@@ -498,7 +498,7 @@ query "aws_ebs_volume_state" {
   param "arn" {}
 }
 
-query "aws_ebs_volume_attached_instances_count" {
+query "ebs_volume_attached_instances_count" {
   sql = <<-EOQ
     select
       'Attached Instances' as label,
@@ -519,7 +519,7 @@ query "aws_ebs_volume_attached_instances_count" {
   param "arn" {}
 }
 
-query "aws_ebs_volume_encryption" {
+query "ebs_volume_encryption" {
   sql = <<-EOQ
     select
       'Encryption' as label,
@@ -534,7 +534,7 @@ query "aws_ebs_volume_encryption" {
   param "arn" {}
 }
 
-query "aws_ebs_volume_attached_instances" {
+query "ebs_volume_attached_instances" {
   sql = <<-EOQ
     select
       i.instance_id as "Instance ID",
@@ -557,7 +557,7 @@ query "aws_ebs_volume_attached_instances" {
   param "arn" {}
 }
 
-query "aws_ebs_volume_encryption_status" {
+query "ebs_volume_encryption_status" {
   sql = <<-EOQ
     select
       case when encrypted then 'Enabled' else 'Disabled' end as "Encryption",
@@ -571,7 +571,7 @@ query "aws_ebs_volume_encryption_status" {
   param "arn" {}
 }
 
-query "aws_ebs_volume_overview" {
+query "ebs_volume_overview" {
   sql = <<-EOQ
     select
       volume_id as "Volume ID",
@@ -591,7 +591,7 @@ query "aws_ebs_volume_overview" {
   param "arn" {}
 }
 
-query "aws_ebs_volume_tags" {
+query "ebs_volume_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",

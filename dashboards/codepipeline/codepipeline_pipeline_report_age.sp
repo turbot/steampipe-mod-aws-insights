@@ -1,4 +1,4 @@
-dashboard "aws_codepipeline_pipeline_age_report" {
+dashboard "codepipeline_pipeline_age_report" {
 
   title         = "AWS CodePipeline Pipeline Age Report"
   documentation = file("./dashboards/codepipeline/docs/codepipeline_pipeline_report_age.md")
@@ -12,38 +12,38 @@ dashboard "aws_codepipeline_pipeline_age_report" {
   container {
 
     card {
-      query   = query.aws_codepipeline_pipeline_count
+      query   = query.codepipeline_pipeline_count
       width = 2
     }
 
     card {
       type  = "info"
       width = 2
-      query   = query.aws_codepipeline_pipeline_24_hours_count
+      query   = query.codepipeline_pipeline_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      query   = query.aws_codepipeline_pipeline_30_days_count
+      query   = query.codepipeline_pipeline_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query   = query.aws_codepipeline_pipeline_30_90_days_count
+      query   = query.codepipeline_pipeline_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query   = query.aws_codepipeline_pipeline_90_365_days_count
+      query   = query.codepipeline_pipeline_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query   = query.aws_codepipeline_pipeline_1_year_count
+      query   = query.codepipeline_pipeline_1_year_count
     }
 
   }
@@ -58,15 +58,15 @@ dashboard "aws_codepipeline_pipeline_age_report" {
     }
 
     column "Name" {
-      href = "${dashboard.aws_codepipeline_pipeline_detail.url_path}?input.pipeline_arn={{.ARN | @uri}}"
+      href = "${dashboard.codepipeline_pipeline_detail.url_path}?input.pipeline_arn={{.ARN | @uri}}"
     }
 
-    query = query.aws_codepipeline_pipeline_age_table
+    query = query.codepipeline_pipeline_age_table
   }
 
 }
 
-query "aws_codepipeline_pipeline_24_hours_count" {
+query "codepipeline_pipeline_24_hours_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -78,7 +78,7 @@ query "aws_codepipeline_pipeline_24_hours_count" {
   EOQ
 }
 
-query "aws_codepipeline_pipeline_30_days_count" {
+query "codepipeline_pipeline_30_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -90,7 +90,7 @@ query "aws_codepipeline_pipeline_30_days_count" {
   EOQ
 }
 
-query "aws_codepipeline_pipeline_30_90_days_count" {
+query "codepipeline_pipeline_30_90_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -102,7 +102,7 @@ query "aws_codepipeline_pipeline_30_90_days_count" {
   EOQ
 }
 
-query "aws_codepipeline_pipeline_90_365_days_count" {
+query "codepipeline_pipeline_90_365_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -114,7 +114,7 @@ query "aws_codepipeline_pipeline_90_365_days_count" {
   EOQ
 }
 
-query "aws_codepipeline_pipeline_1_year_count" {
+query "codepipeline_pipeline_1_year_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -126,7 +126,7 @@ query "aws_codepipeline_pipeline_1_year_count" {
   EOQ
 }
 
-query "aws_codepipeline_pipeline_age_table" {
+query "codepipeline_pipeline_age_table" {
   sql = <<-EOQ
     select
       c.name as "Name",

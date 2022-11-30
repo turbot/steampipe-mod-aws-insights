@@ -1,4 +1,4 @@
-dashboard "aws_sqs_queue_detail" {
+dashboard "sqs_queue_detail" {
 
   title         = "AWS SQS Queue Detail"
   documentation = file("./dashboards/sqs/docs/sqs_queue_detail.md")
@@ -10,7 +10,7 @@ dashboard "aws_sqs_queue_detail" {
 
   input "queue_arn" {
     title = "Select a Queue:"
-    query = query.aws_sqs_queue_input
+    query = query.sqs_queue_input
     width = 4
   }
 
@@ -18,7 +18,7 @@ dashboard "aws_sqs_queue_detail" {
 
     card {
       width = 2
-      query = query.aws_sqs_queue_encryption
+      query = query.sqs_queue_encryption
       args = {
         queue_arn = self.input.queue_arn.value
       }
@@ -26,7 +26,7 @@ dashboard "aws_sqs_queue_detail" {
 
     card {
       width = 2
-      query = query.aws_sqs_queue_content_based_deduplication
+      query = query.sqs_queue_content_based_deduplication
       args = {
         queue_arn = self.input.queue_arn.value
       }
@@ -34,7 +34,7 @@ dashboard "aws_sqs_queue_detail" {
 
     card {
       width = 2
-      query = query.aws_sqs_queue_delay_seconds
+      query = query.sqs_queue_delay_seconds
       args = {
         queue_arn = self.input.queue_arn.value
       }
@@ -42,7 +42,7 @@ dashboard "aws_sqs_queue_detail" {
 
     card {
       width = 2
-      query = query.aws_sqs_queue_message_retention_seconds
+      query = query.sqs_queue_message_retention_seconds
       args = {
         queue_arn = self.input.queue_arn.value
       }
@@ -97,7 +97,7 @@ dashboard "aws_sqs_queue_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_sqs_queue_overview
+        query = query.sqs_queue_overview
         args = {
           queue_arn = self.input.queue_arn.value
         }
@@ -107,7 +107,7 @@ dashboard "aws_sqs_queue_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_sqs_queue_tags_detail
+        query = query.sqs_queue_tags_detail
         args = {
           queue_arn = self.input.queue_arn.value
         }
@@ -121,7 +121,7 @@ dashboard "aws_sqs_queue_detail" {
 
       table {
         title = "Message Details"
-        query = query.aws_sqs_queue_message
+        query = query.sqs_queue_message
         args = {
           queue_arn = self.input.queue_arn.value
         }
@@ -129,7 +129,7 @@ dashboard "aws_sqs_queue_detail" {
 
       table {
         title = "Encryption Details"
-        query = query.aws_sqs_queue_encryption_details
+        query = query.sqs_queue_encryption_details
         args = {
           queue_arn = self.input.queue_arn.value
         }
@@ -145,7 +145,7 @@ dashboard "aws_sqs_queue_detail" {
 
     table {
       title = "Policy"
-      query = query.aws_sqs_queue_policy
+      query = query.sqs_queue_policy
       args = {
         queue_arn = self.input.queue_arn.value
       }
@@ -155,7 +155,7 @@ dashboard "aws_sqs_queue_detail" {
 
 }
 
-query "aws_sqs_queue_input" {
+query "sqs_queue_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -171,7 +171,7 @@ query "aws_sqs_queue_input" {
   EOQ
 }
 
-query "aws_sqs_queue_encryption" {
+query "sqs_queue_encryption" {
   sql = <<-EOQ
     select
       'Encryption' as label,
@@ -186,7 +186,7 @@ query "aws_sqs_queue_encryption" {
   param "queue_arn" {}
 }
 
-query "aws_sqs_queue_content_based_deduplication" {
+query "sqs_queue_content_based_deduplication" {
   sql = <<-EOQ
     select
       'Content Based Deduplication' as label,
@@ -200,7 +200,7 @@ query "aws_sqs_queue_content_based_deduplication" {
   param "queue_arn" {}
 }
 
-query "aws_sqs_queue_delay_seconds" {
+query "sqs_queue_delay_seconds" {
   sql = <<-EOQ
     select
       'Delay Seconds' as label,
@@ -214,7 +214,7 @@ query "aws_sqs_queue_delay_seconds" {
   param "queue_arn" {}
 }
 
-query "aws_sqs_queue_message_retention_seconds" {
+query "sqs_queue_message_retention_seconds" {
   sql = <<-EOQ
     select
       'Message Retention Seconds' as label,
@@ -228,7 +228,7 @@ query "aws_sqs_queue_message_retention_seconds" {
   param "queue_arn" {}
 }
 
-query "aws_sqs_queue_overview" {
+query "sqs_queue_overview" {
   sql = <<-EOQ
     select
       queue_url as "Queue URL",
@@ -245,7 +245,7 @@ query "aws_sqs_queue_overview" {
   param "queue_arn" {}
 }
 
-query "aws_sqs_queue_tags_detail" {
+query "sqs_queue_tags_detail" {
   sql = <<-EOQ
     with jsondata as (
       select
@@ -268,7 +268,7 @@ query "aws_sqs_queue_tags_detail" {
   param "queue_arn" {}
 }
 
-query "aws_sqs_queue_policy" {
+query "sqs_queue_policy" {
   sql = <<-EOQ
     select
       p ->> 'Sid' as "SID",
@@ -287,7 +287,7 @@ query "aws_sqs_queue_policy" {
   param "queue_arn" {}
 }
 
-query "aws_sqs_queue_message" {
+query "sqs_queue_message" {
   sql = <<-EOQ
     select
       max_message_size as "Max Message Size",
@@ -302,7 +302,7 @@ query "aws_sqs_queue_message" {
   param "queue_arn" {}
 }
 
-query "aws_sqs_queue_encryption_details" {
+query "sqs_queue_encryption_details" {
   sql = <<-EOQ
     select
        case when kms_master_key_id is not null then 'Enabled' else 'Disabled' end as "Encryption",

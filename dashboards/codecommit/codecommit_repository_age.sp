@@ -1,4 +1,4 @@
-dashboard "aws_codecommit_repository_age_report" {
+dashboard "codecommit_repository_age_report" {
 
   title         = "AWS Codecommit Repository Age Report"
   documentation = file("./dashboards/codecommit/docs/codecommit_repository_report_age.md")
@@ -11,38 +11,38 @@ dashboard "aws_codecommit_repository_age_report" {
   container {
 
     card {
-      query = query.aws_codecommit_repository_count
+      query = query.codecommit_repository_count
       width = 2
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_codecommit_repository_24_hours_count
+      query = query.codecommit_repository_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_codecommit_repository_30_days_count
+      query = query.codecommit_repository_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_codecommit_repository_30_90_days_count
+      query = query.codecommit_repository_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query = query.aws_codecommit_repository_90_365_days_count
+      query = query.codecommit_repository_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query = query.aws_codecommit_repository_1_year_count
+      query = query.codecommit_repository_1_year_count
     }
 
   }
@@ -57,14 +57,14 @@ dashboard "aws_codecommit_repository_age_report" {
     }
 
     column "Repository ID" {
-      href = "${dashboard.aws_codecommit_repository_detail.url_path}?input.codecommit_repository_arn={{.ARN | @uri}}"
+      href = "${dashboard.codecommit_repository_detail.url_path}?input.codecommit_repository_arn={{.ARN | @uri}}"
     }
-    query = query.aws_codecommit_repository_age_table
+    query = query.codecommit_repository_age_table
   }
 
 }
 
-query "aws_codecommit_repository_24_hours_count" {
+query "codecommit_repository_24_hours_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -76,7 +76,7 @@ query "aws_codecommit_repository_24_hours_count" {
   EOQ
 }
 
-query "aws_codecommit_repository_30_days_count" {
+query "codecommit_repository_30_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -88,7 +88,7 @@ query "aws_codecommit_repository_30_days_count" {
   EOQ
 }
 
-query "aws_codecommit_repository_30_90_days_count" {
+query "codecommit_repository_30_90_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -100,7 +100,7 @@ query "aws_codecommit_repository_30_90_days_count" {
   EOQ
 }
 
-query "aws_codecommit_repository_90_365_days_count" {
+query "codecommit_repository_90_365_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -112,7 +112,7 @@ query "aws_codecommit_repository_90_365_days_count" {
   EOQ
 }
 
-query "aws_codecommit_repository_1_year_count" {
+query "codecommit_repository_1_year_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -124,7 +124,7 @@ query "aws_codecommit_repository_1_year_count" {
   EOQ
 }
 
-query "aws_codecommit_repository_age_table" {
+query "codecommit_repository_age_table" {
   sql = <<-EOQ
     select
       r.repository_id as "Repository ID",

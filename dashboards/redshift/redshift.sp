@@ -7,7 +7,7 @@ locals {
 category "redshift_cluster" {
   title = "Redshift Cluster"
   color = local.database_color
-  href  = "/aws_insights.dashboard.aws_redshift_cluster_detail?input.cluster_arn={{.properties.'ARN' | @uri}}"
+  href  = "/aws_insights.dashboard.redshift_cluster_detail?input.cluster_arn={{.properties.'ARN' | @uri}}"
   icon  = "circle-stack"
 }
 
@@ -20,7 +20,7 @@ category "redshift_parameter_group" {
 category "redshift_snapshot" {
   title = "Redshift Snapshot"
   color = local.database_color
-  href  = "/aws_insights.dashboard.aws_redshift_snapshot_detail?input.snapshot_arn={{.properties.'ARN' | @uri}}"
+  href  = "/aws_insights.dashboard.redshift_snapshot_detail?input.snapshot_arn={{.properties.'ARN' | @uri}}"
   icon  = "viewfinder-circle"
 }
 

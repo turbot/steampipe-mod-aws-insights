@@ -1,4 +1,4 @@
-dashboard "aws_vpc_detail" {
+dashboard "vpc_detail" {
 
   title         = "AWS VPC Detail"
   documentation = file("./dashboards/vpc/docs/vpc_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_vpc_detail" {
 
   input "vpc_id" {
     title = "Select a VPC:"
-    query = query.aws_vpc_input
+    query = query.vpc_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "aws_vpc_detail" {
 
     card {
       width = 2
-      query = query.aws_vpc_num_ips_for_vpc
+      query = query.vpc_num_ips_for_vpc
       args = {
         vpc_id = self.input.vpc_id.value
       }
@@ -25,7 +25,7 @@ dashboard "aws_vpc_detail" {
 
     card {
       width = 2
-      query = query.aws_subnet_count_for_vpc
+      query = query.subnet_count_for_vpc
       args = {
         vpc_id = self.input.vpc_id.value
       }
@@ -33,7 +33,7 @@ dashboard "aws_vpc_detail" {
 
     card {
       width = 2
-      query = query.aws_vpc_is_default
+      query = query.vpc_is_default
       args = {
         vpc_id = self.input.vpc_id.value
       }
@@ -41,7 +41,7 @@ dashboard "aws_vpc_detail" {
 
     card {
       width = 2
-      query = query.aws_flow_logs_count_for_vpc
+      query = query.flow_logs_count_for_vpc
       args = {
         vpc_id = self.input.vpc_id.value
       }
@@ -280,7 +280,7 @@ dashboard "aws_vpc_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_vpc_overview
+        query = query.vpc_overview
         args = {
           vpc_id = self.input.vpc_id.value
         }
@@ -289,7 +289,7 @@ dashboard "aws_vpc_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_vpc_tags
+        query = query.vpc_tags
         args = {
           vpc_id = self.input.vpc_id.value
         }
@@ -303,7 +303,7 @@ dashboard "aws_vpc_detail" {
 
       table {
         title = "CIDR Blocks"
-        query = query.aws_vpc_cidr_blocks
+        query = query.vpc_cidr_blocks
         args = {
           vpc_id = self.input.vpc_id.value
         }
@@ -311,7 +311,7 @@ dashboard "aws_vpc_detail" {
 
       table {
         title = "DHCP Options"
-        query = query.aws_vpc_dhcp_options
+        query = query.vpc_dhcp_options
         args = {
           vpc_id = self.input.vpc_id.value
         }
@@ -329,7 +329,7 @@ dashboard "aws_vpc_detail" {
       title = "Subnets by AZ"
       type  = "column"
       width = 4
-      query = query.aws_vpc_subnet_by_az
+      query = query.vpc_subnet_by_az
       args = {
         vpc_id = self.input.vpc_id.value
       }
@@ -337,7 +337,7 @@ dashboard "aws_vpc_detail" {
     }
 
     table {
-      query = query.aws_vpc_subnets_for_vpc
+      query = query.vpc_subnets_for_vpc
       width = 6
       args = {
         vpc_id = self.input.vpc_id.value
@@ -372,7 +372,7 @@ dashboard "aws_vpc_detail" {
 
     table {
       title = "Route Tables"
-      query = query.aws_vpc_route_tables_for_vpc
+      query = query.vpc_route_tables_for_vpc
       width = 6
       args = {
         vpc_id = self.input.vpc_id.value
@@ -381,7 +381,7 @@ dashboard "aws_vpc_detail" {
 
     table {
       title = "Routes"
-      query = query.aws_vpc_routes_for_vpc
+      query = query.vpc_routes_for_vpc
       width = 6
       args = {
         vpc_id = self.input.vpc_id.value
@@ -397,7 +397,7 @@ dashboard "aws_vpc_detail" {
 
     table {
       title = "Peering Connections"
-      query = query.aws_vpc_peers_for_vpc
+      query = query.vpc_peers_for_vpc
       args = {
         vpc_id = self.input.vpc_id.value
       }
@@ -414,7 +414,7 @@ dashboard "aws_vpc_detail" {
       base  = flow.nacl_flow
       title = "Ingress NACLs"
       width = 6
-      query = query.aws_ingress_nacl_for_vpc_sankey
+      query = query.ingress_nacl_for_vpc_sankey
       args = {
         vpc_id = self.input.vpc_id.value
       }
@@ -425,7 +425,7 @@ dashboard "aws_vpc_detail" {
       base  = flow.nacl_flow
       title = "Egress NACLs"
       width = 6
-      query = query.aws_egress_nacl_for_vpc_sankey
+      query = query.egress_nacl_for_vpc_sankey
       args = {
         vpc_id = self.input.vpc_id.value
       }
@@ -441,7 +441,7 @@ dashboard "aws_vpc_detail" {
     table {
       title = "VPC Endpoints"
 
-      query = query.aws_vpc_endpoints_for_vpc
+      query = query.vpc_endpoints_for_vpc
       width = 6
       args = {
         vpc_id = self.input.vpc_id.value
@@ -450,7 +450,7 @@ dashboard "aws_vpc_detail" {
 
     table {
       title = "Gateways"
-      query = query.aws_vpc_gateways_for_vpc
+      query = query.vpc_gateways_for_vpc
       width = 6
       args = {
         vpc_id = self.input.vpc_id.value
@@ -464,14 +464,14 @@ dashboard "aws_vpc_detail" {
     title = "Security Groups"
 
     table {
-      query = query.aws_vpc_security_groups_for_vpc
+      query = query.vpc_security_groups_for_vpc
       width = 12
       args = {
         vpc_id = self.input.vpc_id.value
       }
 
       column "Group Name" {
-        href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.'Group ID' | @uri}}"
+        href = "${dashboard.vpc_security_group_detail.url_path}?input.security_group_id={{.'Group ID' | @uri}}"
       }
     }
 
@@ -494,7 +494,7 @@ flow "nacl_flow" {
 
 }
 
-query "aws_vpc_input" {
+query "vpc_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -511,7 +511,7 @@ query "aws_vpc_input" {
   EOQ
 }
 
-query "aws_subnet_count_for_vpc" {
+query "subnet_count_for_vpc" {
   sql = <<-EOQ
     select
       'Subnets' as label,
@@ -526,7 +526,7 @@ query "aws_subnet_count_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_is_default" {
+query "vpc_is_default" {
   sql = <<-EOQ
     select
       'Default VPC' as label,
@@ -541,7 +541,7 @@ query "aws_vpc_is_default" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_num_ips_for_vpc" {
+query "vpc_num_ips_for_vpc" {
   sql = <<-EOQ
     with cidrs as (
       select
@@ -563,7 +563,7 @@ query "aws_vpc_num_ips_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_flow_logs_count_for_vpc" {
+query "flow_logs_count_for_vpc" {
   sql = <<-EOQ
     select
       'Flow Logs' as label,
@@ -577,7 +577,7 @@ query "aws_flow_logs_count_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_subnets_for_vpc" {
+query "vpc_subnets_for_vpc" {
   sql = <<-EOQ
     with subnets as (
       select
@@ -609,7 +609,7 @@ query "aws_vpc_subnets_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_security_groups_for_vpc" {
+query "vpc_security_groups_for_vpc" {
   sql = <<-EOQ
     select
       group_name as "Group Name",
@@ -624,7 +624,7 @@ query "aws_vpc_security_groups_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_endpoints_for_vpc" {
+query "vpc_endpoints_for_vpc" {
   sql = <<-EOQ
     select
       vpc_endpoint_id as "VPC Endpoint ID",
@@ -641,7 +641,7 @@ query "aws_vpc_endpoints_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_route_tables_for_vpc" {
+query "vpc_route_tables_for_vpc" {
   sql = <<-EOQ
     select
       route_table_id as "Route Table ID",
@@ -657,7 +657,7 @@ query "aws_vpc_route_tables_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_routes_for_vpc" {
+query "vpc_routes_for_vpc" {
   sql = <<-EOQ
     select
       route_table_id as "Route Table ID",
@@ -698,7 +698,7 @@ query "aws_vpc_routes_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_peers_for_vpc" {
+query "vpc_peers_for_vpc" {
   sql = <<-EOQ
     select
       id as "ID",
@@ -724,7 +724,7 @@ query "aws_vpc_peers_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_gateways_for_vpc" {
+query "vpc_gateways_for_vpc" {
   sql = <<-EOQ
     select
       internet_gateway_id as "ID",
@@ -773,7 +773,7 @@ query "aws_vpc_gateways_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_ingress_nacl_for_vpc_sankey" {
+query "ingress_nacl_for_vpc_sankey" {
   sql = <<-EOQ
 
     with aces as (
@@ -905,7 +905,7 @@ query "aws_ingress_nacl_for_vpc_sankey" {
   param "vpc_id" {}
 }
 
-query "aws_egress_nacl_for_vpc_sankey" {
+query "egress_nacl_for_vpc_sankey" {
   sql = <<-EOQ
 
     with aces as (
@@ -1044,7 +1044,7 @@ query "aws_egress_nacl_for_vpc_sankey" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_overview" {
+query "vpc_overview" {
   sql = <<-EOQ
     select
       vpc_id as "VPC ID",
@@ -1061,7 +1061,7 @@ query "aws_vpc_overview" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_tags" {
+query "vpc_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -1078,7 +1078,7 @@ query "aws_vpc_tags" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_cidr_blocks" {
+query "vpc_cidr_blocks" {
   sql = <<-EOQ
     select
       b ->> 'CidrBlock' as "CIDR Block",
@@ -1102,7 +1102,7 @@ query "aws_vpc_cidr_blocks" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_dhcp_options" {
+query "vpc_dhcp_options" {
   sql = <<-EOQ
     select
       d.dhcp_options_id as "DHCP Options ID",
@@ -1125,7 +1125,7 @@ query "aws_vpc_dhcp_options" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_subnet_by_az" {
+query "vpc_subnet_by_az" {
   sql = <<-EOQ
     select
       availability_zone,

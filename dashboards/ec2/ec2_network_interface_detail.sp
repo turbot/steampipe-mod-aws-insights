@@ -1,4 +1,4 @@
-dashboard "aws_ec2_network_interface_detail" {
+dashboard "ec2_network_interface_detail" {
   title         = "AWS EC2 Network Interface Detail"
   documentation = file("./dashboards/ec2/docs/ec2_network_interface_detail.md")
 
@@ -16,7 +16,7 @@ dashboard "aws_ec2_network_interface_detail" {
 
     card {
       width = 2
-      query = query.aws_ec2_eni_public_ip
+      query = query.ec2_eni_public_ip
       args = {
         network_interface_id = self.input.network_interface_id.value
       }
@@ -24,7 +24,7 @@ dashboard "aws_ec2_network_interface_detail" {
 
     card {
       width = 2
-      query = query.aws_ec2_eni_type
+      query = query.ec2_eni_type
       args = {
         network_interface_id = self.input.network_interface_id.value
       }
@@ -32,7 +32,7 @@ dashboard "aws_ec2_network_interface_detail" {
 
     card {
       width = 2
-      query = query.aws_ec2_eni_delete_on_termination
+      query = query.ec2_eni_delete_on_termination
       args = {
         network_interface_id = self.input.network_interface_id.value
       }
@@ -40,7 +40,7 @@ dashboard "aws_ec2_network_interface_detail" {
 
     card {
       width = 2
-      query = query.aws_ec2_eni_status
+      query = query.ec2_eni_status
       args = {
         network_interface_id = self.input.network_interface_id.value
       }
@@ -48,7 +48,7 @@ dashboard "aws_ec2_network_interface_detail" {
 
     card {
       width = 2
-      query = query.aws_ec2_eni_attachment_status
+      query = query.ec2_eni_attachment_status
       args = {
         network_interface_id = self.input.network_interface_id.value
       }
@@ -185,7 +185,7 @@ dashboard "aws_ec2_network_interface_detail" {
       title = "Overview"
       type  = "line"
       width = 2
-      query = query.aws_ec2_eni_overview
+      query = query.ec2_eni_overview
       args = {
         network_interface_id = self.input.network_interface_id.value
       }
@@ -194,7 +194,7 @@ dashboard "aws_ec2_network_interface_detail" {
     table {
       title = "Tags"
       width = 3
-      query = query.aws_ec2_eni_tags
+      query = query.ec2_eni_tags
       args = {
         network_interface_id = self.input.network_interface_id.value
       }
@@ -205,7 +205,7 @@ dashboard "aws_ec2_network_interface_detail" {
 
       table {
         title = "Associations"
-        query = query.aws_ec2_eni_association_details
+        query = query.ec2_eni_association_details
         args = {
           network_interface_id = self.input.network_interface_id.value
         }
@@ -213,13 +213,13 @@ dashboard "aws_ec2_network_interface_detail" {
           display = "none"
         }
         column "Allocation ID" {
-          href = "/aws_insights.dashboard.aws_vpc_eip_detail?input.eip_arn={{.'eip_alloc_arn' | @uri}}"
+          href = "/aws_insights.dashboard.vpc_eip_detail?input.eip_arn={{.'eip_alloc_arn' | @uri}}"
         }
       }
 
       table {
         title = "Private IP Addresses"
-        query = query.aws_ec2_eni_private_ip
+        query = query.ec2_eni_private_ip
         args = {
           network_interface_id = self.input.network_interface_id.value
         }
@@ -246,7 +246,7 @@ query "network_interface_id" {
   EOQ
 }
 
-query "aws_ec2_eni_status" {
+query "ec2_eni_status" {
   sql = <<-EOQ
     select
       'Status' as label,
@@ -261,7 +261,7 @@ query "aws_ec2_eni_status" {
   param "network_interface_id" {}
 }
 
-query "aws_ec2_eni_type" {
+query "ec2_eni_type" {
   sql = <<-EOQ
     select
       'Type' as label,
@@ -275,7 +275,7 @@ query "aws_ec2_eni_type" {
   param "network_interface_id" {}
 }
 
-query "aws_ec2_eni_attachment_status" {
+query "ec2_eni_attachment_status" {
   sql = <<-EOQ
     select
       'Attachment Status' as label,
@@ -290,7 +290,7 @@ query "aws_ec2_eni_attachment_status" {
   param "network_interface_id" {}
 }
 
-query "aws_ec2_eni_delete_on_termination" {
+query "ec2_eni_delete_on_termination" {
   sql = <<-EOQ
     select
       'Delete on Instance Terminate' as label,
@@ -317,7 +317,7 @@ query "aws_ec2_eni_delete_on_termination" {
   param "network_interface_id" {}
 }
 
-query "aws_ec2_eni_public_ip" {
+query "ec2_eni_public_ip" {
   sql = <<-EOQ
     select
       'Public IP' as label,
@@ -331,7 +331,7 @@ query "aws_ec2_eni_public_ip" {
   param "network_interface_id" {}
 }
 
-query "aws_ec2_eni_private_ip" {
+query "ec2_eni_private_ip" {
   sql = <<-EOQ
     select
       pvt_ip_addr ->> 'PrivateIpAddress' as "IP Address",
@@ -349,7 +349,7 @@ query "aws_ec2_eni_private_ip" {
   param "network_interface_id" {}
 }
 
-query "aws_ec2_eni_association_details" {
+query "ec2_eni_association_details" {
   sql = <<-EOQ
     select
       eni.association_allocation_id "Allocation ID",
@@ -373,7 +373,7 @@ query "aws_ec2_eni_association_details" {
   param "network_interface_id" {}
 }
 
-query "aws_ec2_eni_overview" {
+query "ec2_eni_overview" {
   sql = <<-EOQ
     select
       title as "Title",
@@ -392,7 +392,7 @@ query "aws_ec2_eni_overview" {
   param "network_interface_id" {}
 }
 
-query "aws_ec2_eni_tags" {
+query "ec2_eni_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",

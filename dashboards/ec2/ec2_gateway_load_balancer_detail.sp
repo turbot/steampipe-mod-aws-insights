@@ -1,4 +1,4 @@
-dashboard "aws_ec2_gateway_load_balancer_detail" {
+dashboard "ec2_gateway_load_balancer_detail" {
   title         = "AWS EC2 Gateway Load Balancer Detail"
   documentation = file("./dashboards/ec2/docs/ec2_gateway_load_balancer_detail.md")
 
@@ -8,7 +8,7 @@ dashboard "aws_ec2_gateway_load_balancer_detail" {
 
   input "glb" {
     title = "Select a Gateway Load balancer:"
-    query = query.aws_glb_input
+    query = query.glb_input
     width = 4
   }
 
@@ -16,7 +16,7 @@ dashboard "aws_ec2_gateway_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_glb_state
+      query = query.glb_state
       args = {
         arn = self.input.glb.value
       }
@@ -24,7 +24,7 @@ dashboard "aws_ec2_gateway_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_glb_az_zone
+      query = query.glb_az_zone
       args = {
         arn = self.input.glb.value
       }
@@ -32,7 +32,7 @@ dashboard "aws_ec2_gateway_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_glb_deletion_protection
+      query = query.glb_deletion_protection
       args = {
         arn = self.input.glb.value
       }
@@ -77,7 +77,7 @@ dashboard "aws_ec2_gateway_load_balancer_detail" {
       title = "Overview"
       type  = "line"
       width = 3
-      query = query.aws_ec2_glb_overview
+      query = query.ec2_glb_overview
       args = {
         arn = self.input.glb.value
       }
@@ -87,7 +87,7 @@ dashboard "aws_ec2_gateway_load_balancer_detail" {
     table {
       title = "Tags"
       width = 3
-      query = query.aws_ec2_glb_tags
+      query = query.ec2_glb_tags
       args = {
         arn = self.input.glb.value
       }
@@ -96,7 +96,7 @@ dashboard "aws_ec2_gateway_load_balancer_detail" {
     table {
       title = "Attributes"
       width = 6
-      query = query.aws_ec2_glb_attributes
+      query = query.ec2_glb_attributes
       args = {
         arn = self.input.glb.value
       }
@@ -105,7 +105,7 @@ dashboard "aws_ec2_gateway_load_balancer_detail" {
 
 }
 
-query "aws_glb_input" {
+query "glb_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -121,7 +121,7 @@ query "aws_glb_input" {
   EOQ
 }
 
-query "aws_ec2_glb_overview" {
+query "ec2_glb_overview" {
   sql = <<-EOQ
     select
       title as "Title",
@@ -140,7 +140,7 @@ query "aws_ec2_glb_overview" {
   param "arn" {}
 }
 
-query "aws_ec2_glb_tags" {
+query "ec2_glb_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -157,7 +157,7 @@ query "aws_ec2_glb_tags" {
   param "arn" {}
 }
 
-query "aws_ec2_glb_attributes" {
+query "ec2_glb_attributes" {
   sql = <<-EOQ
     select
       lb ->> 'Key' as "Key",
@@ -175,7 +175,7 @@ query "aws_ec2_glb_attributes" {
   param "arn" {}
 }
 
-query "aws_glb_logging_enabled" {
+query "glb_logging_enabled" {
   sql = <<-EOQ
     select
       'Logging' as label,
@@ -192,7 +192,7 @@ query "aws_glb_logging_enabled" {
   param "arn" {}
 }
 
-query "aws_glb_deletion_protection" {
+query "glb_deletion_protection" {
   sql = <<-EOQ
     select
       'Deletion Protection' as label,
@@ -209,7 +209,7 @@ query "aws_glb_deletion_protection" {
   param "arn" {}
 }
 
-query "aws_glb_az_zone" {
+query "glb_az_zone" {
   sql = <<-EOQ
     select
       'Availibility Zones' as label,
@@ -225,7 +225,7 @@ query "aws_glb_az_zone" {
   param "arn" {}
 }
 
-query "aws_glb_state" {
+query "glb_state" {
   sql = <<-EOQ
     select
       'State' as label,

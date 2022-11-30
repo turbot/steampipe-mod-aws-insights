@@ -1,4 +1,4 @@
-dashboard "aws_vpc_security_group_detail" {
+dashboard "vpc_security_group_detail" {
 
   title         = "AWS VPC Security Group Detail"
   documentation = file("./dashboards/vpc/docs/vpc_security_group_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_vpc_security_group_detail" {
 
   input "security_group_id" {
     title = "Select a security group:"
-    query = query.aws_vpc_security_group_input
+    query = query.vpc_security_group_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "aws_vpc_security_group_detail" {
 
     card {
       width = 2
-      query = query.aws_vpc_security_group_ingress_rules_count
+      query = query.vpc_security_group_ingress_rules_count
       args = {
         group_id = self.input.security_group_id.value
       }
@@ -25,7 +25,7 @@ dashboard "aws_vpc_security_group_detail" {
 
     card {
       width = 2
-      query = query.aws_vpc_security_group_egress_rules_count
+      query = query.vpc_security_group_egress_rules_count
       args = {
         group_id = self.input.security_group_id.value
       }
@@ -33,7 +33,7 @@ dashboard "aws_vpc_security_group_detail" {
 
     card {
       width = 2
-      query = query.aws_vpc_security_attached_enis_count
+      query = query.vpc_security_attached_enis_count
       args = {
         group_id = self.input.security_group_id.value
       }
@@ -41,7 +41,7 @@ dashboard "aws_vpc_security_group_detail" {
 
     card {
       width = 2
-      query = query.aws_vpc_security_unrestricted_ingress
+      query = query.vpc_security_unrestricted_ingress
       args = {
         group_id = self.input.security_group_id.value
       }
@@ -49,7 +49,7 @@ dashboard "aws_vpc_security_group_detail" {
 
     card {
       width = 2
-      query = query.aws_vpc_security_unrestricted_egress
+      query = query.vpc_security_unrestricted_egress
       args = {
         group_id = self.input.security_group_id.value
       }
@@ -266,15 +266,15 @@ dashboard "aws_vpc_security_group_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_vpc_security_group_overview
+        query = query.vpc_security_group_overview
         args = {
           group_id = self.input.security_group_id.value
         }
 
         column "VPC ID" {
           // cyclic dependency prevents use of url_path, hardcode for now
-          // href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.'VPC ID' | @uri}}"
-          href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.'VPC ID' | @uri}}"
+          // href = "${dashboard.vpc_detail.url_path}?input.vpc_id={{.'VPC ID' | @uri}}"
+          href = "/aws_insights.dashboard.vpc_detail?input.vpc_id={{.'VPC ID' | @uri}}"
 
         }
 
@@ -283,7 +283,7 @@ dashboard "aws_vpc_security_group_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_vpc_security_group_tags
+        query = query.vpc_security_group_tags
         args = {
           group_id = self.input.security_group_id.value
         }
@@ -297,7 +297,7 @@ dashboard "aws_vpc_security_group_detail" {
 
       table {
         title = "Associated to"
-        query = query.aws_vpc_security_group_assoc
+        query = query.vpc_security_group_assoc
         args = {
           group_id = self.input.security_group_id.value
         }
@@ -323,7 +323,7 @@ dashboard "aws_vpc_security_group_detail" {
     flow {
       base  = flow.security_group_rules_sankey
       title = "Ingress Analysis"
-      query = query.aws_vpc_security_group_ingress_rule_sankey
+      query = query.vpc_security_group_ingress_rule_sankey
       args = {
         group_id = self.input.security_group_id.value
       }
@@ -332,7 +332,7 @@ dashboard "aws_vpc_security_group_detail" {
 
     table {
       title = "Ingress Rules"
-      query = query.aws_vpc_security_group_ingress_rules
+      query = query.vpc_security_group_ingress_rules
       args = {
         group_id = self.input.security_group_id.value
       }
@@ -347,7 +347,7 @@ dashboard "aws_vpc_security_group_detail" {
     flow {
       base  = flow.security_group_rules_sankey
       title = "Egress Analysis"
-      query = query.aws_vpc_security_group_egress_rule_sankey
+      query = query.vpc_security_group_egress_rule_sankey
       args = {
         group_id = self.input.security_group_id.value
       }
@@ -355,7 +355,7 @@ dashboard "aws_vpc_security_group_detail" {
 
     table {
       title = "Egress Rules"
-      query = query.aws_vpc_security_group_egress_rules
+      query = query.vpc_security_group_egress_rules
       args = {
         group_id = self.input.security_group_id.value
       }
@@ -378,7 +378,7 @@ flow "security_group_rules_sankey" {
 
 }
 
-query "aws_vpc_security_group_input" {
+query "vpc_security_group_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -395,7 +395,7 @@ query "aws_vpc_security_group_input" {
   EOQ
 }
 
-query "aws_vpc_security_group_ingress_rules_count" {
+query "vpc_security_group_ingress_rules_count" {
   sql = <<-EOQ
     select
       'Ingress Rules' as label,
@@ -410,7 +410,7 @@ query "aws_vpc_security_group_ingress_rules_count" {
   param "group_id" {}
 }
 
-query "aws_vpc_security_group_egress_rules_count" {
+query "vpc_security_group_egress_rules_count" {
   sql = <<-EOQ
     select
       'Egress Rules' as label,
@@ -425,7 +425,7 @@ query "aws_vpc_security_group_egress_rules_count" {
   param "group_id" {}
 }
 
-query "aws_vpc_security_attached_enis_count" {
+query "vpc_security_attached_enis_count" {
   sql = <<-EOQ
     select
       'Attached ENIs' as label,
@@ -441,7 +441,7 @@ query "aws_vpc_security_attached_enis_count" {
   param "group_id" {}
 }
 
-query "aws_vpc_security_unrestricted_ingress" {
+query "vpc_security_unrestricted_ingress" {
   sql = <<-EOQ
     select
       'Unrestricted Ingress (Excludes ICMP)' as label,
@@ -466,7 +466,7 @@ query "aws_vpc_security_unrestricted_ingress" {
   param "group_id" {}
 }
 
-query "aws_vpc_security_unrestricted_egress" {
+query "vpc_security_unrestricted_egress" {
   sql = <<-EOQ
     select
       'Unrestricted Egress (Excludes ICMP)' as label,
@@ -491,7 +491,7 @@ query "aws_vpc_security_unrestricted_egress" {
   param "group_id" {}
 }
 
-query "aws_vpc_security_group_assoc" {
+query "vpc_security_group_assoc" {
   sql = <<-EOQ
 
     -- EC2 instances
@@ -499,7 +499,7 @@ query "aws_vpc_security_group_assoc" {
       title as "Title",
       'aws_ec2_instance' as "Type",
       arn as "ARN",
-      '${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn=' || arn as link
+      '${dashboard.ec2_instance_detail.url_path}?input.instance_arn=' || arn as link
      from
        aws_ec2_instance,
        jsonb_array_elements(security_groups) as sg
@@ -511,7 +511,7 @@ query "aws_vpc_security_group_assoc" {
       title as "Title",
       'aws_lambda_function' as "Type",
       arn as "ARN",
-      '${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn=' || arn as link
+      '${dashboard.lambda_function_detail.url_path}?input.lambda_arn=' || arn as link
     from
        aws_lambda_function,
        jsonb_array_elements_text(vpc_security_group_ids) as sg
@@ -648,7 +648,7 @@ query "aws_vpc_security_group_assoc" {
         title as "Title",
         'aws_rds_db_instance' as "Type",
         arn as "ARN",
-      '${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn=' || arn as link
+      '${dashboard.rds_db_instance_detail.url_path}?input.db_instance_arn=' || arn as link
       from
         aws_rds_db_instance,
         jsonb_array_elements(vpc_security_groups) as sg
@@ -661,7 +661,7 @@ query "aws_vpc_security_group_assoc" {
         title as "Title",
         'aws_redshift_cluster' as "Type",
         arn as "ARN",
-      '${dashboard.aws_redshift_cluster_detail.url_path}?input.cluster_arn=' || arn as link
+      '${dashboard.redshift_cluster_detail.url_path}?input.cluster_arn=' || arn as link
       from
         aws_redshift_cluster,
         jsonb_array_elements(vpc_security_groups) as sg
@@ -689,7 +689,7 @@ query "aws_vpc_security_group_assoc" {
 }
 ## TODO: Add aws_rds_db_instance / db_security_groups, ELB, ALB, elasticache, etc....
 
-query "aws_vpc_security_group_ingress_rule_sankey" {
+query "vpc_security_group_ingress_rule_sankey" {
   sql = <<-EOQ
 
     with associations as (
@@ -990,7 +990,7 @@ query "aws_vpc_security_group_ingress_rule_sankey" {
   param "group_id" {}
 }
 
-query "aws_vpc_security_group_egress_rule_sankey" {
+query "vpc_security_group_egress_rule_sankey" {
   sql = <<-EOQ
 
 
@@ -1291,7 +1291,7 @@ query "aws_vpc_security_group_egress_rule_sankey" {
   param "group_id" {}
 }
 
-query "aws_vpc_security_group_ingress_rules" {
+query "vpc_security_group_ingress_rules" {
   sql = <<-EOQ
     select
       concat(text(cidr_ipv4), text(cidr_ipv6), referenced_group_id, referenced_vpc_id,prefix_list_id) as "Source",
@@ -1322,7 +1322,7 @@ query "aws_vpc_security_group_ingress_rules" {
   param "group_id" {}
 }
 
-query "aws_vpc_security_group_egress_rules" {
+query "vpc_security_group_egress_rules" {
   sql = <<-EOQ
     select
       concat(text(cidr_ipv4), text(cidr_ipv6), referenced_group_id, referenced_vpc_id,prefix_list_id) as "Destination",
@@ -1353,7 +1353,7 @@ query "aws_vpc_security_group_egress_rules" {
   param "group_id" {}
 }
 
-query "aws_vpc_security_group_overview" {
+query "vpc_security_group_overview" {
   sql = <<-EOQ
     select
       group_name as "Group Name",
@@ -1372,7 +1372,7 @@ query "aws_vpc_security_group_overview" {
   param "group_id" {}
 }
 
-query "aws_vpc_security_group_tags" {
+query "vpc_security_group_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",

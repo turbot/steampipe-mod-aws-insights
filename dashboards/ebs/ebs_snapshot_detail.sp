@@ -1,4 +1,4 @@
-dashboard "aws_ebs_snapshot_detail" {
+dashboard "ebs_snapshot_detail" {
 
   title         = "AWS EBS Snapshot Detail"
   documentation = file("./dashboards/ebs/docs/ebs_snapshot_detail.md")
@@ -9,14 +9,14 @@ dashboard "aws_ebs_snapshot_detail" {
 
   input "snapshot_arn" {
     title = "Select a snapshot:"
-    query = query.aws_ebs_snapshot_input
+    query = query.ebs_snapshot_input
     width = 4
   }
 
   container {
     card {
       width = 2
-      query = query.aws_ebs_snapshot_state
+      query = query.ebs_snapshot_state
       args = {
         arn = self.input.snapshot_arn.value
       }
@@ -24,14 +24,14 @@ dashboard "aws_ebs_snapshot_detail" {
 
     card {
       width = 2
-      query = query.aws_ebs_snapshot_storage
+      query = query.ebs_snapshot_storage
       args = {
         arn = self.input.snapshot_arn.value
       }
     }
     card {
       width = 2
-      query = query.aws_ebs_snapshot_encryption
+      query = query.ebs_snapshot_encryption
       args = {
         arn = self.input.snapshot_arn.value
       }
@@ -39,7 +39,7 @@ dashboard "aws_ebs_snapshot_detail" {
 
     card {
       width = 2
-      query = query.aws_ebs_snapshot_age
+      query = query.ebs_snapshot_age
       args = {
         arn = self.input.snapshot_arn.value
       }
@@ -82,7 +82,7 @@ dashboard "aws_ebs_snapshot_detail" {
       title = "Overview"
       type  = "line"
       width = 3
-      query = query.aws_ebs_snapshot_overview
+      query = query.ebs_snapshot_overview
       args = {
         arn = self.input.snapshot_arn.value
       }
@@ -91,7 +91,7 @@ dashboard "aws_ebs_snapshot_detail" {
     table {
       title = "Tags"
       width = 3
-      query = query.aws_ebs_snapshot_tags
+      query = query.ebs_snapshot_tags
       args = {
         arn = self.input.snapshot_arn.value
       }
@@ -99,7 +99,7 @@ dashboard "aws_ebs_snapshot_detail" {
   }
 }
 
-query "aws_ebs_snapshot_input" {
+query "ebs_snapshot_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -117,7 +117,7 @@ query "aws_ebs_snapshot_input" {
   EOQ
 }
 
-query "aws_ebs_snapshot_overview" {
+query "ebs_snapshot_overview" {
   sql = <<-EOQ
     select
       snapshot_id as "Snapshot ID",
@@ -134,7 +134,7 @@ query "aws_ebs_snapshot_overview" {
   param "arn" {}
 }
 
-query "aws_ebs_snapshot_tags" {
+query "ebs_snapshot_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -151,7 +151,7 @@ query "aws_ebs_snapshot_tags" {
   param "arn" {}
 }
 
-query "aws_ebs_snapshot_storage" {
+query "ebs_snapshot_storage" {
   sql = <<-EOQ
     select
       'Storage (GB)' as label,
@@ -165,7 +165,7 @@ query "aws_ebs_snapshot_storage" {
   param "arn" {}
 }
 
-query "aws_ebs_snapshot_encryption" {
+query "ebs_snapshot_encryption" {
   sql = <<-EOQ
     select
       'Encryption' as label,
@@ -180,7 +180,7 @@ query "aws_ebs_snapshot_encryption" {
   param "arn" {}
 }
 
-query "aws_ebs_snapshot_state" {
+query "ebs_snapshot_state" {
   sql = <<-EOQ
     select
       'State' as label,
@@ -194,7 +194,7 @@ query "aws_ebs_snapshot_state" {
   param "arn" {}
 }
 
-query "aws_ebs_snapshot_age" {
+query "ebs_snapshot_age" {
   sql = <<-EOQ
     with data as (
       select

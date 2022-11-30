@@ -13,7 +13,7 @@ category "eks_addon" {
 category "eks_cluster" {
   title = "EKS Cluster"
   color = local.containers_color
-  href  = "/aws_insights.dashboard.aws_eks_cluster_detail?input.eks_cluster_arn={{.properties.'ARN' | @uri}}"
+  href  = "/aws_insights.dashboard.eks_cluster_detail?input.eks_cluster_arn={{.properties.'ARN' | @uri}}"
   icon  = "cog"
 }
 

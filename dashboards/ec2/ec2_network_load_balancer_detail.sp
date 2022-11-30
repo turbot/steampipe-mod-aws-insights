@@ -1,4 +1,4 @@
-dashboard "aws_ec2_network_load_balancer_detail" {
+dashboard "ec2_network_load_balancer_detail" {
   title         = "AWS EC2 Network Load Balancer Detail"
   documentation = file("./dashboards/ec2/docs/ec2_network_load_balancer_detail.md")
 
@@ -8,7 +8,7 @@ dashboard "aws_ec2_network_load_balancer_detail" {
 
   input "nlb" {
     title = "Select a Network Load balancer:"
-    query = query.aws_ec2_network_load_balancer_input
+    query = query.ec2_network_load_balancer_input
     width = 4
   }
 
@@ -16,7 +16,7 @@ dashboard "aws_ec2_network_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_nlb_state
+      query = query.nlb_state
       args = {
         arn = self.input.nlb.value
       }
@@ -24,7 +24,7 @@ dashboard "aws_ec2_network_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_nlb_scheme
+      query = query.nlb_scheme
       args = {
         arn = self.input.nlb.value
       }
@@ -32,7 +32,7 @@ dashboard "aws_ec2_network_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_nlb_ip_type
+      query = query.nlb_ip_type
       args = {
         arn = self.input.nlb.value
       }
@@ -40,7 +40,7 @@ dashboard "aws_ec2_network_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_nlb_az_zone
+      query = query.nlb_az_zone
       args = {
         arn = self.input.nlb.value
       }
@@ -48,7 +48,7 @@ dashboard "aws_ec2_network_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_nlb_logging_enabled
+      query = query.nlb_logging_enabled
       args = {
         arn = self.input.nlb.value
       }
@@ -56,7 +56,7 @@ dashboard "aws_ec2_network_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_nlb_deletion_protection
+      query = query.nlb_deletion_protection
       args = {
         arn = self.input.nlb.value
       }
@@ -103,7 +103,7 @@ dashboard "aws_ec2_network_load_balancer_detail" {
       title = "Overview"
       type  = "line"
       width = 3
-      query = query.aws_ec2_nlb_overview
+      query = query.ec2_nlb_overview
       args = {
         arn = self.input.nlb.value
       }
@@ -113,7 +113,7 @@ dashboard "aws_ec2_network_load_balancer_detail" {
     table {
       title = "Tags"
       width = 3
-      query = query.aws_ec2_nlb_tags
+      query = query.ec2_nlb_tags
       args = {
         arn = self.input.nlb.value
       }
@@ -122,7 +122,7 @@ dashboard "aws_ec2_network_load_balancer_detail" {
     table {
       title = "Attributes"
       width = 6
-      query = query.aws_ec2_nlb_attributes
+      query = query.ec2_nlb_attributes
       args = {
         arn = self.input.nlb.value
       }
@@ -130,7 +130,7 @@ dashboard "aws_ec2_network_load_balancer_detail" {
   }
 }
 
-query "aws_ec2_network_load_balancer_input" {
+query "ec2_network_load_balancer_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -146,7 +146,7 @@ query "aws_ec2_network_load_balancer_input" {
   EOQ
 }
 
-query "aws_ec2_nlb_overview" {
+query "ec2_nlb_overview" {
   sql = <<-EOQ
     select
       title as "Title",
@@ -165,7 +165,7 @@ query "aws_ec2_nlb_overview" {
   param "arn" {}
 }
 
-query "aws_ec2_nlb_tags" {
+query "ec2_nlb_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -182,7 +182,7 @@ query "aws_ec2_nlb_tags" {
   param "arn" {}
 }
 
-query "aws_ec2_nlb_attributes" {
+query "ec2_nlb_attributes" {
   sql = <<-EOQ
     select
       lb ->> 'Key' as "Key",
@@ -200,7 +200,7 @@ query "aws_ec2_nlb_attributes" {
   param "arn" {}
 }
 
-query "aws_nlb_ip_type" {
+query "nlb_ip_type" {
   sql = <<-EOQ
     select
       'IP Address Type' as label,
@@ -214,7 +214,7 @@ query "aws_nlb_ip_type" {
   param "arn" {}
 }
 
-query "aws_nlb_logging_enabled" {
+query "nlb_logging_enabled" {
   sql = <<-EOQ
     select
       'Logging' as label,
@@ -231,7 +231,7 @@ query "aws_nlb_logging_enabled" {
   param "arn" {}
 }
 
-query "aws_nlb_deletion_protection" {
+query "nlb_deletion_protection" {
   sql = <<-EOQ
     select
       'Deletion Protection' as label,
@@ -248,7 +248,7 @@ query "aws_nlb_deletion_protection" {
   param "arn" {}
 }
 
-query "aws_nlb_az_zone" {
+query "nlb_az_zone" {
   sql = <<-EOQ
     select
       'Availibility Zones' as label,
@@ -264,7 +264,7 @@ query "aws_nlb_az_zone" {
   param "arn" {}
 }
 
-query "aws_nlb_state" {
+query "nlb_state" {
   sql = <<-EOQ
     select
       'State' as label,
@@ -278,7 +278,7 @@ query "aws_nlb_state" {
   param "arn" {}
 }
 
-query "aws_nlb_scheme" {
+query "nlb_scheme" {
   sql = <<-EOQ
     select
       'Scheme' as label,

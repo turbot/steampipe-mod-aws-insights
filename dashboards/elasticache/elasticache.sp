@@ -7,7 +7,7 @@ locals {
 category "elasticache_cluster" {
   title = "ElastiCache Cluster"
   color = local.database_color
-  href  = "/aws_insights.dashboard.aws_elasticache_cluster_detail.url_path?input.elasticache_cluster_arn={{.properties.ARN | @uri}}"
+  href  = "/aws_insights.dashboard.elasticache_cluster_detail.url_path?input.elasticache_cluster_arn={{.properties.ARN | @uri}}"
   icon  = "circle-stack"
 }
 

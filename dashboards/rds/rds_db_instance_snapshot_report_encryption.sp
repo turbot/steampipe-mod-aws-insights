@@ -1,4 +1,4 @@
-dashboard "aws_rds_db_instace_snapshot_encryption_report" {
+dashboard "rds_db_instace_snapshot_encryption_report" {
 
   title         = "AWS RDS DB Instance Snapshot Encryption Report"
   documentation = file("./dashboards/rds/docs/rds_db_instance_snapshot_report_encryption.md")
@@ -11,12 +11,12 @@ dashboard "aws_rds_db_instace_snapshot_encryption_report" {
   container {
 
     card {
-      query = query.aws_rds_db_instance_snapshot_count
+      query = query.rds_db_instance_snapshot_count
       width = 2
     }
 
     card {
-      query = query.aws_rds_db_instance_snapshot_unencrypted_count
+      query = query.rds_db_instance_snapshot_unencrypted_count
       width = 2
     }
 
@@ -33,15 +33,15 @@ dashboard "aws_rds_db_instace_snapshot_encryption_report" {
     }
 
     column "DB Snapshot Identifier" {
-      href = "${dashboard.aws_rds_db_snapshot_detail.url_path}?input.db_snapshot_arn={{.ARN | @uri}}"
+      href = "${dashboard.rds_db_snapshot_detail.url_path}?input.db_snapshot_arn={{.ARN | @uri}}"
     }
 
-    query = query.aws_rds_db_instance_snapshot_encryption_table
+    query = query.rds_db_instance_snapshot_encryption_table
   }
 
 }
 
-query "aws_rds_db_instance_snapshot_encryption_table" {
+query "rds_db_instance_snapshot_encryption_table" {
   sql = <<-EOQ
     select
       s.db_snapshot_identifier as "DB Snapshot Identifier",

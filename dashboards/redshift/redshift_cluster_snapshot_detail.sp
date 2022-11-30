@@ -1,4 +1,4 @@
-dashboard "aws_redshift_snapshot_detail" {
+dashboard "redshift_snapshot_detail" {
 
   title         = "AWS Redshift Snapshot Detail"
   documentation = file("./dashboards/redshift/docs/redshift_snapshot_detail.md")
@@ -9,14 +9,14 @@ dashboard "aws_redshift_snapshot_detail" {
 
   input "snapshot_arn" {
     title = "Select a snapshot:"
-    query = query.aws_redshift_snapshot_input
+    query = query.redshift_snapshot_input
     width = 4
   }
 
   container {
 
     card {
-      query = query.aws_redshift_snapshot_status
+      query = query.redshift_snapshot_status
       width = 2
       args = {
         arn = self.input.snapshot_arn.value
@@ -24,7 +24,7 @@ dashboard "aws_redshift_snapshot_detail" {
     }
 
     card {
-      query = query.aws_redshift_snapshot_type
+      query = query.redshift_snapshot_type
       width = 2
       args = {
         arn = self.input.snapshot_arn.value
@@ -32,7 +32,7 @@ dashboard "aws_redshift_snapshot_detail" {
     }
 
     card {
-      query = query.aws_redshift_snapshot_engine
+      query = query.redshift_snapshot_engine
       width = 2
       args = {
         arn = self.input.snapshot_arn.value
@@ -40,7 +40,7 @@ dashboard "aws_redshift_snapshot_detail" {
     }
 
     card {
-      query = query.aws_redshift_snapshot_backup_size
+      query = query.redshift_snapshot_backup_size
       width = 2
       args = {
         arn = self.input.snapshot_arn.value
@@ -48,7 +48,7 @@ dashboard "aws_redshift_snapshot_detail" {
     }
 
     card {
-      query = query.aws_redshift_snapshot_node_type
+      query = query.redshift_snapshot_node_type
       width = 2
       args = {
         arn = self.input.snapshot_arn.value
@@ -56,7 +56,7 @@ dashboard "aws_redshift_snapshot_detail" {
     }
 
     card {
-      query = query.aws_redshift_snapshot_unencrypted
+      query = query.redshift_snapshot_unencrypted
       width = 2
       args = {
         arn = self.input.snapshot_arn.value
@@ -99,7 +99,7 @@ dashboard "aws_redshift_snapshot_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_redshift_snapshot_overview
+        query = query.redshift_snapshot_overview
         args = {
           arn = self.input.snapshot_arn.value
         }
@@ -109,7 +109,7 @@ dashboard "aws_redshift_snapshot_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_redshift_snapshot_tags
+        query = query.redshift_snapshot_tags
         args = {
           arn = self.input.snapshot_arn.value
         }
@@ -119,7 +119,7 @@ dashboard "aws_redshift_snapshot_detail" {
   }
 }
 
-query "aws_redshift_snapshot_input" {
+query "redshift_snapshot_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -135,7 +135,7 @@ query "aws_redshift_snapshot_input" {
   EOQ
 }
 
-query "aws_redshift_snapshot_type" {
+query "redshift_snapshot_type" {
   sql = <<-EOQ
     select
       'Type' as label,
@@ -149,7 +149,7 @@ query "aws_redshift_snapshot_type" {
   param "arn" {}
 }
 
-query "aws_redshift_snapshot_engine" {
+query "redshift_snapshot_engine" {
   sql = <<-EOQ
     select
       'Engine Version' as label,
@@ -163,7 +163,7 @@ query "aws_redshift_snapshot_engine" {
   param "arn" {}
 }
 
-query "aws_redshift_snapshot_backup_size" {
+query "redshift_snapshot_backup_size" {
   sql = <<-EOQ
     select
       'Size (GB)' as label,
@@ -177,7 +177,7 @@ query "aws_redshift_snapshot_backup_size" {
   param "arn" {}
 }
 
-query "aws_redshift_snapshot_node_type" {
+query "redshift_snapshot_node_type" {
   sql = <<-EOQ
     select
       'Node Type' as label,
@@ -191,7 +191,7 @@ query "aws_redshift_snapshot_node_type" {
   param "arn" {}
 }
 
-query "aws_redshift_snapshot_status" {
+query "redshift_snapshot_status" {
   sql = <<-EOQ
     select
       'Status' as label,
@@ -205,7 +205,7 @@ query "aws_redshift_snapshot_status" {
   param "arn" {}
 }
 
-query "aws_redshift_snapshot_unencrypted" {
+query "redshift_snapshot_unencrypted" {
   sql = <<-EOQ
     select
       case when encrypted or encrypted_with_hsm then 'Enabled' else 'Disabled' end as value,
@@ -335,7 +335,7 @@ edge "redshift_snapshot_from_redshift_cluster_edge" {
   param "arn" {}
 }
 
-query "aws_redshift_snapshot_overview" {
+query "redshift_snapshot_overview" {
   sql = <<-EOQ
     select
       snapshot_identifier as "Snapshot Name",
@@ -357,7 +357,7 @@ query "aws_redshift_snapshot_overview" {
   param "arn" {}
 }
 
-query "aws_redshift_snapshot_tags" {
+query "redshift_snapshot_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",

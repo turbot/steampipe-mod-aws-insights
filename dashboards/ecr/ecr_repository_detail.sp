@@ -1,4 +1,4 @@
-dashboard "aws_ecr_repository_detail" {
+dashboard "ecr_repository_detail" {
 
   title         = "AWS ECR Repository Detail"
   documentation = file("./dashboards/ecr/docs/ecr_repository_detail.md")
@@ -9,14 +9,14 @@ dashboard "aws_ecr_repository_detail" {
 
   input "ecr_repository_arn" {
     title = "Select a Repository:"
-    query = query.aws_ecr_repository_input
+    query = query.ecr_repository_input
     width = 4
   }
 
   container {
 
     card {
-      query = query.aws_ecr_repository_encrypted
+      query = query.ecr_repository_encrypted
       width = 2
       args = {
         arn = self.input.ecr_repository_arn.value
@@ -24,7 +24,7 @@ dashboard "aws_ecr_repository_detail" {
     }
 
     card {
-      query = query.aws_ecr_repository_scan_on_push
+      query = query.ecr_repository_scan_on_push
       width = 2
       args = {
         arn = self.input.ecr_repository_arn.value
@@ -32,7 +32,7 @@ dashboard "aws_ecr_repository_detail" {
     }
 
     card {
-      query = query.aws_ecr_repository_tagging
+      query = query.ecr_repository_tagging
       width = 2
       args = {
         arn = self.input.ecr_repository_arn.value
@@ -40,7 +40,7 @@ dashboard "aws_ecr_repository_detail" {
     }
 
     card {
-      query = query.aws_ecr_repository_tag_immutability
+      query = query.ecr_repository_tag_immutability
       width = 2
       args = {
         arn = self.input.ecr_repository_arn.value
@@ -83,7 +83,7 @@ dashboard "aws_ecr_repository_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_ecr_repository_overview
+        query = query.ecr_repository_overview
         args = {
           arn = self.input.ecr_repository_arn.value
         }
@@ -92,7 +92,7 @@ dashboard "aws_ecr_repository_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_ecr_repository_tags
+        query = query.ecr_repository_tags
         args = {
           arn = self.input.ecr_repository_arn.value
         }
@@ -101,7 +101,7 @@ dashboard "aws_ecr_repository_detail" {
   }
 }
 
-query "aws_ecr_repository_encrypted" {
+query "ecr_repository_encrypted" {
   sql = <<-EOQ
     select
       'Encrypted' as label,
@@ -116,7 +116,7 @@ query "aws_ecr_repository_encrypted" {
   param "arn" {}
 }
 
-query "aws_ecr_repository_tagging" {
+query "ecr_repository_tagging" {
   sql = <<-EOQ
     with num_tags as (
       select
@@ -137,7 +137,7 @@ query "aws_ecr_repository_tagging" {
   param "arn" {}
 }
 
-query "aws_ecr_repository_public_access" {
+query "ecr_repository_public_access" {
   sql = <<-EOQ
     select
       'Public Access' as label,
@@ -152,7 +152,7 @@ query "aws_ecr_repository_public_access" {
   param "arn" {}
 }
 
-query "aws_ecr_repository_tag_immutability" {
+query "ecr_repository_tag_immutability" {
   sql = <<-EOQ
     select
       'Tag Immutability' as label,
@@ -167,7 +167,7 @@ query "aws_ecr_repository_tag_immutability" {
   param "arn" {}
 }
 
-query "aws_ecr_repository_scan_on_push" {
+query "ecr_repository_scan_on_push" {
   sql = <<-EOQ
     with scan_on_push as (
       select
@@ -188,7 +188,7 @@ query "aws_ecr_repository_scan_on_push" {
   param "arn" {}
 }
 
-query "aws_ecr_repository_overview" {
+query "ecr_repository_overview" {
   sql = <<-EOQ
     select
       title as "Title",
@@ -207,7 +207,7 @@ query "aws_ecr_repository_overview" {
   param "arn" {}
 }
 
-query "aws_ecr_repository_tags" {
+query "ecr_repository_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -224,7 +224,7 @@ query "aws_ecr_repository_tags" {
   param "arn" {}
 }
 
-query "aws_ecr_repository_input" {
+query "ecr_repository_input" {
   sql = <<-EOQ
     select
       title as label,

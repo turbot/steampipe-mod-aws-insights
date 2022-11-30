@@ -1,4 +1,4 @@
-dashboard "aws_ec2_instance_detail" {
+dashboard "ec2_instance_detail" {
 
   title         = "AWS EC2 Instance Detail"
   documentation = file("./dashboards/ec2/docs/ec2_instance_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_ec2_instance_detail" {
 
   input "instance_arn" {
     title = "Select an instance:"
-    query = query.aws_ec2_instance_input
+    query = query.ec2_instance_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "aws_ec2_instance_detail" {
 
     card {
       width = 2
-      query = query.aws_ec2_instance_status
+      query = query.ec2_instance_status
       args = {
         arn = self.input.instance_arn.value
       }
@@ -25,7 +25,7 @@ dashboard "aws_ec2_instance_detail" {
 
     card {
       width = 2
-      query = query.aws_ec2_instance_type
+      query = query.ec2_instance_type
       args = {
         arn = self.input.instance_arn.value
       }
@@ -33,7 +33,7 @@ dashboard "aws_ec2_instance_detail" {
 
     card {
       width = 2
-      query = query.aws_ec2_instance_total_cores_count
+      query = query.ec2_instance_total_cores_count
       args = {
         arn = self.input.instance_arn.value
       }
@@ -41,7 +41,7 @@ dashboard "aws_ec2_instance_detail" {
 
     card {
       width = 2
-      query = query.aws_ec2_instance_public_access
+      query = query.ec2_instance_public_access
       args = {
         arn = self.input.instance_arn.value
       }
@@ -49,7 +49,7 @@ dashboard "aws_ec2_instance_detail" {
 
     card {
       width = 2
-      query = query.aws_ec2_instance_ebs_optimized
+      query = query.ec2_instance_ebs_optimized
       args = {
         arn = self.input.instance_arn.value
       }
@@ -326,7 +326,7 @@ dashboard "aws_ec2_instance_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_ec2_instance_overview
+        query = query.ec2_instance_overview
         args = {
           arn = self.input.instance_arn.value
         }
@@ -336,7 +336,7 @@ dashboard "aws_ec2_instance_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_ec2_instance_tags
+        query = query.ec2_instance_tags
         args = {
           arn = self.input.instance_arn.value
         }
@@ -347,7 +347,7 @@ dashboard "aws_ec2_instance_detail" {
 
       table {
         title = "Block Device Mappings"
-        query = query.aws_ec2_instance_block_device_mapping
+        query = query.ec2_instance_block_device_mapping
         args = {
           arn = self.input.instance_arn.value
         }
@@ -358,7 +358,7 @@ dashboard "aws_ec2_instance_detail" {
 
         column "Volume ID" {
           // cyclic dependency prevents use of url_path, hardcode for now
-          href = "/aws_insights.dashboard.aws_ebs_volume_detail?input.volume_arn={{.'Volume ARN' | @uri}}"
+          href = "/aws_insights.dashboard.ebs_volume_detail?input.volume_arn={{.'Volume ARN' | @uri}}"
         }
       }
     }
@@ -370,14 +370,14 @@ dashboard "aws_ec2_instance_detail" {
 
     table {
       title = "Network Interfaces"
-      query = query.aws_ec2_instance_network_interfaces
+      query = query.ec2_instance_network_interfaces
       args = {
         arn = self.input.instance_arn.value
       }
 
       column "VPC ID" {
         // cyclic dependency prevents use of url_path, hardcode for now
-        href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{ .'VPC ID' | @uri }}"
+        href = "/aws_insights.dashboard.vpc_detail?input.vpc_id={{ .'VPC ID' | @uri }}"
       }
     }
 
@@ -388,14 +388,14 @@ dashboard "aws_ec2_instance_detail" {
 
     table {
       title = "Security Groups"
-      query = query.aws_ec2_instance_security_groups
+      query = query.ec2_instance_security_groups
       args = {
         arn = self.input.instance_arn.value
       }
 
       column "Group ID" {
         // cyclic dependency prevents use of url_path, hardcode for now
-        href = "/aws_insights.dashboard.aws_vpc_security_group_detail?input.security_group_id={{.'Group ID' | @uri}}"
+        href = "/aws_insights.dashboard.vpc_security_group_detail?input.security_group_id={{.'Group ID' | @uri}}"
       }
     }
 
@@ -406,7 +406,7 @@ dashboard "aws_ec2_instance_detail" {
 
     table {
       title = "CPU cores"
-      query = query.aws_ec2_instance_cpu_cores
+      query = query.ec2_instance_cpu_cores
       args = {
         arn = self.input.instance_arn.value
       }
@@ -416,7 +416,7 @@ dashboard "aws_ec2_instance_detail" {
 
 }
 
-query "aws_ec2_instance_input" {
+query "ec2_instance_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -433,7 +433,7 @@ query "aws_ec2_instance_input" {
   EOQ
 }
 
-query "aws_ec2_instance_status" {
+query "ec2_instance_status" {
   sql = <<-EOQ
     select
       'Status' as label,
@@ -448,7 +448,7 @@ query "aws_ec2_instance_status" {
 
 }
 
-query "aws_ec2_instance_type" {
+query "ec2_instance_type" {
   sql = <<-EOQ
     select
       'Type' as label,
@@ -462,7 +462,7 @@ query "aws_ec2_instance_type" {
   param "arn" {}
 }
 
-query "aws_ec2_instance_total_cores_count" {
+query "ec2_instance_total_cores_count" {
   sql = <<-EOQ
     select
       'Total Cores' as label,
@@ -476,7 +476,7 @@ query "aws_ec2_instance_total_cores_count" {
   param "arn" {}
 }
 
-query "aws_ec2_instance_public_access" {
+query "ec2_instance_public_access" {
   sql = <<-EOQ
     select
       'Public IP Address' as label,
@@ -491,7 +491,7 @@ query "aws_ec2_instance_public_access" {
   param "arn" {}
 }
 
-query "aws_ec2_instance_ebs_optimized" {
+query "ec2_instance_ebs_optimized" {
   sql = <<-EOQ
     select
       'EBS Optimized' as label,
@@ -602,7 +602,7 @@ node "ec2_instance_ec2_target_group" {
   param "instance_arns" {}
 }
 
-query "aws_ec2_instance_overview" {
+query "ec2_instance_overview" {
   sql = <<-EOQ
     select
       tags ->> 'Name' as "Name",
@@ -621,7 +621,7 @@ query "aws_ec2_instance_overview" {
   param "arn" {}
 }
 
-query "aws_ec2_instance_tags" {
+query "ec2_instance_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -638,7 +638,7 @@ query "aws_ec2_instance_tags" {
   param "arn" {}
 }
 
-query "aws_ec2_instance_block_device_mapping" {
+query "ec2_instance_block_device_mapping" {
   sql = <<-EOQ
     with volume_details as (
     select
@@ -671,7 +671,7 @@ query "aws_ec2_instance_block_device_mapping" {
   param "arn" {}
 }
 
-query "aws_ec2_instance_security_groups" {
+query "ec2_instance_security_groups" {
   sql = <<-EOQ
     select
       p ->> 'GroupId'  as "Group ID",
@@ -686,7 +686,7 @@ query "aws_ec2_instance_security_groups" {
   param "arn" {}
 }
 
-query "aws_ec2_instance_network_interfaces" {
+query "ec2_instance_network_interfaces" {
   sql = <<-EOQ
     select
       p ->> 'NetworkInterfaceId' as "Network Interface ID",
@@ -707,7 +707,7 @@ query "aws_ec2_instance_network_interfaces" {
   param "arn" {}
 }
 
-query "aws_ec2_instance_cpu_cores" {
+query "ec2_instance_cpu_cores" {
   sql = <<-EOQ
     select
       cpu_options_core_count  as "CPU Options Core Count",
