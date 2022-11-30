@@ -111,7 +111,7 @@ dashboard "dax_cluster_detail" {
 
       table {
         title = "Nodes"
-        query = query.aws_dax_cluster_nodes
+        query = query.aws_dax_cluster_node_details
         args = {
           arn = self.input.dax_cluster_arn.value
         }
@@ -556,7 +556,7 @@ query "aws_dax_cluster_discovery_endpoint" {
   param "arn" {}
 }
 
-query "aws_dax_cluster_nodes" {
+query "aws_dax_cluster_node_details" {
   sql = <<-EOQ
     select
       n ->> 'NodeId' as "Node ID",
@@ -572,4 +572,28 @@ query "aws_dax_cluster_nodes" {
   EOQ
 
   param "arn" {}
+}
+
+node "aws_dax_cluster_nodes" {
+  category = category.aws_dax_cluster
+
+  sql = <<-EOQ
+    select
+      arn as id,
+      title as title,
+      jsonb_build_object(
+        'Cluster Name', cluster_name,
+        'ARN', arn,
+        'Account ID', account_id,
+        'Name', title,
+        'Region', region,
+        'Status', status
+      ) as properties
+    from
+      aws_dax_cluster
+    where
+      arn = any($1);
+  EOQ
+
+  param "dax_cluster_arns" {}
 }

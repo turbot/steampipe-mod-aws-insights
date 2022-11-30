@@ -2069,3 +2069,19 @@ node "aws_vpc_nodes" {
 
   param "vpc_ids" {}
 }
+
+edge "aws_vpc_to_vpc_security_group_edges" {
+  title = "security group"
+
+  sql = <<-EOQ
+    select
+      vpc_ids as from_id,
+      security_group_ids as to_id
+    from
+      unnest($1::text[]) as vpc_ids,
+      unnest($2::text[]) as security_group_ids
+  EOQ
+
+  param "vpc_ids" {}
+  param "security_group_ids" {}
+}

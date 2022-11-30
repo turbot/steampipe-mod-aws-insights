@@ -711,3 +711,27 @@ query "aws_elasticache_cluster_notification_configuration" {
 
   param "arn" {}
 }
+
+node "aws_elasticache_cluster_nodes" {
+  category = category.aws_elasticache_cluster
+
+  sql = <<-EOQ
+    select
+      arn as id,
+      title as title,
+      jsonb_build_object(
+        'ARN', arn,
+        'Cache Cluster ID', cache_cluster_id,
+        'Status', cache_cluster_status,
+        'Encryption Enabled', at_rest_encryption_enabled::text,
+        'Create Time', cache_cluster_create_time,
+        'Account ID', account_id,
+        'Region', region ) as properties
+    from
+      aws_elasticache_cluster
+    where
+      arn = any($1);
+  EOQ
+
+  param "elasticache_cluster_arns" {}
+}
