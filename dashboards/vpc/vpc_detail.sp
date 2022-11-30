@@ -200,16 +200,16 @@ dashboard "aws_vpc_detail" {
       }
 
       nodes = [
-        node.aws_vpc_nodes,
+        node.vpc_vpc,
         node.aws_vpc_flow_log_nodes,
-        node.aws_vpc_subnet_nodes,
-        node.aws_vpc_security_group_nodes,
-        node.aws_ec2_instance_nodes,
+        node.vpc_subnet,
+        node.vpc_security_group,
+        node.ec2_instance,
         node.aws_lambda_function_nodes,
-        node.aws_ec2_application_load_balancer_nodes,
-        node.aws_ec2_network_load_balancer_nodes,
-        node.aws_ec2_classic_load_balancer_nodes,
-        node.aws_ec2_gateway_load_balancer_nodes,
+        node.ec2_application_load_balancer,
+        node.ec2_network_load_balancer,
+        node.ec2_classic_load_balancer,
+        node.ec2_gateway_load_balancer,
         node.aws_rds_db_instance_nodes,
         node.aws_redshift_cluster_nodes,
 
@@ -1145,7 +1145,7 @@ query "aws_vpc_subnet_by_az" {
 
 
 node "aws_vpc_routing_subnet_node" {
-  category = category.aws_vpc_subnet
+  category = category.vpc_subnet
 
   sql = <<-EOQ
     select
@@ -1165,7 +1165,7 @@ node "aws_vpc_routing_subnet_node" {
 }
 
 node "aws_vpc_routing_vpc_node" {
-  category = category.aws_vpc_subnet
+  category = category.vpc_subnet
 
   sql = <<-EOQ
     select
@@ -1644,49 +1644,6 @@ edge "aws_vpc_to_vpc_security_group_edges" {
   param "security_group_ids" {}
 }
 
-node "aws_vpc_peered_vpc_nodes" {
-  category = category.aws_vpc
-
-  sql = <<-EOQ
-    -- with vpcs as (
-      select
-        accepter_vpc_id as id,
-        vpc.title as title,
-        jsonb_build_object(
-          'VPC ID', accepter_vpc_id,
-          'CIDR', accepter_cidr_block,
-          'Status', status_code,
-          'Region', accepter_region,
-          'Account ID', accepter_owner_id
-        ) as properties
-      from
-        aws_vpc_peering_connection,
-        aws_vpc as vpc
-      where
-        accepter_vpc_id = vpc.vpc_id
-        and requester_vpc_id = any($1)
-
-      union all select
-        requester_vpc_id as id,
-        vpc.title as title,
-        jsonb_build_object(
-          'VPC ID', requester_vpc_id,
-          'CIDR', requester_cidr_block,
-          'Status', status_code,
-          'Region', requester_region,
-          'Account ID', requester_owner_id
-        ) as properties
-      from
-        aws_vpc_peering_connection,
-        aws_vpc as vpc
-      where
-        requester_vpc_id = vpc.vpc_id
-        and accepter_vpc_id = any($1)
-  EOQ
-
-  param "vpc_ids" {}
-}
-
 edge "aws_vpc_peered_vpc_edges" {
   title = "peered with"
 
@@ -1745,28 +1702,44 @@ edge "aws_vpc_to_s3_access_point_edges" {
   param "vpc_ids" {}
 }
 
-node "aws_vpc_nodes" {
+node "aws_vpc_peered_vpc_nodes" {
   category = category.aws_vpc
 
   sql = <<-EOQ
-   select
-      vpc_id as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'VPC ID', vpc_id,
-        'Is Default', is_default,
-        'State', state,
-        'CIDR Block', cidr_block,
-        'DHCP Options ID', dhcp_options_id,
-        'Owner ID', owner_id,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_vpc
-    where
-      vpc_id = any($1 ::text[]);
+    -- with vpcs as (
+      select
+        accepter_vpc_id as id,
+        vpc.title as title,
+        jsonb_build_object(
+          'VPC ID', accepter_vpc_id,
+          'CIDR', accepter_cidr_block,
+          'Status', status_code,
+          'Region', accepter_region,
+          'Account ID', accepter_owner_id
+        ) as properties
+      from
+        aws_vpc_peering_connection,
+        aws_vpc as vpc
+      where
+        accepter_vpc_id = vpc.vpc_id
+        and requester_vpc_id = any($1)
+
+      union all select
+        requester_vpc_id as id,
+        vpc.title as title,
+        jsonb_build_object(
+          'VPC ID', requester_vpc_id,
+          'CIDR', requester_cidr_block,
+          'Status', status_code,
+          'Region', requester_region,
+          'Account ID', requester_owner_id
+        ) as properties
+      from
+        aws_vpc_peering_connection,
+        aws_vpc as vpc
+      where
+        requester_vpc_id = vpc.vpc_id
+        and accepter_vpc_id = any($1)
   EOQ
 
   param "vpc_ids" {}

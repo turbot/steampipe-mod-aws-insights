@@ -163,9 +163,9 @@ dashboard "acm_certificate_detail" {
       nodes = [
         node.aws_acm_certificate_nodes,
         node.aws_cloudfront_distribution_nodes,
-        node.aws_ec2_classic_load_balancer_nodes,
-        node.aws_ec2_application_load_balancer_nodes,
-        node.aws_ec2_network_load_balancer_nodes,
+        node.ec2_classic_load_balancer,
+        node.ec2_application_load_balancer,
+        node.ec2_network_load_balancer,
         node.aws_acm_certificate_from_opensearch_domain_nodes
       ]
 

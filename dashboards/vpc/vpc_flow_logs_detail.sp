@@ -133,10 +133,10 @@ dashboard "aws_vpc_flow_logs_detail" {
         node.aws_vpc_flow_log_nodes,
         node.aws_s3_bucket_nodes,
         node.aws_cloudwatch_log_group_nodes,
-        node.aws_iam_role_nodes,
-        node.aws_ec2_network_interface_nodes,
-        node.aws_vpc_subnet_nodes,
-        node.aws_vpc_nodes
+        node.iam_role,
+        node.ec2_network_interface,
+        node.vpc_subnet,
+        node.vpc_vpc
       ]
 
       edges = [

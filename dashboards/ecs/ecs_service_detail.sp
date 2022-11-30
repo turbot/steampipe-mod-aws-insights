@@ -277,7 +277,7 @@ edge "aws_ecs_service_to_ecs_task_edge" {
 }
 
 node "aws_ecs_service_to_iam_role_node" {
-  category = category.aws_iam_role
+  category = category.iam_role
 
   sql = <<-EOQ
     select
@@ -355,7 +355,7 @@ edge "aws_ecs_service_to_ec2_target_group_edge" {
 }
 
 node "aws_ecs_service_from_ecs_cluster_node" {
-  category = category.aws_ecs_cluster
+  category = category.ecs_cluster
 
   sql = <<-EOQ
     select
@@ -434,7 +434,7 @@ edge "aws_ecs_service_to_ecs_container_instance_edge" {
 }
 
 node "aws_ecs_service_to_vpc_security_group_node" {
-  category = category.aws_vpc_security_group
+  category = category.vpc_security_group
 
   sql = <<-EOQ
     select
@@ -479,7 +479,7 @@ edge "aws_ecs_service_to_vpc_security_group_edge" {
 
 
 node "aws_ecs_service_to_vpc_subnet_node" {
-  category = category.aws_vpc_subnet
+  category = category.vpc_subnet
 
   sql = <<-EOQ
     select

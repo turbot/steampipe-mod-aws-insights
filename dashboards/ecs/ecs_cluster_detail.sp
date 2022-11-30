@@ -341,7 +341,7 @@ query "aws_ecs_cluster_container_instances" {
 }
 
 node "aws_ecs_cluster_node" {
-  category = category.aws_ecs_cluster
+  category = category.ecs_cluster
 
   sql = <<-EOQ
     select
@@ -797,7 +797,7 @@ edge "aws_ecs_cluster_to_ecs_container_instance_edge" {
 }
 
 node "aws_ecs_cluster_ecs_container_instance_to_vpc_subnet_node" {
-  category = category.aws_vpc_subnet
+  category = category.vpc_subnet
 
   sql = <<-EOQ
     select
@@ -891,7 +891,7 @@ edge "aws_ecs_cluster_vpc_subnet_to_vpc_edge" {
 }
 
 node "aws_ecs_cluster_ecs_service_to_vpc_subnet_node" {
-  category = category.aws_vpc_subnet
+  category = category.vpc_subnet
 
   sql = <<-EOQ
     select
@@ -986,28 +986,4 @@ edge "aws_ecs_cluster_ecs_service_subnet_to_vpc_edge" {
   EOQ
 
   param "arn" {}
-}
-
-node "aws_ecs_cluster_nodes" {
-  category = category.aws_ecs_cluster
-
-  sql = <<-EOQ
-   select
-      cluster_arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', cluster_arn,
-        'Status', status,
-        'Account ID', account_id,
-        'Region', region,
-        'Active Services Count', active_services_count,
-        'Running Tasks Count', running_tasks_count
-      ) as properties
-    from
-      aws_ecs_cluster
-    where
-      cluster_arn = any($1 ::text[]);
-  EOQ
-
-  param "ecs_cluster_arns" {}
 }

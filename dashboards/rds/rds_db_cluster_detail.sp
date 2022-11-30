@@ -426,7 +426,7 @@ edge "aws_rds_db_cluster_to_kms_key_edge" {
 }
 
 node "aws_rds_db_cluster_to_vpc_security_group_node" {
-  category = category.aws_vpc_security_group
+  category = category.vpc_security_group
 
   sql = <<-EOQ
     select
@@ -474,7 +474,7 @@ edge "aws_rds_db_cluster_to_vpc_security_group_edge" {
 }
 
 node "aws_rds_db_cluster_vpc_subnet_to_rds_db_subnet_group_node" {
-  category = category.aws_vpc_subnet
+  category = category.vpc_subnet
 
   sql = <<-EOQ
     select
@@ -729,7 +729,7 @@ edge "aws_rds_db_cluster_to_sns_topic_edge" {
 }
 
 node "aws_rds_db_cluster_to_iam_role_node" {
-  category = category.aws_iam_role
+  category = category.iam_role
 
   sql = <<-EOQ
     select

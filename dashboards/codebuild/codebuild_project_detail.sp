@@ -463,7 +463,7 @@ edge "aws_codebuild_project_to_kms_key_edge" {
 }
 
 node "aws_codebuild_project_to_iam_role_node" {
-  category = category.aws_iam_role
+  category = category.iam_role
 
   sql = <<-EOQ
     select
@@ -612,7 +612,7 @@ edge "aws_codebuild_project_to_codecommit_repository_edge" {
 }
 
 node "aws_codebuild_project_to_vpc_security_group_node" {
-  category = category.aws_vpc_security_group
+  category = category.vpc_security_group
 
   sql = <<-EOQ
     with sg_id as (
@@ -668,7 +668,7 @@ edge "aws_codebuild_project_to_vpc_security_group_edge" {
 }
 
 node "aws_codebuild_project_vpc_security_group_to_subnet_node" {
-  category = category.aws_vpc_subnet
+  category = category.vpc_subnet
 
   sql = <<-EOQ
     with sn_id as (

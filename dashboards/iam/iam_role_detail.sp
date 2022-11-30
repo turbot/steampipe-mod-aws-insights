@@ -217,7 +217,7 @@ query "aws_iam_role_direct_attached_policy_count_for_role" {
 }
 
 node "aws_iam_role_node" {
-  category = category.aws_iam_role
+  category = category.iam_role
 
   sql = <<-EOQ
     select
@@ -786,30 +786,4 @@ query "aws_iam_user_manage_policies_hierarchy" {
   EOQ
 
   param "arn" {}
-}
-
-
-//******
-
-
-node "aws_iam_role_nodes" {
-  category = category.aws_iam_role
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      name as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Create Date', create_date,
-        'Max Session Duration', max_session_duration,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_iam_role
-    where
-      arn = any($1 ::text[]);
-  EOQ
-
-  param "role_arns" {}
 }

@@ -63,7 +63,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_ec2_classic_load_balancer_nodes,
+        node.ec2_classic_load_balancer,
         node.aws_ec2_clb_to_vpc_subnet_node,
         node.aws_ec2_clb_to_ec2_instance_node,
         node.aws_ec2_clb_to_s3_bucket_node,
@@ -328,7 +328,7 @@ edge "aws_ec2_clb_to_s3_bucket_edge" {
 }
 
 node "aws_ec2_clb_to_vpc_security_group_node" {
-  category = category.aws_vpc_security_group
+  category = category.vpc_security_group
 
   sql = <<-EOQ
     select
@@ -404,7 +404,7 @@ node "aws_ec2_clb_vpc_security_group_to_vpc_node" {
 }
 
 node "aws_ec2_clb_to_vpc_subnet_node" {
-  category = category.aws_vpc_subnet
+  category = category.vpc_subnet
 
   sql = <<-EOQ
     select

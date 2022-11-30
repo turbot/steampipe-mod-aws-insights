@@ -72,7 +72,7 @@ dashboard "aws_ec2_network_load_balancer_detail" {
 
 
       nodes = [
-        node.aws_ec2_network_load_balancer_nodes,
+        node.ec2_network_load_balancer,
         node.aws_ec2_nlb_to_vpc_subnet_node,
         node.aws_ec2_nlb_to_s3_bucket_node,
         node.aws_ec2_nlb_vpc_security_group_to_vpc_node,
@@ -292,32 +292,9 @@ query "aws_nlb_scheme" {
   param "arn" {}
 }
 
-node "aws_ec2_network_load_balancer_nodes" {
-  category = category.aws_ec2_network_load_balancer
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'VPC ID', vpc_id,
-        'State Code', state_code,
-        'Account ID', account_id,
-        'Region', region,
-        'DNS Name', dns_name
-      ) as properties
-    from
-      aws_ec2_network_load_balancer
-    where
-      arn = any($1);
-  EOQ
-
-  param "nlb_arns" {}
-}
 
 node "aws_ec2_nlb_to_vpc_subnet_node" {
-  category = category.aws_vpc_subnet
+  category = category.vpc_subnet
 
   sql = <<-EOQ
     select

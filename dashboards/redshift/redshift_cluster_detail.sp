@@ -456,7 +456,7 @@ node "aws_redshift_cluster_to_redshift_subnet_group_node" {
 }
 
 node "aws_redshift_cluster_to_vpc_subnet_node" {
-  category = category.aws_vpc_subnet
+  category = category.vpc_subnet
 
   sql = <<-EOQ
     select
@@ -574,7 +574,7 @@ edge "aws_redshift_cluster_vpc_security_group_to_subnet_group_edge" {
 }
 
 node "aws_redshift_cluster_to_vpc_security_group_node" {
-  category = category.aws_vpc_security_group
+  category = category.vpc_security_group
 
   sql = <<-EOQ
     select
@@ -664,7 +664,7 @@ edge "aws_redshift_cluster_to_kms_key_edge" {
 }
 
 node "aws_redshift_cluster_to_iam_role_node" {
-  category = category.aws_iam_role
+  category = category.iam_role
 
   sql = <<-EOQ
     select
@@ -710,7 +710,7 @@ edge "aws_redshift_cluster_to_iam_role_edge" {
 }
 
 node "aws_redshift_cluster_to_vpc_eip_node" {
-  category = category.aws_vpc_eip
+  category = category.vpc_eip
 
   sql = <<-EOQ
     select

@@ -156,7 +156,7 @@ node "aws_codepipeline_pipeline_node" {
 }
 
 node "aws_codepipeline_pipeline_from_iam_role_node" {
-  category = category.aws_iam_role
+  category = category.iam_role
 
   sql = <<-EOQ
     select

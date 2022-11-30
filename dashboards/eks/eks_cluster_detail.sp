@@ -373,7 +373,7 @@ node "aws_eks_cluster_node" {
 }
 
 node "aws_eks_cluster_to_iam_role_node" {
-  category = category.aws_iam_role
+  category = category.iam_role
 
   sql = <<-EOQ
     select
@@ -566,7 +566,7 @@ edge "aws_eks_cluster_to_eks_addons_edge" {
 }
 
 node "aws_eks_cluster_to_vpc_security_group_node" {
-  category = category.aws_vpc_security_group
+  category = category.vpc_security_group
 
   sql = <<-EOQ
     select
@@ -613,7 +613,7 @@ edge "aws_eks_cluster_to_vpc_security_group_edge" {
 }
 
 node "aws_eks_cluster_to_vpc_subnet_node" {
-  category = category.aws_vpc_subnet
+  category = category.vpc_subnet
 
   sql = <<-EOQ
     select

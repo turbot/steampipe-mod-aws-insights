@@ -98,7 +98,7 @@ dashboard "aws_iam_policy_detail" {
 
       nodes = [
         node.aws_iam_policy_nodes,
-        node.aws_iam_role_nodes,
+        node.iam_role,
         node.aws_iam_user_nodes,
         node.aws_iam_group_nodes,
 

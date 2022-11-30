@@ -4,14 +4,7 @@ locals {
   }
 }
 
-category "aws_vpc" {
-  title = "VPC"
-  href  = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.properties.'VPC ID' | @uri}}"
-  icon  = "cloud" //"text:vpc"
-  color = local.networking_color
-}
-
-category "aws_vpc_eip" {
+category "vpc_eip" {
   title = "VPC EIP"
   color = local.networking_color
   href  = "/aws_insights.dashboard.aws_vpc_eip_detail?input.eip_arn={{.properties.'ARN' | @uri}}"
@@ -61,17 +54,24 @@ category "aws_vpc_route_table" {
   color = local.networking_color
 }
 
-category "aws_vpc_security_group" {
+category "vpc_security_group" {
   title = "VPC Security Group"
   href  = "/aws_insights.dashboard.aws_vpc_security_group_detail?input.security_group_id={{.properties.'Group ID' | @uri}}"
   icon  = "lock-closed"
   color = local.networking_color
 }
 
-category "aws_vpc_subnet" {
+category "vpc_subnet" {
   title = "VPC Subnet"
   href  = "/aws_insights.dashboard.aws_vpc_subnet_detail?input.subnet_id={{.properties.'Subnet ID' | @uri}}"
   icon  = "share"
+  color = local.networking_color
+}
+
+category "vpc_vpc" {
+  title = "VPC"
+  href  = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.properties.'VPC ID' | @uri}}"
+  icon  = "cloud" //"text:vpc"
   color = local.networking_color
 }
 

@@ -370,7 +370,7 @@ node "aws_emr_cluster_node" {
 }
 
 node "aws_emr_cluster_to_iam_role_node" {
-  category = category.aws_iam_role
+  category = category.iam_role
 
   sql = <<-EOQ
      select

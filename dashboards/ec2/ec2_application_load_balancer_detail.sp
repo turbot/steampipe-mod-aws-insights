@@ -71,7 +71,7 @@ dashboard "aws_ec2_application_load_balancer_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_ec2_application_load_balancer_nodes,
+        node.ec2_application_load_balancer,
         node.aws_ec2_alb_to_vpc_security_group_node,
         node.aws_ec2_alb_to_vpc_subnet_node,
         node.aws_ec2_alb_to_s3_bucket_node,
@@ -294,32 +294,8 @@ query "aws_alb_scheme" {
   param "arn" {}
 }
 
-node "aws_ec2_application_load_balancer_nodes" {
-  category = category.aws_ec2_application_load_balancer
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'State Code', state_code,
-        'Account ID', account_id,
-        'VPC ID', vpc_id,
-        'Region', region,
-        'DNS Name', dns_name
-      ) as properties
-    from
-      aws_ec2_application_load_balancer
-    where
-      arn = any($1);
-  EOQ
-
-  param "alb_arns" {}
-}
-
 node "aws_ec2_alb_to_vpc_subnet_node" {
-  category = category.aws_vpc_subnet
+  category = category.vpc_subnet
 
   sql = <<-EOQ
     select
@@ -365,7 +341,7 @@ edge "aws_ec2_alb_to_vpc_subnet_edge" {
 }
 
 node "aws_ec2_alb_to_vpc_security_group_node" {
-  category = category.aws_vpc_security_group
+  category = category.vpc_security_group
 
   sql = <<-EOQ
     select

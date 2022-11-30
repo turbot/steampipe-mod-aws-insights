@@ -77,9 +77,9 @@ dashboard "aws_vpc_eip_detail" {
       }
 
       nodes = [
-        node.aws_vpc_eip_nodes,
-        node.aws_ec2_network_interface_nodes,
-        node.aws_ec2_instance_nodes,
+        node.vpc_eip,
+        node.ec2_network_interface,
+        node.ec2_instance,
 
         node.aws_ec2_network_interface_vpc_nat_gateway_nodes
       ]
@@ -177,31 +177,6 @@ query "aws_vpc_eip_input" {
     order by
       title;
   EOQ
-}
-
-node "aws_vpc_eip_nodes" {
-  category = category.aws_vpc_eip
-
-  sql = <<-EOQ
-   select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Allocation Id', allocation_id,
-        'Association Id', association_id,
-        'Public IP', public_ip,
-        'Domain', domain,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_vpc_eip
-    where
-      arn = any($1 ::text[]);
-  EOQ
-
-  param "eip_arns" {}
 }
 
 query "aws_vpc_eip_association" {

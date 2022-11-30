@@ -335,7 +335,7 @@ edge "aws_ecs_task_definition_from_ecs_task_edge" {
 }
 
 node "aws_ecs_task_definition_to_iam_execution_role_node" {
-  category = category.aws_iam_role
+  category = category.iam_role
 
   sql = <<-EOQ
     select
@@ -373,7 +373,7 @@ edge "aws_ecs_task_definition_to_iam_execution_role_edge" {
 }
 
 node "aws_ecs_task_definition_to_iam_task_role_node" {
-  category = category.aws_iam_role
+  category = category.iam_role
 
   sql = <<-EOQ
     select

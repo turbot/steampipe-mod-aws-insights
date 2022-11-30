@@ -185,17 +185,17 @@ dashboard "aws_vpc_subnet_detail" {
       }
 
       nodes = [
-        node.aws_vpc_subnet_nodes,
-        node.aws_vpc_nodes,
+        node.vpc_subnet,
+        node.vpc_vpc,
         node.aws_rds_db_instance_nodes,
-        node.aws_ec2_instance_nodes,
+        node.ec2_instance,
         node.aws_lambda_function_nodes,
         node.aws_vpc_flow_log_nodes,
-        node.aws_ec2_network_interface_nodes,
-        node.aws_ec2_application_load_balancer_nodes,
-        node.aws_ec2_network_load_balancer_nodes,
-        node.aws_ec2_classic_load_balancer_nodes,
-        node.aws_ec2_gateway_load_balancer_nodes,
+        node.ec2_network_interface,
+        node.ec2_application_load_balancer,
+        node.ec2_network_load_balancer,
+        node.ec2_classic_load_balancer,
+        node.ec2_gateway_load_balancer,
 
         node.aws_vpc_subnet_vpc_route_table_nodes,
         node.aws_vpc_subnet_vpc_network_acl_nodes,
@@ -463,29 +463,6 @@ query "aws_vpc_subnet_association" {
   EOQ
 
   param "subnet_id" {}
-}
-
-node "aws_vpc_subnet_nodes" {
-  category = category.aws_vpc_subnet
-
-  sql = <<-EOQ
-   select
-      subnet_id as id,
-      title as title,
-      jsonb_build_object(
-        'Subnet ID', subnet_id,
-        'ARN', subnet_arn,
-        'VPC ID', vpc_id,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_vpc_subnet
-    where
-      subnet_id = any($1 ::text[]);
-  EOQ
-
-  param "subnet_ids" {}
 }
 
 edge "aws_vpc_to_vpc_subnet_edges" {

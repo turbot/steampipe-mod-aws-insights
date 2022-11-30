@@ -144,12 +144,12 @@ dashboard "aws_ec2_network_interface_detail" {
       }
 
       nodes = [
-        node.aws_ec2_network_interface_nodes,
-        node.aws_ec2_instance_nodes,
-        node.aws_vpc_security_group_nodes,
-        node.aws_vpc_subnet_nodes,
-        node.aws_vpc_nodes,
-        node.aws_vpc_eip_nodes,
+        node.ec2_network_interface,
+        node.ec2_instance,
+        node.vpc_security_group,
+        node.vpc_subnet,
+        node.vpc_vpc,
+        node.vpc_eip,
         node.aws_vpc_flow_log_nodes,
 
         node.aws_ec2_network_interface_vpc_nat_gateway_nodes
@@ -409,28 +409,6 @@ query "aws_ec2_eni_tags" {
   param "network_interface_id" {}
 }
 
-node "aws_ec2_network_interface_nodes" {
-  category = category.aws_ec2_network_interface
-
-  sql = <<-EOQ
-    select
-      network_interface_id as id,
-      title as title,
-      jsonb_build_object(
-        'ID', network_interface_id,
-        'Interface Type', interface_type,
-        'Status', status,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_ec2_network_interface
-    where
-      network_interface_id = any($1 ::text[]);
-  EOQ
-
-  param "eni_ids" {}
-}
 
 edge "aws_ec2_network_interface_to_vpc_eip_edges" {
   title = "eip"

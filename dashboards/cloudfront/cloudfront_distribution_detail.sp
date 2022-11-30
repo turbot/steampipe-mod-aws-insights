@@ -168,7 +168,7 @@ dashboard "aws_cloudfront_distribution_detail" {
         node.aws_cloudfront_distribution_nodes,
         node.aws_acm_certificate_nodes,
         node.aws_s3_bucket_nodes,
-        node.aws_ec2_application_load_balancer_nodes,
+        node.ec2_application_load_balancer,
         node.aws_media_store_container_nodes,
         node.aws_wafv2_web_acl_nodes
       ]

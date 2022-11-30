@@ -211,9 +211,9 @@ dashboard "aws_s3_bucket_detail" {
       nodes = [
         node.aws_s3_bucket_nodes,
         node.aws_cloudtrail_trail_nodes,
-        node.aws_ec2_application_load_balancer_nodes,
-        node.aws_ec2_network_load_balancer_nodes,
-        node.aws_ec2_classic_load_balancer_nodes,
+        node.ec2_application_load_balancer,
+        node.ec2_network_load_balancer,
+        node.ec2_classic_load_balancer,
         node.aws_kms_key_nodes,
         node.aws_lambda_function_nodes,
         node.aws_sns_topic_nodes,

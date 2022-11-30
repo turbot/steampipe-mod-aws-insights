@@ -220,7 +220,7 @@ dashboard "aws_kms_key_detail" {
         node.aws_kms_key_nodes,
         node.aws_kms_key_alias_nodes,
         node.aws_cloudtrail_trail_nodes,
-        node.aws_ebs_volume_nodes,
+        node.ebs_volume,
         node.aws_rds_db_cluster_snapshot_nodes,
         node.aws_rds_db_cluster_nodes,
         node.aws_redshift_cluster_nodes,

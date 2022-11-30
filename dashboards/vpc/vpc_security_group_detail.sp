@@ -204,15 +204,15 @@ dashboard "aws_vpc_security_group_detail" {
       }
 
       nodes = [
-        node.aws_vpc_security_group_nodes,
-        node.aws_vpc_nodes,
+        node.vpc_security_group,
+        node.vpc_vpc,
         node.aws_rds_db_cluster_nodes,
         node.aws_rds_db_instance_nodes,
-        node.aws_ec2_instance_nodes,
+        node.ec2_instance,
         node.aws_lambda_function_nodes,
         node.aws_redshift_cluster_nodes,
-        node.aws_ec2_classic_load_balancer_nodes,
-        node.aws_ec2_application_load_balancer_nodes,
+        node.ec2_classic_load_balancer,
+        node.ec2_application_load_balancer,
         node.aws_dax_cluster_nodes,
         node.aws_elasticache_cluster_nodes,
 
@@ -1387,30 +1387,6 @@ query "aws_vpc_security_group_tags" {
     EOQ
 
   param "group_id" {}
-}
-
-
-node "aws_vpc_security_group_nodes" {
-  category = category.aws_vpc_security_group
-
-  sql = <<-EOQ
-    select
-      group_id as id,
-      title as title,
-      jsonb_build_object(
-        'Group ID', group_id,
-        'Description', description,
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_vpc_security_group
-    where
-      group_id = any($1 ::text[]);
-  EOQ
-
-  param "security_group_ids" {}
 }
 
 edge "aws_vpc_security_group_to_rds_db_cluster_edges" {

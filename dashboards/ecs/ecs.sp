@@ -4,7 +4,7 @@ locals {
   }
 }
 
-category "aws_ecs_cluster" {
+category "ecs_cluster" {
   title = "ECS Cluster"
   href  = "/aws_insights.dashboard.aws_ecs_cluster_detail?input.ecs_cluster_arn={{.properties.'ARN' | @uri}}"
   icon  = "text:ECS"

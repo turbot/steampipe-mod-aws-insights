@@ -36,7 +36,7 @@ category "aws_iam_instance_profile" {
   color = local.iam_color
 }
 
-category "aws_iam_role" {
+category "iam_role" {
   title = "IAM Role"
   href  = "/aws_insights.dashboard.aws_iam_role_detail?input.role_arn={{.properties.'ARN' | @uri}}"
   icon  = "user-plus"

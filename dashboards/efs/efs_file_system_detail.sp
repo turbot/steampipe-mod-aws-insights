@@ -392,7 +392,7 @@ edge "aws_efs_file_system_to_efs_mount_target_edge" {
 }
 
 node "aws_efs_file_system_mount_target_to_security_group_node" {
-  category = category.aws_vpc_security_group
+  category = category.vpc_security_group
   sql = <<-EOQ
     with mount_sg_list as (
       select
@@ -447,7 +447,7 @@ edge "aws_efs_file_system_mount_target_to_security_group_edge" {
 }
 
 node "aws_efs_file_system_mount_target_security_group_to_subnet_node" {
-  category = category.aws_vpc_subnet
+  category = category.vpc_subnet
   sql = <<-EOQ
     select
       s.subnet_id as id,

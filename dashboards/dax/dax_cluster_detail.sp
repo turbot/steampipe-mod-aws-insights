@@ -205,7 +205,7 @@ node "aws_dax_cluster_node" {
 }
 
 node "aws_dax_cluster_to_iam_role_node" {
-  category = category.aws_iam_role
+  category = category.iam_role
   sql      = <<-EOQ
     select
       r.arn as id,
@@ -244,7 +244,7 @@ edge "aws_dax_cluster_to_iam_role_edge" {
 }
 
 node "aws_dax_cluster_to_vpc_security_group_node" {
-  category = category.aws_vpc_security_group
+  category = category.vpc_security_group
   sql      = <<-EOQ
     select
       arn as id,
@@ -339,7 +339,7 @@ edge "aws_dax_cluster_vpc_security_group_to_dax_subnet_group_edge" {
 }
 
 node "aws_dax_subnet_group_to_vpc_subnet_node" {
-  category = category.aws_vpc_subnet
+  category = category.vpc_subnet
   sql      = <<-EOQ
     select
       subnet_arn as id,
