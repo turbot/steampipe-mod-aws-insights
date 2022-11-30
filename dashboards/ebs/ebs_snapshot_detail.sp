@@ -66,7 +66,7 @@ dashboard "aws_ebs_snapshot_detail" {
 
         args = [self.input.snapshot_arn.value]
       }
-      
+
       with "kms_keys" {
         sql = <<-EOQ
         select
@@ -81,25 +81,60 @@ dashboard "aws_ebs_snapshot_detail" {
         args = [self.input.snapshot_arn.value]
       }
 
+      with "amis" {
+        sql = <<-EOQ
+          select
+            images.image_id as image_id
+          from
+            aws_ec2_ami as images,
+            jsonb_array_elements(images.block_device_mappings) as bdm,
+            aws_ebs_snapshot as s
+          where
+            bdm -> 'Ebs' is not null
+            and bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
+            and s.arn = $1;
+        EOQ
+
+        args = [self.input.snapshot_arn.value]
+      }
+
+      with "launch_configurations" {
+        sql = <<-EOQ
+          select
+            launch_config.launch_configuration_arn as launch_configuration_arn
+          from
+            aws_ec2_launch_configuration as launch_config,
+            jsonb_array_elements(launch_config.block_device_mappings) as bdm,
+            aws_ebs_snapshot as s
+          where
+            bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
+            and s.arn = $1;
+        EOQ
+
+        args = [self.input.snapshot_arn.value]
+      }
+
       nodes = [
         node.aws_ebs_snapshot_nodes,
         node.aws_ebs_volume_nodes,
-        // node.aws_ec2_ami_node,
-        // node.aws_ebs_snapshot_from_ec2_launch_configuration_node,
+        node.aws_ec2_ami_node,
+        node.aws_ec2_launch_configuration_nodes,
         node.aws_kms_key_nodes
       ]
 
       edges = [
         edge.aws_ebs_snapshot_from_ebs_volume_edge,
-        // edge.aws_ebs_snapshot_from_ec2_ami_edge,
-        // edge.aws_ebs_snapshot_from_ec2_launch_configuration_edge,
+        edge.aws_ebs_volume_ebs_snapshots_to_ec2_ami_edge,
+        edge.aws_ebs_snapshot_from_ec2_launch_configuration_edge,
         edge.aws_ebs_snapshot_to_kms_key_edge
       ]
 
       args = {
-        snapshot_arns   = [self.input.snapshot_arn.value]
-        volume_arns     = with.ebs_volumes.rows[*].volume_arn
-        key_arns        = with.kms_keys.rows[*].key_arn
+        snapshot_arns             = [self.input.snapshot_arn.value]
+        volume_arns               = with.ebs_volumes.rows[*].volume_arn
+        key_arns                  = with.kms_keys.rows[*].key_arn
+        image_ids                 = with.amis.rows[*].image_id
+        launch_configuration_arns = with.launch_configurations.rows[*].launch_configuration_arn
       }
     }
   }
@@ -303,31 +338,6 @@ node "aws_ebs_snapshot_from_ec2_ami_node" {
   sql = <<-EOQ
     select
       images.image_id as id,
-      images.title as title,
-      jsonb_build_object(
-        'Image ID', images.image_id,
-        'Snapshot ID', bdm -> 'Ebs' ->> 'SnapshotId'
-      ) as properties
-    from
-      aws_ec2_ami as images,
-      jsonb_array_elements(images.block_device_mappings) as bdm,
-      aws_ebs_snapshot as s
-    where
-      bdm -> 'Ebs' is not null
-      and bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
-      and s.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "aws_ebs_snapshot_from_ec2_ami_edge" {
-  title = "snapshot"
-
-  sql = <<-EOQ
-    select
-      images.image_id as from_id,
-      bdm -> 'Ebs' ->> 'SnapshotId' as to_id
     from
       aws_ec2_ami as images,
       jsonb_array_elements(images.block_device_mappings) as bdm,
@@ -346,13 +356,7 @@ node "aws_ebs_snapshot_from_ec2_launch_configuration_node" {
 
   sql = <<-EOQ
     select
-      launch_config.launch_configuration_arn as id,
-      launch_config.title as title,
-      jsonb_build_object(
-        'ARN', launch_config.launch_configuration_arn,
-        'Account ID', launch_config.account_id,
-        'Region', launch_config.region
-      ) as properties
+      launch_config.launch_configuration_arn
     from
       aws_ec2_launch_configuration as launch_config,
       jsonb_array_elements(launch_config.block_device_mappings) as bdm,
@@ -370,18 +374,15 @@ edge "aws_ebs_snapshot_from_ec2_launch_configuration_edge" {
 
   sql = <<-EOQ
     select
-      launch_config.launch_configuration_arn as from_id,
-      s.snapshot_id as to_id
+      launch_configuration as from_id,
+      snapshot_arn as to_id
     from
-      aws_ec2_launch_configuration as launch_config,
-      jsonb_array_elements(launch_config.block_device_mappings) as bdm,
-      aws_ebs_snapshot as s
-    where
-      bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
-      and s.arn = $1;
+      unnest($1::text[]) as launch_configuration,
+      unnest($2::text[]) as snapshot_arn
   EOQ
 
-  param "arn" {}
+  param "launch_configuration_arns" {}
+  param "snapshot_arns" {}
 }
 
 node "aws_ebs_snapshot_to_kms_key_node" {

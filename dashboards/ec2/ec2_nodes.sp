@@ -43,3 +43,24 @@ node "aws_ec2_instance_nodes" {
 
   param "instance_arns" {}
 }
+
+node "aws_ec2_launch_configuration_nodes" {
+  category = category.aws_ec2_launch_configuration
+
+  sql = <<-EOQ
+    select
+      launch_configuration_arn as id,
+      title as title,
+      jsonb_build_object(
+        'ARN', launch_configuration_arn,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_ec2_launch_configuration
+    where
+      launch_configuration_arn = any($1);
+  EOQ
+
+  param "launch_configuration_arns" {}
+}
