@@ -41,12 +41,12 @@ dashboard "glacier_vault_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_glacier_vault_node,
-        node.aws_glacier_vault_to_sns_topic_node
+        node.glacier_vault_node,
+        node.glacier_vault_to_sns_topic_node
       ]
 
       edges = [
-        edge.aws_glacier_vault_to_sns_topic_edge
+        edge.glacier_vault_to_sns_topic_edge
       ]
 
       args = {
@@ -222,7 +222,7 @@ query "aws_glacier_vault_lock_public_policy" {
   EOQ
 }
 
-node "aws_glacier_vault_node" {
+node "glacier_vault_node" {
   category = category.glacier_vault
 
   sql = <<-EOQ
@@ -244,7 +244,7 @@ node "aws_glacier_vault_node" {
   param "arn" {}
 }
 
-node "aws_glacier_vault_to_sns_topic_node" {
+node "glacier_vault_to_sns_topic_node" {
   category = category.sns_topic
 
   sql = <<-EOQ
@@ -269,7 +269,7 @@ node "aws_glacier_vault_to_sns_topic_node" {
   param "arn" {}
 }
 
-edge "aws_glacier_vault_to_sns_topic_edge" {
+edge "glacier_vault_to_sns_topic_edge" {
   title = "notifies"
 
   sql = <<-EOQ

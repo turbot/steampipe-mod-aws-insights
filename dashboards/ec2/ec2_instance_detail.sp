@@ -270,10 +270,10 @@ dashboard "aws_ec2_instance_detail" {
         node.vpc_vpc,
 
         # TODO: What should these nodes be named and where should they live since they're specific to EC2 instance graphs?
-        node.aws_ec2_instance_iam_instance_profile_nodes,
-        node.aws_ec2_instance_ec2_key_pair_nodes,
-        node.aws_ec2_instance_ec2_autoscaling_group_nodes,
-        node.aws_ec2_instance_ec2_target_group_nodes,
+        node.ec2_instance_iam_instance_profile,
+        node.ec2_instance_ec2_key_pair,
+        node.ec2_instance_ec2_autoscaling_group,
+        node.ec2_instance_ec2_target_group,
       ]
 
       edges = [
@@ -506,7 +506,7 @@ query "aws_ec2_instance_ebs_optimized" {
   param "arn" {}
 }
 
-node "aws_ec2_instance_iam_instance_profile_nodes" {
+node "ec2_instance_iam_instance_profile" {
   category = category.iam_instance_profile
 
   sql = <<-EOQ
@@ -527,7 +527,7 @@ node "aws_ec2_instance_iam_instance_profile_nodes" {
   param "instance_arns" {}
 }
 
-node "aws_ec2_instance_ec2_key_pair_nodes" {
+node "ec2_instance_ec2_key_pair" {
   category = category.ec2_key_pair
 
   sql = <<-EOQ
@@ -552,7 +552,7 @@ node "aws_ec2_instance_ec2_key_pair_nodes" {
   param "instance_arns" {}
 }
 
-node "aws_ec2_instance_ec2_autoscaling_group_nodes" {
+node "ec2_instance_ec2_autoscaling_group" {
   category = category.ec2_autoscaling_group
 
   sql = <<-EOQ
@@ -576,7 +576,7 @@ node "aws_ec2_instance_ec2_autoscaling_group_nodes" {
   param "instance_arns" {}
 }
 
-node "aws_ec2_instance_ec2_target_group_nodes" {
+node "ec2_instance_ec2_target_group" {
   category = category.ec2_target_group
 
   sql = <<-EOQ

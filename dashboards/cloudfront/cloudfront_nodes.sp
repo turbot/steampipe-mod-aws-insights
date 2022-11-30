@@ -1,4 +1,4 @@
-node "aws_cloudfront_distribution_nodes" {
+node "cloudfront_distribution" {
   category = category.cloudfront_distribution
   sql      = <<-EOQ
     select

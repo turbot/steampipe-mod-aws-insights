@@ -32,14 +32,14 @@ dashboard "backup_plan_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_backup_plan_node,
-        node.aws_backup_plan_to_backup_vault_node,
-        node.aws_backup_plan_to_backup_selection_node
+        node.backup_plan_node,
+        node.backup_plan_to_backup_vault_node,
+        node.backup_plan_to_backup_selection_node
       ]
 
       edges = [
-        edge.aws_backup_plan_to_backup_vault_edge,
-        edge.aws_backup_plan_to_backup_selection_edge
+        edge.backup_plan_to_backup_vault_edge,
+        edge.backup_plan_to_backup_selection_edge
       ]
 
       args = {
@@ -110,7 +110,7 @@ query "aws_backup_plan_resource_assignment" {
   param "arn" {}
 }
 
-node "aws_backup_plan_node" {
+node "backup_plan_node" {
   category = category.backup_plan
 
   sql = <<-EOQ
@@ -133,7 +133,7 @@ node "aws_backup_plan_node" {
   param "arn" {}
 }
 
-node "aws_backup_plan_to_backup_vault_node" {
+node "backup_plan_to_backup_vault_node" {
   category = category.backup_vault
 
   sql = <<-EOQ
@@ -165,7 +165,7 @@ node "aws_backup_plan_to_backup_vault_node" {
   param "arn" {}
 }
 
-edge "aws_backup_plan_to_backup_vault_edge" {
+edge "backup_plan_to_backup_vault_edge" {
   title = "backup vault"
 
   sql = <<-EOQ
@@ -184,7 +184,7 @@ edge "aws_backup_plan_to_backup_vault_edge" {
   param "arn" {}
 }
 
-node "aws_backup_plan_to_backup_selection_node" {
+node "backup_plan_to_backup_selection_node" {
   category = category.backup_selection
 
   sql = <<-EOQ
@@ -215,7 +215,7 @@ node "aws_backup_plan_to_backup_selection_node" {
   param "arn" {}
 }
 
-edge "aws_backup_plan_to_backup_selection_edge" {
+edge "backup_plan_to_backup_selection_edge" {
   title = "backup selection"
 
   sql = <<-EOQ

@@ -73,25 +73,25 @@ dashboard "aws_elasticache_cluster_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_elasticache_cluster_node,
-        node.aws_elasticache_cluster_to_elasticache_parameter_group_node,
-        node.aws_elasticache_cluster_to_sns_topic_node,
-        node.aws_elasticache_cluster_to_kms_key_node,
-        node.aws_elasticache_cluster_to_vpc_security_group_node,
-        node.aws_elasticache_cluster_to_vpc_node,
-        node.aws_elasticache_cluster_to_subnet_group_node,
-        node.aws_elasticache_cluster_to_vpc_subnet_node,
-        node.aws_elasticache_cluster_subnet_to_vpc_node
+        node.elasticache_cluster_node,
+        node.elasticache_cluster_to_elasticache_parameter_group_node,
+        node.elasticache_cluster_to_sns_topic_node,
+        node.elasticache_cluster_to_kms_key_node,
+        node.elasticache_cluster_to_vpc_security_group_node,
+        node.elasticache_cluster_to_vpc_node,
+        node.elasticache_cluster_to_subnet_group_node,
+        node.elasticache_cluster_to_vpc_subnet_node,
+        node.elasticache_cluster_subnet_to_vpc_node
       ]
 
       edges = [
-        edge.aws_elasticache_cluster_to_sns_topic_edge,
-        edge.aws_elasticache_cluster_to_elasticache_parameter_group_edge,
-        edge.aws_elasticache_cluster_to_kms_key_edge,
-        edge.aws_elasticache_cluster_to_vpc_security_group_edge,
-        edge.aws_elasticache_cluster_to_subnet_group_edge,
-        edge.aws_elasticache_cluster_to_vpc_subnet_edge,
-        edge.aws_elasticache_cluster_subnet_to_vpc_edge
+        edge.elasticache_cluster_to_sns_topic_edge,
+        edge.elasticache_cluster_to_elasticache_parameter_group_edge,
+        edge.elasticache_cluster_to_kms_key_edge,
+        edge.elasticache_cluster_to_vpc_security_group_edge,
+        edge.elasticache_cluster_to_subnet_group_edge,
+        edge.elasticache_cluster_to_vpc_subnet_edge,
+        edge.elasticache_cluster_subnet_to_vpc_edge
       ]
 
       args = {
@@ -247,7 +247,7 @@ query "aws_elasticache_cluster_auth_token" {
 
 }
 
-node "aws_elasticache_cluster_node" {
+node "elasticache_cluster_node" {
   category = category.elasticache_cluster
 
   sql = <<-EOQ
@@ -270,7 +270,7 @@ node "aws_elasticache_cluster_node" {
   param "arn" {}
 }
 
-node "aws_elasticache_cluster_to_sns_topic_node" {
+node "elasticache_cluster_to_sns_topic_node" {
   category = category.sns_topic
 
   sql = <<-EOQ
@@ -298,7 +298,7 @@ node "aws_elasticache_cluster_to_sns_topic_node" {
   param "arn" {}
 }
 
-edge "aws_elasticache_cluster_to_sns_topic_edge" {
+edge "elasticache_cluster_to_sns_topic_edge" {
   title = "notifies"
 
   sql = <<-EOQ
@@ -317,7 +317,7 @@ edge "aws_elasticache_cluster_to_sns_topic_edge" {
   param "arn" {}
 }
 
-node "aws_elasticache_cluster_to_kms_key_node" {
+node "elasticache_cluster_to_kms_key_node" {
   category = category.kms_key
 
   sql = <<-EOQ
@@ -350,7 +350,7 @@ node "aws_elasticache_cluster_to_kms_key_node" {
   param "arn" {}
 }
 
-edge "aws_elasticache_cluster_to_kms_key_edge" {
+edge "elasticache_cluster_to_kms_key_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -372,7 +372,7 @@ edge "aws_elasticache_cluster_to_kms_key_edge" {
   param "arn" {}
 }
 
-node "aws_elasticache_cluster_to_vpc_security_group_node" {
+node "elasticache_cluster_to_vpc_security_group_node" {
   category = category.vpc_security_group
 
   sql = <<-EOQ
@@ -403,7 +403,7 @@ node "aws_elasticache_cluster_to_vpc_security_group_node" {
   param "arn" {}
 }
 
-edge "aws_elasticache_cluster_to_vpc_security_group_edge" {
+edge "elasticache_cluster_to_vpc_security_group_edge" {
   title = "security group"
 
   sql = <<-EOQ
@@ -422,7 +422,7 @@ edge "aws_elasticache_cluster_to_vpc_security_group_edge" {
   param "arn" {}
 }
 
-node "aws_elasticache_cluster_to_vpc_node" {
+node "elasticache_cluster_to_vpc_node" {
   category = category.vpc_vpc
 
   sql = <<-EOQ
@@ -456,7 +456,7 @@ node "aws_elasticache_cluster_to_vpc_node" {
   param "arn" {}
 }
 
-node "aws_elasticache_cluster_to_subnet_group_node" {
+node "elasticache_cluster_to_subnet_group_node" {
   category = category.elasticache_subnet_group
 
   sql = <<-EOQ
@@ -481,7 +481,7 @@ node "aws_elasticache_cluster_to_subnet_group_node" {
   param "arn" {}
 }
 
-edge "aws_elasticache_cluster_to_subnet_group_edge" {
+edge "elasticache_cluster_to_subnet_group_edge" {
   title = "subnet group"
 
   sql = <<-EOQ
@@ -504,7 +504,7 @@ edge "aws_elasticache_cluster_to_subnet_group_edge" {
   param "arn" {}
 }
 
-node "aws_elasticache_cluster_to_elasticache_parameter_group_node" {
+node "elasticache_cluster_to_elasticache_parameter_group_node" {
   category = category.elasticache_parameter_group
 
   sql = <<-EOQ
@@ -528,7 +528,7 @@ node "aws_elasticache_cluster_to_elasticache_parameter_group_node" {
   param "arn" {}
 }
 
-edge "aws_elasticache_cluster_to_elasticache_parameter_group_edge" {
+edge "elasticache_cluster_to_elasticache_parameter_group_edge" {
   title = "parameter group"
 
   sql = <<-EOQ
@@ -547,7 +547,7 @@ edge "aws_elasticache_cluster_to_elasticache_parameter_group_edge" {
   param "arn" {}
 }
 
-node "aws_elasticache_cluster_to_vpc_subnet_node" {
+node "elasticache_cluster_to_vpc_subnet_node" {
   category = category.vpc_subnet
 
   sql = <<-EOQ
@@ -581,7 +581,7 @@ node "aws_elasticache_cluster_to_vpc_subnet_node" {
   param "arn" {}
 }
 
-edge "aws_elasticache_cluster_to_vpc_subnet_edge" {
+edge "elasticache_cluster_to_vpc_subnet_edge" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -602,7 +602,7 @@ edge "aws_elasticache_cluster_to_vpc_subnet_edge" {
   param "arn" {}
 }
 
-node "aws_elasticache_cluster_subnet_to_vpc_node" {
+node "elasticache_cluster_subnet_to_vpc_node" {
   category = category.vpc_vpc
 
   sql = <<-EOQ
@@ -636,7 +636,7 @@ node "aws_elasticache_cluster_subnet_to_vpc_node" {
   param "arn" {}
 }
 
-edge "aws_elasticache_cluster_subnet_to_vpc_edge" {
+edge "elasticache_cluster_subnet_to_vpc_edge" {
   title = "vpc"
 
   sql = <<-EOQ
@@ -712,7 +712,7 @@ query "aws_elasticache_cluster_notification_configuration" {
   param "arn" {}
 }
 
-node "aws_elasticache_cluster_nodes" {
+node "elasticache_cluster" {
   category = category.elasticache_cluster
 
   sql = <<-EOQ

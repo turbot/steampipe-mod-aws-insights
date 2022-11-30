@@ -85,18 +85,18 @@ dashboard "aws_iam_user_detail" {
       }
 
       nodes = [
-        node.aws_iam_user_nodes,
-        node.aws_iam_group_nodes,
-        node.aws_iam_policy_nodes,
-        node.aws_iam_user_access_key_nodes,
-        node.aws_iam_user_inline_policy_nodes,
+        node.iam_user,
+        node.iam_group,
+        node.iam_policy,
+        node.iam_user_access_key,
+        node.iam_user_inline_policy,
       ]
 
       edges = [
-        edge.aws_iam_group_to_iam_user_edges,
-        edge.aws_iam_user_to_iam_policy_edges,
-        edge.aws_iam_user_to_iam_access_key_edges,
-        edge.aws_iam_user_to_inline_policy_edges,
+        edge.iam_group_to_iam_user,
+        edge.iam_user_to_iam_policy,
+        edge.iam_user_to_iam_access_key,
+        edge.iam_user_to_inline_policy,
       ]
 
       args = {
@@ -540,7 +540,7 @@ query "aws_iam_all_policies_for_user" {
   param "arn" {}
 }
 
-node "aws_iam_user_nodes" {
+node "iam_user" {
 
   category = category.iam_user
 
@@ -564,7 +564,7 @@ node "aws_iam_user_nodes" {
   param "user_arns" {}
 }
 
-edge "aws_iam_user_to_iam_policy_edges" {
+edge "iam_user_to_iam_policy" {
   title = "has policy"
 
   sql = <<-EOQ
@@ -580,7 +580,7 @@ edge "aws_iam_user_to_iam_policy_edges" {
   param "policy_arns" {}
 }
 
-node "aws_iam_user_inline_policy_nodes" {
+node "iam_user_inline_policy" {
   category = category.iam_inline_policy
 
   sql = <<-EOQ
@@ -601,7 +601,7 @@ node "aws_iam_user_inline_policy_nodes" {
   param "user_arns" {}
 }
 
-edge "aws_iam_user_to_inline_policy_edges" {
+edge "iam_user_to_inline_policy" {
   title = "inline policy"
 
   sql = <<-EOQ
@@ -621,7 +621,7 @@ edge "aws_iam_user_to_inline_policy_edges" {
 
 
 
-node "aws_iam_user_access_key_nodes" {
+node "iam_user_access_key" {
   category = category.iam_access_key
 
   sql = <<-EOQ
@@ -648,7 +648,7 @@ node "aws_iam_user_access_key_nodes" {
   param "user_arns" {}
 }
 
-edge "aws_iam_user_to_iam_access_key_edges" {
+edge "iam_user_to_iam_access_key" {
   title = "access key"
 
   sql = <<-EOQ

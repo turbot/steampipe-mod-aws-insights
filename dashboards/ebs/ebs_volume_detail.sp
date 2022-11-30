@@ -66,18 +66,18 @@ dashboard "aws_ebs_volume_detail" {
 
 
       nodes = [
-        node.aws_ebs_volume_node,
-        node.aws_ebs_volume_to_kms_key_node,
-        node.aws_ebs_volume_to_ebs_snapshot_node,
-        node.aws_ebs_volume_from_ec2_instance_node,
-        node.aws_ebs_volume_ebs_snapshots_to_ec2_ami_node
+        node.ebs_volume_node,
+        node.ebs_volume_to_kms_key_node,
+        node.ebs_volume_to_ebs_snapshot_node,
+        node.ebs_volume_from_ec2_instance_node,
+        node.ebs_volume_ebs_snapshots_to_ec2_ami_node
       ]
 
       edges = [
-        edge.aws_ebs_volume_to_kms_key_edge,
-        edge.aws_ebs_volume_to_ebs_snapshot_edge,
-        edge.aws_ebs_volume_from_ec2_instance_edge,
-        edge.aws_ebs_volume_ebs_snapshots_to_ec2_ami_edge
+        edge.ebs_volume_to_kms_key_edge,
+        edge.ebs_volume_to_ebs_snapshot_edge,
+        edge.ebs_volume_from_ec2_instance_edge,
+        edge.ebs_volume_ebs_snapshots_to_ec2_ami_edge
       ]
 
       args = {
@@ -216,7 +216,7 @@ query "aws_ebs_volume_input" {
   EOQ
 }
 
-node "aws_ebs_volume_node" {
+node "ebs_volume_node" {
   category = category.ebs_volume
 
   sql = <<-EOQ
@@ -240,7 +240,7 @@ node "aws_ebs_volume_node" {
   param "arn" {}
 }
 
-node "aws_ebs_volume_to_kms_key_node" {
+node "ebs_volume_to_kms_key_node" {
   category = category.kms_key
 
   sql = <<-EOQ
@@ -264,7 +264,7 @@ node "aws_ebs_volume_to_kms_key_node" {
   param "arn" {}
 }
 
-edge "aws_ebs_volume_to_kms_key_edge" {
+edge "ebs_volume_to_kms_key_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -282,7 +282,7 @@ edge "aws_ebs_volume_to_kms_key_edge" {
   param "arn" {}
 }
 
-node "aws_ebs_volume_to_ebs_snapshot_node" {
+node "ebs_volume_to_ebs_snapshot_node" {
   category = category.ebs_snapshot
 
   sql = <<-EOQ
@@ -305,7 +305,7 @@ node "aws_ebs_volume_to_ebs_snapshot_node" {
   param "arn" {}
 }
 
-edge "aws_ebs_volume_to_ebs_snapshot_edge" {
+edge "ebs_volume_to_ebs_snapshot_edge" {
   title = "snapshot"
 
   sql = <<-EOQ
@@ -323,7 +323,7 @@ edge "aws_ebs_volume_to_ebs_snapshot_edge" {
   param "arn" {}
 }
 
-node "aws_ebs_volume_from_ec2_instance_node" {
+node "ebs_volume_from_ec2_instance_node" {
   category = category.ec2_instance
 
   sql = <<-EOQ
@@ -355,7 +355,7 @@ node "aws_ebs_volume_from_ec2_instance_node" {
   param "arn" {}
 }
 
-edge "aws_ebs_volume_from_ec2_instance_edge" {
+edge "ebs_volume_from_ec2_instance_edge" {
   title = "mounts"
 
   sql = <<-EOQ
@@ -380,7 +380,7 @@ edge "aws_ebs_volume_from_ec2_instance_edge" {
   param "arn" {}
 }
 
-node "aws_ebs_volume_ebs_snapshots_to_ec2_ami_node" {
+node "ebs_volume_ebs_snapshots_to_ec2_ami_node" {
   category = category.ec2_ami
 
   sql = <<-EOQ
@@ -414,7 +414,7 @@ node "aws_ebs_volume_ebs_snapshots_to_ec2_ami_node" {
   param "arn" {}
 }
 
-edge "aws_ebs_volume_ebs_snapshots_to_ec2_ami_edge" {
+edge "ebs_volume_ebs_snapshots_to_ec2_ami_edge" {
   title = "ami"
 
   sql = <<-EOQ

@@ -165,20 +165,20 @@ dashboard "aws_cloudfront_distribution_detail" {
       }
 
       nodes = [
-        node.aws_cloudfront_distribution_nodes,
-        node.aws_acm_certificate_nodes,
-        node.aws_s3_bucket_nodes,
+        node.cloudfront_distribution,
+        node.acm_certificate,
+        node.s3_bucket,
         node.ec2_application_load_balancer,
-        node.aws_media_store_container_nodes,
-        node.aws_wafv2_web_acl_nodes
+        node.media_store_container,
+        node.wafv2_web_acl
       ]
 
       edges = [
-        edge.aws_cloudfront_distribution_to_acm_certificate_edges,
-        edge.aws_s3_bucket_to_cloudfront_distribution_edges,
-        edge.aws_ec2_application_load_balancer_to_cloudfront_distribution_edges,
-        edge.aws_media_store_container_to_cloudfront_distribution_edges,
-        edge.aws_cloudfront_distribution_to_wafv2_web_acl_edges
+        edge.cloudfront_distribution_to_acm_certificate,
+        edge.s3_bucket_to_cloudfront_distribution,
+        edge.ec2_application_load_balancer_to_cloudfront_distribution,
+        edge.media_store_container_to_cloudfront_distribution,
+        edge.cloudfront_distribution_to_wafv2_web_acl
       ]
 
       args = {
@@ -320,7 +320,7 @@ query "aws_cloudfront_distribution_sni" {
   param "arn" {}
 }
 
-edge "aws_cloudfront_distribution_to_acm_certificate_edges" {
+edge "cloudfront_distribution_to_acm_certificate" {
   title = "ssl via"
 
   sql = <<-EOQ
@@ -336,7 +336,7 @@ edge "aws_cloudfront_distribution_to_acm_certificate_edges" {
   param "certificate_arns" {}
 }
 
-edge "aws_s3_bucket_to_cloudfront_distribution_edges" {
+edge "s3_bucket_to_cloudfront_distribution" {
   title = "origin for"
   sql   = <<-EOQ
     select
@@ -351,7 +351,7 @@ edge "aws_s3_bucket_to_cloudfront_distribution_edges" {
   param "bucket_arns" {}
 }
 
-edge "aws_ec2_application_load_balancer_to_cloudfront_distribution_edges" {
+edge "ec2_application_load_balancer_to_cloudfront_distribution" {
   title = "origin for"
   sql   = <<-EOQ
     select
@@ -366,7 +366,7 @@ edge "aws_ec2_application_load_balancer_to_cloudfront_distribution_edges" {
   param "alb_arns" {}
 }
 
-edge "aws_media_store_container_to_cloudfront_distribution_edges" {
+edge "media_store_container_to_cloudfront_distribution" {
   title = "origin for"
   sql   = <<-EOQ
     select
@@ -381,7 +381,7 @@ edge "aws_media_store_container_to_cloudfront_distribution_edges" {
   param "mediastore_arns" {}
 }
 
-edge "aws_cloudfront_distribution_to_wafv2_web_acl_edges" {
+edge "cloudfront_distribution_to_wafv2_web_acl" {
   title = "web acl"
   sql   = <<-EOQ
     select

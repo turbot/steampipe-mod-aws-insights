@@ -49,31 +49,31 @@ dashboard "aws_codebuild_project_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_codebuild_project_node,
-        node.aws_codebuild_project_to_s3_bucket_node,
-        node.aws_codebuild_project_to_cloudwatch_group_node,
-        node.aws_codebuild_project_to_kms_key_node,
-        node.aws_codebuild_project_to_iam_role_node,
-        node.aws_codebuild_project_to_ecr_repository_node,
-        node.aws_codebuild_project_to_codecommit_repository_node,
-        node.aws_codebuild_project_to_vpc_security_group_node,
-        node.aws_codebuild_project_vpc_security_group_to_subnet_node,
-        node.aws_codebuild_project_vpc_security_group_subnet_to_vpc_node
+        node.codebuild_project_node,
+        node.codebuild_project_to_s3_bucket_node,
+        node.codebuild_project_to_cloudwatch_group_node,
+        node.codebuild_project_to_kms_key_node,
+        node.codebuild_project_to_iam_role_node,
+        node.codebuild_project_to_ecr_repository_node,
+        node.codebuild_project_to_codecommit_repository_node,
+        node.codebuild_project_to_vpc_security_group_node,
+        node.codebuild_project_vpc_security_group_to_subnet_node,
+        node.codebuild_project_vpc_security_group_subnet_to_vpc_node
       ]
 
       edges = [
-        edge.aws_codebuild_project_to_s3_bucket_edge,
-        edge.aws_codebuild_project_to_artifact_s3_bucket_edge,
-        edge.aws_codebuild_project_to_cache_s3_bucket_edge,
-        edge.aws_codebuild_project_from_s3_bucket_edge,
-        edge.aws_codebuild_project_to_cloudwatch_group_edge,
-        edge.aws_codebuild_project_to_kms_key_edge,
-        edge.aws_codebuild_project_to_iam_role_edge,
-        edge.aws_codebuild_project_to_ecr_repository_edge,
-        edge.aws_codebuild_project_to_codecommit_repository_edge,
-        edge.aws_codebuild_project_to_vpc_security_group_edge,
-        edge.aws_codebuild_project_vpc_security_group_to_subnet_edge,
-        edge.aws_codebuild_project_vpc_security_group_subnet_to_vpc_edge
+        edge.codebuild_project_to_s3_bucket_edge,
+        edge.codebuild_project_to_artifact_s3_bucket_edge,
+        edge.codebuild_project_to_cache_s3_bucket_edge,
+        edge.codebuild_project_from_s3_bucket_edge,
+        edge.codebuild_project_to_cloudwatch_group_edge,
+        edge.codebuild_project_to_kms_key_edge,
+        edge.codebuild_project_to_iam_role_edge,
+        edge.codebuild_project_to_ecr_repository_edge,
+        edge.codebuild_project_to_codecommit_repository_edge,
+        edge.codebuild_project_to_vpc_security_group_edge,
+        edge.codebuild_project_vpc_security_group_to_subnet_edge,
+        edge.codebuild_project_vpc_security_group_subnet_to_vpc_edge
       ]
 
       args = {
@@ -254,7 +254,7 @@ query "aws_codebuild_project_input" {
   EOQ
 }
 
-node "aws_codebuild_project_node" {
+node "codebuild_project_node" {
   category = category.codebuild_project
 
   sql = <<-EOQ
@@ -277,7 +277,7 @@ node "aws_codebuild_project_node" {
   param "arn" {}
 }
 
-node "aws_codebuild_project_to_s3_bucket_node" {
+node "codebuild_project_to_s3_bucket_node" {
   category = category.s3_bucket
 
   sql = <<-EOQ
@@ -305,7 +305,7 @@ node "aws_codebuild_project_to_s3_bucket_node" {
   param "arn" {}
 }
 
-edge "aws_codebuild_project_to_s3_bucket_edge" {
+edge "codebuild_project_to_s3_bucket_edge" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -323,7 +323,7 @@ edge "aws_codebuild_project_to_s3_bucket_edge" {
   param "arn" {}
 }
 
-edge "aws_codebuild_project_to_artifact_s3_bucket_edge" {
+edge "codebuild_project_to_artifact_s3_bucket_edge" {
   title = "artifact"
 
   sql = <<-EOQ
@@ -341,7 +341,7 @@ edge "aws_codebuild_project_to_artifact_s3_bucket_edge" {
   param "arn" {}
 }
 
-edge "aws_codebuild_project_to_cache_s3_bucket_edge" {
+edge "codebuild_project_to_cache_s3_bucket_edge" {
   title = "cache"
 
   sql = <<-EOQ
@@ -359,7 +359,7 @@ edge "aws_codebuild_project_to_cache_s3_bucket_edge" {
   param "arn" {}
 }
 
-edge "aws_codebuild_project_from_s3_bucket_edge" {
+edge "codebuild_project_from_s3_bucket_edge" {
   title = "source provider"
 
   sql = <<-EOQ
@@ -377,7 +377,7 @@ edge "aws_codebuild_project_from_s3_bucket_edge" {
   param "arn" {}
 }
 
-node "aws_codebuild_project_to_cloudwatch_group_node" {
+node "codebuild_project_to_cloudwatch_group_node" {
   category = category.cloudwatch_log_group
 
   sql = <<-EOQ
@@ -401,7 +401,7 @@ node "aws_codebuild_project_to_cloudwatch_group_node" {
   param "arn" {}
 }
 
-edge "aws_codebuild_project_to_cloudwatch_group_edge" {
+edge "codebuild_project_to_cloudwatch_group_edge" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -418,7 +418,7 @@ edge "aws_codebuild_project_to_cloudwatch_group_edge" {
   param "arn" {}
 }
 
-node "aws_codebuild_project_to_kms_key_node" {
+node "codebuild_project_to_kms_key_node" {
   category = category.kms_key
 
   sql = <<-EOQ
@@ -444,7 +444,7 @@ node "aws_codebuild_project_to_kms_key_node" {
   param "arn" {}
 }
 
-edge "aws_codebuild_project_to_kms_key_edge" {
+edge "codebuild_project_to_kms_key_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -462,7 +462,7 @@ edge "aws_codebuild_project_to_kms_key_edge" {
   param "arn" {}
 }
 
-node "aws_codebuild_project_to_iam_role_node" {
+node "codebuild_project_to_iam_role_node" {
   category = category.iam_role
 
   sql = <<-EOQ
@@ -485,7 +485,7 @@ node "aws_codebuild_project_to_iam_role_node" {
   param "arn" {}
 }
 
-edge "aws_codebuild_project_to_iam_role_edge" {
+edge "codebuild_project_to_iam_role_edge" {
   title = "assumes"
 
   sql = <<-EOQ
@@ -502,7 +502,7 @@ edge "aws_codebuild_project_to_iam_role_edge" {
   param "arn" {}
 }
 
-node "aws_codebuild_project_to_ecr_repository_node" {
+node "codebuild_project_to_ecr_repository_node" {
   category = category.ecr_repository
 
   sql = <<-EOQ
@@ -526,7 +526,7 @@ node "aws_codebuild_project_to_ecr_repository_node" {
   param "arn" {}
 }
 
-edge "aws_codebuild_project_to_ecr_repository_edge" {
+edge "codebuild_project_to_ecr_repository_edge" {
   title = "build environment"
 
   sql = <<-EOQ
@@ -543,7 +543,7 @@ edge "aws_codebuild_project_to_ecr_repository_edge" {
   param "arn" {}
 }
 
-node "aws_codebuild_project_to_codecommit_repository_node" {
+node "codebuild_project_to_codecommit_repository_node" {
   category = category.codecommit_repository
 
   sql = <<-EOQ
@@ -581,7 +581,7 @@ node "aws_codebuild_project_to_codecommit_repository_node" {
   param "arn" {}
 }
 
-edge "aws_codebuild_project_to_codecommit_repository_edge" {
+edge "codebuild_project_to_codecommit_repository_edge" {
   title = "codecommit repository"
 
   sql = <<-EOQ
@@ -611,7 +611,7 @@ edge "aws_codebuild_project_to_codecommit_repository_edge" {
   param "arn" {}
 }
 
-node "aws_codebuild_project_to_vpc_security_group_node" {
+node "codebuild_project_to_vpc_security_group_node" {
   category = category.vpc_security_group
 
   sql = <<-EOQ
@@ -642,7 +642,7 @@ node "aws_codebuild_project_to_vpc_security_group_node" {
   param "arn" {}
 }
 
-edge "aws_codebuild_project_to_vpc_security_group_edge" {
+edge "codebuild_project_to_vpc_security_group_edge" {
   title = "security group"
 
   sql = <<-EOQ
@@ -667,7 +667,7 @@ edge "aws_codebuild_project_to_vpc_security_group_edge" {
   param "arn" {}
 }
 
-node "aws_codebuild_project_vpc_security_group_to_subnet_node" {
+node "codebuild_project_vpc_security_group_to_subnet_node" {
   category = category.vpc_subnet
 
   sql = <<-EOQ
@@ -697,7 +697,7 @@ node "aws_codebuild_project_vpc_security_group_to_subnet_node" {
   param "arn" {}
 }
 
-edge "aws_codebuild_project_vpc_security_group_to_subnet_edge" {
+edge "codebuild_project_vpc_security_group_to_subnet_edge" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -730,7 +730,7 @@ edge "aws_codebuild_project_vpc_security_group_to_subnet_edge" {
   param "arn" {}
 }
 
-node "aws_codebuild_project_vpc_security_group_subnet_to_vpc_node" {
+node "codebuild_project_vpc_security_group_subnet_to_vpc_node" {
   category = category.vpc_vpc
 
   sql = <<-EOQ
@@ -759,7 +759,7 @@ node "aws_codebuild_project_vpc_security_group_subnet_to_vpc_node" {
   param "arn" {}
 }
 
-edge "aws_codebuild_project_vpc_security_group_subnet_to_vpc_edge" {
+edge "codebuild_project_vpc_security_group_subnet_to_vpc_edge" {
   title = "vpc"
 
   sql = <<-EOQ

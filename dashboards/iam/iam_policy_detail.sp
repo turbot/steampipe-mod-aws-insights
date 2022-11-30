@@ -97,33 +97,33 @@ dashboard "aws_iam_policy_detail" {
       }
 
       nodes = [
-        node.aws_iam_policy_nodes,
+        node.iam_policy,
         node.iam_role,
-        node.aws_iam_user_nodes,
-        node.aws_iam_group_nodes,
+        node.iam_user,
+        node.iam_group,
 
-        node.aws_iam_policy_statement_nodes,
-        node.aws_iam_policy_statement_action_notaction_nodes,
-        node.aws_iam_policy_statement_resource_notresource_nodes,
-        node.aws_iam_policy_statement_condition_nodes,
-        node.aws_iam_policy_statement_condition_key_nodes,
-        node.aws_iam_policy_statement_condition_key_value_nodes,
+        node.iam_policy_statement,
+        node.iam_policy_statement_action_notaction,
+        node.iam_policy_statement_resource_notresource,
+        node.iam_policy_statement_condition,
+        node.iam_policy_statement_condition_key,
+        node.iam_policy_statement_condition_key_value,
 
       ]
 
       edges = [
-        edge.aws_iam_policy_from_iam_role_edges,
-        edge.aws_iam_policy_from_iam_user_edges,
-        edge.aws_iam_policy_from_iam_group_edges,
+        edge.iam_policy_from_iam_role,
+        edge.iam_policy_from_iam_user,
+        edge.iam_policy_from_iam_group,
 
-        edge.aws_iam_policy_statement_edges,
-        edge.aws_iam_policy_statement_action_edges,
-        edge.aws_iam_policy_statement_resource_edges,
-        edge.aws_iam_policy_statement_notaction_edges,
-        edge.aws_iam_policy_statement_notresource_edges,
-        edge.aws_iam_policy_statement_condition_edges,
-        edge.aws_iam_policy_statement_condition_key_edges,
-        edge.aws_iam_policy_statement_condition_key_value_edges,
+        edge.iam_policy_statement,
+        edge.iam_policy_statement_action,
+        edge.iam_policy_statement_resource,
+        edge.iam_policy_statement_notaction,
+        edge.iam_policy_statement_notresource,
+        edge.iam_policy_statement_condition,
+        edge.iam_policy_statement_condition_key,
+        edge.iam_policy_statement_condition_key_value,
       ]
 
       args = {
@@ -323,7 +323,7 @@ query "aws_iam_policy_statement" {
 }
 
 // *** Nodes and Edges
-node "aws_iam_policy_nodes" {
+node "iam_policy" {
   category = category.iam_policy
 
   sql = <<-EOQ
@@ -348,7 +348,7 @@ node "aws_iam_policy_nodes" {
   param "policy_arns" {}
 }
 
-edge "aws_iam_policy_from_iam_user_edges" {
+edge "iam_policy_from_iam_user" {
   title = "attaches"
 
   sql = <<-EOQ
@@ -365,7 +365,7 @@ edge "aws_iam_policy_from_iam_user_edges" {
 
 }
 
-edge "aws_iam_policy_from_iam_role_edges" {
+edge "iam_policy_from_iam_role" {
   title = "attaches"
 
   sql = <<-EOQ
@@ -381,7 +381,7 @@ edge "aws_iam_policy_from_iam_role_edges" {
   param "role_arns" {}
 }
 
-edge "aws_iam_policy_from_iam_group_edges" {
+edge "iam_policy_from_iam_group" {
   title = "attaches"
 
   sql = <<-EOQ
@@ -398,7 +398,7 @@ edge "aws_iam_policy_from_iam_group_edges" {
 
 }
 
-node "aws_iam_policy_statement_nodes" {
+node "iam_policy_statement" {
   category = category.iam_policy_statement
 
   sql = <<-EOQ
@@ -415,7 +415,7 @@ node "aws_iam_policy_statement_nodes" {
   param "policy_std" {}
 }
 
-edge "aws_iam_policy_statement_edges" {
+edge "iam_policy_statement" {
   title = "statement"
 
   sql = <<-EOQ
@@ -435,7 +435,7 @@ edge "aws_iam_policy_statement_edges" {
 }
 
 
-edge "aws_iam_policy_statement_action_edges" {
+edge "iam_policy_statement_action" {
   //title = "allows"
   sql = <<-EOQ
 
@@ -453,7 +453,7 @@ edge "aws_iam_policy_statement_action_edges" {
   param "policy_std" {}
 }
 
-edge "aws_iam_policy_statement_notaction_edges" {
+edge "iam_policy_statement_notaction" {
   sql = <<-EOQ
 
     select
@@ -471,7 +471,7 @@ edge "aws_iam_policy_statement_notaction_edges" {
 }
 
 
-edge "aws_iam_policy_statement_resource_edges" {
+edge "iam_policy_statement_resource" {
   title = "resource"
 
   sql = <<-EOQ
@@ -489,7 +489,7 @@ edge "aws_iam_policy_statement_resource_edges" {
   param "policy_std" {}
 }
 
-edge "aws_iam_policy_statement_notresource_edges" {
+edge "iam_policy_statement_notresource" {
   title = "not resource"
 
   sql = <<-EOQ
@@ -507,7 +507,7 @@ edge "aws_iam_policy_statement_notresource_edges" {
   param "policy_std" {}
 }
 
-node "aws_iam_policy_statement_condition_nodes" {
+node "iam_policy_statement_condition" {
   category = category.iam_policy_condition
 
   sql = <<-EOQ
@@ -525,7 +525,7 @@ node "aws_iam_policy_statement_condition_nodes" {
   param "policy_std" {}
 }
 
-edge "aws_iam_policy_statement_condition_edges" {
+edge "iam_policy_statement_condition" {
   title = "condition"
   sql   = <<-EOQ
 
@@ -542,7 +542,7 @@ edge "aws_iam_policy_statement_condition_edges" {
   param "policy_std" {}
 }
 
-node "aws_iam_policy_statement_condition_key_nodes" {
+node "iam_policy_statement_condition_key" {
   category = category.iam_policy_condition_key
 
   sql = <<-EOQ
@@ -561,7 +561,7 @@ node "aws_iam_policy_statement_condition_key_nodes" {
   param "policy_std" {}
 }
 
-edge "aws_iam_policy_statement_condition_key_edges" {
+edge "iam_policy_statement_condition_key" {
   title = "all of"
   sql   = <<-EOQ
     select
@@ -578,7 +578,7 @@ edge "aws_iam_policy_statement_condition_key_edges" {
   param "policy_std" {}
 }
 
-node "aws_iam_policy_statement_condition_key_value_nodes" {
+node "iam_policy_statement_condition_key_value" {
   category = category.iam_policy_condition_value
 
   sql = <<-EOQ
@@ -597,7 +597,7 @@ node "aws_iam_policy_statement_condition_key_value_nodes" {
   param "policy_std" {}
 }
 
-edge "aws_iam_policy_statement_condition_key_value_edges" {
+edge "iam_policy_statement_condition_key_value" {
   title = "any of"
   sql   = <<-EOQ
     select
@@ -615,7 +615,7 @@ edge "aws_iam_policy_statement_condition_key_value_edges" {
   param "policy_std" {}
 }
 
-node "aws_iam_policy_statement_action_notaction_nodes" {
+node "iam_policy_statement_action_notaction" {
   category = category.iam_policy_action
 
   sql = <<-EOQ
@@ -631,7 +631,7 @@ node "aws_iam_policy_statement_action_notaction_nodes" {
   param "policy_std" {}
 }
 
-node "aws_iam_policy_statement_resource_notresource_nodes" {
+node "iam_policy_statement_resource_notresource" {
   category = category.iam_policy_resource
 
   sql = <<-EOQ
@@ -647,7 +647,7 @@ node "aws_iam_policy_statement_resource_notresource_nodes" {
   param "policy_std" {}
 }
 
-node "aws_iam_policy_globbed_notaction_nodes" {
+node "iam_policy_globbed_notaction" {
   category = category.iam_policy_notaction
 
   sql = <<-EOQ
@@ -666,7 +666,7 @@ node "aws_iam_policy_globbed_notaction_nodes" {
   param "policy_std" {}
 }
 
-edge "aws_iam_policy_globbed_notaction_edges" {
+edge "iam_policy_globbed_notaction" {
 
   sql = <<-EOQ
 

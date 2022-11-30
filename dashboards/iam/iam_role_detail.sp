@@ -49,33 +49,33 @@ dashboard "aws_iam_role_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_iam_role_node,
-        node.aws_iam_role_to_iam_policy_node,
-        # node.aws_iam_role_from_kinesisanalyticsv2_application_node,
-        node.aws_iam_role_from_emr_cluster_node,
-        node.aws_iam_role_from_guardduty_detector_node,
-        node.aws_iam_role_from_lambda_function_node,
-        node.aws_iam_role_from_iam_instance_profile_node,
-        node.aws_iam_role_from_ec2_instance_node,
+        node.iam_role_node,
+        node.iam_role_to_iam_policy_node,
+        # node.iam_role_from_kinesisanalyticsv2_application_node,
+        node.iam_role_from_emr_cluster_node,
+        node.iam_role_from_guardduty_detector_node,
+        node.iam_role_from_lambda_function_node,
+        node.iam_role_from_iam_instance_profile_node,
+        node.iam_role_from_ec2_instance_node,
 
-        node.aws_iam_role_trusted_aws_node,
-        node.aws_iam_role_trusted_service_node,
-        node.aws_iam_role_trusted_federated_node,
+        node.iam_role_trusted_aws_node,
+        node.iam_role_trusted_service_node,
+        node.iam_role_trusted_federated_node,
 
       ]
 
       edges = [
-        edge.aws_iam_role_to_iam_policy_edge,
-        # edge.aws_iam_role_from_kinesisanalyticsv2_application_edge,
-        edge.aws_iam_role_from_emr_cluster_edge,
-        edge.aws_iam_role_from_guardduty_detector_edge,
-        edge.aws_iam_role_from_lambda_function_edge,
-        edge.aws_iam_role_from_iam_instance_profile_edge,
-        edge.aws_iam_role_from_ec2_instance_edge,
+        edge.iam_role_to_iam_policy_edge,
+        # edge.iam_role_from_kinesisanalyticsv2_application_edge,
+        edge.iam_role_from_emr_cluster_edge,
+        edge.iam_role_from_guardduty_detector_edge,
+        edge.iam_role_from_lambda_function_edge,
+        edge.iam_role_from_iam_instance_profile_edge,
+        edge.iam_role_from_ec2_instance_edge,
 
-        edge.aws_iam_role_trusted_aws_edge,
-        edge.aws_iam_role_trusted_service_edge,
-        edge.aws_iam_role_trusted_federated_edge,
+        edge.iam_role_trusted_aws_edge,
+        edge.iam_role_trusted_service_edge,
+        edge.iam_role_trusted_federated_edge,
 
       ]
 
@@ -216,7 +216,7 @@ query "aws_iam_role_direct_attached_policy_count_for_role" {
   param "arn" {}
 }
 
-node "aws_iam_role_node" {
+node "iam_role_node" {
   category = category.iam_role
 
   sql = <<-EOQ
@@ -238,7 +238,7 @@ node "aws_iam_role_node" {
   param "arn" {}
 }
 
-node "aws_iam_role_to_iam_policy_node" {
+node "iam_role_to_iam_policy_node" {
   category = category.iam_policy
 
   sql = <<-EOQ
@@ -269,7 +269,7 @@ node "aws_iam_role_to_iam_policy_node" {
   param "arn" {}
 }
 
-edge "aws_iam_role_to_iam_policy_edge" {
+edge "iam_role_to_iam_policy_edge" {
   title = "policy"
 
   sql = <<-EOQ
@@ -289,7 +289,7 @@ edge "aws_iam_role_to_iam_policy_edge" {
   param "arn" {}
 }
 
-node "aws_iam_role_from_kinesisanalyticsv2_application_node" {
+node "iam_role_from_kinesisanalyticsv2_application_node" {
   category = category.kinesisanalyticsv2_application
 
   sql = <<-EOQ
@@ -313,7 +313,7 @@ node "aws_iam_role_from_kinesisanalyticsv2_application_node" {
   param "arn" {}
 }
 
-edge "aws_iam_role_from_kinesisanalyticsv2_application_edge" {
+edge "iam_role_from_kinesisanalyticsv2_application_edge" {
   title = "runs as"
 
   sql = <<-EOQ
@@ -330,7 +330,7 @@ edge "aws_iam_role_from_kinesisanalyticsv2_application_edge" {
   param "arn" {}
 }
 
-node "aws_iam_role_from_emr_cluster_node" {
+node "iam_role_from_emr_cluster_node" {
   category = category.emr_cluster
 
   sql = <<-EOQ
@@ -362,7 +362,7 @@ node "aws_iam_role_from_emr_cluster_node" {
   param "arn" {}
 }
 
-edge "aws_iam_role_from_emr_cluster_edge" {
+edge "iam_role_from_emr_cluster_edge" {
   title = "runs as"
 
   sql = <<-EOQ
@@ -383,7 +383,7 @@ edge "aws_iam_role_from_emr_cluster_edge" {
   param "arn" {}
 }
 
-node "aws_iam_role_from_guardduty_detector_node" {
+node "iam_role_from_guardduty_detector_node" {
   category = category.guardduty_detector
 
   sql = <<-EOQ
@@ -406,7 +406,7 @@ node "aws_iam_role_from_guardduty_detector_node" {
   param "arn" {}
 }
 
-edge "aws_iam_role_from_guardduty_detector_edge" {
+edge "iam_role_from_guardduty_detector_edge" {
   title = "runs as"
 
   sql = <<-EOQ
@@ -423,7 +423,7 @@ edge "aws_iam_role_from_guardduty_detector_edge" {
   param "arn" {}
 }
 
-node "aws_iam_role_from_lambda_function_node" {
+node "iam_role_from_lambda_function_node" {
   category = category.lambda_function
 
   sql = <<-EOQ
@@ -447,7 +447,7 @@ node "aws_iam_role_from_lambda_function_node" {
   param "arn" {}
 }
 
-edge "aws_iam_role_from_lambda_function_edge" {
+edge "iam_role_from_lambda_function_edge" {
   title = "runs as"
 
   sql = <<-EOQ
@@ -464,7 +464,7 @@ edge "aws_iam_role_from_lambda_function_edge" {
   param "arn" {}
 }
 
-node "aws_iam_role_from_iam_instance_profile_node" {
+node "iam_role_from_iam_instance_profile_node" {
   category = category.iam_instance_profile
 
   sql = <<-EOQ
@@ -484,7 +484,7 @@ node "aws_iam_role_from_iam_instance_profile_node" {
   param "arn" {}
 }
 
-edge "aws_iam_role_from_iam_instance_profile_edge" {
+edge "iam_role_from_iam_instance_profile_edge" {
   title = "assumes"
 
   sql = <<-EOQ
@@ -504,7 +504,7 @@ edge "aws_iam_role_from_iam_instance_profile_edge" {
   param "arn" {}
 }
 
-node "aws_iam_role_from_ec2_instance_node" {
+node "iam_role_from_ec2_instance_node" {
   category = category.ec2_instance
 
   sql = <<-EOQ
@@ -530,7 +530,7 @@ node "aws_iam_role_from_ec2_instance_node" {
   param "arn" {}
 }
 
-edge "aws_iam_role_from_ec2_instance_edge" {
+edge "iam_role_from_ec2_instance_edge" {
   title = "runs as"
 
   sql = <<-EOQ
@@ -556,7 +556,7 @@ edge "aws_iam_role_from_ec2_instance_edge" {
 //*********
 
 
-node "aws_iam_role_trusted_aws_node" {
+node "iam_role_trusted_aws_node" {
   category = category.account
 
   sql = <<-EOQ
@@ -583,7 +583,7 @@ node "aws_iam_role_trusted_aws_node" {
 }
 
 
-edge "aws_iam_role_trusted_aws_edge" {
+edge "iam_role_trusted_aws_edge" {
   title = "can assume"
 
   sql = <<-EOQ
@@ -602,7 +602,7 @@ edge "aws_iam_role_trusted_aws_edge" {
 }
 
 
-node "aws_iam_role_trusted_service_node" {
+node "iam_role_trusted_service_node" {
   category = category.iam_service_principal
 
   sql = <<-EOQ
@@ -625,7 +625,7 @@ node "aws_iam_role_trusted_service_node" {
 }
 
 
-edge "aws_iam_role_trusted_service_edge" {
+edge "iam_role_trusted_service_edge" {
   title = "can assume"
 
   sql = <<-EOQ
@@ -645,7 +645,7 @@ edge "aws_iam_role_trusted_service_edge" {
 
 
 
-node "aws_iam_role_trusted_federated_node" {
+node "iam_role_trusted_federated_node" {
   category = category.iam_federated_principal
 
   sql = <<-EOQ
@@ -668,7 +668,7 @@ node "aws_iam_role_trusted_federated_node" {
 }
 
 
-edge "aws_iam_role_trusted_federated_edge" {
+edge "iam_role_trusted_federated_edge" {
   title = "can assume"
 
   sql = <<-EOQ

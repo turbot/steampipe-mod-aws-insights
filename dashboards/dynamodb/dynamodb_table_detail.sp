@@ -132,18 +132,18 @@ dashboard "aws_dynamodb_table_detail" {
       }
 
       nodes = [
-        node.aws_dynamodb_table_nodes,
-        node.aws_kms_key_nodes,
-        node.aws_s3_bucket_nodes,
-        node.aws_dynamodb_table_to_dynamodb_backup_node,
-        node.aws_dynamodb_table_to_kinesis_stream_node
+        node.dynamodb_table,
+        node.kms_key,
+        node.s3_bucket,
+        node.dynamodb_table_to_dynamodb_backup_node,
+        node.dynamodb_table_to_kinesis_stream_node
       ]
 
       edges = [
-        edge.aws_dynamodb_table_to_kms_key_edges,
-        edge.aws_dynamodb_table_to_s3_bucket_edges,
-        edge.aws_dynamodb_table_to_dynamodb_backup_edges,
-        edge.aws_dynamodb_table_to_kinesis_stream_edges
+        edge.dynamodb_table_to_kms_key,
+        edge.dynamodb_table_to_s3_bucket,
+        edge.dynamodb_table_to_dynamodb_backup,
+        edge.dynamodb_table_to_kinesis_stream
       ]
 
       args = {
@@ -358,7 +358,7 @@ query "aws_dynamodb_table_autoscaling_state" {
   param "arn" {}
 }
 
-edge "aws_dynamodb_table_to_kms_key_edges" {
+edge "dynamodb_table_to_kms_key" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -374,7 +374,7 @@ edge "aws_dynamodb_table_to_kms_key_edges" {
   param "table_arns" {}
 }
 
-edge "aws_dynamodb_table_to_s3_bucket_edges" {
+edge "dynamodb_table_to_s3_bucket" {
   title = "exports to"
 
   sql = <<-EOQ
@@ -390,7 +390,7 @@ edge "aws_dynamodb_table_to_s3_bucket_edges" {
   param "bucket_arns" {}
 }
 
-edge "aws_dynamodb_table_to_dynamodb_backup_edges" {
+edge "dynamodb_table_to_dynamodb_backup" {
   title = "backup"
 
   sql = <<-EOQ
@@ -406,7 +406,7 @@ edge "aws_dynamodb_table_to_dynamodb_backup_edges" {
   param "dbynamodb_backup_arns" {}
 }
 
-edge "aws_dynamodb_table_to_kinesis_stream_edges" {
+edge "dynamodb_table_to_kinesis_stream" {
   title = "streams to"
 
   sql = <<-EOQ

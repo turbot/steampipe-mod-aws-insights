@@ -70,16 +70,16 @@ dashboard "aws_iam_group_detail" {
       }
 
       nodes = [
-        node.aws_iam_group_nodes,
-        node.aws_iam_policy_nodes,
-        node.aws_iam_user_nodes,
-        node.aws_iam_group_inline_policy_nodes,
+        node.iam_group,
+        node.iam_policy,
+        node.iam_user,
+        node.iam_group_inline_policy,
       ]
 
       edges = [
-        edge.aws_iam_policy_from_iam_group_edges,
-        edge.aws_iam_group_to_iam_user_edges,
-        edge.aws_iam_group_to_inline_policy_edges,
+        edge.iam_policy_from_iam_group,
+        edge.iam_group_to_iam_user,
+        edge.iam_group_to_inline_policy,
       ]
 
       args = {
@@ -247,7 +247,7 @@ query "aws_iam_all_policies_for_group" {
 }
 
 
-node "aws_iam_group_nodes" {
+node "iam_group" {
   category = category.iam_group
 
   sql = <<-EOQ
@@ -271,7 +271,7 @@ node "aws_iam_group_nodes" {
 
 
 
-edge "aws_iam_group_to_iam_user_edges" {
+edge "iam_group_to_iam_user" {
   title = "has member"
 
   sql = <<-EOQ
@@ -288,7 +288,7 @@ edge "aws_iam_group_to_iam_user_edges" {
 
 }
 
-node "aws_iam_group_inline_policy_nodes" {
+node "iam_group_inline_policy" {
   category = category.iam_inline_policy
 
   sql = <<-EOQ
@@ -309,7 +309,7 @@ node "aws_iam_group_inline_policy_nodes" {
   param "group_arns" {}
 }
 
-edge "aws_iam_group_to_inline_policy_edges" {
+edge "iam_group_to_inline_policy" {
   title = "inline policy"
 
   sql = <<-EOQ

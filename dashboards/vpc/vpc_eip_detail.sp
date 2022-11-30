@@ -81,14 +81,14 @@ dashboard "aws_vpc_eip_detail" {
         node.ec2_network_interface,
         node.ec2_instance,
 
-        node.aws_ec2_network_interface_vpc_nat_gateway_nodes
+        node.ec2_network_interface_vpc_nat_gateway
       ]
 
       edges = [
         edge.ec2_instance_to_ec2_network_interface,
         edge.ec2_network_interface_to_vpc_eip,
 
-        edge.aws_vpc_nat_gateway_to_ec2_network_interface_edges
+        edge.vpc_nat_gateway_to_ec2_network_interface
       ]
 
       args = {

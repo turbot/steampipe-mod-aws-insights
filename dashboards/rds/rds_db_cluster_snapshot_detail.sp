@@ -101,14 +101,14 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
       }
 
       nodes = [
-        node.aws_rds_db_cluster_snapshot_nodes,
-        node.aws_kms_key_nodes,
-        node.aws_rds_db_cluster_nodes
+        node.rds_db_cluster_snapshot,
+        node.kms_key,
+        node.rds_db_cluster
       ]
 
       edges = [
-        edge.aws_rds_db_cluster_snapshot_to_kms_key_edges,
-        edge.aws_rds_db_cluster_to_rds_db_cluster_snapshot_edges
+        edge.rds_db_cluster_snapshot_to_kms_key,
+        edge.rds_db_cluster_to_rds_db_cluster_snapshot
       ]
 
       args = {
@@ -320,7 +320,7 @@ query "aws_rds_db_cluster_snapshot_attributes" {
   param "arn" {}
 }
 
-node "aws_rds_db_cluster_snapshot_nodes" {
+node "rds_db_cluster_snapshot" {
   category = category.rds_db_cluster_snapshot
 
   sql = <<-EOQ
@@ -346,7 +346,7 @@ node "aws_rds_db_cluster_snapshot_nodes" {
   param "rds_db_cluster_snapshot_arns" {}
 }
 
-edge "aws_rds_db_cluster_snapshot_to_kms_key_edges" {
+edge "rds_db_cluster_snapshot_to_kms_key" {
   title = "encrypted with"
 
   sql = <<-EOQ

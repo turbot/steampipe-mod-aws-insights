@@ -39,18 +39,18 @@ dashboard "aws_eventbridge_rule_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_eventbridge_rule_node,
-        node.aws_eventbridge_rule_to_sns_topic_node,
-        node.aws_eventbridge_rule_to_lambda_function_node,
-        node.aws_eventbridge_rule_to_cloudwatch_log_group_node,
-        node.aws_eventbridge_rule_to_eventbridge_bus_node
+        node.eventbridge_rule_node,
+        node.eventbridge_rule_to_sns_topic_node,
+        node.eventbridge_rule_to_lambda_function_node,
+        node.eventbridge_rule_to_cloudwatch_log_group_node,
+        node.eventbridge_rule_to_eventbridge_bus_node
       ]
 
       edges = [
-        edge.aws_eventbridge_rule_to_sns_topic_edge,
-        edge.aws_eventbridge_rule_to_lambda_function_edge,
-        edge.aws_eventbridge_rule_to_cloudwatch_log_group_edge,
-        edge.aws_eventbridge_rule_to_eventbridge_bus_edge
+        edge.eventbridge_rule_to_sns_topic_edge,
+        edge.eventbridge_rule_to_lambda_function_edge,
+        edge.eventbridge_rule_to_cloudwatch_log_group_edge,
+        edge.eventbridge_rule_to_eventbridge_bus_edge
       ]
 
       args = {
@@ -195,7 +195,7 @@ query "aws_eventbridge_rule_target_count" {
   param "arn" {}
 }
 
-node "aws_eventbridge_rule_node" {
+node "eventbridge_rule_node" {
   category = category.eventbridge_rule
 
   sql = <<-EOQ
@@ -219,7 +219,7 @@ node "aws_eventbridge_rule_node" {
   param "arn" {}
 }
 
-node "aws_eventbridge_rule_to_sns_topic_node" {
+node "eventbridge_rule_to_sns_topic_node" {
   category = category.sns_topic
 
   sql = <<-EOQ
@@ -243,7 +243,7 @@ node "aws_eventbridge_rule_to_sns_topic_node" {
   param "arn" {}
 }
 
-edge "aws_eventbridge_rule_to_sns_topic_edge" {
+edge "eventbridge_rule_to_sns_topic_edge" {
   title = "notifies"
 
   sql = <<-EOQ
@@ -262,7 +262,7 @@ edge "aws_eventbridge_rule_to_sns_topic_edge" {
   param "arn" {}
 }
 
-node "aws_eventbridge_rule_to_lambda_function_node" {
+node "eventbridge_rule_to_lambda_function_node" {
   category = category.lambda_function
 
   sql = <<-EOQ
@@ -286,7 +286,7 @@ node "aws_eventbridge_rule_to_lambda_function_node" {
   param "arn" {}
 }
 
-edge "aws_eventbridge_rule_to_lambda_function_edge" {
+edge "eventbridge_rule_to_lambda_function_edge" {
   title = "triggers"
 
   sql = <<-EOQ
@@ -305,7 +305,7 @@ edge "aws_eventbridge_rule_to_lambda_function_edge" {
   param "arn" {}
 }
 
-node "aws_eventbridge_rule_to_cloudwatch_log_group_node" {
+node "eventbridge_rule_to_cloudwatch_log_group_node" {
   category = category.cloudwatch_log_group
 
   sql = <<-EOQ
@@ -330,7 +330,7 @@ node "aws_eventbridge_rule_to_cloudwatch_log_group_node" {
   param "arn" {}
 }
 
-edge "aws_eventbridge_rule_to_cloudwatch_log_group_edge" {
+edge "eventbridge_rule_to_cloudwatch_log_group_edge" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -349,7 +349,7 @@ edge "aws_eventbridge_rule_to_cloudwatch_log_group_edge" {
   param "arn" {}
 }
 
-node "aws_eventbridge_rule_to_eventbridge_bus_node" {
+node "eventbridge_rule_to_eventbridge_bus_node" {
   category = category.eventbridge_bus
 
   sql = <<-EOQ
@@ -377,7 +377,7 @@ node "aws_eventbridge_rule_to_eventbridge_bus_node" {
   param "arn" {}
 }
 
-edge "aws_eventbridge_rule_to_eventbridge_bus_edge" {
+edge "eventbridge_rule_to_eventbridge_bus_edge" {
   title = "eventbridge rule"
 
   sql = <<-EOQ

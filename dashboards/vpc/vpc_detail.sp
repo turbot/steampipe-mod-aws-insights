@@ -201,51 +201,51 @@ dashboard "aws_vpc_detail" {
 
       nodes = [
         node.vpc_vpc,
-        node.aws_vpc_flow_log_nodes,
+        node.vpc_flow_log,
         node.vpc_subnet,
         node.vpc_security_group,
         node.ec2_instance,
-        node.aws_lambda_function_nodes,
+        node.lambda_function,
         node.ec2_application_load_balancer,
         node.ec2_network_load_balancer,
         node.ec2_classic_load_balancer,
         node.ec2_gateway_load_balancer,
-        node.aws_rds_db_instance_nodes,
-        node.aws_redshift_cluster_nodes,
+        node.rds_db_instance,
+        node.redshift_cluster,
 
-        node.aws_vpc_s3_access_point_nodes,
-        node.aws_vpc_peered_vpc_nodes,
-        node.aws_vpc_az_nodes,
-        node.aws_vpc_igw_nodes,
-        node.aws_vpc_az_route_table_nodes,
-        node.aws_vpc_vcp_endpoint_nodes,
-        node.aws_vpc_transit_gateway_nodes,
-        node.aws_vpc_nat_gateway_nodes,
-        node.aws_vpc_vpn_gateway_nodes,
+        node.vpc_s3_access_point,
+        node.vpc_peered_vpc,
+        node.vpc_az,
+        node.vpc_igw,
+        node.vpc_az_route_table,
+        node.vpc_vcp_endpoint,
+        node.vpc_transit_gateway,
+        node.vpc_nat_gateway,
+        node.vpc_vpn_gateway,
       ]
 
       edges = [
-        edge.aws_vpc_to_az_edges,
-        edge.aws_vpc_to_vpc_flow_log_edges,
-        edge.aws_vpc_az_to_vpc_subnet_edges,
-        edge.aws_vpc_to_igw_edges,
-        edge.aws_vpc_subnet_to_route_table_edges,
-        edge.aws_vpc_to_vpc_route_table_edges,
-        edge.aws_vpc_subnet_to_endpoint_edges,
-        edge.aws_vpc_to_transit_gateway_edges,
-        edge.aws_vpc_subnet_to_nat_gateway_edges,
-        edge.aws_vpc_to_vpn_gateway_edges,
-        edge.aws_vpc_to_vpc_security_group_edges,
+        edge.vpc_to_az,
+        edge.vpc_to_vpc_flow_log,
+        edge.vpc_az_to_vpc_subnet,
+        edge.vpc_to_igw,
+        edge.vpc_subnet_to_route_table,
+        edge.vpc_to_vpc_route_table,
+        edge.vpc_subnet_to_endpoint,
+        edge.vpc_to_transit_gateway,
+        edge.vpc_subnet_to_nat_gateway,
+        edge.vpc_to_vpn_gateway,
+        edge.vpc_to_vpc_security_group,
 
-        edge.aws_vpc_subnet_to_instance_edges,
-        edge.aws_vpc_subnet_to_lambda_edges,
-        edge.aws_vpc_subnet_to_ec2_alb_edges,
-        edge.aws_vpc_subnet_to_ec2_nlb_edges,
-        edge.aws_vpc_subnet_to_ec2_clb_edges,
-        edge.aws_vpc_subnet_to_ec2_glb_edges,
-        edge.aws_vpc_subnet_to_rds_instance_edges,
-        edge.aws_vpc_to_s3_access_point_edges,
-        edge.aws_vpc_peered_vpc_edges
+        edge.vpc_subnet_to_instance,
+        edge.vpc_subnet_to_lambda,
+        edge.vpc_subnet_to_ec2_alb,
+        edge.vpc_subnet_to_ec2_nlb,
+        edge.vpc_subnet_to_ec2_clb,
+        edge.vpc_subnet_to_ec2_glb,
+        edge.vpc_subnet_to_rds_instance,
+        edge.vpc_to_s3_access_point,
+        edge.vpc_peered_vpc
       ]
 
       args = {
@@ -353,15 +353,15 @@ dashboard "aws_vpc_detail" {
 
     flow {
       nodes = [
-        node.aws_vpc_routing_vpc_node,
-        node.aws_vpc_routing_subnet_node,
-        node.aws_vpc_routing_cidr_node,
-        node.aws_vpc_routing_gateway_node
+        node.vpc_routing_vpc_node,
+        node.vpc_routing_subnet_node,
+        node.vpc_routing_cidr_node,
+        node.vpc_routing_gateway_node
       ]
 
       edges = [
-        edge.aws_vpc_routing_subnet_vpc_to_cidr_edge,
-        edge.aws_vpc_routing_cidr_to_gateway_edge
+        edge.vpc_routing_subnet_vpc_to_cidr_edge,
+        edge.vpc_routing_cidr_to_gateway_edge
       ]
 
       args = {
@@ -1144,7 +1144,7 @@ query "aws_vpc_subnet_by_az" {
 }
 
 
-node "aws_vpc_routing_subnet_node" {
+node "vpc_routing_subnet_node" {
   category = category.vpc_subnet
 
   sql = <<-EOQ
@@ -1164,7 +1164,7 @@ node "aws_vpc_routing_subnet_node" {
   param "vpc_id" {}
 }
 
-node "aws_vpc_routing_vpc_node" {
+node "vpc_routing_vpc_node" {
   category = category.vpc_subnet
 
   sql = <<-EOQ
@@ -1185,7 +1185,7 @@ node "aws_vpc_routing_vpc_node" {
   param "vpc_id" {}
 }
 
-node "aws_vpc_routing_cidr_node" {
+node "vpc_routing_cidr_node" {
   //category = category.cidr_block
 
   sql = <<-EOQ
@@ -1205,7 +1205,7 @@ node "aws_vpc_routing_cidr_node" {
   param "vpc_id" {}
 }
 
-edge "aws_vpc_routing_subnet_vpc_to_cidr_edge" {
+edge "vpc_routing_subnet_vpc_to_cidr_edge" {
   title = "cidr"
 
   sql = <<-EOQ
@@ -1223,7 +1223,7 @@ edge "aws_vpc_routing_subnet_vpc_to_cidr_edge" {
   param "vpc_id" {}
 }
 
-node "aws_vpc_routing_gateway_node" {
+node "vpc_routing_gateway_node" {
   category = category.vpc_internet_gateway
 
   sql = <<-EOQ
@@ -1268,7 +1268,7 @@ node "aws_vpc_routing_gateway_node" {
   param "vpc_id" {}
 }
 
-edge "aws_vpc_routing_cidr_to_gateway_edge" {
+edge "vpc_routing_cidr_to_gateway_edge" {
 
   title = "gateway"
   sql   = <<-EOQ
@@ -1305,7 +1305,7 @@ edge "aws_vpc_routing_cidr_to_gateway_edge" {
 
 
 // Graph queries
-node "aws_vpc_az_nodes" {
+node "vpc_az" {
   category = category.availability_zone
 
   sql = <<-EOQ
@@ -1328,7 +1328,7 @@ node "aws_vpc_az_nodes" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_to_az_edges" {
+edge "vpc_to_az" {
   title = "az"
 
   sql = <<-EOQ
@@ -1345,7 +1345,7 @@ edge "aws_vpc_to_az_edges" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_az_to_vpc_subnet_edges" {
+edge "vpc_az_to_vpc_subnet" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -1361,7 +1361,7 @@ edge "aws_vpc_az_to_vpc_subnet_edges" {
   param "vpc_ids" {}
 }
 
-node "aws_vpc_igw_nodes" {
+node "vpc_igw" {
   category = category.vpc_internet_gateway
 
   sql = <<-EOQ
@@ -1384,7 +1384,7 @@ node "aws_vpc_igw_nodes" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_to_igw_edges" {
+edge "vpc_to_igw" {
   title = "vpc"
 
   sql = <<-EOQ
@@ -1401,7 +1401,7 @@ edge "aws_vpc_to_igw_edges" {
   param "vpc_ids" {}
 }
 
-node "aws_vpc_az_route_table_nodes" {
+node "vpc_az_route_table" {
   category = category.vpc_route_table
 
   sql = <<-EOQ
@@ -1427,7 +1427,7 @@ node "aws_vpc_az_route_table_nodes" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_subnet_to_route_table_edges" {
+edge "vpc_subnet_to_route_table" {
   title = "route table"
 
   sql = <<-EOQ
@@ -1445,7 +1445,7 @@ edge "aws_vpc_subnet_to_route_table_edges" {
 }
 
 
-edge "aws_vpc_to_vpc_route_table_edges" {
+edge "vpc_to_vpc_route_table" {
   title = "route table"
 
   sql = <<-EOQ
@@ -1463,7 +1463,7 @@ edge "aws_vpc_to_vpc_route_table_edges" {
 }
 
 
-node "aws_vpc_vcp_endpoint_nodes" {
+node "vpc_vcp_endpoint" {
   category = category.vpc_endpoint
 
   sql = <<-EOQ
@@ -1484,7 +1484,7 @@ node "aws_vpc_vcp_endpoint_nodes" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_subnet_to_endpoint_edges" {
+edge "vpc_subnet_to_endpoint" {
   title = "vpc endpoint"
 
   sql = <<-EOQ
@@ -1511,7 +1511,7 @@ edge "aws_vpc_subnet_to_endpoint_edges" {
   param "vpc_ids" {}
 }
 
-node "aws_vpc_transit_gateway_nodes" {
+node "vpc_transit_gateway" {
   category = category.ec2_transit_gateway
 
   sql = <<-EOQ
@@ -1536,7 +1536,7 @@ node "aws_vpc_transit_gateway_nodes" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_to_transit_gateway_edges" {
+edge "vpc_to_transit_gateway" {
   title = "transit_gateway"
 
   sql = <<-EOQ
@@ -1551,7 +1551,7 @@ edge "aws_vpc_to_transit_gateway_edges" {
   param "vpc_ids" {}
 }
 
-node "aws_vpc_nat_gateway_nodes" {
+node "vpc_nat_gateway" {
   category = category.vpc_nat_gateway
 
   sql = <<-EOQ
@@ -1573,7 +1573,7 @@ node "aws_vpc_nat_gateway_nodes" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_subnet_to_nat_gateway_edges" {
+edge "vpc_subnet_to_nat_gateway" {
   title = "nat gateway"
 
   sql = <<-EOQ
@@ -1589,7 +1589,7 @@ edge "aws_vpc_subnet_to_nat_gateway_edges" {
   param "vpc_ids" {}
 }
 
-node "aws_vpc_vpn_gateway_nodes" {
+node "vpc_vpn_gateway" {
   category = category.vpc_vpn_gateway
 
   sql = <<-EOQ
@@ -1611,7 +1611,7 @@ node "aws_vpc_vpn_gateway_nodes" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_to_vpn_gateway_edges" {
+edge "vpc_to_vpn_gateway" {
   title = "vpn gateway"
 
   sql = <<-EOQ
@@ -1628,7 +1628,7 @@ edge "aws_vpc_to_vpn_gateway_edges" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_to_vpc_security_group_edges" {
+edge "vpc_to_vpc_security_group" {
   title = "security group"
 
   sql = <<-EOQ
@@ -1644,7 +1644,7 @@ edge "aws_vpc_to_vpc_security_group_edges" {
   param "security_group_ids" {}
 }
 
-edge "aws_vpc_peered_vpc_edges" {
+edge "vpc_peered_vpc" {
   title = "peered with"
 
   sql = <<-EOQ
@@ -1664,7 +1664,7 @@ edge "aws_vpc_peered_vpc_edges" {
   param "vpc_id" {}
 }
 
-node "aws_vpc_s3_access_point_nodes" {
+node "vpc_s3_access_point" {
   category = category.s3_access_point
 
   sql = <<-EOQ
@@ -1686,7 +1686,7 @@ node "aws_vpc_s3_access_point_nodes" {
 }
 
 
-edge "aws_vpc_to_s3_access_point_edges" {
+edge "vpc_to_s3_access_point" {
   title = "s3 access point"
 
   sql = <<-EOQ
@@ -1702,7 +1702,7 @@ edge "aws_vpc_to_s3_access_point_edges" {
   param "vpc_ids" {}
 }
 
-node "aws_vpc_peered_vpc_nodes" {
+node "vpc_peered_vpc" {
   category = category.vpc_vpc
 
   sql = <<-EOQ
@@ -1745,7 +1745,7 @@ node "aws_vpc_peered_vpc_nodes" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_to_vpc_flow_log_edges" {
+edge "vpc_to_vpc_flow_log" {
   title = "flow log"
 
   sql = <<-EOQ
@@ -1761,7 +1761,7 @@ edge "aws_vpc_to_vpc_flow_log_edges" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_subnet_to_instance_edges" {
+edge "vpc_subnet_to_instance" {
   title = "ec2 instance"
 
   sql = <<-EOQ
@@ -1777,7 +1777,7 @@ edge "aws_vpc_subnet_to_instance_edges" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_subnet_to_lambda_edges" {
+edge "vpc_subnet_to_lambda" {
   title = "lambda function"
 
   sql = <<-EOQ
@@ -1794,7 +1794,7 @@ edge "aws_vpc_subnet_to_lambda_edges" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_subnet_to_ec2_alb_edges" {
+edge "vpc_subnet_to_ec2_alb" {
   title = "alb"
 
   sql = <<-EOQ
@@ -1811,7 +1811,7 @@ edge "aws_vpc_subnet_to_ec2_alb_edges" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_subnet_to_ec2_nlb_edges" {
+edge "vpc_subnet_to_ec2_nlb" {
   title = "nlb"
 
   sql = <<-EOQ
@@ -1827,7 +1827,7 @@ edge "aws_vpc_subnet_to_ec2_nlb_edges" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_subnet_to_ec2_clb_edges" {
+edge "vpc_subnet_to_ec2_clb" {
   title = "clb"
 
   sql = <<-EOQ
@@ -1844,7 +1844,7 @@ edge "aws_vpc_subnet_to_ec2_clb_edges" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_subnet_to_ec2_glb_edges" {
+edge "vpc_subnet_to_ec2_glb" {
   title = "glb"
 
   sql = <<-EOQ
@@ -1861,7 +1861,7 @@ edge "aws_vpc_subnet_to_ec2_glb_edges" {
   param "vpc_ids" {}
 }
 
-edge "aws_vpc_subnet_to_rds_instance_edges" {
+edge "vpc_subnet_to_rds_instance" {
   title = "rds instance"
 
   sql = <<-EOQ

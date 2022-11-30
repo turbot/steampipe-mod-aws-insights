@@ -73,22 +73,22 @@ dashboard "aws_efs_file_system_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_efs_file_system_node,
-        node.aws_efs_file_system_to_kms_key_node,
-        node.aws_efs_file_system_to_efs_access_point_node,
-        node.aws_efs_file_system_to_efs_mount_target_node,
-        node.aws_efs_file_system_mount_target_to_security_group_node,
-        node.aws_efs_file_system_mount_target_security_group_to_subnet_node,
-        node.aws_efs_file_system_mount_target_security_group_subnet_to_vpc_node
+        node.efs_file_system_node,
+        node.efs_file_system_to_kms_key_node,
+        node.efs_file_system_to_efs_access_point_node,
+        node.efs_file_system_to_efs_mount_target_node,
+        node.efs_file_system_mount_target_to_security_group_node,
+        node.efs_file_system_mount_target_security_group_to_subnet_node,
+        node.efs_file_system_mount_target_security_group_subnet_to_vpc_node
       ]
 
       edges = [
-        edge.aws_efs_file_system_to_kms_key_edge,
-        edge.aws_efs_file_system_to_efs_access_point_edge,
-        edge.aws_efs_file_system_to_efs_mount_target_edge,
-        edge.aws_efs_file_system_mount_target_to_security_group_edge,
-        edge.aws_efs_file_system_mount_target_security_group_to_subnet_edge,
-        edge.aws_efs_file_system_mount_target_security_group_subnet_to_vpc_edge
+        edge.efs_file_system_to_kms_key_edge,
+        edge.efs_file_system_to_efs_access_point_edge,
+        edge.efs_file_system_to_efs_mount_target_edge,
+        edge.efs_file_system_mount_target_to_security_group_edge,
+        edge.efs_file_system_mount_target_security_group_to_subnet_edge,
+        edge.efs_file_system_mount_target_security_group_subnet_to_vpc_edge
       ]
 
       args = {
@@ -244,7 +244,7 @@ query "aws_efs_file_system_automatic_backup" {
   param "arn" {}
 }
 
-node "aws_efs_file_system_node" {
+node "efs_file_system_node" {
   category = category.efs_file_system
   sql = <<-EOQ
     select
@@ -268,7 +268,7 @@ node "aws_efs_file_system_node" {
   param "arn" {}
 }
 
-node "aws_efs_file_system_to_kms_key_node" {
+node "efs_file_system_to_kms_key_node" {
   category = category.kms_key
   sql = <<-EOQ
     select
@@ -299,7 +299,7 @@ node "aws_efs_file_system_to_kms_key_node" {
   param "arn" {}
 }
 
-edge "aws_efs_file_system_to_kms_key_edge" {
+edge "efs_file_system_to_kms_key_edge" {
   title = "encrypted with"
   sql = <<-EOQ
     select
@@ -314,7 +314,7 @@ edge "aws_efs_file_system_to_kms_key_edge" {
   param "arn" {}
 }
 
-node "aws_efs_file_system_to_efs_access_point_node" {
+node "efs_file_system_to_efs_access_point_node" {
   category = category.efs_access_point
   sql = <<-EOQ
     select
@@ -337,7 +337,7 @@ node "aws_efs_file_system_to_efs_access_point_node" {
   param "arn" {}
 }
 
-edge "aws_efs_file_system_to_efs_access_point_edge" {
+edge "efs_file_system_to_efs_access_point_edge" {
   title = "access point"
   sql = <<-EOQ
     select
@@ -353,7 +353,7 @@ edge "aws_efs_file_system_to_efs_access_point_edge" {
   param "arn" {}
 }
 
-node "aws_efs_file_system_to_efs_mount_target_node" {
+node "efs_file_system_to_efs_mount_target_node" {
   category = category.efs_mount_target
   sql = <<-EOQ
     select
@@ -375,7 +375,7 @@ node "aws_efs_file_system_to_efs_mount_target_node" {
   param "arn" {}
 }
 
-edge "aws_efs_file_system_to_efs_mount_target_edge" {
+edge "efs_file_system_to_efs_mount_target_edge" {
   title = "mount target"
   sql = <<-EOQ
     select
@@ -391,7 +391,7 @@ edge "aws_efs_file_system_to_efs_mount_target_edge" {
   param "arn" {}
 }
 
-node "aws_efs_file_system_mount_target_to_security_group_node" {
+node "efs_file_system_mount_target_to_security_group_node" {
   category = category.vpc_security_group
   sql = <<-EOQ
     with mount_sg_list as (
@@ -421,7 +421,7 @@ node "aws_efs_file_system_mount_target_to_security_group_node" {
   param "arn" {}
 }
 
-edge "aws_efs_file_system_mount_target_to_security_group_edge" {
+edge "efs_file_system_mount_target_to_security_group_edge" {
   title = "security group"
   sql = <<-EOQ
     with mount_sg_list as (
@@ -446,7 +446,7 @@ edge "aws_efs_file_system_mount_target_to_security_group_edge" {
   param "arn" {}
 }
 
-node "aws_efs_file_system_mount_target_security_group_to_subnet_node" {
+node "efs_file_system_mount_target_security_group_to_subnet_node" {
   category = category.vpc_subnet
   sql = <<-EOQ
     select
@@ -470,7 +470,7 @@ node "aws_efs_file_system_mount_target_security_group_to_subnet_node" {
   param "arn" {}
 }
 
-edge "aws_efs_file_system_mount_target_security_group_to_subnet_edge" {
+edge "efs_file_system_mount_target_security_group_to_subnet_edge" {
   title = "subnet"
   sql = <<-EOQ
     with mount_sg_list as (
@@ -495,7 +495,7 @@ edge "aws_efs_file_system_mount_target_security_group_to_subnet_edge" {
   param "arn" {}
 }
 
-node "aws_efs_file_system_mount_target_security_group_subnet_to_vpc_node" {
+node "efs_file_system_mount_target_security_group_subnet_to_vpc_node" {
   category = category.vpc_vpc
   sql = <<-EOQ
     select
@@ -519,7 +519,7 @@ node "aws_efs_file_system_mount_target_security_group_subnet_to_vpc_node" {
   param "arn" {}
 }
 
-edge "aws_efs_file_system_mount_target_security_group_subnet_to_vpc_edge" {
+edge "efs_file_system_mount_target_security_group_subnet_to_vpc_edge" {
   title = "vpc"
   sql = <<-EOQ
     select

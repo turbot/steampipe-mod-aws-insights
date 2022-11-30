@@ -74,30 +74,30 @@ dashboard "aws_ecs_cluster_detail" {
 
 
       nodes = [
-        node.aws_ecs_cluster_node,
-        node.aws_ecs_cluster_to_ec2_launch_type_node,
-        node.aws_ecs_cluster_to_fargate_launch_type_node,
-        node.aws_ecs_cluster_to_external_launch_type_node,
-        node.aws_ecs_cluster_to_ecs_task_definition_node,
-        node.aws_ecs_cluster_to_ecs_service_node,
-        node.aws_ecs_cluster_to_ecs_container_instance_node,
-        node.aws_ecs_cluster_ecs_container_instance_to_vpc_subnet_node,
-        node.aws_ecs_cluster_vpc_subnet_to_vpc_node,
-        node.aws_ecs_cluster_ecs_service_to_vpc_subnet_node,
-        node.aws_ecs_cluster_ecs_service_subnet_to_vpc_node
+        node.ecs_cluster_node,
+        node.ecs_cluster_to_ec2_launch_type_node,
+        node.ecs_cluster_to_fargate_launch_type_node,
+        node.ecs_cluster_to_external_launch_type_node,
+        node.ecs_cluster_to_ecs_task_definition_node,
+        node.ecs_cluster_to_ecs_service_node,
+        node.ecs_cluster_to_ecs_container_instance_node,
+        node.ecs_cluster_ecs_container_instance_to_vpc_subnet_node,
+        node.ecs_cluster_vpc_subnet_to_vpc_node,
+        node.ecs_cluster_ecs_service_to_vpc_subnet_node,
+        node.ecs_cluster_ecs_service_subnet_to_vpc_node
       ]
 
       edges = [
-        edge.aws_ecs_cluster_to_ec2_launch_type_edge,
-        edge.aws_ecs_cluster_to_fargate_launch_type_edge,
-        edge.aws_ecs_cluster_to_external_launch_type_edge,
-        edge.aws_ecs_cluster_to_ecs_task_definition_edge,
-        edge.aws_ecs_cluster_to_ecs_service_edge,
-        edge.aws_ecs_cluster_to_ecs_container_instance_edge,
-        edge.aws_ecs_cluster_ecs_container_instance_to_vpc_subnet_edge,
-        edge.aws_ecs_cluster_vpc_subnet_to_vpc_edge,
-        edge.aws_ecs_cluster_ecs_service_to_vpc_subnet_edge,
-        edge.aws_ecs_cluster_ecs_service_subnet_to_vpc_edge
+        edge.ecs_cluster_to_ec2_launch_type_edge,
+        edge.ecs_cluster_to_fargate_launch_type_edge,
+        edge.ecs_cluster_to_external_launch_type_edge,
+        edge.ecs_cluster_to_ecs_task_definition_edge,
+        edge.ecs_cluster_to_ecs_service_edge,
+        edge.ecs_cluster_to_ecs_container_instance_edge,
+        edge.ecs_cluster_ecs_container_instance_to_vpc_subnet_edge,
+        edge.ecs_cluster_vpc_subnet_to_vpc_edge,
+        edge.ecs_cluster_ecs_service_to_vpc_subnet_edge,
+        edge.ecs_cluster_ecs_service_subnet_to_vpc_edge
       ]
 
       args = {
@@ -340,7 +340,7 @@ query "aws_ecs_cluster_container_instances" {
   param "arn" {}
 }
 
-node "aws_ecs_cluster_node" {
+node "ecs_cluster_node" {
   category = category.ecs_cluster
 
   sql = <<-EOQ
@@ -364,7 +364,7 @@ node "aws_ecs_cluster_node" {
   param "arn" {}
 }
 
-node "aws_ecs_cluster_to_ec2_launch_type_node" {
+node "ecs_cluster_to_ec2_launch_type_node" {
   # category = category.kms_key
 
   sql = <<-EOQ
@@ -412,7 +412,7 @@ node "aws_ecs_cluster_to_ec2_launch_type_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_cluster_to_ec2_launch_type_edge" {
+edge "ecs_cluster_to_ec2_launch_type_edge" {
   title = "launch type"
 
   sql = <<-EOQ
@@ -456,7 +456,7 @@ edge "aws_ecs_cluster_to_ec2_launch_type_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_cluster_to_fargate_launch_type_node" {
+node "ecs_cluster_to_fargate_launch_type_node" {
   # category = category.fargate_launch_type
 
   sql = <<-EOQ
@@ -503,7 +503,7 @@ node "aws_ecs_cluster_to_fargate_launch_type_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_cluster_to_fargate_launch_type_edge" {
+edge "ecs_cluster_to_fargate_launch_type_edge" {
   title = "launch type"
 
   sql = <<-EOQ
@@ -547,7 +547,7 @@ edge "aws_ecs_cluster_to_fargate_launch_type_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_cluster_to_external_launch_type_node" {
+node "ecs_cluster_to_external_launch_type_node" {
   # category = category.fargate_launch_type
 
   sql = <<-EOQ
@@ -594,7 +594,7 @@ node "aws_ecs_cluster_to_external_launch_type_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_cluster_to_external_launch_type_edge" {
+edge "ecs_cluster_to_external_launch_type_edge" {
   title = "launch type"
 
   sql = <<-EOQ
@@ -638,7 +638,7 @@ edge "aws_ecs_cluster_to_external_launch_type_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_cluster_to_ecs_task_definition_node" {
+node "ecs_cluster_to_ecs_task_definition_node" {
   category = category.ecs_task_definition
 
   sql = <<-EOQ
@@ -683,7 +683,7 @@ node "aws_ecs_cluster_to_ecs_task_definition_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_cluster_to_ecs_task_definition_edge" {
+edge "ecs_cluster_to_ecs_task_definition_edge" {
   title = "task defintion"
 
   sql = <<-EOQ
@@ -718,7 +718,7 @@ edge "aws_ecs_cluster_to_ecs_task_definition_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_cluster_to_ecs_service_node" {
+node "ecs_cluster_to_ecs_service_node" {
   category = category.ecs_service
 
   sql = <<-EOQ
@@ -740,7 +740,7 @@ node "aws_ecs_cluster_to_ecs_service_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_cluster_to_ecs_service_edge" {
+edge "ecs_cluster_to_ecs_service_edge" {
   title = "service"
 
   sql = <<-EOQ
@@ -756,7 +756,7 @@ edge "aws_ecs_cluster_to_ecs_service_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_cluster_to_ecs_container_instance_node" {
+node "ecs_cluster_to_ecs_container_instance_node" {
   category = category.ecs_container_instance
 
   sql = <<-EOQ
@@ -780,7 +780,7 @@ node "aws_ecs_cluster_to_ecs_container_instance_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_cluster_to_ecs_container_instance_edge" {
+edge "ecs_cluster_to_ecs_container_instance_edge" {
   title = "container instance"
 
   sql = <<-EOQ
@@ -796,7 +796,7 @@ edge "aws_ecs_cluster_to_ecs_container_instance_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_cluster_ecs_container_instance_to_vpc_subnet_node" {
+node "ecs_cluster_ecs_container_instance_to_vpc_subnet_node" {
   category = category.vpc_subnet
 
   sql = <<-EOQ
@@ -824,7 +824,7 @@ node "aws_ecs_cluster_ecs_container_instance_to_vpc_subnet_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_cluster_ecs_container_instance_to_vpc_subnet_edge" {
+edge "ecs_cluster_ecs_container_instance_to_vpc_subnet_edge" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -846,7 +846,7 @@ edge "aws_ecs_cluster_ecs_container_instance_to_vpc_subnet_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_cluster_vpc_subnet_to_vpc_node" {
+node "ecs_cluster_vpc_subnet_to_vpc_node" {
   category = category.vpc_vpc
 
   sql = <<-EOQ
@@ -871,7 +871,7 @@ node "aws_ecs_cluster_vpc_subnet_to_vpc_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_cluster_vpc_subnet_to_vpc_edge" {
+edge "ecs_cluster_vpc_subnet_to_vpc_edge" {
   title = "vpc"
 
   sql = <<-EOQ
@@ -890,7 +890,7 @@ edge "aws_ecs_cluster_vpc_subnet_to_vpc_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_cluster_ecs_service_to_vpc_subnet_node" {
+node "ecs_cluster_ecs_service_to_vpc_subnet_node" {
   category = category.vpc_subnet
 
   sql = <<-EOQ
@@ -917,7 +917,7 @@ node "aws_ecs_cluster_ecs_service_to_vpc_subnet_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_cluster_ecs_service_to_vpc_subnet_edge" {
+edge "ecs_cluster_ecs_service_to_vpc_subnet_edge" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -938,7 +938,7 @@ edge "aws_ecs_cluster_ecs_service_to_vpc_subnet_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_cluster_ecs_service_subnet_to_vpc_node" {
+node "ecs_cluster_ecs_service_subnet_to_vpc_node" {
   category = category.vpc_vpc
 
   sql = <<-EOQ
@@ -967,7 +967,7 @@ node "aws_ecs_cluster_ecs_service_subnet_to_vpc_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_cluster_ecs_service_subnet_to_vpc_edge" {
+edge "ecs_cluster_ecs_service_subnet_to_vpc_edge" {
   title = "vpc"
 
   sql = <<-EOQ

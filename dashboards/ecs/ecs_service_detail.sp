@@ -42,27 +42,27 @@ dashboard "aws_ecs_service_detail" {
 
 
       nodes = [
-        node.aws_ecs_service_node,
-        node.aws_ecs_service_to_ecs_task_node,
-        node.aws_ecs_service_to_ec2_target_group_node,
-        node.aws_ecs_service_from_ecs_cluster_node,
-        node.aws_ecs_service_to_ecs_container_instance_node,
-        node.aws_ecs_service_to_vpc_security_group_node,
-        node.aws_ecs_service_to_vpc_subnet_node,
-        node.aws_ecs_service_vpc_subnet_to_vpc_node,
-        node.aws_ecs_service_to_ecs_task_definition_node
+        node.ecs_service_node,
+        node.ecs_service_to_ecs_task_node,
+        node.ecs_service_to_ec2_target_group_node,
+        node.ecs_service_from_ecs_cluster_node,
+        node.ecs_service_to_ecs_container_instance_node,
+        node.ecs_service_to_vpc_security_group_node,
+        node.ecs_service_to_vpc_subnet_node,
+        node.ecs_service_vpc_subnet_to_vpc_node,
+        node.ecs_service_to_ecs_task_definition_node
       ]
 
       edges = [
-        edge.aws_ecs_service_to_ecs_task_edge,
-        edge.aws_ecs_service_to_iam_role_edge,
-        edge.aws_ecs_service_to_ec2_target_group_edge,
-        edge.aws_ecs_service_from_ecs_cluster_edge,
-        edge.aws_ecs_service_to_ecs_container_instance_edge,
-        edge.aws_ecs_service_to_vpc_security_group_edge,
-        edge.aws_ecs_service_to_vpc_subnet_edge,
-        edge.aws_ecs_service_vpc_subnet_to_vpc_edge,
-        edge.aws_ecs_service_to_ecs_task_definition_edge
+        edge.ecs_service_to_ecs_task_edge,
+        edge.ecs_service_to_iam_role_edge,
+        edge.ecs_service_to_ec2_target_group_edge,
+        edge.ecs_service_from_ecs_cluster_edge,
+        edge.ecs_service_to_ecs_container_instance_edge,
+        edge.ecs_service_to_vpc_security_group_edge,
+        edge.ecs_service_to_vpc_subnet_edge,
+        edge.ecs_service_vpc_subnet_to_vpc_edge,
+        edge.ecs_service_to_ecs_task_definition_edge
       ]
 
       args = {
@@ -211,7 +211,7 @@ query "aws_ecs_service_tags" {
   param "arn" {}
 }
 
-node "aws_ecs_service_node" {
+node "ecs_service_node" {
   category = category.ecs_service
 
   sql = <<-EOQ
@@ -233,7 +233,7 @@ node "aws_ecs_service_node" {
   param "arn" {}
 }
 
-node "aws_ecs_service_to_ecs_task_node" {
+node "ecs_service_to_ecs_task_node" {
   category = category.ecs_task
 
   sql = <<-EOQ
@@ -257,7 +257,7 @@ node "aws_ecs_service_to_ecs_task_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_service_to_ecs_task_edge" {
+edge "ecs_service_to_ecs_task_edge" {
   title = "task"
 
   sql = <<-EOQ
@@ -276,7 +276,7 @@ edge "aws_ecs_service_to_ecs_task_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_service_to_iam_role_node" {
+node "ecs_service_to_iam_role_node" {
   category = category.iam_role
 
   sql = <<-EOQ
@@ -296,7 +296,7 @@ node "aws_ecs_service_to_iam_role_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_service_to_iam_role_edge" {
+edge "ecs_service_to_iam_role_edge" {
   title = "assumes"
 
   sql = <<-EOQ
@@ -311,7 +311,7 @@ edge "aws_ecs_service_to_iam_role_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_service_to_ec2_target_group_node" {
+node "ecs_service_to_ec2_target_group_node" {
   category = category.ec2_target_group
 
   sql = <<-EOQ
@@ -336,7 +336,7 @@ node "aws_ecs_service_to_ec2_target_group_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_service_to_ec2_target_group_edge" {
+edge "ecs_service_to_ec2_target_group_edge" {
   title = "target group"
 
   sql = <<-EOQ
@@ -354,7 +354,7 @@ edge "aws_ecs_service_to_ec2_target_group_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_service_from_ecs_cluster_node" {
+node "ecs_service_from_ecs_cluster_node" {
   category = category.ecs_cluster
 
   sql = <<-EOQ
@@ -375,7 +375,7 @@ node "aws_ecs_service_from_ecs_cluster_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_service_from_ecs_cluster_edge" {
+edge "ecs_service_from_ecs_cluster_edge" {
   title = "ecs cluster"
 
   sql = <<-EOQ
@@ -390,7 +390,7 @@ edge "aws_ecs_service_from_ecs_cluster_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_service_to_ecs_container_instance_node" {
+node "ecs_service_to_ecs_container_instance_node" {
   category = category.ecs_container_instance
 
   sql = <<-EOQ
@@ -415,7 +415,7 @@ node "aws_ecs_service_to_ecs_container_instance_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_service_to_ecs_container_instance_edge" {
+edge "ecs_service_to_ecs_container_instance_edge" {
   title = "container instance"
 
   sql = <<-EOQ
@@ -433,7 +433,7 @@ edge "aws_ecs_service_to_ecs_container_instance_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_service_to_vpc_security_group_node" {
+node "ecs_service_to_vpc_security_group_node" {
   category = category.vpc_security_group
 
   sql = <<-EOQ
@@ -459,7 +459,7 @@ node "aws_ecs_service_to_vpc_security_group_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_service_to_vpc_security_group_edge" {
+edge "ecs_service_to_vpc_security_group_edge" {
   title = "security group"
 
   sql = <<-EOQ
@@ -478,7 +478,7 @@ edge "aws_ecs_service_to_vpc_security_group_edge" {
 }
 
 
-node "aws_ecs_service_to_vpc_subnet_node" {
+node "ecs_service_to_vpc_subnet_node" {
   category = category.vpc_subnet
 
   sql = <<-EOQ
@@ -503,7 +503,7 @@ node "aws_ecs_service_to_vpc_subnet_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_service_to_vpc_subnet_edge" {
+edge "ecs_service_to_vpc_subnet_edge" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -522,7 +522,7 @@ edge "aws_ecs_service_to_vpc_subnet_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_service_vpc_subnet_to_vpc_node" {
+node "ecs_service_vpc_subnet_to_vpc_node" {
   category = category.vpc_vpc
 
   sql = <<-EOQ
@@ -549,7 +549,7 @@ node "aws_ecs_service_vpc_subnet_to_vpc_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_service_vpc_subnet_to_vpc_edge" {
+edge "ecs_service_vpc_subnet_to_vpc_edge" {
   title = "vpc"
 
   sql = <<-EOQ
@@ -570,7 +570,7 @@ edge "aws_ecs_service_vpc_subnet_to_vpc_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_service_to_ecs_task_definition_node" {
+node "ecs_service_to_ecs_task_definition_node" {
   category = category.ecs_task_definition
 
   sql = <<-EOQ
@@ -595,7 +595,7 @@ node "aws_ecs_service_to_ecs_task_definition_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_service_to_ecs_task_definition_edge" {
+edge "ecs_service_to_ecs_task_definition_edge" {
   title = "task defintion"
 
   sql = <<-EOQ

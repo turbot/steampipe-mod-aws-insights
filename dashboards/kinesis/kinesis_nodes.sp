@@ -1,4 +1,4 @@
-node "aws_dynamodb_table_to_kinesis_stream_node" {
+node "dynamodb_table_to_kinesis_stream_node" {
   category = category.kinesis_stream
 
   sql = <<-EOQ

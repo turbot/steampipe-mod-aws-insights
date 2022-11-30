@@ -209,32 +209,32 @@ dashboard "aws_s3_bucket_detail" {
       }
 
       nodes = [
-        node.aws_s3_bucket_nodes,
-        node.aws_cloudtrail_trail_nodes,
+        node.s3_bucket,
+        node.cloudtrail_trail,
         node.ec2_application_load_balancer,
         node.ec2_network_load_balancer,
         node.ec2_classic_load_balancer,
-        node.aws_kms_key_nodes,
-        node.aws_lambda_function_nodes,
-        node.aws_sns_topic_nodes,
-        node.aws_sqs_queue_nodes,
-        node.aws_s3_bucket_from_s3_bucket_nodes,
-        node.aws_s3_bucket_to_s3_bucket_nodes
-        # node.aws_s3_bucket_from_s3_access_point_node,
+        node.kms_key,
+        node.lambda_function,
+        node.sns_topic,
+        node.sqs_queue,
+        node.s3_bucket_from_s3_bucket,
+        node.s3_bucket_to_s3_bucket
+        # node.s3_bucket_from_s3_access_point_node,
       ]
 
       edges = [
-        edge.aws_s3_bucket_from_cloudtrail_trail_edges,
-        edge.aws_s3_bucket_from_ec2_alb_edges,
-        edge.aws_s3_bucket_from_ec2_nlb_edges,
-        edge.aws_s3_bucket_from_ec2_clb_edges,
-        edge.aws_s3_bucket_to_kms_key_edges,
-        edge.aws_s3_bucket_to_lambda_function_edges,
-        edge.aws_s3_bucket_to_sns_topic_edges,
-        edge.aws_s3_bucket_to_sqs_queue_edges,
-        edge.aws_s3_bucket_from_s3_bucket_edges,
-        edge.aws_s3_bucket_to_s3_bucket_edges
-        # #edge.aws_s3_bucket_from_s3_access_point_edge,
+        edge.s3_bucket_from_cloudtrail_trail,
+        edge.s3_bucket_from_ec2_alb,
+        edge.s3_bucket_from_ec2_nlb,
+        edge.s3_bucket_from_ec2_clb,
+        edge.s3_bucket_to_kms_key,
+        edge.s3_bucket_to_lambda_function,
+        edge.s3_bucket_to_sns_topic,
+        edge.s3_bucket_to_sqs_queue,
+        edge.s3_bucket_from_s3_bucket,
+        edge.s3_bucket_to_s3_bucket
+        # #edge.s3_bucket_from_s3_access_point_edge,
       ]
 
       args = {
@@ -352,7 +352,7 @@ query "aws_s3_bucket_input" {
   EOQ
 }
 
-node "aws_s3_bucket_nodes" {
+node "s3_bucket" {
   category = category.s3_bucket
 
   sql = <<-EOQ
@@ -374,7 +374,7 @@ node "aws_s3_bucket_nodes" {
   param "bucket_arns" {}
 }
 
-edge "aws_s3_bucket_from_cloudtrail_trail_edges" {
+edge "s3_bucket_from_cloudtrail_trail" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -390,7 +390,7 @@ edge "aws_s3_bucket_from_cloudtrail_trail_edges" {
   param "trail_arns" {}
 }
 
-edge "aws_s3_bucket_from_ec2_alb_edges" {
+edge "s3_bucket_from_ec2_alb" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -406,7 +406,7 @@ edge "aws_s3_bucket_from_ec2_alb_edges" {
   param "alb_arns" {}
 }
 
-edge "aws_s3_bucket_from_ec2_nlb_edges" {
+edge "s3_bucket_from_ec2_nlb" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -422,7 +422,7 @@ edge "aws_s3_bucket_from_ec2_nlb_edges" {
   param "nlb_arns" {}
 }
 
-edge "aws_s3_bucket_from_ec2_clb_edges" {
+edge "s3_bucket_from_ec2_clb" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -438,7 +438,7 @@ edge "aws_s3_bucket_from_ec2_clb_edges" {
   param "clb_arns" {}
 }
 
-node "aws_s3_bucket_to_lambda_function_node" {
+node "s3_bucket_to_lambda_function_node" {
   category = category.lambda_function
 
   sql = <<-EOQ
@@ -464,7 +464,7 @@ node "aws_s3_bucket_to_lambda_function_node" {
   param "arn" {}
 }
 
-edge "aws_s3_bucket_to_lambda_function_edges" {
+edge "s3_bucket_to_lambda_function" {
   title = "triggers"
 
   sql = <<-EOQ
@@ -480,7 +480,7 @@ edge "aws_s3_bucket_to_lambda_function_edges" {
   param "function_arns" {}
 }
 
-edge "aws_s3_bucket_to_sns_topic_edges" {
+edge "s3_bucket_to_sns_topic" {
   title = "notifies"
 
   sql = <<-EOQ
@@ -496,7 +496,7 @@ edge "aws_s3_bucket_to_sns_topic_edges" {
   param "topic_arns" {}
 }
 
-edge "aws_s3_bucket_to_sqs_queue_edges" {
+edge "s3_bucket_to_sqs_queue" {
   title = "queues"
 
   sql = <<-EOQ
@@ -512,7 +512,7 @@ edge "aws_s3_bucket_to_sqs_queue_edges" {
   param "queue_arns" {}
 }
 
-edge "aws_s3_bucket_to_kms_key_edges" {
+edge "s3_bucket_to_kms_key" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -528,7 +528,7 @@ edge "aws_s3_bucket_to_kms_key_edges" {
   param "key_arns" {}
 }
 
-node "aws_s3_bucket_from_s3_bucket_nodes" {
+node "s3_bucket_from_s3_bucket" {
   category = category.s3_bucket
 
   sql = <<-EOQ
@@ -552,7 +552,7 @@ node "aws_s3_bucket_from_s3_bucket_nodes" {
   param "bucket_arns" {}
 }
 
-edge "aws_s3_bucket_from_s3_bucket_edges" {
+edge "s3_bucket_from_s3_bucket" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -570,7 +570,7 @@ edge "aws_s3_bucket_from_s3_bucket_edges" {
   param "bucket_arns" {}
 }
 
-node "aws_s3_bucket_to_s3_bucket_nodes" {
+node "s3_bucket_to_s3_bucket" {
   category = category.s3_bucket
 
   sql = <<-EOQ
@@ -594,7 +594,7 @@ node "aws_s3_bucket_to_s3_bucket_nodes" {
   param "bucket_arns" {}
 }
 
-edge "aws_s3_bucket_to_s3_bucket_edges" {
+edge "s3_bucket_to_s3_bucket" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -612,7 +612,7 @@ edge "aws_s3_bucket_to_s3_bucket_edges" {
   param "bucket_arns" {}
 }
 
-node "aws_s3_bucket_from_s3_access_point_node" {
+node "s3_bucket_from_s3_access_point_node" {
   category = category.s3_access_point
 
   sql = <<-EOQ
@@ -637,7 +637,7 @@ node "aws_s3_bucket_from_s3_access_point_node" {
   param "bucket_arns" {}
 }
 
-edge "aws_s3_bucket_from_s3_access_point_edge" {
+edge "s3_bucket_from_s3_access_point_edge" {
   title = "access point"
 
   sql = <<-EOQ

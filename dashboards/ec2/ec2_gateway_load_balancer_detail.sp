@@ -47,22 +47,22 @@ dashboard "aws_ec2_gateway_load_balancer_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_ec2_gateway_load_balancer_node,
-        node.aws_ec2_glb_to_vpc_subnet_node,
-        node.aws_ec2_glb_to_s3_bucket_node,
-        node.aws_ec2_glb_vpc_security_group_to_vpc_node,
-        node.aws_ec2_lb_to_target_group_node,
-        node.aws_ec2_lb_to_ec2_instance_node,
-        node.aws_ec2_lb_from_ec2_load_balancer_listener_node
+        node.ec2_gateway_load_balancer_node,
+        node.ec2_glb_to_vpc_subnet_node,
+        node.ec2_glb_to_s3_bucket_node,
+        node.ec2_glb_vpc_security_group_to_vpc_node,
+        node.ec2_lb_to_target_group_node,
+        node.ec2_lb_to_ec2_instance_node,
+        node.ec2_lb_from_ec2_load_balancer_listener_node
       ]
 
       edges = [
-        edge.aws_ec2_glb_to_vpc_subnet_edge,
-        edge.aws_ec2_glb_to_s3_bucket_edge,
-        edge.aws_ec2_glb_vpc_security_group_to_vpc_edge,
-        edge.aws_ec2_lb_to_target_group_edge,
-        edge.aws_ec2_lb_to_ec2_instance_edge,
-        edge.aws_ec2_lb_from_ec2_load_balancer_listener_edge
+        edge.ec2_glb_to_vpc_subnet_edge,
+        edge.ec2_glb_to_s3_bucket_edge,
+        edge.ec2_glb_vpc_security_group_to_vpc_edge,
+        edge.ec2_lb_to_target_group_edge,
+        edge.ec2_lb_to_ec2_instance_edge,
+        edge.ec2_lb_from_ec2_load_balancer_listener_edge
       ]
 
       args = {
@@ -239,7 +239,7 @@ query "aws_glb_state" {
   param "arn" {}
 }
 
-node "aws_ec2_gateway_load_balancer_node" {
+node "ec2_gateway_load_balancer_node" {
   category = category.ec2_gateway_load_balancer
 
   sql = <<-EOQ
@@ -263,7 +263,7 @@ node "aws_ec2_gateway_load_balancer_node" {
   param "arn" {}
 }
 
-node "aws_ec2_glb_to_vpc_subnet_node" {
+node "ec2_glb_to_vpc_subnet_node" {
   category = category.vpc_subnet
 
   sql = <<-EOQ
@@ -289,7 +289,7 @@ node "aws_ec2_glb_to_vpc_subnet_node" {
   param "arn" {}
 }
 
-edge "aws_ec2_glb_to_vpc_subnet_edge" {
+edge "ec2_glb_to_vpc_subnet_edge" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -308,7 +308,7 @@ edge "aws_ec2_glb_to_vpc_subnet_edge" {
   param "arn" {}
 }
 
-node "aws_ec2_glb_to_s3_bucket_node" {
+node "ec2_glb_to_s3_bucket_node" {
   category = category.s3_bucket
 
   sql = <<-EOQ
@@ -335,7 +335,7 @@ node "aws_ec2_glb_to_s3_bucket_node" {
   param "arn" {}
 }
 
-edge "aws_ec2_glb_to_s3_bucket_edge" {
+edge "ec2_glb_to_s3_bucket_edge" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -355,7 +355,7 @@ edge "aws_ec2_glb_to_s3_bucket_edge" {
   param "arn" {}
 }
 
-node "aws_ec2_glb_vpc_security_group_to_vpc_node" {
+node "ec2_glb_vpc_security_group_to_vpc_node" {
   category = category.vpc_vpc
 
   sql = <<-EOQ
@@ -379,7 +379,7 @@ node "aws_ec2_glb_vpc_security_group_to_vpc_node" {
   param "arn" {}
 }
 
-edge "aws_ec2_glb_vpc_security_group_to_vpc_edge" {
+edge "ec2_glb_vpc_security_group_to_vpc_edge" {
   title = "vpc"
 
   sql = <<-EOQ

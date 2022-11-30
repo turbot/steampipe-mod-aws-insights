@@ -32,16 +32,16 @@ dashboard "backup_vault_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_backup_vault_node,
-        node.aws_backup_vault_from_backup_plan_node,
-        node.aws_backup_vault_to_kms_key_node,
-        node.aws_backup_vault_to_sns_topic_node
+        node.backup_vault_node,
+        node.backup_vault_from_backup_plan_node,
+        node.backup_vault_to_kms_key_node,
+        node.backup_vault_to_sns_topic_node
       ]
 
       edges = [
-        edge.aws_backup_vault_from_backup_plan_edge,
-        edge.aws_backup_vault_to_kms_key_edge,
-        edge.aws_backup_vault_to_sns_topic_edge,
+        edge.backup_vault_from_backup_plan_edge,
+        edge.backup_vault_to_kms_key_edge,
+        edge.backup_vault_to_sns_topic_edge,
       ]
 
       args = {
@@ -108,7 +108,7 @@ query "aws_backup_vault_recovery_points" {
   param "arn" {}
 }
 
-node "aws_backup_vault_node" {
+node "backup_vault_node" {
   category = category.backup_vault
 
   sql = <<-EOQ
@@ -131,7 +131,7 @@ node "aws_backup_vault_node" {
   param "arn" {}
 }
 
-node "aws_backup_vault_from_backup_plan_node" {
+node "backup_vault_from_backup_plan_node" {
   category = category.backup_plan
 
   sql = <<-EOQ
@@ -164,7 +164,7 @@ node "aws_backup_vault_from_backup_plan_node" {
   param "arn" {}
 }
 
-edge "aws_backup_vault_from_backup_plan_edge" {
+edge "backup_vault_from_backup_plan_edge" {
   title = "backup vault"
 
   sql = <<-EOQ
@@ -183,7 +183,7 @@ edge "aws_backup_vault_from_backup_plan_edge" {
   param "arn" {}
 }
 
-node "aws_backup_vault_to_kms_key_node" {
+node "backup_vault_to_kms_key_node" {
   category = category.kms_key
 
   sql = <<-EOQ
@@ -215,7 +215,7 @@ node "aws_backup_vault_to_kms_key_node" {
   param "arn" {}
 }
 
-edge "aws_backup_vault_to_kms_key_edge" {
+edge "backup_vault_to_kms_key_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -232,7 +232,7 @@ edge "aws_backup_vault_to_kms_key_edge" {
   param "arn" {}
 }
 
-node "aws_backup_vault_to_sns_topic_node" {
+node "backup_vault_to_sns_topic_node" {
   category = category.sns_topic
 
   sql = <<-EOQ
@@ -261,7 +261,7 @@ node "aws_backup_vault_to_sns_topic_node" {
   param "arn" {}
 }
 
-edge "aws_backup_vault_to_sns_topic_edge" {
+edge "backup_vault_to_sns_topic_edge" {
   title = "notifies"
 
   sql = <<-EOQ

@@ -161,20 +161,20 @@ dashboard "acm_certificate_detail" {
       }
 
       nodes = [
-        node.aws_acm_certificate_nodes,
-        node.aws_cloudfront_distribution_nodes,
+        node.acm_certificate,
+        node.cloudfront_distribution,
         node.ec2_classic_load_balancer,
         node.ec2_application_load_balancer,
         node.ec2_network_load_balancer,
-        node.aws_acm_certificate_from_opensearch_domain_nodes
+        node.acm_certificate_from_opensearch_domain
       ]
 
       edges = [
-        edge.aws_cloudfront_distribution_to_acm_certificate_edges,
-        edge.aws_ec2_application_load_balancer_to_acm_certificate_edges,
-        edge.aws_ec2_classic_load_balancer_to_acm_certificate_edges,
-        edge.aws_ec2_network_load_balancer_to_acm_certificate_edges,
-        edge.aws_opensearch_domain_to_acm_certificate_edges
+        edge.cloudfront_distribution_to_acm_certificate,
+        edge.ec2_application_load_balancer_to_acm_certificate,
+        edge.ec2_classic_load_balancer_to_acm_certificate,
+        edge.ec2_network_load_balancer_to_acm_certificate,
+        edge.opensearch_domain_to_acm_certificate
       ]
 
       args = {
@@ -346,7 +346,7 @@ query "aws_acm_certificate_transparency_logging_status" {
   param "arn" {}
 }
 
-edge "aws_opensearch_domain_to_acm_certificate_edges" {
+edge "opensearch_domain_to_acm_certificate" {
   title = "ssl via"
 
   sql = <<-EOQ

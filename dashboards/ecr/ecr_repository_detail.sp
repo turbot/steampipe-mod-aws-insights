@@ -56,16 +56,16 @@ dashboard "aws_ecr_repository_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_ecr_repository_node,
-        node.aws_ecr_repository_to_ecr_image_node,
-        node.aws_ecr_repository_to_ecs_task_definition_node,
-        node.aws_ecr_repository_to_kms_key_node
+        node.ecr_repository_node,
+        node.ecr_repository_to_ecr_image_node,
+        node.ecr_repository_to_ecs_task_definition_node,
+        node.ecr_repository_to_kms_key_node
       ]
 
       edges = [
-        edge.aws_ecr_repository_to_ecr_image_edge,
-        edge.aws_ecr_repository_to_ecs_task_definition_edge,
-        edge.aws_ecr_repository_to_kms_key_edge
+        edge.ecr_repository_to_ecr_image_edge,
+        edge.ecr_repository_to_ecs_task_definition_edge,
+        edge.ecr_repository_to_kms_key_edge
       ]
 
       args = {
@@ -240,7 +240,7 @@ query "aws_ecr_repository_input" {
   EOQ
 }
 
-node "aws_ecr_repository_node" {
+node "ecr_repository_node" {
   category = category.ecr_repository
 
   sql = <<-EOQ
@@ -264,7 +264,7 @@ node "aws_ecr_repository_node" {
   param "arn" {}
 }
 
-node "aws_ecr_repository_to_ecr_image_node" {
+node "ecr_repository_to_ecr_image_node" {
   category = category.ecr_image
 
   sql = <<-EOQ
@@ -288,7 +288,7 @@ node "aws_ecr_repository_to_ecr_image_node" {
   param "arn" {}
 }
 
-edge "aws_ecr_repository_to_ecr_image_edge" {
+edge "ecr_repository_to_ecr_image_edge" {
   title = "image"
 
   sql = <<-EOQ
@@ -305,7 +305,7 @@ edge "aws_ecr_repository_to_ecr_image_edge" {
   param "arn" {}
 }
 
-node "aws_ecr_repository_to_ecs_task_definition_node" {
+node "ecr_repository_to_ecs_task_definition_node" {
   category = category.ecs_task_definition
 
   sql = <<-EOQ
@@ -331,7 +331,7 @@ node "aws_ecr_repository_to_ecs_task_definition_node" {
   param "arn" {}
 }
 
-edge "aws_ecr_repository_to_ecs_task_definition_edge" {
+edge "ecr_repository_to_ecs_task_definition_edge" {
   title = "task definition"
 
   sql = <<-EOQ
@@ -350,7 +350,7 @@ edge "aws_ecr_repository_to_ecs_task_definition_edge" {
   param "arn" {}
 }
 
-node "aws_ecr_repository_to_kms_key_node" {
+node "ecr_repository_to_kms_key_node" {
   category = category.kms_key
 
   sql = <<-EOQ
@@ -375,7 +375,7 @@ node "aws_ecr_repository_to_kms_key_node" {
   param "arn" {}
 }
 
-edge "aws_ecr_repository_to_kms_key_edge" {
+edge "ecr_repository_to_kms_key_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ

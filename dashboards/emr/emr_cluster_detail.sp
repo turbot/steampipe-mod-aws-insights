@@ -55,23 +55,23 @@ dashboard "aws_emr_cluster_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_emr_cluster_node,
-        node.aws_emr_cluster_to_iam_role_node,
-        node.aws_emr_cluster_to_s3_bucket_node,
-        node.aws_emr_cluster_to_emr_instance_fleet_node,
-        node.aws_emr_cluster_to_emr_instance_node,
-        node.aws_emr_cluster_to_emr_instance_group_node,
-        node.aws_emr_cluster_to_ec2_ami_node
+        node.emr_cluster_node,
+        node.emr_cluster_to_iam_role_node,
+        node.emr_cluster_to_s3_bucket_node,
+        node.emr_cluster_to_emr_instance_fleet_node,
+        node.emr_cluster_to_emr_instance_node,
+        node.emr_cluster_to_emr_instance_group_node,
+        node.emr_cluster_to_ec2_ami_node
       ]
 
       edges = [
-        edge.aws_emr_cluster_to_iam_role_edge,
-        edge.aws_emr_cluster_to_s3_bucket_edge,
-        edge.aws_emr_cluster_to_emr_instance_fleet_edge,
-        edge.aws_emr_cluster_to_emr_instance_group_edge,
-        edge.aws_emr_cluster_to_ec2_ami_edge,
-        edge.aws_emr_instance_group_to_emr_instance_edge,
-        edge.aws_emr_instance_fleet_to_emr_instance_edge
+        edge.emr_cluster_to_iam_role_edge,
+        edge.emr_cluster_to_s3_bucket_edge,
+        edge.emr_cluster_to_emr_instance_fleet_edge,
+        edge.emr_cluster_to_emr_instance_group_edge,
+        edge.emr_cluster_to_ec2_ami_edge,
+        edge.emr_instance_group_to_emr_instance_edge,
+        edge.emr_instance_fleet_to_emr_instance_edge
 
       ]
 
@@ -346,7 +346,7 @@ query "aws_emr_cluster_ec2_instance_attributes" {
   param "arn" {}
 }
 
-node "aws_emr_cluster_node" {
+node "emr_cluster_node" {
   category = category.emr_cluster
 
   sql = <<-EOQ
@@ -369,7 +369,7 @@ node "aws_emr_cluster_node" {
   param "arn" {}
 }
 
-node "aws_emr_cluster_to_iam_role_node" {
+node "emr_cluster_to_iam_role_node" {
   category = category.iam_role
 
   sql = <<-EOQ
@@ -398,7 +398,7 @@ node "aws_emr_cluster_to_iam_role_node" {
   param "arn" {}
 }
 
-edge "aws_emr_cluster_to_iam_role_edge" {
+edge "emr_cluster_to_iam_role_edge" {
   title = "assumes"
 
   sql = <<-EOQ
@@ -416,7 +416,7 @@ edge "aws_emr_cluster_to_iam_role_edge" {
   param "arn" {}
 }
 
-node "aws_emr_cluster_to_s3_bucket_node" {
+node "emr_cluster_to_s3_bucket_node" {
   category = category.s3_bucket
 
   sql = <<-EOQ
@@ -445,7 +445,7 @@ node "aws_emr_cluster_to_s3_bucket_node" {
   param "arn" {}
 }
 
-edge "aws_emr_cluster_to_s3_bucket_edge" {
+edge "emr_cluster_to_s3_bucket_edge" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -464,7 +464,7 @@ edge "aws_emr_cluster_to_s3_bucket_edge" {
   param "arn" {}
 }
 
-node "aws_emr_cluster_to_emr_instance_fleet_node" {
+node "emr_cluster_to_emr_instance_fleet_node" {
   category = category.emr_instance_fleet
 
   sql = <<-EOQ
@@ -493,7 +493,7 @@ node "aws_emr_cluster_to_emr_instance_fleet_node" {
   param "arn" {}
 }
 
-edge "aws_emr_cluster_to_emr_instance_fleet_edge" {
+edge "emr_cluster_to_emr_instance_fleet_edge" {
   title = "instance fleet"
 
   sql = <<-EOQ
@@ -512,7 +512,7 @@ edge "aws_emr_cluster_to_emr_instance_fleet_edge" {
   param "arn" {}
 }
 
-node "aws_emr_cluster_to_emr_instance_group_node" {
+node "emr_cluster_to_emr_instance_group_node" {
   category = category.emr_instance_group
 
   sql = <<-EOQ
@@ -541,7 +541,7 @@ node "aws_emr_cluster_to_emr_instance_group_node" {
   param "arn" {}
 }
 
-edge "aws_emr_cluster_to_emr_instance_group_edge" {
+edge "emr_cluster_to_emr_instance_group_edge" {
   title = "instance group"
 
   sql = <<-EOQ
@@ -560,7 +560,7 @@ edge "aws_emr_cluster_to_emr_instance_group_edge" {
   param "arn" {}
 }
 
-node "aws_emr_cluster_to_ec2_ami_node" {
+node "emr_cluster_to_ec2_ami_node" {
   category = category.ec2_ami
 
   sql = <<-EOQ
@@ -590,7 +590,7 @@ node "aws_emr_cluster_to_ec2_ami_node" {
   param "arn" {}
 }
 
-edge "aws_emr_cluster_to_ec2_ami_edge" {
+edge "emr_cluster_to_ec2_ami_edge" {
   title = "ami"
 
   sql = <<-EOQ
@@ -609,7 +609,7 @@ edge "aws_emr_cluster_to_ec2_ami_edge" {
   param "arn" {}
 }
 
-node "aws_emr_cluster_to_emr_instance_node" {
+node "emr_cluster_to_emr_instance_node" {
   category = category.emr_instance
 
   sql = <<-EOQ
@@ -642,7 +642,7 @@ node "aws_emr_cluster_to_emr_instance_node" {
   param "arn" {}
 }
 
-edge "aws_emr_instance_fleet_to_emr_instance_edge" {
+edge "emr_instance_fleet_to_emr_instance_edge" {
   title = "ec2 instance"
 
   sql = <<-EOQ
@@ -663,7 +663,7 @@ edge "aws_emr_instance_fleet_to_emr_instance_edge" {
   param "arn" {}
 }
 
-edge "aws_emr_instance_group_to_emr_instance_edge" {
+edge "emr_instance_group_to_emr_instance_edge" {
   title = "ec2 instance"
 
   sql = <<-EOQ

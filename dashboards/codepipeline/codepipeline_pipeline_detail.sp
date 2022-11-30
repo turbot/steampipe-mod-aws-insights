@@ -33,26 +33,26 @@ dashboard "aws_codepipeline_pipeline_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_codepipeline_pipeline_node,
-        node.aws_codepipeline_pipeline_from_iam_role_node,
-        node.aws_codepipeline_pipeline_from_kms_key_node,
-        node.aws_codepipeline_pipeline_from_codecommit_repository_node,
-        node.aws_codepipeline_pipeline_from_ecr_repository_node,
-        node.aws_codepipeline_pipeline_from_s3_bucket_source_node,
-        node.aws_codepipeline_pipeline_from_codebuild_project_node,
-        node.aws_codepipeline_pipeline_from_s3_bucket_deploy_node,
-        node.aws_codepipeline_pipeline_from_codedeploy_app_node
+        node.codepipeline_pipeline_node,
+        node.codepipeline_pipeline_from_iam_role_node,
+        node.codepipeline_pipeline_from_kms_key_node,
+        node.codepipeline_pipeline_from_codecommit_repository_node,
+        node.codepipeline_pipeline_from_ecr_repository_node,
+        node.codepipeline_pipeline_from_s3_bucket_source_node,
+        node.codepipeline_pipeline_from_codebuild_project_node,
+        node.codepipeline_pipeline_from_s3_bucket_deploy_node,
+        node.codepipeline_pipeline_from_codedeploy_app_node
       ]
 
       edges = [
-        edge.aws_codepipeline_pipeline_from_iam_role_edge,
-        edge.aws_codepipeline_pipeline_from_kms_key_edge,
-        edge.aws_codepipeline_pipeline_from_codecommit_repository_edge,
-        edge.aws_codepipeline_pipeline_from_ecr_repository_edge,
-        edge.aws_codepipeline_pipeline_from_s3_bucket_source_edge,
-        edge.aws_codepipeline_pipeline_from_codebuild_project_edge,
-        edge.aws_codepipeline_pipeline_from_s3_bucket_deploy_edge,
-        edge.aws_codepipeline_pipeline_from_codedeploy_app_edge
+        edge.codepipeline_pipeline_from_iam_role_edge,
+        edge.codepipeline_pipeline_from_kms_key_edge,
+        edge.codepipeline_pipeline_from_codecommit_repository_edge,
+        edge.codepipeline_pipeline_from_ecr_repository_edge,
+        edge.codepipeline_pipeline_from_s3_bucket_source_edge,
+        edge.codepipeline_pipeline_from_codebuild_project_edge,
+        edge.codepipeline_pipeline_from_s3_bucket_deploy_edge,
+        edge.codepipeline_pipeline_from_codedeploy_app_edge
       ]
 
       args = {
@@ -132,7 +132,7 @@ query "aws_codepipeline_pipeline_encryption" {
   param "arn" {}
 }
 
-node "aws_codepipeline_pipeline_node" {
+node "codepipeline_pipeline_node" {
   category = category.codepipeline_pipeline
 
   sql = <<-EOQ
@@ -155,7 +155,7 @@ node "aws_codepipeline_pipeline_node" {
   param "arn" {}
 }
 
-node "aws_codepipeline_pipeline_from_iam_role_node" {
+node "codepipeline_pipeline_from_iam_role_node" {
   category = category.iam_role
 
   sql = <<-EOQ
@@ -187,7 +187,7 @@ node "aws_codepipeline_pipeline_from_iam_role_node" {
   param "arn" {}
 }
 
-edge "aws_codepipeline_pipeline_from_iam_role_edge" {
+edge "codepipeline_pipeline_from_iam_role_edge" {
   title = "assumes"
 
   sql = <<-EOQ
@@ -205,7 +205,7 @@ edge "aws_codepipeline_pipeline_from_iam_role_edge" {
   param "arn" {}
 }
 
-node "aws_codepipeline_pipeline_from_kms_key_node" {
+node "codepipeline_pipeline_from_kms_key_node" {
   category = category.kms_key
 
   sql = <<-EOQ
@@ -238,7 +238,7 @@ node "aws_codepipeline_pipeline_from_kms_key_node" {
   param "arn" {}
 }
 
-edge "aws_codepipeline_pipeline_from_kms_key_edge" {
+edge "codepipeline_pipeline_from_kms_key_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -257,7 +257,7 @@ edge "aws_codepipeline_pipeline_from_kms_key_edge" {
   param "arn" {}
 }
 
-node "aws_codepipeline_pipeline_from_codecommit_repository_node" {
+node "codepipeline_pipeline_from_codecommit_repository_node" {
   category = category.codecommit_repository
 
   sql = <<-EOQ
@@ -292,7 +292,7 @@ node "aws_codepipeline_pipeline_from_codecommit_repository_node" {
   param "arn" {}
 }
 
-edge "aws_codepipeline_pipeline_from_codecommit_repository_edge" {
+edge "codepipeline_pipeline_from_codecommit_repository_edge" {
   title = "source provider"
 
   sql = <<-EOQ
@@ -314,7 +314,7 @@ edge "aws_codepipeline_pipeline_from_codecommit_repository_edge" {
   param "arn" {}
 }
 
-node "aws_codepipeline_pipeline_from_ecr_repository_node" {
+node "codepipeline_pipeline_from_ecr_repository_node" {
   category = category.ecr_repository
 
   sql = <<-EOQ
@@ -349,7 +349,7 @@ node "aws_codepipeline_pipeline_from_ecr_repository_node" {
   param "arn" {}
 }
 
-edge "aws_codepipeline_pipeline_from_ecr_repository_edge" {
+edge "codepipeline_pipeline_from_ecr_repository_edge" {
   title = "source provider"
 
   sql = <<-EOQ
@@ -371,7 +371,7 @@ edge "aws_codepipeline_pipeline_from_ecr_repository_edge" {
   param "arn" {}
 }
 
-node "aws_codepipeline_pipeline_from_s3_bucket_source_node" {
+node "codepipeline_pipeline_from_s3_bucket_source_node" {
   category = category.s3_bucket
 
   sql = <<-EOQ
@@ -406,7 +406,7 @@ node "aws_codepipeline_pipeline_from_s3_bucket_source_node" {
   param "arn" {}
 }
 
-edge "aws_codepipeline_pipeline_from_s3_bucket_source_edge" {
+edge "codepipeline_pipeline_from_s3_bucket_source_edge" {
   title = "source provider"
 
   sql = <<-EOQ
@@ -428,7 +428,7 @@ edge "aws_codepipeline_pipeline_from_s3_bucket_source_edge" {
   param "arn" {}
 }
 
-node "aws_codepipeline_pipeline_from_codebuild_project_node" {
+node "codepipeline_pipeline_from_codebuild_project_node" {
   category = category.codebuild_project
 
   sql = <<-EOQ
@@ -463,7 +463,7 @@ node "aws_codepipeline_pipeline_from_codebuild_project_node" {
   param "arn" {}
 }
 
-edge "aws_codepipeline_pipeline_from_codebuild_project_edge" {
+edge "codepipeline_pipeline_from_codebuild_project_edge" {
   title = "build"
 
   sql = <<-EOQ
@@ -485,7 +485,7 @@ edge "aws_codepipeline_pipeline_from_codebuild_project_edge" {
   param "arn" {}
 }
 
-node "aws_codepipeline_pipeline_from_s3_bucket_deploy_node" {
+node "codepipeline_pipeline_from_s3_bucket_deploy_node" {
   category = category.s3_bucket
 
   sql = <<-EOQ
@@ -520,7 +520,7 @@ node "aws_codepipeline_pipeline_from_s3_bucket_deploy_node" {
   param "arn" {}
 }
 
-edge "aws_codepipeline_pipeline_from_s3_bucket_deploy_edge" {
+edge "codepipeline_pipeline_from_s3_bucket_deploy_edge" {
   title = "deploys"
 
   sql = <<-EOQ
@@ -542,7 +542,7 @@ edge "aws_codepipeline_pipeline_from_s3_bucket_deploy_edge" {
   param "arn" {}
 }
 
-node "aws_codepipeline_pipeline_from_codedeploy_app_node" {
+node "codepipeline_pipeline_from_codedeploy_app_node" {
   category = category.codedeploy_app
 
   sql = <<-EOQ
@@ -577,7 +577,7 @@ node "aws_codepipeline_pipeline_from_codedeploy_app_node" {
   param "arn" {}
 }
 
-edge "aws_codepipeline_pipeline_from_codedeploy_app_edge" {
+edge "codepipeline_pipeline_from_codedeploy_app_edge" {
   title = "deploys"
 
   sql = <<-EOQ

@@ -57,22 +57,22 @@ dashboard "aws_cloudwatch_log_group_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_cloudwatch_log_group_node,
-        node.aws_cloudwatch_log_group_to_kms_key_node,
-        node.aws_cloudwatch_log_group_from_cloudtrail_trail_node,
-        node.aws_cloudwatch_log_group_from_lambda_function_node,
-        node.aws_cloudwatch_log_group_from_vpc_flow_logs_node,
-        node.aws_cloudwatch_log_group_from_kinesis_stream_node,
-        node.aws_cloudwatch_log_group_to_log_metric_filter_node
+        node.cloudwatch_log_group_node,
+        node.cloudwatch_log_group_to_kms_key_node,
+        node.cloudwatch_log_group_from_cloudtrail_trail_node,
+        node.cloudwatch_log_group_from_lambda_function_node,
+        node.cloudwatch_log_group_from_vpc_flow_logs_node,
+        node.cloudwatch_log_group_from_kinesis_stream_node,
+        node.cloudwatch_log_group_to_log_metric_filter_node
       ]
 
       edges = [
-        edge.aws_cloudwatch_log_group_to_kms_key_edge,
-        edge.aws_cloudwatch_log_group_from_cloudtrail_trail_edge,
-        edge.aws_cloudwatch_log_group_from_lambda_function_edge,
-        edge.aws_cloudwatch_log_group_from_vpc_flow_logs_edge,
-        edge.aws_cloudwatch_log_group_from_kinesis_stream_edge,
-        edge.aws_cloudwatch_log_group_to_log_metric_filter_edge
+        edge.cloudwatch_log_group_to_kms_key_edge,
+        edge.cloudwatch_log_group_from_cloudtrail_trail_edge,
+        edge.cloudwatch_log_group_from_lambda_function_edge,
+        edge.cloudwatch_log_group_from_vpc_flow_logs_edge,
+        edge.cloudwatch_log_group_from_kinesis_stream_edge,
+        edge.cloudwatch_log_group_to_log_metric_filter_edge
       ]
 
       args = {
@@ -256,7 +256,7 @@ query "aws_cloudwatch_log_group_encryption_details" {
   param "log_group_arn" {}
 }
 
-node "aws_cloudwatch_log_group_node" {
+node "cloudwatch_log_group_node" {
   category = category.cloudwatch_log_group
 
   sql = <<-EOQ
@@ -279,7 +279,7 @@ node "aws_cloudwatch_log_group_node" {
   param "log_group_arn" {}
 }
 
-node "aws_cloudwatch_log_group_to_kms_key_node" {
+node "cloudwatch_log_group_to_kms_key_node" {
   category = category.kms_key
 
   sql = <<-EOQ
@@ -303,7 +303,7 @@ node "aws_cloudwatch_log_group_to_kms_key_node" {
   param "log_group_arn" {}
 }
 
-edge "aws_cloudwatch_log_group_to_kms_key_edge" {
+edge "cloudwatch_log_group_to_kms_key_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -321,7 +321,7 @@ edge "aws_cloudwatch_log_group_to_kms_key_edge" {
   param "log_group_arn" {}
 }
 
-node "aws_cloudwatch_log_group_from_cloudtrail_trail_node" {
+node "cloudwatch_log_group_from_cloudtrail_trail_node" {
   category = category.cloudtrail_trail
 
   sql = <<-EOQ
@@ -343,7 +343,7 @@ node "aws_cloudwatch_log_group_from_cloudtrail_trail_node" {
   param "log_group_arn" {}
 }
 
-edge "aws_cloudwatch_log_group_from_cloudtrail_trail_edge" {
+edge "cloudwatch_log_group_from_cloudtrail_trail_edge" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -359,7 +359,7 @@ edge "aws_cloudwatch_log_group_from_cloudtrail_trail_edge" {
   param "log_group_arn" {}
 }
 
-node "aws_cloudwatch_log_group_from_lambda_function_node" {
+node "cloudwatch_log_group_from_lambda_function_node" {
   category = category.lambda_function
 
   sql = <<-EOQ
@@ -385,7 +385,7 @@ node "aws_cloudwatch_log_group_from_lambda_function_node" {
   param "log_group_arn" {}
 }
 
-edge "aws_cloudwatch_log_group_from_lambda_function_edge" {
+edge "cloudwatch_log_group_from_lambda_function_edge" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -404,7 +404,7 @@ edge "aws_cloudwatch_log_group_from_lambda_function_edge" {
   param "log_group_arn" {}
 }
 
-node "aws_cloudwatch_log_group_from_vpc_flow_logs_node" {
+node "cloudwatch_log_group_from_vpc_flow_logs_node" {
   category = category.vpc_flow_log
 
   sql = <<-EOQ
@@ -429,7 +429,7 @@ node "aws_cloudwatch_log_group_from_vpc_flow_logs_node" {
   param "log_group_arn" {}
 }
 
-edge "aws_cloudwatch_log_group_from_vpc_flow_logs_edge" {
+edge "cloudwatch_log_group_from_vpc_flow_logs_edge" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -447,7 +447,7 @@ edge "aws_cloudwatch_log_group_from_vpc_flow_logs_edge" {
   param "log_group_arn" {}
 }
 
-node "aws_cloudwatch_log_group_from_kinesis_stream_node" {
+node "cloudwatch_log_group_from_kinesis_stream_node" {
   category = category.kinesis_stream
 
   sql = <<-EOQ
@@ -473,7 +473,7 @@ node "aws_cloudwatch_log_group_from_kinesis_stream_node" {
   param "log_group_arn" {}
 }
 
-edge "aws_cloudwatch_log_group_from_kinesis_stream_edge" {
+edge "cloudwatch_log_group_from_kinesis_stream_edge" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -492,7 +492,7 @@ edge "aws_cloudwatch_log_group_from_kinesis_stream_edge" {
   param "log_group_arn" {}
 }
 
-node "aws_cloudwatch_log_group_to_log_metric_filter_node" {
+node "cloudwatch_log_group_to_log_metric_filter_node" {
   category = category.cloudwatch_log_metric_filter
 
   sql = <<-EOQ
@@ -518,7 +518,7 @@ node "aws_cloudwatch_log_group_to_log_metric_filter_node" {
   param "log_group_arn" {}
 }
 
-edge "aws_cloudwatch_log_group_to_log_metric_filter_edge" {
+edge "cloudwatch_log_group_to_log_metric_filter_edge" {
   title = "metric filter"
 
   sql = <<-EOQ
@@ -537,7 +537,7 @@ edge "aws_cloudwatch_log_group_to_log_metric_filter_edge" {
   param "log_group_arn" {}
 }
 
-node "aws_cloudwatch_log_group_nodes" {
+node "cloudwatch_log_group" {
   category = category.cloudwatch_log_group
 
   sql = <<-EOQ

@@ -1,4 +1,4 @@
-node "aws_media_store_container_nodes" {
+node "media_store_container" {
   category = category.media_store_container
   sql      = <<-EOQ
     select

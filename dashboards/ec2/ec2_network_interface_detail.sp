@@ -150,20 +150,20 @@ dashboard "aws_ec2_network_interface_detail" {
         node.vpc_subnet,
         node.vpc_vpc,
         node.vpc_eip,
-        node.aws_vpc_flow_log_nodes,
+        node.vpc_flow_log,
 
-        node.aws_ec2_network_interface_vpc_nat_gateway_nodes
+        node.ec2_network_interface_vpc_nat_gateway
       ]
 
       edges = [
         edge.ec2_network_interface_to_vpc_eip,
         edge.ec2_instance_to_ec2_network_interface,
-        edge.aws_ec2_network_interface_to_vpc_security_group_edges,
-        edge.aws_ec2_network_interface_to_vpc_subnet_edges,
-        edge.aws_ec2_network_interface_to_vpc_flow_log_edges,
+        edge.ec2_network_interface_to_vpc_security_group,
+        edge.ec2_network_interface_to_vpc_subnet,
+        edge.ec2_network_interface_to_vpc_flow_log,
         edge.vpc_subnet_to_vpc_vpc,
 
-        edge.aws_vpc_nat_gateway_to_ec2_network_interface_edges
+        edge.vpc_nat_gateway_to_ec2_network_interface
       ]
 
       args = {
@@ -412,7 +412,7 @@ query "aws_ec2_eni_tags" {
 
 
 
-edge "aws_ec2_network_interface_to_vpc_security_group_edges" {
+edge "ec2_network_interface_to_vpc_security_group" {
   title = "security group"
 
   sql = <<-EOQ
@@ -428,7 +428,7 @@ edge "aws_ec2_network_interface_to_vpc_security_group_edges" {
   param "security_group_ids" {}
 }
 
-edge "aws_ec2_network_interface_to_vpc_subnet_edges" {
+edge "ec2_network_interface_to_vpc_subnet" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -449,7 +449,7 @@ edge "aws_ec2_network_interface_to_vpc_subnet_edges" {
   param "security_group_ids" {}
 }
 
-edge "aws_ec2_network_interface_to_vpc_flow_log_edges" {
+edge "ec2_network_interface_to_vpc_flow_log" {
   title = "flow log"
 
   sql = <<-EOQ
@@ -465,7 +465,7 @@ edge "aws_ec2_network_interface_to_vpc_flow_log_edges" {
   param "flow_log_ids" {}
 }
 
-node "aws_ec2_network_interface_vpc_nat_gateway_nodes" {
+node "ec2_network_interface_vpc_nat_gateway" {
   category = category.vpc_nat_gateway
 
   sql = <<-EOQ
@@ -489,7 +489,7 @@ node "aws_ec2_network_interface_vpc_nat_gateway_nodes" {
   param "eni_ids" {}
 }
 
-edge "aws_vpc_nat_gateway_to_ec2_network_interface_edges" {
+edge "vpc_nat_gateway_to_ec2_network_interface" {
   title = "eni"
 
   sql = <<-EOQ

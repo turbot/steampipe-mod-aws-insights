@@ -58,38 +58,38 @@ dashboard "aws_lambda_function_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_lambda_function_nodes,
-        node.aws_lambda_to_vpc_security_group_node,
-        node.aws_lambda_vpc_subnet_node,
-        node.aws_lambda_to_vpc_node,
+        node.lambda_function,
+        node.lambda_to_vpc_security_group_node,
+        node.lambda_vpc_subnet_node,
+        node.lambda_to_vpc_node,
 
-        node.aws_lambda_to_kms_key_node,
-        node.aws_lambda_to_iam_role_node,
-        node.aws_lambda_from_s3_bucket_node,
+        node.lambda_to_kms_key_node,
+        node.lambda_to_iam_role_node,
+        node.lambda_from_s3_bucket_node,
 
-        node.aws_lambda_version_node,
-        node.aws_lambda_alias_node,
-        node.aws_lambda_from_sns_subscription_node,
-        node.aws_lambda_from_sns_topic_node,
-        node.aws_lambda_from_api_gateway_integration_node,
-        node.aws_lambda_from_api_gateway_node,
+        node.lambda_version_node,
+        node.lambda_alias_node,
+        node.lambda_from_sns_subscription_node,
+        node.lambda_from_sns_topic_node,
+        node.lambda_from_api_gateway_integration_node,
+        node.lambda_from_api_gateway_node,
 
 
       ]
 
       edges = [
-        edge.aws_lambda_to_vpc_security_group_edge,
-        edge.aws_lambda_vpc_subnet_edge,
-        edge.aws_lambda_to_vpc_edge,
-        edge.aws_lambda_to_kms_key_edge,
-        edge.aws_lambda_to_iam_role_edge,
-        edge.aws_lambda_from_s3_bucket_edge,
-        edge.aws_lambda_version_edge,
-        edge.aws_lambda_alias_edge,
-        edge.aws_lambda_sns_subscription_edge,
-        edge.aws_lambda_sns_topic_edge,
-        edge.aws_lambda_api_gateway_integration_edge,
-        edge.aws_lambda_api_gateway_edge
+        edge.lambda_to_vpc_security_group_edge,
+        edge.lambda_vpc_subnet_edge,
+        edge.lambda_to_vpc_edge,
+        edge.lambda_to_kms_key_edge,
+        edge.lambda_to_iam_role_edge,
+        edge.lambda_from_s3_bucket_edge,
+        edge.lambda_version_edge,
+        edge.lambda_alias_edge,
+        edge.lambda_sns_subscription_edge,
+        edge.lambda_sns_topic_edge,
+        edge.lambda_api_gateway_integration_edge,
+        edge.lambda_api_gateway_edge
       ]
 
       args = {
@@ -358,7 +358,7 @@ query "aws_lambda_function_tags" {
 
 //******
 
-node "aws_lambda_function_nodes" {
+node "lambda_function" {
   category = category.lambda_function
 
   sql = <<-EOQ
@@ -380,7 +380,7 @@ node "aws_lambda_function_nodes" {
   param "function_arns" {}
 }
 
-node "aws_lambda_to_vpc_node" {
+node "lambda_to_vpc_node" {
   category = category.vpc_vpc
 
   sql = <<-EOQ
@@ -404,7 +404,7 @@ node "aws_lambda_to_vpc_node" {
   param "arn" {}
 }
 
-edge "aws_lambda_to_vpc_edge" {
+edge "lambda_to_vpc_edge" {
   title = "vpc"
   # a lambda can only be in one subnet, so we
   # can assume all the vpc_subnet_ids are in the lambda's vpc
@@ -424,7 +424,7 @@ edge "aws_lambda_to_vpc_edge" {
   param "arn" {}
 }
 
-node "aws_lambda_to_vpc_security_group_node" {
+node "lambda_to_vpc_security_group_node" {
   category = category.vpc_security_group
 
   sql = <<-EOQ
@@ -450,7 +450,7 @@ node "aws_lambda_to_vpc_security_group_node" {
   param "arn" {}
 }
 
-edge "aws_lambda_to_vpc_security_group_edge" {
+edge "lambda_to_vpc_security_group_edge" {
   title = "security group"
 
   sql = <<-EOQ
@@ -469,7 +469,7 @@ edge "aws_lambda_to_vpc_security_group_edge" {
 
 
 
-node "aws_lambda_vpc_subnet_node" {
+node "lambda_vpc_subnet_node" {
   category = category.vpc_subnet
 
   sql = <<-EOQ
@@ -495,7 +495,7 @@ node "aws_lambda_vpc_subnet_node" {
   param "arn" {}
 }
 
-edge "aws_lambda_vpc_subnet_edge" {
+edge "lambda_vpc_subnet_edge" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -513,7 +513,7 @@ edge "aws_lambda_vpc_subnet_edge" {
   param "arn" {}
 }
 
-node "aws_lambda_to_kms_key_node" {
+node "lambda_to_kms_key_node" {
   category = category.kms_key
 
   sql = <<-EOQ
@@ -539,7 +539,7 @@ node "aws_lambda_to_kms_key_node" {
   param "arn" {}
 }
 
-edge "aws_lambda_to_kms_key_edge" {
+edge "lambda_to_kms_key_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -556,7 +556,7 @@ edge "aws_lambda_to_kms_key_edge" {
   param "arn" {}
 }
 
-node "aws_lambda_to_iam_role_node" {
+node "lambda_to_iam_role_node" {
   category = category.iam_role
 
   sql = <<-EOQ
@@ -580,7 +580,7 @@ node "aws_lambda_to_iam_role_node" {
   param "arn" {}
 }
 
-edge "aws_lambda_to_iam_role_edge" {
+edge "lambda_to_iam_role_edge" {
   title = "assumes"
 
   sql = <<-EOQ
@@ -597,7 +597,7 @@ edge "aws_lambda_to_iam_role_edge" {
   param "arn" {}
 }
 
-node "aws_lambda_from_s3_bucket_node" {
+node "lambda_from_s3_bucket_node" {
   category = category.s3_bucket
 
   sql = <<-EOQ
@@ -623,7 +623,7 @@ node "aws_lambda_from_s3_bucket_node" {
   param "arn" {}
 }
 
-edge "aws_lambda_from_s3_bucket_edge" {
+edge "lambda_from_s3_bucket_edge" {
   title = "invokes"
 
   sql = <<-EOQ
@@ -652,7 +652,7 @@ edge "aws_lambda_from_s3_bucket_edge" {
 
 
 
-node "aws_lambda_version_node" {
+node "lambda_version_node" {
   category = category.lambda_version
 
   sql = <<-EOQ
@@ -682,7 +682,7 @@ node "aws_lambda_version_node" {
 
 
 
-edge "aws_lambda_version_edge" {
+edge "lambda_version_edge" {
   title = "version"
 
   sql = <<-EOQ
@@ -703,7 +703,7 @@ edge "aws_lambda_version_edge" {
 }
 
 
-node "aws_lambda_alias_node" {
+node "lambda_alias_node" {
   category = category.lambda_alias
 
   sql = <<-EOQ
@@ -731,7 +731,7 @@ node "aws_lambda_alias_node" {
 }
 
 
-edge "aws_lambda_alias_edge" {
+edge "lambda_alias_edge" {
   title = "alias"
 
   sql = <<-EOQ
@@ -754,7 +754,7 @@ edge "aws_lambda_alias_edge" {
 
 
 
-node "aws_lambda_from_sns_topic_node" {
+node "lambda_from_sns_topic_node" {
   category = category.sns_topic
 
   sql = <<-EOQ
@@ -782,7 +782,7 @@ node "aws_lambda_from_sns_topic_node" {
 
 
 
-edge "aws_lambda_sns_topic_edge" {
+edge "lambda_sns_topic_edge" {
   title = "subscription"
 
   sql = <<-EOQ
@@ -801,7 +801,7 @@ edge "aws_lambda_sns_topic_edge" {
 
 
 
-node "aws_lambda_from_sns_subscription_node" {
+node "lambda_from_sns_subscription_node" {
   category = category.sns_topic_subscription
 
   sql = <<-EOQ
@@ -832,7 +832,7 @@ node "aws_lambda_from_sns_subscription_node" {
 
 
 
-edge "aws_lambda_sns_subscription_edge" {
+edge "lambda_sns_subscription_edge" {
   title = "invokes"
 
   sql = <<-EOQ
@@ -854,7 +854,7 @@ edge "aws_lambda_sns_subscription_edge" {
 
 
 
-node "aws_lambda_from_api_gateway_integration_node" {
+node "lambda_from_api_gateway_integration_node" {
   category = category.api_gatewayv2_integration
 
   sql = <<-EOQ
@@ -882,7 +882,7 @@ node "aws_lambda_from_api_gateway_integration_node" {
 
 
 
-edge "aws_lambda_api_gateway_integration_edge" {
+edge "lambda_api_gateway_integration_edge" {
   title = "invokes"
 
   sql = <<-EOQ
@@ -899,7 +899,7 @@ edge "aws_lambda_api_gateway_integration_edge" {
 }
 
 
-node "aws_lambda_from_api_gateway_node" {
+node "lambda_from_api_gateway_node" {
   category = category.api_gatewayv2_api
 
   sql = <<-EOQ
@@ -926,7 +926,7 @@ node "aws_lambda_from_api_gateway_node" {
 
 
 
-edge "aws_lambda_api_gateway_edge" {
+edge "lambda_api_gateway_edge" {
   title = "integration"
 
   sql = <<-EOQ

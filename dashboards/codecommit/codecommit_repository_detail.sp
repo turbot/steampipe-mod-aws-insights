@@ -32,14 +32,14 @@ dashboard "aws_codecommit_repository_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_codecommit_repository_node,
-        node.aws_codecommit_repository_to_codebuild_project_node,
-        node.aws_codecommit_repository_to_codepipeline_pipeline_node
+        node.codecommit_repository_node,
+        node.codecommit_repository_to_codebuild_project_node,
+        node.codecommit_repository_to_codepipeline_pipeline_node
       ]
 
       edges = [
-        edge.aws_codecommit_repository_to_codebuild_project_edge,
-        edge.aws_codecommit_repository_to_codepipeline_pipeline_edge
+        edge.codecommit_repository_to_codebuild_project_edge,
+        edge.codecommit_repository_to_codepipeline_pipeline_edge
       ]
 
       args = {
@@ -141,7 +141,7 @@ query "aws_codecommit_repository_input" {
   EOQ
 }
 
-node "aws_codecommit_repository_node" {
+node "codecommit_repository_node" {
   category = category.codecommit_repository
 
   sql = <<-EOQ
@@ -164,7 +164,7 @@ node "aws_codecommit_repository_node" {
   param "arn" {}
 }
 
-node "aws_codecommit_repository_to_codebuild_project_node" {
+node "codecommit_repository_to_codebuild_project_node" {
   category = category.codebuild_project
 
   sql = <<-EOQ
@@ -198,7 +198,7 @@ node "aws_codecommit_repository_to_codebuild_project_node" {
   param "arn" {}
 }
 
-edge "aws_codecommit_repository_to_codebuild_project_edge" {
+edge "codecommit_repository_to_codebuild_project_edge" {
   title = "codebuild project"
 
   sql = <<-EOQ
@@ -224,7 +224,7 @@ edge "aws_codecommit_repository_to_codebuild_project_edge" {
   param "arn" {}
 }
 
-node "aws_codecommit_repository_to_codepipeline_pipeline_node" {
+node "codecommit_repository_to_codepipeline_pipeline_node" {
   category = category.codepipeline_pipeline
 
   sql = <<-EOQ
@@ -250,7 +250,7 @@ node "aws_codecommit_repository_to_codepipeline_pipeline_node" {
   param "arn" {}
 }
 
-edge "aws_codecommit_repository_to_codepipeline_pipeline_edge" {
+edge "codecommit_repository_to_codepipeline_pipeline_edge" {
   title = "codepipeline pipeline"
 
   sql = <<-EOQ

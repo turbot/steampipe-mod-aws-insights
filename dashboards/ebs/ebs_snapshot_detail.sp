@@ -56,18 +56,18 @@ dashboard "aws_ebs_snapshot_detail" {
 
 
       nodes = [
-        node.aws_ebs_snapshot_node,
-        node.aws_ebs_snapshot_from_ebs_volume_node,
-        node.aws_ebs_snapshot_from_ec2_ami_node,
-        node.aws_ebs_snapshot_from_ec2_launch_configuration_node,
-        node.aws_ebs_snapshot_to_kms_key_node
+        node.ebs_snapshot_node,
+        node.ebs_snapshot_from_ebs_volume_node,
+        node.ebs_snapshot_from_ec2_ami_node,
+        node.ebs_snapshot_from_ec2_launch_configuration_node,
+        node.ebs_snapshot_to_kms_key_node
       ]
 
       edges = [
-        edge.aws_ebs_snapshot_from_ebs_volume_edge,
-        edge.aws_ebs_snapshot_from_ec2_ami_edge,
-        edge.aws_ebs_snapshot_from_ec2_launch_configuration_edge,
-        edge.aws_ebs_snapshot_to_kms_key_edge
+        edge.ebs_snapshot_from_ebs_volume_edge,
+        edge.ebs_snapshot_from_ec2_ami_edge,
+        edge.ebs_snapshot_from_ec2_launch_configuration_edge,
+        edge.ebs_snapshot_to_kms_key_edge
       ]
 
       args = {
@@ -215,7 +215,7 @@ query "aws_ebs_snapshot_age" {
   param "arn" {}
 }
 
-node "aws_ebs_snapshot_node" {
+node "ebs_snapshot_node" {
   category = category.ebs_snapshot
 
   sql = <<-EOQ
@@ -238,7 +238,7 @@ node "aws_ebs_snapshot_node" {
   param "arn" {}
 }
 
-node "aws_ebs_snapshot_from_ebs_volume_node" {
+node "ebs_snapshot_from_ebs_volume_node" {
   category = category.ebs_volume
 
   sql = <<-EOQ
@@ -260,7 +260,7 @@ node "aws_ebs_snapshot_from_ebs_volume_node" {
   param "arn" {}
 }
 
-edge "aws_ebs_snapshot_from_ebs_volume_edge" {
+edge "ebs_snapshot_from_ebs_volume_edge" {
   title = "snapshot"
 
   sql = <<-EOQ
@@ -275,7 +275,7 @@ edge "aws_ebs_snapshot_from_ebs_volume_edge" {
   param "arn" {}
 }
 
-node "aws_ebs_snapshot_from_ec2_ami_node" {
+node "ebs_snapshot_from_ec2_ami_node" {
   category = category.ec2_ami
 
   sql = <<-EOQ
@@ -299,7 +299,7 @@ node "aws_ebs_snapshot_from_ec2_ami_node" {
   param "arn" {}
 }
 
-edge "aws_ebs_snapshot_from_ec2_ami_edge" {
+edge "ebs_snapshot_from_ec2_ami_edge" {
   title = "snapshot"
 
   sql = <<-EOQ
@@ -319,7 +319,7 @@ edge "aws_ebs_snapshot_from_ec2_ami_edge" {
   param "arn" {}
 }
 
-node "aws_ebs_snapshot_from_ec2_launch_configuration_node" {
+node "ebs_snapshot_from_ec2_launch_configuration_node" {
   category = category.ec2_launch_configuration
 
   sql = <<-EOQ
@@ -343,7 +343,7 @@ node "aws_ebs_snapshot_from_ec2_launch_configuration_node" {
   param "arn" {}
 }
 
-edge "aws_ebs_snapshot_from_ec2_launch_configuration_edge" {
+edge "ebs_snapshot_from_ec2_launch_configuration_edge" {
   title = "snapshot"
 
   sql = <<-EOQ
@@ -362,7 +362,7 @@ edge "aws_ebs_snapshot_from_ec2_launch_configuration_edge" {
   param "arn" {}
 }
 
-node "aws_ebs_snapshot_to_kms_key_node" {
+node "ebs_snapshot_to_kms_key_node" {
   category = category.kms_key
 
   sql = <<-EOQ
@@ -383,7 +383,7 @@ node "aws_ebs_snapshot_to_kms_key_node" {
   param "arn" {}
 }
 
-edge "aws_ebs_snapshot_to_kms_key_edge" {
+edge "ebs_snapshot_to_kms_key_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ

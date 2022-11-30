@@ -130,9 +130,9 @@ dashboard "aws_vpc_flow_logs_detail" {
       }
 
       nodes = [
-        node.aws_vpc_flow_log_nodes,
-        node.aws_s3_bucket_nodes,
-        node.aws_cloudwatch_log_group_nodes,
+        node.vpc_flow_log,
+        node.s3_bucket,
+        node.cloudwatch_log_group,
         node.iam_role,
         node.ec2_network_interface,
         node.vpc_subnet,
@@ -140,12 +140,12 @@ dashboard "aws_vpc_flow_logs_detail" {
       ]
 
       edges = [
-        edge.aws_vpc_flow_log_to_s3_bucket_edges,
-        edge.aws_vpc_flow_log_to_cloudwatch_log_group_edges,
-        edge.aws_vpc_flow_log_to_iam_role_edges,
-        edge.aws_ec2_network_interface_to_vpc_flow_log_edges,
-        edge.aws_vpc_subnet_to_vpc_flow_log_edges,
-        edge.aws_vpc_to_vpc_flow_log_edges
+        edge.vpc_flow_log_to_s3_bucket,
+        edge.vpc_flow_log_to_cloudwatch_log_group,
+        edge.vpc_flow_log_to_iam_role,
+        edge.ec2_network_interface_to_vpc_flow_log,
+        edge.vpc_subnet_to_vpc_flow_log,
+        edge.vpc_to_vpc_flow_log
       ]
 
       args = {
@@ -256,7 +256,7 @@ query "aws_vpc_flow_log_deliver_logs_status" {
   param "flow_log_id" {}
 }
 
-node "aws_vpc_flow_log_nodes" {
+node "vpc_flow_log" {
   category = category.vpc_flow_log
 
   sql = <<-EOQ
@@ -278,7 +278,7 @@ node "aws_vpc_flow_log_nodes" {
   param "flow_log_ids" {}
 }
 
-edge "aws_vpc_flow_log_to_s3_bucket_edges" {
+edge "vpc_flow_log_to_s3_bucket" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -294,7 +294,7 @@ edge "aws_vpc_flow_log_to_s3_bucket_edges" {
   param "bucket_arns" {}
 }
 
-edge "aws_vpc_flow_log_to_cloudwatch_log_group_edges" {
+edge "vpc_flow_log_to_cloudwatch_log_group" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -310,7 +310,7 @@ edge "aws_vpc_flow_log_to_cloudwatch_log_group_edges" {
   param "log_group_arns" {}
 }
 
-edge "aws_vpc_flow_log_to_iam_role_edges" {
+edge "vpc_flow_log_to_iam_role" {
   title = "assumes"
 
   sql = <<-EOQ
@@ -326,7 +326,7 @@ edge "aws_vpc_flow_log_to_iam_role_edges" {
   param "role_arns" {}
 }
 
-edge "aws_vpc_subnet_to_vpc_flow_log_edges" {
+edge "vpc_subnet_to_vpc_flow_log" {
   title = "flow log"
 
   sql = <<-EOQ

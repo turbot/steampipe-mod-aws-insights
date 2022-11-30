@@ -63,28 +63,28 @@ dashboard "aws_eks_cluster_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_eks_cluster_node,
-        node.aws_eks_cluster_to_iam_role_node,
-        node.aws_eks_cluster_to_kms_key_node,
-        node.aws_eks_cluster_to_eks_node_group_node,
-        node.aws_eks_cluster_to_eks_addons_node,
-        node.aws_eks_cluster_to_vpc_security_group_node,
-        node.aws_eks_cluster_to_vpc_subnet_node,
-        node.aws_eks_cluster_to_eks_identity_provider_config_node,
-        node.aws_eks_cluster_to_eks_fargate_profile_node,
-        node.aws_eks_cluster_to_vpc_node
+        node.eks_cluster_node,
+        node.eks_cluster_to_iam_role_node,
+        node.eks_cluster_to_kms_key_node,
+        node.eks_cluster_to_eks_node_group_node,
+        node.eks_cluster_to_eks_addons_node,
+        node.eks_cluster_to_vpc_security_group_node,
+        node.eks_cluster_to_vpc_subnet_node,
+        node.eks_cluster_to_eks_identity_provider_config_node,
+        node.eks_cluster_to_eks_fargate_profile_node,
+        node.eks_cluster_to_vpc_node
       ]
 
       edges = [
-        edge.aws_eks_cluster_to_iam_role_edge,
-        edge.aws_eks_cluster_to_kms_key_edge,
-        edge.aws_eks_cluster_to_eks_node_group_edge,
-        edge.aws_eks_cluster_to_eks_addons_edge,
-        edge.aws_eks_cluster_to_vpc_security_group_edge,
-        edge.aws_eks_cluster_to_vpc_security_group_to_vpc_edge,
-        edge.aws_eks_cluster_to_eks_identity_provider_config_edge,
-        edge.aws_eks_cluster_to_eks_fargate_profile_edge,
-        edge.aws_eks_cluster_to_vpc_subnet_to_vpc_edge
+        edge.eks_cluster_to_iam_role_edge,
+        edge.eks_cluster_to_kms_key_edge,
+        edge.eks_cluster_to_eks_node_group_edge,
+        edge.eks_cluster_to_eks_addons_edge,
+        edge.eks_cluster_to_vpc_security_group_edge,
+        edge.eks_cluster_to_vpc_security_group_to_vpc_edge,
+        edge.eks_cluster_to_eks_identity_provider_config_edge,
+        edge.eks_cluster_to_eks_fargate_profile_edge,
+        edge.eks_cluster_to_vpc_subnet_to_vpc_edge
       ]
 
       args = {
@@ -349,7 +349,7 @@ query "aws_eks_cluster_node_group" {
 
 }
 
-node "aws_eks_cluster_node" {
+node "eks_cluster_node" {
   category = category.eks_cluster
 
   sql = <<-EOQ
@@ -372,7 +372,7 @@ node "aws_eks_cluster_node" {
   param "arn" {}
 }
 
-node "aws_eks_cluster_to_iam_role_node" {
+node "eks_cluster_to_iam_role_node" {
   category = category.iam_role
 
   sql = <<-EOQ
@@ -394,7 +394,7 @@ node "aws_eks_cluster_to_iam_role_node" {
   param "arn" {}
 }
 
-edge "aws_eks_cluster_to_iam_role_edge" {
+edge "eks_cluster_to_iam_role_edge" {
   title = "assumes"
 
   sql = <<-EOQ
@@ -411,7 +411,7 @@ edge "aws_eks_cluster_to_iam_role_edge" {
   param "arn" {}
 }
 
-node "aws_eks_cluster_to_kms_key_node" {
+node "eks_cluster_to_kms_key_node" {
   category = category.kms_key
 
   sql = <<-EOQ
@@ -443,7 +443,7 @@ node "aws_eks_cluster_to_kms_key_node" {
   param "arn" {}
 }
 
-edge "aws_eks_cluster_to_kms_key_edge" {
+edge "eks_cluster_to_kms_key_edge" {
   title = "secrets encrypted with"
 
   sql = <<-EOQ
@@ -463,7 +463,7 @@ edge "aws_eks_cluster_to_kms_key_edge" {
   param "arn" {}
 }
 
-node "aws_eks_cluster_to_eks_node_group_node" {
+node "eks_cluster_to_eks_node_group_node" {
   category = category.eks_node_group
 
   sql = <<-EOQ
@@ -495,7 +495,7 @@ node "aws_eks_cluster_to_eks_node_group_node" {
   param "arn" {}
 }
 
-edge "aws_eks_cluster_to_eks_node_group_edge" {
+edge "eks_cluster_to_eks_node_group_edge" {
   title = "node group"
 
   sql = <<-EOQ
@@ -514,7 +514,7 @@ edge "aws_eks_cluster_to_eks_node_group_edge" {
   param "arn" {}
 }
 
-node "aws_eks_cluster_to_eks_addons_node" {
+node "eks_cluster_to_eks_addons_node" {
   category = category.eks_addon
 
   sql = <<-EOQ
@@ -546,7 +546,7 @@ node "aws_eks_cluster_to_eks_addons_node" {
   param "arn" {}
 }
 
-edge "aws_eks_cluster_to_eks_addons_edge" {
+edge "eks_cluster_to_eks_addons_edge" {
   title = "addon"
 
   sql = <<-EOQ
@@ -565,7 +565,7 @@ edge "aws_eks_cluster_to_eks_addons_edge" {
   param "arn" {}
 }
 
-node "aws_eks_cluster_to_vpc_security_group_node" {
+node "eks_cluster_to_vpc_security_group_node" {
   category = category.vpc_security_group
 
   sql = <<-EOQ
@@ -595,7 +595,7 @@ node "aws_eks_cluster_to_vpc_security_group_node" {
   param "arn" {}
 }
 
-edge "aws_eks_cluster_to_vpc_security_group_edge" {
+edge "eks_cluster_to_vpc_security_group_edge" {
   title = "security group"
 
   sql = <<-EOQ
@@ -612,7 +612,7 @@ edge "aws_eks_cluster_to_vpc_security_group_edge" {
   param "arn" {}
 }
 
-node "aws_eks_cluster_to_vpc_subnet_node" {
+node "eks_cluster_to_vpc_subnet_node" {
   category = category.vpc_subnet
 
   sql = <<-EOQ
@@ -643,7 +643,7 @@ node "aws_eks_cluster_to_vpc_subnet_node" {
   param "arn" {}
 }
 
-node "aws_eks_cluster_to_vpc_node" {
+node "eks_cluster_to_vpc_node" {
   category = category.vpc_vpc
 
   sql = <<-EOQ
@@ -674,7 +674,7 @@ node "aws_eks_cluster_to_vpc_node" {
   param "arn" {}
 }
 
-edge "aws_eks_cluster_to_vpc_security_group_to_vpc_edge" {
+edge "eks_cluster_to_vpc_security_group_to_vpc_edge" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -692,7 +692,7 @@ edge "aws_eks_cluster_to_vpc_security_group_to_vpc_edge" {
   param "arn" {}
 }
 
-edge "aws_eks_cluster_to_vpc_subnet_to_vpc_edge" {
+edge "eks_cluster_to_vpc_subnet_to_vpc_edge" {
   title = "vpc"
 
   sql = <<-EOQ
@@ -709,7 +709,7 @@ edge "aws_eks_cluster_to_vpc_subnet_to_vpc_edge" {
   param "arn" {}
 }
 
-node "aws_eks_cluster_to_eks_identity_provider_config_node" {
+node "eks_cluster_to_eks_identity_provider_config_node" {
   category = category.eks_identity_provider_config
 
   sql = <<-EOQ
@@ -741,7 +741,7 @@ node "aws_eks_cluster_to_eks_identity_provider_config_node" {
   param "arn" {}
 }
 
-edge "aws_eks_cluster_to_eks_identity_provider_config_edge" {
+edge "eks_cluster_to_eks_identity_provider_config_edge" {
   title = "identity provider config"
 
   sql = <<-EOQ
@@ -760,7 +760,7 @@ edge "aws_eks_cluster_to_eks_identity_provider_config_edge" {
   param "arn" {}
 }
 
-node "aws_eks_cluster_to_eks_fargate_profile_node" {
+node "eks_cluster_to_eks_fargate_profile_node" {
   category = category.eks_fargate_profile
 
   sql = <<-EOQ
@@ -786,7 +786,7 @@ node "aws_eks_cluster_to_eks_fargate_profile_node" {
   param "arn" {}
 }
 
-edge "aws_eks_cluster_to_eks_fargate_profile_edge" {
+edge "eks_cluster_to_eks_fargate_profile_edge" {
   title = "fargate profile"
 
   sql = <<-EOQ

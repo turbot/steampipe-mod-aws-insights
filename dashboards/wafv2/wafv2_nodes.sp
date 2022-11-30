@@ -1,4 +1,4 @@
-node "aws_wafv2_web_acl_nodes" {
+node "wafv2_web_acl" {
   category = category.wafv2_web_acl
   sql      = <<-EOQ
     select

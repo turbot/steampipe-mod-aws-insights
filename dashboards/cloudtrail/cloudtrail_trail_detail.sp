@@ -61,20 +61,20 @@ dashboard "aws_cloudtrail_trail_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_cloudtrail_trail_nodes,
-        node.aws_cloudtrail_trail_to_s3_bucket_node,
-        node.aws_cloudtrail_trail_to_kms_key_node,
-        node.aws_cloudtrail_trail_to_sns_topic_node,
-        node.aws_cloudtrail_trail_to_cloudwatch_log_group_node,
-        node.aws_cloudtrail_trail_from_guardduty_detector_node
+        node.cloudtrail_trail,
+        node.cloudtrail_trail_to_s3_bucket_node,
+        node.cloudtrail_trail_to_kms_key_node,
+        node.cloudtrail_trail_to_sns_topic_node,
+        node.cloudtrail_trail_to_cloudwatch_log_group_node,
+        node.cloudtrail_trail_from_guardduty_detector_node
       ]
 
       edges = [
-        edge.aws_cloudtrail_trail_to_s3_bucket_edge,
-        edge.aws_cloudtrail_trail_to_kms_key_edge,
-        edge.aws_cloudtrail_trail_to_sns_topic_edge,
-        edge.aws_cloudtrail_trail_to_cloudwatch_log_group_edge,
-        edge.aws_cloudtrail_trail_from_guardduty_detector_edge
+        edge.cloudtrail_trail_to_s3_bucket_edge,
+        edge.cloudtrail_trail_to_kms_key_edge,
+        edge.cloudtrail_trail_to_sns_topic_edge,
+        edge.cloudtrail_trail_to_cloudwatch_log_group_edge,
+        edge.cloudtrail_trail_from_guardduty_detector_edge
       ]
 
       args = {
@@ -280,7 +280,7 @@ query "aws_cloudtrail_trail_bucket" {
   param "arn" {}
 }
 
-node "aws_cloudtrail_trail_nodes" {
+node "cloudtrail_trail" {
   category = category.cloudtrail_trail
 
   sql = <<-EOQ
@@ -303,7 +303,7 @@ node "aws_cloudtrail_trail_nodes" {
   param "trail_arns" {}
 }
 
-node "aws_cloudtrail_trail_to_s3_bucket_node" {
+node "cloudtrail_trail_to_s3_bucket_node" {
   category = category.s3_bucket
 
   sql = <<-EOQ
@@ -326,7 +326,7 @@ node "aws_cloudtrail_trail_to_s3_bucket_node" {
   param "arn" {}
 }
 
-edge "aws_cloudtrail_trail_to_s3_bucket_edge" {
+edge "cloudtrail_trail_to_s3_bucket_edge" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -343,7 +343,7 @@ edge "aws_cloudtrail_trail_to_s3_bucket_edge" {
   param "arn" {}
 }
 
-node "aws_cloudtrail_trail_to_kms_key_node" {
+node "cloudtrail_trail_to_kms_key_node" {
   category = category.kms_key
 
   sql = <<-EOQ
@@ -367,7 +367,7 @@ node "aws_cloudtrail_trail_to_kms_key_node" {
   param "arn" {}
 }
 
-edge "aws_cloudtrail_trail_to_kms_key_edge" {
+edge "cloudtrail_trail_to_kms_key_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -384,7 +384,7 @@ edge "aws_cloudtrail_trail_to_kms_key_edge" {
   param "arn" {}
 }
 
-node "aws_cloudtrail_trail_to_sns_topic_node" {
+node "cloudtrail_trail_to_sns_topic_node" {
   category = category.sns_topic
 
   sql = <<-EOQ
@@ -406,7 +406,7 @@ node "aws_cloudtrail_trail_to_sns_topic_node" {
   param "arn" {}
 }
 
-edge "aws_cloudtrail_trail_to_sns_topic_edge" {
+edge "cloudtrail_trail_to_sns_topic_edge" {
   title = "notifies"
 
   sql = <<-EOQ
@@ -423,7 +423,7 @@ edge "aws_cloudtrail_trail_to_sns_topic_edge" {
   param "arn" {}
 }
 
-node "aws_cloudtrail_trail_to_cloudwatch_log_group_node" {
+node "cloudtrail_trail_to_cloudwatch_log_group_node" {
   category = category.cloudwatch_log_group
 
   sql = <<-EOQ
@@ -445,7 +445,7 @@ node "aws_cloudtrail_trail_to_cloudwatch_log_group_node" {
   param "arn" {}
 }
 
-edge "aws_cloudtrail_trail_to_cloudwatch_log_group_edge" {
+edge "cloudtrail_trail_to_cloudwatch_log_group_edge" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -462,7 +462,7 @@ edge "aws_cloudtrail_trail_to_cloudwatch_log_group_edge" {
   param "arn" {}
 }
 
-node "aws_cloudtrail_trail_from_guardduty_detector_node" {
+node "cloudtrail_trail_from_guardduty_detector_node" {
   category = category.guardduty_detector
 
   sql = <<-EOQ
@@ -488,7 +488,7 @@ node "aws_cloudtrail_trail_from_guardduty_detector_node" {
   param "arn" {}
 }
 
-edge "aws_cloudtrail_trail_from_guardduty_detector_edge" {
+edge "cloudtrail_trail_from_guardduty_detector_edge" {
   title = "cloudtrail trail"
 
   sql = <<-EOQ

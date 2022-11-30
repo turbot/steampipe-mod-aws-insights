@@ -206,39 +206,39 @@ dashboard "aws_vpc_security_group_detail" {
       nodes = [
         node.vpc_security_group,
         node.vpc_vpc,
-        node.aws_rds_db_cluster_nodes,
-        node.aws_rds_db_instance_nodes,
+        node.rds_db_cluster,
+        node.rds_db_instance,
         node.ec2_instance,
-        node.aws_lambda_function_nodes,
-        node.aws_redshift_cluster_nodes,
+        node.lambda_function,
+        node.redshift_cluster,
         node.ec2_classic_load_balancer,
         node.ec2_application_load_balancer,
-        node.aws_dax_cluster_nodes,
-        node.aws_elasticache_cluster_nodes,
+        node.dax_cluster,
+        node.elasticache_cluster,
 
-        node.aws_vpc_security_group_dms_replication_instance_nodes,
-        node.aws_vpc_security_group_ec2_launch_configuration_nodes,
-        node.aws_vpc_security_group_efs_mount_target_nodes,
-        node.aws_vpc_security_group_sagemaker_notebook_instance_nodes,
-        node.aws_vpc_security_group_docdb_cluster_nodes
+        node.vpc_security_group_dms_replication_instance,
+        node.vpc_security_group_ec2_launch_configuration,
+        node.vpc_security_group_efs_mount_target,
+        node.vpc_security_group_sagemaker_notebook_instance,
+        node.vpc_security_group_docdb_cluster
       ]
 
       edges = [
-        edge.aws_vpc_to_vpc_security_group_edges,
-        edge.aws_vpc_security_group_to_rds_db_cluster_edges,
-        edge.aws_vpc_security_group_to_rds_db_instance_edges,
-        edge.aws_vpc_security_group_to_ec2_instance_edges,
-        edge.aws_vpc_security_group_to_lambda_function_edges,
-        edge.aws_vpc_security_group_to_efs_mount_target_edges,
-        edge.aws_vpc_security_group_to_redshift_cluster_edges,
-        edge.aws_vpc_security_group_to_ec2_classic_load_balancer_edges,
-        edge.aws_vpc_security_group_to_ec2_application_load_balancer_edges,
-        edge.aws_vpc_security_group_to_ec2_launch_configuration_edges,
-        edge.aws_vpc_security_group_to_dax_cluster_edges,
-        edge.aws_vpc_security_group_to_dms_replication_instance_edges,
-        edge.aws_vpc_security_group_to_elasticache_cluster_edges,
-        edge.aws_vpc_security_group_to_sagemaker_notebook_instance_edges,
-        edge.aws_vpc_security_group_to_docdb_cluster_edges
+        edge.vpc_to_vpc_security_group,
+        edge.vpc_security_group_to_rds_db_cluster,
+        edge.vpc_security_group_to_rds_db_instance,
+        edge.vpc_security_group_to_ec2_instance,
+        edge.vpc_security_group_to_lambda_function,
+        edge.vpc_security_group_to_efs_mount_target,
+        edge.vpc_security_group_to_redshift_cluster,
+        edge.vpc_security_group_to_ec2_classic_load_balancer,
+        edge.vpc_security_group_to_ec2_application_load_balancer,
+        edge.vpc_security_group_to_ec2_launch_configuration,
+        edge.vpc_security_group_to_dax_cluster,
+        edge.vpc_security_group_to_dms_replication_instance,
+        edge.vpc_security_group_to_elasticache_cluster,
+        edge.vpc_security_group_to_sagemaker_notebook_instance,
+        edge.vpc_security_group_to_docdb_cluster
       ]
 
       args = {
@@ -1389,7 +1389,7 @@ query "aws_vpc_security_group_tags" {
   param "group_id" {}
 }
 
-edge "aws_vpc_security_group_to_rds_db_cluster_edges" {
+edge "vpc_security_group_to_rds_db_cluster" {
   title = "rds cluster"
 
   sql = <<-EOQ
@@ -1405,7 +1405,7 @@ edge "aws_vpc_security_group_to_rds_db_cluster_edges" {
   param "security_group_ids" {}
 }
 
-edge "aws_vpc_security_group_to_rds_db_instance_edges" {
+edge "vpc_security_group_to_rds_db_instance" {
   title = "rds instance"
 
   sql = <<-EOQ
@@ -1421,7 +1421,7 @@ edge "aws_vpc_security_group_to_rds_db_instance_edges" {
   param "security_group_ids" {}
 }
 
-edge "aws_vpc_security_group_to_ec2_instance_edges" {
+edge "vpc_security_group_to_ec2_instance" {
   title = "ec2 instance"
 
   sql = <<-EOQ
@@ -1437,7 +1437,7 @@ edge "aws_vpc_security_group_to_ec2_instance_edges" {
   param "security_group_ids" {}
 }
 
-edge "aws_vpc_security_group_to_lambda_function_edges" {
+edge "vpc_security_group_to_lambda_function" {
   title = "lambda function"
 
   sql = <<-EOQ
@@ -1453,7 +1453,7 @@ edge "aws_vpc_security_group_to_lambda_function_edges" {
   param "security_group_ids" {}
 }
 
-node "aws_vpc_security_group_efs_mount_target_nodes" {
+node "vpc_security_group_efs_mount_target" {
   category = category.efs_mount_target
 
   sql = <<-EOQ
@@ -1481,7 +1481,7 @@ node "aws_vpc_security_group_efs_mount_target_nodes" {
   param "security_group_ids" {}
 }
 
-edge "aws_vpc_security_group_to_efs_mount_target_edges" {
+edge "vpc_security_group_to_efs_mount_target" {
   title = "efs mount target"
 
   sql = <<-EOQ
@@ -1499,7 +1499,7 @@ edge "aws_vpc_security_group_to_efs_mount_target_edges" {
   param "security_group_ids" {}
 }
 
-edge "aws_vpc_security_group_to_redshift_cluster_edges" {
+edge "vpc_security_group_to_redshift_cluster" {
   title = "redshift cluster"
 
   sql = <<-EOQ
@@ -1515,7 +1515,7 @@ edge "aws_vpc_security_group_to_redshift_cluster_edges" {
   param "security_group_ids" {}
 }
 
-edge "aws_vpc_security_group_to_ec2_classic_load_balancer_edges" {
+edge "vpc_security_group_to_ec2_classic_load_balancer" {
   title = "classic load balancer"
 
   sql = <<-EOQ
@@ -1531,7 +1531,7 @@ edge "aws_vpc_security_group_to_ec2_classic_load_balancer_edges" {
   param "security_group_ids" {}
 }
 
-edge "aws_vpc_security_group_to_ec2_application_load_balancer_edges" {
+edge "vpc_security_group_to_ec2_application_load_balancer" {
   title = "application load balancer"
 
   sql = <<-EOQ
@@ -1547,7 +1547,7 @@ edge "aws_vpc_security_group_to_ec2_application_load_balancer_edges" {
   param "security_group_ids" {}
 }
 
-node "aws_vpc_security_group_ec2_launch_configuration_nodes" {
+node "vpc_security_group_ec2_launch_configuration" {
   category = category.ec2_launch_configuration
 
   sql = <<-EOQ
@@ -1570,7 +1570,7 @@ node "aws_vpc_security_group_ec2_launch_configuration_nodes" {
   param "security_group_ids" {}
 }
 
-edge "aws_vpc_security_group_to_ec2_launch_configuration_edges" {
+edge "vpc_security_group_to_ec2_launch_configuration" {
   title = "launch configuration"
 
   sql = <<-EOQ
@@ -1588,7 +1588,7 @@ edge "aws_vpc_security_group_to_ec2_launch_configuration_edges" {
   param "security_group_ids" {}
 }
 
-edge "aws_vpc_security_group_to_dax_cluster_edges" {
+edge "vpc_security_group_to_dax_cluster" {
   title = "dax cluster"
 
   sql = <<-EOQ
@@ -1604,7 +1604,7 @@ edge "aws_vpc_security_group_to_dax_cluster_edges" {
   param "security_group_ids" {}
 }
 
-node "aws_vpc_security_group_dms_replication_instance_nodes" {
+node "vpc_security_group_dms_replication_instance" {
   category = category.dms_replication_instance
 
   sql = <<-EOQ
@@ -1631,7 +1631,7 @@ node "aws_vpc_security_group_dms_replication_instance_nodes" {
   param "security_group_ids" {}
 }
 
-edge "aws_vpc_security_group_to_dms_replication_instance_edges" {
+edge "vpc_security_group_to_dms_replication_instance" {
   title = "replication instance"
 
   sql = <<-EOQ
@@ -1649,7 +1649,7 @@ edge "aws_vpc_security_group_to_dms_replication_instance_edges" {
   param "security_group_ids" {}
 }
 
-edge "aws_vpc_security_group_to_elasticache_cluster_edges" {
+edge "vpc_security_group_to_elasticache_cluster" {
   title = "elasticache cluster"
 
   sql = <<-EOQ
@@ -1665,7 +1665,7 @@ edge "aws_vpc_security_group_to_elasticache_cluster_edges" {
   param "security_group_ids" {}
 }
 
-node "aws_vpc_security_group_sagemaker_notebook_instance_nodes" {
+node "vpc_security_group_sagemaker_notebook_instance" {
   category = category.sagemaker_notebook_instance
 
   sql = <<-EOQ
@@ -1690,7 +1690,7 @@ node "aws_vpc_security_group_sagemaker_notebook_instance_nodes" {
   param "security_group_ids" {}
 }
 
-edge "aws_vpc_security_group_to_sagemaker_notebook_instance_edges" {
+edge "vpc_security_group_to_sagemaker_notebook_instance" {
   title = "notebook instance"
 
   sql = <<-EOQ
@@ -1708,7 +1708,7 @@ edge "aws_vpc_security_group_to_sagemaker_notebook_instance_edges" {
   param "security_group_ids" {}
 }
 
-node "aws_vpc_security_group_docdb_cluster_nodes" {
+node "vpc_security_group_docdb_cluster" {
   category = category.docdb_cluster
 
   sql = <<-EOQ
@@ -1734,7 +1734,7 @@ node "aws_vpc_security_group_docdb_cluster_nodes" {
   param "security_group_ids" {}
 }
 
-edge "aws_vpc_security_group_to_docdb_cluster_edges" {
+edge "vpc_security_group_to_docdb_cluster" {
   title = "docdb cluster"
 
   sql = <<-EOQ

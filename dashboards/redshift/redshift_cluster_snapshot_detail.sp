@@ -74,14 +74,14 @@ dashboard "aws_redshift_snapshot_detail" {
 
 
       nodes = [
-        node.aws_redshift_snapshot_node,
-        node.aws_redshift_snapshot_to_kms_key_node,
-        node.aws_redshift_snapshot_from_redshift_cluster_node
+        node.redshift_snapshot_node,
+        node.redshift_snapshot_to_kms_key_node,
+        node.redshift_snapshot_from_redshift_cluster_node
       ]
 
       edges = [
-        edge.aws_redshift_snapshot_to_kms_key_edge,
-        edge.aws_redshift_snapshot_from_redshift_cluster_edge
+        edge.redshift_snapshot_to_kms_key_edge,
+        edge.redshift_snapshot_from_redshift_cluster_edge
       ]
 
       args = {
@@ -220,7 +220,7 @@ query "aws_redshift_snapshot_unencrypted" {
   param "arn" {}
 }
 
-node "aws_redshift_snapshot_node" {
+node "redshift_snapshot_node" {
   category = category.redshift_snapshot
 
   sql = <<-EOQ
@@ -245,7 +245,7 @@ node "aws_redshift_snapshot_node" {
   param "arn" {}
 }
 
-node "aws_redshift_snapshot_to_kms_key_node" {
+node "redshift_snapshot_to_kms_key_node" {
   category = category.kms_key
 
   sql = <<-EOQ
@@ -269,7 +269,7 @@ node "aws_redshift_snapshot_to_kms_key_node" {
   param "arn" {}
 }
 
-edge "aws_redshift_snapshot_to_kms_key_edge" {
+edge "redshift_snapshot_to_kms_key_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -287,7 +287,7 @@ edge "aws_redshift_snapshot_to_kms_key_edge" {
   param "arn" {}
 }
 
-node "aws_redshift_snapshot_from_redshift_cluster_node" {
+node "redshift_snapshot_from_redshift_cluster_node" {
   category = category.redshift_cluster
 
   sql = <<-EOQ
@@ -315,7 +315,7 @@ node "aws_redshift_snapshot_from_redshift_cluster_node" {
   param "arn" {}
 }
 
-edge "aws_redshift_snapshot_from_redshift_cluster_edge" {
+edge "redshift_snapshot_from_redshift_cluster_edge" {
   title = "snapshot"
 
   sql = <<-EOQ

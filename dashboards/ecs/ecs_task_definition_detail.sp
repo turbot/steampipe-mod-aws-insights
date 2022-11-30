@@ -58,24 +58,24 @@ dashboard "aws_ecs_task_definition_detail" {
 
 
       nodes = [
-        node.aws_ecs_task_definition_node,
-        node.aws_ecs_task_definition_from_ecs_service_node,
-        node.aws_ecs_task_definition_from_ecs_task_node,
-        node.aws_ecs_task_definition_to_iam_execution_role_node,
-        node.aws_ecs_task_definition_to_iam_task_role_node,
-        node.aws_ecs_task_definition_to_cloudwatch_log_group_node,
-        node.aws_ecs_task_definition_to_efs_file_system_node,
-        node.aws_ecs_task_definition_to_ecr_repository_node
+        node.ecs_task_definition_node,
+        node.ecs_task_definition_from_ecs_service_node,
+        node.ecs_task_definition_from_ecs_task_node,
+        node.ecs_task_definition_to_iam_execution_role_node,
+        node.ecs_task_definition_to_iam_task_role_node,
+        node.ecs_task_definition_to_cloudwatch_log_group_node,
+        node.ecs_task_definition_to_efs_file_system_node,
+        node.ecs_task_definition_to_ecr_repository_node
       ]
 
       edges = [
-        edge.aws_ecs_task_definition_from_ecs_service_edge,
-        edge.aws_ecs_task_definition_from_ecs_task_edge,
-        edge.aws_ecs_task_definition_to_iam_execution_role_edge,
-        edge.aws_ecs_task_definition_to_iam_task_role_edge,
-        edge.aws_ecs_task_definition_to_cloudwatch_log_group_edge,
-        edge.aws_ecs_task_definition_to_efs_file_system_edge,
-        edge.aws_ecs_task_definition_to_ecr_repository_edge
+        edge.ecs_task_definition_from_ecs_service_edge,
+        edge.ecs_task_definition_from_ecs_task_edge,
+        edge.ecs_task_definition_to_iam_execution_role_edge,
+        edge.ecs_task_definition_to_iam_task_role_edge,
+        edge.ecs_task_definition_to_cloudwatch_log_group_edge,
+        edge.ecs_task_definition_to_efs_file_system_edge,
+        edge.ecs_task_definition_to_ecr_repository_edge
       ]
 
       args = {
@@ -232,7 +232,7 @@ query "aws_ecs_task_definition_tags" {
   param "arn" {}
 }
 
-node "aws_ecs_task_definition_node" {
+node "ecs_task_definition_node" {
   category = category.ecs_task_definition
 
   sql = <<-EOQ
@@ -254,7 +254,7 @@ node "aws_ecs_task_definition_node" {
   param "arn" {}
 }
 
-node "aws_ecs_task_definition_from_ecs_service_node" {
+node "ecs_task_definition_from_ecs_service_node" {
   category = category.ecs_service
 
   sql = <<-EOQ
@@ -278,7 +278,7 @@ node "aws_ecs_task_definition_from_ecs_service_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_task_definition_from_ecs_service_edge" {
+edge "ecs_task_definition_from_ecs_service_edge" {
   title = "service"
 
   sql = <<-EOQ
@@ -294,7 +294,7 @@ edge "aws_ecs_task_definition_from_ecs_service_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_task_definition_from_ecs_task_node" {
+node "ecs_task_definition_from_ecs_task_node" {
   category = category.ecs_task
 
   sql = <<-EOQ
@@ -318,7 +318,7 @@ node "aws_ecs_task_definition_from_ecs_task_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_task_definition_from_ecs_task_edge" {
+edge "ecs_task_definition_from_ecs_task_edge" {
   title = "task"
 
   sql = <<-EOQ
@@ -334,7 +334,7 @@ edge "aws_ecs_task_definition_from_ecs_task_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_task_definition_to_iam_execution_role_node" {
+node "ecs_task_definition_to_iam_execution_role_node" {
   category = category.iam_role
 
   sql = <<-EOQ
@@ -357,7 +357,7 @@ node "aws_ecs_task_definition_to_iam_execution_role_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_task_definition_to_iam_execution_role_edge" {
+edge "ecs_task_definition_to_iam_execution_role_edge" {
   title = "assumes"
 
   sql = <<-EOQ
@@ -372,7 +372,7 @@ edge "aws_ecs_task_definition_to_iam_execution_role_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_task_definition_to_iam_task_role_node" {
+node "ecs_task_definition_to_iam_task_role_node" {
   category = category.iam_role
 
   sql = <<-EOQ
@@ -392,7 +392,7 @@ node "aws_ecs_task_definition_to_iam_task_role_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_task_definition_to_iam_task_role_edge" {
+edge "ecs_task_definition_to_iam_task_role_edge" {
   title = "assumes task role"
 
   sql = <<-EOQ
@@ -407,7 +407,7 @@ edge "aws_ecs_task_definition_to_iam_task_role_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_task_definition_to_cloudwatch_log_group_node" {
+node "ecs_task_definition_to_cloudwatch_log_group_node" {
   category = category.cloudwatch_log_group
 
   sql = <<-EOQ
@@ -431,7 +431,7 @@ node "aws_ecs_task_definition_to_cloudwatch_log_group_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_task_definition_to_cloudwatch_log_group_edge" {
+edge "ecs_task_definition_to_cloudwatch_log_group_edge" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -450,7 +450,7 @@ edge "aws_ecs_task_definition_to_cloudwatch_log_group_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_task_definition_to_efs_file_system_node" {
+node "ecs_task_definition_to_efs_file_system_node" {
   category = category.efs_file_system
 
   sql = <<-EOQ
@@ -475,7 +475,7 @@ node "aws_ecs_task_definition_to_efs_file_system_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_task_definition_to_efs_file_system_edge" {
+edge "ecs_task_definition_to_efs_file_system_edge" {
   title = "volume"
 
   sql = <<-EOQ
@@ -493,7 +493,7 @@ edge "aws_ecs_task_definition_to_efs_file_system_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_task_definition_to_ecr_repository_node" {
+node "ecs_task_definition_to_ecr_repository_node" {
   category = category.ecr_repository
 
   sql = <<-EOQ
@@ -518,7 +518,7 @@ node "aws_ecs_task_definition_to_ecr_repository_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_task_definition_to_ecr_repository_edge" {
+edge "ecs_task_definition_to_ecr_repository_edge" {
   title = "ecr repository"
 
   sql = <<-EOQ

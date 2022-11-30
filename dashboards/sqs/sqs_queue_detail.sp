@@ -58,26 +58,26 @@ dashboard "aws_sqs_queue_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_sqs_queue_nodes,
-        node.aws_sqs_queue_to_sns_topic_subscription_node,
-        node.aws_sqs_queue_to_sqs_queue_node,
-        node.aws_sqs_queue_to_kms_key_node,
-        node.aws_sqs_queue_from_s3_bucket_node,
-        node.aws_sqs_queue_from_lambda_function_node,
-        node.aws_sqs_queue_from_vpc_endpoint_node,
-        node.aws_sqs_queue_from_vpc_node,
-        node.aws_sqs_queue_from_eventbridge_rule_node
+        node.sqs_queue,
+        node.sqs_queue_to_sns_topic_subscription_node,
+        node.sqs_queue_to_sqs_queue_node,
+        node.sqs_queue_to_kms_key_node,
+        node.sqs_queue_from_s3_bucket_node,
+        node.sqs_queue_from_lambda_function_node,
+        node.sqs_queue_from_vpc_endpoint_node,
+        node.sqs_queue_from_vpc_node,
+        node.sqs_queue_from_eventbridge_rule_node
       ]
 
       edges = [
-        edge.aws_sqs_queue_to_sns_topic_subscription_edge,
-        edge.aws_sqs_queue_to_sqs_queue_edge,
-        edge.aws_sqs_queue_to_kms_key_edge,
-        edge.aws_sqs_queue_from_s3_bucket_edge,
-        edge.aws_sqs_queue_from_lambda_function_edge,
-        edge.aws_sqs_queue_from_vpc_endpoint_edge,
-        edge.aws_sqs_queue_vpc_endpoint_to_vpc_edge,
-        edge.aws_sqs_queue_from_eventbridge_rule_edge
+        edge.sqs_queue_to_sns_topic_subscription_edge,
+        edge.sqs_queue_to_sqs_queue_edge,
+        edge.sqs_queue_to_kms_key_edge,
+        edge.sqs_queue_from_s3_bucket_edge,
+        edge.sqs_queue_from_lambda_function_edge,
+        edge.sqs_queue_from_vpc_endpoint_edge,
+        edge.sqs_queue_vpc_endpoint_to_vpc_edge,
+        edge.sqs_queue_from_eventbridge_rule_edge
       ]
 
       args = {
@@ -316,7 +316,7 @@ query "aws_sqs_queue_encryption_details" {
   param "queue_arn" {}
 }
 
-node "aws_sqs_queue_nodes" {
+node "sqs_queue" {
   category = category.sqs_queue
 
   sql = <<-EOQ
@@ -337,7 +337,7 @@ node "aws_sqs_queue_nodes" {
   param "queue_arns" {}
 }
 
-node "aws_sqs_queue_to_sns_topic_subscription_node" {
+node "sqs_queue_to_sns_topic_subscription_node" {
   category = category.sns_topic_subscription
 
   sql = <<-EOQ
@@ -358,7 +358,7 @@ node "aws_sqs_queue_to_sns_topic_subscription_node" {
   param "arn" {}
 }
 
-edge "aws_sqs_queue_to_sns_topic_subscription_edge" {
+edge "sqs_queue_to_sns_topic_subscription_edge" {
   title = "subscription"
 
   sql = <<-EOQ
@@ -374,7 +374,7 @@ edge "aws_sqs_queue_to_sns_topic_subscription_edge" {
   param "arn" {}
 }
 
-node "aws_sqs_queue_to_sqs_queue_node" {
+node "sqs_queue_to_sqs_queue_node" {
   category = category.sqs_queue
 
   sql = <<-EOQ
@@ -396,7 +396,7 @@ node "aws_sqs_queue_to_sqs_queue_node" {
   param "arn" {}
 }
 
-edge "aws_sqs_queue_to_sqs_queue_edge" {
+edge "sqs_queue_to_sqs_queue_edge" {
   title = "dead letter queue"
 
   sql = <<-EOQ
@@ -413,7 +413,7 @@ edge "aws_sqs_queue_to_sqs_queue_edge" {
   param "arn" {}
 }
 
-node "aws_sqs_queue_to_kms_key_node" {
+node "sqs_queue_to_kms_key_node" {
   category = category.kms_key
 
   sql = <<-EOQ
@@ -438,7 +438,7 @@ node "aws_sqs_queue_to_kms_key_node" {
   param "arn" {}
 }
 
-edge "aws_sqs_queue_to_kms_key_edge" {
+edge "sqs_queue_to_kms_key_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -458,7 +458,7 @@ edge "aws_sqs_queue_to_kms_key_edge" {
   param "arn" {}
 }
 
-node "aws_sqs_queue_from_s3_bucket_node" {
+node "sqs_queue_from_s3_bucket_node" {
   category = category.s3_bucket
 
   sql = <<-EOQ
@@ -486,7 +486,7 @@ node "aws_sqs_queue_from_s3_bucket_node" {
   param "arn" {}
 }
 
-edge "aws_sqs_queue_from_s3_bucket_edge" {
+edge "sqs_queue_from_s3_bucket_edge" {
   title = "queues"
 
   sql = <<-EOQ
@@ -508,7 +508,7 @@ edge "aws_sqs_queue_from_s3_bucket_edge" {
   param "arn" {}
 }
 
-node "aws_sqs_queue_from_lambda_function_node" {
+node "sqs_queue_from_lambda_function_node" {
   category = category.lambda_function
 
   sql = <<-EOQ
@@ -531,7 +531,7 @@ node "aws_sqs_queue_from_lambda_function_node" {
   param "arn" {}
 }
 
-edge "aws_sqs_queue_from_lambda_function_edge" {
+edge "sqs_queue_from_lambda_function_edge" {
   title = "queues"
 
   sql = <<-EOQ
@@ -547,7 +547,7 @@ edge "aws_sqs_queue_from_lambda_function_edge" {
   param "arn" {}
 }
 
-node "aws_sqs_queue_from_vpc_endpoint_node" {
+node "sqs_queue_from_vpc_endpoint_node" {
   category = category.vpc_endpoint
 
   sql = <<-EOQ
@@ -572,7 +572,7 @@ node "aws_sqs_queue_from_vpc_endpoint_node" {
   param "arn" {}
 }
 
-edge "aws_sqs_queue_from_vpc_endpoint_edge" {
+edge "sqs_queue_from_vpc_endpoint_edge" {
   title = "endpoint"
 
   sql = <<-EOQ
@@ -590,7 +590,7 @@ edge "aws_sqs_queue_from_vpc_endpoint_edge" {
   param "arn" {}
 }
 
-node "aws_sqs_queue_from_vpc_node" {
+node "sqs_queue_from_vpc_node" {
   category = category.vpc_vpc
 
   sql = <<-EOQ
@@ -616,7 +616,7 @@ node "aws_sqs_queue_from_vpc_node" {
   param "arn" {}
 }
 
-edge "aws_sqs_queue_vpc_endpoint_to_vpc_edge" {
+edge "sqs_queue_vpc_endpoint_to_vpc_edge" {
   title = "vpc"
 
   sql = <<-EOQ
@@ -636,7 +636,7 @@ edge "aws_sqs_queue_vpc_endpoint_to_vpc_edge" {
   param "arn" {}
 }
 
-node "aws_sqs_queue_from_eventbridge_rule_node" {
+node "sqs_queue_from_eventbridge_rule_node" {
   category = category.eventbridge_rule
 
   sql = <<-EOQ
@@ -659,7 +659,7 @@ node "aws_sqs_queue_from_eventbridge_rule_node" {
   param "arn" {}
 }
 
-edge "aws_sqs_queue_from_eventbridge_rule_edge" {
+edge "sqs_queue_from_eventbridge_rule_edge" {
   title = "queues"
 
   sql = <<-EOQ

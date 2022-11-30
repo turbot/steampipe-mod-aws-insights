@@ -217,34 +217,34 @@ dashboard "aws_kms_key_detail" {
       }
 
       nodes = [
-        node.aws_kms_key_nodes,
-        node.aws_kms_key_alias_nodes,
-        node.aws_cloudtrail_trail_nodes,
+        node.kms_key,
+        node.kms_key_alias,
+        node.cloudtrail_trail,
         node.ebs_volume,
-        node.aws_rds_db_cluster_snapshot_nodes,
-        node.aws_rds_db_cluster_nodes,
-        node.aws_redshift_cluster_nodes,
-        node.aws_sns_topic_nodes,
-        node.aws_sqs_queue_nodes,
-        node.aws_rds_db_instance_nodes,
-        node.aws_rds_db_snapshot_nodes,
-        node.aws_lambda_function_nodes,
-        node.aws_s3_bucket_nodes
+        node.rds_db_cluster_snapshot,
+        node.rds_db_cluster,
+        node.redshift_cluster,
+        node.sns_topic,
+        node.sqs_queue,
+        node.rds_db_instance,
+        node.rds_db_snapshot,
+        node.lambda_function,
+        node.s3_bucket
       ]
 
       edges = [
-        edge.aws_kms_key_to_kms_alias_edge,
-        edge.aws_kms_key_from_cloudtrail_trail_edges,
-        edge.aws_kms_key_from_ebs_volume_edges,
-        edge.aws_rds_db_cluster_snapshot_to_kms_key_edges,
-        edge.aws_kms_key_from_rds_db_cluster_edges,
-        edge.aws_kms_key_from_redshift_cluster_edges,
-        edge.aws_kms_key_from_sns_topic_edges,
-        edge.aws_kms_key_from_sqs_queue_edges,
-        edge.aws_rds_db_instance_to_kms_key_edge,
-        edge.aws_rds_db_snapshot_to_kms_key_edges,
-        edge.aws_kms_key_from_lambda_function_edges,
-        edge.aws_s3_bucket_to_kms_key_edges
+        edge.kms_key_to_kms_alias_edge,
+        edge.kms_key_from_cloudtrail_trail,
+        edge.kms_key_from_ebs_volume,
+        edge.rds_db_cluster_snapshot_to_kms_key,
+        edge.kms_key_from_rds_db_cluster,
+        edge.kms_key_from_redshift_cluster,
+        edge.kms_key_from_sns_topic,
+        edge.kms_key_from_sqs_queue,
+        edge.rds_db_instance_to_kms_key_edge,
+        edge.rds_db_snapshot_to_kms_key,
+        edge.kms_key_from_lambda_function,
+        edge.s3_bucket_to_kms_key
       ]
 
       args = {
@@ -457,7 +457,7 @@ query "aws_kms_key_policy" {
   param "arn" {}
 }
 
-node "aws_kms_key_nodes" {
+node "kms_key" {
   category = category.kms_key
 
   sql = <<-EOQ
@@ -481,7 +481,7 @@ node "aws_kms_key_nodes" {
   param "key_arns" {}
 }
 
-edge "aws_kms_key_from_cloudtrail_trail_edges" {
+edge "kms_key_from_cloudtrail_trail" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -497,7 +497,7 @@ edge "aws_kms_key_from_cloudtrail_trail_edges" {
   param "trail_arns" {}
 }
 
-edge "aws_kms_key_from_ebs_volume_edges" {
+edge "kms_key_from_ebs_volume" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -513,7 +513,7 @@ edge "aws_kms_key_from_ebs_volume_edges" {
   param "volume_arns" {}
 }
 
-edge "aws_kms_key_from_rds_db_cluster_edges" {
+edge "kms_key_from_rds_db_cluster" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -529,7 +529,7 @@ edge "aws_kms_key_from_rds_db_cluster_edges" {
   param "rds_db_cluster_arns" {}
 }
 
-edge "aws_kms_key_from_redshift_cluster_edges" {
+edge "kms_key_from_redshift_cluster" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -545,7 +545,7 @@ edge "aws_kms_key_from_redshift_cluster_edges" {
   param "redshift_cluster_arns" {}
 }
 
-edge "aws_kms_key_from_sns_topic_edges" {
+edge "kms_key_from_sns_topic" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -561,7 +561,7 @@ edge "aws_kms_key_from_sns_topic_edges" {
   param "topic_arns" {}
 }
 
-edge "aws_kms_key_from_sqs_queue_edges" {
+edge "kms_key_from_sqs_queue" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -583,7 +583,7 @@ edge "aws_kms_key_from_sqs_queue_edges" {
   param "key_arns" {}
 }
 
-edge "aws_kms_key_from_lambda_function_edges" {
+edge "kms_key_from_lambda_function" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -599,7 +599,7 @@ edge "aws_kms_key_from_lambda_function_edges" {
   param "function_arns" {}
 }
 
-node "aws_kms_key_alias_nodes" {
+node "kms_key_alias" {
   category = category.kms_alias
 
   sql = <<-EOQ
@@ -623,7 +623,7 @@ node "aws_kms_key_alias_nodes" {
   param "key_arns" {}
 }
 
-edge "aws_kms_key_to_kms_alias_edge" {
+edge "kms_key_to_kms_alias_edge" {
   title = "key"
 
   sql = <<-EOQ

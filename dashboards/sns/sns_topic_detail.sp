@@ -40,26 +40,26 @@ dashboard "aws_sns_topic_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_sns_topic_nodes,
-        node.aws_sns_topic_to_kms_key_node,
-        node.aws_sns_topic_to_sns_topic_subscriptions_node,
-        node.aws_sns_topic_from_s3_bucket_node,
-        node.aws_sns_topic_from_rds_db_instance_node,
-        node.aws_sns_topic_from_redshift_cluster_node,
-        node.aws_sns_topic_from_cloudtrail_trail_node,
-        node.aws_sns_topic_from_cloudformation_stack_node,
-        node.aws_sns_topic_from_aws_elasticache_cluster_node
+        node.sns_topic,
+        node.sns_topic_to_kms_key_node,
+        node.sns_topic_to_sns_topic_subscriptions_node,
+        node.sns_topic_from_s3_bucket_node,
+        node.sns_topic_from_rds_db_instance_node,
+        node.sns_topic_from_redshift_cluster_node,
+        node.sns_topic_from_cloudtrail_trail_node,
+        node.sns_topic_from_cloudformation_stack_node,
+        node.sns_topic_from_aws_elasticache_cluster_node
       ]
 
       edges = [
-        edge.aws_sns_topic_to_kms_key_edge,
-        edge.aws_sns_topic_to_sns_topic_subscriptions_edge,
-        edge.aws_sns_topic_from_s3_bucket_edge,
-        edge.aws_sns_topic_from_rds_db_instance_edge,
-        edge.aws_sns_topic_from_redshift_cluster_edge,
-        edge.aws_sns_topic_from_cloudtrail_trail_edge,
-        edge.aws_sns_topic_from_cloudformation_stack_edge,
-        edge.aws_sns_topic_from_aws_elasticache_cluster_edge
+        edge.sns_topic_to_kms_key_edge,
+        edge.sns_topic_to_sns_topic_subscriptions_edge,
+        edge.sns_topic_from_s3_bucket_edge,
+        edge.sns_topic_from_rds_db_instance_edge,
+        edge.sns_topic_from_redshift_cluster_edge,
+        edge.sns_topic_from_cloudtrail_trail_edge,
+        edge.sns_topic_from_cloudformation_stack_edge,
+        edge.sns_topic_from_aws_elasticache_cluster_edge
       ]
 
       args = {
@@ -264,7 +264,7 @@ query "aws_sns_topic_policy_standard" {
   param "arn" {}
 }
 
-node "aws_sns_topic_nodes" {
+node "sns_topic" {
   category = category.sns_topic
 
   sql = <<-EOQ
@@ -285,7 +285,7 @@ node "aws_sns_topic_nodes" {
   param "topic_arns" {}
 }
 
-node "aws_sns_topic_to_kms_key_node" {
+node "sns_topic_to_kms_key_node" {
   category = category.kms_key
 
   sql = <<-EOQ
@@ -310,7 +310,7 @@ node "aws_sns_topic_to_kms_key_node" {
   param "arn" {}
 }
 
-edge "aws_sns_topic_to_kms_key_edge" {
+edge "sns_topic_to_kms_key_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -328,7 +328,7 @@ edge "aws_sns_topic_to_kms_key_edge" {
   param "arn" {}
 }
 
-node "aws_sns_topic_to_sns_topic_subscriptions_node" {
+node "sns_topic_to_sns_topic_subscriptions_node" {
   category = category.sns_topic_subscription
 
   sql = <<-EOQ
@@ -350,7 +350,7 @@ node "aws_sns_topic_to_sns_topic_subscriptions_node" {
   param "arn" {}
 }
 
-edge "aws_sns_topic_to_sns_topic_subscriptions_edge" {
+edge "sns_topic_to_sns_topic_subscriptions_edge" {
   title = "subscription"
 
   sql = <<-EOQ
@@ -367,7 +367,7 @@ edge "aws_sns_topic_to_sns_topic_subscriptions_edge" {
   param "arn" {}
 }
 
-node "aws_sns_topic_from_s3_bucket_node" {
+node "sns_topic_from_s3_bucket_node" {
   category = category.s3_bucket
 
   sql = <<-EOQ
@@ -394,7 +394,7 @@ node "aws_sns_topic_from_s3_bucket_node" {
   param "arn" {}
 }
 
-edge "aws_sns_topic_from_s3_bucket_edge" {
+edge "sns_topic_from_s3_bucket_edge" {
   title = "notifies"
 
   sql = <<-EOQ
@@ -416,7 +416,7 @@ edge "aws_sns_topic_from_s3_bucket_edge" {
   param "arn" {}
 }
 
-node "aws_sns_topic_from_rds_db_instance_node" {
+node "sns_topic_from_rds_db_instance_node" {
   category = category.rds_db_instance
 
   sql = <<-EOQ
@@ -444,7 +444,7 @@ node "aws_sns_topic_from_rds_db_instance_node" {
   param "arn" {}
 }
 
-edge "aws_sns_topic_from_rds_db_instance_edge" {
+edge "sns_topic_from_rds_db_instance_edge" {
   title = "notifies"
 
   sql = <<-EOQ
@@ -473,7 +473,7 @@ edge "aws_sns_topic_from_rds_db_instance_edge" {
   param "arn" {}
 }
 
-node "aws_sns_topic_from_redshift_cluster_node" {
+node "sns_topic_from_redshift_cluster_node" {
   category = category.redshift_cluster
 
   sql = <<-EOQ
@@ -501,7 +501,7 @@ node "aws_sns_topic_from_redshift_cluster_node" {
   param "arn" {}
 }
 
-edge "aws_sns_topic_from_redshift_cluster_edge" {
+edge "sns_topic_from_redshift_cluster_edge" {
   title = "notifies"
 
   sql = <<-EOQ
@@ -529,7 +529,7 @@ edge "aws_sns_topic_from_redshift_cluster_edge" {
   param "arn" {}
 }
 
-node "aws_sns_topic_from_cloudtrail_trail_node" {
+node "sns_topic_from_cloudtrail_trail_node" {
   category = category.cloudtrail_trail
 
   sql = <<-EOQ
@@ -551,7 +551,7 @@ node "aws_sns_topic_from_cloudtrail_trail_node" {
   param "arn" {}
 }
 
-edge "aws_sns_topic_from_cloudtrail_trail_edge" {
+edge "sns_topic_from_cloudtrail_trail_edge" {
   title = "notifies"
 
   sql = <<-EOQ
@@ -568,7 +568,7 @@ edge "aws_sns_topic_from_cloudtrail_trail_edge" {
   param "arn" {}
 }
 
-node "aws_sns_topic_from_cloudformation_stack_node" {
+node "sns_topic_from_cloudformation_stack_node" {
   category = category.cloudformation_stack
 
   sql = <<-EOQ
@@ -596,7 +596,7 @@ node "aws_sns_topic_from_cloudformation_stack_node" {
   param "arn" {}
 }
 
-edge "aws_sns_topic_from_cloudformation_stack_edge" {
+edge "sns_topic_from_cloudformation_stack_edge" {
   title = "notifies"
 
   sql = <<-EOQ
@@ -619,7 +619,7 @@ edge "aws_sns_topic_from_cloudformation_stack_edge" {
   param "arn" {}
 }
 
-node "aws_sns_topic_from_aws_elasticache_cluster_node" {
+node "sns_topic_from_aws_elasticache_cluster_node" {
   category = category.elasticache_cluster
 
   sql = <<-EOQ
@@ -642,7 +642,7 @@ node "aws_sns_topic_from_aws_elasticache_cluster_node" {
   param "arn" {}
 }
 
-edge "aws_sns_topic_from_aws_elasticache_cluster_edge" {
+edge "sns_topic_from_aws_elasticache_cluster_edge" {
   title = "notifies"
 
   sql = <<-EOQ

@@ -187,35 +187,35 @@ dashboard "aws_vpc_subnet_detail" {
       nodes = [
         node.vpc_subnet,
         node.vpc_vpc,
-        node.aws_rds_db_instance_nodes,
+        node.rds_db_instance,
         node.ec2_instance,
-        node.aws_lambda_function_nodes,
-        node.aws_vpc_flow_log_nodes,
+        node.lambda_function,
+        node.vpc_flow_log,
         node.ec2_network_interface,
         node.ec2_application_load_balancer,
         node.ec2_network_load_balancer,
         node.ec2_classic_load_balancer,
         node.ec2_gateway_load_balancer,
 
-        node.aws_vpc_subnet_vpc_route_table_nodes,
-        node.aws_vpc_subnet_vpc_network_acl_nodes,
-        node.aws_vpc_subnet_sagemaker_notebook_instance_nodes,
+        node.vpc_subnet_vpc_route_table,
+        node.vpc_subnet_vpc_network_acl,
+        node.vpc_subnet_sagemaker_notebook_instance,
       ]
 
       edges = [
-        edge.aws_vpc_to_vpc_subnet_edges,
-        edge.aws_vpc_subnet_to_flow_log_edges,
-        edge.aws_vpc_subnet_to_vpc_route_table_edges,
-        edge.aws_vpc_subnet_to_vpc_network_acl_edges,
-        edge.aws_vpc_subnet_to_rds_db_instance_edges,
-        edge.aws_vpc_subnet_to_ec2_instance_edges,
-        edge.aws_vpc_subnet_to_lambda_function_edges,
-        edge.aws_vpc_subnet_to_sagemaker_notebook_instance_edges,
-        edge.aws_vpc_subnet_to_network_interface_edges,
-        edge.aws_vpc_subnet_to_alb_edges,
-        edge.aws_vpc_subnet_to_clb_edges,
-        edge.aws_vpc_subnet_to_nlb_edges,
-        edge.aws_vpc_subnet_to_glb_edges
+        edge.vpc_to_vpc_subnet,
+        edge.vpc_subnet_to_flow_log,
+        edge.vpc_subnet_to_vpc_route_table,
+        edge.vpc_subnet_to_vpc_network_acl,
+        edge.vpc_subnet_to_rds_db_instance,
+        edge.vpc_subnet_to_ec2_instance,
+        edge.vpc_subnet_to_lambda_function,
+        edge.vpc_subnet_to_sagemaker_notebook_instance,
+        edge.vpc_subnet_to_network_interface,
+        edge.vpc_subnet_to_alb,
+        edge.vpc_subnet_to_clb,
+        edge.vpc_subnet_to_nlb,
+        edge.vpc_subnet_to_glb
       ]
 
       args = {
@@ -465,7 +465,7 @@ query "aws_vpc_subnet_association" {
   param "subnet_id" {}
 }
 
-edge "aws_vpc_to_vpc_subnet_edges" {
+edge "vpc_to_vpc_subnet" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -481,7 +481,7 @@ edge "aws_vpc_to_vpc_subnet_edges" {
   param "subnet_ids" {}
 }
 
-node "aws_vpc_subnet_vpc_route_table_nodes" {
+node "vpc_subnet_vpc_route_table" {
   category = category.vpc_route_table
 
   sql = <<-EOQ
@@ -503,7 +503,7 @@ node "aws_vpc_subnet_vpc_route_table_nodes" {
   param "subnet_ids" {}
 }
 
-edge "aws_vpc_subnet_to_vpc_route_table_edges" {
+edge "vpc_subnet_to_vpc_route_table" {
   title = "route to"
 
   sql = <<-EOQ
@@ -520,7 +520,7 @@ edge "aws_vpc_subnet_to_vpc_route_table_edges" {
   param "subnet_ids" {}
 }
 
-node "aws_vpc_subnet_vpc_network_acl_nodes" {
+node "vpc_subnet_vpc_network_acl" {
   category = category.vpc_network_acl
 
   sql = <<-EOQ
@@ -544,7 +544,7 @@ node "aws_vpc_subnet_vpc_network_acl_nodes" {
   param "subnet_ids" {}
 }
 
-edge "aws_vpc_subnet_to_vpc_network_acl_edges" {
+edge "vpc_subnet_to_vpc_network_acl" {
   title = "network acl"
 
   sql = <<-EOQ
@@ -562,7 +562,7 @@ edge "aws_vpc_subnet_to_vpc_network_acl_edges" {
 }
 
 
-edge "aws_vpc_subnet_to_rds_db_instance_edges" {
+edge "vpc_subnet_to_rds_db_instance" {
   title = "rds db instance"
 
   sql = <<-EOQ
@@ -580,7 +580,7 @@ edge "aws_vpc_subnet_to_rds_db_instance_edges" {
 
 
 
-edge "aws_vpc_subnet_to_ec2_instance_edges" {
+edge "vpc_subnet_to_ec2_instance" {
   title = "ec2 instance"
 
   sql = <<-EOQ
@@ -596,7 +596,7 @@ edge "aws_vpc_subnet_to_ec2_instance_edges" {
   param "subnet_ids" {}
 }
 
-edge "aws_vpc_subnet_to_lambda_function_edges" {
+edge "vpc_subnet_to_lambda_function" {
   title = "lambda function"
 
   sql = <<-EOQ
@@ -612,7 +612,7 @@ edge "aws_vpc_subnet_to_lambda_function_edges" {
   param "subnet_ids" {}
 }
 
-node "aws_vpc_subnet_sagemaker_notebook_instance_nodes" {
+node "vpc_subnet_sagemaker_notebook_instance" {
   category = category.sagemaker_notebook_instance
 
   sql = <<-EOQ
@@ -635,7 +635,7 @@ node "aws_vpc_subnet_sagemaker_notebook_instance_nodes" {
   param "subnet_ids" {}
 }
 
-edge "aws_vpc_subnet_to_sagemaker_notebook_instance_edges" {
+edge "vpc_subnet_to_sagemaker_notebook_instance" {
   title = "notebook instance"
 
   sql = <<-EOQ
@@ -651,7 +651,7 @@ edge "aws_vpc_subnet_to_sagemaker_notebook_instance_edges" {
   param "subnet_ids" {}
 }
 
-edge "aws_vpc_subnet_to_flow_log_edges" {
+edge "vpc_subnet_to_flow_log" {
   title = "flow log"
 
   sql = <<-EOQ
@@ -667,7 +667,7 @@ edge "aws_vpc_subnet_to_flow_log_edges" {
   param "subnet_ids" {}
 }
 
-edge "aws_vpc_subnet_to_network_interface_edges" {
+edge "vpc_subnet_to_network_interface" {
   title = "eni"
 
   sql = <<-EOQ
@@ -683,7 +683,7 @@ edge "aws_vpc_subnet_to_network_interface_edges" {
   param "subnet_ids" {}
 }
 
-edge "aws_vpc_subnet_to_alb_edges" {
+edge "vpc_subnet_to_alb" {
   title = "alb"
 
   sql = <<-EOQ
@@ -699,7 +699,7 @@ edge "aws_vpc_subnet_to_alb_edges" {
   param "subnet_ids" {}
 }
 
-edge "aws_vpc_subnet_to_nlb_edges" {
+edge "vpc_subnet_to_nlb" {
   title = "nlb"
 
   sql = <<-EOQ
@@ -715,7 +715,7 @@ edge "aws_vpc_subnet_to_nlb_edges" {
   param "subnet_ids" {}
 }
 
-edge "aws_vpc_subnet_to_clb_edges" {
+edge "vpc_subnet_to_clb" {
   title = "clb"
 
   sql = <<-EOQ
@@ -731,7 +731,7 @@ edge "aws_vpc_subnet_to_clb_edges" {
   param "subnet_ids" {}
 }
 
-edge "aws_vpc_subnet_to_glb_edges" {
+edge "vpc_subnet_to_glb" {
   title = "glb"
 
   sql = <<-EOQ
