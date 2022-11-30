@@ -459,7 +459,7 @@ edge "aws_api_gatewayv2_api_to_kinesis_stream_edge" {
 }
 
 node "aws_api_gatewayv2_api_to_ec2_load_balancer_listener_node" {
-  category = category.aws_ec2_load_balancer_listener
+  category = category.ec2_load_balancer_listener
 
   sql = <<-EOQ
     select

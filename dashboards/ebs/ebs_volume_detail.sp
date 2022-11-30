@@ -217,7 +217,7 @@ query "aws_ebs_volume_input" {
 }
 
 node "aws_ebs_volume_node" {
-  category = category.aws_ebs_volume
+  category = category.ebs_volume
 
   sql = <<-EOQ
     select
@@ -283,7 +283,7 @@ edge "aws_ebs_volume_to_kms_key_edge" {
 }
 
 node "aws_ebs_volume_to_ebs_snapshot_node" {
-  category = category.aws_ebs_snapshot
+  category = category.ebs_snapshot
 
   sql = <<-EOQ
     select
@@ -324,7 +324,7 @@ edge "aws_ebs_volume_to_ebs_snapshot_edge" {
 }
 
 node "aws_ebs_volume_from_ec2_instance_node" {
-  category = category.aws_ec2_instance
+  category = category.ec2_instance
 
   sql = <<-EOQ
     select
@@ -381,7 +381,7 @@ edge "aws_ebs_volume_from_ec2_instance_edge" {
 }
 
 node "aws_ebs_volume_ebs_snapshots_to_ec2_ami_node" {
-  category = category.aws_ec2_ami
+  category = category.ec2_ami
 
   sql = <<-EOQ
     select

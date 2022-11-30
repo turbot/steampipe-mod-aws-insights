@@ -847,7 +847,7 @@ edge "aws_ecs_cluster_ecs_container_instance_to_vpc_subnet_edge" {
 }
 
 node "aws_ecs_cluster_vpc_subnet_to_vpc_node" {
-  category = category.aws_vpc
+  category = category.vpc_vpc
 
   sql = <<-EOQ
     select
@@ -939,7 +939,7 @@ edge "aws_ecs_cluster_ecs_service_to_vpc_subnet_edge" {
 }
 
 node "aws_ecs_cluster_ecs_service_subnet_to_vpc_node" {
-  category = category.aws_vpc
+  category = category.vpc_vpc
 
   sql = <<-EOQ
     select

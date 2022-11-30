@@ -540,7 +540,7 @@ edge "aws_rds_db_cluster_vpc_subnet_to_rds_db_subnet_group_edge" {
 }
 
 node "aws_rds_db_cluster_vpc_subnet_to_vpc_node" {
-  category = category.aws_vpc
+  category = category.vpc_vpc
 
   sql = <<-EOQ
     select

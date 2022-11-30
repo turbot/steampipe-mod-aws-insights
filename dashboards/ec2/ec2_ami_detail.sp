@@ -300,7 +300,7 @@ query "aws_ec2_ami_tags" {
 }
 
 node "aws_ec2_ami_node" {
-  category = category.aws_ec2_ami
+  category = category.ec2_ami
 
   sql = <<-EOQ
     select
@@ -324,7 +324,7 @@ node "aws_ec2_ami_node" {
 }
 
 node "aws_ec2_ami_to_ec2_instance_node" {
-  category = category.aws_ec2_instance
+  category = category.ec2_instance
 
   sql = <<-EOQ
     select
@@ -363,7 +363,7 @@ edge "aws_ec2_ami_to_ec2_instance_edge" {
 }
 
 node "aws_ec2_ami_from_ebs_snapshot_node" {
-  category = category.aws_ebs_snapshot
+  category = category.ebs_snapshot
 
   sql = <<-EOQ
     select

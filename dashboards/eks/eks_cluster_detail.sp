@@ -644,7 +644,7 @@ node "aws_eks_cluster_to_vpc_subnet_node" {
 }
 
 node "aws_eks_cluster_to_vpc_node" {
-  category = category.aws_vpc
+  category = category.vpc_vpc
 
   sql = <<-EOQ
     select

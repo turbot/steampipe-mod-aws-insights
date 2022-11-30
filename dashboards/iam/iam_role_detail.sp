@@ -505,7 +505,7 @@ edge "aws_iam_role_from_iam_instance_profile_edge" {
 }
 
 node "aws_iam_role_from_ec2_instance_node" {
-  category = category.aws_ec2_instance
+  category = category.ec2_instance
 
   sql = <<-EOQ
     select

@@ -243,7 +243,7 @@ query "aws_clb_scheme" {
 }
 
 node "aws_ec2_clb_to_ec2_instance_node" {
-  category = category.aws_ec2_instance
+  category = category.ec2_instance
 
   sql = <<-EOQ
     select
@@ -380,7 +380,7 @@ edge "aws_ec2_clb_to_vpc_security_group_edge" {
 }
 
 node "aws_ec2_clb_vpc_security_group_to_vpc_node" {
-  category = category.aws_vpc
+  category = category.vpc_vpc
 
   sql = <<-EOQ
     select

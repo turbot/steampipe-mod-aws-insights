@@ -1512,7 +1512,7 @@ edge "aws_vpc_subnet_to_endpoint_edges" {
 }
 
 node "aws_vpc_transit_gateway_nodes" {
-  category = category.aws_ec2_transit_gateway
+  category = category.ec2_transit_gateway
 
   sql = <<-EOQ
     select
@@ -1703,7 +1703,7 @@ edge "aws_vpc_to_s3_access_point_edges" {
 }
 
 node "aws_vpc_peered_vpc_nodes" {
-  category = category.aws_vpc
+  category = category.vpc_vpc
 
   sql = <<-EOQ
     -- with vpcs as (

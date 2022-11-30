@@ -386,7 +386,7 @@ edge "aws_ec2_nlb_to_s3_bucket_edge" {
 }
 
 node "aws_ec2_nlb_vpc_security_group_to_vpc_node" {
-  category = category.aws_vpc
+  category = category.vpc_vpc
 
   sql = <<-EOQ
     select

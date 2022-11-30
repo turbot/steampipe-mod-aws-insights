@@ -1548,7 +1548,7 @@ edge "aws_vpc_security_group_to_ec2_application_load_balancer_edges" {
 }
 
 node "aws_vpc_security_group_ec2_launch_configuration_nodes" {
-  category = category.aws_ec2_launch_configuration
+  category = category.ec2_launch_configuration
 
   sql = <<-EOQ
     select

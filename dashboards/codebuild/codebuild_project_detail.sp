@@ -731,7 +731,7 @@ edge "aws_codebuild_project_vpc_security_group_to_subnet_edge" {
 }
 
 node "aws_codebuild_project_vpc_security_group_subnet_to_vpc_node" {
-  category = category.aws_vpc
+  category = category.vpc_vpc
 
   sql = <<-EOQ
     with vpc_list as (

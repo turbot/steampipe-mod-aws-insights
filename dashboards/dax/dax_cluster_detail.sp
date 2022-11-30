@@ -435,7 +435,7 @@ edge "aws_dax_cluster_to_sns_topic_edge" {
 }
 
 node "aws_dax_cluster_vpc_security_group_to_vpc_node" {
-  category = category.aws_vpc
+  category = category.vpc_vpc
   sql      = <<-EOQ
     select
       arn as id,

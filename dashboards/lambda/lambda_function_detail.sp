@@ -381,7 +381,7 @@ node "aws_lambda_function_nodes" {
 }
 
 node "aws_lambda_to_vpc_node" {
-  category = category.aws_vpc
+  category = category.vpc_vpc
 
   sql = <<-EOQ
     select

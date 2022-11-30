@@ -312,7 +312,7 @@ edge "aws_ecs_service_to_iam_role_edge" {
 }
 
 node "aws_ecs_service_to_ec2_target_group_node" {
-  category = category.aws_ec2_target_group
+  category = category.ec2_target_group
 
   sql = <<-EOQ
     select
@@ -523,7 +523,7 @@ edge "aws_ecs_service_to_vpc_subnet_edge" {
 }
 
 node "aws_ecs_service_vpc_subnet_to_vpc_node" {
-  category = category.aws_vpc
+  category = category.vpc_vpc
 
   sql = <<-EOQ
     select

@@ -1,6 +1,6 @@
 dashboard "aws_ec2_network_interface_detail" {
   title         = "AWS EC2 Network Interface Detail"
-  documentation = file("./dashboards/ec2/docs/ec2_eni_detail.md")
+  documentation = file("./dashboards/ec2/docs/ec2_network_interface_detail.md")
 
   tags = merge(local.ec2_common_tags, {
     type = "Detail"
@@ -156,12 +156,12 @@ dashboard "aws_ec2_network_interface_detail" {
       ]
 
       edges = [
-        edge.aws_ec2_network_interface_to_vpc_eip_edges,
-        edge.aws_ec2_instance_to_ec2_network_interface_edges,
+        edge.ec2_network_interface_to_vpc_eip,
+        edge.ec2_instance_to_ec2_network_interface,
         edge.aws_ec2_network_interface_to_vpc_security_group_edges,
         edge.aws_ec2_network_interface_to_vpc_subnet_edges,
-        edge.aws_vpc_subnet_to_vpc_edges,
         edge.aws_ec2_network_interface_to_vpc_flow_log_edges,
+        edge.vpc_subnet_to_vpc_vpc,
 
         edge.aws_vpc_nat_gateway_to_ec2_network_interface_edges
       ]
@@ -410,21 +410,6 @@ query "aws_ec2_eni_tags" {
 }
 
 
-edge "aws_ec2_network_interface_to_vpc_eip_edges" {
-  title = "eip"
-
-  sql = <<-EOQ
-    select
-      eni_ids as from_id,
-      eip_arns as to_id
-    from
-      unnest($1::text[]) as eni_ids,
-      unnest($2::text[]) as eip_arns
-  EOQ
-
-  param "eni_ids" {}
-  param "eip_arns" {}
-}
 
 
 edge "aws_ec2_network_interface_to_vpc_security_group_edges" {
@@ -463,24 +448,6 @@ edge "aws_ec2_network_interface_to_vpc_subnet_edges" {
   param "subnet_ids" {}
   param "security_group_ids" {}
 }
-
-
-edge "aws_vpc_subnet_to_vpc_edges" {
-  title = "vpc"
-
-  sql = <<-EOQ
-    select
-      subnet_ids as from_id,
-      vpc_ids as to_id
-    from
-      unnest($1::text[]) as subnet_ids,
-      unnest($2::text[]) as vpc_ids
-  EOQ
-
-  param "subnet_ids" {}
-  param "vpc_ids" {}
-}
-
 
 edge "aws_ec2_network_interface_to_vpc_flow_log_edges" {
   title = "flow log"

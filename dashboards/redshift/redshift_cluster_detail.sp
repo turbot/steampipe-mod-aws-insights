@@ -502,7 +502,7 @@ edge "aws_redshift_cluster_subnet_group_to_vpc_subnet_edge" {
 }
 
 node "aws_redshift_cluster_to_vpc_node" {
-  category = category.aws_vpc
+  category = category.vpc_vpc
 
   sql = <<-EOQ
     select

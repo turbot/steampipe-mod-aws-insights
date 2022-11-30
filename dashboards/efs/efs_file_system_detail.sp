@@ -496,7 +496,7 @@ edge "aws_efs_file_system_mount_target_security_group_to_subnet_edge" {
 }
 
 node "aws_efs_file_system_mount_target_security_group_subnet_to_vpc_node" {
-  category = category.aws_vpc
+  category = category.vpc_vpc
   sql = <<-EOQ
     select
       v.vpc_id as id,

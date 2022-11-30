@@ -561,7 +561,7 @@ edge "aws_emr_cluster_to_emr_instance_group_edge" {
 }
 
 node "aws_emr_cluster_to_ec2_ami_node" {
-  category = category.aws_ec2_ami
+  category = category.ec2_ami
 
   sql = <<-EOQ
      select

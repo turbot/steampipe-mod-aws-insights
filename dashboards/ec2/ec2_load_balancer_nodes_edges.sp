@@ -1,5 +1,7 @@
+# TODO: These should be cleaned up and moved into ec2_edges.sp
+
 node "aws_ec2_lb_to_target_group_node" {
-  category = category.aws_ec2_target_group
+  category = category.ec2_target_group
 
   sql = <<-EOQ
     select
@@ -45,7 +47,7 @@ edge "aws_ec2_lb_to_target_group_edge" {
 }
 
 node "aws_ec2_lb_to_ec2_instance_node" {
-  category = category.aws_ec2_instance
+  category = category.ec2_instance
 
   sql = <<-EOQ
     select
@@ -97,7 +99,7 @@ edge "aws_ec2_lb_to_ec2_instance_edge" {
 }
 
 node "aws_ec2_lb_from_ec2_load_balancer_listener_node" {
-  category = category.aws_ec2_load_balancer_listener
+  category = category.ec2_load_balancer_listener
 
   sql = <<-EOQ
     select

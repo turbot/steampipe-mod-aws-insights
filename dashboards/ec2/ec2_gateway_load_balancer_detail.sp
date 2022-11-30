@@ -240,7 +240,7 @@ query "aws_glb_state" {
 }
 
 node "aws_ec2_gateway_load_balancer_node" {
-  category = category.aws_ec2_gateway_load_balancer
+  category = category.ec2_gateway_load_balancer
 
   sql = <<-EOQ
     select
@@ -356,7 +356,7 @@ edge "aws_ec2_glb_to_s3_bucket_edge" {
 }
 
 node "aws_ec2_glb_vpc_security_group_to_vpc_node" {
-  category = category.aws_vpc
+  category = category.vpc_vpc
 
   sql = <<-EOQ
     select

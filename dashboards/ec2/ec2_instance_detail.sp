@@ -79,13 +79,13 @@ dashboard "aws_ec2_instance_detail" {
         args = [self.input.instance_arn.value]
       }
 
-      with "ec2_enis" {
+      with "ec2_network_interfaces" {
         sql = <<-EOQ
           select
-            eni ->> 'NetworkInterfaceId' as eni_id
+            network_interface ->> 'NetworkInterfaceId' as network_interface_id
           from
             aws_ec2_instance as i,
-            jsonb_array_elements(network_interfaces) as eni
+            jsonb_array_elements(network_interfaces) as network_interface
           where
             i.arn = $1;
         EOQ
@@ -292,7 +292,7 @@ dashboard "aws_ec2_instance_detail" {
         edge.ec2_network_load_balancer_to_ec2_instance,
         edge.ec2_target_group_to_ec2_instance,
         edge.ecs_cluster_to_ec2_instance,
-        edge.vpc_subnet_to_vpc,
+        edge.vpc_subnet_to_vpc_vpc,
 
         # TODO: What should this edge be named and where should it live since it's specific to EC2 instance graphs?
         edge.ec2_instance_lb_target_group,
@@ -302,9 +302,9 @@ dashboard "aws_ec2_instance_detail" {
         ebs_volume_arns                    = with.ebs_volumes.rows[*].volume_arn
         ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].application_load_balancer_arn
         ec2_classic_load_balancer_arns     = with.ec2_classic_load_balancers.rows[*].classic_load_balancer_arn
-        ec2_eni_ids                        = with.ec2_enis.rows[*].eni_id
         ec2_gateway_load_balancer_arns     = with.ec2_gateway_load_balancers.rows[*].gateway_load_balancer_arn
         ec2_instance_arns                  = [self.input.instance_arn.value]
+        ec2_network_interface              = with.ec2_network_interfaces.rows[*].network_interface_id
         ec2_network_load_balancer_arns     = with.ec2_network_load_balancers.rows[*].network_load_balancer_arn
         ecs_cluster_arns                   = with.ecs_clusters.rows[*].cluster_arn
         iam_role_arns                      = with.iam_roles.rows[*].role_arn
@@ -528,7 +528,7 @@ node "aws_ec2_instance_iam_instance_profile_nodes" {
 }
 
 node "aws_ec2_instance_ec2_key_pair_nodes" {
-  category = category.aws_ec2_key_pair
+  category = category.ec2_key_pair
 
   sql = <<-EOQ
     select
@@ -553,7 +553,7 @@ node "aws_ec2_instance_ec2_key_pair_nodes" {
 }
 
 node "aws_ec2_instance_ec2_autoscaling_group_nodes" {
-  category = category.aws_ec2_autoscaling_group
+  category = category.ec2_autoscaling_group
 
   sql = <<-EOQ
     select
@@ -577,7 +577,7 @@ node "aws_ec2_instance_ec2_autoscaling_group_nodes" {
 }
 
 node "aws_ec2_instance_ec2_target_group_nodes" {
-  category = category.aws_ec2_target_group
+  category = category.ec2_target_group
 
   sql = <<-EOQ
     select

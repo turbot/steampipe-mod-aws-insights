@@ -591,7 +591,7 @@ edge "aws_sqs_queue_from_vpc_endpoint_edge" {
 }
 
 node "aws_sqs_queue_from_vpc_node" {
-  category = category.aws_vpc
+  category = category.vpc_vpc
 
   sql = <<-EOQ
     select

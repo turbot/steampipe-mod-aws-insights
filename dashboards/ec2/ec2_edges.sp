@@ -3,11 +3,11 @@ edge "ec2_instance_to_ebs_volume" {
 
   sql = <<-EOQ
     select
-      instance_arns as from_id,
-      volume_arns as to_id
+      instance_arn as from_id,
+      volume_arn as to_id
     from
-      unnest($1::text[]) as instance_arns,
-      unnest($2::text[]) as volume_arns
+      unnest($1::text[]) as instance_arn,
+      unnest($2::text[]) as volume_arn
   EOQ
 
   param "instance_arns" {}
@@ -19,11 +19,11 @@ edge "ec2_instance_to_ec2_network_interface" {
 
   sql = <<-EOQ
     select
-      instance_arns as from_id,
-      eni_ids as to_id
+      instance_arn as from_id,
+      eni_id as to_id
     from
-      unnest($1::text[]) as instance_arns,
-      unnest($2::text[]) as eni_ids
+      unnest($1::text[]) as instance_arn,
+      unnest($2::text[]) as eni_id
   EOQ
 
   param "instance_arns" {}
@@ -36,14 +36,14 @@ edge "ec2_instance_to_vpc_security_group" {
   sql = <<-EOQ
     select
       coalesce(
-        eni_ids,
-        instance_arns
+        eni_id,
+        instance_arn
       ) as from_id,
-      security_group_ids as to_id
+      security_group_id as to_id
     from
-      unnest($1::text[]) as instance_arns,
-      unnest($2::text[]) as eni_ids,
-      unnest($3::text[]) as security_group_ids
+      unnest($1::text[]) as instance_arn,
+      unnest($2::text[]) as eni_id,
+      unnest($3::text[]) as security_group_id
   EOQ
 
   param "instance_arns" {}
@@ -56,11 +56,11 @@ edge "ec2_instance_to_vpc_subnet" {
 
   sql = <<-EOQ
     select
-      security_group_ids as from_id,
-      subnet_ids as to_id
+      security_group_id as from_id,
+      subnet_id as to_id
     from
-      unnest($1::text[]) as security_group_ids,
-      unnest($2::text[]) as subnet_ids
+      unnest($1::text[]) as security_group_id,
+      unnest($2::text[]) as subnet_id
   EOQ
 
   param "security_group_ids" {}
@@ -90,10 +90,10 @@ edge "ec2_instance_to_iam_role" {
   sql = <<-EOQ
     select
       i.iam_instance_profile_arn as from_id,
-      role_arns as to_id
+      role_arn as to_id
     from
       aws_ec2_instance as i,
-      unnest($2::text[]) as role_arns
+      unnest($2::text[]) as role_arn
     where
       iam_instance_profile_arn is not null
       and i.arn = any($1);
@@ -184,11 +184,11 @@ edge "ec2_classic_load_balancer_to_ec2_instance" {
 
   sql = <<-EOQ
     select
-      clb_arns as from_id,
-      instance_arns as to_id
+      clb_arn as from_id,
+      instance_arn as to_id
     from
-     unnest($1::text[]) as clb_arns,
-     unnest($2::text[]) as instance_arns
+     unnest($1::text[]) as clb_arn,
+     unnest($2::text[]) as instance_arn
   EOQ
 
   param "clb_arns" {}
@@ -200,11 +200,11 @@ edge "ec2_application_load_balancer_to_ec2_instance" {
 
   sql = <<-EOQ
     select
-      alb_arns as from_id,
-      instance_arns as to_id
+      alb_arn as from_id,
+      instance_arn as to_id
     from
-     unnest($1::text[]) as alb_arns,
-     unnest($2::text[]) as instance_arns
+     unnest($1::text[]) as alb_arn,
+     unnest($2::text[]) as instance_arn
   EOQ
 
   param "alb_arns" {}
@@ -216,11 +216,11 @@ edge "ec2_network_load_balancer_to_ec2_instance" {
 
   sql = <<-EOQ
     select
-      nlb_arns as from_id,
-      instance_arns as to_id
+      nlb_arn as from_id,
+      instance_arn as to_id
     from
-     unnest($1::text[]) as nlb_arns,
-     unnest($2::text[]) as instance_arns
+     unnest($1::text[]) as nlb_arn,
+     unnest($2::text[]) as instance_arn
   EOQ
 
   param "nlb_arns" {}
@@ -232,13 +232,29 @@ edge "ec2_gateway_load_balancer_to_ec2_instance" {
 
   sql = <<-EOQ
     select
-      glb_arns as from_id,
-      instance_arns as to_id
+      glb_arn as from_id,
+      instance_arn as to_id
     from
-     unnest($1::text[]) as glb_arns,
-     unnest($2::text[]) as instance_arns
+     unnest($1::text[]) as glb_arn,
+     unnest($2::text[]) as instance_arn
   EOQ
 
   param "glb_arns" {}
   param "instance_arns" {}
+}
+
+edge "ec2_network_interface_to_vpc_eip" {
+  title = "eip"
+
+  sql = <<-EOQ
+    select
+      network_interface_id as from_id,
+      eip_arn as to_id
+    from
+      unnest($1::text[]) as network_interface_id,
+      unnest($2::text[]) as eip_arn
+  EOQ
+
+  param "network_interface_ids" {}
+  param "eip_arns" {}
 }

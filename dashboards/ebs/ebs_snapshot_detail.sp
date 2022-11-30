@@ -216,7 +216,7 @@ query "aws_ebs_snapshot_age" {
 }
 
 node "aws_ebs_snapshot_node" {
-  category = category.aws_ebs_snapshot
+  category = category.ebs_snapshot
 
   sql = <<-EOQ
     select
@@ -239,7 +239,7 @@ node "aws_ebs_snapshot_node" {
 }
 
 node "aws_ebs_snapshot_from_ebs_volume_node" {
-  category = category.aws_ebs_volume
+  category = category.ebs_volume
 
   sql = <<-EOQ
     select
@@ -276,7 +276,7 @@ edge "aws_ebs_snapshot_from_ebs_volume_edge" {
 }
 
 node "aws_ebs_snapshot_from_ec2_ami_node" {
-  category = category.aws_ec2_ami
+  category = category.ec2_ami
 
   sql = <<-EOQ
     select
@@ -320,7 +320,7 @@ edge "aws_ebs_snapshot_from_ec2_ami_edge" {
 }
 
 node "aws_ebs_snapshot_from_ec2_launch_configuration_node" {
-  category = category.aws_ec2_launch_configuration
+  category = category.ec2_launch_configuration
 
   sql = <<-EOQ
     select

@@ -423,7 +423,7 @@ edge "aws_elasticache_cluster_to_vpc_security_group_edge" {
 }
 
 node "aws_elasticache_cluster_to_vpc_node" {
-  category = category.aws_vpc
+  category = category.vpc_vpc
 
   sql = <<-EOQ
     select
@@ -603,7 +603,7 @@ edge "aws_elasticache_cluster_to_vpc_subnet_edge" {
 }
 
 node "aws_elasticache_cluster_subnet_to_vpc_node" {
-  category = category.aws_vpc
+  category = category.vpc_vpc
 
   sql = <<-EOQ
     select
