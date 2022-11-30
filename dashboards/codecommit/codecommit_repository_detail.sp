@@ -142,7 +142,7 @@ query "aws_codecommit_repository_input" {
 }
 
 node "aws_codecommit_repository_node" {
-  category = category.aws_codecommit_repository
+  category = category.codecommit_repository
 
   sql = <<-EOQ
     select
@@ -165,7 +165,7 @@ node "aws_codecommit_repository_node" {
 }
 
 node "aws_codecommit_repository_to_codebuild_project_node" {
-  category = category.aws_codebuild_project
+  category = category.codebuild_project
 
   sql = <<-EOQ
     select
@@ -225,7 +225,7 @@ edge "aws_codecommit_repository_to_codebuild_project_edge" {
 }
 
 node "aws_codecommit_repository_to_codepipeline_pipeline_node" {
-  category = category.aws_codepipeline_pipeline
+  category = category.codepipeline_pipeline
 
   sql = <<-EOQ
     select

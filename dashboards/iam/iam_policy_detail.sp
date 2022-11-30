@@ -324,7 +324,7 @@ query "aws_iam_policy_statement" {
 
 // *** Nodes and Edges
 node "aws_iam_policy_nodes" {
-  category = category.aws_iam_policy
+  category = category.iam_policy
 
   sql = <<-EOQ
     select
@@ -399,7 +399,7 @@ edge "aws_iam_policy_from_iam_group_edges" {
 }
 
 node "aws_iam_policy_statement_nodes" {
-  category = category.aws_iam_policy_statement
+  category = category.iam_policy_statement
 
   sql = <<-EOQ
     select
@@ -508,7 +508,7 @@ edge "aws_iam_policy_statement_notresource_edges" {
 }
 
 node "aws_iam_policy_statement_condition_nodes" {
-  category = category.aws_iam_policy_condition
+  category = category.iam_policy_condition
 
   sql = <<-EOQ
     select
@@ -543,7 +543,7 @@ edge "aws_iam_policy_statement_condition_edges" {
 }
 
 node "aws_iam_policy_statement_condition_key_nodes" {
-  category = category.aws_iam_policy_condition_key
+  category = category.iam_policy_condition_key
 
   sql = <<-EOQ
     select
@@ -579,7 +579,7 @@ edge "aws_iam_policy_statement_condition_key_edges" {
 }
 
 node "aws_iam_policy_statement_condition_key_value_nodes" {
-  category = category.aws_iam_policy_condition_value
+  category = category.iam_policy_condition_value
 
   sql = <<-EOQ
     select
@@ -616,7 +616,7 @@ edge "aws_iam_policy_statement_condition_key_value_edges" {
 }
 
 node "aws_iam_policy_statement_action_notaction_nodes" {
-  category = category.aws_iam_policy_action
+  category = category.iam_policy_action
 
   sql = <<-EOQ
 
@@ -632,7 +632,7 @@ node "aws_iam_policy_statement_action_notaction_nodes" {
 }
 
 node "aws_iam_policy_statement_resource_notresource_nodes" {
-  category = category.aws_iam_policy_resource
+  category = category.iam_policy_resource
 
   sql = <<-EOQ
     select
@@ -648,7 +648,7 @@ node "aws_iam_policy_statement_resource_notresource_nodes" {
 }
 
 node "aws_iam_policy_globbed_notaction_nodes" {
-  category = category.aws_iam_policy_notaction
+  category = category.iam_policy_notaction
 
   sql = <<-EOQ
     select

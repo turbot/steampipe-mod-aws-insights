@@ -223,7 +223,7 @@ query "aws_glacier_vault_lock_public_policy" {
 }
 
 node "aws_glacier_vault_node" {
-  category = category.aws_glacier_vault
+  category = category.glacier_vault
 
   sql = <<-EOQ
     select
@@ -245,7 +245,7 @@ node "aws_glacier_vault_node" {
 }
 
 node "aws_glacier_vault_to_sns_topic_node" {
-  category = category.aws_sns_topic
+  category = category.sns_topic
 
   sql = <<-EOQ
     select

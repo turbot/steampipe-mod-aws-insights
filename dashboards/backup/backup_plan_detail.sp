@@ -111,7 +111,7 @@ query "aws_backup_plan_resource_assignment" {
 }
 
 node "aws_backup_plan_node" {
-  category = category.aws_backup_plan
+  category = category.backup_plan
 
   sql = <<-EOQ
     select
@@ -134,7 +134,7 @@ node "aws_backup_plan_node" {
 }
 
 node "aws_backup_plan_to_backup_vault_node" {
-  category = category.aws_backup_vault
+  category = category.backup_vault
 
   sql = <<-EOQ
     select
@@ -185,7 +185,7 @@ edge "aws_backup_plan_to_backup_vault_edge" {
 }
 
 node "aws_backup_plan_to_backup_selection_node" {
-  category = category.aws_backup_selection
+  category = category.backup_selection
 
   sql = <<-EOQ
     select

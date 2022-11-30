@@ -257,7 +257,7 @@ query "aws_vpc_flow_log_deliver_logs_status" {
 }
 
 node "aws_vpc_flow_log_nodes" {
-  category = category.aws_vpc_flow_log
+  category = category.vpc_flow_log
 
   sql = <<-EOQ
     select

@@ -1224,7 +1224,7 @@ edge "aws_vpc_routing_subnet_vpc_to_cidr_edge" {
 }
 
 node "aws_vpc_routing_gateway_node" {
-  category = category.aws_vpc_internet_gateway
+  category = category.vpc_internet_gateway
 
   sql = <<-EOQ
       select
@@ -1306,7 +1306,7 @@ edge "aws_vpc_routing_cidr_to_gateway_edge" {
 
 // Graph queries
 node "aws_vpc_az_nodes" {
-  category = category.aws_availability_zone
+  category = category.availability_zone
 
   sql = <<-EOQ
     select
@@ -1362,7 +1362,7 @@ edge "aws_vpc_az_to_vpc_subnet_edges" {
 }
 
 node "aws_vpc_igw_nodes" {
-  category = category.aws_vpc_internet_gateway
+  category = category.vpc_internet_gateway
 
   sql = <<-EOQ
     select
@@ -1402,7 +1402,7 @@ edge "aws_vpc_to_igw_edges" {
 }
 
 node "aws_vpc_az_route_table_nodes" {
-  category = category.aws_vpc_route_table
+  category = category.vpc_route_table
 
   sql = <<-EOQ
     select
@@ -1464,7 +1464,7 @@ edge "aws_vpc_to_vpc_route_table_edges" {
 
 
 node "aws_vpc_vcp_endpoint_nodes" {
-  category = category.aws_vpc_endpoint
+  category = category.vpc_endpoint
 
   sql = <<-EOQ
     select
@@ -1552,7 +1552,7 @@ edge "aws_vpc_to_transit_gateway_edges" {
 }
 
 node "aws_vpc_nat_gateway_nodes" {
-  category = category.aws_vpc_nat_gateway
+  category = category.vpc_nat_gateway
 
   sql = <<-EOQ
     select
@@ -1590,7 +1590,7 @@ edge "aws_vpc_subnet_to_nat_gateway_edges" {
 }
 
 node "aws_vpc_vpn_gateway_nodes" {
-  category = category.aws_vpc_vpn_gateway
+  category = category.vpc_vpn_gateway
 
   sql = <<-EOQ
     select
@@ -1665,7 +1665,7 @@ edge "aws_vpc_peered_vpc_edges" {
 }
 
 node "aws_vpc_s3_access_point_nodes" {
-  category = category.aws_s3_access_point
+  category = category.s3_access_point
 
   sql = <<-EOQ
     select

@@ -255,7 +255,7 @@ query "aws_codebuild_project_input" {
 }
 
 node "aws_codebuild_project_node" {
-  category = category.aws_codebuild_project
+  category = category.codebuild_project
 
   sql = <<-EOQ
     select
@@ -278,7 +278,7 @@ node "aws_codebuild_project_node" {
 }
 
 node "aws_codebuild_project_to_s3_bucket_node" {
-  category = category.aws_s3_bucket
+  category = category.s3_bucket
 
   sql = <<-EOQ
     select
@@ -378,7 +378,7 @@ edge "aws_codebuild_project_from_s3_bucket_edge" {
 }
 
 node "aws_codebuild_project_to_cloudwatch_group_node" {
-  category = category.aws_cloudwatch_log_group
+  category = category.cloudwatch_log_group
 
   sql = <<-EOQ
     select
@@ -419,7 +419,7 @@ edge "aws_codebuild_project_to_cloudwatch_group_edge" {
 }
 
 node "aws_codebuild_project_to_kms_key_node" {
-  category = category.aws_kms_key
+  category = category.kms_key
 
   sql = <<-EOQ
     select
@@ -503,7 +503,7 @@ edge "aws_codebuild_project_to_iam_role_edge" {
 }
 
 node "aws_codebuild_project_to_ecr_repository_node" {
-  category = category.aws_ecr_repository
+  category = category.ecr_repository
 
   sql = <<-EOQ
     select
@@ -544,7 +544,7 @@ edge "aws_codebuild_project_to_ecr_repository_edge" {
 }
 
 node "aws_codebuild_project_to_codecommit_repository_node" {
-  category = category.aws_codecommit_repository
+  category = category.codecommit_repository
 
   sql = <<-EOQ
     select

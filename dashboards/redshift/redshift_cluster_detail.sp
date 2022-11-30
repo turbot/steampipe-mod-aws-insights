@@ -406,7 +406,7 @@ query "aws_redshift_cluster_tags" {
 }
 
 node "aws_redshift_cluster_nodes" {
-  category = category.aws_redshift_cluster
+  category = category.redshift_cluster
 
   sql = <<-EOQ
     select
@@ -431,7 +431,7 @@ node "aws_redshift_cluster_nodes" {
 }
 
 node "aws_redshift_cluster_to_redshift_subnet_group_node" {
-  category = category.aws_redshift_subnet_group
+  category = category.redshift_subnet_group
 
   sql = <<-EOQ
     select
@@ -621,7 +621,7 @@ edge "aws_redshift_cluster_to_vpc_security_group_edge" {
 }
 
 node "aws_redshift_cluster_to_kms_key_node" {
-  category = category.aws_kms_key
+  category = category.kms_key
 
   sql = <<-EOQ
     select
@@ -755,7 +755,7 @@ edge "aws_redshift_cluster_to_vpc_eip_edge" {
 }
 
 node "aws_redshift_cluster_to_cloudwatch_log_group_node" {
-  category = category.aws_cloudwatch_log_group
+  category = category.cloudwatch_log_group
 
   sql = <<-EOQ
     select
@@ -795,7 +795,7 @@ edge "aws_redshift_cluster_to_cloudwatch_log_group_edge" {
 }
 
 node "aws_redshift_cluster_to_s3_bucket_node" {
-  category = category.aws_s3_bucket
+  category = category.s3_bucket
 
   sql = <<-EOQ
     select
@@ -835,7 +835,7 @@ edge "aws_redshift_cluster_to_s3_bucket_edge" {
 }
 
 node "aws_redshift_cluster_to_redshift_parameter_group_node" {
-  category = category.aws_redshift_parameter_group
+  category = category.redshift_parameter_group
 
   sql = <<-EOQ
     select
@@ -880,7 +880,7 @@ edge "aws_redshift_cluster_to_redshift_parameter_group_edge" {
 }
 
 node "aws_redshift_cluster_from_redshift_snapshot_node" {
-  category = category.aws_redshift_snapshot
+  category = category.redshift_snapshot
 
   sql = <<-EOQ
     select

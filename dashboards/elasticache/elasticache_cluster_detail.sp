@@ -248,7 +248,7 @@ query "aws_elasticache_cluster_auth_token" {
 }
 
 node "aws_elasticache_cluster_node" {
-  category = category.aws_elasticache_cluster
+  category = category.elasticache_cluster
 
   sql = <<-EOQ
     select
@@ -271,7 +271,7 @@ node "aws_elasticache_cluster_node" {
 }
 
 node "aws_elasticache_cluster_to_sns_topic_node" {
-  category = category.aws_sns_topic
+  category = category.sns_topic
 
   sql = <<-EOQ
     select
@@ -318,7 +318,7 @@ edge "aws_elasticache_cluster_to_sns_topic_edge" {
 }
 
 node "aws_elasticache_cluster_to_kms_key_node" {
-  category = category.aws_kms_key
+  category = category.kms_key
 
   sql = <<-EOQ
     select
@@ -457,7 +457,7 @@ node "aws_elasticache_cluster_to_vpc_node" {
 }
 
 node "aws_elasticache_cluster_to_subnet_group_node" {
-  category = category.aws_elasticache_subnet_group
+  category = category.elasticache_subnet_group
 
   sql = <<-EOQ
     select
@@ -505,7 +505,7 @@ edge "aws_elasticache_cluster_to_subnet_group_edge" {
 }
 
 node "aws_elasticache_cluster_to_elasticache_parameter_group_node" {
-  category = category.aws_elasticache_parameter_group
+  category = category.elasticache_parameter_group
 
   sql = <<-EOQ
     select
@@ -713,7 +713,7 @@ query "aws_elasticache_cluster_notification_configuration" {
 }
 
 node "aws_elasticache_cluster_nodes" {
-  category = category.aws_elasticache_cluster
+  category = category.elasticache_cluster
 
   sql = <<-EOQ
     select

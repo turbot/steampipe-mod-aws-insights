@@ -241,7 +241,7 @@ query "aws_ecr_repository_input" {
 }
 
 node "aws_ecr_repository_node" {
-  category = category.aws_ecr_repository
+  category = category.ecr_repository
 
   sql = <<-EOQ
     select
@@ -265,7 +265,7 @@ node "aws_ecr_repository_node" {
 }
 
 node "aws_ecr_repository_to_ecr_image_node" {
-  category = category.aws_ecr_image
+  category = category.ecr_image
 
   sql = <<-EOQ
     select
@@ -306,7 +306,7 @@ edge "aws_ecr_repository_to_ecr_image_edge" {
 }
 
 node "aws_ecr_repository_to_ecs_task_definition_node" {
-  category = category.aws_ecs_task_definition
+  category = category.ecs_task_definition
 
   sql = <<-EOQ
     select
@@ -351,7 +351,7 @@ edge "aws_ecr_repository_to_ecs_task_definition_edge" {
 }
 
 node "aws_ecr_repository_to_kms_key_node" {
-  category = category.aws_kms_key
+  category = category.kms_key
 
   sql = <<-EOQ
     select

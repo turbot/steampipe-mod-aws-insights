@@ -245,7 +245,7 @@ query "aws_efs_file_system_automatic_backup" {
 }
 
 node "aws_efs_file_system_node" {
-  category = category.aws_efs_file_system
+  category = category.efs_file_system
   sql = <<-EOQ
     select
       arn as id,
@@ -269,7 +269,7 @@ node "aws_efs_file_system_node" {
 }
 
 node "aws_efs_file_system_to_kms_key_node" {
-  category = category.aws_kms_key
+  category = category.kms_key
   sql = <<-EOQ
     select
       arn as id,
@@ -315,7 +315,7 @@ edge "aws_efs_file_system_to_kms_key_edge" {
 }
 
 node "aws_efs_file_system_to_efs_access_point_node" {
-  category = category.aws_efs_access_point
+  category = category.efs_access_point
   sql = <<-EOQ
     select
       a.access_point_arn as id,
@@ -354,7 +354,7 @@ edge "aws_efs_file_system_to_efs_access_point_edge" {
 }
 
 node "aws_efs_file_system_to_efs_mount_target_node" {
-  category = category.aws_efs_mount_target
+  category = category.efs_mount_target
   sql = <<-EOQ
     select
       m.mount_target_id as id,

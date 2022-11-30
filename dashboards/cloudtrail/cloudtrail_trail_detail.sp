@@ -281,7 +281,7 @@ query "aws_cloudtrail_trail_bucket" {
 }
 
 node "aws_cloudtrail_trail_nodes" {
-  category = category.aws_cloudtrail_trail
+  category = category.cloudtrail_trail
 
   sql = <<-EOQ
     select
@@ -304,7 +304,7 @@ node "aws_cloudtrail_trail_nodes" {
 }
 
 node "aws_cloudtrail_trail_to_s3_bucket_node" {
-  category = category.aws_s3_bucket
+  category = category.s3_bucket
 
   sql = <<-EOQ
     select
@@ -344,7 +344,7 @@ edge "aws_cloudtrail_trail_to_s3_bucket_edge" {
 }
 
 node "aws_cloudtrail_trail_to_kms_key_node" {
-  category = category.aws_kms_key
+  category = category.kms_key
 
   sql = <<-EOQ
     select
@@ -385,7 +385,7 @@ edge "aws_cloudtrail_trail_to_kms_key_edge" {
 }
 
 node "aws_cloudtrail_trail_to_sns_topic_node" {
-  category = category.aws_sns_topic
+  category = category.sns_topic
 
   sql = <<-EOQ
     select
@@ -424,7 +424,7 @@ edge "aws_cloudtrail_trail_to_sns_topic_edge" {
 }
 
 node "aws_cloudtrail_trail_to_cloudwatch_log_group_node" {
-  category = category.aws_cloudwatch_log_group
+  category = category.cloudwatch_log_group
 
   sql = <<-EOQ
     select
@@ -463,7 +463,7 @@ edge "aws_cloudtrail_trail_to_cloudwatch_log_group_edge" {
 }
 
 node "aws_cloudtrail_trail_from_guardduty_detector_node" {
-  category = category.aws_guardduty_detector
+  category = category.guardduty_detector
 
   sql = <<-EOQ
     select

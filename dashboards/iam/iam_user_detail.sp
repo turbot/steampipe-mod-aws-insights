@@ -178,7 +178,7 @@ dashboard "aws_iam_user_detail" {
         arn = self.input.user_arn.value
       }
 
-      category "aws_iam_group" {
+      category "iam_group" {
         color = "ok"
       }
     }
@@ -542,7 +542,7 @@ query "aws_iam_all_policies_for_user" {
 
 node "aws_iam_user_nodes" {
 
-  category = category.aws_iam_user
+  category = category.iam_user
 
   sql = <<-EOQ
     select
@@ -581,7 +581,7 @@ edge "aws_iam_user_to_iam_policy_edges" {
 }
 
 node "aws_iam_user_inline_policy_nodes" {
-  category = category.aws_iam_inline_policy
+  category = category.iam_inline_policy
 
   sql = <<-EOQ
     select
@@ -622,7 +622,7 @@ edge "aws_iam_user_to_inline_policy_edges" {
 
 
 node "aws_iam_user_access_key_nodes" {
-  category = category.aws_iam_access_key
+  category = category.iam_access_key
 
   sql = <<-EOQ
     select

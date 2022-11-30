@@ -309,7 +309,7 @@ edge "aws_ec2_glb_to_vpc_subnet_edge" {
 }
 
 node "aws_ec2_glb_to_s3_bucket_node" {
-  category = category.aws_s3_bucket
+  category = category.s3_bucket
 
   sql = <<-EOQ
     select

@@ -241,7 +241,7 @@ node "aws_ebs_volume_node" {
 }
 
 node "aws_ebs_volume_to_kms_key_node" {
-  category = category.aws_kms_key
+  category = category.kms_key
 
   sql = <<-EOQ
     select

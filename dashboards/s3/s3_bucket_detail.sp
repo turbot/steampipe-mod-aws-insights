@@ -353,7 +353,7 @@ query "aws_s3_bucket_input" {
 }
 
 node "aws_s3_bucket_nodes" {
-  category = category.aws_s3_bucket
+  category = category.s3_bucket
 
   sql = <<-EOQ
     select
@@ -439,7 +439,7 @@ edge "aws_s3_bucket_from_ec2_clb_edges" {
 }
 
 node "aws_s3_bucket_to_lambda_function_node" {
-  category = category.aws_lambda_function
+  category = category.lambda_function
 
   sql = <<-EOQ
     select
@@ -529,7 +529,7 @@ edge "aws_s3_bucket_to_kms_key_edges" {
 }
 
 node "aws_s3_bucket_from_s3_bucket_nodes" {
-  category = category.aws_s3_bucket
+  category = category.s3_bucket
 
   sql = <<-EOQ
     select
@@ -571,7 +571,7 @@ edge "aws_s3_bucket_from_s3_bucket_edges" {
 }
 
 node "aws_s3_bucket_to_s3_bucket_nodes" {
-  category = category.aws_s3_bucket
+  category = category.s3_bucket
 
   sql = <<-EOQ
     select
@@ -613,7 +613,7 @@ edge "aws_s3_bucket_to_s3_bucket_edges" {
 }
 
 node "aws_s3_bucket_from_s3_access_point_node" {
-  category = category.aws_s3_access_point
+  category = category.s3_access_point
 
   sql = <<-EOQ
     select

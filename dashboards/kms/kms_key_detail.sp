@@ -458,7 +458,7 @@ query "aws_kms_key_policy" {
 }
 
 node "aws_kms_key_nodes" {
-  category = category.aws_kms_key
+  category = category.kms_key
 
   sql = <<-EOQ
     select
@@ -600,7 +600,7 @@ edge "aws_kms_key_from_lambda_function_edges" {
 }
 
 node "aws_kms_key_alias_nodes" {
-  category = category.aws_kms_alias
+  category = category.kms_alias
 
   sql = <<-EOQ
     select

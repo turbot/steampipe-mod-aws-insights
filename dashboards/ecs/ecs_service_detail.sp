@@ -212,7 +212,7 @@ query "aws_ecs_service_tags" {
 }
 
 node "aws_ecs_service_node" {
-  category = category.aws_ecs_service
+  category = category.ecs_service
 
   sql = <<-EOQ
     select
@@ -234,7 +234,7 @@ node "aws_ecs_service_node" {
 }
 
 node "aws_ecs_service_to_ecs_task_node" {
-  category = category.aws_ecs_task
+  category = category.ecs_task
 
   sql = <<-EOQ
     select
@@ -391,7 +391,7 @@ edge "aws_ecs_service_from_ecs_cluster_edge" {
 }
 
 node "aws_ecs_service_to_ecs_container_instance_node" {
-  category = category.aws_ecs_container_instance
+  category = category.ecs_container_instance
 
   sql = <<-EOQ
     select
@@ -571,7 +571,7 @@ edge "aws_ecs_service_vpc_subnet_to_vpc_edge" {
 }
 
 node "aws_ecs_service_to_ecs_task_definition_node" {
-  category = category.aws_ecs_task_definition
+  category = category.ecs_task_definition
 
   sql = <<-EOQ
     select

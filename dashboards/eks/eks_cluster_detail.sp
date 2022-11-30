@@ -350,7 +350,7 @@ query "aws_eks_cluster_node_group" {
 }
 
 node "aws_eks_cluster_node" {
-  category = category.aws_eks_cluster
+  category = category.eks_cluster
 
   sql = <<-EOQ
     select
@@ -412,7 +412,7 @@ edge "aws_eks_cluster_to_iam_role_edge" {
 }
 
 node "aws_eks_cluster_to_kms_key_node" {
-  category = category.aws_kms_key
+  category = category.kms_key
 
   sql = <<-EOQ
     select
@@ -464,7 +464,7 @@ edge "aws_eks_cluster_to_kms_key_edge" {
 }
 
 node "aws_eks_cluster_to_eks_node_group_node" {
-  category = category.aws_eks_node_group
+  category = category.eks_node_group
 
   sql = <<-EOQ
     select
@@ -515,7 +515,7 @@ edge "aws_eks_cluster_to_eks_node_group_edge" {
 }
 
 node "aws_eks_cluster_to_eks_addons_node" {
-  category = category.aws_eks_addon
+  category = category.eks_addon
 
   sql = <<-EOQ
      select
@@ -710,7 +710,7 @@ edge "aws_eks_cluster_to_vpc_subnet_to_vpc_edge" {
 }
 
 node "aws_eks_cluster_to_eks_identity_provider_config_node" {
-  category = category.aws_eks_identity_provider_config
+  category = category.eks_identity_provider_config
 
   sql = <<-EOQ
     select
@@ -761,7 +761,7 @@ edge "aws_eks_cluster_to_eks_identity_provider_config_edge" {
 }
 
 node "aws_eks_cluster_to_eks_fargate_profile_node" {
-  category = category.aws_eks_fargate_profile
+  category = category.eks_fargate_profile
 
   sql = <<-EOQ
     select

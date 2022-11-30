@@ -239,7 +239,7 @@ node "aws_iam_role_node" {
 }
 
 node "aws_iam_role_to_iam_policy_node" {
-  category = category.aws_iam_policy
+  category = category.iam_policy
 
   sql = <<-EOQ
     select
@@ -290,7 +290,7 @@ edge "aws_iam_role_to_iam_policy_edge" {
 }
 
 node "aws_iam_role_from_kinesisanalyticsv2_application_node" {
-  category = category.aws_kinesisanalyticsv2_application
+  category = category.kinesisanalyticsv2_application
 
   sql = <<-EOQ
     select
@@ -331,7 +331,7 @@ edge "aws_iam_role_from_kinesisanalyticsv2_application_edge" {
 }
 
 node "aws_iam_role_from_emr_cluster_node" {
-  category = category.aws_emr_cluster
+  category = category.emr_cluster
 
   sql = <<-EOQ
     select
@@ -384,7 +384,7 @@ edge "aws_iam_role_from_emr_cluster_edge" {
 }
 
 node "aws_iam_role_from_guardduty_detector_node" {
-  category = category.aws_guardduty_detector
+  category = category.guardduty_detector
 
   sql = <<-EOQ
     select
@@ -424,7 +424,7 @@ edge "aws_iam_role_from_guardduty_detector_edge" {
 }
 
 node "aws_iam_role_from_lambda_function_node" {
-  category = category.aws_lambda_function
+  category = category.lambda_function
 
   sql = <<-EOQ
     select
@@ -465,7 +465,7 @@ edge "aws_iam_role_from_lambda_function_edge" {
 }
 
 node "aws_iam_role_from_iam_instance_profile_node" {
-  category = category.aws_iam_instance_profile
+  category = category.iam_instance_profile
 
   sql = <<-EOQ
     select
@@ -557,7 +557,7 @@ edge "aws_iam_role_from_ec2_instance_edge" {
 
 
 node "aws_iam_role_trusted_aws_node" {
-  category = category.aws_account
+  category = category.account
 
   sql = <<-EOQ
     select
@@ -603,7 +603,7 @@ edge "aws_iam_role_trusted_aws_edge" {
 
 
 node "aws_iam_role_trusted_service_node" {
-  category = category.aws_iam_service_principal
+  category = category.iam_service_principal
 
   sql = <<-EOQ
     select
@@ -646,7 +646,7 @@ edge "aws_iam_role_trusted_service_edge" {
 
 
 node "aws_iam_role_trusted_federated_node" {
-  category = category.aws_iam_federated_principal
+  category = category.iam_federated_principal
 
   sql = <<-EOQ
     select

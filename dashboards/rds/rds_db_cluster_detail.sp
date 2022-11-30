@@ -233,7 +233,7 @@ query "aws_rds_db_cluster_tags" {
 }
 
 node "aws_rds_db_cluster_nodes" {
-  category = category.aws_rds_db_cluster
+  category = category.rds_db_cluster
 
   sql = <<-EOQ
     select
@@ -258,7 +258,7 @@ node "aws_rds_db_cluster_nodes" {
 }
 
 node "aws_rds_db_cluster_to_rds_db_instance_node" {
-  category = category.aws_rds_db_instance
+  category = category.rds_db_instance
 
   sql = <<-EOQ
     select
@@ -307,7 +307,7 @@ edge "aws_rds_db_cluster_to_rds_db_instance_edge" {
 }
 
 node "aws_rds_db_cluster_to_rds_db_cluster_parameter_group_node" {
-  category = category.aws_rds_db_cluster_parameter_group
+  category = category.rds_db_cluster_parameter_group
 
   sql = <<-EOQ
     select
@@ -355,7 +355,7 @@ edge "aws_rds_db_cluster_to_rds_db_cluster_parameter_group_edge" {
 }
 
 node "aws_rds_db_cluster_to_rds_db_subnet_group_node" {
-  category = category.aws_rds_db_subnet_group
+  category = category.rds_db_subnet_group
 
   sql = <<-EOQ
     select
@@ -382,7 +382,7 @@ node "aws_rds_db_cluster_to_rds_db_subnet_group_node" {
 }
 
 node "aws_rds_db_cluster_to_kms_key_node" {
-  category = category.aws_kms_key
+  category = category.kms_key
 
   sql = <<-EOQ
     select
@@ -643,7 +643,7 @@ edge "aws_rds_db_cluster_vpc_security_group_to_vpc_edge" {
 }
 
 node "aws_rds_db_cluster_to_rds_db_cluster_snapshot_node" {
-  category = category.aws_rds_db_cluster_snapshot
+  category = category.rds_db_cluster_snapshot
 
   sql = <<-EOQ
     select
@@ -686,7 +686,7 @@ edge "aws_rds_db_cluster_to_rds_db_cluster_snapshot_edges" {
 }
 
 node "aws_rds_db_cluster_to_sns_topic_node" {
-  category = category.aws_sns_topic
+  category = category.sns_topic
 
   sql = <<-EOQ
     select

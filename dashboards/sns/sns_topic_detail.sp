@@ -265,7 +265,7 @@ query "aws_sns_topic_policy_standard" {
 }
 
 node "aws_sns_topic_nodes" {
-  category = category.aws_sns_topic
+  category = category.sns_topic
 
   sql = <<-EOQ
     select
@@ -286,7 +286,7 @@ node "aws_sns_topic_nodes" {
 }
 
 node "aws_sns_topic_to_kms_key_node" {
-  category = category.aws_kms_key
+  category = category.kms_key
 
   sql = <<-EOQ
     select
@@ -329,7 +329,7 @@ edge "aws_sns_topic_to_kms_key_edge" {
 }
 
 node "aws_sns_topic_to_sns_topic_subscriptions_node" {
-  category = category.aws_sns_topic_subscription
+  category = category.sns_topic_subscription
 
   sql = <<-EOQ
     select
@@ -368,7 +368,7 @@ edge "aws_sns_topic_to_sns_topic_subscriptions_edge" {
 }
 
 node "aws_sns_topic_from_s3_bucket_node" {
-  category = category.aws_s3_bucket
+  category = category.s3_bucket
 
   sql = <<-EOQ
     select
@@ -417,7 +417,7 @@ edge "aws_sns_topic_from_s3_bucket_edge" {
 }
 
 node "aws_sns_topic_from_rds_db_instance_node" {
-  category = category.aws_rds_db_instance
+  category = category.rds_db_instance
 
   sql = <<-EOQ
     select
@@ -474,7 +474,7 @@ edge "aws_sns_topic_from_rds_db_instance_edge" {
 }
 
 node "aws_sns_topic_from_redshift_cluster_node" {
-  category = category.aws_redshift_cluster
+  category = category.redshift_cluster
 
   sql = <<-EOQ
     select
@@ -530,7 +530,7 @@ edge "aws_sns_topic_from_redshift_cluster_edge" {
 }
 
 node "aws_sns_topic_from_cloudtrail_trail_node" {
-  category = category.aws_cloudtrail_trail
+  category = category.cloudtrail_trail
 
   sql = <<-EOQ
     select
@@ -569,7 +569,7 @@ edge "aws_sns_topic_from_cloudtrail_trail_edge" {
 }
 
 node "aws_sns_topic_from_cloudformation_stack_node" {
-  category = category.aws_cloudformation_stack
+  category = category.cloudformation_stack
 
   sql = <<-EOQ
     select
@@ -620,7 +620,7 @@ edge "aws_sns_topic_from_cloudformation_stack_edge" {
 }
 
 node "aws_sns_topic_from_aws_elasticache_cluster_node" {
-  category = category.aws_elasticache_cluster
+  category = category.elasticache_cluster
 
   sql = <<-EOQ
     select

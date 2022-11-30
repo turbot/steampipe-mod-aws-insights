@@ -466,7 +466,7 @@ edge "aws_ec2_network_interface_to_vpc_flow_log_edges" {
 }
 
 node "aws_ec2_network_interface_vpc_nat_gateway_nodes" {
-  category = category.aws_vpc_nat_gateway
+  category = category.vpc_nat_gateway
 
   sql = <<-EOQ
     select

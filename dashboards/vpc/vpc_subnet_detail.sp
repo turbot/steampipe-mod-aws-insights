@@ -482,7 +482,7 @@ edge "aws_vpc_to_vpc_subnet_edges" {
 }
 
 node "aws_vpc_subnet_vpc_route_table_nodes" {
-  category = category.aws_vpc_route_table
+  category = category.vpc_route_table
 
   sql = <<-EOQ
     select
@@ -521,7 +521,7 @@ edge "aws_vpc_subnet_to_vpc_route_table_edges" {
 }
 
 node "aws_vpc_subnet_vpc_network_acl_nodes" {
-  category = category.aws_vpc_network_acl
+  category = category.vpc_network_acl
 
   sql = <<-EOQ
     select
@@ -613,7 +613,7 @@ edge "aws_vpc_subnet_to_lambda_function_edges" {
 }
 
 node "aws_vpc_subnet_sagemaker_notebook_instance_nodes" {
-  category = category.aws_sagemaker_notebook_instance
+  category = category.sagemaker_notebook_instance
 
   sql = <<-EOQ
     select

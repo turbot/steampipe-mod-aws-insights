@@ -332,7 +332,7 @@ query "aws_rds_db_snapshot_storage" {
 }
 
 node "aws_rds_db_snapshot_nodes" {
-  category = category.aws_rds_db_snapshot
+  category = category.rds_db_snapshot
 
   sql = <<-EOQ
     select

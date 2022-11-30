@@ -133,7 +133,7 @@ query "aws_codepipeline_pipeline_encryption" {
 }
 
 node "aws_codepipeline_pipeline_node" {
-  category = category.aws_codepipeline_pipeline
+  category = category.codepipeline_pipeline
 
   sql = <<-EOQ
     select
@@ -206,7 +206,7 @@ edge "aws_codepipeline_pipeline_from_iam_role_edge" {
 }
 
 node "aws_codepipeline_pipeline_from_kms_key_node" {
-  category = category.aws_kms_key
+  category = category.kms_key
 
   sql = <<-EOQ
     select
@@ -258,7 +258,7 @@ edge "aws_codepipeline_pipeline_from_kms_key_edge" {
 }
 
 node "aws_codepipeline_pipeline_from_codecommit_repository_node" {
-  category = category.aws_codecommit_repository
+  category = category.codecommit_repository
 
   sql = <<-EOQ
     select
@@ -315,7 +315,7 @@ edge "aws_codepipeline_pipeline_from_codecommit_repository_edge" {
 }
 
 node "aws_codepipeline_pipeline_from_ecr_repository_node" {
-  category = category.aws_ecr_repository
+  category = category.ecr_repository
 
   sql = <<-EOQ
     select
@@ -372,7 +372,7 @@ edge "aws_codepipeline_pipeline_from_ecr_repository_edge" {
 }
 
 node "aws_codepipeline_pipeline_from_s3_bucket_source_node" {
-  category = category.aws_s3_bucket
+  category = category.s3_bucket
 
   sql = <<-EOQ
     select
@@ -429,7 +429,7 @@ edge "aws_codepipeline_pipeline_from_s3_bucket_source_edge" {
 }
 
 node "aws_codepipeline_pipeline_from_codebuild_project_node" {
-  category = category.aws_codebuild_project
+  category = category.codebuild_project
 
   sql = <<-EOQ
     select
@@ -486,7 +486,7 @@ edge "aws_codepipeline_pipeline_from_codebuild_project_edge" {
 }
 
 node "aws_codepipeline_pipeline_from_s3_bucket_deploy_node" {
-  category = category.aws_s3_bucket
+  category = category.s3_bucket
 
   sql = <<-EOQ
     select
@@ -543,7 +543,7 @@ edge "aws_codepipeline_pipeline_from_s3_bucket_deploy_edge" {
 }
 
 node "aws_codepipeline_pipeline_from_codedeploy_app_node" {
-  category = category.aws_codedeploy_app
+  category = category.codedeploy_app
 
   sql = <<-EOQ
     select

@@ -196,7 +196,7 @@ query "aws_eventbridge_rule_target_count" {
 }
 
 node "aws_eventbridge_rule_node" {
-  category = category.aws_eventbridge_rule
+  category = category.eventbridge_rule
 
   sql = <<-EOQ
      select
@@ -220,7 +220,7 @@ node "aws_eventbridge_rule_node" {
 }
 
 node "aws_eventbridge_rule_to_sns_topic_node" {
-  category = category.aws_sns_topic
+  category = category.sns_topic
 
   sql = <<-EOQ
      select
@@ -263,7 +263,7 @@ edge "aws_eventbridge_rule_to_sns_topic_edge" {
 }
 
 node "aws_eventbridge_rule_to_lambda_function_node" {
-  category = category.aws_lambda_function
+  category = category.lambda_function
 
   sql = <<-EOQ
      select
@@ -306,7 +306,7 @@ edge "aws_eventbridge_rule_to_lambda_function_edge" {
 }
 
 node "aws_eventbridge_rule_to_cloudwatch_log_group_node" {
-  category = category.aws_cloudwatch_log_group
+  category = category.cloudwatch_log_group
 
   sql = <<-EOQ
      select
@@ -350,7 +350,7 @@ edge "aws_eventbridge_rule_to_cloudwatch_log_group_edge" {
 }
 
 node "aws_eventbridge_rule_to_eventbridge_bus_node" {
-  category = category.aws_eventbridge_bus
+  category = category.eventbridge_bus
 
   sql = <<-EOQ
      select

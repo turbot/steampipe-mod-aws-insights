@@ -507,7 +507,7 @@ query "aws_ec2_instance_ebs_optimized" {
 }
 
 node "aws_ec2_instance_iam_instance_profile_nodes" {
-  category = category.aws_iam_instance_profile
+  category = category.iam_instance_profile
 
   sql = <<-EOQ
     select

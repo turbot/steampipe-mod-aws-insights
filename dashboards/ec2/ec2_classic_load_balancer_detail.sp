@@ -285,7 +285,7 @@ edge "aws_ec2_clb_to_ec2_instance_edge" {
 }
 
 node "aws_ec2_clb_to_s3_bucket_node" {
-  category = category.aws_s3_bucket
+  category = category.s3_bucket
 
   sql = <<-EOQ
     select

@@ -248,7 +248,7 @@ query "aws_iam_all_policies_for_group" {
 
 
 node "aws_iam_group_nodes" {
-  category = category.aws_iam_group
+  category = category.iam_group
 
   sql = <<-EOQ
     select
@@ -289,7 +289,7 @@ edge "aws_iam_group_to_iam_user_edges" {
 }
 
 node "aws_iam_group_inline_policy_nodes" {
-  category = category.aws_iam_inline_policy
+  category = category.iam_inline_policy
 
   sql = <<-EOQ
     select

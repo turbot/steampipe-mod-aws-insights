@@ -347,7 +347,7 @@ query "aws_emr_cluster_ec2_instance_attributes" {
 }
 
 node "aws_emr_cluster_node" {
-  category = category.aws_emr_cluster
+  category = category.emr_cluster
 
   sql = <<-EOQ
      select
@@ -417,7 +417,7 @@ edge "aws_emr_cluster_to_iam_role_edge" {
 }
 
 node "aws_emr_cluster_to_s3_bucket_node" {
-  category = category.aws_s3_bucket
+  category = category.s3_bucket
 
   sql = <<-EOQ
      select
@@ -465,7 +465,7 @@ edge "aws_emr_cluster_to_s3_bucket_edge" {
 }
 
 node "aws_emr_cluster_to_emr_instance_fleet_node" {
-  category = category.aws_emr_instance_fleet
+  category = category.emr_instance_fleet
 
   sql = <<-EOQ
      select
@@ -513,7 +513,7 @@ edge "aws_emr_cluster_to_emr_instance_fleet_edge" {
 }
 
 node "aws_emr_cluster_to_emr_instance_group_node" {
-  category = category.aws_emr_instance_group
+  category = category.emr_instance_group
 
   sql = <<-EOQ
      select
@@ -610,7 +610,7 @@ edge "aws_emr_cluster_to_ec2_ami_edge" {
 }
 
 node "aws_emr_cluster_to_emr_instance_node" {
-  category = category.aws_emr_instance
+  category = category.emr_instance
 
   sql = <<-EOQ
      select

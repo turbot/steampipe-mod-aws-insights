@@ -1454,7 +1454,7 @@ edge "aws_vpc_security_group_to_lambda_function_edges" {
 }
 
 node "aws_vpc_security_group_efs_mount_target_nodes" {
-  category = category.aws_efs_mount_target
+  category = category.efs_mount_target
 
   sql = <<-EOQ
     select
@@ -1605,7 +1605,7 @@ edge "aws_vpc_security_group_to_dax_cluster_edges" {
 }
 
 node "aws_vpc_security_group_dms_replication_instance_nodes" {
-  category = category.aws_dms_replication_instance
+  category = category.dms_replication_instance
 
   sql = <<-EOQ
     select
@@ -1666,7 +1666,7 @@ edge "aws_vpc_security_group_to_elasticache_cluster_edges" {
 }
 
 node "aws_vpc_security_group_sagemaker_notebook_instance_nodes" {
-  category = category.aws_sagemaker_notebook_instance
+  category = category.sagemaker_notebook_instance
 
   sql = <<-EOQ
     select
@@ -1709,7 +1709,7 @@ edge "aws_vpc_security_group_to_sagemaker_notebook_instance_edges" {
 }
 
 node "aws_vpc_security_group_docdb_cluster_nodes" {
-  category = category.aws_docdb_cluster
+  category = category.docdb_cluster
 
   sql = <<-EOQ
     select

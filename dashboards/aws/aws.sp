@@ -4,19 +4,19 @@ locals {
   }
 }
 
-category "aws_account" {
+category "account" {
   title = "Account"
   icon  = "globe-alt"
   color = local.compute_color
 }
 
-category "aws_availability_zone" {
+category "availability_zone" {
   title = "Availability Zone"
   icon  = "building-office"
   color = local.networking_color
 }
 
-category "aws_region" {
+category "region" {
   title = "Region"
   icon  = "globe-americas"
   color = local.compute_color

@@ -109,7 +109,7 @@ query "aws_backup_vault_recovery_points" {
 }
 
 node "aws_backup_vault_node" {
-  category = category.aws_backup_vault
+  category = category.backup_vault
 
   sql = <<-EOQ
     select
@@ -132,7 +132,7 @@ node "aws_backup_vault_node" {
 }
 
 node "aws_backup_vault_from_backup_plan_node" {
-  category = category.aws_backup_plan
+  category = category.backup_plan
 
   sql = <<-EOQ
     select
@@ -184,7 +184,7 @@ edge "aws_backup_vault_from_backup_plan_edge" {
 }
 
 node "aws_backup_vault_to_kms_key_node" {
-  category = category.aws_kms_key
+  category = category.kms_key
 
   sql = <<-EOQ
     select
@@ -233,7 +233,7 @@ edge "aws_backup_vault_to_kms_key_edge" {
 }
 
 node "aws_backup_vault_to_sns_topic_node" {
-  category = category.aws_sns_topic
+  category = category.sns_topic
 
   sql = <<-EOQ
     select

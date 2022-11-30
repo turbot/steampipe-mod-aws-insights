@@ -1,5 +1,5 @@
 node "aws_wafv2_web_acl_nodes" {
-  category = category.aws_wafv2_web_acl
+  category = category.wafv2_web_acl
   sql      = <<-EOQ
     select
       arn as id,

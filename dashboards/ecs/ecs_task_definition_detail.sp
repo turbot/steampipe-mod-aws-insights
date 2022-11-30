@@ -233,7 +233,7 @@ query "aws_ecs_task_definition_tags" {
 }
 
 node "aws_ecs_task_definition_node" {
-  category = category.aws_ecs_task_definition
+  category = category.ecs_task_definition
 
   sql = <<-EOQ
     select
@@ -255,7 +255,7 @@ node "aws_ecs_task_definition_node" {
 }
 
 node "aws_ecs_task_definition_from_ecs_service_node" {
-  category = category.aws_ecs_service
+  category = category.ecs_service
 
   sql = <<-EOQ
     select
@@ -295,7 +295,7 @@ edge "aws_ecs_task_definition_from_ecs_service_edge" {
 }
 
 node "aws_ecs_task_definition_from_ecs_task_node" {
-  category = category.aws_ecs_task
+  category = category.ecs_task
 
   sql = <<-EOQ
     select
@@ -408,7 +408,7 @@ edge "aws_ecs_task_definition_to_iam_task_role_edge" {
 }
 
 node "aws_ecs_task_definition_to_cloudwatch_log_group_node" {
-  category = category.aws_cloudwatch_log_group
+  category = category.cloudwatch_log_group
 
   sql = <<-EOQ
     select
@@ -451,7 +451,7 @@ edge "aws_ecs_task_definition_to_cloudwatch_log_group_edge" {
 }
 
 node "aws_ecs_task_definition_to_efs_file_system_node" {
-  category = category.aws_efs_file_system
+  category = category.efs_file_system
 
   sql = <<-EOQ
     select
@@ -494,7 +494,7 @@ edge "aws_ecs_task_definition_to_efs_file_system_edge" {
 }
 
 node "aws_ecs_task_definition_to_ecr_repository_node" {
-  category = category.aws_ecr_repository
+  category = category.ecr_repository
 
   sql = <<-EOQ
     select

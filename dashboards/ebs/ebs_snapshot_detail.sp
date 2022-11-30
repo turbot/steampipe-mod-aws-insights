@@ -363,7 +363,7 @@ edge "aws_ebs_snapshot_from_ec2_launch_configuration_edge" {
 }
 
 node "aws_ebs_snapshot_to_kms_key_node" {
-  category = category.aws_kms_key
+  category = category.kms_key
 
   sql = <<-EOQ
     select

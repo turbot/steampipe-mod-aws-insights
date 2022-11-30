@@ -221,7 +221,7 @@ query "aws_redshift_snapshot_unencrypted" {
 }
 
 node "aws_redshift_snapshot_node" {
-  category = category.aws_redshift_snapshot
+  category = category.redshift_snapshot
 
   sql = <<-EOQ
     select
@@ -246,7 +246,7 @@ node "aws_redshift_snapshot_node" {
 }
 
 node "aws_redshift_snapshot_to_kms_key_node" {
-  category = category.aws_kms_key
+  category = category.kms_key
 
   sql = <<-EOQ
     select
@@ -288,7 +288,7 @@ edge "aws_redshift_snapshot_to_kms_key_edge" {
 }
 
 node "aws_redshift_snapshot_from_redshift_cluster_node" {
-  category = category.aws_redshift_cluster
+  category = category.redshift_cluster
 
   sql = <<-EOQ
     select

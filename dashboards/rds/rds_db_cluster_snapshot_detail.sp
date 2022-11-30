@@ -321,7 +321,7 @@ query "aws_rds_db_cluster_snapshot_attributes" {
 }
 
 node "aws_rds_db_cluster_snapshot_nodes" {
-  category = category.aws_rds_db_cluster_snapshot
+  category = category.rds_db_cluster_snapshot
 
   sql = <<-EOQ
     select

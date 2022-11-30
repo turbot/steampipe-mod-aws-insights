@@ -317,7 +317,7 @@ query "aws_sqs_queue_encryption_details" {
 }
 
 node "aws_sqs_queue_nodes" {
-  category = category.aws_sqs_queue
+  category = category.sqs_queue
 
   sql = <<-EOQ
     select
@@ -338,7 +338,7 @@ node "aws_sqs_queue_nodes" {
 }
 
 node "aws_sqs_queue_to_sns_topic_subscription_node" {
-  category = category.aws_sns_topic_subscription
+  category = category.sns_topic_subscription
 
   sql = <<-EOQ
     select
@@ -375,7 +375,7 @@ edge "aws_sqs_queue_to_sns_topic_subscription_edge" {
 }
 
 node "aws_sqs_queue_to_sqs_queue_node" {
-  category = category.aws_sqs_queue
+  category = category.sqs_queue
 
   sql = <<-EOQ
     select
@@ -414,7 +414,7 @@ edge "aws_sqs_queue_to_sqs_queue_edge" {
 }
 
 node "aws_sqs_queue_to_kms_key_node" {
-  category = category.aws_kms_key
+  category = category.kms_key
 
   sql = <<-EOQ
     select
@@ -459,7 +459,7 @@ edge "aws_sqs_queue_to_kms_key_edge" {
 }
 
 node "aws_sqs_queue_from_s3_bucket_node" {
-  category = category.aws_s3_bucket
+  category = category.s3_bucket
 
   sql = <<-EOQ
     select
@@ -509,7 +509,7 @@ edge "aws_sqs_queue_from_s3_bucket_edge" {
 }
 
 node "aws_sqs_queue_from_lambda_function_node" {
-  category = category.aws_lambda_function
+  category = category.lambda_function
 
   sql = <<-EOQ
     select
@@ -548,7 +548,7 @@ edge "aws_sqs_queue_from_lambda_function_edge" {
 }
 
 node "aws_sqs_queue_from_vpc_endpoint_node" {
-  category = category.aws_vpc_endpoint
+  category = category.vpc_endpoint
 
   sql = <<-EOQ
     select
@@ -637,7 +637,7 @@ edge "aws_sqs_queue_vpc_endpoint_to_vpc_edge" {
 }
 
 node "aws_sqs_queue_from_eventbridge_rule_node" {
-  category = category.aws_eventbridge_rule
+  category = category.eventbridge_rule
 
   sql = <<-EOQ
     select

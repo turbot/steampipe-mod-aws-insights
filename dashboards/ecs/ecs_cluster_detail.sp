@@ -365,7 +365,7 @@ node "aws_ecs_cluster_node" {
 }
 
 node "aws_ecs_cluster_to_ec2_launch_type_node" {
-  # category = category.aws_kms_key
+  # category = category.kms_key
 
   sql = <<-EOQ
     with list_all_task_definitions as (
@@ -639,7 +639,7 @@ edge "aws_ecs_cluster_to_external_launch_type_edge" {
 }
 
 node "aws_ecs_cluster_to_ecs_task_definition_node" {
-  category = category.aws_ecs_task_definition
+  category = category.ecs_task_definition
 
   sql = <<-EOQ
     with list_all_task_definitions as (
@@ -719,7 +719,7 @@ edge "aws_ecs_cluster_to_ecs_task_definition_edge" {
 }
 
 node "aws_ecs_cluster_to_ecs_service_node" {
-  category = category.aws_ecs_service
+  category = category.ecs_service
 
   sql = <<-EOQ
     select
@@ -757,7 +757,7 @@ edge "aws_ecs_cluster_to_ecs_service_edge" {
 }
 
 node "aws_ecs_cluster_to_ecs_container_instance_node" {
-  category = category.aws_ecs_container_instance
+  category = category.ecs_container_instance
 
   sql = <<-EOQ
     select

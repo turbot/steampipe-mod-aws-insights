@@ -524,7 +524,7 @@ query "aws_rds_db_instance_tags" {
 }
 
 node "aws_rds_db_instance_nodes" {
-  category = category.aws_rds_db_instance
+  category = category.rds_db_instance
 
   sql = <<-EOQ
     select
@@ -551,7 +551,7 @@ node "aws_rds_db_instance_nodes" {
 }
 
 node "aws_rds_db_instance_to_rds_db_parameter_group_node" {
-  category = category.aws_rds_db_parameter_group
+  category = category.rds_db_parameter_group
 
   sql = <<-EOQ
     select
@@ -598,7 +598,7 @@ edge "aws_rds_db_instance_to_rds_db_parameter_group_edge" {
 }
 
 node "aws_rds_db_instance_to_rds_db_subnet_group_node" {
-  category = category.aws_rds_db_subnet_group
+  category = category.rds_db_subnet_group
 
   sql = <<-EOQ
     select

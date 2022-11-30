@@ -181,7 +181,7 @@ query "aws_dax_cluster_encryption" {
 }
 
 node "aws_dax_cluster_node" {
-  category = category.aws_dax_cluster
+  category = category.dax_cluster
 
   sql = <<-EOQ
     select
@@ -292,7 +292,7 @@ edge "aws_dax_cluster_to_vpc_security_group_edge" {
 }
 
 node "aws_dax_cluster_vpc_security_group_to_dax_subnet_group_node" {
-  category = category.aws_dax_subnet_group
+  category = category.dax_subnet_group
   sql      = <<-EOQ
     select
       subnet_group_name as id,
@@ -391,7 +391,7 @@ edge "aws_dax_subnet_group_to_vpc_subnet_edge" {
 }
 
 node "aws_dax_cluster_to_sns_topic_node" {
-  category = category.aws_sns_topic
+  category = category.sns_topic
   sql      = <<-EOQ
     select
       topic_arn as id,
@@ -575,7 +575,7 @@ query "aws_dax_cluster_node_details" {
 }
 
 node "aws_dax_cluster_nodes" {
-  category = category.aws_dax_cluster
+  category = category.dax_cluster
 
   sql = <<-EOQ
     select

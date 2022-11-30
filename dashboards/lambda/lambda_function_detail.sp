@@ -359,7 +359,7 @@ query "aws_lambda_function_tags" {
 //******
 
 node "aws_lambda_function_nodes" {
-  category = category.aws_lambda_function
+  category = category.lambda_function
 
   sql = <<-EOQ
     select
@@ -514,7 +514,7 @@ edge "aws_lambda_vpc_subnet_edge" {
 }
 
 node "aws_lambda_to_kms_key_node" {
-  category = category.aws_kms_key
+  category = category.kms_key
 
   sql = <<-EOQ
     select
@@ -598,7 +598,7 @@ edge "aws_lambda_to_iam_role_edge" {
 }
 
 node "aws_lambda_from_s3_bucket_node" {
-  category = category.aws_s3_bucket
+  category = category.s3_bucket
 
   sql = <<-EOQ
     select
@@ -653,7 +653,7 @@ edge "aws_lambda_from_s3_bucket_edge" {
 
 
 node "aws_lambda_version_node" {
-  category = category.aws_lambda_version
+  category = category.lambda_version
 
   sql = <<-EOQ
     select
@@ -704,7 +704,7 @@ edge "aws_lambda_version_edge" {
 
 
 node "aws_lambda_alias_node" {
-  category = category.aws_lambda_alias
+  category = category.lambda_alias
 
   sql = <<-EOQ
     select
@@ -755,7 +755,7 @@ edge "aws_lambda_alias_edge" {
 
 
 node "aws_lambda_from_sns_topic_node" {
-  category = category.aws_sns_topic
+  category = category.sns_topic
 
   sql = <<-EOQ
     select
@@ -802,7 +802,7 @@ edge "aws_lambda_sns_topic_edge" {
 
 
 node "aws_lambda_from_sns_subscription_node" {
-  category = category.aws_sns_topic_subscription
+  category = category.sns_topic_subscription
 
   sql = <<-EOQ
     select
@@ -855,7 +855,7 @@ edge "aws_lambda_sns_subscription_edge" {
 
 
 node "aws_lambda_from_api_gateway_integration_node" {
-  category = category.aws_api_gatewayv2_integration
+  category = category.api_gatewayv2_integration
 
   sql = <<-EOQ
     select
@@ -900,7 +900,7 @@ edge "aws_lambda_api_gateway_integration_edge" {
 
 
 node "aws_lambda_from_api_gateway_node" {
-  category = category.aws_api_gatewayv2_api
+  category = category.api_gatewayv2_api
 
   sql = <<-EOQ
     select

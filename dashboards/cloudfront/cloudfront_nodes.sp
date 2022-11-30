@@ -1,5 +1,5 @@
 node "aws_cloudfront_distribution_nodes" {
-  category = category.aws_cloudfront_distribution
+  category = category.cloudfront_distribution
   sql      = <<-EOQ
     select
       arn as id,
