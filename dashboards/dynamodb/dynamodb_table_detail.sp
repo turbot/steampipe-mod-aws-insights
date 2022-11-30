@@ -150,8 +150,8 @@ dashboard "aws_dynamodb_table_detail" {
         table_arns            = [self.input.table_arn.value]
         bucket_arns           = with.buckets.rows[*].bucket_arn
         key_arns              = with.kms_keys.rows[*].key_arn
-        kinesis_stream_arns   = with.kms_keys.rows[*].kinesis_stream_arn
-        dbynamodb_backup_arns = with.kms_keys.rows[*].dbynamodb_backup_arn
+        kinesis_stream_arns   = with.kinesis_streams.rows[*].kinesis_stream_arn
+        dbynamodb_backup_arns = with.dynamodb_backups.rows[*].dbynamodb_backup_arn
       }
     }
   }
@@ -412,7 +412,7 @@ edge "aws_dynamodb_table_to_kinesis_stream_edges" {
   sql = <<-EOQ
   select
     table_arns as from_id,
-    bucket_arns as to_id
+    kinesis_stream_arns as to_id
   from
     unnest($1::text[]) as table_arns,
     unnest($2::text[]) as kinesis_stream_arns
