@@ -143,11 +143,11 @@ dashboard "aws_ebs_volume_detail" {
       ]
 
       args = {
-        volume_arns   = [self.input.volume_arn.value]
-        key_arns      = with.kms_keys.rows[*].key_arn
-        snapshot_arns = with.snapshots.rows[*].snapshot_arn
-        instance_arns = with.instances.rows[*].instance_arn
-        image_ids     = with.amis.rows[*].image_id
+        ebs_volume_arns   = [self.input.volume_arn.value]
+        kms_key_arns      = with.kms_keys.rows[*].key_arn
+        ebs_snapshot_arns = with.snapshots.rows[*].snapshot_arn
+        ec2_instance_arns = with.instances.rows[*].instance_arn
+        ec2_image_ids     = with.amis.rows[*].image_id
       }
     }
   }
@@ -286,15 +286,15 @@ edge "aws_ebs_volume_to_kms_key_edge" {
   title = "encrypted with"
   sql   = <<-EOQ
     select
-      key_arns as to_id,
-      volume_arns as from_id
+      kms_key_arn as to_id,
+      ebs_volume_arn as from_id
     from
-      unnest($1::text[]) as key_arns,
-      unnest($2::text[]) as volume_arns
+      unnest($1::text[]) as kms_key_arn,
+      unnest($2::text[]) as ebs_volume_arn
   EOQ
 
-  param "key_arns" {}
-  param "volume_arns" {}
+  param "kms_key_arns" {}
+  param "ebs_volume_arns" {}
 }
 
 edge "aws_ebs_volume_to_ebs_snapshot_edge" {
@@ -302,15 +302,15 @@ edge "aws_ebs_volume_to_ebs_snapshot_edge" {
 
   sql = <<-EOQ
     select
-      snapshot_arns as to_id,
-      volume_arns as from_id
+      ebs_snapshot_arns as to_id,
+      ebs_volume_arns as from_id
     from
-      unnest($1::text[]) as snapshot_arns,
-      unnest($2::text[]) as volume_arns
+      unnest($1::text[]) as ebs_snapshot_arns,
+      unnest($2::text[]) as ebs_volume_arns
   EOQ
 
-  param "snapshot_arns" {}
-  param "volume_arns" {}
+  param "ebs_snapshot_arns" {}
+  param "ebs_volume_arns" {}
 }
 
 edge "aws_ec2_instance_to_ebs_volume_edge" {
@@ -318,15 +318,15 @@ edge "aws_ec2_instance_to_ebs_volume_edge" {
 
   sql = <<-EOQ
     select
-      volume_arns as to_id,
-      instance_arns as from_id
+      ebs_volume_arns as to_id,
+      ec2_instance_arn as from_id
     from
-      unnest($1::text[]) as volume_arns,
-      unnest($2::text[]) as instance_arns
+      unnest($1::text[]) as ebs_volume_arns,
+      unnest($2::text[]) as ec2_instance_arn
   EOQ
 
-  param "volume_arns" {}
-  param "instance_arns" {}
+  param "ebs_volume_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 query "aws_ebs_volume_storage" {

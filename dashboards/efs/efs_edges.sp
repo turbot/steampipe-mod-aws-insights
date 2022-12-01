@@ -4,14 +4,14 @@ edge "efs_file_system_to_kms_key" {
   sql   = <<-EOQ
     select
       efs_file_system_arn as from_id,
-      key_arn as to_id
+      kms_key_arn as to_id
     from
       unnest($1::text[]) as efs_file_system_arn,
-      unnest($2::text[]) as key_arn
+      unnest($2::text[]) as kms_key_arn
   EOQ
 
   param "efs_file_system_arns" {}
-  param "key_arns" {}
+  param "kms_key_arns" {}
 }
 
 edge "efs_file_system_to_efs_access_point" {
@@ -26,7 +26,7 @@ edge "efs_file_system_to_efs_access_point" {
   EOQ
 
   param "efs_file_system_arns" {}
-  param "access_point_arns" {}
+  param "efs_access_point_arns" {}
 }
 
 edge "efs_file_system_to_efs_mount_target" {
@@ -41,7 +41,7 @@ edge "efs_file_system_to_efs_mount_target" {
   EOQ
 
   param "efs_file_system_arns" {}
-  param "mount_target_ids" {}
+  param "efs_mount_target_ids" {}
 }
 
 edge "efs_file_system_mount_target_to_security_group" {
@@ -55,8 +55,8 @@ edge "efs_file_system_mount_target_to_security_group" {
       unnest($2::text[]) as group_id
   EOQ
 
-  param "mount_target_ids" {}
-  param "security_group_ids" {}
+  param "efs_mount_target_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
 edge "efs_file_system_mount_target_security_group_to_subnet" {
@@ -70,8 +70,8 @@ edge "efs_file_system_mount_target_security_group_to_subnet" {
       unnest($2::text[]) as subnet_id
   EOQ
 
-  param "security_group_ids" {}
-  param "subnet_ids" {}
+  param "vpc_security_group_ids" {}
+  param "vpc_subnet_ids" {}
 }
 
 edge "efs_file_system_mount_target_security_group_subnet_to_vpc" {
@@ -85,6 +85,6 @@ edge "efs_file_system_mount_target_security_group_subnet_to_vpc" {
       unnest($1::text[]) as vpc_id
   EOQ
 
-  param "subnet_ids" {}
-  param "vpc_ids" {}
+  param "vpc_subnet_ids" {}
+  param "vpc_vpc_ids" {}
 }

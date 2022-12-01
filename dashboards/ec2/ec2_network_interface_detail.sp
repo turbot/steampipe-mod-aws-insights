@@ -167,13 +167,13 @@ dashboard "aws_ec2_network_interface_detail" {
       ]
 
       args = {
-        eni_ids            = [self.input.network_interface_id.value]
-        instance_arns      = with.instances.rows[*].instance_arn
-        security_group_ids = with.security_groups.rows[*].security_group_id
-        subnet_ids         = with.subnets.rows[*].subnet_id
-        eip_arns           = with.eips.rows[*].eip_arn
-        vpc_ids            = with.vpcs.rows[*].vpc_id
-        flow_log_ids       = with.flow_logs.rows[*].flow_log_id
+        eni_ids                = [self.input.network_interface_id.value]
+        ec2_instance_arns      = with.instances.rows[*].instance_arn
+        vpc_security_group_ids = with.security_groups.rows[*].security_group_id
+        vpc_subnet_ids         = with.subnets.rows[*].subnet_id
+        eip_arns               = with.eips.rows[*].eip_arn
+        vpc_vpc_ids            = with.vpcs.rows[*].vpc_id
+        flow_log_ids           = with.flow_logs.rows[*].flow_log_id
 
       }
     }
@@ -455,14 +455,14 @@ edge "aws_ec2_network_interface_to_vpc_security_group_edges" {
   sql = <<-EOQ
     select
       eni_ids as from_id,
-      security_group_ids as to_id
+      vpc_security_group_id as to_id
     from
       unnest($1::text[]) as eni_ids,
-      unnest($2::text[]) as security_group_ids
+      unnest($2::text[]) as vpc_security_group_id
   EOQ
 
   param "eni_ids" {}
-  param "security_group_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
 edge "aws_ec2_network_interface_to_vpc_subnet_edges" {
@@ -471,19 +471,19 @@ edge "aws_ec2_network_interface_to_vpc_subnet_edges" {
   sql = <<-EOQ
     select
       coalesce(
-        security_group_ids,
+        vpc_security_group_id,
         eni_ids
       ) as from_id,
-      subnet_ids as to_id
+      vpc_subnet_id as to_id
     from
       unnest($1::text[]) as eni_ids,
-      unnest($2::text[]) as subnet_ids,
-      unnest($3::text[]) as security_group_ids
+      unnest($2::text[]) as vpc_subnet_id,
+      unnest($3::text[]) as vpc_security_group_id
   EOQ
 
   param "eni_ids" {}
-  param "subnet_ids" {}
-  param "security_group_ids" {}
+  param "vpc_subnet_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
 
@@ -492,15 +492,15 @@ edge "aws_vpc_subnet_to_vpc_edges" {
 
   sql = <<-EOQ
     select
-      subnet_ids as from_id,
-      vpc_ids as to_id
+      vpc_subnet_id as from_id,
+      vpc_id as to_id
     from
-      unnest($1::text[]) as subnet_ids,
-      unnest($2::text[]) as vpc_ids
+      unnest($1::text[]) as vpc_subnet_id,
+      unnest($2::text[]) as vpc_id
   EOQ
 
-  param "subnet_ids" {}
-  param "vpc_ids" {}
+  param "vpc_subnet_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 
@@ -508,7 +508,7 @@ edge "aws_ec2_network_interface_to_vpc_flow_log_edges" {
   title = "flow log"
 
   sql = <<-EOQ
-   select
+  select
       eni_ids as from_id,
       flow_log_ids as to_id
     from

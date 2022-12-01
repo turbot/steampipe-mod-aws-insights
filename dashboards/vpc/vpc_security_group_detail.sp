@@ -242,17 +242,17 @@ dashboard "aws_vpc_security_group_detail" {
       ]
 
       args = {
-        security_group_ids       = [self.input.security_group_id.value]
+        vpc_security_group_ids   = [self.input.security_group_id.value]
         clb_arns                 = with.clbs.rows[*].clb_arn
         alb_arns                 = with.albs.rows[*].alb_arn
-        instance_arns            = with.ec2_instances.rows[*].instance_arn
+        ec2_instance_arns        = with.ec2_instances.rows[*].instance_arn
         elasticache_cluster_arns = with.elasticache_clusters.rows[*].elasticache_cluster_arn
         dax_cluster_arns         = with.dax_clusters.rows[*].dax_cluster_arn
         redshift_cluster_arns    = with.redshift_clusters.rows[*].redshift_cluster_arn
         function_arns            = with.lambda_functions.rows[*].lambda_arn
         rds_db_instance_arns     = with.rds_instances.rows[*].rds_db_instance_arn
         rds_db_cluster_arns      = with.rds_clusters.rows[*].rds_db_cluster_arn
-        vpc_ids                  = with.vpcs.rows[*].vpc_id
+        vpc_vpc_ids              = with.vpcs.rows[*].vpc_id
       }
     }
   }
@@ -1410,7 +1410,7 @@ node "vpc_security_group" {
       group_id = any($1 ::text[]);
   EOQ
 
-  param "security_group_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
 edge "aws_vpc_security_group_to_rds_db_cluster_edges" {
@@ -1418,15 +1418,15 @@ edge "aws_vpc_security_group_to_rds_db_cluster_edges" {
 
   sql = <<-EOQ
     select
-      security_group_ids as from_id,
+      vpc_security_group_id as from_id,
       rds_db_cluster_arns as to_id
     from
       unnest($1::text[]) as rds_db_cluster_arns,
-      unnest($2::text[]) as security_group_ids
+      unnest($2::text[]) as vpc_security_group_id
   EOQ
 
   param "rds_db_cluster_arns" {}
-  param "security_group_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
 edge "aws_vpc_security_group_to_rds_db_instance_edges" {
@@ -1434,15 +1434,15 @@ edge "aws_vpc_security_group_to_rds_db_instance_edges" {
 
   sql = <<-EOQ
     select
-      security_group_ids as from_id,
+      vpc_security_group_id as from_id,
       rds_db_instance_arns as to_id
     from
       unnest($1::text[]) as rds_db_instance_arns,
-      unnest($2::text[]) as security_group_ids
+      unnest($2::text[]) as vpc_security_group_id
   EOQ
 
   param "rds_db_instance_arns" {}
-  param "security_group_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
 edge "aws_vpc_security_group_to_ec2_instance_edges" {
@@ -1450,15 +1450,15 @@ edge "aws_vpc_security_group_to_ec2_instance_edges" {
 
   sql = <<-EOQ
     select
-      security_group_ids as from_id,
-      instance_arns as to_id
+      vpc_security_group_id as from_id,
+      ec2_instance_arn as to_id
     from
-      unnest($1::text[]) as instance_arns,
-      unnest($2::text[]) as security_group_ids
+      unnest($1::text[]) as ec2_instance_arn,
+      unnest($2::text[]) as vpc_security_group_id
   EOQ
 
-  param "instance_arns" {}
-  param "security_group_ids" {}
+  param "ec2_instance_arns" {}
+  param "vpc_security_group_ids" {}
 }
 
 edge "aws_vpc_security_group_to_lambda_function_edges" {
@@ -1466,15 +1466,15 @@ edge "aws_vpc_security_group_to_lambda_function_edges" {
 
   sql = <<-EOQ
     select
-      security_group_ids as from_id,
+      vpc_security_group_id as from_id,
       function_arns as to_id
     from
       unnest($1::text[]) as function_arns,
-      unnest($2::text[]) as security_group_ids
+      unnest($2::text[]) as vpc_security_group_id
   EOQ
 
   param "function_arns" {}
-  param "security_group_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
 node "aws_vpc_security_group_efs_mount_target_nodes" {
@@ -1502,7 +1502,7 @@ node "aws_vpc_security_group_efs_mount_target_nodes" {
       vsg.group_id = any($1);
   EOQ
 
-  param "security_group_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
 edge "aws_vpc_security_group_to_efs_mount_target_edges" {
@@ -1520,7 +1520,7 @@ edge "aws_vpc_security_group_to_efs_mount_target_edges" {
       vsg.group_id = any($1);
   EOQ
 
-  param "security_group_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
 edge "aws_vpc_security_group_to_redshift_cluster_edges" {
@@ -1528,15 +1528,15 @@ edge "aws_vpc_security_group_to_redshift_cluster_edges" {
 
   sql = <<-EOQ
     select
-      security_group_ids as from_id,
+      vpc_security_group_id as from_id,
       redshift_cluster_arns as to_id
     from
       unnest($1::text[]) as redshift_cluster_arns,
-      unnest($2::text[]) as security_group_ids
+      unnest($2::text[]) as vpc_security_group_id
   EOQ
 
   param "redshift_cluster_arns" {}
-  param "security_group_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
 edge "aws_vpc_security_group_to_ec2_classic_load_balancer_edges" {
@@ -1544,15 +1544,15 @@ edge "aws_vpc_security_group_to_ec2_classic_load_balancer_edges" {
 
   sql = <<-EOQ
     select
-      security_group_ids as from_id,
+      vpc_security_group_id as from_id,
       clb_arns as to_id
     from
       unnest($1::text[]) as clb_arns,
-      unnest($2::text[]) as security_group_ids
+      unnest($2::text[]) as vpc_security_group_id
   EOQ
 
   param "clb_arns" {}
-  param "security_group_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
 edge "aws_vpc_security_group_to_ec2_application_load_balancer_edges" {
@@ -1560,15 +1560,15 @@ edge "aws_vpc_security_group_to_ec2_application_load_balancer_edges" {
 
   sql = <<-EOQ
     select
-      security_group_ids as from_id,
+      vpc_security_group_id as from_id,
       alb_arns as to_id
     from
       unnest($1::text[]) as alb_arns,
-      unnest($2::text[]) as security_group_ids
+      unnest($2::text[]) as vpc_security_group_id
   EOQ
 
   param "alb_arns" {}
-  param "security_group_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
 node "aws_vpc_security_group_ec2_launch_configuration_nodes" {
@@ -1591,7 +1591,7 @@ node "aws_vpc_security_group_ec2_launch_configuration_nodes" {
       vsg.group_id = any($1);
   EOQ
 
-  param "security_group_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
 edge "aws_vpc_security_group_to_ec2_launch_configuration_edges" {
@@ -1609,7 +1609,7 @@ edge "aws_vpc_security_group_to_ec2_launch_configuration_edges" {
       vsg.group_id = any($1);
   EOQ
 
-  param "security_group_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
 edge "aws_vpc_security_group_to_dax_cluster_edges" {
@@ -1617,15 +1617,15 @@ edge "aws_vpc_security_group_to_dax_cluster_edges" {
 
   sql = <<-EOQ
     select
-      security_group_ids as from_id,
+      vpc_security_group_id as from_id,
       dax_cluster_arns as to_id
     from
       unnest($1::text[]) as dax_cluster_arns,
-      unnest($2::text[]) as security_group_ids
+      unnest($2::text[]) as vpc_security_group_id
   EOQ
 
   param "dax_cluster_arns" {}
-  param "security_group_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
 node "aws_vpc_security_group_dms_replication_instance_nodes" {
@@ -1652,7 +1652,7 @@ node "aws_vpc_security_group_dms_replication_instance_nodes" {
       vsg.group_id = any($1);
   EOQ
 
-  param "security_group_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
 edge "aws_vpc_security_group_to_dms_replication_instance_edges" {
@@ -1670,7 +1670,7 @@ edge "aws_vpc_security_group_to_dms_replication_instance_edges" {
       vsg.group_id = any($1);
   EOQ
 
-  param "security_group_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
 edge "aws_vpc_security_group_to_elasticache_cluster_edges" {
@@ -1678,15 +1678,15 @@ edge "aws_vpc_security_group_to_elasticache_cluster_edges" {
 
   sql = <<-EOQ
     select
-      security_group_ids as from_id,
+      vpc_security_group_id as from_id,
       elasticache_cluster_arns as to_id
     from
       unnest($1::text[]) as elasticache_cluster_arns,
-      unnest($2::text[]) as security_group_ids
+      unnest($2::text[]) as vpc_security_group_id
   EOQ
 
   param "elasticache_cluster_arns" {}
-  param "security_group_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
 node "aws_vpc_security_group_sagemaker_notebook_instance_nodes" {
@@ -1711,7 +1711,7 @@ node "aws_vpc_security_group_sagemaker_notebook_instance_nodes" {
       vsg.group_id = any($1);
   EOQ
 
-  param "security_group_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
 edge "aws_vpc_security_group_to_sagemaker_notebook_instance_edges" {
@@ -1729,7 +1729,7 @@ edge "aws_vpc_security_group_to_sagemaker_notebook_instance_edges" {
       vsg.group_id = any($1);
   EOQ
 
-  param "security_group_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
 node "aws_vpc_security_group_docdb_cluster_nodes" {
@@ -1755,7 +1755,7 @@ node "aws_vpc_security_group_docdb_cluster_nodes" {
       vsg.group_id = any($1);
   EOQ
 
-  param "security_group_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
 edge "aws_vpc_security_group_to_docdb_cluster_edges" {
@@ -1773,5 +1773,5 @@ edge "aws_vpc_security_group_to_docdb_cluster_edges" {
       vsg.group_id = any($1);
   EOQ
 
-  param "security_group_ids" {}
+  param "vpc_security_group_ids" {}
 }

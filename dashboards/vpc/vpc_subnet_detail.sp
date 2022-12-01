@@ -155,13 +155,13 @@ dashboard "aws_vpc_subnet_detail" {
       ]
 
       args = {
-        subnet_ids           = [self.input.subnet_id.value]
+        vpc_subnet_ids       = [self.input.subnet_id.value]
         eni_ids              = with.enis.rows[*].eni_id
         flow_log_ids         = with.flow_logs.rows[*].flow_log_id
         function_arns        = with.lambda_functions.rows[*].lambda_arn
-        instance_arns        = with.ec2_instances.rows[*].instance_arn
+        ec2_instance_arns    = with.ec2_instances.rows[*].instance_arn
         rds_db_instance_arns = with.rds_db_instances.rows[*].rds_instance_arn
-        vpc_ids              = with.vpcs.rows[*].vpc_id
+        vpc_vpc_ids          = with.vpcs.rows[*].vpc_id
       }
     }
   }
@@ -417,7 +417,7 @@ node "vpc_subnet" {
       subnet_id = any($1 ::text[]);
   EOQ
 
-  param "subnet_ids" {}
+  param "vpc_subnet_ids" {}
 }
 
 edge "aws_vpc_to_vpc_subnet_edges" {
@@ -425,15 +425,15 @@ edge "aws_vpc_to_vpc_subnet_edges" {
 
   sql = <<-EOQ
      select
-      vpc_ids as from_id,
-      subnet_ids as to_id
+      vpc_id as from_id,
+      vpc_subnet_id as to_id
     from
-      unnest($1::text[]) as vpc_ids,
-      unnest($2::text[]) as subnet_ids;
+      unnest($1::text[]) as vpc_vpc_id,
+      unnest($2::text[]) as vpc_subnet_id;
   EOQ
 
-  param "vpc_ids" {}
-  param "subnet_ids" {}
+  param "vpc_vpc_ids" {}
+  param "vpc_subnet_ids" {}
 }
 
 node "aws_vpc_subnet_vpc_route_table_nodes" {
@@ -455,7 +455,7 @@ node "aws_vpc_subnet_vpc_route_table_nodes" {
       a ->> 'SubnetId' = any($1);
   EOQ
 
-  param "subnet_ids" {}
+  param "vpc_subnet_ids" {}
 }
 
 edge "aws_vpc_subnet_to_vpc_route_table_edges" {
@@ -472,7 +472,7 @@ edge "aws_vpc_subnet_to_vpc_route_table_edges" {
       a ->> 'SubnetId' = any($1);
   EOQ
 
-  param "subnet_ids" {}
+  param "vpc_subnet_ids" {}
 }
 
 node "aws_vpc_subnet_vpc_network_acl_nodes" {
@@ -496,7 +496,7 @@ node "aws_vpc_subnet_vpc_network_acl_nodes" {
       a ->> 'SubnetId' = any($1);
   EOQ
 
-  param "subnet_ids" {}
+  param "vpc_subnet_ids" {}
 }
 
 edge "aws_vpc_subnet_to_vpc_network_acl_edges" {
@@ -513,7 +513,7 @@ edge "aws_vpc_subnet_to_vpc_network_acl_edges" {
       a ->> 'SubnetId' = any($1);
   EOQ
 
-  param "subnet_ids" {}
+  param "vpc_subnet_ids" {}
 }
 
 
@@ -522,15 +522,15 @@ edge "aws_vpc_subnet_to_rds_db_instance_edges" {
 
   sql = <<-EOQ
     select
-      subnet_ids as from_id,
+      vpc_subnet_id as from_id,
       rds_db_instance_arns as to_id
     from
       unnest($1::text[]) as rds_db_instance_arns,
-      unnest($2::text[]) as subnet_ids;
+      unnest($2::text[]) as vpc_subnet_id;
   EOQ
 
   param "rds_db_instance_arns" {}
-  param "subnet_ids" {}
+  param "vpc_subnet_ids" {}
 }
 
 
@@ -540,15 +540,15 @@ edge "aws_vpc_subnet_to_ec2_instance_edges" {
 
   sql = <<-EOQ
     select
-      subnet_ids as from_id,
-      instance_arns as to_id
+      vpc_subnet_id as from_id,
+      ec2_instance_arn as to_id
     from
-      unnest($1::text[]) as instance_arns,
-      unnest($2::text[]) as subnet_ids;
+      unnest($1::text[]) as ec2_instance_arn,
+      unnest($2::text[]) as vpc_subnet_id;
   EOQ
 
-  param "instance_arns" {}
-  param "subnet_ids" {}
+  param "ec2_instance_arns" {}
+  param "vpc_subnet_ids" {}
 }
 
 edge "aws_vpc_subnet_to_lambda_function_edges" {
@@ -556,15 +556,15 @@ edge "aws_vpc_subnet_to_lambda_function_edges" {
 
   sql = <<-EOQ
     select
-      subnet_ids as from_id,
+      vpc_subnet_id as from_id,
       function_arns as to_id
     from
       unnest($1::text[]) as function_arns,
-      unnest($2::text[]) as subnet_ids;
+      unnest($2::text[]) as vpc_subnet_id;
   EOQ
 
   param "function_arns" {}
-  param "subnet_ids" {}
+  param "vpc_subnet_ids" {}
 }
 
 node "aws_vpc_subnet_sagemaker_notebook_instance_nodes" {
@@ -587,7 +587,7 @@ node "aws_vpc_subnet_sagemaker_notebook_instance_nodes" {
       subnet_id = any($1);
   EOQ
 
-  param "subnet_ids" {}
+  param "vpc_subnet_ids" {}
 }
 
 edge "aws_vpc_subnet_to_sagemaker_notebook_instance_edges" {
@@ -603,7 +603,7 @@ edge "aws_vpc_subnet_to_sagemaker_notebook_instance_edges" {
       subnet_id = any($1);
   EOQ
 
-  param "subnet_ids" {}
+  param "vpc_subnet_ids" {}
 }
 
 edge "aws_vpc_subnet_to_flow_log_edges" {
@@ -611,15 +611,15 @@ edge "aws_vpc_subnet_to_flow_log_edges" {
 
   sql = <<-EOQ
    select
-      subnet_ids as from_id,
+      vpc_subnet_id as from_id,
       flow_log_ids as to_id
     from
       unnest($1::text[]) as flow_log_ids,
-      unnest($2::text[]) as subnet_ids;
+      unnest($2::text[]) as vpc_subnet_id;
   EOQ
 
   param "flow_log_ids" {}
-  param "subnet_ids" {}
+  param "vpc_subnet_ids" {}
 }
 
 edge "aws_vpc_subnet_to_network_interface_edges" {
@@ -627,15 +627,15 @@ edge "aws_vpc_subnet_to_network_interface_edges" {
 
   sql = <<-EOQ
    select
-      subnet_ids as from_id,
+      vpc_subnet_id as from_id,
       eni_ids as to_id
     from
       unnest($1::text[]) as eni_ids,
-      unnest($2::text[]) as subnet_ids;
+      unnest($2::text[]) as vpc_subnet_id;
   EOQ
 
   param "eni_ids" {}
-  param "subnet_ids" {}
+  param "vpc_subnet_ids" {}
 }
 
 

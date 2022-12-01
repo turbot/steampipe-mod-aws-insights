@@ -116,9 +116,9 @@ dashboard "aws_dynamodb_table_detail" {
       ]
 
       args = {
-        table_arns  = [self.input.table_arn.value]
-        bucket_arns = with.buckets.rows[*].bucket_arn
-        key_arns    = with.kms_keys.rows[*].key_arn
+        table_arns   = [self.input.table_arn.value]
+        bucket_arns  = with.buckets.rows[*].bucket_arn
+        kms_key_arns = with.kms_keys.rows[*].key_arn
       }
     }
   }
@@ -353,14 +353,14 @@ edge "aws_dynamodb_table_to_kms_key_edges" {
 
   sql = <<-EOQ
     select
-      key_arns as to_id,
+      kms_key_arn as to_id,
       table_arns as from_id
     from
-      unnest($1::text[]) as key_arns,
+      unnest($1::text[]) as kms_key_arn,
       unnest($2::text[]) as table_arns
   EOQ
 
-  param "key_arns" {}
+  param "kms_key_arns" {}
   param "table_arns" {}
 }
 

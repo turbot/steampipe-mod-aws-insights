@@ -92,9 +92,9 @@ dashboard "aws_vpc_eip_detail" {
       ]
 
       args = {
-        instance_arns = with.instances.rows[*].instance_arn
-        eni_ids       = with.enis.rows[*].eni_id
-        eip_arns      = [self.input.eip_arn.value]
+        ec2_instance_arns = with.instances.rows[*].instance_arn
+        eni_ids           = with.enis.rows[*].eni_id
+        eip_arns          = [self.input.eip_arn.value]
       }
     }
   }

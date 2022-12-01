@@ -243,7 +243,7 @@ dashboard "aws_s3_bucket_detail" {
         alb_arns      = with.albs.rows[*].alb_arn
         nlb_arns      = with.nlbs.rows[*].nlb_arn
         clb_arns      = with.clbs.rows[*].clb_arn
-        key_arns      = with.keys.rows[*].key_arn
+        kms_key_arns  = with.keys.rows[*].key_arn
         function_arns = with.functions.rows[*].function_arn
         topic_arns    = with.topics.rows[*].topic_arn
         queue_arns    = with.queues.rows[*].queue_arn
@@ -525,7 +525,7 @@ edge "aws_s3_bucket_to_kms_key_edges" {
   EOQ
 
   param "bucket_arns" {}
-  param "key_arns" {}
+  param "kms_key_arns" {}
 }
 
 node "aws_s3_bucket_from_s3_bucket_nodes" {

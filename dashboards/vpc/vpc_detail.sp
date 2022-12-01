@@ -110,7 +110,7 @@ dashboard "aws_vpc_detail" {
       ]
 
       args = {
-        vpc_ids = [self.input.vpc_id.value]
+        vpc_vpc_ids = [self.input.vpc_id.value]
       }
     }
 
@@ -1206,7 +1206,7 @@ edge "aws_vpc_subnet_endpoint_edge" {
       e.vpc_endpoint_id as to_id
     from
       aws_vpc_endpoint as e,
-      jsonb_array_elements_text(e.subnet_ids) as s
+      jsonb_array_elements_text(e.vpc_subnet_ids) as s
     where
       e.vpc_id = $1
     union
@@ -1216,7 +1216,7 @@ edge "aws_vpc_subnet_endpoint_edge" {
     from
       aws_vpc_endpoint as e
     where
-      jsonb_array_length(subnet_ids) = 0
+      jsonb_array_length(vpc_subnet_ids) = 0
       and vpc_id = $1;
 
   EOQ
@@ -2067,7 +2067,7 @@ node "vpc" {
       vpc_id = any($1 ::text[]);
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 edge "aws_vpc_to_vpc_security_group_edges" {
@@ -2075,13 +2075,13 @@ edge "aws_vpc_to_vpc_security_group_edges" {
 
   sql = <<-EOQ
     select
-      vpc_ids as from_id,
-      security_group_ids as to_id
+      vpc_id as from_id,
+      vpc_security_group_id as to_id
     from
-      unnest($1::text[]) as vpc_ids,
-      unnest($2::text[]) as security_group_ids
+      unnest($1::text[]) as vpc_id,
+      unnest($2::text[]) as vpc_security_group_id
   EOQ
 
-  param "vpc_ids" {}
-  param "security_group_ids" {}
+  param "vpc_vpc_ids" {}
+  param "vpc_security_group_ids" {}
 }

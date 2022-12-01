@@ -19,7 +19,7 @@ node "ebs_snapshot" {
       arn = any($1);
   EOQ
 
-  param "snapshot_arns" {}
+  param "ebs_snapshot_arns" {}
 }
 
 
@@ -44,5 +44,5 @@ node "ebs_volume" {
       arn = any($1);
   EOQ
 
-  param "volume_arns" {}
+  param "ebs_volume_arns" {}
 }

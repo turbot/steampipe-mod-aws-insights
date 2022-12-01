@@ -248,9 +248,9 @@ dashboard "aws_kms_key_detail" {
       ]
 
       args = {
-        key_arns                     = [self.input.key_arn.value]
+        kms_key_arns                 = [self.input.key_arn.value]
         trail_arns                   = with.trails.rows[*].trail_arn
-        volume_arns                  = with.volumes.rows[*].volume_arn
+        ebs_volume_arns              = with.volumes.rows[*].volume_arn
         rds_db_cluster_snapshot_arns = with.rds_db_cluster_snapshots.rows[*].cluster_snapshot_arn
         rds_db_cluster_arns          = with.rds_db_clusters.rows[*].cluster_arn
         rds_db_instance_arns         = with.rds_db_instances.rows[*].db_instance_arn
@@ -478,7 +478,7 @@ node "kms_key" {
       arn = any($1);
   EOQ
 
-  param "key_arns" {}
+  param "kms_key_arns" {}
 }
 
 edge "aws_kms_key_from_cloudtrail_trail_edges" {
@@ -493,7 +493,7 @@ edge "aws_kms_key_from_cloudtrail_trail_edges" {
       unnest($2::text[]) as trail_arn
   EOQ
 
-  param "key_arns" {}
+  param "kms_key_arns" {}
   param "trail_arns" {}
 }
 
@@ -509,8 +509,8 @@ edge "aws_kms_key_from_ebs_volume_edges" {
       unnest($2::text[]) as volume_arn
   EOQ
 
-  param "key_arns" {}
-  param "volume_arns" {}
+  param "kms_key_arns" {}
+  param "ebs_volume_arns" {}
 }
 
 edge "aws_kms_key_from_rds_db_cluster_edges" {
@@ -525,7 +525,7 @@ edge "aws_kms_key_from_rds_db_cluster_edges" {
       unnest($2::text[]) as rds_cluster_arn
   EOQ
 
-  param "key_arns" {}
+  param "kms_key_arns" {}
   param "rds_db_cluster_arns" {}
 }
 
@@ -541,7 +541,7 @@ edge "aws_kms_key_from_redshift_cluster_edges" {
       unnest($2::text[]) as redshift_cluster_arn
   EOQ
 
-  param "key_arns" {}
+  param "kms_key_arns" {}
   param "redshift_cluster_arns" {}
 }
 
@@ -557,7 +557,7 @@ edge "aws_kms_key_from_sns_topic_edges" {
       unnest($2::text[]) as topic_arn
   EOQ
 
-  param "key_arns" {}
+  param "kms_key_arns" {}
   param "topic_arns" {}
 }
 
@@ -580,7 +580,7 @@ edge "aws_kms_key_from_sqs_queue_edges" {
       k.arn = any($1);
   EOQ
 
-  param "key_arns" {}
+  param "kms_key_arns" {}
 }
 
 edge "aws_kms_key_from_lambda_function_edges" {
@@ -595,7 +595,7 @@ edge "aws_kms_key_from_lambda_function_edges" {
       unnest($2::text[]) as function_arn
   EOQ
 
-  param "key_arns" {}
+  param "kms_key_arns" {}
   param "function_arns" {}
 }
 
@@ -620,7 +620,7 @@ node "aws_kms_key_alias_nodes" {
       k.arn = any($1);
   EOQ
 
-  param "key_arns" {}
+  param "kms_key_arns" {}
 }
 
 edge "aws_kms_key_to_kms_alias_edge" {
@@ -638,7 +638,7 @@ edge "aws_kms_key_to_kms_alias_edge" {
       k.arn = any($1);
   EOQ
 
-  param "key_arns" {}
+  param "kms_key_arns" {}
 }
 
 query "aws_kms_key_overview" {

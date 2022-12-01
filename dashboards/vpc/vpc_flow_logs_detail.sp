@@ -152,8 +152,8 @@ dashboard "aws_vpc_flow_logs_detail" {
         role_arns      = with.roles.rows[*].role_arn
         bucket_arns    = with.buckets.rows[*].bucket_arn
         eni_ids        = with.enis.rows[*].eni_id
-        subnet_ids     = with.subnets.rows[*].subnet_id
-        vpc_ids        = with.vpcs.rows[*].vpc_id
+        vpc_subnet_ids = with.subnets.rows[*].subnet_id
+        vpc_vpc_ids    = with.vpcs.rows[*].vpc_id
         log_group_arns = with.log_groups.rows[*].log_group_arn
         flow_log_ids   = [self.input.flow_log_id.value]
       }
@@ -331,15 +331,15 @@ edge "aws_vpc_subnet_to_vpc_flow_log_edges" {
 
   sql = <<-EOQ
     select
-      subnet_ids as from_id,
+      vpc_subnet_id as from_id,
       flow_log_ids as to_id
     from
       unnest($1::text[]) as flow_log_ids,
-      unnest($2::text[]) as subnet_ids
+      unnest($2::text[]) as vpc_subnet_id
   EOQ
 
   param "flow_log_ids" {}
-  param "subnet_ids" {}
+  param "vpc_subnet_ids" {}
 }
 
 edge "aws_vpc_to_vpc_flow_log_edges" {
@@ -347,15 +347,15 @@ edge "aws_vpc_to_vpc_flow_log_edges" {
 
   sql = <<-EOQ
     select
-      vpc_ids as from_id,
+      vpc_id as from_id,
       flow_log_ids as to_id
     from
       unnest($1::text[]) as flow_log_ids,
-      unnest($2::text[]) as vpc_ids
+      unnest($2::text[]) as vpc_id
   EOQ
 
   param "flow_log_ids" {}
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 query "aws_vpc_flow_log_overview" {

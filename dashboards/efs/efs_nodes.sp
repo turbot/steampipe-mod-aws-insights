@@ -42,7 +42,7 @@ node "efs_access_point" {
       access_point_arn = any($1);
   EOQ
 
-  param "access_point_arns" {}
+  param "efs_access_point_arns" {}
 }
 
 node "efs_mount_target" {
@@ -56,5 +56,5 @@ node "efs_mount_target" {
       mount_target_id = any($1);
   EOQ
 
-  param "mount_target_ids" {}
+  param "efs_mount_target_ids" {}
 }

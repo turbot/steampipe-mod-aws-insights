@@ -298,19 +298,19 @@ dashboard "aws_ec2_instance_detail" {
       ]
 
       args = {
-        volume_arns        = with.ebs_volumes.rows[*].volume_arn
-        eni_ids            = with.enis.rows[*].eni_id
-        subnet_ids         = with.subnets.rows[*].subnet_id
-        security_group_ids = with.security_groups.rows[*].security_group_id
-        vpc_ids            = with.vpcs.rows[*].vpc_id
-        clb_arns           = with.clbs.rows[*].clb_arn
-        eip_arns           = with.eips.rows[*].eip_arn
-        alb_arns           = with.albs.rows[*].alb_arn
-        nlb_arns           = with.nlbs.rows[*].nlb_arn
-        glb_arns           = with.glbs.rows[*].glb_arn
-        ecs_cluster_arns   = with.ecs_clusters.rows[*].cluster_arn
-        role_arns          = with.iam_roles.rows[*].role_arn
-        instance_arns      = [self.input.instance_arn.value]
+        ebs_volume_arns        = with.ebs_volumes.rows[*].volume_arn
+        eni_ids                = with.enis.rows[*].eni_id
+        vpc_subnet_ids         = with.subnets.rows[*].subnet_id
+        vpc_security_group_ids = with.security_groups.rows[*].security_group_id
+        vpc_vpc_ids            = with.vpcs.rows[*].vpc_id
+        clb_arns               = with.clbs.rows[*].clb_arn
+        eip_arns               = with.eips.rows[*].eip_arn
+        alb_arns               = with.albs.rows[*].alb_arn
+        nlb_arns               = with.nlbs.rows[*].nlb_arn
+        glb_arns               = with.glbs.rows[*].glb_arn
+        ecs_cluster_arns       = with.ecs_clusters.rows[*].cluster_arn
+        role_arns              = with.iam_roles.rows[*].role_arn
+        ec2_instance_arns      = [self.input.instance_arn.value]
       }
     }
   }
@@ -510,15 +510,15 @@ edge "aws_ec2_instance_to_ebs_volume_edges" {
 
   sql = <<-EOQ
     select
-      instance_arns as from_id,
-      volume_arns as to_id
+      ec2_instance_arn as from_id,
+      ebs_volume_arns as to_id
     from
-      unnest($1::text[]) as instance_arns,
-      unnest($2::text[]) as volume_arns
+      unnest($1::text[]) as ec2_instance_arn,
+      unnest($2::text[]) as ebs_volume_arns
   EOQ
 
-  param "instance_arns" {}
-  param "volume_arns" {}
+  param "ec2_instance_arns" {}
+  param "ebs_volume_arns" {}
 }
 
 edge "aws_ec2_instance_to_ec2_network_interface_edges" {
@@ -526,14 +526,14 @@ edge "aws_ec2_instance_to_ec2_network_interface_edges" {
 
   sql = <<-EOQ
     select
-      instance_arns as from_id,
+      ec2_instance_arn as from_id,
       eni_ids as to_id
     from
-      unnest($1::text[]) as instance_arns,
+      unnest($1::text[]) as ec2_instance_arn,
       unnest($2::text[]) as eni_ids
   EOQ
 
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
   param "eni_ids" {}
 }
 
@@ -544,18 +544,18 @@ edge "aws_ec2_instance_to_vpc_security_group_edges" {
     select
       coalesce(
         eni_ids,
-        instance_arns
+        ec2_instance_arn
       ) as from_id,
-      security_group_ids as to_id
+      vpc_security_group_id as to_id
     from
-      unnest($1::text[]) as instance_arns,
+      unnest($1::text[]) as ec2_instance_arn,
       unnest($2::text[]) as eni_ids,
-      unnest($3::text[]) as security_group_ids
+      unnest($3::text[]) as vpc_security_group_id
   EOQ
 
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
   param "eni_ids" {}
-  param "security_group_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
 edge "aws_ec2_instance_to_vpc_subnet_edges" {
@@ -563,15 +563,15 @@ edge "aws_ec2_instance_to_vpc_subnet_edges" {
 
   sql = <<-EOQ
     select
-      security_group_ids as from_id,
-      subnet_ids as to_id
+      vpc_security_group_id as from_id,
+      vpc_subnet_id as to_id
     from
-      unnest($1::text[]) as security_group_ids,
-      unnest($2::text[]) as subnet_ids
+      unnest($1::text[]) as vpc_security_group_id,
+      unnest($2::text[]) as vpc_subnet_id
   EOQ
 
-  param "security_group_ids" {}
-  param "subnet_ids" {}
+  param "vpc_security_group_ids" {}
+  param "vpc_subnet_ids" {}
 }
 
 edge "aws_ec2_instance_vpc_subnet_to_vpc_edges" {
@@ -579,15 +579,15 @@ edge "aws_ec2_instance_vpc_subnet_to_vpc_edges" {
 
   sql = <<-EOQ
     select
-      subnet_ids as from_id,
-      vpc_ids as to_id
+      vpc_subnet_id as from_id,
+      vpc_id as to_id
     from
-      unnest($1::text[]) as subnet_ids,
-      unnest($2::text[]) as vpc_ids
+      unnest($1::text[]) as vpc_subnet_id,
+      unnest($2::text[]) as vpc_id
   EOQ
 
-  param "subnet_ids" {}
-  param "vpc_ids" {}
+  param "vpc_subnet_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 node "aws_ec2_instance_iam_instance_profile_nodes" {
@@ -608,7 +608,7 @@ node "aws_ec2_instance_iam_instance_profile_nodes" {
       and i.arn = any($1);
   EOQ
 
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 edge "aws_ec2_instance_to_iam_profile_edges" {
@@ -625,7 +625,7 @@ edge "aws_ec2_instance_to_iam_profile_edges" {
       and i.arn = any($1);
   EOQ
 
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 edge "aws_ec2_instance_to_iam_role_edges" {
@@ -643,7 +643,7 @@ edge "aws_ec2_instance_to_iam_role_edges" {
       and i.arn = any($1);
   EOQ
 
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
   param "role_arns" {}
 }
 
@@ -669,7 +669,7 @@ node "aws_ec2_instance_ec2_key_pair_nodes" {
       and i.arn = any($1);
   EOQ
 
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 edge "aws_ec2_instance_to_ec2_key_pair_edges" {
@@ -686,7 +686,7 @@ edge "aws_ec2_instance_to_ec2_key_pair_edges" {
       and i.arn = any($1);
   EOQ
 
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 node "aws_ec2_instance_ec2_autoscaling_group_nodes" {
@@ -710,7 +710,7 @@ node "aws_ec2_instance_ec2_autoscaling_group_nodes" {
       and group_instance ->> 'InstanceId' = i.instance_id;
   EOQ
 
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 edge "aws_ec2_instance_from_ec2_autoscaling_group_edges" {
@@ -729,7 +729,7 @@ edge "aws_ec2_instance_from_ec2_autoscaling_group_edges" {
       and group_instance ->> 'InstanceId' = i.instance_id;
   EOQ
 
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 edge "aws_ec2_instance_from_ec2_classic_load_balancer_edges" {
@@ -738,14 +738,14 @@ edge "aws_ec2_instance_from_ec2_classic_load_balancer_edges" {
   sql = <<-EOQ
     select
       clb_arns as from_id,
-      instance_arns as to_id
+      ec2_instance_arn as to_id
     from
-     unnest($1::text[]) as clb_arns,
-     unnest($2::text[]) as instance_arns
+      unnest($1::text[]) as clb_arns,
+      unnest($2::text[]) as ec2_instance_arn
   EOQ
 
   param "clb_arns" {}
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 edge "aws_ec2_instance_from_ec2_application_load_balancer_edges" {
@@ -754,14 +754,14 @@ edge "aws_ec2_instance_from_ec2_application_load_balancer_edges" {
   sql = <<-EOQ
     select
       alb_arns as from_id,
-      instance_arns as to_id
+      ec2_instance_arn as to_id
     from
      unnest($1::text[]) as alb_arns,
-     unnest($2::text[]) as instance_arns
+     unnest($2::text[]) as ec2_instance_arn
   EOQ
 
   param "alb_arns" {}
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 edge "aws_ec2_instance_from_ec2_network_load_balancer_edges" {
@@ -770,14 +770,14 @@ edge "aws_ec2_instance_from_ec2_network_load_balancer_edges" {
   sql = <<-EOQ
     select
       nlb_arns as from_id,
-      instance_arns as to_id
+      ec2_instance_arn as to_id
     from
      unnest($1::text[]) as nlb_arns,
-     unnest($2::text[]) as instance_arns
+     unnest($2::text[]) as ec2_instance_arn
   EOQ
 
   param "nlb_arns" {}
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 edge "aws_ec2_instance_from_ec2_gateway_load_balancer_edges" {
@@ -786,14 +786,14 @@ edge "aws_ec2_instance_from_ec2_gateway_load_balancer_edges" {
   sql = <<-EOQ
     select
       glb_arns as from_id,
-      instance_arns as to_id
+      ec2_instance_arn as to_id
     from
      unnest($1::text[]) as glb_arns,
-     unnest($2::text[]) as instance_arns
+     unnest($2::text[]) as ec2_instance_arn
   EOQ
 
   param "glb_arns" {}
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 node "aws_ec2_instance_ec2_target_group_nodes" {
@@ -819,7 +819,7 @@ node "aws_ec2_instance_ec2_target_group_nodes" {
       and health_descriptions -> 'Target' ->> 'Id' = i.instance_id
   EOQ
 
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 edge "aws_ec2_instance_from_ec2_target_group_edges" {
@@ -838,7 +838,7 @@ edge "aws_ec2_instance_from_ec2_target_group_edges" {
       and health_descriptions -> 'Target' ->> 'Id' = i.instance_id;
   EOQ
 
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 edge "aws_ec2_instance_lb_target_group_edges" {
@@ -858,7 +858,7 @@ edge "aws_ec2_instance_lb_target_group_edges" {
       and i.arn = any($1);
   EOQ
 
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 edge "aws_ec2_instance_from_cluster_edges" {
@@ -867,14 +867,14 @@ edge "aws_ec2_instance_from_cluster_edges" {
   sql = <<-EOQ
     select
       cluster_arns as from_id,
-      instance_arns as to_id
+      ec2_instance_arn as to_id
     from
       unnest($1::text[]) as cluster_arns,
-     unnest($2::text[]) as instance_arns
+     unnest($2::text[]) as ec2_instance_arn
   EOQ
 
   param "ecs_cluster_arns" {}
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
 }
 //***********
 

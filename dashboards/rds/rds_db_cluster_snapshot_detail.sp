@@ -113,7 +113,7 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
 
       args = {
         rds_db_cluster_arns          = with.rds_clusters.rows[*].rds_cluster_arn
-        key_arns                     = with.kms_keys.rows[*].key_arn
+        kms_key_arns                 = with.kms_keys.rows[*].key_arn
         rds_db_cluster_snapshot_arns = [self.input.snapshot_arn.value]
       }
     }
@@ -352,13 +352,13 @@ edge "aws_rds_db_cluster_snapshot_to_kms_key_edges" {
   sql = <<-EOQ
     select
       db_cluster_snapshot_arn as from_id,
-      key_arn as to_id
+      kms_key_arn as to_id
     from
-      unnest($1::text[]) as key_arn,
+      unnest($1::text[]) as kms_key_arn,
       unnest($2::text[]) as db_cluster_snapshot_arn
   EOQ
 
-  param "key_arns" {}
+  param "kms_key_arns" {}
   param "rds_db_cluster_snapshot_arns" {}
 }
 

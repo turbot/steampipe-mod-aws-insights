@@ -125,16 +125,16 @@ dashboard "ebs_snapshot_detail" {
       edges = [
         edge.ebs_snapshot_from_ebs_volume,
         edge.ebs_snapshot_from_ec2_launch_configuration,
-        edge.ebs_snapshot_to_kms_key
-        edge.ebs_volume_ebs_snapshots_to_ec2_ami,
+        edge.ebs_snapshot_to_kms_key,
+        edge.ebs_volume_ebs_snapshots_to_ec2_ami
       ]
 
       args = {
-        snapshot_arns             = [self.input.snapshot_arn.value]
-        volume_arns               = with.ebs_volumes.rows[*].volume_arn
-        key_arns                  = with.kms_keys.rows[*].key_arn
-        image_ids                 = with.amis.rows[*].image_id
-        launch_configuration_arns = with.launch_configurations.rows[*].launch_configuration_arn
+        ebs_snapshot_arns             = [self.input.snapshot_arn.value]
+        ebs_volume_arns               = with.ebs_volumes.rows[*].volume_arn
+        kms_key_arns                  = with.kms_keys.rows[*].key_arn
+        ec2_image_ids                 = with.amis.rows[*].image_id
+        ec2_launch_configuration_arns = with.launch_configurations.rows[*].launch_configuration_arn
       }
     }
   }

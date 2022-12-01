@@ -3,15 +3,15 @@ edge "ebs_volume_ebs_snapshots_to_ec2_ami" {
 
   sql = <<-EOQ
     select
-      image_ids as to_id,
-      snapshot_arns as from_id
+      ec2_image_id as to_id,
+      ebs_snapshot_arn as from_id
     from
-      unnest($1::text[]) as image_ids,
-      unnest($2::text[]) as snapshot_arns
+      unnest($1::text[]) as ec2_image_id,
+      unnest($2::text[]) as ebs_snapshot_arn
   EOQ
 
-  param "image_ids" {}
-  param "snapshot_arns" {}
+  param "ec2_image_ids" {}
+  param "ebs_snapshot_arns" {}
 }
 
 edge "ebs_snapshot_from_ebs_volume" {
@@ -19,15 +19,15 @@ edge "ebs_snapshot_from_ebs_volume" {
 
   sql = <<-EOQ
     select
-      volume_arn as from_id,
-      snapshot_arn as to_id
+      ebs_volume_arn as from_id,
+      ebs_snapshot_arn as to_id
     from
-      unnest($1::text[]) as volume_arn,
-      unnest($2::text[]) as snapshot_arn
+      unnest($1::text[]) as ebs_volume_arn,
+      unnest($2::text[]) as ebs_snapshot_arn
   EOQ
 
-  param "volume_arns" {}
-  param "snapshot_arns" {}
+  param "ebs_volume_arns" {}
+  param "ebs_snapshot_arns" {}
 }
 
 edge "ebs_snapshot_from_ec2_launch_configuration" {
@@ -42,8 +42,8 @@ edge "ebs_snapshot_from_ec2_launch_configuration" {
       unnest($2::text[]) as snapshot_arn
   EOQ
 
-  param "launch_configuration_arns" {}
-  param "snapshot_arns" {}
+  param "ec2_launch_configuration_arns" {}
+  param "ebs_snapshot_arns" {}
 }
 
 edge "ebs_snapshot_to_kms_key" {
@@ -51,13 +51,13 @@ edge "ebs_snapshot_to_kms_key" {
 
   sql = <<-EOQ
     select
-      snapshot_arn as to_id,
-      key_arn as from_id
+      ebs_snapshot_arn as to_id,
+      kms_key_arn as from_id
     from
-      unnest($2::text[]) as snapshot_arn,
-      unnest($1::text[]) as key_arn
+      unnest($2::text[]) as ebs_snapshot_arn,
+      unnest($1::text[]) as kms_key_arn
   EOQ
 
-  param "snapshot_arns" {}
-  param "key_arns" {}
+  param "ebs_snapshot_arns" {}
+  param "kms_key_arns" {}
 }

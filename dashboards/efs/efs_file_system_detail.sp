@@ -163,9 +163,9 @@ dashboard "efs_file_system_detail" {
         node.efs_file_system,
         node.efs_mount_target,
         node.kms_key,
-        node.vpc
+        node.vpc,
         node.vpc_security_group,
-        node.vpc_subnet,
+        node.vpc_subnet
       ]
 
       edges = [
@@ -178,13 +178,13 @@ dashboard "efs_file_system_detail" {
       ]
 
       args = {
-        efs_file_system_arns = [self.input.efs_file_system_arn.value]
-        key_arns             = with.kms_keys.rows[*].key_arn
-        security_group_ids   = with.security_groups.rows[*].security_group_id
-        access_point_arns    = with.access_points.rows[*].access_point_arn
-        mount_target_ids     = with.mount_targets.rows[*].mount_target_id
-        subnet_ids           = with.subnets.rows[*].subnet_id
-        vpc_ids              = with.vpcs.rows[*].vpc_id
+        efs_file_system_arns   = [self.input.efs_file_system_arn.value]
+        kms_key_arns           = with.kms_keys.rows[*].key_arn
+        vpc_security_group_ids = with.security_groups.rows[*].security_group_id
+        efs_access_point_arns  = with.access_points.rows[*].access_point_arn
+        efs_mount_target_ids   = with.mount_targets.rows[*].mount_target_id
+        vpc_subnet_ids         = with.subnets.rows[*].subnet_id
+        vpc_vpc_ids            = with.vpcs.rows[*].vpc_id
       }
     }
   }

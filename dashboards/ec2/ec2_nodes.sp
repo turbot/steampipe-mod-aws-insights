@@ -41,7 +41,7 @@ node "aws_ec2_instance_nodes" {
       arn = any($1);
   EOQ
 
-  param "instance_arns" {}
+  param "ec2_instance_arns" {}
 }
 
 node "ec2_launch_configuration" {
@@ -62,5 +62,5 @@ node "ec2_launch_configuration" {
       launch_configuration_arn = any($1);
   EOQ
 
-  param "launch_configuration_arns" {}
+  param "ec2_launch_configuration_arns" {}
 }
