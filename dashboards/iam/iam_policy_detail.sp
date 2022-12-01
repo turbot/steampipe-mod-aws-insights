@@ -353,11 +353,11 @@ edge "iam_policy_from_iam_user" {
 
   sql = <<-EOQ
    select
-      iam_policy_arns as to_id,
-      iam_user_arns as from_id
+      iam_policy_arn as to_id,
+      iam_user_arn as from_id
     from
-      unnest($1::text[]) as iam_policy_arns,
-      unnest($2::text[]) as iam_user_arns
+      unnest($1::text[]) as iam_policy_arn,
+      unnest($2::text[]) as iam_user_arn
   EOQ
 
   param "iam_policy_arns" {}
@@ -370,11 +370,11 @@ edge "iam_policy_from_iam_role" {
 
   sql = <<-EOQ
    select
-      iam_policy_arns as to_id,
-      iam_role_arns as from_id
+      iam_policy_arn as to_id,
+      iam_role_arn as from_id
     from
-      unnest($1::text[]) as iam_policy_arns,
-      unnest($2::text[]) as iam_role_arns
+      unnest($1::text[]) as iam_policy_arn,
+      unnest($2::text[]) as iam_role_arn
   EOQ
 
   param "iam_policy_arns" {}
@@ -386,11 +386,11 @@ edge "iam_policy_from_iam_group" {
 
   sql = <<-EOQ
    select
-      iam_policy_arns as to_id,
-      iam_group_arns as from_id
+      iam_policy_arn as to_id,
+      iam_group_arn as from_id
     from
-      unnest($1::text[]) as iam_policy_arns,
-      unnest($2::text[]) as iam_group_arns
+      unnest($1::text[]) as iam_policy_arn,
+      unnest($2::text[]) as iam_group_arn
   EOQ
 
   param "iam_policy_arns" {}

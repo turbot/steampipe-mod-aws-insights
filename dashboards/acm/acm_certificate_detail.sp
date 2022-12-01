@@ -351,11 +351,11 @@ edge "opensearch_domain_to_acm_certificate" {
 
   sql = <<-EOQ
     select
-      acm_certificate_arns as to_id,
-      opensearch_arns as from_id
+      acm_certificate_arn as to_id,
+      opensearch_arn as from_id
     from
-      unnest($1::text[]) as acm_certificate_arns,
-      unnest($2::text[]) as opensearch_arns
+      unnest($1::text[]) as acm_certificate_arn,
+      unnest($2::text[]) as opensearch_arn
   EOQ
 
   param "acm_certificate_arns" {}

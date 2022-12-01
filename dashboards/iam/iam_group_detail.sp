@@ -276,11 +276,11 @@ edge "iam_group_to_iam_user" {
 
   sql = <<-EOQ
    select
-      iam_user_arns as to_id,
-      iam_group_arns as from_id
+      iam_user_arn as to_id,
+      iam_group_arn as from_id
     from
-      unnest($1::text[]) as iam_user_arns,
-      unnest($2::text[]) as iam_group_arns
+      unnest($1::text[]) as iam_user_arn,
+      unnest($2::text[]) as iam_group_arn
   EOQ
 
   param "iam_user_arns" {}

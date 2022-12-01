@@ -674,11 +674,11 @@ edge "rds_db_cluster_to_rds_db_cluster_snapshot" {
 
   sql = <<-EOQ
     select
-      rds_db_cluster_arns as from_id,
-      rds_db_cluster_snapshot_arns as to_id
+      rds_db_cluster_arn as from_id,
+      rds_db_cluster_snapshot_arn as to_id
     from
-     unnest($1::text[]) as rds_db_cluster_arns,
-      unnest($2::text[]) as rds_db_cluster_snapshot_arns
+     unnest($1::text[]) as rds_db_cluster_arn,
+      unnest($2::text[]) as rds_db_cluster_snapshot_arn
   EOQ
 
   param "rds_db_cluster_arns" {}

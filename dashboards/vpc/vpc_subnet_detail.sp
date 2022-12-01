@@ -470,11 +470,11 @@ edge "vpc_to_vpc_subnet" {
 
   sql = <<-EOQ
      select
-      vpc_vpc_ids as from_id,
-      vpc_subnet_ids as to_id
+      vpc_id as from_id,
+      vpc_subnet_id as to_id
     from
-      unnest($1::text[]) as vpc_vpc_ids,
-      unnest($2::text[]) as vpc_subnet_ids;
+      unnest($1::text[]) as vpc_id,
+      unnest($2::text[]) as vpc_subnet_id;
   EOQ
 
   param "vpc_vpc_ids" {}
@@ -567,11 +567,11 @@ edge "vpc_subnet_to_rds_db_instance" {
 
   sql = <<-EOQ
     select
-      vpc_subnet_ids as from_id,
-      rds_db_instance_arns as to_id
+      vpc_subnet_id as from_id,
+      rds_db_instance_arn as to_id
     from
-      unnest($1::text[]) as rds_db_instance_arns,
-      unnest($2::text[]) as vpc_subnet_ids;
+      unnest($1::text[]) as rds_db_instance_arn,
+      unnest($2::text[]) as vpc_subnet_id;
   EOQ
 
   param "rds_db_instance_arns" {}
@@ -585,11 +585,11 @@ edge "vpc_subnet_to_ec2_instance" {
 
   sql = <<-EOQ
     select
-      vpc_subnet_ids as from_id,
-      ec2_instance_arns as to_id
+      vpc_subnet_id as from_id,
+      ec2_instance_arn as to_id
     from
-      unnest($1::text[]) as ec2_instance_arns,
-      unnest($2::text[]) as vpc_subnet_ids;
+      unnest($1::text[]) as ec2_instance_arn,
+      unnest($2::text[]) as vpc_subnet_id;
   EOQ
 
   param "ec2_instance_arns" {}
@@ -601,11 +601,11 @@ edge "vpc_subnet_to_lambda_function" {
 
   sql = <<-EOQ
     select
-      vpc_subnet_ids as from_id,
-      lambda_function_arns as to_id
+      vpc_subnet_id as from_id,
+      lambda_function_arn as to_id
     from
-      unnest($1::text[]) as lambda_function_arns,
-      unnest($2::text[]) as vpc_subnet_ids;
+      unnest($1::text[]) as lambda_function_arn,
+      unnest($2::text[]) as vpc_subnet_id;
   EOQ
 
   param "lambda_function_arns" {}
@@ -656,11 +656,11 @@ edge "vpc_subnet_to_flow_log" {
 
   sql = <<-EOQ
    select
-      vpc_subnet_ids as from_id,
-      vpc_flow_log_ids as to_id
+      vpc_subnet_id as from_id,
+      vpc_flow_log_id as to_id
     from
-      unnest($1::text[]) as vpc_flow_log_ids,
-      unnest($2::text[]) as vpc_subnet_ids;
+      unnest($1::text[]) as vpc_flow_log_id,
+      unnest($2::text[]) as vpc_subnet_id;
   EOQ
 
   param "vpc_flow_log_ids" {}
@@ -672,11 +672,11 @@ edge "vpc_subnet_to_network_interface" {
 
   sql = <<-EOQ
    select
-      vpc_subnet_ids as from_id,
-      ec2_network_interface_ids as to_id
+      vpc_subnet_id as from_id,
+      ec2_network_interface_id as to_id
     from
-      unnest($1::text[]) as ec2_network_interface_ids,
-      unnest($2::text[]) as vpc_subnet_ids;
+      unnest($1::text[]) as ec2_network_interface_id,
+      unnest($2::text[]) as vpc_subnet_id;
   EOQ
 
   param "ec2_network_interface_ids" {}
@@ -688,11 +688,11 @@ edge "vpc_subnet_to_alb" {
 
   sql = <<-EOQ
     select
-      vpc_subnet_ids as from_id,
-      ec2_application_load_balancer_arns as to_id
+      vpc_subnet_id as from_id,
+      ec2_application_load_balancer_arn as to_id
     from
-      unnest($1::text[]) as ec2_application_load_balancer_arns,
-      unnest($2::text[]) as vpc_subnet_ids;
+      unnest($1::text[]) as ec2_application_load_balancer_arn,
+      unnest($2::text[]) as vpc_subnet_id;
   EOQ
 
   param "ec2_application_load_balancer_arns" {}
@@ -704,11 +704,11 @@ edge "vpc_subnet_to_nlb" {
 
   sql = <<-EOQ
     select
-      vpc_subnet_ids as from_id,
-      ec2_network_load_balancer_arns as to_id
+      vpc_subnet_id as from_id,
+      ec2_network_load_balancer_arn as to_id
     from
-      unnest($1::text[]) as ec2_network_load_balancer_arns,
-      unnest($2::text[]) as vpc_subnet_ids;
+      unnest($1::text[]) as ec2_network_load_balancer_arn,
+      unnest($2::text[]) as vpc_subnet_id;
   EOQ
 
   param "ec2_network_load_balancer_arns" {}
@@ -720,11 +720,11 @@ edge "vpc_subnet_to_clb" {
 
   sql = <<-EOQ
     select
-      vpc_subnet_ids as from_id,
-      ec2_classic_load_balancer_arns as to_id
+      vpc_subnet_id as from_id,
+      ec2_classic_load_balancer_arn as to_id
     from
-      unnest($1::text[]) as ec2_classic_load_balancer_arns,
-      unnest($2::text[]) as vpc_subnet_ids;
+      unnest($1::text[]) as ec2_classic_load_balancer_arn,
+      unnest($2::text[]) as vpc_subnet_id;
   EOQ
 
   param "ec2_classic_load_balancer_arns" {}
@@ -736,11 +736,11 @@ edge "vpc_subnet_to_glb" {
 
   sql = <<-EOQ
     select
-      vpc_subnet_ids as from_id,
-      ec2_gateway_load_balancer_arns as to_id
+      vpc_subnet_id as from_id,
+      ec2_gateway_load_balancer_arn as to_id
     from
-      unnest($1::text[]) as ec2_gateway_load_balancer_arns,
-      unnest($2::text[]) as vpc_subnet_ids;
+      unnest($1::text[]) as ec2_gateway_load_balancer_arn,
+      unnest($2::text[]) as vpc_subnet_id;
   EOQ
 
   param "ec2_gateway_load_balancer_arns" {}

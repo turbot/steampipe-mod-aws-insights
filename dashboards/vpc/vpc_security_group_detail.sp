@@ -1394,11 +1394,11 @@ edge "vpc_security_group_to_rds_db_cluster" {
 
   sql = <<-EOQ
     select
-      vpc_security_group_ids as from_id,
-      rds_db_cluster_arns as to_id
+      vpc_security_group_id as from_id,
+      rds_db_cluster_arn as to_id
     from
-      unnest($1::text[]) as rds_db_cluster_arns,
-      unnest($2::text[]) as vpc_security_group_ids
+      unnest($1::text[]) as rds_db_cluster_arn,
+      unnest($2::text[]) as vpc_security_group_id
   EOQ
 
   param "rds_db_cluster_arns" {}
@@ -1410,11 +1410,11 @@ edge "vpc_security_group_to_rds_db_instance" {
 
   sql = <<-EOQ
     select
-      vpc_security_group_ids as from_id,
-      rds_db_instance_arns as to_id
+      vpc_security_group_id as from_id,
+      rds_db_instance_arn as to_id
     from
-      unnest($1::text[]) as rds_db_instance_arns,
-      unnest($2::text[]) as vpc_security_group_ids
+      unnest($1::text[]) as rds_db_instance_arn,
+      unnest($2::text[]) as vpc_security_group_id
   EOQ
 
   param "rds_db_instance_arns" {}
@@ -1426,11 +1426,11 @@ edge "vpc_security_group_to_ec2_instance" {
 
   sql = <<-EOQ
     select
-      vpc_security_group_ids as from_id,
-      ec2_instance_arns as to_id
+      vpc_security_group_id as from_id,
+      ec2_instance_arn as to_id
     from
-      unnest($1::text[]) as ec2_instance_arns,
-      unnest($2::text[]) as vpc_security_group_ids
+      unnest($1::text[]) as ec2_instance_arn,
+      unnest($2::text[]) as vpc_security_group_id
   EOQ
 
   param "ec2_instance_arns" {}
@@ -1442,11 +1442,11 @@ edge "vpc_security_group_to_lambda_function" {
 
   sql = <<-EOQ
     select
-      vpc_security_group_ids as from_id,
-      lambda_function_arns as to_id
+      vpc_security_group_id as from_id,
+      lambda_function_arn as to_id
     from
-      unnest($1::text[]) as lambda_function_arns,
-      unnest($2::text[]) as vpc_security_group_ids
+      unnest($1::text[]) as lambda_function_arn,
+      unnest($2::text[]) as vpc_security_group_id
   EOQ
 
   param "lambda_function_arns" {}
@@ -1504,11 +1504,11 @@ edge "vpc_security_group_to_redshift_cluster" {
 
   sql = <<-EOQ
     select
-      vpc_security_group_ids as from_id,
-      redshift_cluster_arns as to_id
+      vpc_security_group_id as from_id,
+      redshift_cluster_arn as to_id
     from
-      unnest($1::text[]) as redshift_cluster_arns,
-      unnest($2::text[]) as vpc_security_group_ids
+      unnest($1::text[]) as redshift_cluster_arn,
+      unnest($2::text[]) as vpc_security_group_id
   EOQ
 
   param "redshift_cluster_arns" {}
@@ -1520,11 +1520,11 @@ edge "vpc_security_group_to_ec2_classic_load_balancer" {
 
   sql = <<-EOQ
     select
-      vpc_security_group_ids as from_id,
-      ec2_classic_load_balancer_arns as to_id
+      vpc_security_group_id as from_id,
+      ec2_classic_load_balancer_arn as to_id
     from
-      unnest($1::text[]) as ec2_classic_load_balancer_arns,
-      unnest($2::text[]) as vpc_security_group_ids
+      unnest($1::text[]) as ec2_classic_load_balancer_arn,
+      unnest($2::text[]) as vpc_security_group_id
   EOQ
 
   param "ec2_classic_load_balancer_arns" {}
@@ -1536,11 +1536,11 @@ edge "vpc_security_group_to_ec2_application_load_balancer" {
 
   sql = <<-EOQ
     select
-      vpc_security_group_ids as from_id,
-      ec2_application_load_balancer_arns as to_id
+      vpc_security_group_id as from_id,
+      ec2_application_load_balancer_arn as to_id
     from
-      unnest($1::text[]) as ec2_application_load_balancer_arns,
-      unnest($2::text[]) as vpc_security_group_ids
+      unnest($1::text[]) as ec2_application_load_balancer_arn,
+      unnest($2::text[]) as vpc_security_group_id
   EOQ
 
   param "ec2_application_load_balancer_arns" {}
@@ -1593,11 +1593,11 @@ edge "vpc_security_group_to_dax_cluster" {
 
   sql = <<-EOQ
     select
-      vpc_security_group_ids as from_id,
-      dax_cluster_arns as to_id
+      vpc_security_group_id as from_id,
+      dax_cluster_arn as to_id
     from
-      unnest($1::text[]) as dax_cluster_arns,
-      unnest($2::text[]) as vpc_security_group_ids
+      unnest($1::text[]) as dax_cluster_arn,
+      unnest($2::text[]) as vpc_security_group_id
   EOQ
 
   param "dax_cluster_arns" {}
@@ -1654,11 +1654,11 @@ edge "vpc_security_group_to_elasticache_cluster" {
 
   sql = <<-EOQ
     select
-      vpc_security_group_ids as from_id,
-      elasticache_cluster_arns as to_id
+      vpc_security_group_id as from_id,
+      elasticache_cluster_arn as to_id
     from
-      unnest($1::text[]) as elasticache_cluster_arns,
-      unnest($2::text[]) as vpc_security_group_ids
+      unnest($1::text[]) as elasticache_cluster_arn,
+      unnest($2::text[]) as vpc_security_group_id
   EOQ
 
   param "elasticache_cluster_arns" {}

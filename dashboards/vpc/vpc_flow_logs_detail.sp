@@ -283,11 +283,11 @@ edge "vpc_flow_log_to_s3_bucket" {
 
   sql = <<-EOQ
     select
-      vpc_flow_log_ids as from_id,
-      s3_bucket_arns as to_id
+      vpc_flow_log_id as from_id,
+      s3_bucket_arn as to_id
     from
-      unnest($1::text[]) as vpc_flow_log_ids,
-      unnest($2::text[]) as s3_bucket_arns
+      unnest($1::text[]) as vpc_flow_log_id,
+      unnest($2::text[]) as s3_bucket_arn
   EOQ
 
   param "vpc_flow_log_ids" {}
@@ -299,11 +299,11 @@ edge "vpc_flow_log_to_cloudwatch_log_group" {
 
   sql = <<-EOQ
     select
-      vpc_flow_log_ids as from_id,
-      log_group_arns as to_id
+      vpc_flow_log_id as from_id,
+      log_group_arn as to_id
     from
-      unnest($1::text[]) as vpc_flow_log_ids,
-      unnest($2::text[]) as log_group_arns
+      unnest($1::text[]) as vpc_flow_log_id,
+      unnest($2::text[]) as log_group_arn
   EOQ
 
   param "vpc_flow_log_ids" {}
@@ -315,11 +315,11 @@ edge "vpc_flow_log_to_iam_role" {
 
   sql = <<-EOQ
     select
-      vpc_flow_log_ids as from_id,
-      iam_role_arns as to_id
+      vpc_flow_log_id as from_id,
+      iam_role_arn as to_id
     from
-      unnest($1::text[]) as vpc_flow_log_ids,
-      unnest($2::text[]) as iam_role_arns
+      unnest($1::text[]) as vpc_flow_log_id,
+      unnest($2::text[]) as iam_role_arn
   EOQ
 
   param "vpc_flow_log_ids" {}
@@ -331,11 +331,11 @@ edge "vpc_subnet_to_vpc_flow_log" {
 
   sql = <<-EOQ
     select
-      vpc_subnet_ids as from_id,
-      vpc_flow_log_ids as to_id
+      vpc_subnet_id as from_id,
+      vpc_flow_log_id as to_id
     from
-      unnest($1::text[]) as vpc_flow_log_ids,
-      unnest($2::text[]) as vpc_subnet_ids
+      unnest($1::text[]) as vpc_flow_log_id,
+      unnest($2::text[]) as vpc_subnet_id
   EOQ
 
   param "vpc_flow_log_ids" {}

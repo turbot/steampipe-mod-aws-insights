@@ -417,11 +417,11 @@ edge "ec2_network_interface_to_vpc_security_group" {
 
   sql = <<-EOQ
     select
-      ec2_network_interface_ids as from_id,
-      vpc_security_group_ids as to_id
+      ec2_network_interface_id as from_id,
+      vpc_security_group_id as to_id
     from
-      unnest($1::text[]) as ec2_network_interface_ids,
-      unnest($2::text[]) as vpc_security_group_ids
+      unnest($1::text[]) as ec2_network_interface_id,
+      unnest($2::text[]) as vpc_security_group_id
   EOQ
 
   param "ec2_network_interface_ids" {}
@@ -434,14 +434,14 @@ edge "ec2_network_interface_to_vpc_subnet" {
   sql = <<-EOQ
     select
       coalesce(
-        vpc_security_group_ids,
-        ec2_network_interface_ids
+        vpc_security_group_id,
+        ec2_network_interface_id
       ) as from_id,
-      vpc_subnet_ids as to_id
+      vpc_subnet_id as to_id
     from
-      unnest($1::text[]) as ec2_network_interface_ids,
-      unnest($2::text[]) as vpc_subnet_ids,
-      unnest($3::text[]) as vpc_security_group_ids
+      unnest($1::text[]) as ec2_network_interface_id,
+      unnest($2::text[]) as vpc_subnet_id,
+      unnest($3::text[]) as vpc_security_group_id
   EOQ
 
   param "ec2_network_interface_ids" {}
@@ -454,11 +454,11 @@ edge "ec2_network_interface_to_vpc_flow_log" {
 
   sql = <<-EOQ
    select
-      ec2_network_interface_ids as from_id,
-      vpc_flow_log_ids as to_id
+      ec2_network_interface_id as from_id,
+      vpc_flow_log_id as to_id
     from
-      unnest($1::text[]) as ec2_network_interface_ids,
-      unnest($2::text[]) as vpc_flow_log_ids
+      unnest($1::text[]) as ec2_network_interface_id,
+      unnest($2::text[]) as vpc_flow_log_id
   EOQ
 
   param "ec2_network_interface_ids" {}

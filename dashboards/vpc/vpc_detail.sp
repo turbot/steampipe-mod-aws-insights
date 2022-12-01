@@ -1633,11 +1633,11 @@ edge "vpc_to_vpc_security_group" {
 
   sql = <<-EOQ
     select
-      vpc_vpc_ids as from_id,
-      vpc_security_group_ids as to_id
+      vpc_vpc_id as from_id,
+      vpc_security_group_id as to_id
     from
-      unnest($1::text[]) as vpc_vpc_ids,
-      unnest($2::text[]) as vpc_security_group_ids
+      unnest($1::text[]) as vpc_vpc_id,
+      unnest($2::text[]) as vpc_security_group_id
   EOQ
 
   param "vpc_vpc_ids" {}
@@ -1750,11 +1750,11 @@ edge "vpc_to_vpc_flow_log" {
 
   sql = <<-EOQ
     select
-      vpc_vpc_ids as from_id,
-      vpc_flow_log_ids as to_id
+      vpc_vpc_id as from_id,
+      vpc_flow_log_id as to_id
     from
-      unnest($1::text[]) as vpc_flow_log_ids,
-      unnest($2::text[]) as vpc_vpc_ids
+      unnest($1::text[]) as vpc_flow_log_id,
+      unnest($2::text[]) as vpc_vpc_id
   EOQ
 
   param "vpc_flow_log_ids" {}
