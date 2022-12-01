@@ -63,7 +63,7 @@ dashboard "ec2_network_interface_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "instances" {
+      with "ec2_instances" {
         sql = <<-EOQ
           select
             i.arn as instance_arn
@@ -77,7 +77,7 @@ dashboard "ec2_network_interface_detail" {
         args = [self.input.network_interface_id.value]
       }
 
-      with "security_groups" {
+      with "vpc_security_groups" {
         sql = <<-EOQ
           select
            distinct sg ->> 'GroupId' as security_group_id
@@ -91,7 +91,7 @@ dashboard "ec2_network_interface_detail" {
         args = [self.input.network_interface_id.value]
       }
 
-      with "subnets" {
+      with "vpc_subnets" {
         sql = <<-EOQ
           select
             subnet_id as subnet_id
@@ -104,7 +104,7 @@ dashboard "ec2_network_interface_detail" {
         args = [self.input.network_interface_id.value]
       }
 
-      with "eips" {
+      with "vpc_eips" {
         sql = <<-EOQ
           select
             arn as eip_arn
@@ -117,7 +117,7 @@ dashboard "ec2_network_interface_detail" {
         args = [self.input.network_interface_id.value]
       }
 
-      with "vpcs" {
+      with "vpc_vpcs" {
         sql = <<-EOQ
           select
             vpc_id as vpc_id
@@ -130,7 +130,7 @@ dashboard "ec2_network_interface_detail" {
         args = [self.input.network_interface_id.value]
       }
 
-      with "flow_logs" {
+      with "vpc_flow_logs" {
         sql = <<-EOQ
           select
             flow_log_id as flow_log_id
@@ -168,12 +168,12 @@ dashboard "ec2_network_interface_detail" {
 
       args = {
         ec2_network_interface_ids = [self.input.network_interface_id.value]
-        ec2_instance_arns         = with.instances.rows[*].instance_arn
-        vpc_security_group_ids    = with.security_groups.rows[*].security_group_id
-        vpc_subnet_ids            = with.subnets.rows[*].subnet_id
-        vpc_eip_arns              = with.eips.rows[*].eip_arn
-        vpc_vpc_ids               = with.vpcs.rows[*].vpc_id
-        vpc_flow_log_ids          = with.flow_logs.rows[*].flow_log_id
+        ec2_instance_arns         = with.ec2_instances.rows[*].instance_arn
+        vpc_security_group_ids    = with.vpc_security_groups.rows[*].security_group_id
+        vpc_subnet_ids            = with.vpc_subnets.rows[*].subnet_id
+        vpc_eip_arns              = with.vpc_eips.rows[*].eip_arn
+        vpc_vpc_ids               = with.vpc_vpcs.rows[*].vpc_id
+        vpc_flow_log_ids          = with.vpc_flow_logs.rows[*].flow_log_id
 
       }
     }

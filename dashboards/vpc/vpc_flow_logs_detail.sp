@@ -40,7 +40,7 @@ dashboard "vpc_flow_logs_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "buckets" {
+      with "s3_buckets" {
         sql = <<-EOQ
           select
             distinct s.arn as bucket_arn
@@ -101,7 +101,7 @@ dashboard "vpc_flow_logs_detail" {
         args = [self.input.flow_log_id.value]
       }
 
-      with "subnets" {
+      with "vpc_subnets" {
         sql = <<-EOQ
           select
             resource_id as subnet_id
@@ -115,7 +115,7 @@ dashboard "vpc_flow_logs_detail" {
         args = [self.input.flow_log_id.value]
       }
 
-      with "vpcs" {
+      with "vpc_vpcs" {
         sql = <<-EOQ
           select
             resource_id as vpc_id
@@ -150,10 +150,10 @@ dashboard "vpc_flow_logs_detail" {
 
       args = {
         iam_role_arns             = with.roles.rows[*].role_arn
-        s3_bucket_arns            = with.buckets.rows[*].bucket_arn
+        s3_bucket_arns            = with.s3_buckets.rows[*].bucket_arn
         ec2_network_interface_ids = with.enis.rows[*].eni_id
-        vpc_subnet_ids            = with.subnets.rows[*].subnet_id
-        vpc_vpc_ids               = with.vpcs.rows[*].vpc_id
+        vpc_subnet_ids            = with.vpc_subnets.rows[*].subnet_id
+        vpc_vpc_ids               = with.vpc_vpcs.rows[*].vpc_id
         log_group_arns            = with.log_groups.rows[*].log_group_arn
         vpc_flow_log_ids          = [self.input.flow_log_id.value]
       }

@@ -496,7 +496,7 @@ query "s3_bucket_by_region" {
 
 query "s3_bucket_by_creation_month" {
   sql = <<-EOQ
-    with buckets as (
+    with s3_buckets as (
       select
         title,
         creation_date,
@@ -514,7 +514,7 @@ query "s3_bucket_by_creation_month" {
             (
               select
                 min(creation_date)
-                from buckets)),
+                from s3_buckets)),
             date_trunc('month',
               current_date),
             interval '1 month') as d
@@ -524,7 +524,7 @@ query "s3_bucket_by_creation_month" {
         creation_month,
         count(*)
       from
-        buckets
+        s3_buckets
       group by
         creation_month
     )

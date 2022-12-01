@@ -62,7 +62,7 @@ dashboard "cloudfront_distribution_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "certificates" {
+      with "acm_certificates" {
         sql = <<-EOQ
           select
             viewer_certificate ->> 'ACMCertificateArn' as certificate_arn
@@ -76,7 +76,7 @@ dashboard "cloudfront_distribution_detail" {
         args = [self.input.distribution_arn.value]
       }
 
-      with "buckets" {
+      with "s3_buckets" {
         sql = <<-EOQ
           select
             arn as bucket_arn
@@ -99,7 +99,7 @@ dashboard "cloudfront_distribution_detail" {
         args = [self.input.distribution_arn.value]
       }
 
-      with "albs" {
+      with "ec2_application_load_balancers" {
         sql = <<-EOQ
           select
             arn as alb_arn
@@ -183,9 +183,9 @@ dashboard "cloudfront_distribution_detail" {
 
       args = {
         cloudfront_distribution_arns       = [self.input.distribution_arn.value]
-        s3_bucket_arns                     = with.buckets.rows[*].bucket_arn
-        acm_certificate_arns               = with.certificates.rows[*].certificate_arn
-        ec2_application_load_balancer_arns = with.albs.rows[*].alb_arn
+        s3_bucket_arns                     = with.s3_buckets.rows[*].bucket_arn
+        acm_certificate_arns               = with.acm_certificates.rows[*].certificate_arn
+        ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
         mediastore_arns                    = with.media_stores.rows[*].mediastore_arn
         wafv2_acl_arns                     = with.wafv2_web_acls.rows[*].wafv2_acl_arn
       }

@@ -85,7 +85,7 @@ dashboard "dynamodb_table_detail" {
         args = [self.input.table_arn.value]
       }
 
-      with "buckets" {
+      with "s3_buckets" {
         sql = <<-EOQ
           select
             b.arn as bucket_arn
@@ -148,7 +148,7 @@ dashboard "dynamodb_table_detail" {
 
       args = {
         dynamodb_table_arns   = [self.input.table_arn.value]
-        s3_bucket_arns        = with.buckets.rows[*].bucket_arn
+        s3_bucket_arns        = with.s3_buckets.rows[*].bucket_arn
         kms_key_arns          = with.kms_keys.rows[*].key_arn
         kinesis_stream_arns   = with.kinesis_streams.rows[*].kinesis_stream_arn
         dbynamodb_backup_arns = with.dynamodb_backups.rows[*].dbynamodb_backup_arn

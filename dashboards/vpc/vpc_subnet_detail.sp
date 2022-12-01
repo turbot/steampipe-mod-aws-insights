@@ -48,7 +48,7 @@ dashboard "vpc_subnet_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "vpcs" {
+      with "vpc_vpcs" {
         sql = <<-EOQ
           select
             vpc_id as vpc_id
@@ -102,7 +102,7 @@ dashboard "vpc_subnet_detail" {
         args = [self.input.subnet_id.value]
       }
 
-      with "flow_logs" {
+      with "vpc_flow_logs" {
         sql = <<-EOQ
           select
             flow_log_id as flow_log_id
@@ -128,7 +128,7 @@ dashboard "vpc_subnet_detail" {
         args = [self.input.subnet_id.value]
       }
 
-      with "glbs" {
+      with "ec2_gateway_load_balancers" {
         sql = <<-EOQ
           select
             arn as glb_arn
@@ -142,7 +142,7 @@ dashboard "vpc_subnet_detail" {
         args = [self.input.subnet_id.value]
       }
 
-      with "albs" {
+      with "ec2_application_load_balancers" {
         sql = <<-EOQ
           select
             arn as alb_arn
@@ -156,7 +156,7 @@ dashboard "vpc_subnet_detail" {
         args = [self.input.subnet_id.value]
       }
 
-      with "clbs" {
+      with "ec2_classic_load_balancers" {
         sql = <<-EOQ
           select
             arn as clb_arn
@@ -170,7 +170,7 @@ dashboard "vpc_subnet_detail" {
         args = [self.input.subnet_id.value]
       }
 
-      with "nlbs" {
+      with "ec2_network_load_balancers" {
         sql = <<-EOQ
           select
             arn as nlb_arn
@@ -221,15 +221,15 @@ dashboard "vpc_subnet_detail" {
       args = {
         vpc_subnet_ids                     = [self.input.subnet_id.value]
         ec2_network_interface_ids          = with.enis.rows[*].eni_id
-        vpc_flow_log_ids                   = with.flow_logs.rows[*].flow_log_id
+        vpc_flow_log_ids                   = with.vpc_flow_logs.rows[*].flow_log_id
         lambda_function_arns               = with.lambda_functions.rows[*].lambda_arn
         ec2_instance_arns                  = with.ec2_instances.rows[*].instance_arn
         rds_db_instance_arns               = with.rds_db_instances.rows[*].rds_instance_arn
-        ec2_classic_load_balancer_arns     = with.clbs.rows[*].clb_arn
-        ec2_application_load_balancer_arns = with.albs.rows[*].alb_arn
-        ec2_network_load_balancer_arns     = with.nlbs.rows[*].nlb_arn
-        ec2_gateway_load_balancer_arns     = with.glbs.rows[*].glb_arn
-        vpc_vpc_ids                        = with.vpcs.rows[*].vpc_id
+        ec2_classic_load_balancer_arns     = with.ec2_classic_load_balancers.rows[*].clb_arn
+        ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
+        ec2_network_load_balancer_arns     = with.ec2_network_load_balancers.rows[*].nlb_arn
+        ec2_gateway_load_balancer_arns     = with.ec2_gateway_load_balancers.rows[*].glb_arn
+        vpc_vpc_ids                        = with.vpc_vpcs.rows[*].vpc_id
       }
     }
   }

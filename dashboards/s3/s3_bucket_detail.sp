@@ -87,7 +87,7 @@ dashboard "s3_bucket_detail" {
         args = [self.input.bucket_arn.value]
       }
 
-      with "albs" {
+      with "ec2_application_load_balancers" {
         sql = <<-EOQ
           select
             alb.arn as alb_arn
@@ -104,7 +104,7 @@ dashboard "s3_bucket_detail" {
         args = [self.input.bucket_arn.value]
       }
 
-      with "nlbs" {
+      with "ec2_network_load_balancers" {
         sql = <<-EOQ
           select
             nlb.arn as nlb_arn
@@ -121,7 +121,7 @@ dashboard "s3_bucket_detail" {
         args = [self.input.bucket_arn.value]
       }
 
-      with "clbs" {
+      with "ec2_classic_load_balancers" {
         sql = <<-EOQ
           select
             clb.arn as clb_arn
@@ -136,7 +136,7 @@ dashboard "s3_bucket_detail" {
         args = [self.input.bucket_arn.value]
       }
 
-      with "keys" {
+      with "kms_keys" {
         sql = <<-EOQ
           select
             k.arn as key_arn
@@ -152,7 +152,7 @@ dashboard "s3_bucket_detail" {
         args = [self.input.bucket_arn.value]
       }
 
-      with "functions" {
+      with "lambda_functions" {
         sql = <<-EOQ
           select
             f.arn as function_arn
@@ -168,7 +168,7 @@ dashboard "s3_bucket_detail" {
         args = [self.input.bucket_arn.value]
       }
 
-      with "topics" {
+      with "sns_topics" {
         sql = <<-EOQ
           select
             q.topic_arn as topic_arn
@@ -188,7 +188,7 @@ dashboard "s3_bucket_detail" {
         args = [self.input.bucket_arn.value]
       }
 
-      with "queues" {
+      with "sqs_queues" {
         sql = <<-EOQ
           select
             q.queue_arn as queue_arn
@@ -238,13 +238,13 @@ dashboard "s3_bucket_detail" {
       args = {
         s3_bucket_arns                     = [self.input.bucket_arn.value]
         cloudtrail_trail_arns              = with.trails.rows[*].trail_arn
-        ec2_application_load_balancer_arns = with.albs.rows[*].alb_arn
-        ec2_network_load_balancer_arns     = with.nlbs.rows[*].nlb_arn
-        ec2_classic_load_balancer_arns     = with.clbs.rows[*].clb_arn
-        kms_key_arns                       = with.keys.rows[*].key_arn
-        lambda_function_arns               = with.functions.rows[*].function_arn
-        sns_topic_arns                     = with.topics.rows[*].topic_arn
-        sqs_queue_arns                     = with.queues.rows[*].queue_arn
+        ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
+        ec2_network_load_balancer_arns     = with.ec2_network_load_balancers.rows[*].nlb_arn
+        ec2_classic_load_balancer_arns     = with.ec2_classic_load_balancers.rows[*].clb_arn
+        kms_key_arns                       = with.kms_keys.rows[*].key_arn
+        lambda_function_arns               = with.lambda_functions.rows[*].function_arn
+        sns_topic_arns                     = with.sns_topics.rows[*].topic_arn
+        sqs_queue_arns                     = with.sqs_queues.rows[*].queue_arn
       }
     }
   }

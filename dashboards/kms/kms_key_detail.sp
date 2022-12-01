@@ -135,7 +135,7 @@ dashboard "kms_key_detail" {
         args = [self.input.key_arn.value]
       }
 
-      with "topics" {
+      with "sns_topics" {
         sql = <<-EOQ
           select
             t.topic_arn as topic_arn
@@ -151,7 +151,7 @@ dashboard "kms_key_detail" {
         args = [self.input.key_arn.value]
       }
 
-      with "queues" {
+      with "sqs_queues" {
         sql = <<-EOQ
           select
             q.queue_arn as queue_arn
@@ -170,7 +170,7 @@ dashboard "kms_key_detail" {
         args = [self.input.key_arn.value]
       }
 
-      with "functions" {
+      with "lambda_functions" {
         sql = <<-EOQ
           select
             l.arn as function_arn
@@ -199,7 +199,7 @@ dashboard "kms_key_detail" {
 
       }
 
-      with "buckets" {
+      with "s3_buckets" {
         sql = <<-EOQ
           select
             b.arn as bucket_arn
@@ -233,7 +233,7 @@ dashboard "kms_key_detail" {
       ]
 
       edges = [
-        edge.kms_key_to_kms_alias_edge,
+        edge.kms_key_to_kms_alias,
         edge.kms_key_from_cloudtrail_trail,
         edge.kms_key_from_ebs_volume,
         edge.rds_db_cluster_snapshot_to_kms_key,
@@ -241,7 +241,7 @@ dashboard "kms_key_detail" {
         edge.kms_key_from_redshift_cluster,
         edge.kms_key_from_sns_topic,
         edge.kms_key_from_sqs_queue,
-        edge.rds_db_instance_to_kms_key_edge,
+        edge.rds_db_instance_to_kms_key,
         edge.rds_db_snapshot_to_kms_key,
         edge.kms_key_from_lambda_function,
         edge.s3_bucket_to_kms_key
@@ -256,10 +256,10 @@ dashboard "kms_key_detail" {
         rds_db_instance_arns         = with.rds_db_instances.rows[*].db_instance_arn
         rds_db_snapshot_arns         = with.rds_db_snapshots.rows[*].db_snapshot_arn
         redshift_cluster_arns        = with.redshift_clusters.rows[*].redshift_cluster_arn
-        sns_topic_arns               = with.topics.rows[*].topic_arn
-        sqs_queue_arns               = with.queues.rows[*].queue_arn
-        lambda_function_arns         = with.functions.rows[*].function_arn
-        s3_bucket_arns               = with.buckets.rows[*].bucket_arn
+        sns_topic_arns               = with.sns_topics.rows[*].topic_arn
+        sqs_queue_arns               = with.sqs_queues.rows[*].queue_arn
+        lambda_function_arns         = with.lambda_functions.rows[*].function_arn
+        s3_bucket_arns               = with.s3_buckets.rows[*].bucket_arn
         arn                          = self.input.key_arn.value
       }
     }
@@ -623,7 +623,7 @@ node "kms_key_alias" {
   param "kms_key_arns" {}
 }
 
-edge "kms_key_to_kms_alias_edge" {
+edge "kms_key_to_kms_alias" {
   title = "key"
 
   sql = <<-EOQ

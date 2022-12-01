@@ -56,7 +56,7 @@ dashboard "vpc_detail" {
       width = 12
       type  = "graph"
 
-      with "flow_logs" {
+      with "vpc_flow_logs" {
         sql = <<-EOQ
           select
             flow_log_id as flow_log_id
@@ -69,7 +69,7 @@ dashboard "vpc_detail" {
         args = [self.input.vpc_id.value]
       }
 
-      with "subnets" {
+      with "vpc_subnets" {
         sql = <<-EOQ
           select
             subnet_id as subnet_id
@@ -82,7 +82,7 @@ dashboard "vpc_detail" {
         args = [self.input.vpc_id.value]
       }
 
-      with "security_groups" {
+      with "vpc_security_groups" {
         sql = <<-EOQ
           select
             group_id as security_group_id
@@ -121,7 +121,7 @@ dashboard "vpc_detail" {
         args = [self.input.vpc_id.value]
       }
 
-      with "albs" {
+      with "ec2_application_load_balancers" {
         sql = <<-EOQ
           select
             arn as alb_arn
@@ -134,7 +134,7 @@ dashboard "vpc_detail" {
         args = [self.input.vpc_id.value]
       }
 
-      with "clbs" {
+      with "ec2_classic_load_balancers" {
         sql = <<-EOQ
           select
             arn as clb_arn
@@ -147,7 +147,7 @@ dashboard "vpc_detail" {
         args = [self.input.vpc_id.value]
       }
 
-      with "nlbs" {
+      with "ec2_network_load_balancers" {
         sql = <<-EOQ
           select
             arn as nlb_arn
@@ -160,7 +160,7 @@ dashboard "vpc_detail" {
         args = [self.input.vpc_id.value]
       }
 
-      with "glbs" {
+      with "ec2_gateway_load_balancers" {
         sql = <<-EOQ
           select
             arn as glb_arn
@@ -251,17 +251,17 @@ dashboard "vpc_detail" {
       args = {
         vpc_id                             = self.input.vpc_id.value
         vpc_vpc_ids                        = [self.input.vpc_id.value]
-        vpc_security_group_ids             = with.security_groups.rows[*].security_group_id
-        vpc_subnet_ids                     = with.subnets.rows[*].subnet_id
-        ec2_classic_load_balancer_arns     = with.clbs.rows[*].clb_arn
-        ec2_application_load_balancer_arns = with.albs.rows[*].alb_arn
-        ec2_network_load_balancer_arns     = with.nlbs.rows[*].nlb_arn
-        ec2_gateway_load_balancer_arns     = with.glbs.rows[*].glb_arn
+        vpc_security_group_ids             = with.vpc_security_groups.rows[*].security_group_id
+        vpc_subnet_ids                     = with.vpc_subnets.rows[*].subnet_id
+        ec2_classic_load_balancer_arns     = with.ec2_classic_load_balancers.rows[*].clb_arn
+        ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
+        ec2_network_load_balancer_arns     = with.ec2_network_load_balancers.rows[*].nlb_arn
+        ec2_gateway_load_balancer_arns     = with.ec2_gateway_load_balancers.rows[*].glb_arn
         ec2_instance_arns                  = with.ec2_instances.rows[*].instance_arn
         redshift_cluster_arns              = with.redshift_clusters.rows[*].redshift_cluster_arn
         lambda_function_arns               = with.lambda_functions.rows[*].function_arn
         rds_db_instance_arns               = with.rds_db_instances.rows[*].rds_instance_arn
-        vpc_flow_log_ids                   = with.flow_logs.rows[*].flow_log_id
+        vpc_flow_log_ids                   = with.vpc_flow_logs.rows[*].flow_log_id
       }
     }
 
@@ -1493,7 +1493,7 @@ edge "vpc_subnet_to_endpoint" {
       e.vpc_endpoint_id as to_id
     from
       aws_vpc_endpoint as e,
-      jsonb_array_elements_text(e.vpc_subnet_ids) as s
+      jsonb_array_elements_text(e.subnet_ids) as s
     where
       e.vpc_id = any($1)
     union
@@ -1503,7 +1503,7 @@ edge "vpc_subnet_to_endpoint" {
     from
       aws_vpc_endpoint as e
     where
-      jsonb_array_length(vpc_subnet_ids) = 0
+      jsonb_array_length(subnet_ids) = 0
       and vpc_id = any($1);
 
   EOQ
@@ -1794,7 +1794,7 @@ edge "vpc_subnet_to_lambda" {
   param "vpc_vpc_ids" {}
 }
 
-# In the below relation there could be multiple subnets associated to diffrent albs. However it should not be all subnets to all albs, to prevent this edge case; we have to write the query in below format without using unset
+# In the below relation there could be multiple subnets associated to diffrent ec2_application_load_balancers. However it should not be all subnets to all ec2_application_load_balancers, to prevent this edge case; we have to write the query in below format without using unset
 edge "vpc_subnet_to_ec2_alb" {
   title = "alb"
 

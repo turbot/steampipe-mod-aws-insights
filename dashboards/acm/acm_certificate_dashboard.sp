@@ -245,7 +245,7 @@ query "acm_certificate_by_type" {
 
 query "acm_certificate_by_age" {
   sql = <<-EOQ
-    with certificates as (
+    with acm_certificates as (
       select
         title,
         created_at,
@@ -263,7 +263,7 @@ query "acm_certificate_by_age" {
             (
               select
                 min(created_at)
-                from certificates)),
+                from acm_certificates)),
             date_trunc('month',
               current_date),
             interval '1 month') as d
@@ -273,7 +273,7 @@ query "acm_certificate_by_age" {
         creation_month,
         count(*)
       from
-        certificates
+        acm_certificates
       group by
         creation_month
     )

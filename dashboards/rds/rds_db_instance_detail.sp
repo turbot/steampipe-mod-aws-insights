@@ -79,7 +79,7 @@ dashboard "rds_db_instance_detail" {
         args = [self.input.db_instance_arn.value]
       }
 
-      with "topics" {
+      with "sns_topics" {
         sql = <<-EOQ
           select
             s.sns_topic_arn
@@ -108,7 +108,7 @@ dashboard "rds_db_instance_detail" {
         args = [self.input.db_instance_arn.value]
       }
 
-      with "vpcs" {
+      with "vpc_vpcs" {
         sql = <<-EOQ
           select
             vpc_id
@@ -169,8 +169,8 @@ dashboard "rds_db_instance_detail" {
         node.rds_db_instance,
         node.rds_db_snapshot,
         node.sns_topic,
-        node.rds_db_instance_to_rds_db_parameter_group_node,
-        node.rds_db_instance_to_rds_db_subnet_group_node,
+        node.rds_db_instance_to_rds_db_parameter_group,
+        node.rds_db_instance_to_rds_db_subnet_group,
         node.kms_key,
         node.vpc_vpc,
         node.vpc_subnet,
@@ -180,22 +180,22 @@ dashboard "rds_db_instance_detail" {
 
       edges = [
         edge.rds_db_instance_to_rds_db_snapshot,
-        edge.rds_db_instance_to_sns_topic_edge,
-        edge.rds_db_instance_to_rds_db_parameter_group_edge,
-        edge.rds_db_instance_to_kms_key_edge,
-        edge.rds_db_instance_rds_db_subnet_group_to_vpc_subnet_edge,
-        edge.rds_db_instance_to_vpc_security_group_edge,
-        edge.rds_db_instance_vpc_subnet_to_vpc_edge,
-        edge.rds_db_instance_vpc_security_group_to_vpc_edge,
-        edge.rds_db_instance_from_rds_db_cluster_edge
+        edge.rds_db_instance_to_sns_topic,
+        edge.rds_db_instance_to_rds_db_parameter_group,
+        edge.rds_db_instance_to_kms_key,
+        edge.rds_db_instance_rds_db_subnet_group_to_vpc_subnet,
+        edge.rds_db_instance_to_vpc_security_group,
+        edge.rds_db_instance_vpc_subnet_to_vpc,
+        edge.rds_db_instance_vpc_security_group_to_vpc,
+        edge.rds_db_instance_from_rds_db_cluster
       ]
 
       args = {
         rds_db_instance_arns   = [self.input.db_instance_arn.value]
         rds_db_snapshot_arns   = with.snapshots.rows[*].snapshot_arn
-        sns_topic_arns         = with.topics.rows[*].sns_topic_arn
+        sns_topic_arns         = with.sns_topics.rows[*].sns_topic_arn
         kms_key_arns           = with.kms_keys.rows[*].key_arn
-        vpc_vpc_ids            = with.vpcs.rows[*].vpc_id
+        vpc_vpc_ids            = with.vpc_vpcs.rows[*].vpc_id
         vpc_subnet_ids         = with.vpc_subnets.rows[*].subnet_id
         vpc_security_group_ids = with.vpc_security_groups.rows[*].security_group_id
         rds_db_cluster_arns    = with.db_clusters.rows[*].cluster_arn
@@ -550,7 +550,7 @@ node "rds_db_instance" {
   param "rds_db_instance_arns" {}
 }
 
-node "rds_db_instance_to_rds_db_parameter_group_node" {
+node "rds_db_instance_to_rds_db_parameter_group" {
   category = category.rds_db_parameter_group
 
   sql = <<-EOQ
@@ -576,7 +576,7 @@ node "rds_db_instance_to_rds_db_parameter_group_node" {
   param "rds_db_instance_arns" {}
 }
 
-edge "rds_db_instance_to_rds_db_parameter_group_edge" {
+edge "rds_db_instance_to_rds_db_parameter_group" {
   title = "parameter group"
 
   sql = <<-EOQ
@@ -597,7 +597,7 @@ edge "rds_db_instance_to_rds_db_parameter_group_edge" {
   param "rds_db_instance_arns" {}
 }
 
-node "rds_db_instance_to_rds_db_subnet_group_node" {
+node "rds_db_instance_to_rds_db_subnet_group" {
   category = category.rds_db_subnet_group
 
   sql = <<-EOQ
@@ -624,7 +624,7 @@ node "rds_db_instance_to_rds_db_subnet_group_node" {
   param "rds_db_instance_arns" {}
 }
 
-edge "rds_db_instance_to_kms_key_edge" {
+edge "rds_db_instance_to_kms_key" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -640,7 +640,7 @@ edge "rds_db_instance_to_kms_key_edge" {
   param "kms_key_arns" {}
 }
 
-edge "rds_db_instance_rds_db_subnet_group_to_vpc_subnet_edge" {
+edge "rds_db_instance_rds_db_subnet_group_to_vpc_subnet" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -666,7 +666,7 @@ edge "rds_db_instance_rds_db_subnet_group_to_vpc_subnet_edge" {
   param "rds_db_instance_arns" {}
 }
 
-edge "rds_db_instance_to_vpc_security_group_edge" {
+edge "rds_db_instance_to_vpc_security_group" {
   title = "security group"
 
   sql = <<-EOQ
@@ -682,7 +682,7 @@ edge "rds_db_instance_to_vpc_security_group_edge" {
   param "vpc_security_group_ids" {}
 }
 
-edge "rds_db_instance_vpc_subnet_to_vpc_edge" {
+edge "rds_db_instance_vpc_subnet_to_vpc" {
   title = "vpc"
 
   sql = <<-EOQ
@@ -698,7 +698,7 @@ edge "rds_db_instance_vpc_subnet_to_vpc_edge" {
   param "vpc_vpc_ids" {}
 }
 
-edge "rds_db_instance_vpc_security_group_to_vpc_edge" {
+edge "rds_db_instance_vpc_security_group_to_vpc" {
   title = "subnet group"
 
   sql = <<-EOQ
@@ -725,7 +725,7 @@ edge "rds_db_instance_vpc_security_group_to_vpc_edge" {
   param "rds_db_instance_arns" {}
 }
 
-edge "rds_db_instance_from_rds_db_cluster_edge" {
+edge "rds_db_instance_from_rds_db_cluster" {
   title = "instance"
 
   sql = <<-EOQ
@@ -757,7 +757,7 @@ edge "rds_db_instance_to_rds_db_snapshot" {
   param "rds_db_snapshot_arns" {}
 }
 
-edge "rds_db_instance_to_sns_topic_edge" {
+edge "rds_db_instance_to_sns_topic" {
   title = "notifies"
 
   sql = <<-EOQ

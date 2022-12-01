@@ -47,7 +47,7 @@ dashboard "vpc_eip_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "instances" {
+      with "ec2_instances" {
         sql = <<-EOQ
           select
             i.arn as instance_arn
@@ -92,7 +92,7 @@ dashboard "vpc_eip_detail" {
       ]
 
       args = {
-        ec2_instance_arns         = with.instances.rows[*].instance_arn
+        ec2_instance_arns         = with.ec2_instances.rows[*].instance_arn
         ec2_network_interface_ids = with.enis.rows[*].eni_id
         vpc_eip_arns              = [self.input.eip_arn.value]
       }

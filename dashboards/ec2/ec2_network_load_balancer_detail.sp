@@ -371,15 +371,15 @@ edge "ec2_nlb_to_s3_bucket_edge" {
   sql = <<-EOQ
     select
       nlb.arn as from_id,
-      buckets.arn as to_id
+      s3_buckets.arn as to_id
     from
-      aws_s3_bucket buckets,
+      aws_s3_bucket s3_buckets,
       aws_ec2_network_load_balancer as nlb,
       jsonb_array_elements(nlb.load_balancer_attributes) attributes
     where
       nlb.arn = $1
       and attributes ->> 'Key' = 'access_logs.s3.bucket'
-      and buckets.name = attributes ->> 'Value';
+      and s3_buckets.name = attributes ->> 'Value';
   EOQ
 
   param "arn" {}

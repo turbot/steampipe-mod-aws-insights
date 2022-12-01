@@ -84,7 +84,7 @@ dashboard "acm_certificate_detail" {
         args = [self.input.certificate_arn.value]
       }
 
-      with "clbs" {
+      with "ec2_classic_load_balancers" {
         sql = <<-EOQ
           select
             arn as clb_arn
@@ -105,7 +105,7 @@ dashboard "acm_certificate_detail" {
         args = [self.input.certificate_arn.value]
       }
 
-      with "albs" {
+      with "ec2_application_load_balancers" {
         sql = <<-EOQ
           select
             arn as alb_arn
@@ -126,7 +126,7 @@ dashboard "acm_certificate_detail" {
         args = [self.input.certificate_arn.value]
       }
 
-      with "nlbs" {
+      with "ec2_network_load_balancers" {
         sql = <<-EOQ
           select
             arn as nlb_arn
@@ -180,9 +180,9 @@ dashboard "acm_certificate_detail" {
       args = {
         acm_certificate_arns               = [self.input.certificate_arn.value]
         cloudfront_distribution_arns       = with.cloudfront_distributions.rows[*].distribution_arn
-        ec2_application_load_balancer_arns = with.albs.rows[*].alb_arn
-        ec2_classic_load_balancer_arns     = with.clbs.rows[*].clb_arn
-        ec2_network_load_balancer_arns     = with.nlbs.rows[*].nlb_arn
+        ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
+        ec2_classic_load_balancer_arns     = with.ec2_classic_load_balancers.rows[*].clb_arn
+        ec2_network_load_balancer_arns     = with.ec2_network_load_balancers.rows[*].nlb_arn
         opensearch_arns                    = with.opensearch_domains.rows[*].opensearch_arn
       }
     }

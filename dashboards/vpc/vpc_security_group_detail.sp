@@ -64,7 +64,7 @@ dashboard "vpc_security_group_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "vpcs" {
+      with "vpc_vpcs" {
         sql = <<-EOQ
           select
             vpc_id as vpc_id
@@ -147,7 +147,7 @@ dashboard "vpc_security_group_detail" {
         args = [self.input.security_group_id.value]
       }
 
-      with "clbs" {
+      with "ec2_classic_load_balancers" {
         sql = <<-EOQ
           select
             arn as clb_arn
@@ -161,7 +161,7 @@ dashboard "vpc_security_group_detail" {
         args = [self.input.security_group_id.value]
       }
 
-      with "albs" {
+      with "ec2_application_load_balancers" {
         sql = <<-EOQ
           select
             arn as alb_arn
@@ -243,8 +243,8 @@ dashboard "vpc_security_group_detail" {
 
       args = {
         vpc_security_group_ids             = [self.input.security_group_id.value]
-        ec2_classic_load_balancer_arns     = with.clbs.rows[*].clb_arn
-        ec2_application_load_balancer_arns = with.albs.rows[*].alb_arn
+        ec2_classic_load_balancer_arns     = with.ec2_classic_load_balancers.rows[*].clb_arn
+        ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
         ec2_instance_arns                  = with.ec2_instances.rows[*].instance_arn
         elasticache_cluster_arns           = with.elasticache_clusters.rows[*].elasticache_cluster_arn
         dax_cluster_arns                   = with.dax_clusters.rows[*].dax_cluster_arn
@@ -252,7 +252,7 @@ dashboard "vpc_security_group_detail" {
         lambda_function_arns               = with.lambda_functions.rows[*].lambda_arn
         rds_db_instance_arns               = with.rds_instances.rows[*].rds_db_instance_arn
         rds_db_cluster_arns                = with.rds_clusters.rows[*].rds_db_cluster_arn
-        vpc_vpc_ids                        = with.vpcs.rows[*].vpc_id
+        vpc_vpc_ids                        = with.vpc_vpcs.rows[*].vpc_id
       }
     }
   }
