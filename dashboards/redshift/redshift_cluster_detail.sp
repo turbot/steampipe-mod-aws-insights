@@ -169,8 +169,7 @@ dashboard "redshift_cluster_detail" {
             aws_cloudwatch_log_group as g
           where
             g.title like '%' || c.title || '%'
-          where
-            c.arn = $1;
+            and c.arn = $1;
         EOQ
 
         args = [self.input.cluster_arn.value]
@@ -622,7 +621,7 @@ edge "redshift_cluster_vpc_security_group_to_subnet_group" {
 
   sql = <<-EOQ
     select
-      sg.arn as from_id,
+      sg.group_id as from_id,
       sub.cluster_subnet_group_name as to_id
     from
       aws_redshift_cluster as c
@@ -717,7 +716,7 @@ edge "redshift_cluster_to_cloudwatch_log_group" {
       unnest($2::text[]) as redshift_cluster_arn
   EOQ
 
-  param "vpc_eip_arns" {}
+  param "cloudwatch_log_group_arns" {}
   param "redshift_cluster_arns" {}
 }
 
