@@ -92,8 +92,8 @@ dashboard "ec2_application_load_balancer_detail" {
       ]
 
       args = {
-        alb_arns = [self.input.alb.value]
-        arn = self.input.alb.value
+        ec2_application_load_balancer_arns = [self.input.alb.value]
+        arn                                = self.input.alb.value
       }
     }
   }
@@ -488,13 +488,13 @@ edge "ec2_application_load_balancer_to_acm_certificate" {
 
   sql = <<-EOQ
     select
-      certificate_arns as to_id,
-      alb_arns as from_id
+      acm_certificate_arns as to_id,
+      ec2_application_load_balancer_arns as from_id
     from
-      unnest($1::text[]) as certificate_arns,
-      unnest($2::text[]) as alb_arns
+      unnest($1::text[]) as acm_certificate_arns,
+      unnest($2::text[]) as ec2_application_load_balancer_arns
   EOQ
 
-  param "certificate_arns" {}
-  param "alb_arns" {}
+  param "acm_certificate_arns" {}
+  param "ec2_application_load_balancer_arns" {}
 }

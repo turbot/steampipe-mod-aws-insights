@@ -93,8 +93,8 @@ dashboard "lambda_function_detail" {
       ]
 
       args = {
-        function_arns = [self.input.lambda_arn.value]
-        arn = self.input.lambda_arn.value
+        lambda_function_arns = [self.input.lambda_arn.value]
+        arn                  = self.input.lambda_arn.value
       }
     }
   }
@@ -377,7 +377,7 @@ node "lambda_function" {
       arn = any($1);
   EOQ
 
-  param "function_arns" {}
+  param "lambda_function_arns" {}
 }
 
 node "lambda_to_vpc_node" {

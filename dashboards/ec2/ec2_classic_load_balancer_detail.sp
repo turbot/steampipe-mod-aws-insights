@@ -82,8 +82,8 @@ dashboard "ec2_classic_load_balancer_detail" {
       ]
 
       args = {
-        clb_arns = [self.input.clb.value]
-        arn = self.input.clb.value
+        ec2_classic_load_balancer_arns = [self.input.clb.value]
+        arn                            = self.input.clb.value
       }
     }
   }
@@ -468,13 +468,13 @@ edge "ec2_classic_load_balancer_to_acm_certificate" {
 
   sql = <<-EOQ
     select
-      certificate_arns as to_id,
-      clb_arns as from_id
+      acm_certificate_arns as to_id,
+      ec2_classic_load_balancer_arns as from_id
     from
-      unnest($1::text[]) as certificate_arns,
-      unnest($2::text[]) as clb_arns
+      unnest($1::text[]) as acm_certificate_arns,
+      unnest($2::text[]) as ec2_classic_load_balancer_arns
   EOQ
 
-  param "certificate_arns" {}
-  param "clb_arns" {}
+  param "acm_certificate_arns" {}
+  param "ec2_classic_load_balancer_arns" {}
 }

@@ -100,9 +100,9 @@ dashboard "iam_user_detail" {
       ]
 
       args = {
-        group_arns  = with.groups.rows[*].group_arn
-        policy_arns = with.attached_policies.rows[*].policy_arn
-        user_arns   = [self.input.user_arn.value]
+        iam_group_arns  = with.groups.rows[*].group_arn
+        iam_policy_arns = with.attached_policies.rows[*].policy_arn
+        iam_user_arns   = [self.input.user_arn.value]
       }
     }
   }
@@ -561,7 +561,7 @@ node "iam_user" {
       arn = any($1);
   EOQ
 
-  param "user_arns" {}
+  param "iam_user_arns" {}
 }
 
 edge "iam_user_to_iam_policy" {
@@ -576,8 +576,8 @@ edge "iam_user_to_iam_policy" {
       unnest($2::text[]) as policy_arn
   EOQ
 
-  param "user_arns" {}
-  param "policy_arns" {}
+  param "iam_user_arns" {}
+  param "iam_policy_arns" {}
 }
 
 node "iam_user_inline_policy" {
@@ -598,7 +598,7 @@ node "iam_user_inline_policy" {
       u.arn = any($1)
   EOQ
 
-  param "user_arns" {}
+  param "iam_user_arns" {}
 }
 
 edge "iam_user_to_inline_policy" {
@@ -615,7 +615,7 @@ edge "iam_user_to_inline_policy" {
       u.arn = any($1)
   EOQ
 
-  param "user_arns" {}
+  param "iam_user_arns" {}
 }
 
 
@@ -645,7 +645,7 @@ node "iam_user_access_key" {
       and u.arn  = any($1);
   EOQ
 
-  param "user_arns" {}
+  param "iam_user_arns" {}
 }
 
 edge "iam_user_to_iam_access_key" {
@@ -664,5 +664,5 @@ edge "iam_user_to_iam_access_key" {
       and u.arn  = any($1);
   EOQ
 
-  param "user_arns" {}
+  param "iam_user_arns" {}
 }

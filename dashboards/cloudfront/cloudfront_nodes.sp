@@ -17,5 +17,5 @@ node "cloudfront_distribution" {
       arn = any($1);
   EOQ
 
-  param "distribution_arns" {}
+  param "cloudfront_distribution_arns" {}
 }

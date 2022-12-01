@@ -10,7 +10,7 @@ dashboard "iam_group_detail" {
 
   input "group_arn" {
     title = "Select a group:"
-    sql   = query.iam_group_input.sql
+    query = query.iam_group_input
     width = 2
   }
 
@@ -83,9 +83,9 @@ dashboard "iam_group_detail" {
       ]
 
       args = {
-        group_arns  = [self.input.group_arn.value]
-        policy_arns = with.attached_policies.rows[*].policy_arn
-        user_arns   = with.members.rows[*].user_arn
+        iam_group_arns  = [self.input.group_arn.value]
+        iam_policy_arns = with.attached_policies.rows[*].policy_arn
+        iam_user_arns   = with.members.rows[*].user_arn
       }
     }
   }
@@ -266,7 +266,7 @@ node "iam_group" {
       arn = any($1);
   EOQ
 
-  param "group_arns" {}
+  param "iam_group_arns" {}
 }
 
 
@@ -276,15 +276,15 @@ edge "iam_group_to_iam_user" {
 
   sql = <<-EOQ
    select
-      user_arns as to_id,
-      group_arns as from_id
+      iam_user_arns as to_id,
+      iam_group_arns as from_id
     from
-      unnest($1::text[]) as user_arns,
-      unnest($2::text[]) as group_arns
+      unnest($1::text[]) as iam_user_arns,
+      unnest($2::text[]) as iam_group_arns
   EOQ
 
-  param "user_arns" {}
-  param "group_arns" {}
+  param "iam_user_arns" {}
+  param "iam_group_arns" {}
 
 }
 
@@ -306,7 +306,7 @@ node "iam_group_inline_policy" {
       g.arn = any($1)
   EOQ
 
-  param "group_arns" {}
+  param "iam_group_arns" {}
 }
 
 edge "iam_group_to_inline_policy" {
@@ -323,5 +323,5 @@ edge "iam_group_to_inline_policy" {
       g.arn = any($1)
   EOQ
 
-  param "group_arns" {}
+  param "iam_group_arns" {}
 }

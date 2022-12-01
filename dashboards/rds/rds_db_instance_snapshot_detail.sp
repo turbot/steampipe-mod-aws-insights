@@ -111,7 +111,7 @@ dashboard "rds_db_snapshot_detail" {
 
       args = {
         rds_db_instance_arns = with.rds_instances.rows[*].rds_instance_arn
-        key_arns             = with.kms_keys.rows[*].key_arn
+        kms_key_arns         = with.kms_keys.rows[*].key_arn
         rds_db_snapshot_arns = [self.input.db_snapshot_arn.value]
       }
     }
@@ -369,6 +369,6 @@ edge "rds_db_snapshot_to_kms_key" {
       unnest($2::text[]) as rds_db_snapshots_arn;
   EOQ
 
-  param "key_arns" {}
+  param "kms_key_arns" {}
   param "rds_db_snapshot_arns" {}
 }

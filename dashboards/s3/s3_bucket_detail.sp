@@ -220,7 +220,6 @@ dashboard "s3_bucket_detail" {
         node.sqs_queue,
         node.s3_bucket_from_s3_bucket,
         node.s3_bucket_to_s3_bucket
-        # node.s3_bucket_from_s3_access_point_node,
       ]
 
       edges = [
@@ -234,19 +233,18 @@ dashboard "s3_bucket_detail" {
         edge.s3_bucket_to_sqs_queue,
         edge.s3_bucket_from_s3_bucket,
         edge.s3_bucket_to_s3_bucket
-        # #edge.s3_bucket_from_s3_access_point_edge,
       ]
 
       args = {
-        bucket_arns   = [self.input.bucket_arn.value]
-        trail_arns    = with.trails.rows[*].trail_arn
-        alb_arns      = with.albs.rows[*].alb_arn
-        nlb_arns      = with.nlbs.rows[*].nlb_arn
-        clb_arns      = with.clbs.rows[*].clb_arn
-        key_arns      = with.keys.rows[*].key_arn
-        function_arns = with.functions.rows[*].function_arn
-        topic_arns    = with.topics.rows[*].topic_arn
-        queue_arns    = with.queues.rows[*].queue_arn
+        s3_bucket_arns                     = [self.input.bucket_arn.value]
+        cloudtrail_trail_arns              = with.trails.rows[*].trail_arn
+        ec2_application_load_balancer_arns = with.albs.rows[*].alb_arn
+        ec2_network_load_balancer_arns     = with.nlbs.rows[*].nlb_arn
+        ec2_classic_load_balancer_arns     = with.clbs.rows[*].clb_arn
+        kms_key_arns                       = with.keys.rows[*].key_arn
+        lambda_function_arns               = with.functions.rows[*].function_arn
+        sns_topic_arns                     = with.topics.rows[*].topic_arn
+        sqs_queue_arns                     = with.queues.rows[*].queue_arn
       }
     }
   }
@@ -371,7 +369,7 @@ node "s3_bucket" {
       arn = any($1);
   EOQ
 
-  param "bucket_arns" {}
+  param "s3_bucket_arns" {}
 }
 
 edge "s3_bucket_from_cloudtrail_trail" {
@@ -386,8 +384,8 @@ edge "s3_bucket_from_cloudtrail_trail" {
       unnest($2::text[]) as trail_arn
   EOQ
 
-  param "bucket_arns" {}
-  param "trail_arns" {}
+  param "s3_bucket_arns" {}
+  param "cloudtrail_trail_arns" {}
 }
 
 edge "s3_bucket_from_ec2_alb" {
@@ -402,8 +400,8 @@ edge "s3_bucket_from_ec2_alb" {
       unnest($2::text[]) as alb_arn
   EOQ
 
-  param "bucket_arns" {}
-  param "alb_arns" {}
+  param "s3_bucket_arns" {}
+  param "ec2_application_load_balancer_arns" {}
 }
 
 edge "s3_bucket_from_ec2_nlb" {
@@ -418,8 +416,8 @@ edge "s3_bucket_from_ec2_nlb" {
       unnest($2::text[]) as nlb_arn
   EOQ
 
-  param "bucket_arns" {}
-  param "nlb_arns" {}
+  param "s3_bucket_arns" {}
+  param "ec2_network_load_balancer_arns" {}
 }
 
 edge "s3_bucket_from_ec2_clb" {
@@ -434,8 +432,8 @@ edge "s3_bucket_from_ec2_clb" {
       unnest($2::text[]) as clb_arn
   EOQ
 
-  param "bucket_arns" {}
-  param "clb_arns" {}
+  param "s3_bucket_arns" {}
+  param "ec2_classic_load_balancer_arns" {}
 }
 
 node "s3_bucket_to_lambda_function_node" {
@@ -476,8 +474,8 @@ edge "s3_bucket_to_lambda_function" {
       unnest($2::text[]) as function_arn
   EOQ
 
-  param "bucket_arns" {}
-  param "function_arns" {}
+  param "s3_bucket_arns" {}
+  param "lambda_function_arns" {}
 }
 
 edge "s3_bucket_to_sns_topic" {
@@ -492,8 +490,8 @@ edge "s3_bucket_to_sns_topic" {
       unnest($2::text[]) as topic_arn
   EOQ
 
-  param "bucket_arns" {}
-  param "topic_arns" {}
+  param "s3_bucket_arns" {}
+  param "sns_topic_arns" {}
 }
 
 edge "s3_bucket_to_sqs_queue" {
@@ -508,8 +506,8 @@ edge "s3_bucket_to_sqs_queue" {
       unnest($2::text[]) as queue_arn
   EOQ
 
-  param "bucket_arns" {}
-  param "queue_arns" {}
+  param "s3_bucket_arns" {}
+  param "sqs_queue_arns" {}
 }
 
 edge "s3_bucket_to_kms_key" {
@@ -524,8 +522,8 @@ edge "s3_bucket_to_kms_key" {
       unnest($2::text[]) as key_arn
   EOQ
 
-  param "bucket_arns" {}
-  param "key_arns" {}
+  param "s3_bucket_arns" {}
+  param "kms_key_arns" {}
 }
 
 node "s3_bucket_from_s3_bucket" {
@@ -549,7 +547,7 @@ node "s3_bucket_from_s3_bucket" {
       and lb.logging ->> 'TargetBucket' = b.name;
   EOQ
 
-  param "bucket_arns" {}
+  param "s3_bucket_arns" {}
 }
 
 edge "s3_bucket_from_s3_bucket" {
@@ -567,7 +565,7 @@ edge "s3_bucket_from_s3_bucket" {
       and lb.logging ->> 'TargetBucket' = b.name;
   EOQ
 
-  param "bucket_arns" {}
+  param "s3_bucket_arns" {}
 }
 
 node "s3_bucket_to_s3_bucket" {
@@ -591,7 +589,7 @@ node "s3_bucket_to_s3_bucket" {
       and lb.name = b.logging ->> 'TargetBucket';
   EOQ
 
-  param "bucket_arns" {}
+  param "s3_bucket_arns" {}
 }
 
 edge "s3_bucket_to_s3_bucket" {
@@ -609,51 +607,7 @@ edge "s3_bucket_to_s3_bucket" {
       and lb.name = b.logging ->> 'TargetBucket';
   EOQ
 
-  param "bucket_arns" {}
-}
-
-node "s3_bucket_from_s3_access_point_node" {
-  category = category.s3_access_point
-
-  sql = <<-EOQ
-    select
-      ap.access_point_arn as id,
-      ap.title as title,
-      jsonb_build_object(
-        'Name', ap.name,
-        'ARN', ap.access_point_arn,
-        'Account ID', ap.account_id,
-        'Region', ap.region
-      ) as properties
-    from
-      aws_s3_access_point ap,
-      aws_s3_bucket as b
-    where
-      b.arn = any($1)
-      and ap.bucket_name = b.name
-      and ap.region = b.region;
-  EOQ
-
-  param "bucket_arns" {}
-}
-
-edge "s3_bucket_from_s3_access_point_edge" {
-  title = "access point"
-
-  sql = <<-EOQ
-    select
-      ap.access_point_arn as from_id,
-      b.arn as to_id
-    from
-      aws_s3_access_point ap,
-      aws_s3_bucket as b
-    where
-      b.arn = $1
-      and ap.bucket_name = b.name
-      and ap.region = b.region;
-  EOQ
-
-  param "arn" {}
+  param "s3_bucket_arns" {}
 }
 
 query "s3_bucket_versioning" {

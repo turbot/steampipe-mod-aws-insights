@@ -182,12 +182,12 @@ dashboard "cloudfront_distribution_detail" {
       ]
 
       args = {
-        distribution_arns = [self.input.distribution_arn.value]
-        bucket_arns       = with.buckets.rows[*].bucket_arn
-        certificate_arns  = with.certificates.rows[*].certificate_arn
-        alb_arns          = with.albs.rows[*].alb_arn
-        mediastore_arns   = with.media_stores.rows[*].mediastore_arn
-        wafv2_acl_arns    = with.wafv2_web_acls.rows[*].wafv2_acl_arn
+        cloudfront_distribution_arns       = [self.input.distribution_arn.value]
+        s3_bucket_arns                     = with.buckets.rows[*].bucket_arn
+        acm_certificate_arns               = with.certificates.rows[*].certificate_arn
+        ec2_application_load_balancer_arns = with.albs.rows[*].alb_arn
+        mediastore_arns                    = with.media_stores.rows[*].mediastore_arn
+        wafv2_acl_arns                     = with.wafv2_web_acls.rows[*].wafv2_acl_arn
       }
     }
   }
@@ -325,59 +325,59 @@ edge "cloudfront_distribution_to_acm_certificate" {
 
   sql = <<-EOQ
    select
-      distribution_arns as from_id,
-      certificate_arns as to_id
+      cloudfront_distribution_arns as from_id,
+      acm_certificate_arns as to_id
     from
-      unnest($1::text[]) as distribution_arns,
-      unnest($2::text[]) as certificate_arns
+      unnest($1::text[]) as cloudfront_distribution_arns,
+      unnest($2::text[]) as acm_certificate_arns
   EOQ
 
-  param "distribution_arns" {}
-  param "certificate_arns" {}
+  param "cloudfront_distribution_arns" {}
+  param "acm_certificate_arns" {}
 }
 
 edge "s3_bucket_to_cloudfront_distribution" {
   title = "origin for"
   sql   = <<-EOQ
     select
-      distribution_arns as to_id,
-      bucket_arns as from_id
+      cloudfront_distribution_arns as to_id,
+      s3_bucket_arns as from_id
     from
-      unnest($1::text[]) as distribution_arns,
-      unnest($2::text[]) as bucket_arns
+      unnest($1::text[]) as cloudfront_distribution_arns,
+      unnest($2::text[]) as s3_bucket_arns
   EOQ
 
-  param "distribution_arns" {}
-  param "bucket_arns" {}
+  param "cloudfront_distribution_arns" {}
+  param "s3_bucket_arns" {}
 }
 
 edge "ec2_application_load_balancer_to_cloudfront_distribution" {
   title = "origin for"
   sql   = <<-EOQ
     select
-      distribution_arns as to_id,
-      alb_arns as from_id
+      cloudfront_distribution_arns as to_id,
+      ec2_application_load_balancer_arns as from_id
     from
-      unnest($1::text[]) as distribution_arns,
-      unnest($2::text[]) as alb_arns
+      unnest($1::text[]) as cloudfront_distribution_arns,
+      unnest($2::text[]) as ec2_application_load_balancer_arns
   EOQ
 
-  param "distribution_arns" {}
-  param "alb_arns" {}
+  param "cloudfront_distribution_arns" {}
+  param "ec2_application_load_balancer_arns" {}
 }
 
 edge "media_store_container_to_cloudfront_distribution" {
   title = "origin for"
   sql   = <<-EOQ
     select
-      distribution_arns as to_id,
+      cloudfront_distribution_arns as to_id,
       mediastore_arns as from_id
     from
-      unnest($1::text[]) as distribution_arns,
+      unnest($1::text[]) as cloudfront_distribution_arns,
       unnest($2::text[]) as mediastore_arns
   EOQ
 
-  param "distribution_arns" {}
+  param "cloudfront_distribution_arns" {}
   param "mediastore_arns" {}
 }
 
@@ -385,14 +385,14 @@ edge "cloudfront_distribution_to_wafv2_web_acl" {
   title = "web acl"
   sql   = <<-EOQ
     select
-      distribution_arns as from_id,
+      cloudfront_distribution_arns as from_id,
       wafv2_acl_arns as to_id
     from
-      unnest($1::text[]) as distribution_arns,
+      unnest($1::text[]) as cloudfront_distribution_arns,
       unnest($2::text[]) as wafv2_acl_arns
   EOQ
 
-  param "distribution_arns" {}
+  param "cloudfront_distribution_arns" {}
   param "wafv2_acl_arns" {}
 }
 

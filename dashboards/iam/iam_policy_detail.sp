@@ -127,11 +127,11 @@ dashboard "iam_policy_detail" {
       ]
 
       args = {
-        policy_arns = [self.input.policy_arn.value]
-        role_arns   = with.attached_roles.rows[*].role_arn
-        user_arns   = with.attached_users.rows[*].user_arn
-        group_arns  = with.attached_groups.rows[*].group_arn
-        policy_std  = with.policy_std.rows[0].policy_std
+        iam_policy_arns = [self.input.policy_arn.value]
+        iam_role_arns   = with.attached_roles.rows[*].role_arn
+        iam_user_arns   = with.attached_users.rows[*].user_arn
+        iam_group_arns  = with.attached_groups.rows[*].group_arn
+        iam_policy_stds = with.policy_std.rows[0].policy_std
       }
     }
 
@@ -345,7 +345,7 @@ node "iam_policy" {
       arn = any($1);
   EOQ
 
-  param "policy_arns" {}
+  param "iam_policy_arns" {}
 }
 
 edge "iam_policy_from_iam_user" {
@@ -353,15 +353,15 @@ edge "iam_policy_from_iam_user" {
 
   sql = <<-EOQ
    select
-      policy_arns as to_id,
-      user_arns as from_id
+      iam_policy_arns as to_id,
+      iam_user_arns as from_id
     from
-      unnest($1::text[]) as policy_arns,
-      unnest($2::text[]) as user_arns
+      unnest($1::text[]) as iam_policy_arns,
+      unnest($2::text[]) as iam_user_arns
   EOQ
 
-  param "policy_arns" {}
-  param "user_arns" {}
+  param "iam_policy_arns" {}
+  param "iam_user_arns" {}
 
 }
 
@@ -370,15 +370,15 @@ edge "iam_policy_from_iam_role" {
 
   sql = <<-EOQ
    select
-      policy_arns as to_id,
-      role_arns as from_id
+      iam_policy_arns as to_id,
+      iam_role_arns as from_id
     from
-      unnest($1::text[]) as policy_arns,
-      unnest($2::text[]) as role_arns
+      unnest($1::text[]) as iam_policy_arns,
+      unnest($2::text[]) as iam_role_arns
   EOQ
 
-  param "policy_arns" {}
-  param "role_arns" {}
+  param "iam_policy_arns" {}
+  param "iam_role_arns" {}
 }
 
 edge "iam_policy_from_iam_group" {
@@ -386,15 +386,15 @@ edge "iam_policy_from_iam_group" {
 
   sql = <<-EOQ
    select
-      policy_arns as to_id,
-      group_arns as from_id
+      iam_policy_arns as to_id,
+      iam_group_arns as from_id
     from
-      unnest($1::text[]) as policy_arns,
-      unnest($2::text[]) as group_arns
+      unnest($1::text[]) as iam_policy_arns,
+      unnest($2::text[]) as iam_group_arns
   EOQ
 
-  param "policy_arns" {}
-  param "group_arns" {}
+  param "iam_policy_arns" {}
+  param "iam_group_arns" {}
 
 }
 
@@ -412,7 +412,7 @@ node "iam_policy_statement" {
       jsonb_array_elements(($1 :: jsonb) ->  'Statement') with ordinality as t(stmt,i)
   EOQ
 
-  param "policy_std" {}
+  param "iam_policy_stds" {}
 }
 
 edge "iam_policy_statement" {
@@ -431,7 +431,7 @@ edge "iam_policy_statement" {
       p.arn = any($1)
   EOQ
 
-  param "policy_arns" {}
+  param "iam_policy_arns" {}
 }
 
 
@@ -450,7 +450,7 @@ edge "iam_policy_statement_action" {
       jsonb_array_elements_text(t.stmt -> 'Action') as action
   EOQ
 
-  param "policy_std" {}
+  param "iam_policy_stds" {}
 }
 
 edge "iam_policy_statement_notaction" {
@@ -467,7 +467,7 @@ edge "iam_policy_statement_notaction" {
       jsonb_array_elements_text(t.stmt -> 'NotAction') as notaction
   EOQ
 
-  param "policy_std" {}
+  param "iam_policy_stds" {}
 }
 
 
@@ -486,7 +486,7 @@ edge "iam_policy_statement_resource" {
       left join jsonb_array_elements_text(stmt -> 'Resource') as resource on true
   EOQ
 
-  param "policy_std" {}
+  param "iam_policy_stds" {}
 }
 
 edge "iam_policy_statement_notresource" {
@@ -504,7 +504,7 @@ edge "iam_policy_statement_notresource" {
       left join jsonb_array_elements_text(stmt -> 'NotResource') as notresource on true
   EOQ
 
-  param "policy_std" {}
+  param "iam_policy_stds" {}
 }
 
 node "iam_policy_statement_condition" {
@@ -522,7 +522,7 @@ node "iam_policy_statement_condition" {
       stmt -> 'Condition' <> 'null'
   EOQ
 
-  param "policy_std" {}
+  param "iam_policy_stds" {}
 }
 
 edge "iam_policy_statement_condition" {
@@ -539,7 +539,7 @@ edge "iam_policy_statement_condition" {
       stmt -> 'Condition' <> 'null'
   EOQ
 
-  param "policy_std" {}
+  param "iam_policy_stds" {}
 }
 
 node "iam_policy_statement_condition_key" {
@@ -558,7 +558,7 @@ node "iam_policy_statement_condition_key" {
       stmt -> 'Condition' <> 'null'
   EOQ
 
-  param "policy_std" {}
+  param "iam_policy_stds" {}
 }
 
 edge "iam_policy_statement_condition_key" {
@@ -575,7 +575,7 @@ edge "iam_policy_statement_condition_key" {
       stmt -> 'Condition' <> 'null'
   EOQ
 
-  param "policy_std" {}
+  param "iam_policy_stds" {}
 }
 
 node "iam_policy_statement_condition_key_value" {
@@ -594,7 +594,7 @@ node "iam_policy_statement_condition_key_value" {
       stmt -> 'Condition' <> 'null'
   EOQ
 
-  param "policy_std" {}
+  param "iam_policy_stds" {}
 }
 
 edge "iam_policy_statement_condition_key_value" {
@@ -612,7 +612,7 @@ edge "iam_policy_statement_condition_key_value" {
       stmt -> 'Condition' <> 'null'
   EOQ
 
-  param "policy_std" {}
+  param "iam_policy_stds" {}
 }
 
 node "iam_policy_statement_action_notaction" {
@@ -628,7 +628,7 @@ node "iam_policy_statement_action_notaction" {
       jsonb_array_elements_text(coalesce(t.stmt -> 'Action','[]'::jsonb) || coalesce(t.stmt -> 'NotAction','[]'::jsonb)) as action
   EOQ
 
-  param "policy_std" {}
+  param "iam_policy_stds" {}
 }
 
 node "iam_policy_statement_resource_notresource" {
@@ -644,7 +644,7 @@ node "iam_policy_statement_resource_notresource" {
       jsonb_array_elements_text(coalesce(t.stmt -> 'Resource','[]'::jsonb) || coalesce(t.stmt -> 'NotResource','[]'::jsonb)) as resource
   EOQ
 
-  param "policy_std" {}
+  param "iam_policy_stds" {}
 }
 
 node "iam_policy_globbed_notaction" {
@@ -663,7 +663,7 @@ node "iam_policy_globbed_notaction" {
       a.action not like glob(action_glob)
   EOQ
 
-  param "policy_std" {}
+  param "iam_policy_stds" {}
 }
 
 edge "iam_policy_globbed_notaction" {
@@ -684,5 +684,5 @@ edge "iam_policy_globbed_notaction" {
       a.action not like glob(action_glob)
   EOQ
 
-  param "policy_std" {}
+  param "iam_policy_stds" {}
 }

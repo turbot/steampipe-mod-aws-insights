@@ -18,7 +18,7 @@ node "dynamodb_table" {
       arn = any($1);
   EOQ
 
-  param "table_arns" {}
+  param "dynamodb_table_arns" {}
 }
 
 node "dynamodb_table_to_dynamodb_backup_node" {

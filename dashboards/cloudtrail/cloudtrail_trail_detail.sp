@@ -78,8 +78,8 @@ dashboard "cloudtrail_trail_detail" {
       ]
 
       args = {
-        trail_arns = [self.input.trail_arn.value]
-        arn = self.input.trail_arn.value
+        cloudtrail_trail_arns = [self.input.trail_arn.value]
+        arn                   = self.input.trail_arn.value
       }
     }
   }
@@ -300,7 +300,7 @@ node "cloudtrail_trail" {
       arn = any($1);
   EOQ
 
-  param "trail_arns" {}
+  param "cloudtrail_trail_arns" {}
 }
 
 node "cloudtrail_trail_to_s3_bucket_node" {

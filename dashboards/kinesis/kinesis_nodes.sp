@@ -21,5 +21,5 @@ node "dynamodb_table_to_kinesis_stream_node" {
     and t.arn = any($1);
   EOQ
 
-  param "table_arns" {}
+  param "dynamodb_table_arns" {}
 }

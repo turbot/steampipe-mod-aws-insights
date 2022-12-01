@@ -147,9 +147,9 @@ dashboard "dynamodb_table_detail" {
       ]
 
       args = {
-        table_arns            = [self.input.table_arn.value]
-        bucket_arns           = with.buckets.rows[*].bucket_arn
-        key_arns              = with.kms_keys.rows[*].key_arn
+        dynamodb_table_arns   = [self.input.table_arn.value]
+        s3_bucket_arns        = with.buckets.rows[*].bucket_arn
+        kms_key_arns          = with.kms_keys.rows[*].key_arn
         kinesis_stream_arns   = with.kinesis_streams.rows[*].kinesis_stream_arn
         dbynamodb_backup_arns = with.dynamodb_backups.rows[*].dbynamodb_backup_arn
       }
@@ -363,15 +363,15 @@ edge "dynamodb_table_to_kms_key" {
 
   sql = <<-EOQ
     select
-      key_arns as to_id,
-      table_arns as from_id
+      kms_key_arns as to_id,
+      dynamodb_table_arns as from_id
     from
-      unnest($1::text[]) as key_arns,
-      unnest($2::text[]) as table_arns
+      unnest($1::text[]) as kms_key_arns,
+      unnest($2::text[]) as dynamodb_table_arns
   EOQ
 
-  param "key_arns" {}
-  param "table_arns" {}
+  param "kms_key_arns" {}
+  param "dynamodb_table_arns" {}
 }
 
 edge "dynamodb_table_to_s3_bucket" {
@@ -379,15 +379,15 @@ edge "dynamodb_table_to_s3_bucket" {
 
   sql = <<-EOQ
     select
-      table_arns as from_id,
-      bucket_arns as to_id
+      dynamodb_table_arns as from_id,
+      s3_bucket_arns as to_id
     from
-      unnest($1::text[]) as table_arns,
-      unnest($2::text[]) as bucket_arns
+      unnest($1::text[]) as dynamodb_table_arns,
+      unnest($2::text[]) as s3_bucket_arns
   EOQ
 
-  param "table_arns" {}
-  param "bucket_arns" {}
+  param "dynamodb_table_arns" {}
+  param "s3_bucket_arns" {}
 }
 
 edge "dynamodb_table_to_dynamodb_backup" {
@@ -395,14 +395,14 @@ edge "dynamodb_table_to_dynamodb_backup" {
 
   sql = <<-EOQ
     select
-      table_arns as from_id,
+      dynamodb_table_arns as from_id,
       dbynamodb_backup_arns as to_id
     from
-      unnest($1::text[]) as table_arns,
+      unnest($1::text[]) as dynamodb_table_arns,
       unnest($2::text[]) as dbynamodb_backup_arns
   EOQ
 
-  param "table_arns" {}
+  param "dynamodb_table_arns" {}
   param "dbynamodb_backup_arns" {}
 }
 
@@ -411,14 +411,14 @@ edge "dynamodb_table_to_kinesis_stream" {
 
   sql = <<-EOQ
   select
-    table_arns as from_id,
+    dynamodb_table_arns as from_id,
     kinesis_stream_arns as to_id
   from
-    unnest($1::text[]) as table_arns,
+    unnest($1::text[]) as dynamodb_table_arns,
     unnest($2::text[]) as kinesis_stream_arns
   EOQ
 
-  param "table_arns" {}
+  param "dynamodb_table_arns" {}
   param "kinesis_stream_arns" {}
 }
 

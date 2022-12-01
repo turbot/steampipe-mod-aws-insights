@@ -178,8 +178,8 @@ dashboard "acm_certificate_detail" {
       ]
 
       args = {
-        certificate_arns                   = [self.input.certificate_arn.value]
-        distribution_arns                  = with.cloudfront_distributions.rows[*].distribution_arn
+        acm_certificate_arns               = [self.input.certificate_arn.value]
+        cloudfront_distribution_arns       = with.cloudfront_distributions.rows[*].distribution_arn
         ec2_application_load_balancer_arns = with.albs.rows[*].alb_arn
         ec2_classic_load_balancer_arns     = with.clbs.rows[*].clb_arn
         ec2_network_load_balancer_arns     = with.nlbs.rows[*].nlb_arn
@@ -351,14 +351,14 @@ edge "opensearch_domain_to_acm_certificate" {
 
   sql = <<-EOQ
     select
-      certificate_arns as to_id,
+      acm_certificate_arns as to_id,
       opensearch_arns as from_id
     from
-      unnest($1::text[]) as certificate_arns,
+      unnest($1::text[]) as acm_certificate_arns,
       unnest($2::text[]) as opensearch_arns
   EOQ
 
-  param "certificate_arns" {}
+  param "acm_certificate_arns" {}
   param "opensearch_arns" {}
 }
 

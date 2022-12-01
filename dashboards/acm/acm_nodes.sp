@@ -22,6 +22,6 @@ node "acm_certificate" {
       certificate_arn = any($1);
   EOQ
 
-  param "certificate_arns" {}
+  param "acm_certificate_arns" {}
 }
 

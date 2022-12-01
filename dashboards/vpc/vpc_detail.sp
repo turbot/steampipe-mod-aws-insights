@@ -249,19 +249,19 @@ dashboard "vpc_detail" {
       ]
 
       args = {
-        vpc_id                = self.input.vpc_id.value
-        vpc_ids               = [self.input.vpc_id.value]
-        security_group_ids    = with.security_groups.rows[*].security_group_id
-        subnet_ids            = with.subnets.rows[*].subnet_id
-        clb_arns              = with.clbs.rows[*].clb_arn
-        alb_arns              = with.albs.rows[*].alb_arn
-        nlb_arns              = with.nlbs.rows[*].nlb_arn
-        glb_arns              = with.glbs.rows[*].glb_arn
-        instance_arns         = with.ec2_instances.rows[*].instance_arn
-        redshift_cluster_arns = with.redshift_clusters.rows[*].redshift_cluster_arn
-        function_arns         = with.lambda_functions.rows[*].function_arn
-        rds_db_instance_arns  = with.rds_db_instances.rows[*].rds_instance_arn
-        flow_log_ids          = with.flow_logs.rows[*].flow_log_id
+        vpc_id                             = self.input.vpc_id.value
+        vpc_vpc_ids                        = [self.input.vpc_id.value]
+        vpc_security_group_ids             = with.security_groups.rows[*].security_group_id
+        vpc_subnet_ids                     = with.subnets.rows[*].subnet_id
+        ec2_classic_load_balancer_arns     = with.clbs.rows[*].clb_arn
+        ec2_application_load_balancer_arns = with.albs.rows[*].alb_arn
+        ec2_network_load_balancer_arns     = with.nlbs.rows[*].nlb_arn
+        ec2_gateway_load_balancer_arns     = with.glbs.rows[*].glb_arn
+        ec2_instance_arns                  = with.ec2_instances.rows[*].instance_arn
+        redshift_cluster_arns              = with.redshift_clusters.rows[*].redshift_cluster_arn
+        lambda_function_arns               = with.lambda_functions.rows[*].function_arn
+        rds_db_instance_arns               = with.rds_db_instances.rows[*].rds_instance_arn
+        vpc_flow_log_ids                   = with.flow_logs.rows[*].flow_log_id
       }
     }
 
@@ -1325,7 +1325,7 @@ node "vpc_az" {
       vpc_id = any($1)
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 edge "vpc_to_az" {
@@ -1342,7 +1342,7 @@ edge "vpc_to_az" {
       vpc_id = any($1)
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 edge "vpc_az_to_vpc_subnet" {
@@ -1358,7 +1358,7 @@ edge "vpc_az_to_vpc_subnet" {
       vpc_id = any($1)
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 node "vpc_igw" {
@@ -1381,7 +1381,7 @@ node "vpc_igw" {
       a ->> 'VpcId' = any($1);
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 edge "vpc_to_igw" {
@@ -1398,7 +1398,7 @@ edge "vpc_to_igw" {
       a ->> 'VpcId' = any($1);
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 node "vpc_az_route_table" {
@@ -1424,7 +1424,7 @@ node "vpc_az_route_table" {
       vpc_id = any($1);
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 edge "vpc_subnet_to_route_table" {
@@ -1441,7 +1441,7 @@ edge "vpc_subnet_to_route_table" {
         rt.vpc_id = any($1);
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 
@@ -1459,7 +1459,7 @@ edge "vpc_to_vpc_route_table" {
         rt.vpc_id = any($1);
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 
@@ -1481,7 +1481,7 @@ node "vpc_vcp_endpoint" {
       vpc_id = any($1);
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 edge "vpc_subnet_to_endpoint" {
@@ -1493,7 +1493,7 @@ edge "vpc_subnet_to_endpoint" {
       e.vpc_endpoint_id as to_id
     from
       aws_vpc_endpoint as e,
-      jsonb_array_elements_text(e.subnet_ids) as s
+      jsonb_array_elements_text(e.vpc_subnet_ids) as s
     where
       e.vpc_id = any($1)
     union
@@ -1503,12 +1503,12 @@ edge "vpc_subnet_to_endpoint" {
     from
       aws_vpc_endpoint as e
     where
-      jsonb_array_length(subnet_ids) = 0
+      jsonb_array_length(vpc_subnet_ids) = 0
       and vpc_id = any($1);
 
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 node "vpc_transit_gateway" {
@@ -1533,7 +1533,7 @@ node "vpc_transit_gateway" {
       t.resource_id = any($1) and resource_type = 'vpc';
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 edge "vpc_to_transit_gateway" {
@@ -1548,7 +1548,7 @@ edge "vpc_to_transit_gateway" {
       where resource_id = any($1);
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 node "vpc_nat_gateway" {
@@ -1570,7 +1570,7 @@ node "vpc_nat_gateway" {
       vpc_id = any($1);
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 edge "vpc_subnet_to_nat_gateway" {
@@ -1586,7 +1586,7 @@ edge "vpc_subnet_to_nat_gateway" {
       vpc_id = any($1)
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 node "vpc_vpn_gateway" {
@@ -1608,7 +1608,7 @@ node "vpc_vpn_gateway" {
       a ->> 'VpcId' = any($1);
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 edge "vpc_to_vpn_gateway" {
@@ -1625,7 +1625,7 @@ edge "vpc_to_vpn_gateway" {
       a ->> 'VpcId' = any($1);
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 edge "vpc_to_vpc_security_group" {
@@ -1633,15 +1633,15 @@ edge "vpc_to_vpc_security_group" {
 
   sql = <<-EOQ
     select
-      vpc_ids as from_id,
-      security_group_ids as to_id
+      vpc_vpc_ids as from_id,
+      vpc_security_group_ids as to_id
     from
-      unnest($1::text[]) as vpc_ids,
-      unnest($2::text[]) as security_group_ids
+      unnest($1::text[]) as vpc_vpc_ids,
+      unnest($2::text[]) as vpc_security_group_ids
   EOQ
 
-  param "vpc_ids" {}
-  param "security_group_ids" {}
+  param "vpc_vpc_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
 edge "vpc_peered_vpc" {
@@ -1682,7 +1682,7 @@ node "vpc_s3_access_point" {
       vpc_id  = any($1)
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 
@@ -1699,7 +1699,7 @@ edge "vpc_to_s3_access_point" {
       vpc_id = any($1)
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 node "vpc_peered_vpc" {
@@ -1742,7 +1742,7 @@ node "vpc_peered_vpc" {
         and accepter_vpc_id = any($1)
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 edge "vpc_to_vpc_flow_log" {
@@ -1750,15 +1750,15 @@ edge "vpc_to_vpc_flow_log" {
 
   sql = <<-EOQ
     select
-      vpc_ids as from_id,
-      flow_log_ids as to_id
+      vpc_vpc_ids as from_id,
+      vpc_flow_log_ids as to_id
     from
-      unnest($1::text[]) as flow_log_ids,
-      unnest($2::text[]) as vpc_ids
+      unnest($1::text[]) as vpc_flow_log_ids,
+      unnest($2::text[]) as vpc_vpc_ids
   EOQ
 
-  param "flow_log_ids" {}
-  param "vpc_ids" {}
+  param "vpc_flow_log_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 edge "vpc_subnet_to_instance" {
@@ -1774,7 +1774,7 @@ edge "vpc_subnet_to_instance" {
       vpc_id = any($1);
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 edge "vpc_subnet_to_lambda" {
@@ -1791,9 +1791,10 @@ edge "vpc_subnet_to_lambda" {
       l.vpc_id = any($1);
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
+# In the below relation there could be multiple subnets associated to diffrent albs. However it should not be all subnets to all albs, to prevent this edge case; we have to write the query in below format without using unset
 edge "vpc_subnet_to_ec2_alb" {
   title = "alb"
 
@@ -1808,7 +1809,7 @@ edge "vpc_subnet_to_ec2_alb" {
       a.vpc_id = any($1);
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 edge "vpc_subnet_to_ec2_nlb" {
@@ -1824,7 +1825,7 @@ edge "vpc_subnet_to_ec2_nlb" {
     where n.vpc_id = any($1);
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 edge "vpc_subnet_to_ec2_clb" {
@@ -1841,7 +1842,7 @@ edge "vpc_subnet_to_ec2_clb" {
       c.vpc_id = any($1);
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 edge "vpc_subnet_to_ec2_glb" {
@@ -1858,7 +1859,7 @@ edge "vpc_subnet_to_ec2_glb" {
       g.vpc_id = any($1);
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
 edge "vpc_subnet_to_rds_instance" {
@@ -1875,5 +1876,5 @@ edge "vpc_subnet_to_rds_instance" {
       i.vpc_id = any($1);
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
 }

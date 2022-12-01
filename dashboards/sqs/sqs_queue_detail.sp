@@ -81,8 +81,8 @@ dashboard "sqs_queue_detail" {
       ]
 
       args = {
-        queue_arns = [self.input.queue_arn.value]
-        arn = self.input.queue_arn.value
+        sqs_queue_arns = [self.input.queue_arn.value]
+        arn            = self.input.queue_arn.value
       }
     }
   }
@@ -334,7 +334,7 @@ node "sqs_queue" {
       queue_arn = any($1);
   EOQ
 
-  param "queue_arns" {}
+  param "sqs_queue_arns" {}
 }
 
 node "sqs_queue_to_sns_topic_subscription_node" {

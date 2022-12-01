@@ -91,8 +91,8 @@ dashboard "ec2_network_load_balancer_detail" {
       ]
 
       args = {
-        nlb_arns = [self.input.nlb.value]
-        arn = self.input.nlb.value
+        ec2_network_load_balancer_arns = [self.input.nlb.value]
+        arn                            = self.input.nlb.value
       }
     }
   }
@@ -431,13 +431,13 @@ edge "ec2_network_load_balancer_to_acm_certificate" {
 
   sql = <<-EOQ
     select
-      certificate_arns as to_id,
-      nlb_arns as from_id
+      acm_certificate_arns as to_id,
+      ec2_network_load_balancer_arns as from_id
     from
-      unnest($1::text[]) as certificate_arns,
-      unnest($2::text[]) as nlb_arns
+      unnest($1::text[]) as acm_certificate_arns,
+      unnest($2::text[]) as ec2_network_load_balancer_arns
   EOQ
 
-  param "certificate_arns" {}
-  param "nlb_arns" {}
+  param "acm_certificate_arns" {}
+  param "ec2_network_load_balancer_arns" {}
 }

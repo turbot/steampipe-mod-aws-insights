@@ -63,8 +63,8 @@ dashboard "sns_topic_detail" {
       ]
 
       args = {
-        topic_arns = [self.input.topic_arn.value]
-        arn        = self.input.topic_arn.value
+        sns_topic_arns = [self.input.topic_arn.value]
+        arn            = self.input.topic_arn.value
       }
     }
   }
@@ -282,7 +282,7 @@ node "sns_topic" {
       q.topic_arn = any($1);
   EOQ
 
-  param "topic_arns" {}
+  param "sns_topic_arns" {}
 }
 
 node "sns_topic_to_kms_key_node" {
