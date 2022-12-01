@@ -72,20 +72,51 @@ dashboard "redshift_snapshot_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "redshift_clusters" {
+        sql = <<-EOQ
+          select
+            c.arn as redshift_cluster_arn
+          from
+            aws_redshift_snapshot as s,
+            aws_redshift_cluster as c
+          where
+            s.cluster_identifier = c.cluster_identifier
+            and s.akas::text = $1;
+        EOQ
+
+        args = [self.input.snapshot_arn.value]
+      }
+
+      with "kms_keys" {
+        sql = <<-EOQ
+          select
+            kms_key_id as key_arn
+          from
+            aws_redshift_snapshot
+          where
+            kms_key_id is not null
+            and akas::text = $1;
+        EOQ
+
+        args = [self.input.snapshot_arn.value]
+      }
+
 
       nodes = [
-        node.redshift_snapshot_node,
-        node.redshift_snapshot_to_kms_key_node,
-        node.redshift_snapshot_from_redshift_cluster_node
+        node.redshift_cluster,
+        node.kms_key,
+        node.redshift_snapshot
       ]
 
       edges = [
-        edge.redshift_snapshot_to_kms_key_edge,
-        edge.redshift_snapshot_from_redshift_cluster_edge
+        edge.redshift_snapshot_to_kms_key,
+        edge.redshift_cluster_to_redshift_snapshot
       ]
 
       args = {
-        arn = self.input.snapshot_arn.value
+        redshift_snapshot_arns = [self.input.snapshot_arn.value]
+        kms_key_arns           = with.kms_keys.rows[*].key_arn
+        redshift_cluster_arns  = with.redshift_clusters.rows[*].redshift_cluster_arn
       }
     }
   }
@@ -220,12 +251,12 @@ query "redshift_snapshot_unencrypted" {
   param "arn" {}
 }
 
-node "redshift_snapshot_node" {
+node "redshift_snapshot" {
   category = category.redshift_snapshot
 
   sql = <<-EOQ
     select
-      title as id,
+      akas::text as id,
       title,
       jsonb_build_object(
         'Status', status,
@@ -239,100 +270,26 @@ node "redshift_snapshot_node" {
     from
       aws_redshift_snapshot
     where
-      akas::text = $1;
+      akas::text = any($1);
   EOQ
 
-  param "arn" {}
+  param "redshift_snapshot_arns" {}
 }
 
-node "redshift_snapshot_to_kms_key_node" {
-  category = category.kms_key
-
-  sql = <<-EOQ
-    select
-      k.id,
-      k.title,
-      jsonb_build_object(
-        'ARN', k.arn,
-        'Rotation Enabled', k.key_rotation_enabled::text,
-        'Account ID', k.account_id,
-        'Region', k.region
-      ) as properties
-    from
-      aws_redshift_snapshot as s
-      join
-        aws_kms_key as k
-        on s.kms_key_id = k.arn
-        and s.akas::text = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "redshift_snapshot_to_kms_key_edge" {
+edge "redshift_snapshot_to_kms_key" {
   title = "encrypted with"
 
   sql = <<-EOQ
     select
-      s.snapshot_identifier as from_id,
-      k.id as to_id
+      redshift_snapshot_arn as from_id,
+      key_arn as to_id
     from
-      aws_redshift_snapshot as s
-      join
-        aws_kms_key as k
-        on s.kms_key_id = k.arn
-        and s.akas::text = $1;
+      unnest($1::text[]) as key_arn,
+      unnest($2::text[]) as redshift_snapshot_arn
   EOQ
 
-  param "arn" {}
-}
-
-node "redshift_snapshot_from_redshift_cluster_node" {
-  category = category.redshift_cluster
-
-  sql = <<-EOQ
-    select
-      c.cluster_identifier as id,
-      c.title as title,
-      jsonb_build_object(
-        'ARN', c.arn,
-        'Status', c.cluster_status,
-        'Availability Zone', c.availability_zone,
-        'Create Time', c.cluster_create_time,
-        'Account ID', c.account_id,
-        'Region', c.region
-      ) as properties
-    from
-      aws_redshift_snapshot as s
-      join
-        aws_redshift_cluster as c
-        on s.cluster_identifier = c.cluster_identifier
-        and s.account_id = c.account_id
-        and s.region = c.region
-        and s.akas::text = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "redshift_snapshot_from_redshift_cluster_edge" {
-  title = "snapshot"
-
-  sql = <<-EOQ
-    select
-      c.cluster_identifier as from_id,
-      s.snapshot_identifier as to_id
-    from
-      aws_redshift_snapshot as s
-      join
-        aws_redshift_cluster as c
-        on s.cluster_identifier = c.cluster_identifier
-        and s.account_id = c.account_id
-        and s.region = c.region
-        and s.akas::text = $1;
-  EOQ
-
-  param "arn" {}
+  param "kms_key_arns" {}
+  param "redshift_snapshot_arns" {}
 }
 
 query "redshift_snapshot_overview" {

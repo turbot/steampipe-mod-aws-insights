@@ -154,7 +154,7 @@ dashboard "vpc_flow_logs_detail" {
         ec2_network_interface_ids = with.enis.rows[*].eni_id
         vpc_subnet_ids            = with.vpc_subnets.rows[*].subnet_id
         vpc_vpc_ids               = with.vpc_vpcs.rows[*].vpc_id
-        log_group_arns            = with.log_groups.rows[*].log_group_arn
+        cloudwatch_log_group_arns = with.log_groups.rows[*].log_group_arn
         vpc_flow_log_ids          = [self.input.flow_log_id.value]
       }
     }
@@ -264,6 +264,7 @@ node "vpc_flow_log" {
       flow_log_id as id,
       title as title,
       jsonb_build_object(
+        'Flow Log ID', flow_log_id,
         'Status', flow_log_status,
         'Creation Time', creation_time,
         'Account ID', account_id,
@@ -307,7 +308,7 @@ edge "vpc_flow_log_to_cloudwatch_log_group" {
   EOQ
 
   param "vpc_flow_log_ids" {}
-  param "log_group_arns" {}
+  param "cloudwatch_log_group_arns" {}
 }
 
 edge "vpc_flow_log_to_iam_role" {

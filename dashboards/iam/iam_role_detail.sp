@@ -49,7 +49,7 @@ dashboard "iam_role_detail" {
       direction = "TD"
 
       nodes = [
-        node.iam_role_node,
+        node.iam_role,
         node.iam_role_to_iam_policy_node,
         # node.iam_role_from_kinesisanalyticsv2_application_node,
         node.iam_role_from_emr_cluster_node,
@@ -211,28 +211,6 @@ query "iam_role_direct_attached_policy_count_for_role" {
       aws_iam_role
     where
       arn = $1
-  EOQ
-
-  param "arn" {}
-}
-
-node "iam_role_node" {
-  category = category.iam_role
-
-  sql = <<-EOQ
-    select
-      role_id as id,
-      name as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Create Date', create_date,
-        'Max Session Duration', max_session_duration,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_iam_role
-    where
-      arn = $1;
   EOQ
 
   param "arn" {}

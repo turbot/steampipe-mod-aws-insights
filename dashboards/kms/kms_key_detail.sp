@@ -238,7 +238,7 @@ dashboard "kms_key_detail" {
         edge.kms_key_from_ebs_volume,
         edge.rds_db_cluster_snapshot_to_kms_key,
         edge.kms_key_from_rds_db_cluster,
-        edge.kms_key_from_redshift_cluster,
+        edge.redshift_cluster_to_kms_key,
         edge.kms_key_from_sns_topic,
         edge.kms_key_from_sqs_queue,
         edge.rds_db_instance_to_kms_key,
@@ -527,22 +527,6 @@ edge "kms_key_from_rds_db_cluster" {
 
   param "kms_key_arns" {}
   param "rds_db_cluster_arns" {}
-}
-
-edge "kms_key_from_redshift_cluster" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      redshift_cluster_arn as from_id,
-      key_arn as to_id
-    from
-      unnest($1::text[]) as key_arn,
-      unnest($2::text[]) as redshift_cluster_arn
-  EOQ
-
-  param "kms_key_arns" {}
-  param "redshift_cluster_arns" {}
 }
 
 edge "kms_key_from_sns_topic" {

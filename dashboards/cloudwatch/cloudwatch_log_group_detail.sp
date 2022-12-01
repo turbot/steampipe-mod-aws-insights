@@ -557,5 +557,5 @@ node "cloudwatch_log_group" {
       arn = any($1 ::text[]);
   EOQ
 
-  param "log_group_arns" {}
+  param "cloudwatch_log_group_arns" {}
 }
