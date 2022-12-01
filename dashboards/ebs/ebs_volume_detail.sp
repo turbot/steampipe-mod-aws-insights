@@ -128,18 +128,18 @@ dashboard "aws_ebs_volume_detail" {
       }
 
       nodes = [
-        node.aws_ebs_volume_nodes,
-        node.aws_kms_key_nodes,
-        node.aws_ebs_snapshot_nodes,
+        node.ebs_volume,
+        node.kms_key,
+        node.ebs_snapshot,
         node.aws_ec2_instance_nodes,
-        node.aws_ec2_ami_node
+        node.ec2_ami
       ]
 
       edges = [
         edge.aws_ebs_volume_to_kms_key_edge,
         edge.aws_ebs_volume_to_ebs_snapshot_edge,
         edge.aws_ec2_instance_to_ebs_volume_edge,
-        edge.aws_ebs_volume_ebs_snapshots_to_ec2_ami_edge
+        edge.ebs_volume_ebs_snapshots_to_ec2_ami
       ]
 
       args = {
@@ -493,32 +493,4 @@ query "aws_ebs_volume_tags" {
   EOQ
 
   param "arn" {}
-}
-
-
-//******
-
-
-node "aws_ebs_volume_nodes" {
-  category = category.aws_ebs_volume
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ID', volume_id,
-        'ARN', arn,
-        'Size', size,
-        'Account ID', account_id,
-        'Region', region,
-        'KMS Key ID', kms_key_id
-      ) as properties
-    from
-      aws_ebs_volume
-    where
-      arn = any($1);
-  EOQ
-
-  param "volume_arns" {}
 }

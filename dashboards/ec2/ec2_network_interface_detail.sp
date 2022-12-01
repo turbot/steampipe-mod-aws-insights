@@ -146,9 +146,9 @@ dashboard "aws_ec2_network_interface_detail" {
       nodes = [
         node.aws_ec2_network_interface_nodes,
         node.aws_ec2_instance_nodes,
-        node.aws_vpc_security_group_nodes,
-        node.aws_vpc_subnet_nodes,
-        node.aws_vpc_nodes,
+        node.vpc_security_group,
+        node.vpc_subnet,
+        node.vpc,
         node.aws_vpc_eip_nodes,
         node.aws_vpc_flow_log_nodes,
 

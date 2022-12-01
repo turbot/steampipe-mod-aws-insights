@@ -217,10 +217,10 @@ dashboard "aws_kms_key_detail" {
       }
 
       nodes = [
-        node.aws_kms_key_nodes,
+        node.kms_key,
         node.aws_kms_key_alias_nodes,
         node.aws_cloudtrail_trail_nodes,
-        node.aws_ebs_volume_nodes,
+        node.ebs_volume,
         node.aws_rds_db_cluster_snapshot_nodes,
         node.aws_rds_db_cluster_nodes,
         node.aws_redshift_cluster_nodes,
@@ -457,7 +457,7 @@ query "aws_kms_key_policy" {
   param "arn" {}
 }
 
-node "aws_kms_key_nodes" {
+node "kms_key" {
   category = category.aws_kms_key
 
   sql = <<-EOQ

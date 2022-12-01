@@ -129,8 +129,8 @@ dashboard "aws_vpc_subnet_detail" {
       }
 
       nodes = [
-        node.aws_vpc_subnet_nodes,
-        node.aws_vpc_nodes,
+        node.vpc_subnet,
+        node.vpc,
         node.aws_rds_db_instance_nodes,
         node.aws_ec2_instance_nodes,
         node.aws_lambda_function_nodes,
@@ -397,7 +397,7 @@ query "aws_vpc_subnet_association" {
   param "subnet_id" {}
 }
 
-node "aws_vpc_subnet_nodes" {
+node "vpc_subnet" {
   category = category.aws_vpc_subnet
 
   sql = <<-EOQ

@@ -135,8 +135,8 @@ dashboard "aws_vpc_flow_logs_detail" {
         node.aws_cloudwatch_log_group_nodes,
         node.aws_iam_role_nodes,
         node.aws_ec2_network_interface_nodes,
-        node.aws_vpc_subnet_nodes,
-        node.aws_vpc_nodes
+        node.vpc_subnet,
+        node.vpc
       ]
 
       edges = [

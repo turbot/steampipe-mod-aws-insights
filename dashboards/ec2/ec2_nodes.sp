@@ -44,7 +44,7 @@ node "aws_ec2_instance_nodes" {
   param "instance_arns" {}
 }
 
-node "aws_ec2_launch_configuration_nodes" {
+node "ec2_launch_configuration" {
   category = category.aws_ec2_launch_configuration
 
   sql = <<-EOQ

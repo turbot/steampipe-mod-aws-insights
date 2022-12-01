@@ -171,10 +171,10 @@ dashboard "aws_rds_db_instance_detail" {
         node.aws_sns_topic_nodes,
         node.aws_rds_db_instance_to_rds_db_parameter_group_node,
         node.aws_rds_db_instance_to_rds_db_subnet_group_node,
-        node.aws_kms_key_nodes,
-        node.aws_vpc_nodes,
-        node.aws_vpc_subnet_nodes,
-        node.aws_vpc_security_group_nodes,
+        node.kms_key,
+        node.vpc,
+        node.vpc_subnet,
+        node.vpc_security_group,
         node.aws_rds_db_cluster_nodes
       ]
 

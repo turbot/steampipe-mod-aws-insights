@@ -56,7 +56,7 @@ dashboard "aws_vpc_detail" {
       width = 12
       type  = "graph"
       nodes = [
-        node.aws_vpc_nodes,
+        node.vpc,
         node.aws_vpc_az_node,
         node.aws_vpc_to_flow_log_node,
         node.aws_vpc_vpc_subnet_node,
@@ -2043,7 +2043,7 @@ edge "aws_vpc_routing_cidr_to_gateway_edge" {
   param "vpc_id" {}
 }
 
-node "aws_vpc_nodes" {
+node "vpc" {
   category = category.aws_vpc
 
   sql = <<-EOQ

@@ -204,8 +204,8 @@ dashboard "aws_vpc_security_group_detail" {
       }
 
       nodes = [
-        node.aws_vpc_security_group_nodes,
-        node.aws_vpc_nodes,
+        node.vpc_security_group,
+        node.vpc,
         node.aws_rds_db_cluster_nodes,
         node.aws_rds_db_instance_nodes,
         node.aws_ec2_instance_nodes,
@@ -1390,7 +1390,7 @@ query "aws_vpc_security_group_tags" {
 }
 
 
-node "aws_vpc_security_group_nodes" {
+node "vpc_security_group" {
   category = category.aws_vpc_security_group
 
   sql = <<-EOQ

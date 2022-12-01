@@ -1,4 +1,29 @@
-node "aws_efs_access_point_node" {
+
+node "efs_file_system" {
+  category = category.aws_efs_file_system
+  sql      = <<-EOQ
+      select
+        arn as id,
+        title as title,
+        json_build_object(
+          'ARN', arn,
+          'ID', file_system_id,
+          'Name', name,
+          'State', life_cycle_state,
+          'Created At', creation_time,
+          'Account ID', account_id,
+          'Region', region
+        ) as properties
+      from
+        aws_efs_file_system
+      where
+        arn = any($1);
+  EOQ
+
+  param "efs_file_system_arns" {}
+}
+
+node "efs_access_point" {
   category = category.aws_efs_access_point
   sql      = <<-EOQ
     select
@@ -20,7 +45,7 @@ node "aws_efs_access_point_node" {
   param "access_point_arns" {}
 }
 
-node "aws_efs_mount_target_node" {
+node "efs_mount_target" {
   category = category.aws_efs_mount_target
   sql      = <<-EOQ
     select

@@ -214,7 +214,7 @@ dashboard "aws_s3_bucket_detail" {
         node.aws_ec2_application_load_balancer_nodes,
         node.aws_ec2_network_load_balancer_nodes,
         node.aws_ec2_classic_load_balancer_nodes,
-        node.aws_kms_key_nodes,
+        node.kms_key,
         node.aws_lambda_function_nodes,
         node.aws_sns_topic_nodes,
         node.aws_sqs_queue_nodes,

@@ -102,7 +102,7 @@ dashboard "aws_rds_db_cluster_snapshot_detail" {
 
       nodes = [
         node.aws_rds_db_cluster_snapshot_nodes,
-        node.aws_kms_key_nodes,
+        node.kms_key,
         node.aws_rds_db_cluster_nodes
       ]
 

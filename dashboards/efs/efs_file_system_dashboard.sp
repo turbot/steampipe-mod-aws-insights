@@ -1,4 +1,4 @@
-dashboard "aws_efs_file_system_dashboard" {
+dashboard "efs_file_system_dashboard" {
 
   title         = "AWS EFS File System Dashboard"
   documentation = file("./dashboards/efs/docs/efs_file_system_dashboard.md")
@@ -12,17 +12,17 @@ dashboard "aws_efs_file_system_dashboard" {
     # Analysis
 
     card {
-      query = query.aws_efs_file_system_count
+      query = query.efs_file_system_count
       width = 2
     }
 
     card {
-      query = query.aws_efs_file_system_encryption_disabled_count
+      query = query.efs_file_system_encryption_disabled_count
       width = 2
     }
 
     card {
-      query = query.aws_efs_file_system_automatic_backup_disabled_count
+      query = query.efs_file_system_automatic_backup_disabled_count
       width = 2
     }
 
@@ -34,7 +34,7 @@ dashboard "aws_efs_file_system_dashboard" {
 
     chart {
       title = "File System Encryption Status"
-      query   = query.aws_efs_file_system_by_encryption_status
+      query   = query.efs_file_system_by_encryption_status
       type  = "donut"
       width = 3
 
@@ -50,7 +50,7 @@ dashboard "aws_efs_file_system_dashboard" {
 
     chart {
       title = "File System Automatic Backup Status"
-      query   = query.aws_efs_file_system_by_automatic_backup_status
+      query   = query.efs_file_system_by_automatic_backup_status
       type  = "donut"
       width = 3
 
@@ -72,42 +72,42 @@ dashboard "aws_efs_file_system_dashboard" {
 
     chart {
       title = "File Systems by Account"
-      query = query.aws_efs_file_system_by_account
+      query = query.efs_file_system_by_account
       type  = "column"
       width = 3
     }
 
     chart {
       title = "File Systems by Region"
-      query   = query.aws_efs_file_system_by_region
+      query   = query.efs_file_system_by_region
       type  = "column"
       width = 3
     }
 
     chart {
       title = "File Systems by State"
-      query   = query.aws_efs_file_system_by_state
+      query   = query.efs_file_system_by_state
       type  = "column"
       width = 3
     }
 
     chart {
       title = "File Systems by Age"
-      query   = query.aws_efs_file_system_by_age
+      query   = query.efs_file_system_by_age
       type  = "column"
       width = 3
     }
 
     chart {
       title = "File Systems by Performance Mode"
-      query   = query.aws_efs_file_system_by_performance_mode
+      query   = query.efs_file_system_by_performance_mode
       type  = "column"
       width = 3
     }
 
     chart {
       title = "File Systems by Throughput Mode"
-      query   = query.aws_efs_file_system_by_throughput_mode
+      query   = query.efs_file_system_by_throughput_mode
       type  = "column"
       width = 3
     }
@@ -118,7 +118,7 @@ dashboard "aws_efs_file_system_dashboard" {
 
 # Card Queries
 
-query "aws_efs_file_system_count" {
+query "efs_file_system_count" {
   sql = <<-EOQ
     select
       count(*) as "File Systems"
@@ -127,7 +127,7 @@ query "aws_efs_file_system_count" {
   EOQ
 }
 
-query "aws_efs_file_system_encryption_disabled_count" {
+query "efs_file_system_encryption_disabled_count" {
   sql = <<-EOQ
     select
       'Encryption Disabled' as label,
@@ -140,7 +140,7 @@ query "aws_efs_file_system_encryption_disabled_count" {
   EOQ
 }
 
-query "aws_efs_file_system_automatic_backup_disabled_count" {
+query "efs_file_system_automatic_backup_disabled_count" {
   sql = <<-EOQ
     select
       'Automatic Backup Disabled' as label,
@@ -155,7 +155,7 @@ query "aws_efs_file_system_automatic_backup_disabled_count" {
 
 # Assessments Queries
 
-query "aws_efs_file_system_by_encryption_status" {
+query "efs_file_system_by_encryption_status" {
   sql = <<-EOQ
     select
       encryption_status,
@@ -173,7 +173,7 @@ query "aws_efs_file_system_by_encryption_status" {
   EOQ
 }
 
-query "aws_efs_file_system_by_automatic_backup_status" {
+query "efs_file_system_by_automatic_backup_status" {
   sql = <<-EOQ
     select
       automatic_backup_status,
@@ -193,7 +193,7 @@ query "aws_efs_file_system_by_automatic_backup_status" {
 
 # Analysis Queries
 
-query "aws_efs_file_system_by_account" {
+query "efs_file_system_by_account" {
   sql = <<-EOQ
     select
       a.title as "Account",
@@ -210,7 +210,7 @@ query "aws_efs_file_system_by_account" {
   EOQ
 }
 
-query "aws_efs_file_system_by_region" {
+query "efs_file_system_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
@@ -222,7 +222,7 @@ query "aws_efs_file_system_by_region" {
   EOQ
 }
 
-query "aws_efs_file_system_by_state" {
+query "efs_file_system_by_state" {
   sql = <<-EOQ
     select
       life_cycle_state as "State",
@@ -236,7 +236,7 @@ query "aws_efs_file_system_by_state" {
   EOQ
 }
 
-query "aws_efs_file_system_by_age" {
+query "efs_file_system_by_age" {
   sql = <<-EOQ
     with file_systems as (
       select
@@ -282,7 +282,7 @@ query "aws_efs_file_system_by_age" {
   EOQ
 }
 
-query "aws_efs_file_system_by_performance_mode" {
+query "efs_file_system_by_performance_mode" {
   sql = <<-EOQ
     select
       performance_mode as "Performance Mode",
@@ -296,7 +296,7 @@ query "aws_efs_file_system_by_performance_mode" {
   EOQ
 }
 
-query "aws_efs_file_system_by_throughput_mode" {
+query "efs_file_system_by_throughput_mode" {
   sql = <<-EOQ
     select
       throughput_mode as "Throughput Mode",

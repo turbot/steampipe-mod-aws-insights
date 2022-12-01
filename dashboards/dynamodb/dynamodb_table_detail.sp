@@ -72,8 +72,8 @@ dashboard "aws_dynamodb_table_detail" {
       type      = "graph"
       direction = "TD"
 
-    with "kms_keys" {
-      sql = <<-EOQ
+      with "kms_keys" {
+        sql = <<-EOQ
         select
           sse_description ->> 'KMSMasterKeyArn' as key_arn
         from
@@ -82,11 +82,11 @@ dashboard "aws_dynamodb_table_detail" {
           arn = $1;
       EOQ
 
-      args = [self.input.table_arn.value]
-    }
+        args = [self.input.table_arn.value]
+      }
 
-    with "buckets" {
-      sql = <<-EOQ
+      with "buckets" {
+        sql = <<-EOQ
         select
           b.arn as bucket_arn
         from
@@ -97,12 +97,12 @@ dashboard "aws_dynamodb_table_detail" {
           and t.table_arn = $1;
       EOQ
 
-      args = [self.input.table_arn.value]
-    }
+        args = [self.input.table_arn.value]
+      }
 
       nodes = [
         node.aws_dynamodb_table_nodes,
-        node.aws_kms_key_nodes,
+        node.kms_key,
         node.aws_s3_bucket_nodes,
         node.aws_dynamodb_table_to_dynamodb_backup_node,
         node.aws_dynamodb_table_to_kinesis_stream_node
@@ -116,9 +116,9 @@ dashboard "aws_dynamodb_table_detail" {
       ]
 
       args = {
-        table_arns = [self.input.table_arn.value]
-        bucket_arns =  with.buckets.rows[*].bucket_arn
-        key_arns =  with.kms_keys.rows[*].key_arn
+        table_arns  = [self.input.table_arn.value]
+        bucket_arns = with.buckets.rows[*].bucket_arn
+        key_arns    = with.kms_keys.rows[*].key_arn
       }
     }
   }

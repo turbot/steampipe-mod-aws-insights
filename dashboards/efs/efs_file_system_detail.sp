@@ -1,4 +1,4 @@
-dashboard "aws_efs_file_system_detail" {
+dashboard "efs_file_system_detail" {
 
   title         = "AWS EFS File System Detail"
   documentation = file("./dashboards/efs/docs/efs_file_system_detail.md")
@@ -9,14 +9,14 @@ dashboard "aws_efs_file_system_detail" {
 
   input "efs_file_system_arn" {
     title = "Select a file system:"
-    query = query.aws_efs_file_system_input
+    query = query.efs_file_system_input
     width = 4
   }
 
   container {
 
     card {
-      query = query.aws_efs_file_system_status
+      query = query.efs_file_system_status
       width = 2
       args = {
         arn = self.input.efs_file_system_arn.value
@@ -24,7 +24,7 @@ dashboard "aws_efs_file_system_detail" {
     }
 
     card {
-      query = query.aws_efs_file_system_performance_mode
+      query = query.efs_file_system_performance_mode
       width = 2
       args = {
         arn = self.input.efs_file_system_arn.value
@@ -32,7 +32,7 @@ dashboard "aws_efs_file_system_detail" {
     }
 
     card {
-      query = query.aws_efs_file_system_throughput_mode
+      query = query.efs_file_system_throughput_mode
       width = 2
       args = {
         arn = self.input.efs_file_system_arn.value
@@ -40,7 +40,7 @@ dashboard "aws_efs_file_system_detail" {
     }
 
     card {
-      query = query.aws_efs_file_system_mount_targets
+      query = query.efs_file_system_mount_targets
       width = 2
       args = {
         arn = self.input.efs_file_system_arn.value
@@ -48,7 +48,7 @@ dashboard "aws_efs_file_system_detail" {
     }
 
     card {
-      query = query.aws_efs_file_system_encryption
+      query = query.efs_file_system_encryption
       width = 2
       args = {
         arn = self.input.efs_file_system_arn.value
@@ -56,7 +56,7 @@ dashboard "aws_efs_file_system_detail" {
     }
 
     card {
-      query = query.aws_efs_file_system_automatic_backup
+      query = query.efs_file_system_automatic_backup
       width = 2
       args = {
         arn = self.input.efs_file_system_arn.value
@@ -99,7 +99,7 @@ dashboard "aws_efs_file_system_detail" {
 
         args = [self.input.efs_file_system_arn.value]
       }
-      
+
       with "access_points" {
         sql = <<-EOQ
           select
@@ -159,22 +159,22 @@ dashboard "aws_efs_file_system_detail" {
       }
 
       nodes = [
-        node.aws_efs_file_system_node,
-        node.aws_kms_key_nodes,
-        node.aws_efs_access_point_node,
-        node.aws_efs_mount_target_node,
-        node.aws_vpc_security_group_nodes,
-        node.aws_vpc_subnet_nodes,
-        node.aws_vpc_nodes
+        node.efs_access_point,
+        node.efs_file_system,
+        node.efs_mount_target,
+        node.kms_key,
+        node.vpc
+        node.vpc_security_group,
+        node.vpc_subnet,
       ]
 
       edges = [
-        edge.aws_efs_file_system_to_kms_key_edge,
-        edge.aws_efs_file_system_to_efs_access_point_edge,
-        edge.aws_efs_file_system_to_efs_mount_target_edge,
-        edge.aws_efs_file_system_mount_target_to_security_group_edge,
-        edge.aws_efs_file_system_mount_target_security_group_to_subnet_edge,
-        edge.aws_efs_file_system_mount_target_security_group_subnet_to_vpc_edge
+        edge.efs_file_system_mount_target_security_group_subnet_to_vpc
+        edge.efs_file_system_mount_target_security_group_to_subnet,
+        edge.efs_file_system_mount_target_to_security_group,
+        edge.efs_file_system_to_efs_access_point,
+        edge.efs_file_system_to_efs_mount_target,
+        edge.efs_file_system_to_kms_key,
       ]
 
       args = {
@@ -198,7 +198,7 @@ dashboard "aws_efs_file_system_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_efs_file_system_overview
+        query = query.efs_file_system_overview
         args = {
           arn = self.input.efs_file_system_arn.value
         }
@@ -207,7 +207,7 @@ dashboard "aws_efs_file_system_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_efs_file_system_tags
+        query = query.efs_file_system_tags
         args = {
           arn = self.input.efs_file_system_arn.value
         }
@@ -221,7 +221,7 @@ dashboard "aws_efs_file_system_detail" {
       table {
         title = "Size in Bytes"
         // type  = "line"
-        query = query.aws_efs_file_system_size_in_bytes
+        query = query.efs_file_system_size_in_bytes
         args = {
           arn = self.input.efs_file_system_arn.value
         }
@@ -233,7 +233,7 @@ dashboard "aws_efs_file_system_detail" {
 }
 
 
-query "aws_efs_file_system_input" {
+query "efs_file_system_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -250,7 +250,7 @@ query "aws_efs_file_system_input" {
   EOQ
 }
 
-query "aws_efs_file_system_status" {
+query "efs_file_system_status" {
   sql = <<-EOQ
     select
       'Status' as label,
@@ -264,7 +264,7 @@ query "aws_efs_file_system_status" {
   param "arn" {}
 }
 
-query "aws_efs_file_system_performance_mode" {
+query "efs_file_system_performance_mode" {
   sql = <<-EOQ
     select
       'Performance Mode' as label,
@@ -278,7 +278,7 @@ query "aws_efs_file_system_performance_mode" {
   param "arn" {}
 }
 
-query "aws_efs_file_system_throughput_mode" {
+query "efs_file_system_throughput_mode" {
   sql = <<-EOQ
     select
       'Throughput Mode' as label,
@@ -292,7 +292,7 @@ query "aws_efs_file_system_throughput_mode" {
   param "arn" {}
 }
 
-query "aws_efs_file_system_mount_targets" {
+query "efs_file_system_mount_targets" {
   sql = <<-EOQ
     select
       'Mount Targets' as label,
@@ -306,7 +306,7 @@ query "aws_efs_file_system_mount_targets" {
   param "arn" {}
 }
 
-query "aws_efs_file_system_encryption" {
+query "efs_file_system_encryption" {
   sql = <<-EOQ
     select
       'Encryption' as label,
@@ -321,7 +321,7 @@ query "aws_efs_file_system_encryption" {
   param "arn" {}
 }
 
-query "aws_efs_file_system_automatic_backup" {
+query "efs_file_system_automatic_backup" {
   sql = <<-EOQ
     select
       'Automatic Backup' as label,
@@ -336,121 +336,7 @@ query "aws_efs_file_system_automatic_backup" {
   param "arn" {}
 }
 
-node "aws_efs_file_system_node" {
-  category = category.aws_efs_file_system
-    sql = <<-EOQ
-      select
-        arn as id,
-        title as title,
-        json_build_object(
-          'ARN', arn,
-          'ID', file_system_id,
-          'Name', name,
-          'State', life_cycle_state,
-          'Created At', creation_time,
-          'Account ID', account_id,
-          'Region', region
-        ) as properties
-      from
-        aws_efs_file_system
-      where
-        arn = any($1);
-  EOQ
-
-  param "efs_file_system_arns" {}
-}
-
-edge "aws_efs_file_system_to_kms_key_edge" {
-  title = "encrypted with"
-  sql   = <<-EOQ
-    select
-      efs_file_system_arn as from_id,
-      key_arn as to_id
-    from
-      unnest($1::text[]) as efs_file_system_arn,
-      unnest($2::text[]) as key_arn
-  EOQ
-
-  param "efs_file_system_arns" {}
-  param "key_arns" {}
-}
-
-edge "aws_efs_file_system_to_efs_access_point_edge" {
-  title = "access point"
-  sql   = <<-EOQ
-    select
-      efs_file_system_arn as from_id,
-      access_point_arn as to_id
-    from
-      unnest($1::text[]) as efs_file_system_arn,
-      unnest($2::text[]) as access_point_arn
-  EOQ
-
-  param "efs_file_system_arns" {}
-  param "access_point_arns" {}
-}
-
-edge "aws_efs_file_system_to_efs_mount_target_edge" {
-  title = "mount target"
-  sql   = <<-EOQ
-    select
-      efs_file_system_arn as from_id,
-      mount_target_id as to_id
-    from
-      unnest($1::text[]) as efs_file_system_arn,
-      unnest($2::text[]) as mount_target_id
-  EOQ
-
-  param "efs_file_system_arns" {}
-  param "mount_target_ids" {}
-}
-
-edge "aws_efs_file_system_mount_target_to_security_group_edge" {
-  title = "security group"
-  sql   = <<-EOQ
-    select
-      mount_target_id as from_id,
-      group_id as to_id
-    from
-      unnest($1::text[]) as mount_target_id,
-      unnest($2::text[]) as group_id
-  EOQ
-
-  param "mount_target_ids" {}
-  param "security_group_ids" {}
-}
-
-edge "aws_efs_file_system_mount_target_security_group_to_subnet_edge" {
-  title = "subnet"
-  sql   = <<-EOQ
-    select
-      security_group_id as from_id,
-      subnet_id as to_id
-    from
-      unnest($1::text[]) as security_group_id,
-      unnest($2::text[]) as subnet_id
-  EOQ
-
-  param "security_group_ids" {}
-  param "subnet_ids" {}
-}
-
-edge "aws_efs_file_system_mount_target_security_group_subnet_to_vpc_edge" {
-  title = "vpc"
-  sql   = <<-EOQ
-    select
-      subnet_id as to_id,
-      vpc_id as from_id
-    from
-      unnest($2::text[]) as subnet_id,
-      unnest($1::text[]) as vpc_id
-  EOQ
-
-  param "subnet_ids" {}
-  param "vpc_ids" {}
-}
-
-query "aws_efs_file_system_overview" {
+query "efs_file_system_overview" {
   sql = <<-EOQ
     select
       title as "Title",
@@ -469,7 +355,7 @@ query "aws_efs_file_system_overview" {
   param "arn" {}
 }
 
-query "aws_efs_file_system_tags" {
+query "efs_file_system_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -486,7 +372,7 @@ query "aws_efs_file_system_tags" {
   param "arn" {}
 }
 
-query "aws_efs_file_system_size_in_bytes" {
+query "efs_file_system_size_in_bytes" {
   sql = <<-EOQ
     select
       size_in_bytes ->> 'Value' as "Total Size",
