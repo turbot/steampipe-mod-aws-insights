@@ -416,16 +416,18 @@ edge "ec2_network_interface_to_vpc_security_group" {
   title = "security group"
 
   sql = <<-EOQ
+    sql = <<-EOQ
     select
-      ec2_network_interface_id as from_id,
-      vpc_security_group_id as to_id
+      network_interface_id as from_id,
+      sg ->> 'GroupId' as to_id
     from
-      unnest($1::text[]) as ec2_network_interface_id,
-      unnest($2::text[]) as vpc_security_group_id
+      aws_ec2_network_interface
+      left join jsonb_array_elements(groups) as sg on true
+    where
+      network_interface_id = any($1);
   EOQ
 
   param "ec2_network_interface_ids" {}
-  param "vpc_security_group_ids" {}
 }
 
 edge "ec2_network_interface_to_vpc_subnet" {
@@ -434,35 +436,34 @@ edge "ec2_network_interface_to_vpc_subnet" {
   sql = <<-EOQ
     select
       coalesce(
-        vpc_security_group_id,
-        ec2_network_interface_id
+        sg ->> 'GroupId',
+        network_interface_id
       ) as from_id,
-      vpc_subnet_id as to_id
+      subnet_id as to_id
     from
-      unnest($1::text[]) as ec2_network_interface_id,
-      unnest($2::text[]) as vpc_subnet_id,
-      unnest($3::text[]) as vpc_security_group_id
+      aws_ec2_network_interface
+      left join jsonb_array_elements(groups) as sg on true
+    where
+      network_interface_id = any($1)
   EOQ
 
   param "ec2_network_interface_ids" {}
-  param "vpc_subnet_ids" {}
-  param "vpc_security_group_ids" {}
 }
 
 edge "ec2_network_interface_to_vpc_flow_log" {
   title = "flow log"
 
   sql = <<-EOQ
-   select
-      ec2_network_interface_id as from_id,
-      vpc_flow_log_id as to_id
+    select
+      resource_id as from_id,
+      flow_log_id as to_id
     from
-      unnest($1::text[]) as ec2_network_interface_id,
-      unnest($2::text[]) as vpc_flow_log_id
+      aws_vpc_flow_log
+    where
+      resource_id = any($1);
   EOQ
 
   param "ec2_network_interface_ids" {}
-  param "vpc_flow_log_ids" {}
 }
 
 node "ec2_network_interface_vpc_nat_gateway" {

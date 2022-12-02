@@ -237,13 +237,13 @@ dashboard "vpc_detail" {
         edge.vpc_to_vpn_gateway,
         edge.vpc_to_vpc_security_group,
 
-        edge.vpc_subnet_to_instance,
-        edge.vpc_subnet_to_lambda,
-        edge.vpc_subnet_to_ec2_alb,
-        edge.vpc_subnet_to_ec2_nlb,
-        edge.vpc_subnet_to_ec2_clb,
-        edge.vpc_subnet_to_ec2_glb,
-        edge.vpc_subnet_to_rds_instance,
+        edge.vpc_subnet_to_ec2_instance,
+        edge.vpc_subnet_to_lambda_function,
+        edge.vpc_subnet_to_alb,
+        edge.vpc_subnet_to_nlb,
+        edge.vpc_subnet_to_clb,
+        edge.vpc_subnet_to_glb,
+        edge.vpc_subnet_to_rds_db_instance,
         edge.vpc_to_s3_access_point,
         edge.vpc_peered_vpc
       ]
@@ -1633,15 +1633,15 @@ edge "vpc_to_vpc_security_group" {
 
   sql = <<-EOQ
     select
-      vpc_vpc_id as from_id,
-      vpc_security_group_id as to_id
+      vpc_id as from_id,
+      group_id as to_id
     from
-      unnest($1::text[]) as vpc_vpc_id,
-      unnest($2::text[]) as vpc_security_group_id
+      aws_vpc_security_group
+    where
+      vpc_id = any($1);
   EOQ
 
   param "vpc_vpc_ids" {}
-  param "vpc_security_group_ids" {}
 }
 
 edge "vpc_peered_vpc" {
@@ -1750,131 +1750,14 @@ edge "vpc_to_vpc_flow_log" {
 
   sql = <<-EOQ
     select
-      vpc_vpc_id as from_id,
-      vpc_flow_log_id as to_id
+      resource_id as from_id,
+      flow_log_id as to_id
     from
-      unnest($1::text[]) as vpc_flow_log_id,
-      unnest($2::text[]) as vpc_vpc_id
-  EOQ
-
-  param "vpc_flow_log_ids" {}
-  param "vpc_vpc_ids" {}
-}
-
-edge "vpc_subnet_to_instance" {
-  title = "ec2 instance"
-
-  sql = <<-EOQ
-    select
-      subnet_id as from_id,
-      arn as to_id
-    from
-      aws_ec2_instance
+       aws_vpc_flow_log
     where
-      vpc_id = any($1);
+      resource_id = $1;
   EOQ
 
   param "vpc_vpc_ids" {}
 }
 
-edge "vpc_subnet_to_lambda" {
-  title = "lambda function"
-
-  sql = <<-EOQ
-    select
-      s as from_id,
-      l.arn as to_id
-    from
-      aws_lambda_function as l,
-      jsonb_array_elements_text(l.vpc_subnet_ids) as s
-    where
-      l.vpc_id = any($1);
-  EOQ
-
-  param "vpc_vpc_ids" {}
-}
-
-# In the below relation there could be multiple subnets associated to diffrent ec2_application_load_balancers. However it should not be all subnets to all ec2_application_load_balancers, to prevent this edge case; we have to write the query in below format without using unset
-edge "vpc_subnet_to_ec2_alb" {
-  title = "alb"
-
-  sql = <<-EOQ
-    select
-      az ->> 'SubnetId' as from_id,
-      a.arn as to_id
-    from
-      aws_ec2_application_load_balancer as a,
-      jsonb_array_elements(availability_zones) as az
-    where
-      a.vpc_id = any($1);
-  EOQ
-
-  param "vpc_vpc_ids" {}
-}
-
-edge "vpc_subnet_to_ec2_nlb" {
-  title = "nlb"
-
-  sql = <<-EOQ
-    select
-      az ->> 'SubnetId' as from_id,
-      n.arn as to_id
-    from
-      aws_ec2_network_load_balancer as n,
-      jsonb_array_elements(availability_zones) as az
-    where n.vpc_id = any($1);
-  EOQ
-
-  param "vpc_vpc_ids" {}
-}
-
-edge "vpc_subnet_to_ec2_clb" {
-  title = "clb"
-
-  sql = <<-EOQ
-    select
-      s as from_id,
-      c.arn as to_id
-    from
-      aws_ec2_classic_load_balancer as c,
-      jsonb_array_elements_text(subnets) as s
-    where
-      c.vpc_id = any($1);
-  EOQ
-
-  param "vpc_vpc_ids" {}
-}
-
-edge "vpc_subnet_to_ec2_glb" {
-  title = "glb"
-
-  sql = <<-EOQ
-    select
-      az ->> 'SubnetId' as from_id,
-      g.arn as to_id
-    from
-      aws_ec2_gateway_load_balancer as g,
-      jsonb_array_elements(availability_zones) as az
-    where
-      g.vpc_id = any($1);
-  EOQ
-
-  param "vpc_vpc_ids" {}
-}
-
-edge "vpc_subnet_to_rds_instance" {
-  title = "rds instance"
-
-  sql = <<-EOQ
-    select
-      s ->> 'SubnetIdentifier' as from_id,
-      i.arn as to_id
-    from
-      aws_rds_db_instance as i,
-      jsonb_array_elements(subnets) as s
-    where
-      i.vpc_id = any($1);
-  EOQ
-
-  param "vpc_vpc_ids" {}
-}

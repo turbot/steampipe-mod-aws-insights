@@ -94,7 +94,8 @@ dashboard "rds_db_cluster_snapshot_detail" {
           from
             aws_rds_db_cluster_snapshot
           where
-            arn = $1;
+            kms_key_id is not null
+            and arn = $1;
         EOQ
 
         args = [self.input.snapshot_arn.value]
@@ -351,14 +352,15 @@ edge "rds_db_cluster_snapshot_to_kms_key" {
 
   sql = <<-EOQ
     select
-      db_cluster_snapshot_arn as from_id,
-      key_arn as to_id
+      arn as from_id,
+      kms_key_id as to_id
     from
-      unnest($1::text[]) as key_arn,
-      unnest($2::text[]) as db_cluster_snapshot_arn
+      aws_rds_db_cluster_snapshot
+    where
+      kms_key_id is not null
+      and arn = $1;
   EOQ
 
-  param "kms_key_arns" {}
   param "rds_db_cluster_snapshot_arns" {}
 }
 

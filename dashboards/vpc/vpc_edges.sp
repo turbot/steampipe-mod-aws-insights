@@ -6,10 +6,10 @@ edge "vpc_subnet_to_vpc_vpc" {
       subnet_id as from_id,
       vpc_id as to_id
     from
-      unnest($1::text[]) as subnet_id,
-      unnest($2::text[]) as vpc_id
+      aws_vpc_subnet
+    where
+      subnet_id = any($1);
   EOQ
 
   param "vpc_subnet_ids" {}
-  param "vpc_vpc_ids" {}
 }

@@ -187,7 +187,7 @@ dashboard "rds_db_instance_detail" {
         edge.rds_db_instance_to_vpc_security_group,
         edge.rds_db_instance_vpc_subnet_to_vpc,
         edge.rds_db_instance_vpc_security_group_to_vpc,
-        edge.rds_db_instance_from_rds_db_cluster
+        edge.rds_db_cluster_to_rds_db_instance
       ]
 
       args = {
@@ -629,15 +629,15 @@ edge "rds_db_instance_to_kms_key" {
 
   sql = <<-EOQ
     select
-      instance_arn as from_id,
-      key_arn as to_id
+      arn as from_id,
+      kms_key_id as to_id
     from
-      unnest($1::text[]) as instance_arn,
-      unnest($2::text[]) as key_arn;
+      aws_rds_db_instance
+    where
+      arn = any($1);
   EOQ
 
   param "rds_db_instance_arns" {}
-  param "kms_key_arns" {}
 }
 
 edge "rds_db_instance_rds_db_subnet_group_to_vpc_subnet" {
@@ -671,15 +671,16 @@ edge "rds_db_instance_to_vpc_security_group" {
 
   sql = <<-EOQ
     select
-      instance_arn as from_id,
-      security_group_id as to_id
+      arn as from_id,
+      dsg ->> 'VpcSecurityGroupId' as to_id
     from
-      unnest($1::text[]) as instance_arn,
-      unnest($2::text[]) as security_group_id;
+      aws_rds_db_instance as di,
+      jsonb_array_elements(di.vpc_security_groups) as dsg
+    where
+      arn = any($1);
   EOQ
 
   param "rds_db_instance_arns" {}
-  param "vpc_security_group_ids" {}
 }
 
 edge "rds_db_instance_vpc_subnet_to_vpc" {
@@ -687,15 +688,16 @@ edge "rds_db_instance_vpc_subnet_to_vpc" {
 
   sql = <<-EOQ
     select
-      subnet_id as from_id,
+      subnet ->> 'SubnetIdentifier' as from_id,
       vpc_id as to_id
     from
-      unnest($1::text[]) as subnet_id,
-      unnest($2::text[]) as vpc_id;
+      aws_rds_db_instance as rdb,
+      jsonb_array_elements(subnets) as subnet
+    where
+      arn = any($1);
   EOQ
 
-  param "vpc_subnet_ids" {}
-  param "vpc_vpc_ids" {}
+  param "rds_db_instance_arns" {}
 }
 
 edge "rds_db_instance_vpc_security_group_to_vpc" {
@@ -725,19 +727,22 @@ edge "rds_db_instance_vpc_security_group_to_vpc" {
   param "rds_db_instance_arns" {}
 }
 
-edge "rds_db_instance_from_rds_db_cluster" {
+edge "rds_db_cluster_to_rds_db_instance" {
   title = "instance"
 
   sql = <<-EOQ
     select
-      cluster_arn as from_id,
-      instance_arn as to_id
+      c.arn as from_id,
+      i.arn as to_id
     from
-      unnest($1::text[]) as instance_arn,
-      unnest($2::text[]) as cluster_arn;
+      aws_rds_db_instance as i
+      join
+        aws_rds_db_cluster as c
+        on i.db_cluster_identifier = c.db_cluster_identifier
+    where
+      c.arn = $1;
   EOQ
 
-  param "rds_db_instance_arns" {}
   param "rds_db_cluster_arns" {}
 }
 
@@ -746,15 +751,17 @@ edge "rds_db_instance_to_rds_db_snapshot" {
 
   sql = <<-EOQ
     select
-      instance_arn as from_id,
-      snapshot_arn as to_id
+      i.arn as from_id,
+      s.arn as to_id
     from
-      unnest($1::text[]) as instance_arn,
-      unnest($2::text[]) as snapshot_arn;
+      aws_rds_db_instance as i
+      join aws_rds_db_snapshot as s
+        on s.dbi_resource_id = i.resource_id
+    where
+      s.arn = $1;
   EOQ
 
   param "rds_db_instance_arns" {}
-  param "rds_db_snapshot_arns" {}
 }
 
 edge "rds_db_instance_to_sns_topic" {
@@ -762,13 +769,16 @@ edge "rds_db_instance_to_sns_topic" {
 
   sql = <<-EOQ
     select
-      instance_arn as from_id,
-      sns_topic_arn as to_id
+      i.arn as from_id,
+      s.sns_topic_arn as to_id
     from
-      unnest($1::text[]) as instance_arn,
-      unnest($2::text[]) as sns_topic_arn;
+      aws_rds_db_event_subscription as s,
+      jsonb_array_elements_text(source_ids_list) as ids
+      join aws_rds_db_instance as i
+      on ids = i.db_instance_identifier
+    where
+      i.arn = any($1);
   EOQ
 
   param "rds_db_instance_arns" {}
-  param "sns_topic_arns" {}
 }

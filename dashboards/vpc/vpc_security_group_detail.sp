@@ -1394,14 +1394,15 @@ edge "vpc_security_group_to_rds_db_cluster" {
 
   sql = <<-EOQ
     select
-      vpc_security_group_id as from_id,
-      rds_db_cluster_arn as to_id
+      sg ->> 'VpcSecurityGroupId' as from_id,
+      arn as to_id
     from
-      unnest($1::text[]) as rds_db_cluster_arn,
-      unnest($2::text[]) as vpc_security_group_id
+      aws_rds_db_cluster,
+      jsonb_array_elements(vpc_security_groups) as sg
+    where
+      sg ->> 'VpcSecurityGroupId' = any($1);
   EOQ
 
-  param "rds_db_cluster_arns" {}
   param "vpc_security_group_ids" {}
 }
 
@@ -1410,14 +1411,15 @@ edge "vpc_security_group_to_rds_db_instance" {
 
   sql = <<-EOQ
     select
-      vpc_security_group_id as from_id,
-      rds_db_instance_arn as to_id
+      dsg ->> 'VpcSecurityGroupId' as from_id,
+      arn as to_id
     from
-      unnest($1::text[]) as rds_db_instance_arn,
-      unnest($2::text[]) as vpc_security_group_id
+      aws_rds_db_instance as di,
+      jsonb_array_elements(di.vpc_security_groups) as dsg
+    where
+      dsg ->> 'VpcSecurityGroupId' = any($1);
   EOQ
 
-  param "rds_db_instance_arns" {}
   param "vpc_security_group_ids" {}
 }
 
@@ -1426,14 +1428,15 @@ edge "vpc_security_group_to_ec2_instance" {
 
   sql = <<-EOQ
     select
-      vpc_security_group_id as from_id,
-      ec2_instance_arn as to_id
+      s ->> 'GroupId' as from_id,
+      arn as to_id
     from
-      unnest($1::text[]) as ec2_instance_arn,
-      unnest($2::text[]) as vpc_security_group_id
+      aws_ec2_instance
+      join jsonb_array_elements(security_groups) as s on true
+    where
+      s ->> 'GroupId' = any($1);
   EOQ
 
-  param "ec2_instance_arns" {}
   param "vpc_security_group_ids" {}
 }
 
@@ -1442,14 +1445,15 @@ edge "vpc_security_group_to_lambda_function" {
 
   sql = <<-EOQ
     select
-      vpc_security_group_id as from_id,
-      lambda_function_arn as to_id
+      s as from_id,
+      arn as to_id
     from
-      unnest($1::text[]) as lambda_function_arn,
-      unnest($2::text[]) as vpc_security_group_id
+      aws_lambda_function,
+      jsonb_array_elements_text(vpc_security_group_ids) as s
+    where
+      s = any($1);
   EOQ
 
-  param "lambda_function_arns" {}
   param "vpc_security_group_ids" {}
 }
 
@@ -1504,14 +1508,15 @@ edge "vpc_security_group_to_redshift_cluster" {
 
   sql = <<-EOQ
     select
-      vpc_security_group_id as from_id,
-      redshift_cluster_arn as to_id
+      sg ->> 'VpcSecurityGroupId' as from_id,
+      arn as to_id
     from
-      unnest($1::text[]) as redshift_cluster_arn,
-      unnest($2::text[]) as vpc_security_group_id
+      aws_redshift_cluster,
+      jsonb_array_elements(vpc_security_groups) as sg
+    where
+      sg ->> 'VpcSecurityGroupId' = any($1);
   EOQ
 
-  param "redshift_cluster_arns" {}
   param "vpc_security_group_ids" {}
 }
 
@@ -1520,14 +1525,15 @@ edge "vpc_security_group_to_ec2_classic_load_balancer" {
 
   sql = <<-EOQ
     select
-      vpc_security_group_id as from_id,
-      ec2_classic_load_balancer_arn as to_id
+      sg as from_id,
+      arn as to_id
     from
-      unnest($1::text[]) as ec2_classic_load_balancer_arn,
-      unnest($2::text[]) as vpc_security_group_id
+      aws_ec2_classic_load_balancer,
+      jsonb_array_elements_text(security_groups) as sg
+    where
+      sg = any($1);
   EOQ
 
-  param "ec2_classic_load_balancer_arns" {}
   param "vpc_security_group_ids" {}
 }
 
@@ -1536,14 +1542,15 @@ edge "vpc_security_group_to_ec2_application_load_balancer" {
 
   sql = <<-EOQ
     select
-      vpc_security_group_id as from_id,
-      ec2_application_load_balancer_arn as to_id
+      sg as from_id,
+      arn as to_id
     from
-      unnest($1::text[]) as ec2_application_load_balancer_arn,
-      unnest($2::text[]) as vpc_security_group_id
+      aws_ec2_application_load_balancer,
+      jsonb_array_elements_text(security_groups) as sg
+    where
+      sg = any($1);
   EOQ
 
-  param "ec2_application_load_balancer_arns" {}
   param "vpc_security_group_ids" {}
 }
 
@@ -1593,14 +1600,15 @@ edge "vpc_security_group_to_dax_cluster" {
 
   sql = <<-EOQ
     select
-      vpc_security_group_id as from_id,
-      dax_cluster_arn as to_id
+      sg ->> 'SecurityGroupIdentifier' as from_id,
+      arn as to_id
     from
-      unnest($1::text[]) as dax_cluster_arn,
-      unnest($2::text[]) as vpc_security_group_id
+      aws_dax_cluster,
+      jsonb_array_elements(security_groups) as sg
+    where
+      sg ->> 'SecurityGroupIdentifier' = $1;
   EOQ
 
-  param "dax_cluster_arns" {}
   param "vpc_security_group_ids" {}
 }
 
@@ -1654,14 +1662,15 @@ edge "vpc_security_group_to_elasticache_cluster" {
 
   sql = <<-EOQ
     select
-      vpc_security_group_id as from_id,
-      elasticache_cluster_arn as to_id
+      sg ->> 'SecurityGroupId' as from_id,
+      arn as to_id
     from
-      unnest($1::text[]) as elasticache_cluster_arn,
-      unnest($2::text[]) as vpc_security_group_id
+      aws_elasticache_cluster,
+      jsonb_array_elements(security_groups) as sg
+    where
+      sg ->> 'SecurityGroupId' = $1;
   EOQ
 
-  param "elasticache_cluster_arns" {}
   param "vpc_security_group_ids" {}
 }
 

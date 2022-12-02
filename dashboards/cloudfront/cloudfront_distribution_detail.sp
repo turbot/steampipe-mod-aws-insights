@@ -324,76 +324,87 @@ edge "cloudfront_distribution_to_acm_certificate" {
   title = "ssl via"
 
   sql = <<-EOQ
-   select
-      cloudfront_distribution_arn as from_id,
-      acm_certificate_arn as to_id
+    select
+      arn as from_id,
+      viewer_certificate ->> 'ACMCertificateArn' as to_id
     from
-      unnest($1::text[]) as cloudfront_distribution_arn,
-      unnest($2::text[]) as acm_certificate_arn
+      aws_cloudfront_distribution
+    where
+      arn = any($1);
   EOQ
 
   param "cloudfront_distribution_arns" {}
-  param "acm_certificate_arns" {}
 }
 
 edge "s3_bucket_to_cloudfront_distribution" {
   title = "origin for"
-  sql   = <<-EOQ
+
+  sql = <<-EOQ
     select
-      cloudfront_distribution_arn as to_id,
-      s3_bucket_arn as from_id
+      b.arn as from_id,
+      d.arn as to_id
     from
-      unnest($1::text[]) as cloudfront_distribution_arn,
-      unnest($2::text[]) as s3_bucket_arn
+      aws_cloudfront_distribution as d,
+      jsonb_array_elements(origins) as origin
+      left join aws_s3_bucket as b on origin ->> 'DomainName' like '%' || b.name || '%'
+    where
+      d.arn = any($1);
   EOQ
 
   param "cloudfront_distribution_arns" {}
-  param "s3_bucket_arns" {}
 }
 
 edge "ec2_application_load_balancer_to_cloudfront_distribution" {
   title = "origin for"
-  sql   = <<-EOQ
+
+  sql = <<-EOQ
     select
-      cloudfront_distribution_arn as to_id,
-      ec2_application_load_balancer_arn as from_id
+      b.arn as from_id,
+      d.arn as to_id
     from
-      unnest($1::text[]) as cloudfront_distribution_arn,
-      unnest($2::text[]) as ec2_application_load_balancer_arn
+      aws_cloudfront_distribution as d,
+      jsonb_array_elements(origins) as origin
+      left join aws_ec2_application_load_balancer as b on b.dns_name = origin ->> 'DomainName'
+    where
+      d.arn = any($1);
   EOQ
 
   param "cloudfront_distribution_arns" {}
-  param "ec2_application_load_balancer_arns" {}
 }
 
 edge "media_store_container_to_cloudfront_distribution" {
   title = "origin for"
-  sql   = <<-EOQ
+
+  sql = <<-EOQ
     select
-      cloudfront_distribution_arn as to_id,
-      mediastore_arn as from_id
+      c.arn as from_id,
+      d.arn as to_id
     from
-      unnest($1::text[]) as cloudfront_distribution_arn,
-      unnest($2::text[]) as mediastore_arn
+      aws_cloudfront_distribution as d,
+      jsonb_array_elements(origins) as origin
+      left join aws_media_store_container as c on c.endpoint = 'https://' || (origin ->> 'DomainName')
+    where
+      d.arn = any($1);
   EOQ
 
   param "cloudfront_distribution_arns" {}
-  param "mediastore_arns" {}
 }
 
 edge "cloudfront_distribution_to_wafv2_web_acl" {
   title = "web acl"
-  sql   = <<-EOQ
+
+  sql = <<-EOQ
     select
-      cloudfront_distribution_arn as from_id,
-      wafv2_acl_arn as to_id
+      d.arn as from_id,
+      c.arn as to_id
     from
-      unnest($1::text[]) as cloudfront_distribution_arn,
-      unnest($2::text[]) as wafv2_acl_arn
+      aws_wafv2_web_acl as c
+      left join aws_cloudfront_distribution as d on d.web_acl_id = c.arn
+    where
+      d.arn = any($1);
   EOQ
 
   param "cloudfront_distribution_arns" {}
-  param "wafv2_acl_arns" {}
 }
 
 query "cloudfront_distribution_overview" {

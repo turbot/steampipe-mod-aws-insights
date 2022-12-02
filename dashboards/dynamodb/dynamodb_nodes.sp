@@ -36,11 +36,9 @@ node "dynamodb_table_to_dynamodb_backup_node" {
       'Account ID', b.account_id
     ) as properties
   from
-    aws_dynamodb_backup as b,
-    aws_dynamodb_table as t
+    aws_dynamodb_backup as b
   where
-    t.arn = b.table_arn
-    and t.arn = any($1);
+    b.table_arn = any($1);
   EOQ
 
   param "dbynamodb_backup_arns" {}

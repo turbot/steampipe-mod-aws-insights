@@ -204,7 +204,7 @@ dashboard "vpc_subnet_detail" {
 
       edges = [
         edge.vpc_to_vpc_subnet,
-        edge.vpc_subnet_to_flow_log,
+        edge.vpc_subnet_to_vpc_flow_log,
         edge.vpc_subnet_to_vpc_route_table,
         edge.vpc_subnet_to_vpc_network_acl,
         edge.vpc_subnet_to_rds_db_instance,
@@ -377,7 +377,7 @@ query "vpc_subnet_tags" {
     where
       subnet_id = $1
     order by
-      tag ->> 'Key';
+      tag ->> 'Key'; 
   EOQ
 
   param "subnet_id" {}
@@ -471,14 +471,14 @@ edge "vpc_to_vpc_subnet" {
   sql = <<-EOQ
      select
       vpc_id as from_id,
-      vpc_subnet_id as to_id
+      subnet_id as to_id
     from
-      unnest($1::text[]) as vpc_id,
-      unnest($2::text[]) as vpc_subnet_id;
+      aws_vpc_subnet
+    where
+      vpc_id = any($1);
   EOQ
 
   param "vpc_vpc_ids" {}
-  param "vpc_subnet_ids" {}
 }
 
 node "vpc_subnet_vpc_route_table" {
@@ -561,38 +561,36 @@ edge "vpc_subnet_to_vpc_network_acl" {
   param "vpc_subnet_ids" {}
 }
 
-
 edge "vpc_subnet_to_rds_db_instance" {
   title = "rds db instance"
 
   sql = <<-EOQ
     select
-      vpc_subnet_id as from_id,
-      rds_db_instance_arn as to_id
+      s ->> 'SubnetIdentifier' as from_id,
+      arn as to_id
     from
-      unnest($1::text[]) as rds_db_instance_arn,
-      unnest($2::text[]) as vpc_subnet_id;
+      aws_rds_db_instance,
+      jsonb_array_elements(subnets) as s
+    where
+      s ->> 'SubnetIdentifier' = any($1);
   EOQ
 
-  param "rds_db_instance_arns" {}
   param "vpc_subnet_ids" {}
 }
-
-
 
 edge "vpc_subnet_to_ec2_instance" {
   title = "ec2 instance"
 
   sql = <<-EOQ
     select
-      vpc_subnet_id as from_id,
-      ec2_instance_arn as to_id
+      subnet_id as from_id,
+      arn as to_id
     from
-      unnest($1::text[]) as ec2_instance_arn,
-      unnest($2::text[]) as vpc_subnet_id;
+      aws_ec2_instance
+    where
+      subnet_id = $1;
   EOQ
 
-  param "ec2_instance_arns" {}
   param "vpc_subnet_ids" {}
 }
 
@@ -601,14 +599,15 @@ edge "vpc_subnet_to_lambda_function" {
 
   sql = <<-EOQ
     select
-      vpc_subnet_id as from_id,
-      lambda_function_arn as to_id
+      s as from_id,
+      arn as to_id
     from
-      unnest($1::text[]) as lambda_function_arn,
-      unnest($2::text[]) as vpc_subnet_id;
+      aws_lambda_function,
+      jsonb_array_elements_text(vpc_subnet_ids) as s
+    where
+      s = any($1);
   EOQ
 
-  param "lambda_function_arns" {}
   param "vpc_subnet_ids" {}
 }
 
@@ -651,19 +650,19 @@ edge "vpc_subnet_to_sagemaker_notebook_instance" {
   param "vpc_subnet_ids" {}
 }
 
-edge "vpc_subnet_to_flow_log" {
+edge "vpc_subnet_to_vpc_flow_log" {
   title = "flow log"
 
   sql = <<-EOQ
-   select
-      vpc_subnet_id as from_id,
-      vpc_flow_log_id as to_id
+    select
+      resource_id as from_id,
+      flow_log_id as to_id
     from
-      unnest($1::text[]) as vpc_flow_log_id,
-      unnest($2::text[]) as vpc_subnet_id;
+      aws_vpc_flow_log
+    where
+      resource_id = any($1);
   EOQ
 
-  param "vpc_flow_log_ids" {}
   param "vpc_subnet_ids" {}
 }
 
@@ -672,14 +671,14 @@ edge "vpc_subnet_to_network_interface" {
 
   sql = <<-EOQ
    select
-      vpc_subnet_id as from_id,
-      ec2_network_interface_id as to_id
+      subnet_id as from_id,
+      network_interface_id as to_id
     from
-      unnest($1::text[]) as ec2_network_interface_id,
-      unnest($2::text[]) as vpc_subnet_id;
+      aws_ec2_network_interface
+    where
+      subnet_id = any($1);
   EOQ
 
-  param "ec2_network_interface_ids" {}
   param "vpc_subnet_ids" {}
 }
 
@@ -688,14 +687,15 @@ edge "vpc_subnet_to_alb" {
 
   sql = <<-EOQ
     select
-      vpc_subnet_id as from_id,
-      ec2_application_load_balancer_arn as to_id
+      az ->> 'SubnetId' as from_id,
+      arn as to_id
     from
-      unnest($1::text[]) as ec2_application_load_balancer_arn,
-      unnest($2::text[]) as vpc_subnet_id;
+      aws_ec2_application_load_balancer,
+      jsonb_array_elements(availability_zones) as az
+    where
+      az ->> 'SubnetId' = any($1);
   EOQ
 
-  param "ec2_application_load_balancer_arns" {}
   param "vpc_subnet_ids" {}
 }
 
@@ -704,14 +704,15 @@ edge "vpc_subnet_to_nlb" {
 
   sql = <<-EOQ
     select
-      vpc_subnet_id as from_id,
-      ec2_network_load_balancer_arn as to_id
+      az ->> 'SubnetId' as from_id,
+      arn as to_id
     from
-      unnest($1::text[]) as ec2_network_load_balancer_arn,
-      unnest($2::text[]) as vpc_subnet_id;
+      aws_ec2_network_load_balancer,
+      jsonb_array_elements(availability_zones) as az
+    where
+      az ->> 'SubnetId' = any($1);
   EOQ
 
-  param "ec2_network_load_balancer_arns" {}
   param "vpc_subnet_ids" {}
 }
 
@@ -720,14 +721,15 @@ edge "vpc_subnet_to_clb" {
 
   sql = <<-EOQ
     select
-      vpc_subnet_id as from_id,
-      ec2_classic_load_balancer_arn as to_id
+      az ->> 'SubnetId' as from_id,
+      arn as to_id
     from
-      unnest($1::text[]) as ec2_classic_load_balancer_arn,
-      unnest($2::text[]) as vpc_subnet_id;
+      aws_ec2_classic_load_balancer,
+      jsonb_array_elements(availability_zones) as az
+    where
+      az ->> 'SubnetId' = any($1);
   EOQ
 
-  param "ec2_classic_load_balancer_arns" {}
   param "vpc_subnet_ids" {}
 }
 
@@ -736,13 +738,14 @@ edge "vpc_subnet_to_glb" {
 
   sql = <<-EOQ
     select
-      vpc_subnet_id as from_id,
-      ec2_gateway_load_balancer_arn as to_id
+      az ->> 'SubnetId' as from_id,
+      arn as to_id
     from
-      unnest($1::text[]) as ec2_gateway_load_balancer_arn,
-      unnest($2::text[]) as vpc_subnet_id;
+      aws_ec2_gateway_load_balancer,
+      jsonb_array_elements(availability_zones) as az
+    where
+      az ->> 'SubnetId' = any($1);
   EOQ
 
-  param "ec2_gateway_load_balancer_arns" {}
   param "vpc_subnet_ids" {}
 }
