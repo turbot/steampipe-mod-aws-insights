@@ -1,3 +1,9 @@
+## v0.9 [2022-12-02]
+
+_Bug fixes_
+
+- Fixed the `aws_sqs_queue_encryption` query in the `AWS SQS Queue Detail` dashboard to also check if a queue is encrypted by Amazon Managed SQS Key. ([#245](https://github.com/turbot/steampipe-mod-aws-insights/pull/245))
+
 ## v0.8 [2022-10-27]
 
 _Enhancements_
