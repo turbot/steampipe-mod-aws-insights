@@ -1,4 +1,4 @@
-dashboard "aws_codecommit_repository_dashboard" {
+dashboard "codecommit_repository_dashboard" {
 
   title         = "AWS Codecommit Repository Dashboard"
   documentation = file("./dashboards/codecommit/docs/codecommit_repository_dashboard.md")
@@ -12,13 +12,13 @@ dashboard "aws_codecommit_repository_dashboard" {
 
     # Analysis
     card {
-      query = query.aws_codecommit_repository_count
+      query = query.codecommit_repository_count
       width = 2
     }
 
     # Assessments
     card {
-      query = query.aws_codecommit_repository_untagged_count
+      query = query.codecommit_repository_untagged_count
       width = 2
     }
 
@@ -27,7 +27,7 @@ dashboard "aws_codecommit_repository_dashboard" {
       type  = "info"
       icon  = "currency-dollar"
       width = 2
-      query = query.aws_codecommit_repository_cost_mtd
+      query = query.codecommit_repository_cost_mtd
     }
   }
 
@@ -39,7 +39,7 @@ dashboard "aws_codecommit_repository_dashboard" {
       title = "Untagged Repository Status"
       type  = "donut"
       width = 6
-      query = query.aws_codecommit_repository_untagged_count_status
+      query = query.codecommit_repository_untagged_count_status
 
       series "count" {
         point "enabled" {
@@ -60,14 +60,14 @@ dashboard "aws_codecommit_repository_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      query = query.aws_codecommit_repository_monthly_forecast_table
+      query = query.codecommit_repository_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      query = query.aws_codecommit_repository_cost_per_month
+      query = query.codecommit_repository_cost_per_month
     }
 
   }
@@ -79,19 +79,19 @@ dashboard "aws_codecommit_repository_dashboard" {
       title = "Repositories by Account"
       type  = "column"
       width = 4
-      query   = query.aws_codecommit_repository_by_account
+      query   = query.codecommit_repository_by_account
     }
 
     chart {
       title = "Repositories by Region"
       type  = "column"
       width = 4
-      query  = query.aws_codecommit_repository_by_region
+      query  = query.codecommit_repository_by_region
     }
 
     chart {
       title = "Repositories by Age"
-      query   = query.aws_codecommit_repository_by_creation_month
+      query   = query.codecommit_repository_by_creation_month
       type  = "column"
       width = 4
     }
@@ -102,13 +102,13 @@ dashboard "aws_codecommit_repository_dashboard" {
 
 # Card Queries
 
-query "aws_codecommit_repository_count" {
+query "codecommit_repository_count" {
   sql = <<-EOQ
     select count(*) as "Repositories" from aws_codecommit_repository;
   EOQ
 }
 
-query "aws_codecommit_repository_untagged_count" {
+query "codecommit_repository_untagged_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -121,7 +121,7 @@ query "aws_codecommit_repository_untagged_count" {
   EOQ
 }
 
-query "aws_codecommit_repository_cost_mtd" {
+query "codecommit_repository_cost_mtd" {
   sql = <<-EOQ
     select
       'Cost - MTD' as label,
@@ -135,7 +135,7 @@ query "aws_codecommit_repository_cost_mtd" {
 
 # Assessment Queries
 
-query "aws_codecommit_repository_untagged_count_status" {
+query "codecommit_repository_untagged_count_status" {
   sql = <<-EOQ
     select
       case
@@ -151,7 +151,7 @@ query "aws_codecommit_repository_untagged_count_status" {
 
 # Cost Queries
 
-query "aws_codecommit_repository_monthly_forecast_table" {
+query "codecommit_repository_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
       select
@@ -191,7 +191,7 @@ query "aws_codecommit_repository_monthly_forecast_table" {
   EOQ
 }
 
-query "aws_codecommit_repository_cost_per_month" {
+query "codecommit_repository_cost_per_month" {
   sql = <<-EOQ
     select
       to_char(period_start, 'Mon-YY') as "Month",
@@ -210,7 +210,7 @@ query "aws_codecommit_repository_cost_per_month" {
 
 # Analysis Queries
 
-query "aws_codecommit_repository_by_account" {
+query "codecommit_repository_by_account" {
   sql = <<-EOQ
     select
       a.title as "account",
@@ -227,7 +227,7 @@ query "aws_codecommit_repository_by_account" {
   EOQ
 }
 
-query "aws_codecommit_repository_by_region" {
+query "codecommit_repository_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
@@ -241,7 +241,7 @@ query "aws_codecommit_repository_by_region" {
   EOQ
 }
 
-query "aws_codecommit_repository_by_creation_month" {
+query "codecommit_repository_by_creation_month" {
   sql = <<-EOQ
     with repositories as (
       select

@@ -1,4 +1,4 @@
-dashboard "aws_iam_credential_report" {
+dashboard "iam_credential_report" {
 
   title         = "AWS IAM Credential Report"
   documentation = file("./dashboards/iam/docs/iam_credential_report.md")
@@ -37,17 +37,17 @@ dashboard "aws_iam_credential_report" {
 
 
     column "User Name" {
-      href = "${dashboard.aws_iam_user_detail.url_path}?input.user_arn={{.'User ARN' | @uri}}"
+      href = "${dashboard.iam_user_detail.url_path}?input.user_arn={{.'User ARN' | @uri}}"
     }
 
-    query = query.aws_iam_credential_entities_root_access_keys_table
+    query = query.iam_credential_entities_root_access_keys_table
   }
 
 }
 
 # Card Queries
 
-query "aws_iam_credential_entities_count" {
+query "iam_credential_entities_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -57,7 +57,7 @@ query "aws_iam_credential_entities_count" {
   EOQ
 }
 
-query "aws_iam_credential_entities_console_access_with_no_mfa_count" {
+query "iam_credential_entities_console_access_with_no_mfa_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -71,7 +71,7 @@ query "aws_iam_credential_entities_console_access_with_no_mfa_count" {
   EOQ
 }
 
-query "aws_iam_credential_entities_root_access_keys_table" {
+query "iam_credential_entities_root_access_keys_table" {
   sql = <<-EOQ
     select
       user_name as "User Name",

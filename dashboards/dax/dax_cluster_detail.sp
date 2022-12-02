@@ -9,14 +9,14 @@ dashboard "dax_cluster_detail" {
 
   input "dax_cluster_arn" {
     title = "Select a cluster:"
-    query = query.aws_dax_cluster_input
+    query = query.dax_cluster_input
     width = 4
   }
 
   container {
 
     card {
-      query = query.aws_dax_cluster_status
+      query = query.dax_cluster_status
       width = 2
       args = {
         arn = self.input.dax_cluster_arn.value
@@ -24,7 +24,7 @@ dashboard "dax_cluster_detail" {
     }
 
     card {
-      query = query.aws_dax_cluster_node_type
+      query = query.dax_cluster_node_type
       width = 2
       args = {
         arn = self.input.dax_cluster_arn.value
@@ -32,7 +32,7 @@ dashboard "dax_cluster_detail" {
     }
 
     card {
-      query = query.aws_dax_cluster_encryption
+      query = query.dax_cluster_encryption
       width = 2
       args = {
         arn = self.input.dax_cluster_arn.value
@@ -48,22 +48,22 @@ dashboard "dax_cluster_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_dax_cluster_node,
-        node.aws_dax_cluster_to_iam_role_node,
-        node.aws_dax_cluster_to_vpc_security_group_node,
-        node.aws_dax_cluster_vpc_security_group_to_dax_subnet_group_node,
-        node.aws_dax_subnet_group_to_vpc_subnet_node,
-        node.aws_dax_cluster_to_sns_topic_node,
-        node.aws_dax_cluster_vpc_security_group_to_vpc_node
+        node.dax_cluster_node,
+        node.dax_cluster_to_iam_role_node,
+        node.dax_cluster_to_vpc_security_group_node,
+        node.dax_cluster_vpc_security_group_to_dax_subnet_group_node,
+        node.dax_subnet_group_to_vpc_subnet_node,
+        node.dax_cluster_to_sns_topic_node,
+        node.dax_cluster_vpc_security_group_to_vpc_node
       ]
 
       edges = [
-        edge.aws_dax_cluster_to_iam_role_edge,
-        edge.aws_dax_cluster_to_vpc_security_group_edge,
-        edge.aws_dax_cluster_vpc_security_group_to_dax_subnet_group_edge,
-        edge.aws_dax_subnet_group_to_vpc_subnet_edge,
-        edge.aws_dax_cluster_to_sns_topic_edge,
-        edge.aws_dax_cluster_vpc_subnet_to_vpc_edge
+        edge.dax_cluster_to_iam_role_edge,
+        edge.dax_cluster_to_vpc_security_group_edge,
+        edge.dax_cluster_vpc_security_group_to_dax_subnet_group_edge,
+        edge.dax_subnet_group_to_vpc_subnet_edge,
+        edge.dax_cluster_to_sns_topic_edge,
+        edge.dax_cluster_vpc_subnet_to_vpc_edge
       ]
 
       args = {
@@ -81,7 +81,7 @@ dashboard "dax_cluster_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_dax_cluster_overview
+        query = query.dax_cluster_overview
         args = {
           arn = self.input.dax_cluster_arn.value
         }
@@ -91,7 +91,7 @@ dashboard "dax_cluster_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_dax_cluster_tags
+        query = query.dax_cluster_tags
         args = {
           arn = self.input.dax_cluster_arn.value
         }
@@ -103,7 +103,7 @@ dashboard "dax_cluster_detail" {
 
       table {
         title = "Cluster Discovery Endpoint"
-        query = query.aws_dax_cluster_discovery_endpoint
+        query = query.dax_cluster_discovery_endpoint
         args = {
           arn = self.input.dax_cluster_arn.value
         }
@@ -111,7 +111,7 @@ dashboard "dax_cluster_detail" {
 
       table {
         title = "Nodes"
-        query = query.aws_dax_cluster_nodes
+        query = query.dax_cluster_node_details
         args = {
           arn = self.input.dax_cluster_arn.value
         }
@@ -121,7 +121,7 @@ dashboard "dax_cluster_detail" {
 
 }
 
-query "aws_dax_cluster_input" {
+query "dax_cluster_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -137,7 +137,7 @@ query "aws_dax_cluster_input" {
   EOQ
 }
 
-query "aws_dax_cluster_status" {
+query "dax_cluster_status" {
   sql = <<-EOQ
     select
       'Status' as label,
@@ -151,7 +151,7 @@ query "aws_dax_cluster_status" {
   param "arn" {}
 }
 
-query "aws_dax_cluster_node_type" {
+query "dax_cluster_node_type" {
   sql = <<-EOQ
     select
       'Node Type' as label,
@@ -165,7 +165,7 @@ query "aws_dax_cluster_node_type" {
   param "arn" {}
 }
 
-query "aws_dax_cluster_encryption" {
+query "dax_cluster_encryption" {
   sql = <<-EOQ
     select
       'Encryption' as label,
@@ -180,8 +180,8 @@ query "aws_dax_cluster_encryption" {
   param "arn" {}
 }
 
-node "aws_dax_cluster_node" {
-  category = category.aws_dax_cluster
+node "dax_cluster_node" {
+  category = category.dax_cluster
 
   sql = <<-EOQ
     select
@@ -204,8 +204,8 @@ node "aws_dax_cluster_node" {
   param "arn" {}
 }
 
-node "aws_dax_cluster_to_iam_role_node" {
-  category = category.aws_iam_role
+node "dax_cluster_to_iam_role_node" {
+  category = category.iam_role
   sql      = <<-EOQ
     select
       r.arn as id,
@@ -228,7 +228,7 @@ node "aws_dax_cluster_to_iam_role_node" {
   param "arn" {}
 }
 
-edge "aws_dax_cluster_to_iam_role_edge" {
+edge "dax_cluster_to_iam_role_edge" {
   title = "assumes"
   sql   = <<-EOQ
     select
@@ -243,8 +243,8 @@ edge "aws_dax_cluster_to_iam_role_edge" {
   param "arn" {}
 }
 
-node "aws_dax_cluster_to_vpc_security_group_node" {
-  category = category.aws_vpc_security_group
+node "dax_cluster_to_vpc_security_group_node" {
+  category = category.vpc_security_group
   sql      = <<-EOQ
     select
       arn as id,
@@ -274,7 +274,7 @@ node "aws_dax_cluster_to_vpc_security_group_node" {
   param "arn" {}
 }
 
-edge "aws_dax_cluster_to_vpc_security_group_edge" {
+edge "dax_cluster_to_vpc_security_group_edge" {
   title = "security group"
   sql   = <<-EOQ
     select
@@ -291,8 +291,8 @@ edge "aws_dax_cluster_to_vpc_security_group_edge" {
   param "arn" {}
 }
 
-node "aws_dax_cluster_vpc_security_group_to_dax_subnet_group_node" {
-  category = category.aws_dax_subnet_group
+node "dax_cluster_vpc_security_group_to_dax_subnet_group_node" {
+  category = category.dax_subnet_group
   sql      = <<-EOQ
     select
       subnet_group_name as id,
@@ -320,7 +320,7 @@ node "aws_dax_cluster_vpc_security_group_to_dax_subnet_group_node" {
   param "arn" {}
 }
 
-edge "aws_dax_cluster_vpc_security_group_to_dax_subnet_group_edge" {
+edge "dax_cluster_vpc_security_group_to_dax_subnet_group_edge" {
   title = "subnet group"
   sql   = <<-EOQ
     select
@@ -338,8 +338,8 @@ edge "aws_dax_cluster_vpc_security_group_to_dax_subnet_group_edge" {
   param "arn" {}
 }
 
-node "aws_dax_subnet_group_to_vpc_subnet_node" {
-  category = category.aws_vpc_subnet
+node "dax_subnet_group_to_vpc_subnet_node" {
+  category = category.vpc_subnet
   sql      = <<-EOQ
     select
       subnet_arn as id,
@@ -370,7 +370,7 @@ node "aws_dax_subnet_group_to_vpc_subnet_node" {
   param "arn" {}
 }
 
-edge "aws_dax_subnet_group_to_vpc_subnet_edge" {
+edge "dax_subnet_group_to_vpc_subnet_edge" {
   title = "subnet"
   sql   = <<-EOQ
     select
@@ -390,8 +390,8 @@ edge "aws_dax_subnet_group_to_vpc_subnet_edge" {
   param "arn" {}
 }
 
-node "aws_dax_cluster_to_sns_topic_node" {
-  category = category.aws_sns_topic
+node "dax_cluster_to_sns_topic_node" {
+  category = category.sns_topic
   sql      = <<-EOQ
     select
       topic_arn as id,
@@ -418,7 +418,7 @@ node "aws_dax_cluster_to_sns_topic_node" {
   param "arn" {}
 }
 
-edge "aws_dax_cluster_to_sns_topic_edge" {
+edge "dax_cluster_to_sns_topic_edge" {
   title = "notifies"
   sql   = <<-EOQ
     select
@@ -434,8 +434,8 @@ edge "aws_dax_cluster_to_sns_topic_edge" {
   param "arn" {}
 }
 
-node "aws_dax_cluster_vpc_security_group_to_vpc_node" {
-  category = category.aws_vpc
+node "dax_cluster_vpc_security_group_to_vpc_node" {
+  category = category.vpc_vpc
   sql      = <<-EOQ
     select
       arn as id,
@@ -466,7 +466,7 @@ node "aws_dax_cluster_vpc_security_group_to_vpc_node" {
   param "arn" {}
 }
 
-edge "aws_dax_cluster_vpc_security_group_to_vpc_edge" {
+edge "dax_cluster_vpc_security_group_to_vpc_edge" {
   title = "vpc"
   sql   = <<-EOQ
     select
@@ -484,7 +484,7 @@ edge "aws_dax_cluster_vpc_security_group_to_vpc_edge" {
   param "arn" {}
 }
 
-edge "aws_dax_cluster_vpc_subnet_to_vpc_edge" {
+edge "dax_cluster_vpc_subnet_to_vpc_edge" {
   title = "vpc"
   sql   = <<-EOQ
     select
@@ -506,11 +506,11 @@ edge "aws_dax_cluster_vpc_subnet_to_vpc_edge" {
   param "arn" {}
 }
 
-query "aws_dax_cluster_overview" {
+query "dax_cluster_overview" {
   sql = <<-EOQ
     select
       title as "Title",
-      active_nodes as "Active Nodes",
+      active as "Active Nodes",
       preferred_maintenance_window as "Preferred Maintenance Window",
       region as "Region",
       account_id as "Account ID",
@@ -524,7 +524,7 @@ query "aws_dax_cluster_overview" {
   param "arn" {}
 }
 
-query "aws_dax_cluster_tags" {
+query "dax_cluster_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -541,7 +541,7 @@ query "aws_dax_cluster_tags" {
   param "arn" {}
 }
 
-query "aws_dax_cluster_discovery_endpoint" {
+query "dax_cluster_discovery_endpoint" {
   sql = <<-EOQ
     select
       cluster_discovery_endpoint ->> 'Address' as "Address",
@@ -556,7 +556,7 @@ query "aws_dax_cluster_discovery_endpoint" {
   param "arn" {}
 }
 
-query "aws_dax_cluster_nodes" {
+query "dax_cluster_node_details" {
   sql = <<-EOQ
     select
       n ->> 'NodeId' as "Node ID",
@@ -572,4 +572,28 @@ query "aws_dax_cluster_nodes" {
   EOQ
 
   param "arn" {}
+}
+
+node "dax_cluster" {
+  category = category.dax_cluster
+
+  sql = <<-EOQ
+    select
+      arn as id,
+      title as title,
+      jsonb_build_object(
+        'Cluster Name', cluster_name,
+        'ARN', arn,
+        'Account ID', account_id,
+        'Name', title,
+        'Region', region,
+        'Status', status
+      ) as properties
+    from
+      aws_dax_cluster
+    where
+      arn = any($1);
+  EOQ
+
+  param "dax_cluster_arns" {}
 }

@@ -1,7 +1,7 @@
-dashboard "aws_account_report" {
+dashboard "account_report" {
 
   title         = "AWS Account Report"
-  documentation = file("./dashboards/aws/docs/aws_account_report.md")
+  documentation = file("./dashboards/aws/docs/account_report.md")
 
   tags = merge(local.aws_common_tags, {
     type     = "Report"
@@ -11,7 +11,7 @@ dashboard "aws_account_report" {
   container {
 
     card {
-      query = query.aws_account_count
+      query = query.account_count
       width = 2
     }
 
@@ -22,12 +22,12 @@ dashboard "aws_account_report" {
       display = "none"
     }
 
-    query = query.aws_account_table
+    query = query.account_table
   }
 
 }
 
-query "aws_account_count" {
+query "account_count" {
   sql = <<-EOQ
     select
       count(*) as "Accounts"
@@ -36,7 +36,7 @@ query "aws_account_count" {
   EOQ
 }
 
-query "aws_account_table" {
+query "account_table" {
   sql = <<-EOQ
     select
       account_id as "Account ID",

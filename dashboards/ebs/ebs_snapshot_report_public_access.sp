@@ -1,4 +1,4 @@
-dashboard "aws_ebs_snapshot_public_access_report" {
+dashboard "ebs_snapshot_public_access_report" {
 
   title         = "AWS EBS Snapshot Public Access Report"
   documentation = file("./dashboards/ebs/docs/ebs_snapshot_report_public_access.md")
@@ -11,12 +11,12 @@ dashboard "aws_ebs_snapshot_public_access_report" {
   container {
 
     card {
-      query = query.aws_ebs_snapshot_count
+      query = query.ebs_snapshot_count
       width = 2
     }
 
     card {
-      query = query.aws_ebs_snapshot_public_count
+      query = query.ebs_snapshot_public_count
       width = 2
     }
 
@@ -31,12 +31,12 @@ dashboard "aws_ebs_snapshot_public_access_report" {
       display = "none"
     }
 
-    query = query.aws_ebs_snapshot_public_table
+    query = query.ebs_snapshot_public_table
   }
 
 }
 
-query "aws_ebs_snapshot_public_table" {
+query "ebs_snapshot_public_table" {
   sql = <<-EOQ
     select
       s.snapshot_id as "Snapshot",

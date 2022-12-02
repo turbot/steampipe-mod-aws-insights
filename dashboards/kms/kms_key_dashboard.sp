@@ -1,4 +1,4 @@
-dashboard "aws_kms_key_dashboard" {
+dashboard "kms_key_dashboard" {
 
   title         = "AWS KMS Key Dashboard"
   documentation = file("./dashboards/kms/docs/kms_key_dashboard.md")
@@ -11,25 +11,25 @@ dashboard "aws_kms_key_dashboard" {
 
     # Analysis
     card {
-      query = query.aws_kms_key_count
+      query = query.kms_key_count
       width = 2
     }
 
     card {
-      query = query.aws_kms_customer_managed_key_count
+      query = query.kms_customer_managed_key_count
       width = 2
     }
 
     # Assessments
     card {
-      query = query.aws_kms_key_disabled_count
+      query = query.kms_key_disabled_count
       width = 2
     }
 
     card {
-      query = query.aws_kms_cmk_rotation_disabled_count
+      query = query.kms_cmk_rotation_disabled_count
       width = 2
-      href  = dashboard.aws_kms_key_lifecycle_report.url_path
+      href  = dashboard.kms_key_lifecycle_report.url_path
     }
 
     # Costs
@@ -37,7 +37,7 @@ dashboard "aws_kms_key_dashboard" {
       type  = "info"
       icon  = "currency-dollar"
       width = 2
-      query = query.aws_kms_key_cost_mtd
+      query = query.kms_key_cost_mtd
     }
 
   }
@@ -49,7 +49,7 @@ dashboard "aws_kms_key_dashboard" {
 
     chart {
       title = "Enabled/Disabled Status"
-      query = query.aws_kms_key_disabled_status
+      query = query.kms_key_disabled_status
       type  = "donut"
       width = 4
 
@@ -65,7 +65,7 @@ dashboard "aws_kms_key_dashboard" {
 
     chart {
       title = "CMK Rotation Status"
-      query = query.aws_kms_key_rotation_status
+      query = query.kms_key_rotation_status
       type  = "donut"
       width = 4
 
@@ -89,14 +89,14 @@ dashboard "aws_kms_key_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      query = query.aws_kms_monthly_forecast_table
+      query = query.kms_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      query = query.aws_kms_key_cost_per_month
+      query = query.kms_key_cost_per_month
     }
 
   }
@@ -107,28 +107,28 @@ dashboard "aws_kms_key_dashboard" {
 
     chart {
       title = "Keys by Account"
-      query = query.aws_kms_key_by_account
+      query = query.kms_key_by_account
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Keys by Region"
-      query = query.aws_kms_key_by_region
+      query = query.kms_key_by_region
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Keys by State"
-      query = query.aws_kms_key_by_state
+      query = query.kms_key_by_state
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Keys by Age"
-      query = query.aws_kms_key_by_creation_month
+      query = query.kms_key_by_creation_month
       type  = "column"
       width = 3
     }
@@ -139,13 +139,13 @@ dashboard "aws_kms_key_dashboard" {
 
 # Card Queries
 
-query "aws_kms_key_count" {
+query "kms_key_count" {
   sql = <<-EOQ
     select count(*) as "Keys" from aws_kms_key;
   EOQ
 }
 
-query "aws_kms_customer_managed_key_count" {
+query "kms_customer_managed_key_count" {
   sql = <<-EOQ
     select
       count(*)as "Customer Managed Keys"
@@ -156,7 +156,7 @@ query "aws_kms_customer_managed_key_count" {
   EOQ
 }
 
-query "aws_kms_key_disabled_count" {
+query "kms_key_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -169,7 +169,7 @@ query "aws_kms_key_disabled_count" {
   EOQ
 }
 
-query "aws_kms_cmk_rotation_disabled_count" {
+query "kms_cmk_rotation_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -183,7 +183,7 @@ query "aws_kms_cmk_rotation_disabled_count" {
   EOQ
 }
 
-query "aws_kms_key_cost_mtd" {
+query "kms_key_cost_mtd" {
   sql = <<-EOQ
     select
       'Cost - MTD' as label,
@@ -198,7 +198,7 @@ query "aws_kms_key_cost_mtd" {
 
 # Assessment Queries
 
-query "aws_kms_key_disabled_status" {
+query "kms_key_disabled_status" {
   sql = <<-EOQ
     select
       disabled_status,
@@ -219,7 +219,7 @@ query "aws_kms_key_disabled_status" {
   EOQ
 }
 
-query "aws_kms_key_rotation_status" {
+query "kms_key_rotation_status" {
   sql = <<-EOQ
     select
       rotation_status,
@@ -244,7 +244,7 @@ query "aws_kms_key_rotation_status" {
 
 # Cost Queries
 
-query "aws_kms_monthly_forecast_table" {
+query "kms_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
       select
@@ -285,7 +285,7 @@ query "aws_kms_monthly_forecast_table" {
   EOQ
 }
 
-query "aws_kms_key_cost_per_month" {
+query "kms_key_cost_per_month" {
   sql = <<-EOQ
     select
       to_char(period_start, 'Mon-YY') as "Month",
@@ -303,7 +303,7 @@ query "aws_kms_key_cost_per_month" {
 
 # Analysis Queries
 
-query "aws_kms_key_by_account" {
+query "kms_key_by_account" {
   sql = <<-EOQ
     select
       a.title as "Account",
@@ -320,7 +320,7 @@ query "aws_kms_key_by_account" {
   EOQ
 }
 
-query "aws_kms_key_by_region" {
+query "kms_key_by_region" {
   sql = <<-EOQ
     select
       region,
@@ -332,7 +332,7 @@ query "aws_kms_key_by_region" {
   EOQ
 }
 
-query "aws_kms_key_by_state" {
+query "kms_key_by_state" {
   sql = <<-EOQ
     select
       key_state,
@@ -344,7 +344,7 @@ query "aws_kms_key_by_state" {
   EOQ
 }
 
-query "aws_kms_key_by_creation_month" {
+query "kms_key_by_creation_month" {
   sql = <<-EOQ
     with keys as (
       select

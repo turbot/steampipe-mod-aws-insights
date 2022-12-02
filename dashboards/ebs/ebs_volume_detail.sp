@@ -1,4 +1,4 @@
-dashboard "aws_ebs_volume_detail" {
+dashboard "ebs_volume_detail" {
 
   title         = "AWS EBS Volume Detail"
   documentation = file("./dashboards/ebs/docs/ebs_volume_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_ebs_volume_detail" {
 
   input "volume_arn" {
     title = "Select a volume:"
-    query = query.aws_ebs_volume_input
+    query = query.ebs_volume_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "aws_ebs_volume_detail" {
 
     card {
       width = 2
-      query = query.aws_ebs_volume_storage
+      query = query.ebs_volume_storage
       args = {
         arn = self.input.volume_arn.value
       }
@@ -25,7 +25,7 @@ dashboard "aws_ebs_volume_detail" {
 
     card {
       width = 2
-      query = query.aws_ebs_volume_iops
+      query = query.ebs_volume_iops
       args = {
         arn = self.input.volume_arn.value
       }
@@ -33,7 +33,7 @@ dashboard "aws_ebs_volume_detail" {
 
     card {
       width = 2
-      query = query.aws_ebs_volume_type
+      query = query.ebs_volume_type
       args = {
         arn = self.input.volume_arn.value
       }
@@ -41,7 +41,7 @@ dashboard "aws_ebs_volume_detail" {
 
     card {
       width = 2
-      query = query.aws_ebs_volume_attached_instances_count
+      query = query.ebs_volume_attached_instances_count
       args = {
         arn = self.input.volume_arn.value
       }
@@ -49,7 +49,7 @@ dashboard "aws_ebs_volume_detail" {
 
     card {
       width = 2
-      query = query.aws_ebs_volume_encryption
+      query = query.ebs_volume_encryption
       args = {
         arn = self.input.volume_arn.value
       }
@@ -128,6 +128,7 @@ dashboard "aws_ebs_volume_detail" {
       }
 
       nodes = [
+<<<<<<< HEAD
         node.aws_ebs_volume_nodes,
         node.aws_kms_key_nodes,
         node.aws_ebs_snapshot_nodes,
@@ -140,6 +141,20 @@ dashboard "aws_ebs_volume_detail" {
         edge.aws_ebs_volume_to_ebs_snapshot_edge,
         edge.aws_ec2_instance_to_ebs_volume_edge,
         edge.aws_ebs_volume_ebs_snapshots_to_ec2_ami_edge
+=======
+        node.ebs_volume_node,
+        node.ebs_volume_to_kms_key_node,
+        node.ebs_volume_to_ebs_snapshot_node,
+        node.ebs_volume_from_ec2_instance_node,
+        node.ebs_volume_ebs_snapshots_to_ec2_ami_node
+      ]
+
+      edges = [
+        edge.ebs_volume_to_kms_key_edge,
+        edge.ebs_volume_to_ebs_snapshot_edge,
+        edge.ebs_volume_from_ec2_instance_edge,
+        edge.ebs_volume_ebs_snapshots_to_ec2_ami_edge
+>>>>>>> 4b4db0f1df91f5a1a9377b61a59c0908c966ace4
       ]
 
       args = {
@@ -162,7 +177,7 @@ dashboard "aws_ebs_volume_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_ebs_volume_overview
+        query = query.ebs_volume_overview
         args = {
           arn = self.input.volume_arn.value
         }
@@ -171,7 +186,7 @@ dashboard "aws_ebs_volume_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_ebs_volume_tags
+        query = query.ebs_volume_tags
         args = {
           arn = self.input.volume_arn.value
         }
@@ -184,7 +199,7 @@ dashboard "aws_ebs_volume_detail" {
 
       table {
         title = "Attached To"
-        query = query.aws_ebs_volume_attached_instances
+        query = query.ebs_volume_attached_instances
         args = {
           arn = self.input.volume_arn.value
         }
@@ -194,16 +209,16 @@ dashboard "aws_ebs_volume_detail" {
         }
 
         column "Instance ID" {
-          href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.'Instance ARN' | @uri}}"
+          href = "${dashboard.ec2_instance_detail.url_path}?input.instance_arn={{.'Instance ARN' | @uri}}"
         }
       }
 
       table {
         title = "Encryption Details"
         column "KMS Key ID" {
-          href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.'KMS Key ID' | @uri}}"
+          href = "${dashboard.kms_key_detail.url_path}?input.key_arn={{.'KMS Key ID' | @uri}}"
         }
-        query = query.aws_ebs_volume_encryption_status
+        query = query.ebs_volume_encryption_status
         args = {
           arn = self.input.volume_arn.value
         }
@@ -265,7 +280,7 @@ dashboard "aws_ebs_volume_detail" {
 
 }
 
-query "aws_ebs_volume_input" {
+query "ebs_volume_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -282,9 +297,82 @@ query "aws_ebs_volume_input" {
   EOQ
 }
 
+<<<<<<< HEAD
 edge "aws_ebs_volume_to_kms_key_edge" {
   title = "encrypted with"
   sql   = <<-EOQ
+=======
+node "ebs_volume_node" {
+  category = category.ebs_volume
+
+  sql = <<-EOQ
+    select
+      arn as id,
+      title as title,
+      jsonb_build_object(
+        'ID', volume_id,
+        'ARN', arn,
+        'Size', size,
+        'Account ID', account_id,
+        'Region', region,
+        'KMS Key ID', kms_key_id
+      ) as properties
+    from
+      aws_ebs_volume
+    where
+      arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "ebs_volume_to_kms_key_node" {
+  category = category.kms_key
+
+  sql = <<-EOQ
+    select
+      k.arn as id,
+      k.title as title,
+      jsonb_build_object(
+        'ID', k.id,
+        'ARN', k.arn,
+        'Key State', k.key_state,
+        'Key Manager', k.key_manager
+      ) as properties
+    from
+      aws_kms_key as k,
+      aws_ebs_volume as v
+    where
+      v.kms_key_id = k.arn
+      and v.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "ebs_volume_to_kms_key_edge" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
+    select
+      v.arn as from_id,
+      k.arn as to_id
+    from
+      aws_kms_key as k,
+      aws_ebs_volume as v
+    where
+      v.kms_key_id = k.arn
+      and v.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "ebs_volume_to_ebs_snapshot_node" {
+  category = category.ebs_snapshot
+
+  sql = <<-EOQ
+>>>>>>> 4b4db0f1df91f5a1a9377b61a59c0908c966ace4
     select
       key_arns as to_id,
       volume_arns as from_id
@@ -297,13 +385,43 @@ edge "aws_ebs_volume_to_kms_key_edge" {
   param "volume_arns" {}
 }
 
-edge "aws_ebs_volume_to_ebs_snapshot_edge" {
+edge "ebs_volume_to_ebs_snapshot_edge" {
   title = "snapshot"
 
   sql = <<-EOQ
     select
+<<<<<<< HEAD
       snapshot_arns as to_id,
       volume_arns as from_id
+=======
+      v.arn as from_id,
+      s.snapshot_id as to_id
+    from
+      aws_ebs_snapshot as s,
+      aws_ebs_volume as v
+    where
+      v.volume_id = s.volume_id
+      and v.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "ebs_volume_from_ec2_instance_node" {
+  category = category.ec2_instance
+
+  sql = <<-EOQ
+    select
+      i.arn as id,
+      i.title as title,
+      jsonb_build_object(
+        'Name', i.tags ->> 'Name',
+        'Instance ID', i.instance_id,
+        'ARN', i.arn,
+        'Account ID', i.account_id,
+        'Region', i.region
+      ) as properties
+>>>>>>> 4b4db0f1df91f5a1a9377b61a59c0908c966ace4
     from
       unnest($1::text[]) as snapshot_arns,
       unnest($2::text[]) as volume_arns
@@ -313,7 +431,11 @@ edge "aws_ebs_volume_to_ebs_snapshot_edge" {
   param "volume_arns" {}
 }
 
+<<<<<<< HEAD
 edge "aws_ec2_instance_to_ebs_volume_edge" {
+=======
+edge "ebs_volume_from_ec2_instance_edge" {
+>>>>>>> 4b4db0f1df91f5a1a9377b61a59c0908c966ace4
   title = "mounts"
 
   sql = <<-EOQ
@@ -321,15 +443,64 @@ edge "aws_ec2_instance_to_ebs_volume_edge" {
       volume_arns as to_id,
       instance_arns as from_id
     from
+<<<<<<< HEAD
       unnest($1::text[]) as volume_arns,
       unnest($2::text[]) as instance_arns
+=======
+      aws_ec2_instance as i,
+      jsonb_array_elements(i.block_device_mappings) as bdm
+    where
+      bdm -> 'Ebs' ->> 'VolumeId' in
+      (
+        select
+          volume_id
+        from
+          aws_ebs_volume as v
+        where
+          v.arn = $1
+      );
+  EOQ
+
+  param "arn" {}
+}
+
+node "ebs_volume_ebs_snapshots_to_ec2_ami_node" {
+  category = category.ec2_ami
+
+  sql = <<-EOQ
+    select
+      images.image_id as id,
+      images.title as title,
+      jsonb_build_object(
+        'Snapshot ID', bdm -> 'Ebs' ->> 'SnapshotId',
+        'Account ID', images.account_id,
+        'Region', images.region,
+        'Image ID', images.image_id
+      ) as properties
+    from
+      aws_ec2_ami as images,
+      jsonb_array_elements(images.block_device_mappings) as bdm,
+      aws_ebs_volume as v
+    where
+      bdm -> 'Ebs' is not null
+      and bdm -> 'Ebs' ->> 'SnapshotId' in
+      (
+        select
+          snapshot_id
+        from
+          aws_ebs_snapshot
+        where
+          aws_ebs_snapshot.volume_id = v.volume_id
+      )
+      and v.arn = $1;
+>>>>>>> 4b4db0f1df91f5a1a9377b61a59c0908c966ace4
   EOQ
 
   param "volume_arns" {}
   param "instance_arns" {}
 }
 
-edge "aws_ebs_volume_ebs_snapshots_to_ec2_ami_edge" {
+edge "ebs_volume_ebs_snapshots_to_ec2_ami_edge" {
   title = "ami"
 
   sql = <<-EOQ
@@ -345,7 +516,7 @@ edge "aws_ebs_volume_ebs_snapshots_to_ec2_ami_edge" {
   param "snapshot_arns" {}
 }
 
-query "aws_ebs_volume_storage" {
+query "ebs_volume_storage" {
   sql = <<-EOQ
     select
       'Storage (GB)' as label,
@@ -359,7 +530,7 @@ query "aws_ebs_volume_storage" {
   param "arn" {}
 }
 
-query "aws_ebs_volume_iops" {
+query "ebs_volume_iops" {
   sql = <<-EOQ
     select
       'IOPS' as label,
@@ -373,7 +544,7 @@ query "aws_ebs_volume_iops" {
   param "arn" {}
 }
 
-query "aws_ebs_volume_type" {
+query "ebs_volume_type" {
   sql = <<-EOQ
     select
       'Type' as label,
@@ -387,7 +558,7 @@ query "aws_ebs_volume_type" {
   param "arn" {}
 }
 
-query "aws_ebs_volume_state" {
+query "ebs_volume_state" {
   sql = <<-EOQ
     select
       'State' as label,
@@ -401,7 +572,7 @@ query "aws_ebs_volume_state" {
   param "arn" {}
 }
 
-query "aws_ebs_volume_attached_instances_count" {
+query "ebs_volume_attached_instances_count" {
   sql = <<-EOQ
     select
       'Attached Instances' as label,
@@ -422,7 +593,7 @@ query "aws_ebs_volume_attached_instances_count" {
   param "arn" {}
 }
 
-query "aws_ebs_volume_encryption" {
+query "ebs_volume_encryption" {
   sql = <<-EOQ
     select
       'Encryption' as label,
@@ -437,7 +608,7 @@ query "aws_ebs_volume_encryption" {
   param "arn" {}
 }
 
-query "aws_ebs_volume_attached_instances" {
+query "ebs_volume_attached_instances" {
   sql = <<-EOQ
     select
       i.instance_id as "Instance ID",
@@ -460,7 +631,7 @@ query "aws_ebs_volume_attached_instances" {
   param "arn" {}
 }
 
-query "aws_ebs_volume_encryption_status" {
+query "ebs_volume_encryption_status" {
   sql = <<-EOQ
     select
       case when encrypted then 'Enabled' else 'Disabled' end as "Encryption",
@@ -474,7 +645,7 @@ query "aws_ebs_volume_encryption_status" {
   param "arn" {}
 }
 
-query "aws_ebs_volume_overview" {
+query "ebs_volume_overview" {
   sql = <<-EOQ
     select
       volume_id as "Volume ID",
@@ -494,7 +665,7 @@ query "aws_ebs_volume_overview" {
   param "arn" {}
 }
 
-query "aws_ebs_volume_tags" {
+query "ebs_volume_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -509,32 +680,4 @@ query "aws_ebs_volume_tags" {
   EOQ
 
   param "arn" {}
-}
-
-
-//******
-
-
-node "aws_ebs_volume_nodes" {
-  category = category.aws_ebs_volume
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ID', volume_id,
-        'ARN', arn,
-        'Size', size,
-        'Account ID', account_id,
-        'Region', region,
-        'KMS Key ID', kms_key_id
-      ) as properties
-    from
-      aws_ebs_volume
-    where
-      arn = any($1);
-  EOQ
-
-  param "volume_arns" {}
 }

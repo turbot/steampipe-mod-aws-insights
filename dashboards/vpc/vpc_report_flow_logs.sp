@@ -1,4 +1,4 @@
-dashboard "aws_vpc_flow_logs_report" {
+dashboard "vpc_flow_logs_report" {
 
   title         = "AWS VPC Flow Logs Report"
   documentation = file("./dashboards/vpc/docs/vpc_report_flow_logs.md")
@@ -11,12 +11,12 @@ dashboard "aws_vpc_flow_logs_report" {
   container {
 
     card {
-      query = query.aws_vpc_count
+      query = query.vpc_count
       width = 2
     }
 
     card {
-      query = query.aws_vpc_no_flow_logs_count
+      query = query.vpc_no_flow_logs_count
       width = 2
     }
 
@@ -32,15 +32,15 @@ dashboard "aws_vpc_flow_logs_report" {
     }
 
     column "VPC ID" {
-      href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_arn={{.ARN | @uri}}"
+      href = "${dashboard.vpc_detail.url_path}?input.vpc_arn={{.ARN | @uri}}"
     }
 
-    query = query.aws_vpc_flow_logs_table
+    query = query.vpc_flow_logs_table
   }
 
 }
 
-query "aws_vpc_flow_logs_table" {
+query "vpc_flow_logs_table" {
   sql = <<-EOQ
     with flow_logs as (
       select

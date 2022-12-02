@@ -1,4 +1,4 @@
-dashboard "aws_cloudfront_distribution_detail" {
+dashboard "cloudfront_distribution_detail" {
   title         = "AWS CloudFront Distribution Detail"
   documentation = file("./dashboards/cloudfront/docs/cloudfront_distribution_detail.md")
 
@@ -8,14 +8,14 @@ dashboard "aws_cloudfront_distribution_detail" {
 
   input "distribution_arn" {
     title = "Select a distribution:"
-    query = query.aws_cloudfront_distribution_input
+    query = query.cloudfront_distribution_input
     width = 4
   }
 
   container {
 
     card {
-      query = query.aws_cloudfront_distribution_status
+      query = query.cloudfront_distribution_status
       width = 2
       args = {
         arn = self.input.distribution_arn.value
@@ -23,7 +23,7 @@ dashboard "aws_cloudfront_distribution_detail" {
     }
 
     card {
-      query = query.aws_cloudfront_distribution_price_class
+      query = query.cloudfront_distribution_price_class
       width = 2
       args = {
         arn = self.input.distribution_arn.value
@@ -31,7 +31,7 @@ dashboard "aws_cloudfront_distribution_detail" {
     }
 
     card {
-      query = query.aws_cloudfront_distribution_logging
+      query = query.cloudfront_distribution_logging
       width = 2
       args = {
         arn = self.input.distribution_arn.value
@@ -39,7 +39,7 @@ dashboard "aws_cloudfront_distribution_detail" {
     }
 
     card {
-      query = query.aws_cloudfront_distribution_field_level_encryption
+      query = query.cloudfront_distribution_field_level_encryption
       width = 2
       args = {
         arn = self.input.distribution_arn.value
@@ -47,7 +47,7 @@ dashboard "aws_cloudfront_distribution_detail" {
     }
 
     card {
-      query = query.aws_cloudfront_distribution_sni
+      query = query.cloudfront_distribution_sni
       width = 2
       args = {
         arn = self.input.distribution_arn.value
@@ -62,7 +62,7 @@ dashboard "aws_cloudfront_distribution_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "certificates" {
+      with "acm_certificates" {
         sql = <<-EOQ
           select
             viewer_certificate ->> 'ACMCertificateArn' as certificate_arn
@@ -76,7 +76,7 @@ dashboard "aws_cloudfront_distribution_detail" {
         args = [self.input.distribution_arn.value]
       }
 
-      with "buckets" {
+      with "s3_buckets" {
         sql = <<-EOQ
           select
             arn as bucket_arn
@@ -99,7 +99,7 @@ dashboard "aws_cloudfront_distribution_detail" {
         args = [self.input.distribution_arn.value]
       }
 
-      with "albs" {
+      with "ec2_application_load_balancers" {
         sql = <<-EOQ
           select
             arn as alb_arn
@@ -165,29 +165,29 @@ dashboard "aws_cloudfront_distribution_detail" {
       }
 
       nodes = [
-        node.aws_cloudfront_distribution_nodes,
-        node.aws_acm_certificate_nodes,
-        node.aws_s3_bucket_nodes,
-        node.aws_ec2_application_load_balancer_nodes,
-        node.aws_media_store_container_nodes,
-        node.aws_wafv2_web_acl_nodes
+        node.cloudfront_distribution,
+        node.acm_certificate,
+        node.s3_bucket,
+        node.ec2_application_load_balancer,
+        node.media_store_container,
+        node.wafv2_web_acl
       ]
 
       edges = [
-        edge.aws_cloudfront_distribution_to_acm_certificate_edges,
-        edge.aws_s3_bucket_to_cloudfront_distribution_edges,
-        edge.aws_ec2_application_load_balancer_to_cloudfront_distribution_edges,
-        edge.aws_media_store_container_to_cloudfront_distribution_edges,
-        edge.aws_cloudfront_distribution_to_wafv2_web_acl_edges
+        edge.cloudfront_distribution_to_acm_certificate,
+        edge.s3_bucket_to_cloudfront_distribution,
+        edge.ec2_application_load_balancer_to_cloudfront_distribution,
+        edge.media_store_container_to_cloudfront_distribution,
+        edge.cloudfront_distribution_to_wafv2_web_acl
       ]
 
       args = {
-        distribution_arns = [self.input.distribution_arn.value]
-        bucket_arns       = with.buckets.rows[*].bucket_arn
-        certificate_arns  = with.certificates.rows[*].certificate_arn
-        alb_arns          = with.albs.rows[*].alb_arn
-        mediastore_arns   = with.media_stores.rows[*].mediastore_arn
-        wafv2_acl_arns    = with.wafv2_web_acls.rows[*].wafv2_acl_arn
+        cloudfront_distribution_arns       = [self.input.distribution_arn.value]
+        s3_bucket_arns                     = with.s3_buckets.rows[*].bucket_arn
+        acm_certificate_arns               = with.acm_certificates.rows[*].certificate_arn
+        ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
+        mediastore_arns                    = with.media_stores.rows[*].mediastore_arn
+        wafv2_acl_arns                     = with.wafv2_web_acls.rows[*].wafv2_acl_arn
       }
     }
   }
@@ -201,7 +201,7 @@ dashboard "aws_cloudfront_distribution_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_cloudfront_distribution_overview
+        query = query.cloudfront_distribution_overview
         args = {
           arn = self.input.distribution_arn.value
         }
@@ -211,7 +211,7 @@ dashboard "aws_cloudfront_distribution_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_cloudfront_distribution_tags
+        query = query.cloudfront_distribution_tags
         args = {
           arn = self.input.distribution_arn.value
         }
@@ -223,7 +223,7 @@ dashboard "aws_cloudfront_distribution_detail" {
 
       table {
         title = "Restrictions"
-        query = query.aws_cloudfront_distribution_restrictions
+        query = query.cloudfront_distribution_restrictions
         args = {
           arn = self.input.distribution_arn.value
         }
@@ -232,7 +232,7 @@ dashboard "aws_cloudfront_distribution_detail" {
   }
 }
 
-query "aws_cloudfront_distribution_input" {
+query "cloudfront_distribution_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -247,7 +247,7 @@ query "aws_cloudfront_distribution_input" {
   EOQ
 }
 
-query "aws_cloudfront_distribution_status" {
+query "cloudfront_distribution_status" {
   sql = <<-EOQ
     select
       'Status' as label,
@@ -261,7 +261,7 @@ query "aws_cloudfront_distribution_status" {
   param "arn" {}
 }
 
-query "aws_cloudfront_distribution_price_class" {
+query "cloudfront_distribution_price_class" {
   sql = <<-EOQ
     select
       'Price Class' as label,
@@ -275,7 +275,7 @@ query "aws_cloudfront_distribution_price_class" {
   param "arn" {}
 }
 
-query "aws_cloudfront_distribution_logging" {
+query "cloudfront_distribution_logging" {
   sql = <<-EOQ
     select
       'Logging' as label,
@@ -290,7 +290,7 @@ query "aws_cloudfront_distribution_logging" {
   param "arn" {}
 }
 
-query "aws_cloudfront_distribution_field_level_encryption" {
+query "cloudfront_distribution_field_level_encryption" {
   sql = <<-EOQ
     select
       'Field Level Encryption' as label,
@@ -305,7 +305,7 @@ query "aws_cloudfront_distribution_field_level_encryption" {
   param "arn" {}
 }
 
-query "aws_cloudfront_distribution_sni" {
+query "cloudfront_distribution_sni" {
   sql = <<-EOQ
     select
       'SNI' as label,
@@ -320,83 +320,83 @@ query "aws_cloudfront_distribution_sni" {
   param "arn" {}
 }
 
-edge "aws_cloudfront_distribution_to_acm_certificate_edges" {
+edge "cloudfront_distribution_to_acm_certificate" {
   title = "ssl via"
 
   sql = <<-EOQ
    select
-      distribution_arns as from_id,
-      certificate_arns as to_id
+      cloudfront_distribution_arn as from_id,
+      acm_certificate_arn as to_id
     from
-      unnest($1::text[]) as distribution_arns,
-      unnest($2::text[]) as certificate_arns
+      unnest($1::text[]) as cloudfront_distribution_arn,
+      unnest($2::text[]) as acm_certificate_arn
   EOQ
 
-  param "distribution_arns" {}
-  param "certificate_arns" {}
+  param "cloudfront_distribution_arns" {}
+  param "acm_certificate_arns" {}
 }
 
-edge "aws_s3_bucket_to_cloudfront_distribution_edges" {
+edge "s3_bucket_to_cloudfront_distribution" {
   title = "origin for"
   sql   = <<-EOQ
     select
-      distribution_arns as to_id,
-      bucket_arns as from_id
+      cloudfront_distribution_arn as to_id,
+      s3_bucket_arn as from_id
     from
-      unnest($1::text[]) as distribution_arns,
-      unnest($2::text[]) as bucket_arns
+      unnest($1::text[]) as cloudfront_distribution_arn,
+      unnest($2::text[]) as s3_bucket_arn
   EOQ
 
-  param "distribution_arns" {}
-  param "bucket_arns" {}
+  param "cloudfront_distribution_arns" {}
+  param "s3_bucket_arns" {}
 }
 
-edge "aws_ec2_application_load_balancer_to_cloudfront_distribution_edges" {
+edge "ec2_application_load_balancer_to_cloudfront_distribution" {
   title = "origin for"
   sql   = <<-EOQ
     select
-      distribution_arns as to_id,
-      alb_arns as from_id
+      cloudfront_distribution_arn as to_id,
+      ec2_application_load_balancer_arn as from_id
     from
-      unnest($1::text[]) as distribution_arns,
-      unnest($2::text[]) as alb_arns
+      unnest($1::text[]) as cloudfront_distribution_arn,
+      unnest($2::text[]) as ec2_application_load_balancer_arn
   EOQ
 
-  param "distribution_arns" {}
-  param "alb_arns" {}
+  param "cloudfront_distribution_arns" {}
+  param "ec2_application_load_balancer_arns" {}
 }
 
-edge "aws_media_store_container_to_cloudfront_distribution_edges" {
+edge "media_store_container_to_cloudfront_distribution" {
   title = "origin for"
   sql   = <<-EOQ
     select
-      distribution_arns as to_id,
-      mediastore_arns as from_id
+      cloudfront_distribution_arn as to_id,
+      mediastore_arn as from_id
     from
-      unnest($1::text[]) as distribution_arns,
-      unnest($2::text[]) as mediastore_arns
+      unnest($1::text[]) as cloudfront_distribution_arn,
+      unnest($2::text[]) as mediastore_arn
   EOQ
 
-  param "distribution_arns" {}
+  param "cloudfront_distribution_arns" {}
   param "mediastore_arns" {}
 }
 
-edge "aws_cloudfront_distribution_to_wafv2_web_acl_edges" {
+edge "cloudfront_distribution_to_wafv2_web_acl" {
   title = "web acl"
   sql   = <<-EOQ
     select
-      distribution_arns as from_id,
-      wafv2_acl_arns as to_id
+      cloudfront_distribution_arn as from_id,
+      wafv2_acl_arn as to_id
     from
-      unnest($1::text[]) as distribution_arns,
-      unnest($2::text[]) as wafv2_acl_arns
+      unnest($1::text[]) as cloudfront_distribution_arn,
+      unnest($2::text[]) as wafv2_acl_arn
   EOQ
 
-  param "distribution_arns" {}
+  param "cloudfront_distribution_arns" {}
   param "wafv2_acl_arns" {}
 }
 
-query "aws_cloudfront_distribution_overview" {
+query "cloudfront_distribution_overview" {
   sql = <<-EOQ
     select
       domain_name as "Domain Name",
@@ -416,7 +416,7 @@ query "aws_cloudfront_distribution_overview" {
   param "arn" {}
 }
 
-query "aws_cloudfront_distribution_tags" {
+query "cloudfront_distribution_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -433,7 +433,7 @@ query "aws_cloudfront_distribution_tags" {
   param "arn" {}
 }
 
-query "aws_cloudfront_distribution_restrictions" {
+query "cloudfront_distribution_restrictions" {
   sql = <<-EOQ
     select
       restrictions -> 'GeoRestriction' -> 'Items' as "Geo Restriction Items",

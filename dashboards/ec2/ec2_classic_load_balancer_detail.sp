@@ -1,4 +1,4 @@
-dashboard "aws_ec2_classic_load_balancer_detail" {
+dashboard "ec2_classic_load_balancer_detail" {
   title         = "AWS EC2 Classic Load Balancer Detail"
   documentation = file("./dashboards/ec2/docs/ec2_classic_load_balancer_detail.md")
 
@@ -8,7 +8,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
 
   input "clb" {
     title = "Select a Classic Load balancer:"
-    query = query.aws_clb_input
+    query = query.clb_input
     width = 4
   }
 
@@ -16,7 +16,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_clb_scheme
+      query = query.clb_scheme
       args = {
         arn = self.input.clb.value
       }
@@ -24,7 +24,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_clb_instances
+      query = query.clb_instances
       args = {
         arn = self.input.clb.value
       }
@@ -32,7 +32,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_clb_logging_enabled
+      query = query.clb_logging_enabled
       args = {
         arn = self.input.clb.value
       }
@@ -40,7 +40,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_clb_az_zone
+      query = query.clb_az_zone
       args = {
         arn = self.input.clb.value
       }
@@ -48,7 +48,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.aws_clb_cross_zone_enabled
+      query = query.clb_cross_zone_enabled
       args = {
         arn = self.input.clb.value
       }
@@ -63,27 +63,27 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_ec2_classic_load_balancer_nodes,
-        node.aws_ec2_clb_to_vpc_subnet_node,
-        node.aws_ec2_clb_to_ec2_instance_node,
-        node.aws_ec2_clb_to_s3_bucket_node,
-        node.aws_ec2_clb_to_vpc_security_group_node,
-        node.aws_ec2_clb_vpc_security_group_to_vpc_node,
-        node.aws_ec2_lb_from_ec2_load_balancer_listener_node
+        node.ec2_classic_load_balancer,
+        node.ec2_clb_to_vpc_subnet_node,
+        node.ec2_clb_to_ec2_instance_node,
+        node.ec2_clb_to_s3_bucket_node,
+        node.ec2_clb_to_vpc_security_group_node,
+        node.ec2_clb_vpc_security_group_to_vpc_node,
+        node.ec2_lb_from_ec2_load_balancer_listener_node
       ]
 
       edges = [
-        edge.aws_ec2_clb_to_vpc_subnet_edge,
-        edge.aws_ec2_clb_to_ec2_instance_edge,
-        edge.aws_ec2_clb_to_s3_bucket_edge,
-        edge.aws_ec2_clb_to_vpc_security_group_edge,
-        edge.aws_ec2_clb_vpc_security_group_to_vpc_edge,
-        edge.aws_ec2_lb_from_ec2_load_balancer_listener_edge
+        edge.ec2_clb_to_vpc_subnet_edge,
+        edge.ec2_clb_to_ec2_instance_edge,
+        edge.ec2_clb_to_s3_bucket_edge,
+        edge.ec2_clb_to_vpc_security_group_edge,
+        edge.ec2_clb_vpc_security_group_to_vpc_edge,
+        edge.ec2_lb_from_ec2_load_balancer_listener_edge
       ]
 
       args = {
-        clb_arns = [self.input.clb.value]
-        arn = self.input.clb.value
+        ec2_classic_load_balancer_arns = [self.input.clb.value]
+        arn                            = self.input.clb.value
       }
     }
   }
@@ -94,7 +94,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
       title = "Overview"
       type  = "line"
       width = 3
-      query = query.aws_ec2_clb_overview
+      query = query.ec2_clb_overview
       args = {
         arn = self.input.clb.value
       }
@@ -104,7 +104,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
     table {
       title = "Tags"
       width = 3
-      query = query.aws_ec2_clb_tags
+      query = query.ec2_clb_tags
       args = {
         arn = self.input.clb.value
       }
@@ -113,7 +113,7 @@ dashboard "aws_ec2_classic_load_balancer_detail" {
 
 }
 
-query "aws_clb_input" {
+query "clb_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -129,7 +129,7 @@ query "aws_clb_input" {
   EOQ
 }
 
-query "aws_ec2_clb_overview" {
+query "ec2_clb_overview" {
   sql = <<-EOQ
     select
       title as "Title",
@@ -148,7 +148,7 @@ query "aws_ec2_clb_overview" {
   param "arn" {}
 }
 
-query "aws_ec2_clb_tags" {
+query "ec2_clb_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -165,7 +165,7 @@ query "aws_ec2_clb_tags" {
   param "arn" {}
 }
 
-query "aws_clb_logging_enabled" {
+query "clb_logging_enabled" {
   sql = <<-EOQ
     select
       'Logging' as label,
@@ -180,7 +180,7 @@ query "aws_clb_logging_enabled" {
   param "arn" {}
 }
 
-query "aws_clb_az_zone" {
+query "clb_az_zone" {
   sql = <<-EOQ
     select
       'Availibility Zones' as label,
@@ -196,7 +196,7 @@ query "aws_clb_az_zone" {
   param "arn" {}
 }
 
-query "aws_clb_cross_zone_enabled" {
+query "clb_cross_zone_enabled" {
   sql = <<-EOQ
     select
       'Cross Zone' as label,
@@ -212,7 +212,7 @@ query "aws_clb_cross_zone_enabled" {
   param "arn" {}
 }
 
-query "aws_clb_instances" {
+query "clb_instances" {
   sql = <<-EOQ
     select
       'Instances' as label,
@@ -228,7 +228,7 @@ query "aws_clb_instances" {
   param "arn" {}
 }
 
-query "aws_clb_scheme" {
+query "clb_scheme" {
   sql = <<-EOQ
     select
       'Scheme' as label,
@@ -242,8 +242,8 @@ query "aws_clb_scheme" {
   param "arn" {}
 }
 
-node "aws_ec2_clb_to_ec2_instance_node" {
-  category = category.aws_ec2_instance
+node "ec2_clb_to_ec2_instance_node" {
+  category = category.ec2_instance
 
   sql = <<-EOQ
     select
@@ -266,7 +266,7 @@ node "aws_ec2_clb_to_ec2_instance_node" {
   param "arn" {}
 }
 
-edge "aws_ec2_clb_to_ec2_instance_edge" {
+edge "ec2_clb_to_ec2_instance_edge" {
   title = "routes to"
 
   sql = <<-EOQ
@@ -284,8 +284,8 @@ edge "aws_ec2_clb_to_ec2_instance_edge" {
   param "arn" {}
 }
 
-node "aws_ec2_clb_to_s3_bucket_node" {
-  category = category.aws_s3_bucket
+node "ec2_clb_to_s3_bucket_node" {
+  category = category.s3_bucket
 
   sql = <<-EOQ
     select
@@ -309,7 +309,7 @@ node "aws_ec2_clb_to_s3_bucket_node" {
   param "arn" {}
 }
 
-edge "aws_ec2_clb_to_s3_bucket_edge" {
+edge "ec2_clb_to_s3_bucket_edge" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -327,8 +327,8 @@ edge "aws_ec2_clb_to_s3_bucket_edge" {
   param "arn" {}
 }
 
-node "aws_ec2_clb_to_vpc_security_group_node" {
-  category = category.aws_vpc_security_group
+node "ec2_clb_to_vpc_security_group_node" {
+  category = category.vpc_security_group
 
   sql = <<-EOQ
     select
@@ -357,7 +357,7 @@ node "aws_ec2_clb_to_vpc_security_group_node" {
   param "arn" {}
 }
 
-edge "aws_ec2_clb_to_vpc_security_group_edge" {
+edge "ec2_clb_to_vpc_security_group_edge" {
   title = "security group"
 
   sql = <<-EOQ
@@ -379,8 +379,8 @@ edge "aws_ec2_clb_to_vpc_security_group_edge" {
   param "arn" {}
 }
 
-node "aws_ec2_clb_vpc_security_group_to_vpc_node" {
-  category = category.aws_vpc
+node "ec2_clb_vpc_security_group_to_vpc_node" {
+  category = category.vpc_vpc
 
   sql = <<-EOQ
     select
@@ -403,8 +403,8 @@ node "aws_ec2_clb_vpc_security_group_to_vpc_node" {
   param "arn" {}
 }
 
-node "aws_ec2_clb_to_vpc_subnet_node" {
-  category = category.aws_vpc_subnet
+node "ec2_clb_to_vpc_subnet_node" {
+  category = category.vpc_subnet
 
   sql = <<-EOQ
     select
@@ -429,7 +429,7 @@ node "aws_ec2_clb_to_vpc_subnet_node" {
   param "arn" {}
 }
 
-edge "aws_ec2_clb_to_vpc_subnet_edge" {
+edge "ec2_clb_to_vpc_subnet_edge" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -447,7 +447,7 @@ edge "aws_ec2_clb_to_vpc_subnet_edge" {
   param "arn" {}
 }
 
-edge "aws_ec2_clb_vpc_security_group_to_vpc_edge" {
+edge "ec2_clb_vpc_security_group_to_vpc_edge" {
   title = "vpc"
 
   sql = <<-EOQ
@@ -463,18 +463,18 @@ edge "aws_ec2_clb_vpc_security_group_to_vpc_edge" {
   param "arn" {}
 }
 
-edge "aws_ec2_classic_load_balancer_to_acm_certificate_edges" {
+edge "ec2_classic_load_balancer_to_acm_certificate" {
   title = "ssl via"
 
   sql = <<-EOQ
     select
-      certificate_arns as to_id,
-      clb_arns as from_id
+      acm_certificate_arn as to_id,
+      ec2_classic_load_balancer_arn as from_id
     from
-      unnest($1::text[]) as certificate_arns,
-      unnest($2::text[]) as clb_arns
+      unnest($1::text[]) as acm_certificate_arn,
+      unnest($2::text[]) as ec2_classic_load_balancer_arn
   EOQ
 
-  param "certificate_arns" {}
-  param "clb_arns" {}
+  param "acm_certificate_arns" {}
+  param "ec2_classic_load_balancer_arns" {}
 }

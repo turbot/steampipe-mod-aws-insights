@@ -1,4 +1,4 @@
-dashboard "aws_iam_action_glob_report" {
+dashboard "iam_action_glob_report" {
 
   title = "AWS IAM Action Glob Report"
 

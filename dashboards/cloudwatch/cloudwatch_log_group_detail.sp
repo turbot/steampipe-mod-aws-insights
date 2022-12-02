@@ -1,4 +1,4 @@
-dashboard "aws_cloudwatch_log_group_detail" {
+dashboard "cloudwatch_log_group_detail" {
 
   title         = "AWS CloudWatch Log Group Detail"
   documentation = file("./dashboards/cloudwatch/docs/cloudwatch_log_group_detail.md")
@@ -9,14 +9,14 @@ dashboard "aws_cloudwatch_log_group_detail" {
 
   input "log_group_arn" {
     title = "Select a log group:"
-    query = query.aws_cloudwatch_log_group_input
+    query = query.cloudwatch_log_group_input
     width = 4
   }
 
   container {
 
     card {
-      query = query.aws_cloudwatch_log_group_retention_in_days
+      query = query.cloudwatch_log_group_retention_in_days
       width = 2
       args = {
         log_group_arn = self.input.log_group_arn.value
@@ -24,7 +24,7 @@ dashboard "aws_cloudwatch_log_group_detail" {
     }
 
     card {
-      query = query.aws_cloudwatch_log_group_stored_bytes
+      query = query.cloudwatch_log_group_stored_bytes
       width = 2
       args = {
         log_group_arn = self.input.log_group_arn.value
@@ -32,7 +32,7 @@ dashboard "aws_cloudwatch_log_group_detail" {
     }
 
     card {
-      query = query.aws_cloudwatch_log_group_metric_filter_count
+      query = query.cloudwatch_log_group_metric_filter_count
       width = 2
       args = {
         log_group_arn = self.input.log_group_arn.value
@@ -41,7 +41,7 @@ dashboard "aws_cloudwatch_log_group_detail" {
 
     card {
       width = 2
-      query = query.aws_cloudwatch_log_group_unencrypted
+      query = query.cloudwatch_log_group_unencrypted
       args = {
         log_group_arn = self.input.log_group_arn.value
       }
@@ -57,22 +57,22 @@ dashboard "aws_cloudwatch_log_group_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_cloudwatch_log_group_node,
-        node.aws_cloudwatch_log_group_to_kms_key_node,
-        node.aws_cloudwatch_log_group_from_cloudtrail_trail_node,
-        node.aws_cloudwatch_log_group_from_lambda_function_node,
-        node.aws_cloudwatch_log_group_from_vpc_flow_logs_node,
-        node.aws_cloudwatch_log_group_from_kinesis_stream_node,
-        node.aws_cloudwatch_log_group_to_log_metric_filter_node
+        node.cloudwatch_log_group_node,
+        node.cloudwatch_log_group_to_kms_key_node,
+        node.cloudwatch_log_group_from_cloudtrail_trail_node,
+        node.cloudwatch_log_group_from_lambda_function_node,
+        node.cloudwatch_log_group_from_vpc_flow_logs_node,
+        node.cloudwatch_log_group_from_kinesis_stream_node,
+        node.cloudwatch_log_group_to_log_metric_filter_node
       ]
 
       edges = [
-        edge.aws_cloudwatch_log_group_to_kms_key_edge,
-        edge.aws_cloudwatch_log_group_from_cloudtrail_trail_edge,
-        edge.aws_cloudwatch_log_group_from_lambda_function_edge,
-        edge.aws_cloudwatch_log_group_from_vpc_flow_logs_edge,
-        edge.aws_cloudwatch_log_group_from_kinesis_stream_edge,
-        edge.aws_cloudwatch_log_group_to_log_metric_filter_edge
+        edge.cloudwatch_log_group_to_kms_key_edge,
+        edge.cloudwatch_log_group_from_cloudtrail_trail_edge,
+        edge.cloudwatch_log_group_from_lambda_function_edge,
+        edge.cloudwatch_log_group_from_vpc_flow_logs_edge,
+        edge.cloudwatch_log_group_from_kinesis_stream_edge,
+        edge.cloudwatch_log_group_to_log_metric_filter_edge
       ]
 
       args = {
@@ -91,7 +91,7 @@ dashboard "aws_cloudwatch_log_group_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_cloudwatch_log_group_overview
+        query = query.cloudwatch_log_group_overview
         args = {
           log_group_arn = self.input.log_group_arn.value
         }
@@ -101,7 +101,7 @@ dashboard "aws_cloudwatch_log_group_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_cloudwatch_log_group_tags
+        query = query.cloudwatch_log_group_tags
         args = {
           log_group_arn = self.input.log_group_arn.value
         }
@@ -114,13 +114,13 @@ dashboard "aws_cloudwatch_log_group_detail" {
 
       table {
         title = "Encryption Details"
-        query = query.aws_cloudwatch_log_group_encryption_details
+        query = query.cloudwatch_log_group_encryption_details
         args = {
           log_group_arn = self.input.log_group_arn.value
         }
 
         column "KMS Key ID" {
-          href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.'KMS Key ID' | @uri}}"
+          href = "${dashboard.kms_key_detail.url_path}?input.key_arn={{.'KMS Key ID' | @uri}}"
         }
       }
 
@@ -130,7 +130,7 @@ dashboard "aws_cloudwatch_log_group_detail" {
 
 }
 
-query "aws_cloudwatch_log_group_input" {
+query "cloudwatch_log_group_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -147,7 +147,7 @@ query "aws_cloudwatch_log_group_input" {
   EOQ
 }
 
-query "aws_cloudwatch_log_group_retention_in_days" {
+query "cloudwatch_log_group_retention_in_days" {
   sql = <<-EOQ
     select
       retention_in_days as value,
@@ -161,7 +161,7 @@ query "aws_cloudwatch_log_group_retention_in_days" {
   param "log_group_arn" {}
 }
 
-query "aws_cloudwatch_log_group_stored_bytes" {
+query "cloudwatch_log_group_stored_bytes" {
   sql = <<-EOQ
     select
       stored_bytes as value,
@@ -175,7 +175,7 @@ query "aws_cloudwatch_log_group_stored_bytes" {
   param "log_group_arn" {}
 }
 
-query "aws_cloudwatch_log_group_metric_filter_count" {
+query "cloudwatch_log_group_metric_filter_count" {
   sql = <<-EOQ
     select
       metric_filter_count as value,
@@ -189,7 +189,7 @@ query "aws_cloudwatch_log_group_metric_filter_count" {
   param "log_group_arn" {}
 }
 
-query "aws_cloudwatch_log_group_unencrypted" {
+query "cloudwatch_log_group_unencrypted" {
   sql = <<-EOQ
     select
       'Encryption' as label,
@@ -204,7 +204,7 @@ query "aws_cloudwatch_log_group_unencrypted" {
   param "log_group_arn" {}
 }
 
-query "aws_cloudwatch_log_group_overview" {
+query "cloudwatch_log_group_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -221,7 +221,7 @@ query "aws_cloudwatch_log_group_overview" {
   param "log_group_arn" {}
 }
 
-query "aws_cloudwatch_log_group_tags" {
+query "cloudwatch_log_group_tags" {
   sql = <<-EOQ
     with jsondata as (
       select
@@ -242,7 +242,7 @@ query "aws_cloudwatch_log_group_tags" {
   param "log_group_arn" {}
 }
 
-query "aws_cloudwatch_log_group_encryption_details" {
+query "cloudwatch_log_group_encryption_details" {
   sql = <<-EOQ
     select
        case when kms_key_id is not null then 'Enabled' else 'Disabled' end as "Encryption",
@@ -256,8 +256,8 @@ query "aws_cloudwatch_log_group_encryption_details" {
   param "log_group_arn" {}
 }
 
-node "aws_cloudwatch_log_group_node" {
-  category = category.aws_cloudwatch_log_group
+node "cloudwatch_log_group_node" {
+  category = category.cloudwatch_log_group
 
   sql = <<-EOQ
     select
@@ -279,8 +279,8 @@ node "aws_cloudwatch_log_group_node" {
   param "log_group_arn" {}
 }
 
-node "aws_cloudwatch_log_group_to_kms_key_node" {
-  category = category.aws_kms_key
+node "cloudwatch_log_group_to_kms_key_node" {
+  category = category.kms_key
 
   sql = <<-EOQ
     select
@@ -303,7 +303,7 @@ node "aws_cloudwatch_log_group_to_kms_key_node" {
   param "log_group_arn" {}
 }
 
-edge "aws_cloudwatch_log_group_to_kms_key_edge" {
+edge "cloudwatch_log_group_to_kms_key_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -321,8 +321,8 @@ edge "aws_cloudwatch_log_group_to_kms_key_edge" {
   param "log_group_arn" {}
 }
 
-node "aws_cloudwatch_log_group_from_cloudtrail_trail_node" {
-  category = category.aws_cloudtrail_trail
+node "cloudwatch_log_group_from_cloudtrail_trail_node" {
+  category = category.cloudtrail_trail
 
   sql = <<-EOQ
     select
@@ -343,7 +343,7 @@ node "aws_cloudwatch_log_group_from_cloudtrail_trail_node" {
   param "log_group_arn" {}
 }
 
-edge "aws_cloudwatch_log_group_from_cloudtrail_trail_edge" {
+edge "cloudwatch_log_group_from_cloudtrail_trail_edge" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -359,8 +359,8 @@ edge "aws_cloudwatch_log_group_from_cloudtrail_trail_edge" {
   param "log_group_arn" {}
 }
 
-node "aws_cloudwatch_log_group_from_lambda_function_node" {
-  category = category.aws_lambda_function
+node "cloudwatch_log_group_from_lambda_function_node" {
+  category = category.lambda_function
 
   sql = <<-EOQ
     select
@@ -385,7 +385,7 @@ node "aws_cloudwatch_log_group_from_lambda_function_node" {
   param "log_group_arn" {}
 }
 
-edge "aws_cloudwatch_log_group_from_lambda_function_edge" {
+edge "cloudwatch_log_group_from_lambda_function_edge" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -404,8 +404,8 @@ edge "aws_cloudwatch_log_group_from_lambda_function_edge" {
   param "log_group_arn" {}
 }
 
-node "aws_cloudwatch_log_group_from_vpc_flow_logs_node" {
-  category = category.aws_vpc_flow_log
+node "cloudwatch_log_group_from_vpc_flow_logs_node" {
+  category = category.vpc_flow_log
 
   sql = <<-EOQ
     select
@@ -429,7 +429,7 @@ node "aws_cloudwatch_log_group_from_vpc_flow_logs_node" {
   param "log_group_arn" {}
 }
 
-edge "aws_cloudwatch_log_group_from_vpc_flow_logs_edge" {
+edge "cloudwatch_log_group_from_vpc_flow_logs_edge" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -447,8 +447,8 @@ edge "aws_cloudwatch_log_group_from_vpc_flow_logs_edge" {
   param "log_group_arn" {}
 }
 
-node "aws_cloudwatch_log_group_from_kinesis_stream_node" {
-  category = category.aws_kinesis_stream
+node "cloudwatch_log_group_from_kinesis_stream_node" {
+  category = category.kinesis_stream
 
   sql = <<-EOQ
     select
@@ -473,7 +473,7 @@ node "aws_cloudwatch_log_group_from_kinesis_stream_node" {
   param "log_group_arn" {}
 }
 
-edge "aws_cloudwatch_log_group_from_kinesis_stream_edge" {
+edge "cloudwatch_log_group_from_kinesis_stream_edge" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -492,8 +492,8 @@ edge "aws_cloudwatch_log_group_from_kinesis_stream_edge" {
   param "log_group_arn" {}
 }
 
-node "aws_cloudwatch_log_group_to_log_metric_filter_node" {
-  category = category.aws_cloudwatch_log_metric_filter
+node "cloudwatch_log_group_to_log_metric_filter_node" {
+  category = category.cloudwatch_log_metric_filter
 
   sql = <<-EOQ
     select
@@ -518,7 +518,7 @@ node "aws_cloudwatch_log_group_to_log_metric_filter_node" {
   param "log_group_arn" {}
 }
 
-edge "aws_cloudwatch_log_group_to_log_metric_filter_edge" {
+edge "cloudwatch_log_group_to_log_metric_filter_edge" {
   title = "metric filter"
 
   sql = <<-EOQ
@@ -537,8 +537,8 @@ edge "aws_cloudwatch_log_group_to_log_metric_filter_edge" {
   param "log_group_arn" {}
 }
 
-node "aws_cloudwatch_log_group_nodes" {
-  category = category.aws_cloudwatch_log_group
+node "cloudwatch_log_group" {
+  category = category.cloudwatch_log_group
 
   sql = <<-EOQ
     select
@@ -557,5 +557,5 @@ node "aws_cloudwatch_log_group_nodes" {
       arn = any($1 ::text[]);
   EOQ
 
-  param "log_group_arns" {}
+  param "cloudwatch_log_group_arns" {}
 }

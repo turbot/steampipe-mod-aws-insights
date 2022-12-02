@@ -1,4 +1,4 @@
-dashboard "aws_s3_bucket_detail" {
+dashboard "s3_bucket_detail" {
 
   title         = "AWS S3 Bucket Detail"
   documentation = file("./dashboards/s3/docs/s3_bucket_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_s3_bucket_detail" {
 
   input "bucket_arn" {
     title = "Select a bucket:"
-    query = query.aws_s3_bucket_input
+    query = query.s3_bucket_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "aws_s3_bucket_detail" {
 
     card {
       width = 2
-      query = query.aws_s3_bucket_public
+      query = query.s3_bucket_public
       args = {
         arn = self.input.bucket_arn.value
       }
@@ -25,14 +25,14 @@ dashboard "aws_s3_bucket_detail" {
 
     card {
       width = 2
-      query = query.aws_s3_bucket_versioning
+      query = query.s3_bucket_versioning
       args = {
         arn = self.input.bucket_arn.value
       }
     }
 
     card {
-      query = query.aws_s3_bucket_logging_enabled
+      query = query.s3_bucket_logging_enabled
       width = 2
       args = {
         arn = self.input.bucket_arn.value
@@ -41,7 +41,7 @@ dashboard "aws_s3_bucket_detail" {
 
     card {
       width = 2
-      query = query.aws_s3_bucket_encryption
+      query = query.s3_bucket_encryption
       args = {
         arn = self.input.bucket_arn.value
       }
@@ -49,7 +49,7 @@ dashboard "aws_s3_bucket_detail" {
 
     card {
       width = 2
-      query = query.aws_s3_bucket_cross_region_replication
+      query = query.s3_bucket_cross_region_replication
       args = {
         arn = self.input.bucket_arn.value
       }
@@ -57,7 +57,7 @@ dashboard "aws_s3_bucket_detail" {
 
     card {
       width = 2
-      query = query.aws_s3_bucket_https_enforce
+      query = query.s3_bucket_https_enforce
       args = {
         arn = self.input.bucket_arn.value
       }
@@ -87,7 +87,7 @@ dashboard "aws_s3_bucket_detail" {
         args = [self.input.bucket_arn.value]
       }
 
-      with "albs" {
+      with "ec2_application_load_balancers" {
         sql = <<-EOQ
           select
             alb.arn as alb_arn
@@ -104,7 +104,7 @@ dashboard "aws_s3_bucket_detail" {
         args = [self.input.bucket_arn.value]
       }
 
-      with "nlbs" {
+      with "ec2_network_load_balancers" {
         sql = <<-EOQ
           select
             nlb.arn as nlb_arn
@@ -121,7 +121,7 @@ dashboard "aws_s3_bucket_detail" {
         args = [self.input.bucket_arn.value]
       }
 
-      with "clbs" {
+      with "ec2_classic_load_balancers" {
         sql = <<-EOQ
           select
             clb.arn as clb_arn
@@ -136,7 +136,7 @@ dashboard "aws_s3_bucket_detail" {
         args = [self.input.bucket_arn.value]
       }
 
-      with "keys" {
+      with "kms_keys" {
         sql = <<-EOQ
           select
             k.arn as key_arn
@@ -152,7 +152,7 @@ dashboard "aws_s3_bucket_detail" {
         args = [self.input.bucket_arn.value]
       }
 
-      with "functions" {
+      with "lambda_functions" {
         sql = <<-EOQ
           select
             f.arn as function_arn
@@ -168,7 +168,7 @@ dashboard "aws_s3_bucket_detail" {
         args = [self.input.bucket_arn.value]
       }
 
-      with "topics" {
+      with "sns_topics" {
         sql = <<-EOQ
           select
             q.topic_arn as topic_arn
@@ -188,7 +188,7 @@ dashboard "aws_s3_bucket_detail" {
         args = [self.input.bucket_arn.value]
       }
 
-      with "queues" {
+      with "sqs_queues" {
         sql = <<-EOQ
           select
             q.queue_arn as queue_arn
@@ -209,44 +209,42 @@ dashboard "aws_s3_bucket_detail" {
       }
 
       nodes = [
-        node.aws_s3_bucket_nodes,
-        node.aws_cloudtrail_trail_nodes,
-        node.aws_ec2_application_load_balancer_nodes,
-        node.aws_ec2_network_load_balancer_nodes,
-        node.aws_ec2_classic_load_balancer_nodes,
-        node.aws_kms_key_nodes,
-        node.aws_lambda_function_nodes,
-        node.aws_sns_topic_nodes,
-        node.aws_sqs_queue_nodes,
-        node.aws_s3_bucket_from_s3_bucket_nodes,
-        node.aws_s3_bucket_to_s3_bucket_nodes
-        # node.aws_s3_bucket_from_s3_access_point_node,
+        node.s3_bucket,
+        node.cloudtrail_trail,
+        node.ec2_application_load_balancer,
+        node.ec2_network_load_balancer,
+        node.ec2_classic_load_balancer,
+        node.kms_key,
+        node.lambda_function,
+        node.sns_topic,
+        node.sqs_queue,
+        node.s3_bucket_from_s3_bucket,
+        node.s3_bucket_to_s3_bucket
       ]
 
       edges = [
-        edge.aws_s3_bucket_from_cloudtrail_trail_edges,
-        edge.aws_s3_bucket_from_ec2_alb_edges,
-        edge.aws_s3_bucket_from_ec2_nlb_edges,
-        edge.aws_s3_bucket_from_ec2_clb_edges,
-        edge.aws_s3_bucket_to_kms_key_edges,
-        edge.aws_s3_bucket_to_lambda_function_edges,
-        edge.aws_s3_bucket_to_sns_topic_edges,
-        edge.aws_s3_bucket_to_sqs_queue_edges,
-        edge.aws_s3_bucket_from_s3_bucket_edges,
-        edge.aws_s3_bucket_to_s3_bucket_edges
-        # #edge.aws_s3_bucket_from_s3_access_point_edge,
+        edge.s3_bucket_from_cloudtrail_trail,
+        edge.s3_bucket_from_ec2_alb,
+        edge.s3_bucket_from_ec2_nlb,
+        edge.s3_bucket_from_ec2_clb,
+        edge.s3_bucket_to_kms_key,
+        edge.s3_bucket_to_lambda_function,
+        edge.s3_bucket_to_sns_topic,
+        edge.s3_bucket_to_sqs_queue,
+        edge.s3_bucket_from_s3_bucket,
+        edge.s3_bucket_to_s3_bucket
       ]
 
       args = {
-        bucket_arns   = [self.input.bucket_arn.value]
-        trail_arns    = with.trails.rows[*].trail_arn
-        alb_arns      = with.albs.rows[*].alb_arn
-        nlb_arns      = with.nlbs.rows[*].nlb_arn
-        clb_arns      = with.clbs.rows[*].clb_arn
-        key_arns      = with.keys.rows[*].key_arn
-        function_arns = with.functions.rows[*].function_arn
-        topic_arns    = with.topics.rows[*].topic_arn
-        queue_arns    = with.queues.rows[*].queue_arn
+        s3_bucket_arns                     = [self.input.bucket_arn.value]
+        cloudtrail_trail_arns              = with.trails.rows[*].trail_arn
+        ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
+        ec2_network_load_balancer_arns     = with.ec2_network_load_balancers.rows[*].nlb_arn
+        ec2_classic_load_balancer_arns     = with.ec2_classic_load_balancers.rows[*].clb_arn
+        kms_key_arns                       = with.kms_keys.rows[*].key_arn
+        lambda_function_arns               = with.lambda_functions.rows[*].function_arn
+        sns_topic_arns                     = with.sns_topics.rows[*].topic_arn
+        sqs_queue_arns                     = with.sqs_queues.rows[*].queue_arn
       }
     }
   }
@@ -260,7 +258,7 @@ dashboard "aws_s3_bucket_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_s3_bucket_overview
+        query = query.s3_bucket_overview
         args = {
           arn = self.input.bucket_arn.value
         }
@@ -270,7 +268,7 @@ dashboard "aws_s3_bucket_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_s3_bucket_tags_detail
+        query = query.s3_bucket_tags_detail
         param "arn" {}
         args = {
           arn = self.input.bucket_arn.value
@@ -283,7 +281,7 @@ dashboard "aws_s3_bucket_detail" {
 
       table {
         title = "Public Access"
-        query = query.aws_s3_bucket_public_access
+        query = query.s3_bucket_public_access
         args = {
           arn = self.input.bucket_arn.value
         }
@@ -291,7 +289,7 @@ dashboard "aws_s3_bucket_detail" {
 
       table {
         title = "Logging"
-        query = query.aws_s3_bucket_logging
+        query = query.s3_bucket_logging
         args = {
           arn = self.input.bucket_arn.value
         }
@@ -303,7 +301,7 @@ dashboard "aws_s3_bucket_detail" {
       width = 12
       table {
         title = "Policy"
-        query = query.aws_s3_bucket_policy
+        query = query.s3_bucket_policy
         args = {
           arn = self.input.bucket_arn.value
         }
@@ -314,7 +312,7 @@ dashboard "aws_s3_bucket_detail" {
       width = 12
       table {
         title = "Lifecycle Rules"
-        query = query.aws_s3_bucket_lifecycle_policy
+        query = query.s3_bucket_lifecycle_policy
         args = {
           arn = self.input.bucket_arn.value
         }
@@ -325,7 +323,7 @@ dashboard "aws_s3_bucket_detail" {
       width = 12
       table {
         title = "Server Side Encryption"
-        query = query.aws_s3_bucket_server_side_encryption
+        query = query.s3_bucket_server_side_encryption
         args = {
           arn = self.input.bucket_arn.value
         }
@@ -336,7 +334,7 @@ dashboard "aws_s3_bucket_detail" {
 
 }
 
-query "aws_s3_bucket_input" {
+query "s3_bucket_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -352,8 +350,8 @@ query "aws_s3_bucket_input" {
   EOQ
 }
 
-node "aws_s3_bucket_nodes" {
-  category = category.aws_s3_bucket
+node "s3_bucket" {
+  category = category.s3_bucket
 
   sql = <<-EOQ
     select
@@ -371,10 +369,10 @@ node "aws_s3_bucket_nodes" {
       arn = any($1);
   EOQ
 
-  param "bucket_arns" {}
+  param "s3_bucket_arns" {}
 }
 
-edge "aws_s3_bucket_from_cloudtrail_trail_edges" {
+edge "s3_bucket_from_cloudtrail_trail" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -386,11 +384,11 @@ edge "aws_s3_bucket_from_cloudtrail_trail_edges" {
       unnest($2::text[]) as trail_arn
   EOQ
 
-  param "bucket_arns" {}
-  param "trail_arns" {}
+  param "s3_bucket_arns" {}
+  param "cloudtrail_trail_arns" {}
 }
 
-edge "aws_s3_bucket_from_ec2_alb_edges" {
+edge "s3_bucket_from_ec2_alb" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -402,11 +400,11 @@ edge "aws_s3_bucket_from_ec2_alb_edges" {
       unnest($2::text[]) as alb_arn
   EOQ
 
-  param "bucket_arns" {}
-  param "alb_arns" {}
+  param "s3_bucket_arns" {}
+  param "ec2_application_load_balancer_arns" {}
 }
 
-edge "aws_s3_bucket_from_ec2_nlb_edges" {
+edge "s3_bucket_from_ec2_nlb" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -418,11 +416,11 @@ edge "aws_s3_bucket_from_ec2_nlb_edges" {
       unnest($2::text[]) as nlb_arn
   EOQ
 
-  param "bucket_arns" {}
-  param "nlb_arns" {}
+  param "s3_bucket_arns" {}
+  param "ec2_network_load_balancer_arns" {}
 }
 
-edge "aws_s3_bucket_from_ec2_clb_edges" {
+edge "s3_bucket_from_ec2_clb" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -434,12 +432,12 @@ edge "aws_s3_bucket_from_ec2_clb_edges" {
       unnest($2::text[]) as clb_arn
   EOQ
 
-  param "bucket_arns" {}
-  param "clb_arns" {}
+  param "s3_bucket_arns" {}
+  param "ec2_classic_load_balancer_arns" {}
 }
 
-node "aws_s3_bucket_to_lambda_function_node" {
-  category = category.aws_lambda_function
+node "s3_bucket_to_lambda_function_node" {
+  category = category.lambda_function
 
   sql = <<-EOQ
     select
@@ -464,7 +462,7 @@ node "aws_s3_bucket_to_lambda_function_node" {
   param "arn" {}
 }
 
-edge "aws_s3_bucket_to_lambda_function_edges" {
+edge "s3_bucket_to_lambda_function" {
   title = "triggers"
 
   sql = <<-EOQ
@@ -476,11 +474,11 @@ edge "aws_s3_bucket_to_lambda_function_edges" {
       unnest($2::text[]) as function_arn
   EOQ
 
-  param "bucket_arns" {}
-  param "function_arns" {}
+  param "s3_bucket_arns" {}
+  param "lambda_function_arns" {}
 }
 
-edge "aws_s3_bucket_to_sns_topic_edges" {
+edge "s3_bucket_to_sns_topic" {
   title = "notifies"
 
   sql = <<-EOQ
@@ -492,11 +490,11 @@ edge "aws_s3_bucket_to_sns_topic_edges" {
       unnest($2::text[]) as topic_arn
   EOQ
 
-  param "bucket_arns" {}
-  param "topic_arns" {}
+  param "s3_bucket_arns" {}
+  param "sns_topic_arns" {}
 }
 
-edge "aws_s3_bucket_to_sqs_queue_edges" {
+edge "s3_bucket_to_sqs_queue" {
   title = "queues"
 
   sql = <<-EOQ
@@ -508,11 +506,11 @@ edge "aws_s3_bucket_to_sqs_queue_edges" {
       unnest($2::text[]) as queue_arn
   EOQ
 
-  param "bucket_arns" {}
-  param "queue_arns" {}
+  param "s3_bucket_arns" {}
+  param "sqs_queue_arns" {}
 }
 
-edge "aws_s3_bucket_to_kms_key_edges" {
+edge "s3_bucket_to_kms_key" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -524,12 +522,12 @@ edge "aws_s3_bucket_to_kms_key_edges" {
       unnest($2::text[]) as key_arn
   EOQ
 
-  param "bucket_arns" {}
-  param "key_arns" {}
+  param "s3_bucket_arns" {}
+  param "kms_key_arns" {}
 }
 
-node "aws_s3_bucket_from_s3_bucket_nodes" {
-  category = category.aws_s3_bucket
+node "s3_bucket_from_s3_bucket" {
+  category = category.s3_bucket
 
   sql = <<-EOQ
     select
@@ -549,10 +547,10 @@ node "aws_s3_bucket_from_s3_bucket_nodes" {
       and lb.logging ->> 'TargetBucket' = b.name;
   EOQ
 
-  param "bucket_arns" {}
+  param "s3_bucket_arns" {}
 }
 
-edge "aws_s3_bucket_from_s3_bucket_edges" {
+edge "s3_bucket_from_s3_bucket" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -567,11 +565,11 @@ edge "aws_s3_bucket_from_s3_bucket_edges" {
       and lb.logging ->> 'TargetBucket' = b.name;
   EOQ
 
-  param "bucket_arns" {}
+  param "s3_bucket_arns" {}
 }
 
-node "aws_s3_bucket_to_s3_bucket_nodes" {
-  category = category.aws_s3_bucket
+node "s3_bucket_to_s3_bucket" {
+  category = category.s3_bucket
 
   sql = <<-EOQ
     select
@@ -591,10 +589,10 @@ node "aws_s3_bucket_to_s3_bucket_nodes" {
       and lb.name = b.logging ->> 'TargetBucket';
   EOQ
 
-  param "bucket_arns" {}
+  param "s3_bucket_arns" {}
 }
 
-edge "aws_s3_bucket_to_s3_bucket_edges" {
+edge "s3_bucket_to_s3_bucket" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -609,54 +607,10 @@ edge "aws_s3_bucket_to_s3_bucket_edges" {
       and lb.name = b.logging ->> 'TargetBucket';
   EOQ
 
-  param "bucket_arns" {}
+  param "s3_bucket_arns" {}
 }
 
-node "aws_s3_bucket_from_s3_access_point_node" {
-  category = category.aws_s3_access_point
-
-  sql = <<-EOQ
-    select
-      ap.access_point_arn as id,
-      ap.title as title,
-      jsonb_build_object(
-        'Name', ap.name,
-        'ARN', ap.access_point_arn,
-        'Account ID', ap.account_id,
-        'Region', ap.region
-      ) as properties
-    from
-      aws_s3_access_point ap,
-      aws_s3_bucket as b
-    where
-      b.arn = any($1)
-      and ap.bucket_name = b.name
-      and ap.region = b.region;
-  EOQ
-
-  param "bucket_arns" {}
-}
-
-edge "aws_s3_bucket_from_s3_access_point_edge" {
-  title = "access point"
-
-  sql = <<-EOQ
-    select
-      ap.access_point_arn as from_id,
-      b.arn as to_id
-    from
-      aws_s3_access_point ap,
-      aws_s3_bucket as b
-    where
-      b.arn = $1
-      and ap.bucket_name = b.name
-      and ap.region = b.region;
-  EOQ
-
-  param "arn" {}
-}
-
-query "aws_s3_bucket_versioning" {
+query "s3_bucket_versioning" {
   sql = <<-EOQ
     select
       'Versioning' as label,
@@ -671,7 +625,7 @@ query "aws_s3_bucket_versioning" {
   param "arn" {}
 }
 
-query "aws_s3_bucket_public" {
+query "s3_bucket_public" {
   sql = <<-EOQ
     select
       'Public Access' as label,
@@ -686,7 +640,7 @@ query "aws_s3_bucket_public" {
   param "arn" {}
 }
 
-query "aws_s3_bucket_logging_enabled" {
+query "s3_bucket_logging_enabled" {
   sql = <<-EOQ
     select
       'Logging' as label,
@@ -701,7 +655,7 @@ query "aws_s3_bucket_logging_enabled" {
   param "arn" {}
 }
 
-query "aws_s3_bucket_encryption" {
+query "s3_bucket_encryption" {
   sql = <<-EOQ
     select
       'Encryption' as label,
@@ -716,7 +670,7 @@ query "aws_s3_bucket_encryption" {
   param "arn" {}
 }
 
-query "aws_s3_bucket_cross_region_replication" {
+query "s3_bucket_cross_region_replication" {
   sql = <<-EOQ
     with bucket_with_replication as (
       select
@@ -740,7 +694,7 @@ query "aws_s3_bucket_cross_region_replication" {
   param "arn" {}
 }
 
-query "aws_s3_bucket_https_enforce" {
+query "s3_bucket_https_enforce" {
   sql = <<-EOQ
     with ssl_ok as (
       select
@@ -773,7 +727,7 @@ query "aws_s3_bucket_https_enforce" {
   param "arn" {}
 }
 
-query "aws_s3_bucket_overview" {
+query "s3_bucket_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -791,7 +745,7 @@ query "aws_s3_bucket_overview" {
   param "arn" {}
 }
 
-query "aws_s3_bucket_tags_detail" {
+query "s3_bucket_tags_detail" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -808,7 +762,7 @@ query "aws_s3_bucket_tags_detail" {
   param "arn" {}
 }
 
-query "aws_s3_bucket_server_side_encryption" {
+query "s3_bucket_server_side_encryption" {
   sql = <<-EOQ
     select
       rules -> 'ApplyServerSideEncryptionByDefault' -> 'KMSMasterKeyID' as "KMS Master Key ID",
@@ -824,7 +778,7 @@ query "aws_s3_bucket_server_side_encryption" {
   param "arn" {}
 }
 
-query "aws_s3_bucket_logging" {
+query "s3_bucket_logging" {
   sql = <<-EOQ
     select
       logging ->> 'TargetBucket' as "Target Bucket",
@@ -839,7 +793,7 @@ query "aws_s3_bucket_logging" {
   param "arn" {}
 }
 
-query "aws_s3_bucket_public_access" {
+query "s3_bucket_public_access" {
   sql = <<-EOQ
     select
       bucket_policy_is_public as "Has Public Bucket Policy",
@@ -856,7 +810,7 @@ query "aws_s3_bucket_public_access" {
   param "arn" {}
 }
 
-query "aws_s3_bucket_policy" {
+query "s3_bucket_policy" {
   sql = <<-EOQ
     select
       p ->> 'Sid' as "SID",
@@ -876,7 +830,7 @@ query "aws_s3_bucket_policy" {
   param "arn" {}
 }
 
-query "aws_s3_bucket_lifecycle_policy" {
+query "s3_bucket_lifecycle_policy" {
   sql = <<-EOQ
     select
       r ->> 'ID' as "ID",

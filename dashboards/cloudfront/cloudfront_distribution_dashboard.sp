@@ -1,4 +1,4 @@
-dashboard "aws_cloudfront_distribution_dashboard" {
+dashboard "cloudfront_distribution_dashboard" {
 
   title         = "AWS CloudFront Distribution Dashboard"
   documentation = file("./dashboards/cloudfront/docs/cloudfront_distribution_dashboard.md")
@@ -11,27 +11,27 @@ dashboard "aws_cloudfront_distribution_dashboard" {
 
     # Analysis
     card {
-      query = query.aws_cloudfront_distribution_count
+      query = query.cloudfront_distribution_count
       width = 2
     }
 
     card {
-      query = query.aws_cloudfront_distribution_logging_disabled
+      query = query.cloudfront_distribution_logging_disabled
       width = 2
     }
 
     card {
-      query = query.aws_cloudfront_distribution_sni_disabled
+      query = query.cloudfront_distribution_sni_disabled
       width = 2
     }
 
     card {
-      query = query.aws_cloudfront_distribution_encryption_in_transit_disabled
+      query = query.cloudfront_distribution_encryption_in_transit_disabled
       width = 2
     }
 
     card {
-      query = query.aws_cloudfront_distribution_waf_disabled
+      query = query.cloudfront_distribution_waf_disabled
       width = 2
     }
 
@@ -43,7 +43,7 @@ dashboard "aws_cloudfront_distribution_dashboard" {
 
     chart {
       title = "Logging Status"
-      query   = query.aws_cloudfront_distribution_logging_status
+      query   = query.cloudfront_distribution_logging_status
       type  = "donut"
       width = 3
 
@@ -59,7 +59,7 @@ dashboard "aws_cloudfront_distribution_dashboard" {
 
     chart {
       title = "SNI Status"
-      query   = query.aws_cloudfront_distribution_sni_status
+      query   = query.cloudfront_distribution_sni_status
       type  = "donut"
       width = 3
 
@@ -75,7 +75,7 @@ dashboard "aws_cloudfront_distribution_dashboard" {
 
     chart {
       title = "Encryption in Transit Status"
-      query   = query.aws_cloudfront_distribution_encryption_in_transit_status
+      query   = query.cloudfront_distribution_encryption_in_transit_status
       type  = "donut"
       width = 3
 
@@ -91,7 +91,7 @@ dashboard "aws_cloudfront_distribution_dashboard" {
 
     chart {
       title = "WAF Status"
-      query   = query.aws_cloudfront_distribution_waf_status
+      query   = query.cloudfront_distribution_waf_status
       type  = "donut"
       width = 3
 
@@ -113,14 +113,14 @@ dashboard "aws_cloudfront_distribution_dashboard" {
 
     chart {
       title = "Distributions by Account"
-      query = query.aws_cloudfront_distribution_by_account
+      query = query.cloudfront_distribution_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Distributions by Status"
-      query = query.aws_cloudfront_distribution_by_status
+      query = query.cloudfront_distribution_by_status
       type  = "column"
       width = 4
     }
@@ -131,13 +131,13 @@ dashboard "aws_cloudfront_distribution_dashboard" {
 
 # Card Queries
 
-query "aws_cloudfront_distribution_count" {
+query "cloudfront_distribution_count" {
   sql = <<-EOQ
     select count(*) as "Distributions" from aws_cloudfront_distribution;
   EOQ
 }
 
-query "aws_cloudfront_distribution_logging_disabled" {
+query "cloudfront_distribution_logging_disabled" {
   sql = <<-EOQ
     select
       'Logging Disabled' as label,
@@ -150,7 +150,7 @@ query "aws_cloudfront_distribution_logging_disabled" {
   EOQ
 }
 
-query "aws_cloudfront_distribution_sni_disabled" {
+query "cloudfront_distribution_sni_disabled" {
   sql = <<-EOQ
     select
       'SNI Disabled' as label,
@@ -163,7 +163,7 @@ query "aws_cloudfront_distribution_sni_disabled" {
   EOQ
 }
 
-query "aws_cloudfront_distribution_encryption_in_transit_disabled" {
+query "cloudfront_distribution_encryption_in_transit_disabled" {
   sql = <<-EOQ
     select
       'Encryption in Transit Disabled' as label,
@@ -176,7 +176,7 @@ query "aws_cloudfront_distribution_encryption_in_transit_disabled" {
   EOQ
 }
 
-query "aws_cloudfront_distribution_waf_disabled" {
+query "cloudfront_distribution_waf_disabled" {
   sql = <<-EOQ
     select
       'WAF Disabled' as label,
@@ -191,7 +191,7 @@ query "aws_cloudfront_distribution_waf_disabled" {
 
 # Assessments
 
-query "aws_cloudfront_distribution_logging_status" {
+query "cloudfront_distribution_logging_status" {
   sql = <<-EOQ
     select
       logging_status,
@@ -209,7 +209,7 @@ query "aws_cloudfront_distribution_logging_status" {
   EOQ
 }
 
-query "aws_cloudfront_distribution_sni_status" {
+query "cloudfront_distribution_sni_status" {
   sql = <<-EOQ
     select
       sni_status,
@@ -227,7 +227,7 @@ query "aws_cloudfront_distribution_sni_status" {
   EOQ
 }
 
-query "aws_cloudfront_distribution_encryption_in_transit_status" {
+query "cloudfront_distribution_encryption_in_transit_status" {
   sql = <<-EOQ
     select
       eit_status,
@@ -245,7 +245,7 @@ query "aws_cloudfront_distribution_encryption_in_transit_status" {
   EOQ
 }
 
-query "aws_cloudfront_distribution_waf_status" {
+query "cloudfront_distribution_waf_status" {
   sql = <<-EOQ
     select
       case when web_acl_id = '' then 'Disabled' else 'Enabled' end as waf_status,
@@ -261,7 +261,7 @@ query "aws_cloudfront_distribution_waf_status" {
 
 # Analysis
 
-query "aws_cloudfront_distribution_by_account" {
+query "cloudfront_distribution_by_account" {
   sql = <<-EOQ
     select
       a.title as "Account",
@@ -278,7 +278,7 @@ query "aws_cloudfront_distribution_by_account" {
   EOQ
 }
 
-query "aws_cloudfront_distribution_by_status" {
+query "cloudfront_distribution_by_status" {
   sql = <<-EOQ
     select
       case when enabled then 'Enabled' else 'Disabled' end as "Status",

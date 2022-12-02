@@ -1,4 +1,4 @@
-dashboard "aws_kms_key_detail" {
+dashboard "kms_key_detail" {
 
   title         = "AWS KMS Key Detail"
   documentation = file("./dashboards/kms/docs/kms_key_detail.md")
@@ -10,7 +10,7 @@ dashboard "aws_kms_key_detail" {
 
   input "key_arn" {
     title = "Select a key:"
-    query = query.aws_kms_key_input
+    query = query.kms_key_input
     width = 4
   }
 
@@ -18,7 +18,7 @@ dashboard "aws_kms_key_detail" {
 
     card {
       width = 2
-      query = query.aws_kms_key_type
+      query = query.kms_key_type
       args = {
         arn = self.input.key_arn.value
       }
@@ -26,7 +26,7 @@ dashboard "aws_kms_key_detail" {
 
     card {
       width = 2
-      query = query.aws_kms_key_origin
+      query = query.kms_key_origin
       args = {
         arn = self.input.key_arn.value
       }
@@ -34,7 +34,7 @@ dashboard "aws_kms_key_detail" {
 
     card {
       width = 2
-      query = query.aws_kms_key_state
+      query = query.kms_key_state
       args = {
         arn = self.input.key_arn.value
       }
@@ -42,7 +42,7 @@ dashboard "aws_kms_key_detail" {
 
     card {
       width = 2
-      query = query.aws_kms_key_rotation_enabled
+      query = query.kms_key_rotation_enabled
       args = {
         arn = self.input.key_arn.value
       }
@@ -135,7 +135,7 @@ dashboard "aws_kms_key_detail" {
         args = [self.input.key_arn.value]
       }
 
-      with "topics" {
+      with "sns_topics" {
         sql = <<-EOQ
           select
             t.topic_arn as topic_arn
@@ -151,7 +151,7 @@ dashboard "aws_kms_key_detail" {
         args = [self.input.key_arn.value]
       }
 
-      with "queues" {
+      with "sqs_queues" {
         sql = <<-EOQ
           select
             q.queue_arn as queue_arn
@@ -170,7 +170,7 @@ dashboard "aws_kms_key_detail" {
         args = [self.input.key_arn.value]
       }
 
-      with "functions" {
+      with "lambda_functions" {
         sql = <<-EOQ
           select
             l.arn as function_arn
@@ -199,7 +199,7 @@ dashboard "aws_kms_key_detail" {
 
       }
 
-      with "buckets" {
+      with "s3_buckets" {
         sql = <<-EOQ
           select
             b.arn as bucket_arn
@@ -217,49 +217,49 @@ dashboard "aws_kms_key_detail" {
       }
 
       nodes = [
-        node.aws_kms_key_nodes,
-        node.aws_kms_key_alias_nodes,
-        node.aws_cloudtrail_trail_nodes,
-        node.aws_ebs_volume_nodes,
-        node.aws_rds_db_cluster_snapshot_nodes,
-        node.aws_rds_db_cluster_nodes,
-        node.aws_redshift_cluster_nodes,
-        node.aws_sns_topic_nodes,
-        node.aws_sqs_queue_nodes,
-        node.aws_rds_db_instance_nodes,
-        node.aws_rds_db_snapshot_nodes,
-        node.aws_lambda_function_nodes,
-        node.aws_s3_bucket_nodes
+        node.kms_key,
+        node.kms_key_alias,
+        node.cloudtrail_trail,
+        node.ebs_volume,
+        node.rds_db_cluster_snapshot,
+        node.rds_db_cluster,
+        node.redshift_cluster,
+        node.sns_topic,
+        node.sqs_queue,
+        node.rds_db_instance,
+        node.rds_db_snapshot,
+        node.lambda_function,
+        node.s3_bucket
       ]
 
       edges = [
-        edge.aws_kms_key_to_kms_alias_edge,
-        edge.aws_kms_key_from_cloudtrail_trail_edges,
-        edge.aws_kms_key_from_ebs_volume_edges,
-        edge.aws_rds_db_cluster_snapshot_to_kms_key_edges,
-        edge.aws_kms_key_from_rds_db_cluster_edges,
-        edge.aws_kms_key_from_redshift_cluster_edges,
-        edge.aws_kms_key_from_sns_topic_edges,
-        edge.aws_kms_key_from_sqs_queue_edges,
-        edge.aws_rds_db_instance_to_kms_key_edge,
-        edge.aws_rds_db_snapshot_to_kms_key_edges,
-        edge.aws_kms_key_from_lambda_function_edges,
-        edge.aws_s3_bucket_to_kms_key_edges
+        edge.kms_key_to_kms_alias,
+        edge.kms_key_from_cloudtrail_trail,
+        edge.kms_key_from_ebs_volume,
+        edge.rds_db_cluster_snapshot_to_kms_key,
+        edge.kms_key_from_rds_db_cluster,
+        edge.redshift_cluster_to_kms_key,
+        edge.kms_key_from_sns_topic,
+        edge.kms_key_from_sqs_queue,
+        edge.rds_db_instance_to_kms_key,
+        edge.rds_db_snapshot_to_kms_key,
+        edge.kms_key_from_lambda_function,
+        edge.s3_bucket_to_kms_key
       ]
 
       args = {
-        key_arns                     = [self.input.key_arn.value]
-        trail_arns                   = with.trails.rows[*].trail_arn
-        volume_arns                  = with.volumes.rows[*].volume_arn
+        kms_key_arns                 = [self.input.key_arn.value]
+        cloudtrail_trail_arns        = with.trails.rows[*].trail_arn
+        ebs_volume_arns              = with.volumes.rows[*].volume_arn
         rds_db_cluster_snapshot_arns = with.rds_db_cluster_snapshots.rows[*].cluster_snapshot_arn
         rds_db_cluster_arns          = with.rds_db_clusters.rows[*].cluster_arn
         rds_db_instance_arns         = with.rds_db_instances.rows[*].db_instance_arn
         rds_db_snapshot_arns         = with.rds_db_snapshots.rows[*].db_snapshot_arn
         redshift_cluster_arns        = with.redshift_clusters.rows[*].redshift_cluster_arn
-        topic_arns                   = with.topics.rows[*].topic_arn
-        queue_arns                   = with.queues.rows[*].queue_arn
-        function_arns                = with.functions.rows[*].function_arn
-        bucket_arns                  = with.buckets.rows[*].bucket_arn
+        sns_topic_arns               = with.sns_topics.rows[*].topic_arn
+        sqs_queue_arns               = with.sqs_queues.rows[*].queue_arn
+        lambda_function_arns         = with.lambda_functions.rows[*].function_arn
+        s3_bucket_arns               = with.s3_buckets.rows[*].bucket_arn
         arn                          = self.input.key_arn.value
       }
     }
@@ -275,7 +275,7 @@ dashboard "aws_kms_key_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_kms_key_overview
+        query = query.kms_key_overview
         args = {
           arn = self.input.key_arn.value
         }
@@ -285,7 +285,7 @@ dashboard "aws_kms_key_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_kms_key_tags
+        query = query.kms_key_tags
         args = {
           arn = self.input.key_arn.value
         }
@@ -299,7 +299,7 @@ dashboard "aws_kms_key_detail" {
 
       table {
         title = "Key Age"
-        query = query.aws_kms_key_age
+        query = query.kms_key_age
         args = {
           arn = self.input.key_arn.value
         }
@@ -311,7 +311,7 @@ dashboard "aws_kms_key_detail" {
 
   table {
     title = "Policy"
-    query = query.aws_kms_key_policy
+    query = query.kms_key_policy
     args = {
       arn = self.input.key_arn.value
     }
@@ -319,7 +319,7 @@ dashboard "aws_kms_key_detail" {
 
   table {
     title = "Key Aliases"
-    query = query.aws_kms_key_aliases
+    query = query.kms_key_aliases
     args = {
       arn = self.input.key_arn.value
     }
@@ -327,7 +327,7 @@ dashboard "aws_kms_key_detail" {
 
 }
 
-query "aws_kms_key_input" {
+query "kms_key_input" {
   sql = <<-EOQ
     select
       coalesce(a.title, k.title) as label,
@@ -346,7 +346,7 @@ query "aws_kms_key_input" {
   EOQ
 }
 
-query "aws_kms_key_type" {
+query "kms_key_type" {
   sql = <<-EOQ
     select
       'Key Manager' as label,
@@ -360,7 +360,7 @@ query "aws_kms_key_type" {
   param "arn" {}
 }
 
-query "aws_kms_key_origin" {
+query "kms_key_origin" {
   sql = <<-EOQ
     select
       'Origin' as label,
@@ -374,7 +374,7 @@ query "aws_kms_key_origin" {
   param "arn" {}
 }
 
-query "aws_kms_key_state" {
+query "kms_key_state" {
   sql = <<-EOQ
     select
       'State' as label,
@@ -389,7 +389,7 @@ query "aws_kms_key_state" {
   param "arn" {}
 }
 
-query "aws_kms_key_rotation_enabled" {
+query "kms_key_rotation_enabled" {
   sql = <<-EOQ
     select
       'Key Rotation' as label,
@@ -406,7 +406,7 @@ query "aws_kms_key_rotation_enabled" {
   param "arn" {}
 }
 
-query "aws_kms_key_age" {
+query "kms_key_age" {
   sql = <<-EOQ
     select
       creation_date as "Creation Date",
@@ -421,7 +421,7 @@ query "aws_kms_key_age" {
   param "arn" {}
 }
 
-query "aws_kms_key_aliases" {
+query "kms_key_aliases" {
   sql = <<-EOQ
     select
       p ->> 'AliasArn' as "Alias Arn",
@@ -438,7 +438,7 @@ query "aws_kms_key_aliases" {
   param "arn" {}
 }
 
-query "aws_kms_key_policy" {
+query "kms_key_policy" {
   sql = <<-EOQ
     select
       p ->> 'Sid' as "Sid",
@@ -457,8 +457,8 @@ query "aws_kms_key_policy" {
   param "arn" {}
 }
 
-node "aws_kms_key_nodes" {
-  category = category.aws_kms_key
+node "kms_key" {
+  category = category.kms_key
 
   sql = <<-EOQ
     select
@@ -478,10 +478,10 @@ node "aws_kms_key_nodes" {
       arn = any($1);
   EOQ
 
-  param "key_arns" {}
+  param "kms_key_arns" {}
 }
 
-edge "aws_kms_key_from_cloudtrail_trail_edges" {
+edge "kms_key_from_cloudtrail_trail" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -493,11 +493,11 @@ edge "aws_kms_key_from_cloudtrail_trail_edges" {
       unnest($2::text[]) as trail_arn
   EOQ
 
-  param "key_arns" {}
-  param "trail_arns" {}
+  param "kms_key_arns" {}
+  param "cloudtrail_trail_arns" {}
 }
 
-edge "aws_kms_key_from_ebs_volume_edges" {
+edge "kms_key_from_ebs_volume" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -509,11 +509,11 @@ edge "aws_kms_key_from_ebs_volume_edges" {
       unnest($2::text[]) as volume_arn
   EOQ
 
-  param "key_arns" {}
-  param "volume_arns" {}
+  param "kms_key_arns" {}
+  param "ebs_volume_arns" {}
 }
 
-edge "aws_kms_key_from_rds_db_cluster_edges" {
+edge "kms_key_from_rds_db_cluster" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -525,27 +525,11 @@ edge "aws_kms_key_from_rds_db_cluster_edges" {
       unnest($2::text[]) as rds_cluster_arn
   EOQ
 
-  param "key_arns" {}
+  param "kms_key_arns" {}
   param "rds_db_cluster_arns" {}
 }
 
-edge "aws_kms_key_from_redshift_cluster_edges" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      redshift_cluster_arn as from_id,
-      key_arn as to_id
-    from
-      unnest($1::text[]) as key_arn,
-      unnest($2::text[]) as redshift_cluster_arn
-  EOQ
-
-  param "key_arns" {}
-  param "redshift_cluster_arns" {}
-}
-
-edge "aws_kms_key_from_sns_topic_edges" {
+edge "kms_key_from_sns_topic" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -557,11 +541,11 @@ edge "aws_kms_key_from_sns_topic_edges" {
       unnest($2::text[]) as topic_arn
   EOQ
 
-  param "key_arns" {}
-  param "topic_arns" {}
+  param "kms_key_arns" {}
+  param "sns_topic_arns" {}
 }
 
-edge "aws_kms_key_from_sqs_queue_edges" {
+edge "kms_key_from_sqs_queue" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -580,10 +564,10 @@ edge "aws_kms_key_from_sqs_queue_edges" {
       k.arn = any($1);
   EOQ
 
-  param "key_arns" {}
+  param "kms_key_arns" {}
 }
 
-edge "aws_kms_key_from_lambda_function_edges" {
+edge "kms_key_from_lambda_function" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -595,12 +579,12 @@ edge "aws_kms_key_from_lambda_function_edges" {
       unnest($2::text[]) as function_arn
   EOQ
 
-  param "key_arns" {}
-  param "function_arns" {}
+  param "kms_key_arns" {}
+  param "lambda_function_arns" {}
 }
 
-node "aws_kms_key_alias_nodes" {
-  category = category.aws_kms_alias
+node "kms_key_alias" {
+  category = category.kms_alias
 
   sql = <<-EOQ
     select
@@ -620,10 +604,10 @@ node "aws_kms_key_alias_nodes" {
       k.arn = any($1);
   EOQ
 
-  param "key_arns" {}
+  param "kms_key_arns" {}
 }
 
-edge "aws_kms_key_to_kms_alias_edge" {
+edge "kms_key_to_kms_alias" {
   title = "key"
 
   sql = <<-EOQ
@@ -638,10 +622,10 @@ edge "aws_kms_key_to_kms_alias_edge" {
       k.arn = any($1);
   EOQ
 
-  param "key_arns" {}
+  param "kms_key_arns" {}
 }
 
-query "aws_kms_key_overview" {
+query "kms_key_overview" {
   sql = <<-EOQ
     select
       id as "ID",
@@ -658,7 +642,7 @@ query "aws_kms_key_overview" {
   param "arn" {}
 }
 
-query "aws_kms_key_tags" {
+query "kms_key_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",

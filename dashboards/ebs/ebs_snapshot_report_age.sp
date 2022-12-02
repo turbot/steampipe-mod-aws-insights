@@ -1,4 +1,4 @@
-dashboard "aws_ebs_snapshot_age_report" {
+dashboard "ebs_snapshot_age_report" {
 
   title         = "AWS EBS Snapshot Age Report"
   documentation = file("./dashboards/ebs/docs/ebs_snapshot_report_age.md")
@@ -11,38 +11,38 @@ dashboard "aws_ebs_snapshot_age_report" {
   container {
 
     card {
-      query = query.aws_ebs_snapshot_count
+      query = query.ebs_snapshot_count
       width = 2
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_ebs_snapshot_24_hours_count
+      query = query.ebs_snapshot_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_ebs_snapshot_30_days_count
+      query = query.ebs_snapshot_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_ebs_snapshot_30_90_days_count
+      query = query.ebs_snapshot_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query = query.aws_ebs_snapshot_90_365_days_count
+      query = query.ebs_snapshot_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query = query.aws_ebs_snapshot_1_year_count
+      query = query.ebs_snapshot_1_year_count
     }
 
   }
@@ -56,12 +56,12 @@ dashboard "aws_ebs_snapshot_age_report" {
       display = "none"
     }
 
-    query = query.aws_ebs_snapshot_age_table
+    query = query.ebs_snapshot_age_table
   }
 
 }
 
-query "aws_ebs_snapshot_24_hours_count" {
+query "ebs_snapshot_24_hours_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -73,7 +73,7 @@ query "aws_ebs_snapshot_24_hours_count" {
   EOQ
 }
 
-query "aws_ebs_snapshot_30_days_count" {
+query "ebs_snapshot_30_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -85,7 +85,7 @@ query "aws_ebs_snapshot_30_days_count" {
   EOQ
 }
 
-query "aws_ebs_snapshot_30_90_days_count" {
+query "ebs_snapshot_30_90_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -97,7 +97,7 @@ query "aws_ebs_snapshot_30_90_days_count" {
   EOQ
 }
 
-query "aws_ebs_snapshot_90_365_days_count" {
+query "ebs_snapshot_90_365_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -109,7 +109,7 @@ query "aws_ebs_snapshot_90_365_days_count" {
   EOQ
 }
 
-query "aws_ebs_snapshot_1_year_count" {
+query "ebs_snapshot_1_year_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -121,7 +121,7 @@ query "aws_ebs_snapshot_1_year_count" {
   EOQ
 }
 
-query "aws_ebs_snapshot_age_table" {
+query "ebs_snapshot_age_table" {
   sql = <<-EOQ
     select
       s.snapshot_id as "Snapshot ID",

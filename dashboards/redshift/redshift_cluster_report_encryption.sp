@@ -1,4 +1,4 @@
-dashboard "aws_redshift_cluster_encryption_report" {
+dashboard "redshift_cluster_encryption_report" {
 
   title         = "AWS Redshift Cluster Encryption Report"
   documentation = file("./dashboards/redshift/docs/redshift_cluster_report_encryption.md")
@@ -11,12 +11,12 @@ dashboard "aws_redshift_cluster_encryption_report" {
   container {
 
     card {
-      query = query.aws_redshift_cluster_count
+      query = query.redshift_cluster_count
       width = 2
     }
 
     card {
-      query = query.aws_redshift_cluster_unencrypted_count
+      query = query.redshift_cluster_unencrypted_count
       width = 2
     }
   }
@@ -32,15 +32,15 @@ dashboard "aws_redshift_cluster_encryption_report" {
     }
 
     column "Cluster Identifier" {
-      href = "${dashboard.aws_redshift_cluster_detail.url_path}?input.cluster_arn={{.ARN | @uri}}"
+      href = "${dashboard.redshift_cluster_detail.url_path}?input.cluster_arn={{.ARN | @uri}}"
     }
 
-    query = query.aws_redshift_cluster_encryption_table
+    query = query.redshift_cluster_encryption_table
   }
 
 }
 
-query "aws_redshift_cluster_encryption_table" {
+query "redshift_cluster_encryption_table" {
   sql = <<-EOQ
     select
       c.cluster_identifier as "Cluster Identifier",

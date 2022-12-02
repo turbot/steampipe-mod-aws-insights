@@ -1,4 +1,4 @@
-dashboard "aws_ecs_cluster_detail" {
+dashboard "ecs_cluster_detail" {
 
   title         = "AWS ECS Cluster Detail"
   documentation = file("./dashboards/ecs/docs/ecs_cluster_detail.md")
@@ -9,14 +9,14 @@ dashboard "aws_ecs_cluster_detail" {
 
   input "ecs_cluster_arn" {
     title = "Select a cluster:"
-    query = query.aws_ecs_cluster_input
+    query = query.ecs_cluster_input
     width = 4
   }
 
   container {
 
     card {
-      query = query.aws_ecs_cluster_status
+      query = query.ecs_cluster_status
       width = 2
       args = {
         arn = self.input.ecs_cluster_arn.value
@@ -24,7 +24,7 @@ dashboard "aws_ecs_cluster_detail" {
     }
 
     card {
-      query = query.aws_ecs_cluster_registered_container_instances_count
+      query = query.ecs_cluster_registered_container_instances_count
       width = 2
       args = {
         arn = self.input.ecs_cluster_arn.value
@@ -32,7 +32,7 @@ dashboard "aws_ecs_cluster_detail" {
     }
 
     card {
-      query = query.aws_ecs_cluster_active_services_count
+      query = query.ecs_cluster_active_services_count
       width = 2
       args = {
         arn = self.input.ecs_cluster_arn.value
@@ -40,7 +40,7 @@ dashboard "aws_ecs_cluster_detail" {
     }
 
     card {
-      query = query.aws_ecs_cluster_running_tasks_count
+      query = query.ecs_cluster_running_tasks_count
       width = 2
       args = {
         arn = self.input.ecs_cluster_arn.value
@@ -48,7 +48,7 @@ dashboard "aws_ecs_cluster_detail" {
     }
 
     card {
-      query = query.aws_ecs_cluster_pending_tasks_count
+      query = query.ecs_cluster_pending_tasks_count
       width = 2
       args = {
         arn = self.input.ecs_cluster_arn.value
@@ -56,7 +56,7 @@ dashboard "aws_ecs_cluster_detail" {
     }
 
     card {
-      query = query.aws_ecs_cluster_container_insights_enabled
+      query = query.ecs_cluster_container_insights_enabled
       width = 2
       args = {
         arn = self.input.ecs_cluster_arn.value
@@ -74,30 +74,30 @@ dashboard "aws_ecs_cluster_detail" {
 
 
       nodes = [
-        node.aws_ecs_cluster_node,
-        node.aws_ecs_cluster_to_ec2_launch_type_node,
-        node.aws_ecs_cluster_to_fargate_launch_type_node,
-        node.aws_ecs_cluster_to_external_launch_type_node,
-        node.aws_ecs_cluster_to_ecs_task_definition_node,
-        node.aws_ecs_cluster_to_ecs_service_node,
-        node.aws_ecs_cluster_to_ecs_container_instance_node,
-        node.aws_ecs_cluster_ecs_container_instance_to_vpc_subnet_node,
-        node.aws_ecs_cluster_vpc_subnet_to_vpc_node,
-        node.aws_ecs_cluster_ecs_service_to_vpc_subnet_node,
-        node.aws_ecs_cluster_ecs_service_subnet_to_vpc_node
+        node.ecs_cluster_node,
+        node.ecs_cluster_to_ec2_launch_type_node,
+        node.ecs_cluster_to_fargate_launch_type_node,
+        node.ecs_cluster_to_external_launch_type_node,
+        node.ecs_cluster_to_ecs_task_definition_node,
+        node.ecs_cluster_to_ecs_service_node,
+        node.ecs_cluster_to_ecs_container_instance_node,
+        node.ecs_cluster_ecs_container_instance_to_vpc_subnet_node,
+        node.ecs_cluster_vpc_subnet_to_vpc_node,
+        node.ecs_cluster_ecs_service_to_vpc_subnet_node,
+        node.ecs_cluster_ecs_service_subnet_to_vpc_node
       ]
 
       edges = [
-        edge.aws_ecs_cluster_to_ec2_launch_type_edge,
-        edge.aws_ecs_cluster_to_fargate_launch_type_edge,
-        edge.aws_ecs_cluster_to_external_launch_type_edge,
-        edge.aws_ecs_cluster_to_ecs_task_definition_edge,
-        edge.aws_ecs_cluster_to_ecs_service_edge,
-        edge.aws_ecs_cluster_to_ecs_container_instance_edge,
-        edge.aws_ecs_cluster_ecs_container_instance_to_vpc_subnet_edge,
-        edge.aws_ecs_cluster_vpc_subnet_to_vpc_edge,
-        edge.aws_ecs_cluster_ecs_service_to_vpc_subnet_edge,
-        edge.aws_ecs_cluster_ecs_service_subnet_to_vpc_edge
+        edge.ecs_cluster_to_ec2_launch_type_edge,
+        edge.ecs_cluster_to_fargate_launch_type_edge,
+        edge.ecs_cluster_to_external_launch_type_edge,
+        edge.ecs_cluster_to_ecs_task_definition_edge,
+        edge.ecs_cluster_to_ecs_service_edge,
+        edge.ecs_cluster_to_ecs_container_instance_edge,
+        edge.ecs_cluster_ecs_container_instance_to_vpc_subnet_edge,
+        edge.ecs_cluster_vpc_subnet_to_vpc_edge,
+        edge.ecs_cluster_ecs_service_to_vpc_subnet_edge,
+        edge.ecs_cluster_ecs_service_subnet_to_vpc_edge
       ]
 
       args = {
@@ -115,7 +115,7 @@ dashboard "aws_ecs_cluster_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_ecs_cluster_overview
+        query = query.ecs_cluster_overview
         args = {
           arn = self.input.ecs_cluster_arn.value
         }
@@ -125,7 +125,7 @@ dashboard "aws_ecs_cluster_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_ecs_cluster_tags
+        query = query.ecs_cluster_tags
         args = {
           arn = self.input.ecs_cluster_arn.value
         }
@@ -138,7 +138,7 @@ dashboard "aws_ecs_cluster_detail" {
 
       table {
         title = "Registered Container Instances"
-        query = query.aws_ecs_cluster_container_instances
+        query = query.ecs_cluster_container_instances
         args = {
           arn = self.input.ecs_cluster_arn.value
         }
@@ -148,14 +148,14 @@ dashboard "aws_ecs_cluster_detail" {
         }
 
         column "EC2 Instance ID" {
-          href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.'Instance ARN' | @uri}}"
+          href = "${dashboard.ec2_instance_detail.url_path}?input.instance_arn={{.'Instance ARN' | @uri}}"
         }
 
       }
 
       table {
         title = "Statistics"
-        query = query.aws_ecs_cluster_statistics
+        query = query.ecs_cluster_statistics
         args = {
           arn = self.input.ecs_cluster_arn.value
         }
@@ -168,7 +168,7 @@ dashboard "aws_ecs_cluster_detail" {
   }
 }
 
-query "aws_ecs_cluster_input" {
+query "ecs_cluster_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -185,7 +185,7 @@ query "aws_ecs_cluster_input" {
   EOQ
 }
 
-query "aws_ecs_cluster_status" {
+query "ecs_cluster_status" {
   sql = <<-EOQ
     select
       initcap(status) as value,
@@ -199,7 +199,7 @@ query "aws_ecs_cluster_status" {
   param "arn" {}
 }
 
-query "aws_ecs_cluster_registered_container_instances_count" {
+query "ecs_cluster_registered_container_instances_count" {
   sql = <<-EOQ
     select
       registered_container_instances_count as value,
@@ -213,7 +213,7 @@ query "aws_ecs_cluster_registered_container_instances_count" {
   param "arn" {}
 }
 
-query "aws_ecs_cluster_pending_tasks_count" {
+query "ecs_cluster_pending_tasks_count" {
   sql = <<-EOQ
     select
       pending_tasks_count as value,
@@ -227,7 +227,7 @@ query "aws_ecs_cluster_pending_tasks_count" {
   param "arn" {}
 }
 
-query "aws_ecs_cluster_running_tasks_count" {
+query "ecs_cluster_running_tasks_count" {
   sql = <<-EOQ
     select
       running_tasks_count as value,
@@ -241,7 +241,7 @@ query "aws_ecs_cluster_running_tasks_count" {
   param "arn" {}
 }
 
-query "aws_ecs_cluster_active_services_count" {
+query "ecs_cluster_active_services_count" {
   sql = <<-EOQ
     select
       active_services_count as value,
@@ -255,7 +255,7 @@ query "aws_ecs_cluster_active_services_count" {
   param "arn" {}
 }
 
-query "aws_ecs_cluster_container_insights_enabled" {
+query "ecs_cluster_container_insights_enabled" {
   sql = <<-EOQ
     select
       'Container Insights' as label,
@@ -271,7 +271,7 @@ query "aws_ecs_cluster_container_insights_enabled" {
   param "arn" {}
 }
 
-query "aws_ecs_cluster_overview" {
+query "ecs_cluster_overview" {
   sql = <<-EOQ
     select
       cluster_name as "Name",
@@ -287,7 +287,7 @@ query "aws_ecs_cluster_overview" {
   param "arn" {}
 }
 
-query "aws_ecs_cluster_tags" {
+query "ecs_cluster_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -304,7 +304,7 @@ query "aws_ecs_cluster_tags" {
   param "arn" {}
 }
 
-query "aws_ecs_cluster_statistics" {
+query "ecs_cluster_statistics" {
   sql = <<-EOQ
     select
       s ->> 'Name' as "Name",
@@ -321,7 +321,7 @@ query "aws_ecs_cluster_statistics" {
   param "arn" {}
 }
 
-query "aws_ecs_cluster_container_instances" {
+query "ecs_cluster_container_instances" {
   sql = <<-EOQ
     select
       c.ec2_instance_id as "EC2 Instance ID",
@@ -340,8 +340,8 @@ query "aws_ecs_cluster_container_instances" {
   param "arn" {}
 }
 
-node "aws_ecs_cluster_node" {
-  category = category.aws_ecs_cluster
+node "ecs_cluster_node" {
+  category = category.ecs_cluster
 
   sql = <<-EOQ
     select
@@ -364,8 +364,8 @@ node "aws_ecs_cluster_node" {
   param "arn" {}
 }
 
-node "aws_ecs_cluster_to_ec2_launch_type_node" {
-  # category = category.aws_kms_key
+node "ecs_cluster_to_ec2_launch_type_node" {
+  # category = category.kms_key
 
   sql = <<-EOQ
     with list_all_task_definitions as (
@@ -412,7 +412,7 @@ node "aws_ecs_cluster_to_ec2_launch_type_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_cluster_to_ec2_launch_type_edge" {
+edge "ecs_cluster_to_ec2_launch_type_edge" {
   title = "launch type"
 
   sql = <<-EOQ
@@ -456,7 +456,7 @@ edge "aws_ecs_cluster_to_ec2_launch_type_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_cluster_to_fargate_launch_type_node" {
+node "ecs_cluster_to_fargate_launch_type_node" {
   # category = category.fargate_launch_type
 
   sql = <<-EOQ
@@ -503,7 +503,7 @@ node "aws_ecs_cluster_to_fargate_launch_type_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_cluster_to_fargate_launch_type_edge" {
+edge "ecs_cluster_to_fargate_launch_type_edge" {
   title = "launch type"
 
   sql = <<-EOQ
@@ -547,7 +547,7 @@ edge "aws_ecs_cluster_to_fargate_launch_type_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_cluster_to_external_launch_type_node" {
+node "ecs_cluster_to_external_launch_type_node" {
   # category = category.fargate_launch_type
 
   sql = <<-EOQ
@@ -594,7 +594,7 @@ node "aws_ecs_cluster_to_external_launch_type_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_cluster_to_external_launch_type_edge" {
+edge "ecs_cluster_to_external_launch_type_edge" {
   title = "launch type"
 
   sql = <<-EOQ
@@ -638,8 +638,8 @@ edge "aws_ecs_cluster_to_external_launch_type_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_cluster_to_ecs_task_definition_node" {
-  category = category.aws_ecs_task_definition
+node "ecs_cluster_to_ecs_task_definition_node" {
+  category = category.ecs_task_definition
 
   sql = <<-EOQ
     with list_all_task_definitions as (
@@ -683,7 +683,7 @@ node "aws_ecs_cluster_to_ecs_task_definition_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_cluster_to_ecs_task_definition_edge" {
+edge "ecs_cluster_to_ecs_task_definition_edge" {
   title = "task defintion"
 
   sql = <<-EOQ
@@ -718,8 +718,8 @@ edge "aws_ecs_cluster_to_ecs_task_definition_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_cluster_to_ecs_service_node" {
-  category = category.aws_ecs_service
+node "ecs_cluster_to_ecs_service_node" {
+  category = category.ecs_service
 
   sql = <<-EOQ
     select
@@ -740,7 +740,7 @@ node "aws_ecs_cluster_to_ecs_service_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_cluster_to_ecs_service_edge" {
+edge "ecs_cluster_to_ecs_service_edge" {
   title = "service"
 
   sql = <<-EOQ
@@ -756,8 +756,8 @@ edge "aws_ecs_cluster_to_ecs_service_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_cluster_to_ecs_container_instance_node" {
-  category = category.aws_ecs_container_instance
+node "ecs_cluster_to_ecs_container_instance_node" {
+  category = category.ecs_container_instance
 
   sql = <<-EOQ
     select
@@ -780,7 +780,7 @@ node "aws_ecs_cluster_to_ecs_container_instance_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_cluster_to_ecs_container_instance_edge" {
+edge "ecs_cluster_to_ecs_container_instance_edge" {
   title = "container instance"
 
   sql = <<-EOQ
@@ -796,8 +796,8 @@ edge "aws_ecs_cluster_to_ecs_container_instance_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_cluster_ecs_container_instance_to_vpc_subnet_node" {
-  category = category.aws_vpc_subnet
+node "ecs_cluster_ecs_container_instance_to_vpc_subnet_node" {
+  category = category.vpc_subnet
 
   sql = <<-EOQ
     select
@@ -824,7 +824,7 @@ node "aws_ecs_cluster_ecs_container_instance_to_vpc_subnet_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_cluster_ecs_container_instance_to_vpc_subnet_edge" {
+edge "ecs_cluster_ecs_container_instance_to_vpc_subnet_edge" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -846,8 +846,8 @@ edge "aws_ecs_cluster_ecs_container_instance_to_vpc_subnet_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_cluster_vpc_subnet_to_vpc_node" {
-  category = category.aws_vpc
+node "ecs_cluster_vpc_subnet_to_vpc_node" {
+  category = category.vpc_vpc
 
   sql = <<-EOQ
     select
@@ -871,7 +871,7 @@ node "aws_ecs_cluster_vpc_subnet_to_vpc_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_cluster_vpc_subnet_to_vpc_edge" {
+edge "ecs_cluster_vpc_subnet_to_vpc_edge" {
   title = "vpc"
 
   sql = <<-EOQ
@@ -890,8 +890,8 @@ edge "aws_ecs_cluster_vpc_subnet_to_vpc_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_cluster_ecs_service_to_vpc_subnet_node" {
-  category = category.aws_vpc_subnet
+node "ecs_cluster_ecs_service_to_vpc_subnet_node" {
+  category = category.vpc_subnet
 
   sql = <<-EOQ
     select
@@ -917,7 +917,7 @@ node "aws_ecs_cluster_ecs_service_to_vpc_subnet_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_cluster_ecs_service_to_vpc_subnet_edge" {
+edge "ecs_cluster_ecs_service_to_vpc_subnet_edge" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -938,8 +938,8 @@ edge "aws_ecs_cluster_ecs_service_to_vpc_subnet_edge" {
   param "arn" {}
 }
 
-node "aws_ecs_cluster_ecs_service_subnet_to_vpc_node" {
-  category = category.aws_vpc
+node "ecs_cluster_ecs_service_subnet_to_vpc_node" {
+  category = category.vpc_vpc
 
   sql = <<-EOQ
     select
@@ -967,7 +967,7 @@ node "aws_ecs_cluster_ecs_service_subnet_to_vpc_node" {
   param "arn" {}
 }
 
-edge "aws_ecs_cluster_ecs_service_subnet_to_vpc_edge" {
+edge "ecs_cluster_ecs_service_subnet_to_vpc_edge" {
   title = "vpc"
 
   sql = <<-EOQ
@@ -986,28 +986,4 @@ edge "aws_ecs_cluster_ecs_service_subnet_to_vpc_edge" {
   EOQ
 
   param "arn" {}
-}
-
-node "aws_ecs_cluster_nodes" {
-  category = category.aws_ecs_cluster
-
-  sql = <<-EOQ
-   select
-      cluster_arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', cluster_arn,
-        'Status', status,
-        'Account ID', account_id,
-        'Region', region,
-        'Active Services Count', active_services_count,
-        'Running Tasks Count', running_tasks_count
-      ) as properties
-    from
-      aws_ecs_cluster
-    where
-      cluster_arn = any($1 ::text[]);
-  EOQ
-
-  param "ecs_cluster_arns" {}
 }

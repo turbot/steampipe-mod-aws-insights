@@ -1,4 +1,4 @@
-dashboard "aws_rds_db_cluster_logging_report" {
+dashboard "rds_db_cluster_logging_report" {
 
   title         = "AWS RDS DB Cluster Logging Report"
   documentation = file("./dashboards/rds/docs/rds_db_cluster_report_logging.md")
@@ -11,12 +11,12 @@ dashboard "aws_rds_db_cluster_logging_report" {
   container {
 
     card {
-      query = query.aws_rds_db_cluster_count
+      query = query.rds_db_cluster_count
       width = 2
     }
 
     card {
-      query = query.aws_rds_db_cluster_logging_disabled_count
+      query = query.rds_db_cluster_logging_disabled_count
       width = 2
     }
 
@@ -31,12 +31,12 @@ dashboard "aws_rds_db_cluster_logging_report" {
       display = "none"
     }
 
-    query = query.aws_rds_db_cluster_logging_table
+    query = query.rds_db_cluster_logging_table
   }
 
 }
 
-query "aws_rds_db_cluster_logging_table" {
+query "rds_db_cluster_logging_table" {
   sql = <<-EOQ
     select
       c.db_cluster_identifier as "DB Cluster Identifier",

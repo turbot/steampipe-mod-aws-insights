@@ -1,4 +1,4 @@
-dashboard "aws_iam_user_excessive_privilege_report" {
+dashboard "iam_user_excessive_privilege_report" {
 
   title = "AWS IAM User Excessive Privilege Report"
 
@@ -31,12 +31,12 @@ dashboard "aws_iam_user_excessive_privilege_report" {
   container {
 
     card {
-      query = query.aws_iam_user_count
+      query = query.iam_user_count
       width = 2
     }
 
     card {
-      query = query.aws_iam_user_with_excessive_permissions_count
+      query = query.iam_user_with_excessive_permissions_count
       width = 2
 
       args  = {
@@ -45,7 +45,7 @@ dashboard "aws_iam_user_excessive_privilege_report" {
     }
 
     card {
-      query = query.aws_iam_user_excessive_permissions_count
+      query = query.iam_user_excessive_permissions_count
       width = 2
 
       args  = {
@@ -66,10 +66,10 @@ dashboard "aws_iam_user_excessive_privilege_report" {
     }
 
     column "User Name" {
-      href = "/aws_insights.dashboard.aws_iam_user_detail?input.user_arn={{.ARN | @uri}}"
+      href = "/aws_insights.dashboard.iam_user_detail?input.user_arn={{.ARN | @uri}}"
     }
 
-    query = query.aws_iam_user_excessive_permissions_report
+    query = query.iam_user_excessive_permissions_report
 
     args  = {
       threshold_in_days = self.input.threshold_in_days.value
@@ -78,7 +78,7 @@ dashboard "aws_iam_user_excessive_privilege_report" {
 
 }
 
-query "aws_iam_user_with_excessive_permissions_count" {
+query "iam_user_with_excessive_permissions_count" {
   sql = <<-EOQ
     select
       count(distinct principal_arn) as value,
@@ -98,7 +98,7 @@ query "aws_iam_user_with_excessive_permissions_count" {
   param "threshold_in_days" {}
 }
 
-query "aws_iam_user_excessive_permissions_count" {
+query "iam_user_excessive_permissions_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -118,7 +118,7 @@ query "aws_iam_user_excessive_permissions_count" {
   param "threshold_in_days" {}
 }
 
-query "aws_iam_user_excessive_permissions_report" {
+query "iam_user_excessive_permissions_report" {
   sql = <<-EOQ
     select
       u.name as "User Name",

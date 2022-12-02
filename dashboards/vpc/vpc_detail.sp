@@ -1,4 +1,4 @@
-dashboard "aws_vpc_detail" {
+dashboard "vpc_detail" {
 
   title         = "AWS VPC Detail"
   documentation = file("./dashboards/vpc/docs/vpc_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_vpc_detail" {
 
   input "vpc_id" {
     title = "Select a VPC:"
-    query = query.aws_vpc_input
+    query = query.vpc_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "aws_vpc_detail" {
 
     card {
       width = 2
-      query = query.aws_vpc_num_ips_for_vpc
+      query = query.vpc_num_ips_for_vpc
       args = {
         vpc_id = self.input.vpc_id.value
       }
@@ -25,7 +25,7 @@ dashboard "aws_vpc_detail" {
 
     card {
       width = 2
-      query = query.aws_subnet_count_for_vpc
+      query = query.subnet_count_for_vpc
       args = {
         vpc_id = self.input.vpc_id.value
       }
@@ -33,7 +33,7 @@ dashboard "aws_vpc_detail" {
 
     card {
       width = 2
-      query = query.aws_vpc_is_default
+      query = query.vpc_is_default
       args = {
         vpc_id = self.input.vpc_id.value
       }
@@ -41,7 +41,7 @@ dashboard "aws_vpc_detail" {
 
     card {
       width = 2
-      query = query.aws_flow_logs_count_for_vpc
+      query = query.flow_logs_count_for_vpc
       args = {
         vpc_id = self.input.vpc_id.value
       }
@@ -55,62 +55,213 @@ dashboard "aws_vpc_detail" {
       title = "Relationships"
       width = 12
       type  = "graph"
+
+      with "vpc_flow_logs" {
+        sql = <<-EOQ
+          select
+            flow_log_id as flow_log_id
+          from
+            aws_vpc_flow_log
+          where
+            resource_id = $1;
+        EOQ
+
+        args = [self.input.vpc_id.value]
+      }
+
+      with "vpc_subnets" {
+        sql = <<-EOQ
+          select
+            subnet_id as subnet_id
+          from
+            aws_vpc_subnet
+          where
+            vpc_id = $1;
+        EOQ
+
+        args = [self.input.vpc_id.value]
+      }
+
+      with "vpc_security_groups" {
+        sql = <<-EOQ
+          select
+            group_id as security_group_id
+          from
+            aws_vpc_security_group
+          where
+            vpc_id = $1;
+        EOQ
+
+        args = [self.input.vpc_id.value]
+      }
+
+      with "ec2_instances" {
+        sql = <<-EOQ
+          select
+            arn as instance_arn
+          from
+            aws_ec2_instance
+          where
+            vpc_id = $1;
+        EOQ
+
+        args = [self.input.vpc_id.value]
+      }
+
+      with "lambda_functions" {
+        sql = <<-EOQ
+          select
+            arn as function_arn
+          from
+            aws_lambda_function
+          where
+            vpc_id = $1;
+        EOQ
+
+        args = [self.input.vpc_id.value]
+      }
+
+      with "ec2_application_load_balancers" {
+        sql = <<-EOQ
+          select
+            arn as alb_arn
+          from
+            aws_ec2_application_load_balancer
+          where
+            vpc_id = $1;
+        EOQ
+
+        args = [self.input.vpc_id.value]
+      }
+
+      with "ec2_classic_load_balancers" {
+        sql = <<-EOQ
+          select
+            arn as clb_arn
+          from
+            aws_ec2_classic_load_balancer
+          where
+            vpc_id = $1;
+        EOQ
+
+        args = [self.input.vpc_id.value]
+      }
+
+      with "ec2_network_load_balancers" {
+        sql = <<-EOQ
+          select
+            arn as nlb_arn
+          from
+            aws_ec2_network_load_balancer
+          where
+            vpc_id = $1;
+        EOQ
+
+        args = [self.input.vpc_id.value]
+      }
+
+      with "ec2_gateway_load_balancers" {
+        sql = <<-EOQ
+          select
+            arn as glb_arn
+          from
+            aws_ec2_gateway_load_balancer
+          where
+            vpc_id = $1;
+        EOQ
+
+        args = [self.input.vpc_id.value]
+      }
+
+      with "rds_db_instances" {
+        sql = <<-EOQ
+          select
+            arn as rds_instance_arn
+          from
+            aws_rds_db_instance
+          where
+            vpc_id = $1;
+        EOQ
+
+        args = [self.input.vpc_id.value]
+      }
+
+      with "redshift_clusters" {
+        sql = <<-EOQ
+          select
+            arn as redshift_cluster_arn
+          from
+            aws_redshift_cluster
+          where
+            vpc_id = $1;
+        EOQ
+
+        args = [self.input.vpc_id.value]
+      }
+
       nodes = [
-        node.aws_vpc_nodes,
-        node.aws_vpc_az_node,
-        node.aws_vpc_to_flow_log_node,
-        node.aws_vpc_vpc_subnet_node,
-        node.aws_vpc_igw_node,
-        node.aws_vpc_az_route_table,
-        node.aws_vpc_vcp_endpoint_node,
-        node.aws_vpc_transit_gateway_node,
-        node.aws_vpc_nat_gateway_node,
-        node.aws_vpc_vpn_gateway_node,
-        node.aws_vpc_vpc_security_group_node,
+        node.vpc_vpc,
+        node.vpc_flow_log,
+        node.vpc_subnet,
+        node.vpc_security_group,
+        node.ec2_instance,
+        node.lambda_function,
+        node.ec2_application_load_balancer,
+        node.ec2_network_load_balancer,
+        node.ec2_classic_load_balancer,
+        node.ec2_gateway_load_balancer,
+        node.rds_db_instance,
+        node.redshift_cluster,
 
-        node.aws_vpc_ec2_instance_node,
-        node.aws_vpc_lambda_function_node,
-        node.aws_vpc_alb_node,
-        node.aws_vpc_nlb_node,
-        node.aws_vpc_security_elb_node,
-        node.aws_vpc_gwlbnode,
-        node.aws_vpc_rds_instance_node,
-        node.aws_vpc_redshift_cluster_node,
-        node.aws_vpc_fsx_filesystem_node,
-        node.aws_vpc_s3_access_point_node,
-
-        node.aws_vpc_peered_vpc_node,
+        node.vpc_s3_access_point,
+        node.vpc_peered_vpc,
+        node.vpc_az,
+        node.vpc_igw,
+        node.vpc_az_route_table,
+        node.vpc_vcp_endpoint,
+        node.vpc_transit_gateway,
+        node.vpc_nat_gateway,
+        node.vpc_vpn_gateway,
       ]
 
       edges = [
-        edge.aws_vpc_az_edge,
-        edge.aws_vpc_to_flow_log_edge,
-        edge.aws_vpc_az_subnet_edge,
-        edge.aws_vpc_igw_edge,
-        edge.aws_vpc_subnet_route_table_edge,
-        edge.aws_vpc_vpc_route_table_edge,
-        edge.aws_vpc_subnet_endpoint_edge,
-        edge.aws_vpc_transit_gateway_edge,
-        edge.aws_vpc_subnet_nat_gateway_edge,
-        edge.aws_vpc_vpn_gateway_edge,
-        edge.aws_vpc_security_group_edge,
+        edge.vpc_to_az,
+        edge.vpc_to_vpc_flow_log,
+        edge.vpc_az_to_vpc_subnet,
+        edge.vpc_to_igw,
+        edge.vpc_subnet_to_route_table,
+        edge.vpc_to_vpc_route_table,
+        edge.vpc_subnet_to_endpoint,
+        edge.vpc_to_transit_gateway,
+        edge.vpc_subnet_to_nat_gateway,
+        edge.vpc_to_vpn_gateway,
+        edge.vpc_to_vpc_security_group,
 
-        edge.aws_vpc_subnet_instance_edge,
-        edge.aws_vpc_subnet_lambda_edge,
-        edge.aws_vpc_subnet_alb_edge,
-        edge.aws_vpc_subnet_nlb_edge,
-        edge.aws_vpc_subnet_elb_edge,
-        edge.aws_vpc_subnet_gwlb_edge,
-        edge.aws_vpc_subnet_rds_edge,
-        edge.aws_vpc_subnet_redshift_edge,
-        edge.aws_vpc_subnet_fxs_edge,
-        edge.aws_vpc_s3_access_point_edge,
-
-        edge.aws_vpc_peered_vpc_edge
+        edge.vpc_subnet_to_instance,
+        edge.vpc_subnet_to_lambda,
+        edge.vpc_subnet_to_ec2_alb,
+        edge.vpc_subnet_to_ec2_nlb,
+        edge.vpc_subnet_to_ec2_clb,
+        edge.vpc_subnet_to_ec2_glb,
+        edge.vpc_subnet_to_rds_instance,
+        edge.vpc_to_s3_access_point,
+        edge.vpc_peered_vpc
       ]
 
       args = {
-        vpc_ids = [self.input.vpc_id.value]
+        vpc_id                             = self.input.vpc_id.value
+        vpc_vpc_ids                        = [self.input.vpc_id.value]
+        vpc_security_group_ids             = with.vpc_security_groups.rows[*].security_group_id
+        vpc_subnet_ids                     = with.vpc_subnets.rows[*].subnet_id
+        ec2_classic_load_balancer_arns     = with.ec2_classic_load_balancers.rows[*].clb_arn
+        ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
+        ec2_network_load_balancer_arns     = with.ec2_network_load_balancers.rows[*].nlb_arn
+        ec2_gateway_load_balancer_arns     = with.ec2_gateway_load_balancers.rows[*].glb_arn
+        ec2_instance_arns                  = with.ec2_instances.rows[*].instance_arn
+        redshift_cluster_arns              = with.redshift_clusters.rows[*].redshift_cluster_arn
+        lambda_function_arns               = with.lambda_functions.rows[*].function_arn
+        rds_db_instance_arns               = with.rds_db_instances.rows[*].rds_instance_arn
+        vpc_flow_log_ids                   = with.vpc_flow_logs.rows[*].flow_log_id
       }
     }
 
@@ -129,7 +280,7 @@ dashboard "aws_vpc_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_vpc_overview
+        query = query.vpc_overview
         args = {
           vpc_id = self.input.vpc_id.value
         }
@@ -138,7 +289,7 @@ dashboard "aws_vpc_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_vpc_tags
+        query = query.vpc_tags
         args = {
           vpc_id = self.input.vpc_id.value
         }
@@ -152,7 +303,7 @@ dashboard "aws_vpc_detail" {
 
       table {
         title = "CIDR Blocks"
-        query = query.aws_vpc_cidr_blocks
+        query = query.vpc_cidr_blocks
         args = {
           vpc_id = self.input.vpc_id.value
         }
@@ -160,7 +311,7 @@ dashboard "aws_vpc_detail" {
 
       table {
         title = "DHCP Options"
-        query = query.aws_vpc_dhcp_options
+        query = query.vpc_dhcp_options
         args = {
           vpc_id = self.input.vpc_id.value
         }
@@ -178,7 +329,7 @@ dashboard "aws_vpc_detail" {
       title = "Subnets by AZ"
       type  = "column"
       width = 4
-      query = query.aws_vpc_subnet_by_az
+      query = query.vpc_subnet_by_az
       args = {
         vpc_id = self.input.vpc_id.value
       }
@@ -186,7 +337,7 @@ dashboard "aws_vpc_detail" {
     }
 
     table {
-      query = query.aws_vpc_subnets_for_vpc
+      query = query.vpc_subnets_for_vpc
       width = 6
       args = {
         vpc_id = self.input.vpc_id.value
@@ -202,15 +353,15 @@ dashboard "aws_vpc_detail" {
 
     flow {
       nodes = [
-        node.aws_vpc_routing_vpc_node,
-        node.aws_vpc_routing_subnet_node,
-        node.aws_vpc_routing_cidr_node,
-        node.aws_vpc_routing_gateway_node
+        node.vpc_routing_vpc_node,
+        node.vpc_routing_subnet_node,
+        node.vpc_routing_cidr_node,
+        node.vpc_routing_gateway_node
       ]
 
       edges = [
-        edge.aws_vpc_routing_subnet_vpc_to_cidr_edge,
-        edge.aws_vpc_routing_cidr_to_gateway_edge
+        edge.vpc_routing_subnet_vpc_to_cidr_edge,
+        edge.vpc_routing_cidr_to_gateway_edge
       ]
 
       args = {
@@ -221,7 +372,7 @@ dashboard "aws_vpc_detail" {
 
     table {
       title = "Route Tables"
-      query = query.aws_vpc_route_tables_for_vpc
+      query = query.vpc_route_tables_for_vpc
       width = 6
       args = {
         vpc_id = self.input.vpc_id.value
@@ -230,7 +381,7 @@ dashboard "aws_vpc_detail" {
 
     table {
       title = "Routes"
-      query = query.aws_vpc_routes_for_vpc
+      query = query.vpc_routes_for_vpc
       width = 6
       args = {
         vpc_id = self.input.vpc_id.value
@@ -246,7 +397,7 @@ dashboard "aws_vpc_detail" {
 
     table {
       title = "Peering Connections"
-      query = query.aws_vpc_peers_for_vpc
+      query = query.vpc_peers_for_vpc
       args = {
         vpc_id = self.input.vpc_id.value
       }
@@ -263,7 +414,7 @@ dashboard "aws_vpc_detail" {
       base  = flow.nacl_flow
       title = "Ingress NACLs"
       width = 6
-      query = query.aws_ingress_nacl_for_vpc_sankey
+      query = query.ingress_nacl_for_vpc_sankey
       args = {
         vpc_id = self.input.vpc_id.value
       }
@@ -274,7 +425,7 @@ dashboard "aws_vpc_detail" {
       base  = flow.nacl_flow
       title = "Egress NACLs"
       width = 6
-      query = query.aws_egress_nacl_for_vpc_sankey
+      query = query.egress_nacl_for_vpc_sankey
       args = {
         vpc_id = self.input.vpc_id.value
       }
@@ -290,7 +441,7 @@ dashboard "aws_vpc_detail" {
     table {
       title = "VPC Endpoints"
 
-      query = query.aws_vpc_endpoints_for_vpc
+      query = query.vpc_endpoints_for_vpc
       width = 6
       args = {
         vpc_id = self.input.vpc_id.value
@@ -299,7 +450,7 @@ dashboard "aws_vpc_detail" {
 
     table {
       title = "Gateways"
-      query = query.aws_vpc_gateways_for_vpc
+      query = query.vpc_gateways_for_vpc
       width = 6
       args = {
         vpc_id = self.input.vpc_id.value
@@ -313,14 +464,14 @@ dashboard "aws_vpc_detail" {
     title = "Security Groups"
 
     table {
-      query = query.aws_vpc_security_groups_for_vpc
+      query = query.vpc_security_groups_for_vpc
       width = 12
       args = {
         vpc_id = self.input.vpc_id.value
       }
 
       column "Group Name" {
-        href = "${dashboard.aws_vpc_security_group_detail.url_path}?input.security_group_id={{.'Group ID' | @uri}}"
+        href = "${dashboard.vpc_security_group_detail.url_path}?input.security_group_id={{.'Group ID' | @uri}}"
       }
     }
 
@@ -343,7 +494,7 @@ flow "nacl_flow" {
 
 }
 
-query "aws_vpc_input" {
+query "vpc_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -360,7 +511,7 @@ query "aws_vpc_input" {
   EOQ
 }
 
-query "aws_subnet_count_for_vpc" {
+query "subnet_count_for_vpc" {
   sql = <<-EOQ
     select
       'Subnets' as label,
@@ -375,7 +526,7 @@ query "aws_subnet_count_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_is_default" {
+query "vpc_is_default" {
   sql = <<-EOQ
     select
       'Default VPC' as label,
@@ -390,7 +541,7 @@ query "aws_vpc_is_default" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_num_ips_for_vpc" {
+query "vpc_num_ips_for_vpc" {
   sql = <<-EOQ
     with cidrs as (
       select
@@ -412,7 +563,7 @@ query "aws_vpc_num_ips_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_flow_logs_count_for_vpc" {
+query "flow_logs_count_for_vpc" {
   sql = <<-EOQ
     select
       'Flow Logs' as label,
@@ -426,7 +577,7 @@ query "aws_flow_logs_count_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_subnets_for_vpc" {
+query "vpc_subnets_for_vpc" {
   sql = <<-EOQ
     with subnets as (
       select
@@ -458,7 +609,7 @@ query "aws_vpc_subnets_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_security_groups_for_vpc" {
+query "vpc_security_groups_for_vpc" {
   sql = <<-EOQ
     select
       group_name as "Group Name",
@@ -473,7 +624,7 @@ query "aws_vpc_security_groups_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_endpoints_for_vpc" {
+query "vpc_endpoints_for_vpc" {
   sql = <<-EOQ
     select
       vpc_endpoint_id as "VPC Endpoint ID",
@@ -490,7 +641,7 @@ query "aws_vpc_endpoints_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_route_tables_for_vpc" {
+query "vpc_route_tables_for_vpc" {
   sql = <<-EOQ
     select
       route_table_id as "Route Table ID",
@@ -506,7 +657,7 @@ query "aws_vpc_route_tables_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_routes_for_vpc" {
+query "vpc_routes_for_vpc" {
   sql = <<-EOQ
     select
       route_table_id as "Route Table ID",
@@ -547,7 +698,7 @@ query "aws_vpc_routes_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_peers_for_vpc" {
+query "vpc_peers_for_vpc" {
   sql = <<-EOQ
     select
       id as "ID",
@@ -573,7 +724,7 @@ query "aws_vpc_peers_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_gateways_for_vpc" {
+query "vpc_gateways_for_vpc" {
   sql = <<-EOQ
     select
       internet_gateway_id as "ID",
@@ -622,7 +773,7 @@ query "aws_vpc_gateways_for_vpc" {
   param "vpc_id" {}
 }
 
-query "aws_ingress_nacl_for_vpc_sankey" {
+query "ingress_nacl_for_vpc_sankey" {
   sql = <<-EOQ
 
     with aces as (
@@ -754,7 +905,7 @@ query "aws_ingress_nacl_for_vpc_sankey" {
   param "vpc_id" {}
 }
 
-query "aws_egress_nacl_for_vpc_sankey" {
+query "egress_nacl_for_vpc_sankey" {
   sql = <<-EOQ
 
     with aces as (
@@ -893,7 +1044,7 @@ query "aws_egress_nacl_for_vpc_sankey" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_overview" {
+query "vpc_overview" {
   sql = <<-EOQ
     select
       vpc_id as "VPC ID",
@@ -910,7 +1061,7 @@ query "aws_vpc_overview" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_tags" {
+query "vpc_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -927,7 +1078,7 @@ query "aws_vpc_tags" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_cidr_blocks" {
+query "vpc_cidr_blocks" {
   sql = <<-EOQ
     select
       b ->> 'CidrBlock' as "CIDR Block",
@@ -951,7 +1102,7 @@ query "aws_vpc_cidr_blocks" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_dhcp_options" {
+query "vpc_dhcp_options" {
   sql = <<-EOQ
     select
       d.dhcp_options_id as "DHCP Options ID",
@@ -974,7 +1125,7 @@ query "aws_vpc_dhcp_options" {
   param "vpc_id" {}
 }
 
-query "aws_vpc_subnet_by_az" {
+query "vpc_subnet_by_az" {
   sql = <<-EOQ
     select
       availability_zone,
@@ -992,894 +1143,9 @@ query "aws_vpc_subnet_by_az" {
   param "vpc_id" {}
 }
 
-node "aws_vpc_az_node" {
-  category = category.aws_availability_zone
 
-  sql = <<-EOQ
-    select
-      distinct on (availability_zone)
-      availability_zone as id,
-      availability_zone as title,
-      jsonb_build_object(
-        'Availability Zone', availability_zone,
-        'Availability Zone ID', availability_zone_id,
-        'Region', region,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_vpc_subnet
-    where
-      vpc_id = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-edge "aws_vpc_az_edge" {
-  title = "az"
-
-  sql = <<-EOQ
-    select
-      distinct on (availability_zone)
-      $1 as from_id,
-      availability_zone as to_id
-    from
-      aws_vpc_subnet
-    where
-      vpc_id = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-
-node "aws_vpc_vpc_subnet_node" {
-  category = category.aws_vpc_subnet
-
-  sql = <<-EOQ
-    select
-      subnet_id as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', subnet_arn,
-        'Subnet ID', subnet_id,
-        'CIDR Block', cidr_block,
-        'IP Address Count', available_ip_address_count,
-        'Region', region,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_vpc_subnet
-    where
-      vpc_id = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-
-edge "aws_vpc_az_subnet_edge" {
-  title = "subnet"
-
-  sql = <<-EOQ
-    select
-      availability_zone as from_id,
-      subnet_id as to_id
-    from
-      aws_vpc_subnet
-    where
-      vpc_id = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-node "aws_vpc_igw_node" {
-  category = category.aws_vpc_internet_gateway
-
-  sql = <<-EOQ
-    select
-      internet_gateway_id as id,
-      title as title,
-      jsonb_build_object(
-        'ID', internet_gateway_id,
-        'State', a ->> 'State',
-        'Region', region,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_vpc_internet_gateway,
-      jsonb_array_elements(attachments) as a
-    where
-      a ->> 'VpcId' = $1;
-  EOQ
-
-  param "vpc_id" {}
-}
-
-edge "aws_vpc_igw_edge" {
-  title = "vpc"
-
-  sql = <<-EOQ
-    select
-      a ->> 'VpcId' as to_id,
-      i.internet_gateway_id as from_id
-    from
-      aws_vpc_internet_gateway as i,
-      jsonb_array_elements(attachments) as a
-    where
-      a ->> 'VpcId' = $1;
-  EOQ
-
-  param "vpc_id" {}
-}
-
-node "aws_vpc_az_route_table" {
-  category = category.aws_vpc_route_table
-
-  sql = <<-EOQ
-    select
-      route_table_id as id,
-      case
-        when associations @> '[{"Main": true}]'
-          then concat(title,' [Default]')
-        else
-          title
-      end as title,
-      jsonb_build_object(
-        'ID', route_table_id,
-        'Region', region,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_vpc_route_table
-    where
-      vpc_id = $1;
-  EOQ
-
-  param "vpc_id" {}
-}
-
-edge "aws_vpc_subnet_route_table_edge" {
-  title = "route table"
-
-  sql = <<-EOQ
-    select
-       a ->> 'SubnetId' as to_id,
-      rt.route_table_id as from_id
-      from
-        aws_vpc_route_table as rt,
-        jsonb_array_elements(associations) as a
-      where
-        rt.vpc_id = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-
-edge "aws_vpc_vpc_route_table_edge" {
-  title = "route table"
-
-  sql = <<-EOQ
-    select
-      rt.vpc_id as from_id,
-      rt.route_table_id as to_id
-      from
-        aws_vpc_route_table as rt,
-        jsonb_array_elements(associations) as a
-      where
-        rt.vpc_id = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-
-node "aws_vpc_vcp_endpoint_node" {
-  category = category.aws_vpc_endpoint
-
-  sql = <<-EOQ
-    select
-      vpc_endpoint_id as id,
-      title as title,
-      jsonb_build_object(
-        'ID', vpc_endpoint_id,
-        'Region', region,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_vpc_endpoint
-    where
-      vpc_id = $1;
-  EOQ
-
-  param "vpc_id" {}
-}
-
-edge "aws_vpc_subnet_endpoint_edge" {
-  title = "vpc endpoint"
-
-  sql = <<-EOQ
-    select
-      s as from_id,
-      e.vpc_endpoint_id as to_id
-    from
-      aws_vpc_endpoint as e,
-      jsonb_array_elements_text(e.subnet_ids) as s
-    where
-      e.vpc_id = $1
-    union
-    select
-      vpc_id as from_id,
-      vpc_endpoint_id as to_id
-    from
-      aws_vpc_endpoint as e
-    where
-      jsonb_array_length(subnet_ids) = 0
-      and vpc_id = $1;
-
-  EOQ
-
-  param "vpc_id" {}
-}
-
-node "aws_vpc_transit_gateway_node" {
-  category = category.aws_ec2_transit_gateway
-
-  sql = <<-EOQ
-    select
-      g.transit_gateway_id as id,
-      g.title as title,
-      jsonb_build_object(
-        'ID', g.transit_gateway_id,
-        'ARN', g.transit_gateway_arn,
-        'Attachment Id', t.transit_gateway_attachment_id,
-        'Association State', t.association_state,
-        'Region', g.region,
-        'Account ID', g.account_id
-      ) as properties
-    from
-      aws_ec2_transit_gateway_vpc_attachment as t
-      left join aws_ec2_transit_gateway as g on t.transit_gateway_id = g.transit_gateway_id
-    where
-      t.resource_id = $1 and resource_type = 'vpc';
-  EOQ
-
-  param "vpc_id" {}
-}
-
-edge "aws_vpc_transit_gateway_edge" {
-  title = "transit_gateway"
-
-  sql = <<-EOQ
-    select
-      resource_id as to_id,
-      transit_gateway_id as from_id
-    from
-      aws_ec2_transit_gateway_vpc_attachment
-      where resource_id = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-node "aws_vpc_nat_gateway_node" {
-  category = category.aws_vpc_nat_gateway
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'ID', nat_gateway_id,
-        'Region', region,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_vpc_nat_gateway
-    where
-      vpc_id = $1;
-  EOQ
-
-  param "vpc_id" {}
-}
-
-edge "aws_vpc_subnet_nat_gateway_edge" {
-  title = "nat gateway"
-
-  sql = <<-EOQ
-    select
-      subnet_id as from_id,
-      arn as to_id
-    from
-      aws_vpc_nat_gateway
-    where
-      vpc_id = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-node "aws_vpc_vpn_gateway_node" {
-  category = category.aws_vpc_vpn_gateway
-
-  sql = <<-EOQ
-    select
-      vpn_gateway_id as id,
-      title as title,
-      jsonb_build_object(
-        'ID', vpn_gateway_id,
-        'Region', region,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_vpc_vpn_gateway,
-      jsonb_array_elements(vpc_attachments) as a
-    where
-      a ->> 'VpcId' = $1;
-  EOQ
-
-  param "vpc_id" {}
-}
-
-edge "aws_vpc_vpn_gateway_edge" {
-  title = "vpn gateway"
-
-  sql = <<-EOQ
-    select
-      a ->> 'VpcId' as to_id,
-      g.vpn_gateway_id as from_id
-    from
-      aws_vpc_vpn_gateway as g,
-      jsonb_array_elements(vpc_attachments) as a
-    where
-      a ->> 'VpcId' = $1;
-  EOQ
-
-  param "vpc_id" {}
-}
-
-node "aws_vpc_vpc_security_group_node" {
-  category = category.aws_vpc_security_group
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Group ID', group_id,
-        'Region', region,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_vpc_security_group
-    where
-      vpc_id = $1;
-  EOQ
-
-  param "vpc_id" {}
-}
-
-edge "aws_vpc_security_group_edge" {
-  title = "security group"
-
-  sql = <<-EOQ
-    select
-      vpc_id as from_id,
-      arn as to_id
-    from
-      aws_vpc_security_group
-    where
-      vpc_id = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-
-
-node "aws_vpc_peered_vpc_node" {
-  category = category.aws_vpc
-
-  sql = <<-EOQ
-    -- with vpcs as (
-      select
-        accepter_vpc_id as id,
-        vpc.title as title,
-        jsonb_build_object(
-          'VPC ID', accepter_vpc_id,
-          'CIDR', accepter_cidr_block,
-          'Status', status_code,
-          'Region', accepter_region,
-          'Account ID', accepter_owner_id
-        ) as properties
-      from
-        aws_vpc_peering_connection,
-        aws_vpc as vpc
-      where
-        accepter_vpc_id = vpc.vpc_id
-        and requester_vpc_id = $1
-
-      union all select
-        requester_vpc_id as id,
-        vpc.title as title,
-        jsonb_build_object(
-          'VPC ID', requester_vpc_id,
-          'CIDR', requester_cidr_block,
-          'Status', status_code,
-          'Region', requester_region,
-          'Account ID', requester_owner_id
-        ) as properties
-      from
-        aws_vpc_peering_connection,
-        aws_vpc as vpc
-      where
-        requester_vpc_id = vpc.vpc_id
-        and accepter_vpc_id = $1
-
-
-  EOQ
-
-  param "vpc_id" {}
-}
-
-
-
-
-edge "aws_vpc_peered_vpc_edge" {
-  title = "peered with"
-
-  sql = <<-EOQ
-    select
-      $1 as to_id,
-      case
-        when accepter_vpc_id = $1 then requester_vpc_id
-        else accepter_vpc_id
-      end as from_id
-    from
-      aws_vpc_peering_connection
-    where
-      accepter_vpc_id = $1
-      or requester_vpc_id = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-
-
-node "aws_vpc_ec2_instance_node" {
-  category = category.aws_ec2_instance
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_ec2_instance
-    where
-      vpc_id  = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-edge "aws_vpc_subnet_instance_edge" {
-  title = "ec2 instance"
-
-  sql = <<-EOQ
-    select
-      subnet_id as from_id,
-      arn as to_id
-    from
-      aws_ec2_instance
-    where
-      vpc_id = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-
-node "aws_vpc_lambda_function_node" {
-  category = category.aws_lambda_function
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_lambda_function
-    where
-      vpc_id  = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-edge "aws_vpc_subnet_lambda_edge" {
-  title = "lambda function"
-
-  sql = <<-EOQ
-    select
-      s as from_id,
-      l.arn as to_id
-    from
-      aws_lambda_function as l,
-      jsonb_array_elements_text(l.vpc_subnet_ids) as s
-    where
-      l.vpc_id = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-node "aws_vpc_alb_node" {
-  category = category.aws_ec2_application_load_balancer
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_ec2_application_load_balancer
-    where
-      vpc_id  = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-edge "aws_vpc_subnet_alb_edge" {
-  title = "alb"
-
-  sql = <<-EOQ
-    select
-      az ->> 'SubnetId' as from_id,
-      a.arn as to_id
-    from
-      aws_ec2_application_load_balancer as a,
-      jsonb_array_elements(availability_zones) as az
-    where
-      a.vpc_id = $1;
-  EOQ
-
-  param "vpc_id" {}
-}
-
-node "aws_vpc_nlb_node" {
-  category = category.aws_ec2_network_load_balancer
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_ec2_network_load_balancer
-    where
-      vpc_id  = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-edge "aws_vpc_subnet_nlb_edge" {
-  title = "nlb"
-
-  sql = <<-EOQ
-    select
-      az ->> 'SubnetId' as from_id,
-      n.arn as to_id
-    from
-      aws_ec2_network_load_balancer as n,
-      jsonb_array_elements(availability_zones) as az
-    where n.vpc_id = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-
-node "aws_vpc_security_elb_node" {
-  category = category.aws_ec2_classic_load_balancer
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_ec2_classic_load_balancer
-    where
-      vpc_id  = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-edge "aws_vpc_subnet_elb_edge" {
-  title = "elb"
-
-  sql = <<-EOQ
-    select
-      s as from_id,
-      c.arn as to_id
-    from
-      aws_ec2_classic_load_balancer as c,
-      jsonb_array_elements_text(subnets) as s
-    where
-      c.vpc_id = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-
-node "aws_vpc_gwlbnode" {
-  category = category.aws_ec2_gateway_load_balancer
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_ec2_gateway_load_balancer
-    where
-      vpc_id  = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-edge "aws_vpc_subnet_gwlb_edge" {
-  title = "gwlb"
-
-  sql = <<-EOQ
-    select
-      az ->> 'SubnetId' as from_id,
-      g.arn as to_id
-    from
-      aws_ec2_gateway_load_balancer as g,
-      jsonb_array_elements(availability_zones) as az
-    where
-      g.vpc_id = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-
-node "aws_vpc_rds_instance_node" {
-  category = category.aws_rds_db_instance
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_rds_db_instance
-    where
-      vpc_id  = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-
-edge "aws_vpc_subnet_rds_edge" {
-  title = "rds instance"
-
-  sql = <<-EOQ
-    select
-      s ->> 'SubnetIdentifier' as from_id,
-      i.arn as to_id
-    from
-      aws_rds_db_instance as i,
-      jsonb_array_elements(subnets) as s
-    where
-      i.vpc_id = $1;
-  EOQ
-
-  param "vpc_id" {}
-}
-
-
-node "aws_vpc_redshift_cluster_node" {
-  category = category.aws_redshift_cluster
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_redshift_cluster
-    where
-      vpc_id  = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-
-
-# -- Subnet -> Redshift Clusters (edge)
-# -- TO DO: These should connect to subnets, not vpcs (dont have any to test with right now...)
-edge "aws_vpc_subnet_redshift_edge" {
-  title = "vpc"
-
-  sql = <<-EOQ
-    select
-      arn as from_id,
-      vpc_id as to_id
-    from
-      aws_redshift_cluster
-    where
-     vpc_id = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-node "aws_vpc_fsx_filesystem_node" {
-  category = category.aws_fsx_file_system
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_fsx_file_system
-    where
-      vpc_id  = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-
-# -- Subnet -> FSX File Systems (edge)
-# -- TO DO: These should connect to subnets, not vpcs (dont have any to test with right now...)
-edge "aws_vpc_subnet_fxs_edge" {
-  title = "fsx file system"
-
-  sql = <<-EOQ
-    select
-      arn as from_id,
-      vpc_id as to_id
-    from
-      aws_fsx_file_system
-    where
-      vpc_id = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-
-node "aws_vpc_s3_access_point_node" {
-  category = category.aws_s3_access_point
-
-  sql = <<-EOQ
-    select
-      access_point_arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', access_point_arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_s3_access_point
-    where
-      vpc_id  = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-
-edge "aws_vpc_s3_access_point_edge" {
-  title = "s3 access point"
-
-  sql = <<-EOQ
-    select
-      vpc_id as from_id,
-      access_point_arn as to_id
-    from
-      aws_s3_access_point
-    where
-      vpc_id = $1
-  EOQ
-
-  param "vpc_id" {}
-}
-
-node "aws_vpc_to_flow_log_node" {
-  category = category.aws_vpc_flow_log
-
-  sql = <<-EOQ
-    select
-      flow_log_id as id,
-      title as title,
-      jsonb_build_object(
-        'Flow Log ID', flow_log_id,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_vpc_flow_log
-    where
-      resource_id = $1;
-  EOQ
-
-  param "vpc_id" {}
-}
-
-edge "aws_vpc_to_flow_log_edge" {
-  title = "flow log"
-
-  sql = <<-EOQ
-    select
-      resource_id as from_id,
-      flow_log_id as to_id
-    from
-      aws_vpc_flow_log
-    where
-      resource_id = $1;
-  EOQ
-
-  param "vpc_id" {}
-}
-
-node "aws_vpc_routing_subnet_node" {
-  category = category.aws_vpc_subnet
+node "vpc_routing_subnet_node" {
+  category = category.vpc_subnet
 
   sql = <<-EOQ
     select
@@ -1898,8 +1164,8 @@ node "aws_vpc_routing_subnet_node" {
   param "vpc_id" {}
 }
 
-node "aws_vpc_routing_vpc_node" {
-  category = category.aws_vpc_subnet
+node "vpc_routing_vpc_node" {
+  category = category.vpc_subnet
 
   sql = <<-EOQ
     select
@@ -1919,7 +1185,7 @@ node "aws_vpc_routing_vpc_node" {
   param "vpc_id" {}
 }
 
-node "aws_vpc_routing_cidr_node" {
+node "vpc_routing_cidr_node" {
   //category = category.cidr_block
 
   sql = <<-EOQ
@@ -1939,9 +1205,7 @@ node "aws_vpc_routing_cidr_node" {
   param "vpc_id" {}
 }
 
-
-
-edge "aws_vpc_routing_subnet_vpc_to_cidr_edge" {
+edge "vpc_routing_subnet_vpc_to_cidr_edge" {
   title = "cidr"
 
   sql = <<-EOQ
@@ -1959,10 +1223,8 @@ edge "aws_vpc_routing_subnet_vpc_to_cidr_edge" {
   param "vpc_id" {}
 }
 
-
-
-node "aws_vpc_routing_gateway_node" {
-  category = category.aws_vpc_internet_gateway
+node "vpc_routing_gateway_node" {
+  category = category.vpc_internet_gateway
 
   sql = <<-EOQ
       select
@@ -2006,9 +1268,7 @@ node "aws_vpc_routing_gateway_node" {
   param "vpc_id" {}
 }
 
-
-
-edge "aws_vpc_routing_cidr_to_gateway_edge" {
+edge "vpc_routing_cidr_to_gateway_edge" {
 
   title = "gateway"
   sql   = <<-EOQ
@@ -2043,29 +1303,578 @@ edge "aws_vpc_routing_cidr_to_gateway_edge" {
   param "vpc_id" {}
 }
 
-node "aws_vpc_nodes" {
-  category = category.aws_vpc
+
+// Graph queries
+node "vpc_az" {
+  category = category.availability_zone
 
   sql = <<-EOQ
-   select
-      vpc_id as id,
+    select
+      distinct on (availability_zone)
+      availability_zone as id,
+      availability_zone as title,
+      jsonb_build_object(
+        'Availability Zone', availability_zone,
+        'Availability Zone ID', availability_zone_id,
+        'Region', region,
+        'Account ID', account_id
+      ) as properties
+    from
+      aws_vpc_subnet
+    where
+      vpc_id = any($1)
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+edge "vpc_to_az" {
+  title = "az"
+
+  sql = <<-EOQ
+    select
+      distinct on (availability_zone)
+      vpc_id as from_id,
+      availability_zone as to_id
+    from
+      aws_vpc_subnet
+    where
+      vpc_id = any($1)
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+edge "vpc_az_to_vpc_subnet" {
+  title = "subnet"
+
+  sql = <<-EOQ
+    select
+      availability_zone as from_id,
+      subnet_id as to_id
+    from
+      aws_vpc_subnet
+    where
+      vpc_id = any($1)
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+node "vpc_igw" {
+  category = category.vpc_internet_gateway
+
+  sql = <<-EOQ
+    select
+      internet_gateway_id as id,
+      title as title,
+      jsonb_build_object(
+        'ID', internet_gateway_id,
+        'State', a ->> 'State',
+        'Region', region,
+        'Account ID', account_id
+      ) as properties
+    from
+      aws_vpc_internet_gateway,
+      jsonb_array_elements(attachments) as a
+    where
+      a ->> 'VpcId' = any($1);
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+edge "vpc_to_igw" {
+  title = "vpc"
+
+  sql = <<-EOQ
+    select
+      a ->> 'VpcId' as to_id,
+      i.internet_gateway_id as from_id
+    from
+      aws_vpc_internet_gateway as i,
+      jsonb_array_elements(attachments) as a
+    where
+      a ->> 'VpcId' = any($1);
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+node "vpc_az_route_table" {
+  category = category.vpc_route_table
+
+  sql = <<-EOQ
+    select
+      route_table_id as id,
+      case
+        when associations @> '[{"Main": true}]'
+          then concat(title,' [Default]')
+        else
+          title
+      end as title,
+      jsonb_build_object(
+        'ID', route_table_id,
+        'Region', region,
+        'Account ID', account_id
+      ) as properties
+    from
+      aws_vpc_route_table
+    where
+      vpc_id = any($1);
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+edge "vpc_subnet_to_route_table" {
+  title = "route table"
+
+  sql = <<-EOQ
+    select
+       a ->> 'SubnetId' as to_id,
+      rt.route_table_id as from_id
+      from
+        aws_vpc_route_table as rt,
+        jsonb_array_elements(associations) as a
+      where
+        rt.vpc_id = any($1);
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+
+edge "vpc_to_vpc_route_table" {
+  title = "route table"
+
+  sql = <<-EOQ
+    select
+      rt.vpc_id as from_id,
+      rt.route_table_id as to_id
+      from
+        aws_vpc_route_table as rt,
+        jsonb_array_elements(associations) as a
+      where
+        rt.vpc_id = any($1);
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+
+node "vpc_vcp_endpoint" {
+  category = category.vpc_endpoint
+
+  sql = <<-EOQ
+    select
+      vpc_endpoint_id as id,
+      title as title,
+      jsonb_build_object(
+        'ID', vpc_endpoint_id,
+        'Region', region,
+        'Account ID', account_id
+      ) as properties
+    from
+      aws_vpc_endpoint
+    where
+      vpc_id = any($1);
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+edge "vpc_subnet_to_endpoint" {
+  title = "vpc endpoint"
+
+  sql = <<-EOQ
+    select
+      s as from_id,
+      e.vpc_endpoint_id as to_id
+    from
+      aws_vpc_endpoint as e,
+      jsonb_array_elements_text(e.subnet_ids) as s
+    where
+      e.vpc_id = any($1)
+    union
+    select
+      vpc_id as from_id,
+      vpc_endpoint_id as to_id
+    from
+      aws_vpc_endpoint as e
+    where
+      jsonb_array_length(subnet_ids) = 0
+      and vpc_id = any($1);
+
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+node "vpc_transit_gateway" {
+  category = category.ec2_transit_gateway
+
+  sql = <<-EOQ
+    select
+      g.transit_gateway_id as id,
+      g.title as title,
+      jsonb_build_object(
+        'ID', g.transit_gateway_id,
+        'ARN', g.transit_gateway_arn,
+        'Attachment Id', t.transit_gateway_attachment_id,
+        'Association State', t.association_state,
+        'Region', g.region,
+        'Account ID', g.account_id
+      ) as properties
+    from
+      aws_ec2_transit_gateway_vpc_attachment as t
+      left join aws_ec2_transit_gateway as g on t.transit_gateway_id = g.transit_gateway_id
+    where
+      t.resource_id = any($1) and resource_type = 'vpc';
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+edge "vpc_to_transit_gateway" {
+  title = "transit_gateway"
+
+  sql = <<-EOQ
+    select
+      resource_id as to_id,
+      transit_gateway_id as from_id
+    from
+      aws_ec2_transit_gateway_vpc_attachment
+      where resource_id = any($1);
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+node "vpc_nat_gateway" {
+  category = category.vpc_nat_gateway
+
+  sql = <<-EOQ
+    select
+      arn as id,
       title as title,
       jsonb_build_object(
         'ARN', arn,
-        'VPC ID', vpc_id,
-        'Is Default', is_default,
-        'State', state,
-        'CIDR Block', cidr_block,
-        'DHCP Options ID', dhcp_options_id,
-        'Owner ID', owner_id,
+        'ID', nat_gateway_id,
+        'Region', region,
+        'Account ID', account_id
+      ) as properties
+    from
+      aws_vpc_nat_gateway
+    where
+      vpc_id = any($1);
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+edge "vpc_subnet_to_nat_gateway" {
+  title = "nat gateway"
+
+  sql = <<-EOQ
+    select
+      subnet_id as from_id,
+      arn as to_id
+    from
+      aws_vpc_nat_gateway
+    where
+      vpc_id = any($1)
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+node "vpc_vpn_gateway" {
+  category = category.vpc_vpn_gateway
+
+  sql = <<-EOQ
+    select
+      vpn_gateway_id as id,
+      title as title,
+      jsonb_build_object(
+        'ID', vpn_gateway_id,
+        'Region', region,
+        'Account ID', account_id
+      ) as properties
+    from
+      aws_vpc_vpn_gateway,
+      jsonb_array_elements(vpc_attachments) as a
+    where
+      a ->> 'VpcId' = any($1);
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+edge "vpc_to_vpn_gateway" {
+  title = "vpn gateway"
+
+  sql = <<-EOQ
+    select
+      a ->> 'VpcId' as to_id,
+      g.vpn_gateway_id as from_id
+    from
+      aws_vpc_vpn_gateway as g,
+      jsonb_array_elements(vpc_attachments) as a
+    where
+      a ->> 'VpcId' = any($1);
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+edge "vpc_to_vpc_security_group" {
+  title = "security group"
+
+  sql = <<-EOQ
+    select
+      vpc_vpc_id as from_id,
+      vpc_security_group_id as to_id
+    from
+      unnest($1::text[]) as vpc_vpc_id,
+      unnest($2::text[]) as vpc_security_group_id
+  EOQ
+
+  param "vpc_vpc_ids" {}
+  param "vpc_security_group_ids" {}
+}
+
+edge "vpc_peered_vpc" {
+  title = "peered with"
+
+  sql = <<-EOQ
+    select
+      $1 as to_id,
+      case
+        when accepter_vpc_id = $1 then requester_vpc_id
+        else accepter_vpc_id
+      end as from_id
+    from
+      aws_vpc_peering_connection
+    where
+      accepter_vpc_id = $1
+      or requester_vpc_id = $1
+  EOQ
+
+  param "vpc_id" {}
+}
+
+node "vpc_s3_access_point" {
+  category = category.s3_access_point
+
+  sql = <<-EOQ
+    select
+      access_point_arn as id,
+      title as title,
+      jsonb_build_object(
+        'ARN', access_point_arn,
         'Account ID', account_id,
         'Region', region
       ) as properties
     from
-      aws_vpc
+      aws_s3_access_point
     where
-      vpc_id = any($1 ::text[]);
+      vpc_id  = any($1)
   EOQ
 
-  param "vpc_ids" {}
+  param "vpc_vpc_ids" {}
+}
+
+
+edge "vpc_to_s3_access_point" {
+  title = "s3 access point"
+
+  sql = <<-EOQ
+    select
+      vpc_id as from_id,
+      access_point_arn as to_id
+    from
+      aws_s3_access_point
+    where
+      vpc_id = any($1)
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+node "vpc_peered_vpc" {
+  category = category.vpc_vpc
+
+  sql = <<-EOQ
+    -- with vpcs as (
+      select
+        accepter_vpc_id as id,
+        vpc.title as title,
+        jsonb_build_object(
+          'VPC ID', accepter_vpc_id,
+          'CIDR', accepter_cidr_block,
+          'Status', status_code,
+          'Region', accepter_region,
+          'Account ID', accepter_owner_id
+        ) as properties
+      from
+        aws_vpc_peering_connection,
+        aws_vpc as vpc
+      where
+        accepter_vpc_id = vpc.vpc_id
+        and requester_vpc_id = any($1)
+
+      union all select
+        requester_vpc_id as id,
+        vpc.title as title,
+        jsonb_build_object(
+          'VPC ID', requester_vpc_id,
+          'CIDR', requester_cidr_block,
+          'Status', status_code,
+          'Region', requester_region,
+          'Account ID', requester_owner_id
+        ) as properties
+      from
+        aws_vpc_peering_connection,
+        aws_vpc as vpc
+      where
+        requester_vpc_id = vpc.vpc_id
+        and accepter_vpc_id = any($1)
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+edge "vpc_to_vpc_flow_log" {
+  title = "flow log"
+
+  sql = <<-EOQ
+    select
+      vpc_vpc_id as from_id,
+      vpc_flow_log_id as to_id
+    from
+      unnest($1::text[]) as vpc_flow_log_id,
+      unnest($2::text[]) as vpc_vpc_id
+  EOQ
+
+  param "vpc_flow_log_ids" {}
+  param "vpc_vpc_ids" {}
+}
+
+edge "vpc_subnet_to_instance" {
+  title = "ec2 instance"
+
+  sql = <<-EOQ
+    select
+      subnet_id as from_id,
+      arn as to_id
+    from
+      aws_ec2_instance
+    where
+      vpc_id = any($1);
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+edge "vpc_subnet_to_lambda" {
+  title = "lambda function"
+
+  sql = <<-EOQ
+    select
+      s as from_id,
+      l.arn as to_id
+    from
+      aws_lambda_function as l,
+      jsonb_array_elements_text(l.vpc_subnet_ids) as s
+    where
+      l.vpc_id = any($1);
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+# In the below relation there could be multiple subnets associated to diffrent ec2_application_load_balancers. However it should not be all subnets to all ec2_application_load_balancers, to prevent this edge case; we have to write the query in below format without using unset
+edge "vpc_subnet_to_ec2_alb" {
+  title = "alb"
+
+  sql = <<-EOQ
+    select
+      az ->> 'SubnetId' as from_id,
+      a.arn as to_id
+    from
+      aws_ec2_application_load_balancer as a,
+      jsonb_array_elements(availability_zones) as az
+    where
+      a.vpc_id = any($1);
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+edge "vpc_subnet_to_ec2_nlb" {
+  title = "nlb"
+
+  sql = <<-EOQ
+    select
+      az ->> 'SubnetId' as from_id,
+      n.arn as to_id
+    from
+      aws_ec2_network_load_balancer as n,
+      jsonb_array_elements(availability_zones) as az
+    where n.vpc_id = any($1);
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+edge "vpc_subnet_to_ec2_clb" {
+  title = "clb"
+
+  sql = <<-EOQ
+    select
+      s as from_id,
+      c.arn as to_id
+    from
+      aws_ec2_classic_load_balancer as c,
+      jsonb_array_elements_text(subnets) as s
+    where
+      c.vpc_id = any($1);
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+edge "vpc_subnet_to_ec2_glb" {
+  title = "glb"
+
+  sql = <<-EOQ
+    select
+      az ->> 'SubnetId' as from_id,
+      g.arn as to_id
+    from
+      aws_ec2_gateway_load_balancer as g,
+      jsonb_array_elements(availability_zones) as az
+    where
+      g.vpc_id = any($1);
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+edge "vpc_subnet_to_rds_instance" {
+  title = "rds instance"
+
+  sql = <<-EOQ
+    select
+      s ->> 'SubnetIdentifier' as from_id,
+      i.arn as to_id
+    from
+      aws_rds_db_instance as i,
+      jsonb_array_elements(subnets) as s
+    where
+      i.vpc_id = any($1);
+  EOQ
+
+  param "vpc_vpc_ids" {}
 }

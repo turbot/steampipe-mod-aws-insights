@@ -1,4 +1,4 @@
-dashboard "aws_elasticache_cluster_detail" {
+dashboard "elasticache_cluster_detail" {
 
   title         = "AWS ElastiCache Cluster Detail"
   documentation = file("./dashboards/elasticache/docs/elasticache_cluster_detail.md")
@@ -9,14 +9,14 @@ dashboard "aws_elasticache_cluster_detail" {
 
   input "elasticache_cluster_arn" {
     title = "Select a Cluster:"
-    query = query.aws_elasticache_cluster_input
+    query = query.elasticache_cluster_input
     width = 4
   }
 
   container {
 
     card {
-      query = query.aws_elasticache_cluster_status
+      query = query.elasticache_cluster_status
       width = 2
       args = {
         arn = self.input.elasticache_cluster_arn.value
@@ -24,7 +24,7 @@ dashboard "aws_elasticache_cluster_detail" {
     }
 
     card {
-      query = query.aws_elasticache_cluster_node_type
+      query = query.elasticache_cluster_node_type
       width = 2
       args = {
         arn = self.input.elasticache_cluster_arn.value
@@ -32,7 +32,7 @@ dashboard "aws_elasticache_cluster_detail" {
     }
 
     card {
-      query = query.aws_elasticache_cluster_automatic_backup
+      query = query.elasticache_cluster_automatic_backup
       width = 2
       args = {
         arn = self.input.elasticache_cluster_arn.value
@@ -40,7 +40,7 @@ dashboard "aws_elasticache_cluster_detail" {
     }
 
     card {
-      query = query.aws_elasticache_cluster_encryption_transit
+      query = query.elasticache_cluster_encryption_transit
       width = 2
       args = {
         arn = self.input.elasticache_cluster_arn.value
@@ -48,7 +48,7 @@ dashboard "aws_elasticache_cluster_detail" {
     }
 
     card {
-      query = query.aws_elasticache_cluster_encryption_rest
+      query = query.elasticache_cluster_encryption_rest
       width = 2
       args = {
         arn = self.input.elasticache_cluster_arn.value
@@ -56,7 +56,7 @@ dashboard "aws_elasticache_cluster_detail" {
     }
 
     card {
-      query = query.aws_elasticache_cluster_auth_token
+      query = query.elasticache_cluster_auth_token
       width = 2
       args = {
         arn = self.input.elasticache_cluster_arn.value
@@ -73,25 +73,25 @@ dashboard "aws_elasticache_cluster_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_elasticache_cluster_node,
-        node.aws_elasticache_cluster_to_elasticache_parameter_group_node,
-        node.aws_elasticache_cluster_to_sns_topic_node,
-        node.aws_elasticache_cluster_to_kms_key_node,
-        node.aws_elasticache_cluster_to_vpc_security_group_node,
-        node.aws_elasticache_cluster_to_vpc_node,
-        node.aws_elasticache_cluster_to_subnet_group_node,
-        node.aws_elasticache_cluster_to_vpc_subnet_node,
-        node.aws_elasticache_cluster_subnet_to_vpc_node
+        node.elasticache_cluster_node,
+        node.elasticache_cluster_to_elasticache_parameter_group_node,
+        node.elasticache_cluster_to_sns_topic_node,
+        node.elasticache_cluster_to_kms_key_node,
+        node.elasticache_cluster_to_vpc_security_group_node,
+        node.elasticache_cluster_to_vpc_node,
+        node.elasticache_cluster_to_subnet_group_node,
+        node.elasticache_cluster_to_vpc_subnet_node,
+        node.elasticache_cluster_subnet_to_vpc_node
       ]
 
       edges = [
-        edge.aws_elasticache_cluster_to_sns_topic_edge,
-        edge.aws_elasticache_cluster_to_elasticache_parameter_group_edge,
-        edge.aws_elasticache_cluster_to_kms_key_edge,
-        edge.aws_elasticache_cluster_to_vpc_security_group_edge,
-        edge.aws_elasticache_cluster_to_subnet_group_edge,
-        edge.aws_elasticache_cluster_to_vpc_subnet_edge,
-        edge.aws_elasticache_cluster_subnet_to_vpc_edge
+        edge.elasticache_cluster_to_sns_topic_edge,
+        edge.elasticache_cluster_to_elasticache_parameter_group_edge,
+        edge.elasticache_cluster_to_kms_key_edge,
+        edge.elasticache_cluster_to_vpc_security_group_edge,
+        edge.elasticache_cluster_to_subnet_group_edge,
+        edge.elasticache_cluster_to_vpc_subnet_edge,
+        edge.elasticache_cluster_subnet_to_vpc_edge
       ]
 
       args = {
@@ -109,7 +109,7 @@ dashboard "aws_elasticache_cluster_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_elasticache_cluster_overview
+        query = query.elasticache_cluster_overview
         args = {
           arn = self.input.elasticache_cluster_arn.value
         }
@@ -119,7 +119,7 @@ dashboard "aws_elasticache_cluster_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_elasticache_cluster_tags
+        query = query.elasticache_cluster_tags
         args = {
           arn = self.input.elasticache_cluster_arn.value
         }
@@ -131,7 +131,7 @@ dashboard "aws_elasticache_cluster_detail" {
 
       table {
         title = "Notification Configuration"
-        query = query.aws_elasticache_cluster_notification_configuration
+        query = query.elasticache_cluster_notification_configuration
         args = {
           arn = self.input.elasticache_cluster_arn.value
         }
@@ -141,7 +141,7 @@ dashboard "aws_elasticache_cluster_detail" {
 }
 
 
-query "aws_elasticache_cluster_input" {
+query "elasticache_cluster_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -157,7 +157,7 @@ query "aws_elasticache_cluster_input" {
   EOQ
 }
 
-query "aws_elasticache_cluster_status" {
+query "elasticache_cluster_status" {
   sql = <<-EOQ
     select
       'Status' as label,
@@ -171,7 +171,7 @@ query "aws_elasticache_cluster_status" {
   param "arn" {}
 }
 
-query "aws_elasticache_cluster_node_type" {
+query "elasticache_cluster_node_type" {
   sql = <<-EOQ
     select
       'Node Type' as label,
@@ -185,7 +185,7 @@ query "aws_elasticache_cluster_node_type" {
   param "arn" {}
 }
 
-query "aws_elasticache_cluster_automatic_backup" {
+query "elasticache_cluster_automatic_backup" {
   sql = <<-EOQ
     select
       'Automatic Backup' as label,
@@ -200,7 +200,7 @@ query "aws_elasticache_cluster_automatic_backup" {
   param "arn" {}
 }
 
-query "aws_elasticache_cluster_encryption_transit" {
+query "elasticache_cluster_encryption_transit" {
   sql = <<-EOQ
     select
       'Encryption in Transit' as label,
@@ -215,7 +215,7 @@ query "aws_elasticache_cluster_encryption_transit" {
   param "arn" {}
 }
 
-query "aws_elasticache_cluster_encryption_rest" {
+query "elasticache_cluster_encryption_rest" {
   sql = <<-EOQ
     select
       'Encryption at Rest' as label,
@@ -231,7 +231,7 @@ query "aws_elasticache_cluster_encryption_rest" {
 
 }
 
-query "aws_elasticache_cluster_auth_token" {
+query "elasticache_cluster_auth_token" {
   sql = <<-EOQ
     select
       'Auth Token' as label,
@@ -247,8 +247,8 @@ query "aws_elasticache_cluster_auth_token" {
 
 }
 
-node "aws_elasticache_cluster_node" {
-  category = category.aws_elasticache_cluster
+node "elasticache_cluster_node" {
+  category = category.elasticache_cluster
 
   sql = <<-EOQ
     select
@@ -270,8 +270,8 @@ node "aws_elasticache_cluster_node" {
   param "arn" {}
 }
 
-node "aws_elasticache_cluster_to_sns_topic_node" {
-  category = category.aws_sns_topic
+node "elasticache_cluster_to_sns_topic_node" {
+  category = category.sns_topic
 
   sql = <<-EOQ
     select
@@ -298,7 +298,7 @@ node "aws_elasticache_cluster_to_sns_topic_node" {
   param "arn" {}
 }
 
-edge "aws_elasticache_cluster_to_sns_topic_edge" {
+edge "elasticache_cluster_to_sns_topic_edge" {
   title = "notifies"
 
   sql = <<-EOQ
@@ -317,8 +317,8 @@ edge "aws_elasticache_cluster_to_sns_topic_edge" {
   param "arn" {}
 }
 
-node "aws_elasticache_cluster_to_kms_key_node" {
-  category = category.aws_kms_key
+node "elasticache_cluster_to_kms_key_node" {
+  category = category.kms_key
 
   sql = <<-EOQ
     select
@@ -350,7 +350,7 @@ node "aws_elasticache_cluster_to_kms_key_node" {
   param "arn" {}
 }
 
-edge "aws_elasticache_cluster_to_kms_key_edge" {
+edge "elasticache_cluster_to_kms_key_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -372,8 +372,8 @@ edge "aws_elasticache_cluster_to_kms_key_edge" {
   param "arn" {}
 }
 
-node "aws_elasticache_cluster_to_vpc_security_group_node" {
-  category = category.aws_vpc_security_group
+node "elasticache_cluster_to_vpc_security_group_node" {
+  category = category.vpc_security_group
 
   sql = <<-EOQ
     select
@@ -403,7 +403,7 @@ node "aws_elasticache_cluster_to_vpc_security_group_node" {
   param "arn" {}
 }
 
-edge "aws_elasticache_cluster_to_vpc_security_group_edge" {
+edge "elasticache_cluster_to_vpc_security_group_edge" {
   title = "security group"
 
   sql = <<-EOQ
@@ -422,8 +422,8 @@ edge "aws_elasticache_cluster_to_vpc_security_group_edge" {
   param "arn" {}
 }
 
-node "aws_elasticache_cluster_to_vpc_node" {
-  category = category.aws_vpc
+node "elasticache_cluster_to_vpc_node" {
+  category = category.vpc_vpc
 
   sql = <<-EOQ
     select
@@ -456,8 +456,8 @@ node "aws_elasticache_cluster_to_vpc_node" {
   param "arn" {}
 }
 
-node "aws_elasticache_cluster_to_subnet_group_node" {
-  category = category.aws_elasticache_subnet_group
+node "elasticache_cluster_to_subnet_group_node" {
+  category = category.elasticache_subnet_group
 
   sql = <<-EOQ
     select
@@ -481,7 +481,7 @@ node "aws_elasticache_cluster_to_subnet_group_node" {
   param "arn" {}
 }
 
-edge "aws_elasticache_cluster_to_subnet_group_edge" {
+edge "elasticache_cluster_to_subnet_group_edge" {
   title = "subnet group"
 
   sql = <<-EOQ
@@ -504,8 +504,8 @@ edge "aws_elasticache_cluster_to_subnet_group_edge" {
   param "arn" {}
 }
 
-node "aws_elasticache_cluster_to_elasticache_parameter_group_node" {
-  category = category.aws_elasticache_parameter_group
+node "elasticache_cluster_to_elasticache_parameter_group_node" {
+  category = category.elasticache_parameter_group
 
   sql = <<-EOQ
     select
@@ -528,7 +528,7 @@ node "aws_elasticache_cluster_to_elasticache_parameter_group_node" {
   param "arn" {}
 }
 
-edge "aws_elasticache_cluster_to_elasticache_parameter_group_edge" {
+edge "elasticache_cluster_to_elasticache_parameter_group_edge" {
   title = "parameter group"
 
   sql = <<-EOQ
@@ -547,8 +547,8 @@ edge "aws_elasticache_cluster_to_elasticache_parameter_group_edge" {
   param "arn" {}
 }
 
-node "aws_elasticache_cluster_to_vpc_subnet_node" {
-  category = category.aws_vpc_subnet
+node "elasticache_cluster_to_vpc_subnet_node" {
+  category = category.vpc_subnet
 
   sql = <<-EOQ
     select
@@ -581,7 +581,7 @@ node "aws_elasticache_cluster_to_vpc_subnet_node" {
   param "arn" {}
 }
 
-edge "aws_elasticache_cluster_to_vpc_subnet_edge" {
+edge "elasticache_cluster_to_vpc_subnet_edge" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -602,8 +602,8 @@ edge "aws_elasticache_cluster_to_vpc_subnet_edge" {
   param "arn" {}
 }
 
-node "aws_elasticache_cluster_subnet_to_vpc_node" {
-  category = category.aws_vpc
+node "elasticache_cluster_subnet_to_vpc_node" {
+  category = category.vpc_vpc
 
   sql = <<-EOQ
     select
@@ -636,7 +636,7 @@ node "aws_elasticache_cluster_subnet_to_vpc_node" {
   param "arn" {}
 }
 
-edge "aws_elasticache_cluster_subnet_to_vpc_edge" {
+edge "elasticache_cluster_subnet_to_vpc_edge" {
   title = "vpc"
 
   sql = <<-EOQ
@@ -655,7 +655,7 @@ edge "aws_elasticache_cluster_subnet_to_vpc_edge" {
   param "arn" {}
 }
 
-query "aws_elasticache_cluster_overview" {
+query "elasticache_cluster_overview" {
   sql = <<-EOQ
     select
       title as "Title",
@@ -678,7 +678,7 @@ query "aws_elasticache_cluster_overview" {
   param "arn" {}
 }
 
-query "aws_elasticache_cluster_tags" {
+query "elasticache_cluster_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -695,7 +695,7 @@ query "aws_elasticache_cluster_tags" {
   param "arn" {}
 }
 
-query "aws_elasticache_cluster_notification_configuration" {
+query "elasticache_cluster_notification_configuration" {
   sql = <<-EOQ
     select
       t.title as "Topic Title",
@@ -710,4 +710,28 @@ query "aws_elasticache_cluster_notification_configuration" {
   EOQ
 
   param "arn" {}
+}
+
+node "elasticache_cluster" {
+  category = category.elasticache_cluster
+
+  sql = <<-EOQ
+    select
+      arn as id,
+      title as title,
+      jsonb_build_object(
+        'ARN', arn,
+        'Cache Cluster ID', cache_cluster_id,
+        'Status', cache_cluster_status,
+        'Encryption Enabled', at_rest_encryption_enabled::text,
+        'Create Time', cache_cluster_create_time,
+        'Account ID', account_id,
+        'Region', region ) as properties
+    from
+      aws_elasticache_cluster
+    where
+      arn = any($1);
+  EOQ
+
+  param "elasticache_cluster_arns" {}
 }

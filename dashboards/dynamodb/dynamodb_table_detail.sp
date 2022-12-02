@@ -1,4 +1,4 @@
-dashboard "aws_dynamodb_table_detail" {
+dashboard "dynamodb_table_detail" {
 
   title         = "AWS DynamoDB Table Detail"
   documentation = file("./dashboards/dynamodb/docs/dynamodb_table_detail.md")
@@ -9,14 +9,14 @@ dashboard "aws_dynamodb_table_detail" {
 
   input "table_arn" {
     title = "Select a table:"
-    query = query.aws_dynamodb_table_input
+    query = query.dynamodb_table_input
     width = 4
   }
 
   container {
 
     card {
-      query = query.aws_dynamodb_table_status
+      query = query.dynamodb_table_status
       width = 2
       args = {
         arn = self.input.table_arn.value
@@ -24,7 +24,7 @@ dashboard "aws_dynamodb_table_detail" {
     }
 
     card {
-      query = query.aws_dynamodb_table_class
+      query = query.dynamodb_table_class
       width = 2
       args = {
         arn = self.input.table_arn.value
@@ -32,7 +32,7 @@ dashboard "aws_dynamodb_table_detail" {
     }
 
     card {
-      query = query.aws_dynamodb_table_backup_count
+      query = query.dynamodb_table_backup_count
       width = 2
       args = {
         arn = self.input.table_arn.value
@@ -40,7 +40,7 @@ dashboard "aws_dynamodb_table_detail" {
     }
 
     card {
-      query = query.aws_dynamodb_table_encryption_type
+      query = query.dynamodb_table_encryption_type
       width = 2
       args = {
         arn = self.input.table_arn.value
@@ -48,7 +48,7 @@ dashboard "aws_dynamodb_table_detail" {
     }
 
     card {
-      query = query.aws_dynamodb_table_continuous_backups
+      query = query.dynamodb_table_continuous_backups
       width = 2
       args = {
         arn = self.input.table_arn.value
@@ -56,7 +56,7 @@ dashboard "aws_dynamodb_table_detail" {
     }
 
     card {
-      query = query.aws_dynamodb_table_autoscaling_state
+      query = query.dynamodb_table_autoscaling_state
       width = 2
       args = {
         arn = self.input.table_arn.value
@@ -72,53 +72,86 @@ dashboard "aws_dynamodb_table_detail" {
       type      = "graph"
       direction = "TD"
 
-    with "kms_keys" {
-      sql = <<-EOQ
-        select
-          sse_description ->> 'KMSMasterKeyArn' as key_arn
-        from
-          aws_dynamodb_table
-        where
-          arn = $1;
-      EOQ
+      with "kms_keys" {
+        sql = <<-EOQ
+          select
+            sse_description ->> 'KMSMasterKeyArn' as key_arn
+          from
+            aws_dynamodb_table
+          where
+            arn = $1;
+        EOQ
 
-      args = [self.input.table_arn.value]
-    }
+        args = [self.input.table_arn.value]
+      }
 
-    with "buckets" {
-      sql = <<-EOQ
-        select
-          b.arn as bucket_arn
-        from
-          aws_s3_bucket as b,
-          aws_dynamodb_table_export as t
-        where
-          b.name = t.s3_bucket
-          and t.table_arn = $1;
-      EOQ
+      with "s3_buckets" {
+        sql = <<-EOQ
+          select
+            b.arn as bucket_arn
+          from
+            aws_s3_bucket as b,
+            aws_dynamodb_table_export as t
+          where
+            b.name = t.s3_bucket
+            and t.table_arn = $1;
+        EOQ
 
-      args = [self.input.table_arn.value]
-    }
+        args = [self.input.table_arn.value]
+      }
+
+      with "kinesis_streams" {
+        sql = <<-EOQ
+          select
+            s.stream_arn as kinesis_stream_arn
+          from
+            aws_kinesis_stream as s,
+            aws_dynamodb_table as t,
+            jsonb_array_elements(t.streaming_destination -> 'KinesisDataStreamDestinations') as d
+          where
+            d ->> 'StreamArn' = s.stream_arn
+            and t.arn = $1;
+          EOQ
+
+        args = [self.input.table_arn.value]
+      }
+
+      with "dynamodb_backups" {
+        sql = <<-EOQ
+          select
+            b.arn as dbynamodb_backup_arn
+          from
+            aws_dynamodb_backup as b,
+            aws_dynamodb_table as t
+          where
+            t.arn = b.table_arn
+            and t.arn = $1;
+        EOQ
+
+        args = [self.input.table_arn.value]
+      }
 
       nodes = [
-        node.aws_dynamodb_table_nodes,
-        node.aws_kms_key_nodes,
-        node.aws_s3_bucket_nodes,
-        node.aws_dynamodb_table_to_dynamodb_backup_node,
-        node.aws_dynamodb_table_to_kinesis_stream_node
+        node.dynamodb_table,
+        node.kms_key,
+        node.s3_bucket,
+        node.dynamodb_table_to_dynamodb_backup_node,
+        node.dynamodb_table_to_kinesis_stream_node
       ]
 
       edges = [
-        edge.aws_dynamodb_table_to_kms_key_edges,
-        edge.aws_dynamodb_table_to_s3_bucket_edges,
-        edge.aws_dynamodb_table_to_dynamodb_backup_edges,
-        edge.aws_dynamodb_table_to_kinesis_stream_edges
+        edge.dynamodb_table_to_kms_key,
+        edge.dynamodb_table_to_s3_bucket,
+        edge.dynamodb_table_to_dynamodb_backup,
+        edge.dynamodb_table_to_kinesis_stream
       ]
 
       args = {
-        table_arns = [self.input.table_arn.value]
-        bucket_arns =  with.buckets.rows[*].bucket_arn
-        key_arns =  with.kms_keys.rows[*].key_arn
+        dynamodb_table_arns   = [self.input.table_arn.value]
+        s3_bucket_arns        = with.s3_buckets.rows[*].bucket_arn
+        kms_key_arns          = with.kms_keys.rows[*].key_arn
+        kinesis_stream_arns   = with.kinesis_streams.rows[*].kinesis_stream_arn
+        dbynamodb_backup_arns = with.dynamodb_backups.rows[*].dbynamodb_backup_arn
       }
     }
   }
@@ -132,7 +165,7 @@ dashboard "aws_dynamodb_table_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_dynamodb_table_overview
+        query = query.dynamodb_table_overview
         args = {
           arn = self.input.table_arn.value
         }
@@ -142,7 +175,7 @@ dashboard "aws_dynamodb_table_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_dynamodb_table_tags
+        query = query.dynamodb_table_tags
         args = {
           arn = self.input.table_arn.value
         }
@@ -156,7 +189,7 @@ dashboard "aws_dynamodb_table_detail" {
       table {
         title = "Read/Write Capacity"
         width = 6
-        query = query.aws_dynamodb_table_read_write_capacity
+        query = query.dynamodb_table_read_write_capacity
         args = {
           arn = self.input.table_arn.value
         }
@@ -165,7 +198,7 @@ dashboard "aws_dynamodb_table_detail" {
       table {
         title = "Primary Key Schema"
         width = 6
-        query = query.aws_dynamodb_table_key_schema
+        query = query.dynamodb_table_key_schema
         args = {
           arn = self.input.table_arn.value
         }
@@ -174,7 +207,7 @@ dashboard "aws_dynamodb_table_detail" {
       table {
         title = "Point-in-Time Recovery (PITR)"
         width = 12
-        query = query.aws_dynamodb_table_point_in_time_recovery
+        query = query.dynamodb_table_point_in_time_recovery
         args = {
           arn = self.input.table_arn.value
         }
@@ -185,7 +218,7 @@ dashboard "aws_dynamodb_table_detail" {
   }
 }
 
-query "aws_dynamodb_table_input" {
+query "dynamodb_table_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -202,7 +235,7 @@ query "aws_dynamodb_table_input" {
   EOQ
 }
 
-query "aws_dynamodb_table_status" {
+query "dynamodb_table_status" {
   sql = <<-EOQ
     select
       initcap(table_status) as value,
@@ -216,7 +249,7 @@ query "aws_dynamodb_table_status" {
   param "arn" {}
 }
 
-query "aws_dynamodb_table_size" {
+query "dynamodb_table_size" {
   sql = <<-EOQ
     select
       table_size_bytes as value,
@@ -230,7 +263,7 @@ query "aws_dynamodb_table_size" {
   param "arn" {}
 }
 
-query "aws_dynamodb_table_backup_count" {
+query "dynamodb_table_backup_count" {
   sql = <<-EOQ
     select
       count(name) as value,
@@ -244,7 +277,7 @@ query "aws_dynamodb_table_backup_count" {
   param "arn" {}
 }
 
-query "aws_dynamodb_table_encryption_type" {
+query "dynamodb_table_encryption_type" {
   sql = <<-EOQ
     with table_encryption_status as (
       select
@@ -272,7 +305,7 @@ query "aws_dynamodb_table_encryption_type" {
   param "arn" {}
 }
 
-query "aws_dynamodb_table_class" {
+query "dynamodb_table_class" {
   sql = <<-EOQ
     select
       case when table_class is null then 'Standard' else initcap(table_class) end as value,
@@ -286,7 +319,7 @@ query "aws_dynamodb_table_class" {
   param "arn" {}
 }
 
-query "aws_dynamodb_table_continuous_backups" {
+query "dynamodb_table_continuous_backups" {
   sql = <<-EOQ
     select
       case when continuous_backups_status = 'ENABLED' then 'Enabled' else 'Disabled' end as value,
@@ -301,7 +334,7 @@ query "aws_dynamodb_table_continuous_backups" {
   param "arn" {}
 }
 
-query "aws_dynamodb_table_autoscaling_state" {
+query "dynamodb_table_autoscaling_state" {
   sql = <<-EOQ
     with table_with_autoscaling as (
       select
@@ -325,152 +358,7 @@ query "aws_dynamodb_table_autoscaling_state" {
   param "arn" {}
 }
 
-node "aws_dynamodb_table_nodes" {
-  category = category.aws_dynamodb_table
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'Name', name,
-        'ARN', arn,
-        'Creation Date', creation_date_time,
-        'Table Status', table_status,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_dynamodb_table
-    where
-      arn = any($1);
-  EOQ
-
-  param "table_arns" {}
-}
-
-edge "aws_dynamodb_table_to_kms_key_edges" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      key_arns as to_id,
-      table_arns as from_id
-    from
-      unnest($1::text[]) as key_arns,
-      unnest($2::text[]) as table_arns
-  EOQ
-
-  param "key_arns" {}
-  param "table_arns" {}
-}
-
-edge "aws_dynamodb_table_to_s3_bucket_edges" {
-  title = "exports to"
-
-  sql = <<-EOQ
-    select
-      table_arns as from_id,
-      bucket_arns as to_id
-    from
-      unnest($1::text[]) as table_arns,
-      unnest($2::text[]) as bucket_arns
-  EOQ
-
-  param "table_arns" {}
-  param "bucket_arns" {}
-}
-
-node "aws_dynamodb_table_to_dynamodb_backup_node" {
-  category = category.aws_dynamodb_backup
-
-  sql = <<-EOQ
-  select
-    b.arn as id,
-    b.title as title,
-    jsonb_build_object(
-      'ARN', b.arn,
-      'Status', b.backup_status,
-      'Creation Date', b.backup_creation_datetime,
-      'Region', b.region ,
-      'Account ID', b.account_id
-    ) as properties
-  from
-    aws_dynamodb_backup as b,
-    aws_dynamodb_table as t
-  where
-    t.arn = b.table_arn
-    and t.arn = any($1);
-  EOQ
-
-  param "table_arns" {}
-}
-
-edge "aws_dynamodb_table_to_dynamodb_backup_edges" {
-  title = "backup"
-
-  sql = <<-EOQ
-  select
-    t.arn as from_id,
-    b.arn as to_id
-  from
-    aws_dynamodb_backup as b,
-    aws_dynamodb_table as t
-  where
-    t.arn = b.table_arn
-    and t.arn = any($1);
-  EOQ
-
-  param "table_arns" {}
-}
-
-node "aws_dynamodb_table_to_kinesis_stream_node" {
-  category = category.aws_kinesis_stream
-
-  sql = <<-EOQ
-  select
-    s.stream_arn as id,
-    s.title as title,
-    jsonb_build_object(
-      'ARN', s.stream_arn,
-      'Status', stream_status,
-      'Encryption Type', encryption_type,
-      'Region', s.region ,
-      'Account ID', s.account_id
-    ) as properties
-  from
-    aws_kinesis_stream as s,
-    aws_dynamodb_table as t,
-    jsonb_array_elements(t.streaming_destination -> 'KinesisDataStreamDestinations') as d
-  where
-    d ->> 'StreamArn' = s.stream_arn
-    and t.arn = any($1);
-  EOQ
-
-  param "table_arns" {}
-}
-
-edge "aws_dynamodb_table_to_kinesis_stream_edges" {
-  title = "streams to"
-
-  sql = <<-EOQ
-  select
-    t.arn as from_id,
-    s.stream_arn as to_id
-  from
-    aws_kinesis_stream as s,
-    aws_dynamodb_table as t,
-    jsonb_array_elements(t.streaming_destination -> 'KinesisDataStreamDestinations') as d
-  where
-    d ->> 'StreamArn' = s.stream_arn
-    and t.arn = any($1);
-  EOQ
-
-  param "table_arns" {}
-}
-
-## End relationship graph
-
-query "aws_dynamodb_table_overview" {
+query "dynamodb_table_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -489,7 +377,7 @@ query "aws_dynamodb_table_overview" {
   param "arn" {}
 }
 
-query "aws_dynamodb_table_tags" {
+query "dynamodb_table_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -506,7 +394,7 @@ query "aws_dynamodb_table_tags" {
   param "arn" {}
 }
 
-query "aws_dynamodb_table_key_schema" {
+query "dynamodb_table_key_schema" {
   sql = <<-EOQ
     select
       schema ->> 'AttributeName' as "Attribute Name",
@@ -521,7 +409,7 @@ query "aws_dynamodb_table_key_schema" {
   param "arn" {}
 }
 
-query "aws_dynamodb_table_read_write_capacity" {
+query "dynamodb_table_read_write_capacity" {
   sql = <<-EOQ
     select
       case when read_capacity = 0 then 'On-demand' else read_capacity::text end as "Read Capacity",
@@ -535,7 +423,7 @@ query "aws_dynamodb_table_read_write_capacity" {
   param "arn" {}
 }
 
-query "aws_dynamodb_table_point_in_time_recovery" {
+query "dynamodb_table_point_in_time_recovery" {
   sql = <<-EOQ
     select
       point_in_time_recovery_description ->> 'PointInTimeRecoveryStatus' as "Status",

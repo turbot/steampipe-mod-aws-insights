@@ -1,4 +1,4 @@
-dashboard "aws_rds_db_cluster_detail" {
+dashboard "rds_db_cluster_detail" {
 
   title         = "AWS RDS DB Cluster Detail"
   documentation = file("./dashboards/rds/docs/rds_db_cluster_detail.md")
@@ -9,14 +9,14 @@ dashboard "aws_rds_db_cluster_detail" {
 
   input "db_cluster_arn" {
     title = "Select a cluster:"
-    query = query.aws_rds_db_cluster_input
+    query = query.rds_db_cluster_input
     width = 4
   }
 
   container {
 
     card {
-      query = query.aws_rds_db_cluster_unencrypted
+      query = query.rds_db_cluster_unencrypted
       width = 2
       args = {
         arn = self.input.db_cluster_arn.value
@@ -24,7 +24,7 @@ dashboard "aws_rds_db_cluster_detail" {
     }
 
     card {
-      query = query.aws_rds_db_cluster_logging_disabled
+      query = query.rds_db_cluster_logging_disabled
       width = 2
       args = {
         arn = self.input.db_cluster_arn.value
@@ -32,7 +32,7 @@ dashboard "aws_rds_db_cluster_detail" {
     }
 
     card {
-      query = query.aws_rds_db_cluster_no_deletion_protection
+      query = query.rds_db_cluster_no_deletion_protection
       width = 2
       args = {
         arn = self.input.db_cluster_arn.value
@@ -40,7 +40,7 @@ dashboard "aws_rds_db_cluster_detail" {
     }
 
     card {
-      query = query.aws_rds_db_cluster_status
+      query = query.rds_db_cluster_status
       width = 2
       args = {
         arn = self.input.db_cluster_arn.value
@@ -57,30 +57,30 @@ dashboard "aws_rds_db_cluster_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_rds_db_cluster_nodes,
-        node.aws_rds_db_cluster_to_iam_role_node,
-        node.aws_rds_db_cluster_to_sns_topic_node,
-        node.aws_rds_db_cluster_to_rds_db_cluster_snapshot_node,
-        node.aws_rds_db_cluster_to_rds_db_instance_node,
-        node.aws_rds_db_cluster_to_rds_db_cluster_parameter_group_node,
-        node.aws_rds_db_cluster_to_rds_db_subnet_group_node,
-        node.aws_rds_db_cluster_to_kms_key_node,
-        node.aws_rds_db_cluster_to_vpc_security_group_node,
-        node.aws_rds_db_cluster_vpc_subnet_to_rds_db_subnet_group_node,
-        node.aws_rds_db_cluster_vpc_subnet_to_vpc_node
+        node.rds_db_cluster,
+        node.rds_db_cluster_to_iam_role_node,
+        node.rds_db_cluster_to_sns_topic_node,
+        node.rds_db_cluster_to_rds_db_cluster_snapshot_node,
+        node.rds_db_cluster_to_rds_db_instance_node,
+        node.rds_db_cluster_to_rds_db_cluster_parameter_group_node,
+        node.rds_db_cluster_to_rds_db_subnet_group_node,
+        node.rds_db_cluster_to_kms_key_node,
+        node.rds_db_cluster_to_vpc_security_group_node,
+        node.rds_db_cluster_vpc_subnet_to_rds_db_subnet_group_node,
+        node.rds_db_cluster_vpc_subnet_to_vpc_node
       ]
 
       edges = [
-        edge.aws_rds_db_cluster_to_sns_topic_edge,
-        edge.aws_rds_db_cluster_to_iam_role_edge,
-        edge.aws_rds_db_cluster_to_rds_db_cluster_snapshot_edges,
-        edge.aws_rds_db_cluster_to_rds_db_instance_edge,
-        edge.aws_rds_db_cluster_to_rds_db_cluster_parameter_group_edge,
-        edge.aws_rds_db_cluster_to_kms_key_edge,
-        edge.aws_rds_db_cluster_to_vpc_security_group_edge,
-        edge.aws_rds_db_cluster_vpc_subnet_to_rds_db_subnet_group_edge,
-        edge.aws_rds_db_cluster_vpc_subnet_to_vpc_edge,
-        edge.aws_rds_db_cluster_vpc_security_group_to_vpc_edge
+        edge.rds_db_cluster_to_sns_topic_edge,
+        edge.rds_db_cluster_to_iam_role_edge,
+        edge.rds_db_cluster_to_rds_db_cluster_snapshot,
+        edge.rds_db_cluster_to_rds_db_instance_edge,
+        edge.rds_db_cluster_to_rds_db_cluster_parameter_group_edge,
+        edge.rds_db_cluster_to_kms_key_edge,
+        edge.rds_db_cluster_to_vpc_security_group_edge,
+        edge.rds_db_cluster_vpc_subnet_to_rds_db_subnet_group_edge,
+        edge.rds_db_cluster_vpc_subnet_to_vpc_edge,
+        edge.rds_db_cluster_vpc_security_group_to_vpc_edge
       ]
 
       args = {
@@ -99,7 +99,7 @@ dashboard "aws_rds_db_cluster_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_rds_db_cluster_overview
+        query = query.rds_db_cluster_overview
         args = {
           arn = self.input.db_cluster_arn.value
         }
@@ -109,7 +109,7 @@ dashboard "aws_rds_db_cluster_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_rds_db_cluster_tags
+        query = query.rds_db_cluster_tags
         args = {
           arn = self.input.db_cluster_arn.value
         }
@@ -120,7 +120,7 @@ dashboard "aws_rds_db_cluster_detail" {
   }
 }
 
-query "aws_rds_db_cluster_input" {
+query "rds_db_cluster_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -136,7 +136,7 @@ query "aws_rds_db_cluster_input" {
   EOQ
 }
 
-query "aws_rds_db_cluster_unencrypted" {
+query "rds_db_cluster_unencrypted" {
   sql = <<-EOQ
     select
       case when storage_encrypted then 'Enabled' else 'Disabled' end as value,
@@ -151,7 +151,7 @@ query "aws_rds_db_cluster_unencrypted" {
   param "arn" {}
 }
 
-query "aws_rds_db_cluster_logging_disabled" {
+query "rds_db_cluster_logging_disabled" {
   sql = <<-EOQ
     select
       case when enabled_cloudwatch_logs_exports is not null then 'Enabled' else 'Disabled' end as value,
@@ -166,7 +166,7 @@ query "aws_rds_db_cluster_logging_disabled" {
   param "arn" {}
 }
 
-query "aws_rds_db_cluster_no_deletion_protection" {
+query "rds_db_cluster_no_deletion_protection" {
   sql = <<-EOQ
     select
       case when deletion_protection then 'Enabled' else 'Disabled' end as value,
@@ -181,7 +181,7 @@ query "aws_rds_db_cluster_no_deletion_protection" {
   param "arn" {}
 }
 
-query "aws_rds_db_cluster_status" {
+query "rds_db_cluster_status" {
   sql = <<-EOQ
     select
       status as value,
@@ -196,7 +196,7 @@ query "aws_rds_db_cluster_status" {
   param "arn" {}
 }
 
-query "aws_rds_db_cluster_overview" {
+query "rds_db_cluster_overview" {
   sql = <<-EOQ
     select
       db_cluster_identifier as "Cluster Name",
@@ -215,7 +215,7 @@ query "aws_rds_db_cluster_overview" {
   param "arn" {}
 }
 
-query "aws_rds_db_cluster_tags" {
+query "rds_db_cluster_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -232,8 +232,8 @@ query "aws_rds_db_cluster_tags" {
   param "arn" {}
 }
 
-node "aws_rds_db_cluster_nodes" {
-  category = category.aws_rds_db_cluster
+node "rds_db_cluster" {
+  category = category.rds_db_cluster
 
   sql = <<-EOQ
     select
@@ -257,8 +257,8 @@ node "aws_rds_db_cluster_nodes" {
   param "rds_db_cluster_arns" {}
 }
 
-node "aws_rds_db_cluster_to_rds_db_instance_node" {
-  category = category.aws_rds_db_instance
+node "rds_db_cluster_to_rds_db_instance_node" {
+  category = category.rds_db_instance
 
   sql = <<-EOQ
     select
@@ -287,7 +287,7 @@ node "aws_rds_db_cluster_to_rds_db_instance_node" {
   param "arn" {}
 }
 
-edge "aws_rds_db_cluster_to_rds_db_instance_edge" {
+edge "rds_db_cluster_to_rds_db_instance_edge" {
   title = "instance"
 
   sql = <<-EOQ
@@ -306,8 +306,8 @@ edge "aws_rds_db_cluster_to_rds_db_instance_edge" {
   param "arn" {}
 }
 
-node "aws_rds_db_cluster_to_rds_db_cluster_parameter_group_node" {
-  category = category.aws_rds_db_cluster_parameter_group
+node "rds_db_cluster_to_rds_db_cluster_parameter_group_node" {
+  category = category.rds_db_cluster_parameter_group
 
   sql = <<-EOQ
     select
@@ -333,7 +333,7 @@ node "aws_rds_db_cluster_to_rds_db_cluster_parameter_group_node" {
   param "arn" {}
 }
 
-edge "aws_rds_db_cluster_to_rds_db_cluster_parameter_group_edge" {
+edge "rds_db_cluster_to_rds_db_cluster_parameter_group_edge" {
   title = "parameter group"
 
   sql = <<-EOQ
@@ -354,8 +354,8 @@ edge "aws_rds_db_cluster_to_rds_db_cluster_parameter_group_edge" {
   param "arn" {}
 }
 
-node "aws_rds_db_cluster_to_rds_db_subnet_group_node" {
-  category = category.aws_rds_db_subnet_group
+node "rds_db_cluster_to_rds_db_subnet_group_node" {
+  category = category.rds_db_subnet_group
 
   sql = <<-EOQ
     select
@@ -381,8 +381,8 @@ node "aws_rds_db_cluster_to_rds_db_subnet_group_node" {
   param "arn" {}
 }
 
-node "aws_rds_db_cluster_to_kms_key_node" {
-  category = category.aws_kms_key
+node "rds_db_cluster_to_kms_key_node" {
+  category = category.kms_key
 
   sql = <<-EOQ
     select
@@ -406,7 +406,7 @@ node "aws_rds_db_cluster_to_kms_key_node" {
   param "arn" {}
 }
 
-edge "aws_rds_db_cluster_to_kms_key_edge" {
+edge "rds_db_cluster_to_kms_key_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -425,8 +425,8 @@ edge "aws_rds_db_cluster_to_kms_key_edge" {
   param "arn" {}
 }
 
-node "aws_rds_db_cluster_to_vpc_security_group_node" {
-  category = category.aws_vpc_security_group
+node "rds_db_cluster_to_vpc_security_group_node" {
+  category = category.vpc_security_group
 
   sql = <<-EOQ
     select
@@ -452,7 +452,7 @@ node "aws_rds_db_cluster_to_vpc_security_group_node" {
   param "arn" {}
 }
 
-edge "aws_rds_db_cluster_to_vpc_security_group_edge" {
+edge "rds_db_cluster_to_vpc_security_group_edge" {
   title = "security group"
 
   sql = <<-EOQ
@@ -473,8 +473,8 @@ edge "aws_rds_db_cluster_to_vpc_security_group_edge" {
   param "arn" {}
 }
 
-node "aws_rds_db_cluster_vpc_subnet_to_rds_db_subnet_group_node" {
-  category = category.aws_vpc_subnet
+node "rds_db_cluster_vpc_subnet_to_rds_db_subnet_group_node" {
+  category = category.vpc_subnet
 
   sql = <<-EOQ
     select
@@ -511,7 +511,7 @@ node "aws_rds_db_cluster_vpc_subnet_to_rds_db_subnet_group_node" {
   param "arn" {}
 }
 
-edge "aws_rds_db_cluster_vpc_subnet_to_rds_db_subnet_group_edge" {
+edge "rds_db_cluster_vpc_subnet_to_rds_db_subnet_group_edge" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -539,8 +539,8 @@ edge "aws_rds_db_cluster_vpc_subnet_to_rds_db_subnet_group_edge" {
   param "arn" {}
 }
 
-node "aws_rds_db_cluster_vpc_subnet_to_vpc_node" {
-  category = category.aws_vpc
+node "rds_db_cluster_vpc_subnet_to_vpc_node" {
+  category = category.vpc_vpc
 
   sql = <<-EOQ
     select
@@ -581,7 +581,7 @@ node "aws_rds_db_cluster_vpc_subnet_to_vpc_node" {
   param "arn" {}
 }
 
-edge "aws_rds_db_cluster_vpc_subnet_to_vpc_edge" {
+edge "rds_db_cluster_vpc_subnet_to_vpc_edge" {
   title = "vpc"
 
   sql = <<-EOQ
@@ -615,7 +615,7 @@ edge "aws_rds_db_cluster_vpc_subnet_to_vpc_edge" {
   param "arn" {}
 }
 
-edge "aws_rds_db_cluster_vpc_security_group_to_vpc_edge" {
+edge "rds_db_cluster_vpc_security_group_to_vpc_edge" {
   title = "subnet group"
 
   sql = <<-EOQ
@@ -642,8 +642,8 @@ edge "aws_rds_db_cluster_vpc_security_group_to_vpc_edge" {
   param "arn" {}
 }
 
-node "aws_rds_db_cluster_to_rds_db_cluster_snapshot_node" {
-  category = category.aws_rds_db_cluster_snapshot
+node "rds_db_cluster_to_rds_db_cluster_snapshot_node" {
+  category = category.rds_db_cluster_snapshot
 
   sql = <<-EOQ
     select
@@ -669,24 +669,24 @@ node "aws_rds_db_cluster_to_rds_db_cluster_snapshot_node" {
   param "arn" {}
 }
 
-edge "aws_rds_db_cluster_to_rds_db_cluster_snapshot_edges" {
+edge "rds_db_cluster_to_rds_db_cluster_snapshot" {
   title = "snapshot"
 
   sql = <<-EOQ
     select
-      rds_db_cluster_arns as from_id,
-      rds_db_cluster_snapshot_arns as to_id
+      rds_db_cluster_arn as from_id,
+      rds_db_cluster_snapshot_arn as to_id
     from
-     unnest($1::text[]) as rds_db_cluster_arns,
-      unnest($2::text[]) as rds_db_cluster_snapshot_arns
+     unnest($1::text[]) as rds_db_cluster_arn,
+      unnest($2::text[]) as rds_db_cluster_snapshot_arn
   EOQ
 
   param "rds_db_cluster_arns" {}
   param "rds_db_cluster_snapshot_arns" {}
 }
 
-node "aws_rds_db_cluster_to_sns_topic_node" {
-  category = category.aws_sns_topic
+node "rds_db_cluster_to_sns_topic_node" {
+  category = category.sns_topic
 
   sql = <<-EOQ
     select
@@ -709,7 +709,7 @@ node "aws_rds_db_cluster_to_sns_topic_node" {
   param "arn" {}
 }
 
-edge "aws_rds_db_cluster_to_sns_topic_edge" {
+edge "rds_db_cluster_to_sns_topic_edge" {
   title = "notifies"
 
   sql = <<-EOQ
@@ -728,8 +728,8 @@ edge "aws_rds_db_cluster_to_sns_topic_edge" {
   param "arn" {}
 }
 
-node "aws_rds_db_cluster_to_iam_role_node" {
-  category = category.aws_iam_role
+node "rds_db_cluster_to_iam_role_node" {
+  category = category.iam_role
 
   sql = <<-EOQ
     select
@@ -753,7 +753,7 @@ node "aws_rds_db_cluster_to_iam_role_node" {
   param "arn" {}
 }
 
-edge "aws_rds_db_cluster_to_iam_role_edge" {
+edge "rds_db_cluster_to_iam_role_edge" {
   title = "assumes"
 
   sql = <<-EOQ

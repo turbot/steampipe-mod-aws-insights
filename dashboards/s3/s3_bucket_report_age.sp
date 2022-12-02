@@ -1,4 +1,4 @@
-dashboard "aws_s3_bucket_age_report" {
+dashboard "s3_bucket_age_report" {
 
   title         = "AWS S3 Bucket Age Report"
   documentation = file("./dashboards/s3/docs/s3_bucket_report_age.md")
@@ -11,36 +11,36 @@ dashboard "aws_s3_bucket_age_report" {
   container {
 
     card {
-      query = query.aws_s3_bucket_count
+      query = query.s3_bucket_count
       width = 2
     }
 
     card {
-      query = query.aws_s3_bucket_24_hours_count
-      width = 2
-      type  = "info"
-    }
-
-    card {
-      query = query.aws_s3_bucket_30_days_count
+      query = query.s3_bucket_24_hours_count
       width = 2
       type  = "info"
     }
 
     card {
-      query = query.aws_s3_bucket_30_90_days_count
+      query = query.s3_bucket_30_days_count
       width = 2
       type  = "info"
     }
 
     card {
-      query = query.aws_s3_bucket_90_365_days_count
+      query = query.s3_bucket_30_90_days_count
       width = 2
       type  = "info"
     }
 
     card {
-      query = query.aws_s3_bucket_1_year_count
+      query = query.s3_bucket_90_365_days_count
+      width = 2
+      type  = "info"
+    }
+
+    card {
+      query = query.s3_bucket_1_year_count
       width = 2
       type  = "info"
     }
@@ -57,15 +57,15 @@ dashboard "aws_s3_bucket_age_report" {
     }
 
     column "Name" {
-      href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.ARN | @uri}}"
+      href = "${dashboard.s3_bucket_detail.url_path}?input.bucket_arn={{.ARN | @uri}}"
     }
 
-    query = query.aws_s3_bucket_age_table
+    query = query.s3_bucket_age_table
   }
 
 }
 
-query "aws_s3_bucket_24_hours_count" {
+query "s3_bucket_24_hours_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -77,7 +77,7 @@ query "aws_s3_bucket_24_hours_count" {
   EOQ
 }
 
-query "aws_s3_bucket_30_days_count" {
+query "s3_bucket_30_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -90,7 +90,7 @@ query "aws_s3_bucket_30_days_count" {
   EOQ
 }
 
-query "aws_s3_bucket_30_90_days_count" {
+query "s3_bucket_30_90_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -103,7 +103,7 @@ query "aws_s3_bucket_30_90_days_count" {
   EOQ
 }
 
-query "aws_s3_bucket_90_365_days_count" {
+query "s3_bucket_90_365_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -116,7 +116,7 @@ query "aws_s3_bucket_90_365_days_count" {
   EOQ
 }
 
-query "aws_s3_bucket_1_year_count" {
+query "s3_bucket_1_year_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -128,7 +128,7 @@ query "aws_s3_bucket_1_year_count" {
   EOQ
 }
 
-query "aws_s3_bucket_age_table" {
+query "s3_bucket_age_table" {
   sql = <<-EOQ
     select
       b.name as "Name",

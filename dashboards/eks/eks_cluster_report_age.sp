@@ -1,4 +1,4 @@
-dashboard "aws_eks_cluster_age_report" {
+dashboard "eks_cluster_age_report" {
 
   title         = "AWS EKS Cluster Age Report"
   documentation = file("./dashboards/eks/docs/eks_cluster_report_age.md")
@@ -11,38 +11,38 @@ dashboard "aws_eks_cluster_age_report" {
   container {
 
     card {
-      query = query.aws_eks_cluster_count
+      query = query.eks_cluster_count
       width = 2
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_eks_cluster_24_hours_count
+      query = query.eks_cluster_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_eks_cluster_30_days_count
+      query = query.eks_cluster_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_eks_cluster_30_90_days_count
+      query = query.eks_cluster_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query = query.aws_eks_cluster_90_365_days_count
+      query = query.eks_cluster_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query = query.aws_eks_cluster_1_year_count
+      query = query.eks_cluster_1_year_count
     }
 
   }
@@ -57,14 +57,14 @@ dashboard "aws_eks_cluster_age_report" {
     }
 
     column "Name" {
-      href = "${dashboard.aws_eks_cluster_detail.url_path}?input.eks_cluster_arn={{.ARN | @uri}}"
+      href = "${dashboard.eks_cluster_detail.url_path}?input.eks_cluster_arn={{.ARN | @uri}}"
     }
-    query = query.aws_eks_cluster_age_table
+    query = query.eks_cluster_age_table
   }
 
 }
 
-query "aws_eks_cluster_count" {
+query "eks_cluster_count" {
   sql = <<-EOQ
     select
       count(*) as "Clusters"
@@ -73,7 +73,7 @@ query "aws_eks_cluster_count" {
   EOQ
 }
 
-query "aws_eks_cluster_24_hours_count" {
+query "eks_cluster_24_hours_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -85,7 +85,7 @@ query "aws_eks_cluster_24_hours_count" {
   EOQ
 }
 
-query "aws_eks_cluster_30_days_count" {
+query "eks_cluster_30_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -97,7 +97,7 @@ query "aws_eks_cluster_30_days_count" {
   EOQ
 }
 
-query "aws_eks_cluster_30_90_days_count" {
+query "eks_cluster_30_90_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -109,7 +109,7 @@ query "aws_eks_cluster_30_90_days_count" {
   EOQ
 }
 
-query "aws_eks_cluster_90_365_days_count" {
+query "eks_cluster_90_365_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -121,7 +121,7 @@ query "aws_eks_cluster_90_365_days_count" {
   EOQ
 }
 
-query "aws_eks_cluster_1_year_count" {
+query "eks_cluster_1_year_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -133,7 +133,7 @@ query "aws_eks_cluster_1_year_count" {
   EOQ
 }
 
-query "aws_eks_cluster_age_table" {
+query "eks_cluster_age_table" {
   sql = <<-EOQ
     select
       e.name as "Name",

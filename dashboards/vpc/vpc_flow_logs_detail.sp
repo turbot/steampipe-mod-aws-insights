@@ -1,4 +1,4 @@
-dashboard "aws_vpc_flow_logs_detail" {
+dashboard "vpc_flow_logs_detail" {
 
   title         = "AWS VPC Flow Logs Detail"
   documentation = file("./dashboards/vpc/docs/vpc_flow_logs_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_vpc_flow_logs_detail" {
 
   input "flow_log_id" {
     title = "Select a flow log:"
-    query = query.aws_vpc_flow_log_input
+    query = query.vpc_flow_log_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "aws_vpc_flow_logs_detail" {
 
     card {
       width = 2
-      query = query.aws_vpc_flow_log_resource_id
+      query = query.vpc_flow_log_resource_id
       args = {
         flow_log_id = self.input.flow_log_id.value
       }
@@ -25,7 +25,7 @@ dashboard "aws_vpc_flow_logs_detail" {
 
     card {
       width = 2
-      query = query.aws_vpc_flow_log_deliver_logs_status
+      query = query.vpc_flow_log_deliver_logs_status
       args = {
         flow_log_id = self.input.flow_log_id.value
       }
@@ -40,7 +40,7 @@ dashboard "aws_vpc_flow_logs_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "buckets" {
+      with "s3_buckets" {
         sql = <<-EOQ
           select
             distinct s.arn as bucket_arn
@@ -101,7 +101,7 @@ dashboard "aws_vpc_flow_logs_detail" {
         args = [self.input.flow_log_id.value]
       }
 
-      with "subnets" {
+      with "vpc_subnets" {
         sql = <<-EOQ
           select
             resource_id as subnet_id
@@ -115,7 +115,7 @@ dashboard "aws_vpc_flow_logs_detail" {
         args = [self.input.flow_log_id.value]
       }
 
-      with "vpcs" {
+      with "vpc_vpcs" {
         sql = <<-EOQ
           select
             resource_id as vpc_id
@@ -130,32 +130,32 @@ dashboard "aws_vpc_flow_logs_detail" {
       }
 
       nodes = [
-        node.aws_vpc_flow_log_nodes,
-        node.aws_s3_bucket_nodes,
-        node.aws_cloudwatch_log_group_nodes,
-        node.aws_iam_role_nodes,
-        node.aws_ec2_network_interface_nodes,
-        node.aws_vpc_subnet_nodes,
-        node.aws_vpc_nodes
+        node.vpc_flow_log,
+        node.s3_bucket,
+        node.cloudwatch_log_group,
+        node.iam_role,
+        node.ec2_network_interface,
+        node.vpc_subnet,
+        node.vpc_vpc
       ]
 
       edges = [
-        edge.aws_vpc_flow_log_to_s3_bucket_edges,
-        edge.aws_vpc_flow_log_to_cloudwatch_log_group_edges,
-        edge.aws_vpc_flow_log_to_iam_role_edges,
-        edge.aws_ec2_network_interface_to_vpc_flow_log_edges,
-        edge.aws_vpc_subnet_to_vpc_flow_log_edges,
-        edge.aws_vpc_to_vpc_flow_log_edges
+        edge.vpc_flow_log_to_s3_bucket,
+        edge.vpc_flow_log_to_cloudwatch_log_group,
+        edge.vpc_flow_log_to_iam_role,
+        edge.ec2_network_interface_to_vpc_flow_log,
+        edge.vpc_subnet_to_vpc_flow_log,
+        edge.vpc_to_vpc_flow_log
       ]
 
       args = {
-        role_arns      = with.roles.rows[*].role_arn
-        bucket_arns    = with.buckets.rows[*].bucket_arn
-        eni_ids        = with.enis.rows[*].eni_id
-        subnet_ids     = with.subnets.rows[*].subnet_id
-        vpc_ids        = with.vpcs.rows[*].vpc_id
-        log_group_arns = with.log_groups.rows[*].log_group_arn
-        flow_log_ids   = [self.input.flow_log_id.value]
+        iam_role_arns             = with.roles.rows[*].role_arn
+        s3_bucket_arns            = with.s3_buckets.rows[*].bucket_arn
+        ec2_network_interface_ids = with.enis.rows[*].eni_id
+        vpc_subnet_ids            = with.vpc_subnets.rows[*].subnet_id
+        vpc_vpc_ids               = with.vpc_vpcs.rows[*].vpc_id
+        cloudwatch_log_group_arns = with.log_groups.rows[*].log_group_arn
+        vpc_flow_log_ids          = [self.input.flow_log_id.value]
       }
     }
   }
@@ -169,7 +169,7 @@ dashboard "aws_vpc_flow_logs_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_vpc_flow_log_overview
+        query = query.vpc_flow_log_overview
         args = {
           flow_log_id = self.input.flow_log_id.value
         }
@@ -179,7 +179,7 @@ dashboard "aws_vpc_flow_logs_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_vpc_flow_tags
+        query = query.vpc_flow_tags
         args = {
           flow_log_id = self.input.flow_log_id.value
         }
@@ -193,13 +193,13 @@ dashboard "aws_vpc_flow_logs_detail" {
       table {
         title = "Log Destination"
         width = 12
-        query = query.aws_vpc_flow_log_destination
+        query = query.vpc_flow_log_destination
         args = {
           flow_log_id = self.input.flow_log_id.value
         }
 
         column "Bucket" {
-          href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.'Bucket' | @uri}}"
+          href = "${dashboard.s3_bucket_detail.url_path}?input.bucket_arn={{.'Bucket' | @uri}}"
 
         }
       }
@@ -210,7 +210,7 @@ dashboard "aws_vpc_flow_logs_detail" {
 
 }
 
-query "aws_vpc_flow_log_input" {
+query "vpc_flow_log_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -227,7 +227,7 @@ query "aws_vpc_flow_log_input" {
 
 }
 
-query "aws_vpc_flow_log_resource_id" {
+query "vpc_flow_log_resource_id" {
   sql = <<-EOQ
     select
       'Resource ID' as label,
@@ -241,7 +241,7 @@ query "aws_vpc_flow_log_resource_id" {
   param "flow_log_id" {}
 }
 
-query "aws_vpc_flow_log_deliver_logs_status" {
+query "vpc_flow_log_deliver_logs_status" {
   sql = <<-EOQ
     select
       'Deliver Logs Status' as label,
@@ -256,14 +256,15 @@ query "aws_vpc_flow_log_deliver_logs_status" {
   param "flow_log_id" {}
 }
 
-node "aws_vpc_flow_log_nodes" {
-  category = category.aws_vpc_flow_log
+node "vpc_flow_log" {
+  category = category.vpc_flow_log
 
   sql = <<-EOQ
     select
       flow_log_id as id,
       title as title,
       jsonb_build_object(
+        'Flow Log ID', flow_log_id,
         'Status', flow_log_status,
         'Creation Time', creation_time,
         'Account ID', account_id,
@@ -275,90 +276,74 @@ node "aws_vpc_flow_log_nodes" {
       flow_log_id = any($1 ::text[]);
   EOQ
 
-  param "flow_log_ids" {}
+  param "vpc_flow_log_ids" {}
 }
 
-edge "aws_vpc_flow_log_to_s3_bucket_edges" {
+edge "vpc_flow_log_to_s3_bucket" {
   title = "logs to"
 
   sql = <<-EOQ
     select
-      flow_log_ids as from_id,
-      bucket_arns as to_id
+      vpc_flow_log_id as from_id,
+      s3_bucket_arn as to_id
     from
-      unnest($1::text[]) as flow_log_ids,
-      unnest($2::text[]) as bucket_arns
+      unnest($1::text[]) as vpc_flow_log_id,
+      unnest($2::text[]) as s3_bucket_arn
   EOQ
 
-  param "flow_log_ids" {}
-  param "bucket_arns" {}
+  param "vpc_flow_log_ids" {}
+  param "s3_bucket_arns" {}
 }
 
-edge "aws_vpc_flow_log_to_cloudwatch_log_group_edges" {
+edge "vpc_flow_log_to_cloudwatch_log_group" {
   title = "logs to"
 
   sql = <<-EOQ
     select
-      flow_log_ids as from_id,
-      log_group_arns as to_id
+      vpc_flow_log_id as from_id,
+      log_group_arn as to_id
     from
-      unnest($1::text[]) as flow_log_ids,
-      unnest($2::text[]) as log_group_arns
+      unnest($1::text[]) as vpc_flow_log_id,
+      unnest($2::text[]) as log_group_arn
   EOQ
 
-  param "flow_log_ids" {}
-  param "log_group_arns" {}
+  param "vpc_flow_log_ids" {}
+  param "cloudwatch_log_group_arns" {}
 }
 
-edge "aws_vpc_flow_log_to_iam_role_edges" {
+edge "vpc_flow_log_to_iam_role" {
   title = "assumes"
 
   sql = <<-EOQ
     select
-      flow_log_ids as from_id,
-      role_arns as to_id
+      vpc_flow_log_id as from_id,
+      iam_role_arn as to_id
     from
-      unnest($1::text[]) as flow_log_ids,
-      unnest($2::text[]) as role_arns
+      unnest($1::text[]) as vpc_flow_log_id,
+      unnest($2::text[]) as iam_role_arn
   EOQ
 
-  param "flow_log_ids" {}
-  param "role_arns" {}
+  param "vpc_flow_log_ids" {}
+  param "iam_role_arns" {}
 }
 
-edge "aws_vpc_subnet_to_vpc_flow_log_edges" {
+edge "vpc_subnet_to_vpc_flow_log" {
   title = "flow log"
 
   sql = <<-EOQ
     select
-      subnet_ids as from_id,
-      flow_log_ids as to_id
+      vpc_subnet_id as from_id,
+      vpc_flow_log_id as to_id
     from
-      unnest($1::text[]) as flow_log_ids,
-      unnest($2::text[]) as subnet_ids
+      unnest($1::text[]) as vpc_flow_log_id,
+      unnest($2::text[]) as vpc_subnet_id
   EOQ
 
-  param "flow_log_ids" {}
-  param "subnet_ids" {}
+  param "vpc_flow_log_ids" {}
+  param "vpc_subnet_ids" {}
 }
 
-edge "aws_vpc_to_vpc_flow_log_edges" {
-  title = "flow log"
-
-  sql = <<-EOQ
-    select
-      vpc_ids as from_id,
-      flow_log_ids as to_id
-    from
-      unnest($1::text[]) as flow_log_ids,
-      unnest($2::text[]) as vpc_ids
-  EOQ
-
-  param "flow_log_ids" {}
-  param "vpc_ids" {}
-}
-
-query "aws_vpc_flow_log_overview" {
+query "vpc_flow_log_overview" {
   sql = <<-EOQ
     select
       flow_log_id as "Flow Log ID",
@@ -377,7 +362,7 @@ query "aws_vpc_flow_log_overview" {
   param "flow_log_id" {}
 }
 
-query "aws_vpc_flow_tags" {
+query "vpc_flow_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -394,7 +379,7 @@ query "aws_vpc_flow_tags" {
   param "flow_log_id" {}
 }
 
-query "aws_vpc_flow_log_destination" {
+query "vpc_flow_log_destination" {
   sql = <<-EOQ
     select
       log_destination_type as "Log Destination Type",

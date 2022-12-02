@@ -8,7 +8,7 @@ dashboard "api_gatewayv2_api_detail" {
 
   input "api_id" {
     title = "Select an API:"
-    query = query.aws_api_gatewayv2_api_input
+    query = query.api_gatewayv2_api_input
     width = 4
   }
 
@@ -16,7 +16,7 @@ dashboard "api_gatewayv2_api_detail" {
 
     card {
       width = 2
-      query = query.aws_api_gatewayv2_api_protocol
+      query = query.api_gatewayv2_api_protocol
       args = {
         api_id = self.input.api_id.value
       }
@@ -24,7 +24,7 @@ dashboard "api_gatewayv2_api_detail" {
 
     card {
       width = 2
-      query = query.aws_api_gatewayv2_stage_count
+      query = query.api_gatewayv2_stage_count
       args = {
         api_id = self.input.api_id.value
       }
@@ -32,7 +32,7 @@ dashboard "api_gatewayv2_api_detail" {
 
     card {
       width = 2
-      query = query.aws_api_gatewayv2_default_endpoint
+      query = query.api_gatewayv2_default_endpoint
       args = {
         api_id = self.input.api_id.value
       }
@@ -47,22 +47,22 @@ dashboard "api_gatewayv2_api_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_api_gatewayv2_api_node,
-        node.aws_api_gatewayv2_api_to_lambda_function_node,
-        node.aws_api_gatewayv2_api_to_sqs_queue_node,
-        node.aws_api_gatewayv2_api_to_sfn_state_machine_node,
-        node.aws_api_gatewayv2_api_to_kinesis_stream_node,
-        node.aws_api_gatewayv2_api_to_ec2_load_balancer_listener_node,
-        node.aws_api_gatewayv2_api_from_api_gatewayv2_stage_node
+        node.api_gatewayv2_api_node,
+        node.api_gatewayv2_api_to_lambda_function_node,
+        node.api_gatewayv2_api_to_sqs_queue_node,
+        node.api_gatewayv2_api_to_sfn_state_machine_node,
+        node.api_gatewayv2_api_to_kinesis_stream_node,
+        node.api_gatewayv2_api_to_ec2_load_balancer_listener_node,
+        node.api_gatewayv2_api_from_api_gatewayv2_stage_node
       ]
 
       edges = [
-        edge.aws_api_gatewayv2_api_to_lambda_function_edge,
-        edge.aws_api_gatewayv2_api_to_sqs_queue_edge,
-        edge.aws_api_gatewayv2_api_to_sfn_state_machine_edge,
-        edge.aws_api_gatewayv2_api_to_kinesis_stream_edge,
-        edge.aws_api_gatewayv2_api_to_ec2_load_balancer_listener_edge,
-        edge.aws_api_gatewayv2_api_from_api_gatewayv2_stage_edge
+        edge.api_gatewayv2_api_to_lambda_function_edge,
+        edge.api_gatewayv2_api_to_sqs_queue_edge,
+        edge.api_gatewayv2_api_to_sfn_state_machine_edge,
+        edge.api_gatewayv2_api_to_kinesis_stream_edge,
+        edge.api_gatewayv2_api_to_ec2_load_balancer_listener_edge,
+        edge.api_gatewayv2_api_from_api_gatewayv2_stage_edge
       ]
 
       args = {
@@ -79,7 +79,7 @@ dashboard "api_gatewayv2_api_detail" {
         title = "Overview"
         type  = "line"
         width = 3
-        query = query.aws_api_gatewayv2_api_overview
+        query = query.api_gatewayv2_api_overview
         args = {
           api_id = self.input.api_id.value
         }
@@ -89,7 +89,7 @@ dashboard "api_gatewayv2_api_detail" {
       table {
         title = "Tags"
         width = 3
-        query = query.aws_api_gatewayv2_api_tags
+        query = query.api_gatewayv2_api_tags
         args = {
           api_id = self.input.api_id.value
         }
@@ -99,7 +99,7 @@ dashboard "api_gatewayv2_api_detail" {
       table {
         title = "Stages"
         width = 6
-        query = query.aws_api_gatewayv2_api_stages
+        query = query.api_gatewayv2_api_stages
         args = {
           api_id = self.input.api_id.value
         }
@@ -116,7 +116,7 @@ dashboard "api_gatewayv2_api_detail" {
 
       table {
         title = "Integrations"
-        query = query.aws_api_gatewayv2_api_integrations
+        query = query.api_gatewayv2_api_integrations
         args = {
           api_id = self.input.api_id.value
         }
@@ -129,7 +129,7 @@ dashboard "api_gatewayv2_api_detail" {
 
 }
 
-query "aws_api_gatewayv2_api_input" {
+query "api_gatewayv2_api_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -145,7 +145,7 @@ query "aws_api_gatewayv2_api_input" {
   EOQ
 }
 
-query "aws_api_gatewayv2_api_protocol" {
+query "api_gatewayv2_api_protocol" {
   sql = <<-EOQ
     select
       'Protocol Type' as label,
@@ -159,7 +159,7 @@ query "aws_api_gatewayv2_api_protocol" {
   param "api_id" {}
 }
 
-query "aws_api_gatewayv2_stage_count" {
+query "api_gatewayv2_stage_count" {
   sql = <<-EOQ
     select
       'Stage Count' as label,
@@ -173,7 +173,7 @@ query "aws_api_gatewayv2_stage_count" {
   param "api_id" {}
 }
 
-query "aws_api_gatewayv2_default_endpoint" {
+query "api_gatewayv2_default_endpoint" {
   sql = <<-EOQ
     select
       'Default Endpoint' as label,
@@ -188,7 +188,7 @@ query "aws_api_gatewayv2_default_endpoint" {
   param "api_id" {}
 }
 
-query "aws_api_gatewayv2_api_overview" {
+query "api_gatewayv2_api_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -207,7 +207,7 @@ query "aws_api_gatewayv2_api_overview" {
   param "api_id" {}
 }
 
-query "aws_api_gatewayv2_api_tags" {
+query "api_gatewayv2_api_tags" {
   sql = <<-EOQ
     with jsondata as (
     select
@@ -228,7 +228,7 @@ query "aws_api_gatewayv2_api_tags" {
   param "api_id" {}
 }
 
-query "aws_api_gatewayv2_api_stages" {
+query "api_gatewayv2_api_stages" {
   sql = <<-EOQ
     select
       stage_name as "Name",
@@ -245,7 +245,7 @@ query "aws_api_gatewayv2_api_stages" {
   param "api_id" {}
 }
 
-query "aws_api_gatewayv2_api_integrations" {
+query "api_gatewayv2_api_integrations" {
   sql = <<-EOQ
     select
       integration_id as "Integration ID",
@@ -263,8 +263,8 @@ query "aws_api_gatewayv2_api_integrations" {
   param "api_id" {}
 }
 
-node "aws_api_gatewayv2_api_node" {
-  category = category.aws_api_gatewayv2_api
+node "api_gatewayv2_api_node" {
+  category = category.api_gatewayv2_api
 
   sql = <<-EOQ
     select
@@ -288,8 +288,8 @@ node "aws_api_gatewayv2_api_node" {
   param "api_id" {}
 }
 
-node "aws_api_gatewayv2_api_to_lambda_function_node" {
-  category = category.aws_lambda_function
+node "api_gatewayv2_api_to_lambda_function_node" {
+  category = category.lambda_function
 
   sql = <<-EOQ
     select
@@ -313,7 +313,7 @@ node "aws_api_gatewayv2_api_to_lambda_function_node" {
   param "api_id" {}
 }
 
-edge "aws_api_gatewayv2_api_to_lambda_function_edge" {
+edge "api_gatewayv2_api_to_lambda_function_edge" {
   title = "lambda function"
 
   sql = <<-EOQ
@@ -331,8 +331,8 @@ edge "aws_api_gatewayv2_api_to_lambda_function_edge" {
   param "api_id" {}
 }
 
-node "aws_api_gatewayv2_api_to_sqs_queue_node" {
-  category = category.aws_sqs_queue
+node "api_gatewayv2_api_to_sqs_queue_node" {
+  category = category.sqs_queue
 
   sql = <<-EOQ
     select
@@ -354,7 +354,7 @@ node "aws_api_gatewayv2_api_to_sqs_queue_node" {
   param "api_id" {}
 }
 
-edge "aws_api_gatewayv2_api_to_sqs_queue_edge" {
+edge "api_gatewayv2_api_to_sqs_queue_edge" {
   title = "sqs queue"
 
   sql = <<-EOQ
@@ -372,8 +372,8 @@ edge "aws_api_gatewayv2_api_to_sqs_queue_edge" {
   param "api_id" {}
 }
 
-node "aws_api_gatewayv2_api_to_sfn_state_machine_node" {
-  category = category.aws_sfn_state_machine
+node "api_gatewayv2_api_to_sfn_state_machine_node" {
+  category = category.sfn_state_machine
 
   sql = <<-EOQ
     select
@@ -397,7 +397,7 @@ node "aws_api_gatewayv2_api_to_sfn_state_machine_node" {
   param "api_id" {}
 }
 
-edge "aws_api_gatewayv2_api_to_sfn_state_machine_edge" {
+edge "api_gatewayv2_api_to_sfn_state_machine_edge" {
   title = "sfn state machine"
 
   sql = <<-EOQ
@@ -415,8 +415,8 @@ edge "aws_api_gatewayv2_api_to_sfn_state_machine_edge" {
   param "api_id" {}
 }
 
-node "aws_api_gatewayv2_api_to_kinesis_stream_node" {
-  category = category.aws_kinesis_stream
+node "api_gatewayv2_api_to_kinesis_stream_node" {
+  category = category.kinesis_stream
 
   sql = <<-EOQ
     select
@@ -440,7 +440,7 @@ node "aws_api_gatewayv2_api_to_kinesis_stream_node" {
   param "api_id" {}
 }
 
-edge "aws_api_gatewayv2_api_to_kinesis_stream_edge" {
+edge "api_gatewayv2_api_to_kinesis_stream_edge" {
   title = "kinesis stream"
 
   sql = <<-EOQ
@@ -458,8 +458,8 @@ edge "aws_api_gatewayv2_api_to_kinesis_stream_edge" {
   param "api_id" {}
 }
 
-node "aws_api_gatewayv2_api_to_ec2_load_balancer_listener_node" {
-  category = category.aws_ec2_load_balancer_listener
+node "api_gatewayv2_api_to_ec2_load_balancer_listener_node" {
+  category = category.ec2_load_balancer_listener
 
   sql = <<-EOQ
     select
@@ -484,7 +484,7 @@ node "aws_api_gatewayv2_api_to_ec2_load_balancer_listener_node" {
   param "api_id" {}
 }
 
-edge "aws_api_gatewayv2_api_to_ec2_load_balancer_listener_edge" {
+edge "api_gatewayv2_api_to_ec2_load_balancer_listener_edge" {
   title = "lb listener"
 
   sql = <<-EOQ
@@ -502,8 +502,8 @@ edge "aws_api_gatewayv2_api_to_ec2_load_balancer_listener_edge" {
   param "api_id" {}
 }
 
-node "aws_api_gatewayv2_api_from_api_gatewayv2_stage_node" {
-  category = category.aws_api_gatewayv2_stage
+node "api_gatewayv2_api_from_api_gatewayv2_stage_node" {
+  category = category.api_gatewayv2_stage
 
   sql = <<-EOQ
     select
@@ -526,7 +526,7 @@ node "aws_api_gatewayv2_api_from_api_gatewayv2_stage_node" {
   param "api_id" {}
 }
 
-edge "aws_api_gatewayv2_api_from_api_gatewayv2_stage_edge" {
+edge "api_gatewayv2_api_from_api_gatewayv2_stage_edge" {
   title = "deploys"
 
   sql = <<-EOQ

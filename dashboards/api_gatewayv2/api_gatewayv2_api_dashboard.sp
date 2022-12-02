@@ -1,4 +1,4 @@
-dashboard "aws_api_gatewayv2_api_dashboard" {
+dashboard "api_gatewayv2_api_dashboard" {
   title         = "AWS API Gateway V2 API Dashboard"
   documentation = file("./dashboards/api_gatewayv2/docs/api_gatewayv2_api_dashboard.md")
 
@@ -10,12 +10,12 @@ dashboard "aws_api_gatewayv2_api_dashboard" {
 
     card {
       width = 2
-      query = query.aws_api_gatewayv2_api_count
+      query = query.api_gatewayv2_api_count
     }
 
     card {
       width = 2
-      query = query.aws_api_gatewayv2_api_default_endpoint_enabled
+      query = query.api_gatewayv2_api_default_endpoint_enabled
     }
 
   }
@@ -26,7 +26,7 @@ dashboard "aws_api_gatewayv2_api_dashboard" {
 
     chart {
       title = "Default Endpoint"
-      query = query.aws_api_gatewayv2_api_endpoint_status
+      query = query.api_gatewayv2_api_endpoint_status
       type  = "donut"
       width = 2
 
@@ -49,28 +49,28 @@ dashboard "aws_api_gatewayv2_api_dashboard" {
       title = "APIs by Account"
       type  = "column"
       width = 3
-      query = query.aws_api_gatewayv2_api_by_account
+      query = query.api_gatewayv2_api_by_account
     }
 
     chart {
       title = "APIs by Region"
       type  = "column"
       width = 3
-      query = query.aws_api_gatewayv2_api_by_region
+      query = query.api_gatewayv2_api_by_region
     }
 
     chart {
       title = "APIs by Age"
       type  = "column"
       width = 3
-      query = query.aws_api_gatewayv2_api_by_age
+      query = query.api_gatewayv2_api_by_age
     }
 
     chart {
       title = "APIs by Protocol"
       type  = "column"
       width = 3
-      query = query.aws_api_gatewayv2_api_by_protocol
+      query = query.api_gatewayv2_api_by_protocol
     }
 
   }
@@ -79,7 +79,7 @@ dashboard "aws_api_gatewayv2_api_dashboard" {
 
 # Cards
 
-query "aws_api_gatewayv2_api_count" {
+query "api_gatewayv2_api_count" {
   sql = <<-EOQ
     select
       count(*) as "APIs"
@@ -88,7 +88,7 @@ query "aws_api_gatewayv2_api_count" {
   EOQ
 }
 
-query "aws_api_gatewayv2_api_default_endpoint_enabled" {
+query "api_gatewayv2_api_default_endpoint_enabled" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -106,7 +106,7 @@ query "aws_api_gatewayv2_api_default_endpoint_enabled" {
 
 # Assessments
 
-query "aws_api_gatewayv2_api_endpoint_status" {
+query "api_gatewayv2_api_endpoint_status" {
   sql = <<-EOQ
     with apis_with_api_endpoint_status as (
       select
@@ -130,7 +130,7 @@ query "aws_api_gatewayv2_api_endpoint_status" {
 
 # Analysis
 
-query "aws_api_gatewayv2_api_by_account" {
+query "api_gatewayv2_api_by_account" {
   sql = <<-EOQ
     select
       acc.title as "account",
@@ -145,7 +145,7 @@ query "aws_api_gatewayv2_api_by_account" {
   EOQ
 }
 
-query "aws_api_gatewayv2_api_by_region" {
+query "api_gatewayv2_api_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
@@ -157,7 +157,7 @@ query "aws_api_gatewayv2_api_by_region" {
   EOQ
 }
 
-query "aws_api_gatewayv2_api_by_age" {
+query "api_gatewayv2_api_by_age" {
   sql = <<-EOQ
     with apis as (
       select
@@ -204,7 +204,7 @@ query "aws_api_gatewayv2_api_by_age" {
   EOQ
 }
 
-query "aws_api_gatewayv2_api_by_protocol" {
+query "api_gatewayv2_api_by_protocol" {
   sql = <<-EOQ
     select
       protocol_type as "Protocol",

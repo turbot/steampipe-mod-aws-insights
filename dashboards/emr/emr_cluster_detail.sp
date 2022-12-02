@@ -1,4 +1,4 @@
-dashboard "aws_emr_cluster_detail" {
+dashboard "emr_cluster_detail" {
   title         = "AWS EMR Cluster Detail"
   documentation = file("./dashboards/emr/docs/emr_cluster_detail.md")
 
@@ -8,7 +8,7 @@ dashboard "aws_emr_cluster_detail" {
 
   input "emr_cluster_arn" {
     title = "Select a cluster:"
-    query = query.aws_emr_cluster_input
+    query = query.emr_cluster_input
     width = 4
   }
 
@@ -16,7 +16,7 @@ dashboard "aws_emr_cluster_detail" {
 
     card {
       width = 2
-      query = query.aws_emr_cluster_auto_termination
+      query = query.emr_cluster_auto_termination
       args = {
         arn = self.input.emr_cluster_arn.value
       }
@@ -24,7 +24,7 @@ dashboard "aws_emr_cluster_detail" {
 
     card {
       width = 2
-      query = query.aws_emr_cluster_state
+      query = query.emr_cluster_state
       args = {
         arn = self.input.emr_cluster_arn.value
       }
@@ -32,7 +32,7 @@ dashboard "aws_emr_cluster_detail" {
 
     card {
       width = 2
-      query = query.aws_emr_cluster_logging
+      query = query.emr_cluster_logging
       args = {
         arn = self.input.emr_cluster_arn.value
       }
@@ -40,7 +40,7 @@ dashboard "aws_emr_cluster_detail" {
 
     card {
       width = 2
-      query = query.aws_emr_cluster_log_encryption
+      query = query.emr_cluster_log_encryption
       args = {
         arn = self.input.emr_cluster_arn.value
       }
@@ -55,23 +55,23 @@ dashboard "aws_emr_cluster_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_emr_cluster_node,
-        node.aws_emr_cluster_to_iam_role_node,
-        node.aws_emr_cluster_to_s3_bucket_node,
-        node.aws_emr_cluster_to_emr_instance_fleet_node,
-        node.aws_emr_cluster_to_emr_instance_node,
-        node.aws_emr_cluster_to_emr_instance_group_node,
-        node.aws_emr_cluster_to_ec2_ami_node
+        node.emr_cluster_node,
+        node.emr_cluster_to_iam_role_node,
+        node.emr_cluster_to_s3_bucket_node,
+        node.emr_cluster_to_emr_instance_fleet_node,
+        node.emr_cluster_to_emr_instance_node,
+        node.emr_cluster_to_emr_instance_group_node,
+        node.emr_cluster_to_ec2_ami_node
       ]
 
       edges = [
-        edge.aws_emr_cluster_to_iam_role_edge,
-        edge.aws_emr_cluster_to_s3_bucket_edge,
-        edge.aws_emr_cluster_to_emr_instance_fleet_edge,
-        edge.aws_emr_cluster_to_emr_instance_group_edge,
-        edge.aws_emr_cluster_to_ec2_ami_edge,
-        edge.aws_emr_instance_group_to_emr_instance_edge,
-        edge.aws_emr_instance_fleet_to_emr_instance_edge
+        edge.emr_cluster_to_iam_role_edge,
+        edge.emr_cluster_to_s3_bucket_edge,
+        edge.emr_cluster_to_emr_instance_fleet_edge,
+        edge.emr_cluster_to_emr_instance_group_edge,
+        edge.emr_cluster_to_ec2_ami_edge,
+        edge.emr_instance_group_to_emr_instance_edge,
+        edge.emr_instance_fleet_to_emr_instance_edge
 
       ]
 
@@ -90,7 +90,7 @@ dashboard "aws_emr_cluster_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_emr_cluster_overview
+        query = query.emr_cluster_overview
         args = {
           arn = self.input.emr_cluster_arn.value
         }
@@ -100,7 +100,7 @@ dashboard "aws_emr_cluster_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_emr_cluster_tags
+        query = query.emr_cluster_tags
         args = {
           arn = self.input.emr_cluster_arn.value
         }
@@ -111,7 +111,7 @@ dashboard "aws_emr_cluster_detail" {
 
       table {
         title = "Status"
-        query = query.aws_emr_cluster_status
+        query = query.emr_cluster_status
         args = {
           arn = self.input.emr_cluster_arn.value
         }
@@ -119,7 +119,7 @@ dashboard "aws_emr_cluster_detail" {
 
       table {
         title = "Instances"
-        query = query.aws_emr_cluster_instance
+        query = query.emr_cluster_instance
         args = {
           arn = self.input.emr_cluster_arn.value
         }
@@ -129,7 +129,7 @@ dashboard "aws_emr_cluster_detail" {
         }
 
         column "EC2 Instance ID" {
-          href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.'ARN' | @uri}}"
+          href = "${dashboard.ec2_instance_detail.url_path}?input.instance_arn={{.'ARN' | @uri}}"
         }
       }
 
@@ -141,7 +141,7 @@ dashboard "aws_emr_cluster_detail" {
     table {
       title = "Applications"
       width = 6
-      query = query.aws_emr_cluster_applications
+      query = query.emr_cluster_applications
       args = {
         arn = self.input.emr_cluster_arn.value
       }
@@ -151,7 +151,7 @@ dashboard "aws_emr_cluster_detail" {
     table {
       title = "EC2 Instance Attributes"
       width = 6
-      query = query.aws_emr_cluster_ec2_instance_attributes
+      query = query.emr_cluster_ec2_instance_attributes
       args = {
         arn = self.input.emr_cluster_arn.value
       }
@@ -160,7 +160,7 @@ dashboard "aws_emr_cluster_detail" {
   }
 }
 
-query "aws_emr_cluster_input" {
+query "emr_cluster_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -177,7 +177,7 @@ query "aws_emr_cluster_input" {
 EOQ
 }
 
-query "aws_emr_cluster_auto_termination" {
+query "emr_cluster_auto_termination" {
   sql = <<-EOQ
     select
       'Auto Termination' as label,
@@ -191,7 +191,7 @@ query "aws_emr_cluster_auto_termination" {
   param "arn" {}
 }
 
-query "aws_emr_cluster_state" {
+query "emr_cluster_state" {
   sql = <<-EOQ
     select
       'State' as label,
@@ -206,7 +206,7 @@ query "aws_emr_cluster_state" {
   param "arn" {}
 }
 
-query "aws_emr_cluster_logging" {
+query "emr_cluster_logging" {
   sql = <<-EOQ
     select
       'Logging' as label,
@@ -221,7 +221,7 @@ query "aws_emr_cluster_logging" {
   param "arn" {}
 }
 
-query "aws_emr_cluster_log_encryption" {
+query "emr_cluster_log_encryption" {
   sql = <<-EOQ
     select
       'Log Encryption' as label,
@@ -236,7 +236,7 @@ query "aws_emr_cluster_log_encryption" {
   param "arn" {}
 }
 
-query "aws_emr_cluster_overview" {
+query "emr_cluster_overview" {
   sql = <<-EOQ
     select
       title as "Title",
@@ -254,7 +254,7 @@ query "aws_emr_cluster_overview" {
   param "arn" {}
 }
 
-query "aws_emr_cluster_tags" {
+query "emr_cluster_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -271,7 +271,7 @@ query "aws_emr_cluster_tags" {
   param "arn" {}
 }
 
-query "aws_emr_cluster_instance" {
+query "emr_cluster_instance" {
   sql = <<-EOQ
     select
       i.id as "ID",
@@ -293,7 +293,7 @@ query "aws_emr_cluster_instance" {
   param "arn" {}
 }
 
-query "aws_emr_cluster_status" {
+query "emr_cluster_status" {
   sql = <<-EOQ
     select
       status -> 'StateChangeReason' ->> 'Code' as "Code",
@@ -310,7 +310,7 @@ query "aws_emr_cluster_status" {
   param "arn" {}
 }
 
-query "aws_emr_cluster_applications" {
+query "emr_cluster_applications" {
   sql = <<-EOQ
     select
       app ->> 'Name' as "Name",
@@ -327,7 +327,7 @@ query "aws_emr_cluster_applications" {
   param "arn" {}
 }
 
-query "aws_emr_cluster_ec2_instance_attributes" {
+query "emr_cluster_ec2_instance_attributes" {
   sql = <<-EOQ
     select
       ec2_instance_attributes ->> 'Ec2KeyName' as "Ec2 Key Name",
@@ -346,8 +346,8 @@ query "aws_emr_cluster_ec2_instance_attributes" {
   param "arn" {}
 }
 
-node "aws_emr_cluster_node" {
-  category = category.aws_emr_cluster
+node "emr_cluster_node" {
+  category = category.emr_cluster
 
   sql = <<-EOQ
      select
@@ -369,8 +369,8 @@ node "aws_emr_cluster_node" {
   param "arn" {}
 }
 
-node "aws_emr_cluster_to_iam_role_node" {
-  category = category.aws_iam_role
+node "emr_cluster_to_iam_role_node" {
+  category = category.iam_role
 
   sql = <<-EOQ
      select
@@ -398,7 +398,7 @@ node "aws_emr_cluster_to_iam_role_node" {
   param "arn" {}
 }
 
-edge "aws_emr_cluster_to_iam_role_edge" {
+edge "emr_cluster_to_iam_role_edge" {
   title = "assumes"
 
   sql = <<-EOQ
@@ -416,8 +416,8 @@ edge "aws_emr_cluster_to_iam_role_edge" {
   param "arn" {}
 }
 
-node "aws_emr_cluster_to_s3_bucket_node" {
-  category = category.aws_s3_bucket
+node "emr_cluster_to_s3_bucket_node" {
+  category = category.s3_bucket
 
   sql = <<-EOQ
      select
@@ -445,7 +445,7 @@ node "aws_emr_cluster_to_s3_bucket_node" {
   param "arn" {}
 }
 
-edge "aws_emr_cluster_to_s3_bucket_edge" {
+edge "emr_cluster_to_s3_bucket_edge" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -464,8 +464,8 @@ edge "aws_emr_cluster_to_s3_bucket_edge" {
   param "arn" {}
 }
 
-node "aws_emr_cluster_to_emr_instance_fleet_node" {
-  category = category.aws_emr_instance_fleet
+node "emr_cluster_to_emr_instance_fleet_node" {
+  category = category.emr_instance_fleet
 
   sql = <<-EOQ
      select
@@ -493,7 +493,7 @@ node "aws_emr_cluster_to_emr_instance_fleet_node" {
   param "arn" {}
 }
 
-edge "aws_emr_cluster_to_emr_instance_fleet_edge" {
+edge "emr_cluster_to_emr_instance_fleet_edge" {
   title = "instance fleet"
 
   sql = <<-EOQ
@@ -512,8 +512,8 @@ edge "aws_emr_cluster_to_emr_instance_fleet_edge" {
   param "arn" {}
 }
 
-node "aws_emr_cluster_to_emr_instance_group_node" {
-  category = category.aws_emr_instance_group
+node "emr_cluster_to_emr_instance_group_node" {
+  category = category.emr_instance_group
 
   sql = <<-EOQ
      select
@@ -541,7 +541,7 @@ node "aws_emr_cluster_to_emr_instance_group_node" {
   param "arn" {}
 }
 
-edge "aws_emr_cluster_to_emr_instance_group_edge" {
+edge "emr_cluster_to_emr_instance_group_edge" {
   title = "instance group"
 
   sql = <<-EOQ
@@ -560,8 +560,8 @@ edge "aws_emr_cluster_to_emr_instance_group_edge" {
   param "arn" {}
 }
 
-node "aws_emr_cluster_to_ec2_ami_node" {
-  category = category.aws_ec2_ami
+node "emr_cluster_to_ec2_ami_node" {
+  category = category.ec2_ami
 
   sql = <<-EOQ
      select
@@ -590,7 +590,7 @@ node "aws_emr_cluster_to_ec2_ami_node" {
   param "arn" {}
 }
 
-edge "aws_emr_cluster_to_ec2_ami_edge" {
+edge "emr_cluster_to_ec2_ami_edge" {
   title = "ami"
 
   sql = <<-EOQ
@@ -609,8 +609,8 @@ edge "aws_emr_cluster_to_ec2_ami_edge" {
   param "arn" {}
 }
 
-node "aws_emr_cluster_to_emr_instance_node" {
-  category = category.aws_emr_instance
+node "emr_cluster_to_emr_instance_node" {
+  category = category.emr_instance
 
   sql = <<-EOQ
      select
@@ -642,7 +642,7 @@ node "aws_emr_cluster_to_emr_instance_node" {
   param "arn" {}
 }
 
-edge "aws_emr_instance_fleet_to_emr_instance_edge" {
+edge "emr_instance_fleet_to_emr_instance_edge" {
   title = "ec2 instance"
 
   sql = <<-EOQ
@@ -663,7 +663,7 @@ edge "aws_emr_instance_fleet_to_emr_instance_edge" {
   param "arn" {}
 }
 
-edge "aws_emr_instance_group_to_emr_instance_edge" {
+edge "emr_instance_group_to_emr_instance_edge" {
   title = "ec2 instance"
 
   sql = <<-EOQ

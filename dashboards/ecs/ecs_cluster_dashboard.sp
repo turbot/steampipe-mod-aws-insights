@@ -1,4 +1,4 @@
-dashboard "aws_ecs_cluster_dashboard" {
+dashboard "ecs_cluster_dashboard" {
 
   title         = "AWS ECS Cluster Dashboard"
   documentation = file("./dashboards/ecs/docs/ecs_cluster_dashboard.md")
@@ -11,18 +11,18 @@ dashboard "aws_ecs_cluster_dashboard" {
 
     # Analysis
     card {
-      query = query.aws_ecs_cluster_count
+      query = query.ecs_cluster_count
       width = 2
     }
 
     card {
-      query = query.aws_ecs_cluster_active_service_count
+      query = query.ecs_cluster_active_service_count
       width = 2
     }
 
     # Assessments
     card {
-      query = query.aws_ecs_cluster_container_insights_disabled
+      query = query.ecs_cluster_container_insights_disabled
       width = 2
     }
 
@@ -36,7 +36,7 @@ dashboard "aws_ecs_cluster_dashboard" {
 
     chart {
       title = "Container Insights Status"
-      query = query.aws_ecs_cluster_container_insights_status
+      query = query.ecs_cluster_container_insights_status
       type  = "donut"
       width = 4
 
@@ -59,14 +59,14 @@ dashboard "aws_ecs_cluster_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      query = query.aws_ecs_cluster_monthly_forecast_table
+      query = query.ecs_cluster_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      query = query.aws_ecs_cluster_cost_per_month
+      query = query.ecs_cluster_cost_per_month
     }
 
   }
@@ -77,21 +77,21 @@ dashboard "aws_ecs_cluster_dashboard" {
 
     chart {
       title = "Clusters by Account"
-      query = query.aws_ecs_cluster_by_account
+      query = query.ecs_cluster_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Clusters by Region"
-      query = query.aws_ecs_cluster_by_region
+      query = query.ecs_cluster_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Clusters by Status"
-      query = query.aws_ecs_cluster_by_status
+      query = query.ecs_cluster_by_status
       type  = "column"
       width = 4
     }
@@ -102,7 +102,7 @@ dashboard "aws_ecs_cluster_dashboard" {
 
 # Card Queries
 
-query "aws_ecs_cluster_count" {
+query "ecs_cluster_count" {
   sql = <<-EOQ
     select
       count(*) as "Clusters"
@@ -111,7 +111,7 @@ query "aws_ecs_cluster_count" {
   EOQ
 }
 
-query "aws_ecs_cluster_active_service_count" {
+query "ecs_cluster_active_service_count" {
   sql = <<-EOQ
     select
       count(*) as "Cluster Active Services"
@@ -120,7 +120,7 @@ query "aws_ecs_cluster_active_service_count" {
   EOQ
 }
 
-query "aws_ecs_cluster_container_insights_disabled" {
+query "ecs_cluster_container_insights_disabled" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -137,7 +137,7 @@ query "aws_ecs_cluster_container_insights_disabled" {
 
 # Assessment Queries
 
-query "aws_ecs_cluster_container_insights_status" {
+query "ecs_cluster_container_insights_status" {
   sql = <<-EOQ
     select
       container_insights_status,
@@ -161,7 +161,7 @@ query "aws_ecs_cluster_container_insights_status" {
 
 # Cost Queries
 
-query "aws_ecs_cluster_monthly_forecast_table" {
+query "ecs_cluster_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
       select
@@ -200,7 +200,7 @@ query "aws_ecs_cluster_monthly_forecast_table" {
   EOQ
 }
 
-query "aws_ecs_cluster_cost_per_month" {
+query "ecs_cluster_cost_per_month" {
   sql = <<-EOQ
     select
       to_char(period_start, 'Mon-YY') as "Month",
@@ -218,7 +218,7 @@ query "aws_ecs_cluster_cost_per_month" {
 
 # Analysis Queries
 
-query "aws_ecs_cluster_by_account" {
+query "ecs_cluster_by_account" {
   sql = <<-EOQ
     select
       a.title as "account",
@@ -235,7 +235,7 @@ query "aws_ecs_cluster_by_account" {
   EOQ
 }
 
-query "aws_ecs_cluster_by_region" {
+query "ecs_cluster_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
@@ -249,7 +249,7 @@ query "aws_ecs_cluster_by_region" {
   EOQ
 }
 
-query "aws_ecs_cluster_by_status" {
+query "ecs_cluster_by_status" {
   sql = <<-EOQ
     select
       status as "Status",

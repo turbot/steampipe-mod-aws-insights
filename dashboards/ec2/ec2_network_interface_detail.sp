@@ -1,6 +1,6 @@
-dashboard "aws_ec2_network_interface_detail" {
+dashboard "ec2_network_interface_detail" {
   title         = "AWS EC2 Network Interface Detail"
-  documentation = file("./dashboards/ec2/docs/ec2_eni_detail.md")
+  documentation = file("./dashboards/ec2/docs/ec2_network_interface_detail.md")
 
   tags = merge(local.ec2_common_tags, {
     type = "Detail"
@@ -16,7 +16,7 @@ dashboard "aws_ec2_network_interface_detail" {
 
     card {
       width = 2
-      query = query.aws_ec2_eni_public_ip
+      query = query.ec2_eni_public_ip
       args = {
         network_interface_id = self.input.network_interface_id.value
       }
@@ -24,7 +24,7 @@ dashboard "aws_ec2_network_interface_detail" {
 
     card {
       width = 2
-      query = query.aws_ec2_eni_type
+      query = query.ec2_eni_type
       args = {
         network_interface_id = self.input.network_interface_id.value
       }
@@ -32,7 +32,7 @@ dashboard "aws_ec2_network_interface_detail" {
 
     card {
       width = 2
-      query = query.aws_ec2_eni_delete_on_termination
+      query = query.ec2_eni_delete_on_termination
       args = {
         network_interface_id = self.input.network_interface_id.value
       }
@@ -40,7 +40,7 @@ dashboard "aws_ec2_network_interface_detail" {
 
     card {
       width = 2
-      query = query.aws_ec2_eni_status
+      query = query.ec2_eni_status
       args = {
         network_interface_id = self.input.network_interface_id.value
       }
@@ -48,7 +48,7 @@ dashboard "aws_ec2_network_interface_detail" {
 
     card {
       width = 2
-      query = query.aws_ec2_eni_attachment_status
+      query = query.ec2_eni_attachment_status
       args = {
         network_interface_id = self.input.network_interface_id.value
       }
@@ -63,7 +63,7 @@ dashboard "aws_ec2_network_interface_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "instances" {
+      with "ec2_instances" {
         sql = <<-EOQ
           select
             i.arn as instance_arn
@@ -77,7 +77,7 @@ dashboard "aws_ec2_network_interface_detail" {
         args = [self.input.network_interface_id.value]
       }
 
-      with "security_groups" {
+      with "vpc_security_groups" {
         sql = <<-EOQ
           select
            distinct sg ->> 'GroupId' as security_group_id
@@ -91,7 +91,7 @@ dashboard "aws_ec2_network_interface_detail" {
         args = [self.input.network_interface_id.value]
       }
 
-      with "subnets" {
+      with "vpc_subnets" {
         sql = <<-EOQ
           select
             subnet_id as subnet_id
@@ -104,7 +104,7 @@ dashboard "aws_ec2_network_interface_detail" {
         args = [self.input.network_interface_id.value]
       }
 
-      with "eips" {
+      with "vpc_eips" {
         sql = <<-EOQ
           select
             arn as eip_arn
@@ -117,7 +117,7 @@ dashboard "aws_ec2_network_interface_detail" {
         args = [self.input.network_interface_id.value]
       }
 
-      with "vpcs" {
+      with "vpc_vpcs" {
         sql = <<-EOQ
           select
             vpc_id as vpc_id
@@ -130,7 +130,7 @@ dashboard "aws_ec2_network_interface_detail" {
         args = [self.input.network_interface_id.value]
       }
 
-      with "flow_logs" {
+      with "vpc_flow_logs" {
         sql = <<-EOQ
           select
             flow_log_id as flow_log_id
@@ -144,36 +144,36 @@ dashboard "aws_ec2_network_interface_detail" {
       }
 
       nodes = [
-        node.aws_ec2_network_interface_nodes,
-        node.aws_ec2_instance_nodes,
-        node.aws_vpc_security_group_nodes,
-        node.aws_vpc_subnet_nodes,
-        node.aws_vpc_nodes,
-        node.aws_vpc_eip_nodes,
-        node.aws_vpc_flow_log_nodes,
+        node.ec2_network_interface,
+        node.ec2_instance,
+        node.vpc_security_group,
+        node.vpc_subnet,
+        node.vpc_vpc,
+        node.vpc_eip,
+        node.vpc_flow_log,
 
-        node.aws_ec2_network_interface_vpc_nat_gateway_nodes
+        node.ec2_network_interface_vpc_nat_gateway
       ]
 
       edges = [
-        edge.aws_ec2_network_interface_to_vpc_eip_edges,
-        edge.aws_ec2_instance_to_ec2_network_interface_edges,
-        edge.aws_ec2_network_interface_to_vpc_security_group_edges,
-        edge.aws_ec2_network_interface_to_vpc_subnet_edges,
-        edge.aws_vpc_subnet_to_vpc_edges,
-        edge.aws_ec2_network_interface_to_vpc_flow_log_edges,
+        edge.ec2_network_interface_to_vpc_eip,
+        edge.ec2_instance_to_ec2_network_interface,
+        edge.ec2_network_interface_to_vpc_security_group,
+        edge.ec2_network_interface_to_vpc_subnet,
+        edge.ec2_network_interface_to_vpc_flow_log,
+        edge.vpc_subnet_to_vpc_vpc,
 
-        edge.aws_vpc_nat_gateway_to_ec2_network_interface_edges
+        edge.vpc_nat_gateway_to_ec2_network_interface
       ]
 
       args = {
-        eni_ids            = [self.input.network_interface_id.value]
-        instance_arns      = with.instances.rows[*].instance_arn
-        security_group_ids = with.security_groups.rows[*].security_group_id
-        subnet_ids         = with.subnets.rows[*].subnet_id
-        eip_arns           = with.eips.rows[*].eip_arn
-        vpc_ids            = with.vpcs.rows[*].vpc_id
-        flow_log_ids       = with.flow_logs.rows[*].flow_log_id
+        ec2_network_interface_ids = [self.input.network_interface_id.value]
+        ec2_instance_arns         = with.ec2_instances.rows[*].instance_arn
+        vpc_security_group_ids    = with.vpc_security_groups.rows[*].security_group_id
+        vpc_subnet_ids            = with.vpc_subnets.rows[*].subnet_id
+        vpc_eip_arns              = with.vpc_eips.rows[*].eip_arn
+        vpc_vpc_ids               = with.vpc_vpcs.rows[*].vpc_id
+        vpc_flow_log_ids          = with.vpc_flow_logs.rows[*].flow_log_id
 
       }
     }
@@ -185,7 +185,7 @@ dashboard "aws_ec2_network_interface_detail" {
       title = "Overview"
       type  = "line"
       width = 2
-      query = query.aws_ec2_eni_overview
+      query = query.ec2_eni_overview
       args = {
         network_interface_id = self.input.network_interface_id.value
       }
@@ -194,7 +194,7 @@ dashboard "aws_ec2_network_interface_detail" {
     table {
       title = "Tags"
       width = 3
-      query = query.aws_ec2_eni_tags
+      query = query.ec2_eni_tags
       args = {
         network_interface_id = self.input.network_interface_id.value
       }
@@ -205,7 +205,7 @@ dashboard "aws_ec2_network_interface_detail" {
 
       table {
         title = "Associations"
-        query = query.aws_ec2_eni_association_details
+        query = query.ec2_eni_association_details
         args = {
           network_interface_id = self.input.network_interface_id.value
         }
@@ -213,13 +213,13 @@ dashboard "aws_ec2_network_interface_detail" {
           display = "none"
         }
         column "Allocation ID" {
-          href = "/aws_insights.dashboard.aws_vpc_eip_detail?input.eip_arn={{.'eip_alloc_arn' | @uri}}"
+          href = "/aws_insights.dashboard.vpc_eip_detail?input.eip_arn={{.'eip_alloc_arn' | @uri}}"
         }
       }
 
       table {
         title = "Private IP Addresses"
-        query = query.aws_ec2_eni_private_ip
+        query = query.ec2_eni_private_ip
         args = {
           network_interface_id = self.input.network_interface_id.value
         }
@@ -246,7 +246,7 @@ query "network_interface_id" {
   EOQ
 }
 
-query "aws_ec2_eni_status" {
+query "ec2_eni_status" {
   sql = <<-EOQ
     select
       'Status' as label,
@@ -261,7 +261,7 @@ query "aws_ec2_eni_status" {
   param "network_interface_id" {}
 }
 
-query "aws_ec2_eni_type" {
+query "ec2_eni_type" {
   sql = <<-EOQ
     select
       'Type' as label,
@@ -275,7 +275,7 @@ query "aws_ec2_eni_type" {
   param "network_interface_id" {}
 }
 
-query "aws_ec2_eni_attachment_status" {
+query "ec2_eni_attachment_status" {
   sql = <<-EOQ
     select
       'Attachment Status' as label,
@@ -290,7 +290,7 @@ query "aws_ec2_eni_attachment_status" {
   param "network_interface_id" {}
 }
 
-query "aws_ec2_eni_delete_on_termination" {
+query "ec2_eni_delete_on_termination" {
   sql = <<-EOQ
     select
       'Delete on Instance Terminate' as label,
@@ -317,7 +317,7 @@ query "aws_ec2_eni_delete_on_termination" {
   param "network_interface_id" {}
 }
 
-query "aws_ec2_eni_public_ip" {
+query "ec2_eni_public_ip" {
   sql = <<-EOQ
     select
       'Public IP' as label,
@@ -331,7 +331,7 @@ query "aws_ec2_eni_public_ip" {
   param "network_interface_id" {}
 }
 
-query "aws_ec2_eni_private_ip" {
+query "ec2_eni_private_ip" {
   sql = <<-EOQ
     select
       pvt_ip_addr ->> 'PrivateIpAddress' as "IP Address",
@@ -349,7 +349,7 @@ query "aws_ec2_eni_private_ip" {
   param "network_interface_id" {}
 }
 
-query "aws_ec2_eni_association_details" {
+query "ec2_eni_association_details" {
   sql = <<-EOQ
     select
       eni.association_allocation_id "Allocation ID",
@@ -373,7 +373,7 @@ query "aws_ec2_eni_association_details" {
   param "network_interface_id" {}
 }
 
-query "aws_ec2_eni_overview" {
+query "ec2_eni_overview" {
   sql = <<-EOQ
     select
       title as "Title",
@@ -392,7 +392,7 @@ query "aws_ec2_eni_overview" {
   param "network_interface_id" {}
 }
 
-query "aws_ec2_eni_tags" {
+query "ec2_eni_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -409,119 +409,64 @@ query "aws_ec2_eni_tags" {
   param "network_interface_id" {}
 }
 
-node "aws_ec2_network_interface_nodes" {
-  category = category.aws_ec2_network_interface
-
-  sql = <<-EOQ
-    select
-      network_interface_id as id,
-      title as title,
-      jsonb_build_object(
-        'ID', network_interface_id,
-        'Interface Type', interface_type,
-        'Status', status,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_ec2_network_interface
-    where
-      network_interface_id = any($1 ::text[]);
-  EOQ
-
-  param "eni_ids" {}
-}
-
-edge "aws_ec2_network_interface_to_vpc_eip_edges" {
-  title = "eip"
-
-  sql = <<-EOQ
-    select
-      eni_ids as from_id,
-      eip_arns as to_id
-    from
-      unnest($1::text[]) as eni_ids,
-      unnest($2::text[]) as eip_arns
-  EOQ
-
-  param "eni_ids" {}
-  param "eip_arns" {}
-}
 
 
-edge "aws_ec2_network_interface_to_vpc_security_group_edges" {
+
+edge "ec2_network_interface_to_vpc_security_group" {
   title = "security group"
 
   sql = <<-EOQ
     select
-      eni_ids as from_id,
-      security_group_ids as to_id
+      ec2_network_interface_id as from_id,
+      vpc_security_group_id as to_id
     from
-      unnest($1::text[]) as eni_ids,
-      unnest($2::text[]) as security_group_ids
+      unnest($1::text[]) as ec2_network_interface_id,
+      unnest($2::text[]) as vpc_security_group_id
   EOQ
 
-  param "eni_ids" {}
-  param "security_group_ids" {}
+  param "ec2_network_interface_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
-edge "aws_ec2_network_interface_to_vpc_subnet_edges" {
+edge "ec2_network_interface_to_vpc_subnet" {
   title = "subnet"
 
   sql = <<-EOQ
     select
       coalesce(
-        security_group_ids,
-        eni_ids
+        vpc_security_group_id,
+        ec2_network_interface_id
       ) as from_id,
-      subnet_ids as to_id
+      vpc_subnet_id as to_id
     from
-      unnest($1::text[]) as eni_ids,
-      unnest($2::text[]) as subnet_ids,
-      unnest($3::text[]) as security_group_ids
+      unnest($1::text[]) as ec2_network_interface_id,
+      unnest($2::text[]) as vpc_subnet_id,
+      unnest($3::text[]) as vpc_security_group_id
   EOQ
 
-  param "eni_ids" {}
-  param "subnet_ids" {}
-  param "security_group_ids" {}
+  param "ec2_network_interface_ids" {}
+  param "vpc_subnet_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
-
-edge "aws_vpc_subnet_to_vpc_edges" {
-  title = "vpc"
-
-  sql = <<-EOQ
-    select
-      subnet_ids as from_id,
-      vpc_ids as to_id
-    from
-      unnest($1::text[]) as subnet_ids,
-      unnest($2::text[]) as vpc_ids
-  EOQ
-
-  param "subnet_ids" {}
-  param "vpc_ids" {}
-}
-
-
-edge "aws_ec2_network_interface_to_vpc_flow_log_edges" {
+edge "ec2_network_interface_to_vpc_flow_log" {
   title = "flow log"
 
   sql = <<-EOQ
    select
-      eni_ids as from_id,
-      flow_log_ids as to_id
+      ec2_network_interface_id as from_id,
+      vpc_flow_log_id as to_id
     from
-      unnest($1::text[]) as eni_ids,
-      unnest($2::text[]) as flow_log_ids
+      unnest($1::text[]) as ec2_network_interface_id,
+      unnest($2::text[]) as vpc_flow_log_id
   EOQ
 
-  param "eni_ids" {}
-  param "flow_log_ids" {}
+  param "ec2_network_interface_ids" {}
+  param "vpc_flow_log_ids" {}
 }
 
-node "aws_ec2_network_interface_vpc_nat_gateway_nodes" {
-  category = category.aws_vpc_nat_gateway
+node "ec2_network_interface_vpc_nat_gateway" {
+  category = category.vpc_nat_gateway
 
   sql = <<-EOQ
     select
@@ -541,10 +486,10 @@ node "aws_ec2_network_interface_vpc_nat_gateway_nodes" {
       a ->> 'NetworkInterfaceId' = any($1);
   EOQ
 
-  param "eni_ids" {}
+  param "ec2_network_interface_ids" {}
 }
 
-edge "aws_vpc_nat_gateway_to_ec2_network_interface_edges" {
+edge "vpc_nat_gateway_to_ec2_network_interface" {
   title = "eni"
 
   sql = <<-EOQ
@@ -558,5 +503,5 @@ edge "aws_vpc_nat_gateway_to_ec2_network_interface_edges" {
       a ->> 'NetworkInterfaceId' = any($1);
   EOQ
 
-  param "eni_ids" {}
+  param "ec2_network_interface_ids" {}
 }

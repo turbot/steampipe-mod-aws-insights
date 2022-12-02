@@ -1,4 +1,4 @@
-dashboard "aws_eks_cluster_dashboard" {
+dashboard "eks_cluster_dashboard" {
 
   title         = "AWS EKS Cluster Dashboard"
   documentation = file("./dashboards/eks/docs/eks_cluster_dashboard.md")
@@ -12,23 +12,23 @@ dashboard "aws_eks_cluster_dashboard" {
   container {
 
     card {
-      query = query.aws_eks_cluster_count
+      query = query.eks_cluster_count
       width = 2
     }
 
     #Assessments
     card {
-      query = query.aws_eks_cluster_secrets_encryption_disabled
+      query = query.eks_cluster_secrets_encryption_disabled
       width = 2
     }
 
     card {
-      query = query.aws_eks_cluster_endpoint_endpoint_public_access_disabled
+      query = query.eks_cluster_endpoint_endpoint_public_access_disabled
       width = 2
     }
 
     card {
-      query = query.aws_eks_cluster_audit_logging_disabled
+      query = query.eks_cluster_audit_logging_disabled
       width = 2
     }
 
@@ -43,7 +43,7 @@ dashboard "aws_eks_cluster_dashboard" {
 
     chart {
       title = "Secrets Encryption Status"
-      query = query.aws_eks_cluster_secrets_encryption_status
+      query = query.eks_cluster_secrets_encryption_status
       type  = "donut"
       width = 4
 
@@ -59,7 +59,7 @@ dashboard "aws_eks_cluster_dashboard" {
 
     chart {
       title = "Endpoint Public Access Status"
-      query = query.aws_eks_cluster_endpoint_public_access_status
+      query = query.eks_cluster_endpoint_public_access_status
       type  = "donut"
       width = 4
 
@@ -75,7 +75,7 @@ dashboard "aws_eks_cluster_dashboard" {
 
     chart {
       title = "Audit Logging Status"
-      query = query.aws_eks_cluster_audit_logging_status
+      query = query.eks_cluster_audit_logging_status
       type  = "donut"
       width = 4
 
@@ -98,14 +98,14 @@ dashboard "aws_eks_cluster_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      query = query.aws_eks_monthly_forecast_table
+      query = query.eks_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      query = query.aws_eks_cost_per_month
+      query = query.eks_cost_per_month
     }
 
   }
@@ -118,42 +118,42 @@ dashboard "aws_eks_cluster_dashboard" {
 
     chart {
       title = "Clusters by Account"
-      query = query.aws_eks_cluster_by_account
+      query = query.eks_cluster_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Clusters by Region"
-      query = query.aws_eks_cluster_by_region
+      query = query.eks_cluster_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Clusters by Status"
-      query = query.aws_eks_cluster_by_status
+      query = query.eks_cluster_by_status
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Clusters by Creation Month"
-      query = query.aws_eks_cluste_by_creation_month
+      query = query.eks_cluste_by_creation_month
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Clusters by Platform Version"
-      query = query.aws_eks_cluster_by_platform_version
+      query = query.eks_cluster_by_platform_version
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Clusters by IP Family"
-      query = query.aws_eks_cluster_by_ip_family
+      query = query.eks_cluster_by_ip_family
       type  = "column"
       width = 4
     }
@@ -165,7 +165,7 @@ dashboard "aws_eks_cluster_dashboard" {
 
 # Card Queries
 
-query "aws_eks_cluster_secrets_encryption_disabled" {
+query "eks_cluster_secrets_encryption_disabled" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -178,7 +178,7 @@ query "aws_eks_cluster_secrets_encryption_disabled" {
   EOQ
 }
 
-query "aws_eks_cluster_endpoint_endpoint_public_access_disabled" {
+query "eks_cluster_endpoint_endpoint_public_access_disabled" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -191,7 +191,7 @@ query "aws_eks_cluster_endpoint_endpoint_public_access_disabled" {
   EOQ
 }
 
-query "aws_eks_cluster_audit_logging_disabled" {
+query "eks_cluster_audit_logging_disabled" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -208,7 +208,7 @@ query "aws_eks_cluster_audit_logging_disabled" {
 
 # Assessment Queries
 
-query "aws_eks_cluster_secrets_encryption_status" {
+query "eks_cluster_secrets_encryption_status" {
   sql = <<-EOQ
     select
       encryption_status,
@@ -229,7 +229,7 @@ query "aws_eks_cluster_secrets_encryption_status" {
   EOQ
 }
 
-query "aws_eks_cluster_endpoint_public_access_status" {
+query "eks_cluster_endpoint_public_access_status" {
   sql = <<-EOQ
     select
       endpoint_public_access_status,
@@ -250,7 +250,7 @@ query "aws_eks_cluster_endpoint_public_access_status" {
   EOQ
 }
 
-query "aws_eks_cluster_audit_logging_status" {
+query "eks_cluster_audit_logging_status" {
   sql = <<-EOQ
     select
       audit_logging_status,
@@ -278,7 +278,7 @@ query "aws_eks_cluster_audit_logging_status" {
 
 // # Cost Queries
 
-query "aws_eks_monthly_forecast_table" {
+query "eks_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
       select
@@ -318,7 +318,7 @@ query "aws_eks_monthly_forecast_table" {
   EOQ
 }
 
-query "aws_eks_cost_per_month" {
+query "eks_cost_per_month" {
   sql = <<-EOQ
     select
       to_char(period_start, 'Mon-YY') as "Month",
@@ -337,7 +337,7 @@ query "aws_eks_cost_per_month" {
 
 // # Analysis Queries
 
-query "aws_eks_cluster_by_account" {
+query "eks_cluster_by_account" {
   sql = <<-EOQ
     select
       a.title as "account",
@@ -354,7 +354,7 @@ query "aws_eks_cluster_by_account" {
   EOQ
 }
 
-query "aws_eks_cluster_by_region" {
+query "eks_cluster_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
@@ -368,7 +368,7 @@ query "aws_eks_cluster_by_region" {
   EOQ
 }
 
-query "aws_eks_cluster_by_status" {
+query "eks_cluster_by_status" {
   sql = <<-EOQ
     select
       status as "Status",
@@ -382,7 +382,7 @@ query "aws_eks_cluster_by_status" {
   EOQ
 }
 
-query "aws_eks_cluster_by_platform_version" {
+query "eks_cluster_by_platform_version" {
   sql = <<-EOQ
     select
       platform_version as "Platform Version",
@@ -396,7 +396,7 @@ query "aws_eks_cluster_by_platform_version" {
   EOQ
 }
 
-query "aws_eks_cluster_by_ip_family" {
+query "eks_cluster_by_ip_family" {
   sql = <<-EOQ
     select
       kubernetes_network_config -> 'IpFamily' as "IP Family",
@@ -410,7 +410,7 @@ query "aws_eks_cluster_by_ip_family" {
   EOQ
 }
 
-query "aws_eks_cluste_by_creation_month" {
+query "eks_cluste_by_creation_month" {
   sql = <<-EOQ
     with clusters as (
       select

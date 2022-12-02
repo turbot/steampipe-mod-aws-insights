@@ -10,38 +10,38 @@ dashboard "api_gatewayv2_api_report_age" {
   container {
 
     card {
-      query = query.aws_api_gatewayv2_api_count
+      query = query.api_gatewayv2_api_count
       width = 2
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_api_gatewayv2_api_24_hours_count
+      query = query.api_gatewayv2_api_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_api_gatewayv2_api_30_days_count
+      query = query.api_gatewayv2_api_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.aws_api_gatewayv2_api_30_90_days_count
+      query = query.api_gatewayv2_api_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query = query.aws_api_gatewayv2_api_90_365_days_count
+      query = query.api_gatewayv2_api_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query = query.aws_api_gatewayv2_api_1_year_count
+      query = query.api_gatewayv2_api_1_year_count
     }
 
   }
@@ -55,11 +55,11 @@ dashboard "api_gatewayv2_api_report_age" {
       href = "${dashboard.api_gatewayv2_api_detail.url_path}?input.api_id={{.ID | @uri}}"
     }
 
-    query = query.aws_api_gatewayv2_api_table
+    query = query.api_gatewayv2_api_table
   }
 }
 
-query "aws_api_gatewayv2_api_24_hours_count" {
+query "api_gatewayv2_api_24_hours_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -71,7 +71,7 @@ query "aws_api_gatewayv2_api_24_hours_count" {
   EOQ
 }
 
-query "aws_api_gatewayv2_api_30_days_count" {
+query "api_gatewayv2_api_30_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -83,7 +83,7 @@ query "aws_api_gatewayv2_api_30_days_count" {
   EOQ
 }
 
-query "aws_api_gatewayv2_api_30_90_days_count" {
+query "api_gatewayv2_api_30_90_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -95,7 +95,7 @@ query "aws_api_gatewayv2_api_30_90_days_count" {
   EOQ
 }
 
-query "aws_api_gatewayv2_api_90_365_days_count" {
+query "api_gatewayv2_api_90_365_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -107,7 +107,7 @@ query "aws_api_gatewayv2_api_90_365_days_count" {
   EOQ
 }
 
-query "aws_api_gatewayv2_api_1_year_count" {
+query "api_gatewayv2_api_1_year_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -119,7 +119,7 @@ query "aws_api_gatewayv2_api_1_year_count" {
   EOQ
 }
 
-query "aws_api_gatewayv2_api_table" {
+query "api_gatewayv2_api_table" {
   sql = <<-EOQ
     select
       api.name as "Name",

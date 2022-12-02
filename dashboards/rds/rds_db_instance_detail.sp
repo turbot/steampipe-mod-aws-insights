@@ -1,4 +1,4 @@
-dashboard "aws_rds_db_instance_detail" {
+dashboard "rds_db_instance_detail" {
 
   title         = "AWS RDS DB Instance Detail"
   documentation = file("./dashboards/rds/docs/rds_db_instance_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_rds_db_instance_detail" {
 
   input "db_instance_arn" {
     title = "Select a DB Instance:"
-    query = query.aws_rds_db_instance_input
+    query = query.rds_db_instance_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "aws_rds_db_instance_detail" {
 
     card {
       width = 2
-      query = query.aws_rds_db_instance_engine_type
+      query = query.rds_db_instance_engine_type
       args = {
         arn = self.input.db_instance_arn.value
       }
@@ -25,7 +25,7 @@ dashboard "aws_rds_db_instance_detail" {
 
     card {
       width = 2
-      query = query.aws_rds_db_instance_class
+      query = query.rds_db_instance_class
       args = {
         arn = self.input.db_instance_arn.value
       }
@@ -33,7 +33,7 @@ dashboard "aws_rds_db_instance_detail" {
 
     card {
       width = 2
-      query = query.aws_rds_db_instance_public
+      query = query.rds_db_instance_public
       args = {
         arn = self.input.db_instance_arn.value
       }
@@ -41,7 +41,7 @@ dashboard "aws_rds_db_instance_detail" {
 
     card {
       width = 2
-      query = query.aws_rds_db_instance_unencrypted
+      query = query.rds_db_instance_unencrypted
       args = {
         arn = self.input.db_instance_arn.value
       }
@@ -49,7 +49,7 @@ dashboard "aws_rds_db_instance_detail" {
 
     card {
       width = 2
-      query = query.aws_rds_db_instance_deletion_protection
+      query = query.rds_db_instance_deletion_protection
       args = {
         arn = self.input.db_instance_arn.value
       }
@@ -79,7 +79,7 @@ dashboard "aws_rds_db_instance_detail" {
         args = [self.input.db_instance_arn.value]
       }
 
-      with "topics" {
+      with "sns_topics" {
         sql = <<-EOQ
           select
             s.sns_topic_arn
@@ -108,7 +108,7 @@ dashboard "aws_rds_db_instance_detail" {
         args = [self.input.db_instance_arn.value]
       }
 
-      with "vpcs" {
+      with "vpc_vpcs" {
         sql = <<-EOQ
           select
             vpc_id
@@ -166,39 +166,39 @@ dashboard "aws_rds_db_instance_detail" {
       }
 
       nodes = [
-        node.aws_rds_db_instance_nodes,
-        node.aws_rds_db_snapshot_nodes,
-        node.aws_sns_topic_nodes,
-        node.aws_rds_db_instance_to_rds_db_parameter_group_node,
-        node.aws_rds_db_instance_to_rds_db_subnet_group_node,
-        node.aws_kms_key_nodes,
-        node.aws_vpc_nodes,
-        node.aws_vpc_subnet_nodes,
-        node.aws_vpc_security_group_nodes,
-        node.aws_rds_db_cluster_nodes
+        node.rds_db_instance,
+        node.rds_db_snapshot,
+        node.sns_topic,
+        node.rds_db_instance_to_rds_db_parameter_group,
+        node.rds_db_instance_to_rds_db_subnet_group,
+        node.kms_key,
+        node.vpc_vpc,
+        node.vpc_subnet,
+        node.vpc_security_group,
+        node.rds_db_cluster
       ]
 
       edges = [
-        edge.aws_rds_db_instance_to_rds_db_snapshot_edges,
-        edge.aws_rds_db_instance_to_sns_topic_edge,
-        edge.aws_rds_db_instance_to_rds_db_parameter_group_edge,
-        edge.aws_rds_db_instance_to_kms_key_edge,
-        edge.aws_rds_db_instance_rds_db_subnet_group_to_vpc_subnet_edge,
-        edge.aws_rds_db_instance_to_vpc_security_group_edge,
-        edge.aws_rds_db_instance_vpc_subnet_to_vpc_edge,
-        edge.aws_rds_db_instance_vpc_security_group_to_vpc_edge,
-        edge.aws_rds_db_instance_from_rds_db_cluster_edge
+        edge.rds_db_instance_to_rds_db_snapshot,
+        edge.rds_db_instance_to_sns_topic,
+        edge.rds_db_instance_to_rds_db_parameter_group,
+        edge.rds_db_instance_to_kms_key,
+        edge.rds_db_instance_rds_db_subnet_group_to_vpc_subnet,
+        edge.rds_db_instance_to_vpc_security_group,
+        edge.rds_db_instance_vpc_subnet_to_vpc,
+        edge.rds_db_instance_vpc_security_group_to_vpc,
+        edge.rds_db_instance_from_rds_db_cluster
       ]
 
       args = {
-        rds_db_instance_arns = [self.input.db_instance_arn.value]
-        rds_db_snapshot_arns = with.snapshots.rows[*].snapshot_arn
-        topic_arns           = with.topics.rows[*].sns_topic_arn
-        key_arns             = with.kms_keys.rows[*].key_arn
-        vpc_ids              = with.vpcs.rows[*].vpc_id
-        subnet_ids           = with.vpc_subnets.rows[*].subnet_id
-        security_group_ids   = with.vpc_security_groups.rows[*].security_group_id
-        rds_db_cluster_arns  = with.db_clusters.rows[*].cluster_arn
+        rds_db_instance_arns   = [self.input.db_instance_arn.value]
+        rds_db_snapshot_arns   = with.snapshots.rows[*].snapshot_arn
+        sns_topic_arns         = with.sns_topics.rows[*].sns_topic_arn
+        kms_key_arns           = with.kms_keys.rows[*].key_arn
+        vpc_vpc_ids            = with.vpc_vpcs.rows[*].vpc_id
+        vpc_subnet_ids         = with.vpc_subnets.rows[*].subnet_id
+        vpc_security_group_ids = with.vpc_security_groups.rows[*].security_group_id
+        rds_db_cluster_arns    = with.db_clusters.rows[*].cluster_arn
       }
     }
   }
@@ -213,7 +213,7 @@ dashboard "aws_rds_db_instance_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_rds_db_instance_overview
+        query = query.rds_db_instance_overview
         args = {
           arn = self.input.db_instance_arn.value
         }
@@ -222,7 +222,7 @@ dashboard "aws_rds_db_instance_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_rds_db_instance_tags
+        query = query.rds_db_instance_tags
         args = {
           arn = self.input.db_instance_arn.value
         }
@@ -236,7 +236,7 @@ dashboard "aws_rds_db_instance_detail" {
 
       table {
         title = "DB Parameter Groups"
-        query = query.aws_rds_db_instance_parameter_groups
+        query = query.rds_db_instance_parameter_groups
         args = {
           arn = self.input.db_instance_arn.value
         }
@@ -244,7 +244,7 @@ dashboard "aws_rds_db_instance_detail" {
 
       table {
         title = "Subnets"
-        query = query.aws_rds_db_instance_subnets
+        query = query.rds_db_instance_subnets
         args = {
           arn = self.input.db_instance_arn.value
         }
@@ -259,7 +259,7 @@ dashboard "aws_rds_db_instance_detail" {
       table {
         width = 6
         title = "Storage"
-        query = query.aws_rds_db_instance_storage
+        query = query.rds_db_instance_storage
         args = {
           arn = self.input.db_instance_arn.value
         }
@@ -268,7 +268,7 @@ dashboard "aws_rds_db_instance_detail" {
       table {
         width = 6
         title = "Logging"
-        query = query.aws_rds_db_instance_logging
+        query = query.rds_db_instance_logging
         args = {
           arn = self.input.db_instance_arn.value
         }
@@ -283,7 +283,7 @@ dashboard "aws_rds_db_instance_detail" {
       table {
         width = 6
         title = "Security Groups"
-        query = query.aws_rds_db_instance_security_groups
+        query = query.rds_db_instance_security_groups
         args = {
           arn = self.input.db_instance_arn.value
         }
@@ -292,7 +292,7 @@ dashboard "aws_rds_db_instance_detail" {
       table {
         width = 6
         title = "DB Subnet Groups"
-        query = query.aws_rds_db_instance_db_subnet_groups
+        query = query.rds_db_instance_db_subnet_groups
         args = {
           arn = self.input.db_instance_arn.value
         }
@@ -304,7 +304,7 @@ dashboard "aws_rds_db_instance_detail" {
 
 }
 
-query "aws_rds_db_instance_input" {
+query "rds_db_instance_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -320,7 +320,7 @@ query "aws_rds_db_instance_input" {
   EOQ
 }
 
-query "aws_rds_db_instance_engine_type" {
+query "rds_db_instance_engine_type" {
   sql = <<-EOQ
     select
       'Engine Type' as label,
@@ -334,7 +334,7 @@ query "aws_rds_db_instance_engine_type" {
   param "arn" {}
 }
 
-query "aws_rds_db_instance_class" {
+query "rds_db_instance_class" {
   sql = <<-EOQ
     select
       'Class' as label,
@@ -348,7 +348,7 @@ query "aws_rds_db_instance_class" {
   param "arn" {}
 }
 
-query "aws_rds_db_instance_public" {
+query "rds_db_instance_public" {
   sql = <<-EOQ
     select
       'Public Access' as label,
@@ -363,7 +363,7 @@ query "aws_rds_db_instance_public" {
   param "arn" {}
 }
 
-query "aws_rds_db_instance_unencrypted" {
+query "rds_db_instance_unencrypted" {
   sql = <<-EOQ
     select
       'Encryption' as label,
@@ -378,7 +378,7 @@ query "aws_rds_db_instance_unencrypted" {
   param "arn" {}
 }
 
-query "aws_rds_db_instance_deletion_protection" {
+query "rds_db_instance_deletion_protection" {
   sql = <<-EOQ
     select
       'Deletion Protection' as label,
@@ -393,7 +393,7 @@ query "aws_rds_db_instance_deletion_protection" {
   param "arn" {}
 }
 
-query "aws_rds_db_instance_parameter_groups" {
+query "rds_db_instance_parameter_groups" {
   sql = <<-EOQ
     select
       p ->> 'DBParameterGroupName' as "DB Parameter Group Name",
@@ -408,7 +408,7 @@ query "aws_rds_db_instance_parameter_groups" {
   param "arn" {}
 }
 
-query "aws_rds_db_instance_subnets" {
+query "rds_db_instance_subnets" {
   sql = <<-EOQ
     select
       p ->> 'SubnetIdentifier' as "Subnet Identifier",
@@ -424,7 +424,7 @@ query "aws_rds_db_instance_subnets" {
   param "arn" {}
 }
 
-query "aws_rds_db_instance_storage" {
+query "rds_db_instance_storage" {
   sql = <<-EOQ
     select
       storage_type as "Storage Type",
@@ -440,7 +440,7 @@ query "aws_rds_db_instance_storage" {
   param "arn" {}
 }
 
-query "aws_rds_db_instance_logging" {
+query "rds_db_instance_logging" {
   sql = <<-EOQ
     select
       enabled_cloudwatch_logs_exports as "Enabled CloudWatch Logs Exports",
@@ -454,7 +454,7 @@ query "aws_rds_db_instance_logging" {
   param "arn" {}
 }
 
-query "aws_rds_db_instance_security_groups" {
+query "rds_db_instance_security_groups" {
   sql = <<-EOQ
     select
       s ->> 'VpcSecurityGroupId' as "VPC Security Group ID",
@@ -469,7 +469,7 @@ query "aws_rds_db_instance_security_groups" {
   param "arn" {}
 }
 
-query "aws_rds_db_instance_db_subnet_groups" {
+query "rds_db_instance_db_subnet_groups" {
   sql = <<-EOQ
     select
       db_subnet_group_name as "DB Subnet Group Name",
@@ -484,7 +484,7 @@ query "aws_rds_db_instance_db_subnet_groups" {
   param "arn" {}
 }
 
-query "aws_rds_db_instance_overview" {
+query "rds_db_instance_overview" {
   sql = <<-EOQ
     select
       db_instance_identifier as "DB Instance Identifier",
@@ -506,7 +506,7 @@ query "aws_rds_db_instance_overview" {
   param "arn" {}
 }
 
-query "aws_rds_db_instance_tags" {
+query "rds_db_instance_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -523,8 +523,8 @@ query "aws_rds_db_instance_tags" {
   param "arn" {}
 }
 
-node "aws_rds_db_instance_nodes" {
-  category = category.aws_rds_db_instance
+node "rds_db_instance" {
+  category = category.rds_db_instance
 
   sql = <<-EOQ
     select
@@ -550,8 +550,8 @@ node "aws_rds_db_instance_nodes" {
   param "rds_db_instance_arns" {}
 }
 
-node "aws_rds_db_instance_to_rds_db_parameter_group_node" {
-  category = category.aws_rds_db_parameter_group
+node "rds_db_instance_to_rds_db_parameter_group" {
+  category = category.rds_db_parameter_group
 
   sql = <<-EOQ
     select
@@ -576,7 +576,7 @@ node "aws_rds_db_instance_to_rds_db_parameter_group_node" {
   param "rds_db_instance_arns" {}
 }
 
-edge "aws_rds_db_instance_to_rds_db_parameter_group_edge" {
+edge "rds_db_instance_to_rds_db_parameter_group" {
   title = "parameter group"
 
   sql = <<-EOQ
@@ -597,8 +597,8 @@ edge "aws_rds_db_instance_to_rds_db_parameter_group_edge" {
   param "rds_db_instance_arns" {}
 }
 
-node "aws_rds_db_instance_to_rds_db_subnet_group_node" {
-  category = category.aws_rds_db_subnet_group
+node "rds_db_instance_to_rds_db_subnet_group" {
+  category = category.rds_db_subnet_group
 
   sql = <<-EOQ
     select
@@ -624,7 +624,7 @@ node "aws_rds_db_instance_to_rds_db_subnet_group_node" {
   param "rds_db_instance_arns" {}
 }
 
-edge "aws_rds_db_instance_to_kms_key_edge" {
+edge "rds_db_instance_to_kms_key" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -637,10 +637,10 @@ edge "aws_rds_db_instance_to_kms_key_edge" {
   EOQ
 
   param "rds_db_instance_arns" {}
-  param "key_arns" {}
+  param "kms_key_arns" {}
 }
 
-edge "aws_rds_db_instance_rds_db_subnet_group_to_vpc_subnet_edge" {
+edge "rds_db_instance_rds_db_subnet_group_to_vpc_subnet" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -666,7 +666,7 @@ edge "aws_rds_db_instance_rds_db_subnet_group_to_vpc_subnet_edge" {
   param "rds_db_instance_arns" {}
 }
 
-edge "aws_rds_db_instance_to_vpc_security_group_edge" {
+edge "rds_db_instance_to_vpc_security_group" {
   title = "security group"
 
   sql = <<-EOQ
@@ -679,10 +679,10 @@ edge "aws_rds_db_instance_to_vpc_security_group_edge" {
   EOQ
 
   param "rds_db_instance_arns" {}
-  param "security_group_ids" {}
+  param "vpc_security_group_ids" {}
 }
 
-edge "aws_rds_db_instance_vpc_subnet_to_vpc_edge" {
+edge "rds_db_instance_vpc_subnet_to_vpc" {
   title = "vpc"
 
   sql = <<-EOQ
@@ -694,11 +694,11 @@ edge "aws_rds_db_instance_vpc_subnet_to_vpc_edge" {
       unnest($2::text[]) as vpc_id;
   EOQ
 
-  param "subnet_ids" {}
-  param "vpc_ids" {}
+  param "vpc_subnet_ids" {}
+  param "vpc_vpc_ids" {}
 }
 
-edge "aws_rds_db_instance_vpc_security_group_to_vpc_edge" {
+edge "rds_db_instance_vpc_security_group_to_vpc" {
   title = "subnet group"
 
   sql = <<-EOQ
@@ -725,7 +725,7 @@ edge "aws_rds_db_instance_vpc_security_group_to_vpc_edge" {
   param "rds_db_instance_arns" {}
 }
 
-edge "aws_rds_db_instance_from_rds_db_cluster_edge" {
+edge "rds_db_instance_from_rds_db_cluster" {
   title = "instance"
 
   sql = <<-EOQ
@@ -741,7 +741,7 @@ edge "aws_rds_db_instance_from_rds_db_cluster_edge" {
   param "rds_db_cluster_arns" {}
 }
 
-edge "aws_rds_db_instance_to_rds_db_snapshot_edges" {
+edge "rds_db_instance_to_rds_db_snapshot" {
   title = "snapshot"
 
   sql = <<-EOQ
@@ -757,7 +757,7 @@ edge "aws_rds_db_instance_to_rds_db_snapshot_edges" {
   param "rds_db_snapshot_arns" {}
 }
 
-edge "aws_rds_db_instance_to_sns_topic_edge" {
+edge "rds_db_instance_to_sns_topic" {
   title = "notifies"
 
   sql = <<-EOQ
@@ -770,5 +770,5 @@ edge "aws_rds_db_instance_to_sns_topic_edge" {
   EOQ
 
   param "rds_db_instance_arns" {}
-  param "topic_arns" {}
+  param "sns_topic_arns" {}
 }

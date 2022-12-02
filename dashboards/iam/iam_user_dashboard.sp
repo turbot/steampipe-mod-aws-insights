@@ -1,4 +1,4 @@
-dashboard "aws_iam_user_dashboard" {
+dashboard "iam_user_dashboard" {
 
   title         = "AWS IAM User Dashboard"
   documentation = file("./dashboards/iam/docs/iam_user_dashboard.md")
@@ -11,29 +11,29 @@ dashboard "aws_iam_user_dashboard" {
 
     # Analysis
     card {
-      query = query.aws_iam_user_count
+      query = query.iam_user_count
       width = 2
     }
 
     # Assessments
     card {
-      query = query.aws_iam_user_no_mfa_count
+      query = query.iam_user_no_mfa_count
       width = 2
-      href  = dashboard.aws_iam_user_mfa_report.url_path
+      href  = dashboard.iam_user_mfa_report.url_path
     }
 
     card {
-      query = query.aws_iam_user_no_boundary_count
-      width = 2
-    }
-
-    card {
-      query = query.aws_iam_users_with_direct_attached_policy_count
+      query = query.iam_user_no_boundary_count
       width = 2
     }
 
     card {
-      query = query.aws_iam_users_with_inline_policy_count
+      query = query.iam_users_with_direct_attached_policy_count
+      width = 2
+    }
+
+    card {
+      query = query.iam_users_with_inline_policy_count
       width = 2
     }
 
@@ -44,7 +44,7 @@ dashboard "aws_iam_user_dashboard" {
 
     chart {
       title = "MFA Status"
-      query = query.aws_iam_users_by_mfa_enabled
+      query = query.iam_users_by_mfa_enabled
       type  = "donut"
       width = 3
 
@@ -60,7 +60,7 @@ dashboard "aws_iam_user_dashboard" {
 
     chart {
       title = "Boundary Policy"
-      query = query.aws_iam_users_by_boundary_policy
+      query = query.iam_users_by_boundary_policy
       type  = "donut"
       width = 3
 
@@ -76,7 +76,7 @@ dashboard "aws_iam_user_dashboard" {
 
     chart {
       title = "Attached Policies"
-      query = query.aws_iam_users_with_direct_attached_policy
+      query = query.iam_users_with_direct_attached_policy
       type  = "donut"
       width = 3
 
@@ -92,7 +92,7 @@ dashboard "aws_iam_user_dashboard" {
 
     chart {
       title = "Inline Policies"
-      query = query.aws_iam_users_with_inline_policy
+      query = query.iam_users_with_inline_policy
       type  = "donut"
       width = 3
 
@@ -113,21 +113,21 @@ dashboard "aws_iam_user_dashboard" {
 
     chart {
       title = "Users by Account"
-      query = query.aws_iam_users_by_account
+      query = query.iam_users_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Users by Path"
-      query = query.aws_iam_user_by_path
+      query = query.iam_user_by_path
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Users by Age"
-      query = query.aws_iam_user_by_creation_month
+      query = query.iam_user_by_creation_month
       type  = "column"
       width = 4
     }
@@ -138,7 +138,7 @@ dashboard "aws_iam_user_dashboard" {
 
 # Card Queries
 
-query "aws_iam_user_count" {
+query "iam_user_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -148,7 +148,7 @@ query "aws_iam_user_count" {
   EOQ
 }
 
-query "aws_iam_user_no_mfa_count" {
+query "iam_user_no_mfa_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -161,7 +161,7 @@ query "aws_iam_user_no_mfa_count" {
   EOQ
 }
 
-query "aws_iam_user_no_boundary_count" {
+query "iam_user_no_boundary_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -174,7 +174,7 @@ query "aws_iam_user_no_boundary_count" {
   EOQ
 }
 
-query "aws_iam_users_with_direct_attached_policy_count" {
+query "iam_users_with_direct_attached_policy_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -187,7 +187,7 @@ query "aws_iam_users_with_direct_attached_policy_count" {
   EOQ
 }
 
-query "aws_iam_users_with_inline_policy_count" {
+query "iam_users_with_inline_policy_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -202,7 +202,7 @@ query "aws_iam_users_with_inline_policy_count" {
 
 # Assessment Queries
 
-query "aws_iam_users_by_mfa_enabled" {
+query "iam_users_by_mfa_enabled" {
   sql = <<-EOQ
     with mfa_stat as (
       select
@@ -223,7 +223,7 @@ query "aws_iam_users_by_mfa_enabled" {
   EOQ
 }
 
-query "aws_iam_users_by_boundary_policy" {
+query "iam_users_by_boundary_policy" {
   sql = <<-EOQ
     select
       case
@@ -238,7 +238,7 @@ query "aws_iam_users_by_boundary_policy" {
   EOQ
 }
 
-query "aws_iam_users_with_direct_attached_policy" {
+query "iam_users_with_direct_attached_policy" {
   sql = <<-EOQ
     with attached_compliance as (
       select
@@ -260,7 +260,7 @@ query "aws_iam_users_with_direct_attached_policy" {
   EOQ
 }
 
-query "aws_iam_users_with_inline_policy" {
+query "iam_users_with_inline_policy" {
   sql = <<-EOQ
     with inline_compliance as (
       select
@@ -284,7 +284,7 @@ query "aws_iam_users_with_inline_policy" {
 
 # Analysis Queries
 
-query "aws_iam_users_by_account" {
+query "iam_users_by_account" {
   sql = <<-EOQ
     select
       a.title,
@@ -301,7 +301,7 @@ query "aws_iam_users_by_account" {
   EOQ
 }
 
-query "aws_iam_user_by_path" {
+query "iam_user_by_path" {
   sql = <<-EOQ
     select
       path,
@@ -313,7 +313,7 @@ query "aws_iam_user_by_path" {
   EOQ
 }
 
-query "aws_iam_user_by_creation_month" {
+query "iam_user_by_creation_month" {
   sql = <<-EOQ
     with users as (
       select

@@ -1,4 +1,4 @@
-dashboard "aws_acm_certificate_dashboard" {
+dashboard "acm_certificate_dashboard" {
 
   title         = "AWS ACM Certificate Dashboard"
   documentation = file("./dashboards/acm/docs/acm_certificate_dashboard.md")
@@ -11,28 +11,28 @@ dashboard "aws_acm_certificate_dashboard" {
 
     # Analysis
     card {
-      query = query.aws_acm_certificate_count
+      query = query.acm_certificate_count
       width = 2
     }
 
     card {
-      query = query.aws_acm_certificate_revoked_count
+      query = query.acm_certificate_revoked_count
       width = 2
     }
 
     # Assessments
     card {
-      query = query.aws_acm_certificate_renewal_eligibility_ineligible
+      query = query.acm_certificate_renewal_eligibility_ineligible
       width = 2
     }
 
     card {
-      query = query.aws_acm_certificate_invalid
+      query = query.acm_certificate_invalid
       width = 2
     }
 
     card {
-      query = query.aws_acm_certificate_transparency_logging_disabled
+      query = query.acm_certificate_transparency_logging_disabled
       width = 2
     }
   }
@@ -43,7 +43,7 @@ dashboard "aws_acm_certificate_dashboard" {
 
     chart {
       title = "Certificate Validity"
-      query = query.aws_acm_certificate_by_validity
+      query = query.acm_certificate_by_validity
       type  = "donut"
       width = 3
 
@@ -59,7 +59,7 @@ dashboard "aws_acm_certificate_dashboard" {
 
     chart {
       title = "Transparency Logging Status"
-      query = query.aws_acm_certificate_by_transparency_logging_preference
+      query = query.acm_certificate_by_transparency_logging_preference
       type  = "donut"
       width = 3
 
@@ -81,28 +81,28 @@ dashboard "aws_acm_certificate_dashboard" {
 
     chart {
       title = "Certificates by Account"
-      query = query.aws_acm_certificate_by_account
+      query = query.acm_certificate_by_account
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Certificates by Region"
-      query = query.aws_acm_certificate_by_region
+      query = query.acm_certificate_by_region
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Certificates by Type"
-      query = query.aws_acm_certificate_by_type
+      query = query.acm_certificate_by_type
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Certificates by Age"
-      query = query.aws_acm_certificate_by_age
+      query = query.acm_certificate_by_age
       type  = "column"
       width = 3
     }
@@ -111,19 +111,19 @@ dashboard "aws_acm_certificate_dashboard" {
 
 # Card Queries
 
-query "aws_acm_certificate_count" {
+query "acm_certificate_count" {
   sql = <<-EOQ
     select count(*) as "Certificates" from aws_acm_certificate;
   EOQ
 }
 
-query "aws_acm_certificate_revoked_count" {
+query "acm_certificate_revoked_count" {
   sql = <<-EOQ
     select count(*) as "Revoked Certificates" from aws_acm_certificate where revoked_at is not null;
   EOQ
 }
 
-query "aws_acm_certificate_renewal_eligibility_ineligible" {
+query "acm_certificate_renewal_eligibility_ineligible" {
   sql = <<-EOQ
     select
       count(*) as "Ineligible for Renewal"
@@ -134,7 +134,7 @@ query "aws_acm_certificate_renewal_eligibility_ineligible" {
   EOQ
 }
 
-query "aws_acm_certificate_invalid" {
+query "acm_certificate_invalid" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -147,7 +147,7 @@ query "aws_acm_certificate_invalid" {
   EOQ
 }
 
-query "aws_acm_certificate_transparency_logging_disabled" {
+query "acm_certificate_transparency_logging_disabled" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -162,7 +162,7 @@ query "aws_acm_certificate_transparency_logging_disabled" {
 
 # Assessment Queries
 
-query "aws_acm_certificate_by_validity" {
+query "acm_certificate_by_validity" {
   sql = <<-EOQ
     select
       validity,
@@ -183,7 +183,7 @@ query "aws_acm_certificate_by_validity" {
   EOQ
 }
 
-query "aws_acm_certificate_by_transparency_logging_preference" {
+query "acm_certificate_by_transparency_logging_preference" {
   sql = <<-EOQ
     select
       certificate_transparency_logging_preference_status,
@@ -206,7 +206,7 @@ query "aws_acm_certificate_by_transparency_logging_preference" {
 
 # Analysis Queries
 
-query "aws_acm_certificate_by_account" {
+query "acm_certificate_by_account" {
   sql = <<-EOQ
     select
       a.title as "Account",
@@ -223,13 +223,13 @@ query "aws_acm_certificate_by_account" {
   EOQ
 }
 
-query "aws_acm_certificate_by_region" {
+query "acm_certificate_by_region" {
   sql = <<-EOQ
     select region as "Region", count(*) as "Certificates" from aws_acm_certificate group by region order by region;
   EOQ
 }
 
-query "aws_acm_certificate_by_type" {
+query "acm_certificate_by_type" {
   sql = <<-EOQ
     select
       type as "Type",
@@ -243,9 +243,9 @@ query "aws_acm_certificate_by_type" {
   EOQ
 }
 
-query "aws_acm_certificate_by_age" {
+query "acm_certificate_by_age" {
   sql = <<-EOQ
-    with certificates as (
+    with acm_certificates as (
       select
         title,
         created_at,
@@ -263,7 +263,7 @@ query "aws_acm_certificate_by_age" {
             (
               select
                 min(created_at)
-                from certificates)),
+                from acm_certificates)),
             date_trunc('month',
               current_date),
             interval '1 month') as d
@@ -273,7 +273,7 @@ query "aws_acm_certificate_by_age" {
         creation_month,
         count(*)
       from
-        certificates
+        acm_certificates
       group by
         creation_month
     )

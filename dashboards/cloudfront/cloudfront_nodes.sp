@@ -1,5 +1,5 @@
-node "aws_cloudfront_distribution_nodes" {
-  category = category.aws_cloudfront_distribution
+node "cloudfront_distribution" {
+  category = category.cloudfront_distribution
   sql      = <<-EOQ
     select
       arn as id,
@@ -17,5 +17,5 @@ node "aws_cloudfront_distribution_nodes" {
       arn = any($1);
   EOQ
 
-  param "distribution_arns" {}
+  param "cloudfront_distribution_arns" {}
 }

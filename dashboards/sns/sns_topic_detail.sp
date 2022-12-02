@@ -1,4 +1,4 @@
-dashboard "aws_sns_topic_detail" {
+dashboard "sns_topic_detail" {
 
   title         = "AWS SNS Topic Detail"
   documentation = file("./dashboards/sns/docs/sns_topic_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_sns_topic_detail" {
 
   input "topic_arn" {
     title = "Select a topic:"
-    query = query.aws_sns_topic_input
+    query = query.sns_topic_input
     width = 4
   }
 
@@ -17,14 +17,14 @@ dashboard "aws_sns_topic_detail" {
 
     card {
       width = 2
-      query = query.aws_sns_topic_encryption_status
+      query = query.sns_topic_encryption_status
       args = {
         arn = self.input.topic_arn.value
       }
     }
 
     card {
-      query = query.aws_sns_topic_subscriptions_confirmed_count
+      query = query.sns_topic_subscriptions_confirmed_count
       width = 2
       args = {
         arn = self.input.topic_arn.value
@@ -40,31 +40,31 @@ dashboard "aws_sns_topic_detail" {
       direction = "TD"
 
       nodes = [
-        node.aws_sns_topic_nodes,
-        node.aws_sns_topic_to_kms_key_node,
-        node.aws_sns_topic_to_sns_topic_subscriptions_node,
-        node.aws_sns_topic_from_s3_bucket_node,
-        node.aws_sns_topic_from_rds_db_instance_node,
-        node.aws_sns_topic_from_redshift_cluster_node,
-        node.aws_sns_topic_from_cloudtrail_trail_node,
-        node.aws_sns_topic_from_cloudformation_stack_node,
-        node.aws_sns_topic_from_aws_elasticache_cluster_node
+        node.sns_topic,
+        node.sns_topic_to_kms_key_node,
+        node.sns_topic_to_sns_topic_subscriptions_node,
+        node.sns_topic_from_s3_bucket_node,
+        node.sns_topic_from_rds_db_instance_node,
+        node.sns_topic_from_redshift_cluster_node,
+        node.sns_topic_from_cloudtrail_trail_node,
+        node.sns_topic_from_cloudformation_stack_node,
+        node.sns_topic_from_aws_elasticache_cluster_node
       ]
 
       edges = [
-        edge.aws_sns_topic_to_kms_key_edge,
-        edge.aws_sns_topic_to_sns_topic_subscriptions_edge,
-        edge.aws_sns_topic_from_s3_bucket_edge,
-        edge.aws_sns_topic_from_rds_db_instance_edge,
-        edge.aws_sns_topic_from_redshift_cluster_edge,
-        edge.aws_sns_topic_from_cloudtrail_trail_edge,
-        edge.aws_sns_topic_from_cloudformation_stack_edge,
-        edge.aws_sns_topic_from_aws_elasticache_cluster_edge
+        edge.sns_topic_to_kms_key_edge,
+        edge.sns_topic_to_sns_topic_subscriptions_edge,
+        edge.sns_topic_from_s3_bucket_edge,
+        edge.sns_topic_from_rds_db_instance_edge,
+        edge.sns_topic_from_redshift_cluster_edge,
+        edge.sns_topic_from_cloudtrail_trail_edge,
+        edge.sns_topic_from_cloudformation_stack_edge,
+        edge.sns_topic_from_aws_elasticache_cluster_edge
       ]
 
       args = {
-        topic_arns = [self.input.topic_arn.value]
-        arn        = self.input.topic_arn.value
+        sns_topic_arns = [self.input.topic_arn.value]
+        arn            = self.input.topic_arn.value
       }
     }
   }
@@ -78,7 +78,7 @@ dashboard "aws_sns_topic_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_sns_topic_overview
+        query = query.sns_topic_overview
         args = {
           arn = self.input.topic_arn.value
         }
@@ -88,7 +88,7 @@ dashboard "aws_sns_topic_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_sns_topic_tags
+        query = query.sns_topic_tags
         args = {
           arn = self.input.topic_arn.value
         }
@@ -101,7 +101,7 @@ dashboard "aws_sns_topic_detail" {
 
       table {
         title = "Subscription Counts"
-        query = query.aws_sns_topic_subscriptions
+        query = query.sns_topic_subscriptions
         args = {
           arn = self.input.topic_arn.value
         }
@@ -114,7 +114,7 @@ dashboard "aws_sns_topic_detail" {
 
       table {
         title = "Effective Delivery Policy"
-        query = query.aws_sns_topic_delivery_policy
+        query = query.sns_topic_delivery_policy
         args = {
           arn = self.input.topic_arn.value
         }
@@ -122,7 +122,7 @@ dashboard "aws_sns_topic_detail" {
 
       table {
         title = "Policy"
-        query = query.aws_sns_topic_policy_standard
+        query = query.sns_topic_policy_standard
         args = {
           arn = self.input.topic_arn.value
         }
@@ -132,7 +132,7 @@ dashboard "aws_sns_topic_detail" {
   }
 }
 
-query "aws_sns_topic_input" {
+query "sns_topic_input" {
   sql = <<-EOQ
     select
       topic_arn as label,
@@ -144,7 +144,7 @@ query "aws_sns_topic_input" {
 EOQ
 }
 
-query "aws_sns_topic_encryption_status" {
+query "sns_topic_encryption_status" {
   sql = <<-EOQ
     select
       case when kms_master_key_id is not null then 'Enabled' else 'Disabled' end as value,
@@ -159,7 +159,7 @@ query "aws_sns_topic_encryption_status" {
   param "arn" {}
 }
 
-query "aws_sns_topic_subscriptions_confirmed_count" {
+query "sns_topic_subscriptions_confirmed_count" {
   sql = <<-EOQ
     select
       subscriptions_confirmed::int as value,
@@ -174,7 +174,7 @@ query "aws_sns_topic_subscriptions_confirmed_count" {
   param "arn" {}
 }
 
-query "aws_sns_topic_overview" {
+query "sns_topic_overview" {
   sql = <<-EOQ
     select
       display_name as "Display Name",
@@ -193,7 +193,7 @@ query "aws_sns_topic_overview" {
   param "arn" {}
 }
 
-query "aws_sns_topic_tags" {
+query "sns_topic_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -210,7 +210,7 @@ query "aws_sns_topic_tags" {
   param "arn" {}
 }
 
-query "aws_sns_topic_subscriptions" {
+query "sns_topic_subscriptions" {
   sql = <<-EOQ
     select
       subscriptions_confirmed as "Confirmed",
@@ -225,7 +225,7 @@ query "aws_sns_topic_subscriptions" {
   param "arn" {}
 }
 
-query "aws_sns_topic_delivery_policy" {
+query "sns_topic_delivery_policy" {
   sql = <<-EOQ
     select
       effective_delivery_policy -> 'http' -> 'defaultHealthyRetryPolicy' ->> 'numRetries' as "Retries",
@@ -245,7 +245,7 @@ query "aws_sns_topic_delivery_policy" {
   param "arn" {}
 }
 
-query "aws_sns_topic_policy_standard" {
+query "sns_topic_policy_standard" {
   sql = <<-EOQ
     select
       statement ->> 'Sid' as "SID",
@@ -264,8 +264,8 @@ query "aws_sns_topic_policy_standard" {
   param "arn" {}
 }
 
-node "aws_sns_topic_nodes" {
-  category = category.aws_sns_topic
+node "sns_topic" {
+  category = category.sns_topic
 
   sql = <<-EOQ
     select
@@ -282,11 +282,11 @@ node "aws_sns_topic_nodes" {
       q.topic_arn = any($1);
   EOQ
 
-  param "topic_arns" {}
+  param "sns_topic_arns" {}
 }
 
-node "aws_sns_topic_to_kms_key_node" {
-  category = category.aws_kms_key
+node "sns_topic_to_kms_key_node" {
+  category = category.kms_key
 
   sql = <<-EOQ
     select
@@ -310,7 +310,7 @@ node "aws_sns_topic_to_kms_key_node" {
   param "arn" {}
 }
 
-edge "aws_sns_topic_to_kms_key_edge" {
+edge "sns_topic_to_kms_key_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -328,8 +328,8 @@ edge "aws_sns_topic_to_kms_key_edge" {
   param "arn" {}
 }
 
-node "aws_sns_topic_to_sns_topic_subscriptions_node" {
-  category = category.aws_sns_topic_subscription
+node "sns_topic_to_sns_topic_subscriptions_node" {
+  category = category.sns_topic_subscription
 
   sql = <<-EOQ
     select
@@ -350,7 +350,7 @@ node "aws_sns_topic_to_sns_topic_subscriptions_node" {
   param "arn" {}
 }
 
-edge "aws_sns_topic_to_sns_topic_subscriptions_edge" {
+edge "sns_topic_to_sns_topic_subscriptions_edge" {
   title = "subscription"
 
   sql = <<-EOQ
@@ -367,8 +367,8 @@ edge "aws_sns_topic_to_sns_topic_subscriptions_edge" {
   param "arn" {}
 }
 
-node "aws_sns_topic_from_s3_bucket_node" {
-  category = category.aws_s3_bucket
+node "sns_topic_from_s3_bucket_node" {
+  category = category.s3_bucket
 
   sql = <<-EOQ
     select
@@ -394,7 +394,7 @@ node "aws_sns_topic_from_s3_bucket_node" {
   param "arn" {}
 }
 
-edge "aws_sns_topic_from_s3_bucket_edge" {
+edge "sns_topic_from_s3_bucket_edge" {
   title = "notifies"
 
   sql = <<-EOQ
@@ -416,8 +416,8 @@ edge "aws_sns_topic_from_s3_bucket_edge" {
   param "arn" {}
 }
 
-node "aws_sns_topic_from_rds_db_instance_node" {
-  category = category.aws_rds_db_instance
+node "sns_topic_from_rds_db_instance_node" {
+  category = category.rds_db_instance
 
   sql = <<-EOQ
     select
@@ -444,7 +444,7 @@ node "aws_sns_topic_from_rds_db_instance_node" {
   param "arn" {}
 }
 
-edge "aws_sns_topic_from_rds_db_instance_edge" {
+edge "sns_topic_from_rds_db_instance_edge" {
   title = "notifies"
 
   sql = <<-EOQ
@@ -473,8 +473,8 @@ edge "aws_sns_topic_from_rds_db_instance_edge" {
   param "arn" {}
 }
 
-node "aws_sns_topic_from_redshift_cluster_node" {
-  category = category.aws_redshift_cluster
+node "sns_topic_from_redshift_cluster_node" {
+  category = category.redshift_cluster
 
   sql = <<-EOQ
     select
@@ -501,7 +501,7 @@ node "aws_sns_topic_from_redshift_cluster_node" {
   param "arn" {}
 }
 
-edge "aws_sns_topic_from_redshift_cluster_edge" {
+edge "sns_topic_from_redshift_cluster_edge" {
   title = "notifies"
 
   sql = <<-EOQ
@@ -529,8 +529,8 @@ edge "aws_sns_topic_from_redshift_cluster_edge" {
   param "arn" {}
 }
 
-node "aws_sns_topic_from_cloudtrail_trail_node" {
-  category = category.aws_cloudtrail_trail
+node "sns_topic_from_cloudtrail_trail_node" {
+  category = category.cloudtrail_trail
 
   sql = <<-EOQ
     select
@@ -551,7 +551,7 @@ node "aws_sns_topic_from_cloudtrail_trail_node" {
   param "arn" {}
 }
 
-edge "aws_sns_topic_from_cloudtrail_trail_edge" {
+edge "sns_topic_from_cloudtrail_trail_edge" {
   title = "notifies"
 
   sql = <<-EOQ
@@ -568,8 +568,8 @@ edge "aws_sns_topic_from_cloudtrail_trail_edge" {
   param "arn" {}
 }
 
-node "aws_sns_topic_from_cloudformation_stack_node" {
-  category = category.aws_cloudformation_stack
+node "sns_topic_from_cloudformation_stack_node" {
+  category = category.cloudformation_stack
 
   sql = <<-EOQ
     select
@@ -596,7 +596,7 @@ node "aws_sns_topic_from_cloudformation_stack_node" {
   param "arn" {}
 }
 
-edge "aws_sns_topic_from_cloudformation_stack_edge" {
+edge "sns_topic_from_cloudformation_stack_edge" {
   title = "notifies"
 
   sql = <<-EOQ
@@ -619,8 +619,8 @@ edge "aws_sns_topic_from_cloudformation_stack_edge" {
   param "arn" {}
 }
 
-node "aws_sns_topic_from_aws_elasticache_cluster_node" {
-  category = category.aws_elasticache_cluster
+node "sns_topic_from_aws_elasticache_cluster_node" {
+  category = category.elasticache_cluster
 
   sql = <<-EOQ
     select
@@ -642,7 +642,7 @@ node "aws_sns_topic_from_aws_elasticache_cluster_node" {
   param "arn" {}
 }
 
-edge "aws_sns_topic_from_aws_elasticache_cluster_edge" {
+edge "sns_topic_from_aws_elasticache_cluster_edge" {
   title = "notifies"
 
   sql = <<-EOQ

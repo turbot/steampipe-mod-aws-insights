@@ -1,4 +1,4 @@
-dashboard "aws_redshift_cluster_dashboard" {
+dashboard "redshift_cluster_dashboard" {
 
   title         = "AWS Redshift Cluster Dashboard"
   documentation = file("./dashboards/redshift/docs/redshift_cluster_dashboard.md")
@@ -11,21 +11,21 @@ dashboard "aws_redshift_cluster_dashboard" {
 
     # Analysis
     card {
-      query = query.aws_redshift_cluster_count
+      query = query.redshift_cluster_count
       width = 2
     }
 
     # Assessments
     card {
-      query = query.aws_redshift_cluster_unencrypted_count
+      query = query.redshift_cluster_unencrypted_count
       width = 2
-      href  = dashboard.aws_redshift_cluster_encryption_report.url_path
+      href  = dashboard.redshift_cluster_encryption_report.url_path
     }
 
     card {
-      query = query.aws_redshift_cluster_publicly_accessible
+      query = query.redshift_cluster_publicly_accessible
       width = 2
-      href  = dashboard.aws_redshift_cluster_public_access_report.url_path
+      href  = dashboard.redshift_cluster_public_access_report.url_path
     }
 
     # Costs
@@ -33,7 +33,7 @@ dashboard "aws_redshift_cluster_dashboard" {
       type  = "info"
       icon  = "currency-dollar"
       width = 2
-      query = query.aws_redshift_cluster_cost_mtd
+      query = query.redshift_cluster_cost_mtd
     }
 
   }
@@ -45,7 +45,7 @@ dashboard "aws_redshift_cluster_dashboard" {
 
     chart {
       title = "Encryption Status"
-      query = query.aws_redshift_cluster_by_encryption_status
+      query = query.redshift_cluster_by_encryption_status
       type  = "donut"
       width = 4
 
@@ -61,7 +61,7 @@ dashboard "aws_redshift_cluster_dashboard" {
 
     chart {
       title = "Public Accessibility Status"
-      query = query.aws_redshift_cluster_by_publicly_accessible_status
+      query = query.redshift_cluster_by_publicly_accessible_status
       type  = "donut"
       width = 4
 
@@ -85,13 +85,13 @@ dashboard "aws_redshift_cluster_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      query = query.aws_redshift_cluster_monthly_forecast_table
+      query = query.redshift_cluster_monthly_forecast_table
     }
 
     chart {
       title = "Monthly Cost - 12 Months"
       type  = "column"
-      query = query.aws_redshift_cluster_cost_per_month
+      query = query.redshift_cluster_cost_per_month
       width = 6
     }
 
@@ -103,28 +103,28 @@ dashboard "aws_redshift_cluster_dashboard" {
 
     chart {
       title = "Clusters by Account"
-      query = query.aws_redshift_cluster_by_account
+      query = query.redshift_cluster_by_account
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Clusters by Region"
-      query = query.aws_redshift_cluster_by_region
+      query = query.redshift_cluster_by_region
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Clusters by State"
-      query = query.aws_redshift_cluster_by_state
+      query = query.redshift_cluster_by_state
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Clusters by Age"
-      query = query.aws_redshift_cluster_by_creation_month
+      query = query.redshift_cluster_by_creation_month
       type  = "column"
       width = 3
     }
@@ -139,14 +139,14 @@ dashboard "aws_redshift_cluster_dashboard" {
       title = "Top 10 CPU - Last 7 days"
       type  = "line"
       width = 6
-      query = query.aws_redshift_cluster_top10_cpu_past_week
+      query = query.redshift_cluster_top10_cpu_past_week
     }
 
     chart {
       title = "Average max daily CPU - Last 30 days"
       type  = "line"
       width = 6
-      query = query.aws_redshift_cluster_by_cpu_utilization_category
+      query = query.redshift_cluster_by_cpu_utilization_category
     }
 
   }
@@ -155,13 +155,13 @@ dashboard "aws_redshift_cluster_dashboard" {
 
 # Card Queries
 
-query "aws_redshift_cluster_count" {
+query "redshift_cluster_count" {
   sql = <<-EOQ
     select count(*) as "Clusters" from aws_redshift_cluster
   EOQ
 }
 
-query "aws_redshift_cluster_unencrypted_count" {
+query "redshift_cluster_unencrypted_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -174,7 +174,7 @@ query "aws_redshift_cluster_unencrypted_count" {
   EOQ
 }
 
-query "aws_redshift_cluster_publicly_accessible" {
+query "redshift_cluster_publicly_accessible" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -187,7 +187,7 @@ query "aws_redshift_cluster_publicly_accessible" {
   EOQ
 }
 
-query "aws_redshift_cluster_cost_mtd" {
+query "redshift_cluster_cost_mtd" {
   sql = <<-EOQ
     select
       'Cost - MTD' as label,
@@ -202,7 +202,7 @@ query "aws_redshift_cluster_cost_mtd" {
 
 # Assessment Queries
 
-query "aws_redshift_cluster_by_encryption_status" {
+query "redshift_cluster_by_encryption_status" {
   sql = <<-EOQ
     select
       encryption_status,
@@ -223,7 +223,7 @@ query "aws_redshift_cluster_by_encryption_status" {
   EOQ
 }
 
-query "aws_redshift_cluster_by_publicly_accessible_status" {
+query "redshift_cluster_by_publicly_accessible_status" {
   sql = <<-EOQ
     select
       publicly_accessible_status,
@@ -246,7 +246,7 @@ query "aws_redshift_cluster_by_publicly_accessible_status" {
 
 # Cost Queries
 
-query "aws_redshift_cluster_monthly_forecast_table" {
+query "redshift_cluster_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
       select
@@ -287,7 +287,7 @@ query "aws_redshift_cluster_monthly_forecast_table" {
   EOQ
 }
 
-query "aws_redshift_cluster_cost_per_month" {
+query "redshift_cluster_cost_per_month" {
   sql = <<-EOQ
     select
       to_char(period_start, 'Mon-YY') as "Month",
@@ -305,7 +305,7 @@ query "aws_redshift_cluster_cost_per_month" {
 
 # Analysis Queries
 
-query "aws_redshift_cluster_by_account" {
+query "redshift_cluster_by_account" {
   sql = <<-EOQ
     select
       a.title as "Account",
@@ -322,13 +322,13 @@ query "aws_redshift_cluster_by_account" {
   EOQ
 }
 
-query "aws_redshift_cluster_by_region" {
+query "redshift_cluster_by_region" {
   sql = <<-EOQ
     select region as "Region", count(*) as "clusters" from aws_redshift_cluster group by region order by region
   EOQ
 }
 
-query "aws_redshift_cluster_by_state" {
+query "redshift_cluster_by_state" {
   sql = <<-EOQ
     select
       cluster_status,
@@ -340,7 +340,7 @@ query "aws_redshift_cluster_by_state" {
   EOQ
 }
 
-query "aws_redshift_cluster_by_creation_month" {
+query "redshift_cluster_by_creation_month" {
   sql = <<-EOQ
     with clusters as (
       select
@@ -387,7 +387,7 @@ query "aws_redshift_cluster_by_creation_month" {
 
 # Performance Queries
 
-query "aws_redshift_cluster_top10_cpu_past_week" {
+query "redshift_cluster_top10_cpu_past_week" {
   sql = <<-EOQ
     with top_n as (
       select
@@ -417,7 +417,7 @@ query "aws_redshift_cluster_top10_cpu_past_week" {
   EOQ
 }
 
-query "aws_redshift_cluster_by_cpu_utilization_category" {
+query "redshift_cluster_by_cpu_utilization_category" {
   sql = <<-EOQ
     with cpu_buckets as (
       select

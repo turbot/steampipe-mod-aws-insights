@@ -1,4 +1,4 @@
-dashboard "aws_codepipeline_pipeline_dashboard" {
+dashboard "codepipeline_pipeline_dashboard" {
 
   title         = "AWS CodePipeline Pipeline Dashboard"
   documentation = file("./dashboards/codepipeline/docs/codepipeline_pipeline_dashboard.md")
@@ -11,12 +11,12 @@ dashboard "aws_codepipeline_pipeline_dashboard" {
 
     # Analysis
     card {
-      query   = query.aws_codepipeline_pipeline_count
+      query   = query.codepipeline_pipeline_count
       width = 2
     }
 
     card {
-      query   = query.aws_codepipeline_pipeline_unencrypted_count
+      query   = query.codepipeline_pipeline_unencrypted_count
       width = 2
     }
   }
@@ -28,7 +28,7 @@ dashboard "aws_codepipeline_pipeline_dashboard" {
 
     chart {
       title = "Encryption status"
-      query   = query.aws_codepipeline_pipeline_encryption_status
+      query   = query.codepipeline_pipeline_encryption_status
       type  = "donut"
       width = 4
 
@@ -49,21 +49,21 @@ dashboard "aws_codepipeline_pipeline_dashboard" {
 
     chart {
       title = "Pipelines by Account"
-      query   = query.aws_codepipeline_pipeline_by_account
+      query   = query.codepipeline_pipeline_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Pipelines by Region"
-      query   = query.aws_codepipeline_pipeline_by_region
+      query   = query.codepipeline_pipeline_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Pipelines by Age"
-      query   = query.aws_codepipeline_pipeline_by_creation_month
+      query   = query.codepipeline_pipeline_by_creation_month
       width = 4
     }
 
@@ -73,7 +73,7 @@ dashboard "aws_codepipeline_pipeline_dashboard" {
 
 # Card Queries
 
-query "aws_codepipeline_pipeline_count" {
+query "codepipeline_pipeline_count" {
   sql = <<-EOQ
     select
       count(*) as "Pipelines"
@@ -82,7 +82,7 @@ query "aws_codepipeline_pipeline_count" {
   EOQ
 }
 
-query "aws_codepipeline_pipeline_unencrypted_count" {
+query "codepipeline_pipeline_unencrypted_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -98,7 +98,7 @@ query "aws_codepipeline_pipeline_unencrypted_count" {
 
 // # Assessment Queries
 
-query "aws_codepipeline_pipeline_encryption_status" {
+query "codepipeline_pipeline_encryption_status" {
   sql = <<-EOQ
     select
       encryption_status,
@@ -121,7 +121,7 @@ query "aws_codepipeline_pipeline_encryption_status" {
 
 # Analysis Queries
 
-query "aws_codepipeline_pipeline_by_account" {
+query "codepipeline_pipeline_by_account" {
   sql = <<-EOQ
     select
       a.title as "account",
@@ -138,7 +138,7 @@ query "aws_codepipeline_pipeline_by_account" {
   EOQ
 }
 
-query "aws_codepipeline_pipeline_by_region" {
+query "codepipeline_pipeline_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
@@ -152,7 +152,7 @@ query "aws_codepipeline_pipeline_by_region" {
   EOQ
 }
 
-query "aws_codepipeline_pipeline_by_creation_month" {
+query "codepipeline_pipeline_by_creation_month" {
   sql = <<-EOQ
     with clusters as (
       select

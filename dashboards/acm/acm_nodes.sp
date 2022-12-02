@@ -1,5 +1,5 @@
-node "aws_acm_certificate_nodes" {
-  category = category.aws_acm_certificate
+node "acm_certificate" {
+  category = category.acm_certificate
 
   sql = <<-EOQ
     select
@@ -22,6 +22,6 @@ node "aws_acm_certificate_nodes" {
       certificate_arn = any($1);
   EOQ
 
-  param "certificate_arns" {}
+  param "acm_certificate_arns" {}
 }
 
