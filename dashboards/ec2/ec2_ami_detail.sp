@@ -57,7 +57,7 @@ dashboard "ec2_ami_detail" {
       direction = "TD"
 
       nodes = [
-        node.ec2_ami_node,
+        node.ec2_ami,
         node.ec2_ami_to_ec2_instance_node,
         node.ec2_ami_from_ebs_snapshot_node
       ]
@@ -299,7 +299,7 @@ query "ec2_ami_tags" {
   param "image_ids" {}
 }
 
-node "ec2_ami_node" {
+node "ec2_ami" {
   category = category.ec2_ami
 
   sql = <<-EOQ
