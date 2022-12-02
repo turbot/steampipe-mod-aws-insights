@@ -128,18 +128,18 @@ dashboard "ebs_volume_detail" {
       }
 
       nodes = [
-        node.ebs_volume,
-        node.kms_key,
         node.ebs_snapshot,
-        node.ec2_instance,
+        node.ebs_volume,
         node.ec2_ami
+        node.ec2_instance,
+        node.kms_key,
       ]
 
       edges = [
-        edge.ebs_volume_to_kms_key,
-        edge.ebs_volume_to_ebs_snapshot,
-        edge.ebs_volume_from_ec2_instance,
         edge.ebs_volume_ebs_snapshots_to_ec2_ami
+        edge.ebs_volume_from_ec2_instance,
+        edge.ebs_volume_to_ebs_snapshot,
+        edge.ebs_volume_to_kms_key,
       ]
 
       args = {
