@@ -513,22 +513,6 @@ edge "ebs_volume_to_kms_key" {
   param "ebs_volume_arns" {}
 }
 
-edge "rds_db_cluster_to_kms_key" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      arn as from_id,
-      kms_key_id as to_id
-    from
-      aws_rds_db_cluster
-    where
-      arn = any($1);
-  EOQ
-
-  param "rds_db_cluster_arns" {}
-}
-
 edge "sns_topic_to_kms_key" {
   title = "encrypted with"
 

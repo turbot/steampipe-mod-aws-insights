@@ -727,25 +727,6 @@ edge "rds_db_instance_vpc_security_group_to_vpc" {
   param "rds_db_instance_arns" {}
 }
 
-edge "rds_db_cluster_to_rds_db_instance" {
-  title = "instance"
-
-  sql = <<-EOQ
-    select
-      c.arn as from_id,
-      i.arn as to_id
-    from
-      aws_rds_db_instance as i
-      join
-        aws_rds_db_cluster as c
-        on i.db_cluster_identifier = c.db_cluster_identifier
-    where
-      c.arn = $1;
-  EOQ
-
-  param "rds_db_cluster_arns" {}
-}
-
 edge "rds_db_instance_to_rds_db_snapshot" {
   title = "snapshot"
 
