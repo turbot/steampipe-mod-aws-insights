@@ -75,7 +75,7 @@ dashboard "s3_bucket_detail" {
       with "trails" {
         sql = <<-EOQ
           select
-            trail.arn as trail_arn
+            distinct trail.arn as trail_arn
           from
             aws_cloudtrail_trail as trail,
             aws_s3_bucket as b
@@ -155,11 +155,10 @@ dashboard "s3_bucket_detail" {
       with "lambda_functions" {
         sql = <<-EOQ
           select
-            f.arn as function_arn
+            t ->> 'LambdaFunctionArn' as function_arn
           from
             aws_s3_bucket as b,
             jsonb_array_elements(event_notification_configuration -> 'LambdaFunctionConfigurations') as t
-            left join aws_lambda_function as f on f.arn = t ->> 'LambdaFunctionArn'
           where
             event_notification_configuration -> 'LambdaFunctionConfigurations' <> 'null'
             and b.arn = $1;
@@ -171,7 +170,7 @@ dashboard "s3_bucket_detail" {
       with "sns_topics" {
         sql = <<-EOQ
           select
-            q.topic_arn as topic_arn
+            t ->> 'TopicArn' as topic_arn
           from
             aws_s3_bucket as b,
             jsonb_array_elements(
@@ -180,7 +179,6 @@ dashboard "s3_bucket_detail" {
                 else null end
               )
               as t
-            left join aws_sns_topic as q on q.topic_arn = t ->> 'TopicArn'
           where
             b.arn = $1;
         EOQ
@@ -383,7 +381,7 @@ edge "cloudtrail_trail_to_s3_bucket" {
       aws_cloudtrail_trail as t,
       aws_s3_bucket as b
     where
-      t.arn = $1
+      t.arn = any($1)
       and t.s3_bucket_name = b.name;
   EOQ
 

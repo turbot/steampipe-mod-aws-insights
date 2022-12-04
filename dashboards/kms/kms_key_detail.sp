@@ -554,22 +554,6 @@ edge "sqs_queue_to_kms_key" {
   param "sqs_queue_arns" {}
 }
 
-edge "lambda_function_to_kms_key" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      arn as from_id,
-      kms_key_arn as to_id
-    from
-      aws_lambda_function
-    where
-      arn = any($1);
-  EOQ
-
-  param "lambda_function_arns" {}
-}
-
 node "kms_key_alias" {
   category = category.kms_alias
 

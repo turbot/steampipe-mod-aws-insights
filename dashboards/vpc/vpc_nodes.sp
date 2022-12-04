@@ -40,7 +40,7 @@ node "vpc_security_group" {
     from
       aws_vpc_security_group
     where
-      group_id = any($1 ::text[]);
+      group_id = any($1);
   EOQ
 
   param "vpc_security_group_ids" {}

@@ -57,44 +57,160 @@ dashboard "lambda_function_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "vpc_security_groups" {
+        sql = <<-EOQ
+          select
+            s as group_id
+          from
+            aws_lambda_function,
+            jsonb_array_elements_text(vpc_security_group_ids) as s
+          where
+            arn = $1;
+        EOQ
+
+        args = [self.input.lambda_arn.value]
+      }
+
+      with "vpc_subnets" {
+        sql = <<-EOQ
+          select
+            s as subnet_id
+          from
+            aws_lambda_function,
+            jsonb_array_elements_text(vpc_subnet_ids) as s
+          where
+            arn = $1;
+        EOQ
+
+        args = [self.input.lambda_arn.value]
+      }
+
+      with "vpc_vpcs" {
+        sql = <<-EOQ
+          select
+            vpc_id
+          from
+            aws_lambda_function
+          where
+            arn = $1;
+        EOQ
+
+        args = [self.input.lambda_arn.value]
+      }
+
+      with "kms_keys" {
+        sql = <<-EOQ
+          select
+            kms_key_arn
+          from
+            aws_lambda_function
+          where
+            arn = $1;
+        EOQ
+
+        args = [self.input.lambda_arn.value]
+      }
+
+      with "iam_roles" {
+        sql = <<-EOQ
+          select
+            role as role_arn
+          from
+            aws_lambda_function
+          where
+            arn = $1;
+        EOQ
+
+        args = [self.input.lambda_arn.value]
+      }
+
+      with "s3_buckets" {
+        sql = <<-EOQ
+          select
+            arn as bucket_arn
+          from
+            aws_s3_bucket,
+            jsonb_array_elements(event_notification_configuration -> 'LambdaFunctionConfigurations') as t
+          where
+            event_notification_configuration -> 'LambdaFunctionConfigurations' <> 'null'
+            and t ->> 'LambdaFunctionArn' = $1;
+        EOQ
+
+        args = [self.input.lambda_arn.value]
+      }
+
+      with "sns_topics" {
+        sql = <<-EOQ
+          select
+            topic_arn as topic_arn
+          from
+            aws_sns_topic_subscription
+          where
+            protocol = 'lambda'
+            and (
+              endpoint = $1
+              or endpoint like $1 || ':%'
+            )
+        EOQ
+
+        args = [self.input.lambda_arn.value]
+      }
+
+      with "api_gateway_apis" {
+        sql = <<-EOQ
+          select
+            api_id
+          from
+            aws_api_gatewayv2_integration
+          where
+            integration_uri = $1;
+        EOQ
+
+        args = [self.input.lambda_arn.value]
+      }
+
       nodes = [
         node.lambda_function,
-        node.lambda_to_vpc_security_group_node,
-        node.lambda_vpc_subnet_node,
-        node.lambda_to_vpc_node,
-
-        node.lambda_to_kms_key_node,
-        node.lambda_to_iam_role_node,
-        node.lambda_from_s3_bucket_node,
-
-        node.lambda_version_node,
-        node.lambda_alias_node,
-        node.lambda_from_sns_subscription_node,
-        node.lambda_from_sns_topic_node,
-        node.lambda_from_api_gateway_integration_node,
-        node.lambda_from_api_gateway_node,
-
-
+        node.vpc_security_group,
+        node.vpc_subnet,
+        node.vpc_vpc,
+        node.kms_key,
+        node.iam_role,
+        node.s3_bucket,
+        node.lambda_version,
+        node.lambda_alias,
+        node.sns_topic_subscription,
+        node.sns_topic,
+        node.api_gatewayv2_integration,
+        node.api_gatewayv2_api
       ]
 
       edges = [
-        edge.lambda_to_vpc_security_group_edge,
-        edge.lambda_vpc_subnet_edge,
-        edge.lambda_to_vpc_edge,
-        edge.lambda_to_kms_key_edge,
-        edge.lambda_to_iam_role_edge,
-        edge.lambda_from_s3_bucket_edge,
-        edge.lambda_version_edge,
-        edge.lambda_alias_edge,
-        edge.lambda_sns_subscription_edge,
-        edge.lambda_sns_topic_edge,
-        edge.lambda_api_gateway_integration_edge,
-        edge.lambda_api_gateway_edge
+        edge.lambda_function_to_vpc_security_group,
+        edge.lambda_function_to_vpc_subnet,
+        edge.vpc_subnet_to_vpc_vpc,
+        edge.lambda_function_to_kms_key,
+        edge.lambda_function_to_iam_role,
+        edge.s3_bucket_to_lambda_function,
+        edge.lambda_function_to_lambda_version,
+        edge.lambda_function_to_lambda_alias,
+        edge.sns_subscription_to_lambda_function,
+        edge.sns_topic_to_sns_subscription,
+        edge.api_gateway_integration_to_lambda_function,
+        edge.api_gateway_api_to_api_gateway_integration
       ]
 
       args = {
-        lambda_function_arns = [self.input.lambda_arn.value]
-        arn                  = self.input.lambda_arn.value
+        lambda_function_arn    = self.input.lambda_arn.value
+        lambda_function_arns   = [self.input.lambda_arn.value]
+        vpc_vpc_ids            = with.vpc_vpcs.rows[*].vpc_id
+        vpc_subnet_ids         = with.vpc_subnets.rows[*].subnet_id
+        vpc_security_group_ids = with.vpc_security_groups.rows[*].group_id
+        sns_topic_arns         = with.sns_topics.rows[*].topic_arn
+        kms_key_arns           = with.kms_keys.rows[*].kms_key_arn
+        iam_role_arns          = with.iam_roles.rows[*].role_arn
+        s3_bucket_arns         = with.s3_buckets.rows[*].bucket_arn
+        api_gatewayv2_api_ids  = with.api_gateway_apis.rows[*].api_id
       }
     }
   }
@@ -380,77 +496,7 @@ node "lambda_function" {
   param "lambda_function_arns" {}
 }
 
-node "lambda_to_vpc_node" {
-  category = category.vpc_vpc
-
-  sql = <<-EOQ
-    select
-      v.vpc_id as id,
-      v.title as title,
-      jsonb_build_object(
-        'ARN', v.arn,
-        'VPC ID', v.vpc_id,
-        'Account ID', v.account_id,
-        'Region', v.region
-      ) as properties
-    from
-      aws_lambda_function as l,
-      aws_vpc as v
-    where
-      v.vpc_id = l.vpc_id
-      and l.arn = $1
-  EOQ
-
-  param "arn" {}
-}
-
-edge "lambda_to_vpc_edge" {
-  title = "vpc"
-  # a lambda can only be in one subnet, so we
-  # can assume all the vpc_subnet_ids are in the lambda's vpc
-  sql = <<-EOQ
-    select
-      s as from_id,
-      l.vpc_id as to_id
-    from
-      aws_lambda_function as l,
-      jsonb_array_elements_text(vpc_subnet_ids) as s
-    where
-      l.vpc_id  is not null
-      and l.vpc_id <> ''
-      and l.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "lambda_to_vpc_security_group_node" {
-  category = category.vpc_security_group
-
-  sql = <<-EOQ
-    select
-      sg.group_id as id,
-      sg.title as title,
-      jsonb_build_object(
-        'ARN', sg.arn,
-        'Group ID', sg.group_id,
-        'Group Name', sg.group_name,
-        'Account ID', sg.account_id,
-        'Region', sg.region
-      ) as properties
-    from
-      aws_lambda_function as l,
-      jsonb_array_elements_text(vpc_security_group_ids) as s,
-      aws_vpc_security_group as sg
-      where
-        sg.group_id = s
-        and l.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "lambda_to_vpc_security_group_edge" {
+edge "lambda_function_to_vpc_security_group" {
   title = "security group"
 
   sql = <<-EOQ
@@ -460,42 +506,14 @@ edge "lambda_to_vpc_security_group_edge" {
     from
       aws_lambda_function as l,
       jsonb_array_elements_text(vpc_security_group_ids) as s
-      where
-        l.arn = $1;
+    where
+      l.arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "lambda_function_arns" {}
 }
 
-
-
-node "lambda_vpc_subnet_node" {
-  category = category.vpc_subnet
-
-  sql = <<-EOQ
-    select
-      subnet.subnet_id as id,
-      subnet.title as title,
-      jsonb_build_object(
-        'ARN', subnet.subnet_arn,
-        'Subnet ID', subnet.subnet_id,
-        'Name', subnet.tags ->> 'Name',
-        'Account ID', subnet.account_id,
-        'Region', subnet.region
-      ) as properties
-    from
-      aws_lambda_function as l,
-      jsonb_array_elements_text(vpc_subnet_ids) as s,
-      aws_vpc_subnet as subnet
-      where
-        subnet.subnet_id = s
-        and l.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "lambda_vpc_subnet_edge" {
+edge "lambda_function_to_vpc_subnet" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -506,40 +524,14 @@ edge "lambda_vpc_subnet_edge" {
       aws_lambda_function as l,
       jsonb_array_elements_text(vpc_subnet_ids) as s,
       jsonb_array_elements_text(vpc_security_group_ids) as sg
-      where
-        l.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "lambda_to_kms_key_node" {
-  category = category.kms_key
-
-  sql = <<-EOQ
-    select
-      k.arn as id,
-      k.title as title,
-      jsonb_build_object(
-        'ARN', k.arn,
-        'Key Manager', k.key_manager,
-        'Creation Date', k.creation_date,
-        'Enabled', k.enabled::text,
-        'Account ID', k.account_id,
-        'Region', k.region
-      ) as properties
-    from
-      aws_lambda_function as l,
-      aws_kms_key as k
     where
-      k.arn = l.kms_key_arn
-      and l.arn = $1
+      l.arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "lambda_function_arns" {}
 }
 
-edge "lambda_to_kms_key_edge" {
+edge "lambda_function_to_kms_key" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -550,37 +542,13 @@ edge "lambda_to_kms_key_edge" {
       aws_lambda_function as l
     where
       l.kms_key_arn is not null
-      and l.arn = $1
+      and l.arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "lambda_function_arns" {}
 }
 
-node "lambda_to_iam_role_node" {
-  category = category.iam_role
-
-  sql = <<-EOQ
-    select
-      r.arn as id,
-      r.title as title,
-      jsonb_build_object(
-        'ARN', r.arn,
-        'Create Date', r.create_date,
-        'Max Session Duration', r.max_session_duration,
-        'Account ID', r.account_id
-      ) as properties
-    from
-      aws_lambda_function as l,
-      aws_iam_role as r
-    where
-      r.arn = l.role
-      and l.arn = $1
-  EOQ
-
-  param "arn" {}
-}
-
-edge "lambda_to_iam_role_edge" {
+edge "lambda_function_to_iam_role" {
   title = "assumes"
 
   sql = <<-EOQ
@@ -591,68 +559,13 @@ edge "lambda_to_iam_role_edge" {
       aws_lambda_function as l
     where
       l.role is not null
-      and l.arn = $1
+      and l.arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "lambda_function_arns" {}
 }
 
-node "lambda_from_s3_bucket_node" {
-  category = category.s3_bucket
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region,
-        'Public', bucket_policy_is_public::text,
-        'Event Notification Configuration ID', t ->> 'Id',
-        'Events Configured', t -> 'Events'
-      ) as properties
-     from
-      aws_s3_bucket,
-      jsonb_array_elements(event_notification_configuration -> 'LambdaFunctionConfigurations') as t
-    where
-      event_notification_configuration -> 'LambdaFunctionConfigurations' <> 'null'
-      and t ->> 'LambdaFunctionArn' = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "lambda_from_s3_bucket_edge" {
-  title = "invokes"
-
-  sql = <<-EOQ
-    select
-      arn as from_id,
-      t ->> 'LambdaFunctionArn' as to_id,
-      jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Event Notification Configuration ID', t ->> 'Id',
-        'Events Configured', t -> 'Events',
-        'Region', region
-      ) as properties
-    from
-      aws_s3_bucket,
-      jsonb_array_elements(event_notification_configuration -> 'LambdaFunctionConfigurations') as t
-    where
-      event_notification_configuration -> 'LambdaFunctionConfigurations' <> 'null'
-      and t ->> 'LambdaFunctionArn' = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-
-
-
-
-node "lambda_version_node" {
+node "lambda_version" {
   category = category.lambda_version
 
   sql = <<-EOQ
@@ -673,16 +586,13 @@ node "lambda_version_node" {
       l.name = v.function_name
       and l.account_id = v.account_id
       and l.region = v.region
-      and l.arn = $1
-
+      and l.arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "lambda_function_arns" {}
 }
 
-
-
-edge "lambda_version_edge" {
+edge "lambda_function_to_lambda_version" {
   title = "version"
 
   sql = <<-EOQ
@@ -696,14 +606,13 @@ edge "lambda_version_edge" {
       l.name = v.function_name
       and l.account_id = v.account_id
       and l.region = v.region
-      and l.arn = $1
+      and l.arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "lambda_function_arns" {}
 }
 
-
-node "lambda_alias_node" {
+node "lambda_alias" {
   category = category.lambda_alias
 
   sql = <<-EOQ
@@ -724,14 +633,13 @@ node "lambda_alias_node" {
       a.function_name = l.name
       and a.account_id = l.account_id
       and a.region = l.region
-      and l.arn = $1
+      and l.arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "lambda_function_arns" {}
 }
 
-
-edge "lambda_alias_edge" {
+edge "lambda_function_to_lambda_alias" {
   title = "alias"
 
   sql = <<-EOQ
@@ -745,44 +653,13 @@ edge "lambda_alias_edge" {
       a.function_name = l.name
       and a.account_id = l.account_id
       and a.region = l.region
-      and l.arn = $1
+      and l.arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "lambda_function_arns" {}
 }
 
-
-
-
-node "lambda_from_sns_topic_node" {
-  category = category.sns_topic
-
-  sql = <<-EOQ
-    select
-      t.topic_arn as id,
-      left(t.title, 30) as title,
-      jsonb_build_object(
-        'ARN', t.topic_arn,
-        'Region', t.region,
-        'Account ID', t.account_id
-      ) as properties
-    from
-      aws_sns_topic_subscription as s,
-      aws_sns_topic as t
-    where
-      t.topic_arn = s.topic_arn
-      and protocol = 'lambda'
-      and endpoint = $1
-  EOQ
-
-  param "arn" {}
-}
-
-
-
-
-
-edge "lambda_sns_topic_edge" {
+edge "sns_topic_to_sns_subscription" {
   title = "subscription"
 
   sql = <<-EOQ
@@ -793,15 +670,13 @@ edge "lambda_sns_topic_edge" {
       aws_sns_topic_subscription
     where
       protocol = 'lambda'
-      and endpoint = $1;
+      and topic_arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "sns_topic_arns" {}
 }
 
-
-
-node "lambda_from_sns_subscription_node" {
+node "sns_topic_subscription" {
   category = category.sns_topic_subscription
 
   sql = <<-EOQ
@@ -825,15 +700,11 @@ node "lambda_from_sns_subscription_node" {
 
   EOQ
 
-  param "arn" {}
+  param "lambda_function_arn" {}
 }
 
-
-
-
-
-edge "lambda_sns_subscription_edge" {
-  title = "invokes"
+edge "sns_subscription_to_lambda_function" {
+  title = "triggers"
 
   sql = <<-EOQ
      select
@@ -844,17 +715,15 @@ edge "lambda_sns_subscription_edge" {
     where
       protocol = 'lambda'
       and (
-        endpoint = $1
-        or endpoint like $1 || ':%'
+        endpoint = any($1)
+        or endpoint like any($1) || ':%'
       )
   EOQ
 
-  param "arn" {}
+  param "lambda_function_arns" {}
 }
 
-
-
-node "lambda_from_api_gateway_integration_node" {
+node "api_gatewayv2_integration" {
   category = category.api_gatewayv2_integration
 
   sql = <<-EOQ
@@ -873,16 +742,13 @@ node "lambda_from_api_gateway_integration_node" {
     from
       aws_api_gatewayv2_integration as i
     where
-      i.integration_uri = $1
+      i.integration_uri = any($1);
   EOQ
 
-  param "arn" {}
+  param "lambda_function_arns" {}
 }
 
-
-
-
-edge "lambda_api_gateway_integration_edge" {
+edge "api_gateway_integration_to_lambda_function" {
   title = "invokes"
 
   sql = <<-EOQ
@@ -892,55 +758,25 @@ edge "lambda_api_gateway_integration_edge" {
     from
       aws_api_gatewayv2_integration as i
     where
-      i.integration_uri = $1
+      i.integration_uri = any($1);
   EOQ
 
-  param "arn" {}
+  param "lambda_function_arns" {}
 }
 
-
-node "lambda_from_api_gateway_node" {
-  category = category.api_gatewayv2_api
-
-  sql = <<-EOQ
-    select
-      api.api_id as id,
-      left(api.title, 30) as title,
-      jsonb_build_object(
-        'Name', api.name,
-        'ID', api.api_id,
-        'Endpoint', api.api_endpoint,
-        'Region', api.region,
-        'Account ID', api.account_id
-      ) as properties
-    from
-      aws_api_gatewayv2_integration as i,
-      aws_api_gatewayv2_api as api
-    where
-      i.api_id = api.api_id
-      and i.integration_uri = $1
-  EOQ
-
-  param "arn" {}
-}
-
-
-
-edge "lambda_api_gateway_edge" {
+edge "api_gateway_api_to_api_gateway_integration" {
   title = "integration"
 
   sql = <<-EOQ
     select
-     api.api_id as from_id,
-     i.integration_id as to_id
+     api_id as from_id,
+     integration_id as to_id
     from
-      aws_api_gatewayv2_integration as i,
-      aws_api_gatewayv2_api as api
+      aws_api_gatewayv2_integration
     where
-      i.api_id = api.api_id
-      and i.integration_uri = $1
+      api_id = any($1);
   EOQ
 
-  param "arn" {}
+  param "api_gatewayv2_api_ids" {}
 }
 
