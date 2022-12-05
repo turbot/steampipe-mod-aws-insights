@@ -41,11 +41,12 @@ edge "ebs_snapshot_to_kms_key" {
 
   sql = <<-EOQ
     select
-      s.arn as from_id,
-      k.arn as to_id
+      arn as from_id,
+      kms_key_id as to_id
     from
-      aws_ebs_snapshot as s
-      left join aws_kms_key as k on s.kms_key_id = k.arn and s.arn = any($1);
+      aws_ebs_snapshot
+    where
+      arn = any($1);
   EOQ
 
   param "ebs_snapshot_arns" {}

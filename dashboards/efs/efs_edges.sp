@@ -46,57 +46,37 @@ edge "efs_file_system_to_efs_mount_target" {
   param "efs_file_system_arns" {}
 }
 
-edge "efs_file_system_mount_target_to_security_group" {
+edge "efs_mount_target_to_security_group" {
   title = "security group"
   sql   = <<-EOQ
-    with mount_sg_list as (
-      select
-        jsonb_array_elements_text(security_groups) as sg,
-        file_system_id,
-        mount_target_id
-      from
-        aws_efs_mount_target
-    )
     select
-      m.mount_target_id as from_id,
-      s.group_id as to_id
+      mount_target_id as from_id,
+      jsonb_array_elements_text(security_groups) as to_id
     from
-      mount_sg_list as m
-      left join aws_efs_file_system as f on f.file_system_id = m.file_system_id
-      left join aws_vpc_security_group as s on m.sg= s.group_id
+        aws_efs_mount_target 
     where
-      f.arn = any($1);
+      mount_target_id = any($1);
   EOQ
 
-  param "efs_file_system_arns" {}
+  param "efs_mount_target_ids" {}
 }
 
-edge "efs_file_system_mount_target_security_group_to_subnet" {
+edge "efs_mount_target_to_subnet" {
   title = "subnet"
   sql   = <<-EOQ
-    with mount_sg_list as (
-      select
-        jsonb_array_elements_text(security_groups) as sg_id,
-        file_system_id,
-        subnet_id
-      from
-        aws_efs_mount_target
-    )
     select
-      m.sg_id as from_id,
-      s.subnet_id as to_id
+      jsonb_array_elements_text(security_groups) as from_id,
+      subnet_id as to_id
     from
-      mount_sg_list as m
-      left join aws_efs_file_system as f on f.file_system_id = m.file_system_id
-      left join aws_vpc_subnet as s on m.subnet_id= s.subnet_id
+      aws_efs_mount_target  
     where
-      f.arn = any($1);
+      mount_target_id = any($1);
   EOQ
 
-  param "efs_file_system_arns" {}
+  param "efs_mount_target_ids" {}
 }
 
-edge "efs_file_system_mount_target_security_group_subnet_to_vpc" {
+edge "efs_mount_target_to_vpc" {
   title = "vpc"
   sql   = <<-EOQ
     select

@@ -85,7 +85,7 @@ dashboard "efs_file_system_detail" {
         args = [self.input.efs_file_system_arn.value]
       }
 
-      with "security_groups" {
+      with "vpc_security_groups" {
         sql = <<-EOQ
           select
             jsonb_array_elements_text(t.security_groups) as security_group_id
@@ -100,7 +100,7 @@ dashboard "efs_file_system_detail" {
         args = [self.input.efs_file_system_arn.value]
       }
 
-      with "access_points" {
+      with "efs_access_points" {
         sql = <<-EOQ
           select
             a.access_point_arn as access_point_arn
@@ -114,7 +114,7 @@ dashboard "efs_file_system_detail" {
         args = [self.input.efs_file_system_arn.value]
       }
 
-      with "mount_targets" {
+      with "efs_mount_targets" {
         sql = <<-EOQ
           select
             mount_target_id
@@ -128,7 +128,7 @@ dashboard "efs_file_system_detail" {
         args = [self.input.efs_file_system_arn.value]
       }
 
-      with "subnets" {
+      with "vpc_subnets" {
         sql = <<-EOQ
           select
             s.subnet_id as subnet_id
@@ -143,7 +143,7 @@ dashboard "efs_file_system_detail" {
         args = [self.input.efs_file_system_arn.value]
       }
 
-      with "vpcs" {
+      with "vpc_vpcs" {
         sql = <<-EOQ
           select
             v.vpc_id as vpc_id
@@ -169,22 +169,22 @@ dashboard "efs_file_system_detail" {
       ]
 
       edges = [
-        edge.efs_file_system_mount_target_security_group_subnet_to_vpc,
-        edge.efs_file_system_mount_target_security_group_to_subnet,
-        edge.efs_file_system_mount_target_to_security_group,
         edge.efs_file_system_to_efs_access_point,
         edge.efs_file_system_to_efs_mount_target,
-        edge.efs_file_system_to_kms_key
+        edge.efs_file_system_to_kms_key,
+        edge.efs_mount_target_to_security_group,
+        edge.efs_mount_target_to_subnet,
+        edge.vpc_subnet_to_vpc_vpc
       ]
 
       args = {
         efs_file_system_arns   = [self.input.efs_file_system_arn.value]
         kms_key_arns           = with.kms_keys.rows[*].key_arn
-        vpc_security_group_ids = with.security_groups.rows[*].security_group_id
-        efs_access_point_arns  = with.access_points.rows[*].access_point_arn
-        efs_mount_target_ids   = with.mount_targets.rows[*].mount_target_id
-        vpc_subnet_ids         = with.subnets.rows[*].subnet_id
-        vpc_vpc_ids            = with.vpcs.rows[*].vpc_id
+        vpc_security_group_ids = with.vpc_security_groups.rows[*].security_group_id
+        efs_access_point_arns  = with.efs_access_points.rows[*].access_point_arn
+        efs_mount_target_ids   = with.efs_mount_targets.rows[*].mount_target_id
+        vpc_subnet_ids         = with.vpc_subnets.rows[*].subnet_id
+        vpc_vpc_ids            = with.vpc_vpcs.rows[*].vpc_id
       }
     }
   }

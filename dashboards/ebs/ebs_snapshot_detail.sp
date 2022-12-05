@@ -83,7 +83,7 @@ dashboard "ebs_snapshot_detail" {
         args = [self.input.snapshot_arn.value]
       }
 
-      with "amis" {
+      with "ec2_amis" {
         sql = <<-EOQ
           select
             images.image_id as image_id
@@ -100,7 +100,7 @@ dashboard "ebs_snapshot_detail" {
         args = [self.input.snapshot_arn.value]
       }
 
-      with "launch_configurations" {
+      with "ec2_launch_configurations" {
         sql = <<-EOQ
           select
             launch_config.launch_configuration_arn as launch_configuration_arn
@@ -135,8 +135,8 @@ dashboard "ebs_snapshot_detail" {
         ebs_snapshot_arns             = [self.input.snapshot_arn.value]
         ebs_volume_arns               = with.ebs_volumes.rows[*].volume_arn
         kms_key_arns                  = with.kms_keys.rows[*].key_arn
-        ec2_image_ids                 = with.amis.rows[*].image_id
-        ec2_launch_configuration_arns = with.launch_configurations.rows[*].launch_configuration_arn
+        ec2_image_ids                 = with.ec2_amis.rows[*].image_id
+        ec2_launch_configuration_arns = with.ec2_launch_configurations.rows[*].launch_configuration_arn
       }
     }
   }
