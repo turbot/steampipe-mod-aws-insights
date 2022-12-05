@@ -513,25 +513,6 @@ edge "ebs_volume_to_kms_key" {
   param "ebs_volume_arns" {}
 }
 
-edge "sns_topic_to_kms_key" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      topic_arn as from_id,
-      k.arn as to_id
-    from
-      aws_sns_topic as t
-      left join aws_kms_key as k on k.id = split_part(t.kms_master_key_id, '/', 2)
-    where
-      t.topic_arn = any($1)
-      and k.region = t.region
-      and k.account_id = t.account_id;
-  EOQ
-
-  param "sns_topic_arns" {}
-}
-
 edge "sqs_queue_to_kms_key" {
   title = "encrypted with"
 
