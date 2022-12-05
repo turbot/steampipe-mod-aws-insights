@@ -59,8 +59,10 @@ dashboard "ebs_snapshot_detail" {
           select
             v.arn as volume_arn
           from
-            aws_ebs_snapshot as s,
-            aws_ebs_volume as v where s.snapshot_id = v.snapshot_id
+            aws_ebs_volume as v,
+            aws_ebs_snapshot as s
+          where
+            s.snapshot_id = v.snapshot_id
             and s.arn = $1;
         EOQ
 
