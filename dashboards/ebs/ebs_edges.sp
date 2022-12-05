@@ -3,8 +3,8 @@ edge "ebs_snapshot_to_ec2_ami" {
 
   sql = <<-EOQ
     select
-      images.image_id as from_id,
-      s.arn as to_id
+      images.image_id as to_id,
+      s.arn as from_id
     from
       aws_ec2_ami as images,
       jsonb_array_elements(images.block_device_mappings) as bdm,
