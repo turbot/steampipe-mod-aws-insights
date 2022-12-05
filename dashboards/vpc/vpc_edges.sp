@@ -13,3 +13,18 @@ edge "vpc_subnet_to_vpc_vpc" {
 
   param "vpc_subnet_ids" {}
 }
+
+edge "vpc_security_group_to_dax_subnet_group" {
+  title = "subnet group"
+  sql   = <<-EOQ
+    select
+      sg ->> 'SecurityGroupIdentifier' as from_id,
+      subnet_group as as to_id
+    from
+      aws_dax_cluster
+    where
+      c.arn = $1;
+  EOQ
+
+  param "dax_cluster_arns" {}
+}
