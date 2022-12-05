@@ -497,22 +497,6 @@ edge "cloudtrail_trail_to_kms_key" {
   param "cloudtrail_trail_arns" {}
 }
 
-edge "ebs_volume_to_kms_key" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      arn as from_id,
-      kms_key_id as to_id
-    from
-      aws_ebs_volume
-    where
-      arn = any($1);
-  EOQ
-
-  param "ebs_volume_arns" {}
-}
-
 edge "sns_topic_to_kms_key" {
   title = "encrypted with"
 

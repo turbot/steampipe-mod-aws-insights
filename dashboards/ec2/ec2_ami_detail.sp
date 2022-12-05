@@ -69,6 +69,7 @@ dashboard "ec2_ami_detail" {
 
       args = {
         image_id = self.input.ami.value
+        ec2_ami_image_ids = [self.input.ami.value]
       }
     }
   }
@@ -156,7 +157,7 @@ query "ec2_ami_instances" {
       image_id = $1;
   EOQ
 
-  param "image_ids" {}
+  param "image_id" {}
 
 }
 
@@ -198,7 +199,7 @@ query "ec2_ami_shared_with" {
       lp ->> 'OrganizationalUnitArn' is not null
   EOQ
 
-  param "image_ids" {}
+  param "image_id" {}
 
 }
 
@@ -213,7 +214,7 @@ query "ec2_ami_state" {
       image_id = $1;
   EOQ
 
-  param "image_ids" {}
+  param "image_id" {}
 
 }
 
@@ -228,7 +229,7 @@ query "ec2_ami_architecture" {
       image_id = $1;
   EOQ
 
-  param "image_ids" {}
+  param "image_id" {}
 
 }
 
@@ -243,7 +244,7 @@ query "ec2_ami_hypervisor" {
       image_id = $1;
   EOQ
 
-  param "image_ids" {}
+  param "image_id" {}
 
 }
 
@@ -258,7 +259,7 @@ query "ec2_ami_virtualization" {
       image_id = $1;
   EOQ
 
-  param "image_ids" {}
+  param "image_id" {}
 
 }
 
@@ -279,7 +280,7 @@ query "ec2_ami_overview" {
       image_id = $1;
   EOQ
 
-  param "image_ids" {}
+  param "image_id" {}
 }
 
 query "ec2_ami_tags" {
@@ -296,7 +297,7 @@ query "ec2_ami_tags" {
       t ->> 'Key';
     EOQ
 
-  param "image_ids" {}
+  param "image_id" {}
 }
 
 node "ec2_ami" {
@@ -320,7 +321,7 @@ node "ec2_ami" {
       image_id = any($1);
   EOQ
 
-  param "image_ids" {}
+  param "ec2_ami_image_ids" {}
 }
 
 node "ec2_ami_to_ec2_instance_node" {
@@ -343,7 +344,7 @@ node "ec2_ami_to_ec2_instance_node" {
       image_id = $1;
   EOQ
 
-  param "image_ids" {}
+  param "image_id" {}
 }
 
 edge "ec2_ami_to_ec2_instance_edge" {
@@ -359,7 +360,7 @@ edge "ec2_ami_to_ec2_instance_edge" {
       image_id = $1;
   EOQ
 
-  param "image_ids" {}
+  param "image_id" {}
 }
 
 node "ec2_ami_from_ebs_snapshot_node" {
@@ -385,7 +386,7 @@ node "ec2_ami_from_ebs_snapshot_node" {
       and ami.image_id = $1
   EOQ
 
-  param "image_ids" {}
+  param "image_id" {}
 }
 
 edge "ec2_ami_from_ebs_snapshot_edge" {
@@ -403,5 +404,5 @@ edge "ec2_ami_from_ebs_snapshot_edge" {
       and device_mappings -> 'Ebs' is not null;
   EOQ
 
-  param "image_ids" {}
+  param "image_id" {}
 }
