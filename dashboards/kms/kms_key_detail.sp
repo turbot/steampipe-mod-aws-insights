@@ -240,7 +240,7 @@ dashboard "kms_key_detail" {
         edge.rds_db_cluster_to_kms_key,
         edge.redshift_cluster_to_kms_key,
         edge.sns_topic_to_kms_key,
-        edge.sqs_queue_to_kms_key,
+        edge.sqs_queue_to_kms_key_alias,
         edge.rds_db_instance_to_kms_key,
         edge.rds_db_snapshot_to_kms_key,
         edge.lambda_function_to_kms_key,
@@ -511,28 +511,6 @@ edge "ebs_volume_to_kms_key" {
   EOQ
 
   param "ebs_volume_arns" {}
-}
-
-edge "sqs_queue_to_kms_key" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      q.queue_arn as from_id,
-      a.arn as to_id
-    from
-      aws_kms_key as k
-      join aws_kms_alias as a
-      on a.target_key_id = k.id
-      join aws_sqs_queue as q
-      on a.alias_name = q.kms_master_key_id
-      and k.region = q.region
-      and k.account_id = q.account_id
-    where
-      q.queue_arn = any($1);
-  EOQ
-
-  param "sqs_queue_arns" {}
 }
 
 node "kms_key_alias" {

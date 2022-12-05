@@ -199,6 +199,19 @@ dashboard "vpc_detail" {
         args = [self.input.vpc_id.value]
       }
 
+      with "vpc_endpoints" {
+        sql = <<-EOQ
+          select
+            vpc_endpoint_id
+          from
+            aws_vpc_endpoint
+          where
+            vpc_id = $1;
+        EOQ
+
+        args = [self.input.vpc_id.value]
+      }
+
       nodes = [
         node.vpc_vpc,
         node.vpc_flow_log,
@@ -218,7 +231,7 @@ dashboard "vpc_detail" {
         node.vpc_az,
         node.vpc_igw,
         node.vpc_az_route_table,
-        node.vpc_vcp_endpoint,
+        node.vpc_endpoint,
         node.vpc_transit_gateway,
         node.vpc_nat_gateway,
         node.vpc_vpn_gateway,
@@ -262,6 +275,7 @@ dashboard "vpc_detail" {
         lambda_function_arns               = with.lambda_functions.rows[*].function_arn
         rds_db_instance_arns               = with.rds_db_instances.rows[*].rds_instance_arn
         vpc_flow_log_ids                   = with.vpc_flow_logs.rows[*].flow_log_id
+        vpc_endpoint_ids                   = with.vpc_endpoints.rows[*].vpc_endpoint_id
       }
     }
 
@@ -1463,7 +1477,7 @@ edge "vpc_to_vpc_route_table" {
 }
 
 
-node "vpc_vcp_endpoint" {
+node "vpc_endpoint" {
   category = category.vpc_endpoint
 
   sql = <<-EOQ
@@ -1478,10 +1492,10 @@ node "vpc_vcp_endpoint" {
     from
       aws_vpc_endpoint
     where
-      vpc_id = any($1);
+      vpc_endpoint_id = any($1);
   EOQ
 
-  param "vpc_vpc_ids" {}
+  param "vpc_endpoint_ids" {}
 }
 
 edge "vpc_subnet_to_endpoint" {
@@ -1755,7 +1769,7 @@ edge "vpc_to_vpc_flow_log" {
     from
        aws_vpc_flow_log
     where
-      resource_id = $1;
+      resource_id = any($1);
   EOQ
 
   param "vpc_vpc_ids" {}

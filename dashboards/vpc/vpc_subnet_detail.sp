@@ -377,7 +377,7 @@ query "vpc_subnet_tags" {
     where
       subnet_id = $1
     order by
-      tag ->> 'Key'; 
+      tag ->> 'Key';
   EOQ
 
   param "subnet_id" {}
@@ -588,7 +588,7 @@ edge "vpc_subnet_to_ec2_instance" {
     from
       aws_ec2_instance
     where
-      subnet_id = $1;
+      subnet_id = any($1);
   EOQ
 
   param "vpc_subnet_ids" {}
