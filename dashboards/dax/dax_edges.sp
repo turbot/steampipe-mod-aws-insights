@@ -7,7 +7,7 @@ edge "dax_cluster_to_iam_role" {
     from
       aws_dax_cluster
     where
-      arn = $1;
+      arn = any($1);
   EOQ
 
   param "dax_cluster_arns" {}
@@ -23,7 +23,7 @@ edge "dax_cluster_to_vpc_security_group" {
       aws_dax_cluster as c,
       jsonb_array_elements(security_groups) as sg
     where
-      c.arn = $1;
+      c.arn = any($1);
   EOQ
 
   param "dax_cluster_arns" {}
@@ -41,7 +41,7 @@ edge "dax_subnet_group_to_vpc_subnet" {
       jsonb_array_elements(subnets) as s
     where
       g.subnet_group_name = c.subnet_group
-      and c.arn = $1;
+      and c.arn = any($1);
   EOQ
 
   param "dax_cluster_arns" {}
@@ -56,7 +56,7 @@ edge "dax_cluster_to_sns_topic" {
     from
       aws_dax_cluster
     where
-      arn = $1;
+      arn = any($1);
   EOQ
 
   param "dax_cluster_arns" {}
@@ -71,7 +71,7 @@ edge "dax_cluster_to_dax_parameter_group" {
     from
       aws_dax_cluster
     where
-      arn = $1;
+      arn = any($1);
   EOQ
 
   param "dax_cluster_arns" {}

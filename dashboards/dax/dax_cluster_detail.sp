@@ -103,7 +103,7 @@ dashboard "dax_cluster_detail" {
         args = [self.input.dax_cluster_arn.value]
       }
 
-      with "dax_subnet_group_names" {
+      with "dax_subnet_groups" {
         sql = <<-EOQ
         select
           subnet_group as subnet_group_name
@@ -116,7 +116,7 @@ dashboard "dax_cluster_detail" {
         args = [self.input.dax_cluster_arn.value]
       }
 
-      with "dax_parameter_group_names" {
+      with "dax_parameter_groups" {
         sql = <<-EOQ
         select
           p.parameter_group_name as parameter_group_name
@@ -131,7 +131,7 @@ dashboard "dax_cluster_detail" {
         args = [self.input.dax_cluster_arn.value]
       }
 
-      with "vpc_vpc_ids" {
+      with "vpc_vpcs" {
         sql = <<-EOQ
         select
           sg.vpc_id as vpc_id
@@ -169,14 +169,14 @@ dashboard "dax_cluster_detail" {
       ]
 
       args = {
-        dax_cluster_arns       = self.input.dax_cluster_arn.value
-        iam_role_arns          = with.iam_role_arns.rows[*].iam_role_arn
-        dax_parameter_group_names =with.dax_parameter_group_names.rows[*].parameter_group_name
-        vpc_security_group_ids = with.vpc_security_groups.rows[*].security_group_id
-        vpc_subnet_ids         = with.vpc_subnets.rows[*].subnet_id
-        sns_topic_arns         = with.sns_topics.rows[*].topic_arn
-        dax_subnet_group_names = with.dax_subnet_group_names.rows[*].subnet_group_name
-        vpc_vpc_ids            = with.vpc_vpc_ids.rows[*].vpc_id
+        dax_cluster_arns          = [self.input.dax_cluster_arn.value]
+        iam_role_arns             = with.iam_role_arns.rows[*].iam_role_arn
+        dax_parameter_group_names = with.dax_parameter_groups.rows[*].parameter_group_name
+        vpc_security_group_ids    = with.vpc_security_groups.rows[*].security_group_id
+        vpc_subnet_ids            = with.vpc_subnets.rows[*].subnet_id
+        sns_topic_arns            = with.sns_topics.rows[*].topic_arn
+        dax_subnet_group_names    = with.dax_subnet_groups.rows[*].subnet_group_name
+        vpc_vpc_ids               = with.vpc_vpcs.rows[*].vpc_id
       }
     }
   }
@@ -293,7 +293,7 @@ query "dax_cluster_overview" {
   sql = <<-EOQ
     select
       title as "Title",
-      active as "Active Nodes",
+      active_nodes as "Active Nodes",
       preferred_maintenance_window as "Preferred Maintenance Window",
       region as "Region",
       account_id as "Account ID",

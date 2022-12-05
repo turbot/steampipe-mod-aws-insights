@@ -44,7 +44,7 @@ node "dax_subnet_group" {
 }
 
 node "dax_parameter_group" {
-  category = category.dax_subnet_group
+  category = category.dax_parameter_group
   sql      = <<-EOQ
     select
       parameter_group_name as id,
