@@ -169,12 +169,12 @@ dashboard "efs_file_system_detail" {
       ]
 
       edges = [
-        edge.efs_file_system_mount_target_security_group_subnet_to_vpc
+        edge.efs_file_system_mount_target_security_group_subnet_to_vpc,
         edge.efs_file_system_mount_target_security_group_to_subnet,
         edge.efs_file_system_mount_target_to_security_group,
         edge.efs_file_system_to_efs_access_point,
         edge.efs_file_system_to_efs_mount_target,
-        edge.efs_file_system_to_kms_key,
+        edge.efs_file_system_to_kms_key
       ]
 
       args = {
