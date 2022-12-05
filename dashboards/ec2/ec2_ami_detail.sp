@@ -57,7 +57,7 @@ dashboard "ec2_ami_detail" {
       direction = "TD"
 
       nodes = [
-        node.ec2_ami_node,
+        node.ec2_ami,
         node.ec2_ami_to_ec2_instance_node,
         node.ec2_ami_from_ebs_snapshot_node
       ]
@@ -156,7 +156,7 @@ query "ec2_ami_instances" {
       image_id = $1;
   EOQ
 
-  param "image_id" {}
+  param "ec2_image_ids" {}
 
 }
 
@@ -198,7 +198,7 @@ query "ec2_ami_shared_with" {
       lp ->> 'OrganizationalUnitArn' is not null
   EOQ
 
-  param "image_id" {}
+  param "ec2_image_ids" {}
 
 }
 
@@ -213,7 +213,7 @@ query "ec2_ami_state" {
       image_id = $1;
   EOQ
 
-  param "image_id" {}
+  param "ec2_image_ids" {}
 
 }
 
@@ -228,7 +228,7 @@ query "ec2_ami_architecture" {
       image_id = $1;
   EOQ
 
-  param "image_id" {}
+  param "ec2_image_ids" {}
 
 }
 
@@ -243,7 +243,7 @@ query "ec2_ami_hypervisor" {
       image_id = $1;
   EOQ
 
-  param "image_id" {}
+  param "ec2_image_ids" {}
 
 }
 
@@ -258,7 +258,7 @@ query "ec2_ami_virtualization" {
       image_id = $1;
   EOQ
 
-  param "image_id" {}
+  param "ec2_image_ids" {}
 
 }
 
@@ -279,7 +279,7 @@ query "ec2_ami_overview" {
       image_id = $1;
   EOQ
 
-  param "image_id" {}
+  param "ec2_image_ids" {}
 }
 
 query "ec2_ami_tags" {
@@ -296,32 +296,9 @@ query "ec2_ami_tags" {
       t ->> 'Key';
     EOQ
 
-  param "image_id" {}
+  param "ec2_image_ids" {}
 }
 
-node "ec2_ami_node" {
-  category = category.ec2_ami
-
-  sql = <<-EOQ
-    select
-      image_id as id,
-      title as title,
-      jsonb_build_object(
-        'Image ID', image_id,
-        'Image Location', image_location,
-        'State', state,
-        'public', public::text,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_ec2_ami
-    where
-      image_id = $1;
-  EOQ
-
-  param "image_id" {}
-}
 
 node "ec2_ami_to_ec2_instance_node" {
   category = category.ec2_instance
@@ -343,7 +320,7 @@ node "ec2_ami_to_ec2_instance_node" {
       image_id = $1;
   EOQ
 
-  param "image_id" {}
+  param "ec2_image_ids" {}
 }
 
 edge "ec2_ami_to_ec2_instance_edge" {
@@ -359,7 +336,7 @@ edge "ec2_ami_to_ec2_instance_edge" {
       image_id = $1;
   EOQ
 
-  param "image_id" {}
+  param "ec2_image_ids" {}
 }
 
 node "ec2_ami_from_ebs_snapshot_node" {
@@ -385,7 +362,7 @@ node "ec2_ami_from_ebs_snapshot_node" {
       and ami.image_id = $1
   EOQ
 
-  param "image_id" {}
+  param "ec2_image_ids" {}
 }
 
 edge "ec2_ami_from_ebs_snapshot_edge" {
@@ -403,5 +380,5 @@ edge "ec2_ami_from_ebs_snapshot_edge" {
       and device_mappings -> 'Ebs' is not null;
   EOQ
 
-  param "image_id" {}
+  param "ec2_image_ids" {}
 }

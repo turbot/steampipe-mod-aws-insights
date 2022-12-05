@@ -54,24 +54,87 @@ dashboard "ebs_snapshot_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "ebs_volumes" {
+        sql = <<-EOQ
+          select
+            v.arn as volume_arn
+          from
+            aws_ebs_snapshot as s,
+            aws_ebs_volume as v where s.snapshot_id = v.snapshot_id
+            and s.arn = $1;
+        EOQ
+
+        args = [self.input.snapshot_arn.value]
+      }
+
+      with "kms_keys" {
+        sql = <<-EOQ
+        select
+          kms_key_id as key_arn
+        from
+          aws_ebs_snapshot
+        where
+          kms_key_id is not null
+          and arn = $1
+      EOQ
+
+        args = [self.input.snapshot_arn.value]
+      }
+
+      with "amis" {
+        sql = <<-EOQ
+          select
+            images.image_id as image_id
+          from
+            aws_ec2_ami as images,
+            jsonb_array_elements(images.block_device_mappings) as bdm,
+            aws_ebs_snapshot as s
+          where
+            bdm -> 'Ebs' is not null
+            and bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
+            and s.arn = $1;
+        EOQ
+
+        args = [self.input.snapshot_arn.value]
+      }
+
+      with "launch_configurations" {
+        sql = <<-EOQ
+          select
+            launch_config.launch_configuration_arn as launch_configuration_arn
+          from
+            aws_ec2_launch_configuration as launch_config,
+            jsonb_array_elements(launch_config.block_device_mappings) as bdm,
+            aws_ebs_snapshot as s
+          where
+            bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
+            and s.arn = $1;
+        EOQ
+
+        args = [self.input.snapshot_arn.value]
+      }
 
       nodes = [
-        node.ebs_snapshot_node,
-        node.ebs_snapshot_from_ebs_volume_node,
-        node.ebs_snapshot_from_ec2_ami_node,
-        node.ebs_snapshot_from_ec2_launch_configuration_node,
-        node.ebs_snapshot_to_kms_key_node
+        node.ebs_snapshot,
+        node.ebs_volume,
+        node.ec2_ami,
+        node.ec2_launch_configuration,
+        node.kms_key
       ]
 
       edges = [
-        edge.ebs_snapshot_from_ebs_volume_edge,
-        edge.ebs_snapshot_from_ec2_ami_edge,
-        edge.ebs_snapshot_from_ec2_launch_configuration_edge,
-        edge.ebs_snapshot_to_kms_key_edge
+        edge.ebs_snapshot_to_ec2_ami,
+        edge.ebs_snapshot_to_kms_key,
+        edge.ebs_volume_to_ebs_snapshot,
+        edge.ec2_launch_configuration_to_ebs_snapshot
       ]
 
       args = {
-        arn = self.input.snapshot_arn.value
+        ebs_snapshot_arns             = [self.input.snapshot_arn.value]
+        ebs_volume_arns               = with.ebs_volumes.rows[*].volume_arn
+        kms_key_arns                  = with.kms_keys.rows[*].key_arn
+        ec2_image_ids                 = with.amis.rows[*].image_id
+        ec2_launch_configuration_arns = with.launch_configurations.rows[*].launch_configuration_arn
       }
     }
   }
@@ -260,140 +323,3 @@ node "ebs_snapshot_from_ebs_volume_node" {
   param "arn" {}
 }
 
-edge "ebs_snapshot_from_ebs_volume_edge" {
-  title = "snapshot"
-
-  sql = <<-EOQ
-    select
-      v.volume_id as from_id,
-      s.snapshot_id as to_id
-    from
-      aws_ebs_snapshot as s
-      left join aws_ebs_volume as v on s.volume_id = v.volume_id and s.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ebs_snapshot_from_ec2_ami_node" {
-  category = category.ec2_ami
-
-  sql = <<-EOQ
-    select
-      images.image_id as id,
-      images.title as title,
-      jsonb_build_object(
-        'Image ID', images.image_id,
-        'Snapshot ID', bdm -> 'Ebs' ->> 'SnapshotId'
-      ) as properties
-    from
-      aws_ec2_ami as images,
-      jsonb_array_elements(images.block_device_mappings) as bdm,
-      aws_ebs_snapshot as s
-    where
-      bdm -> 'Ebs' is not null
-      and bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
-      and s.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ebs_snapshot_from_ec2_ami_edge" {
-  title = "snapshot"
-
-  sql = <<-EOQ
-    select
-      images.image_id as from_id,
-      bdm -> 'Ebs' ->> 'SnapshotId' as to_id
-    from
-      aws_ec2_ami as images,
-      jsonb_array_elements(images.block_device_mappings) as bdm,
-      aws_ebs_snapshot as s
-    where
-      bdm -> 'Ebs' is not null
-      and bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
-      and s.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ebs_snapshot_from_ec2_launch_configuration_node" {
-  category = category.ec2_launch_configuration
-
-  sql = <<-EOQ
-    select
-      launch_config.launch_configuration_arn as id,
-      launch_config.title as title,
-      jsonb_build_object(
-        'ARN', launch_config.launch_configuration_arn,
-        'Account ID', launch_config.account_id,
-        'Region', launch_config.region
-      ) as properties
-    from
-      aws_ec2_launch_configuration as launch_config,
-      jsonb_array_elements(launch_config.block_device_mappings) as bdm,
-      aws_ebs_snapshot as s
-    where
-      bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
-      and s.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ebs_snapshot_from_ec2_launch_configuration_edge" {
-  title = "snapshot"
-
-  sql = <<-EOQ
-    select
-      launch_config.launch_configuration_arn as from_id,
-      s.snapshot_id as to_id
-    from
-      aws_ec2_launch_configuration as launch_config,
-      jsonb_array_elements(launch_config.block_device_mappings) as bdm,
-      aws_ebs_snapshot as s
-    where
-      bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
-      and s.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ebs_snapshot_to_kms_key_node" {
-  category = category.kms_key
-
-  sql = <<-EOQ
-    select
-      k.arn as id,
-      k.title as title,
-      jsonb_build_object(
-        'ARN', k.arn,
-        'ID', k.id,
-        'Enabled', k.enabled,
-        'Key Manager', k.key_manager
-      ) as properties
-    from
-      aws_ebs_snapshot as s
-      left join aws_kms_key as k on s.kms_key_id = k.arn and s.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ebs_snapshot_to_kms_key_edge" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      s.snapshot_id as from_id,
-      k.arn as to_id
-    from
-      aws_ebs_snapshot as s
-      left join aws_kms_key as k on s.kms_key_id = k.arn and s.arn = $1;
-  EOQ
-
-  param "arn" {}
-}

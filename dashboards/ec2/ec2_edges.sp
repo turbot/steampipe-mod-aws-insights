@@ -219,3 +219,22 @@ edge "ec2_network_interface_to_vpc_eip" {
 
   param "ec2_network_interface_ids" {}
 }
+
+edge "ec2_launch_configuration_to_ebs_snapshot" {
+  title = "snapshot"
+
+  sql = <<-EOQ
+    select
+      launch_config.launch_configuration_arn as from_id,
+      s.arn as to_id
+    from
+      aws_ec2_launch_configuration as launch_config,
+      jsonb_array_elements(launch_config.block_device_mappings) as bdm,
+      aws_ebs_snapshot as s
+    where
+      bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
+      and s.arn = any($1);
+  EOQ
+
+  param "ebs_snapshot_arns" {}
+}
