@@ -49,7 +49,15 @@ node "efs_mount_target" {
   category = category.efs_mount_target
   sql      = <<-EOQ
     select
-      mount_target_id as id
+      mount_target_id as id,
+      title as title,
+      json_build_object(
+        'ID', mount_target_id,
+        'Account ID', account_id,
+        'Owner ID', owner_id,
+        'File System Id', file_system_id,
+        'Region', region
+      ) as properties
     from
       aws_efs_mount_target
     where
