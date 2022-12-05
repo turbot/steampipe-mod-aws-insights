@@ -234,16 +234,16 @@ dashboard "kms_key_detail" {
 
       edges = [
         edge.kms_key_to_kms_alias,
-        edge.kms_key_from_cloudtrail_trail,
-        edge.kms_key_from_ebs_volume,
+        edge.cloudtrail_trail_to_kms_key,
+        edge.ebs_volume_to_kms_key,
         edge.rds_db_cluster_snapshot_to_kms_key,
-        edge.kms_key_from_rds_db_cluster,
+        edge.rds_db_cluster_to_kms_key,
         edge.redshift_cluster_to_kms_key,
-        edge.kms_key_from_sns_topic,
-        edge.kms_key_from_sqs_queue,
+        edge.sns_topic_to_kms_key,
+        edge.sqs_queue_to_kms_key,
         edge.rds_db_instance_to_kms_key,
         edge.rds_db_snapshot_to_kms_key,
-        edge.kms_key_from_lambda_function,
+        edge.lambda_function_to_kms_key,
         edge.s3_bucket_to_kms_key
       ]
 
@@ -481,71 +481,58 @@ node "kms_key" {
   param "kms_key_arns" {}
 }
 
-edge "kms_key_from_cloudtrail_trail" {
+edge "cloudtrail_trail_to_kms_key" {
   title = "encrypted with"
 
   sql = <<-EOQ
     select
-      trail_arn as from_id,
-      key_arn as to_id
+      arn as from_id,
+      kms_key_id as to_id
     from
-      unnest($1::text[]) as key_arn,
-      unnest($2::text[]) as trail_arn
+      aws_cloudtrail_trail
+    where
+      arn = any($1);
   EOQ
 
-  param "kms_key_arns" {}
   param "cloudtrail_trail_arns" {}
 }
 
-edge "kms_key_from_ebs_volume" {
+edge "ebs_volume_to_kms_key" {
   title = "encrypted with"
 
   sql = <<-EOQ
     select
-      volume_arn as from_id,
-      key_arn as to_id
+      arn as from_id,
+      kms_key_id as to_id
     from
-      unnest($1::text[]) as key_arn,
-      unnest($2::text[]) as volume_arn
+      aws_ebs_volume
+    where
+      arn = any($1);
   EOQ
 
-  param "kms_key_arns" {}
   param "ebs_volume_arns" {}
 }
 
-edge "kms_key_from_rds_db_cluster" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      rds_cluster_arn as from_id,
-      key_arn as to_id
-    from
-      unnest($1::text[]) as key_arn,
-      unnest($2::text[]) as rds_cluster_arn
-  EOQ
-
-  param "kms_key_arns" {}
-  param "rds_db_cluster_arns" {}
-}
-
-edge "kms_key_from_sns_topic" {
+edge "sns_topic_to_kms_key" {
   title = "encrypted with"
 
   sql = <<-EOQ
     select
       topic_arn as from_id,
-      key_arn as to_id
+      k.arn as to_id
     from
-      unnest($1::text[]) as key_arn,
-      unnest($2::text[]) as topic_arn
+      aws_sns_topic as t
+      left join aws_kms_key as k on k.id = split_part(t.kms_master_key_id, '/', 2)
+    where
+      t.topic_arn = any($1)
+      and k.region = t.region
+      and k.account_id = t.account_id;
   EOQ
 
-  param "kms_key_arns" {}
   param "sns_topic_arns" {}
 }
 
-edge "kms_key_from_sqs_queue" {
+edge "sqs_queue_to_kms_key" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -561,26 +548,10 @@ edge "kms_key_from_sqs_queue" {
       and k.region = q.region
       and k.account_id = q.account_id
     where
-      k.arn = any($1);
+      q.queue_arn = any($1);
   EOQ
 
-  param "kms_key_arns" {}
-}
-
-edge "kms_key_from_lambda_function" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      function_arn as from_id,
-      key_arn as to_id
-    from
-      unnest($1::text[]) as key_arn,
-      unnest($2::text[]) as function_arn
-  EOQ
-
-  param "kms_key_arns" {}
-  param "lambda_function_arns" {}
+  param "sqs_queue_arns" {}
 }
 
 node "kms_key_alias" {

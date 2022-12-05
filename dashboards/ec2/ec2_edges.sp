@@ -3,15 +3,18 @@ edge "ec2_instance_to_ebs_volume" {
 
   sql = <<-EOQ
     select
-      instance_arn as from_id,
-      volume_arn as to_id
+      i.arn as from_id,
+      v.arn as to_id
     from
-      unnest($1::text[]) as instance_arn,
-      unnest($2::text[]) as volume_arn
+      aws_ec2_instance as i,
+      jsonb_array_elements(block_device_mappings) as bd,
+      aws_ebs_volume as v
+    where
+      v.volume_id = bd -> 'Ebs' ->> 'VolumeId'
+      and i.arn = any($1);
   EOQ
 
   param "ec2_instance_arns" {}
-  param "ebs_volume_arns" {}
 }
 
 edge "ec2_instance_to_ec2_network_interface" {
@@ -19,15 +22,16 @@ edge "ec2_instance_to_ec2_network_interface" {
 
   sql = <<-EOQ
     select
-      instance_arn as from_id,
-      eni_id as to_id
+      arn as from_id,
+      i ->> 'NetworkInterfaceId' as to_id
     from
-      unnest($1::text[]) as instance_arn,
-      unnest($2::text[]) as eni_id
+      aws_ec2_instance
+      join jsonb_array_elements(network_interfaces) as i on true
+    where
+      arn = any($1);
   EOQ
 
   param "ec2_instance_arns" {}
-  param "ec2_network_interface_ids" {}
 }
 
 edge "ec2_instance_to_vpc_security_group" {
@@ -36,19 +40,19 @@ edge "ec2_instance_to_vpc_security_group" {
   sql = <<-EOQ
     select
       coalesce(
-        eni_id,
-        instance_arn
+        i ->> 'NetworkInterfaceId',
+        arn
       ) as from_id,
-      security_group_id as to_id
+      s ->> 'GroupId' as to_id
     from
-      unnest($1::text[]) as instance_arn,
-      unnest($2::text[]) as eni_id,
-      unnest($3::text[]) as security_group_id
+      aws_ec2_instance
+      join jsonb_array_elements(network_interfaces) as i on true
+      join jsonb_array_elements(security_groups) as s on true
+    where
+      arn = any($1);
   EOQ
 
   param "ec2_instance_arns" {}
-  param "ec2_network_interface_ids" {}
-  param "vpc_security_group_ids" {}
 }
 
 edge "ec2_instance_to_vpc_subnet" {
@@ -56,15 +60,16 @@ edge "ec2_instance_to_vpc_subnet" {
 
   sql = <<-EOQ
     select
-      security_group_id as from_id,
+      s ->> 'GroupId' as from_id,
       subnet_id as to_id
     from
-      unnest($1::text[]) as security_group_id,
-      unnest($2::text[]) as subnet_id
+      aws_ec2_instance
+      join jsonb_array_elements(security_groups) as s on true
+    where
+      arn = any($1);
   EOQ
 
-  param "vpc_security_group_ids" {}
-  param "vpc_subnet_ids" {}
+  param "ec2_instance_arns" {}
 }
 
 edge "ec2_instance_to_iam_instance_profile" {
@@ -90,13 +95,14 @@ edge "ec2_instance_to_iam_role" {
   sql = <<-EOQ
     select
       i.iam_instance_profile_arn as from_id,
-      role_arn as to_id
+      r.arn as to_id
     from
       aws_ec2_instance as i,
-      unnest($2::text[]) as role_arn
+      aws_iam_role as r,
+      jsonb_array_elements_text(instance_profile_arns) as instance_profile
     where
-      iam_instance_profile_arn is not null
-      and i.arn = any($1);
+      i.arn = $1
+      and instance_profile = i.iam_instance_profile_arn;
   EOQ
 
   param "ec2_instance_arns" {}
@@ -140,7 +146,7 @@ edge "ec2_target_group_to_ec2_instance" {
   param "ec2_instance_arns" {}
 }
 
-edge "ec2_instance_lb_target_group" {
+edge "ec2_load_balancer_to_target_group" {
   title = "target group"
 
   sql = <<-EOQ
@@ -184,63 +190,17 @@ edge "ec2_classic_load_balancer_to_ec2_instance" {
 
   sql = <<-EOQ
     select
-      clb_arn as from_id,
-      instance_arn as to_id
+      clb.arn as from_id,
+      i.arn as to_id
     from
-     unnest($1::text[]) as clb_arn,
-     unnest($2::text[]) as instance_arn
+      aws_ec2_classic_load_balancer as clb
+      cross join jsonb_array_elements(clb.instances) as ci
+      left join aws_ec2_instance i on i.instance_id = ci ->> 'InstanceId'
+    where
+      clb.arn = any($1);
   EOQ
 
   param "ec2_classic_load_balancer_arns" {}
-  param "ec2_instance_arns" {}
-}
-
-edge "ec2_application_load_balancer_to_ec2_instance" {
-  title = "routes to"
-
-  sql = <<-EOQ
-    select
-      alb_arn as from_id,
-      instance_arn as to_id
-    from
-     unnest($1::text[]) as alb_arn,
-     unnest($2::text[]) as instance_arn
-  EOQ
-
-  param "ec2_application_load_balancer_arns" {}
-  param "ec2_instance_arns" {}
-}
-
-edge "ec2_network_load_balancer_to_ec2_instance" {
-  title = "routes to"
-
-  sql = <<-EOQ
-    select
-      nlb_arn as from_id,
-      instance_arn as to_id
-    from
-     unnest($1::text[]) as nlb_arn,
-     unnest($2::text[]) as instance_arn
-  EOQ
-
-  param "ec2_network_load_balancer_arns" {}
-  param "ec2_instance_arns" {}
-}
-
-edge "ec2_gateway_load_balancer_to_ec2_instance" {
-  title = "routes to"
-
-  sql = <<-EOQ
-    select
-      glb_arn as from_id,
-      instance_arn as to_id
-    from
-     unnest($1::text[]) as glb_arn,
-     unnest($2::text[]) as instance_arn
-  EOQ
-
-  param "ec2_gateway_load_balancer_arns" {}
-  param "ec2_instance_arns" {}
 }
 
 edge "ec2_network_interface_to_vpc_eip" {
@@ -248,13 +208,14 @@ edge "ec2_network_interface_to_vpc_eip" {
 
   sql = <<-EOQ
     select
-      network_interface_id as from_id,
-      eip_arn as to_id
+      i.network_interface_id as from_id,
+      e.arn as to_id
     from
-      unnest($1::text[]) as network_interface_id,
-      unnest($2::text[]) as eip_arn
+      aws_vpc_eip as e
+      left join aws_ec2_network_interface as i on e.network_interface_id = i.network_interface_id
+    where
+      i.network_interface_id = any($1);
   EOQ
 
   param "ec2_network_interface_ids" {}
-  param "vpc_eip_arns" {}
 }

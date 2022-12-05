@@ -284,15 +284,18 @@ edge "vpc_flow_log_to_s3_bucket" {
 
   sql = <<-EOQ
     select
-      vpc_flow_log_id as from_id,
-      s3_bucket_arn as to_id
+      flow_log_id as from_id,
+      b.arn as to_id
     from
-      unnest($1::text[]) as vpc_flow_log_id,
-      unnest($2::text[]) as s3_bucket_arn
+      aws_vpc_flow_log as f,
+      aws_s3_bucket as b
+    where
+      f.bucket_name = b.name
+      and f.log_destination_type = 's3'
+      and f.flow_log_id = $1;
   EOQ
 
   param "vpc_flow_log_ids" {}
-  param "s3_bucket_arns" {}
 }
 
 edge "vpc_flow_log_to_cloudwatch_log_group" {
@@ -300,15 +303,19 @@ edge "vpc_flow_log_to_cloudwatch_log_group" {
 
   sql = <<-EOQ
     select
-      vpc_flow_log_id as from_id,
-      log_group_arn as to_id
+      flow_log_id as from_id,
+      g.arn as to_id
     from
-      unnest($1::text[]) as vpc_flow_log_id,
-      unnest($2::text[]) as log_group_arn
+      aws_vpc_flow_log as f,
+      aws_cloudwatch_log_group as g
+    where
+      f.log_group_name = g.name
+      and f.log_destination_type = 'cloud-watch-logs'
+      and f.region = g.region
+      and f.flow_log_id = $1;
   EOQ
 
   param "vpc_flow_log_ids" {}
-  param "cloudwatch_log_group_arns" {}
 }
 
 edge "vpc_flow_log_to_iam_role" {
@@ -316,31 +323,15 @@ edge "vpc_flow_log_to_iam_role" {
 
   sql = <<-EOQ
     select
-      vpc_flow_log_id as from_id,
-      iam_role_arn as to_id
+      flow_log_id as from_id,
+      deliver_logs_permission_arn as to_id
     from
-      unnest($1::text[]) as vpc_flow_log_id,
-      unnest($2::text[]) as iam_role_arn
+      aws_vpc_flow_log
+    where
+      flow_log_id = $1;
   EOQ
 
   param "vpc_flow_log_ids" {}
-  param "iam_role_arns" {}
-}
-
-edge "vpc_subnet_to_vpc_flow_log" {
-  title = "flow log"
-
-  sql = <<-EOQ
-    select
-      vpc_subnet_id as from_id,
-      vpc_flow_log_id as to_id
-    from
-      unnest($1::text[]) as vpc_flow_log_id,
-      unnest($2::text[]) as vpc_subnet_id
-  EOQ
-
-  param "vpc_flow_log_ids" {}
-  param "vpc_subnet_ids" {}
 }
 
 query "vpc_flow_log_overview" {

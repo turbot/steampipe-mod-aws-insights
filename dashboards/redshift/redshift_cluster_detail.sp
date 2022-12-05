@@ -645,15 +645,16 @@ edge "redshift_cluster_to_vpc_security_group" {
 
   sql = <<-EOQ
     select
-      redshift_cluster_arn as from_id,
-      vpc_security_group_id as to_id
+      arn as from_id,
+      s ->> 'VpcSecurityGroupId' as to_id
     from
-      unnest($1::text[]) as redshift_cluster_arn,
-      unnest($2::text[]) as vpc_security_group_id
+      aws_redshift_cluster,
+      jsonb_array_elements(vpc_security_groups) as s
+    where
+      arn = $1;
   EOQ
 
   param "redshift_cluster_arns" {}
-  param "vpc_security_group_ids" {}
 }
 
 edge "redshift_cluster_to_kms_key" {
@@ -661,14 +662,14 @@ edge "redshift_cluster_to_kms_key" {
 
   sql = <<-EOQ
     select
-      redshift_cluster_arn as from_id,
-      key_arn as to_id
+      arn as from_id,
+      kms_key_id as to_id
     from
-      unnest($1::text[]) as key_arn,
-      unnest($2::text[]) as redshift_cluster_arn
+      aws_redshift_cluster
+    where
+      arn = $1;
   EOQ
 
-  param "kms_key_arns" {}
   param "redshift_cluster_arns" {}
 }
 
@@ -677,14 +678,15 @@ edge "redshift_cluster_to_iam_role" {
 
   sql = <<-EOQ
     select
-      redshift_cluster_arn as from_id,
-      iam_role_arn as to_id
+      arn as from_id,
+      r ->> 'IamRoleArn' as to_id
     from
-      unnest($1::text[]) as iam_role_arn,
-      unnest($2::text[]) as redshift_cluster_arn
+      aws_redshift_cluster,
+      jsonb_array_elements(iam_roles) as r
+    where
+      arn = $1;
   EOQ
 
-  param "iam_role_arns" {}
   param "redshift_cluster_arns" {}
 }
 
@@ -693,14 +695,17 @@ edge "redshift_cluster_to_vpc_eip" {
 
   sql = <<-EOQ
     select
-      redshift_cluster_arn as from_id,
-      vpc_eip_arn as to_id
+      c.arn as from_id,
+      e.arn as to_id
     from
-      unnest($1::text[]) as vpc_eip_arn,
-      unnest($2::text[]) as redshift_cluster_arn
+      aws_redshift_cluster as c,
+      aws_vpc_eip as e
+    where
+      c.elastic_ip_status is not null
+      and e.public_ip = (c.elastic_ip_status ->> 'ElasticIp')::inet
+      and c.arn = $1;
   EOQ
 
-  param "vpc_eip_arns" {}
   param "redshift_cluster_arns" {}
 }
 
@@ -709,14 +714,16 @@ edge "redshift_cluster_to_cloudwatch_log_group" {
 
   sql = <<-EOQ
     select
-      redshift_cluster_arn as from_id,
-      cloudwatch_log_group_arn as to_id
+      c.arn as from_id,
+      g.arn as to_id
     from
-      unnest($1::text[]) as cloudwatch_log_group_arn,
-      unnest($2::text[]) as redshift_cluster_arn
+      aws_redshift_cluster as c,
+      aws_cloudwatch_log_group as g
+    where
+      g.title like '%' || c.title || '%'
+      and c.arn = $1;
   EOQ
 
-  param "cloudwatch_log_group_arns" {}
   param "redshift_cluster_arns" {}
 }
 
@@ -725,14 +732,16 @@ edge "redshift_cluster_to_s3_bucket" {
 
   sql = <<-EOQ
     select
-      redshift_cluster_arn as from_id,
-      s3_bucket_arn as to_id
+      c.arn as from_id,
+      b.arn as to_id
     from
-      unnest($1::text[]) as s3_bucket_arn,
-      unnest($2::text[]) as redshift_cluster_arn
+      aws_redshift_cluster as c,
+      aws_s3_bucket as b
+    where
+      b.name = c.logging_status ->> 'BucketName'
+      and c.arn = $1;
   EOQ
 
-  param "s3_bucket_arns" {}
   param "redshift_cluster_arns" {}
 }
 
@@ -786,13 +795,15 @@ edge "redshift_cluster_to_redshift_snapshot" {
 
   sql = <<-EOQ
     select
-      redshift_cluster_arn as from_id,
-      redshift_snapshot_arn as to_id
+      c.arn as from_id,
+      s.akas::text as to_id
     from
-      unnest($1::text[]) as redshift_cluster_arn,
-      unnest($2::text[]) as redshift_snapshot_arn
+      aws_redshift_snapshot as s,
+      aws_redshift_cluster as c
+    where
+      s.cluster_identifier = c.cluster_identifier
+      and c.arn = $1;
   EOQ
 
   param "redshift_cluster_arns" {}
-  param "redshift_snapshot_arns" {}
 }

@@ -542,3 +542,26 @@ edge "api_gatewayv2_api_from_api_gatewayv2_stage_edge" {
 
   param "api_id" {}
 }
+
+node "api_gatewayv2_api" {
+  category = category.api_gatewayv2_api
+
+  sql = <<-EOQ
+    select
+      api_id as id,
+      left(title, 30) as title,
+      jsonb_build_object(
+        'Name', name,
+        'ID', api_id,
+        'Endpoint', api_endpoint,
+        'Region', region,
+        'Account ID', account_id
+      ) as properties
+    from
+      aws_api_gatewayv2_api
+    where
+      api_id = any($1);
+  EOQ
+
+  param "api_gatewayv2_api_ids" {}
+}

@@ -75,7 +75,7 @@ dashboard "s3_bucket_detail" {
       with "trails" {
         sql = <<-EOQ
           select
-            trail.arn as trail_arn
+            distinct trail.arn as trail_arn
           from
             aws_cloudtrail_trail as trail,
             aws_s3_bucket as b
@@ -155,11 +155,10 @@ dashboard "s3_bucket_detail" {
       with "lambda_functions" {
         sql = <<-EOQ
           select
-            f.arn as function_arn
+            t ->> 'LambdaFunctionArn' as function_arn
           from
             aws_s3_bucket as b,
             jsonb_array_elements(event_notification_configuration -> 'LambdaFunctionConfigurations') as t
-            left join aws_lambda_function as f on f.arn = t ->> 'LambdaFunctionArn'
           where
             event_notification_configuration -> 'LambdaFunctionConfigurations' <> 'null'
             and b.arn = $1;
@@ -171,7 +170,7 @@ dashboard "s3_bucket_detail" {
       with "sns_topics" {
         sql = <<-EOQ
           select
-            q.topic_arn as topic_arn
+            t ->> 'TopicArn' as topic_arn
           from
             aws_s3_bucket as b,
             jsonb_array_elements(
@@ -180,7 +179,6 @@ dashboard "s3_bucket_detail" {
                 else null end
               )
               as t
-            left join aws_sns_topic as q on q.topic_arn = t ->> 'TopicArn'
           where
             b.arn = $1;
         EOQ
@@ -223,10 +221,10 @@ dashboard "s3_bucket_detail" {
       ]
 
       edges = [
-        edge.s3_bucket_from_cloudtrail_trail,
-        edge.s3_bucket_from_ec2_alb,
-        edge.s3_bucket_from_ec2_nlb,
-        edge.s3_bucket_from_ec2_clb,
+        edge.cloudtrail_trail_to_s3_bucket,
+        edge.ec2_alb_to_s3_bucket,
+        edge.ec2_nlb_to_s3_bucket,
+        edge.ec2_clb_to_s3_bucket,
         edge.s3_bucket_to_kms_key,
         edge.s3_bucket_to_lambda_function,
         edge.s3_bucket_to_sns_topic,
@@ -372,67 +370,79 @@ node "s3_bucket" {
   param "s3_bucket_arns" {}
 }
 
-edge "s3_bucket_from_cloudtrail_trail" {
+edge "cloudtrail_trail_to_s3_bucket" {
   title = "logs to"
 
   sql = <<-EOQ
     select
-      trail_arn as from_id,
-      bucket_arn as to_id
+      t.arn as from_id,
+      b.arn as to_id
     from
-      unnest($1::text[]) as bucket_arn,
-      unnest($2::text[]) as trail_arn
+      aws_cloudtrail_trail as t,
+      aws_s3_bucket as b
+    where
+      t.arn = any($1)
+      and t.s3_bucket_name = b.name;
   EOQ
 
-  param "s3_bucket_arns" {}
   param "cloudtrail_trail_arns" {}
 }
 
-edge "s3_bucket_from_ec2_alb" {
+edge "ec2_alb_to_s3_bucket" {
   title = "logs to"
 
   sql = <<-EOQ
     select
-      alb_arn as from_id,
-      bucket_arn as to_id
+      alb.arn as from_id,
+      b.arn as to_id
     from
-      unnest($1::text[]) as bucket_arn,
-      unnest($2::text[]) as alb_arn
+      aws_ec2_application_load_balancer as alb,
+      jsonb_array_elements(alb.load_balancer_attributes) as attributes,
+      aws_s3_bucket as b
+    where
+      alb.arn = $1
+      and attributes ->> 'Key' = 'access_logs.s3.bucket'
+      and attributes ->> 'Value' = b.name;
   EOQ
 
-  param "s3_bucket_arns" {}
   param "ec2_application_load_balancer_arns" {}
 }
 
-edge "s3_bucket_from_ec2_nlb" {
+edge "ec2_nlb_to_s3_bucket" {
   title = "logs to"
 
   sql = <<-EOQ
     select
-      nlb_arn as from_id,
-      bucket_arn as to_id
+      nlb.arn as from_id,
+      b.arn as to_id
     from
-      unnest($1::text[]) as bucket_arn,
-      unnest($2::text[]) as nlb_arn
+      aws_ec2_network_load_balancer as nlb,
+      jsonb_array_elements(nlb.load_balancer_attributes) as attributes,
+      aws_s3_bucket as b
+    where
+      nlb.arn = $1
+      and attributes ->> 'Key' = 'access_logs.s3.bucket'
+      and attributes ->> 'Value' = b.name;
   EOQ
 
-  param "s3_bucket_arns" {}
   param "ec2_network_load_balancer_arns" {}
 }
 
-edge "s3_bucket_from_ec2_clb" {
+edge "ec2_clb_to_s3_bucket" {
   title = "logs to"
 
   sql = <<-EOQ
     select
-      clb_arn as from_id,
-      bucket_arn as to_id
+      clb.arn as from_id,
+      b.arn as to_id
     from
-      unnest($1::text[]) as bucket_arn,
-      unnest($2::text[]) as clb_arn
+      aws_ec2_classic_load_balancer clb,
+      aws_s3_bucket as b
+    where
+      clb.arn = $1
+      and clb.access_log_s3_bucket_name = b.name;
   EOQ
 
-  param "s3_bucket_arns" {}
   param "ec2_classic_load_balancer_arns" {}
 }
 
@@ -467,15 +477,16 @@ edge "s3_bucket_to_lambda_function" {
 
   sql = <<-EOQ
     select
-      bucket_arn as from_id,
-      function_arn as to_id
+      b.arn as from_id,
+      t ->> 'LambdaFunctionArn' as to_id
     from
-      unnest($1::text[]) as bucket_arn,
-      unnest($2::text[]) as function_arn
+      aws_s3_bucket as b,
+      jsonb_array_elements(event_notification_configuration -> 'LambdaFunctionConfigurations') as t
+    where
+      arn = any($1);
   EOQ
 
   param "s3_bucket_arns" {}
-  param "lambda_function_arns" {}
 }
 
 edge "s3_bucket_to_sns_topic" {
@@ -483,15 +494,16 @@ edge "s3_bucket_to_sns_topic" {
 
   sql = <<-EOQ
     select
-      bucket_arn as from_id,
-      topic_arn as to_id
+      b.arn as from_id,
+      t ->> 'TopicArn' as to_id
     from
-      unnest($1::text[]) as bucket_arn,
-      unnest($2::text[]) as topic_arn
+      aws_s3_bucket as b,
+      jsonb_array_elements(event_notification_configuration -> 'TopicConfigurations') as t
+    where
+      arn = any($1);
   EOQ
 
   param "s3_bucket_arns" {}
-  param "sns_topic_arns" {}
 }
 
 edge "s3_bucket_to_sqs_queue" {
@@ -499,15 +511,16 @@ edge "s3_bucket_to_sqs_queue" {
 
   sql = <<-EOQ
     select
-      bucket_arn as from_id,
-      queue_arn as to_id
+      b.arn as from_id,
+      q ->> 'QueueArn' as to_id
     from
-      unnest($1::text[]) as bucket_arn,
-      unnest($2::text[]) as queue_arn
+      aws_s3_bucket as b,
+      jsonb_array_elements(event_notification_configuration -> 'QueueConfigurations') as q
+    where
+      arn = any($1);
   EOQ
 
   param "s3_bucket_arns" {}
-  param "sqs_queue_arns" {}
 }
 
 edge "s3_bucket_to_kms_key" {
@@ -515,15 +528,16 @@ edge "s3_bucket_to_kms_key" {
 
   sql = <<-EOQ
     select
-      bucket_arn as from_id,
-      key_arn as to_id
+      b.arn as from_id,
+      r -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID' as to_id
     from
-      unnest($1::text[]) as bucket_arn,
-      unnest($2::text[]) as key_arn
+      aws_s3_bucket as b
+      cross join jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as r
+    where
+      arn = any($1);
   EOQ
 
   param "s3_bucket_arns" {}
-  param "kms_key_arns" {}
 }
 
 node "s3_bucket_from_s3_bucket" {

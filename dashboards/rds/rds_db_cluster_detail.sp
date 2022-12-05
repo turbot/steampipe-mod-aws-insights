@@ -56,36 +56,182 @@ dashboard "rds_db_cluster_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "rds_db_cluster_snapshots" {
+        sql = <<-EOQ
+          select
+            s.arn as snapshot_arn
+          from
+            aws_rds_db_cluster as c
+            join aws_rds_db_cluster_snapshot as s
+            on s.db_cluster_identifier = c.db_cluster_identifier
+          where
+            c.arn = $1;
+        EOQ
+
+        args = [self.input.db_cluster_arn.value]
+      }
+
+      with "iam_roles" {
+        sql = <<-EOQ
+          select
+            roles ->> 'RoleArn' as role_arn
+          from
+            aws_rds_db_cluster
+            cross join jsonb_array_elements(associated_roles) as roles
+          where
+            arn = $1;
+        EOQ
+
+        args = [self.input.db_cluster_arn.value]
+      }
+
+      with "sns_topics" {
+        sql = <<-EOQ
+          select
+            s.sns_topic_arn as topic_arn
+          from
+            aws_rds_db_event_subscription as s,
+            jsonb_array_elements_text(source_ids_list) as ids
+            join aws_rds_db_cluster as c
+            on ids = c.db_cluster_identifier
+          where
+            c.arn = $1;
+        EOQ
+
+        args = [self.input.db_cluster_arn.value]
+      }
+
+      with "rds_db_instances" {
+        sql = <<-EOQ
+          select
+            i.arn as instance_arn
+          from
+            aws_rds_db_instance as i
+            join
+              aws_rds_db_cluster as c
+              on i.db_cluster_identifier = c.db_cluster_identifier
+          where
+            c.arn = $1;
+        EOQ
+
+        args = [self.input.db_cluster_arn.value]
+      }
+
+      with "kms_keys" {
+        sql = <<-EOQ
+          select
+            kms_key_id as key_arn
+          from
+            aws_rds_db_cluster
+          where
+            arn = $1;
+        EOQ
+
+        args = [self.input.db_cluster_arn.value]
+      }
+
+      with "vpc_security_groups" {
+        sql = <<-EOQ
+          select
+            csg ->> 'VpcSecurityGroupId' as group_id
+          from
+            aws_rds_db_cluster as c
+            cross join
+              jsonb_array_elements(c.vpc_security_groups) as csg
+          where
+            c.arn = $1;
+        EOQ
+
+        args = [self.input.db_cluster_arn.value]
+      }
+
+      with "vpc_subnets" {
+        sql = <<-EOQ
+          select
+            vs ->> 'SubnetIdentifier' as subnet_id
+          from
+            aws_rds_db_cluster as rdc
+            left join
+              aws_rds_db_subnet_group as rdsg
+              on rdc.db_subnet_group = rdsg.name
+              and rdc.region = rdsg.region
+              and rdc.account_id = rdsg.account_id
+            cross join
+              jsonb_array_elements(rdsg.subnets) as vs
+          where
+            rdc.arn = $1;
+        EOQ
+
+        args = [self.input.db_cluster_arn.value]
+      }
+
+      with "vpc_vpcs" {
+        sql = <<-EOQ
+          select
+            distinct v.vpc_id as vpc_id
+          from
+            aws_rds_db_cluster as rdc
+            join
+              aws_rds_db_subnet_group as rdsg
+              on rdc.db_subnet_group = rdsg.name
+              and rdc.region = rdsg.region
+              and rdc.account_id = rdsg.account_id
+            cross join
+              jsonb_array_elements(rdsg.subnets) as vs
+            join
+              aws_vpc_subnet as avs
+              on avs.subnet_id = vs ->> 'SubnetIdentifier'
+              and avs.account_id = rdsg.account_id
+              and avs.region = rdsg.region
+            join
+              aws_vpc as v
+              on v.vpc_id = avs.vpc_id
+              and v.region = avs.region
+              and v.account_id = avs.account_id
+          where
+            rdc.arn = $1;
+        EOQ
+
+        args = [self.input.db_cluster_arn.value]
+      }
+
       nodes = [
         node.rds_db_cluster,
-        node.rds_db_cluster_to_iam_role_node,
-        node.rds_db_cluster_to_sns_topic_node,
-        node.rds_db_cluster_to_rds_db_cluster_snapshot_node,
-        node.rds_db_cluster_to_rds_db_instance_node,
-        node.rds_db_cluster_to_rds_db_cluster_parameter_group_node,
-        node.rds_db_cluster_to_rds_db_subnet_group_node,
-        node.rds_db_cluster_to_kms_key_node,
-        node.rds_db_cluster_to_vpc_security_group_node,
-        node.rds_db_cluster_vpc_subnet_to_rds_db_subnet_group_node,
-        node.rds_db_cluster_vpc_subnet_to_vpc_node
+        node.iam_role,
+        node.sns_topic,
+        node.rds_db_cluster_snapshot,
+        node.rds_db_instance,
+        node.rds_db_cluster_parameter_group,
+        node.rds_db_subnet_group,
+        node.kms_key,
+        node.vpc_security_group,
+        node.vpc_subnet,
+        node.vpc_vpc
       ]
 
       edges = [
-        edge.rds_db_cluster_to_sns_topic_edge,
-        edge.rds_db_cluster_to_iam_role_edge,
+        edge.rds_db_cluster_to_sns_topic,
+        edge.rds_db_cluster_to_iam_role,
         edge.rds_db_cluster_to_rds_db_cluster_snapshot,
-        edge.rds_db_cluster_to_rds_db_instance_edge,
-        edge.rds_db_cluster_to_rds_db_cluster_parameter_group_edge,
-        edge.rds_db_cluster_to_kms_key_edge,
-        edge.rds_db_cluster_to_vpc_security_group_edge,
-        edge.rds_db_cluster_vpc_subnet_to_rds_db_subnet_group_edge,
-        edge.rds_db_cluster_vpc_subnet_to_vpc_edge,
-        edge.rds_db_cluster_vpc_security_group_to_vpc_edge
+        edge.rds_db_cluster_to_rds_db_instance,
+        edge.rds_db_cluster_to_rds_db_cluster_parameter_group,
+        edge.rds_db_cluster_to_kms_key,
+        edge.rds_db_cluster_to_vpc_security_group,
+        edge.rds_db_subnet_group_to_vpc_subnet,
+        edge.vpc_subnet_to_vpc_vpc,
+        edge.vpc_security_group_to_rds_db_subnet_group
       ]
 
       args = {
-        rds_db_cluster_arns = [self.input.db_cluster_arn.value]
-        arn                 = self.input.db_cluster_arn.value
+        rds_db_cluster_arns          = [self.input.db_cluster_arn.value]
+        rds_db_instance_arns         = with.rds_db_instances.rows[*].instance_arn
+        rds_db_cluster_snapshot_arns = with.rds_db_cluster_snapshots.rows[*].snapshot_arn
+        sns_topic_arns               = with.sns_topics.rows[*].topic_arn
+        kms_key_arns                 = with.kms_keys.rows[*].key_arn
+        vpc_vpc_ids                  = with.vpc_vpcs.rows[*].vpc_id
+        vpc_subnet_ids               = with.vpc_subnets.rows[*].subnet_id
+        vpc_security_group_ids       = with.vpc_security_groups.rows[*].group_id
+        iam_role_arns                = with.iam_roles.rows[*].role_arn
       }
     }
   }
@@ -184,7 +330,7 @@ query "rds_db_cluster_no_deletion_protection" {
 query "rds_db_cluster_status" {
   sql = <<-EOQ
     select
-      status as value,
+      initcap(status) as value,
       'Status' as label,
       case when status = 'available' then 'ok' else 'alert' end as type
     from
@@ -257,56 +403,26 @@ node "rds_db_cluster" {
   param "rds_db_cluster_arns" {}
 }
 
-node "rds_db_cluster_to_rds_db_instance_node" {
-  category = category.rds_db_instance
-
-  sql = <<-EOQ
-    select
-      i.db_instance_identifier as id,
-      i.title,
-      jsonb_build_object(
-        'ARN', i.arn,
-        'Status', i.status,
-        'Public Access', i.publicly_accessible::text,
-        'Availability Zone', i.availability_zone,
-        'Create Time', i.create_time,
-        'Is Multi AZ', i.multi_az::text,
-        'Class', i.class,
-        'Account ID', i.account_id,
-        'Region', i.region
-      ) as properties
-    from
-      aws_rds_db_cluster as c
-      join
-        aws_rds_db_instance i
-        on i.db_cluster_identifier = c.db_cluster_identifier
-    where
-      c.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "rds_db_cluster_to_rds_db_instance_edge" {
+edge "rds_db_cluster_to_rds_db_instance" {
   title = "instance"
 
   sql = <<-EOQ
     select
       c.arn as from_id,
-      i.db_instance_identifier as to_id
+      i.arn as to_id
     from
-      aws_rds_db_cluster as c
+      aws_rds_db_instance as i
       join
-        aws_rds_db_instance i
+        aws_rds_db_cluster as c
         on i.db_cluster_identifier = c.db_cluster_identifier
     where
-      c.arn = $1;
+      c.arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "rds_db_cluster_arns" {}
 }
 
-node "rds_db_cluster_to_rds_db_cluster_parameter_group_node" {
+node "rds_db_cluster_parameter_group" {
   category = category.rds_db_cluster_parameter_group
 
   sql = <<-EOQ
@@ -327,13 +443,13 @@ node "rds_db_cluster_to_rds_db_cluster_parameter_group_node" {
         and rdc.account_id = rg.account_id
         and rdc.region = rg.region
     where
-      rdc.arn = $1;
+      rdc.arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "rds_db_cluster_arns" {}
 }
 
-edge "rds_db_cluster_to_rds_db_cluster_parameter_group_edge" {
+edge "rds_db_cluster_to_rds_db_cluster_parameter_group" {
   title = "parameter group"
 
   sql = <<-EOQ
@@ -348,13 +464,13 @@ edge "rds_db_cluster_to_rds_db_cluster_parameter_group_edge" {
         and rdc.account_id = rg.account_id
         and rdc.region = rg.region
     where
-      rdc.arn = $1;
+      rdc.arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "rds_db_cluster_arns" {}
 }
 
-node "rds_db_cluster_to_rds_db_subnet_group_node" {
+node "rds_db_subnet_group" {
   category = category.rds_db_subnet_group
 
   sql = <<-EOQ
@@ -375,149 +491,53 @@ node "rds_db_cluster_to_rds_db_subnet_group_node" {
         and rdc.region = rdsg.region
         and rdc.account_id = rdsg.account_id
     where
-      rdc.arn = $1;
+      rdc.arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "rds_db_cluster_arns" {}
 }
 
-node "rds_db_cluster_to_kms_key_node" {
-  category = category.kms_key
-
-  sql = <<-EOQ
-    select
-      k.id as id,
-      k.title as title,
-      jsonb_build_object(
-        'ARN', k.arn,
-        'Rotation Enabled', k.key_rotation_enabled::text,
-        'Account ID', k.account_id,
-        'Region', k.region
-      ) as properties
-    from
-      aws_rds_db_cluster as c
-      left join
-        aws_kms_key as k
-        on c.kms_key_id = k.arn
-    where
-      c.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "rds_db_cluster_to_kms_key_edge" {
+edge "rds_db_cluster_to_kms_key" {
   title = "encrypted with"
 
   sql = <<-EOQ
     select
-      c.arn as from_id,
-      k.id as to_id
+      arn as from_id,
+      kms_key_id as to_id
     from
-      aws_rds_db_cluster as c
-      left join
-        aws_kms_key as k
-        on c.kms_key_id = k.arn
+      aws_rds_db_cluster
     where
-      c.arn = $1;
+      arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "rds_db_cluster_arns" {}
 }
 
-node "rds_db_cluster_to_vpc_security_group_node" {
-  category = category.vpc_security_group
-
-  sql = <<-EOQ
-    select
-      sg.group_id as id,
-      sg.title,
-      jsonb_build_object(
-        'Group ID', sg.group_id,
-        'VPC ID', sg.vpc_id,
-        'Account ID', sg.account_id,
-        'Region', sg.region
-      ) as properties
-    from
-      aws_rds_db_cluster as c
-      cross join
-        jsonb_array_elements(c.vpc_security_groups) as csg
-      left join
-        aws_vpc_security_group as sg
-        on sg.group_id = csg ->> 'VpcSecurityGroupId'
-    where
-      c.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "rds_db_cluster_to_vpc_security_group_edge" {
+edge "rds_db_cluster_to_vpc_security_group" {
   title = "security group"
 
   sql = <<-EOQ
     select
       c.arn as from_id,
-      sg.group_id as to_id
+      csg ->> 'VpcSecurityGroupId' as to_id
     from
       aws_rds_db_cluster as c
       cross join
         jsonb_array_elements(c.vpc_security_groups) as csg
-      left join
-        aws_vpc_security_group as sg
-        on sg.group_id = csg ->> 'VpcSecurityGroupId'
     where
-      c.arn = $1;
+      c.arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "rds_db_cluster_arns" {}
 }
 
-node "rds_db_cluster_vpc_subnet_to_rds_db_subnet_group_node" {
-  category = category.vpc_subnet
-
-  sql = <<-EOQ
-    select
-      avs.subnet_id as id,
-      avs.title as title,
-      'aws_vpc_subnet' as category,
-      jsonb_build_object(
-        'Subnet ID', avs.subnet_id,
-        'CIDR Block', avs.cidr_block,
-        'Availability Zone', avs.availability_zone,
-        'State', avs.state,
-        'VPC ID', avs.vpc_id,
-        'Account ID', avs.account_id,
-        'Region', avs.region
-      ) as properties
-    from
-      aws_rds_db_cluster as rdc
-      left join
-        aws_rds_db_subnet_group as rdsg
-        on rdc.db_subnet_group = rdsg.name
-        and rdc.region = rdsg.region
-        and rdc.account_id = rdsg.account_id
-      cross join
-        jsonb_array_elements(rdsg.subnets) as vs
-      left join
-        aws_vpc_subnet as avs
-        on avs.subnet_id = vs ->> 'SubnetIdentifier'
-        and avs.account_id = rdsg.account_id
-        and avs.region = rdsg.region
-    where
-      rdc.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "rds_db_cluster_vpc_subnet_to_rds_db_subnet_group_edge" {
+edge "rds_db_subnet_group_to_vpc_subnet" {
   title = "subnet"
 
   sql = <<-EOQ
     select
       rdsg.arn as from_id,
-      avs.subnet_id as to_id
+      vs ->> 'SubnetIdentifier' as to_id
     from
       aws_rds_db_cluster as rdc
       left join
@@ -527,95 +547,14 @@ edge "rds_db_cluster_vpc_subnet_to_rds_db_subnet_group_edge" {
         and rdc.account_id = rdsg.account_id
       cross join
         jsonb_array_elements(rdsg.subnets) as vs
-      left join
-        aws_vpc_subnet as avs
-        on avs.subnet_id = vs ->> 'SubnetIdentifier'
-        and avs.account_id = rdsg.account_id
-        and avs.region = rdsg.region
     where
-      rdc.arn = $1;
+      rdc.arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "rds_db_cluster_arns" {}
 }
 
-node "rds_db_cluster_vpc_subnet_to_vpc_node" {
-  category = category.vpc_vpc
-
-  sql = <<-EOQ
-    select
-      distinct
-      v.vpc_id as id,
-      v.title as title,
-      jsonb_build_object(
-        'VPC ID', v.vpc_id,
-        'ARN', v.arn,
-        'CIDR Block', v.cidr_block,
-        'Is Default', v.is_default::text,
-        'Account ID', v.account_id,
-        'Region', v.region
-      ) as properties
-    from
-      aws_rds_db_cluster as rdc
-      join
-        aws_rds_db_subnet_group as rdsg
-        on rdc.db_subnet_group = rdsg.name
-        and rdc.region = rdsg.region
-        and rdc.account_id = rdsg.account_id
-      cross join
-        jsonb_array_elements(rdsg.subnets) as vs
-      join
-        aws_vpc_subnet as avs
-        on avs.subnet_id = vs ->> 'SubnetIdentifier'
-        and avs.account_id = rdsg.account_id
-        and avs.region = rdsg.region
-      join
-        aws_vpc as v
-        on v.vpc_id = avs.vpc_id
-        and v.region = avs.region
-        and v.account_id = avs.account_id
-    where
-      rdc.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "rds_db_cluster_vpc_subnet_to_vpc_edge" {
-  title = "vpc"
-
-  sql = <<-EOQ
-    select
-      distinct
-      avs.subnet_id as from_id,
-      v.vpc_id as to_id
-    from
-      aws_rds_db_cluster as rdc
-      join
-        aws_rds_db_subnet_group as rdsg
-        on rdc.db_subnet_group = rdsg.name
-        and rdc.region = rdsg.region
-        and rdc.account_id = rdsg.account_id
-      cross join
-        jsonb_array_elements(rdsg.subnets) as vs
-      join
-        aws_vpc_subnet as avs
-        on avs.subnet_id = vs ->> 'SubnetIdentifier'
-        and avs.account_id = rdsg.account_id
-        and avs.region = rdsg.region
-      join
-        aws_vpc as v
-        on v.vpc_id = avs.vpc_id
-        and v.region = avs.region
-        and v.account_id = avs.account_id
-    where
-      rdc.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "rds_db_cluster_vpc_security_group_to_vpc_edge" {
+edge "vpc_security_group_to_rds_db_subnet_group" {
   title = "subnet group"
 
   sql = <<-EOQ
@@ -636,80 +575,32 @@ edge "rds_db_cluster_vpc_security_group_to_vpc_edge" {
         and c.region = rdsg.region
         and c.account_id = rdsg.account_id
     where
-      c.arn = $1;
+      c.arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "rds_db_cluster_arns" {}
 }
 
-node "rds_db_cluster_to_rds_db_cluster_snapshot_node" {
-  category = category.rds_db_cluster_snapshot
-
-  sql = <<-EOQ
-    select
-      s.db_cluster_snapshot_identifier as id,
-      s.title as title,
-      jsonb_build_object(
-        'ARN', s.arn,
-        'Status', s.status,
-        'Type', s.type,
-        'Create Time', s.create_time,
-        'Account ID', s.account_id,
-        'Region', s.region
-      ) as properties
-    from
-      aws_rds_db_cluster as c
-      join
-        aws_rds_db_cluster_snapshot as s
-        on s.db_cluster_identifier = c.db_cluster_identifier
-    where
-      c.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
 
 edge "rds_db_cluster_to_rds_db_cluster_snapshot" {
   title = "snapshot"
 
   sql = <<-EOQ
     select
-      rds_db_cluster_arn as from_id,
-      rds_db_cluster_snapshot_arn as to_id
+      c.arn as from_id,
+      s.arn as to_id
     from
-     unnest($1::text[]) as rds_db_cluster_arn,
-      unnest($2::text[]) as rds_db_cluster_snapshot_arn
+      aws_rds_db_cluster as c
+      join aws_rds_db_cluster_snapshot as s
+      on s.db_cluster_identifier = c.db_cluster_identifier
+    where
+      c.arn = any($1);
   EOQ
 
   param "rds_db_cluster_arns" {}
-  param "rds_db_cluster_snapshot_arns" {}
 }
 
-node "rds_db_cluster_to_sns_topic_node" {
-  category = category.sns_topic
-
-  sql = <<-EOQ
-    select
-      s.sns_topic_arn as id,
-      split_part(s.sns_topic_arn, ':', -1) as title,
-      jsonb_build_object(
-        'ARN', s.sns_topic_arn,
-        'Account ID', s.account_id,
-        'Region', s.region
-      ) as properties
-    from
-      aws_rds_db_event_subscription as s,
-      jsonb_array_elements_text(source_ids_list) as ids
-      join aws_rds_db_cluster as c
-      on ids = c.db_cluster_identifier
-    where
-      c.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "rds_db_cluster_to_sns_topic_edge" {
+edge "rds_db_cluster_to_sns_topic" {
   title = "notifies"
 
   sql = <<-EOQ
@@ -722,52 +613,25 @@ edge "rds_db_cluster_to_sns_topic_edge" {
       join aws_rds_db_cluster as c
       on ids = c.db_cluster_identifier
     where
-      c.arn = $1;
+      c.arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "rds_db_cluster_arns" {}
 }
 
-node "rds_db_cluster_to_iam_role_node" {
-  category = category.iam_role
-
-  sql = <<-EOQ
-    select
-      r.role_id as id,
-      r.name as title,
-      jsonb_build_object(
-        'ARN', r.arn,
-        'Create Date', r.create_date,
-        'Max Session Duration', r.max_session_duration,
-        'Account ID', r.account_id
-      ) as properties
-    from
-      aws_rds_db_cluster as c
-      cross join jsonb_array_elements(associated_roles) as roles
-      join aws_iam_role as r
-      on roles ->> 'RoleArn' = r.arn
-    where
-      c.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "rds_db_cluster_to_iam_role_edge" {
+edge "rds_db_cluster_to_iam_role" {
   title = "assumes"
 
   sql = <<-EOQ
     select
-      c.arn as from_id,
-      r.role_id as to_id
+      arn as from_id,
+      roles ->> 'RoleArn' as to_id
     from
-      aws_rds_db_cluster as c
+      aws_rds_db_cluster
       cross join jsonb_array_elements(associated_roles) as roles
-      join aws_iam_role as r
-      on roles ->> 'RoleArn' = r.arn
     where
-      c.arn = $1;
+      arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "rds_db_cluster_arns" {}
 }

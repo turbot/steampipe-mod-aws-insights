@@ -277,10 +277,8 @@ dashboard "ec2_instance_detail" {
       ]
 
       edges = [
-        edge.ec2_application_load_balancer_to_ec2_instance,
         edge.ec2_autoscaling_group_to_ec2_instance,
         edge.ec2_classic_load_balancer_to_ec2_instance,
-        edge.ec2_gateway_load_balancer_to_ec2_instance,
         edge.ec2_instance_to_ebs_volume,
         edge.ec2_instance_to_ec2_key_pair,
         edge.ec2_instance_to_ec2_network_interface,
@@ -289,13 +287,12 @@ dashboard "ec2_instance_detail" {
         edge.ec2_instance_to_vpc_security_group,
         edge.ec2_instance_to_vpc_subnet,
         edge.ec2_network_interface_to_vpc_eip,
-        edge.ec2_network_load_balancer_to_ec2_instance,
         edge.ec2_target_group_to_ec2_instance,
         edge.ecs_cluster_to_ec2_instance,
         edge.vpc_subnet_to_vpc_vpc,
 
         # TODO: What should this edge be named and where should it live since it's specific to EC2 instance graphs?
-        edge.ec2_instance_lb_target_group,
+        edge.ec2_load_balancer_to_target_group,
       ]
 
       args = {
