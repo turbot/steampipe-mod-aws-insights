@@ -42,21 +42,12 @@ edge "ebs_volume_snapshot_to_ec2_ami" {
     from
       aws_ec2_ami as i,
       aws_ebs_snapshot as s,
-      jsonb_array_elements(i.block_device_mappings) as bdm,
-      aws_ebs_volume as v
+      jsonb_array_elements(i.block_device_mappings) as bdm
     where
       bdm -> 'Ebs' is not null
-      and bdm -> 'Ebs' ->> 'SnapshotId' in
-      (
-        select
-          snapshot_id
-        from
-          aws_ebs_snapshot
-        where
-          aws_ebs_snapshot.snapshot_id = v.snapshot_id
-      )
-      and v.arn = any($1);
+      and bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
+      and s.arn = any($1);
   EOQ
 
-  param "ebs_volume_arns" {}
+  param "ebs_snapshot_arns" {}
 }

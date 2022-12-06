@@ -143,7 +143,6 @@ dashboard "ebs_volume_detail" {
       ]
 
       args = {
-        image_id          = self.input.volume_arn.value
         ebs_volume_arns   = [self.input.volume_arn.value]
         kms_key_arns      = with.kms_keys.rows[*].key_arn
         ebs_snapshot_arns = with.ebs_snapshots.rows[*].snapshot_arn
