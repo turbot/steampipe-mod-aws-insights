@@ -68,7 +68,7 @@ dashboard "dax_cluster_detail" {
           aws_dax_cluster,
           jsonb_array_elements(security_groups) as sg
         where
-          arn = $1
+          arn = $1;
         EOQ
 
         args = [self.input.dax_cluster_arn.value]
@@ -84,7 +84,7 @@ dashboard "dax_cluster_detail" {
           jsonb_array_elements(subnets) as s
         where
           g.subnet_group_name = c.subnet_group
-          and c.arn = $1
+          and c.arn = $1;
         EOQ
 
         args = [self.input.dax_cluster_arn.value]
@@ -97,35 +97,7 @@ dashboard "dax_cluster_detail" {
         from
           aws_dax_cluster
         where
-          arn = $1
-        EOQ
-
-        args = [self.input.dax_cluster_arn.value]
-      }
-
-      with "dax_subnet_groups" {
-        sql = <<-EOQ
-        select
-          subnet_group as subnet_group_name
-        from
-          aws_dax_cluster
-        where
-          arn = $1
-        EOQ
-
-        args = [self.input.dax_cluster_arn.value]
-      }
-
-      with "dax_parameter_groups" {
-        sql = <<-EOQ
-        select
-          p.parameter_group_name as parameter_group_name
-        from
-          aws_dax_parameter_group as p,
-          aws_dax_cluster as c
-        where
-          c.parameter_group ->> 'ParameterGroupName' = p.parameter_group_name
-          and c.arn = $1
+          arn = $1;
         EOQ
 
         args = [self.input.dax_cluster_arn.value]
@@ -134,14 +106,13 @@ dashboard "dax_cluster_detail" {
       with "vpc_vpcs" {
         sql = <<-EOQ
         select
-          sg.vpc_id as vpc_id
+          g.vpc_id as vpc_id
         from
           aws_dax_cluster as c,
-          jsonb_array_elements(security_groups) as s
-          join aws_vpc_security_group sg
-            on sg.group_id = s ->> 'SecurityGroupIdentifier'
+          aws_dax_subnet_group as g
         where
-          c.arn = $1
+          g.subnet_group_name = c.subnet_group
+          and c.arn = $1;
         EOQ
 
         args = [self.input.dax_cluster_arn.value]
@@ -169,14 +140,12 @@ dashboard "dax_cluster_detail" {
       ]
 
       args = {
-        dax_cluster_arns          = [self.input.dax_cluster_arn.value]
-        iam_role_arns             = with.iam_role_arns.rows[*].iam_role_arn
-        dax_parameter_group_names = with.dax_parameter_groups.rows[*].parameter_group_name
-        vpc_security_group_ids    = with.vpc_security_groups.rows[*].security_group_id
-        vpc_subnet_ids            = with.vpc_subnets.rows[*].subnet_id
-        sns_topic_arns            = with.sns_topics.rows[*].topic_arn
-        dax_subnet_group_names    = with.dax_subnet_groups.rows[*].subnet_group_name
-        vpc_vpc_ids               = with.vpc_vpcs.rows[*].vpc_id
+        dax_cluster_arns       = [self.input.dax_cluster_arn.value]
+        iam_role_arns          = with.iam_role_arns.rows[*].iam_role_arn
+        vpc_security_group_ids = with.vpc_security_groups.rows[*].security_group_id
+        vpc_subnet_ids         = with.vpc_subnets.rows[*].subnet_id
+        sns_topic_arns         = with.sns_topics.rows[*].topic_arn
+        vpc_vpc_ids            = with.vpc_vpcs.rows[*].vpc_id
       }
     }
   }
