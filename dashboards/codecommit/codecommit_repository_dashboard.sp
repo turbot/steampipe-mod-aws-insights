@@ -1,6 +1,6 @@
 dashboard "codecommit_repository_dashboard" {
 
-  title         = "AWS Codecommit Repository Dashboard"
+  title         = "AWS CodeCommit Repository Dashboard"
   documentation = file("./dashboards/codecommit/docs/codecommit_repository_dashboard.md")
 
   tags = merge(local.codecommit_common_tags, {

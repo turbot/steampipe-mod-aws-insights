@@ -1,6 +1,6 @@
 dashboard "codecommit_repository_age_report" {
 
-  title         = "AWS Codecommit Repository Age Report"
+  title         = "AWS CodeCommit Repository Age Report"
   documentation = file("./dashboards/codecommit/docs/codecommit_repository_report_age.md")
 
   tags = merge(local.codecommit_common_tags, {
