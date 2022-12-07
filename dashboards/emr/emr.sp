@@ -15,7 +15,7 @@ category "emr_instance" {
   title = "EMR Instance"
   color = local.analytics_color
   href  = "/aws_insights.dashboard.ec2_instance_detail?input.instance_arn={{.properties.'EC2 Instance ARN' | @uri}}"
-  icon  = "cpu-chip"
+  icon  = "heroicons-outline:cpu-chip"
 }
 
 category "emr_instance_fleet" {
@@ -27,5 +27,5 @@ category "emr_instance_fleet" {
 category "emr_instance_group" {
   title = "EMR instance group"
   color = local.analytics_color
-  icon  = "rectangle-group"
+  icon  = "heroicons-outline:rectangle-group"
 }

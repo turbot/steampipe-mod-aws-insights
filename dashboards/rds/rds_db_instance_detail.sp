@@ -169,8 +169,8 @@ dashboard "rds_db_instance_detail" {
         node.rds_db_instance,
         node.rds_db_snapshot,
         node.sns_topic,
-        node.rds_db_instance_to_rds_db_parameter_group,
-        node.rds_db_instance_to_rds_db_subnet_group,
+        node.rds_db_parameter_group,
+        node.rds_db_subnet_group,
         node.kms_key,
         node.vpc_vpc,
         node.vpc_subnet,
@@ -550,7 +550,7 @@ node "rds_db_instance" {
   param "rds_db_instance_arns" {}
 }
 
-node "rds_db_instance_to_rds_db_parameter_group" {
+node "rds_db_parameter_group" {
   category = category.rds_db_parameter_group
 
   sql = <<-EOQ
@@ -597,7 +597,7 @@ edge "rds_db_instance_to_rds_db_parameter_group" {
   param "rds_db_instance_arns" {}
 }
 
-node "rds_db_instance_to_rds_db_subnet_group" {
+node "rds_db_subnet_group" {
   category = category.rds_db_subnet_group
 
   sql = <<-EOQ

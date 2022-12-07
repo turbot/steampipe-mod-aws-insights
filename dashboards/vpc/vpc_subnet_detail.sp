@@ -196,9 +196,8 @@ dashboard "vpc_subnet_detail" {
         node.ec2_network_load_balancer,
         node.ec2_classic_load_balancer,
         node.ec2_gateway_load_balancer,
-
-        node.vpc_subnet_vpc_route_table,
-        node.vpc_subnet_vpc_network_acl,
+        node.vpc_route_table,
+        node.vpc_network_acl,
         node.vpc_subnet_sagemaker_notebook_instance,
       ]
 
@@ -377,7 +376,7 @@ query "vpc_subnet_tags" {
     where
       subnet_id = $1
     order by
-      tag ->> 'Key'; 
+      tag ->> 'Key';
   EOQ
 
   param "subnet_id" {}
@@ -481,7 +480,7 @@ edge "vpc_to_vpc_subnet" {
   param "vpc_vpc_ids" {}
 }
 
-node "vpc_subnet_vpc_route_table" {
+node "vpc_route_table" {
   category = category.vpc_route_table
 
   sql = <<-EOQ
@@ -520,7 +519,7 @@ edge "vpc_subnet_to_vpc_route_table" {
   param "vpc_subnet_ids" {}
 }
 
-node "vpc_subnet_vpc_network_acl" {
+node "vpc_network_acl" {
   category = category.vpc_network_acl
 
   sql = <<-EOQ
@@ -588,7 +587,7 @@ edge "vpc_subnet_to_ec2_instance" {
     from
       aws_ec2_instance
     where
-      subnet_id = $1;
+      subnet_id = any($1);
   EOQ
 
   param "vpc_subnet_ids" {}

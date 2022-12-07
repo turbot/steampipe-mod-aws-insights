@@ -215,12 +215,11 @@ dashboard "vpc_security_group_detail" {
         node.ec2_application_load_balancer,
         node.dax_cluster,
         node.elasticache_cluster,
-
-        node.vpc_security_group_dms_replication_instance,
-        node.vpc_security_group_ec2_launch_configuration,
-        node.vpc_security_group_efs_mount_target,
-        node.vpc_security_group_sagemaker_notebook_instance,
-        node.vpc_security_group_docdb_cluster
+        node.dms_replication_instance,
+        node.ec2_launch_configuration,
+        node.efs_mount_target,
+        node.sagemaker_notebook_instance,
+        node.docdb_cluster
       ]
 
       edges = [
@@ -1457,7 +1456,7 @@ edge "vpc_security_group_to_lambda_function" {
   param "vpc_security_group_ids" {}
 }
 
-node "vpc_security_group_efs_mount_target" {
+node "efs_mount_target" {
   category = category.efs_mount_target
 
   sql = <<-EOQ
@@ -1554,7 +1553,7 @@ edge "vpc_security_group_to_ec2_application_load_balancer" {
   param "vpc_security_group_ids" {}
 }
 
-node "vpc_security_group_ec2_launch_configuration" {
+node "ec2_launch_configuration" {
   category = category.ec2_launch_configuration
 
   sql = <<-EOQ
@@ -1612,7 +1611,7 @@ edge "vpc_security_group_to_dax_cluster" {
   param "vpc_security_group_ids" {}
 }
 
-node "vpc_security_group_dms_replication_instance" {
+node "dms_replication_instance" {
   category = category.dms_replication_instance
 
   sql = <<-EOQ
@@ -1674,7 +1673,7 @@ edge "vpc_security_group_to_elasticache_cluster" {
   param "vpc_security_group_ids" {}
 }
 
-node "vpc_security_group_sagemaker_notebook_instance" {
+node "sagemaker_notebook_instance" {
   category = category.sagemaker_notebook_instance
 
   sql = <<-EOQ
@@ -1717,7 +1716,7 @@ edge "vpc_security_group_to_sagemaker_notebook_instance" {
   param "vpc_security_group_ids" {}
 }
 
-node "vpc_security_group_docdb_cluster" {
+node "docdb_cluster" {
   category = category.docdb_cluster
 
   sql = <<-EOQ

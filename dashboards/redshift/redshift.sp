@@ -8,7 +8,7 @@ category "redshift_cluster" {
   title = "Redshift Cluster"
   color = local.database_color
   href  = "/aws_insights.dashboard.redshift_cluster_detail?input.cluster_arn={{.properties.'ARN' | @uri}}"
-  icon  = "circle-stack"
+  icon  = "heroicons-outline:circle-stack"
 }
 
 category "redshift_parameter_group" {
@@ -21,7 +21,7 @@ category "redshift_snapshot" {
   title = "Redshift Snapshot"
   color = local.database_color
   href  = "/aws_insights.dashboard.redshift_snapshot_detail?input.snapshot_arn={{.properties.'ARN' | @uri}}"
-  icon  = "viewfinder-circle"
+  icon  = "heroicons-outline:viewfinder-circle"
 }
 
 category "redshift_subnet_group" {

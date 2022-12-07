@@ -21,7 +21,7 @@ node "dynamodb_table" {
   param "dynamodb_table_arns" {}
 }
 
-node "dynamodb_table_to_dynamodb_backup_node" {
+node "dynamodb_backup" {
   category = category.dynamodb_backup
 
   sql = <<-EOQ

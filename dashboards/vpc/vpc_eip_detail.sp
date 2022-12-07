@@ -81,7 +81,7 @@ dashboard "vpc_eip_detail" {
         node.ec2_network_interface,
         node.ec2_instance,
 
-        node.ec2_network_interface_vpc_nat_gateway
+        node.vpc_nat_gateway
       ]
 
       edges = [

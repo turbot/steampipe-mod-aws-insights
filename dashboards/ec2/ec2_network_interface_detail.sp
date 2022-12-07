@@ -151,8 +151,7 @@ dashboard "ec2_network_interface_detail" {
         node.vpc_vpc,
         node.vpc_eip,
         node.vpc_flow_log,
-
-        node.ec2_network_interface_vpc_nat_gateway
+        node.vpc_nat_gateway
       ]
 
       edges = [
@@ -162,7 +161,6 @@ dashboard "ec2_network_interface_detail" {
         edge.ec2_network_interface_to_vpc_subnet,
         edge.ec2_network_interface_to_vpc_flow_log,
         edge.vpc_subnet_to_vpc_vpc,
-
         edge.vpc_nat_gateway_to_ec2_network_interface
       ]
 
@@ -466,7 +464,7 @@ edge "ec2_network_interface_to_vpc_flow_log" {
   param "ec2_network_interface_ids" {}
 }
 
-node "ec2_network_interface_vpc_nat_gateway" {
+node "vpc_nat_gateway" {
   category = category.vpc_nat_gateway
 
   sql = <<-EOQ

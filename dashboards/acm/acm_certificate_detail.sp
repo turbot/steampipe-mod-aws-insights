@@ -166,7 +166,7 @@ dashboard "acm_certificate_detail" {
         node.ec2_classic_load_balancer,
         node.ec2_application_load_balancer,
         node.ec2_network_load_balancer,
-        node.acm_certificate_from_opensearch_domain
+        node.opensearch_domain
       ]
 
       edges = [

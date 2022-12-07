@@ -240,7 +240,7 @@ dashboard "kms_key_detail" {
         edge.rds_db_cluster_to_kms_key,
         edge.redshift_cluster_to_kms_key,
         edge.sns_topic_to_kms_key,
-        edge.sqs_queue_to_kms_key,
+        edge.sqs_queue_to_kms_key_alias,
         edge.rds_db_instance_to_kms_key,
         edge.rds_db_snapshot_to_kms_key,
         edge.lambda_function_to_kms_key,
@@ -495,47 +495,6 @@ edge "cloudtrail_trail_to_kms_key" {
   EOQ
 
   param "cloudtrail_trail_arns" {}
-}
-
-edge "sns_topic_to_kms_key" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      topic_arn as from_id,
-      k.arn as to_id
-    from
-      aws_sns_topic as t
-      left join aws_kms_key as k on k.id = split_part(t.kms_master_key_id, '/', 2)
-    where
-      t.topic_arn = any($1)
-      and k.region = t.region
-      and k.account_id = t.account_id;
-  EOQ
-
-  param "sns_topic_arns" {}
-}
-
-edge "sqs_queue_to_kms_key" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      q.queue_arn as from_id,
-      a.arn as to_id
-    from
-      aws_kms_key as k
-      join aws_kms_alias as a
-      on a.target_key_id = k.id
-      join aws_sqs_queue as q
-      on a.alias_name = q.kms_master_key_id
-      and k.region = q.region
-      and k.account_id = q.account_id
-    where
-      q.queue_arn = any($1);
-  EOQ
-
-  param "sqs_queue_arns" {}
 }
 
 node "kms_key_alias" {

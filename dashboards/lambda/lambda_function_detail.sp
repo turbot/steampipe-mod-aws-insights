@@ -92,7 +92,8 @@ dashboard "lambda_function_detail" {
           from
             aws_lambda_function
           where
-            arn = $1;
+            vpc_id is not null
+            and arn = $1;
         EOQ
 
         args = [self.input.lambda_arn.value]
@@ -105,7 +106,8 @@ dashboard "lambda_function_detail" {
           from
             aws_lambda_function
           where
-            arn = $1;
+            kms_key_arn is not null
+            and arn = $1;
         EOQ
 
         args = [self.input.lambda_arn.value]
@@ -179,7 +181,7 @@ dashboard "lambda_function_detail" {
         node.s3_bucket,
         node.lambda_version,
         node.lambda_alias,
-        node.sns_topic_subscription,
+        node.lambda_function_sns_topic_subscription,
         node.sns_topic,
         node.api_gatewayv2_integration,
         node.api_gatewayv2_api
@@ -676,7 +678,7 @@ edge "sns_topic_to_sns_subscription" {
   param "sns_topic_arns" {}
 }
 
-node "sns_topic_subscription" {
+node "lambda_function_sns_topic_subscription" {
   category = category.sns_topic_subscription
 
   sql = <<-EOQ

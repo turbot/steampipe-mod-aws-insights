@@ -268,12 +268,10 @@ dashboard "ec2_instance_detail" {
         node.vpc_security_group,
         node.vpc_subnet,
         node.vpc_vpc,
-
-        # TODO: What should these nodes be named and where should they live since they're specific to EC2 instance graphs?
-        node.ec2_instance_iam_instance_profile,
-        node.ec2_instance_ec2_key_pair,
-        node.ec2_instance_ec2_autoscaling_group,
-        node.ec2_instance_ec2_target_group,
+        node.iam_instance_profile,
+        node.ec2_key_pair,
+        node.ec2_autoscaling_group,
+        node.ec2_target_group,
       ]
 
       edges = [
@@ -290,8 +288,6 @@ dashboard "ec2_instance_detail" {
         edge.ec2_target_group_to_ec2_instance,
         edge.ecs_cluster_to_ec2_instance,
         edge.vpc_subnet_to_vpc_vpc,
-
-        # TODO: What should this edge be named and where should it live since it's specific to EC2 instance graphs?
         edge.ec2_load_balancer_to_target_group,
       ]
 
@@ -503,7 +499,7 @@ query "ec2_instance_ebs_optimized" {
   param "arn" {}
 }
 
-node "ec2_instance_iam_instance_profile" {
+node "iam_instance_profile" {
   category = category.iam_instance_profile
 
   sql = <<-EOQ
@@ -524,7 +520,7 @@ node "ec2_instance_iam_instance_profile" {
   param "ec2_instance_arns" {}
 }
 
-node "ec2_instance_ec2_key_pair" {
+node "ec2_key_pair" {
   category = category.ec2_key_pair
 
   sql = <<-EOQ
@@ -549,7 +545,7 @@ node "ec2_instance_ec2_key_pair" {
   param "ec2_instance_arns" {}
 }
 
-node "ec2_instance_ec2_autoscaling_group" {
+node "ec2_autoscaling_group" {
   category = category.ec2_autoscaling_group
 
   sql = <<-EOQ
@@ -573,7 +569,7 @@ node "ec2_instance_ec2_autoscaling_group" {
   param "ec2_instance_arns" {}
 }
 
-node "ec2_instance_ec2_target_group" {
+node "ec2_target_group" {
   category = category.ec2_target_group
 
   sql = <<-EOQ

@@ -1,4 +1,4 @@
-node "acm_certificate_from_opensearch_domain" {
+node "opensearch_domain" {
   category = category.opensearch_domain
 
   sql = <<-EOQ
