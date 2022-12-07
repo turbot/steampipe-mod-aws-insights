@@ -57,7 +57,7 @@ dashboard "ec2_ami_detail" {
       direction = "TD"
 
       nodes = [
-        node.ec2_ami_node,
+        node.ec2_ami,
         node.ec2_ami_to_ec2_instance_node,
         node.ec2_ami_from_ebs_snapshot_node
       ]
@@ -69,6 +69,7 @@ dashboard "ec2_ami_detail" {
 
       args = {
         image_id = self.input.ami.value
+        ec2_ami_image_ids = [self.input.ami.value]
       }
     }
   }
@@ -299,7 +300,7 @@ query "ec2_ami_tags" {
   param "image_id" {}
 }
 
-node "ec2_ami_node" {
+node "ec2_ami" {
   category = category.ec2_ami
 
   sql = <<-EOQ
@@ -317,10 +318,10 @@ node "ec2_ami_node" {
     from
       aws_ec2_ami
     where
-      image_id = $1;
+      image_id = any($1);
   EOQ
 
-  param "image_id" {}
+  param "ec2_ami_image_ids" {}
 }
 
 node "ec2_ami_to_ec2_instance_node" {

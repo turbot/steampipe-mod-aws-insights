@@ -64,24 +64,90 @@ dashboard "ebs_volume_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "kms_keys" {
+        sql = <<-EOQ
+          select
+            kms_key_id as key_arn
+          from
+            aws_ebs_volume
+          where
+            kms_key_id is not null
+            and arn = $1;
+        EOQ
+
+        args = [self.input.volume_arn.value]
+      }
+
+      with "ebs_snapshots" {
+        sql = <<-EOQ
+          select
+            s.arn as snapshot_arn
+          from
+            aws_ebs_volume as v,
+            aws_ebs_snapshot as s
+          where
+            s.snapshot_id = v.snapshot_id
+            and v.arn = $1;
+        EOQ
+
+        args = [self.input.volume_arn.value]
+      }
+
+      with "ec2_instances" {
+        sql = <<-EOQ
+          select
+            e.arn as instance_arn
+          from
+            aws_ebs_volume as v,
+            jsonb_array_elements(attachments) as a,
+            aws_ec2_instance as e
+          where
+            a ->> 'InstanceId' = e.instance_id
+            and v.arn = $1;
+        EOQ
+
+        args = [self.input.volume_arn.value]
+      }
+
+      with "ec2_amis" {
+        sql = <<-EOQ
+          select
+            a.image_id as image_id
+          from
+            aws_ebs_volume as v,
+            aws_ebs_snapshot as s,
+            aws_ec2_ami as a,
+            jsonb_array_elements(block_device_mappings) as s_id
+          where
+            v.snapshot_id = s.snapshot_id
+            and s_id -> 'Ebs'->> 'SnapshotId' = s.snapshot_id
+            and v.arn = $1
+        EOQ
+
+        args = [self.input.volume_arn.value]
+      }
 
       nodes = [
-        node.ebs_volume_node,
-        node.ebs_volume_to_kms_key_node,
-        node.ebs_volume_to_ebs_snapshot_node,
-        node.ebs_volume_from_ec2_instance_node,
-        node.ebs_volume_ebs_snapshots_to_ec2_ami_node
+        node.ebs_snapshot,
+        node.ebs_volume,
+        node.ec2_ami,
+        node.ec2_instance,
+        node.kms_key
       ]
 
       edges = [
-        edge.ebs_volume_to_kms_key_edge,
-        edge.ebs_volume_to_ebs_snapshot_edge,
-        edge.ebs_volume_from_ec2_instance_edge,
-        edge.ebs_volume_ebs_snapshots_to_ec2_ami_edge
+        edge.ebs_volume_snapshot_to_ec2_ami,
+        edge.ec2_instance_to_ebs_volume,
+        edge.ebs_volume_to_ebs_snapshot,
+        edge.ebs_volume_to_kms_key
       ]
 
       args = {
-        arn = self.input.volume_arn.value
+        ebs_volume_arns   = [self.input.volume_arn.value]
+        kms_key_arns      = with.kms_keys.rows[*].key_arn
+        ebs_snapshot_arns = with.ebs_snapshots.rows[*].snapshot_arn
+        ec2_instance_arns = with.ec2_instances.rows[*].instance_arn
+        ec2_ami_image_ids = with.ec2_amis.rows[*].image_id
       }
     }
   }
@@ -214,232 +280,6 @@ query "ebs_volume_input" {
     order by
       title;
   EOQ
-}
-
-node "ebs_volume_node" {
-  category = category.ebs_volume
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ID', volume_id,
-        'ARN', arn,
-        'Size', size,
-        'Account ID', account_id,
-        'Region', region,
-        'KMS Key ID', kms_key_id
-      ) as properties
-    from
-      aws_ebs_volume
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ebs_volume_to_kms_key_node" {
-  category = category.kms_key
-
-  sql = <<-EOQ
-    select
-      k.arn as id,
-      k.title as title,
-      jsonb_build_object(
-        'ID', k.id,
-        'ARN', k.arn,
-        'Key State', k.key_state,
-        'Key Manager', k.key_manager
-      ) as properties
-    from
-      aws_kms_key as k,
-      aws_ebs_volume as v
-    where
-      v.kms_key_id = k.arn
-      and v.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ebs_volume_to_kms_key_edge" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      v.arn as from_id,
-      k.arn as to_id
-    from
-      aws_kms_key as k,
-      aws_ebs_volume as v
-    where
-      v.kms_key_id = k.arn
-      and v.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ebs_volume_to_ebs_snapshot_node" {
-  category = category.ebs_snapshot
-
-  sql = <<-EOQ
-    select
-      s.snapshot_id as id,
-      s.title as title,
-      jsonb_build_object(
-        'ARN', s.arn,
-        'Start Time', s.start_time,
-        'Snapshot ID', s.snapshot_id
-      ) as properties
-    from
-      aws_ebs_snapshot as s,
-      aws_ebs_volume as v
-    where
-      v.volume_id = s.volume_id
-      and v.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ebs_volume_to_ebs_snapshot_edge" {
-  title = "snapshot"
-
-  sql = <<-EOQ
-    select
-      v.arn as from_id,
-      s.snapshot_id as to_id
-    from
-      aws_ebs_snapshot as s,
-      aws_ebs_volume as v
-    where
-      v.volume_id = s.volume_id
-      and v.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ebs_volume_from_ec2_instance_node" {
-  category = category.ec2_instance
-
-  sql = <<-EOQ
-    select
-      i.arn as id,
-      i.title as title,
-      jsonb_build_object(
-        'Name', i.tags ->> 'Name',
-        'Instance ID', i.instance_id,
-        'ARN', i.arn,
-        'Account ID', i.account_id,
-        'Region', i.region
-      ) as properties
-    from
-      aws_ec2_instance as i,
-      jsonb_array_elements(i.block_device_mappings) as bdm
-    where
-      bdm -> 'Ebs' ->> 'VolumeId' in
-      (
-        select
-          volume_id
-        from
-          aws_ebs_volume as v
-        where
-          v.arn = $1
-      );
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ebs_volume_from_ec2_instance_edge" {
-  title = "mounts"
-
-  sql = <<-EOQ
-    select
-      i.arn as from_id,
-      $1 as to_id
-    from
-      aws_ec2_instance as i,
-      jsonb_array_elements(i.block_device_mappings) as bdm
-    where
-      bdm -> 'Ebs' ->> 'VolumeId' in
-      (
-        select
-          volume_id
-        from
-          aws_ebs_volume as v
-        where
-          v.arn = $1
-      );
-  EOQ
-
-  param "arn" {}
-}
-
-node "ebs_volume_ebs_snapshots_to_ec2_ami_node" {
-  category = category.ec2_ami
-
-  sql = <<-EOQ
-    select
-      images.image_id as id,
-      images.title as title,
-      jsonb_build_object(
-        'Snapshot ID', bdm -> 'Ebs' ->> 'SnapshotId',
-        'Account ID', images.account_id,
-        'Region', images.region,
-        'Image ID', images.image_id
-      ) as properties
-    from
-      aws_ec2_ami as images,
-      jsonb_array_elements(images.block_device_mappings) as bdm,
-      aws_ebs_volume as v
-    where
-      bdm -> 'Ebs' is not null
-      and bdm -> 'Ebs' ->> 'SnapshotId' in
-      (
-        select
-          snapshot_id
-        from
-          aws_ebs_snapshot
-        where
-          aws_ebs_snapshot.volume_id = v.volume_id
-      )
-      and v.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ebs_volume_ebs_snapshots_to_ec2_ami_edge" {
-  title = "ami"
-
-  sql = <<-EOQ
-    select
-      bdm -> 'Ebs' ->> 'SnapshotId' as from_id,
-      images.image_id as to_id
-    from
-      aws_ec2_ami as images,
-      jsonb_array_elements(images.block_device_mappings) as bdm,
-      aws_ebs_volume as v
-    where
-      bdm -> 'Ebs' is not null
-      and bdm -> 'Ebs' ->> 'SnapshotId' in
-      (
-        select
-          snapshot_id
-        from
-          aws_ebs_snapshot
-        where
-          aws_ebs_snapshot.volume_id = v.volume_id
-      )
-      and v.arn = $1;
-  EOQ
-
-  param "arn" {}
 }
 
 query "ebs_volume_storage" {

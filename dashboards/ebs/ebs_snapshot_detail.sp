@@ -72,6 +72,7 @@ dashboard "ebs_snapshot_detail" {
 
       args = {
         arn = self.input.snapshot_arn.value
+        ebs_snapshot_arns   = [self.input.snapshot_arn.value]
       }
     }
   }
@@ -220,7 +221,7 @@ node "ebs_snapshot_node" {
 
   sql = <<-EOQ
     select
-      snapshot_id as id,
+      arn as id,
       title as title,
       jsonb_build_object(
         'ID', s.snapshot_id,
@@ -232,10 +233,10 @@ node "ebs_snapshot_node" {
     from
       aws_ebs_snapshot as s
     where
-      arn = $1;
+      arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "ebs_snapshot_arns" {}
 }
 
 node "ebs_snapshot_from_ebs_volume_node" {
