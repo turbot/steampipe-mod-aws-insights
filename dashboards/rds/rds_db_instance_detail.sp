@@ -192,9 +192,9 @@ dashboard "rds_db_instance_detail" {
 
       args = {
         kms_key_arns           = with.kms_keys.rows[*].key_arn
-        rds_db_cluster_arns    = with.db_clusters.rows[*].cluster_arn
+        rds_db_cluster_arns    = with.rds_db_clusters.rows[*].cluster_arn
         rds_db_instance_arns   = [self.input.db_instance_arn.value]
-        rds_db_snapshot_arns   = with.snapshots.rows[*].snapshot_arn
+        rds_db_snapshot_arns   = with.rds_db_snapshots.rows[*].snapshot_arn
         sns_topic_arns         = with.sns_topics.rows[*].sns_topic_arn
         vpc_security_group_ids = with.vpc_security_groups.rows[*].security_group_id
         vpc_subnet_ids         = with.vpc_subnets.rows[*].subnet_id

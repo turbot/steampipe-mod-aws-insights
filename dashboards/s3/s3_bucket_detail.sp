@@ -215,9 +215,9 @@ dashboard "s3_bucket_detail" {
         node.lambda_function,
         node.s3_bucket,
         node.s3_bucket_from_s3_bucket,
-        node.s3_bucket_to_s3_bucket
+        node.s3_bucket_to_s3_bucket,
         node.sns_topic,
-        node.sqs_queue,
+        node.sqs_queue
       ]
 
       edges = [
@@ -234,7 +234,7 @@ dashboard "s3_bucket_detail" {
       ]
 
       args = {
-        cloudtrail_trail_arns              = with.trails.rows[*].trail_arn
+        cloudtrail_trail_arns              = with.cloudtrail_trails.rows[*].trail_arn
         ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
         ec2_classic_load_balancer_arns     = with.ec2_classic_load_balancers.rows[*].clb_arn
         ec2_network_load_balancer_arns     = with.ec2_network_load_balancers.rows[*].nlb_arn
