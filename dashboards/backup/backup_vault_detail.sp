@@ -31,21 +31,68 @@ dashboard "backup_vault_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "backup_plans" {
+        sql = <<-EOQ
+          select
+            p.arn as backup_plan_arn
+          from
+            aws_backup_vault as v,
+            aws_backup_plan as p,
+            jsonb_array_elements(backup_plan -> 'Rules') as r
+          where
+            r ->> 'TargetBackupVaultName' = v.name
+            and v.arn = $1
+        EOQ
+
+        args = [self.input.backup_vault_arn.value]
+      }
+
+      with "kms_keys" {
+        sql = <<-EOQ
+          select
+            encryption_key_arn as kms_key_arn
+          from
+            aws_backup_vault
+          where
+            encryption_key_arn is not null
+            and arn = $1;
+        EOQ
+
+        args = [self.input.backup_vault_arn.value]
+      }
+
+      with "sns_topics" {
+        sql = <<-EOQ
+          select
+            sns_topic_arn
+          from
+            aws_backup_vault
+          where
+            sns_topic_arn is not null
+            and arn = $1;
+        EOQ
+
+        args = [self.input.backup_vault_arn.value]
+      }
+
       nodes = [
-        node.backup_vault_node,
-        node.backup_vault_from_backup_plan_node,
-        node.backup_vault_to_kms_key_node,
-        node.backup_vault_to_sns_topic_node
+        node.backup_plan,
+        node.backup_vault,
+        node.kms_key,
+        node.sns_topic
       ]
 
       edges = [
-        edge.backup_vault_from_backup_plan_edge,
-        edge.backup_vault_to_kms_key_edge,
-        edge.backup_vault_to_sns_topic_edge,
+        edge.backup_plan_to_backup_vault,
+        edge.backup_vault_to_kms_key,
+        edge.backup_vault_to_sns_topic
       ]
 
       args = {
-        arn = self.input.backup_vault_arn.value
+        backup_plan_arns  = with.backup_plans.rows[*].backup_plan_arn
+        backup_vault_arns = [self.input.backup_vault_arn.value]
+        kms_key_arns      = with.kms_keys.rows[*].kms_key_arn
+        sns_topic_arns    = with.sns_topics.rows[*].sns_topic_arn
       }
     }
   }
@@ -101,176 +148,6 @@ query "backup_vault_recovery_points" {
       number_of_recovery_points as value
     from
       aws_backup_vault
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "backup_vault_node" {
-  category = category.backup_vault
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object (
-        'ARN', arn,
-        'Name', name,
-        'Creation Date', creation_date,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_backup_vault
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "backup_vault_from_backup_plan_node" {
-  category = category.backup_plan
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object (
-        'ARN', arn,
-        'Name', name,
-        'Backup Plan ID', backup_plan_id,
-        'Creation Date', creation_date,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_backup_plan,
-      jsonb_array_elements(backup_plan -> 'Rules') as r
-    where
-      r ->> 'TargetBackupVaultName' in
-      (
-        select
-          name
-        from
-          aws_backup_vault
-        where
-          arn = $1
-      );
-  EOQ
-
-  param "arn" {}
-}
-
-edge "backup_vault_from_backup_plan_edge" {
-  title = "backup vault"
-
-  sql = <<-EOQ
-    select
-      p.arn as from_id,
-      v.arn as to_id
-    from
-      aws_backup_vault as v,
-      aws_backup_plan as p,
-      jsonb_array_elements(backup_plan -> 'Rules') as r
-    where
-      r ->> 'TargetBackupVaultName' = v.name
-      and v.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "backup_vault_to_kms_key_node" {
-  category = category.kms_key
-
-  sql = <<-EOQ
-    select
-      id as id,
-      title as title,
-      jsonb_build_object (
-        'ARN', arn,
-        'Key Manager', key_manager,
-        'Creation Date', creation_date,
-        'Enabled', enabled::text,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_kms_key
-    where
-      arn in
-      (
-        select
-          encryption_key_arn
-        from
-          aws_backup_vault
-        where
-          arn = $1
-      );
-  EOQ
-
-  param "arn" {}
-}
-
-edge "backup_vault_to_kms_key_edge" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      v.arn as from_id,
-      k.id as to_id
-    from
-      aws_backup_vault as v
-      left join aws_kms_key as k on k.arn = v.encryption_key_arn
-    where
-      v.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "backup_vault_to_sns_topic_node" {
-  category = category.sns_topic
-
-  sql = <<-EOQ
-    select
-      topic_arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', topic_arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_sns_topic
-    where
-      topic_arn in
-      (
-        select
-          sns_topic_arn
-        from
-          aws_backup_vault
-        where
-          arn = $1
-      );
-  EOQ
-
-  param "arn" {}
-}
-
-edge "backup_vault_to_sns_topic_edge" {
-  title = "notifies"
-
-  sql = <<-EOQ
-    select
-      v.arn as from_id,
-      t.topic_arn as to_id
-    from
-      aws_backup_vault as v
-      left join aws_sns_topic as t on t.topic_arn = v.sns_topic_arn
     where
       arn = $1;
   EOQ
