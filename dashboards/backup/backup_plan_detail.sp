@@ -31,19 +31,36 @@ dashboard "backup_plan_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "backup_vaults" {
+        sql = <<-EOQ
+          select
+            v.arn as backup_vault_arn
+          from
+            aws_backup_vault as v,
+            aws_backup_plan as p,
+            jsonb_array_elements(backup_plan -> 'Rules') as r
+          where
+            r ->> 'TargetBackupVaultName' = v.name
+            and p.arn = $1;
+        EOQ
+
+        args = [self.input.backup_plan_arn.value]
+      }
+
       nodes = [
-        node.backup_plan_node,
-        node.backup_plan_to_backup_vault_node,
-        node.backup_plan_to_backup_selection_node
+        node.backup_plan,
+        node.backup_selection,
+        node.backup_vault
       ]
 
       edges = [
-        edge.backup_plan_to_backup_vault_edge,
-        edge.backup_plan_to_backup_selection_edge
+        edge.backup_plan_to_backup_selection,
+        edge.backup_plan_to_backup_vault
       ]
 
       args = {
-        arn = self.input.backup_plan_arn.value
+        backup_plan_arns  = [self.input.backup_plan_arn.value]
+        backup_vault_arns = with.backup_vaults.rows[*].backup_vault_arn
       }
     }
   }
@@ -99,129 +116,6 @@ query "backup_plan_resource_assignment" {
     select
       'Resource Assignments' as label,
       count(selection_name) as value
-    from
-      aws_backup_selection as s,
-      aws_backup_plan as p
-    where
-      s.backup_plan_id = p.backup_plan_id
-      and p.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "backup_plan_node" {
-  category = category.backup_plan
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object (
-        'ARN', arn,
-        'Name', name,
-        'Creation Date', creation_date,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_backup_plan
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "backup_plan_to_backup_vault_node" {
-  category = category.backup_vault
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object (
-        'ARN', arn,
-        'Name', name,
-        'Creation Date', creation_date,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_backup_vault
-    where
-      name in
-      (
-        select
-          r ->> 'TargetBackupVaultName'
-        from
-          aws_backup_plan,
-          jsonb_array_elements(backup_plan -> 'Rules') as r
-        where
-          arn = $1
-      );
-  EOQ
-
-  param "arn" {}
-}
-
-edge "backup_plan_to_backup_vault_edge" {
-  title = "backup vault"
-
-  sql = <<-EOQ
-    select
-      p.arn as from_id,
-      v.arn as to_id
-    from
-      aws_backup_vault as v,
-      aws_backup_plan as p,
-      jsonb_array_elements(backup_plan -> 'Rules') as r
-    where
-      r ->> 'TargetBackupVaultName' = v.name
-      and p.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "backup_plan_to_backup_selection_node" {
-  category = category.backup_selection
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Name', selection_name,
-        'Creation Date', creation_date,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_backup_selection
-    where
-      backup_plan_id in
-      (
-        select
-          backup_plan_id
-        from
-          aws_backup_plan
-        where
-          arn = $1
-      );
-  EOQ
-
-  param "arn" {}
-}
-
-edge "backup_plan_to_backup_selection_edge" {
-  title = "backup selection"
-
-  sql = <<-EOQ
-    select
-      p.arn as from_id,
-      s.arn as to_id
     from
       aws_backup_selection as s,
       aws_backup_plan as p
