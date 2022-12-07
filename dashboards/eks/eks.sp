@@ -20,7 +20,7 @@ category "eks_cluster" {
 category "eks_fargate_profile" {
   title = "EKS Farget Profile"
   color = local.containers_color
-  icon  = "heroicons-outline:FP"
+  icon  = "text:FP"
 }
 
 category "eks_identity_provider_config" {
