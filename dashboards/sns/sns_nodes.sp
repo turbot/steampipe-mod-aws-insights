@@ -13,7 +13,7 @@ node "sns_topic" {
     from
       aws_sns_topic
     where
-      q.topic_arn = any($1);
+      topic_arn = any($1);
   EOQ
 
   param "sns_topic_arns" {}
