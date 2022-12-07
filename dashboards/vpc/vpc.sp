@@ -50,28 +50,28 @@ category "vpc_peering_connection" {
 
 category "vpc_route_table" {
   title = "VPC Route Table"
-  icon  = "arrows-right-left"
+  icon  = "heroicons-outline:arrows-right-left"
   color = local.networking_color
 }
 
 category "vpc_security_group" {
   title = "VPC Security Group"
   href  = "/aws_insights.dashboard.vpc_security_group_detail?input.security_group_id={{.properties.'Group ID' | @uri}}"
-  icon  = "lock-closed"
+  icon  = "heroicons-outline:lock-closed"
   color = local.networking_color
 }
 
 category "vpc_subnet" {
   title = "VPC Subnet"
   href  = "/aws_insights.dashboard.vpc_subnet_detail?input.subnet_id={{.properties.'Subnet ID' | @uri}}"
-  icon  = "share"
+  icon  = "heroicons-outline:share"
   color = local.networking_color
 }
 
 category "vpc_vpc" {
   title = "VPC"
   href  = "/aws_insights.dashboard.vpc_detail?input.vpc_id={{.properties.'VPC ID' | @uri}}"
-  icon  = "cloud" //"text:vpc"
+  icon  = "heroicons-outline:cloud"
   color = local.networking_color
 }
 

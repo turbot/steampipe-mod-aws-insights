@@ -27,5 +27,5 @@ category "backup_vault" {
   title = "Backup Vault"
   color = local.storage_color
   href  = "/aws_insights.dashboard.backup_vault_detail?input.backup_vault_arn={{.properties.'ARN' | @uri}}"
-  icon  = "archive-box-arrow-down"
+  icon  = "heroicons-outline:archive-box-arrow-down"
 }

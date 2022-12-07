@@ -13,6 +13,6 @@ category "sns_topic" {
 
 category "sns_topic_subscription" {
   title = "SNS Subscription"
-  icon  = "rss"
+  icon  = "heroicons-outline:rss"
   color = local.application_integration_color
 }
