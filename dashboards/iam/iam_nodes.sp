@@ -282,3 +282,74 @@ node "iam_user_access_key" {
 
   param "iam_user_arns" {}
 }
+
+node "iam_role_trusted_service" {
+  category = category.iam_service_principal
+
+  sql = <<-EOQ
+    select
+      svc as id,
+      svc as title,
+      jsonb_build_object(
+        'ARN', svc,
+        'Principal Type', 'Service'
+      ) as properties
+    from
+      aws_iam_role as r,
+      jsonb_array_elements(assume_role_policy_std -> 'Statement') as s,
+      jsonb_array_elements_text( (s -> 'Principal' ->> 'Service')::jsonb ) as svc
+    where
+      r.arn = any($1);
+  EOQ
+
+  param "iam_role_arns" {}
+}
+
+
+node "iam_role_trusted_federated" {
+  category = category.iam_federated_principal
+
+  sql = <<-EOQ
+    select
+      fed as id,
+      fed as title,
+      jsonb_build_object(
+        'ARN', fed,
+        'Principal Type', 'Federated'
+      ) as properties
+    from
+      aws_iam_role as r,
+      jsonb_array_elements(assume_role_policy_std -> 'Statement') as s,
+      jsonb_array_elements_text( (s -> 'Principal' ->> 'Federated')::jsonb ) as fed
+    where
+      r.arn = any($1);
+  EOQ
+
+  param "iam_role_arns" {}
+}
+
+node "iam_role_trusted_aws" {
+  category = category.account
+
+  sql = <<-EOQ
+    select
+      aws as id,
+      concat(
+        split_part(aws,':',5),
+        ':',
+        split_part(aws,':',6)
+      ) as title,
+      jsonb_build_object(
+        'ARN', aws,
+        'Principal Type', 'AWS'
+      ) as properties
+    from
+      aws_iam_role as r,
+      jsonb_array_elements(assume_role_policy_std -> 'Statement') as s,
+      jsonb_array_elements_text( (s -> 'Principal' ->> 'AWS')::jsonb ) as aws
+   where
+      r.arn = any($1);
+  EOQ
+
+  param "iam_role_arns" {}
+}

@@ -282,3 +282,77 @@ edge "iam_group_to_iam_policy" {
   param "iam_group_arns" {}
 
 }
+
+edge "iam_instance_profile_to_iam_role" {
+  title = "assumes"
+
+  sql = <<-EOQ
+    select
+      iam_instance_profile_arn as from_id,
+      arn as to_id,
+      jsonb_build_object(
+        'Instance Profile ARN', iam_instance_profile_arn
+      ) as properties
+    from
+      aws_iam_role,
+      jsonb_array_elements_text(instance_profile_arns) as iam_instance_profile_arn
+    where
+      arn = any($1);
+  EOQ
+
+  param "iam_role_arns" {}
+}
+
+edge "iam_role_trusted_aws" {
+  title = "can assume"
+
+  sql = <<-EOQ
+    select
+      arn as to_id,
+      aws as from_id
+    from
+      aws_iam_role as r,
+      jsonb_array_elements(assume_role_policy_std -> 'Statement') as s,
+      jsonb_array_elements_text( (s -> 'Principal' ->> 'AWS')::jsonb ) as aws
+   where
+      r.arn = any($1);
+  EOQ
+
+  param "iam_role_arns" {}
+}
+
+edge "iam_role_trusted_service" {
+  title = "can assume"
+
+  sql = <<-EOQ
+    select
+      arn as to_id,
+      svc as from_id
+    from
+      aws_iam_role as r,
+      jsonb_array_elements(assume_role_policy_std -> 'Statement') as s,
+      jsonb_array_elements_text( (s -> 'Principal' ->> 'Service')::jsonb ) as svc
+   where
+      r.arn = any($1);
+  EOQ
+
+  param "iam_role_arns" {}
+}
+
+edge "iam_role_trusted_federated" {
+  title = "can assume"
+
+  sql = <<-EOQ
+    select
+      arn as to_id,
+      fed as from_id
+    from
+      aws_iam_role as r,
+      jsonb_array_elements(assume_role_policy_std -> 'Statement') as s,
+      jsonb_array_elements_text( (s -> 'Principal' ->> 'Federated')::jsonb ) as fed
+   where
+      r.arn = any($1);
+  EOQ
+
+  param "iam_role_arns" {}
+}
