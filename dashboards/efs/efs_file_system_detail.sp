@@ -72,34 +72,6 @@ dashboard "efs_file_system_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "kms_keys" {
-        sql = <<-EOQ
-        select
-          kms_key_id as key_arn
-        from
-          aws_efs_file_system
-        where
-          arn = $1
-      EOQ
-
-        args = [self.input.efs_file_system_arn.value]
-      }
-
-      with "vpc_security_groups" {
-        sql = <<-EOQ
-          select
-            jsonb_array_elements_text(t.security_groups) as security_group_id
-          from
-            aws_efs_file_system as s,
-            aws_efs_mount_target as t
-          where
-            s.file_system_id = t.file_system_id
-            and s.arn = $1
-        EOQ
-
-        args = [self.input.efs_file_system_arn.value]
-      }
-
       with "efs_access_points" {
         sql = <<-EOQ
           select
@@ -123,6 +95,34 @@ dashboard "efs_file_system_detail" {
             left join aws_efs_file_system as f on m.file_system_id = f.file_system_id
           where
             f.arn = $1;
+        EOQ
+
+        args = [self.input.efs_file_system_arn.value]
+      }
+
+      with "kms_keys" {
+        sql = <<-EOQ
+        select
+          kms_key_id as key_arn
+        from
+          aws_efs_file_system
+        where
+          arn = $1
+        EOQ
+
+        args = [self.input.efs_file_system_arn.value]
+      }
+
+      with "vpc_security_groups" {
+        sql = <<-EOQ
+          select
+            jsonb_array_elements_text(t.security_groups) as security_group_id
+          from
+            aws_efs_file_system as s,
+            aws_efs_mount_target as t
+          where
+            s.file_system_id = t.file_system_id
+            and s.arn = $1
         EOQ
 
         args = [self.input.efs_file_system_arn.value]
@@ -163,9 +163,9 @@ dashboard "efs_file_system_detail" {
         node.efs_file_system,
         node.efs_mount_target,
         node.kms_key,
-        node.vpc_vpc,
         node.vpc_security_group,
-        node.vpc_subnet
+        node.vpc_subnet,
+        node.vpc_vpc
       ]
 
       edges = [
@@ -178,11 +178,11 @@ dashboard "efs_file_system_detail" {
       ]
 
       args = {
+        efs_access_point_arns  = with.efs_access_points.rows[*].access_point_arn
         efs_file_system_arns   = [self.input.efs_file_system_arn.value]
+        efs_mount_target_ids   = with.efs_mount_targets.rows[*].mount_target_id
         kms_key_arns           = with.kms_keys.rows[*].key_arn
         vpc_security_group_ids = with.vpc_security_groups.rows[*].security_group_id
-        efs_access_point_arns  = with.efs_access_points.rows[*].access_point_arn
-        efs_mount_target_ids   = with.efs_mount_targets.rows[*].mount_target_id
         vpc_subnet_ids         = with.vpc_subnets.rows[*].subnet_id
         vpc_vpc_ids            = with.vpc_vpcs.rows[*].vpc_id
       }

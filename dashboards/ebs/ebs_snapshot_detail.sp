@@ -69,20 +69,6 @@ dashboard "ebs_snapshot_detail" {
         args = [self.input.snapshot_arn.value]
       }
 
-      with "kms_keys" {
-        sql = <<-EOQ
-        select
-          kms_key_id as key_arn
-        from
-          aws_ebs_snapshot
-        where
-          kms_key_id is not null
-          and arn = $1
-      EOQ
-
-        args = [self.input.snapshot_arn.value]
-      }
-
       with "ec2_amis" {
         sql = <<-EOQ
           select
@@ -116,6 +102,20 @@ dashboard "ebs_snapshot_detail" {
         args = [self.input.snapshot_arn.value]
       }
 
+      with "kms_keys" {
+        sql = <<-EOQ
+        select
+          kms_key_id as key_arn
+        from
+          aws_ebs_snapshot
+        where
+          kms_key_id is not null
+          and arn = $1
+        EOQ
+
+        args = [self.input.snapshot_arn.value]
+      }
+
       nodes = [
         node.ebs_snapshot,
         node.ebs_volume,
@@ -134,9 +134,9 @@ dashboard "ebs_snapshot_detail" {
       args = {
         ebs_snapshot_arns             = [self.input.snapshot_arn.value]
         ebs_volume_arns               = with.ebs_volumes.rows[*].volume_arn
-        kms_key_arns                  = with.kms_keys.rows[*].key_arn
         ec2_image_ids                 = with.ec2_amis.rows[*].image_id
         ec2_launch_configuration_arns = with.ec2_launch_configurations.rows[*].launch_configuration_arn
+        kms_key_arns                  = with.kms_keys.rows[*].key_arn
       }
     }
   }
