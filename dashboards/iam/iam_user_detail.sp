@@ -56,12 +56,13 @@ dashboard "iam_user_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "attached_policies" {
+      with "iam_groups" {
         sql = <<-EOQ
           select
-            jsonb_array_elements_text(attached_policy_arns) as policy_arn
+            g ->> 'Arn' as group_arn
           from
-            aws_iam_user
+            aws_iam_user,
+            jsonb_array_elements(groups) as g
           where
             arn = $1
         EOQ
@@ -69,13 +70,12 @@ dashboard "iam_user_detail" {
         args = [self.input.user_arn.value]
       }
 
-      with "groups" {
+      with "iam_policies" {
         sql = <<-EOQ
           select
-            g ->> 'Arn' as group_arn
+            jsonb_array_elements_text(attached_policy_arns) as policy_arn
           from
-            aws_iam_user,
-            jsonb_array_elements(groups) as g
+            aws_iam_user
           where
             arn = $1
         EOQ
@@ -99,8 +99,8 @@ dashboard "iam_user_detail" {
       ]
 
       args = {
-        iam_group_arns  = with.groups.rows[*].group_arn
-        iam_policy_arns = with.attached_policies.rows[*].policy_arn
+        iam_group_arns  = with.iam_groups.rows[*].group_arn
+        iam_policy_arns = with.iam_policies.rows[*].policy_arn
         iam_user_arns   = [self.input.user_arn.value]
       }
     }
@@ -294,9 +294,6 @@ query "iam_user_direct_attached_policy_count_for_user" {
 
   param "arn" {}
 }
-
-
-
 
 query "iam_user_overview" {
   sql = <<-EOQ
@@ -539,129 +536,4 @@ query "iam_all_policies_for_user" {
   param "arn" {}
 }
 
-node "iam_user" {
 
-  category = category.iam_user
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      name as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Path', path,
-        'Create Date', create_date,
-        'MFA Enabled', mfa_enabled::text,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_iam_user
-    where
-      arn = any($1);
-  EOQ
-
-  param "iam_user_arns" {}
-}
-
-edge "iam_user_to_iam_policy" {
-  title = "has policy"
-
-  sql = <<-EOQ
-   select
-      user_arn as from_id,
-      policy_arn as to_id
-    from
-      unnest($1::text[]) as user_arn,
-      unnest($2::text[]) as policy_arn
-  EOQ
-
-  param "iam_user_arns" {}
-  param "iam_policy_arns" {}
-}
-
-node "iam_user_inline_policy" {
-  category = category.iam_inline_policy
-
-  sql = <<-EOQ
-    select
-      concat(u.arn, ':inline_', i ->> 'PolicyName') as id,
-      i ->> 'PolicyName' as title,
-      jsonb_build_object(
-        'PolicyName', i ->> 'PolicyName',
-        'Type', 'Inline Policy'
-      ) as properties
-    from
-      aws_iam_user as u,
-      jsonb_array_elements(inline_policies_std) as i
-    where
-      u.arn = any($1)
-  EOQ
-
-  param "iam_user_arns" {}
-}
-
-edge "iam_user_to_inline_policy" {
-  title = "inline policy"
-
-  sql = <<-EOQ
-    select
-      u.arn as from_id,
-      concat(u.arn, ':inline_', i ->> 'PolicyName') as to_id
-    from
-      aws_iam_user as u,
-      jsonb_array_elements(inline_policies_std) as i
-    where
-      u.arn = any($1)
-  EOQ
-
-  param "iam_user_arns" {}
-}
-
-
-
-
-node "iam_user_access_key" {
-  category = category.iam_access_key
-
-  sql = <<-EOQ
-    select
-      a.access_key_id as id,
-      a.access_key_id as title,
-      jsonb_build_object(
-        'Key Id', a.access_key_id,
-        'Status', a.status,
-        'Create Date', a.create_date,
-        'Last Used Date', a.access_key_last_used_date,
-        'Last Used Service', a.access_key_last_used_service,
-        'Last Used Region', a.access_key_last_used_region
-      ) as properties
-    from
-      aws_iam_access_key as a,
-      aws_iam_user as u
-    where
-      u.name = a.user_name
-      and u.account_id = a.account_id
-      and u.arn  = any($1);
-  EOQ
-
-  param "iam_user_arns" {}
-}
-
-edge "iam_user_to_iam_access_key" {
-  title = "access key"
-
-  sql = <<-EOQ
-    select
-      u.arn as from_id,
-      a.access_key_id as to_id
-    from
-      aws_iam_access_key as a,
-      aws_iam_user as u
-    where
-      u.name = a.user_name
-      and u.account_id = a.account_id
-      and u.arn  = any($1);
-  EOQ
-
-  param "iam_user_arns" {}
-}

@@ -683,3 +683,26 @@ edge "emr_instance_group_to_emr_instance_edge" {
 
   param "arn" {}
 }
+
+node "emr_cluster" {
+  category = category.emr_cluster
+
+  sql = <<-EOQ
+     select
+      id as id,
+      title as title,
+      jsonb_build_object(
+        'ARN', cluster_arn,
+        'State', state,
+        'Log URI', log_uri,
+        'Auto Terminate', auto_terminate::text,
+        'Account ID', account_id,
+        'Region', region ) as properties
+    from
+      aws_emr_cluster
+    where
+      cluster_arn = any($1);
+  EOQ
+
+  param "emr_cluster_arns" {}
+}

@@ -101,12 +101,11 @@ edge "ec2_instance_to_iam_role" {
       aws_iam_role as r,
       jsonb_array_elements_text(instance_profile_arns) as instance_profile
     where
-      i.arn = $1
+      i.arn = any($1)
       and instance_profile = i.iam_instance_profile_arn;
   EOQ
 
   param "ec2_instance_arns" {}
-  param "iam_role_arns" {}
 }
 
 edge "ec2_instance_to_ec2_key_pair" {
