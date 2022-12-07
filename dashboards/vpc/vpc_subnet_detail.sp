@@ -158,6 +158,19 @@ dashboard "vpc_subnet_detail" {
         args = [self.input.subnet_id.value]
       }
 
+      with "sagemaker_notebook_instances" {
+        sql = <<-EOQ
+          select
+            arn as notebook_instance_arn
+          from
+            aws_sagemaker_notebook_instance
+          where
+            subnet_id = $1;
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
       with "vpc_flow_logs" {
         sql = <<-EOQ
           select
@@ -193,11 +206,11 @@ dashboard "vpc_subnet_detail" {
         node.ec2_network_load_balancer,
         node.lambda_function,
         node.rds_db_instance,
+        node.sagemaker_notebook_instance,
         node.vpc_flow_log,
         node.vpc_network_acl,
         node.vpc_route_table,
         node.vpc_subnet,
-        node.vpc_subnet_sagemaker_notebook_instance,
         node.vpc_vpc
       ]
 
@@ -226,6 +239,7 @@ dashboard "vpc_subnet_detail" {
         ec2_network_load_balancer_arns     = with.ec2_network_load_balancers.rows[*].nlb_arn
         lambda_function_arns               = with.lambda_functions.rows[*].lambda_arn
         rds_db_instance_arns               = with.rds_db_instances.rows[*].rds_instance_arn
+        sagemaker_notebook_instance_arns   = with.sagemaker_notebook_instances.rows[*].notebook_instance_arn
         vpc_flow_log_ids                   = with.vpc_flow_logs.rows[*].flow_log_id
         vpc_subnet_ids                     = [self.input.subnet_id.value]
         vpc_vpc_ids                        = with.vpc_vpcs.rows[*].vpc_id
@@ -610,7 +624,7 @@ edge "vpc_subnet_to_lambda_function" {
   param "vpc_subnet_ids" {}
 }
 
-node "vpc_subnet_sagemaker_notebook_instance" {
+node "sagemaker_notebook_instance" {
   category = category.sagemaker_notebook_instance
 
   sql = <<-EOQ
@@ -627,10 +641,10 @@ node "vpc_subnet_sagemaker_notebook_instance" {
     from
       aws_sagemaker_notebook_instance
     where
-      subnet_id = any($1);
+      arn = any($1);
   EOQ
 
-  param "vpc_subnet_ids" {}
+  param "sagemaker_notebook_instance_arns" {}
 }
 
 edge "vpc_subnet_to_sagemaker_notebook_instance" {

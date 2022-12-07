@@ -219,6 +219,20 @@ dashboard "vpc_security_group_detail" {
         args = [self.input.security_group_id.value]
       }
 
+      with "sagemaker_notebook_instances" {
+        sql = <<-EOQ
+          select
+            arn as notebook_instance_arn
+          from
+            aws_sagemaker_notebook_instance,
+            jsonb_array_elements_text(security_groups) as sg
+          where
+            sg = $1;
+        EOQ
+
+        args = [self.input.security_group_id.value]
+      }
+
       with "vpc_vpcs" {
         sql = <<-EOQ
           select
@@ -281,6 +295,7 @@ dashboard "vpc_security_group_detail" {
         rds_db_cluster_arns                = with.rds_db_clusters.rows[*].rds_db_cluster_arn
         rds_db_instance_arns               = with.rds_db_instances.rows[*].rds_db_instance_arn
         redshift_cluster_arns              = with.redshift_clusters.rows[*].redshift_cluster_arn
+        sagemaker_notebook_instance_arns   = with.sagemaker_notebook_instances.rows[*].notebook_instance_arn
         vpc_security_group_ids             = [self.input.security_group_id.value]
         vpc_vpc_ids                        = with.vpc_vpcs.rows[*].vpc_id
       }
@@ -1648,31 +1663,6 @@ edge "vpc_security_group_to_elasticache_cluster" {
       jsonb_array_elements(security_groups) as sg
     where
       sg ->> 'SecurityGroupId' = $1;
-  EOQ
-
-  param "vpc_security_group_ids" {}
-}
-
-node "sagemaker_notebook_instance" {
-  category = category.sagemaker_notebook_instance
-
-  sql = <<-EOQ
-    select
-      ni.arn as id,
-      ni.title as title,
-      jsonb_build_object(
-        'ARN', ni.arn,
-        'Status', ni.notebook_instance_status,
-        'Instance Type', ni.instance_type,
-        'Region', ni.region,
-        'Account ID', ni.account_id
-      ) as properties
-    from
-      aws_sagemaker_notebook_instance ni,
-      jsonb_array_elements_text(ni.security_groups) as sg
-      join aws_vpc_security_group vsg on vsg.group_id = sg
-    where
-      vsg.group_id = any($1);
   EOQ
 
   param "vpc_security_group_ids" {}
