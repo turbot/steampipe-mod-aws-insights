@@ -28,23 +28,22 @@ node "vpc_nat_gateway" {
 
   sql = <<-EOQ
     select
-      n.arn as id,
-      n.title as title,
+      arn as id,
+      title as title,
       jsonb_build_object(
-        'ARN', n.arn,
-        'NAT Gateway ID', n.nat_gateway_id,
-        'State', n.state,
-        'Account ID', n.account_id,
-        'Region', n.region
+        'ARN', arn,
+        'NAT Gateway ID', nat_gateway_id,
+        'State', state,
+        'Account ID', account_id,
+        'Region', region
       ) as properties
     from
-      aws_vpc_nat_gateway as n,
-      jsonb_array_elements(nat_gateway_addresses) as a
+      aws_vpc_nat_gateway
     where
-      a ->> 'NetworkInterfaceId' = any($1);
+      arn = any($1);
   EOQ
 
-  param "ec2_network_interface_ids" {}
+  param "vpc_nat_gateway_arns" {}
 }
 
 node "vpc_security_group" {
