@@ -273,7 +273,7 @@ node "vpc_flow_log" {
     from
       aws_vpc_flow_log
     where
-      flow_log_id = any($1 ::text[]);
+      flow_log_id = any($1);
   EOQ
 
   param "vpc_flow_log_ids" {}
@@ -312,7 +312,7 @@ edge "vpc_flow_log_to_cloudwatch_log_group" {
       f.log_group_name = g.name
       and f.log_destination_type = 'cloud-watch-logs'
       and f.region = g.region
-      and f.flow_log_id = $1;
+      and f.flow_log_id = any($1);
   EOQ
 
   param "vpc_flow_log_ids" {}

@@ -360,26 +360,6 @@ query "sns_topic_policy_standard" {
   param "arn" {}
 }
 
-node "sns_topic" {
-  category = category.sns_topic
-
-  sql = <<-EOQ
-    select
-      topic_arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', topic_arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_sns_topic as q
-    where
-      q.topic_arn = any($1);
-  EOQ
-
-  param "sns_topic_arns" {}
-}
 
 edge "sns_topic_to_kms_key" {
   title = "encrypted with"
@@ -452,22 +432,6 @@ edge "redshift_cluster_to_sns_topic" {
   EOQ
 
   param "redshift_cluster_arns" {}
-}
-
-edge "cloudtrail_trail_to_sns_topic" {
-  title = "notifies"
-
-  sql = <<-EOQ
-    select
-      arn as from_id,
-      sns_topic_arn as to_id
-    from
-      aws_cloudtrail_trail
-    where
-      arn = any($1);
-  EOQ
-
-  param "cloudtrail_trail_arns" {}
 }
 
 node "cloudformation_stack" {
