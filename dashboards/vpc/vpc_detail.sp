@@ -1565,28 +1565,6 @@ edge "vpc_to_transit_gateway" {
   param "vpc_vpc_ids" {}
 }
 
-node "vpc_nat_gateway" {
-  category = category.vpc_nat_gateway
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'ID', nat_gateway_id,
-        'Region', region,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_vpc_nat_gateway
-    where
-      vpc_id = any($1);
-  EOQ
-
-  param "vpc_vpc_ids" {}
-}
-
 edge "vpc_subnet_to_nat_gateway" {
   title = "nat gateway"
 
