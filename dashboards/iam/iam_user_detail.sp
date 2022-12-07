@@ -56,6 +56,19 @@ dashboard "iam_user_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "attached_policies" {
+        sql = <<-EOQ
+          select
+            jsonb_array_elements_text(attached_policy_arns) as policy_arn
+          from
+            aws_iam_user
+          where
+            arn = $1
+        EOQ
+
+        args = [self.input.user_arn.value]
+      }
+
       with "groups" {
         sql = <<-EOQ
           select
@@ -70,32 +83,18 @@ dashboard "iam_user_detail" {
         args = [self.input.user_arn.value]
       }
 
-
-      with "attached_policies" {
-        sql = <<-EOQ
-          select
-            jsonb_array_elements_text(attached_policy_arns) as policy_arn
-          from
-            aws_iam_user
-          where
-            arn = $1
-        EOQ
-
-        args = [self.input.user_arn.value]
-      }
-
       nodes = [
-        node.iam_user,
         node.iam_group,
         node.iam_policy,
+        node.iam_user,
         node.iam_user_access_key,
         node.iam_user_inline_policy,
       ]
 
       edges = [
         edge.iam_group_to_iam_user,
-        edge.iam_user_to_iam_policy,
         edge.iam_user_to_iam_access_key,
+        edge.iam_user_to_iam_policy,
         edge.iam_user_to_inline_policy,
       ]
 

@@ -56,71 +56,6 @@ dashboard "vpc_detail" {
       width = 12
       type  = "graph"
 
-      with "vpc_flow_logs" {
-        sql = <<-EOQ
-          select
-            flow_log_id as flow_log_id
-          from
-            aws_vpc_flow_log
-          where
-            resource_id = $1;
-        EOQ
-
-        args = [self.input.vpc_id.value]
-      }
-
-      with "vpc_subnets" {
-        sql = <<-EOQ
-          select
-            subnet_id as subnet_id
-          from
-            aws_vpc_subnet
-          where
-            vpc_id = $1;
-        EOQ
-
-        args = [self.input.vpc_id.value]
-      }
-
-      with "vpc_security_groups" {
-        sql = <<-EOQ
-          select
-            group_id as security_group_id
-          from
-            aws_vpc_security_group
-          where
-            vpc_id = $1;
-        EOQ
-
-        args = [self.input.vpc_id.value]
-      }
-
-      with "ec2_instances" {
-        sql = <<-EOQ
-          select
-            arn as instance_arn
-          from
-            aws_ec2_instance
-          where
-            vpc_id = $1;
-        EOQ
-
-        args = [self.input.vpc_id.value]
-      }
-
-      with "lambda_functions" {
-        sql = <<-EOQ
-          select
-            arn as function_arn
-          from
-            aws_lambda_function
-          where
-            vpc_id = $1;
-        EOQ
-
-        args = [self.input.vpc_id.value]
-      }
-
       with "ec2_application_load_balancers" {
         sql = <<-EOQ
           select
@@ -147,6 +82,32 @@ dashboard "vpc_detail" {
         args = [self.input.vpc_id.value]
       }
 
+      with "ec2_gateway_load_balancers" {
+        sql = <<-EOQ
+          select
+            arn as glb_arn
+          from
+            aws_ec2_gateway_load_balancer
+          where
+            vpc_id = $1;
+        EOQ
+
+        args = [self.input.vpc_id.value]
+      }
+
+      with "ec2_instances" {
+        sql = <<-EOQ
+          select
+            arn as instance_arn
+          from
+            aws_ec2_instance
+          where
+            vpc_id = $1;
+        EOQ
+
+        args = [self.input.vpc_id.value]
+      }
+
       with "ec2_network_load_balancers" {
         sql = <<-EOQ
           select
@@ -160,12 +121,12 @@ dashboard "vpc_detail" {
         args = [self.input.vpc_id.value]
       }
 
-      with "ec2_gateway_load_balancers" {
+      with "lambda_functions" {
         sql = <<-EOQ
           select
-            arn as glb_arn
+            arn as function_arn
           from
-            aws_ec2_gateway_load_balancer
+            aws_lambda_function
           where
             vpc_id = $1;
         EOQ
@@ -212,70 +173,109 @@ dashboard "vpc_detail" {
         args = [self.input.vpc_id.value]
       }
 
+      with "vpc_flow_logs" {
+        sql = <<-EOQ
+          select
+            flow_log_id as flow_log_id
+          from
+            aws_vpc_flow_log
+          where
+            resource_id = $1;
+        EOQ
+
+        args = [self.input.vpc_id.value]
+      }
+
+      with "vpc_security_groups" {
+        sql = <<-EOQ
+          select
+            group_id as security_group_id
+          from
+            aws_vpc_security_group
+          where
+            vpc_id = $1;
+        EOQ
+
+        args = [self.input.vpc_id.value]
+      }
+
+      with "vpc_subnets" {
+        sql = <<-EOQ
+          select
+            subnet_id as subnet_id
+          from
+            aws_vpc_subnet
+          where
+            vpc_id = $1;
+        EOQ
+
+        args = [self.input.vpc_id.value]
+      }
+
       nodes = [
-        node.vpc_vpc,
-        node.vpc_flow_log,
-        node.vpc_subnet,
-        node.vpc_security_group,
-        node.ec2_instance,
-        node.lambda_function,
+
         node.ec2_application_load_balancer,
-        node.ec2_network_load_balancer,
         node.ec2_classic_load_balancer,
         node.ec2_gateway_load_balancer,
+        node.ec2_instance,
+        node.ec2_network_load_balancer,
+        node.lambda_function,
         node.rds_db_instance,
         node.redshift_cluster,
-
-        node.vpc_s3_access_point,
-        node.vpc_peered_vpc,
         node.vpc_az,
-        node.vpc_igw,
         node.vpc_az_route_table,
         node.vpc_endpoint,
-        node.vpc_transit_gateway,
+        node.vpc_flow_log,
+        node.vpc_igw,
         node.vpc_nat_gateway,
-        node.vpc_vpn_gateway,
+        node.vpc_peered_vpc,
+        node.vpc_s3_access_point,
+        node.vpc_security_group,
+        node.vpc_subnet,
+        node.vpc_transit_gateway,
+        node.vpc_vpc,
+        node.vpc_vpn_gateway
       ]
 
       edges = [
-        edge.vpc_to_az,
-        edge.vpc_to_vpc_flow_log,
-        edge.vpc_az_to_vpc_subnet,
-        edge.vpc_to_igw,
-        edge.vpc_subnet_to_route_table,
-        edge.vpc_to_vpc_route_table,
-        edge.vpc_subnet_to_endpoint,
-        edge.vpc_to_transit_gateway,
-        edge.vpc_subnet_to_nat_gateway,
-        edge.vpc_to_vpn_gateway,
-        edge.vpc_to_vpc_security_group,
 
-        edge.vpc_subnet_to_ec2_instance,
-        edge.vpc_subnet_to_lambda_function,
+        edge.vpc_az_to_vpc_subnet,
+        edge.vpc_peered_vpc,
         edge.vpc_subnet_to_alb,
-        edge.vpc_subnet_to_nlb,
         edge.vpc_subnet_to_clb,
+        edge.vpc_subnet_to_ec2_instance,
+        edge.vpc_subnet_to_endpoint,
         edge.vpc_subnet_to_glb,
+        edge.vpc_subnet_to_lambda_function,
+        edge.vpc_subnet_to_nat_gateway,
+        edge.vpc_subnet_to_nlb,
         edge.vpc_subnet_to_rds_db_instance,
+        edge.vpc_subnet_to_route_table,
+        edge.vpc_to_az,
+        edge.vpc_to_igw,
         edge.vpc_to_s3_access_point,
-        edge.vpc_peered_vpc
+        edge.vpc_to_transit_gateway,
+        edge.vpc_to_vpc_flow_log,
+        edge.vpc_to_vpc_route_table,
+        edge.vpc_to_vpc_security_group,
+        edge.vpc_to_vpn_gateway
       ]
 
       args = {
-        vpc_id                             = self.input.vpc_id.value
-        vpc_vpc_ids                        = [self.input.vpc_id.value]
-        vpc_security_group_ids             = with.vpc_security_groups.rows[*].security_group_id
-        vpc_subnet_ids                     = with.vpc_subnets.rows[*].subnet_id
-        ec2_classic_load_balancer_arns     = with.ec2_classic_load_balancers.rows[*].clb_arn
         ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
-        ec2_network_load_balancer_arns     = with.ec2_network_load_balancers.rows[*].nlb_arn
+        ec2_classic_load_balancer_arns     = with.ec2_classic_load_balancers.rows[*].clb_arn
         ec2_gateway_load_balancer_arns     = with.ec2_gateway_load_balancers.rows[*].glb_arn
         ec2_instance_arns                  = with.ec2_instances.rows[*].instance_arn
-        redshift_cluster_arns              = with.redshift_clusters.rows[*].redshift_cluster_arn
+        ec2_network_load_balancer_arns     = with.ec2_network_load_balancers.rows[*].nlb_arn
         lambda_function_arns               = with.lambda_functions.rows[*].function_arn
         rds_db_instance_arns               = with.rds_db_instances.rows[*].rds_instance_arn
-        vpc_flow_log_ids                   = with.vpc_flow_logs.rows[*].flow_log_id
+        redshift_cluster_arns              = with.redshift_clusters.rows[*].redshift_cluster_arn
         vpc_endpoint_ids                   = with.vpc_endpoints.rows[*].vpc_endpoint_id
+        vpc_flow_log_ids                   = with.vpc_flow_logs.rows[*].flow_log_id
+        vpc_id                             = self.input.vpc_id.value
+        vpc_security_group_ids             = with.vpc_security_groups.rows[*].security_group_id
+        vpc_subnet_ids                     = with.vpc_subnets.rows[*].subnet_id
+        vpc_vpc_ids                        = [self.input.vpc_id.value]
       }
     }
 

@@ -40,23 +40,7 @@ dashboard "vpc_flow_logs_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "s3_buckets" {
-        sql = <<-EOQ
-          select
-            distinct s.arn as bucket_arn
-          from
-            aws_vpc_flow_log as f,
-            aws_s3_bucket as s
-          where
-            f.bucket_name = s.name
-            and f.log_destination_type = 's3'
-            and f.flow_log_id = $1;
-        EOQ
-
-        args = [self.input.flow_log_id.value]
-      }
-
-      with "log_groups" {
+      with "cloudwatch_log_groups" {
         sql = <<-EOQ
           select
             distinct g.arn as log_group_arn
@@ -73,7 +57,21 @@ dashboard "vpc_flow_logs_detail" {
         args = [self.input.flow_log_id.value]
       }
 
-      with "roles" {
+      with "ec2_network_interfaces" {
+        sql = <<-EOQ
+          select
+            resource_id as eni_id
+          from
+            aws_vpc_flow_log
+          where
+            resource_id like 'eni-%'
+            and flow_log_id = $1;
+        EOQ
+
+        args = [self.input.flow_log_id.value]
+      }
+
+      with "iam_roles" {
         sql = <<-EOQ
           select
             deliver_logs_permission_arn as role_arn
@@ -87,15 +85,17 @@ dashboard "vpc_flow_logs_detail" {
         args = [self.input.flow_log_id.value]
       }
 
-      with "enis" {
+      with "s3_buckets" {
         sql = <<-EOQ
           select
-            resource_id as eni_id
+            distinct s.arn as bucket_arn
           from
-            aws_vpc_flow_log
+            aws_vpc_flow_log as f,
+            aws_s3_bucket as s
           where
-            resource_id like 'eni-%'
-            and flow_log_id = $1;
+            f.bucket_name = s.name
+            and f.log_destination_type = 's3'
+            and f.flow_log_id = $1;
         EOQ
 
         args = [self.input.flow_log_id.value]
@@ -130,32 +130,32 @@ dashboard "vpc_flow_logs_detail" {
       }
 
       nodes = [
-        node.vpc_flow_log,
-        node.s3_bucket,
         node.cloudwatch_log_group,
-        node.iam_role,
         node.ec2_network_interface,
+        node.iam_role,
+        node.s3_bucket,
+        node.vpc_flow_log,
         node.vpc_subnet,
         node.vpc_vpc
       ]
 
       edges = [
-        edge.vpc_flow_log_to_s3_bucket,
+        edge.ec2_network_interface_to_vpc_flow_log,
         edge.vpc_flow_log_to_cloudwatch_log_group,
         edge.vpc_flow_log_to_iam_role,
-        edge.ec2_network_interface_to_vpc_flow_log,
+        edge.vpc_flow_log_to_s3_bucket,
         edge.vpc_subnet_to_vpc_flow_log,
         edge.vpc_to_vpc_flow_log
       ]
 
       args = {
-        iam_role_arns             = with.roles.rows[*].role_arn
+        cloudwatch_log_group_arns = with.cloudwatch_log_groups.rows[*].log_group_arn
+        ec2_network_interface_ids = with.ec2_network_interfaces.rows[*].eni_id
+        iam_role_arns             = with.iam_roles.rows[*].role_arn
         s3_bucket_arns            = with.s3_buckets.rows[*].bucket_arn
-        ec2_network_interface_ids = with.enis.rows[*].eni_id
+        vpc_flow_log_ids          = [self.input.flow_log_id.value]
         vpc_subnet_ids            = with.vpc_subnets.rows[*].subnet_id
         vpc_vpc_ids               = with.vpc_vpcs.rows[*].vpc_id
-        cloudwatch_log_group_arns = with.log_groups.rows[*].log_group_arn
-        vpc_flow_log_ids          = [self.input.flow_log_id.value]
       }
     }
   }

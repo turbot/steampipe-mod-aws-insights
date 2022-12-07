@@ -57,6 +57,20 @@ dashboard "sqs_queue_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "eventbridge_rules" {
+        sql = <<-EOQ
+          select
+            arn as eventbridge_rule_arn
+          from
+            aws_eventbridge_rule as r,
+            jsonb_array_elements(targets) as t
+          where
+            t ->> 'Arn' = $1;
+        EOQ
+
+        args = [self.input.queue_arn.value]
+      }
+
       with "kms_keys" {
         sql = <<-EOQ
           select
@@ -74,6 +88,19 @@ dashboard "sqs_queue_detail" {
         args = [self.input.queue_arn.value]
       }
 
+      with "lambda_functions" {
+        sql = <<-EOQ
+          select
+            arn as function_arn
+          from
+            aws_lambda_function
+          where
+            dead_letter_config_target_arn = $1;
+        EOQ
+
+        args = [self.input.queue_arn.value]
+      }
+
       with "s3_buckets" {
         sql = <<-EOQ
           select
@@ -84,19 +111,6 @@ dashboard "sqs_queue_detail" {
           where
             event_notification_configuration -> 'QueueConfigurations' <> 'null'
             and q ->> 'QueueArn' = $1;
-        EOQ
-
-        args = [self.input.queue_arn.value]
-      }
-
-      with "lambda_functions" {
-        sql = <<-EOQ
-          select
-            arn as function_arn
-          from
-            aws_lambda_function
-          where
-            dead_letter_config_target_arn = $1;
         EOQ
 
         args = [self.input.queue_arn.value]
@@ -132,51 +146,37 @@ dashboard "sqs_queue_detail" {
         args = [self.input.queue_arn.value]
       }
 
-      with "eventbridge_rules" {
-        sql = <<-EOQ
-          select
-            arn as eventbridge_rule_arn
-          from
-            aws_eventbridge_rule as r,
-            jsonb_array_elements(targets) as t
-          where
-            t ->> 'Arn' = $1;
-        EOQ
-
-        args = [self.input.queue_arn.value]
-      }
-
       nodes = [
+        node.eventbridge_rule,
+        node.kms_key,
+        node.lambda_function,
+        node.s3_bucket,
+        node.sqs_dead_letter_queue,
         node.sqs_queue,
         node.sqs_queue_sns_topic_subscription,
-        node.sqs_dead_letter_queue,
-        node.kms_key,
-        node.s3_bucket,
-        node.lambda_function,
         node.vpc_endpoint,
-        node.vpc_vpc,
-        node.eventbridge_rule
+        node.vpc_vpc
       ]
 
       edges = [
+        edge.eventbridge_rule_to_sqs_queue,
+        edge.lambda_function_to_sqs_queue,
+        edge.s3_bucket_to_sqs_queue,
+        edge.sqs_queue_to_kms_key,
         edge.sqs_queue_to_sns_topic_subscription,
         edge.sqs_queue_to_sqs_dead_letter_queue,
-        edge.sqs_queue_to_kms_key,
-        edge.s3_bucket_to_sqs_queue,
-        edge.lambda_function_to_sqs_queue,
         edge.sqs_queue_to_vpc_endpoint,
-        edge.vpc_endpoint_to_vpc,
-        edge.eventbridge_rule_to_sqs_queue
+        edge.vpc_endpoint_to_vpc
       ]
 
       args = {
-        sqs_queue_arns        = [self.input.queue_arn.value]
-        kms_key_arns          = with.kms_keys.rows[*].key_arn
         eventbridge_rule_arns = with.eventbridge_rules.rows[*].eventbridge_rule_arn
-        vpc_vpc_ids           = with.vpc_vpcs.rows[*].vpc_id
-        vpc_endpoint_ids      = with.vpc_endpoints.rows[*].vpc_endpoint_id
+        kms_key_arns          = with.kms_keys.rows[*].key_arn
         lambda_function_arns  = with.lambda_functions.rows[*].function_arn
         s3_bucket_arns        = with.s3_buckets.rows[*].bucket_arn
+        sqs_queue_arns        = [self.input.queue_arn.value]
+        vpc_endpoint_ids      = with.vpc_endpoints.rows[*].vpc_endpoint_id
+        vpc_vpc_ids           = with.vpc_vpcs.rows[*].vpc_id
       }
     }
   }

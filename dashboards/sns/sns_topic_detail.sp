@@ -39,6 +39,32 @@ dashboard "sns_topic_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "cloudtrail_trails" {
+        sql = <<-EOQ
+          select
+            arn as trail_arn
+          from
+            aws_cloudtrail_trail
+          where
+            sns_topic_arn = $1;
+        EOQ
+
+        args = [self.input.topic_arn.value]
+      }
+
+      with "elasticache_clusters" {
+        sql = <<-EOQ
+          select
+            arn as elasticache_cluster_arn
+          from
+            aws_elasticache_cluster
+          where
+            notification_configuration ->> 'TopicArn' = $1;
+        EOQ
+
+        args = [self.input.topic_arn.value]
+      }
+
       with "kms_keys" {
         sql = <<-EOQ
           select
@@ -48,25 +74,6 @@ dashboard "sns_topic_detail" {
           where
             kms_master_key_id is not null
             and topic_arn = $1;
-        EOQ
-
-        args = [self.input.topic_arn.value]
-      }
-
-      with "s3_buckets" {
-        sql = <<-EOQ
-          select
-            b.arn as bucket_arn
-          from
-            aws_s3_bucket as b,
-            jsonb_array_elements(
-              case jsonb_typeof(event_notification_configuration -> 'TopicConfigurations')
-                when 'array' then (event_notification_configuration -> 'TopicConfigurations')
-                else null end
-              )
-              as t
-          where
-            t ->> 'TopicArn' = $1;
         EOQ
 
         args = [self.input.topic_arn.value]
@@ -104,63 +111,56 @@ dashboard "sns_topic_detail" {
         args = [self.input.topic_arn.value]
       }
 
-      with "cloudtrail_trails" {
+      with "s3_buckets" {
         sql = <<-EOQ
           select
-            arn as trail_arn
+            b.arn as bucket_arn
           from
-            aws_cloudtrail_trail
+            aws_s3_bucket as b,
+            jsonb_array_elements(
+              case jsonb_typeof(event_notification_configuration -> 'TopicConfigurations')
+                when 'array' then (event_notification_configuration -> 'TopicConfigurations')
+                else null end
+              )
+              as t
           where
-            sns_topic_arn = $1;
-        EOQ
-
-        args = [self.input.topic_arn.value]
-      }
-
-      with "elasticache_clusters" {
-        sql = <<-EOQ
-          select
-            arn as elasticache_cluster_arn
-          from
-            aws_elasticache_cluster
-          where
-            notification_configuration ->> 'TopicArn' = $1;
+            t ->> 'TopicArn' = $1;
         EOQ
 
         args = [self.input.topic_arn.value]
       }
 
       nodes = [
-        node.sns_topic,
+        node.cloudformation_stack,
+        node.cloudtrail_trail,
+        node.elasticache_cluster,
         node.kms_key,
-        node.sns_topic_subscription,
-        node.s3_bucket,
         node.rds_db_instance,
         node.redshift_cluster,
-        node.cloudtrail_trail,
-        node.cloudformation_stack,
-        node.elasticache_cluster
+        node.s3_bucket,
+        node.sns_topic,
+        node.sns_topic_subscription
       ]
 
       edges = [
-        edge.sns_topic_to_kms_key,
-        edge.sns_topic_to_sns_topic_subscription,
-        edge.s3_bucket_to_sns_topic,
+        edge.cloudformation_stack_to_sns_topic,
+        edge.cloudtrail_trail_to_sns_topic,
+        edge.elasticache_cluster_to_sns_topic,
         edge.rds_db_instance_to_sns_topic,
         edge.redshift_cluster_to_sns_topic,
-        edge.cloudtrail_trail_to_sns_topic,
-        edge.cloudformation_stack_to_sns_topic,
-        edge.elasticache_cluster_to_sns_topic
+        edge.s3_bucket_to_sns_topic,
+        edge.sns_topic_to_kms_key,
+        edge.sns_topic_to_sns_topic_subscription
       ]
 
       args = {
-        sns_topic_arns           = [self.input.topic_arn.value]
+        cloudtrail_trail_arns    = with.cloudtrail_trails.rows[*].trail_arn
+        elasticache_cluster_arns = with.elasticache_clusters.rows[*].elasticache_cluster_arn
         kms_key_arns             = with.kms_keys.rows[*].key_arn
+        rds_db_instance_arns     = with.rds_db_instances.rows[*].db_instance_arn
         redshift_cluster_arns    = with.redshift_clusters.rows[*].cluster_arn
         s3_bucket_arns           = with.s3_buckets.rows[*].bucket_arn
-        cloudtrail_trail_arns    = with.cloudtrail_trails.rows[*].trail_arn
-        rds_db_instance_arns     = with.rds_db_instances.rows[*].db_instance_arn
-        elasticache_cluster_arns = with.elasticache_clusters.rows[*].elasticache_cluster_arn
+        sns_topic_arns           = [self.input.topic_arn.value]
       }
     }
   }

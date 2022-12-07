@@ -48,100 +48,6 @@ dashboard "vpc_subnet_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "vpc_vpcs" {
-        sql = <<-EOQ
-          select
-            vpc_id as vpc_id
-          from
-            aws_vpc_subnet
-          where
-            subnet_id = $1;
-        EOQ
-
-        args = [self.input.subnet_id.value]
-      }
-
-      with "rds_db_instances" {
-        sql = <<-EOQ
-          select
-            arn as rds_instance_arn
-          from
-            aws_rds_db_instance,
-            jsonb_array_elements(subnets) as s
-          where
-            s ->> 'SubnetIdentifier' = $1;
-        EOQ
-
-        args = [self.input.subnet_id.value]
-      }
-
-      with "ec2_instances" {
-        sql = <<-EOQ
-          select
-            arn as instance_arn
-          from
-            aws_ec2_instance
-          where
-            subnet_id = $1;
-        EOQ
-
-        args = [self.input.subnet_id.value]
-      }
-
-      with "lambda_functions" {
-        sql = <<-EOQ
-          select
-            arn as lambda_arn
-          from
-            aws_lambda_function,
-            jsonb_array_elements_text(vpc_subnet_ids) as s
-          where
-            s = $1;
-        EOQ
-
-        args = [self.input.subnet_id.value]
-      }
-
-      with "vpc_flow_logs" {
-        sql = <<-EOQ
-          select
-            flow_log_id as flow_log_id
-          from
-            aws_vpc_flow_log
-          where
-            resource_id = $1;
-        EOQ
-
-        args = [self.input.subnet_id.value]
-      }
-
-      with "enis" {
-        sql = <<-EOQ
-          select
-            network_interface_id as eni_id
-          from
-            aws_ec2_network_interface
-          where
-            subnet_id = $1;
-        EOQ
-
-        args = [self.input.subnet_id.value]
-      }
-
-      with "ec2_gateway_load_balancers" {
-        sql = <<-EOQ
-          select
-            arn as glb_arn
-          from
-            aws_ec2_gateway_load_balancer,
-            jsonb_array_elements(availability_zones) as az
-          where
-            az ->> 'SubnetId' = $1;
-        EOQ
-
-        args = [self.input.subnet_id.value]
-      }
-
       with "ec2_application_load_balancers" {
         sql = <<-EOQ
           select
@@ -170,6 +76,46 @@ dashboard "vpc_subnet_detail" {
         args = [self.input.subnet_id.value]
       }
 
+      with "ec2_gateway_load_balancers" {
+        sql = <<-EOQ
+          select
+            arn as glb_arn
+          from
+            aws_ec2_gateway_load_balancer,
+            jsonb_array_elements(availability_zones) as az
+          where
+            az ->> 'SubnetId' = $1;
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
+      with "ec2_instances" {
+        sql = <<-EOQ
+          select
+            arn as instance_arn
+          from
+            aws_ec2_instance
+          where
+            subnet_id = $1;
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
+      with "ec2_network_interfaces" {
+        sql = <<-EOQ
+          select
+            network_interface_id as eni_id
+          from
+            aws_ec2_network_interface
+          where
+            subnet_id = $1;
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
       with "ec2_network_load_balancers" {
         sql = <<-EOQ
           select
@@ -184,50 +130,104 @@ dashboard "vpc_subnet_detail" {
         args = [self.input.subnet_id.value]
       }
 
+      with "lambda_functions" {
+        sql = <<-EOQ
+          select
+            arn as lambda_arn
+          from
+            aws_lambda_function,
+            jsonb_array_elements_text(vpc_subnet_ids) as s
+          where
+            s = $1;
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
+      with "rds_db_instances" {
+        sql = <<-EOQ
+          select
+            arn as rds_instance_arn
+          from
+            aws_rds_db_instance,
+            jsonb_array_elements(subnets) as s
+          where
+            s ->> 'SubnetIdentifier' = $1;
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
+      with "vpc_flow_logs" {
+        sql = <<-EOQ
+          select
+            flow_log_id as flow_log_id
+          from
+            aws_vpc_flow_log
+          where
+            resource_id = $1;
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
+      with "vpc_vpcs" {
+        sql = <<-EOQ
+          select
+            vpc_id as vpc_id
+          from
+            aws_vpc_subnet
+          where
+            subnet_id = $1;
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
       nodes = [
-        node.vpc_subnet,
-        node.vpc_vpc,
-        node.rds_db_instance,
-        node.ec2_instance,
-        node.lambda_function,
-        node.vpc_flow_log,
-        node.ec2_network_interface,
         node.ec2_application_load_balancer,
-        node.ec2_network_load_balancer,
         node.ec2_classic_load_balancer,
         node.ec2_gateway_load_balancer,
-        node.vpc_route_table,
+        node.ec2_instance,
+        node.ec2_network_interface,
+        node.ec2_network_load_balancer,
+        node.lambda_function,
+        node.rds_db_instance,
+        node.vpc_flow_log,
         node.vpc_network_acl,
+        node.vpc_route_table,
+        node.vpc_subnet,
         node.vpc_subnet_sagemaker_notebook_instance,
+        node.vpc_vpc
       ]
 
       edges = [
-        edge.vpc_to_vpc_subnet,
-        edge.vpc_subnet_to_vpc_flow_log,
-        edge.vpc_subnet_to_vpc_route_table,
-        edge.vpc_subnet_to_vpc_network_acl,
-        edge.vpc_subnet_to_rds_db_instance,
-        edge.vpc_subnet_to_ec2_instance,
-        edge.vpc_subnet_to_lambda_function,
-        edge.vpc_subnet_to_sagemaker_notebook_instance,
-        edge.vpc_subnet_to_network_interface,
         edge.vpc_subnet_to_alb,
         edge.vpc_subnet_to_clb,
+        edge.vpc_subnet_to_ec2_instance,
+        edge.vpc_subnet_to_glb,
+        edge.vpc_subnet_to_lambda_function,
+        edge.vpc_subnet_to_network_interface,
         edge.vpc_subnet_to_nlb,
-        edge.vpc_subnet_to_glb
+        edge.vpc_subnet_to_rds_db_instance,
+        edge.vpc_subnet_to_sagemaker_notebook_instance,
+        edge.vpc_subnet_to_vpc_flow_log,
+        edge.vpc_subnet_to_vpc_network_acl,
+        edge.vpc_subnet_to_vpc_route_table,
+        edge.vpc_to_vpc_subnet
       ]
 
       args = {
-        vpc_subnet_ids                     = [self.input.subnet_id.value]
-        ec2_network_interface_ids          = with.enis.rows[*].eni_id
-        vpc_flow_log_ids                   = with.vpc_flow_logs.rows[*].flow_log_id
-        lambda_function_arns               = with.lambda_functions.rows[*].lambda_arn
-        ec2_instance_arns                  = with.ec2_instances.rows[*].instance_arn
-        rds_db_instance_arns               = with.rds_db_instances.rows[*].rds_instance_arn
-        ec2_classic_load_balancer_arns     = with.ec2_classic_load_balancers.rows[*].clb_arn
         ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
-        ec2_network_load_balancer_arns     = with.ec2_network_load_balancers.rows[*].nlb_arn
+        ec2_classic_load_balancer_arns     = with.ec2_classic_load_balancers.rows[*].clb_arn
         ec2_gateway_load_balancer_arns     = with.ec2_gateway_load_balancers.rows[*].glb_arn
+        ec2_instance_arns                  = with.ec2_instances.rows[*].instance_arn
+        ec2_network_interface_ids          = with.ec2_network_interfaces.rows[*].eni_id
+        ec2_network_load_balancer_arns     = with.ec2_network_load_balancers.rows[*].nlb_arn
+        lambda_function_arns               = with.lambda_functions.rows[*].lambda_arn
+        rds_db_instance_arns               = with.rds_db_instances.rows[*].rds_instance_arn
+        vpc_flow_log_ids                   = with.vpc_flow_logs.rows[*].flow_log_id
+        vpc_subnet_ids                     = [self.input.subnet_id.value]
         vpc_vpc_ids                        = with.vpc_vpcs.rows[*].vpc_id
       }
     }
@@ -407,7 +407,7 @@ query "vpc_subnet_association" {
       aws_lambda_function,
       jsonb_array_elements(vpc_subnet_ids) as s
     where
-       trim((s::text ), '""') = $1
+      trim((s::text ), '""') = $1
 
     -- Sagemaker Notebook Instances
     union all
