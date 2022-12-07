@@ -120,6 +120,35 @@ dashboard "vpc_security_group_detail" {
         args = [self.input.security_group_id.value]
       }
 
+
+      with "ec2_launch_configurations" {
+        sql = <<-EOQ
+          select
+            launch_configuration_arn as launch_configuration_arn
+          from
+            aws_ec2_launch_configuration,
+            jsonb_array_elements_text(security_groups) as sg
+          where
+            sg = $1;
+        EOQ
+
+        args = [self.input.security_group_id.value]
+      }
+
+      with "efs_mount_targets" {
+        sql = <<-EOQ
+          select
+            mount_target_id as mount_target_id
+          from
+            aws_efs_mount_target,
+            jsonb_array_elements_text(security_groups) as sg
+          where
+            sg = $1;
+        EOQ
+
+        args = [self.input.security_group_id.value]
+      }
+
       with "elasticache_clusters" {
         sql = <<-EOQ
           select
@@ -245,6 +274,8 @@ dashboard "vpc_security_group_detail" {
         ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
         ec2_classic_load_balancer_arns     = with.ec2_classic_load_balancers.rows[*].clb_arn
         ec2_instance_arns                  = with.ec2_instances.rows[*].instance_arn
+        ec2_launch_configuration_arns      = with.ec2_launch_configurations.rows[*].launch_configuration_arn
+        efs_mount_target_ids               = with.efs_mount_targets.rows[*].mount_target_id
         elasticache_cluster_arns           = with.elasticache_clusters.rows[*].elasticache_cluster_arn
         lambda_function_arns               = with.lambda_functions.rows[*].lambda_arn
         rds_db_cluster_arns                = with.rds_db_clusters.rows[*].rds_db_cluster_arn
@@ -1456,34 +1487,6 @@ edge "vpc_security_group_to_lambda_function" {
   param "vpc_security_group_ids" {}
 }
 
-node "efs_mount_target" {
-  category = category.efs_mount_target
-
-  sql = <<-EOQ
-    select
-      mt.mount_target_id as id,
-      mt.title as title,
-      jsonb_build_object(
-        'ID', mt.mount_target_id,
-        'Availability Zone', mt.availability_zone_name,
-        'File System ID', mt.file_system_id,
-        'IP Address', mt.ip_address,
-        'Life Cycle State', mt.life_cycle_state,
-        'ENI ID' ,network_interface_id,
-        'Account ID', mt.account_id,
-        'Region', mt.region
-      ) as properties
-    from
-      aws_efs_mount_target as mt,
-      jsonb_array_elements_text(mt.security_groups) as sg
-      join aws_vpc_security_group vsg on vsg.group_id = sg
-    where
-      vsg.group_id = any($1);
-  EOQ
-
-  param "vpc_security_group_ids" {}
-}
-
 edge "vpc_security_group_to_efs_mount_target" {
   title = "efs mount target"
 
@@ -1548,29 +1551,6 @@ edge "vpc_security_group_to_ec2_application_load_balancer" {
       jsonb_array_elements_text(security_groups) as sg
     where
       sg = any($1);
-  EOQ
-
-  param "vpc_security_group_ids" {}
-}
-
-node "ec2_launch_configuration" {
-  category = category.ec2_launch_configuration
-
-  sql = <<-EOQ
-    select
-      c.launch_configuration_arn as id,
-      c.title as title,
-      jsonb_build_object(
-        'ARN', c.launch_configuration_arn,
-        'Account ID', c.account_id,
-        'Region', c.region
-      ) as properties
-    from
-      aws_ec2_launch_configuration as c,
-      jsonb_array_elements_text(c.security_groups) as sg
-      join aws_vpc_security_group vsg on vsg.group_id = sg
-    where
-      vsg.group_id = any($1);
   EOQ
 
   param "vpc_security_group_ids" {}

@@ -160,7 +160,7 @@ node "ec2_ami" {
       image_id = any($1);
   EOQ
 
-  param "ec2_image_ids" {}
+  param "ec2_ami_image_ids" {}
 }
 
 node "ec2_launch_configuration" {

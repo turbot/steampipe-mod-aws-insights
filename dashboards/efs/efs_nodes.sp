@@ -53,6 +53,10 @@ node "efs_mount_target" {
       title as title,
       json_build_object(
         'ID', mount_target_id,
+        'File System ID', file_system_id,
+        'IP Address', ip_address,
+        'Life Cycle State', life_cycle_state,
+        'ENI ID', network_interface_id,
         'Account ID', account_id,
         'Owner ID', owner_id,
         'File System Id', file_system_id,
