@@ -89,7 +89,6 @@ node "iam_policy" {
 
   sql = <<-EOQ
     select
-      distinct on (arn)
       arn as id,
       name as title,
       'aws_iam_policy' as category,
