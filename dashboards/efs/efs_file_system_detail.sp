@@ -72,27 +72,119 @@ dashboard "efs_file_system_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "efs_access_points" {
+        sql = <<-EOQ
+          select
+            a.access_point_arn as access_point_arn
+          from
+            aws_efs_access_point as a
+            left join aws_efs_file_system as f on a.file_system_id = f.file_system_id
+          where
+            f.arn = $1;
+        EOQ
+
+        args = [self.input.efs_file_system_arn.value]
+      }
+
+      with "efs_mount_targets" {
+        sql = <<-EOQ
+          select
+            mount_target_id
+          from
+            aws_efs_mount_target as m
+            left join aws_efs_file_system as f on m.file_system_id = f.file_system_id
+          where
+            f.arn = $1;
+        EOQ
+
+        args = [self.input.efs_file_system_arn.value]
+      }
+
+      with "kms_keys" {
+        sql = <<-EOQ
+        select
+          kms_key_id as key_arn
+        from
+          aws_efs_file_system
+        where
+          arn = $1
+        EOQ
+
+        args = [self.input.efs_file_system_arn.value]
+      }
+
+      with "vpc_security_groups" {
+        sql = <<-EOQ
+          select
+            jsonb_array_elements_text(t.security_groups) as security_group_id
+          from
+            aws_efs_file_system as s,
+            aws_efs_mount_target as t
+          where
+            s.file_system_id = t.file_system_id
+            and s.arn = $1
+        EOQ
+
+        args = [self.input.efs_file_system_arn.value]
+      }
+
+      with "vpc_subnets" {
+        sql = <<-EOQ
+          select
+            s.subnet_id as subnet_id
+          from
+            aws_efs_mount_target as m
+            left join aws_efs_file_system as f on f.file_system_id = m.file_system_id
+            left join aws_vpc_subnet as s on m.subnet_id = s.subnet_id
+          where
+            f.arn = $1;
+        EOQ
+
+        args = [self.input.efs_file_system_arn.value]
+      }
+
+      with "vpc_vpcs" {
+        sql = <<-EOQ
+          select
+            v.vpc_id as vpc_id
+          from
+            aws_efs_mount_target as m
+            left join aws_efs_file_system as f on f.file_system_id = m.file_system_id
+            left join aws_vpc as v on m.vpc_id= v.vpc_id
+          where
+            f.arn = $1;
+        EOQ
+
+        args = [self.input.efs_file_system_arn.value]
+      }
+
       nodes = [
-        node.efs_file_system_node,
-        node.efs_file_system_to_kms_key_node,
-        node.efs_file_system_to_efs_access_point_node,
-        node.efs_file_system_to_efs_mount_target_node,
-        node.efs_file_system_mount_target_to_security_group_node,
-        node.efs_file_system_mount_target_security_group_to_subnet_node,
-        node.efs_file_system_mount_target_security_group_subnet_to_vpc_node
+        node.efs_access_point,
+        node.efs_file_system,
+        node.efs_mount_target,
+        node.kms_key,
+        node.vpc_security_group,
+        node.vpc_subnet,
+        node.vpc_vpc
       ]
 
       edges = [
-        edge.efs_file_system_to_kms_key_edge,
-        edge.efs_file_system_to_efs_access_point_edge,
-        edge.efs_file_system_to_efs_mount_target_edge,
-        edge.efs_file_system_mount_target_to_security_group_edge,
-        edge.efs_file_system_mount_target_security_group_to_subnet_edge,
-        edge.efs_file_system_mount_target_security_group_subnet_to_vpc_edge
+        edge.efs_file_system_to_efs_access_point,
+        edge.efs_file_system_to_efs_mount_target,
+        edge.efs_file_system_to_kms_key,
+        edge.efs_mount_target_to_security_group,
+        edge.efs_mount_target_to_subnet,
+        edge.vpc_subnet_to_vpc_vpc
       ]
 
       args = {
-        arn = self.input.efs_file_system_arn.value
+        efs_access_point_arns  = with.efs_access_points.rows[*].access_point_arn
+        efs_file_system_arns   = [self.input.efs_file_system_arn.value]
+        efs_mount_target_ids   = with.efs_mount_targets.rows[*].mount_target_id
+        kms_key_arns           = with.kms_keys.rows[*].key_arn
+        vpc_security_group_ids = with.vpc_security_groups.rows[*].security_group_id
+        vpc_subnet_ids         = with.vpc_subnets.rows[*].subnet_id
+        vpc_vpc_ids            = with.vpc_vpcs.rows[*].vpc_id
       }
     }
   }
@@ -243,299 +335,6 @@ query "efs_file_system_automatic_backup" {
 
   param "arn" {}
 }
-
-node "efs_file_system_node" {
-  category = category.efs_file_system
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      json_build_object(
-        'ARN', arn,
-        'ID', file_system_id,
-        'Name', name,
-        'State', life_cycle_state,
-        'Created At', creation_time,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_efs_file_system
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "efs_file_system_to_kms_key_node" {
-  category = category.kms_key
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      json_build_object(
-        'ARN', arn,
-        'Creation Date', creation_date,
-        'Deletion Date', deletion_date,
-        'Account ID', account_id,
-        'Name', title,
-        'Region', region
-      ) as properties
-    from
-      aws_kms_key
-    where
-      arn in
-      (
-        select
-          kms_key_id
-        from
-          aws_efs_file_system
-        where
-          arn = $1
-      );
-  EOQ
-
-  param "arn" {}
-}
-
-edge "efs_file_system_to_kms_key_edge" {
-  title = "encrypted with"
-  sql = <<-EOQ
-    select
-      arn as from_id,
-      kms_key_id as to_id
-    from
-      aws_efs_file_system
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "efs_file_system_to_efs_access_point_node" {
-  category = category.efs_access_point
-  sql = <<-EOQ
-    select
-      a.access_point_arn as id,
-      a.title as title,
-      json_build_object(
-        'ARN', a.access_point_arn,
-        'Account ID', a.account_id,
-        'Owner ID', a.owner_id,
-        'Name', a.name,
-        'Region', a.region
-      ) as properties
-    from
-      aws_efs_access_point as a
-      left join aws_efs_file_system as f on a.file_system_id = f.file_system_id
-    where
-      f.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "efs_file_system_to_efs_access_point_edge" {
-  title = "access point"
-  sql = <<-EOQ
-    select
-      f.arn as from_id,
-      a.access_point_arn as to_id
-    from
-      aws_efs_access_point as a
-      left join aws_efs_file_system as f on a.file_system_id = f.file_system_id
-    where
-      f.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "efs_file_system_to_efs_mount_target_node" {
-  category = category.efs_mount_target
-  sql = <<-EOQ
-    select
-      m.mount_target_id as id,
-      m.title as title,
-      json_build_object(
-        'Account ID', m.account_id,
-        'Owner ID', m.owner_id,
-        'Life Cycle State', m.life_cycle_state,
-        'Region', m.region
-      ) as properties
-    from
-      aws_efs_mount_target as m
-      left join aws_efs_file_system as f on m.file_system_id = f.file_system_id
-    where
-      f.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "efs_file_system_to_efs_mount_target_edge" {
-  title = "mount target"
-  sql = <<-EOQ
-    select
-      f.arn as from_id,
-      m.mount_target_id as to_id
-    from
-      aws_efs_mount_target as m
-      left join aws_efs_file_system as f on m.file_system_id = f.file_system_id
-    where
-      f.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "efs_file_system_mount_target_to_security_group_node" {
-  category = category.vpc_security_group
-  sql = <<-EOQ
-    with mount_sg_list as (
-      select
-        jsonb_array_elements_text(security_groups) as sg,
-        file_system_id
-      from
-        aws_efs_mount_target
-    )
-    select
-      s.group_id as id,
-      s.title as title,
-      json_build_object(
-        'ARN', s.arn,
-        'Account ID', s.account_id,
-        'Owner ID', s.owner_id,
-        'Region', s.region
-      ) as properties
-    from
-      mount_sg_list as m
-      left join aws_efs_file_system as f on f.file_system_id = m.file_system_id
-      left join aws_vpc_security_group as s on m.sg= s.group_id
-    where
-      f.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "efs_file_system_mount_target_to_security_group_edge" {
-  title = "security group"
-  sql = <<-EOQ
-    with mount_sg_list as (
-      select
-        jsonb_array_elements_text(security_groups) as sg,
-        file_system_id,
-        mount_target_id
-      from
-        aws_efs_mount_target
-    )
-    select
-      m.mount_target_id as from_id,
-      s.group_id as to_id
-    from
-      mount_sg_list as m
-      left join aws_efs_file_system as f on f.file_system_id = m.file_system_id
-      left join aws_vpc_security_group as s on m.sg= s.group_id
-    where
-      f.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "efs_file_system_mount_target_security_group_to_subnet_node" {
-  category = category.vpc_subnet
-  sql = <<-EOQ
-    select
-      s.subnet_id as id,
-      s.title as title,
-      json_build_object(
-        'ARN', s.subnet_arn,
-        'Account ID', s.account_id,
-        'Owner ID', s.owner_id,
-        'CIDR Block', s.cidr_block,
-        'Region', s.region
-      ) as properties
-    from
-      aws_efs_mount_target as m
-      left join aws_efs_file_system as f on f.file_system_id = m.file_system_id
-      left join aws_vpc_subnet as s on m.subnet_id= s.subnet_id
-    where
-      f.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "efs_file_system_mount_target_security_group_to_subnet_edge" {
-  title = "subnet"
-  sql = <<-EOQ
-    with mount_sg_list as (
-      select
-        jsonb_array_elements_text(security_groups) as sg_id,
-        file_system_id,
-        subnet_id
-      from
-        aws_efs_mount_target
-    )
-    select
-      m.sg_id as from_id,
-      s.subnet_id as to_id
-    from
-      mount_sg_list as m
-      left join aws_efs_file_system as f on f.file_system_id = m.file_system_id
-      left join aws_vpc_subnet as s on m.subnet_id= s.subnet_id
-    where
-      f.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "efs_file_system_mount_target_security_group_subnet_to_vpc_node" {
-  category = category.vpc_vpc
-  sql = <<-EOQ
-    select
-      v.vpc_id as id,
-      v.title as title,
-      json_build_object(
-        'ARN', v.arn,
-        'Account ID', v.account_id,
-        'Owner ID', v.owner_id,
-        'CIDR Block', v.cidr_block,
-        'Region', v.region
-      ) as properties
-    from
-      aws_efs_mount_target as m
-      left join aws_efs_file_system as f on f.file_system_id = m.file_system_id
-      left join aws_vpc as v on m.vpc_id= v.vpc_id
-    where
-      f.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "efs_file_system_mount_target_security_group_subnet_to_vpc_edge" {
-  title = "vpc"
-  sql = <<-EOQ
-    select
-      m.subnet_id as from_id,
-      v.vpc_id as to_id
-    from
-      aws_efs_mount_target as m
-      left join aws_efs_file_system as f on f.file_system_id = m.file_system_id
-      left join aws_vpc as v on m.vpc_id= v.vpc_id
-    where
-      f.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
 
 query "efs_file_system_overview" {
   sql = <<-EOQ

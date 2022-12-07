@@ -214,6 +214,50 @@ node "ec2_network_load_balancer" {
   param "ec2_network_load_balancer_arns" {}
 }
 
+node "ec2_ami" {
+  category = category.ec2_ami
+
+  sql = <<-EOQ
+    select
+      image_id as id,
+      title as title,
+      jsonb_build_object(
+        'Image ID', image_id,
+        'Image Location', image_location,
+        'State', state,
+        'public', public::text,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_ec2_ami
+    where
+      image_id = any($1);
+  EOQ
+
+  param "ec2_ami_image_ids" {}
+}
+
+node "ec2_launch_configuration" {
+  category = category.ec2_launch_configuration
+
+  sql = <<-EOQ
+    select
+      launch_configuration_arn as id,
+      title as title,
+      jsonb_build_object(
+        'ARN', launch_configuration_arn,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_ec2_launch_configuration
+    where
+      launch_configuration_arn = any($1);
+  EOQ
+
+  param "ec2_launch_configuration_arns" {}
+}
 node "ec2_target_group" {
   category = category.ec2_target_group
 
