@@ -206,7 +206,7 @@ dashboard "vpc_security_group_detail" {
       nodes = [
         node.dax_cluster,
         node.dms_replication_instance,
-        node.docdb_cluster
+        node.docdb_cluster,
         node.ec2_application_load_balancer,
         node.ec2_classic_load_balancer,
         node.ec2_instance,
@@ -219,13 +219,13 @@ dashboard "vpc_security_group_detail" {
         node.redshift_cluster,
         node.sagemaker_notebook_instance,
         node.vpc_security_group,
-        node.vpc_vpc,
+        node.vpc_vpc
       ]
 
       edges = [
         edge.vpc_security_group_to_dax_cluster,
         edge.vpc_security_group_to_dms_replication_instance,
-        edge.vpc_security_group_to_docdb_cluster
+        edge.vpc_security_group_to_docdb_cluster,
         edge.vpc_security_group_to_ec2_application_load_balancer,
         edge.vpc_security_group_to_ec2_classic_load_balancer,
         edge.vpc_security_group_to_ec2_instance,
@@ -237,7 +237,7 @@ dashboard "vpc_security_group_detail" {
         edge.vpc_security_group_to_rds_db_instance,
         edge.vpc_security_group_to_redshift_cluster,
         edge.vpc_security_group_to_sagemaker_notebook_instance,
-        edge.vpc_to_vpc_security_group,
+        edge.vpc_to_vpc_security_group
       ]
 
       args = {
