@@ -32,7 +32,7 @@ edge "ebs_volume_to_ebs_snapshot" {
   param "ebs_volume_arns" {}
 }
 
-edge "ebs_volume_snapshot_to_ec2_ami" {
+edge "ebs_snapshot_to_ec2_ami" {
   title = "ami"
 
   sql = <<-EOQ
