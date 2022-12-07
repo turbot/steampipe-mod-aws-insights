@@ -36,37 +36,6 @@ dashboard "iam_policy_detail" {
       title = "Relationships"
       type  = "graph"
 
-      with "attached_roles" {
-        sql = <<-EOQ
-          select
-            arn as role_arn
-          from
-            aws_iam_role,
-            jsonb_array_elements_text(attached_policy_arns) as policy_arn
-          where
-            policy_arn = $1;
-        EOQ
-
-        args = [self.input.policy_arn.value]
-      }
-
-
-      with "attached_users" {
-        sql = <<-EOQ
-          select
-            arn as user_arn
-          from
-            aws_iam_user,
-            jsonb_array_elements_text(attached_policy_arns) as policy_arn
-          where
-            policy_arn = $1;
-        EOQ
-
-        args = [self.input.policy_arn.value]
-      }
-
-
-
       with "attached_groups" {
         sql = <<-EOQ
           select
@@ -81,6 +50,33 @@ dashboard "iam_policy_detail" {
         args = [self.input.policy_arn.value]
       }
 
+      with "attached_roles" {
+        sql = <<-EOQ
+          select
+            arn as role_arn
+          from
+            aws_iam_role,
+            jsonb_array_elements_text(attached_policy_arns) as policy_arn
+          where
+            policy_arn = $1;
+        EOQ
+
+        args = [self.input.policy_arn.value]
+      }
+
+      with "attached_users" {
+        sql = <<-EOQ
+          select
+            arn as user_arn
+          from
+            aws_iam_user,
+            jsonb_array_elements_text(attached_policy_arns) as policy_arn
+          where
+            policy_arn = $1;
+        EOQ
+
+        args = [self.input.policy_arn.value]
+      }
 
       with "policy_std" {
         sql = <<-EOQ
@@ -97,41 +93,41 @@ dashboard "iam_policy_detail" {
       }
 
       nodes = [
-        node.iam_policy,
-        node.iam_role,
-        node.iam_user,
-        node.iam_group,
 
+        node.iam_group,
+        node.iam_policy,
         node.iam_policy_statement,
         node.iam_policy_statement_action_notaction,
-        node.iam_policy_statement_resource_notresource,
         node.iam_policy_statement_condition,
         node.iam_policy_statement_condition_key,
         node.iam_policy_statement_condition_key_value,
+        node.iam_policy_statement_resource_notresource,
+        node.iam_role,
+        node.iam_user
 
       ]
 
       edges = [
+
+        edge.iam_policy_from_iam_group,
         edge.iam_policy_from_iam_role,
         edge.iam_policy_from_iam_user,
-        edge.iam_policy_from_iam_group,
-
         edge.iam_policy_statement,
         edge.iam_policy_statement_action,
-        edge.iam_policy_statement_resource,
-        edge.iam_policy_statement_notaction,
-        edge.iam_policy_statement_notresource,
         edge.iam_policy_statement_condition,
         edge.iam_policy_statement_condition_key,
         edge.iam_policy_statement_condition_key_value,
+        edge.iam_policy_statement_notaction,
+        edge.iam_policy_statement_notresource,
+        edge.iam_policy_statement_resource,
       ]
 
       args = {
+        iam_group_arns  = with.attached_groups.rows[*].group_arn
         iam_policy_arns = [self.input.policy_arn.value]
+        iam_policy_stds = with.policy_std.rows[0].policy_std
         iam_role_arns   = with.attached_roles.rows[*].role_arn
         iam_user_arns   = with.attached_users.rows[*].user_arn
-        iam_group_arns  = with.attached_groups.rows[*].group_arn
-        iam_policy_stds = with.policy_std.rows[0].policy_std
       }
     }
 

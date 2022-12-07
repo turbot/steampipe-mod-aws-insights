@@ -72,6 +72,20 @@ dashboard "rds_db_cluster_snapshot_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "kms_keys" {
+        sql = <<-EOQ
+          select
+            kms_key_id as key_arn
+          from
+            aws_rds_db_cluster_snapshot
+          where
+            kms_key_id is not null
+            and arn = $1;
+        EOQ
+
+        args = [self.input.snapshot_arn.value]
+      }
+
       with "rds_clusters" {
         sql = <<-EOQ
           select
@@ -87,24 +101,10 @@ dashboard "rds_db_cluster_snapshot_detail" {
         args = [self.input.snapshot_arn.value]
       }
 
-      with "kms_keys" {
-        sql = <<-EOQ
-          select
-            kms_key_id as key_arn
-          from
-            aws_rds_db_cluster_snapshot
-          where
-            kms_key_id is not null
-            and arn = $1;
-        EOQ
-
-        args = [self.input.snapshot_arn.value]
-      }
-
       nodes = [
-        node.rds_db_cluster_snapshot,
         node.kms_key,
-        node.rds_db_cluster
+        node.rds_db_cluster,
+        node.rds_db_cluster_snapshot
       ]
 
       edges = [
@@ -113,8 +113,8 @@ dashboard "rds_db_cluster_snapshot_detail" {
       ]
 
       args = {
-        rds_db_cluster_arns          = with.rds_clusters.rows[*].rds_cluster_arn
         kms_key_arns                 = with.kms_keys.rows[*].key_arn
+        rds_db_cluster_arns          = with.rds_clusters.rows[*].rds_cluster_arn
         rds_db_cluster_snapshot_arns = [self.input.snapshot_arn.value]
       }
     }
