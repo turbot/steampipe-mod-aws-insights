@@ -136,7 +136,7 @@ dashboard "ebs_volume_detail" {
       ]
 
       edges = [
-        edge.ebs_volume_snapshot_to_ec2_ami,
+        edge.ebs_snapshot_to_ec2_ami,
         edge.ebs_volume_to_ebs_snapshot,
         edge.ebs_volume_to_kms_key,
         edge.ec2_instance_to_ebs_volume
