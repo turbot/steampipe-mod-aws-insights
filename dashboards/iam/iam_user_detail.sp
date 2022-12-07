@@ -88,14 +88,14 @@ dashboard "iam_user_detail" {
         node.iam_policy,
         node.iam_user,
         node.iam_user_access_key,
-        node.iam_user_inline_policy,
+        node.iam_user_inline_policy
       ]
 
       edges = [
         edge.iam_group_to_iam_user,
         edge.iam_user_to_iam_access_key,
         edge.iam_user_to_iam_policy,
-        edge.iam_user_to_inline_policy,
+        edge.iam_user_to_inline_policy
       ]
 
       args = {

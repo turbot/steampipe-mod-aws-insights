@@ -117,7 +117,7 @@ dashboard "iam_role_detail" {
         node.iam_role_trusted_aws,
         node.iam_role_trusted_federated,
         node.iam_role_trusted_service,
-        node.lambda_function,
+        node.lambda_function
       ]
 
       edges = [
@@ -129,7 +129,7 @@ dashboard "iam_role_detail" {
         edge.iam_role_trusted_aws,
         edge.iam_role_trusted_federated,
         edge.iam_role_trusted_service,
-        edge.lambda_function_to_iam_role,
+        edge.lambda_function_to_iam_role
 
       ]
 

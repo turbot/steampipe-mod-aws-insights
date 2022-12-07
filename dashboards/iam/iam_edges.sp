@@ -1,3 +1,21 @@
+edge "iam_group_to_iam_policy" {
+  title = "attaches"
+
+  sql = <<-EOQ
+    select
+      arn as from_id,
+      policy_arn as to_id
+    from
+      aws_iam_group,
+      jsonb_array_elements_text(attached_policy_arns) as policy_arn
+    where
+      arn = $1;
+  EOQ
+
+  param "iam_group_arns" {}
+
+}
+
 edge "iam_group_to_iam_user" {
   title = "has member"
 
@@ -32,6 +50,47 @@ edge "iam_group_to_inline_policy" {
   param "iam_group_arns" {}
 }
 
+edge "iam_instance_profile_to_iam_role" {
+  title = "assumes"
+
+  sql = <<-EOQ
+    select
+      iam_instance_profile_arn as from_id,
+      arn as to_id,
+      jsonb_build_object(
+        'Instance Profile ARN', iam_instance_profile_arn
+      ) as properties
+    from
+      aws_iam_role,
+      jsonb_array_elements_text(instance_profile_arns) as iam_instance_profile_arn
+    where
+      arn = any($1);
+  EOQ
+
+  param "iam_role_arns" {}
+}
+
+edge "iam_policy_globbed_notaction" {
+
+  sql = <<-EOQ
+
+    select
+      distinct on (a.action)
+      concat('action:', a.action) as to_id,
+      concat('statement:', i) as from_id,
+      lower(t.stmt ->> 'Effect') as category,
+      t.stmt ->> 'Effect' as title
+    from
+      jsonb_array_elements(($1 :: jsonb) ->  'Statement') with ordinality as t(stmt,i),
+      jsonb_array_elements_text(t.stmt -> 'NotAction') as action_glob,
+      aws_iam_action as a
+    where
+      a.action not like glob(action_glob)
+  EOQ
+
+  param "iam_policy_stds" {}
+}
+
 edge "iam_policy_statement" {
   title = "statement"
 
@@ -64,59 +123,6 @@ edge "iam_policy_statement_action" {
     from
       jsonb_array_elements(($1 :: jsonb) ->  'Statement') with ordinality as t(stmt,i),
       jsonb_array_elements_text(t.stmt -> 'Action') as action
-  EOQ
-
-  param "iam_policy_stds" {}
-}
-
-edge "iam_policy_statement_notaction" {
-  sql = <<-EOQ
-
-    select
-      --distinct on (p.arn,notaction)
-      concat('action:', notaction) as to_id,
-      concat('statement:', i) as from_id,
-      concat(lower(t.stmt ->> 'Effect'), ' not action') as title,
-      lower(t.stmt ->> 'Effect') as category
-    from
-      jsonb_array_elements(($1 :: jsonb) ->  'Statement') with ordinality as t(stmt,i),
-      jsonb_array_elements_text(t.stmt -> 'NotAction') as notaction
-  EOQ
-
-  param "iam_policy_stds" {}
-}
-
-edge "iam_policy_statement_resource" {
-  title = "resource"
-
-  sql = <<-EOQ
-    select
-      concat('action:', coalesce(action, notaction)) as from_id,
-      resource as to_id,
-      lower(stmt ->> 'Effect') as category
-    from
-      jsonb_array_elements(($1 :: jsonb) ->  'Statement') with ordinality as t(stmt,i)
-      left join jsonb_array_elements_text(stmt -> 'Action') as action on true
-      left join jsonb_array_elements_text(stmt -> 'NotAction') as notaction on true
-      left join jsonb_array_elements_text(stmt -> 'Resource') as resource on true
-  EOQ
-
-  param "iam_policy_stds" {}
-}
-
-edge "iam_policy_statement_notresource" {
-  title = "not resource"
-
-  sql = <<-EOQ
-    select
-      concat('action:', coalesce(action, notaction)) as from_id,
-      notresource as to_id,
-      lower(stmt ->> 'Effect') as category
-    from
-      jsonb_array_elements(($1 :: jsonb) ->  'Statement') with ordinality as t(stmt,i)
-      left join jsonb_array_elements_text(stmt -> 'Action') as action on true
-      left join jsonb_array_elements_text(stmt -> 'NotAction') as notaction on true
-      left join jsonb_array_elements_text(stmt -> 'NotResource') as notresource on true
   EOQ
 
   param "iam_policy_stds" {}
@@ -174,25 +180,128 @@ edge "iam_policy_statement_condition_key_value" {
   param "iam_policy_stds" {}
 }
 
-edge "iam_policy_globbed_notaction" {
-
+edge "iam_policy_statement_notaction" {
   sql = <<-EOQ
 
     select
-      distinct on (a.action)
-      concat('action:', a.action) as to_id,
+      --distinct on (p.arn,notaction)
+      concat('action:', notaction) as to_id,
       concat('statement:', i) as from_id,
-      lower(t.stmt ->> 'Effect') as category,
-      t.stmt ->> 'Effect' as title
+      concat(lower(t.stmt ->> 'Effect'), ' not action') as title,
+      lower(t.stmt ->> 'Effect') as category
     from
       jsonb_array_elements(($1 :: jsonb) ->  'Statement') with ordinality as t(stmt,i),
-      jsonb_array_elements_text(t.stmt -> 'NotAction') as action_glob,
-      aws_iam_action as a
-    where
-      a.action not like glob(action_glob)
+      jsonb_array_elements_text(t.stmt -> 'NotAction') as notaction
   EOQ
 
   param "iam_policy_stds" {}
+}
+
+edge "iam_policy_statement_notresource" {
+  title = "not resource"
+
+  sql = <<-EOQ
+    select
+      concat('action:', coalesce(action, notaction)) as from_id,
+      notresource as to_id,
+      lower(stmt ->> 'Effect') as category
+    from
+      jsonb_array_elements(($1 :: jsonb) ->  'Statement') with ordinality as t(stmt,i)
+      left join jsonb_array_elements_text(stmt -> 'Action') as action on true
+      left join jsonb_array_elements_text(stmt -> 'NotAction') as notaction on true
+      left join jsonb_array_elements_text(stmt -> 'NotResource') as notresource on true
+  EOQ
+
+  param "iam_policy_stds" {}
+}
+
+edge "iam_policy_statement_resource" {
+  title = "resource"
+
+  sql = <<-EOQ
+    select
+      concat('action:', coalesce(action, notaction)) as from_id,
+      resource as to_id,
+      lower(stmt ->> 'Effect') as category
+    from
+      jsonb_array_elements(($1 :: jsonb) ->  'Statement') with ordinality as t(stmt,i)
+      left join jsonb_array_elements_text(stmt -> 'Action') as action on true
+      left join jsonb_array_elements_text(stmt -> 'NotAction') as notaction on true
+      left join jsonb_array_elements_text(stmt -> 'Resource') as resource on true
+  EOQ
+
+  param "iam_policy_stds" {}
+}
+
+edge "iam_role_to_iam_policy" {
+  title = "attaches"
+
+  sql = <<-EOQ
+    select
+      arn as from_id,
+      policy_arn as to_id
+    from
+      aws_iam_role,
+      jsonb_array_elements_text(attached_policy_arns) as policy_arn
+    where
+      arn = any($1);
+  EOQ
+
+  param "iam_role_arns" {}
+}
+
+edge "iam_role_trusted_aws" {
+  title = "can assume"
+
+  sql = <<-EOQ
+    select
+      arn as to_id,
+      aws as from_id
+    from
+      aws_iam_role as r,
+      jsonb_array_elements(assume_role_policy_std -> 'Statement') as s,
+      jsonb_array_elements_text( (s -> 'Principal' ->> 'AWS')::jsonb ) as aws
+    where
+      r.arn = any($1);
+  EOQ
+
+  param "iam_role_arns" {}
+}
+
+edge "iam_role_trusted_federated" {
+  title = "can assume"
+
+  sql = <<-EOQ
+    select
+      arn as to_id,
+      fed as from_id
+    from
+      aws_iam_role as r,
+      jsonb_array_elements(assume_role_policy_std -> 'Statement') as s,
+      jsonb_array_elements_text( (s -> 'Principal' ->> 'Federated')::jsonb ) as fed
+    where
+      r.arn = any($1);
+  EOQ
+
+  param "iam_role_arns" {}
+}
+
+edge "iam_role_trusted_service" {
+  title = "can assume"
+
+  sql = <<-EOQ
+    select
+      arn as to_id,
+      svc as from_id
+    from
+      aws_iam_role as r,
+      jsonb_array_elements(assume_role_policy_std -> 'Statement') as s,
+      jsonb_array_elements_text( (s -> 'Principal' ->> 'Service')::jsonb ) as svc
+    where
+      r.arn = any($1);
+  EOQ
+
+  param "iam_role_arns" {}
 }
 
 edge "iam_user_to_iam_policy" {
@@ -246,113 +355,4 @@ edge "iam_user_to_iam_access_key" {
   EOQ
 
   param "iam_user_arns" {}
-}
-
-edge "iam_role_to_iam_policy" {
-  title = "attaches"
-
-  sql = <<-EOQ
-   select
-      arn as from_id,
-      policy_arn as to_id
-    from
-      aws_iam_role,
-      jsonb_array_elements_text(attached_policy_arns) as policy_arn
-    where
-      arn = any($1);
-  EOQ
-
-  param "iam_role_arns" {}
-}
-
-edge "iam_group_to_iam_policy" {
-  title = "attaches"
-
-  sql = <<-EOQ
-    select
-      arn as from_id,
-      policy_arn as to_id
-    from
-      aws_iam_group,
-      jsonb_array_elements_text(attached_policy_arns) as policy_arn
-    where
-      arn = $1;
-  EOQ
-
-  param "iam_group_arns" {}
-
-}
-
-edge "iam_instance_profile_to_iam_role" {
-  title = "assumes"
-
-  sql = <<-EOQ
-    select
-      iam_instance_profile_arn as from_id,
-      arn as to_id,
-      jsonb_build_object(
-        'Instance Profile ARN', iam_instance_profile_arn
-      ) as properties
-    from
-      aws_iam_role,
-      jsonb_array_elements_text(instance_profile_arns) as iam_instance_profile_arn
-    where
-      arn = any($1);
-  EOQ
-
-  param "iam_role_arns" {}
-}
-
-edge "iam_role_trusted_aws" {
-  title = "can assume"
-
-  sql = <<-EOQ
-    select
-      arn as to_id,
-      aws as from_id
-    from
-      aws_iam_role as r,
-      jsonb_array_elements(assume_role_policy_std -> 'Statement') as s,
-      jsonb_array_elements_text( (s -> 'Principal' ->> 'AWS')::jsonb ) as aws
-   where
-      r.arn = any($1);
-  EOQ
-
-  param "iam_role_arns" {}
-}
-
-edge "iam_role_trusted_service" {
-  title = "can assume"
-
-  sql = <<-EOQ
-    select
-      arn as to_id,
-      svc as from_id
-    from
-      aws_iam_role as r,
-      jsonb_array_elements(assume_role_policy_std -> 'Statement') as s,
-      jsonb_array_elements_text( (s -> 'Principal' ->> 'Service')::jsonb ) as svc
-   where
-      r.arn = any($1);
-  EOQ
-
-  param "iam_role_arns" {}
-}
-
-edge "iam_role_trusted_federated" {
-  title = "can assume"
-
-  sql = <<-EOQ
-    select
-      arn as to_id,
-      fed as from_id
-    from
-      aws_iam_role as r,
-      jsonb_array_elements(assume_role_policy_std -> 'Statement') as s,
-      jsonb_array_elements_text( (s -> 'Principal' ->> 'Federated')::jsonb ) as fed
-   where
-      r.arn = any($1);
-  EOQ
-
-  param "iam_role_arns" {}
 }

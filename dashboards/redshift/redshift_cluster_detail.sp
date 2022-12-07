@@ -72,109 +72,6 @@ dashboard "redshift_cluster_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "cloudwatch_log_groups" {
-        sql = <<-EOQ
-          select
-            g.arn as log_group_arn
-          from
-            aws_redshift_cluster as c,
-            aws_cloudwatch_log_group as g
-          where
-            g.title like '%' || c.title || '%'
-            and c.arn = $1;
-        EOQ
-
-        args = [self.input.cluster_arn.value]
-      }
-
-      with "iam_roles" {
-        sql = <<-EOQ
-          select
-            r ->> 'IamRoleArn' as role_arn
-          from
-            aws_redshift_cluster,
-            jsonb_array_elements(iam_roles) as r
-          where
-            arn = $1;
-        EOQ
-
-        args = [self.input.cluster_arn.value]
-      }
-
-      with "kms_keys" {
-        sql = <<-EOQ
-          select
-            kms_key_id as key_arn
-          from
-            aws_redshift_cluster
-          where
-            kms_key_id is not null
-            and arn = $1;
-        EOQ
-
-        args = [self.input.cluster_arn.value]
-      }
-
-      with "redshift_snapshots" {
-        sql = <<-EOQ
-          select
-            s.akas::text as snapshot_arn
-          from
-            aws_redshift_snapshot as s,
-            aws_redshift_cluster as c
-          where
-            s.cluster_identifier = c.cluster_identifier
-            and c.arn = $1;
-        EOQ
-
-        args = [self.input.cluster_arn.value]
-      }
-
-      with "s3_buckets" {
-        sql = <<-EOQ
-          select
-            b.arn as bucket_arn
-          from
-            aws_redshift_cluster as c,
-            aws_s3_bucket as b
-          where
-            b.name = c.logging_status ->> 'BucketName'
-            and c.arn = $1;
-        EOQ
-
-        args = [self.input.cluster_arn.value]
-      }
-
-      with "vpc_eips" {
-        sql = <<-EOQ
-          select
-            e.arn as eip_arn
-          from
-            aws_redshift_cluster as c,
-            aws_vpc_eip as e
-          where
-            c.elastic_ip_status is not null
-            and e.public_ip = (c.elastic_ip_status ->> 'ElasticIp')::inet
-            and c.arn = $1;
-        EOQ
-
-        args = [self.input.cluster_arn.value]
-      }
-
-      with "vpc_security_groups" {
-        sql = <<-EOQ
-          select
-            s ->> 'VpcSecurityGroupId' as security_group_id
-          from
-            aws_redshift_cluster,
-            jsonb_array_elements(vpc_security_groups) as s
-          where
-            arn = $1;
-        EOQ
-
-        args = [self.input.cluster_arn.value]
-      }
-
       with "vpc_subnets" {
         sql = <<-EOQ
           select
@@ -205,46 +102,149 @@ dashboard "redshift_cluster_detail" {
         args = [self.input.cluster_arn.value]
       }
 
+      with "vpc_security_groups" {
+        sql = <<-EOQ
+          select
+            s ->> 'VpcSecurityGroupId' as security_group_id
+          from
+            aws_redshift_cluster,
+            jsonb_array_elements(vpc_security_groups) as s
+          where
+            arn = $1;
+        EOQ
+
+        args = [self.input.cluster_arn.value]
+      }
+
+      with "kms_keys" {
+        sql = <<-EOQ
+          select
+            kms_key_id as key_arn
+          from
+            aws_redshift_cluster
+          where
+            kms_key_id is not null
+            and arn = $1;
+        EOQ
+
+        args = [self.input.cluster_arn.value]
+      }
+
+      with "iam_roles" {
+        sql = <<-EOQ
+          select
+            r ->> 'IamRoleArn' as role_arn
+          from
+            aws_redshift_cluster,
+            jsonb_array_elements(iam_roles) as r
+          where
+            arn = $1;
+        EOQ
+
+        args = [self.input.cluster_arn.value]
+      }
+
+      with "vpc_eips" {
+        sql = <<-EOQ
+          select
+            e.arn as eip_arn
+          from
+            aws_redshift_cluster as c,
+            aws_vpc_eip as e
+          where
+            c.elastic_ip_status is not null
+            and e.public_ip = (c.elastic_ip_status ->> 'ElasticIp')::inet
+            and c.arn = $1;
+        EOQ
+
+        args = [self.input.cluster_arn.value]
+      }
+
+      with "cloudwatch_log_groups" {
+        sql = <<-EOQ
+          select
+            g.arn as log_group_arn
+          from
+            aws_redshift_cluster as c,
+            aws_cloudwatch_log_group as g
+          where
+            g.title like '%' || c.title || '%'
+            and c.arn = $1;
+        EOQ
+
+        args = [self.input.cluster_arn.value]
+      }
+
+      with "s3_buckets" {
+        sql = <<-EOQ
+          select
+            b.arn as bucket_arn
+          from
+            aws_redshift_cluster as c,
+            aws_s3_bucket as b
+          where
+            b.name = c.logging_status ->> 'BucketName'
+            and c.arn = $1;
+        EOQ
+
+        args = [self.input.cluster_arn.value]
+      }
+
+      with "redshift_snapshots" {
+        sql = <<-EOQ
+          select
+            s.akas::text as snapshot_arn
+          from
+            aws_redshift_snapshot as s,
+            aws_redshift_cluster as c
+          where
+            s.cluster_identifier = c.cluster_identifier
+            and c.arn = $1;
+        EOQ
+
+        args = [self.input.cluster_arn.value]
+      }
+
       nodes = [
-        node.cloudwatch_log_group,
-        node.iam_role,
-        node.kms_key,
         node.redshift_cluster,
-        node.redshift_parameter_group,
-        node.redshift_snapshot,
         node.redshift_subnet_group,
-        node.s3_bucket,
-        node.vpc_eip,
-        node.vpc_security_group,
         node.vpc_subnet,
-        node.vpc_vpc
+        node.vpc_vpc,
+        node.vpc_security_group,
+        node.kms_key,
+        node.iam_role,
+        node.vpc_eip,
+        node.cloudwatch_log_group,
+        node.s3_bucket,
+        node.redshift_parameter_group,
+        node.redshift_snapshot
       ]
 
       edges = [
         edge.redshift_cluster_subnet_group_to_vpc_subnet,
-        edge.redshift_cluster_to_cloudwatch_log_group,
-        edge.redshift_cluster_to_iam_role,
-        edge.redshift_cluster_to_kms_key,
-        edge.redshift_cluster_to_redshift_parameter_group,
-        edge.redshift_cluster_to_redshift_snapshot,
-        edge.redshift_cluster_to_s3_bucket,
-        edge.redshift_cluster_to_vpc_eip,
-        edge.redshift_cluster_to_vpc_security_group,
+        edge.vpc_subnet_to_vpc_vpc,
         edge.redshift_cluster_vpc_security_group_to_subnet_group,
-        edge.vpc_subnet_to_vpc_vpc
+        edge.redshift_cluster_to_vpc_security_group,
+        edge.redshift_cluster_to_kms_key,
+        edge.redshift_cluster_to_iam_role,
+        edge.redshift_cluster_to_vpc_eip,
+        edge.redshift_cluster_to_cloudwatch_log_group,
+        edge.redshift_cluster_to_s3_bucket,
+        edge.redshift_cluster_to_redshift_parameter_group,
+        edge.redshift_cluster_to_redshift_snapshot
       ]
 
       args = {
-        cloudwatch_log_group_arns = with.cloudwatch_log_groups.rows[*].log_group_arn
-        iam_role_arns             = with.iam_roles.rows[*].role_arn
-        kms_key_arns              = with.kms_keys.rows[*].key_arn
         redshift_cluster_arns     = [self.input.cluster_arn.value]
         redshift_snapshot_arns    = with.redshift_snapshots.rows[*].snapshot_arn
+        kms_key_arns              = with.kms_keys.rows[*].key_arn
+        vpc_vpc_ids               = with.vpc_vpcs.rows[*].vpc_id
+        vpc_subnet_ids            = with.vpc_subnets.rows[*].subnet_id
+        vpc_security_group_ids    = with.vpc_security_groups.rows[*].security_group_id
+        iam_role_arns             = with.iam_roles.rows[*].role_arn
         s3_bucket_arns            = with.s3_buckets.rows[*].bucket_arn
         vpc_eip_arns              = with.vpc_eips.rows[*].eip_arn
-        vpc_security_group_ids    = with.vpc_security_groups.rows[*].security_group_id
-        vpc_subnet_ids            = with.vpc_subnets.rows[*].subnet_id
-        vpc_vpc_ids               = with.vpc_vpcs.rows[*].vpc_id
+        cloudwatch_log_group_arns = with.cloudwatch_log_groups.rows[*].log_group_arn
       }
     }
   }
@@ -544,266 +544,4 @@ query "redshift_cluster_tags" {
     EOQ
 
   param "arn" {}
-}
-
-node "redshift_cluster" {
-  category = category.redshift_cluster
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region,
-        'Cluster Status', cluster_status,
-        'Cluster Version', cluster_version,
-        'Public', publicly_accessible::text,
-        'Encrypted', encrypted::text
-      ) as properties
-    from
-      aws_redshift_cluster
-    where
-      arn = any($1);
-  EOQ
-
-  param "redshift_cluster_arns" {}
-}
-
-node "redshift_subnet_group" {
-  category = category.redshift_subnet_group
-
-  sql = <<-EOQ
-    select
-      s.cluster_subnet_group_name as id,
-      s.cluster_subnet_group_name as title,
-      jsonb_build_object(
-        'AKAS', s.akas,
-        'Description', s.description,
-        'Status', s.subnet_group_status,
-        'Vpc ID', s.vpc_id
-      ) as properties
-    from
-      aws_redshift_cluster as c
-      left join
-        aws_redshift_subnet_group as s
-        on c.vpc_id = s.vpc_id
-        and c.cluster_subnet_group_name = s.cluster_subnet_group_name
-        and c.arn = any($1);
-  EOQ
-
-  param "redshift_cluster_arns" {}
-}
-
-edge "redshift_cluster_subnet_group_to_vpc_subnet" {
-  title = "subnet"
-
-  sql = <<-EOQ
-    select
-      s.cluster_subnet_group_name as from_id,
-      subnet ->> 'SubnetIdentifier' as to_id
-    from
-      aws_redshift_subnet_group as s
-      cross join jsonb_array_elements(s.subnets) subnet
-      join
-        aws_redshift_cluster as c
-        on c.cluster_subnet_group_name = s.cluster_subnet_group_name
-        and c.region = s.region
-        and c.arn = any($1);
-  EOQ
-
-  param "redshift_cluster_arns" {}
-}
-
-edge "redshift_cluster_vpc_security_group_to_subnet_group" {
-  title = "subnet group"
-
-  sql = <<-EOQ
-    select
-      sg.group_id as from_id,
-      sub.cluster_subnet_group_name as to_id
-    from
-      aws_redshift_cluster as c
-      cross join
-        jsonb_array_elements(c.vpc_security_groups) as s
-      join
-        aws_vpc_security_group as sg
-        on sg.group_id = s ->> 'VpcSecurityGroupId'
-      join
-        aws_redshift_subnet_group as sub
-        on c.vpc_id = sub.vpc_id
-        and c.cluster_subnet_group_name = sub.cluster_subnet_group_name
-        and c.arn = any($1);
-  EOQ
-
-  param "redshift_cluster_arns" {}
-}
-
-edge "redshift_cluster_to_vpc_security_group" {
-  title = "security group"
-
-  sql = <<-EOQ
-    select
-      arn as from_id,
-      s ->> 'VpcSecurityGroupId' as to_id
-    from
-      aws_redshift_cluster,
-      jsonb_array_elements(vpc_security_groups) as s
-    where
-      arn = $1;
-  EOQ
-
-  param "redshift_cluster_arns" {}
-}
-
-edge "redshift_cluster_to_kms_key" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      arn as from_id,
-      kms_key_id as to_id
-    from
-      aws_redshift_cluster
-    where
-      arn = $1;
-  EOQ
-
-  param "redshift_cluster_arns" {}
-}
-
-edge "redshift_cluster_to_iam_role" {
-  title = "assumes"
-
-  sql = <<-EOQ
-    select
-      arn as from_id,
-      r ->> 'IamRoleArn' as to_id
-    from
-      aws_redshift_cluster,
-      jsonb_array_elements(iam_roles) as r
-    where
-      arn = $1;
-  EOQ
-
-  param "redshift_cluster_arns" {}
-}
-
-edge "redshift_cluster_to_vpc_eip" {
-  title = "eip"
-
-  sql = <<-EOQ
-    select
-      c.arn as from_id,
-      e.arn as to_id
-    from
-      aws_redshift_cluster as c,
-      aws_vpc_eip as e
-    where
-      c.elastic_ip_status is not null
-      and e.public_ip = (c.elastic_ip_status ->> 'ElasticIp')::inet
-      and c.arn = $1;
-  EOQ
-
-  param "redshift_cluster_arns" {}
-}
-
-edge "redshift_cluster_to_cloudwatch_log_group" {
-  title = "logs to"
-
-  sql = <<-EOQ
-    select
-      c.arn as from_id,
-      g.arn as to_id
-    from
-      aws_redshift_cluster as c,
-      aws_cloudwatch_log_group as g
-    where
-      g.title like '%' || c.title || '%'
-      and c.arn = $1;
-  EOQ
-
-  param "redshift_cluster_arns" {}
-}
-
-edge "redshift_cluster_to_s3_bucket" {
-  title = "logs to"
-
-  sql = <<-EOQ
-    select
-      c.arn as from_id,
-      b.arn as to_id
-    from
-      aws_redshift_cluster as c,
-      aws_s3_bucket as b
-    where
-      b.name = c.logging_status ->> 'BucketName'
-      and c.arn = $1;
-  EOQ
-
-  param "redshift_cluster_arns" {}
-}
-
-node "redshift_parameter_group" {
-  category = category.redshift_parameter_group
-
-  sql = <<-EOQ
-    select
-      g.title as id,
-      g.title as title,
-      jsonb_build_object(
-        'ARN', g.title,
-        'Description', g.description,
-        'Family', g.family
-      ) as properties
-    from
-      aws_redshift_cluster as c,
-      jsonb_array_elements(cluster_parameter_groups) as p
-      left join
-        aws_redshift_parameter_group as g
-        on g.name = p ->> 'ParameterGroupName'
-      where
-        c.arn = any($1);
-  EOQ
-
-  param "redshift_cluster_arns" {}
-}
-
-edge "redshift_cluster_to_redshift_parameter_group" {
-  title = "parameter group"
-
-  sql = <<-EOQ
-    select
-      c.arn as from_id,
-      g.title as to_id
-    from
-      aws_redshift_cluster as c,
-      jsonb_array_elements(cluster_parameter_groups) as p
-      left join
-        aws_redshift_parameter_group as g
-        on g.name = p ->> 'ParameterGroupName'
-      where
-        c.arn = any($1);
-  EOQ
-
-  param "redshift_cluster_arns" {}
-}
-
-edge "redshift_cluster_to_redshift_snapshot" {
-  title = "snapshot"
-
-  sql = <<-EOQ
-    select
-      c.arn as from_id,
-      s.akas::text as to_id
-    from
-      aws_redshift_snapshot as s,
-      aws_redshift_cluster as c
-    where
-      s.cluster_identifier = c.cluster_identifier
-      and c.arn = $1;
-  EOQ
-
-  param "redshift_cluster_arns" {}
 }
