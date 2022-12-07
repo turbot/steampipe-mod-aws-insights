@@ -14,13 +14,13 @@ category "eks_cluster" {
   title = "EKS Cluster"
   color = local.containers_color
   href  = "/aws_insights.dashboard.eks_cluster_detail?input.eks_cluster_arn={{.properties.'ARN' | @uri}}"
-  icon  = "cog"
+  icon  = "heroicons-outline:cog"
 }
 
 category "eks_fargate_profile" {
   title = "EKS Farget Profile"
   color = local.containers_color
-  icon  = "FP"
+  icon  = "text:FP"
 }
 
 category "eks_identity_provider_config" {
@@ -32,5 +32,5 @@ category "eks_identity_provider_config" {
 category "eks_node_group" {
   title = "EKS Node Group"
   color = local.containers_color
-  icon  = "rectangle-group"
+  icon  = "heroicons-outline:rectangle-group"
 }

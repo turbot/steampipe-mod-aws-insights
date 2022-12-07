@@ -134,7 +134,7 @@ dashboard "ebs_snapshot_detail" {
       args = {
         ebs_snapshot_arns             = [self.input.snapshot_arn.value]
         ebs_volume_arns               = with.ebs_volumes.rows[*].volume_arn
-        ec2_image_ids                 = with.ec2_amis.rows[*].image_id
+        ec2_ami_image_ids             = with.ec2_amis.rows[*].image_id
         ec2_launch_configuration_arns = with.ec2_launch_configurations.rows[*].launch_configuration_arn
         kms_key_arns                  = with.kms_keys.rows[*].key_arn
       }
@@ -285,7 +285,7 @@ node "ebs_snapshot_node" {
 
   sql = <<-EOQ
     select
-      snapshot_id as id,
+      arn as id,
       title as title,
       jsonb_build_object(
         'ID', s.snapshot_id,
@@ -297,10 +297,10 @@ node "ebs_snapshot_node" {
     from
       aws_ebs_snapshot as s
     where
-      arn = $1;
+      arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "ebs_snapshot_arns" {}
 }
 
 node "ebs_snapshot_from_ebs_volume_node" {

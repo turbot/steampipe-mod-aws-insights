@@ -71,15 +71,15 @@ dashboard "iam_group_detail" {
 
       nodes = [
         node.iam_group,
-        node.iam_policy,
-        node.iam_user,
         node.iam_group_inline_policy,
+        node.iam_policy,
+        node.iam_user
       ]
 
       edges = [
-        edge.iam_policy_from_iam_group,
         edge.iam_group_to_iam_user,
         edge.iam_group_to_inline_policy,
+        edge.iam_policy_from_iam_group,
       ]
 
       args = {

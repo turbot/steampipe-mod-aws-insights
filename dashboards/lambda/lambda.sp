@@ -6,19 +6,19 @@ locals {
 
 category "lambda_alias" {
   title = "Lambda Alias"
-  icon  = "at-symbol"
+  icon  = "alternate-email"
   color = local.compute_color
 }
 
 category "lambda_function" {
   title = "Lambda Function"
   href  = "/aws_insights.dashboard.lambda_function_detail?input.lambda_arn={{.properties.'ARN' | @uri}}"
-  icon  = "text:Lambda"
+  icon  = "code-blocks"
   color = local.compute_color
 }
 
 category "lambda_version" {
   title = "Lambda Version"
-  icon  = "document-duplicate"
+  icon  = "content-copy"
   color = local.compute_color
 }

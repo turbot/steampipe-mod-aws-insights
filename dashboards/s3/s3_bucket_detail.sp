@@ -72,7 +72,7 @@ dashboard "s3_bucket_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "trails" {
+      with "cloudtrail_trails" {
         sql = <<-EOQ
           select
             distinct trail.arn as trail_arn
@@ -104,6 +104,21 @@ dashboard "s3_bucket_detail" {
         args = [self.input.bucket_arn.value]
       }
 
+      with "ec2_classic_load_balancers" {
+        sql = <<-EOQ
+          select
+            clb.arn as clb_arn
+          from
+            aws_ec2_classic_load_balancer clb,
+            aws_s3_bucket as b
+          where
+            b.arn = $1
+            and clb.access_log_s3_bucket_name = b.name;
+        EOQ
+
+        args = [self.input.bucket_arn.value]
+      }
+
       with "ec2_network_load_balancers" {
         sql = <<-EOQ
           select
@@ -116,21 +131,6 @@ dashboard "s3_bucket_detail" {
             b.arn = $1
             and attributes ->> 'Key' = 'access_logs.s3.bucket'
             and attributes ->> 'Value' = b.name;
-        EOQ
-
-        args = [self.input.bucket_arn.value]
-      }
-
-      with "ec2_classic_load_balancers" {
-        sql = <<-EOQ
-          select
-            clb.arn as clb_arn
-          from
-            aws_ec2_classic_load_balancer clb,
-            aws_s3_bucket as b
-          where
-            b.arn = $1
-            and clb.access_log_s3_bucket_name = b.name;
         EOQ
 
         args = [self.input.bucket_arn.value]
@@ -207,40 +207,40 @@ dashboard "s3_bucket_detail" {
       }
 
       nodes = [
-        node.s3_bucket,
         node.cloudtrail_trail,
         node.ec2_application_load_balancer,
-        node.ec2_network_load_balancer,
         node.ec2_classic_load_balancer,
+        node.ec2_network_load_balancer,
         node.kms_key,
         node.lambda_function,
-        node.sns_topic,
-        node.sqs_queue,
+        node.s3_bucket,
         node.s3_bucket_from_s3_bucket,
-        node.s3_bucket_to_s3_bucket
+        node.s3_bucket_to_s3_bucket,
+        node.sns_topic,
+        node.sqs_queue
       ]
 
       edges = [
         edge.cloudtrail_trail_to_s3_bucket,
         edge.ec2_alb_to_s3_bucket,
-        edge.ec2_nlb_to_s3_bucket,
         edge.ec2_clb_to_s3_bucket,
+        edge.ec2_nlb_to_s3_bucket,
+        edge.s3_bucket_from_s3_bucket,
         edge.s3_bucket_to_kms_key,
         edge.s3_bucket_to_lambda_function,
+        edge.s3_bucket_to_s3_bucket,
         edge.s3_bucket_to_sns_topic,
-        edge.s3_bucket_to_sqs_queue,
-        edge.s3_bucket_from_s3_bucket,
-        edge.s3_bucket_to_s3_bucket
+        edge.s3_bucket_to_sqs_queue
       ]
 
       args = {
-        s3_bucket_arns                     = [self.input.bucket_arn.value]
-        cloudtrail_trail_arns              = with.trails.rows[*].trail_arn
+        cloudtrail_trail_arns              = with.cloudtrail_trails.rows[*].trail_arn
         ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
-        ec2_network_load_balancer_arns     = with.ec2_network_load_balancers.rows[*].nlb_arn
         ec2_classic_load_balancer_arns     = with.ec2_classic_load_balancers.rows[*].clb_arn
+        ec2_network_load_balancer_arns     = with.ec2_network_load_balancers.rows[*].nlb_arn
         kms_key_arns                       = with.kms_keys.rows[*].key_arn
         lambda_function_arns               = with.lambda_functions.rows[*].function_arn
+        s3_bucket_arns                     = [self.input.bucket_arn.value]
         sns_topic_arns                     = with.sns_topics.rows[*].topic_arn
         sqs_queue_arns                     = with.sqs_queues.rows[*].queue_arn
       }

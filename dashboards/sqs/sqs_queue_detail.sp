@@ -57,32 +57,126 @@ dashboard "sqs_queue_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "eventbridge_rules" {
+        sql = <<-EOQ
+          select
+            arn as eventbridge_rule_arn
+          from
+            aws_eventbridge_rule as r,
+            jsonb_array_elements(targets) as t
+          where
+            t ->> 'Arn' = $1;
+        EOQ
+
+        args = [self.input.queue_arn.value]
+      }
+
+      with "kms_keys" {
+        sql = <<-EOQ
+          select
+            k.arn as key_arn
+          from
+            aws_sqs_queue as q,
+            aws_kms_key as k,
+            jsonb_array_elements(aliases) as a
+          where
+            a ->> 'AliasName' = q.kms_master_key_id
+            and k.region = q.region
+            and q.queue_arn = $1;
+        EOQ
+
+        args = [self.input.queue_arn.value]
+      }
+
+      with "lambda_functions" {
+        sql = <<-EOQ
+          select
+            arn as function_arn
+          from
+            aws_lambda_function
+          where
+            dead_letter_config_target_arn = $1;
+        EOQ
+
+        args = [self.input.queue_arn.value]
+      }
+
+      with "s3_buckets" {
+        sql = <<-EOQ
+          select
+            b.arn as bucket_arn
+          from
+            aws_s3_bucket as b,
+            jsonb_array_elements(event_notification_configuration -> 'QueueConfigurations') as q
+          where
+            event_notification_configuration -> 'QueueConfigurations' <> 'null'
+            and q ->> 'QueueArn' = $1;
+        EOQ
+
+        args = [self.input.queue_arn.value]
+      }
+
+      with "vpc_endpoints" {
+        sql = <<-EOQ
+          select
+            vpc_endpoint_id
+          from
+            aws_vpc_endpoint,
+            jsonb_array_elements(policy_std -> 'Statement') as s,
+            jsonb_array_elements_text(s -> 'Resource') as r
+          where
+            r = $1;
+        EOQ
+
+        args = [self.input.queue_arn.value]
+      }
+
+      with "vpc_vpcs" {
+        sql = <<-EOQ
+          select
+            vpc_id
+          from
+            aws_vpc_endpoint,
+            jsonb_array_elements(policy_std -> 'Statement') as s,
+            jsonb_array_elements_text(s -> 'Resource') as r
+          where
+            r = $1;
+        EOQ
+
+        args = [self.input.queue_arn.value]
+      }
+
       nodes = [
+        node.eventbridge_rule,
+        node.kms_key,
+        node.lambda_function,
+        node.s3_bucket,
+        node.sqs_dead_letter_queue,
         node.sqs_queue,
-        node.sqs_queue_to_sns_topic_subscription_node,
-        node.sqs_queue_to_sqs_queue_node,
-        node.sqs_queue_to_kms_key_node,
-        node.sqs_queue_from_s3_bucket_node,
-        node.sqs_queue_from_lambda_function_node,
-        node.sqs_queue_from_vpc_endpoint_node,
-        node.sqs_queue_from_vpc_node,
-        node.sqs_queue_from_eventbridge_rule_node
+        node.sqs_queue_sns_topic_subscription,
+        node.vpc_endpoint,
+        node.vpc_vpc
       ]
 
       edges = [
-        edge.sqs_queue_to_sns_topic_subscription_edge,
-        edge.sqs_queue_to_sqs_queue_edge,
-        edge.sqs_queue_to_kms_key_edge,
-        edge.sqs_queue_from_s3_bucket_edge,
-        edge.sqs_queue_from_lambda_function_edge,
-        edge.sqs_queue_from_vpc_endpoint_edge,
-        edge.sqs_queue_vpc_endpoint_to_vpc_edge,
-        edge.sqs_queue_from_eventbridge_rule_edge
+        edge.eventbridge_rule_to_sqs_queue,
+        edge.lambda_function_to_sqs_queue,
+        edge.s3_bucket_to_sqs_queue,
+        edge.sqs_queue_to_kms_key,
+        edge.sqs_queue_to_sns_topic_subscription,
+        edge.sqs_queue_to_sqs_dead_letter_queue,
+        edge.sqs_queue_to_vpc_endpoint,
+        edge.vpc_endpoint_to_vpc
       ]
 
       args = {
-        sqs_queue_arns = [self.input.queue_arn.value]
-        arn            = self.input.queue_arn.value
+        eventbridge_rule_arns = with.eventbridge_rules.rows[*].eventbridge_rule_arn
+        kms_key_arns          = with.kms_keys.rows[*].key_arn
+        lambda_function_arns  = with.lambda_functions.rows[*].function_arn
+        s3_bucket_arns        = with.s3_buckets.rows[*].bucket_arn
+        sqs_queue_arns        = [self.input.queue_arn.value]
+        vpc_endpoint_ids      = with.vpc_endpoints.rows[*].vpc_endpoint_id
+        vpc_vpc_ids           = with.vpc_vpcs.rows[*].vpc_id
       }
     }
   }
@@ -337,7 +431,7 @@ node "sqs_queue" {
   param "sqs_queue_arns" {}
 }
 
-node "sqs_queue_to_sns_topic_subscription_node" {
+node "sqs_queue_sns_topic_subscription" {
   category = category.sns_topic_subscription
 
   sql = <<-EOQ
@@ -352,29 +446,29 @@ node "sqs_queue_to_sns_topic_subscription_node" {
     from
       aws_sns_topic_subscription
     where
-      endpoint = $1;
+      endpoint = any($1);
   EOQ
 
-  param "arn" {}
+  param "sqs_queue_arns" {}
 }
 
-edge "sqs_queue_to_sns_topic_subscription_edge" {
+edge "sqs_queue_to_sns_topic_subscription" {
   title = "subscription"
 
   sql = <<-EOQ
     select
-      q.queue_arn as from_id,
-      s.subscription_arn as to_id
+      endpoint as from_id,
+      subscription_arn as to_id
     from
-      aws_sqs_queue as q
-      left join aws_sns_topic_subscription as s on s.endpoint = q.queue_arn
-      and q.queue_arn = $1;
+      aws_sns_topic_subscription
+    where
+      endpoint = any($1);
   EOQ
 
-  param "arn" {}
+  param "sqs_queue_arns" {}
 }
 
-node "sqs_queue_to_sqs_queue_node" {
+node "sqs_dead_letter_queue" {
   category = category.sqs_queue
 
   sql = <<-EOQ
@@ -390,13 +484,13 @@ node "sqs_queue_to_sqs_queue_node" {
       aws_sqs_queue
     where
       redrive_policy ->> 'deadLetterTargetArn' is not null
-      and queue_arn = $1;
+      and queue_arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "sqs_queue_arns" {}
 }
 
-edge "sqs_queue_to_sqs_queue_edge" {
+edge "sqs_queue_to_sqs_dead_letter_queue" {
   title = "dead letter queue"
 
   sql = <<-EOQ
@@ -407,38 +501,35 @@ edge "sqs_queue_to_sqs_queue_edge" {
       aws_sqs_queue
     where
       redrive_policy ->> 'deadLetterTargetArn' is not null
-      and queue_arn = $1;
+      and queue_arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "sqs_queue_arns" {}
 }
 
-node "sqs_queue_to_kms_key_node" {
-  category = category.kms_key
+edge "sqs_queue_to_kms_key_alias" {
+  title = "encrypted with"
 
   sql = <<-EOQ
     select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Id', id,
-        'Enabled', enabled::text,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
+      q.queue_arn as from_id,
+      a.arn as to_id
     from
-      aws_kms_key,
-      jsonb_array_elements(aliases) as a
+      aws_kms_key as k
+      join aws_kms_alias as a
+      on a.target_key_id = k.id
+      join aws_sqs_queue as q
+      on a.alias_name = q.kms_master_key_id
+      and k.region = q.region
+      and k.account_id = q.account_id
     where
-      a ->> 'AliasName' in (select kms_master_key_id from aws_sqs_queue where queue_arn = $1)
-      and region in (select region from aws_sqs_queue where queue_arn = $1);
+      q.queue_arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "sqs_queue_arns" {}
 }
 
-edge "sqs_queue_to_kms_key_edge" {
+edge "sqs_queue_to_kms_key" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -452,226 +543,76 @@ edge "sqs_queue_to_kms_key_edge" {
     where
       a ->> 'AliasName' = q.kms_master_key_id
       and k.region = q.region
-      and q.queue_arn = $1;
+      and q.queue_arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "sqs_queue_arns" {}
 }
 
-node "sqs_queue_from_s3_bucket_node" {
-  category = category.s3_bucket
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Versioning Enabled', versioning_enabled::text,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_s3_bucket,
-      jsonb_array_elements(
-        case jsonb_typeof(event_notification_configuration -> 'QueueConfigurations')
-          when 'array' then (event_notification_configuration -> 'QueueConfigurations')
-          else null end
-        )
-        as q
-    where
-      q ->> 'QueueArn' = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "sqs_queue_from_s3_bucket_edge" {
+edge "lambda_function_to_sqs_queue" {
   title = "queues"
 
   sql = <<-EOQ
     select
       arn as from_id,
-      $1 as to_id
-    from
-      aws_s3_bucket,
-      jsonb_array_elements(
-        case jsonb_typeof(event_notification_configuration -> 'QueueConfigurations')
-          when 'array' then (event_notification_configuration -> 'QueueConfigurations')
-          else null end
-        )
-        as q
-    where
-      q ->> 'QueueArn' = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "sqs_queue_from_lambda_function_node" {
-  category = category.lambda_function
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'State', state,
-        'Runtime', runtime,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
+      dead_letter_config_target_arn as to_id
     from
       aws_lambda_function
     where
-      dead_letter_config_target_arn = $1;
+      dead_letter_config_target_arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "sqs_queue_arns" {}
 }
 
-edge "sqs_queue_from_lambda_function_edge" {
-  title = "queues"
-
-  sql = <<-EOQ
-    select
-      arn as from_id,
-      $1 as to_id
-    from
-      aws_lambda_function as l
-    where
-      dead_letter_config_target_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "sqs_queue_from_vpc_endpoint_node" {
-  category = category.vpc_endpoint
-
-  sql = <<-EOQ
-    select
-      vpc_endpoint_id as id,
-      title as title,
-      jsonb_build_object(
-        'ID', vpc_endpoint_id,
-        'State', state,
-        'Service Name', service_name,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_vpc_endpoint,
-      jsonb_array_elements(policy_std -> 'Statement') as s,
-      jsonb_array_elements_text(s -> 'Resource') as r
-    where
-      r = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "sqs_queue_from_vpc_endpoint_edge" {
+edge "sqs_queue_to_vpc_endpoint" {
   title = "endpoint"
 
   sql = <<-EOQ
     select
-      $1 as from_id,
+      r as from_id,
       vpc_endpoint_id as to_id
     from
       aws_vpc_endpoint,
       jsonb_array_elements(policy_std -> 'Statement') as s,
       jsonb_array_elements_text(s -> 'Resource') as r
     where
-      r = $1;
+      r = any($1);
   EOQ
 
-  param "arn" {}
+  param "sqs_queue_arns" {}
 }
 
-node "sqs_queue_from_vpc_node" {
-  category = category.vpc_vpc
-
-  sql = <<-EOQ
-    select
-      e.vpc_id as id,
-      v.title as title,
-      jsonb_build_object(
-        'VPC ARN', v.arn,
-        'VPC ID', v.vpc_id,
-        'Account ID', v.account_id,
-        'Region', v.region
-      ) as properties
-    from
-      aws_vpc_endpoint as e,
-      jsonb_array_elements(e.policy_std -> 'Statement') as s,
-      jsonb_array_elements_text(s -> 'Resource') as r,
-      aws_vpc as v
-    where
-      v.vpc_id = e.vpc_id
-      and r = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "sqs_queue_vpc_endpoint_to_vpc_edge" {
+edge "vpc_endpoint_to_vpc" {
   title = "vpc"
 
   sql = <<-EOQ
     select
-      e.vpc_endpoint_id as from_id,
-      e.vpc_id as to_id
+      vpc_endpoint_id as from_id,
+      vpc_id as to_id
     from
-      aws_vpc_endpoint as e,
-      jsonb_array_elements(policy_std -> 'Statement') as s,
-      jsonb_array_elements_text(s -> 'Resource') as r
-      , aws_vpc as v
+      aws_vpc_endpoint
     where
-      v.vpc_id = e.vpc_id
-      and r = $1;
+      vpc_endpoint_id = any($1);
   EOQ
 
-  param "arn" {}
+  param "vpc_endpoint_ids" {}
 }
 
-node "sqs_queue_from_eventbridge_rule_node" {
-  category = category.eventbridge_rule
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'State', state,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_eventbridge_rule,
-      jsonb_array_elements(targets) as t
-    where
-      t ->> 'Arn' = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "sqs_queue_from_eventbridge_rule_edge" {
+edge "eventbridge_rule_to_sqs_queue" {
   title = "queues"
 
   sql = <<-EOQ
     select
       arn as from_id,
-      $1 as to_id
+      t ->> 'Arn' as to_id
     from
       aws_eventbridge_rule as r,
       jsonb_array_elements(targets) as t
     where
-      t ->> 'Arn' = $1;
+      t ->> 'Arn' like '%sqs%'
+      and arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "eventbridge_rule_arns" {}
 }

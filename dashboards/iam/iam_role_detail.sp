@@ -80,7 +80,8 @@ dashboard "iam_role_detail" {
       ]
 
       args = {
-        arn = self.input.role_arn.value
+        arn           = self.input.role_arn.value
+        iam_role_arns = [self.input.role_arn.value]
       }
     }
   }

@@ -39,7 +39,7 @@ dashboard "eventbridge_rule_detail" {
       direction = "TD"
 
       nodes = [
-        node.eventbridge_rule_node,
+        node.eventbridge_rule,
         node.eventbridge_rule_to_sns_topic_node,
         node.eventbridge_rule_to_lambda_function_node,
         node.eventbridge_rule_to_cloudwatch_log_group_node,
@@ -54,7 +54,8 @@ dashboard "eventbridge_rule_detail" {
       ]
 
       args = {
-        arn = self.input.eventbridge_rule_arn.value
+        arn                   = self.input.eventbridge_rule_arn.value
+        eventbridge_rule_arns = [self.input.eventbridge_rule_arn.value]
       }
     }
   }
@@ -195,7 +196,7 @@ query "eventbridge_rule_target_count" {
   param "arn" {}
 }
 
-node "eventbridge_rule_node" {
+node "eventbridge_rule" {
   category = category.eventbridge_rule
 
   sql = <<-EOQ
@@ -213,10 +214,10 @@ node "eventbridge_rule_node" {
     from
       aws_eventbridge_rule
     where
-      arn = $1;
+      arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "eventbridge_rule_arns" {}
 }
 
 node "eventbridge_rule_to_sns_topic_node" {
@@ -357,8 +358,6 @@ node "eventbridge_rule_to_eventbridge_bus_node" {
       null as from_id,
       null as to_id,
       b.arn as id,
-      r.event_bus_name as title,
-      'aws_eventbridge_bus' as category,
       jsonb_build_object(
         'ARN', b.arn,
         'Account ID', b.account_id,

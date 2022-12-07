@@ -59,13 +59,15 @@ dashboard "ecr_repository_detail" {
         node.ecr_repository_node,
         node.ecr_repository_to_ecr_image_node,
         node.ecr_repository_to_ecs_task_definition_node,
-        node.ecr_repository_to_kms_key_node
+        node.ecr_repository_to_kms_key_node,
+        node.ecr_image_tag
       ]
 
       edges = [
         edge.ecr_repository_to_ecr_image_edge,
         edge.ecr_repository_to_ecs_task_definition_edge,
-        edge.ecr_repository_to_kms_key_edge
+        edge.ecr_repository_to_kms_key_edge,
+        edge.ecr_image_to_ecr_image_tag
       ]
 
       args = {
@@ -270,7 +272,7 @@ node "ecr_repository_to_ecr_image_node" {
   sql = <<-EOQ
     select
       i.image_digest as id,
-      i.image_digest as title,
+      left(split_part(i.image_digest,':',2),12) as title,
       jsonb_build_object(
         'Manifest Media Type', i.image_manifest_media_type,
         'Artifact Media Type', i.artifact_media_type,
@@ -298,6 +300,48 @@ edge "ecr_repository_to_ecr_image_edge" {
     from
       aws_ecr_repository as r
       left join aws_ecr_image i on i.registry_id = r.registry_id and i.repository_name = r.repository_name
+    where
+      r.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+node "ecr_image_tag" {
+  category = category.ecr_image_tag
+
+  sql = <<-EOQ
+    select
+      jsonb_array_elements_text(image_tags) as id,
+      jsonb_array_elements_text(image_tags) as title,
+      jsonb_build_object(
+        'Account ID', i.account_id,
+        'Region', i.region
+      ) as properties
+    from
+      aws_ecr_repository as r
+      left join aws_ecr_image i
+      on i.registry_id = i.registry_id
+      and i.repository_name = r.repository_name
+    where
+      r.arn = $1;
+  EOQ
+
+  param "arn" {}
+}
+
+edge "ecr_image_to_ecr_image_tag" {
+  title = "tag"
+
+  sql = <<-EOQ
+    select
+      i.image_digest as from_id,
+      jsonb_array_elements_text(image_tags) as to_id
+    from
+      aws_ecr_repository as r
+      left join aws_ecr_image i
+      on i.registry_id = r.registry_id
+      and i.repository_name = r.repository_name
     where
       r.arn = $1;
   EOQ

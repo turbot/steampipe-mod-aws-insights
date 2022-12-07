@@ -62,7 +62,7 @@ dashboard "vpc_eip_detail" {
         args = [self.input.eip_arn.value]
       }
 
-      with "enis" {
+      with "ec2_network_interfaces" {
         sql = <<-EOQ
           select
             network_interface_id as eni_id
@@ -77,23 +77,23 @@ dashboard "vpc_eip_detail" {
       }
 
       nodes = [
-        node.vpc_eip,
-        node.ec2_network_interface,
-        node.ec2_instance,
 
-        node.ec2_network_interface_vpc_nat_gateway
+        node.ec2_instance,
+        node.ec2_network_interface,
+        node.vpc_eip,
+        node.vpc_nat_gateway
       ]
 
       edges = [
+
         edge.ec2_instance_to_ec2_network_interface,
         edge.ec2_network_interface_to_vpc_eip,
-
         edge.vpc_nat_gateway_to_ec2_network_interface
       ]
 
       args = {
         ec2_instance_arns         = with.ec2_instances.rows[*].instance_arn
-        ec2_network_interface_ids = with.enis.rows[*].eni_id
+        ec2_network_interface_ids = with.ec2_network_interfaces.rows[*].eni_id
         vpc_eip_arns              = [self.input.eip_arn.value]
       }
     }

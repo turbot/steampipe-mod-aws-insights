@@ -56,21 +56,6 @@ dashboard "rds_db_cluster_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "rds_db_cluster_snapshots" {
-        sql = <<-EOQ
-          select
-            s.arn as snapshot_arn
-          from
-            aws_rds_db_cluster as c
-            join aws_rds_db_cluster_snapshot as s
-            on s.db_cluster_identifier = c.db_cluster_identifier
-          where
-            c.arn = $1;
-        EOQ
-
-        args = [self.input.db_cluster_arn.value]
-      }
-
       with "iam_roles" {
         sql = <<-EOQ
           select
@@ -85,15 +70,27 @@ dashboard "rds_db_cluster_detail" {
         args = [self.input.db_cluster_arn.value]
       }
 
-      with "sns_topics" {
+      with "kms_keys" {
         sql = <<-EOQ
           select
-            s.sns_topic_arn as topic_arn
+            kms_key_id as key_arn
           from
-            aws_rds_db_event_subscription as s,
-            jsonb_array_elements_text(source_ids_list) as ids
-            join aws_rds_db_cluster as c
-            on ids = c.db_cluster_identifier
+            aws_rds_db_cluster
+          where
+            arn = $1;
+        EOQ
+
+        args = [self.input.db_cluster_arn.value]
+      }
+
+      with "rds_db_cluster_snapshots" {
+        sql = <<-EOQ
+          select
+            s.arn as snapshot_arn
+          from
+            aws_rds_db_cluster as c
+            join aws_rds_db_cluster_snapshot as s
+            on s.db_cluster_identifier = c.db_cluster_identifier
           where
             c.arn = $1;
         EOQ
@@ -117,14 +114,17 @@ dashboard "rds_db_cluster_detail" {
         args = [self.input.db_cluster_arn.value]
       }
 
-      with "kms_keys" {
+      with "sns_topics" {
         sql = <<-EOQ
           select
-            kms_key_id as key_arn
+            s.sns_topic_arn as topic_arn
           from
-            aws_rds_db_cluster
+            aws_rds_db_event_subscription as s,
+            jsonb_array_elements_text(source_ids_list) as ids
+            join aws_rds_db_cluster as c
+            on ids = c.db_cluster_identifier
           where
-            arn = $1;
+            c.arn = $1;
         EOQ
 
         args = [self.input.db_cluster_arn.value]
@@ -196,42 +196,42 @@ dashboard "rds_db_cluster_detail" {
       }
 
       nodes = [
-        node.rds_db_cluster,
         node.iam_role,
-        node.sns_topic,
+        node.kms_key,
+        node.rds_db_cluster,
+        node.rds_db_cluster_parameter_group,
         node.rds_db_cluster_snapshot,
         node.rds_db_instance,
-        node.rds_db_cluster_parameter_group,
         node.rds_db_subnet_group,
-        node.kms_key,
+        node.sns_topic,
         node.vpc_security_group,
         node.vpc_subnet,
         node.vpc_vpc
       ]
 
       edges = [
-        edge.rds_db_cluster_to_sns_topic,
         edge.rds_db_cluster_to_iam_role,
+        edge.rds_db_cluster_to_kms_key,
+        edge.rds_db_cluster_to_rds_db_cluster_parameter_group,
         edge.rds_db_cluster_to_rds_db_cluster_snapshot,
         edge.rds_db_cluster_to_rds_db_instance,
-        edge.rds_db_cluster_to_rds_db_cluster_parameter_group,
-        edge.rds_db_cluster_to_kms_key,
+        edge.rds_db_cluster_to_sns_topic,
         edge.rds_db_cluster_to_vpc_security_group,
         edge.rds_db_subnet_group_to_vpc_subnet,
-        edge.vpc_subnet_to_vpc_vpc,
-        edge.vpc_security_group_to_rds_db_subnet_group
+        edge.vpc_security_group_to_rds_db_subnet_group,
+        edge.vpc_subnet_to_vpc_vpc
       ]
 
       args = {
-        rds_db_cluster_arns          = [self.input.db_cluster_arn.value]
-        rds_db_instance_arns         = with.rds_db_instances.rows[*].instance_arn
-        rds_db_cluster_snapshot_arns = with.rds_db_cluster_snapshots.rows[*].snapshot_arn
-        sns_topic_arns               = with.sns_topics.rows[*].topic_arn
-        kms_key_arns                 = with.kms_keys.rows[*].key_arn
-        vpc_vpc_ids                  = with.vpc_vpcs.rows[*].vpc_id
-        vpc_subnet_ids               = with.vpc_subnets.rows[*].subnet_id
-        vpc_security_group_ids       = with.vpc_security_groups.rows[*].group_id
         iam_role_arns                = with.iam_roles.rows[*].role_arn
+        kms_key_arns                 = with.kms_keys.rows[*].key_arn
+        rds_db_cluster_arns          = [self.input.db_cluster_arn.value]
+        rds_db_cluster_snapshot_arns = with.rds_db_cluster_snapshots.rows[*].snapshot_arn
+        rds_db_instance_arns         = with.rds_db_instances.rows[*].instance_arn
+        sns_topic_arns               = with.sns_topics.rows[*].topic_arn
+        vpc_security_group_ids       = with.vpc_security_groups.rows[*].group_id
+        vpc_subnet_ids               = with.vpc_subnets.rows[*].subnet_id
+        vpc_vpc_ids                  = with.vpc_vpcs.rows[*].vpc_id
       }
     }
   }
@@ -463,33 +463,6 @@ edge "rds_db_cluster_to_rds_db_cluster_parameter_group" {
         on rdc.db_cluster_parameter_group = rg.name
         and rdc.account_id = rg.account_id
         and rdc.region = rg.region
-    where
-      rdc.arn = any($1);
-  EOQ
-
-  param "rds_db_cluster_arns" {}
-}
-
-node "rds_db_subnet_group" {
-  category = category.rds_db_subnet_group
-
-  sql = <<-EOQ
-    select
-      rdsg.arn as id,
-      rdsg.title as title,
-      jsonb_build_object(
-        'Status', rdsg.status,
-        'VPC ID', rdsg.vpc_id,
-        'Account ID', rdsg.account_id,
-        'Region', rdsg.region
-      ) as properties
-    from
-      aws_rds_db_cluster rdc
-      left join
-        aws_rds_db_subnet_group as rdsg
-        on rdc.db_subnet_group = rdsg.name
-        and rdc.region = rdsg.region
-        and rdc.account_id = rdsg.account_id
     where
       rdc.arn = any($1);
   EOQ

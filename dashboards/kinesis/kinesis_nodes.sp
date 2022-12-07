@@ -1,4 +1,4 @@
-node "dynamodb_table_to_kinesis_stream_node" {
+node "kinesis_stream" {
   category = category.kinesis_stream
 
   sql = <<-EOQ
