@@ -59,7 +59,6 @@ dashboard "backup_plan_detail" {
       ]
 
       args = {
-        arn               = self.input.backup_plan_arn.value
         backup_plan_arns  = [self.input.backup_plan_arn.value]
         backup_vault_arns = with.backup_vaults.rows[*].backup_vault_arn
       }
