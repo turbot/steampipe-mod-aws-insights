@@ -49,13 +49,13 @@ dashboard "backup_plan_detail" {
 
       nodes = [
         node.backup_plan,
-        node.backup_vault,
-        node.backup_selection
+        node.backup_selection,
+        node.backup_vault
       ]
 
       edges = [
-        edge.backup_plan_to_backup_vault,
-        edge.backup_plan_to_backup_selection
+        edge.backup_plan_to_backup_selection,
+        edge.backup_plan_to_backup_vault
       ]
 
       args = {

@@ -74,8 +74,8 @@ dashboard "backup_vault_detail" {
       }
 
       nodes = [
-        node.backup_vault,
         node.backup_plan,
+        node.backup_vault,
         node.kms_key,
         node.sns_topic
       ]
@@ -88,8 +88,8 @@ dashboard "backup_vault_detail" {
 
       args = {
         arn = self.input.backup_vault_arn.value
-        backup_vault_arns = [self.input.backup_vault_arn.value]
         backup_plan_arns      = with.backup_plans.rows[*].backup_plan_arn
+        backup_vault_arns = [self.input.backup_vault_arn.value]
         kms_key_arns      = with.kms_keys.rows[*].kms_key_arn
         sns_topic_arns    = with.sns_topics.rows[*].sns_topic_arn
       }
