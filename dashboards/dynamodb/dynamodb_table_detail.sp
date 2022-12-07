@@ -135,8 +135,8 @@ dashboard "dynamodb_table_detail" {
         node.dynamodb_table,
         node.kms_key,
         node.s3_bucket,
-        node.dynamodb_table_to_dynamodb_backup_node,
-        node.dynamodb_table_to_kinesis_stream_node
+        node.dynamodb_backup,
+        node.kinesis_stream
       ]
 
       edges = [

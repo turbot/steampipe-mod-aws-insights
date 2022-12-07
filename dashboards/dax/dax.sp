@@ -11,6 +11,12 @@ category "dax_cluster" {
   icon  = "clipboard-document-check"
 }
 
+category "dax_cluster_node" {
+  title = "DAX Cluster Node"
+  color = local.database_color
+  icon  = "text:Node"
+}
+
 category "dax_subnet_group" {
   title = "DAX Subnet Group"
   color = local.database_color

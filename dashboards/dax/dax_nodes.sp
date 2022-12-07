@@ -22,6 +22,31 @@ node "dax_cluster" {
   param "dax_cluster_arns" {}
 }
 
+node "dax_cluster_node" {
+  category = category.dax_cluster_node
+
+  sql = <<-EOQ
+    select
+      n ->> 'NodeId' as id,
+      n ->> 'NodeId' as title,
+      jsonb_build_object(
+        'Status', n ->> 'NodeStatus',
+        'Create Time', n ->> 'NodeCreateTime',
+        'Account ID', account_id,
+        'Availability Zone', n ->> 'AvailabilityZone',
+        'Region', region,
+        'Parameter Group Status', n ->> 'ParameterGroupStatus'
+      ) as properties
+    from
+      aws_dax_cluster,
+      jsonb_array_elements(nodes) as n
+    where
+      arn = any($1);
+  EOQ
+
+  param "dax_cluster_arns" {}
+}
+
 node "dax_subnet_group" {
   category = category.dax_subnet_group
   sql      = <<-EOQ

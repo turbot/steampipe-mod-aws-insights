@@ -120,6 +120,7 @@ dashboard "dax_cluster_detail" {
 
       nodes = [
         node.dax_cluster,
+        node.dax_cluster_node,
         node.dax_parameter_group,
         node.dax_subnet_group,
         node.iam_role,
@@ -130,6 +131,7 @@ dashboard "dax_cluster_detail" {
       ]
 
       edges = [
+        edge.dax_cluster_to_dax_cluster_node,
         edge.dax_cluster_to_iam_role,
         edge.dax_cluster_to_dax_parameter_group,
         edge.dax_cluster_to_sns_topic,

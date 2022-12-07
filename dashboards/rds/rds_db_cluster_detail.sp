@@ -470,33 +470,6 @@ edge "rds_db_cluster_to_rds_db_cluster_parameter_group" {
   param "rds_db_cluster_arns" {}
 }
 
-node "rds_db_subnet_group" {
-  category = category.rds_db_subnet_group
-
-  sql = <<-EOQ
-    select
-      rdsg.arn as id,
-      rdsg.title as title,
-      jsonb_build_object(
-        'Status', rdsg.status,
-        'VPC ID', rdsg.vpc_id,
-        'Account ID', rdsg.account_id,
-        'Region', rdsg.region
-      ) as properties
-    from
-      aws_rds_db_cluster rdc
-      left join
-        aws_rds_db_subnet_group as rdsg
-        on rdc.db_subnet_group = rdsg.name
-        and rdc.region = rdsg.region
-        and rdc.account_id = rdsg.account_id
-    where
-      rdc.arn = any($1);
-  EOQ
-
-  param "rds_db_cluster_arns" {}
-}
-
 edge "rds_db_cluster_to_kms_key" {
   title = "encrypted with"
 

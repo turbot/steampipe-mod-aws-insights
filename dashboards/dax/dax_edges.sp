@@ -1,3 +1,19 @@
+edge "dax_cluster_to_dax_cluster_node" {
+  title = "node"
+  sql   = <<-EOQ
+    select
+      arn as from_id,
+      n ->> 'NodeId' as to_id
+    from
+      aws_dax_cluster,
+      jsonb_array_elements(nodes) as n
+    where
+      arn = any($1);
+  EOQ
+
+  param "dax_cluster_arns" {}
+}
+
 edge "dax_cluster_to_iam_role" {
   title = "assumes"
   sql   = <<-EOQ

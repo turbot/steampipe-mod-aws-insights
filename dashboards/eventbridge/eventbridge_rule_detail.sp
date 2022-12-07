@@ -358,8 +358,6 @@ node "eventbridge_rule_to_eventbridge_bus_node" {
       null as from_id,
       null as to_id,
       b.arn as id,
-      r.event_bus_name as title,
-      'aws_eventbridge_bus' as category,
       jsonb_build_object(
         'ARN', b.arn,
         'Account ID', b.account_id,
