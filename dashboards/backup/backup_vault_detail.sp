@@ -54,7 +54,8 @@ dashboard "backup_vault_detail" {
           from
             aws_backup_vault
           where
-            arn = $1;
+            encryption_key_arn is not null
+            and arn = $1;
         EOQ
 
         args = [self.input.backup_vault_arn.value]
@@ -67,7 +68,8 @@ dashboard "backup_vault_detail" {
           from
             aws_backup_vault
           where
-            arn = $1;
+            sns_topic_arn is not null
+            and arn = $1;
         EOQ
 
         args = [self.input.backup_vault_arn.value]
