@@ -276,7 +276,7 @@ edge "iam_group_to_iam_policy" {
       aws_iam_group,
       jsonb_array_elements_text(attached_policy_arns) as policy_arn
     where
-      arn = $1;
+      arn = any($1);
   EOQ
 
   param "iam_group_arns" {}

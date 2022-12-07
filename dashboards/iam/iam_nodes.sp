@@ -89,10 +89,8 @@ node "iam_policy" {
 
   sql = <<-EOQ
     select
-      distinct on (arn)
       arn as id,
       name as title,
-      'aws_iam_policy' as category,
       jsonb_build_object(
         'ARN', arn,
         'AWS Managed', is_aws_managed::text,
