@@ -78,27 +78,27 @@ dashboard "api_gatewayv2_api_detail" {
 
       nodes = [
         node.api_gatewayv2_api,
-        node.lambda_function,
-        node.sqs_queue,
-        node.sfn_state_machine,
-        node.kinesis_stream,
+        node.api_gatewayv2_stage,
         node.ec2_load_balancer_listener,
-        node.api_gatewayv2_stage
+        node.kinesis_stream,
+        node.lambda_function,
+        node.sfn_state_machine,
+        node.sqs_queue
       ]
 
       edges = [
-        edge.api_gatewayv2_api_to_lambda_function,
-        edge.api_gatewayv2_api_to_sqs_queue,
-        edge.api_gatewayv2_api_to_sfn_state_machine,
-        edge.api_gatewayv2_api_to_kinesis_stream,
         edge.api_gatewayv2_api_to_ec2_load_balancer_listener,
+        edge.api_gatewayv2_api_to_kinesis_stream,
+        edge.api_gatewayv2_api_to_lambda_function,
+        edge.api_gatewayv2_api_to_sfn_state_machine,
+        edge.api_gatewayv2_api_to_sqs_queue,
         edge.api_gatewayv2_stage_to_api_gatewayv2_api
       ]
 
       args = {
         api_gatewayv2_api_ids = [self.input.api_id.value]
-        sqs_queue_arns        = with.sqs_queues.rows[*].queue_arn
         lambda_function_arns  = with.lambda_functions.rows[*].function_arn
+        sqs_queue_arns        = with.sqs_queues.rows[*].queue_arn
       }
     }
   }

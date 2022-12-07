@@ -17,14 +17,14 @@ category "dax_cluster_node" {
   icon  = "text:Node"
 }
 
-category "dax_subnet_group" {
-  title = "DAX Subnet Group"
-  color = local.database_color
-  icon  = "text:SG"
-}
-
 category "dax_parameter_group" {
   title = "DAX Parameter Group"
   color = local.database_color
   icon  = "text:PG"
+}
+
+category "dax_subnet_group" {
+  title = "DAX Subnet Group"
+  color = local.database_color
+  icon  = "text:SG"
 }

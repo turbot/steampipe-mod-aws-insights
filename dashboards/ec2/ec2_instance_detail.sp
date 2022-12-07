@@ -79,15 +79,20 @@ dashboard "ec2_instance_detail" {
         args = [self.input.instance_arn.value]
       }
 
-      with "ec2_network_interfaces" {
+      with "ec2_application_load_balancers" {
         sql = <<-EOQ
           select
-            network_interface ->> 'NetworkInterfaceId' as network_interface_id
+            distinct lb.arn as application_load_balancer_arn
           from
             aws_ec2_instance as i,
-            jsonb_array_elements(network_interfaces) as network_interface
+            aws_ec2_target_group as target,
+            jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
+            jsonb_array_elements_text(target.load_balancer_arns) as l,
+            aws_ec2_application_load_balancer as lb
           where
-            i.arn = $1;
+            health_descriptions -> 'Target' ->> 'Id' = i.instance_id
+            and l = lb.arn
+            and i.arn = $1;
         EOQ
 
         args = [self.input.instance_arn.value]
@@ -109,20 +114,34 @@ dashboard "ec2_instance_detail" {
         args = [self.input.instance_arn.value]
       }
 
-      with "ec2_application_load_balancers" {
+      with "ec2_gateway_load_balancers" {
         sql = <<-EOQ
           select
-            distinct lb.arn as application_load_balancer_arn
+            distinct lb.arn as gateway_load_balancer_arn
           from
             aws_ec2_instance as i,
             aws_ec2_target_group as target,
             jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
             jsonb_array_elements_text(target.load_balancer_arns) as l,
-            aws_ec2_application_load_balancer as lb
+            aws_ec2_gateway_load_balancer as lb
           where
             health_descriptions -> 'Target' ->> 'Id' = i.instance_id
             and l = lb.arn
             and i.arn = $1;
+        EOQ
+
+        args = [self.input.instance_arn.value]
+      }
+
+      with "ec2_network_interfaces" {
+        sql = <<-EOQ
+          select
+            network_interface ->> 'NetworkInterfaceId' as network_interface_id
+          from
+            aws_ec2_instance as i,
+            jsonb_array_elements(network_interfaces) as network_interface
+          where
+            i.arn = $1;
         EOQ
 
         args = [self.input.instance_arn.value]
@@ -138,25 +157,6 @@ dashboard "ec2_instance_detail" {
             jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
             jsonb_array_elements_text(target.load_balancer_arns) as l,
             aws_ec2_network_load_balancer as lb
-          where
-            health_descriptions -> 'Target' ->> 'Id' = i.instance_id
-            and l = lb.arn
-            and i.arn = $1;
-        EOQ
-
-        args = [self.input.instance_arn.value]
-      }
-
-      with "ec2_gateway_load_balancers" {
-        sql = <<-EOQ
-          select
-            distinct lb.arn as gateway_load_balancer_arn
-          from
-            aws_ec2_instance as i,
-            aws_ec2_target_group as target,
-            jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
-            jsonb_array_elements_text(target.load_balancer_arns) as l,
-            aws_ec2_gateway_load_balancer as lb
           where
             health_descriptions -> 'Target' ->> 'Id' = i.instance_id
             and l = lb.arn
@@ -257,21 +257,21 @@ dashboard "ec2_instance_detail" {
       nodes = [
         node.ebs_volume,
         node.ec2_application_load_balancer,
+        node.ec2_autoscaling_group,
         node.ec2_classic_load_balancer,
         node.ec2_gateway_load_balancer,
         node.ec2_instance,
+        node.ec2_key_pair,
         node.ec2_network_interface,
         node.ec2_network_load_balancer,
+        node.ec2_target_group,
         node.ecs_cluster,
+        node.iam_instance_profile,
         node.iam_role,
         node.vpc_eip,
         node.vpc_security_group,
         node.vpc_subnet,
-        node.vpc_vpc,
-        node.iam_instance_profile,
-        node.ec2_key_pair,
-        node.ec2_autoscaling_group,
-        node.ec2_target_group,
+        node.vpc_vpc
       ]
 
       edges = [
@@ -284,11 +284,11 @@ dashboard "ec2_instance_detail" {
         edge.ec2_instance_to_iam_role,
         edge.ec2_instance_to_vpc_security_group,
         edge.ec2_instance_to_vpc_subnet,
+        edge.ec2_load_balancer_to_target_group,
         edge.ec2_network_interface_to_vpc_eip,
         edge.ec2_target_group_to_ec2_instance,
         edge.ecs_cluster_to_ec2_instance,
-        edge.vpc_subnet_to_vpc_vpc,
-        edge.ec2_load_balancer_to_target_group,
+        edge.vpc_subnet_to_vpc_vpc
       ]
 
       args = {
@@ -302,9 +302,9 @@ dashboard "ec2_instance_detail" {
         ecs_cluster_arns                   = with.ecs_clusters.rows[*].cluster_arn
         iam_role_arns                      = with.iam_roles.rows[*].role_arn
         vpc_eip_arns                       = with.vpc_eips.rows[*].eip_arn
-        vpc_vpc_ids                        = with.vpc_vpcs.rows[*].vpc_id
         vpc_security_group_ids             = with.vpc_security_groups.rows[*].security_group_id
         vpc_subnet_ids                     = with.vpc_subnets.rows[*].subnet_id
+        vpc_vpc_ids                        = with.vpc_vpcs.rows[*].vpc_id
       }
     }
   }

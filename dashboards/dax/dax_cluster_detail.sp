@@ -60,6 +60,19 @@ dashboard "dax_cluster_detail" {
         args = [self.input.dax_cluster_arn.value]
       }
 
+      with "sns_topics" {
+        sql = <<-EOQ
+        select
+          notification_configuration ->> 'TopicArn' as topic_arn
+        from
+          aws_dax_cluster
+        where
+          arn = $1;
+        EOQ
+
+        args = [self.input.dax_cluster_arn.value]
+      }
+
       with "vpc_security_groups" {
         sql = <<-EOQ
           select
@@ -85,19 +98,6 @@ dashboard "dax_cluster_detail" {
         where
           g.subnet_group_name = c.subnet_group
           and c.arn = $1;
-        EOQ
-
-        args = [self.input.dax_cluster_arn.value]
-      }
-
-      with "sns_topics" {
-        sql = <<-EOQ
-        select
-          notification_configuration ->> 'TopicArn' as topic_arn
-        from
-          aws_dax_cluster
-        where
-          arn = $1;
         EOQ
 
         args = [self.input.dax_cluster_arn.value]
@@ -132,8 +132,8 @@ dashboard "dax_cluster_detail" {
 
       edges = [
         edge.dax_cluster_to_dax_cluster_node,
-        edge.dax_cluster_to_iam_role,
         edge.dax_cluster_to_dax_parameter_group,
+        edge.dax_cluster_to_iam_role,
         edge.dax_cluster_to_sns_topic,
         edge.dax_cluster_to_vpc_security_group,
         edge.dax_subnet_group_to_vpc_subnet,
@@ -144,9 +144,9 @@ dashboard "dax_cluster_detail" {
       args = {
         dax_cluster_arns       = [self.input.dax_cluster_arn.value]
         iam_role_arns          = with.iam_role_arns.rows[*].iam_role_arn
+        sns_topic_arns         = with.sns_topics.rows[*].topic_arn
         vpc_security_group_ids = with.vpc_security_groups.rows[*].security_group_id
         vpc_subnet_ids         = with.vpc_subnets.rows[*].subnet_id
-        sns_topic_arns         = with.sns_topics.rows[*].topic_arn
         vpc_vpc_ids            = with.vpc_vpcs.rows[*].vpc_id
       }
     }

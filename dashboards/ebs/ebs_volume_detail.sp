@@ -64,20 +64,6 @@ dashboard "ebs_volume_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "kms_keys" {
-        sql = <<-EOQ
-          select
-            kms_key_id as key_arn
-          from
-            aws_ebs_volume
-          where
-            kms_key_id is not null
-            and arn = $1;
-        EOQ
-
-        args = [self.input.volume_arn.value]
-      }
-
       with "ebs_snapshots" {
         sql = <<-EOQ
           select
@@ -87,22 +73,6 @@ dashboard "ebs_volume_detail" {
             aws_ebs_snapshot as s
           where
             s.snapshot_id = v.snapshot_id
-            and v.arn = $1;
-        EOQ
-
-        args = [self.input.volume_arn.value]
-      }
-
-      with "ec2_instances" {
-        sql = <<-EOQ
-          select
-            e.arn as instance_arn
-          from
-            aws_ebs_volume as v,
-            jsonb_array_elements(attachments) as a,
-            aws_ec2_instance as e
-          where
-            a ->> 'InstanceId' = e.instance_id
             and v.arn = $1;
         EOQ
 
@@ -127,6 +97,36 @@ dashboard "ebs_volume_detail" {
         args = [self.input.volume_arn.value]
       }
 
+      with "ec2_instances" {
+        sql = <<-EOQ
+          select
+            e.arn as instance_arn
+          from
+            aws_ebs_volume as v,
+            jsonb_array_elements(attachments) as a,
+            aws_ec2_instance as e
+          where
+            a ->> 'InstanceId' = e.instance_id
+            and v.arn = $1;
+        EOQ
+
+        args = [self.input.volume_arn.value]
+      }
+
+      with "kms_keys" {
+        sql = <<-EOQ
+          select
+            kms_key_id as key_arn
+          from
+            aws_ebs_volume
+          where
+            kms_key_id is not null
+            and arn = $1;
+        EOQ
+
+        args = [self.input.volume_arn.value]
+      }
+
       nodes = [
         node.ebs_snapshot,
         node.ebs_volume,
@@ -137,17 +137,17 @@ dashboard "ebs_volume_detail" {
 
       edges = [
         edge.ebs_volume_snapshot_to_ec2_ami,
-        edge.ec2_instance_to_ebs_volume,
         edge.ebs_volume_to_ebs_snapshot,
-        edge.ebs_volume_to_kms_key
+        edge.ebs_volume_to_kms_key,
+        edge.ec2_instance_to_ebs_volume
       ]
 
       args = {
-        ebs_volume_arns   = [self.input.volume_arn.value]
-        kms_key_arns      = with.kms_keys.rows[*].key_arn
         ebs_snapshot_arns = with.ebs_snapshots.rows[*].snapshot_arn
-        ec2_instance_arns = with.ec2_instances.rows[*].instance_arn
+        ebs_volume_arns   = [self.input.volume_arn.value]
         ec2_ami_image_ids = with.ec2_amis.rows[*].image_id
+        ec2_instance_arns = with.ec2_instances.rows[*].instance_arn
+        kms_key_arns      = with.kms_keys.rows[*].key_arn
       }
     }
   }
