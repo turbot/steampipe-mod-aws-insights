@@ -144,23 +144,200 @@ node "vpc_nat_gateway" {
 
   sql = <<-EOQ
     select
-      n.arn as id,
-      n.title as title,
+      arn as id,
+      title as title,
       jsonb_build_object(
-        'ARN', n.arn,
-        'NAT Gateway ID', n.nat_gateway_id,
-        'State', n.state,
-        'Account ID', n.account_id,
-        'Region', n.region
+        'ARN', arn,
+        'NAT Gateway ID', nat_gateway_id,
+        'State', state,
+        'Account ID', account_id,
+        'Region', region
       ) as properties
     from
-      aws_vpc_nat_gateway as n,
-      jsonb_array_elements(nat_gateway_addresses) as a
+      aws_vpc_nat_gateway
     where
-      a ->> 'NetworkInterfaceId' = any($1);
+      arn = any($1);
   EOQ
 
-  param "ec2_network_interface_ids" {}
+  param "vpc_nat_gateway_arns" {}
+}
+
+node "vpc_network_acl" {
+  category = category.vpc_network_acl
+
+  sql = <<-EOQ
+    select
+      network_acl_id as id,
+      title as title,
+      jsonb_build_object(
+        'ARN', arn,
+        'Is Default', is_default,
+        'Association Id', a ->> 'NetworkAclAssociationId',
+        'Region', region,
+        'Account ID', account_id
+      ) as properties
+    from
+      aws_vpc_network_acl,
+      jsonb_array_elements(associations) as a
+    where
+      a ->> 'SubnetId' = any($1);
+  EOQ
+
+  param "vpc_subnet_ids" {}
+}
+
+node "vpc_peered_vpc" {
+  category = category.vpc_vpc
+
+  sql = <<-EOQ
+    -- with vpcs as (
+      select
+        accepter_vpc_id as id,
+        vpc.title as title,
+        jsonb_build_object(
+          'VPC ID', accepter_vpc_id,
+          'CIDR', accepter_cidr_block,
+          'Status', status_code,
+          'Region', accepter_region,
+          'Account ID', accepter_owner_id
+        ) as properties
+      from
+        aws_vpc_peering_connection,
+        aws_vpc as vpc
+      where
+        accepter_vpc_id = vpc.vpc_id
+        and requester_vpc_id = any($1)
+
+      union all select
+        requester_vpc_id as id,
+        vpc.title as title,
+        jsonb_build_object(
+          'VPC ID', requester_vpc_id,
+          'CIDR', requester_cidr_block,
+          'Status', status_code,
+          'Region', requester_region,
+          'Account ID', requester_owner_id
+        ) as properties
+      from
+        aws_vpc_peering_connection,
+        aws_vpc as vpc
+      where
+        requester_vpc_id = vpc.vpc_id
+        and accepter_vpc_id = any($1)
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+node "vpc_route_table" {
+  category = category.vpc_route_table
+
+  sql = <<-EOQ
+    select
+      route_table_id as id,
+      title as title,
+      jsonb_build_object(
+        'Owner ID', owner_id,
+        'Region', region,
+        'Account ID', account_id
+      ) as properties
+    from
+      aws_vpc_route_table,
+      jsonb_array_elements(associations) as a
+    where
+      a ->> 'SubnetId' = any($1);
+  EOQ
+
+  param "vpc_subnet_ids" {}
+}
+
+node "vpc_network_acl" {
+  category = category.vpc_network_acl
+
+  sql = <<-EOQ
+    select
+      network_acl_id as id,
+      title as title,
+      jsonb_build_object(
+        'ARN', arn,
+        'Is Default', is_default,
+        'Association Id', a ->> 'NetworkAclAssociationId',
+        'Region', region,
+        'Account ID', account_id
+      ) as properties
+    from
+      aws_vpc_network_acl,
+      jsonb_array_elements(associations) as a
+    where
+      a ->> 'SubnetId' = any($1);
+  EOQ
+
+  param "vpc_subnet_ids" {}
+}
+
+node "vpc_peered_vpc" {
+  category = category.vpc_vpc
+
+  sql = <<-EOQ
+    -- with vpcs as (
+      select
+        accepter_vpc_id as id,
+        vpc.title as title,
+        jsonb_build_object(
+          'VPC ID', accepter_vpc_id,
+          'CIDR', accepter_cidr_block,
+          'Status', status_code,
+          'Region', accepter_region,
+          'Account ID', accepter_owner_id
+        ) as properties
+      from
+        aws_vpc_peering_connection,
+        aws_vpc as vpc
+      where
+        accepter_vpc_id = vpc.vpc_id
+        and requester_vpc_id = any($1)
+
+      union all select
+        requester_vpc_id as id,
+        vpc.title as title,
+        jsonb_build_object(
+          'VPC ID', requester_vpc_id,
+          'CIDR', requester_cidr_block,
+          'Status', status_code,
+          'Region', requester_region,
+          'Account ID', requester_owner_id
+        ) as properties
+      from
+        aws_vpc_peering_connection,
+        aws_vpc as vpc
+      where
+        requester_vpc_id = vpc.vpc_id
+        and accepter_vpc_id = any($1)
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+node "vpc_route_table" {
+  category = category.vpc_route_table
+
+  sql = <<-EOQ
+    select
+      route_table_id as id,
+      title as title,
+      jsonb_build_object(
+        'Owner ID', owner_id,
+        'Region', region,
+        'Account ID', account_id
+      ) as properties
+    from
+      aws_vpc_route_table,
+      jsonb_array_elements(associations) as a
+    where
+      a ->> 'SubnetId' = any($1);
+  EOQ
+
+  param "vpc_subnet_ids" {}
 }
 
 node "vpc_network_acl" {

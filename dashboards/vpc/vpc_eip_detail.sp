@@ -76,6 +76,22 @@ dashboard "vpc_eip_detail" {
         args = [self.input.eip_arn.value]
       }
 
+      with "vpc_nat_gateways" {
+        sql = <<-EOQ
+          select
+            g.arn as gateway_arn
+          from
+            aws_vpc_eip as e,
+            aws_vpc_nat_gateway as g,
+            jsonb_array_elements(nat_gateway_addresses) as a
+          where
+            a ->> 'NetworkInterfaceId' = e.network_interface_id
+            and arn = $1;
+        EOQ
+
+        args = [self.input.eip_arn.value]
+      }
+
       nodes = [
 
         node.ec2_instance,
@@ -95,6 +111,7 @@ dashboard "vpc_eip_detail" {
         ec2_instance_arns         = with.ec2_instances.rows[*].instance_arn
         ec2_network_interface_ids = with.ec2_network_interfaces.rows[*].eni_id
         vpc_eip_arns              = [self.input.eip_arn.value]
+        vpc_nat_gateway_arns      = with.vpc_nat_gateways.rows[*].gateway_arn
       }
     }
   }

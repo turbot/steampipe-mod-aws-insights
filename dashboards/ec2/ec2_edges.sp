@@ -161,25 +161,6 @@ edge "ec2_instance_to_iam_instance_profile" {
   param "ec2_instance_arns" {}
 }
 
-edge "ec2_instance_to_iam_role" {
-  title = "assumes"
-
-  sql = <<-EOQ
-    select
-      i.iam_instance_profile_arn as from_id,
-      r.arn as to_id
-    from
-      aws_ec2_instance as i,
-      aws_iam_role as r,
-      jsonb_array_elements_text(instance_profile_arns) as instance_profile
-    where
-      i.arn = any($1)
-      and instance_profile = i.iam_instance_profile_arn;
-  EOQ
-
-  param "ec2_instance_arns" {}
-}
-
 edge "ec2_instance_to_vpc_security_group" {
   title = "security groups"
 

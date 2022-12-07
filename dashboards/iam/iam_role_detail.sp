@@ -121,7 +121,7 @@ dashboard "iam_role_detail" {
       ]
 
       edges = [
-        edge.ec2_instance_to_iam_role,
+        edge.ec2_instance_to_iam_instance_profile,
         edge.emr_cluster_to_iam_role,
         edge.guardduty_detector_to_iam_role,
         edge.iam_instance_profile_to_iam_role,

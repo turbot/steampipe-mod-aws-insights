@@ -281,13 +281,13 @@ dashboard "ec2_instance_detail" {
         edge.ec2_instance_to_ec2_key_pair,
         edge.ec2_instance_to_ec2_network_interface,
         edge.ec2_instance_to_iam_instance_profile,
-        edge.ec2_instance_to_iam_role,
         edge.ec2_instance_to_vpc_security_group,
         edge.ec2_instance_to_vpc_subnet,
         edge.ec2_load_balancer_to_target_group,
         edge.ec2_network_interface_to_vpc_eip,
         edge.ec2_target_group_to_ec2_instance,
         edge.ecs_cluster_to_ec2_instance,
+        edge.iam_instance_profile_to_iam_role,
         edge.vpc_subnet_to_vpc_vpc
       ]
 
