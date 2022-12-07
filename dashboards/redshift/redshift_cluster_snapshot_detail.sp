@@ -280,14 +280,15 @@ edge "redshift_snapshot_to_kms_key" {
 
   sql = <<-EOQ
     select
-      redshift_snapshot_arn as from_id,
-      key_arn as to_id
+      akas::text as from_id,
+      kms_key_id as to_id
     from
-      unnest($1::text[]) as key_arn,
-      unnest($2::text[]) as redshift_snapshot_arn
+      aws_redshift_snapshot
+    where
+      kms_key_id is not null
+      and akas::text = any($1);
   EOQ
 
-  param "kms_key_arns" {}
   param "redshift_snapshot_arns" {}
 }
 
