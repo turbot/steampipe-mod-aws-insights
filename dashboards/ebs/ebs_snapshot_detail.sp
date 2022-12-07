@@ -72,6 +72,7 @@ dashboard "ebs_snapshot_detail" {
 
       args = {
         arn = self.input.snapshot_arn.value
+        ebs_snapshot_arns   = [self.input.snapshot_arn.value]
       }
     }
   }
@@ -131,7 +132,7 @@ query "ebs_snapshot_overview" {
       arn = $1
   EOQ
 
-  param "snapshot_arns" {}
+  param "arn" {}
 }
 
 query "ebs_snapshot_tags" {
@@ -148,7 +149,7 @@ query "ebs_snapshot_tags" {
       tag ->> 'Key';
   EOQ
 
-  param "snapshot_arns" {}
+  param "arn" {}
 }
 
 query "ebs_snapshot_storage" {
@@ -162,7 +163,7 @@ query "ebs_snapshot_storage" {
       arn = $1;
   EOQ
 
-  param "snapshot_arns" {}
+  param "arn" {}
 }
 
 query "ebs_snapshot_encryption" {
@@ -177,7 +178,7 @@ query "ebs_snapshot_encryption" {
       arn = $1;
   EOQ
 
-  param "snapshot_arns" {}
+  param "arn" {}
 }
 
 query "ebs_snapshot_state" {
@@ -191,7 +192,7 @@ query "ebs_snapshot_state" {
       arn = $1;
   EOQ
 
-  param "snapshot_arns" {}
+  param "arn" {}
 }
 
 query "ebs_snapshot_age" {
@@ -212,7 +213,7 @@ query "ebs_snapshot_age" {
       data;
   EOQ
 
-  param "snapshot_arns" {}
+  param "arn" {}
 }
 
 node "ebs_snapshot_node" {
@@ -235,7 +236,7 @@ node "ebs_snapshot_node" {
       arn = any($1);
   EOQ
 
-  param "snapshot_arns" {}
+  param "ebs_snapshot_arns" {}
 }
 
 node "ebs_snapshot_from_ebs_volume_node" {
@@ -257,7 +258,7 @@ node "ebs_snapshot_from_ebs_volume_node" {
       left join aws_ebs_volume as v on s.volume_id = v.volume_id and s.arn = $1;
   EOQ
 
-  param "snapshot_arns" {}
+  param "arn" {}
 }
 
 edge "ebs_snapshot_from_ebs_volume_edge" {
@@ -272,7 +273,7 @@ edge "ebs_snapshot_from_ebs_volume_edge" {
       left join aws_ebs_volume as v on s.volume_id = v.volume_id and s.arn = $1;
   EOQ
 
-  param "snapshot_arns" {}
+  param "arn" {}
 }
 
 node "ebs_snapshot_from_ec2_ami_node" {
@@ -296,7 +297,7 @@ node "ebs_snapshot_from_ec2_ami_node" {
       and s.arn = $1;
   EOQ
 
-  param "snapshot_arns" {}
+  param "arn" {}
 }
 
 edge "ebs_snapshot_from_ec2_ami_edge" {
@@ -316,7 +317,7 @@ edge "ebs_snapshot_from_ec2_ami_edge" {
       and s.arn = $1;
   EOQ
 
-  param "snapshot_arns" {}
+  param "arn" {}
 }
 
 node "ebs_snapshot_from_ec2_launch_configuration_node" {
@@ -340,7 +341,7 @@ node "ebs_snapshot_from_ec2_launch_configuration_node" {
       and s.arn = $1;
   EOQ
 
-  param "snapshot_arns" {}
+  param "arn" {}
 }
 
 edge "ebs_snapshot_from_ec2_launch_configuration_edge" {
@@ -359,7 +360,7 @@ edge "ebs_snapshot_from_ec2_launch_configuration_edge" {
       and s.arn = $1;
   EOQ
 
-  param "snapshot_arns" {}
+  param "arn" {}
 }
 
 node "ebs_snapshot_to_kms_key_node" {
@@ -380,7 +381,7 @@ node "ebs_snapshot_to_kms_key_node" {
       left join aws_kms_key as k on s.kms_key_id = k.arn and s.arn = $1;
   EOQ
 
-  param "snapshot_arns" {}
+  param "arn" {}
 }
 
 edge "ebs_snapshot_to_kms_key_edge" {
@@ -395,5 +396,5 @@ edge "ebs_snapshot_to_kms_key_edge" {
       left join aws_kms_key as k on s.kms_key_id = k.arn and s.arn = $1;
   EOQ
 
-  param "snapshot_arns" {}
+  param "arn" {}
 }
