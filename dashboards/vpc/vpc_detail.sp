@@ -108,6 +108,20 @@ dashboard "vpc_detail" {
         args = [self.input.vpc_id.value]
       }
 
+      with "ec2_network_interface_id" {
+        sql = <<-EOQ
+          select
+            network_interface_id as network_interface_id
+          from
+            aws_ec2_network_interface
+          where
+            vpc_id = $1;
+        EOQ
+
+        args = [self.input.vpc_id.value]
+      }
+
+
       with "ec2_network_load_balancers" {
         sql = <<-EOQ
           select
@@ -266,6 +280,7 @@ dashboard "vpc_detail" {
         ec2_classic_load_balancer_arns     = with.ec2_classic_load_balancers.rows[*].clb_arn
         ec2_gateway_load_balancer_arns     = with.ec2_gateway_load_balancers.rows[*].glb_arn
         ec2_instance_arns                  = with.ec2_instances.rows[*].instance_arn
+        ec2_network_interface_ids          = with.ec2_network_interface_id.rows[*].network_interface_id
         ec2_network_load_balancer_arns     = with.ec2_network_load_balancers.rows[*].nlb_arn
         lambda_function_arns               = with.lambda_functions.rows[*].function_arn
         rds_db_instance_arns               = with.rds_db_instances.rows[*].rds_instance_arn
