@@ -43,11 +43,11 @@ dashboard "eventbridge_rule_detail" {
           select
             (t ->> 'Arn')::text || ':*' as cloudwatch_log_group_arn
           from
-            aws_eventbridge_rule r
-            cross join jsonb_array_elements(targets) t
+            aws_eventbridge_rule r,
+            jsonb_array_elements(targets) t
           where
             r.arn = $1
-            and split_part((t ->> 'Arn'::text), ':', 3) = 'logs';
+            and t ->> 'Arn' like '%logs%;
         EOQ
 
         args = [self.input.eventbridge_rule_arn.value]
@@ -74,11 +74,11 @@ dashboard "eventbridge_rule_detail" {
           select
             (t ->> 'Arn')::text as function_arn
           from
-            aws_eventbridge_rule r
-            cross join jsonb_array_elements(targets) t
+            aws_eventbridge_rule r,
+            jsonb_array_elements(targets) t
           where
             r.arn = $1
-            and split_part((t ->> 'Arn'::text), ':', 3) = 'lambda';
+            and t ->> 'Arn' like '%lambda%;
         EOQ
 
         args = [self.input.eventbridge_rule_arn.value]
@@ -89,11 +89,11 @@ dashboard "eventbridge_rule_detail" {
           select
             (t ->> 'Arn')::text as topic_arn
           from
-            aws_eventbridge_rule r
-            cross join jsonb_array_elements(targets) t
+            aws_eventbridge_rule r,
+            jsonb_array_elements(targets) t
           where
             arn = $1
-            and split_part((t ->> 'Arn'::text), ':', 3) = 'sns';
+            and t ->> 'Arn' like '%sns%';
         EOQ
 
         args = [self.input.eventbridge_rule_arn.value]
