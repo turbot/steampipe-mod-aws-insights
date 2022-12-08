@@ -33,7 +33,7 @@ dashboard "codepipeline_pipeline_detail" {
       direction = "TD"
 
       nodes = [
-        node.codepipeline_pipeline_node,
+        node.codepipeline_pipeline,
         node.codepipeline_pipeline_from_iam_role_node,
         node.codepipeline_pipeline_from_kms_key_node,
         node.codepipeline_pipeline_from_codecommit_repository_node,
@@ -56,7 +56,8 @@ dashboard "codepipeline_pipeline_detail" {
       ]
 
       args = {
-        arn = self.input.pipeline_arn.value
+        arn                        = self.input.pipeline_arn.value
+        codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
       }
     }
   }
@@ -132,7 +133,7 @@ query "codepipeline_pipeline_encryption" {
   param "arn" {}
 }
 
-node "codepipeline_pipeline_node" {
+node "codepipeline_pipeline" {
   category = category.codepipeline_pipeline
 
   sql = <<-EOQ
@@ -149,10 +150,10 @@ node "codepipeline_pipeline_node" {
     from
       aws_codepipeline_pipeline
     where
-      arn = $1;
+      arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "codepipeline_pipeline_arns" {}
 }
 
 node "codepipeline_pipeline_from_iam_role_node" {
