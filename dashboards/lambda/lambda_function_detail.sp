@@ -189,10 +189,10 @@ dashboard "lambda_function_detail" {
         node.kms_key,
         node.lambda_alias,
         node.lambda_function,
-        node.sns_topic_subscription,
         node.lambda_version,
         node.s3_bucket,
         node.sns_topic,
+        node.sns_topic_subscription,
         node.vpc_security_group,
         node.vpc_subnet,
         node.vpc_vpc

@@ -304,6 +304,25 @@ edge "iam_role_trusted_service" {
   param "iam_role_arns" {}
 }
 
+edge "iam_user_to_iam_access_key" {
+  title = "access key"
+
+  sql = <<-EOQ
+    select
+      u.arn as from_id,
+      a.access_key_id as to_id
+    from
+      aws_iam_access_key as a,
+      aws_iam_user as u
+    where
+      u.name = a.user_name
+      and u.account_id = a.account_id
+      and u.arn  = any($1);
+  EOQ
+
+  param "iam_user_arns" {}
+}
+
 edge "iam_user_to_iam_policy" {
   title = "attaches"
 
@@ -338,21 +357,3 @@ edge "iam_user_to_inline_policy" {
   param "iam_user_arns" {}
 }
 
-edge "iam_user_to_iam_access_key" {
-  title = "access key"
-
-  sql = <<-EOQ
-    select
-      u.arn as from_id,
-      a.access_key_id as to_id
-    from
-      aws_iam_access_key as a,
-      aws_iam_user as u
-    where
-      u.name = a.user_name
-      and u.account_id = a.account_id
-      and u.arn  = any($1);
-  EOQ
-
-  param "iam_user_arns" {}
-}
