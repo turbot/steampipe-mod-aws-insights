@@ -300,7 +300,6 @@ dashboard "vpc_detail" {
         redshift_cluster_arns              = with.redshift_clusters.rows[*].redshift_cluster_arn
         vpc_endpoint_ids                   = with.vpc_endpoints.rows[*].vpc_endpoint_id
         vpc_flow_log_ids                   = with.vpc_flow_logs.rows[*].flow_log_id
-        vpc_id                             = self.input.vpc_id.value
         vpc_nat_gateway_arns               = with.vpc_nat_gateways.rows[*].gateway_arn
         vpc_security_group_ids             = with.vpc_security_groups.rows[*].security_group_id
         vpc_subnet_ids                     = with.vpc_subnets.rows[*].subnet_id
