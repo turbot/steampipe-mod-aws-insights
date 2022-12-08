@@ -285,7 +285,6 @@ dashboard "vpc_detail" {
         redshift_cluster_arns              = with.redshift_clusters.rows[*].redshift_cluster_arn
         vpc_endpoint_ids                   = with.vpc_endpoints.rows[*].vpc_endpoint_id
         vpc_flow_log_ids                   = with.vpc_flow_logs.rows[*].flow_log_id
-        vpc_id                             = self.input.vpc_id.value
         vpc_nat_gateway_arns               = with.vpc_nat_gateways.rows[*].gateway_arn
         vpc_security_group_ids             = with.vpc_security_groups.rows[*].security_group_id
         vpc_subnet_ids                     = with.vpc_subnets.rows[*].subnet_id
@@ -1589,10 +1588,10 @@ edge "vpc_subnet_to_nat_gateway" {
     from
       aws_vpc_nat_gateway
     where
-      vpc_id = any($1)
+      subnet_id = any($1);
   EOQ
 
-  param "vpc_vpc_ids" {}
+  param "vpc_subnet_ids" {}
 }
 
 node "vpc_vpn_gateway" {
@@ -1655,19 +1654,19 @@ edge "vpc_peered_vpc" {
 
   sql = <<-EOQ
     select
-      $1 as to_id,
+      any($1) as to_id,
       case
-        when accepter_vpc_id = $1 then requester_vpc_id
+        when accepter_vpc_id = any($1) then requester_vpc_id
         else accepter_vpc_id
       end as from_id
     from
       aws_vpc_peering_connection
     where
-      accepter_vpc_id = $1
-      or requester_vpc_id = $1
+      accepter_vpc_id = any($1)
+      or requester_vpc_id = any($1)
   EOQ
 
-  param "vpc_id" {}
+  param "vpc_vpc_ids" {}
 }
 
 node "vpc_s3_access_point" {

@@ -651,7 +651,7 @@ edge "redshift_cluster_to_vpc_security_group" {
       aws_redshift_cluster,
       jsonb_array_elements(vpc_security_groups) as s
     where
-      arn = $1;
+      arn = any($1);
   EOQ
 
   param "redshift_cluster_arns" {}
@@ -667,7 +667,7 @@ edge "redshift_cluster_to_kms_key" {
     from
       aws_redshift_cluster
     where
-      arn = $1;
+      arn = any($1);
   EOQ
 
   param "redshift_cluster_arns" {}
@@ -684,7 +684,7 @@ edge "redshift_cluster_to_iam_role" {
       aws_redshift_cluster,
       jsonb_array_elements(iam_roles) as r
     where
-      arn = $1;
+      arn = any($1);
   EOQ
 
   param "redshift_cluster_arns" {}
@@ -703,7 +703,7 @@ edge "redshift_cluster_to_vpc_eip" {
     where
       c.elastic_ip_status is not null
       and e.public_ip = (c.elastic_ip_status ->> 'ElasticIp')::inet
-      and c.arn = $1;
+      and c.arn = any($1);
   EOQ
 
   param "redshift_cluster_arns" {}
@@ -721,7 +721,7 @@ edge "redshift_cluster_to_cloudwatch_log_group" {
       aws_cloudwatch_log_group as g
     where
       g.title like '%' || c.title || '%'
-      and c.arn = $1;
+      and c.arn = any($1);
   EOQ
 
   param "redshift_cluster_arns" {}
@@ -739,7 +739,7 @@ edge "redshift_cluster_to_s3_bucket" {
       aws_s3_bucket as b
     where
       b.name = c.logging_status ->> 'BucketName'
-      and c.arn = $1;
+      and c.arn = any($1);
   EOQ
 
   param "redshift_cluster_arns" {}
@@ -802,7 +802,7 @@ edge "redshift_cluster_to_redshift_snapshot" {
       aws_redshift_cluster as c
     where
       s.cluster_identifier = c.cluster_identifier
-      and c.arn = $1;
+      and c.arn = any($1);
   EOQ
 
   param "redshift_cluster_arns" {}

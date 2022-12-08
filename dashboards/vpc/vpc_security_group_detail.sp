@@ -1600,7 +1600,7 @@ edge "vpc_security_group_to_dax_cluster" {
       aws_dax_cluster,
       jsonb_array_elements(security_groups) as sg
     where
-      sg ->> 'SecurityGroupIdentifier' = $1;
+      sg ->> 'SecurityGroupIdentifier' = any($1);
   EOQ
 
   param "vpc_security_group_ids" {}
@@ -1662,7 +1662,7 @@ edge "vpc_security_group_to_elasticache_cluster" {
       aws_elasticache_cluster,
       jsonb_array_elements(security_groups) as sg
     where
-      sg ->> 'SecurityGroupId' = $1;
+      sg ->> 'SecurityGroupId' = any($1);
   EOQ
 
   param "vpc_security_group_ids" {}

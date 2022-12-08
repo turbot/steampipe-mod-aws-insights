@@ -120,15 +120,26 @@ dashboard "lambda_function_detail" {
             aws_sns_topic_subscription
           where
             protocol = 'lambda'
-            and (
-              endpoint = $1
-              or endpoint like $1 || ':%'
-            )
+            and endpoint = $1;
         EOQ
 
         args = [self.input.lambda_arn.value]
       }
-      
+
+      with "sns_topic_subscriptions" {
+        sql = <<-EOQ
+          select
+            subscription_arn as subscription_arn
+          from
+            aws_sns_topic_subscription
+          where
+            protocol = 'lambda'
+            and endpoint = $1;
+        EOQ
+
+        args = [self.input.lambda_arn.value]
+      }
+
       with "vpc_security_groups" {
         sql = <<-EOQ
           select
@@ -178,7 +189,7 @@ dashboard "lambda_function_detail" {
         node.kms_key,
         node.lambda_alias,
         node.lambda_function,
-        node.lambda_function_sns_topic_subscription,
+        node.sns_topic_subscription,
         node.lambda_version,
         node.s3_bucket,
         node.sns_topic,
@@ -203,16 +214,16 @@ dashboard "lambda_function_detail" {
       ]
 
       args = {
-        api_gatewayv2_api_ids  = with.api_gateway_apis.rows[*].api_id
-        iam_role_arns          = with.iam_roles.rows[*].role_arn
-        kms_key_arns           = with.kms_keys.rows[*].kms_key_arn
-        lambda_function_arn    = self.input.lambda_arn.value
-        lambda_function_arns   = [self.input.lambda_arn.value]
-        s3_bucket_arns         = with.s3_buckets.rows[*].bucket_arn
-        sns_topic_arns         = with.sns_topics.rows[*].topic_arn
-        vpc_security_group_ids = with.vpc_security_groups.rows[*].group_id
-        vpc_subnet_ids         = with.vpc_subnets.rows[*].subnet_id
-        vpc_vpc_ids            = with.vpc_vpcs.rows[*].vpc_id
+        api_gatewayv2_api_ids       = with.api_gateway_apis.rows[*].api_id
+        iam_role_arns               = with.iam_roles.rows[*].role_arn
+        kms_key_arns                = with.kms_keys.rows[*].kms_key_arn
+        lambda_function_arns        = [self.input.lambda_arn.value]
+        s3_bucket_arns              = with.s3_buckets.rows[*].bucket_arn
+        sns_topic_arns              = with.sns_topics.rows[*].topic_arn
+        sns_topic_subscription_arns = with.sns_topic_subscriptions.rows[*].subscription_arn
+        vpc_security_group_ids      = with.vpc_security_groups.rows[*].group_id
+        vpc_subnet_ids              = with.vpc_subnets.rows[*].subnet_id
+        vpc_vpc_ids                 = with.vpc_vpcs.rows[*].vpc_id
       }
     }
   }
@@ -678,7 +689,7 @@ edge "sns_topic_to_sns_subscription" {
   param "sns_topic_arns" {}
 }
 
-node "lambda_function_sns_topic_subscription" {
+node "sns_topic_subscription" {
   category = category.sns_topic_subscription
 
   sql = <<-EOQ
@@ -694,15 +705,10 @@ node "lambda_function_sns_topic_subscription" {
     from
       aws_sns_topic_subscription
     where
-      protocol = 'lambda'
-      and (
-        endpoint = $1
-        or endpoint like $1 || ':%'
-      )
-
+      subscription_arn = any($1);
   EOQ
 
-  param "lambda_function_arn" {}
+  param "sns_topic_subscription_arns" {}
 }
 
 edge "sns_subscription_to_lambda_function" {
@@ -715,14 +721,10 @@ edge "sns_subscription_to_lambda_function" {
     from
       aws_sns_topic_subscription
     where
-      protocol = 'lambda'
-      and (
-        endpoint = any($1)
-        or endpoint like any($1) || ':%'
-      )
+      subscription_arn = any($1);
   EOQ
 
-  param "lambda_function_arns" {}
+  param "sns_topic_subscription_arns" {}
 }
 
 node "api_gatewayv2_integration" {

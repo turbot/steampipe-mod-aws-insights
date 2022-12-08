@@ -248,7 +248,6 @@ dashboard "kms_key_detail" {
       ]
 
       args = {
-        arn                          = self.input.key_arn.value
         cloudtrail_trail_arns        = with.cloudtrail_trails.rows[*].trail_arn
         ebs_volume_arns              = with.ebs_volumes.rows[*].volume_arn
         kms_key_arns                 = [self.input.key_arn.value]
