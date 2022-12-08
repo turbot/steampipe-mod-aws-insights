@@ -56,7 +56,7 @@ dashboard "ecr_repository_detail" {
       direction = "TD"
 
       nodes = [
-        node.ecr_repository_node,
+        node.ecr_repository,
         node.ecr_repository_to_ecr_image_node,
         node.ecr_repository_to_ecs_task_definition_node,
         node.ecr_repository_to_kms_key_node,
@@ -72,6 +72,7 @@ dashboard "ecr_repository_detail" {
 
       args = {
         arn = self.input.ecr_repository_arn.value
+        ecr_repository_arns = [self.input.ecr_repository_arn.value]
       }
     }
   }
@@ -242,7 +243,7 @@ query "ecr_repository_input" {
   EOQ
 }
 
-node "ecr_repository_node" {
+node "ecr_repository" {
   category = category.ecr_repository
 
   sql = <<-EOQ
@@ -260,10 +261,10 @@ node "ecr_repository_node" {
     from
       aws_ecr_repository
     where
-      arn = $1
+      arn = any($1)
   EOQ
 
-  param "arn" {}
+  param "ecr_repository_arns" {}
 }
 
 node "ecr_repository_to_ecr_image_node" {
