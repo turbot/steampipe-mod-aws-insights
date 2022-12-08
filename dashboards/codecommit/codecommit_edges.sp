@@ -32,13 +32,15 @@ edge "codecommit_repository_to_codepipeline_pipeline" {
       r.arn as from_id,
       p.arn as to_id
     from
-      aws_codecommit_repository as r
-      cross join aws_codepipeline_pipeline as p
+      aws_codecommit_repository as r,
+      aws_codepipeline_pipeline as p,
+      jsonb_array_elements(stages) as s,
+      jsonb_array_elements(s -> 'Actions') as a
     where
-      r.arn = any($1) and p.stages is not null
-      and r.repository_name in (
-      select jsonb_path_query(p.stages, '$[*].Actions[*].Configuration.RepositoryName')::text
-    );
+      s ->> 'Name' = 'Source'
+      and a -> 'ActionTypeId' ->> 'Provider' = 'CodeCommit'
+      and r.repository_name = a -> 'Configuration' ->> 'RepositoryName'
+      and r.arn = any($1)
   EOQ
 
   param "codecommit_repository_arns" {}
