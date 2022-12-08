@@ -50,6 +50,20 @@ dashboard "iam_policy_detail" {
         args = [self.input.policy_arn.value]
       }
 
+      with "iam_policy_std" {
+        sql = <<-EOQ
+          select
+            policy_std
+          from
+            aws_iam_policy
+          where
+            arn = $1
+          limit 1;  -- aws managed policies will appear once for each connection in the aggregator, but we only need one...
+        EOQ
+
+        args = [self.input.policy_arn.value]
+      }
+
       with "iam_roles" {
         sql = <<-EOQ
           select
@@ -78,20 +92,6 @@ dashboard "iam_policy_detail" {
         args = [self.input.policy_arn.value]
       }
 
-      with "iam_policy_std" {
-        sql = <<-EOQ
-          select
-            policy_std
-          from
-            aws_iam_policy
-          where
-            arn = $1
-          limit 1;  -- aws managed policies will appear once for each connection in the aggregator, but we only need one...
-        EOQ
-
-        args = [self.input.policy_arn.value]
-      }
-
       nodes = [
         node.iam_group,
         node.iam_policy,
@@ -108,8 +108,6 @@ dashboard "iam_policy_detail" {
       edges = [
 
         edge.iam_group_to_iam_policy,
-        edge.iam_role_to_iam_policy,
-        edge.iam_user_to_iam_policy,
         edge.iam_policy_statement,
         edge.iam_policy_statement_action,
         edge.iam_policy_statement_condition,
@@ -118,6 +116,8 @@ dashboard "iam_policy_detail" {
         edge.iam_policy_statement_notaction,
         edge.iam_policy_statement_notresource,
         edge.iam_policy_statement_resource,
+        edge.iam_role_to_iam_policy,
+        edge.iam_user_to_iam_policy
       ]
 
       args = {
