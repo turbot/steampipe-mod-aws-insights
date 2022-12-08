@@ -54,29 +54,75 @@ dashboard "emr_cluster_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "ec2_amis" {
+        sql = <<-EOQ
+          select
+            custom_ami_id as image_id
+          from
+            aws_emr_cluster
+            cluster_arn = $1;
+        EOQ
+
+        args = [self.input.emr_cluster_arn.value]
+      }
+
+      with "iam_roles" {
+        sql = <<-EOQ
+          select
+            r.arn as role_arn
+          from
+            aws_iam_role as r,
+            aws_emr_cluster as c
+          where
+            c.cluster_arn = $1
+            and r.name = c.service_role;
+        EOQ
+
+        args = [self.input.emr_cluster_arn.value]
+      }
+
+      with "s3_buckets" {
+        sql = <<-EOQ
+          select
+            b.arn as s3_bucket_arn
+          from
+            aws_emr_cluster as c
+          left join
+            aws_s3_bucket as b
+            on split_part(log_uri, '/', 3) = b.name
+          where
+            cluster_arn = $1;
+        EOQ
+
+        args = [self.input.emr_cluster_arn.value]
+      }
+
       nodes = [
-        node.emr_cluster_node,
-        node.emr_cluster_to_iam_role_node,
-        node.emr_cluster_to_s3_bucket_node,
-        node.emr_cluster_to_emr_instance_fleet_node,
-        node.emr_cluster_to_emr_instance_node,
-        node.emr_cluster_to_emr_instance_group_node,
-        node.emr_cluster_to_ec2_ami_node
+        node.emr_cluster,
+        node.iam_role,
+        node.s3_bucket,
+        node.emr_instance_fleet,
+        node.emr_instance,
+        node.emr_instance_group,
+        node.ec2_ami
       ]
 
       edges = [
-        edge.emr_cluster_to_iam_role_edge,
-        edge.emr_cluster_to_s3_bucket_edge,
-        edge.emr_cluster_to_emr_instance_fleet_edge,
-        edge.emr_cluster_to_emr_instance_group_edge,
-        edge.emr_cluster_to_ec2_ami_edge,
-        edge.emr_instance_group_to_emr_instance_edge,
-        edge.emr_instance_fleet_to_emr_instance_edge
+        edge.emr_cluster_to_ec2_ami,
+        edge.emr_cluster_to_emr_instance_fleet,
+        edge.emr_cluster_to_emr_instance_group,
+        edge.emr_cluster_to_iam_role,
+        edge.emr_cluster_to_s3_bucket,
+        edge.emr_instance_fleet_to_emr_instance,
+        edge.emr_instance_group_to_emr_instance
 
       ]
 
       args = {
-        arn = self.input.emr_cluster_arn.value
+        ec2_ami_image_ids = with.ec2_amis.rows[*].image_id
+        emr_cluster_arns  = [self.input.emr_cluster_arn.value]
+        iam_role_arns     = with.iam_roles.rows[*].role_arn
+        s3_bucket_arns    = with.s3_buckets.rows[*].s3_bucket_arn
       }
     }
   }
@@ -346,363 +392,334 @@ query "emr_cluster_ec2_instance_attributes" {
   param "arn" {}
 }
 
-node "emr_cluster_node" {
-  category = category.emr_cluster
+// node "emr_cluster" {
+//   category = category.emr_cluster
 
-  sql = <<-EOQ
-     select
-      id as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', cluster_arn,
-        'State', state,
-        'Log URI', log_uri,
-        'Auto Terminate', auto_terminate::text,
-        'Account ID', account_id,
-        'Region', region ) as properties
-    from
-      aws_emr_cluster
-    where
-      cluster_arn = $1;
-  EOQ
+//   sql = <<-EOQ
+//     select
+//       id as id,
+//       title as title,
+//       jsonb_build_object(
+//         'ARN', cluster_arn,
+//         'State', state,
+//         'Log URI', log_uri,
+//         'Auto Terminate', auto_terminate::text,
+//         'Account ID', account_id,
+//         'Region', region ) as properties
+//     from
+//       aws_emr_cluster
+//     where
+//       cluster_arn = $1;
+//   EOQ
 
-  param "arn" {}
-}
+//   param "arn" {}
+// }
 
-node "emr_cluster_to_iam_role_node" {
-  category = category.iam_role
+// node "emr_cluster_to_iam_role_node" {
+//   category = category.iam_role
 
-  sql = <<-EOQ
-     select
-      role_id as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Create Date', create_date,
-        'Max Session Duration', max_session_duration,
-        'Account ID', account_id ) as properties
-    from
-      aws_iam_role
-    where
-      name in
-      (
-        select
-          service_role
-        from
-          aws_emr_cluster
-        where
-          cluster_arn = $1
-      )
-  EOQ
+//   sql = <<-EOQ
+//      select
+//       role_id as id,
+//       title as title,
+//       jsonb_build_object(
+//         'ARN', arn,
+//         'Create Date', create_date,
+//         'Max Session Duration', max_session_duration,
+//         'Account ID', account_id ) as properties
+//     from
+//       aws_iam_role
+//     where
+//       name in
+//       (
+//         select
+//           service_role
+//         from
+//           aws_emr_cluster
+//         where
+//           cluster_arn = $1
+//       )
+//   EOQ
 
-  param "arn" {}
-}
+//   param "arn" {}
+// }
 
-edge "emr_cluster_to_iam_role_edge" {
-  title = "assumes"
+// edge "emr_cluster_to_iam_role_edge" {
+//   title = "assumes"
 
-  sql = <<-EOQ
-     select
-      c.id as from_id,
-      role_id as to_id
-    from
-      aws_iam_role as r,
-      aws_emr_cluster as c
-    where
-      c.cluster_arn = $1
-      and r.name = c.service_role;
-  EOQ
+//   sql = <<-EOQ
+//      select
+//       c.id as from_id,
+//       role_id as to_id
+//     from
+//       aws_iam_role as r,
+//       aws_emr_cluster as c
+//     where
+//       c.cluster_arn = $1
+//       and r.name = c.service_role;
+//   EOQ
 
-  param "arn" {}
-}
+//   param "arn" {}
+// }
 
-node "emr_cluster_to_s3_bucket_node" {
-  category = category.s3_bucket
+// node "emr_cluster_to_s3_bucket_node" {
+//   category = category.s3_bucket
 
-  sql = <<-EOQ
-     select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'Name', name,
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region ) as properties
-    from
-      aws_s3_bucket
-    where
-      name in
-      (
-        select
-          split_part(log_uri, '/', 3)
-        from
-          aws_emr_cluster
-        where
-          cluster_arn = $1
-      )
-  EOQ
+//   sql = <<-EOQ
+//      select
+//       arn as id,
+//       title as title,
+//       jsonb_build_object(
+//         'Name', name,
+//         'ARN', arn,
+//         'Account ID', account_id,
+//         'Region', region ) as properties
+//     from
+//       aws_s3_bucket
+//     where
+//       name in
+//       (
+//         select
+//           split_part(log_uri, '/', 3)
+//         from
+//           aws_emr_cluster
+//         where
+//           cluster_arn = $1
+//       )
+//   EOQ
 
-  param "arn" {}
-}
+//   param "arn" {}
+// }
 
-edge "emr_cluster_to_s3_bucket_edge" {
-  title = "logs to"
+// edge "emr_cluster_to_s3_bucket_edge" {
+//   title = "logs to"
 
-  sql = <<-EOQ
-     select
-      c.id as from_id,
-      b.arn as to_id
-    from
-      aws_emr_cluster as c
-      left join
-        aws_s3_bucket as b
-        on split_part(log_uri, '/', 3) = b.name
-    where
-      cluster_arn = $1;
-  EOQ
+//   sql = <<-EOQ
+//     select
+//       c.id as from_id,
+//       b.arn as to_id
+//     from
+//       aws_emr_cluster as c
+//       left join
+//         aws_s3_bucket as b
+//         on split_part(log_uri, '/', 3) = b.name
+//     where
+//       cluster_arn = $1;
+//   EOQ
 
-  param "arn" {}
-}
+//   param "arn" {}
+// }
 
-node "emr_cluster_to_emr_instance_fleet_node" {
-  category = category.emr_instance_fleet
+// edge "emr_cluster_to_emr_instance_fleet_edge" {
+//   title = "instance fleet"
 
-  sql = <<-EOQ
-     select
-      id as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'State', state,
-        'Account ID', account_id,
-        'Region', region ) as properties
-    from
-      aws_emr_instance_fleet
-    where
-      cluster_id in
-      (
-        select
-          id
-        from
-          aws_emr_cluster
-        where
-          cluster_arn = $1
-      )
-  EOQ
+//   sql = <<-EOQ
+//     select
+//       c.id as from_id,
+//       f.id as to_id
+//     from
+//       aws_emr_cluster as c
+//       left join
+//         aws_emr_instance_fleet as f
+//         on f.cluster_id = c.id
+//     where
+//       cluster_arn = $1;
+//   EOQ
 
-  param "arn" {}
-}
+//   param "arn" {}
+// }
 
-edge "emr_cluster_to_emr_instance_fleet_edge" {
-  title = "instance fleet"
+// node "emr_cluster_to_emr_instance_group_node" {
+//   category = category.emr_instance_group
 
-  sql = <<-EOQ
-     select
-      c.id as from_id,
-      f.id as to_id
-    from
-      aws_emr_cluster as c
-      left join
-        aws_emr_instance_fleet as f
-        on f.cluster_id = c.id
-    where
-      cluster_arn = $1;
-  EOQ
+//   sql = <<-EOQ
+//      select
+//       id as id,
+//       title as title,
+//       jsonb_build_object(
+//         'ARN', arn,
+//         'State', state,
+//         'Account ID', account_id,
+//         'Region', region ) as properties
+//     from
+//       aws_emr_instance_group
+//     where
+//       cluster_id in
+//       (
+//         select
+//           id
+//         from
+//           aws_emr_cluster
+//         where
+//           cluster_arn = $1
+//       )
+//   EOQ
 
-  param "arn" {}
-}
+//   param "arn" {}
+// }
 
-node "emr_cluster_to_emr_instance_group_node" {
-  category = category.emr_instance_group
+// edge "emr_cluster_to_emr_instance_group_edge" {
+//   title = "instance group"
 
-  sql = <<-EOQ
-     select
-      id as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'State', state,
-        'Account ID', account_id,
-        'Region', region ) as properties
-    from
-      aws_emr_instance_group
-    where
-      cluster_id in
-      (
-        select
-          id
-        from
-          aws_emr_cluster
-        where
-          cluster_arn = $1
-      )
-  EOQ
+//   sql = <<-EOQ
+//     select
+//       c.id as from_id,
+//       g.id as to_id
+//     from
+//       aws_emr_cluster as c
+//       left join
+//         aws_emr_instance_group as g
+//         on g.cluster_id = c.id
+//     where
+//       cluster_arn = $1;
+//   EOQ
 
-  param "arn" {}
-}
+//   param "arn" {}
+// }
 
-edge "emr_cluster_to_emr_instance_group_edge" {
-  title = "instance group"
+// node "emr_cluster_to_ec2_ami_node" {
+//   category = category.ec2_ami
 
-  sql = <<-EOQ
-     select
-      c.id as from_id,
-      g.id as to_id
-    from
-      aws_emr_cluster as c
-      left join
-        aws_emr_instance_group as g
-        on g.cluster_id = c.id
-    where
-      cluster_arn = $1;
-  EOQ
+//   sql = <<-EOQ
+//      select
+//       image_id as id,
+//       title as title,
+//       jsonb_build_object(
+//         'Image ID', image_id,
+//         'Creation Date', creation_date,
+//         'State', state,
+//         'Account ID', account_id,
+//         'Region', region ) as properties
+//     from
+//       aws_ec2_ami
+//     where
+//       image_id in
+//       (
+//         select
+//           custom_ami_id
+//         from
+//           aws_emr_cluster
+//         where
+//           cluster_arn = $1
+//       )
+//   EOQ
 
-  param "arn" {}
-}
+//   param "arn" {}
+// }
 
-node "emr_cluster_to_ec2_ami_node" {
-  category = category.ec2_ami
+// edge "emr_cluster_to_ec2_ami_edge" {
+//   title = "ami"
 
-  sql = <<-EOQ
-     select
-      image_id as id,
-      title as title,
-      jsonb_build_object(
-        'Image ID', image_id,
-        'Creation Date', creation_date,
-        'State', state,
-        'Account ID', account_id,
-        'Region', region ) as properties
-    from
-      aws_ec2_ami
-    where
-      image_id in
-      (
-        select
-          custom_ami_id
-        from
-          aws_emr_cluster
-        where
-          cluster_arn = $1
-      )
-  EOQ
+//   sql = <<-EOQ
+//     select
+//       c.id as from_id,
+//       image_id as to_id
+//     from
+//       aws_emr_cluster as c
+//       left join
+//         aws_ec2_ami as a
+//         on a.image_id = c.custom_ami_id
+//     where
+//       cluster_arn = $1;
+//   EOQ
 
-  param "arn" {}
-}
+//   param "arn" {}
+// }
 
-edge "emr_cluster_to_ec2_ami_edge" {
-  title = "ami"
+// node "emr_cluster_to_emr_instance_node" {
+//   category = category.emr_instance
 
-  sql = <<-EOQ
-     select
-      c.id as from_id,
-      image_id as to_id
-    from
-      aws_emr_cluster as c
-      left join
-        aws_ec2_ami as a
-        on a.image_id = c.custom_ami_id
-    where
-      cluster_arn = $1;
-  EOQ
+//   sql = <<-EOQ
+//     select
+//       emri.id as id,
+//       emri.title as title,
+//       jsonb_build_object(
+//         'EC2 Instance ARN', ec2i.arn,
+//         'EC2 Instance ID', ec2_instance_id,
+//         'State', emri.state,
+//         'Instance Type', emri.instance_type,
+//         'Account ID', emri.account_id,
+//         'Region', emri.region ) as properties
+//     from
+//       aws_ec2_instance as ec2i,
+//       aws_emr_instance as emri
+//     where
+//       ec2i.instance_id = emri.ec2_instance_id
+//       and cluster_id in
+//       (
+//         select
+//           id
+//         from
+//           aws_emr_cluster
+//         where
+//           cluster_arn = $1
+//       )
+//   EOQ
 
-  param "arn" {}
-}
+//   param "arn" {}
+// }
 
-node "emr_cluster_to_emr_instance_node" {
-  category = category.emr_instance
+// edge "emr_instance_fleet_to_emr_instance_edge" {
+//   title = "ec2 instance"
 
-  sql = <<-EOQ
-     select
-      emri.id as id,
-      emri.title as title,
-      jsonb_build_object(
-        'EC2 Instance ARN', ec2i.arn,
-        'EC2 Instance ID', ec2_instance_id,
-        'State', emri.state,
-        'Instance Type', emri.instance_type,
-        'Account ID', emri.account_id,
-        'Region', emri.region ) as properties
-    from
-      aws_ec2_instance as ec2i,
-      aws_emr_instance as emri
-    where
-      ec2i.instance_id = emri.ec2_instance_id
-      and cluster_id in
-      (
-        select
-          id
-        from
-          aws_emr_cluster
-        where
-          cluster_arn = $1
-      )
-  EOQ
+//   sql = <<-EOQ
+//      select
+//       instance_fleet_id as from_id,
+//       i.id as to_id
+//     from
+//       aws_emr_cluster as c
+//       left join
+//         aws_emr_instance as i
+//         on i.cluster_id = c.id
+//     where
+//       cluster_arn = $1
+//       and instance_fleet_id is not null
+//       and i.state <> 'TERMINATED';
+//   EOQ
 
-  param "arn" {}
-}
+//   param "arn" {}
+// }
 
-edge "emr_instance_fleet_to_emr_instance_edge" {
-  title = "ec2 instance"
+// edge "emr_instance_group_to_emr_instance_edge" {
+//   title = "ec2 instance"
 
-  sql = <<-EOQ
-     select
-      instance_fleet_id as from_id,
-      i.id as to_id
-    from
-      aws_emr_cluster as c
-      left join
-        aws_emr_instance as i
-        on i.cluster_id = c.id
-    where
-      cluster_arn = $1
-      and instance_fleet_id is not null
-      and i.state <> 'TERMINATED';
-  EOQ
+//   sql = <<-EOQ
+//      select
+//       instance_group_id as from_id,
+//       i.id as to_id
+//     from
+//       aws_emr_cluster as c
+//       left join
+//         aws_emr_instance as i
+//         on i.cluster_id = c.id
+//     where
+//       cluster_arn = $1
+//       and instance_group_id is not null
+//       and i.state <> 'TERMINATED';
+//   EOQ
 
-  param "arn" {}
-}
+//   param "arn" {}
+// }
 
-edge "emr_instance_group_to_emr_instance_edge" {
-  title = "ec2 instance"
+// node "emr_cluster" {
+//   category = category.emr_cluster
 
-  sql = <<-EOQ
-     select
-      instance_group_id as from_id,
-      i.id as to_id
-    from
-      aws_emr_cluster as c
-      left join
-        aws_emr_instance as i
-        on i.cluster_id = c.id
-    where
-      cluster_arn = $1
-      and instance_group_id is not null
-      and i.state <> 'TERMINATED';
-  EOQ
+//   sql = <<-EOQ
+//      select
+//       id as id,
+//       title as title,
+//       jsonb_build_object(
+//         'ARN', cluster_arn,
+//         'State', state,
+//         'Log URI', log_uri,
+//         'Auto Terminate', auto_terminate::text,
+//         'Account ID', account_id,
+//         'Region', region ) as properties
+//     from
+//       aws_emr_cluster
+//     where
+//       cluster_arn = any($1);
+//   EOQ
 
-  param "arn" {}
-}
-
-node "emr_cluster" {
-  category = category.emr_cluster
-
-  sql = <<-EOQ
-     select
-      id as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', cluster_arn,
-        'State', state,
-        'Log URI', log_uri,
-        'Auto Terminate', auto_terminate::text,
-        'Account ID', account_id,
-        'Region', region ) as properties
-    from
-      aws_emr_cluster
-    where
-      cluster_arn = any($1);
-  EOQ
-
-  param "emr_cluster_arns" {}
-}
+//   param "emr_cluster_arns" {}
+// }
