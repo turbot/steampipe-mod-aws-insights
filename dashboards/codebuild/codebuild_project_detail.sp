@@ -219,7 +219,7 @@ dashboard "codebuild_project_detail" {
         edge.codebuild_project_to_artifact_s3_bucket,
         edge.codebuild_project_to_cache_s3_bucket,
         edge.codebuild_project_to_cloudwatch_group,
-        edge.codebuild_project_to_codecommit_repository,
+        edge.codecommit_repository_to_codebuild_project,
         edge.codebuild_project_to_ecr_repository,
         edge.codebuild_project_to_iam_role,
         edge.codebuild_project_to_kms_key,
@@ -235,7 +235,7 @@ dashboard "codebuild_project_detail" {
         codebuild_project_arns     = [self.input.codebuild_project_arn.value]
         codecommit_repository_arns = with.codecommit_repositories.rows[*].codecommit_repository_arn
         ecr_repository_arns        = with.ecr_repositories.rows[*].ecr_repository_arn
-        iam_role_arns             = with.iam_roles.rows[*].iam_role_arn
+        iam_role_arns              = with.iam_roles.rows[*].iam_role_arn
         kms_key_arns               = with.kms_keys.rows[*].kms_key_arn
         s3_bucket_arns             = with.s3_buckets.rows[*].s3_bucket_arn
         vpc_security_group_ids     = with.vpc_security_groups.rows[*].vpc_security_group_id
