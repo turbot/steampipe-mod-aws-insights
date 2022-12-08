@@ -51,6 +51,58 @@ edge "codebuild_project_to_cloudwatch_group" {
   param "codebuild_project_arns" {}
 }
 
+edge "codebuild_project_to_codecommit_repository" {
+  title = "codecommit repository"
+
+  sql = <<-EOQ
+    select
+      p.arn as from_id,
+      r.arn as to_id
+    from
+      aws_codebuild_project as p
+      left join aws_codecommit_repository as r on r.clone_url_http in (
+        with code_sources as (
+          select
+            source,
+            secondary_sources
+          from
+            aws_codebuild_project
+          where
+            arn = any($1)
+        )
+        select source ->> 'Location' as "Location" from code_sources
+        union all
+        select s ->> 'Location' as "Location" from code_sources, jsonb_array_elements(secondary_sources) as s
+      )
+    where
+      p.arn = any($1);
+  EOQ
+
+  param "codebuild_project_arns" {}
+}
+
+edge "codebuild_project_to_codepipeline_pipeline" {
+  title = "build"
+
+  sql = <<-EOQ
+    select
+      b.arn as from_id,
+      p.arn as to_id
+    from
+      aws_codebuild_project as b,
+      aws_codepipeline_pipeline as p,
+      jsonb_array_elements(stages) as s,
+      jsonb_array_elements(s -> 'Actions') as a
+    where
+      s ->> 'Name' = 'Build'
+      and a -> 'ActionTypeId' ->> 'Provider' = 'CodeBuild'
+      and a -> 'Configuration' ->> 'ProjectName' = b.name
+      and p.arn = any($1);
+  EOQ
+
+  param "codepipeline_pipeline_arns" {}
+}
+
 edge "codebuild_project_to_ecr_repository" {
   title = "build environment"
 
