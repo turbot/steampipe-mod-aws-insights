@@ -32,7 +32,7 @@ dashboard "codecommit_repository_detail" {
       direction = "TD"
 
       nodes = [
-        node.codecommit_repository_node,
+        node.codecommit_repository,
         node.codecommit_repository_to_codebuild_project_node,
         node.codecommit_repository_to_codepipeline_pipeline_node
       ]
@@ -43,7 +43,8 @@ dashboard "codecommit_repository_detail" {
       ]
 
       args = {
-        arn = self.input.codecommit_repository_arn.value
+        arn                        = self.input.codecommit_repository_arn.value
+        codecommit_repository_arns = [self.input.codecommit_repository_arn.value]
       }
     }
   }
@@ -139,29 +140,6 @@ query "codecommit_repository_input" {
     order by
       title;
   EOQ
-}
-
-node "codecommit_repository_node" {
-  category = category.codecommit_repository
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'Repository ID', repository_id,
-        'Repository Name', repository_name,
-        'ARN', arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_codecommit_repository
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
 }
 
 node "codecommit_repository_to_codebuild_project_node" {

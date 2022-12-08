@@ -34,6 +34,24 @@ edge "s3_bucket_to_cloudfront_distribution" {
   param "cloudfront_distribution_arns" {}
 }
 
+edge "s3_bucket_to_codebuild_project" {
+  title = "source provider"
+
+  sql = <<-EOQ
+    select
+      s3.arn as from_id,
+      p.arn as to_id
+    from
+      aws_codebuild_project as p,
+      aws_s3_bucket as s3
+    where
+      p.arn = any($1)
+      and s3.name = split_part(p.source ->> 'Location', '/', 1);
+  EOQ
+
+  param "codebuild_project_arns" {}
+}
+
 edge "s3_bucket_to_kms_key" {
   title = "encrypted with"
 
