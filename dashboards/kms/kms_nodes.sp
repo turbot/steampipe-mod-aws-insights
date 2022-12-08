@@ -21,3 +21,27 @@ node "kms_key" {
 
   param "kms_key_arns" {}
 }
+
+node "kms_key_alias" {
+  category = category.kms_alias
+
+  sql = <<-EOQ
+    select
+      a.arn as id,
+      a.title as title,
+      jsonb_build_object(
+        'ARN', a.arn,
+        'Create Date', a.creation_date,
+        'Account ID', a.account_id,
+        'Region', a.region
+      ) as properties
+    from
+      aws_kms_alias as a
+      join aws_kms_key as k
+      on a.target_key_id = k.id
+    where
+      k.arn = any($1);
+  EOQ
+
+  param "kms_key_arns" {}
+}

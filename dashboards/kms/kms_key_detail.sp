@@ -456,48 +456,6 @@ query "kms_key_policy" {
   param "arn" {}
 }
 
-node "kms_key_alias" {
-  category = category.kms_alias
-
-  sql = <<-EOQ
-    select
-      a.arn as id,
-      a.title as title,
-      jsonb_build_object(
-        'ARN', a.arn,
-        'Create Date', a.creation_date,
-        'Account ID', a.account_id,
-        'Region', a.region
-      ) as properties
-    from
-      aws_kms_alias as a
-      join aws_kms_key as k
-      on a.target_key_id = k.id
-    where
-      k.arn = any($1);
-  EOQ
-
-  param "kms_key_arns" {}
-}
-
-edge "kms_key_to_kms_alias" {
-  title = "key"
-
-  sql = <<-EOQ
-    select
-      a.arn as from_id,
-      k.arn as to_id
-    from
-      aws_kms_alias as a
-      join aws_kms_key as k
-      on a.target_key_id = k.id
-    where
-      k.arn = any($1);
-  EOQ
-
-  param "kms_key_arns" {}
-}
-
 query "kms_key_overview" {
   sql = <<-EOQ
     select

@@ -79,7 +79,7 @@ dashboard "iam_group_detail" {
       edges = [
         edge.iam_group_to_iam_policy,
         edge.iam_group_to_iam_user,
-        edge.iam_group_to_inline_policy,
+        edge.iam_group_to_inline_policy
       ]
 
       args = {

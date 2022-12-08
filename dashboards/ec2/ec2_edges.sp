@@ -1,3 +1,23 @@
+edge "ec2_alb_to_s3_bucket" {
+  title = "logs to"
+
+  sql = <<-EOQ
+    select
+      alb.arn as from_id,
+      b.arn as to_id
+    from
+      aws_ec2_application_load_balancer as alb,
+      jsonb_array_elements(alb.load_balancer_attributes) as attributes,
+      aws_s3_bucket as b
+    where
+      alb.arn = $1
+      and attributes ->> 'Key' = 'access_logs.s3.bucket'
+      and attributes ->> 'Value' = b.name;
+  EOQ
+
+  param "ec2_application_load_balancer_arns" {}
+}
+
 edge "ec2_application_load_balancer_to_cloudfront_distribution" {
   title = "origin for"
 
@@ -48,6 +68,24 @@ edge "ec2_classic_load_balancer_to_ec2_instance" {
       left join aws_ec2_instance i on i.instance_id = ci ->> 'InstanceId'
     where
       clb.arn = any($1);
+  EOQ
+
+  param "ec2_classic_load_balancer_arns" {}
+}
+
+edge "ec2_clb_to_s3_bucket" {
+  title = "logs to"
+
+  sql = <<-EOQ
+    select
+      clb.arn as from_id,
+      b.arn as to_id
+    from
+      aws_ec2_classic_load_balancer clb,
+      aws_s3_bucket as b
+    where
+      clb.arn = $1
+      and clb.access_log_s3_bucket_name = b.name;
   EOQ
 
   param "ec2_classic_load_balancer_arns" {}
@@ -250,6 +288,26 @@ edge "ec2_network_interface_to_vpc_subnet" {
   EOQ
 
   param "ec2_network_interface_ids" {}
+}
+
+edge "ec2_nlb_to_s3_bucket" {
+  title = "logs to"
+
+  sql = <<-EOQ
+    select
+      nlb.arn as from_id,
+      b.arn as to_id
+    from
+      aws_ec2_network_load_balancer as nlb,
+      jsonb_array_elements(nlb.load_balancer_attributes) as attributes,
+      aws_s3_bucket as b
+    where
+      nlb.arn = $1
+      and attributes ->> 'Key' = 'access_logs.s3.bucket'
+      and attributes ->> 'Value' = b.name;
+  EOQ
+
+  param "ec2_network_load_balancer_arns" {}
 }
 
 edge "ec2_target_group_to_ec2_instance" {
