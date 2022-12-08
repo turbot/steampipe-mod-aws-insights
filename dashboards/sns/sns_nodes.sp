@@ -11,9 +11,9 @@ node "sns_topic" {
         'Region', region
       ) as properties
     from
-      aws_sns_topic as q
+      aws_sns_topic
     where
-      q.topic_arn = any($1);
+      topic_arn = any($1);
   EOQ
 
   param "sns_topic_arns" {}

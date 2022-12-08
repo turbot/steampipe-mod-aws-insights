@@ -292,7 +292,7 @@ edge "vpc_flow_log_to_s3_bucket" {
     where
       f.bucket_name = b.name
       and f.log_destination_type = 's3'
-      and f.flow_log_id = $1;
+      and f.flow_log_id = any($1);
   EOQ
 
   param "vpc_flow_log_ids" {}
@@ -328,7 +328,7 @@ edge "vpc_flow_log_to_iam_role" {
     from
       aws_vpc_flow_log
     where
-      flow_log_id = $1;
+      flow_log_id = any($1);
   EOQ
 
   param "vpc_flow_log_ids" {}

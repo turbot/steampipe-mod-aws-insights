@@ -186,6 +186,19 @@ dashboard "vpc_detail" {
         args = [self.input.vpc_id.value]
       }
 
+      with "vpc_nat_gateways" {
+        sql = <<-EOQ
+          select
+            arn as gateway_arn
+          from
+            aws_vpc_nat_gateway
+          where
+            vpc_id = $1;
+        EOQ
+
+        args = [self.input.vpc_id.value]
+      }
+
       with "vpc_security_groups" {
         sql = <<-EOQ
           select
@@ -273,6 +286,7 @@ dashboard "vpc_detail" {
         vpc_endpoint_ids                   = with.vpc_endpoints.rows[*].vpc_endpoint_id
         vpc_flow_log_ids                   = with.vpc_flow_logs.rows[*].flow_log_id
         vpc_id                             = self.input.vpc_id.value
+        vpc_nat_gateway_arns               = with.vpc_nat_gateways.rows[*].gateway_arn
         vpc_security_group_ids             = with.vpc_security_groups.rows[*].security_group_id
         vpc_subnet_ids                     = with.vpc_subnets.rows[*].subnet_id
         vpc_vpc_ids                        = [self.input.vpc_id.value]

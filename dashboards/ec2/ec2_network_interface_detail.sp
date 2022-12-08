@@ -103,6 +103,20 @@ dashboard "ec2_network_interface_detail" {
         args = [self.input.network_interface_id.value]
       }
 
+      with "vpc_nat_gateways" {
+        sql = <<-EOQ
+          select
+            arn as gateway_arn
+          from
+            aws_vpc_nat_gateway,
+            jsonb_array_elements(nat_gateway_addresses) as a
+          where
+            a ->> 'NetworkInterfaceId' = $1;
+        EOQ
+
+        args = [self.input.network_interface_id.value]
+      }
+
       with "vpc_security_groups" {
         sql = <<-EOQ
           select
@@ -169,6 +183,7 @@ dashboard "ec2_network_interface_detail" {
         ec2_network_interface_ids = [self.input.network_interface_id.value]
         vpc_eip_arns              = with.vpc_eips.rows[*].eip_arn
         vpc_flow_log_ids          = with.vpc_flow_logs.rows[*].flow_log_id
+        vpc_nat_gateway_arns      = with.vpc_nat_gateways.rows[*].gateway_arn
         vpc_security_group_ids    = with.vpc_security_groups.rows[*].security_group_id
         vpc_subnet_ids            = with.vpc_subnets.rows[*].subnet_id
         vpc_vpc_ids               = with.vpc_vpcs.rows[*].vpc_id
