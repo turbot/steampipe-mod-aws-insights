@@ -8,11 +8,11 @@ edge "eventbridge_rule_to_cloudwatch_log_group" {
       r.arn as from_id,
       (t ->> 'Arn')::text || ':*' as to_id
     from
-      aws_eventbridge_rule r
-      cross join jsonb_array_elements(targets) t
+      aws_eventbridge_rule r,
+      jsonb_array_elements(targets) t
     where
       r.arn = any($1)
-      and split_part((t ->> 'Arn'::text), ':', 3) = 'logs';
+      and t ->> 'Arn' like '%logs%;
   EOQ
 
   param "eventbridge_rule_arns" {}
@@ -49,7 +49,7 @@ edge "eventbridge_rule_to_lambda_function" {
       jsonb_array_elements(targets) t
     where
       r.arn = any($1)
-      and split_part((t ->> 'Arn'::text), ':', 3) = 'lambda';
+      and t ->> 'Arn' like '%lambda%;
   EOQ
 
   param "eventbridge_rule_arns" {}
@@ -67,7 +67,7 @@ edge "eventbridge_rule_to_sns_topic" {
       jsonb_array_elements(targets) t
     where
       r.arn = any($1)
-      and split_part((t ->> 'Arn'::text), ':', 3) = 'sns';
+      and t ->> 'Arn' like '%sns%';
   EOQ
 
   param "eventbridge_rule_arns" {}
