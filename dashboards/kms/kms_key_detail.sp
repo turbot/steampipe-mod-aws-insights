@@ -457,22 +457,6 @@ query "kms_key_policy" {
   param "arn" {}
 }
 
-edge "cloudtrail_trail_to_kms_key" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      arn as from_id,
-      kms_key_id as to_id
-    from
-      aws_cloudtrail_trail
-    where
-      arn = any($1);
-  EOQ
-
-  param "cloudtrail_trail_arns" {}
-}
-
 node "kms_key_alias" {
   category = category.kms_alias
 

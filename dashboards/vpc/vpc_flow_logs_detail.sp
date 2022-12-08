@@ -273,7 +273,7 @@ node "vpc_flow_log" {
     from
       aws_vpc_flow_log
     where
-      flow_log_id = any($1 ::text[]);
+      flow_log_id = any($1);
   EOQ
 
   param "vpc_flow_log_ids" {}

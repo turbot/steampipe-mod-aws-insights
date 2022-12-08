@@ -3,20 +3,21 @@ node "guardduty_detector" {
 
   sql = <<-EOQ
     select
-      detector_id as id,
-      title,
+      arn as id,
+      left(title,8) as title,
       jsonb_build_object(
         'ARN', arn,
-        'Status', status,
-        'Created At', created_at,
         'Account ID', account_id,
-        'Region', region
+        'Region', region,
+        'Status', status
       ) as properties
     from
       aws_guardduty_detector
     where
-      service_role = any($1);
+      status = 'ENABLED'
+      and data_sources is not null
+      and arn = any($1);
   EOQ
 
-  param "iam_role_arns" {}
+  param "guardduty_detector_arns" {}
 }
