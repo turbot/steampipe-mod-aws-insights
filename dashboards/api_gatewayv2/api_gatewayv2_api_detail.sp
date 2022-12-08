@@ -46,6 +46,21 @@ dashboard "api_gatewayv2_api_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "ec2_load_balancer_listeners" {
+        sql = <<-EOQ
+          select
+            lb.arn as listener_arn
+          from
+            aws_api_gatewayv2_integration as i
+            join aws_ec2_load_balancer_listener as lb on i.integration_uri = lb.arn
+            join aws_api_gatewayv2_api as a on a.api_id = i.api_id
+          where
+            a.api_id = any($1);
+        EOQ
+
+        args = [self.input.api_id.value]
+      }
+
       with "lambda_functions" {
         sql = <<-EOQ
           select
@@ -96,9 +111,10 @@ dashboard "api_gatewayv2_api_detail" {
       ]
 
       args = {
-        api_gatewayv2_api_ids = [self.input.api_id.value]
-        lambda_function_arns  = with.lambda_functions.rows[*].function_arn
-        sqs_queue_arns        = with.sqs_queues.rows[*].queue_arn
+        api_gatewayv2_api_ids           = [self.input.api_id.value]
+        ec2_load_balancer_listener_arns = with.ec2_load_balancer_listeners.rows[*].listener_arn
+        lambda_function_arns            = with.lambda_functions.rows[*].function_arn
+        sqs_queue_arns                  = with.sqs_queues.rows[*].queue_arn
       }
     }
   }

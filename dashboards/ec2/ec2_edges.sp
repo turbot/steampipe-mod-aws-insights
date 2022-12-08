@@ -1,4 +1,4 @@
-edge "ec2_alb_to_s3_bucket" {
+edge "ec2_application_load_balancer_to_s3_bucket" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -6,13 +6,73 @@ edge "ec2_alb_to_s3_bucket" {
       alb.arn as from_id,
       b.arn as to_id
     from
+      aws_s3_bucket b,
       aws_ec2_application_load_balancer as alb,
-      jsonb_array_elements(alb.load_balancer_attributes) as attributes,
-      aws_s3_bucket as b
+      jsonb_array_elements(alb.load_balancer_attributes) attributes
     where
-      alb.arn = $1
+      alb.arn = any($1)
       and attributes ->> 'Key' = 'access_logs.s3.bucket'
-      and attributes ->> 'Value' = b.name;
+      and b.name = attributes ->> 'Value';
+  EOQ
+
+  param "ec2_application_load_balancer_arns" {}
+}
+
+edge "ec2_application_load_balancer_to_vpc_security_group" {
+  title = "security group"
+
+  sql = <<-EOQ
+    select
+      alb.arn as from_id,
+      sg.group_id as to_id
+    from
+      aws_vpc_security_group sg,
+      aws_ec2_application_load_balancer as alb
+    where
+      alb.arn = any($1)
+      and sg.group_id in
+      (
+        select
+          jsonb_array_elements_text(alb.security_groups)
+      );
+  EOQ
+
+  param "ec2_application_load_balancer_arns" {}
+}
+
+edge "ec2_application_load_balancer_to_vpc_subnet" {
+  title = "subnet"
+
+  sql = <<-EOQ
+    select
+      sg as from_id,
+      s.subnet_id as to_id
+    from
+      aws_vpc_subnet s,
+      aws_ec2_application_load_balancer as alb,
+      jsonb_array_elements_text(alb.security_groups) as sg,
+      jsonb_array_elements(availability_zones) as az
+    where
+      alb.arn = any($1)
+      and s.subnet_id = az ->> 'SubnetId';
+  EOQ
+
+  param "ec2_application_load_balancer_arns" {}
+}
+
+edge "ec2_application_load_balancer_to_acm_certificate" {
+  title = "ssl via"
+
+  sql = <<-EOQ
+    select
+      u as from_id,
+      c.certificate_arn as to_id
+    from
+      aws_ec2_application_load_balancer alb,
+      aws_acm_certificate c,
+      jsonb_array_elements_text(in_use_by) u
+    where
+      u = $1
   EOQ
 
   param "ec2_application_load_balancer_arns" {}
@@ -322,11 +382,11 @@ edge "ec2_target_group_to_ec2_instance" {
       aws_ec2_target_group as target,
       jsonb_array_elements(target.target_health_descriptions) as health_descriptions
     where
-      i.arn = any($1)
+      target.target_group_arn = any($1)
       and health_descriptions -> 'Target' ->> 'Id' = i.instance_id;
   EOQ
 
-  param "ec2_instance_arns" {}
+  param "ec2_target_group_arns" {}
 }
 edge "ec2_launch_configuration_to_ebs_snapshot" {
   title = "snapshot"

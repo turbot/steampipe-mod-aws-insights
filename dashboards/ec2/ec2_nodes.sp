@@ -141,32 +141,6 @@ node "ec2_key_pair" {
   param "ec2_instance_arns" {}
 }
 
-node "ec2_load_balancer_listener" {
-  category = category.ec2_load_balancer_listener
-
-  sql = <<-EOQ
-    select
-      lb.arn as id,
-      lb.title as title,
-      jsonb_build_object (
-        'ARN', lb.arn,
-        'Account ID', lb.account_id,
-        'Region', lb.region,
-        'Protocol', lb.protocol,
-        'Port', lb.port,
-        'SSL Policy', coalesce(lb.ssl_policy, 'None')
-      ) as properties
-    from
-      aws_api_gatewayv2_integration as i
-      join aws_ec2_load_balancer_listener as lb on i.integration_uri = lb.arn
-      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
-    where
-      a.api_id = any($1);
-  EOQ
-
-  param "api_gatewayv2_api_ids" {}
-}
-
 node "ec2_network_interface" {
   category = category.ec2_network_interface
 
@@ -258,6 +232,7 @@ node "ec2_launch_configuration" {
 
   param "ec2_launch_configuration_arns" {}
 }
+
 node "ec2_target_group" {
   category = category.ec2_target_group
 
@@ -273,13 +248,10 @@ node "ec2_target_group" {
         'Account ID', target.account_id
       ) as properties
     from
-      aws_ec2_instance as i,
-      aws_ec2_target_group as target,
-      jsonb_array_elements(target.target_health_descriptions) as health_descriptions
+      aws_ec2_target_group as target
     where
-      i.arn = any($1)
-      and health_descriptions -> 'Target' ->> 'Id' = i.instance_id
+      target.target_group_arn = any($1)
   EOQ
 
-  param "ec2_instance_arns" {}
+  param "ec2_target_group_arns" {}
 }

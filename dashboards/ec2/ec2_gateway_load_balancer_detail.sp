@@ -51,18 +51,18 @@ dashboard "ec2_gateway_load_balancer_detail" {
         node.ec2_glb_to_vpc_subnet_node,
         node.ec2_glb_to_s3_bucket_node,
         node.ec2_glb_vpc_security_group_to_vpc_node,
-        node.ec2_lb_to_target_group_node,
-        node.ec2_lb_to_ec2_instance_node,
-        node.ec2_lb_from_ec2_load_balancer_listener_node
+        // node.ec2_lb_to_target_group_node,
+        // node.ec2_lb_to_ec2_instance_node,
+        // node.ec2_lb_from_ec2_load_balancer_listener_node
       ]
 
       edges = [
         edge.ec2_glb_to_vpc_subnet_edge,
         edge.ec2_glb_to_s3_bucket_edge,
         edge.ec2_glb_vpc_security_group_to_vpc_edge,
-        edge.ec2_lb_to_target_group_edge,
-        edge.ec2_lb_to_ec2_instance_edge,
-        edge.ec2_lb_from_ec2_load_balancer_listener_edge
+        // edge.ec2_lb_to_target_group_edge,
+        // edge.ec2_lb_to_ec2_instance_edge,
+        // edge.ec2_lb_from_ec2_load_balancer_listener_edge
       ]
 
       args = {

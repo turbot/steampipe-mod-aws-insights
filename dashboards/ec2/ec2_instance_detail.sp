@@ -166,6 +166,22 @@ dashboard "ec2_instance_detail" {
         args = [self.input.instance_arn.value]
       }
 
+      with "ec2_target_groups" {
+        sql = <<-EOQ
+          select
+            target.target_group_arn
+          from
+            aws_ec2_instance as i,
+            aws_ec2_target_group as target,
+            jsonb_array_elements(target.target_health_descriptions) as health_descriptions
+          where
+            i.arn = $1
+            and health_descriptions -> 'Target' ->> 'Id' = i.instance_id;
+        EOQ
+
+        args = [self.input.instance_arn.value]
+      }
+
       with "ecs_clusters" {
         sql = <<-EOQ
           select
@@ -299,6 +315,7 @@ dashboard "ec2_instance_detail" {
         ec2_instance_arns                  = [self.input.instance_arn.value]
         ec2_network_interface_ids          = with.ec2_network_interfaces.rows[*].network_interface_id
         ec2_network_load_balancer_arns     = with.ec2_network_load_balancers.rows[*].network_load_balancer_arn
+        ec2_target_group_arns              = with.ec2_target_groups.rows[*].target_group_arn
         ecs_cluster_arns                   = with.ecs_clusters.rows[*].cluster_arn
         iam_role_arns                      = with.iam_roles.rows[*].role_arn
         vpc_eip_arns                       = with.vpc_eips.rows[*].eip_arn

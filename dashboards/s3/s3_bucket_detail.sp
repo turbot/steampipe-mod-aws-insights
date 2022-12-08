@@ -222,7 +222,7 @@ dashboard "s3_bucket_detail" {
 
       edges = [
         edge.cloudtrail_trail_to_s3_bucket,
-        edge.ec2_alb_to_s3_bucket,
+        edge.ec2_application_load_balancer_to_s3_bucket,
         edge.ec2_clb_to_s3_bucket,
         edge.ec2_nlb_to_s3_bucket,
         edge.s3_bucket_from_s3_bucket,

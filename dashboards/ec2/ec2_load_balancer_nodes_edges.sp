@@ -1,104 +1,6 @@
 # TODO: These should be cleaned up and moved into ec2.sp
 
-node "ec2_lb_to_target_group_node" {
-  category = category.ec2_target_group
-
-  sql = <<-EOQ
-    select
-      tg.target_group_arn as id,
-      tg.title as title,
-      jsonb_build_object(
-        'Group Name', tg.target_group_name,
-        'ARN', tg.target_group_arn,
-        'Account ID', tg.account_id,
-        'Region', tg.region
-      ) as properties
-    from
-      aws_ec2_target_group tg
-    where
-      $1 in
-      (
-        select
-          jsonb_array_elements_text(tg.load_balancer_arns)
-      );
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ec2_lb_to_target_group_edge" {
-  title = "target group"
-
-  sql = <<-EOQ
-    select
-      $1 as from_id,
-      tg.target_group_arn as to_id
-    from
-      aws_ec2_target_group tg
-    where
-      $1 in
-      (
-        select
-          jsonb_array_elements_text(tg.load_balancer_arns)
-      );
-  EOQ
-
-  param "arn" {}
-}
-
-node "ec2_lb_to_ec2_instance_node" {
-  category = category.ec2_instance
-
-  sql = <<-EOQ
-    select
-      instance.instance_id as id,
-      instance.title as title,
-      jsonb_build_object(
-        'Instance ID', instance.instance_id,
-        'ARN', instance.arn,
-        'Account ID', instance.account_id,
-        'Region', instance.region
-      ) as properties
-    from
-      aws_ec2_target_group tg,
-      aws_ec2_instance instance,
-      jsonb_array_elements(tg.target_health_descriptions) thd
-    where
-      instance.instance_id = thd -> 'Target' ->> 'Id'
-      and $1 in
-      (
-        select
-          jsonb_array_elements_text(tg.load_balancer_arns)
-      );
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ec2_lb_to_ec2_instance_edge" {
-  title = "routes to"
-
-  sql = <<-EOQ
-    select
-      tg.target_group_arn as from_id,
-      instance.instance_id as to_id
-    from
-      aws_ec2_target_group tg,
-      aws_ec2_instance instance,
-      jsonb_array_elements(tg.target_health_descriptions) thd
-    where
-      instance.instance_id = thd -> 'Target' ->> 'Id'
-      and $1 in
-      (
-        select
-          jsonb_array_elements_text(tg.load_balancer_arns)
-      );
-  EOQ
-
-  param "arn" {}
-}
-
-node "ec2_lb_from_ec2_load_balancer_listener_node" {
+node "ec2_load_balancer_listener" {
   category = category.ec2_load_balancer_listener
 
   sql = <<-EOQ
@@ -116,13 +18,13 @@ node "ec2_lb_from_ec2_load_balancer_listener_node" {
     from
       aws_ec2_load_balancer_listener lblistener
     where
-      lblistener.load_balancer_arn = $1;
+      lblistener.arn = any($1);
   EOQ
 
-  param "arn" {}
+  param "ec2_load_balancer_listener_arns" {}
 }
 
-edge "ec2_lb_from_ec2_load_balancer_listener_edge" {
+edge "ec2_load_balancer_listener_to_ec2_lb" {
   title = "listener for"
 
   sql = <<-EOQ
@@ -132,8 +34,25 @@ edge "ec2_lb_from_ec2_load_balancer_listener_edge" {
     from
       aws_ec2_load_balancer_listener lblistener
     where
-      lblistener.load_balancer_arn = $1
+      lblistener.arn = any($1)
   EOQ
 
-  param "arn" {}
+  param "ec2_load_balancer_listener_arns" {}
+}
+
+edge "ec2_lb_to_target_group" {
+  title = "target group"
+
+  sql = <<-EOQ
+    select
+      lb_arns as from_id,
+      tg.target_group_arn as to_id
+    from
+      aws_ec2_target_group tg,
+      jsonb_array_elements_text(tg.load_balancer_arns) as lb_arns
+    where
+      lb_arns = any($1);
+  EOQ
+
+  param "ec2_application_load_balancer_arns" {}
 }
