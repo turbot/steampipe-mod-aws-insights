@@ -45,8 +45,8 @@ edge "eventbridge_rule_to_lambda_function" {
       r.arn as from_id,
       (t ->> 'Arn')::text as to_id
     from
-      aws_eventbridge_rule r
-      cross join jsonb_array_elements(targets) t
+      aws_eventbridge_rule r,
+      jsonb_array_elements(targets) t
     where
       r.arn = any($1)
       and split_part((t ->> 'Arn'::text), ':', 3) = 'lambda';
@@ -63,8 +63,8 @@ edge "eventbridge_rule_to_sns_topic" {
       r.arn as from_id,
       (t ->> 'Arn')::text as to_id
     from
-      aws_eventbridge_rule r
-      cross join jsonb_array_elements(targets) t
+      aws_eventbridge_rule r,
+      jsonb_array_elements(targets) t
     where
       r.arn = any($1)
       and split_part((t ->> 'Arn'::text), ':', 3) = 'sns';
