@@ -7,18 +7,18 @@ locals {
 category "api_gatewayv2_api" {
   title = "API Gatewayv2 API"
   href  = "/aws_insights.dashboard.api_gatewayv2_api_detail?input.api_id={{.properties.'ID' | @uri}}"
-  icon  = "heroicons-outline:bolt"
+  icon  = "api"
   color = local.front_end_web_color
 }
 
 category "api_gatewayv2_integration" {
   title = "API Gatewayv2 Integration"
-  icon  = "heroicons-outline:puzzle-piece"
+  icon  = "integration-instructions"
   color = local.front_end_web_color
 }
 
 category "api_gatewayv2_stage" {
   title = "API Gatewayv2 Stage"
   color = local.front_end_web_color
-  icon  = "text:Stage"
+  icon  = "developer-board"
 }

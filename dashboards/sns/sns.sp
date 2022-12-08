@@ -7,12 +7,12 @@ locals {
 category "sns_topic" {
   title = "SNS Topic"
   href  = "/aws_insights.dashboard.sns_topic_detail?input.topic_arn={{.properties.'ARN' | @uri}}"
-  icon  = "text:Topic"
+  icon  = "podcasts"
   color = local.application_integration_color
 }
 
 category "sns_topic_subscription" {
   title = "SNS Subscription"
-  icon  = "heroicons-outline:rss"
+  icon  = "sensors"
   color = local.application_integration_color
 }

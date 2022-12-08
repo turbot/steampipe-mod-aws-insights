@@ -1,5 +1,5 @@
 category "opensearch_domain" {
   title = "OpenSearch Domain"
-  icon  = "text:OS"
+  icon  = "database"
   color = local.analytics_color
 }

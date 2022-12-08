@@ -7,12 +7,12 @@ locals {
 category "cloudwatch_log_group" {
   title = "CloudWatch Log Group"
   color = local.management_governance_color
-  icon  = "text:CW"
+  icon  = "query-stats"
   href  = "/aws_insights.dashboard.cloudwatch_log_group_detail?input.log_group_arn={{.properties.'ARN' | @uri}}"
 }
 
 category "cloudwatch_log_metric_filter" {
   title = "CloudWatch Log Metric Filter"
   color = local.management_governance_color
-  icon  = "text:LMF"
+  icon  = "analytics"
 }
