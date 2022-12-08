@@ -38,24 +38,88 @@ dashboard "eventbridge_rule_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "cloudwatch_log_groups" {
+        sql = <<-EOQ
+          select
+            (t ->> 'Arn')::text || ':*' as cloudwatch_log_group_arn
+          from
+            aws_eventbridge_rule r
+            cross join jsonb_array_elements(targets) t
+          where
+            r.arn = $1
+            and split_part((t ->> 'Arn'::text), ':', 3) = 'logs';
+        EOQ
+
+        args = [self.input.eventbridge_rule_arn.value]
+      }
+
+      with "eventbridge_buses" {
+        sql = <<-EOQ
+          select
+            b.arn as eventbridge_bus_arn
+          from
+            aws_eventbridge_rule r
+            join aws_eventbridge_bus b on b.name = r.event_bus_name
+            and b.region = r.region
+            and b.account_id = r.account_id
+          where
+            arn = $1;
+        EOQ
+
+        args = [self.input.eventbridge_rule_arn.value]
+      }
+
+      with "lambda_functions" {
+        sql = <<-EOQ
+          select
+            (t ->> 'Arn')::text as function_arn
+          from
+            aws_eventbridge_rule r
+            cross join jsonb_array_elements(targets) t
+          where
+            r.arn = $1
+            and split_part((t ->> 'Arn'::text), ':', 3) = 'lambda';
+        EOQ
+
+        args = [self.input.eventbridge_rule_arn.value]
+      }
+
+      with "sns_topics" {
+        sql = <<-EOQ
+          select
+            (t ->> 'Arn')::text as topic_arn
+          from
+            aws_eventbridge_rule r
+            cross join jsonb_array_elements(targets) t
+          where
+            arn = $1
+            and split_part((t ->> 'Arn'::text), ':', 3) = 'sns';
+        EOQ
+
+        args = [self.input.eventbridge_rule_arn.value]
+      }
+
       nodes = [
+        node.cloudwatch_log_group,
+        node.eventbridge_bus,
         node.eventbridge_rule,
-        node.eventbridge_rule_to_sns_topic_node,
-        node.eventbridge_rule_to_lambda_function_node,
-        node.eventbridge_rule_to_cloudwatch_log_group_node,
-        node.eventbridge_rule_to_eventbridge_bus_node
+        node.lambda_function,
+        node.sns_topic
       ]
 
       edges = [
-        edge.eventbridge_rule_to_sns_topic_edge,
-        edge.eventbridge_rule_to_lambda_function_edge,
-        edge.eventbridge_rule_to_cloudwatch_log_group_edge,
-        edge.eventbridge_rule_to_eventbridge_bus_edge
+        edge.eventbridge_rule_to_cloudwatch_log_group,
+        edge.eventbridge_rule_to_eventbridge_bus,
+        edge.eventbridge_rule_to_lambda_function,
+        edge.eventbridge_rule_to_sns_topic
       ]
 
       args = {
-        arn                   = self.input.eventbridge_rule_arn.value
-        eventbridge_rule_arns = [self.input.eventbridge_rule_arn.value]
+        cloudwatch_log_group_arns = with.cloudwatch_log_groups.rows[*].cloudwatch_log_group_arn
+        eventbridge_bus_arns     = with.eventbridge_buses.rows[*].eventbridge_bus_arn
+        eventbridge_rule_arns     = [self.input.eventbridge_rule_arn.value]
+        lambda_function_arns      = with.lambda_functions.rows[*].function_arn
+        sns_topic_arns            = with.sns_topics.rows[*].topic_arn
       }
     }
   }
@@ -196,201 +260,3 @@ query "eventbridge_rule_target_count" {
   param "arn" {}
 }
 
-node "eventbridge_rule" {
-  category = category.eventbridge_rule
-
-  sql = <<-EOQ
-     select
-      arn as id,
-      title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Account ID', account_id,
-        'Event Bus Name', event_bus_name,
-        'Managed by', managed_by,
-        'Region', region,
-        'State', state
-      ) as properties
-    from
-      aws_eventbridge_rule
-    where
-      arn = any($1);
-  EOQ
-
-  param "eventbridge_rule_arns" {}
-}
-
-node "eventbridge_rule_to_sns_topic_node" {
-  category = category.sns_topic
-
-  sql = <<-EOQ
-     select
-      s.topic_arn as id,
-      s.title,
-      jsonb_build_object(
-        'ARN', s.topic_arn,
-        'Account ID', s.account_id,
-        'Region', s.region
-      ) as properties
-    from
-      aws_eventbridge_rule r
-      cross join jsonb_array_elements(targets) t
-      join aws_sns_topic s on s.topic_arn = (t ->> 'Arn')::text
-    where
-      arn = $1
-      and split_part((t ->> 'Arn'::text), ':', 3) = 'sns';
-  EOQ
-
-  param "arn" {}
-}
-
-edge "eventbridge_rule_to_sns_topic_edge" {
-  title = "notifies"
-
-  sql = <<-EOQ
-     select
-      r.arn as from_id,
-      s.topic_arn as to_id
-    from
-      aws_eventbridge_rule r
-      cross join jsonb_array_elements(targets) t
-      join aws_sns_topic s on s.topic_arn = (t ->> 'Arn')::text
-    where
-      r.arn = $1
-      and split_part((t ->> 'Arn'::text), ':', 3) = 'sns';
-  EOQ
-
-  param "arn" {}
-}
-
-node "eventbridge_rule_to_lambda_function_node" {
-  category = category.lambda_function
-
-  sql = <<-EOQ
-     select
-      f.arn as id,
-      f.title,
-      jsonb_build_object(
-        'ARN', f.arn,
-        'Account ID', f.account_id,
-        'Region', f.region
-      ) as properties
-    from
-      aws_eventbridge_rule r
-      cross join jsonb_array_elements(targets) t
-      join aws_lambda_function f on f.arn = (t ->> 'Arn')::text
-    where
-      r.arn = $1
-      and split_part((t ->> 'Arn'::text), ':', 3) = 'lambda';
-  EOQ
-
-  param "arn" {}
-}
-
-edge "eventbridge_rule_to_lambda_function_edge" {
-  title = "triggers"
-
-  sql = <<-EOQ
-     select
-      r.arn as from_id,
-      f.arn as to_id
-    from
-      aws_eventbridge_rule r
-      cross join jsonb_array_elements(targets) t
-      join aws_lambda_function f on f.arn = (t ->> 'Arn')::text
-    where
-      r.arn = $1
-      and split_part((t ->> 'Arn'::text), ':', 3) = 'lambda';
-  EOQ
-
-  param "arn" {}
-}
-
-node "eventbridge_rule_to_cloudwatch_log_group_node" {
-  category = category.cloudwatch_log_group
-
-  sql = <<-EOQ
-     select
-      w.arn as id,
-      w.title,
-      jsonb_build_object(
-        'ARN', w.arn,
-        'Account ID', w.account_id,
-        'Region', w.region,
-        'Retention days', w.retention_in_days
-      ) as properties
-    from
-      aws_eventbridge_rule r
-      cross join jsonb_array_elements(targets) t
-      join aws_cloudwatch_log_group w on w.arn = (t ->> 'Arn')::text || ':*'
-    where
-      r.arn = $1
-      and split_part((t ->> 'Arn'::text), ':', 3) = 'logs';
-  EOQ
-
-  param "arn" {}
-}
-
-edge "eventbridge_rule_to_cloudwatch_log_group_edge" {
-  title = "logs to"
-
-  sql = <<-EOQ
-     select
-      r.arn as from_id,
-      w.arn as to_id
-    from
-      aws_eventbridge_rule r
-      cross join jsonb_array_elements(targets) t
-      join aws_cloudwatch_log_group w on w.arn = (t ->> 'Arn')::text || ':*'
-    where
-      r.arn = $1
-      and split_part((t ->> 'Arn'::text), ':', 3) = 'logs';
-  EOQ
-
-  param "arn" {}
-}
-
-node "eventbridge_rule_to_eventbridge_bus_node" {
-  category = category.eventbridge_bus
-
-  sql = <<-EOQ
-     select
-      null as from_id,
-      null as to_id,
-      b.arn as id,
-      jsonb_build_object(
-        'ARN', b.arn,
-        'Account ID', b.account_id,
-        'Event Bus Name', r.event_bus_name,
-        'Region', r.region
-      ) as properties
-    from
-      aws_eventbridge_rule r
-      join aws_eventbridge_bus b on b.name = r.event_bus_name
-        and b.region = r.region
-        and b.account_id = r.account_id
-    where
-      r.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "eventbridge_rule_to_eventbridge_bus_edge" {
-  title = "eventbridge rule"
-
-  sql = <<-EOQ
-     select
-      b.arn as from_id,
-      r.arn as to_id
-    from
-      aws_eventbridge_rule r
-      join aws_eventbridge_bus b on b.name = r.event_bus_name
-        and b.region = r.region
-        and b.account_id = r.account_id
-    where
-      r.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
