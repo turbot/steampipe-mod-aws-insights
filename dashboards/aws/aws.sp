@@ -12,7 +12,7 @@ category "account" {
 
 category "availability_zone" {
   title = "Availability Zone"
-  icon  = "heroicons-outline:building-office"
+  icon  = "activity-zone"
   color = local.networking_color
 }
 
