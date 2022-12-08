@@ -434,22 +434,6 @@ edge "redshift_cluster_to_sns_topic" {
   param "redshift_cluster_arns" {}
 }
 
-edge "cloudtrail_trail_to_sns_topic" {
-  title = "notifies"
-
-  sql = <<-EOQ
-    select
-      arn as from_id,
-      sns_topic_arn as to_id
-    from
-      aws_cloudtrail_trail
-    where
-      arn = any($1);
-  EOQ
-
-  param "cloudtrail_trail_arns" {}
-}
-
 node "cloudformation_stack" {
   category = category.cloudformation_stack
 
