@@ -25,14 +25,10 @@ edge "sns_subscription_to_lambda_function" {
     from
       aws_sns_topic_subscription
     where
-      protocol = 'lambda'
-      and (
-        endpoint = any($1)
-        or endpoint like any($1) || ':%'
-      )
+      subscription_arn = any($1);
   EOQ
 
-  param "lambda_function_arns" {}
+  param "sns_topic_subscription_arns" {}
 }
 
 edge "sns_topic_to_sns_subscription" {

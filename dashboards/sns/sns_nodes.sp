@@ -26,18 +26,18 @@ node "sns_topic_subscription" {
   sql = <<-EOQ
     select
       subscription_arn as id,
-      left(title,8) as title,
+      split_part(title, '-', 1) as title,
       jsonb_build_object(
         'ARN', subscription_arn,
-        'Pending Confirmation', pending_confirmation,
-        'Account ID', account_id,
-        'Region', region
+        'Endpoint', endpoint,
+        'Region', region,
+        'Account ID', account_id
       ) as properties
     from
       aws_sns_topic_subscription
     where
-      topic_arn = any($1);
+      subscription_arn = any($1);
   EOQ
 
-  param "sns_topic_arns" {}
+  param "sns_topic_subscription_arns" {}
 }

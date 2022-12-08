@@ -107,19 +107,19 @@ edge "vpc_peered_vpc" {
 
   sql = <<-EOQ
     select
-      $1 as to_id,
+      any($1) as to_id,
       case
-        when accepter_vpc_id = $1 then requester_vpc_id
+        when accepter_vpc_id = any($1) then requester_vpc_id
         else accepter_vpc_id
       end as from_id
     from
       aws_vpc_peering_connection
     where
-      accepter_vpc_id = $1
-      or requester_vpc_id = $1
+      accepter_vpc_id = any($1)
+      or requester_vpc_id = any($1)
   EOQ
 
-  param "vpc_id" {}
+  param "vpc_vpc_ids" {}
 }
 
 edge "vpc_security_group_to_dax_cluster" {
@@ -133,7 +133,7 @@ edge "vpc_security_group_to_dax_cluster" {
       aws_dax_cluster,
       jsonb_array_elements(security_groups) as sg
     where
-      sg ->> 'SecurityGroupIdentifier' = $1;
+      sg ->> 'SecurityGroupIdentifier' = any($1);
   EOQ
 
   param "vpc_security_group_ids" {}
@@ -289,7 +289,7 @@ edge "vpc_security_group_to_elasticache_cluster" {
       aws_elasticache_cluster,
       jsonb_array_elements(security_groups) as sg
     where
-      sg ->> 'SecurityGroupId' = $1;
+      sg ->> 'SecurityGroupId' = any($1);
   EOQ
 
   param "vpc_security_group_ids" {}
@@ -529,10 +529,10 @@ edge "vpc_subnet_to_nat_gateway" {
     from
       aws_vpc_nat_gateway
     where
-      vpc_id = any($1)
+      subnet_id = any($1);
   EOQ
 
-  param "vpc_vpc_ids" {}
+  param "vpc_subnet_ids" {}
 }
 
 edge "vpc_subnet_to_network_interface" {

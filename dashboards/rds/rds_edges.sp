@@ -11,7 +11,7 @@ edge "rds_db_cluster_snapshot_to_kms_key" {
       aws_rds_db_cluster_snapshot
     where
       kms_key_id is not null
-      and arn = $1;
+      and arn = any($1);
   EOQ
 
   param "rds_db_cluster_snapshot_arns" {}
