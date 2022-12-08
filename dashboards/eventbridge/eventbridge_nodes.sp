@@ -13,9 +13,9 @@ node "eventbridge_bus" {
         'Region', region
       ) as properties
     from
-      aws_eventbridge_bus 
+      aws_eventbridge_bus
     where
-      name = any($1);
+      arn = any($1);
   EOQ
 
   param "eventbridge_bus_arns" {}

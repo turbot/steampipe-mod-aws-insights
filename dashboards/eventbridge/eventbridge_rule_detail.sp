@@ -63,7 +63,7 @@ dashboard "eventbridge_rule_detail" {
             and b.region = r.region
             and b.account_id = r.account_id
           where
-            arn = $1;
+            r.arn = $1;
         EOQ
 
         args = [self.input.eventbridge_rule_arn.value]
@@ -116,7 +116,7 @@ dashboard "eventbridge_rule_detail" {
 
       args = {
         cloudwatch_log_group_arns = with.cloudwatch_log_groups.rows[*].cloudwatch_log_group_arn
-        eventbridge_bus_arns     = with.eventbridge_buses.rows[*].eventbridge_bus_arn
+        eventbridge_bus_arns      = with.eventbridge_buses.rows[*].eventbridge_bus_arn
         eventbridge_rule_arns     = [self.input.eventbridge_rule_arn.value]
         lambda_function_arns      = with.lambda_functions.rows[*].function_arn
         sns_topic_arns            = with.sns_topics.rows[*].topic_arn
