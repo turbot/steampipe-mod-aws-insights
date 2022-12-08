@@ -20,7 +20,7 @@ category "ec2_application_load_balancer" {
 
 category "ec2_autoscaling_group" {
   title = "EC2 Autoscaling Group"
-  icon  = "heroicons-outline:square2stack"
+  icon  = "library-add"
   color = local.compute_color
 }
 
@@ -41,20 +41,20 @@ category "ec2_gateway_load_balancer" {
 category "ec2_instance" {
   title = "EC2 Instance"
   href  = "/aws_insights.dashboard.ec2_instance_detail?input.instance_arn={{.properties.'ARN' | @uri}}"
-  icon  = "heroicons-outline:cpu-chip"
+  icon  = "memory"
   color = local.compute_color
 }
 
 category "ec2_key_pair" {
   title = "EC2 Key Pair"
-  icon  = "heroicons-outline:key"
+  icon  = "vpn_key"
   color = local.compute_color
 }
 
 category "ec2_launch_configuration" {
   title = "EC2 Launch Configuration"
   color = local.compute_color
-  icon  = "heroicons-outline:newspaper"
+  icon  = "receipt-long"
 }
 
 category "ec2_load_balancer_listener" {
@@ -79,12 +79,12 @@ category "ec2_network_load_balancer" {
 
 category "ec2_target_group" {
   title = "EC2 Target Group"
-  icon  = "heroicons-outline:arrow-down-on-square"
+  icon  = "assignment-returned"
   color = local.networking_color
 }
 
 category "ec2_transit_gateway" {
   title = "EC2 Transit Gateway"
-  icon  = "heroicons-outline:arrows-right-left"
+  icon  = "sync-alt"
   color = local.networking_color
 }
