@@ -128,7 +128,7 @@ edge "ec2_classic_load_balancer_to_acm_certificate" {
       u = any($1)
   EOQ
 
-  param "ec2_application_load_balancer_arns" {}
+  param "ec2_classic_load_balancer_arns" {}
 }
 
 edge "ec2_classic_load_balancer_to_ec2_instance" {
@@ -393,6 +393,25 @@ edge "ec2_instance_to_vpc_subnet" {
   param "ec2_instance_arns" {}
 }
 
+edge "ec2_launch_configuration_to_ebs_snapshot" {
+  title = "snapshot"
+
+  sql = <<-EOQ
+    select
+      launch_config.launch_configuration_arn as from_id,
+      s.arn as to_id
+    from
+      aws_ec2_launch_configuration as launch_config,
+      jsonb_array_elements(launch_config.block_device_mappings) as bdm,
+      aws_ebs_snapshot as s
+    where
+      bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
+      and s.arn = any($1);
+  EOQ
+
+  param "ebs_snapshot_arns" {}
+}
+
 edge "ec2_load_balancer_listener_to_ec2_load_balancer" {
   title = "listener for"
 
@@ -409,7 +428,7 @@ edge "ec2_load_balancer_listener_to_ec2_load_balancer" {
   param "ec2_load_balancer_listener_arns" {}
 }
 
-edge "ec2_load_balancer_to_target_group" {
+edge "ec2_load_balancer_to_ec2_target_group" {
   title = "target group"
 
   sql = <<-EOQ
@@ -597,21 +616,3 @@ edge "ec2_target_group_to_ec2_instance" {
   param "ec2_target_group_arns" {}
 }
 
-edge "ec2_launch_configuration_to_ebs_snapshot" {
-  title = "snapshot"
-
-  sql = <<-EOQ
-    select
-      launch_config.launch_configuration_arn as from_id,
-      s.arn as to_id
-    from
-      aws_ec2_launch_configuration as launch_config,
-      jsonb_array_elements(launch_config.block_device_mappings) as bdm,
-      aws_ebs_snapshot as s
-    where
-      bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
-      and s.arn = any($1);
-  EOQ
-
-  param "ebs_snapshot_arns" {}
-}

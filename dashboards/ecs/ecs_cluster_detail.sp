@@ -170,10 +170,10 @@ dashboard "ecs_cluster_detail" {
       }
 
       nodes = [
+        node.ecs_cluster,
         node.ecs_cluster_ec2_launch_type,
         node.ecs_cluster_external_launch_type,
         node.ecs_cluster_fargate_launch_type,
-        node.ecs_cluster,
         node.ecs_container_instance,
         node.ecs_service,
         node.ecs_task_definition,

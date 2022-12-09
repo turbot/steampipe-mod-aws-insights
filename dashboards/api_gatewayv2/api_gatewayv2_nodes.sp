@@ -21,29 +21,6 @@ node "api_gatewayv2_api" {
   param "api_gatewayv2_api_ids" {}
 }
 
-node "api_gatewayv2_stage" {
-  category = category.api_gatewayv2_stage
-
-  sql = <<-EOQ
-    select
-      stage_name as id,
-      title as title,
-      jsonb_build_object (
-        'Deployment ID', deployment_id,
-        'Auto Deploy', auto_deploy,
-        'Created Time', created_date,
-        'Region', region,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_api_gatewayv2_stage
-    where
-      api_id = any($1);
-  EOQ
-
-  param "api_gatewayv2_api_ids" {}
-}
-
 node "api_gatewayv2_integration" {
   category = category.api_gatewayv2_integration
 
@@ -67,4 +44,27 @@ node "api_gatewayv2_integration" {
   EOQ
 
   param "lambda_function_arns" {}
+}
+
+node "api_gatewayv2_stage" {
+  category = category.api_gatewayv2_stage
+
+  sql = <<-EOQ
+    select
+      stage_name as id,
+      title as title,
+      jsonb_build_object (
+        'Deployment ID', deployment_id,
+        'Auto Deploy', auto_deploy,
+        'Created Time', created_date,
+        'Region', region,
+        'Account ID', account_id
+      ) as properties
+    from
+      aws_api_gatewayv2_stage
+    where
+      api_id = any($1);
+  EOQ
+
+  param "api_gatewayv2_api_ids" {}
 }

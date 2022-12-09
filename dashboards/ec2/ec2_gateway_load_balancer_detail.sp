@@ -191,7 +191,7 @@ dashboard "ec2_gateway_load_balancer_detail" {
         edge.ec2_gateway_load_balancer_to_s3_bucket,
         edge.ec2_gateway_load_balancer_to_vpc_security_group,
         edge.ec2_gateway_load_balancer_to_vpc_subnet,
-        edge.ec2_glb_to_target_group,
+        edge.ec2_gateway_load_balancer_to_ec2_target_group,
         edge.ec2_load_balancer_listener_to_ec2_load_balancer,
         edge.ec2_target_group_to_ec2_instance,
         edge.vpc_subnet_to_vpc_vpc

@@ -100,8 +100,8 @@ dashboard "ecr_repository_detail" {
       ]
 
       args = {
-        ecs_task_definition_arns = with.ecs_task_definitions.rows[*].task_definition_arn
         ecr_repository_arns      = [self.input.ecr_repository_arn.value]
+        ecs_task_definition_arns = with.ecs_task_definitions.rows[*].task_definition_arn
         kms_key_arns             = with.kms_keys.rows[*].kms_key_arn
       }
     }

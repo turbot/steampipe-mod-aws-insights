@@ -2,7 +2,7 @@ edge "codedeploy_app_to_codepipeline_pipeline" {
   title = "deploys"
 
   sql = <<-EOQ
-   select
+  select
       p.arn as from_id,
       app.arn as to_id
     from

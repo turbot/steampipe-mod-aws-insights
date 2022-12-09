@@ -5,7 +5,7 @@ edge "cloudtrail_trail_to_cloudwatch_log_group" {
     select
       arn as from_id,
       log_group_arn as to_id
-   from
+    from
       aws_cloudtrail_trail
     where
       log_group_arn is not null

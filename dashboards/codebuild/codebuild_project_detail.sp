@@ -219,15 +219,15 @@ dashboard "codebuild_project_detail" {
         edge.codebuild_project_to_artifact_s3_bucket,
         edge.codebuild_project_to_cache_s3_bucket,
         edge.codebuild_project_to_cloudwatch_group,
-        edge.codecommit_repository_to_codebuild_project,
         edge.codebuild_project_to_ecr_repository,
         edge.codebuild_project_to_iam_role,
         edge.codebuild_project_to_kms_key,
         edge.codebuild_project_to_s3_bucket,
         edge.codebuild_project_to_vpc_security_group,
-        edge.codebuild_project_vpc_security_group_subnet_to_vpc,
-        edge.codebuild_project_vpc_security_group_to_subnet,
-        edge.s3_bucket_to_codebuild_project
+        edge.codebuild_project_to_vpc_subnet,
+        edge.codecommit_repository_to_codebuild_project,
+        edge.s3_bucket_to_codebuild_project,
+        edge.vpc_subnet_to_vpc_vpc
       ]
 
       args = {
