@@ -66,33 +66,171 @@ dashboard "ec2_network_load_balancer_detail" {
 
   container {
     graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
+      title = "Relationships"
+      type  = "graph"
 
+      with "acm_certificates" {
+        sql = <<-EOQ
+          select
+            c.certificate_arn
+          from
+            aws_acm_certificate c,
+            jsonb_array_elements_text(in_use_by) u
+          where
+            u = $1
+        EOQ
+
+        args = [self.input.nlb.value]
+      }
+
+      with "ec2_instances" {
+        sql = <<-EOQ
+          select
+            instance.arn as instance_arn
+          from
+            aws_ec2_target_group tg,
+            aws_ec2_instance instance,
+            jsonb_array_elements(tg.target_health_descriptions) thd
+          where
+            instance.instance_id = thd -> 'Target' ->> 'Id'
+            and $1 in
+            (
+              select
+                jsonb_array_elements_text(tg.load_balancer_arns)
+            );
+        EOQ
+
+        args = [self.input.nlb.value]
+      }
+
+      with "ec2_load_balancer_listeners" {
+        sql = <<-EOQ
+          select
+            lblistener.arn as listener_arn
+          from
+            aws_ec2_load_balancer_listener lblistener
+          where
+            lblistener.load_balancer_arn = $1;
+        EOQ
+
+        args = [self.input.nlb.value]
+      }
+
+      with "ec2_target_groups" {
+        sql = <<-EOQ
+          select
+            tg.target_group_arn
+          from
+            aws_ec2_target_group tg
+          where
+            $1 in
+            (
+              select
+                jsonb_array_elements_text(tg.load_balancer_arns)
+            );
+        EOQ
+
+        args = [self.input.nlb.value]
+      }
+
+      with "s3_buckets" {
+        sql = <<-EOQ
+          select
+            b.arn as bucket_arn
+          from
+            aws_s3_bucket b,
+            aws_ec2_network_load_balancer as alb,
+            jsonb_array_elements(alb.load_balancer_attributes) attributes
+          where
+            alb.arn = $1
+            and attributes ->> 'Key' = 'access_logs.s3.bucket'
+            and b.name = attributes ->> 'Value';
+        EOQ
+
+        args = [self.input.nlb.value]
+      }
+
+      with "vpc_security_groups" {
+        sql = <<-EOQ
+          select
+            sg.group_id
+          from
+            aws_vpc_security_group sg,
+            aws_ec2_network_load_balancer as alb
+          where
+            alb.arn = $1
+            and sg.group_id in
+            (
+              select
+                jsonb_array_elements_text(alb.security_groups)
+            );
+        EOQ
+
+        args = [self.input.nlb.value]
+      }
+
+      with "vpc_subnets" {
+        sql = <<-EOQ
+          select
+            s.subnet_id as subnet_id
+          from
+            aws_vpc_subnet s,
+            aws_ec2_network_load_balancer as alb,
+            jsonb_array_elements(availability_zones) as az
+          where
+            alb.arn = $1
+            and s.subnet_id = az ->> 'SubnetId';
+        EOQ
+
+        args = [self.input.nlb.value]
+      }
+
+      with "vpc_vpcs" {
+        sql = <<-EOQ
+          select
+            alb.vpc_id as vpc_id
+          from
+            aws_ec2_network_load_balancer as alb
+          where
+            alb.arn = $1;
+        EOQ
+
+        args = [self.input.nlb.value]
+      }
 
       nodes = [
+        node.acm_certificate,
+        node.ec2_instance,
+        node.ec2_load_balancer_listener,
         node.ec2_network_load_balancer,
-        node.ec2_nlb_to_vpc_subnet_node,
-        node.ec2_nlb_to_s3_bucket_node,
-        node.ec2_nlb_vpc_security_group_to_vpc_node,
-        node.ec2_lb_to_target_group_node,
-        node.ec2_lb_to_ec2_instance_node,
-        node.ec2_lb_from_ec2_load_balancer_listener_node
+        node.ec2_target_group,
+        node.s3_bucket,
+        node.vpc_security_group,
+        node.vpc_subnet,
+        node.vpc_vpc
       ]
 
       edges = [
-        edge.ec2_nlb_to_vpc_security_group_edge,
-        edge.ec2_nlb_to_s3_bucket_edge,
-        edge.ec2_nlb_vpc_security_group_to_vpc_edge,
-        edge.ec2_lb_to_target_group_edge,
-        edge.ec2_lb_to_ec2_instance_edge,
-        edge.ec2_lb_from_ec2_load_balancer_listener_edge
+        edge.ec2_network_load_balancer_to_acm_certificate,
+        edge.ec2_network_load_balancer_to_s3_bucket,
+        edge.ec2_network_load_balancer_to_vpc_security_group,
+        edge.ec2_network_load_balancer_to_vpc_subnet,
+        edge.ec2_nlb_to_target_group,
+        edge.ec2_load_balancer_listener_to_ec2_lb,
+        edge.ec2_target_group_to_ec2_instance,
+        edge.vpc_subnet_to_vpc_vpc
       ]
 
       args = {
-        ec2_network_load_balancer_arns = [self.input.nlb.value]
-        arn                            = self.input.nlb.value
+        acm_certificate_arns            = with.acm_certificates.rows[*].certificate_arn
+        ec2_instance_arns               = with.ec2_instances.rows[*].instance_arn
+        ec2_load_balancer_listener_arns = with.ec2_load_balancer_listeners.rows[*].listener_arn
+        ec2_network_load_balancer_arns  = [self.input.nlb.value]
+        ec2_target_group_arns           = with.ec2_target_groups.rows[*].target_group_arn
+        s3_bucket_arns                  = with.s3_buckets.rows[*].bucket_arn
+        vpc_security_group_ids          = with.vpc_security_groups.rows[*].group_id
+        vpc_subnet_ids                  = with.vpc_subnets.rows[*].subnet_id
+        vpc_vpc_ids                     = with.vpc_vpcs.rows[*].vpc_id
       }
     }
   }
@@ -290,154 +428,4 @@ query "nlb_scheme" {
   EOQ
 
   param "arn" {}
-}
-
-
-node "ec2_nlb_to_vpc_subnet_node" {
-  category = category.vpc_subnet
-
-  sql = <<-EOQ
-    select
-      s.subnet_id as id,
-      s.title as title,
-      jsonb_build_object(
-        'Subnet ID', s.subnet_id,
-        'ARN', s.subnet_arn,
-        'VPC ID', s.vpc_id,
-        'Account ID', s.account_id,
-        'Region', s.region
-      ) as properties
-    from
-      aws_vpc_subnet s,
-      aws_ec2_network_load_balancer as nlb,
-      jsonb_array_elements(availability_zones) as az
-    where
-      nlb.arn = $1
-      and s.subnet_id = az ->> 'SubnetId';
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ec2_nlb_to_vpc_security_group_edge" {
-  title = "subnet"
-
-  sql = <<-EOQ
-    select
-      nlb.arn as from_id,
-      s.subnet_id as to_id
-    from
-      aws_vpc_subnet s,
-      aws_ec2_network_load_balancer as nlb,
-      jsonb_array_elements(availability_zones) as az
-    where
-      nlb.arn = $1
-      and s.subnet_id = az ->> 'SubnetId';
-  EOQ
-
-  param "arn" {}
-}
-
-node "ec2_nlb_to_s3_bucket_node" {
-  category = category.s3_bucket
-
-  sql = <<-EOQ
-    select
-      b.arn as id,
-      b.title as title,
-      jsonb_build_object(
-        'Name', b.name,
-        'ARN', b.arn,
-        'Account ID', nlb.account_id,
-        'Region', nlb.region,
-        'Logs to', attributes ->> 'Value'
-      ) as properties
-    from
-      aws_s3_bucket b,
-      aws_ec2_network_load_balancer as nlb,
-      jsonb_array_elements(nlb.load_balancer_attributes) attributes
-    where
-      nlb.arn = $1
-      and attributes ->> 'Key' = 'access_logs.s3.bucket'
-      and b.name = attributes ->> 'Value';
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ec2_nlb_to_s3_bucket_edge" {
-  title = "logs to"
-
-  sql = <<-EOQ
-    select
-      nlb.arn as from_id,
-      s3_buckets.arn as to_id
-    from
-      aws_s3_bucket s3_buckets,
-      aws_ec2_network_load_balancer as nlb,
-      jsonb_array_elements(nlb.load_balancer_attributes) attributes
-    where
-      nlb.arn = $1
-      and attributes ->> 'Key' = 'access_logs.s3.bucket'
-      and s3_buckets.name = attributes ->> 'Value';
-  EOQ
-
-  param "arn" {}
-}
-
-node "ec2_nlb_vpc_security_group_to_vpc_node" {
-  category = category.vpc_vpc
-
-  sql = <<-EOQ
-    select
-      vpc.vpc_id as id,
-      vpc.title as title,
-      jsonb_build_object(
-        'VPC ID', vpc.vpc_id,
-        'Account ID', vpc.account_id,
-        'Region', vpc.region,
-        'CIDR Block', vpc.cidr_block
-      ) as properties
-    from
-      aws_vpc vpc,
-      aws_ec2_network_load_balancer as nlb
-    where
-      nlb.arn = $1
-      and nlb.vpc_id = vpc.vpc_id;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ec2_nlb_vpc_security_group_to_vpc_edge" {
-  title = "vpc"
-
-  sql = <<-EOQ
-    select
-      az ->> 'SubnetId' as from_id,
-      vpc_id as to_id
-    from
-      aws_ec2_network_load_balancer,
-      jsonb_array_elements(availability_zones) as az
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ec2_network_load_balancer_to_acm_certificate" {
-  title = "ssl via"
-
-  sql = <<-EOQ
-    select
-      acm_certificate_arn as to_id,
-      ec2_network_load_balancer_arn as from_id
-    from
-      unnest($1::text[]) as acm_certificate_arn,
-      unnest($2::text[]) as ec2_network_load_balancer_arn
-  EOQ
-
-  param "acm_certificate_arns" {}
-  param "ec2_network_load_balancer_arns" {}
 }

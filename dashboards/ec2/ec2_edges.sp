@@ -1,18 +1,15 @@
-edge "ec2_alb_to_s3_bucket" {
-  title = "logs to"
+edge "ec2_application_load_balancer_to_acm_certificate" {
+  title = "ssl via"
 
   sql = <<-EOQ
     select
-      alb.arn as from_id,
-      b.arn as to_id
+      u as from_id,
+      c.certificate_arn as to_id
     from
-      aws_ec2_application_load_balancer as alb,
-      jsonb_array_elements(alb.load_balancer_attributes) as attributes,
-      aws_s3_bucket as b
+      aws_acm_certificate c,
+      jsonb_array_elements_text(in_use_by) u
     where
-      alb.arn = $1
-      and attributes ->> 'Key' = 'access_logs.s3.bucket'
-      and attributes ->> 'Value' = b.name;
+      u = any($1)
   EOQ
 
   param "ec2_application_load_balancer_arns" {}
@@ -36,6 +33,68 @@ edge "ec2_application_load_balancer_to_cloudfront_distribution" {
   param "cloudfront_distribution_arns" {}
 }
 
+edge "ec2_application_load_balancer_to_s3_bucket" {
+  title = "logs to"
+
+  sql = <<-EOQ
+    select
+      alb.arn as from_id,
+      b.arn as to_id
+    from
+      aws_s3_bucket b,
+      aws_ec2_application_load_balancer as alb,
+      jsonb_array_elements(alb.load_balancer_attributes) attributes
+    where
+      alb.arn = any($1)
+      and attributes ->> 'Key' = 'access_logs.s3.bucket'
+      and b.name = attributes ->> 'Value';
+  EOQ
+
+  param "ec2_application_load_balancer_arns" {}
+}
+
+edge "ec2_application_load_balancer_to_vpc_security_group" {
+  title = "security group"
+
+  sql = <<-EOQ
+    select
+      alb.arn as from_id,
+      sg.group_id as to_id
+    from
+      aws_vpc_security_group sg,
+      aws_ec2_application_load_balancer as alb
+    where
+      alb.arn = any($1)
+      and sg.group_id in
+      (
+        select
+          jsonb_array_elements_text(alb.security_groups)
+      );
+  EOQ
+
+  param "ec2_application_load_balancer_arns" {}
+}
+
+edge "ec2_application_load_balancer_to_vpc_subnet" {
+  title = "subnet"
+
+  sql = <<-EOQ
+    select
+      sg as from_id,
+      s.subnet_id as to_id
+    from
+      aws_vpc_subnet s,
+      aws_ec2_application_load_balancer as alb,
+      jsonb_array_elements_text(alb.security_groups) as sg,
+      jsonb_array_elements(availability_zones) as az
+    where
+      alb.arn = any($1)
+      and s.subnet_id = az ->> 'SubnetId';
+  EOQ
+
+  param "ec2_application_load_balancer_arns" {}
+}
+
 edge "ec2_autoscaling_group_to_ec2_instance" {
   title = "launches"
 
@@ -53,6 +112,23 @@ edge "ec2_autoscaling_group_to_ec2_instance" {
   EOQ
 
   param "ec2_instance_arns" {}
+}
+
+edge "ec2_classic_load_balancer_to_acm_certificate" {
+  title = "ssl via"
+
+  sql = <<-EOQ
+    select
+      u as from_id,
+      c.certificate_arn as to_id
+    from
+      aws_acm_certificate c,
+      jsonb_array_elements_text(in_use_by) u
+    where
+      u = any($1)
+  EOQ
+
+  param "ec2_application_load_balancer_arns" {}
 }
 
 edge "ec2_classic_load_balancer_to_ec2_instance" {
@@ -73,7 +149,7 @@ edge "ec2_classic_load_balancer_to_ec2_instance" {
   param "ec2_classic_load_balancer_arns" {}
 }
 
-edge "ec2_clb_to_s3_bucket" {
+edge "ec2_classic_load_balancer_to_s3_bucket" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -81,14 +157,132 @@ edge "ec2_clb_to_s3_bucket" {
       clb.arn as from_id,
       b.arn as to_id
     from
-      aws_ec2_classic_load_balancer clb,
-      aws_s3_bucket as b
+      aws_s3_bucket b,
+      aws_ec2_classic_load_balancer as clb
     where
-      clb.arn = $1
-      and clb.access_log_s3_bucket_name = b.name;
+      clb.arn = any($1)
+      and b.name = clb.access_log_s3_bucket_name;
   EOQ
 
   param "ec2_classic_load_balancer_arns" {}
+}
+
+edge "ec2_classic_load_balancer_to_vpc_security_group" {
+  title = "security group"
+
+  sql = <<-EOQ
+    select
+      clb.arn as from_id,
+      sg.group_id as to_id
+    from
+      aws_vpc_security_group sg,
+      aws_ec2_classic_load_balancer as clb
+    where
+      clb.arn = any($1)
+      and sg.group_id in
+      (
+        select
+          jsonb_array_elements_text(clb.security_groups)
+      );
+  EOQ
+
+  param "ec2_classic_load_balancer_arns" {}
+}
+
+edge "ec2_classic_load_balancer_to_vpc_subnet" {
+  title = "subnet"
+
+  sql = <<-EOQ
+    select
+      sg as from_id,
+      s as to_id
+    from
+      aws_ec2_classic_load_balancer,
+      jsonb_array_elements_text(security_groups) as sg,
+      jsonb_array_elements_text(subnets) as s
+    where
+      arn = any($1);
+  EOQ
+
+  param "ec2_classic_load_balancer_arns" {}
+}
+
+edge "ec2_gateway_load_balancer_to_acm_certificate" {
+  title = "ssl via"
+
+  sql = <<-EOQ
+    select
+      u as from_id,
+      c.certificate_arn as to_id
+    from
+      aws_acm_certificate c,
+      jsonb_array_elements_text(in_use_by) u
+    where
+      u = any($1);
+  EOQ
+
+  param "ec2_gateway_load_balancer_arns" {}
+}
+
+edge "ec2_gateway_load_balancer_to_s3_bucket" {
+  title = "logs to"
+
+  sql = <<-EOQ
+    select
+      glb.arn as from_id,
+      b.arn as to_id
+    from
+      aws_s3_bucket b,
+      aws_ec2_gateway_load_balancer as glb,
+      jsonb_array_elements(glb.load_balancer_attributes) attributes
+    where
+      glb.arn = any($1)
+      and attributes ->> 'Key' = 'access_logs.s3.bucket'
+      and b.name = attributes ->> 'Value';
+  EOQ
+
+  param "ec2_gateway_load_balancer_arns" {}
+}
+
+edge "ec2_gateway_load_balancer_to_vpc_security_group" {
+  title = "security group"
+
+  sql = <<-EOQ
+    select
+      clb.arn as from_id,
+      sg.group_id as to_id
+    from
+      aws_vpc_security_group sg,
+      aws_ec2_gateway_load_balancer as clb
+    where
+      clb.arn = any($1)
+      and sg.group_id in
+      (
+        select
+          jsonb_array_elements_text(clb.security_groups)
+      );
+  EOQ
+
+  param "ec2_gateway_load_balancer_arns" {}
+}
+
+edge "ec2_gateway_load_balancer_to_vpc_subnet" {
+  title = "subnet"
+
+  sql = <<-EOQ
+    select
+      glb.arn as from_id,
+      s.subnet_id as to_id
+    from
+      aws_vpc_subnet s,
+      aws_ec2_gateway_load_balancer as glb,
+      jsonb_array_elements(availability_zones) as az
+    where
+      glb.arn = any($1)
+      and s.subnet_id = az ->> 'SubnetId';
+  EOQ
+
+  param "ec2_gateway_load_balancer_arns" {}
 }
 
 edge "ec2_instance_to_ebs_volume" {
@@ -199,6 +393,22 @@ edge "ec2_instance_to_vpc_subnet" {
   param "ec2_instance_arns" {}
 }
 
+edge "ec2_load_balancer_listener_to_ec2_lb" {
+  title = "listener for"
+
+  sql = <<-EOQ
+    select
+      lblistener.arn as from_id,
+      $1 as to_id
+    from
+      aws_ec2_load_balancer_listener lblistener
+    where
+      lblistener.arn = any($1)
+  EOQ
+
+  param "ec2_load_balancer_listener_arns" {}
+}
+
 edge "ec2_load_balancer_to_target_group" {
   title = "target group"
 
@@ -290,21 +500,79 @@ edge "ec2_network_interface_to_vpc_subnet" {
   param "ec2_network_interface_ids" {}
 }
 
-edge "ec2_nlb_to_s3_bucket" {
+edge "ec2_network_load_balancer_to_acm_certificate" {
+  title = "ssl via"
+
+  sql = <<-EOQ
+    select
+      u as from_id,
+      c.certificate_arn as to_id
+    from
+      aws_acm_certificate c,
+      jsonb_array_elements_text(in_use_by) u
+    where
+      u = any($1);
+  EOQ
+
+  param "ec2_network_load_balancer_arns" {}
+}
+
+edge "ec2_network_load_balancer_to_s3_bucket" {
   title = "logs to"
 
   sql = <<-EOQ
     select
       nlb.arn as from_id,
-      b.arn as to_id
+      s3_buckets.arn as to_id
     from
+      aws_s3_bucket s3_buckets,
       aws_ec2_network_load_balancer as nlb,
-      jsonb_array_elements(nlb.load_balancer_attributes) as attributes,
-      aws_s3_bucket as b
+      jsonb_array_elements(nlb.load_balancer_attributes) attributes
     where
-      nlb.arn = $1
+      nlb.arn = any($1)
       and attributes ->> 'Key' = 'access_logs.s3.bucket'
-      and attributes ->> 'Value' = b.name;
+      and s3_buckets.name = attributes ->> 'Value';
+  EOQ
+
+  param "ec2_network_load_balancer_arns" {}
+}
+
+edge "ec2_network_load_balancer_to_vpc_security_group" {
+  title = "security group"
+
+  sql = <<-EOQ
+    select
+      clb.arn as from_id,
+      sg.group_id as to_id
+    from
+      aws_vpc_security_group sg,
+      aws_ec2_network_load_balancer as clb
+    where
+      clb.arn = any($1)
+      and sg.group_id in
+      (
+        select
+          jsonb_array_elements_text(clb.security_groups)
+      );
+  EOQ
+
+  param "ec2_network_load_balancer_arns" {}
+}
+
+edge "ec2_network_load_balancer_to_vpc_subnet" {
+  title = "subnet"
+
+  sql = <<-EOQ
+    select
+      glb.arn as from_id,
+      s.subnet_id as to_id
+    from
+      aws_vpc_subnet s,
+      aws_ec2_network_load_balancer as glb,
+      jsonb_array_elements(availability_zones) as az
+    where
+      glb.arn = any($1)
+      and s.subnet_id = az ->> 'SubnetId';
   EOQ
 
   param "ec2_network_load_balancer_arns" {}
@@ -322,12 +590,13 @@ edge "ec2_target_group_to_ec2_instance" {
       aws_ec2_target_group as target,
       jsonb_array_elements(target.target_health_descriptions) as health_descriptions
     where
-      i.arn = any($1)
+      target.target_group_arn = any($1)
       and health_descriptions -> 'Target' ->> 'Id' = i.instance_id;
   EOQ
 
-  param "ec2_instance_arns" {}
+  param "ec2_target_group_arns" {}
 }
+
 edge "ec2_launch_configuration_to_ebs_snapshot" {
   title = "snapshot"
 
