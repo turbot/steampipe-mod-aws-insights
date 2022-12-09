@@ -100,13 +100,13 @@ dashboard "emr_cluster_detail" {
       }
 
       nodes = [
+        node.ec2_ami,
         node.emr_cluster,
-        node.iam_role,
-        node.s3_bucket,
-        node.emr_instance_fleet,
         node.emr_instance,
+        node.emr_instance_fleet,
         node.emr_instance_group,
-        node.ec2_ami
+        node.iam_role,
+        node.s3_bucket
       ]
 
       edges = [

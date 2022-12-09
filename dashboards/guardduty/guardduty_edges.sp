@@ -18,7 +18,6 @@ edge "guardduty_detector_to_cloudtrail_trail" {
   param "guardduty_detector_arns" {}
 }
 
-
 edge "guardduty_detector_to_iam_role" {
   title = "runs as"
 
