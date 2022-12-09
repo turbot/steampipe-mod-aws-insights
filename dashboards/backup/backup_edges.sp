@@ -59,7 +59,7 @@ edge "backup_vault_to_sns_topic" {
       arn as from_id,
       sns_topic_arn as to_id
     from
-      aws_backup_vault as v
+      aws_backup_vault
     where
       arn = any($1);
   EOQ
