@@ -266,17 +266,17 @@ dashboard "vpc_detail" {
 
       edges = [
 
-        edge.vpc_availability_zone_to_vpc_subnet,
+        edge.ec2_availability_zone_to_vpc_subnet,
         edge.vpc_peered_vpc,
         edge.vpc_subnet_to_ec2_application_load_balancer,
         edge.vpc_subnet_to_ec2_classic_load_balancer,
         edge.vpc_subnet_to_ec2_gateway_load_balancer,
         edge.vpc_subnet_to_ec2_instance,
         edge.vpc_subnet_to_ec2_network_load_balancer,
-        edge.vpc_subnet_to_vpc_endpoint,
         edge.vpc_subnet_to_lambda_function,
         edge.vpc_subnet_to_nat_gateway,
         edge.vpc_subnet_to_rds_db_instance,
+        edge.vpc_subnet_to_vpc_endpoint,
         edge.vpc_subnet_to_vpc_route_table,
         edge.vpc_vpc_to_ec2_availability_zone,
         edge.vpc_vpc_to_ec2_transit_gateway,

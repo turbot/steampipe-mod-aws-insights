@@ -1,4 +1,4 @@
-edge "vpc_availability_zone_to_vpc_subnet" {
+edge "ec2_availability_zone_to_vpc_subnet" {
   title = "subnet"
 
   sql = <<-EOQ
