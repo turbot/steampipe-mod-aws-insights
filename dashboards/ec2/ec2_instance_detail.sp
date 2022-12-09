@@ -169,14 +169,14 @@ dashboard "ec2_instance_detail" {
       with "ec2_target_groups" {
         sql = <<-EOQ
           select
-            target.target_group_arn as target_group_arn
+            target.target_group_arn
           from
             aws_ec2_instance as i,
             aws_ec2_target_group as target,
             jsonb_array_elements(target.target_health_descriptions) as health_descriptions
           where
             i.arn = $1
-            and health_descriptions -> 'Target' ->> 'Id' = i.instance_id
+            and health_descriptions -> 'Target' ->> 'Id' = i.instance_id;
         EOQ
 
         args = [self.input.instance_arn.value]
