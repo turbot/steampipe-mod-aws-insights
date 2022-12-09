@@ -117,7 +117,7 @@ edge "eks_cluster_to_vpc_security_group" {
   param "vpc_security_group_ids" {}
 }
 
-edge "eks_cluster_vpc_security_group_to_subnet" {
+edge "eks_cluster_to_vpc_subnet" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -129,25 +129,8 @@ edge "eks_cluster_vpc_security_group_to_subnet" {
       jsonb_array_elements_text(resources_vpc_config -> 'SecurityGroupIds') as group_id,
       jsonb_array_elements_text(resources_vpc_config -> 'SubnetIds') as subnet_id
     where
-      subnet_id = any($1)
+      arn = any($1)
   EOQ
 
-  param "vpc_subnet_ids" {}
-}
-
-edge "eks_cluster_vpc_subnet_to_vpc" {
-  title = "vpc"
-
-  sql = <<-EOQ
-    select
-      subnet_id as from_id,
-      resources_vpc_config ->> 'VpcId' as to_id
-    from
-      aws_eks_cluster as c,
-      jsonb_array_elements_text(resources_vpc_config -> 'SubnetIds') as subnet_id
-    where
-      resources_vpc_config ->> 'VpcId' = any($1)
-  EOQ
-
-  param "vpc_vpc_ids" {}
+  param "eks_cluster_arns" {}
 }

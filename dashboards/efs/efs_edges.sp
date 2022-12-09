@@ -46,7 +46,7 @@ edge "efs_file_system_to_efs_mount_target" {
   param "efs_file_system_arns" {}
 }
 
-edge "efs_mount_target_to_security_group" {
+edge "efs_mount_target_to_vpc_security_group" {
   title = "security group"
   sql   = <<-EOQ
     select
@@ -61,7 +61,7 @@ edge "efs_mount_target_to_security_group" {
   param "efs_mount_target_ids" {}
 }
 
-edge "efs_mount_target_to_subnet" {
+edge "efs_mount_target_to_vpc_subnet" {
   title = "subnet"
   sql   = <<-EOQ
     select
