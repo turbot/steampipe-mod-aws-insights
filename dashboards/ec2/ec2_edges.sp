@@ -417,12 +417,12 @@ edge "ec2_load_balancer_listener_to_ec2_load_balancer" {
 
   sql = <<-EOQ
     select
-      lblistener.arn as from_id,
-      $1 as to_id
+      arn as from_id,
+      load_balancer_arn as to_id
     from
-      aws_ec2_load_balancer_listener lblistener
+      aws_ec2_load_balancer_listener
     where
-      lblistener.arn = any($1)
+      arn = any($1);
   EOQ
 
   param "ec2_load_balancer_listener_arns" {}

@@ -86,26 +86,11 @@ dashboard "kms_key_detail" {
       with "lambda_functions" {
         sql = <<-EOQ
           select
-            l.arn as function_arn
+            arn as function_arn
           from
-            aws_lambda_function as l,
-            aws_kms_key as k
+            aws_lambda_function
           where
-            k.arn = l.kms_key_arn
-            and k.arn = $1;
-        EOQ
-
-        args = [self.input.key_arn.value]
-      }
-
-      with "rds_db_clusters" {
-        sql = <<-EOQ
-          select
-            arn as cluster_arn
-          from
-            aws_rds_db_cluster as c
-          where
-            c.kms_key_id = $1;
+            kms_key_arn = $1;
         EOQ
 
         args = [self.input.key_arn.value]
@@ -119,6 +104,19 @@ dashboard "kms_key_detail" {
             aws_rds_db_cluster_snapshot as s
           where
             s.kms_key_id = $1;
+        EOQ
+
+        args = [self.input.key_arn.value]
+      }
+
+      with "rds_db_clusters" {
+        sql = <<-EOQ
+          select
+            arn as cluster_arn
+          from
+            aws_rds_db_cluster as c
+          where
+            c.kms_key_id = $1;
         EOQ
 
         args = [self.input.key_arn.value]

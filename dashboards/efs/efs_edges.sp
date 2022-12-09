@@ -1,19 +1,3 @@
-
-edge "efs_file_system_to_kms_key" {
-  title = "encrypted with"
-  sql   = <<-EOQ
-    select
-      arn as from_id,
-      kms_key_id as to_id
-    from
-      aws_efs_file_system
-    where
-      arn = any($1);
-  EOQ
-
-  param "efs_file_system_arns" {}
-}
-
 edge "efs_file_system_to_efs_access_point" {
   title = "access point"
   sql   = <<-EOQ
@@ -46,34 +30,19 @@ edge "efs_file_system_to_efs_mount_target" {
   param "efs_file_system_arns" {}
 }
 
-edge "efs_mount_target_to_vpc_security_group" {
-  title = "security group"
+edge "efs_file_system_to_kms_key" {
+  title = "encrypted with"
   sql   = <<-EOQ
     select
-      mount_target_id as from_id,
-      jsonb_array_elements_text(security_groups) as to_id
+      arn as from_id,
+      kms_key_id as to_id
     from
-        aws_efs_mount_target 
+      aws_efs_file_system
     where
-      mount_target_id = any($1);
+      arn = any($1);
   EOQ
 
-  param "efs_mount_target_ids" {}
-}
-
-edge "efs_mount_target_to_vpc_subnet" {
-  title = "subnet"
-  sql   = <<-EOQ
-    select
-      jsonb_array_elements_text(security_groups) as from_id,
-      subnet_id as to_id
-    from
-      aws_efs_mount_target  
-    where
-      mount_target_id = any($1);
-  EOQ
-
-  param "efs_mount_target_ids" {}
+  param "efs_file_system_arns" {}
 }
 
 edge "efs_mount_target_to_vpc" {
@@ -91,4 +60,34 @@ edge "efs_mount_target_to_vpc" {
   EOQ
 
   param "efs_file_system_arns" {}
+}
+
+edge "efs_mount_target_to_vpc_security_group" {
+  title = "security group"
+  sql   = <<-EOQ
+    select
+      mount_target_id as from_id,
+      jsonb_array_elements_text(security_groups) as to_id
+    from
+        aws_efs_mount_target
+    where
+      mount_target_id = any($1);
+  EOQ
+
+  param "efs_mount_target_ids" {}
+}
+
+edge "efs_mount_target_to_vpc_subnet" {
+  title = "subnet"
+  sql   = <<-EOQ
+    select
+      jsonb_array_elements_text(security_groups) as from_id,
+      subnet_id as to_id
+    from
+      aws_efs_mount_target
+    where
+      mount_target_id = any($1);
+  EOQ
+
+  param "efs_mount_target_ids" {}
 }

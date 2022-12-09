@@ -1,4 +1,3 @@
-
 node "redshift_cluster" {
   category = category.redshift_cluster
 

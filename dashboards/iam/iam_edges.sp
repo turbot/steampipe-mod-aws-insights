@@ -233,23 +233,6 @@ edge "iam_policy_statement_resource" {
   param "iam_policy_stds" {}
 }
 
-edge "iam_role_to_iam_policy" {
-  title = "attaches"
-
-  sql = <<-EOQ
-    select
-      arn as from_id,
-      policy_arn as to_id
-    from
-      aws_iam_role,
-      jsonb_array_elements_text(attached_policy_arns) as policy_arn
-    where
-      arn = any($1);
-  EOQ
-
-  param "iam_role_arns" {}
-}
-
 edge "iam_role_to_codepipeline_pipeline" {
   title = "assumes"
 
@@ -266,6 +249,23 @@ edge "iam_role_to_codepipeline_pipeline" {
   EOQ
 
   param "codepipeline_pipeline_arns" {}
+}
+
+edge "iam_role_to_iam_policy" {
+  title = "attaches"
+
+  sql = <<-EOQ
+    select
+      arn as from_id,
+      policy_arn as to_id
+    from
+      aws_iam_role,
+      jsonb_array_elements_text(attached_policy_arns) as policy_arn
+    where
+      arn = any($1);
+  EOQ
+
+  param "iam_role_arns" {}
 }
 
 edge "iam_role_trusted_aws" {

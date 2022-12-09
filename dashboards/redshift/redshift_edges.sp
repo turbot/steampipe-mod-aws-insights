@@ -1,4 +1,3 @@
-
 edge "redshift_cluster_subnet_group_to_vpc_subnet" {
   title = "subnet"
 

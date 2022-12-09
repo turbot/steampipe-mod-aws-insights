@@ -112,10 +112,10 @@ dashboard "lambda_function_detail" {
         args = [self.input.lambda_arn.value]
       }
 
-      with "sns_topics" {
+      with "sns_topic_subscriptions" {
         sql = <<-EOQ
           select
-            topic_arn as topic_arn
+            subscription_arn as subscription_arn
           from
             aws_sns_topic_subscription
           where
@@ -126,10 +126,10 @@ dashboard "lambda_function_detail" {
         args = [self.input.lambda_arn.value]
       }
 
-      with "sns_topic_subscriptions" {
+      with "sns_topics" {
         sql = <<-EOQ
           select
-            subscription_arn as subscription_arn
+            topic_arn as topic_arn
           from
             aws_sns_topic_subscription
           where

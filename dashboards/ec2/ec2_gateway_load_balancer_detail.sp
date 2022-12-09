@@ -82,11 +82,11 @@ dashboard "ec2_gateway_load_balancer_detail" {
       with "ec2_load_balancer_listeners" {
         sql = <<-EOQ
           select
-            lblistener.arn as listener_arn
+            arn as listener_arn
           from
-            aws_ec2_load_balancer_listener lblistener
+            aws_ec2_load_balancer_listener
           where
-            lblistener.load_balancer_arn = $1;
+            load_balancer_arn = $1;
         EOQ
 
         args = [self.input.glb.value]
@@ -192,6 +192,7 @@ dashboard "ec2_gateway_load_balancer_detail" {
         edge.ec2_gateway_load_balancer_to_vpc_security_group,
         edge.ec2_gateway_load_balancer_to_vpc_subnet,
         edge.ec2_gateway_load_balancer_to_ec2_target_group,
+        edge.ec2_load_balancer_listener_to_ec2_load_balancer,
         edge.ec2_target_group_to_ec2_instance,
         edge.vpc_subnet_to_vpc_vpc
       ]

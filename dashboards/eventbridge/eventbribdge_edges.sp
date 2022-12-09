@@ -1,5 +1,3 @@
-
-
 edge "eventbridge_rule_to_cloudwatch_log_group" {
   title = "logs to"
 

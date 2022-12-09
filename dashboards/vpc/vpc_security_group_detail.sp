@@ -120,7 +120,6 @@ dashboard "vpc_security_group_detail" {
         args = [self.input.security_group_id.value]
       }
 
-
       with "ec2_launch_configurations" {
         sql = <<-EOQ
           select
