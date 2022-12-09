@@ -145,7 +145,7 @@ dashboard "vpc_flow_logs_detail" {
         edge.vpc_flow_log_to_iam_role,
         edge.vpc_flow_log_to_s3_bucket,
         edge.vpc_subnet_to_vpc_flow_log,
-        edge.vpc_to_vpc_flow_log
+        edge.vpc_vpc_to_vpc_flow_log
       ]
 
       args = {

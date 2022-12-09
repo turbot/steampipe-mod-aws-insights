@@ -184,7 +184,7 @@ dashboard "ec2_classic_load_balancer_detail" {
         edge.ec2_classic_load_balancer_to_s3_bucket,
         edge.ec2_classic_load_balancer_to_vpc_security_group,
         edge.ec2_classic_load_balancer_to_vpc_subnet,
-        edge.ec2_load_balancer_listener_to_ec2_lb,
+        edge.ec2_load_balancer_listener_to_ec2_load_balancer,
         edge.vpc_subnet_to_vpc_vpc
       ]
 

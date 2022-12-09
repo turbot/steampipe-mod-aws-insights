@@ -163,7 +163,7 @@ dashboard "sns_topic_detail" {
         edge.redshift_cluster_to_sns_topic,
         edge.s3_bucket_to_sns_topic,
         edge.sns_topic_to_kms_key,
-        edge.sns_topic_to_sns_topic_subscription
+        edge.sns_topic_to_sns_subscription
       ]
 
       args = {

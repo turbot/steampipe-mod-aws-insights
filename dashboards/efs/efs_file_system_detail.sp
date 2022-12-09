@@ -172,8 +172,8 @@ dashboard "efs_file_system_detail" {
         edge.efs_file_system_to_efs_access_point,
         edge.efs_file_system_to_efs_mount_target,
         edge.efs_file_system_to_kms_key,
-        edge.efs_mount_target_to_security_group,
-        edge.efs_mount_target_to_subnet,
+        edge.efs_mount_target_to_vpc_security_group,
+        edge.efs_mount_target_to_vpc_subnet,
         edge.vpc_subnet_to_vpc_vpc
       ]
 

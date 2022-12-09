@@ -143,7 +143,6 @@ dashboard "iam_role_detail" {
         edge.iam_role_trusted_federated,
         edge.iam_role_trusted_service,
         edge.lambda_function_to_iam_role
-
       ]
 
       args = {

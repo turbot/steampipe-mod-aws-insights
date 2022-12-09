@@ -246,13 +246,13 @@ dashboard "eks_cluster_detail" {
         edge.eks_cluster_to_iam_role,
         edge.eks_cluster_to_kms_key,
         edge.eks_cluster_to_vpc_security_group,
-        edge.eks_cluster_vpc_security_group_to_subnet,
-        edge.eks_cluster_vpc_subnet_to_vpc
+        edge.eks_cluster_to_vpc_subnet,
+        edge.vpc_subnet_to_vpc_vpc
       ]
 
       args = {
-        eks_cluster_arns           = [self.input.eks_cluster_arn.value]
         eks_addon_arns             = with.eks_addons.rows[*].eks_addon_arn
+        eks_cluster_arns           = [self.input.eks_cluster_arn.value]
         eks_fargate_profile_arns   = with.eks_fargate_profiles.rows[*].eks_fargate_profile_arn
         eks_identity_provider_arns = with.eks_identity_providers.rows[*].eks_identity_provider_arn
         eks_node_group_arns        = with.eks_node_groups.rows[*].eks_node_group_arn

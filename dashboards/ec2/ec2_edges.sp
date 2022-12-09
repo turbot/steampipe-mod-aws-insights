@@ -393,7 +393,7 @@ edge "ec2_instance_to_vpc_subnet" {
   param "ec2_instance_arns" {}
 }
 
-edge "ec2_load_balancer_listener_to_ec2_lb" {
+edge "ec2_load_balancer_listener_to_ec2_load_balancer" {
   title = "listener for"
 
   sql = <<-EOQ

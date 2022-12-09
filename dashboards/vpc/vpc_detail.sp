@@ -108,7 +108,7 @@ dashboard "vpc_detail" {
         args = [self.input.vpc_id.value]
       }
 
-      with "ec2_network_interface_id" {
+      with "ec2_network_interfaces" {
         sql = <<-EOQ
           select
             network_interface_id as network_interface_id
@@ -242,6 +242,7 @@ dashboard "vpc_detail" {
       nodes = [
 
         node.ec2_application_load_balancer,
+        node.ec2_availability_zone,
         node.ec2_classic_load_balancer,
         node.ec2_gateway_load_balancer,
         node.ec2_instance,
@@ -249,43 +250,42 @@ dashboard "vpc_detail" {
         node.lambda_function,
         node.rds_db_instance,
         node.redshift_cluster,
-        node.vpc_az,
         node.vpc_az_route_table,
         node.vpc_endpoint,
         node.vpc_flow_log,
-        node.vpc_igw,
+        node.vpc_internet_gateway,
         node.vpc_nat_gateway,
         node.vpc_peered_vpc,
         node.vpc_s3_access_point,
         node.vpc_security_group,
         node.vpc_subnet,
-        node.vpc_transit_gateway,
+        node.ec2_transit_gateway,
         node.vpc_vpc,
         node.vpc_vpn_gateway
       ]
 
       edges = [
 
-        edge.vpc_az_to_vpc_subnet,
+        edge.ec2_availability_zone_to_vpc_subnet,
         edge.vpc_peered_vpc,
-        edge.vpc_subnet_to_alb,
-        edge.vpc_subnet_to_clb,
+        edge.vpc_subnet_to_ec2_application_load_balancer,
+        edge.vpc_subnet_to_ec2_classic_load_balancer,
+        edge.vpc_subnet_to_ec2_gateway_load_balancer,
         edge.vpc_subnet_to_ec2_instance,
-        edge.vpc_subnet_to_endpoint,
-        edge.vpc_subnet_to_glb,
+        edge.vpc_subnet_to_ec2_network_load_balancer,
         edge.vpc_subnet_to_lambda_function,
         edge.vpc_subnet_to_nat_gateway,
-        edge.vpc_subnet_to_nlb,
         edge.vpc_subnet_to_rds_db_instance,
-        edge.vpc_subnet_to_route_table,
-        edge.vpc_to_az,
-        edge.vpc_to_igw,
-        edge.vpc_to_s3_access_point,
-        edge.vpc_to_transit_gateway,
-        edge.vpc_to_vpc_flow_log,
-        edge.vpc_to_vpc_route_table,
-        edge.vpc_to_vpc_security_group,
-        edge.vpc_to_vpn_gateway
+        edge.vpc_subnet_to_vpc_endpoint,
+        edge.vpc_subnet_to_vpc_route_table,
+        edge.vpc_vpc_to_ec2_availability_zone,
+        edge.vpc_vpc_to_ec2_transit_gateway,
+        edge.vpc_vpc_to_s3_access_point,
+        edge.vpc_vpc_to_vpc_flow_log,
+        edge.vpc_vpc_to_vpc_internet_gateway,
+        edge.vpc_vpc_to_vpc_route_table,
+        edge.vpc_vpc_to_vpc_security_group,
+        edge.vpc_vpc_to_vpc_vpn_gateway,
       ]
 
       args = {
@@ -293,7 +293,7 @@ dashboard "vpc_detail" {
         ec2_classic_load_balancer_arns     = with.ec2_classic_load_balancers.rows[*].clb_arn
         ec2_gateway_load_balancer_arns     = with.ec2_gateway_load_balancers.rows[*].glb_arn
         ec2_instance_arns                  = with.ec2_instances.rows[*].instance_arn
-        ec2_network_interface_ids          = with.ec2_network_interface_id.rows[*].network_interface_id
+        ec2_network_interface_ids          = with.ec2_network_interfaces.rows[*].network_interface_id
         ec2_network_load_balancer_arns     = with.ec2_network_load_balancers.rows[*].nlb_arn
         lambda_function_arns               = with.lambda_functions.rows[*].function_arn
         rds_db_instance_arns               = with.rds_db_instances.rows[*].rds_instance_arn
