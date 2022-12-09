@@ -81,6 +81,28 @@ edge "codebuild_project_to_codecommit_repository" {
   param "codebuild_project_arns" {}
 }
 
+edge "codebuild_project_to_codepipeline_pipeline" {
+  title = "build"
+
+  sql = <<-EOQ
+    select
+      b.arn as from_id,
+      p.arn as to_id
+    from
+      aws_codebuild_project as b,
+      aws_codepipeline_pipeline as p,
+      jsonb_array_elements(stages) as s,
+      jsonb_array_elements(s -> 'Actions') as a
+    where
+      s ->> 'Name' = 'Build'
+      and a -> 'ActionTypeId' ->> 'Provider' = 'CodeBuild'
+      and a -> 'Configuration' ->> 'ProjectName' = b.name
+      and p.arn = any($1);
+  EOQ
+
+  param "codepipeline_pipeline_arns" {}
+}
+
 edge "codebuild_project_to_ecr_repository" {
   title = "build environment"
 

@@ -40,33 +40,182 @@ dashboard "ecs_service_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "ec2_target_groups" {
+        sql = <<-EOQ
+          select
+            t.target_group_arn as target_group_arn
+          from
+            aws_ecs_service as s,
+            jsonb_array_elements(load_balancers) as l
+            left join aws_ec2_target_group as t on t.target_group_arn = l ->> 'TargetGroupArn'
+          where
+            s.arn = $1;
+        EOQ
+
+        args = [self.input.service_arn.value]
+      }
+
+      with "ecs_clusters" {
+        sql = <<-EOQ
+          select
+            c.cluster_arn as cluster_arn
+          from
+            aws_ecs_service as s
+            left join aws_ecs_cluster as c on s.cluster_arn = c.cluster_arn and s.arn = $1
+          where
+            c.cluster_arn is not null
+        EOQ
+
+        args = [self.input.service_arn.value]
+      }
+
+      with "ecs_container_instances" {
+        sql = <<-EOQ
+          select
+            i.arn as container_instance_arn
+          from
+            aws_ecs_service as s
+            left join aws_ecs_container_instance as i on s.cluster_arn = i.cluster_arn
+            left join aws_ec2_instance as e on i.ec2_instance_id = e.instance_id
+          where
+            i.arn  is not null
+            and s.arn = $1;
+        EOQ
+
+        args = [self.input.service_arn.value]
+      }
+
+      with "ecs_task_definitions" {
+        sql = <<-EOQ
+          select
+            d.task_definition_arn as task_definition_arn
+          from
+            aws_ecs_task_definition as d,
+            aws_ecs_service as s
+          where
+            d.task_definition_arn = s.task_definition
+            and s.arn = $1;
+        EOQ
+
+        args = [self.input.service_arn.value]
+      }
+
+      with "ecs_tasks" {
+        sql = <<-EOQ
+          select
+            t.task_arn as task_arn
+          from
+            aws_ecs_task as t,
+            aws_ecs_service as s
+          where
+            s.arn = $1
+            and t.service_name = s.service_name
+            and t.region = s.region;
+        EOQ
+
+        args = [self.input.service_arn.value]
+      }
+
+      with "iam_roles" {
+        sql = <<-EOQ
+          select
+            r.arn as role_arn
+          from
+            aws_ecs_service as s
+            left join aws_iam_role as r on r.arn = s.role_arn and s.arn = $1
+          where
+            r.arn is not null
+        EOQ
+
+        args = [self.input.service_arn.value]
+      }
+
+      with "vpc_security_groups" {
+        sql = <<-EOQ
+          select
+            sg.group_id as group_id
+          from
+            aws_ecs_service as e,
+            jsonb_array_elements_text(e.network_configuration -> 'AwsvpcConfiguration' -> 'SecurityGroups') as s
+            left join aws_vpc_security_group as sg on sg.group_id = s
+          where
+            e.arn = $1
+            and e.network_configuration is not null;
+        EOQ
+
+        args = [self.input.service_arn.value]
+      }
+
+      with "vpc_subnets" {
+        sql = <<-EOQ
+          select
+            sb.subnet_id as subnet_id
+          from
+            aws_ecs_service as e,
+            jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
+            left join aws_vpc_subnet as sb on sb.subnet_id = trim((s::text ), '""')
+          where
+            e.arn = $1
+            and e.network_configuration is not null;
+        EOQ
+
+        args = [self.input.service_arn.value]
+      }
+
+      with "vpc_vpcs" {
+        sql = <<-EOQ
+         select
+          v.arn as vpc_arn
+        from
+          aws_ecs_service as e,
+          jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
+          left join aws_vpc_subnet as sb on sb.subnet_id = trim((s::text ), '""'),
+          aws_vpc as v
+        where
+          e.arn = $1
+          and e.network_configuration is not null
+          and v.vpc_id = sb.vpc_id;
+        EOQ
+
+        args = [self.input.service_arn.value]
+      }
 
       nodes = [
-        node.ecs_service_node,
-        node.ecs_service_to_ecs_task_node,
-        node.ecs_service_to_ec2_target_group_node,
-        node.ecs_service_from_ecs_cluster_node,
-        node.ecs_service_to_ecs_container_instance_node,
-        node.ecs_service_to_vpc_security_group_node,
-        node.ecs_service_to_vpc_subnet_node,
-        node.ecs_service_vpc_subnet_to_vpc_node,
-        node.ecs_service_to_ecs_task_definition_node
+        node.ec2_target_group,
+        node.ecs_cluster,
+        node.ecs_container_instance,
+        node.ecs_service,
+        node.ecs_task_definition,
+        node.ecs_task,
+        node.iam_role,
+        node.vpc_security_group,
+        node.vpc_subnet,
+        node.vpc_vpc,
       ]
 
       edges = [
-        edge.ecs_service_to_ecs_task_edge,
-        edge.ecs_service_to_iam_role_edge,
-        edge.ecs_service_to_ec2_target_group_edge,
-        edge.ecs_service_from_ecs_cluster_edge,
-        edge.ecs_service_to_ecs_container_instance_edge,
-        edge.ecs_service_to_vpc_security_group_edge,
-        edge.ecs_service_to_vpc_subnet_edge,
-        edge.ecs_service_vpc_subnet_to_vpc_edge,
-        edge.ecs_service_to_ecs_task_definition_edge
+        edge.ecs_cluster_to_ecs_service,
+        edge.ecs_service_to_ec2_target_group,
+        edge.ecs_service_to_ecs_container_instance,
+        edge.ecs_service_to_ecs_task_definitions,
+        edge.ecs_service_to_ecs_task,
+        edge.ecs_service_to_iam_role,
+        edge.ecs_service_to_vpc_security_group,
+        edge.ecs_service_to_vpc_subnet,
+        edge.vpc_subnet_to_vpc_vpc,
       ]
 
       args = {
-        arn = self.input.service_arn.value
+        ec2_target_group_arns       = with.ec2_target_groups.rows[*].target_group_arn
+        ecs_cluster_arns            = with.ecs_clusters.rows[*].cluster_arn
+        ecs_container_instance_arns = with.ecs_container_instances.rows[*].container_instance_arn
+        ecs_service_arns            = [self.input.service_arn.value]
+        ecs_task_arns               = with.ecs_tasks.rows[*].task_arn
+        ecs_task_definition_arns    = with.ecs_task_definitions.rows[*].task_definition_arn
+        iam_role_arns               = with.iam_roles.rows[*].role_arn
+        vpc_security_group_ids      = with.vpc_security_groups.rows[*].group_id
+        vpc_subnet_ids              = with.vpc_subnets.rows[*].subnet_id
+        vpc_vpc_ids                 = with.vpc_vpcs.rows[*].vpc_arn
       }
     }
   }
@@ -206,408 +355,6 @@ query "ecs_service_tags" {
       arn = $1
     order by
       tag ->> 'Key';
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_service_node" {
-  category = category.ecs_service
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Status', status,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_ecs_service
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_service_to_ecs_task_node" {
-  category = category.ecs_task
-
-  sql = <<-EOQ
-    select
-      t.task_arn as id,
-      concat(split_part(t.task_arn, '/', 2),'/' ,split_part(t.task_arn, '/', 3)) as title,
-      jsonb_build_object(
-        'ARN', t.task_arn,
-        'Account ID', t.account_id,
-        'Region', t.region
-      ) as properties
-    from
-      aws_ecs_task as t,
-      aws_ecs_service as s
-    where
-      s.arn = $1
-      and t.service_name = s.service_name
-      and t.region = s.region;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecs_service_to_ecs_task_edge" {
-  title = "task"
-
-  sql = <<-EOQ
-    select
-      $1 as from_id,
-      t.task_arn as to_id
-    from
-      aws_ecs_task as t,
-      aws_ecs_service as s
-    where
-      s.arn = $1
-      and t.service_name = s.service_name
-      and t.region = s.region;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_service_to_iam_role_node" {
-  category = category.iam_role
-
-  sql = <<-EOQ
-    select
-      r.arn as id,
-      r.title as title,
-      jsonb_build_object(
-        'ARN', r.arn,
-        'Create Date', r.create_date,
-        'Account ID', r.account_id
-      ) as properties
-    from
-      aws_ecs_service as s
-      left join aws_iam_role as r on r.arn = s.role_arn and s.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecs_service_to_iam_role_edge" {
-  title = "assumes"
-
-  sql = <<-EOQ
-    select
-      s.arn as from_id,
-      s.role_arn as to_id
-    from
-      aws_ecs_service as s
-      left join aws_iam_role as r on r.arn = s.role_arn and s.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_service_to_ec2_target_group_node" {
-  category = category.ec2_target_group
-
-  sql = <<-EOQ
-    select
-      t.target_group_arn as id,
-      t.title as title,
-      jsonb_build_object(
-        'ARN', t.target_group_arn,
-        'VPC ID', t.vpc_id,
-        'Target Type', target_type,
-        'Account ID', t.account_id,
-        'Region', t.region
-      ) as properties
-    from
-      aws_ecs_service as s,
-      jsonb_array_elements(load_balancers) as l
-      left join aws_ec2_target_group as t on t.target_group_arn = l ->> 'TargetGroupArn'
-    where
-      s.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecs_service_to_ec2_target_group_edge" {
-  title = "target group"
-
-  sql = <<-EOQ
-    select
-      s.arn as from_id,
-      l ->> 'TargetGroupArn' as to_id
-    from
-      aws_ecs_service as s,
-      jsonb_array_elements(load_balancers) as l
-      left join aws_ec2_target_group as t on t.target_group_arn = l ->> 'TargetGroupArn'
-    where
-      s.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_service_from_ecs_cluster_node" {
-  category = category.ecs_cluster
-
-  sql = <<-EOQ
-    select
-      c.cluster_arn as id,
-      c.title as title,
-      jsonb_build_object(
-        'ARN', c.cluster_arn,
-        'Status', c.status,
-        'Account ID', c.account_id,
-        'Region', c.region
-      ) as properties
-    from
-      aws_ecs_service as s
-      left join aws_ecs_cluster as c on s.cluster_arn = c.cluster_arn and s.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecs_service_from_ecs_cluster_edge" {
-  title = "ecs cluster"
-
-  sql = <<-EOQ
-    select
-      c.cluster_arn as from_id,
-      s.arn to_id
-    from
-      aws_ecs_service as s
-      left join aws_ecs_cluster as c on s.cluster_arn = c.cluster_arn and s.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_service_to_ecs_container_instance_node" {
-  category = category.ecs_container_instance
-
-  sql = <<-EOQ
-    select
-      i.arn as id,
-      e.title as title,
-      jsonb_build_object(
-        'ARN', i.arn,
-        'Instance ID', i.ec2_instance_id,
-        'Status', i.status,
-        'Account ID', i.account_id,
-        'Region', i.region
-      ) as properties
-    from
-      aws_ecs_service as s
-      left join aws_ecs_container_instance as i on s.cluster_arn = i.cluster_arn
-      left join aws_ec2_instance as e on i.ec2_instance_id = e.instance_id
-    where
-      s.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecs_service_to_ecs_container_instance_edge" {
-  title = "container instance"
-
-  sql = <<-EOQ
-    select
-      s.arn as from_id,
-      i.arn as to_id
-    from
-      aws_ecs_service as s
-      left join aws_ecs_container_instance as i on s.cluster_arn = i.cluster_arn
-      left join aws_ec2_instance as e on i.ec2_instance_id = e.instance_id
-    where
-      s.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_service_to_vpc_security_group_node" {
-  category = category.vpc_security_group
-
-  sql = <<-EOQ
-    select
-      sg.group_id as id,
-      sg.title as title,
-      jsonb_build_object(
-        'Group ID', sg.group_id,
-        'Description', sg.description,
-        'ARN', sg.arn,
-        'Account ID', sg.account_id,
-        'Region', sg.region
-      ) as properties
-    from
-      aws_ecs_service as e,
-      jsonb_array_elements_text(e.network_configuration -> 'AwsvpcConfiguration' -> 'SecurityGroups') as s
-      left join aws_vpc_security_group as sg on sg.group_id = s
-    where
-      e.arn = $1
-      and e.network_configuration is not null;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecs_service_to_vpc_security_group_edge" {
-  title = "security group"
-
-  sql = <<-EOQ
-    select
-      e.arn as from_id,
-      s as to_id
-    from
-      aws_ecs_service as e,
-      jsonb_array_elements_text(e.network_configuration -> 'AwsvpcConfiguration' -> 'SecurityGroups') as s
-    where
-      e.arn = $1
-      and e.network_configuration is not null;
-  EOQ
-
-  param "arn" {}
-}
-
-
-node "ecs_service_to_vpc_subnet_node" {
-  category = category.vpc_subnet
-
-  sql = <<-EOQ
-    select
-      sb.subnet_id as id,
-      sb.title as title,
-      jsonb_build_object(
-        'ARN', sb.subnet_arn,
-        'Subnet ID', sb.subnet_id,
-        'Account ID', sb.account_id,
-        'Region', sb.region
-      ) as properties
-    from
-      aws_ecs_service as e,
-      jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
-      left join aws_vpc_subnet as sb on sb.subnet_id = trim((s::text ), '""')
-    where
-      e.arn = $1
-      and e.network_configuration is not null;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecs_service_to_vpc_subnet_edge" {
-  title = "subnet"
-
-  sql = <<-EOQ
-    select
-      coalesce(sg, e.arn) as from_id,
-      s as to_id
-    from
-      aws_ecs_service as e,
-      jsonb_array_elements_text(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s,
-      jsonb_array_elements_text(e.network_configuration -> 'AwsvpcConfiguration' -> 'SecurityGroups') as sg
-    where
-      e.arn = $1
-      and e.network_configuration is not null;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_service_vpc_subnet_to_vpc_node" {
-  category = category.vpc_vpc
-
-  sql = <<-EOQ
-    select
-      v.arn as id,
-      v.title as title,
-      jsonb_build_object(
-        'ARN', v.arn,
-        'VPC ID', v.vpc_id,
-        'Account ID', v.account_id,
-        'Region', v.region
-      ) as properties
-    from
-      aws_ecs_service as e,
-      jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
-      left join aws_vpc_subnet as sb on sb.subnet_id = trim((s::text ), '""'),
-      aws_vpc as v
-    where
-      e.arn = $1
-      and e.network_configuration is not null
-      and v.vpc_id = sb.vpc_id;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecs_service_vpc_subnet_to_vpc_edge" {
-  title = "vpc"
-
-  sql = <<-EOQ
-    select
-      sb.subnet_id as from_id,
-      v.arn as to_id
-    from
-      aws_ecs_service as e,
-      jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
-      left join aws_vpc_subnet as sb on sb.subnet_id = trim((s::text ), '""'),
-      aws_vpc as v
-    where
-      e.arn = $1
-      and e.network_configuration is not null
-      and v.vpc_id = sb.vpc_id;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_service_to_ecs_task_definition_node" {
-  category = category.ecs_task_definition
-
-  sql = <<-EOQ
-    select
-      d.task_definition_arn as id,
-      d.title as title,
-      jsonb_build_object(
-        'ARN', d.task_definition_arn,
-        'CPU', d.cpu,
-        'Status', d.status,
-        'Memory', d.memory,
-        'Registered At', d.registered_at
-      ) as properties
-    from
-      aws_ecs_task_definition as d,
-      aws_ecs_service as s
-    where
-      d.task_definition_arn = s.task_definition
-      and s.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecs_service_to_ecs_task_definition_edge" {
-  title = "task defintion"
-
-  sql = <<-EOQ
-    select
-      $1 as to_id,
-      d.task_definition_arn as from_id
-    from
-      aws_ecs_task_definition as d,
-      aws_ecs_service as s
-    where
-      d.task_definition_arn = s.task_definition
-      and s.arn = $1;
   EOQ
 
   param "arn" {}

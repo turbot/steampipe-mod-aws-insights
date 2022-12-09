@@ -14,7 +14,7 @@ category "eks_cluster" {
   title = "EKS Cluster"
   color = local.containers_color
   href  = "/aws_insights.dashboard.eks_cluster_detail?input.eks_cluster_arn={{.properties.'ARN' | @uri}}"
-  icon  = "heroicons-outline:cog"
+  icon  = "hub"
 }
 
 category "eks_fargate_profile" {
@@ -32,5 +32,5 @@ category "eks_identity_provider_config" {
 category "eks_node_group" {
   title = "EKS Node Group"
   color = local.containers_color
-  icon  = "heroicons-outline:rectangle-group"
+  icon  = "device-hub"
 }

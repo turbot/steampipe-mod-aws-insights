@@ -1,5 +1,5 @@
 category "docdb_cluster" {
   title = "DocumentDB Cluster"
-  icon  = "text:DDB"
+  icon  = "database"
   color = local.database_color
 }
