@@ -73,7 +73,7 @@ node "ec2_gateway_load_balancer" {
   category = category.ec2_gateway_load_balancer
 
   sql = <<-EOQ
-   select
+    select
       arn as id,
       title as title,
       jsonb_build_object(
@@ -87,7 +87,7 @@ node "ec2_gateway_load_balancer" {
     from
       aws_ec2_gateway_load_balancer
     where
-      arn = any($1 ::text[]);
+      arn = any($1);
   EOQ
 
   param "ec2_gateway_load_balancer_arns" {}

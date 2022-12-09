@@ -9,7 +9,7 @@ edge "ec2_application_load_balancer_to_acm_certificate" {
       aws_acm_certificate c,
       jsonb_array_elements_text(in_use_by) u
     where
-      u = $1
+      u = any($1)
   EOQ
 
   param "ec2_application_load_balancer_arns" {}
@@ -125,7 +125,7 @@ edge "ec2_classic_load_balancer_to_acm_certificate" {
       aws_acm_certificate c,
       jsonb_array_elements_text(in_use_by) u
     where
-      u = $1
+      u = any($1)
   EOQ
 
   param "ec2_application_load_balancer_arns" {}
@@ -205,6 +205,84 @@ edge "ec2_classic_load_balancer_to_vpc_subnet" {
   EOQ
 
   param "ec2_classic_load_balancer_arns" {}
+}
+
+edge "ec2_gateway_load_balancer_to_acm_certificate" {
+  title = "ssl via"
+
+  sql = <<-EOQ
+    select
+      u as from_id,
+      c.certificate_arn as to_id
+    from
+      aws_acm_certificate c,
+      jsonb_array_elements_text(in_use_by) u
+    where
+      u = any($1)
+  EOQ
+
+  param "ec2_gateway_load_balancer_arns" {}
+}
+
+edge "ec2_gateway_load_balancer_to_s3_bucket" {
+  title = "logs to"
+
+  sql = <<-EOQ
+    select
+      glb.arn as from_id,
+      b.arn as to_id
+    from
+      aws_s3_bucket b,
+      aws_ec2_gateway_load_balancer as glb,
+      jsonb_array_elements(glb.load_balancer_attributes) attributes
+    where
+      glb.arn = any($1)
+      and attributes ->> 'Key' = 'access_logs.s3.bucket'
+      and b.name = attributes ->> 'Value';
+  EOQ
+
+  param "ec2_gateway_load_balancer_arns" {}
+}
+
+edge "ec2_gateway_load_balancer_to_vpc_security_group" {
+  title = "security group"
+
+  sql = <<-EOQ
+    select
+      clb.arn as from_id,
+      sg.group_id as to_id
+    from
+      aws_vpc_security_group sg,
+      aws_ec2_gateway_load_balancer as clb
+    where
+      clb.arn = any($1)
+      and sg.group_id in
+      (
+        select
+          jsonb_array_elements_text(clb.security_groups)
+      );
+  EOQ
+
+  param "ec2_gateway_load_balancer_arns" {}
+}
+
+edge "ec2_gateway_load_balancer_to_vpc_subnet" {
+  title = "subnet"
+
+  sql = <<-EOQ
+    select
+      glb.arn as from_id,
+      s.subnet_id as to_id
+    from
+      aws_vpc_subnet s,
+      aws_ec2_gateway_load_balancer as glb,
+      jsonb_array_elements(availability_zones) as az
+    where
+      glb.arn = any($1)
+      and s.subnet_id = az ->> 'SubnetId';
+  EOQ
+
+  param "ec2_gateway_load_balancer_arns" {}
 }
 
 edge "ec2_instance_to_ebs_volume" {
@@ -444,6 +522,7 @@ edge "ec2_target_group_to_ec2_instance" {
 
   param "ec2_target_group_arns" {}
 }
+
 edge "ec2_launch_configuration_to_ebs_snapshot" {
   title = "snapshot"
 
