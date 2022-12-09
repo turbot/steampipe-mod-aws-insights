@@ -41,7 +41,7 @@ category "ec2_gateway_load_balancer" {
 category "ec2_instance" {
   title = "EC2 Instance"
   href  = "/aws_insights.dashboard.ec2_instance_detail?input.instance_arn={{.properties.'ARN' | @uri}}"
-  icon  = "memory"
+  icon  = "dns"
   color = local.compute_color
 }
 

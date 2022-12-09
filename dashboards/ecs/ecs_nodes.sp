@@ -2,7 +2,7 @@ node "ecs_cluster" {
   category = category.ecs_cluster
 
   sql = <<-EOQ
-   select
+  select
       cluster_arn as id,
       title as title,
       jsonb_build_object(
@@ -209,6 +209,28 @@ node "ecs_service" {
   param "ecs_service_arns" {}
 }
 
+node "ecs_task" {
+  category = category.ecs_task
+
+  sql = <<-EOQ
+    select
+      t.task_arn as id,
+      concat(split_part(t.task_arn, '/', 2),'/' ,split_part(t.task_arn, '/', 3)) as title,
+      jsonb_build_object(
+        'ARN', t.task_arn,
+        'Account ID', t.account_id,
+        'Region', t.region
+      ) as properties
+    from
+      aws_ecs_task as t
+    where
+      t.task_arn = any($1);
+  EOQ
+
+  param "ecs_task_arns" {}
+}
+
+
 node "ecs_task_definition" {
   category = category.ecs_task_definition
 
@@ -229,25 +251,4 @@ node "ecs_task_definition" {
   EOQ
 
   param "ecs_task_definition_arns" {}
-}
-
-node "ecs_task" {
-  category = category.ecs_task
-
-  sql = <<-EOQ
-    select
-      t.task_arn as id,
-      concat(split_part(t.task_arn, '/', 2),'/' ,split_part(t.task_arn, '/', 3)) as title,
-      jsonb_build_object(
-        'ARN', t.task_arn,
-        'Account ID', t.account_id,
-        'Region', t.region
-      ) as properties
-    from
-      aws_ecs_task as t
-    where
-      t.task_arn = any($1);
-  EOQ
-
-  param "ecs_task_arns" {}
 }
