@@ -258,6 +258,7 @@ node "ec2_launch_configuration" {
 
   param "ec2_launch_configuration_arns" {}
 }
+
 node "ec2_target_group" {
   category = category.ec2_target_group
 
@@ -273,13 +274,10 @@ node "ec2_target_group" {
         'Account ID', target.account_id
       ) as properties
     from
-      aws_ec2_instance as i,
-      aws_ec2_target_group as target,
-      jsonb_array_elements(target.target_health_descriptions) as health_descriptions
+      aws_ec2_target_group as target
     where
-      i.arn = any($1)
-      and health_descriptions -> 'Target' ->> 'Id' = i.instance_id
+      target.target_group_arn = any($1)
   EOQ
 
-  param "ec2_instance_arns" {}
+  param "ec2_target_group_arns" {}
 }

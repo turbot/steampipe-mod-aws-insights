@@ -64,7 +64,7 @@ category "vpc_security_group" {
 category "vpc_subnet" {
   title = "VPC Subnet"
   href  = "/aws_insights.dashboard.vpc_subnet_detail?input.subnet_id={{.properties.'Subnet ID' | @uri}}"
-  icon  = "lock"
+  icon  = "share"
   color = local.networking_color
 }
 

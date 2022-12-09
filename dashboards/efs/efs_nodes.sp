@@ -1,23 +1,23 @@
-
 node "efs_file_system" {
   category = category.efs_file_system
-  sql      = <<-EOQ
-      select
-        arn as id,
-        title as title,
-        json_build_object(
-          'ARN', arn,
-          'ID', file_system_id,
-          'Name', name,
-          'State', life_cycle_state,
-          'Created At', creation_time,
-          'Account ID', account_id,
-          'Region', region
-        ) as properties
-      from
-        aws_efs_file_system
-      where
-        arn = any($1);
+
+  sql = <<-EOQ
+    select
+      arn as id,
+      title as title,
+      json_build_object(
+        'ARN', arn,
+        'ID', file_system_id,
+        'Name', name,
+        'State', life_cycle_state,
+        'Created At', creation_time,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_efs_file_system
+    where
+      arn = any($1);
   EOQ
 
   param "efs_file_system_arns" {}
