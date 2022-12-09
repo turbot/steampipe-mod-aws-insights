@@ -219,14 +219,14 @@ dashboard "elasticache_cluster_detail" {
       ]
 
       args = {
-        elasticache_cluster_arns  = [self.input.elasticache_cluster_arn.value]
-        elasticache_subnet_group_arns = with.elasticache_subnet_groups.rows[*].elasticache_subnet_group_arn
+        elasticache_cluster_arns        = [self.input.elasticache_cluster_arn.value]
+        elasticache_subnet_group_arns   = with.elasticache_subnet_groups.rows[*].elasticache_subnet_group_arn
         elsticache_parameter_group_arns = with.elasticache_parameter_groups.rows[*].elasticache_parameter_group_arn
-        kms_key_arns = with.kms_keys.rows[*].kms_key_arn
-        sns_topic_arns = with.sns_topics.rows[*].sns_topic_arn
-        vpc_security_group_ids = with.vpc_security_groups.rows[*].vpc_security_group_id
-        vpc_subnet_ids = with.vpc_subnets.rows[*].vpc_subnet_id
-        vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_vpc_id
+        kms_key_arns                    = with.kms_keys.rows[*].kms_key_arn
+        sns_topic_arns                  = with.sns_topics.rows[*].sns_topic_arn
+        vpc_security_group_ids          = with.vpc_security_groups.rows[*].vpc_security_group_id
+        vpc_subnet_ids                  = with.vpc_subnets.rows[*].vpc_subnet_id
+        vpc_vpc_ids                     = with.vpc_vpcs.rows[*].vpc_vpc_id
       }
     }
   }
