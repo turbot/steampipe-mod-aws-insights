@@ -144,32 +144,6 @@ edge "rds_db_cluster_to_vpc_security_group" {
   param "rds_db_cluster_arns" {}
 }
 
-edge "rds_db_instance_rds_db_subnet_group_to_vpc_subnet" {
-  title = "subnet"
-
-  sql = <<-EOQ
-    select
-      rdsg.arn as from_id,
-      vs.subnet_id as to_id
-    from
-      aws_rds_db_instance as rdb
-      cross join
-        jsonb_array_elements(subnets) as subnet
-      join
-        aws_vpc_subnet as vs
-        on subnet ->> 'SubnetIdentifier' = vs.subnet_id
-      join
-        aws_rds_db_subnet_group as rdsg
-        on rdb.db_subnet_group_name = rdsg.name
-        and rdb.region = rdsg.region
-        and rdb.account_id = rdsg.account_id
-    where
-      rdb.arn = any($1);
-  EOQ
-
-  param "rds_db_instance_arns" {}
-}
-
 edge "rds_db_instance_to_kms_key" {
   title = "encrypted with"
 
@@ -256,33 +230,6 @@ edge "rds_db_instance_to_vpc_security_group" {
       jsonb_array_elements(di.vpc_security_groups) as dsg
     where
       arn = any($1);
-  EOQ
-
-  param "rds_db_instance_arns" {}
-}
-
-edge "rds_db_instance_vpc_security_group_to_vpc" {
-  title = "subnet group"
-
-  sql = <<-EOQ
-    select
-      sg.group_id as from_id,
-      rdsg.arn as to_id
-    from
-      aws_rds_db_instance as di
-      cross join
-        jsonb_array_elements(di.vpc_security_groups) as dsg
-      join
-        aws_vpc_security_group as sg
-        on sg.group_id = dsg ->> 'VpcSecurityGroupId'
-      join
-        aws_rds_db_subnet_group as rdsg
-        on di.db_subnet_group_name = rdsg.name
-        and di.region = rdsg.region
-        and di.account_id = rdsg.account_id
-    where
-      di.arn = any($1)
-      and di.vpc_id = sg.vpc_id;
   EOQ
 
   param "rds_db_instance_arns" {}

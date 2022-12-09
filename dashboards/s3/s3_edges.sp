@@ -16,6 +16,24 @@ edge "s3_bucket_from_s3_bucket" {
   param "s3_bucket_arns" {}
 }
 
+edge "s3_bucket_to_codebuild_project" {
+  title = "source provider"
+
+  sql = <<-EOQ
+    select
+      s3.arn as from_id,
+      p.arn as to_id
+    from
+      aws_codebuild_project as p,
+      aws_s3_bucket as s3
+    where
+      p.arn = any($1)
+      and s3.name = split_part(p.source ->> 'Location', '/', 1);
+  EOQ
+
+  param "codebuild_project_arns" {}
+}
+
 edge "s3_bucket_to_codepipeline_pipeline" {
   title = "source provider"
 
@@ -56,24 +74,6 @@ edge "s3_bucket_to_cloudfront_distribution" {
   param "cloudfront_distribution_arns" {}
 }
 
-edge "s3_bucket_to_codebuild_project" {
-  title = "source provider"
-
-  sql = <<-EOQ
-    select
-      s3.arn as from_id,
-      p.arn as to_id
-    from
-      aws_codebuild_project as p,
-      aws_s3_bucket as s3
-    where
-      p.arn = any($1)
-      and s3.name = split_part(p.source ->> 'Location', '/', 1);
-  EOQ
-
-  param "codebuild_project_arns" {}
-}
-
 edge "s3_bucket_to_kms_key" {
   title = "encrypted with"
 
@@ -108,30 +108,22 @@ edge "s3_bucket_to_lambda_function" {
   param "s3_bucket_arns" {}
 }
 
-node "s3_bucket_to_lambda_function_node" {
-  category = category.lambda_function
+edge "s3_bucket_to_s3_bucket" {
+  title = "logs to"
 
   sql = <<-EOQ
     select
-      f.arn as id,
-      f.title as title,
-      jsonb_build_object(
-        'Version', f.version,
-        'ARN', f.arn,
-        'Runtime', f.runtime,
-        'Region', f.region,
-        'Account ID', f.account_id
-      ) as properties
+      b.arn as from_id,
+      lb.arn as to_id
     from
-      aws_s3_bucket as b,
-      jsonb_array_elements(event_notification_configuration -> 'LambdaFunctionConfigurations') as t
-      left join aws_lambda_function as f on f.arn = t ->> 'LambdaFunctionArn'
+      aws_s3_bucket as lb,
+      aws_s3_bucket as b
     where
-      event_notification_configuration -> 'LambdaFunctionConfigurations' <> 'null'
-      and b.arn = $1;
+      b.arn = any($1)
+      and lb.name = b.logging ->> 'TargetBucket';
   EOQ
 
-  param "arn" {}
+  param "s3_bucket_arns" {}
 }
 
 edge "s3_bucket_to_sns_topic" {
@@ -163,24 +155,6 @@ edge "s3_bucket_to_sqs_queue" {
       jsonb_array_elements(event_notification_configuration -> 'QueueConfigurations') as q
     where
       arn = any($1);
-  EOQ
-
-  param "s3_bucket_arns" {}
-}
-
-edge "s3_bucket_to_s3_bucket" {
-  title = "logs to"
-
-  sql = <<-EOQ
-    select
-      b.arn as from_id,
-      lb.arn as to_id
-    from
-      aws_s3_bucket as lb,
-      aws_s3_bucket as b
-    where
-      b.arn = any($1)
-      and lb.name = b.logging ->> 'TargetBucket';
   EOQ
 
   param "s3_bucket_arns" {}

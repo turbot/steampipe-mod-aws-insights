@@ -1,4 +1,4 @@
-edge "vpc_az_to_vpc_subnet" {
+edge "vpc_availability_zone_to_vpc_subnet" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -14,7 +14,7 @@ edge "vpc_az_to_vpc_subnet" {
   param "vpc_vpc_ids" {}
 }
 
-edge "vpc_endpoint_to_vpc" {
+edge "vpc_endpoint_to_vpc_vpc" {
   title = "vpc"
 
   sql = <<-EOQ
@@ -390,6 +390,30 @@ edge "vpc_security_group_to_redshift_cluster" {
   param "vpc_security_group_ids" {}
 }
 
+edge "vpc_security_group_to_redshift_subnet_group" {
+  title = "subnet group"
+
+  sql = <<-EOQ
+    select
+      sg.group_id as from_id,
+      sub.cluster_subnet_group_name as to_id
+    from
+      aws_redshift_cluster as c
+      cross join
+        jsonb_array_elements(c.vpc_security_groups) as s
+      join
+        aws_vpc_security_group as sg
+        on sg.group_id = s ->> 'VpcSecurityGroupId'
+      join
+        aws_redshift_subnet_group as sub
+        on c.vpc_id = sub.vpc_id
+        and c.cluster_subnet_group_name = sub.cluster_subnet_group_name
+        and c.arn = any($1);
+  EOQ
+
+  param "redshift_cluster_arns" {}
+}
+
 edge "vpc_security_group_to_sagemaker_notebook_instance" {
   title = "notebook instance"
 
@@ -408,7 +432,7 @@ edge "vpc_security_group_to_sagemaker_notebook_instance" {
   param "vpc_security_group_ids" {}
 }
 
-edge "vpc_subnet_to_alb" {
+edge "vpc_subnet_to_ec2_application_load_balancer" {
   title = "alb"
 
   sql = <<-EOQ
@@ -425,7 +449,7 @@ edge "vpc_subnet_to_alb" {
   param "vpc_subnet_ids" {}
 }
 
-edge "vpc_subnet_to_clb" {
+edge "vpc_subnet_to_ec2_classic_load_balancer" {
   title = "clb"
 
   sql = <<-EOQ
@@ -434,6 +458,23 @@ edge "vpc_subnet_to_clb" {
       arn as to_id
     from
       aws_ec2_classic_load_balancer,
+      jsonb_array_elements(availability_zones) as az
+    where
+      az ->> 'SubnetId' = any($1);
+  EOQ
+
+  param "vpc_subnet_ids" {}
+}
+
+edge "vpc_subnet_to_ec2_gateway_load_balancer" {
+  title = "glb"
+
+  sql = <<-EOQ
+    select
+      az ->> 'SubnetId' as from_id,
+      arn as to_id
+    from
+      aws_ec2_gateway_load_balancer,
       jsonb_array_elements(availability_zones) as az
     where
       az ->> 'SubnetId' = any($1);
@@ -458,42 +499,15 @@ edge "vpc_subnet_to_ec2_instance" {
   param "vpc_subnet_ids" {}
 }
 
-edge "vpc_subnet_to_endpoint" {
-  title = "vpc endpoint"
-
-  sql = <<-EOQ
-    select
-      s as from_id,
-      e.vpc_endpoint_id as to_id
-    from
-      aws_vpc_endpoint as e,
-      jsonb_array_elements_text(e.subnet_ids) as s
-    where
-      e.vpc_id = any($1)
-    union
-    select
-      vpc_id as from_id,
-      vpc_endpoint_id as to_id
-    from
-      aws_vpc_endpoint as e
-    where
-      jsonb_array_length(subnet_ids) = 0
-      and vpc_id = any($1);
-
-  EOQ
-
-  param "vpc_vpc_ids" {}
-}
-
-edge "vpc_subnet_to_glb" {
-  title = "glb"
+edge "vpc_subnet_to_ec2_network_load_balancer" {
+  title = "nlb"
 
   sql = <<-EOQ
     select
       az ->> 'SubnetId' as from_id,
       arn as to_id
     from
-      aws_ec2_gateway_load_balancer,
+      aws_ec2_network_load_balancer,
       jsonb_array_elements(availability_zones) as az
     where
       az ->> 'SubnetId' = any($1);
@@ -551,23 +565,6 @@ edge "vpc_subnet_to_network_interface" {
   param "vpc_subnet_ids" {}
 }
 
-edge "vpc_subnet_to_nlb" {
-  title = "nlb"
-
-  sql = <<-EOQ
-    select
-      az ->> 'SubnetId' as from_id,
-      arn as to_id
-    from
-      aws_ec2_network_load_balancer,
-      jsonb_array_elements(availability_zones) as az
-    where
-      az ->> 'SubnetId' = any($1);
-  EOQ
-
-  param "vpc_subnet_ids" {}
-}
-
 edge "vpc_subnet_to_rds_db_instance" {
   title = "rds db instance"
 
@@ -585,23 +582,6 @@ edge "vpc_subnet_to_rds_db_instance" {
   param "vpc_subnet_ids" {}
 }
 
-edge "vpc_subnet_to_route_table" {
-  title = "route table"
-
-  sql = <<-EOQ
-    select
-      a ->> 'SubnetId' as to_id,
-      rt.route_table_id as from_id
-      from
-        aws_vpc_route_table as rt,
-        jsonb_array_elements(associations) as a
-      where
-        rt.vpc_id = any($1);
-  EOQ
-
-  param "vpc_vpc_ids" {}
-}
-
 edge "vpc_subnet_to_sagemaker_notebook_instance" {
   title = "notebook instance"
 
@@ -616,6 +596,33 @@ edge "vpc_subnet_to_sagemaker_notebook_instance" {
   EOQ
 
   param "vpc_subnet_ids" {}
+}
+
+edge "vpc_subnet_to_vpc_endpoint" {
+  title = "vpc endpoint"
+
+  sql = <<-EOQ
+    select
+      s as from_id,
+      e.vpc_endpoint_id as to_id
+    from
+      aws_vpc_endpoint as e,
+      jsonb_array_elements_text(e.subnet_ids) as s
+    where
+      e.vpc_id = any($1)
+    union
+    select
+      vpc_id as from_id,
+      vpc_endpoint_id as to_id
+    from
+      aws_vpc_endpoint as e
+    where
+      jsonb_array_length(subnet_ids) = 0
+      and vpc_id = any($1);
+
+  EOQ
+
+  param "vpc_vpc_ids" {}
 }
 
 edge "vpc_subnet_to_vpc_flow_log" {
@@ -668,22 +675,6 @@ edge "vpc_subnet_to_vpc_route_table" {
   param "vpc_subnet_ids" {}
 }
 
-edge "vpc_to_vpc_subnet" {
-  title = "subnet"
-
-  sql = <<-EOQ
-    select
-      vpc_id as from_id,
-      subnet_id as to_id
-    from
-      aws_vpc_subnet
-    where
-      vpc_id = any($1);
-  EOQ
-
-  param "vpc_vpc_ids" {}
-}
-
 edge "vpc_subnet_to_vpc_vpc" {
   title = "vpc"
 
@@ -700,7 +691,7 @@ edge "vpc_subnet_to_vpc_vpc" {
   param "vpc_subnet_ids" {}
 }
 
-edge "vpc_to_az" {
+edge "vpc_vpc_to_ec2_availability_zone" {
   title = "az"
 
   sql = <<-EOQ
@@ -717,7 +708,54 @@ edge "vpc_to_az" {
   param "vpc_vpc_ids" {}
 }
 
-edge "vpc_to_igw" {
+edge "vpc_vpc_to_ec2_transit_gateway" {
+  title = "transit_gateway"
+
+  sql = <<-EOQ
+    select
+      resource_id as to_id,
+      transit_gateway_id as from_id
+    from
+      aws_ec2_transit_gateway_vpc_attachment
+      where resource_id = any($1);
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+edge "vpc_vpc_to_s3_access_point" {
+  title = "s3 access point"
+
+  sql = <<-EOQ
+    select
+      vpc_id as from_id,
+      access_point_arn as to_id
+    from
+      aws_s3_access_point
+    where
+      vpc_id = any($1)
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+edge "vpc_vpc_to_vpc_flow_log" {
+  title = "flow log"
+
+  sql = <<-EOQ
+    select
+      resource_id as from_id,
+      flow_log_id as to_id
+    from
+      aws_vpc_flow_log
+    where
+      resource_id = any($1);
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+edge "vpc_vpc_to_vpc_internet_gateway" {
   title = "vpc"
 
   sql = <<-EOQ
@@ -734,54 +772,7 @@ edge "vpc_to_igw" {
   param "vpc_vpc_ids" {}
 }
 
-edge "vpc_to_transit_gateway" {
-  title = "transit_gateway"
-
-  sql = <<-EOQ
-    select
-      resource_id as to_id,
-      transit_gateway_id as from_id
-    from
-      aws_ec2_transit_gateway_vpc_attachment
-      where resource_id = any($1);
-  EOQ
-
-  param "vpc_vpc_ids" {}
-}
-
-edge "vpc_to_s3_access_point" {
-  title = "s3 access point"
-
-  sql = <<-EOQ
-    select
-      vpc_id as from_id,
-      access_point_arn as to_id
-    from
-      aws_s3_access_point
-    where
-      vpc_id = any($1)
-  EOQ
-
-  param "vpc_vpc_ids" {}
-}
-
-edge "vpc_to_vpc_flow_log" {
-  title = "flow log"
-
-  sql = <<-EOQ
-    select
-      resource_id as from_id,
-      flow_log_id as to_id
-    from
-      aws_vpc_flow_log
-    where
-      resource_id = any($1);
-  EOQ
-
-  param "vpc_vpc_ids" {}
-}
-
-edge "vpc_to_vpc_route_table" {
+edge "vpc_vpc_to_vpc_route_table" {
   title = "route table"
 
   sql = <<-EOQ
@@ -798,7 +789,7 @@ edge "vpc_to_vpc_route_table" {
   param "vpc_vpc_ids" {}
 }
 
-edge "vpc_to_vpc_security_group" {
+edge "vpc_vpc_to_vpc_security_group" {
   title = "security group"
 
   sql = <<-EOQ
@@ -814,7 +805,23 @@ edge "vpc_to_vpc_security_group" {
   param "vpc_vpc_ids" {}
 }
 
-edge "vpc_to_vpn_gateway" {
+edge "vpc_vpc_to_vpc_subnet" {
+  title = "subnet"
+
+  sql = <<-EOQ
+    select
+      vpc_id as from_id,
+      subnet_id as to_id
+    from
+      aws_vpc_subnet
+    where
+      vpc_id = any($1);
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
+edge "vpc_vpc_to_vpc_vpn_gateway" {
   title = "vpn gateway"
 
   sql = <<-EOQ

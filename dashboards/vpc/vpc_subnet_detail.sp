@@ -215,19 +215,19 @@ dashboard "vpc_subnet_detail" {
       ]
 
       edges = [
-        edge.vpc_subnet_to_alb,
-        edge.vpc_subnet_to_clb,
+        edge.vpc_subnet_to_ec2_application_load_balancer,
+        edge.vpc_subnet_to_ec2_classic_load_balancer,
         edge.vpc_subnet_to_ec2_instance,
-        edge.vpc_subnet_to_glb,
+        edge.vpc_subnet_to_ec2_gateway_load_balancer,
         edge.vpc_subnet_to_lambda_function,
         edge.vpc_subnet_to_network_interface,
-        edge.vpc_subnet_to_nlb,
+        edge.vpc_subnet_to_ec2_network_load_balancer,
         edge.vpc_subnet_to_rds_db_instance,
         edge.vpc_subnet_to_sagemaker_notebook_instance,
         edge.vpc_subnet_to_vpc_flow_log,
         edge.vpc_subnet_to_vpc_network_acl,
         edge.vpc_subnet_to_vpc_route_table,
-        edge.vpc_to_vpc_subnet
+        edge.vpc_vpc_to_vpc_subnet
       ]
 
       args = {

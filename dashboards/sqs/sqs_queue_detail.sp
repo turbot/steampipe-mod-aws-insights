@@ -166,7 +166,7 @@ dashboard "sqs_queue_detail" {
         edge.sqs_queue_to_sns_topic_subscription,
         edge.sqs_queue_to_sqs_dead_letter_queue,
         edge.sqs_queue_to_vpc_endpoint,
-        edge.vpc_endpoint_to_vpc
+        edge.vpc_endpoint_to_vpc_vpc
       ]
 
       args = {

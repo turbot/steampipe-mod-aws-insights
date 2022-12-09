@@ -1,4 +1,4 @@
-edge "ec2_alb_to_s3_bucket" {
+edge "ec2_application_load_balancer_to_s3_bucket" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -73,7 +73,7 @@ edge "ec2_classic_load_balancer_to_ec2_instance" {
   param "ec2_classic_load_balancer_arns" {}
 }
 
-edge "ec2_clb_to_s3_bucket" {
+edge "ec2_classic_load_balancer_to_s3_bucket" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -290,7 +290,7 @@ edge "ec2_network_interface_to_vpc_subnet" {
   param "ec2_network_interface_ids" {}
 }
 
-edge "ec2_nlb_to_s3_bucket" {
+edge "ec2_network_load_balancer_to_s3_bucket" {
   title = "logs to"
 
   sql = <<-EOQ

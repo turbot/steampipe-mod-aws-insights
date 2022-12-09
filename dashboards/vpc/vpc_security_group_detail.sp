@@ -280,7 +280,7 @@ dashboard "vpc_security_group_detail" {
         edge.vpc_security_group_to_rds_db_instance,
         edge.vpc_security_group_to_redshift_cluster,
         edge.vpc_security_group_to_sagemaker_notebook_instance,
-        edge.vpc_to_vpc_security_group
+        edge.vpc_vpc_to_vpc_security_group
       ]
 
       args = {

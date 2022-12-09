@@ -19,23 +19,6 @@ edge "redshift_cluster_subnet_group_to_vpc_subnet" {
   param "redshift_cluster_arns" {}
 }
 
-edge "redshift_cluster_to_vpc_security_group" {
-  title = "security group"
-
-  sql = <<-EOQ
-    select
-      arn as from_id,
-      s ->> 'VpcSecurityGroupId' as to_id
-    from
-      aws_redshift_cluster,
-      jsonb_array_elements(vpc_security_groups) as s
-    where
-      arn = any($1);
-  EOQ
-
-  param "redshift_cluster_arns" {}
-}
-
 edge "redshift_cluster_to_cloudwatch_log_group" {
   title = "logs to"
 
@@ -125,19 +108,18 @@ edge "redshift_cluster_to_redshift_snapshot" {
   param "redshift_cluster_arns" {}
 }
 
-edge "redshift_cluster_to_vpc_eip" {
-  title = "eip"
+edge "redshift_cluster_to_s3_bucket" {
+  title = "logs to"
 
   sql = <<-EOQ
     select
       c.arn as from_id,
-      e.arn as to_id
+      b.arn as to_id
     from
       aws_redshift_cluster as c,
-      aws_vpc_eip as e
+      aws_s3_bucket as b
     where
-      c.elastic_ip_status is not null
-      and e.public_ip = (c.elastic_ip_status ->> 'ElasticIp')::inet
+      b.name = c.logging_status ->> 'BucketName'
       and c.arn = any($1);
   EOQ
 
@@ -163,43 +145,37 @@ edge "redshift_cluster_to_sns_topic" {
   param "redshift_cluster_arns" {}
 }
 
-edge "redshift_cluster_to_s3_bucket" {
-  title = "logs to"
+edge "redshift_cluster_to_vpc_eip" {
+  title = "eip"
 
   sql = <<-EOQ
     select
       c.arn as from_id,
-      b.arn as to_id
+      e.arn as to_id
     from
       aws_redshift_cluster as c,
-      aws_s3_bucket as b
+      aws_vpc_eip as e
     where
-      b.name = c.logging_status ->> 'BucketName'
+      c.elastic_ip_status is not null
+      and e.public_ip = (c.elastic_ip_status ->> 'ElasticIp')::inet
       and c.arn = any($1);
   EOQ
 
   param "redshift_cluster_arns" {}
 }
 
-edge "redshift_cluster_vpc_security_group_to_subnet_group" {
-  title = "subnet group"
+edge "redshift_cluster_to_vpc_security_group" {
+  title = "security group"
 
   sql = <<-EOQ
     select
-      sg.group_id as from_id,
-      sub.cluster_subnet_group_name as to_id
+      arn as from_id,
+      s ->> 'VpcSecurityGroupId' as to_id
     from
-      aws_redshift_cluster as c
-      cross join
-        jsonb_array_elements(c.vpc_security_groups) as s
-      join
-        aws_vpc_security_group as sg
-        on sg.group_id = s ->> 'VpcSecurityGroupId'
-      join
-        aws_redshift_subnet_group as sub
-        on c.vpc_id = sub.vpc_id
-        and c.cluster_subnet_group_name = sub.cluster_subnet_group_name
-        and c.arn = any($1);
+      aws_redshift_cluster,
+      jsonb_array_elements(vpc_security_groups) as s
+    where
+      arn = any($1);
   EOQ
 
   param "redshift_cluster_arns" {}
