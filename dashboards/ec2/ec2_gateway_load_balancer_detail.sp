@@ -176,14 +176,14 @@ dashboard "ec2_gateway_load_balancer_detail" {
 
       nodes = [
         node.acm_certificate,
-        node.ec2_gateway_load_balancer_node,
-        node.ec2_instance_node,
-        node.ec2_load_balancer_listener_node,
-        node.ec2_target_group_node,
-        node.s3_bucket_node,
+        node.ec2_gateway_load_balancer,
+        node.ec2_instance,
+        node.ec2_load_balancer_listener,
+        node.ec2_target_group,
+        node.s3_bucket,
         node.vpc_security_group,
-        node.vpc_subnet_node,
-        node.vpc_vpc_node
+        node.vpc_subnet,
+        node.vpc_vpc
       ]
 
       edges = [
@@ -192,7 +192,6 @@ dashboard "ec2_gateway_load_balancer_detail" {
         edge.ec2_gateway_load_balancer_to_vpc_security_group,
         edge.ec2_gateway_load_balancer_to_vpc_subnet,
         edge.ec2_glb_to_target_group,
-        edge.ec2_load_balancer_listener_to_ec2_lb,
         edge.ec2_target_group_to_ec2_instance,
         edge.vpc_subnet_to_vpc_vpc
       ]

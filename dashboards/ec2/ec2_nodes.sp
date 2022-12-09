@@ -1,3 +1,27 @@
+node "ec2_ami" {
+  category = category.ec2_ami
+
+  sql = <<-EOQ
+    select
+      image_id as id,
+      title as title,
+      jsonb_build_object(
+        'Image ID', image_id,
+        'Image Location', image_location,
+        'State', state,
+        'public', public::text,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_ec2_ami
+    where
+      image_id = any($1);
+  EOQ
+
+  param "ec2_ami_image_ids" {}
+}
+
 node "ec2_application_load_balancer" {
   category = category.ec2_application_load_balancer
 
@@ -141,6 +165,51 @@ node "ec2_key_pair" {
   param "ec2_instance_arns" {}
 }
 
+node "ec2_launch_configuration" {
+  category = category.ec2_launch_configuration
+
+  sql = <<-EOQ
+    select
+      launch_configuration_arn as id,
+      title as title,
+      jsonb_build_object(
+        'ARN', launch_configuration_arn,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_ec2_launch_configuration
+    where
+      launch_configuration_arn = any($1);
+  EOQ
+
+  param "ec2_launch_configuration_arns" {}
+}
+
+node "ec2_load_balancer_listener" {
+  category = category.ec2_load_balancer_listener
+
+  sql = <<-EOQ
+    select
+      lblistener.arn as id,
+      lblistener.title as title,
+      jsonb_build_object(
+        'ARN', lblistener.arn,
+        'Account ID', lblistener.account_id,
+        'Region', lblistener.region,
+        'Protocol', lblistener.protocol,
+        'Port', lblistener.port,
+        'SSL Policy', coalesce(lblistener.ssl_policy, 'None')
+      ) as properties
+    from
+      aws_ec2_load_balancer_listener lblistener
+    where
+      lblistener.arn = any($1);
+  EOQ
+
+  param "ec2_load_balancer_listener_arns" {}
+}
+
 node "ec2_network_interface" {
   category = category.ec2_network_interface
 
@@ -186,51 +255,6 @@ node "ec2_network_load_balancer" {
   EOQ
 
   param "ec2_network_load_balancer_arns" {}
-}
-
-node "ec2_ami" {
-  category = category.ec2_ami
-
-  sql = <<-EOQ
-    select
-      image_id as id,
-      title as title,
-      jsonb_build_object(
-        'Image ID', image_id,
-        'Image Location', image_location,
-        'State', state,
-        'public', public::text,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_ec2_ami
-    where
-      image_id = any($1);
-  EOQ
-
-  param "ec2_ami_image_ids" {}
-}
-
-node "ec2_launch_configuration" {
-  category = category.ec2_launch_configuration
-
-  sql = <<-EOQ
-    select
-      launch_configuration_arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', launch_configuration_arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_ec2_launch_configuration
-    where
-      launch_configuration_arn = any($1);
-  EOQ
-
-  param "ec2_launch_configuration_arns" {}
 }
 
 node "ec2_target_group" {
