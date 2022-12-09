@@ -393,6 +393,22 @@ edge "ec2_instance_to_vpc_subnet" {
   param "ec2_instance_arns" {}
 }
 
+edge "ec2_load_balancer_listener_to_ec2_lb" {
+  title = "listener for"
+
+  sql = <<-EOQ
+    select
+      lblistener.arn as from_id,
+      $1 as to_id
+    from
+      aws_ec2_load_balancer_listener lblistener
+    where
+      lblistener.arn = any($1)
+  EOQ
+
+  param "ec2_load_balancer_listener_arns" {}
+}
+
 edge "ec2_load_balancer_to_target_group" {
   title = "target group"
 
