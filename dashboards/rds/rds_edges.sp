@@ -1,4 +1,3 @@
-
 edge "rds_db_cluster_snapshot_to_kms_key" {
   title = "encrypted with"
 

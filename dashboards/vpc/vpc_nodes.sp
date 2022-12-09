@@ -276,6 +276,27 @@ node "vpc_route_table" {
   param "vpc_subnet_ids" {}
 }
 
+node "vpc_s3_access_point" {
+  category = category.s3_access_point
+
+  sql = <<-EOQ
+    select
+      access_point_arn as id,
+      title as title,
+      jsonb_build_object(
+        'ARN', access_point_arn,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_s3_access_point
+    where
+      vpc_id  = any($1)
+  EOQ
+
+  param "vpc_vpc_ids" {}
+}
+
 node "vpc_security_group" {
   category = category.vpc_security_group
 
@@ -320,27 +341,6 @@ node "vpc_subnet" {
   EOQ
 
   param "vpc_subnet_ids" {}
-}
-
-node "vpc_s3_access_point" {
-  category = category.s3_access_point
-
-  sql = <<-EOQ
-    select
-      access_point_arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', access_point_arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_s3_access_point
-    where
-      vpc_id  = any($1)
-  EOQ
-
-  param "vpc_vpc_ids" {}
 }
 
 node "vpc_vpc" {

@@ -247,6 +247,7 @@ dashboard "vpc_detail" {
         node.ec2_gateway_load_balancer,
         node.ec2_instance,
         node.ec2_network_load_balancer,
+        node.ec2_transit_gateway,
         node.lambda_function,
         node.rds_db_instance,
         node.redshift_cluster,
@@ -259,7 +260,6 @@ dashboard "vpc_detail" {
         node.vpc_s3_access_point,
         node.vpc_security_group,
         node.vpc_subnet,
-        node.ec2_transit_gateway,
         node.vpc_vpc,
         node.vpc_vpn_gateway
       ]

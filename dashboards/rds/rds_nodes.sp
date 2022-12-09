@@ -1,4 +1,3 @@
-
 node "rds_db_cluster" {
   category = category.rds_db_cluster
 
