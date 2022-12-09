@@ -1,3 +1,38 @@
+edge "ec2_application_load_balancer_to_acm_certificate" {
+  title = "ssl via"
+
+  sql = <<-EOQ
+    select
+      u as from_id,
+      c.certificate_arn as to_id
+    from
+      aws_acm_certificate c,
+      jsonb_array_elements_text(in_use_by) u
+    where
+      u = $1
+  EOQ
+
+  param "ec2_application_load_balancer_arns" {}
+}
+
+edge "ec2_application_load_balancer_to_cloudfront_distribution" {
+  title = "origin for"
+
+  sql = <<-EOQ
+    select
+      b.arn as from_id,
+      d.arn as to_id
+    from
+      aws_cloudfront_distribution as d,
+      jsonb_array_elements(origins) as origin
+      left join aws_ec2_application_load_balancer as b on b.dns_name = origin ->> 'DomainName'
+    where
+      d.arn = any($1);
+  EOQ
+
+  param "cloudfront_distribution_arns" {}
+}
+
 edge "ec2_application_load_balancer_to_s3_bucket" {
   title = "logs to"
 
@@ -60,42 +95,6 @@ edge "ec2_application_load_balancer_to_vpc_subnet" {
   param "ec2_application_load_balancer_arns" {}
 }
 
-edge "ec2_application_load_balancer_to_acm_certificate" {
-  title = "ssl via"
-
-  sql = <<-EOQ
-    select
-      u as from_id,
-      c.certificate_arn as to_id
-    from
-      aws_ec2_application_load_balancer alb,
-      aws_acm_certificate c,
-      jsonb_array_elements_text(in_use_by) u
-    where
-      u = $1
-  EOQ
-
-  param "ec2_application_load_balancer_arns" {}
-}
-
-edge "ec2_application_load_balancer_to_cloudfront_distribution" {
-  title = "origin for"
-
-  sql = <<-EOQ
-    select
-      b.arn as from_id,
-      d.arn as to_id
-    from
-      aws_cloudfront_distribution as d,
-      jsonb_array_elements(origins) as origin
-      left join aws_ec2_application_load_balancer as b on b.dns_name = origin ->> 'DomainName'
-    where
-      d.arn = any($1);
-  EOQ
-
-  param "cloudfront_distribution_arns" {}
-}
-
 edge "ec2_autoscaling_group_to_ec2_instance" {
   title = "launches"
 
@@ -113,6 +112,23 @@ edge "ec2_autoscaling_group_to_ec2_instance" {
   EOQ
 
   param "ec2_instance_arns" {}
+}
+
+edge "ec2_classic_load_balancer_to_acm_certificate" {
+  title = "ssl via"
+
+  sql = <<-EOQ
+    select
+      u as from_id,
+      c.certificate_arn as to_id
+    from
+      aws_acm_certificate c,
+      jsonb_array_elements_text(in_use_by) u
+    where
+      u = $1
+  EOQ
+
+  param "ec2_application_load_balancer_arns" {}
 }
 
 edge "ec2_classic_load_balancer_to_ec2_instance" {
@@ -133,7 +149,7 @@ edge "ec2_classic_load_balancer_to_ec2_instance" {
   param "ec2_classic_load_balancer_arns" {}
 }
 
-edge "ec2_clb_to_s3_bucket" {
+edge "ec2_classic_load_balancer_to_s3_bucket" {
   title = "logs to"
 
   sql = <<-EOQ
@@ -141,11 +157,51 @@ edge "ec2_clb_to_s3_bucket" {
       clb.arn as from_id,
       b.arn as to_id
     from
-      aws_ec2_classic_load_balancer clb,
-      aws_s3_bucket as b
+      aws_s3_bucket b,
+      aws_ec2_classic_load_balancer as clb
     where
-      clb.arn = $1
-      and clb.access_log_s3_bucket_name = b.name;
+      clb.arn = any($1)
+      and b.name = clb.access_log_s3_bucket_name;
+  EOQ
+
+  param "ec2_classic_load_balancer_arns" {}
+}
+
+edge "ec2_classic_load_balancer_to_vpc_security_group" {
+  title = "security group"
+
+  sql = <<-EOQ
+    select
+      clb.arn as from_id,
+      sg.group_id as to_id
+    from
+      aws_vpc_security_group sg,
+      aws_ec2_classic_load_balancer as clb
+    where
+      clb.arn = any($1)
+      and sg.group_id in
+      (
+        select
+          jsonb_array_elements_text(clb.security_groups)
+      );
+  EOQ
+
+  param "ec2_classic_load_balancer_arns" {}
+}
+
+edge "ec2_classic_load_balancer_to_vpc_subnet" {
+  title = "subnet"
+
+  sql = <<-EOQ
+    select
+      sg as from_id,
+      s as to_id
+    from
+      aws_ec2_classic_load_balancer,
+      jsonb_array_elements_text(security_groups) as sg,
+      jsonb_array_elements_text(subnets) as s
+    where
+      arn = any($1);
   EOQ
 
   param "ec2_classic_load_balancer_arns" {}

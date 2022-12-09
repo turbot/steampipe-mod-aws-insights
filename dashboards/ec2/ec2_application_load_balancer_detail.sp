@@ -74,7 +74,6 @@ dashboard "ec2_application_load_balancer_detail" {
           select
             c.certificate_arn
           from
-            aws_ec2_application_load_balancer alb,
             aws_acm_certificate c,
             jsonb_array_elements_text(in_use_by) u
           where
