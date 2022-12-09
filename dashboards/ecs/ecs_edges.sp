@@ -294,24 +294,6 @@ edge "ecs_service_to_ecs_task" {
   param "ecs_service_arns" {}
 }
 
-edge "ecs_service_to_ecs_task_definitions" {
-  title = "task defintion"
-
-  sql = <<-EOQ
-    select
-      s.arn as to_id,
-      d.task_definition_arn as from_id
-    from
-      aws_ecs_task_definition as d,
-      aws_ecs_service as s
-    where
-      d.task_definition_arn = s.task_definition
-      and s.arn = any($1);
-  EOQ
-
-  param "ecs_service_arns" {}
-}
-
 edge "ecs_service_to_ecs_task_definition" {
   title = "task definition"
 

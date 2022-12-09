@@ -230,7 +230,6 @@ node "ecs_task" {
   param "ecs_task_arns" {}
 }
 
-
 node "ecs_task_definition" {
   category = category.ecs_task_definition
 

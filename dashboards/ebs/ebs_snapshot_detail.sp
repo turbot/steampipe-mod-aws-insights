@@ -54,6 +54,36 @@ dashboard "ebs_snapshot_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "ec2_launch_configurations" {
+        sql = <<-EOQ
+          select
+            launch_config.launch_configuration_arn as launch_configuration_arn
+          from
+            aws_ec2_launch_configuration as launch_config,
+            jsonb_array_elements(launch_config.block_device_mappings) as bdm,
+            aws_ebs_snapshot as s
+          where
+            bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
+            and s.arn = $1;
+        EOQ
+
+        args = [self.input.snapshot_arn.value]
+      }
+
+      with "kms_keys" {
+        sql = <<-EOQ
+        select
+          kms_key_id as key_arn
+        from
+          aws_ebs_snapshot
+        where
+          kms_key_id is not null
+          and arn = $1
+        EOQ
+
+        args = [self.input.snapshot_arn.value]
+      }
+
       with "ebs_volumes" {
         sql = <<-EOQ
           select
@@ -81,36 +111,6 @@ dashboard "ebs_snapshot_detail" {
             bdm -> 'Ebs' is not null
             and bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
             and s.arn = $1;
-        EOQ
-
-        args = [self.input.snapshot_arn.value]
-      }
-
-      with "ec2_launch_configurations" {
-        sql = <<-EOQ
-          select
-            launch_config.launch_configuration_arn as launch_configuration_arn
-          from
-            aws_ec2_launch_configuration as launch_config,
-            jsonb_array_elements(launch_config.block_device_mappings) as bdm,
-            aws_ebs_snapshot as s
-          where
-            bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
-            and s.arn = $1;
-        EOQ
-
-        args = [self.input.snapshot_arn.value]
-      }
-
-      with "kms_keys" {
-        sql = <<-EOQ
-        select
-          kms_key_id as key_arn
-        from
-          aws_ebs_snapshot
-        where
-          kms_key_id is not null
-          and arn = $1
         EOQ
 
         args = [self.input.snapshot_arn.value]

@@ -162,8 +162,8 @@ dashboard "cloudwatch_log_group_detail" {
 
       edges = [
         edge.cloudtrail_trail_to_cloudwatch_log_group,
+        edge.cloudwatch_log_group_to_cloudwatch_log_metric_filter_edge,
         edge.cloudwatch_log_group_to_kms_key,
-        edge.cloudwatch_log_group_to_log_metric_filter_edge,
         edge.kinesis_stream_to_cloudwatch_log_group,
         edge.lambda_function_to_cloudwatch_log_group,
         edge.vpc_flow_log_to_cloudwatch_log_group

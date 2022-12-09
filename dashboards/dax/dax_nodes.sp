@@ -47,6 +47,28 @@ node "dax_cluster_node" {
   param "dax_cluster_arns" {}
 }
 
+node "dax_parameter_group" {
+  category = category.dax_parameter_group
+  sql      = <<-EOQ
+    select
+      p.parameter_group_name as id,
+      p.title as title,
+      jsonb_build_object(
+        'Name', p.parameter_group_name,
+        'Account ID', p.account_id,
+        'Region', p.region
+      ) as properties
+    from
+      aws_dax_parameter_group as p,
+      aws_dax_cluster as c
+    where
+      c.parameter_group ->> 'ParameterGroupName' = p.parameter_group_name
+      and c.arn = any($1);
+  EOQ
+
+  param "dax_cluster_arns" {}
+}
+
 node "dax_subnet_group" {
   category = category.dax_subnet_group
   sql      = <<-EOQ
@@ -64,28 +86,6 @@ node "dax_subnet_group" {
       aws_dax_subnet_group as g
     where
       g.subnet_group_name = c.subnet_group
-      and c.arn = any($1);
-  EOQ
-
-  param "dax_cluster_arns" {}
-}
-
-node "dax_parameter_group" {
-  category = category.dax_parameter_group
-  sql      = <<-EOQ
-    select
-      p.parameter_group_name as id,
-      p.title as title,
-      jsonb_build_object(
-        'Name', p.parameter_group_name,
-        'Account ID', p.account_id,
-        'Region', p.region
-      ) as properties
-    from
-      aws_dax_parameter_group as p,
-      aws_dax_cluster as c
-    where
-      c.parameter_group ->> 'ParameterGroupName' = p.parameter_group_name
       and c.arn = any($1);
   EOQ
 

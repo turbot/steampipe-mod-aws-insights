@@ -1,3 +1,36 @@
+
+edge "api_gateway_api_to_api_gateway_integration" {
+  title = "integration"
+
+  sql = <<-EOQ
+    select
+      api_id as from_id,
+      integration_id as to_id
+    from
+      aws_api_gatewayv2_integration
+    where
+      api_id = any($1);
+  EOQ
+
+  param "api_gatewayv2_api_ids" {}
+}
+
+edge "api_gateway_integration_to_lambda_function" {
+  title = "invokes"
+
+  sql = <<-EOQ
+    select
+      i.integration_id as from_id,
+      i.integration_uri as to_id
+    from
+      aws_api_gatewayv2_integration as i
+    where
+      i.integration_uri = any($1);
+  EOQ
+
+  param "lambda_function_arns" {}
+}
+
 edge "api_gatewayv2_api_to_ec2_load_balancer_listener" {
   title = "lb listener"
 
@@ -97,38 +130,6 @@ edge "api_gatewayv2_stage_to_api_gatewayv2_api" {
       api_id as to_id
     from
       aws_api_gatewayv2_stage
-    where
-      api_id = any($1);
-  EOQ
-
-  param "api_gatewayv2_api_ids" {}
-}
-
-edge "api_gateway_integration_to_lambda_function" {
-  title = "invokes"
-
-  sql = <<-EOQ
-    select
-      i.integration_id as from_id,
-      i.integration_uri as to_id
-    from
-      aws_api_gatewayv2_integration as i
-    where
-      i.integration_uri = any($1);
-  EOQ
-
-  param "lambda_function_arns" {}
-}
-
-edge "api_gateway_api_to_api_gateway_integration" {
-  title = "integration"
-
-  sql = <<-EOQ
-    select
-      api_id as from_id,
-      integration_id as to_id
-    from
-      aws_api_gatewayv2_integration
     where
       api_id = any($1);
   EOQ

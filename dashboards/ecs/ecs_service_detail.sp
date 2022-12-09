@@ -197,7 +197,7 @@ dashboard "ecs_service_detail" {
         edge.ecs_cluster_to_ecs_service,
         edge.ecs_service_to_ec2_target_group,
         edge.ecs_service_to_ecs_container_instance,
-        edge.ecs_service_to_ecs_task_definitions,
+        edge.ecs_service_to_ecs_task_definition,
         edge.ecs_service_to_ecs_task,
         edge.ecs_service_to_iam_role,
         edge.ecs_service_to_vpc_security_group,

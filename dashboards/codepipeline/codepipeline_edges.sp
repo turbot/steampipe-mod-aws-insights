@@ -2,7 +2,7 @@ edge "codepipeline_pipeline_to_s3_bucket" {
   title = "deploys"
 
   sql = <<-EOQ
-   select
+    select
       p.arn as from_id,
       b.arn as to_id
     from
