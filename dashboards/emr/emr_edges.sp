@@ -57,7 +57,7 @@ edge "emr_cluster_to_iam_role" {
 
   sql = <<-EOQ
     select
-      c.cluster_arn as from_id,
+      c.id as from_id,
       r.arn as to_id
     from
       aws_iam_role as r,
