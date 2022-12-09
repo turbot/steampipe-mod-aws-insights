@@ -196,7 +196,7 @@ edge "rds_db_instance_to_rds_db_parameter_group" {
     from
       aws_rds_db_instance as rdb
       cross join jsonb_array_elements(db_parameter_groups) as db_parameter_group
-      join aws_rds_db_cluster_parameter_group as rg
+      join aws_rds_db_parameter_group as rg
         on db_parameter_group ->> 'DBParameterGroupName' = rg.name
         and rdb.account_id = rg.account_id
         and rdb.region = rg.region
