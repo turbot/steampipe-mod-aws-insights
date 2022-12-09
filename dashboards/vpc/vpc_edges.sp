@@ -122,6 +122,29 @@ edge "vpc_peered_vpc" {
   param "vpc_vpc_ids" {}
 }
 
+edge "vpc_security_group_to_elasticache_subnet_group" {
+  title = "subnet group"
+
+  sql = <<-EOQ
+    select
+       coalesce(
+        sg ->> 'SecurityGroupId',
+        c.cache_cluster_id
+      ) as from_id,
+      g.arn as to_id
+    from
+      aws_elasticache_cluster as c
+      cross join jsonb_array_elements(security_groups) as sg
+      join aws_elasticache_subnet_group as g
+      on g.cache_subnet_group_name = c.cache_subnet_group_name
+      and g.region = c.region
+    where
+      g.arn = any($1);
+  EOQ
+
+  param "elasticache_subnet_group_arns" {}
+}
+
 edge "vpc_security_group_to_dax_cluster" {
   title = "dax cluster"
 
