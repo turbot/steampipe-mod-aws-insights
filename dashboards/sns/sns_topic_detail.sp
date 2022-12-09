@@ -130,6 +130,19 @@ dashboard "sns_topic_detail" {
         args = [self.input.topic_arn.value]
       }
 
+      with "sns_topic_subscriptions" {
+        sql = <<-EOQ
+          select
+            subscription_arn as subscription_arn
+          from
+            aws_sns_topic_subscription
+          where
+            topic_arn = $1;
+        EOQ
+
+        args = [self.input.topic_arn.value]
+      }
+
       nodes = [
         node.cloudformation_stack,
         node.cloudtrail_trail,
@@ -154,13 +167,14 @@ dashboard "sns_topic_detail" {
       ]
 
       args = {
-        cloudtrail_trail_arns    = with.cloudtrail_trails.rows[*].trail_arn
-        elasticache_cluster_arns = with.elasticache_clusters.rows[*].elasticache_cluster_arn
-        kms_key_arns             = with.kms_keys.rows[*].key_arn
-        rds_db_instance_arns     = with.rds_db_instances.rows[*].db_instance_arn
-        redshift_cluster_arns    = with.redshift_clusters.rows[*].cluster_arn
-        s3_bucket_arns           = with.s3_buckets.rows[*].bucket_arn
-        sns_topic_arns           = [self.input.topic_arn.value]
+        cloudtrail_trail_arns       = with.cloudtrail_trails.rows[*].trail_arn
+        elasticache_cluster_arns    = with.elasticache_clusters.rows[*].elasticache_cluster_arn
+        kms_key_arns                = with.kms_keys.rows[*].key_arn
+        rds_db_instance_arns        = with.rds_db_instances.rows[*].db_instance_arn
+        redshift_cluster_arns       = with.redshift_clusters.rows[*].cluster_arn
+        s3_bucket_arns              = with.s3_buckets.rows[*].bucket_arn
+        sns_topic_arns              = [self.input.topic_arn.value]
+        sns_topic_subscription_arns = with.sns_topic_subscriptions.rows[*].subscription_arn
       }
     }
   }

@@ -86,7 +86,7 @@ dashboard "vpc_eip_detail" {
             jsonb_array_elements(nat_gateway_addresses) as a
           where
             a ->> 'NetworkInterfaceId' = e.network_interface_id
-            and arn = $1;
+            and e.arn = $1;
         EOQ
 
         args = [self.input.eip_arn.value]

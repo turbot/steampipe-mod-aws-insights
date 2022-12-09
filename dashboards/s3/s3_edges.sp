@@ -16,6 +16,28 @@ edge "s3_bucket_from_s3_bucket" {
   param "s3_bucket_arns" {}
 }
 
+edge "s3_bucket_to_codepipeline_pipeline" {
+  title = "source provider"
+
+  sql = <<-EOQ
+    select
+      b.arn as from_id,
+      p.arn as to_id
+    from
+      aws_s3_bucket as b,
+      aws_codepipeline_pipeline as p,
+      jsonb_array_elements(stages) as s,
+      jsonb_array_elements(s -> 'Actions') as a
+    where
+      s ->> 'Name' = 'Source'
+      and a -> 'ActionTypeId' ->> 'Provider' = 'S3'
+      and a -> 'Configuration' ->> 'S3Bucket' = b.name
+      and b.arn = any($1);
+  EOQ
+
+  param "s3_bucket_arns" {}
+}
+
 edge "s3_bucket_to_cloudfront_distribution" {
   title = "origin for"
 
@@ -32,6 +54,24 @@ edge "s3_bucket_to_cloudfront_distribution" {
   EOQ
 
   param "cloudfront_distribution_arns" {}
+}
+
+edge "s3_bucket_to_codebuild_project" {
+  title = "source provider"
+
+  sql = <<-EOQ
+    select
+      s3.arn as from_id,
+      p.arn as to_id
+    from
+      aws_codebuild_project as p,
+      aws_s3_bucket as s3
+    where
+      p.arn = any($1)
+      and s3.name = split_part(p.source ->> 'Location', '/', 1);
+  EOQ
+
+  param "codebuild_project_arns" {}
 }
 
 edge "s3_bucket_to_kms_key" {

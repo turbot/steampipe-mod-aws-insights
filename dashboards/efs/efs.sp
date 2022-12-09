@@ -7,13 +7,13 @@ locals {
 category "efs_access_point" {
   title = "EFS Access Point"
   color = local.storage_color
-  icon  = "text:AP"
+  icon  = "file-open"
 }
 
 category "efs_file_system" {
   title = "EFS File System"
   color = local.storage_color
-  icon  = "text:File"
+  icon  = "settings-system-daydream"
 }
 
 category "efs_mount_target" {

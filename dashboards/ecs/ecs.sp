@@ -7,13 +7,13 @@ locals {
 category "ecs_cluster" {
   title = "ECS Cluster"
   href  = "/aws_insights.dashboard.ecs_cluster_detail?input.ecs_cluster_arn={{.properties.'ARN' | @uri}}"
-  icon  = "text:ECS"
+  icon  = "hub"
   color = local.compute_color
 }
 
 category "ecs_container_instance" {
   title = "ECS Container Instance"
-  icon  = "text:ECS"
+  icon  = "memory"
   color = local.compute_color
 }
 
