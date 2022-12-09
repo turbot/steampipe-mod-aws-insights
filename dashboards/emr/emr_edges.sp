@@ -53,7 +53,7 @@ edge "emr_cluster_to_emr_instance_group" {
 }
 
 edge "emr_cluster_to_iam_role" {
-  title = "runs as"
+  title = "assumes"
 
   sql = <<-EOQ
     select
