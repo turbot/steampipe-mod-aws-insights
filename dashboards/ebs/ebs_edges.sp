@@ -18,6 +18,22 @@ edge "ebs_snapshot_to_ec2_ami" {
   param "ebs_snapshot_arns" {}
 }
 
+edge "ebs_snapshot_to_kms_key" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
+    select
+      arn as from_id,
+      kms_key_id as to_id
+    from
+      aws_ebs_snapshot
+    where
+      arn = any($1);
+  EOQ
+
+  param "ebs_snapshot_arns" {}
+}
+
 edge "ebs_volume_to_ebs_snapshot" {
   title = "snapshot"
 
@@ -50,20 +66,4 @@ edge "ebs_volume_to_kms_key" {
   EOQ
 
   param "ebs_volume_arns" {}
-}
-
-edge "ebs_snapshot_to_kms_key" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      arn as from_id,
-      kms_key_id as to_id
-    from
-      aws_ebs_snapshot
-    where
-      arn = any($1);
-  EOQ
-
-  param "ebs_snapshot_arns" {}
 }

@@ -1,3 +1,22 @@
+edge "ecr_image_to_ecr_image_tag" {
+  title = "tag"
+
+  sql = <<-EOQ
+    select
+      i.image_digest as from_id,
+      jsonb_array_elements_text(image_tags) as to_id
+    from
+      aws_ecr_repository as r
+      left join aws_ecr_image i
+      on i.registry_id = r.registry_id
+      and i.repository_name = r.repository_name
+    where
+      r.arn = any($1);
+  EOQ
+
+  param "ecr_repository_arns" {}
+}
+
 edge "ecr_repository_to_codepipeline_pipeline" {
   title = "source provider"
 
@@ -18,25 +37,6 @@ edge "ecr_repository_to_codepipeline_pipeline" {
   EOQ
 
   param "codepipeline_pipeline_arns" {}
-}
-
-edge "ecr_image_to_ecr_image_tag" {
-  title = "tag"
-
-  sql = <<-EOQ
-    select
-      i.image_digest as from_id,
-      jsonb_array_elements_text(image_tags) as to_id
-    from
-      aws_ecr_repository as r
-      left join aws_ecr_image i
-      on i.registry_id = r.registry_id
-      and i.repository_name = r.repository_name
-    where
-      r.arn = any($1);
-  EOQ
-
-  param "ecr_repository_arns" {}
 }
 
 edge "ecr_repository_to_ecr_image" {

@@ -158,8 +158,8 @@ dashboard "ecs_task_definition_detail" {
         node.cloudwatch_log_group,
         node.ecr_repository,
         node.ecs_service,
-        node.ecs_task_definition,
         node.ecs_task,
+        node.ecs_task_definition,
         node.efs_file_system,
         node.iam_role,
       ]

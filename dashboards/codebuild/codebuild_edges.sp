@@ -195,7 +195,7 @@ edge "codebuild_project_to_vpc_security_group" {
   param "codebuild_project_arns" {}
 }
 
-edge "codebuild_project_vpc_security_group_to_subnet" {
+edge "codebuild_project_to_vpc_subnet" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -205,23 +205,6 @@ edge "codebuild_project_vpc_security_group_to_subnet" {
     from
       aws_codebuild_project,
       jsonb_array_elements(vpc_config -> 'SecurityGroupIds') as sg,
-      jsonb_array_elements(vpc_config -> 'Subnets') as s
-    where
-      arn = any($1);
-  EOQ
-
-  param "codebuild_project_arns" {}
-}
-
-edge "codebuild_project_vpc_security_group_subnet_to_vpc" {
-  title = "vpc"
-
-  sql = <<-EOQ
-    select
-      s as from_id,
-      vpc_config-> 'VpcId' as to_id
-    from
-      aws_codebuild_project,
       jsonb_array_elements(vpc_config -> 'Subnets') as s
     where
       arn = any($1);

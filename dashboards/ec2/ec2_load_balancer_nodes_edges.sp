@@ -1,6 +1,6 @@
 # TODO: These should be cleaned up and moved into ec2.sp
 
-edge "ec2_alb_to_target_group" {
+edge "ec2_application_load_balancer_to_ec2_target_group" {
   title = "target group"
 
   sql = <<-EOQ
@@ -17,7 +17,7 @@ edge "ec2_alb_to_target_group" {
   param "ec2_application_load_balancer_arns" {}
 }
 
-edge "ec2_glb_to_target_group" {
+edge "ec2_gateway_load_balancer_to_ec2_target_group" {
   title = "target group"
 
   sql = <<-EOQ
@@ -34,7 +34,7 @@ edge "ec2_glb_to_target_group" {
   param "ec2_gateway_load_balancer_arns" {}
 }
 
-edge "ec2_nlb_to_target_group" {
+edge "ec2_network_load_balancer_to_ec2_target_group" {
   title = "target group"
 
   sql = <<-EOQ
@@ -48,5 +48,5 @@ edge "ec2_nlb_to_target_group" {
       lb_arns = any($1);
   EOQ
 
-  param "ec2_gateway_load_balancer_arns" {}
+  param "ec2_network_load_balancer_arns" {}
 }

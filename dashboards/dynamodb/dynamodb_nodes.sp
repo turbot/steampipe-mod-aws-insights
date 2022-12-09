@@ -1,26 +1,3 @@
-node "dynamodb_table" {
-  category = category.dynamodb_table
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'Name', name,
-        'ARN', arn,
-        'Creation Date', creation_date_time,
-        'Table Status', table_status,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_dynamodb_table
-    where
-      arn = any($1);
-  EOQ
-
-  param "dynamodb_table_arns" {}
-}
-
 node "dynamodb_backup" {
   category = category.dynamodb_backup
 
@@ -42,4 +19,27 @@ node "dynamodb_backup" {
   EOQ
 
   param "dbynamodb_backup_arns" {}
+}
+
+node "dynamodb_table" {
+  category = category.dynamodb_table
+
+  sql = <<-EOQ
+    select
+      arn as id,
+      title as title,
+      jsonb_build_object(
+        'Name', name,
+        'ARN', arn,
+        'Creation Date', creation_date_time,
+        'Table Status', table_status,
+        'Account ID', account_id
+      ) as properties
+    from
+      aws_dynamodb_table
+    where
+      arn = any($1);
+  EOQ
+
+  param "dynamodb_table_arns" {}
 }

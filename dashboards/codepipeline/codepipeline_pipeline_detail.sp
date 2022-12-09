@@ -82,31 +82,6 @@ dashboard "codepipeline_pipeline_detail" {
         args = [self.input.pipeline_arn.value]
       }
 
-      with "codedeploy_apps" {
-        sql = <<-EOQ
-          select
-            arn as codedeploy_app_arn
-          from
-            aws_codedeploy_app
-          where
-            application_name in
-            (
-              select
-                a -> 'Configuration' ->> 'ApplicationName'
-              from
-                aws_codepipeline_pipeline,
-                jsonb_array_elements(stages) as s,
-                jsonb_array_elements(s -> 'Actions') as a
-              where
-                s ->> 'Name' = 'Deploy'
-                and a -> 'ActionTypeId' ->> 'Provider' = 'CodeDeploy'
-                and arn = $1
-            );
-        EOQ
-
-        args = [self.input.pipeline_arn.value]
-      }
-
       with "ecr_repositories" {
         sql = <<-EOQ
           select
