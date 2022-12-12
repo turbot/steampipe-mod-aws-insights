@@ -12,13 +12,13 @@ category "elasticache_cluster" {
 }
 
 category "elasticache_parameter_group" {
-  title = "elasticache Parameter Group"
+  title = "ElastiCache Parameter Group"
   color = local.database_color
   icon  = "text:PG"
 }
 
 category "elasticache_subnet_group" {
-  title = "elasticache Subnet Group"
+  title = "ElastiCache Subnet Group"
   color = local.database_color
   icon  = "text:SG"
 }
