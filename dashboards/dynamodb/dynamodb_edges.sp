@@ -1,4 +1,3 @@
-
 edge "dynamodb_table_to_dynamodb_backup" {
   title = "backup"
 

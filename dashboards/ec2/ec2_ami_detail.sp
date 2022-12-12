@@ -56,20 +56,51 @@ dashboard "ec2_ami_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "ebs_snapshots" {
+        sql = <<-EOQ
+          select
+            s.arn as ebs_snapshot_arn
+          from
+            aws_ebs_snapshot as s,
+            aws_ec2_ami as ami,
+            jsonb_array_elements(ami.block_device_mappings) as device_mappings
+          where
+            device_mappings -> 'Ebs' is not null
+            and s.snapshot_id = device_mappings -> 'Ebs' ->> 'SnapshotId'
+            and ami.image_id = $1
+        EOQ
+
+        args = [self.input.ami.value]
+      }
+
+      with "ec2_instances" {
+        sql = <<-EOQ
+          select
+            arn as ec2_instance_arn
+          from
+            aws_ec2_instance
+          where
+            image_id = $1;
+        EOQ
+
+        args = [self.input.ami.value]
+      }
+
       nodes = [
+        node.ebs_snapshot,
         node.ec2_ami,
-        node.ec2_ami_to_ec2_instance_node,
-        node.ec2_ami_from_ebs_snapshot_node
+        node.ec2_instance
       ]
 
       edges = [
-        edge.ec2_ami_to_ec2_instance_edge,
-        edge.ec2_ami_from_ebs_snapshot_edge
+        edge.ebs_snapshot_to_ec2_ami,
+        edge.ec2_ami_to_ec2_instance_edge
       ]
 
       args = {
-        image_id          = self.input.ami.value
         ec2_ami_image_ids = [self.input.ami.value]
+        ebs_snapshot_arns = with.ebs_snapshots.rows[*].ebs_snapshot_arn
+        ec2_instance_arns = with.ec2_instances.rows[*].ec2_instance_arn
       }
     }
   }
@@ -296,89 +327,6 @@ query "ec2_ami_tags" {
     order by
       t ->> 'Key';
     EOQ
-
-  param "image_id" {}
-}
-
-node "ec2_ami_to_ec2_instance_node" {
-  category = category.ec2_instance
-
-  sql = <<-EOQ
-    select
-      i.instance_id as id,
-      i.title as title,
-      jsonb_build_object(
-        'Name', i.tags ->> 'Name',
-        'Instance ID', i.instance_id,
-        'ARN', i.arn,
-        'Account ID', i.account_id,
-        'Region', i.region
-      ) as properties
-    from
-      aws_ec2_instance as i
-    where
-      image_id = $1;
-  EOQ
-
-  param "image_id" {}
-}
-
-edge "ec2_ami_to_ec2_instance_edge" {
-  title = "instance"
-
-  sql = <<-EOQ
-    select
-      image_id as from_id,
-      instance_id as to_id
-    from
-      aws_ec2_instance as i
-    where
-      image_id = $1;
-  EOQ
-
-  param "image_id" {}
-}
-
-node "ec2_ami_from_ebs_snapshot_node" {
-  category = category.ebs_snapshot
-
-  sql = <<-EOQ
-    select
-      device_mappings -> 'Ebs' ->> 'SnapshotId' as id,
-      s.title as title,
-      jsonb_build_object(
-        'ARN', s.arn,
-        'SnapshotId', device_mappings -> 'Ebs' ->> 'SnapshotId',
-        'Account ID', s.account_id,
-        'Region', s.region
-      ) as properties
-    from
-      aws_ebs_snapshot as s,
-      aws_ec2_ami as ami,
-      jsonb_array_elements(ami.block_device_mappings) as device_mappings
-    where
-      device_mappings -> 'Ebs' is not null
-      and s.snapshot_id = device_mappings -> 'Ebs' ->> 'SnapshotId'
-      and ami.image_id = $1
-  EOQ
-
-  param "image_id" {}
-}
-
-edge "ec2_ami_from_ebs_snapshot_edge" {
-  title = "ami"
-
-  sql = <<-EOQ
-    select
-      device_mappings -> 'Ebs' ->> 'SnapshotId' as from_id,
-      ami.image_id as to_id
-    from
-      aws_ec2_ami as ami,
-      jsonb_array_elements(ami.block_device_mappings) as device_mappings
-    where
-      ami.image_id = $1
-      and device_mappings -> 'Ebs' is not null;
-  EOQ
 
   param "image_id" {}
 }

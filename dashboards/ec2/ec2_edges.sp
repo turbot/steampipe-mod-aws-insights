@@ -1,3 +1,19 @@
+edge "ec2_ami_to_ec2_instance_edge" {
+  title = "instance"
+
+  sql = <<-EOQ
+    select
+      image_id as from_id,
+      arn as to_id
+    from
+      aws_ec2_instance
+    where
+      arn = any($1);
+  EOQ
+
+  param "ec2_instance_arns" {}
+}
+
 edge "ec2_application_load_balancer_to_acm_certificate" {
   title = "ssl via"
 

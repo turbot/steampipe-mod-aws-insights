@@ -1,4 +1,3 @@
-
 node "cloudformation_stack" {
   category = category.cloudformation_stack
 

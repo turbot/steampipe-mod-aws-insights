@@ -178,7 +178,7 @@ dashboard "ecs_cluster_detail" {
         node.ecs_service,
         node.ecs_task_definition,
         node.vpc_subnet,
-        node.vpc_vpc,
+        node.vpc_vpc
       ]
 
       edges = [
@@ -189,7 +189,7 @@ dashboard "ecs_cluster_detail" {
         edge.ecs_cluster_to_ecs_task_definition,
         edge.ecs_container_instance_to_vpc_subnet,
         edge.ecs_task_definition_to_ecs_service,
-        edge.vpc_subnet_to_vpc_vpc,
+        edge.vpc_subnet_to_vpc_vpc
       ]
 
       args = {

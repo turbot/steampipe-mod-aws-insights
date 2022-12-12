@@ -161,7 +161,7 @@ dashboard "ecs_task_definition_detail" {
         node.ecs_task,
         node.ecs_task_definition,
         node.efs_file_system,
-        node.iam_role,
+        node.iam_role
       ]
 
       edges = [
@@ -171,7 +171,7 @@ dashboard "ecs_task_definition_detail" {
         edge.ecs_task_definition_to_efs_file_system,
         edge.ecs_task_definition_to_iam_execution_role,
         edge.ecs_task_definition_to_iam_task_role,
-        edge.ecs_task_to_ecs_task_definition,
+        edge.ecs_task_to_ecs_task_definition
       ]
 
       args = {

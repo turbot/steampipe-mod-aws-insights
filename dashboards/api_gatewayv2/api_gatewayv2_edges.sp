@@ -1,4 +1,3 @@
-
 edge "api_gateway_api_to_api_gateway_integration" {
   title = "integration"
 
