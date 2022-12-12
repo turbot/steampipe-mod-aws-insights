@@ -1,4 +1,3 @@
-
 node "ebs_snapshot" {
   category = category.ebs_snapshot
 

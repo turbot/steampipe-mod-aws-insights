@@ -185,24 +185,24 @@ dashboard "ecs_service_detail" {
         node.ecs_cluster,
         node.ecs_container_instance,
         node.ecs_service,
-        node.ecs_task_definition,
         node.ecs_task,
+        node.ecs_task_definition,
         node.iam_role,
         node.vpc_security_group,
         node.vpc_subnet,
-        node.vpc_vpc,
+        node.vpc_vpc
       ]
 
       edges = [
         edge.ecs_cluster_to_ecs_service,
         edge.ecs_service_to_ec2_target_group,
         edge.ecs_service_to_ecs_container_instance,
-        edge.ecs_service_to_ecs_task_definition,
         edge.ecs_service_to_ecs_task,
+        edge.ecs_service_to_ecs_task_definition,
         edge.ecs_service_to_iam_role,
         edge.ecs_service_to_vpc_security_group,
         edge.ecs_service_to_vpc_subnet,
-        edge.vpc_subnet_to_vpc_vpc,
+        edge.vpc_subnet_to_vpc_vpc
       ]
 
       args = {

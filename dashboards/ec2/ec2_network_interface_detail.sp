@@ -187,7 +187,6 @@ dashboard "ec2_network_interface_detail" {
         vpc_security_group_ids    = with.vpc_security_groups.rows[*].security_group_id
         vpc_subnet_ids            = with.vpc_subnets.rows[*].subnet_id
         vpc_vpc_ids               = with.vpc_vpcs.rows[*].vpc_id
-
       }
     }
   }

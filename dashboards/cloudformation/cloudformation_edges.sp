@@ -1,4 +1,3 @@
-
 edge "cloudformation_stack_to_sns_topic" {
   title = "notifies"
 

@@ -1,4 +1,3 @@
-
 node "docdb_cluster" {
   category = category.docdb_cluster
 
