@@ -231,8 +231,6 @@ dashboard "ebs_volume_detail" {
         order by timestamp
       EOQ
 
-      param "arn" {}
-
       args = {
         arn = self.input.volume_arn.value
       }
@@ -253,8 +251,6 @@ dashboard "ebs_volume_detail" {
           and volume_id = reverse(split_part(reverse($1), '/', 1))
         order by timestamp;
       EOQ
-
-      param "arn" {}
 
       args = {
         arn = self.input.volume_arn.value
