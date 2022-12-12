@@ -167,7 +167,7 @@ edge "ecs_cluster_to_ecs_container_instance" {
 }
 
 edge "ecs_cluster_to_ecs_service" {
-  title = "ecs cluster"
+  title = "ecs service"
 
   sql = <<-EOQ
     select
@@ -223,15 +223,12 @@ edge "ecs_container_instance_to_vpc_subnet" {
   sql = <<-EOQ
     select
       i.arn as from_id,
-      s.subnet_arn as to_id
+      c.subnet_id as to_id
     from
       aws_ecs_container_instance as i
       right join
         aws_ec2_instance as c
         on c.instance_id = i.ec2_instance_id
-      right join
-        aws_vpc_subnet as s
-        on s.subnet_id = c.subnet_id
     where
       i.arn = any($1);
   EOQ
