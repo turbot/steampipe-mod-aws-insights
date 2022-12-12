@@ -24,46 +24,46 @@ dashboard "backup_plan_detail" {
     }
   }
 
-  container {
+  # container {
 
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
+  #   graph {
+  #     title     = "Relationships"
+  #     type      = "graph"
+  #     direction = "TD"
 
-      with "backup_vaults" {
-        sql = <<-EOQ
-          select
-            v.arn as backup_vault_arn
-          from
-            aws_backup_vault as v,
-            aws_backup_plan as p,
-            jsonb_array_elements(backup_plan -> 'Rules') as r
-          where
-            r ->> 'TargetBackupVaultName' = v.name
-            and p.arn = $1;
-        EOQ
+  #     with "backup_vaults" {
+  #       sql = <<-EOQ
+  #         select
+  #           v.arn as backup_vault_arn
+  #         from
+  #           aws_backup_vault as v,
+  #           aws_backup_plan as p,
+  #           jsonb_array_elements(backup_plan -> 'Rules') as r
+  #         where
+  #           r ->> 'TargetBackupVaultName' = v.name
+  #           and p.arn = $1;
+  #       EOQ
 
-        args = [self.input.backup_plan_arn.value]
-      }
+  #       args = [self.input.backup_plan_arn.value]
+  #     }
 
-      nodes = [
-        node.backup_plan,
-        node.backup_selection,
-        node.backup_vault
-      ]
+  #     nodes = [
+  #       node.backup_plan,
+  #       node.backup_selection,
+  #       node.backup_vault
+  #     ]
 
-      edges = [
-        edge.backup_plan_to_backup_selection,
-        edge.backup_plan_to_backup_vault
-      ]
+  #     edges = [
+  #       edge.backup_plan_to_backup_selection,
+  #       edge.backup_plan_to_backup_vault
+  #     ]
 
-      args = {
-        backup_plan_arns  = [self.input.backup_plan_arn.value]
-        backup_vault_arns = with.backup_vaults.rows[*].backup_vault_arn
-      }
-    }
-  }
+  #     args = {
+  #       backup_plan_arns  = [self.input.backup_plan_arn.value]
+  #       backup_vault_arns = with.backup_vaults.rows[*].backup_vault_arn
+  #     }
+  #   }
+  # }
 
   container {
 

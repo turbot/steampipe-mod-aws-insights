@@ -50,217 +50,217 @@ dashboard "kms_key_detail" {
 
   }
 
-  container {
+  # container {
 
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
+  #   graph {
+  #     title     = "Relationships"
+  #     type      = "graph"
+  #     direction = "TD"
 
-      with "cloudtrail_trails" {
-        sql = <<-EOQ
-          select
-            t.arn as trail_arn
-          from
-            aws_cloudtrail_trail as t
-          where
-            t.kms_key_id = $1;
-        EOQ
+  #     with "cloudtrail_trails" {
+  #       sql = <<-EOQ
+  #         select
+  #           t.arn as trail_arn
+  #         from
+  #           aws_cloudtrail_trail as t
+  #         where
+  #           t.kms_key_id = $1;
+  #       EOQ
 
-        args = [self.input.key_arn.value]
-      }
+  #       args = [self.input.key_arn.value]
+  #     }
 
-      with "ebs_volumes" {
-        sql = <<-EOQ
-          select
-            v.arn as volume_arn
-          from
-            aws_ebs_volume as v
-          where
-            v.kms_key_id = $1;
-        EOQ
+  #     with "ebs_volumes" {
+  #       sql = <<-EOQ
+  #         select
+  #           v.arn as volume_arn
+  #         from
+  #           aws_ebs_volume as v
+  #         where
+  #           v.kms_key_id = $1;
+  #       EOQ
 
-        args = [self.input.key_arn.value]
-      }
+  #       args = [self.input.key_arn.value]
+  #     }
 
-      with "lambda_functions" {
-        sql = <<-EOQ
-          select
-            arn as function_arn
-          from
-            aws_lambda_function
-          where
-            kms_key_arn = $1;
-        EOQ
+  #     with "lambda_functions" {
+  #       sql = <<-EOQ
+  #         select
+  #           arn as function_arn
+  #         from
+  #           aws_lambda_function
+  #         where
+  #           kms_key_arn = $1;
+  #       EOQ
 
-        args = [self.input.key_arn.value]
-      }
+  #       args = [self.input.key_arn.value]
+  #     }
 
-      with "rds_db_cluster_snapshots" {
-        sql = <<-EOQ
-          select
-            s.arn as cluster_snapshot_arn
-          from
-            aws_rds_db_cluster_snapshot as s
-          where
-            s.kms_key_id = $1;
-        EOQ
+  #     with "rds_db_cluster_snapshots" {
+  #       sql = <<-EOQ
+  #         select
+  #           s.arn as cluster_snapshot_arn
+  #         from
+  #           aws_rds_db_cluster_snapshot as s
+  #         where
+  #           s.kms_key_id = $1;
+  #       EOQ
 
-        args = [self.input.key_arn.value]
-      }
+  #       args = [self.input.key_arn.value]
+  #     }
 
-      with "rds_db_clusters" {
-        sql = <<-EOQ
-          select
-            arn as cluster_arn
-          from
-            aws_rds_db_cluster as c
-          where
-            c.kms_key_id = $1;
-        EOQ
+  #     with "rds_db_clusters" {
+  #       sql = <<-EOQ
+  #         select
+  #           arn as cluster_arn
+  #         from
+  #           aws_rds_db_cluster as c
+  #         where
+  #           c.kms_key_id = $1;
+  #       EOQ
 
-        args = [self.input.key_arn.value]
-      }
+  #       args = [self.input.key_arn.value]
+  #     }
 
-      with "rds_db_instances" {
-        sql = <<-EOQ
-          select
-            arn as db_instance_arn
-          from
-            aws_rds_db_instance as i
-          where
-            i.kms_key_id = $1;
-        EOQ
+  #     with "rds_db_instances" {
+  #       sql = <<-EOQ
+  #         select
+  #           arn as db_instance_arn
+  #         from
+  #           aws_rds_db_instance as i
+  #         where
+  #           i.kms_key_id = $1;
+  #       EOQ
 
-        args = [self.input.key_arn.value]
-      }
+  #       args = [self.input.key_arn.value]
+  #     }
 
-      with "rds_db_snapshots" {
-        sql = <<-EOQ
-          select
-            arn as db_snapshot_arn
-          from
-            aws_rds_db_snapshot as s
-          where
-            s.kms_key_id = $1;
-        EOQ
+  #     with "rds_db_snapshots" {
+  #       sql = <<-EOQ
+  #         select
+  #           arn as db_snapshot_arn
+  #         from
+  #           aws_rds_db_snapshot as s
+  #         where
+  #           s.kms_key_id = $1;
+  #       EOQ
 
-        args = [self.input.key_arn.value]
+  #       args = [self.input.key_arn.value]
 
-      }
+  #     }
 
-      with "redshift_clusters" {
-        sql = <<-EOQ
-          select
-            arn as redshift_cluster_arn
-          from
-            aws_redshift_cluster as c
-          where
-            c.kms_key_id = $1;
-        EOQ
+  #     with "redshift_clusters" {
+  #       sql = <<-EOQ
+  #         select
+  #           arn as redshift_cluster_arn
+  #         from
+  #           aws_redshift_cluster as c
+  #         where
+  #           c.kms_key_id = $1;
+  #       EOQ
 
-        args = [self.input.key_arn.value]
-      }
+  #       args = [self.input.key_arn.value]
+  #     }
 
-      with "s3_buckets" {
-        sql = <<-EOQ
-          select
-            b.arn as bucket_arn
-          from
-            aws_s3_bucket as b
-            cross join jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as r
-            join aws_kms_key as k
-            on k.arn = r -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID'
-          where
-            k.arn = $1;
-        EOQ
+  #     with "s3_buckets" {
+  #       sql = <<-EOQ
+  #         select
+  #           b.arn as bucket_arn
+  #         from
+  #           aws_s3_bucket as b
+  #           cross join jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as r
+  #           join aws_kms_key as k
+  #           on k.arn = r -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID'
+  #         where
+  #           k.arn = $1;
+  #       EOQ
 
-        args = [self.input.key_arn.value]
+  #       args = [self.input.key_arn.value]
 
-      }
+  #     }
 
-      with "sns_topics" {
-        sql = <<-EOQ
-          select
-            t.topic_arn as topic_arn
-          from
-            aws_sns_topic as t
-            left join aws_kms_key as k on k.id = split_part(t.kms_master_key_id, '/', 2)
-          where
-            k.arn = $1
-            and k.region = t.region
-            and k.account_id = t.account_id;
-        EOQ
+  #     with "sns_topics" {
+  #       sql = <<-EOQ
+  #         select
+  #           t.topic_arn as topic_arn
+  #         from
+  #           aws_sns_topic as t
+  #           left join aws_kms_key as k on k.id = split_part(t.kms_master_key_id, '/', 2)
+  #         where
+  #           k.arn = $1
+  #           and k.region = t.region
+  #           and k.account_id = t.account_id;
+  #       EOQ
 
-        args = [self.input.key_arn.value]
-      }
+  #       args = [self.input.key_arn.value]
+  #     }
 
-      with "sqs_queues" {
-        sql = <<-EOQ
-          select
-            q.queue_arn as queue_arn
-          from
-            aws_kms_key as k
-            join aws_kms_alias as a
-            on a.target_key_id = k.id
-            join aws_sqs_queue as q
-            on a.alias_name = q.kms_master_key_id
-            and k.region = q.region
-            and k.account_id = q.account_id
-          where
-            k.arn = $1;
-        EOQ
+  #     with "sqs_queues" {
+  #       sql = <<-EOQ
+  #         select
+  #           q.queue_arn as queue_arn
+  #         from
+  #           aws_kms_key as k
+  #           join aws_kms_alias as a
+  #           on a.target_key_id = k.id
+  #           join aws_sqs_queue as q
+  #           on a.alias_name = q.kms_master_key_id
+  #           and k.region = q.region
+  #           and k.account_id = q.account_id
+  #         where
+  #           k.arn = $1;
+  #       EOQ
 
-        args = [self.input.key_arn.value]
-      }
+  #       args = [self.input.key_arn.value]
+  #     }
 
-      nodes = [
-        node.cloudtrail_trail,
-        node.ebs_volume,
-        node.kms_key,
-        node.kms_key_alias,
-        node.lambda_function,
-        node.rds_db_cluster,
-        node.rds_db_cluster_snapshot,
-        node.rds_db_instance,
-        node.rds_db_snapshot,
-        node.redshift_cluster,
-        node.s3_bucket,
-        node.sns_topic,
-        node.sqs_queue
-      ]
+  #     nodes = [
+  #       node.cloudtrail_trail,
+  #       node.ebs_volume,
+  #       node.kms_key,
+  #       node.kms_key_alias,
+  #       node.lambda_function,
+  #       node.rds_db_cluster,
+  #       node.rds_db_cluster_snapshot,
+  #       node.rds_db_instance,
+  #       node.rds_db_snapshot,
+  #       node.redshift_cluster,
+  #       node.s3_bucket,
+  #       node.sns_topic,
+  #       node.sqs_queue
+  #     ]
 
-      edges = [
-        edge.cloudtrail_trail_to_kms_key,
-        edge.ebs_volume_to_kms_key,
-        edge.kms_key_to_kms_alias,
-        edge.lambda_function_to_kms_key,
-        edge.rds_db_cluster_snapshot_to_kms_key,
-        edge.rds_db_cluster_to_kms_key,
-        edge.rds_db_instance_to_kms_key,
-        edge.rds_db_snapshot_to_kms_key,
-        edge.redshift_cluster_to_kms_key,
-        edge.s3_bucket_to_kms_key,
-        edge.sns_topic_to_kms_key,
-        edge.sqs_queue_to_kms_key_alias
-      ]
+  #     edges = [
+  #       edge.cloudtrail_trail_to_kms_key,
+  #       edge.ebs_volume_to_kms_key,
+  #       edge.kms_key_to_kms_alias,
+  #       edge.lambda_function_to_kms_key,
+  #       edge.rds_db_cluster_snapshot_to_kms_key,
+  #       edge.rds_db_cluster_to_kms_key,
+  #       edge.rds_db_instance_to_kms_key,
+  #       edge.rds_db_snapshot_to_kms_key,
+  #       edge.redshift_cluster_to_kms_key,
+  #       edge.s3_bucket_to_kms_key,
+  #       edge.sns_topic_to_kms_key,
+  #       edge.sqs_queue_to_kms_key_alias
+  #     ]
 
-      args = {
-        cloudtrail_trail_arns        = with.cloudtrail_trails.rows[*].trail_arn
-        ebs_volume_arns              = with.ebs_volumes.rows[*].volume_arn
-        kms_key_arns                 = [self.input.key_arn.value]
-        lambda_function_arns         = with.lambda_functions.rows[*].function_arn
-        rds_db_cluster_arns          = with.rds_db_clusters.rows[*].cluster_arn
-        rds_db_cluster_snapshot_arns = with.rds_db_cluster_snapshots.rows[*].cluster_snapshot_arn
-        rds_db_instance_arns         = with.rds_db_instances.rows[*].db_instance_arn
-        rds_db_snapshot_arns         = with.rds_db_snapshots.rows[*].db_snapshot_arn
-        redshift_cluster_arns        = with.redshift_clusters.rows[*].redshift_cluster_arn
-        s3_bucket_arns               = with.s3_buckets.rows[*].bucket_arn
-        sns_topic_arns               = with.sns_topics.rows[*].topic_arn
-        sqs_queue_arns               = with.sqs_queues.rows[*].queue_arn
-      }
-    }
-  }
+  #     args = {
+  #       cloudtrail_trail_arns        = with.cloudtrail_trails.rows[*].trail_arn
+  #       ebs_volume_arns              = with.ebs_volumes.rows[*].volume_arn
+  #       kms_key_arns                 = [self.input.key_arn.value]
+  #       lambda_function_arns         = with.lambda_functions.rows[*].function_arn
+  #       rds_db_cluster_arns          = with.rds_db_clusters.rows[*].cluster_arn
+  #       rds_db_cluster_snapshot_arns = with.rds_db_cluster_snapshots.rows[*].cluster_snapshot_arn
+  #       rds_db_instance_arns         = with.rds_db_instances.rows[*].db_instance_arn
+  #       rds_db_snapshot_arns         = with.rds_db_snapshots.rows[*].db_snapshot_arn
+  #       redshift_cluster_arns        = with.redshift_clusters.rows[*].redshift_cluster_arn
+  #       s3_bucket_arns               = with.s3_buckets.rows[*].bucket_arn
+  #       sns_topic_arns               = with.sns_topics.rows[*].topic_arn
+  #       sqs_queue_arns               = with.sqs_queues.rows[*].queue_arn
+  #     }
+  #   }
+  # }
 
   container {
 

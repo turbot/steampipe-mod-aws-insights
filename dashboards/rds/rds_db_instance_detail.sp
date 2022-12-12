@@ -57,151 +57,151 @@ dashboard "rds_db_instance_detail" {
 
   }
 
-  container {
+  # container {
 
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "top-down"
+  #   graph {
+  #     title     = "Relationships"
+  #     type      = "graph"
+  #     direction = "top-down"
 
-      with "kms_keys" {
-        sql = <<-EOQ
-          select
-            rdb.kms_key_id as key_arn
-          from
-            aws_rds_db_instance rdb
-          where
-            rdb.arn = $1;
-        EOQ
+  #     with "kms_keys" {
+  #       sql = <<-EOQ
+  #         select
+  #           rdb.kms_key_id as key_arn
+  #         from
+  #           aws_rds_db_instance rdb
+  #         where
+  #           rdb.arn = $1;
+  #       EOQ
 
-        args = [self.input.db_instance_arn.value]
-      }
+  #       args = [self.input.db_instance_arn.value]
+  #     }
 
-      with "rds_db_clusters" {
-        sql = <<-EOQ
-          select
-            c.arn as cluster_arn
-          from
-            aws_rds_db_instance as i
-            join
-              aws_rds_db_cluster as c
-              on i.db_cluster_identifier = c.db_cluster_identifier
-          where
-            i.arn = $1;
-        EOQ
+  #     with "rds_db_clusters" {
+  #       sql = <<-EOQ
+  #         select
+  #           c.arn as cluster_arn
+  #         from
+  #           aws_rds_db_instance as i
+  #           join
+  #             aws_rds_db_cluster as c
+  #             on i.db_cluster_identifier = c.db_cluster_identifier
+  #         where
+  #           i.arn = $1;
+  #       EOQ
 
-        args = [self.input.db_instance_arn.value]
-      }
+  #       args = [self.input.db_instance_arn.value]
+  #     }
 
-      with "rds_db_snapshots" {
-        sql = <<-EOQ
-          select
-            s.arn as snapshot_arn
-          from
-            aws_rds_db_instance as i
-            join aws_rds_db_snapshot as s
-              on s.dbi_resource_id = i.resource_id
-          where
-            i.arn = $1;
-        EOQ
+  #     with "rds_db_snapshots" {
+  #       sql = <<-EOQ
+  #         select
+  #           s.arn as snapshot_arn
+  #         from
+  #           aws_rds_db_instance as i
+  #           join aws_rds_db_snapshot as s
+  #             on s.dbi_resource_id = i.resource_id
+  #         where
+  #           i.arn = $1;
+  #       EOQ
 
-        args = [self.input.db_instance_arn.value]
-      }
+  #       args = [self.input.db_instance_arn.value]
+  #     }
 
-      with "sns_topics" {
-        sql = <<-EOQ
-          select
-            s.sns_topic_arn
-          from
-            aws_rds_db_event_subscription as s,
-            jsonb_array_elements_text(source_ids_list) as ids
-            join aws_rds_db_instance as i
-            on ids = i.db_instance_identifier
-          where
-            i.arn = $1;
-        EOQ
+  #     with "sns_topics" {
+  #       sql = <<-EOQ
+  #         select
+  #           s.sns_topic_arn
+  #         from
+  #           aws_rds_db_event_subscription as s,
+  #           jsonb_array_elements_text(source_ids_list) as ids
+  #           join aws_rds_db_instance as i
+  #           on ids = i.db_instance_identifier
+  #         where
+  #           i.arn = $1;
+  #       EOQ
 
-        args = [self.input.db_instance_arn.value]
-      }
+  #       args = [self.input.db_instance_arn.value]
+  #     }
 
-      with "vpc_security_groups" {
-        sql = <<-EOQ
-          select
-            dsg ->> 'VpcSecurityGroupId' as security_group_id
-          from
-            aws_rds_db_instance as di,
-            jsonb_array_elements(di.vpc_security_groups) as dsg
-          where
-            di.arn = $1;
-        EOQ
+  #     with "vpc_security_groups" {
+  #       sql = <<-EOQ
+  #         select
+  #           dsg ->> 'VpcSecurityGroupId' as security_group_id
+  #         from
+  #           aws_rds_db_instance as di,
+  #           jsonb_array_elements(di.vpc_security_groups) as dsg
+  #         where
+  #           di.arn = $1;
+  #       EOQ
 
-        args = [self.input.db_instance_arn.value]
-      }
+  #       args = [self.input.db_instance_arn.value]
+  #     }
 
-      with "vpc_subnets" {
-        sql = <<-EOQ
-          select
-            subnet ->> 'SubnetIdentifier' as subnet_id
-          from
-            aws_rds_db_instance as rdb,
-            jsonb_array_elements(subnets) as subnet
-          where
-            rdb.arn = $1;
-        EOQ
+  #     with "vpc_subnets" {
+  #       sql = <<-EOQ
+  #         select
+  #           subnet ->> 'SubnetIdentifier' as subnet_id
+  #         from
+  #           aws_rds_db_instance as rdb,
+  #           jsonb_array_elements(subnets) as subnet
+  #         where
+  #           rdb.arn = $1;
+  #       EOQ
 
-        args = [self.input.db_instance_arn.value]
-      }
+  #       args = [self.input.db_instance_arn.value]
+  #     }
 
-      with "vpc_vpcs" {
-        sql = <<-EOQ
-          select
-            vpc_id
-          from
-            aws_rds_db_instance as di
-          where
-            di.arn = $1;
-        EOQ
+  #     with "vpc_vpcs" {
+  #       sql = <<-EOQ
+  #         select
+  #           vpc_id
+  #         from
+  #           aws_rds_db_instance as di
+  #         where
+  #           di.arn = $1;
+  #       EOQ
 
-        args = [self.input.db_instance_arn.value]
-      }
+  #       args = [self.input.db_instance_arn.value]
+  #     }
 
-      nodes = [
-        node.kms_key,
-        node.rds_db_cluster,
-        node.rds_db_instance,
-        node.rds_db_parameter_group,
-        node.rds_db_snapshot,
-        node.rds_db_subnet_group,
-        node.sns_topic,
-        node.vpc_security_group,
-        node.vpc_subnet,
-        node.vpc_vpc
-      ]
+  #     nodes = [
+  #       node.kms_key,
+  #       node.rds_db_cluster,
+  #       node.rds_db_instance,
+  #       node.rds_db_parameter_group,
+  #       node.rds_db_snapshot,
+  #       node.rds_db_subnet_group,
+  #       node.sns_topic,
+  #       node.vpc_security_group,
+  #       node.vpc_subnet,
+  #       node.vpc_vpc
+  #     ]
 
-      edges = [
-        edge.rds_db_cluster_to_rds_db_instance,
-        edge.rds_db_instance_to_kms_key,
-        edge.rds_db_instance_to_rds_db_parameter_group,
-        edge.rds_db_instance_to_rds_db_snapshot,
-        edge.rds_db_instance_to_sns_topic,
-        edge.rds_db_instance_to_vpc_security_group,
-        edge.rds_db_instance_vpc_subnet_to_vpc,
-        edge.rds_db_subnet_group_to_vpc_subnet,
-        edge.vpc_security_group_to_rds_db_subnet_group
-      ]
+  #     edges = [
+  #       edge.rds_db_cluster_to_rds_db_instance,
+  #       edge.rds_db_instance_to_kms_key,
+  #       edge.rds_db_instance_to_rds_db_parameter_group,
+  #       edge.rds_db_instance_to_rds_db_snapshot,
+  #       edge.rds_db_instance_to_sns_topic,
+  #       edge.rds_db_instance_to_vpc_security_group,
+  #       edge.rds_db_instance_vpc_subnet_to_vpc,
+  #       edge.rds_db_subnet_group_to_vpc_subnet,
+  #       edge.vpc_security_group_to_rds_db_subnet_group
+  #     ]
 
-      args = {
-        kms_key_arns           = with.kms_keys.rows[*].key_arn
-        rds_db_cluster_arns    = with.rds_db_clusters.rows[*].cluster_arn
-        rds_db_instance_arns   = [self.input.db_instance_arn.value]
-        rds_db_snapshot_arns   = with.rds_db_snapshots.rows[*].snapshot_arn
-        sns_topic_arns         = with.sns_topics.rows[*].sns_topic_arn
-        vpc_security_group_ids = with.vpc_security_groups.rows[*].security_group_id
-        vpc_subnet_ids         = with.vpc_subnets.rows[*].subnet_id
-        vpc_vpc_ids            = with.vpc_vpcs.rows[*].vpc_id
-      }
-    }
-  }
+  #     args = {
+  #       kms_key_arns           = with.kms_keys.rows[*].key_arn
+  #       rds_db_cluster_arns    = with.rds_db_clusters.rows[*].cluster_arn
+  #       rds_db_instance_arns   = [self.input.db_instance_arn.value]
+  #       rds_db_snapshot_arns   = with.rds_db_snapshots.rows[*].snapshot_arn
+  #       sns_topic_arns         = with.sns_topics.rows[*].sns_topic_arn
+  #       vpc_security_group_ids = with.vpc_security_groups.rows[*].security_group_id
+  #       vpc_subnet_ids         = with.vpc_subnets.rows[*].subnet_id
+  #       vpc_vpc_ids            = with.vpc_vpcs.rows[*].vpc_id
+  #     }
+  #   }
+  # }
 
   container {
 

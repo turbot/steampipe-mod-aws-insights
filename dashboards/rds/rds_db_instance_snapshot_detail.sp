@@ -63,60 +63,60 @@ dashboard "rds_db_snapshot_detail" {
 
   }
 
-  container {
+  # container {
 
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
+  #   graph {
+  #     title     = "Relationships"
+  #     type      = "graph"
+  #     direction = "TD"
 
-      with "kms_keys" {
-        sql = <<-EOQ
-          select
-            kms_key_id as key_arn
-          from
-            aws_rds_db_snapshot
-          where
-            kms_key_id is not null
-            and arn = $1;
-        EOQ
+  #     with "kms_keys" {
+  #       sql = <<-EOQ
+  #         select
+  #           kms_key_id as key_arn
+  #         from
+  #           aws_rds_db_snapshot
+  #         where
+  #           kms_key_id is not null
+  #           and arn = $1;
+  #       EOQ
 
-        args = [self.input.db_snapshot_arn.value]
-      }
+  #       args = [self.input.db_snapshot_arn.value]
+  #     }
 
-      with "rds_instances" {
-        sql = <<-EOQ
-          select
-            i.arn as rds_instance_arn
-          from
-            aws_rds_db_instance as i
-            join aws_rds_db_snapshot as s
-              on s.dbi_resource_id = i.resource_id
-          where
-            s.arn = $1;
-        EOQ
+  #     with "rds_instances" {
+  #       sql = <<-EOQ
+  #         select
+  #           i.arn as rds_instance_arn
+  #         from
+  #           aws_rds_db_instance as i
+  #           join aws_rds_db_snapshot as s
+  #             on s.dbi_resource_id = i.resource_id
+  #         where
+  #           s.arn = $1;
+  #       EOQ
 
-        args = [self.input.db_snapshot_arn.value]
-      }
+  #       args = [self.input.db_snapshot_arn.value]
+  #     }
 
-      nodes = [
-        node.kms_key,
-        node.rds_db_instance,
-        node.rds_db_snapshot
-      ]
+  #     nodes = [
+  #       node.kms_key,
+  #       node.rds_db_instance,
+  #       node.rds_db_snapshot
+  #     ]
 
-      edges = [
-        edge.rds_db_instance_to_rds_db_snapshot,
-        edge.rds_db_snapshot_to_kms_key
-      ]
+  #     edges = [
+  #       edge.rds_db_instance_to_rds_db_snapshot,
+  #       edge.rds_db_snapshot_to_kms_key
+  #     ]
 
-      args = {
-        kms_key_arns         = with.kms_keys.rows[*].key_arn
-        rds_db_instance_arns = with.rds_instances.rows[*].rds_instance_arn
-        rds_db_snapshot_arns = [self.input.db_snapshot_arn.value]
-      }
-    }
-  }
+  #     args = {
+  #       kms_key_arns         = with.kms_keys.rows[*].key_arn
+  #       rds_db_instance_arns = with.rds_instances.rows[*].rds_instance_arn
+  #       rds_db_snapshot_arns = [self.input.db_snapshot_arn.value]
+  #     }
+  #   }
+  # }
 
   container {
 

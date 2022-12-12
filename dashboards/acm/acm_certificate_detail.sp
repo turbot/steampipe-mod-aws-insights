@@ -56,137 +56,137 @@ dashboard "acm_certificate_detail" {
 
   }
 
-  container {
+  # container {
 
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
+  #   graph {
+  #     title     = "Relationships"
+  #     type      = "graph"
+  #     direction = "TD"
 
-      with "cloudfront_distributions" {
-        sql = <<-EOQ
-        select
-          arn as distribution_arn
-        from
-          aws_cloudfront_distribution
-        where
-          arn in
-          (
-            select
-              jsonb_array_elements_text(in_use_by)
-            from
-              aws_acm_certificate
-            where
-              certificate_arn = $1
-          );
-        EOQ
+  #     with "cloudfront_distributions" {
+  #       sql = <<-EOQ
+  #       select
+  #         arn as distribution_arn
+  #       from
+  #         aws_cloudfront_distribution
+  #       where
+  #         arn in
+  #         (
+  #           select
+  #             jsonb_array_elements_text(in_use_by)
+  #           from
+  #             aws_acm_certificate
+  #           where
+  #             certificate_arn = $1
+  #         );
+  #       EOQ
 
-        args = [self.input.certificate_arn.value]
-      }
+  #       args = [self.input.certificate_arn.value]
+  #     }
 
-      with "ec2_application_load_balancers" {
-        sql = <<-EOQ
-          select
-            arn as alb_arn
-          from
-            aws_ec2_application_load_balancer
-          where
-            arn in
-            (
-              select
-                jsonb_array_elements_text(in_use_by)
-              from
-                aws_acm_certificate
-              where
-                certificate_arn = $1
-            );
-        EOQ
+  #     with "ec2_application_load_balancers" {
+  #       sql = <<-EOQ
+  #         select
+  #           arn as alb_arn
+  #         from
+  #           aws_ec2_application_load_balancer
+  #         where
+  #           arn in
+  #           (
+  #             select
+  #               jsonb_array_elements_text(in_use_by)
+  #             from
+  #               aws_acm_certificate
+  #             where
+  #               certificate_arn = $1
+  #           );
+  #       EOQ
 
-        args = [self.input.certificate_arn.value]
-      }
+  #       args = [self.input.certificate_arn.value]
+  #     }
 
-      with "ec2_classic_load_balancers" {
-        sql = <<-EOQ
-          select
-            arn as clb_arn
-          from
-            aws_ec2_classic_load_balancer
-          where
-            arn in
-            (
-              select
-                jsonb_array_elements_text(in_use_by)
-              from
-                aws_acm_certificate
-              where
-                certificate_arn = $1
-            );
-        EOQ
+  #     with "ec2_classic_load_balancers" {
+  #       sql = <<-EOQ
+  #         select
+  #           arn as clb_arn
+  #         from
+  #           aws_ec2_classic_load_balancer
+  #         where
+  #           arn in
+  #           (
+  #             select
+  #               jsonb_array_elements_text(in_use_by)
+  #             from
+  #               aws_acm_certificate
+  #             where
+  #               certificate_arn = $1
+  #           );
+  #       EOQ
 
-        args = [self.input.certificate_arn.value]
-      }
+  #       args = [self.input.certificate_arn.value]
+  #     }
 
-      with "ec2_network_load_balancers" {
-        sql = <<-EOQ
-          select
-            arn as nlb_arn
-          from
-            aws_ec2_network_load_balancer
-          where
-            arn in
-            (
-              select
-                jsonb_array_elements_text(in_use_by)
-              from
-                aws_acm_certificate
-              where
-                certificate_arn = $1
-            );
-        EOQ
+  #     with "ec2_network_load_balancers" {
+  #       sql = <<-EOQ
+  #         select
+  #           arn as nlb_arn
+  #         from
+  #           aws_ec2_network_load_balancer
+  #         where
+  #           arn in
+  #           (
+  #             select
+  #               jsonb_array_elements_text(in_use_by)
+  #             from
+  #               aws_acm_certificate
+  #             where
+  #               certificate_arn = $1
+  #           );
+  #       EOQ
 
-        args = [self.input.certificate_arn.value]
-      }
+  #       args = [self.input.certificate_arn.value]
+  #     }
 
-      with "opensearch_domains" {
-        sql = <<-EOQ
-          select
-            arn as opensearch_arn
-          from
-            aws_opensearch_domain
-          where
-          domain_endpoint_options ->> 'CustomEndpointCertificateArn' = $1;
-        EOQ
+  #     with "opensearch_domains" {
+  #       sql = <<-EOQ
+  #         select
+  #           arn as opensearch_arn
+  #         from
+  #           aws_opensearch_domain
+  #         where
+  #         domain_endpoint_options ->> 'CustomEndpointCertificateArn' = $1;
+  #       EOQ
 
-        args = [self.input.certificate_arn.value]
-      }
+  #       args = [self.input.certificate_arn.value]
+  #     }
 
-      nodes = [
-        node.acm_certificate,
-        node.cloudfront_distribution,
-        node.ec2_application_load_balancer,
-        node.ec2_classic_load_balancer,
-        node.ec2_network_load_balancer,
-        node.opensearch_domain
-      ]
+  #     nodes = [
+  #       node.acm_certificate,
+  #       node.cloudfront_distribution,
+  #       node.ec2_application_load_balancer,
+  #       node.ec2_classic_load_balancer,
+  #       node.ec2_network_load_balancer,
+  #       node.opensearch_domain
+  #     ]
 
-      edges = [
-        edge.cloudfront_distribution_to_acm_certificate,
-        edge.ec2_application_load_balancer_to_acm_certificate,
-        edge.ec2_classic_load_balancer_to_acm_certificate,
-        edge.ec2_network_load_balancer_to_acm_certificate,
-        edge.opensearch_domain_to_acm_certificate
-      ]
+  #     edges = [
+  #       edge.cloudfront_distribution_to_acm_certificate,
+  #       edge.ec2_application_load_balancer_to_acm_certificate,
+  #       edge.ec2_classic_load_balancer_to_acm_certificate,
+  #       edge.ec2_network_load_balancer_to_acm_certificate,
+  #       edge.opensearch_domain_to_acm_certificate
+  #     ]
 
-      args = {
-        acm_certificate_arns               = [self.input.certificate_arn.value]
-        cloudfront_distribution_arns       = with.cloudfront_distributions.rows[*].distribution_arn
-        ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
-        ec2_classic_load_balancer_arns     = with.ec2_classic_load_balancers.rows[*].clb_arn
-        ec2_network_load_balancer_arns     = with.ec2_network_load_balancers.rows[*].nlb_arn
-        opensearch_arns                    = with.opensearch_domains.rows[*].opensearch_arn
-      }
-    }
-  }
+  #     args = {
+  #       acm_certificate_arns               = [self.input.certificate_arn.value]
+  #       cloudfront_distribution_arns       = with.cloudfront_distributions.rows[*].distribution_arn
+  #       ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
+  #       ec2_classic_load_balancer_arns     = with.ec2_classic_load_balancers.rows[*].clb_arn
+  #       ec2_network_load_balancer_arns     = with.ec2_network_load_balancers.rows[*].nlb_arn
+  #       opensearch_arns                    = with.opensearch_domains.rows[*].opensearch_arn
+  #     }
+  #   }
+  # }
 
   container {
 

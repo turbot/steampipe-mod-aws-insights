@@ -53,115 +53,115 @@ dashboard "cloudtrail_trail_detail" {
 
   }
 
-  container {
+  # container {
 
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
+  #   graph {
+  #     title     = "Relationships"
+  #     type      = "graph"
+  #     direction = "TD"
 
-      with "cloudwatch_log_groups" {
-        sql = <<-EOQ
-          select
-            log_group_arn as cloudwatch_log_group_arn
-          from
-            aws_cloudtrail_trail
-          where
-            log_group_arn is not null
-            and arn = $1;
-        EOQ
+  #     with "cloudwatch_log_groups" {
+  #       sql = <<-EOQ
+  #         select
+  #           log_group_arn as cloudwatch_log_group_arn
+  #         from
+  #           aws_cloudtrail_trail
+  #         where
+  #           log_group_arn is not null
+  #           and arn = $1;
+  #       EOQ
 
-        args = [self.input.trail_arn.value]
-      }
+  #       args = [self.input.trail_arn.value]
+  #     }
 
-      with "guardduty_detectors" {
-        sql = <<-EOQ
-          select
-            detector.arn as guardduty_detector_arn
-          from
-            aws_guardduty_detector as detector,
-            aws_cloudtrail_trail as t
-          where
-            detector.status = 'ENABLED'
-            and detector.data_sources is not null
-            and detector.data_sources -> 'CloudTrail' ->> 'Status' = 'ENABLED'
-            and t.arn = $1;
-        EOQ
+  #     with "guardduty_detectors" {
+  #       sql = <<-EOQ
+  #         select
+  #           detector.arn as guardduty_detector_arn
+  #         from
+  #           aws_guardduty_detector as detector,
+  #           aws_cloudtrail_trail as t
+  #         where
+  #           detector.status = 'ENABLED'
+  #           and detector.data_sources is not null
+  #           and detector.data_sources -> 'CloudTrail' ->> 'Status' = 'ENABLED'
+  #           and t.arn = $1;
+  #       EOQ
 
-        args = [self.input.trail_arn.value]
-      }
+  #       args = [self.input.trail_arn.value]
+  #     }
 
-      with "kms_keys" {
-        sql = <<-EOQ
-          select
-            kms_key_id as kms_key_arn
-          from
-            aws_cloudtrail_trail as t
-          where
-            kms_key_id is not null
-            and arn = $1;
-        EOQ
+  #     with "kms_keys" {
+  #       sql = <<-EOQ
+  #         select
+  #           kms_key_id as kms_key_arn
+  #         from
+  #           aws_cloudtrail_trail as t
+  #         where
+  #           kms_key_id is not null
+  #           and arn = $1;
+  #       EOQ
 
-        args = [self.input.trail_arn.value]
-      }
+  #       args = [self.input.trail_arn.value]
+  #     }
 
-      with "s3_buckets" {
-        sql = <<-EOQ
-          select
-            s.arn as s3_bucket_arn
-          from
-            aws_cloudtrail_trail as t,
-            aws_s3_bucket as s
-          where
-            t.s3_bucket_name = s.name
-            and s3_bucket_name is not null
-            and t.arn = $1;
-        EOQ
+  #     with "s3_buckets" {
+  #       sql = <<-EOQ
+  #         select
+  #           s.arn as s3_bucket_arn
+  #         from
+  #           aws_cloudtrail_trail as t,
+  #           aws_s3_bucket as s
+  #         where
+  #           t.s3_bucket_name = s.name
+  #           and s3_bucket_name is not null
+  #           and t.arn = $1;
+  #       EOQ
 
-        args = [self.input.trail_arn.value]
-      }
+  #       args = [self.input.trail_arn.value]
+  #     }
 
-      with "sns_topics" {
-        sql = <<-EOQ
-          select
-            sns_topic_arn
-          from
-            aws_cloudtrail_trail
-          where
-            sns_topic_arn is not null
-            and arn = $1;
-        EOQ
+  #     with "sns_topics" {
+  #       sql = <<-EOQ
+  #         select
+  #           sns_topic_arn
+  #         from
+  #           aws_cloudtrail_trail
+  #         where
+  #           sns_topic_arn is not null
+  #           and arn = $1;
+  #       EOQ
 
-        args = [self.input.trail_arn.value]
-      }
+  #       args = [self.input.trail_arn.value]
+  #     }
 
-      nodes = [
-        node.cloudtrail_trail,
-        node.cloudwatch_log_group,
-        node.guardduty_detector,
-        node.kms_key,
-        node.s3_bucket,
-        node.sns_topic
-      ]
+  #     nodes = [
+  #       node.cloudtrail_trail,
+  #       node.cloudwatch_log_group,
+  #       node.guardduty_detector,
+  #       node.kms_key,
+  #       node.s3_bucket,
+  #       node.sns_topic
+  #     ]
 
-      edges = [
-        edge.cloudtrail_trail_to_cloudwatch_log_group,
-        edge.cloudtrail_trail_to_kms_key,
-        edge.cloudtrail_trail_to_s3_bucket,
-        edge.cloudtrail_trail_to_sns_topic,
-        edge.guardduty_detector_to_cloudtrail_trail
-      ]
+  #     edges = [
+  #       edge.cloudtrail_trail_to_cloudwatch_log_group,
+  #       edge.cloudtrail_trail_to_kms_key,
+  #       edge.cloudtrail_trail_to_s3_bucket,
+  #       edge.cloudtrail_trail_to_sns_topic,
+  #       edge.guardduty_detector_to_cloudtrail_trail
+  #     ]
 
-      args = {
-        cloudtrail_trail_arns     = [self.input.trail_arn.value]
-        cloudwatch_log_group_arns = with.cloudwatch_log_groups.rows[*].cloudwatch_log_group_arn
-        guardduty_detector_arns   = with.guardduty_detectors.rows[*].guardduty_detector_arn
-        kms_key_arns              = with.kms_keys.rows[*].kms_key_arn
-        s3_bucket_arns            = with.s3_buckets.rows[*].s3_bucket_arn
-        sns_topic_arns            = with.sns_topics.rows[*].sns_topic_arn
-      }
-    }
-  }
+  #     args = {
+  #       cloudtrail_trail_arns     = [self.input.trail_arn.value]
+  #       cloudwatch_log_group_arns = with.cloudwatch_log_groups.rows[*].cloudwatch_log_group_arn
+  #       guardduty_detector_arns   = with.guardduty_detectors.rows[*].guardduty_detector_arn
+  #       kms_key_arns              = with.kms_keys.rows[*].kms_key_arn
+  #       s3_bucket_arns            = with.s3_buckets.rows[*].s3_bucket_arn
+  #       sns_topic_arns            = with.sns_topics.rows[*].sns_topic_arn
+  #     }
+  #   }
+  # }
 
   container {
 

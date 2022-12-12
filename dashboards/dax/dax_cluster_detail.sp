@@ -41,116 +41,116 @@ dashboard "dax_cluster_detail" {
 
   }
 
-  container {
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
+  # container {
+  #   graph {
+  #     title     = "Relationships"
+  #     type      = "graph"
+  #     direction = "TD"
 
-      with "iam_role_arns" {
-        sql = <<-EOQ
-          select
-            iam_role_arn
-          from
-            aws_dax_cluster
-          where
-            arn = $1;
-        EOQ
+  #     with "iam_role_arns" {
+  #       sql = <<-EOQ
+  #         select
+  #           iam_role_arn
+  #         from
+  #           aws_dax_cluster
+  #         where
+  #           arn = $1;
+  #       EOQ
 
-        args = [self.input.dax_cluster_arn.value]
-      }
+  #       args = [self.input.dax_cluster_arn.value]
+  #     }
 
-      with "sns_topics" {
-        sql = <<-EOQ
-        select
-          notification_configuration ->> 'TopicArn' as topic_arn
-        from
-          aws_dax_cluster
-        where
-          arn = $1;
-        EOQ
+  #     with "sns_topics" {
+  #       sql = <<-EOQ
+  #       select
+  #         notification_configuration ->> 'TopicArn' as topic_arn
+  #       from
+  #         aws_dax_cluster
+  #       where
+  #         arn = $1;
+  #       EOQ
 
-        args = [self.input.dax_cluster_arn.value]
-      }
+  #       args = [self.input.dax_cluster_arn.value]
+  #     }
 
-      with "vpc_security_groups" {
-        sql = <<-EOQ
-          select
-          sg ->> 'SecurityGroupIdentifier' as security_group_id
-        from
-          aws_dax_cluster,
-          jsonb_array_elements(security_groups) as sg
-        where
-          arn = $1;
-        EOQ
+  #     with "vpc_security_groups" {
+  #       sql = <<-EOQ
+  #         select
+  #         sg ->> 'SecurityGroupIdentifier' as security_group_id
+  #       from
+  #         aws_dax_cluster,
+  #         jsonb_array_elements(security_groups) as sg
+  #       where
+  #         arn = $1;
+  #       EOQ
 
-        args = [self.input.dax_cluster_arn.value]
-      }
+  #       args = [self.input.dax_cluster_arn.value]
+  #     }
 
-      with "vpc_subnets" {
-        sql = <<-EOQ
-          select
-          s ->> 'SubnetIdentifier' as subnet_id
-        from
-          aws_dax_cluster as c,
-          aws_dax_subnet_group as g,
-          jsonb_array_elements(subnets) as s
-        where
-          g.subnet_group_name = c.subnet_group
-          and c.arn = $1;
-        EOQ
+  #     with "vpc_subnets" {
+  #       sql = <<-EOQ
+  #         select
+  #         s ->> 'SubnetIdentifier' as subnet_id
+  #       from
+  #         aws_dax_cluster as c,
+  #         aws_dax_subnet_group as g,
+  #         jsonb_array_elements(subnets) as s
+  #       where
+  #         g.subnet_group_name = c.subnet_group
+  #         and c.arn = $1;
+  #       EOQ
 
-        args = [self.input.dax_cluster_arn.value]
-      }
+  #       args = [self.input.dax_cluster_arn.value]
+  #     }
 
-      with "vpc_vpcs" {
-        sql = <<-EOQ
-        select
-          g.vpc_id as vpc_id
-        from
-          aws_dax_cluster as c,
-          aws_dax_subnet_group as g
-        where
-          g.subnet_group_name = c.subnet_group
-          and c.arn = $1;
-        EOQ
+  #     with "vpc_vpcs" {
+  #       sql = <<-EOQ
+  #       select
+  #         g.vpc_id as vpc_id
+  #       from
+  #         aws_dax_cluster as c,
+  #         aws_dax_subnet_group as g
+  #       where
+  #         g.subnet_group_name = c.subnet_group
+  #         and c.arn = $1;
+  #       EOQ
 
-        args = [self.input.dax_cluster_arn.value]
-      }
+  #       args = [self.input.dax_cluster_arn.value]
+  #     }
 
-      nodes = [
-        node.dax_cluster,
-        node.dax_cluster_node,
-        node.dax_parameter_group,
-        node.dax_subnet_group,
-        node.iam_role,
-        node.sns_topic,
-        node.vpc_security_group,
-        node.vpc_subnet,
-        node.vpc_vpc
-      ]
+  #     nodes = [
+  #       node.dax_cluster,
+  #       node.dax_cluster_node,
+  #       node.dax_parameter_group,
+  #       node.dax_subnet_group,
+  #       node.iam_role,
+  #       node.sns_topic,
+  #       node.vpc_security_group,
+  #       node.vpc_subnet,
+  #       node.vpc_vpc
+  #     ]
 
-      edges = [
-        edge.dax_cluster_to_dax_cluster_node,
-        edge.dax_cluster_to_dax_parameter_group,
-        edge.dax_cluster_to_iam_role,
-        edge.dax_cluster_to_sns_topic,
-        edge.dax_cluster_to_vpc_security_group,
-        edge.dax_subnet_group_to_vpc_subnet,
-        edge.vpc_security_group_to_dax_subnet_group,
-        edge.vpc_subnet_to_vpc_vpc
-      ]
+  #     edges = [
+  #       edge.dax_cluster_to_dax_cluster_node,
+  #       edge.dax_cluster_to_dax_parameter_group,
+  #       edge.dax_cluster_to_iam_role,
+  #       edge.dax_cluster_to_sns_topic,
+  #       edge.dax_cluster_to_vpc_security_group,
+  #       edge.dax_subnet_group_to_vpc_subnet,
+  #       edge.vpc_security_group_to_dax_subnet_group,
+  #       edge.vpc_subnet_to_vpc_vpc
+  #     ]
 
-      args = {
-        dax_cluster_arns       = [self.input.dax_cluster_arn.value]
-        iam_role_arns          = with.iam_role_arns.rows[*].iam_role_arn
-        sns_topic_arns         = with.sns_topics.rows[*].topic_arn
-        vpc_security_group_ids = with.vpc_security_groups.rows[*].security_group_id
-        vpc_subnet_ids         = with.vpc_subnets.rows[*].subnet_id
-        vpc_vpc_ids            = with.vpc_vpcs.rows[*].vpc_id
-      }
-    }
-  }
+  #     args = {
+  #       dax_cluster_arns       = [self.input.dax_cluster_arn.value]
+  #       iam_role_arns          = with.iam_role_arns.rows[*].iam_role_arn
+  #       sns_topic_arns         = with.sns_topics.rows[*].topic_arn
+  #       vpc_security_group_ids = with.vpc_security_groups.rows[*].security_group_id
+  #       vpc_subnet_ids         = with.vpc_subnets.rows[*].subnet_id
+  #       vpc_vpc_ids            = with.vpc_vpcs.rows[*].vpc_id
+  #     }
+  #   }
+  # }
 
   container {
 

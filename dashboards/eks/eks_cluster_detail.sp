@@ -56,214 +56,214 @@ dashboard "eks_cluster_detail" {
 
   }
 
-  container {
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
+  # container {
+  #   graph {
+  #     title     = "Relationships"
+  #     type      = "graph"
+  #     direction = "TD"
 
-      with "eks_addons" {
-        sql = <<-EOQ
-          select
-            arn as eks_addon_arn
-          from
-            aws_eks_addon
-          where
-            cluster_name in
-            (
-              select
-                name
-              from
-                aws_eks_cluster
-              where
-                arn = $1
-            )
-        EOQ
+  #     with "eks_addons" {
+  #       sql = <<-EOQ
+  #         select
+  #           arn as eks_addon_arn
+  #         from
+  #           aws_eks_addon
+  #         where
+  #           cluster_name in
+  #           (
+  #             select
+  #               name
+  #             from
+  #               aws_eks_cluster
+  #             where
+  #               arn = $1
+  #           )
+  #       EOQ
 
-        args = [self.input.eks_cluster_arn.value]
-      }
+  #       args = [self.input.eks_cluster_arn.value]
+  #     }
 
-      with "eks_fargate_profiles" {
-        sql = <<-EOQ
-          select
-            p.fargate_profile_arn as eks_fargate_profile_arn
-          from
-          aws_eks_cluster as c
-          left join aws_eks_fargate_profile as p on p.cluster_name = c.name
-          where
-            p.region = c.region
-            and c.arn = $1;
-        EOQ
+  #     with "eks_fargate_profiles" {
+  #       sql = <<-EOQ
+  #         select
+  #           p.fargate_profile_arn as eks_fargate_profile_arn
+  #         from
+  #         aws_eks_cluster as c
+  #         left join aws_eks_fargate_profile as p on p.cluster_name = c.name
+  #         where
+  #           p.region = c.region
+  #           and c.arn = $1;
+  #       EOQ
 
-        args = [self.input.eks_cluster_arn.value]
-      }
+  #       args = [self.input.eks_cluster_arn.value]
+  #     }
 
-      with "eks_identity_providers" {
-        sql = <<-EOQ
-          select
-            arn as eks_identity_provider_arn
-          from
-            aws_eks_identity_provider_config
-          where
-            cluster_name in
-            (
-              select
-                name
-              from
-                aws_eks_cluster
-              where
-                arn = $1
-            )
-        EOQ
+  #     with "eks_identity_providers" {
+  #       sql = <<-EOQ
+  #         select
+  #           arn as eks_identity_provider_arn
+  #         from
+  #           aws_eks_identity_provider_config
+  #         where
+  #           cluster_name in
+  #           (
+  #             select
+  #               name
+  #             from
+  #               aws_eks_cluster
+  #             where
+  #               arn = $1
+  #           )
+  #       EOQ
 
-        args = [self.input.eks_cluster_arn.value]
-      }
+  #       args = [self.input.eks_cluster_arn.value]
+  #     }
 
-      with "eks_node_groups" {
-        sql = <<-EOQ
-          select
-            arn as eks_node_group_arn
-          from
-            aws_eks_node_group
-          where
-            cluster_name in
-            (
-              select
-                name
-              from
-                aws_eks_cluster
-              where
-                arn = $1
-            )
-        EOQ
+  #     with "eks_node_groups" {
+  #       sql = <<-EOQ
+  #         select
+  #           arn as eks_node_group_arn
+  #         from
+  #           aws_eks_node_group
+  #         where
+  #           cluster_name in
+  #           (
+  #             select
+  #               name
+  #             from
+  #               aws_eks_cluster
+  #             where
+  #               arn = $1
+  #           )
+  #       EOQ
 
-        args = [self.input.eks_cluster_arn.value]
-      }
+  #       args = [self.input.eks_cluster_arn.value]
+  #     }
 
-      with "iam_roles" {
-        sql = <<-EOQ
-          select
-            role_arn as iam_role_arn
-          from
-            aws_eks_cluster as c
-          where
-            arn = $1
-        EOQ
+  #     with "iam_roles" {
+  #       sql = <<-EOQ
+  #         select
+  #           role_arn as iam_role_arn
+  #         from
+  #           aws_eks_cluster as c
+  #         where
+  #           arn = $1
+  #       EOQ
 
-        args = [self.input.eks_cluster_arn.value]
-      }
+  #       args = [self.input.eks_cluster_arn.value]
+  #     }
 
-      with "kms_keys" {
-        sql = <<-EOQ
-          select
-            e -> 'Provider' ->> 'KeyArn' as kms_key_arn
-          from
-            aws_eks_cluster,
-            jsonb_array_elements(encryption_config) as e
-          where
-            arn = $1
-        EOQ
+  #     with "kms_keys" {
+  #       sql = <<-EOQ
+  #         select
+  #           e -> 'Provider' ->> 'KeyArn' as kms_key_arn
+  #         from
+  #           aws_eks_cluster,
+  #           jsonb_array_elements(encryption_config) as e
+  #         where
+  #           arn = $1
+  #       EOQ
 
-        args = [self.input.eks_cluster_arn.value]
-      }
+  #       args = [self.input.eks_cluster_arn.value]
+  #     }
 
-      with "vpc_security_groups" {
-        sql = <<-EOQ
-          select
-            group_id as vpc_security_group_id
-          from
-            aws_vpc_security_group
-          where
-            group_id in
-            (
-              select
-                s
-              from
-                aws_eks_cluster,
-                jsonb_array_elements_text(resources_vpc_config -> 'SecurityGroupIds') as s
-              where
-                arn = $1
-            )
-        EOQ
+  #     with "vpc_security_groups" {
+  #       sql = <<-EOQ
+  #         select
+  #           group_id as vpc_security_group_id
+  #         from
+  #           aws_vpc_security_group
+  #         where
+  #           group_id in
+  #           (
+  #             select
+  #               s
+  #             from
+  #               aws_eks_cluster,
+  #               jsonb_array_elements_text(resources_vpc_config -> 'SecurityGroupIds') as s
+  #             where
+  #               arn = $1
+  #           )
+  #       EOQ
 
-        args = [self.input.eks_cluster_arn.value]
-      }
+  #       args = [self.input.eks_cluster_arn.value]
+  #     }
 
-      with "vpc_subnets" {
-        sql = <<-EOQ
-          select
-            subnet_id as vpc_subnet_id
-          from
-            aws_vpc_subnet
-          where
-            subnet_id in
-            (
-              select
-                s
-              from
-                aws_eks_cluster,
-                jsonb_array_elements_text(resources_vpc_config -> 'SubnetIds') as s
-              where
-                arn = $1
-            )
-        EOQ
+  #     with "vpc_subnets" {
+  #       sql = <<-EOQ
+  #         select
+  #           subnet_id as vpc_subnet_id
+  #         from
+  #           aws_vpc_subnet
+  #         where
+  #           subnet_id in
+  #           (
+  #             select
+  #               s
+  #             from
+  #               aws_eks_cluster,
+  #               jsonb_array_elements_text(resources_vpc_config -> 'SubnetIds') as s
+  #             where
+  #               arn = $1
+  #           )
+  #       EOQ
 
-        args = [self.input.eks_cluster_arn.value]
-      }
+  #       args = [self.input.eks_cluster_arn.value]
+  #     }
 
-      with "vpc_vpcs" {
-        sql = <<-EOQ
-          select
-            resources_vpc_config ->> 'VpcId' as vpc_vpc_id
-          from
-            aws_eks_cluster
-          where
-            resources_vpc_config ->> 'VpcId' is not null
-            and arn = $1
-        EOQ
+  #     with "vpc_vpcs" {
+  #       sql = <<-EOQ
+  #         select
+  #           resources_vpc_config ->> 'VpcId' as vpc_vpc_id
+  #         from
+  #           aws_eks_cluster
+  #         where
+  #           resources_vpc_config ->> 'VpcId' is not null
+  #           and arn = $1
+  #       EOQ
 
-        args = [self.input.eks_cluster_arn.value]
-      }
+  #       args = [self.input.eks_cluster_arn.value]
+  #     }
 
-      nodes = [
-        node.eks_addon,
-        node.eks_cluster,
-        node.eks_fargate_profile,
-        node.eks_identity_provider_config,
-        node.eks_node_group,
-        node.iam_role,
-        node.kms_key,
-        node.vpc_security_group,
-        node.vpc_subnet,
-        node.vpc_vpc
-      ]
+  #     nodes = [
+  #       node.eks_addon,
+  #       node.eks_cluster,
+  #       node.eks_fargate_profile,
+  #       node.eks_identity_provider_config,
+  #       node.eks_node_group,
+  #       node.iam_role,
+  #       node.kms_key,
+  #       node.vpc_security_group,
+  #       node.vpc_subnet,
+  #       node.vpc_vpc
+  #     ]
 
-      edges = [
-        edge.eks_cluster_to_eks_addon,
-        edge.eks_cluster_to_eks_fargate_profile,
-        edge.eks_cluster_to_eks_identity_provider_config,
-        edge.eks_cluster_to_eks_node_group,
-        edge.eks_cluster_to_iam_role,
-        edge.eks_cluster_to_kms_key,
-        edge.eks_cluster_to_vpc_security_group,
-        edge.eks_cluster_to_vpc_subnet,
-        edge.vpc_subnet_to_vpc_vpc
-      ]
+  #     edges = [
+  #       edge.eks_cluster_to_eks_addon,
+  #       edge.eks_cluster_to_eks_fargate_profile,
+  #       edge.eks_cluster_to_eks_identity_provider_config,
+  #       edge.eks_cluster_to_eks_node_group,
+  #       edge.eks_cluster_to_iam_role,
+  #       edge.eks_cluster_to_kms_key,
+  #       edge.eks_cluster_to_vpc_security_group,
+  #       edge.eks_cluster_to_vpc_subnet,
+  #       edge.vpc_subnet_to_vpc_vpc
+  #     ]
 
-      args = {
-        eks_addon_arns             = with.eks_addons.rows[*].eks_addon_arn
-        eks_cluster_arns           = [self.input.eks_cluster_arn.value]
-        eks_fargate_profile_arns   = with.eks_fargate_profiles.rows[*].eks_fargate_profile_arn
-        eks_identity_provider_arns = with.eks_identity_providers.rows[*].eks_identity_provider_arn
-        eks_node_group_arns        = with.eks_node_groups.rows[*].eks_node_group_arn
-        iam_role_arns              = with.iam_roles.rows[*].iam_role_arn
-        kms_key_arns               = with.kms_keys.rows[*].kms_key_arn
-        vpc_security_group_ids     = with.vpc_security_groups.rows[*].vpc_security_group_id
-        vpc_subnet_ids             = with.vpc_subnets.rows[*].vpc_subnet_id
-        vpc_vpc_ids                = with.vpc_vpcs.rows[*].vpc_vpc_id
-      }
-    }
-  }
+  #     args = {
+  #       eks_addon_arns             = with.eks_addons.rows[*].eks_addon_arn
+  #       eks_cluster_arns           = [self.input.eks_cluster_arn.value]
+  #       eks_fargate_profile_arns   = with.eks_fargate_profiles.rows[*].eks_fargate_profile_arn
+  #       eks_identity_provider_arns = with.eks_identity_providers.rows[*].eks_identity_provider_arn
+  #       eks_node_group_arns        = with.eks_node_groups.rows[*].eks_node_group_arn
+  #       iam_role_arns              = with.iam_roles.rows[*].iam_role_arn
+  #       kms_key_arns               = with.kms_keys.rows[*].kms_key_arn
+  #       vpc_security_group_ids     = with.vpc_security_groups.rows[*].vpc_security_group_id
+  #       vpc_subnet_ids             = with.vpc_subnets.rows[*].vpc_subnet_id
+  #       vpc_vpc_ids                = with.vpc_vpcs.rows[*].vpc_vpc_id
+  #     }
+  #   }
+  # }
 
   container {
 

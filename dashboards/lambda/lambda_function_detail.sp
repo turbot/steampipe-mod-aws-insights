@@ -50,183 +50,183 @@ dashboard "lambda_function_detail" {
 
   }
 
-  container {
+  # container {
 
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
+  #   graph {
+  #     title     = "Relationships"
+  #     type      = "graph"
+  #     direction = "TD"
 
-      with "api_gateway_apis" {
-        sql = <<-EOQ
-          select
-            api_id
-          from
-            aws_api_gatewayv2_integration
-          where
-            integration_uri = $1;
-        EOQ
+  #     with "api_gateway_apis" {
+  #       sql = <<-EOQ
+  #         select
+  #           api_id
+  #         from
+  #           aws_api_gatewayv2_integration
+  #         where
+  #           integration_uri = $1;
+  #       EOQ
 
-        args = [self.input.lambda_arn.value]
-      }
+  #       args = [self.input.lambda_arn.value]
+  #     }
 
-      with "iam_roles" {
-        sql = <<-EOQ
-          select
-            role as role_arn
-          from
-            aws_lambda_function
-          where
-            arn = $1;
-        EOQ
+  #     with "iam_roles" {
+  #       sql = <<-EOQ
+  #         select
+  #           role as role_arn
+  #         from
+  #           aws_lambda_function
+  #         where
+  #           arn = $1;
+  #       EOQ
 
-        args = [self.input.lambda_arn.value]
-      }
+  #       args = [self.input.lambda_arn.value]
+  #     }
 
-      with "kms_keys" {
-        sql = <<-EOQ
-          select
-            kms_key_arn
-          from
-            aws_lambda_function
-          where
-            kms_key_arn is not null
-            and arn = $1;
-        EOQ
+  #     with "kms_keys" {
+  #       sql = <<-EOQ
+  #         select
+  #           kms_key_arn
+  #         from
+  #           aws_lambda_function
+  #         where
+  #           kms_key_arn is not null
+  #           and arn = $1;
+  #       EOQ
 
-        args = [self.input.lambda_arn.value]
-      }
+  #       args = [self.input.lambda_arn.value]
+  #     }
 
-      with "s3_buckets" {
-        sql = <<-EOQ
-          select
-            arn as bucket_arn
-          from
-            aws_s3_bucket,
-            jsonb_array_elements(event_notification_configuration -> 'LambdaFunctionConfigurations') as t
-          where
-            event_notification_configuration -> 'LambdaFunctionConfigurations' <> 'null'
-            and t ->> 'LambdaFunctionArn' = $1;
-        EOQ
+  #     with "s3_buckets" {
+  #       sql = <<-EOQ
+  #         select
+  #           arn as bucket_arn
+  #         from
+  #           aws_s3_bucket,
+  #           jsonb_array_elements(event_notification_configuration -> 'LambdaFunctionConfigurations') as t
+  #         where
+  #           event_notification_configuration -> 'LambdaFunctionConfigurations' <> 'null'
+  #           and t ->> 'LambdaFunctionArn' = $1;
+  #       EOQ
 
-        args = [self.input.lambda_arn.value]
-      }
+  #       args = [self.input.lambda_arn.value]
+  #     }
 
-      with "sns_topic_subscriptions" {
-        sql = <<-EOQ
-          select
-            subscription_arn as subscription_arn
-          from
-            aws_sns_topic_subscription
-          where
-            protocol = 'lambda'
-            and endpoint = $1;
-        EOQ
+  #     with "sns_topic_subscriptions" {
+  #       sql = <<-EOQ
+  #         select
+  #           subscription_arn as subscription_arn
+  #         from
+  #           aws_sns_topic_subscription
+  #         where
+  #           protocol = 'lambda'
+  #           and endpoint = $1;
+  #       EOQ
 
-        args = [self.input.lambda_arn.value]
-      }
+  #       args = [self.input.lambda_arn.value]
+  #     }
 
-      with "sns_topics" {
-        sql = <<-EOQ
-          select
-            topic_arn as topic_arn
-          from
-            aws_sns_topic_subscription
-          where
-            protocol = 'lambda'
-            and endpoint = $1;
-        EOQ
+  #     with "sns_topics" {
+  #       sql = <<-EOQ
+  #         select
+  #           topic_arn as topic_arn
+  #         from
+  #           aws_sns_topic_subscription
+  #         where
+  #           protocol = 'lambda'
+  #           and endpoint = $1;
+  #       EOQ
 
-        args = [self.input.lambda_arn.value]
-      }
+  #       args = [self.input.lambda_arn.value]
+  #     }
 
-      with "vpc_security_groups" {
-        sql = <<-EOQ
-          select
-            s as group_id
-          from
-            aws_lambda_function,
-            jsonb_array_elements_text(vpc_security_group_ids) as s
-          where
-            arn = $1;
-        EOQ
+  #     with "vpc_security_groups" {
+  #       sql = <<-EOQ
+  #         select
+  #           s as group_id
+  #         from
+  #           aws_lambda_function,
+  #           jsonb_array_elements_text(vpc_security_group_ids) as s
+  #         where
+  #           arn = $1;
+  #       EOQ
 
-        args = [self.input.lambda_arn.value]
-      }
+  #       args = [self.input.lambda_arn.value]
+  #     }
 
-      with "vpc_subnets" {
-        sql = <<-EOQ
-          select
-            s as subnet_id
-          from
-            aws_lambda_function,
-            jsonb_array_elements_text(vpc_subnet_ids) as s
-          where
-            arn = $1;
-        EOQ
+  #     with "vpc_subnets" {
+  #       sql = <<-EOQ
+  #         select
+  #           s as subnet_id
+  #         from
+  #           aws_lambda_function,
+  #           jsonb_array_elements_text(vpc_subnet_ids) as s
+  #         where
+  #           arn = $1;
+  #       EOQ
 
-        args = [self.input.lambda_arn.value]
-      }
+  #       args = [self.input.lambda_arn.value]
+  #     }
 
-      with "vpc_vpcs" {
-        sql = <<-EOQ
-          select
-            vpc_id
-          from
-            aws_lambda_function
-          where
-            vpc_id is not null
-            and arn = $1;
-        EOQ
+  #     with "vpc_vpcs" {
+  #       sql = <<-EOQ
+  #         select
+  #           vpc_id
+  #         from
+  #           aws_lambda_function
+  #         where
+  #           vpc_id is not null
+  #           and arn = $1;
+  #       EOQ
 
-        args = [self.input.lambda_arn.value]
-      }
+  #       args = [self.input.lambda_arn.value]
+  #     }
 
-      nodes = [
-        node.api_gatewayv2_api,
-        node.api_gatewayv2_integration,
-        node.iam_role,
-        node.kms_key,
-        node.lambda_alias,
-        node.lambda_function,
-        node.lambda_version,
-        node.s3_bucket,
-        node.sns_topic,
-        node.sns_topic_subscription,
-        node.vpc_security_group,
-        node.vpc_subnet,
-        node.vpc_vpc
-      ]
+  #     nodes = [
+  #       node.api_gatewayv2_api,
+  #       node.api_gatewayv2_integration,
+  #       node.iam_role,
+  #       node.kms_key,
+  #       node.lambda_alias,
+  #       node.lambda_function,
+  #       node.lambda_version,
+  #       node.s3_bucket,
+  #       node.sns_topic,
+  #       node.sns_topic_subscription,
+  #       node.vpc_security_group,
+  #       node.vpc_subnet,
+  #       node.vpc_vpc
+  #     ]
 
-      edges = [
-        edge.api_gateway_api_to_api_gateway_integration,
-        edge.api_gateway_integration_to_lambda_function,
-        edge.lambda_function_to_iam_role,
-        edge.lambda_function_to_kms_key,
-        edge.lambda_function_to_lambda_alias,
-        edge.lambda_function_to_lambda_version,
-        edge.lambda_function_to_vpc_security_group,
-        edge.lambda_function_to_vpc_subnet,
-        edge.s3_bucket_to_lambda_function,
-        edge.sns_subscription_to_lambda_function,
-        edge.sns_topic_to_sns_subscription,
-        edge.vpc_subnet_to_vpc_vpc
-      ]
+  #     edges = [
+  #       edge.api_gateway_api_to_api_gateway_integration,
+  #       edge.api_gateway_integration_to_lambda_function,
+  #       edge.lambda_function_to_iam_role,
+  #       edge.lambda_function_to_kms_key,
+  #       edge.lambda_function_to_lambda_alias,
+  #       edge.lambda_function_to_lambda_version,
+  #       edge.lambda_function_to_vpc_security_group,
+  #       edge.lambda_function_to_vpc_subnet,
+  #       edge.s3_bucket_to_lambda_function,
+  #       edge.sns_subscription_to_lambda_function,
+  #       edge.sns_topic_to_sns_subscription,
+  #       edge.vpc_subnet_to_vpc_vpc
+  #     ]
 
-      args = {
-        api_gatewayv2_api_ids       = with.api_gateway_apis.rows[*].api_id
-        iam_role_arns               = with.iam_roles.rows[*].role_arn
-        kms_key_arns                = with.kms_keys.rows[*].kms_key_arn
-        lambda_function_arns        = [self.input.lambda_arn.value]
-        s3_bucket_arns              = with.s3_buckets.rows[*].bucket_arn
-        sns_topic_arns              = with.sns_topics.rows[*].topic_arn
-        sns_topic_subscription_arns = with.sns_topic_subscriptions.rows[*].subscription_arn
-        vpc_security_group_ids      = with.vpc_security_groups.rows[*].group_id
-        vpc_subnet_ids              = with.vpc_subnets.rows[*].subnet_id
-        vpc_vpc_ids                 = with.vpc_vpcs.rows[*].vpc_id
-      }
-    }
-  }
+  #     args = {
+  #       api_gatewayv2_api_ids       = with.api_gateway_apis.rows[*].api_id
+  #       iam_role_arns               = with.iam_roles.rows[*].role_arn
+  #       kms_key_arns                = with.kms_keys.rows[*].kms_key_arn
+  #       lambda_function_arns        = [self.input.lambda_arn.value]
+  #       s3_bucket_arns              = with.s3_buckets.rows[*].bucket_arn
+  #       sns_topic_arns              = with.sns_topics.rows[*].topic_arn
+  #       sns_topic_subscription_arns = with.sns_topic_subscriptions.rows[*].subscription_arn
+  #       vpc_security_group_ids      = with.vpc_security_groups.rows[*].group_id
+  #       vpc_subnet_ids              = with.vpc_subnets.rows[*].subnet_id
+  #       vpc_vpc_ids                 = with.vpc_vpcs.rows[*].vpc_id
+  #     }
+  #   }
+  # }
 
   container {
 

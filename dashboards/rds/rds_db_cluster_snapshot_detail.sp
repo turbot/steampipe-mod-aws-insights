@@ -65,60 +65,60 @@ dashboard "rds_db_cluster_snapshot_detail" {
 
   }
 
-  container {
+  # container {
 
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
+  #   graph {
+  #     title     = "Relationships"
+  #     type      = "graph"
+  #     direction = "TD"
 
-      with "kms_keys" {
-        sql = <<-EOQ
-          select
-            kms_key_id as key_arn
-          from
-            aws_rds_db_cluster_snapshot
-          where
-            kms_key_id is not null
-            and arn = $1;
-        EOQ
+  #     with "kms_keys" {
+  #       sql = <<-EOQ
+  #         select
+  #           kms_key_id as key_arn
+  #         from
+  #           aws_rds_db_cluster_snapshot
+  #         where
+  #           kms_key_id is not null
+  #           and arn = $1;
+  #       EOQ
 
-        args = [self.input.snapshot_arn.value]
-      }
+  #       args = [self.input.snapshot_arn.value]
+  #     }
 
-      with "rds_clusters" {
-        sql = <<-EOQ
-          select
-            c.arn as rds_cluster_arn
-          from
-            aws_rds_db_cluster as c
-            join aws_rds_db_cluster_snapshot as s
-            on s.db_cluster_identifier = c.db_cluster_identifier
-          where
-            s.arn = $1;
-        EOQ
+  #     with "rds_clusters" {
+  #       sql = <<-EOQ
+  #         select
+  #           c.arn as rds_cluster_arn
+  #         from
+  #           aws_rds_db_cluster as c
+  #           join aws_rds_db_cluster_snapshot as s
+  #           on s.db_cluster_identifier = c.db_cluster_identifier
+  #         where
+  #           s.arn = $1;
+  #       EOQ
 
-        args = [self.input.snapshot_arn.value]
-      }
+  #       args = [self.input.snapshot_arn.value]
+  #     }
 
-      nodes = [
-        node.kms_key,
-        node.rds_db_cluster,
-        node.rds_db_cluster_snapshot
-      ]
+  #     nodes = [
+  #       node.kms_key,
+  #       node.rds_db_cluster,
+  #       node.rds_db_cluster_snapshot
+  #     ]
 
-      edges = [
-        edge.rds_db_cluster_snapshot_to_kms_key,
-        edge.rds_db_cluster_to_rds_db_cluster_snapshot
-      ]
+  #     edges = [
+  #       edge.rds_db_cluster_snapshot_to_kms_key,
+  #       edge.rds_db_cluster_to_rds_db_cluster_snapshot
+  #     ]
 
-      args = {
-        kms_key_arns                 = with.kms_keys.rows[*].key_arn
-        rds_db_cluster_arns          = with.rds_clusters.rows[*].rds_cluster_arn
-        rds_db_cluster_snapshot_arns = [self.input.snapshot_arn.value]
-      }
-    }
-  }
+  #     args = {
+  #       kms_key_arns                 = with.kms_keys.rows[*].key_arn
+  #       rds_db_cluster_arns          = with.rds_clusters.rows[*].rds_cluster_arn
+  #       rds_db_cluster_snapshot_arns = [self.input.snapshot_arn.value]
+  #     }
+  #   }
+  # }
 
   container {
 

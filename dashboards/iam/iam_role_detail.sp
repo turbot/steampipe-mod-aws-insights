@@ -41,120 +41,120 @@ dashboard "iam_role_detail" {
 
   }
 
-  container {
+  # container {
 
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
+  #   graph {
+  #     title     = "Relationships"
+  #     type      = "graph"
+  #     direction = "TD"
 
-      with "ec2_instances" {
-        sql = <<-EOQ
-          select
-            i.arn as instance_arn
-          from
-            aws_ec2_instance as i,
-            aws_iam_role as r,
-            jsonb_array_elements_text(instance_profile_arns) as instance_profile
-          where
-            r.arn = $1
-            and instance_profile = i.iam_instance_profile_arn;
-        EOQ
+  #     with "ec2_instances" {
+  #       sql = <<-EOQ
+  #         select
+  #           i.arn as instance_arn
+  #         from
+  #           aws_ec2_instance as i,
+  #           aws_iam_role as r,
+  #           jsonb_array_elements_text(instance_profile_arns) as instance_profile
+  #         where
+  #           r.arn = $1
+  #           and instance_profile = i.iam_instance_profile_arn;
+  #       EOQ
 
-        args = [self.input.role_arn.value]
-      }
+  #       args = [self.input.role_arn.value]
+  #     }
 
-      with "emr_clusters" {
-        sql = <<-EOQ
-          select
-            c.cluster_arn as cluster_arn
-          from
-            aws_iam_role as r,
-            aws_emr_cluster as c
-          where
-            r.arn = $1
-            and r.name = c.service_role;
-        EOQ
+  #     with "emr_clusters" {
+  #       sql = <<-EOQ
+  #         select
+  #           c.cluster_arn as cluster_arn
+  #         from
+  #           aws_iam_role as r,
+  #           aws_emr_cluster as c
+  #         where
+  #           r.arn = $1
+  #           and r.name = c.service_role;
+  #       EOQ
 
-        args = [self.input.role_arn.value]
-      }
+  #       args = [self.input.role_arn.value]
+  #     }
 
-      with "guardduty_detectors" {
-        sql = <<-EOQ
-          select
-            arn as guardduty_detector_arn
-          from
-            aws_guardduty_detector
-          where
-            service_role = $1;
-        EOQ
+  #     with "guardduty_detectors" {
+  #       sql = <<-EOQ
+  #         select
+  #           arn as guardduty_detector_arn
+  #         from
+  #           aws_guardduty_detector
+  #         where
+  #           service_role = $1;
+  #       EOQ
 
-        args = [self.input.role_arn.value]
-      }
+  #       args = [self.input.role_arn.value]
+  #     }
 
-      with "iam_policies" {
-        sql = <<-EOQ
-          select
-            policy_arn
-          from
-            aws_iam_role,
-            jsonb_array_elements_text(attached_policy_arns) as policy_arn
-          where
-            arn = $1;
-        EOQ
+  #     with "iam_policies" {
+  #       sql = <<-EOQ
+  #         select
+  #           policy_arn
+  #         from
+  #           aws_iam_role,
+  #           jsonb_array_elements_text(attached_policy_arns) as policy_arn
+  #         where
+  #           arn = $1;
+  #       EOQ
 
-        args = [self.input.role_arn.value]
-      }
+  #       args = [self.input.role_arn.value]
+  #     }
 
-      with "lambda_functions" {
-        sql = <<-EOQ
-          select
-            arn as function_arn
-          from
-            aws_lambda_function
-          where
-            role = $1;
-        EOQ
+  #     with "lambda_functions" {
+  #       sql = <<-EOQ
+  #         select
+  #           arn as function_arn
+  #         from
+  #           aws_lambda_function
+  #         where
+  #           role = $1;
+  #       EOQ
 
-        args = [self.input.role_arn.value]
-      }
+  #       args = [self.input.role_arn.value]
+  #     }
 
 
-      nodes = [
-        node.ec2_instance,
-        node.emr_cluster,
-        node.guardduty_detector,
-        node.iam_instance_profile,
-        node.iam_policy,
-        node.iam_role,
-        node.iam_role_trusted_aws,
-        node.iam_role_trusted_federated,
-        node.iam_role_trusted_service,
-        node.lambda_function
-      ]
+  #     nodes = [
+  #       node.ec2_instance,
+  #       node.emr_cluster,
+  #       node.guardduty_detector,
+  #       node.iam_instance_profile,
+  #       node.iam_policy,
+  #       node.iam_role,
+  #       node.iam_role_trusted_aws,
+  #       node.iam_role_trusted_federated,
+  #       node.iam_role_trusted_service,
+  #       node.lambda_function
+  #     ]
 
-      edges = [
-        edge.ec2_instance_to_iam_instance_profile,
-        edge.emr_cluster_to_iam_role,
-        edge.guardduty_detector_to_iam_role,
-        edge.iam_instance_profile_to_iam_role,
-        edge.iam_role_to_iam_policy,
-        edge.iam_role_trusted_aws,
-        edge.iam_role_trusted_federated,
-        edge.iam_role_trusted_service,
-        edge.lambda_function_to_iam_role
-      ]
+  #     edges = [
+  #       edge.ec2_instance_to_iam_instance_profile,
+  #       edge.emr_cluster_to_iam_role,
+  #       edge.guardduty_detector_to_iam_role,
+  #       edge.iam_instance_profile_to_iam_role,
+  #       edge.iam_role_to_iam_policy,
+  #       edge.iam_role_trusted_aws,
+  #       edge.iam_role_trusted_federated,
+  #       edge.iam_role_trusted_service,
+  #       edge.lambda_function_to_iam_role
+  #     ]
 
-      args = {
-        ec2_instance_arns       = with.ec2_instances.rows[*].instance_arn
-        emr_cluster_arns        = with.emr_clusters.rows[*].cluster_arn
-        guardduty_detector_arns = with.guardduty_detectors.rows[*].guardduty_detector_arn
-        iam_policy_arns         = with.iam_policies.rows[*].policy_arn
-        iam_role_arns           = [self.input.role_arn.value]
-        lambda_function_arns    = with.lambda_functions.rows[*].function_arn
-      }
-    }
-  }
+  #     args = {
+  #       ec2_instance_arns       = with.ec2_instances.rows[*].instance_arn
+  #       emr_cluster_arns        = with.emr_clusters.rows[*].cluster_arn
+  #       guardduty_detector_arns = with.guardduty_detectors.rows[*].guardduty_detector_arn
+  #       iam_policy_arns         = with.iam_policies.rows[*].policy_arn
+  #       iam_role_arns           = [self.input.role_arn.value]
+  #       lambda_function_arns    = with.lambda_functions.rows[*].function_arn
+  #     }
+  #   }
+  # }
 
   container {
 
