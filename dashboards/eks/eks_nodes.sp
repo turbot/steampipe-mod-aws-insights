@@ -59,7 +59,7 @@ node "eks_fargate_profile" {
         'Region', p.region
         ) as properties
     from
-     aws_eks_cluster as c
+      aws_eks_cluster as c
       left join
         aws_eks_fargate_profile as p
         on p.cluster_name = c.name

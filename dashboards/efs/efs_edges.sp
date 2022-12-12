@@ -45,23 +45,6 @@ edge "efs_file_system_to_kms_key" {
   param "efs_file_system_arns" {}
 }
 
-edge "efs_mount_target_to_vpc" {
-  title = "vpc"
-  sql   = <<-EOQ
-    select
-      m.subnet_id as from_id,
-      v.vpc_id as to_id
-    from
-      aws_efs_mount_target as m
-      left join aws_efs_file_system as f on f.file_system_id = m.file_system_id
-      left join aws_vpc as v on m.vpc_id= v.vpc_id
-    where
-      f.arn = any($1);
-  EOQ
-
-  param "efs_file_system_arns" {}
-}
-
 edge "efs_mount_target_to_vpc_security_group" {
   title = "security group"
   sql   = <<-EOQ

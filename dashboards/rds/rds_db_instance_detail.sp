@@ -185,9 +185,9 @@ dashboard "rds_db_instance_detail" {
         edge.rds_db_instance_to_rds_db_snapshot,
         edge.rds_db_instance_to_sns_topic,
         edge.rds_db_instance_to_vpc_security_group,
-        edge.rds_db_instance_vpc_subnet_to_vpc,
         edge.rds_db_subnet_group_to_vpc_subnet,
-        edge.vpc_security_group_to_rds_db_subnet_group
+        edge.vpc_security_group_to_rds_db_subnet_group,
+        edge.vpc_subnet_to_vpc_vpc
       ]
 
       args = {

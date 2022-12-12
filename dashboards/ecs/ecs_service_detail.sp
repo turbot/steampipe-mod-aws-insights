@@ -85,21 +85,6 @@ dashboard "ecs_service_detail" {
         args = [self.input.service_arn.value]
       }
 
-      with "ecs_task_definitions" {
-        sql = <<-EOQ
-          select
-            d.task_definition_arn as task_definition_arn
-          from
-            aws_ecs_task_definition as d,
-            aws_ecs_service as s
-          where
-            d.task_definition_arn = s.task_definition
-            and s.arn = $1;
-        EOQ
-
-        args = [self.input.service_arn.value]
-      }
-
       with "ecs_tasks" {
         sql = <<-EOQ
           select
@@ -111,6 +96,21 @@ dashboard "ecs_service_detail" {
             s.arn = $1
             and t.service_name = s.service_name
             and t.region = s.region;
+        EOQ
+
+        args = [self.input.service_arn.value]
+      }
+
+      with "ecs_task_definitions" {
+        sql = <<-EOQ
+          select
+            d.task_definition_arn as task_definition_arn
+          from
+            aws_ecs_task_definition as d,
+            aws_ecs_service as s
+          where
+            d.task_definition_arn = s.task_definition
+            and s.arn = $1;
         EOQ
 
         args = [self.input.service_arn.value]
@@ -164,7 +164,7 @@ dashboard "ecs_service_detail" {
 
       with "vpc_vpcs" {
         sql = <<-EOQ
-         select
+        select
           v.arn as vpc_arn
         from
           aws_ecs_service as e,

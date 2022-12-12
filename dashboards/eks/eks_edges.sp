@@ -71,7 +71,7 @@ edge "eks_cluster_to_iam_role" {
   title = "assumes"
 
   sql = <<-EOQ
-     select
+    select
       arn as from_id,
       role_arn as to_id
     from

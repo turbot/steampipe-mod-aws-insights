@@ -154,7 +154,7 @@ dashboard "ecs_cluster_detail" {
 
       with "vpc_vpcs" {
         sql = <<-EOQ
-         select
+        select
           v.vpc_id as vpc_id
         from
           aws_ecs_container_instance as i

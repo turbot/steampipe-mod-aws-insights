@@ -285,7 +285,7 @@ dashboard "vpc_detail" {
         edge.vpc_vpc_to_vpc_internet_gateway,
         edge.vpc_vpc_to_vpc_route_table,
         edge.vpc_vpc_to_vpc_security_group,
-        edge.vpc_vpc_to_vpc_vpn_gateway,
+        edge.vpc_vpc_to_vpc_vpn_gateway
       ]
 
       args = {
