@@ -72,6 +72,20 @@ dashboard "redshift_snapshot_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "kms_keys" {
+        sql = <<-EOQ
+          select
+            kms_key_id as key_arn
+          from
+            aws_redshift_snapshot
+          where
+            kms_key_id is not null
+            and akas::text = $1;
+        EOQ
+
+        args = [self.input.snapshot_arn.value]
+      }
+
       with "redshift_clusters" {
         sql = <<-EOQ
           select
@@ -87,36 +101,21 @@ dashboard "redshift_snapshot_detail" {
         args = [self.input.snapshot_arn.value]
       }
 
-      with "kms_keys" {
-        sql = <<-EOQ
-          select
-            kms_key_id as key_arn
-          from
-            aws_redshift_snapshot
-          where
-            kms_key_id is not null
-            and akas::text = $1;
-        EOQ
-
-        args = [self.input.snapshot_arn.value]
-      }
-
-
       nodes = [
-        node.redshift_cluster,
         node.kms_key,
+        node.redshift_cluster,
         node.redshift_snapshot
       ]
 
       edges = [
-        edge.redshift_snapshot_to_kms_key,
-        edge.redshift_cluster_to_redshift_snapshot
+        edge.redshift_cluster_to_redshift_snapshot,
+        edge.redshift_snapshot_to_kms_key
       ]
 
       args = {
-        redshift_snapshot_arns = [self.input.snapshot_arn.value]
         kms_key_arns           = with.kms_keys.rows[*].key_arn
         redshift_cluster_arns  = with.redshift_clusters.rows[*].redshift_cluster_arn
+        redshift_snapshot_arns = [self.input.snapshot_arn.value]
       }
     }
   }
@@ -249,47 +248,6 @@ query "redshift_snapshot_unencrypted" {
   EOQ
 
   param "arn" {}
-}
-
-node "redshift_snapshot" {
-  category = category.redshift_snapshot
-
-  sql = <<-EOQ
-    select
-      akas::text as id,
-      title,
-      jsonb_build_object(
-        'Status', status,
-        'Cluster Identifier', cluster_identifier,
-        'Create Time', cluster_create_time,
-        'Type', snapshot_type,
-        'Encrypted', encrypted::text,
-        'Account ID', account_id,
-        'Source Region', source_region
-      ) as properties
-    from
-      aws_redshift_snapshot
-    where
-      akas::text = any($1);
-  EOQ
-
-  param "redshift_snapshot_arns" {}
-}
-
-edge "redshift_snapshot_to_kms_key" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      redshift_snapshot_arn as from_id,
-      key_arn as to_id
-    from
-      unnest($1::text[]) as key_arn,
-      unnest($2::text[]) as redshift_snapshot_arn
-  EOQ
-
-  param "kms_key_arns" {}
-  param "redshift_snapshot_arns" {}
 }
 
 query "redshift_snapshot_overview" {

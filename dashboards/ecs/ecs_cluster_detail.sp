@@ -72,36 +72,133 @@ dashboard "ecs_cluster_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "ecs_container_instances" {
+        sql = <<-EOQ
+          select
+            i.arn as container_instance_arn
+          from
+            aws_ecs_container_instance as i
+            left join aws_ec2_instance as e on i.ec2_instance_id = e.instance_id
+          where
+            i.arn is not null
+            and i.cluster_arn = $1;
+        EOQ
+
+        args = [self.input.ecs_cluster_arn.value]
+      }
+
+      with "ecs_services" {
+        sql = <<-EOQ
+          select
+            s.arn as service_arn
+          from
+            aws_ecs_service as s
+          where
+            s.cluster_arn = $1;
+        EOQ
+
+        args = [self.input.ecs_cluster_arn.value]
+      }
+
+      with "ecs_task_definitions" {
+        sql = <<-EOQ
+          with list_all_task_definitions as (
+            select
+              distinct task_definition_arn as task_definition
+            from
+              aws_ecs_task
+            where
+              cluster_arn = $1
+            union
+            select
+              distinct task_definition as task_definition
+            from
+              aws_ecs_service
+            where
+              cluster_arn = $1
+          )
+        select
+          d.task_definition_arn as task_definition_arn
+        from
+          aws_ecs_task_definition as d
+        where
+          d.task_definition_arn in (
+            select
+              distinct task_definition
+            from
+              list_all_task_definitions
+          );
+        EOQ
+
+        args = [self.input.ecs_cluster_arn.value]
+      }
+
+      with "vpc_subnets" {
+        sql = <<-EOQ
+          select
+            s.subnet_id as subnet_id
+          from
+            aws_ecs_container_instance as i
+            right join
+              aws_ec2_instance as c
+              on c.instance_id = i.ec2_instance_id
+            right join
+              aws_vpc_subnet as s
+              on s.subnet_id = c.subnet_id
+          where
+            i.cluster_arn = $1;
+        EOQ
+
+        args = [self.input.ecs_cluster_arn.value]
+      }
+
+      with "vpc_vpcs" {
+        sql = <<-EOQ
+         select
+          v.vpc_id as vpc_id
+        from
+          aws_ecs_container_instance as i
+          right join aws_ec2_instance as c on c.instance_id = i.ec2_instance_id
+          right join aws_vpc_subnet as s on s.subnet_id = c.subnet_id
+          right join aws_vpc as v on v.vpc_id = s.vpc_id
+        where
+          v.vpc_id is not null
+          and i.cluster_arn = $1;
+        EOQ
+
+        args = [self.input.ecs_cluster_arn.value]
+      }
 
       nodes = [
-        node.ecs_cluster_node,
-        node.ecs_cluster_to_ec2_launch_type_node,
-        node.ecs_cluster_to_fargate_launch_type_node,
-        node.ecs_cluster_to_external_launch_type_node,
-        node.ecs_cluster_to_ecs_task_definition_node,
-        node.ecs_cluster_to_ecs_service_node,
-        node.ecs_cluster_to_ecs_container_instance_node,
-        node.ecs_cluster_ecs_container_instance_to_vpc_subnet_node,
-        node.ecs_cluster_vpc_subnet_to_vpc_node,
-        node.ecs_cluster_ecs_service_to_vpc_subnet_node,
-        node.ecs_cluster_ecs_service_subnet_to_vpc_node
+        node.ecs_cluster,
+        node.ecs_cluster_ec2_launch_type,
+        node.ecs_cluster_external_launch_type,
+        node.ecs_cluster_fargate_launch_type,
+        node.ecs_container_instance,
+        node.ecs_service,
+        node.ecs_task_definition,
+        node.vpc_subnet,
+        node.vpc_vpc
       ]
 
       edges = [
-        edge.ecs_cluster_to_ec2_launch_type_edge,
-        edge.ecs_cluster_to_fargate_launch_type_edge,
-        edge.ecs_cluster_to_external_launch_type_edge,
-        edge.ecs_cluster_to_ecs_task_definition_edge,
-        edge.ecs_cluster_to_ecs_service_edge,
-        edge.ecs_cluster_to_ecs_container_instance_edge,
-        edge.ecs_cluster_ecs_container_instance_to_vpc_subnet_edge,
-        edge.ecs_cluster_vpc_subnet_to_vpc_edge,
-        edge.ecs_cluster_ecs_service_to_vpc_subnet_edge,
-        edge.ecs_cluster_ecs_service_subnet_to_vpc_edge
+        edge.ecs_cluster_to_ecs_cluster_ec2_launch_type,
+        edge.ecs_cluster_to_ecs_cluster_external_launch_type,
+        edge.ecs_cluster_to_ecs_cluster_fargate_launch_type,
+        edge.ecs_cluster_to_ecs_container_instance,
+        edge.ecs_cluster_to_ecs_task_definition,
+        edge.ecs_container_instance_to_vpc_subnet,
+        edge.ecs_task_definition_to_ecs_service,
+        edge.vpc_subnet_to_vpc_vpc
       ]
 
       args = {
-        arn = self.input.ecs_cluster_arn.value
+        ecs_cluster_arns            = [self.input.ecs_cluster_arn.value]
+        ecs_container_instance_arns = with.ecs_container_instances.rows[*].container_instance_arn
+        ecs_service_arns            = with.ecs_services.rows[*].service_arn
+        ecs_task_definition_arns    = with.ecs_task_definitions.rows[*].task_definition_arn
+        vpc_subnet_ids              = with.vpc_subnets.rows[*].subnet_id
+        vpc_vpc_ids                 = with.vpc_vpcs.rows[*].vpc_id
       }
     }
   }
@@ -359,630 +456,6 @@ node "ecs_cluster_node" {
       aws_ecs_cluster
     where
       cluster_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_cluster_to_ec2_launch_type_node" {
-  # category = category.kms_key
-
-  sql = <<-EOQ
-    with list_all_task_definitions as (
-      select
-        distinct task_definition_arn as task_definition
-      from
-        aws_ecs_task
-      where
-        cluster_arn = $1
-      union
-      select
-        distinct task_definition as task_definition
-      from
-        aws_ecs_service
-      where
-        cluster_arn = $1
-    ),task_definition_launch_type as (
-      select
-        jsonb_array_elements_text(requires_compatibilities) as launch_type,
-        task_definition_arn
-      from
-        aws_ecs_task_definition as d
-      where
-        d.task_definition_arn in (select task_definition from list_all_task_definitions)
-    ) select
-      'EC2' as id,
-      'EC2' as title,
-      'ec2_launch_type' as category,
-      jsonb_build_object(
-        'Launch Type', 'EC2'
-      ) as properties
-    from
-      aws_ecs_cluster
-    where
-      'EC2' in (
-        select
-          launch_type
-        from
-          task_definition_launch_type
-      )
-      and cluster_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecs_cluster_to_ec2_launch_type_edge" {
-  title = "launch type"
-
-  sql = <<-EOQ
-    with list_all_task_definitions as (
-      select
-        distinct task_definition_arn as task_definition
-      from
-        aws_ecs_task
-      where
-        cluster_arn = $1
-      union
-      select
-        distinct task_definition as task_definition
-      from
-        aws_ecs_service
-      where
-        cluster_arn = $1
-    ),task_definition_launch_type as (
-      select
-        jsonb_array_elements_text(requires_compatibilities) as launch_type,
-        task_definition_arn
-      from
-        aws_ecs_task_definition as d
-      where
-        d.task_definition_arn in (select task_definition from list_all_task_definitions)
-    ) select
-        $1 as from_id,
-        'EC2' as to_id
-      from
-        aws_ecs_cluster
-      where
-        'EC2' in (
-          select
-            launch_type
-          from
-            task_definition_launch_type
-        )
-        and cluster_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_cluster_to_fargate_launch_type_node" {
-  # category = category.fargate_launch_type
-
-  sql = <<-EOQ
-    with list_all_task_definitions as (
-      select
-        distinct task_definition_arn as task_definition
-      from
-        aws_ecs_task
-      where
-        cluster_arn = $1
-      union
-      select
-        distinct task_definition as task_definition
-      from
-        aws_ecs_service
-      where
-        cluster_arn = $1
-    ),task_definition_launch_type as (
-      select
-        jsonb_array_elements_text(requires_compatibilities) as launch_type,
-        task_definition_arn
-      from
-        aws_ecs_task_definition as d
-      where
-        d.task_definition_arn in (select task_definition from list_all_task_definitions)
-    ) select
-        'FARGATE' as id,
-        'FARGATE' as title,
-        jsonb_build_object(
-          'Launch Type', 'FARGATE'
-        ) as properties
-      from
-        aws_ecs_cluster
-      where
-        'FARGATE' in (
-          select
-            launch_type
-          from
-            task_definition_launch_type
-        )
-        and cluster_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecs_cluster_to_fargate_launch_type_edge" {
-  title = "launch type"
-
-  sql = <<-EOQ
-    with list_all_task_definitions as (
-      select
-        distinct task_definition_arn as task_definition
-      from
-        aws_ecs_task
-      where
-        cluster_arn = $1
-      union
-      select
-        distinct task_definition as task_definition
-      from
-        aws_ecs_service
-      where
-        cluster_arn = $1
-    ),task_definition_launch_type as (
-      select
-        jsonb_array_elements_text(requires_compatibilities) as launch_type,
-        task_definition_arn
-      from
-        aws_ecs_task_definition as d
-      where
-        d.task_definition_arn in (select task_definition from list_all_task_definitions)
-    ) select
-        $1 as from_id,
-        'FARGATE' as to_id
-      from
-        aws_ecs_cluster
-      where
-        'FARGATE' in (
-          select
-            launch_type
-          from
-            task_definition_launch_type
-        )
-        and cluster_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_cluster_to_external_launch_type_node" {
-  # category = category.fargate_launch_type
-
-  sql = <<-EOQ
-    with list_all_task_definitions as (
-      select
-        distinct task_definition_arn as task_definition
-      from
-        aws_ecs_task
-      where
-        cluster_arn = $1
-      union
-      select
-        distinct task_definition as task_definition
-      from
-        aws_ecs_service
-      where
-        cluster_arn = $1
-    ),task_definition_launch_type as (
-      select
-        jsonb_array_elements_text(requires_compatibilities) as launch_type,
-        task_definition_arn
-      from
-        aws_ecs_task_definition as d
-      where
-        d.task_definition_arn in (select task_definition from list_all_task_definitions)
-    ) select
-        'EXTERNAL' as id,
-        'EXTERNAL' as title,
-        jsonb_build_object(
-          'Launch Type', 'EXTERNAL'
-        ) as properties
-      from
-        aws_ecs_cluster
-      where
-        'EXTERNAL' in (
-          select
-            launch_type
-          from
-            task_definition_launch_type
-        )
-        and cluster_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecs_cluster_to_external_launch_type_edge" {
-  title = "launch type"
-
-  sql = <<-EOQ
-    with list_all_task_definitions as (
-      select
-        distinct task_definition_arn as task_definition
-      from
-        aws_ecs_task
-      where
-        cluster_arn = $1
-      union
-      select
-        distinct task_definition as task_definition
-      from
-        aws_ecs_service
-      where
-        cluster_arn = $1
-    ),task_definition_launch_type as (
-      select
-        jsonb_array_elements_text(requires_compatibilities) as launch_type,
-        task_definition_arn
-      from
-        aws_ecs_task_definition as d
-      where
-        d.task_definition_arn in (select task_definition from list_all_task_definitions)
-    ) select
-        $1 as from_id,
-        'EXTERNAL' as to_id
-      from
-        aws_ecs_cluster
-      where
-        'EXTERNAL' in (
-          select
-            launch_type
-          from
-            task_definition_launch_type
-        )
-        and cluster_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_cluster_to_ecs_task_definition_node" {
-  category = category.ecs_task_definition
-
-  sql = <<-EOQ
-    with list_all_task_definitions as (
-      select
-        distinct task_definition_arn as task_definition
-      from
-        aws_ecs_task
-      where
-        cluster_arn = $1
-      union
-      select
-        distinct task_definition as task_definition
-      from
-        aws_ecs_service
-      where
-        cluster_arn = $1
-    )
-    select
-      d.task_definition_arn as id,
-      d.title as title,
-      jsonb_build_object(
-        'ARN', d.task_definition_arn,
-        'Account ID', d.account_id,
-        'Status', d.status,
-        'Memory', d.memory,
-        'CPU', d.cpu,
-        'Revision', d.revision,
-        'Region', d.region
-      ) as properties
-    from
-      aws_ecs_task_definition as d
-    where
-      d.task_definition_arn in (
-        select
-          distinct task_definition
-        from
-          list_all_task_definitions
-      );
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecs_cluster_to_ecs_task_definition_edge" {
-  title = "task defintion"
-
-  sql = <<-EOQ
-    with list_all_task_definitions as (
-      select
-        distinct task_definition_arn as task_definition
-      from
-        aws_ecs_task
-      where
-        cluster_arn = $1
-      union
-      select
-        distinct task_definition as task_definition
-      from
-        aws_ecs_service
-      where
-        cluster_arn = $1
-    ) select
-      jsonb_array_elements_text(requires_compatibilities) as from_id,
-      d.task_definition_arn as to_id
-    from
-      aws_ecs_task_definition as d
-    where
-      d.task_definition_arn in (
-        select
-          task_definition
-        from
-          list_all_task_definitions
-      );
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_cluster_to_ecs_service_node" {
-  category = category.ecs_service
-
-  sql = <<-EOQ
-    select
-      s.arn as id,
-      s.title as title,
-      jsonb_build_object(
-        'ARN', s.arn,
-        'launch_type', s.launch_type,
-        'Account ID', s.account_id,
-        'Region', s.region
-      ) as properties
-    from
-      aws_ecs_service as s
-    where
-      s.cluster_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecs_cluster_to_ecs_service_edge" {
-  title = "service"
-
-  sql = <<-EOQ
-    select
-      s.task_definition as from_id,
-      s.arn as to_id
-    from
-      aws_ecs_service as s
-    where
-      s.cluster_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_cluster_to_ecs_container_instance_node" {
-  category = category.ecs_container_instance
-
-  sql = <<-EOQ
-    select
-      i.arn as id,
-      e.title as title,
-      jsonb_build_object(
-        'ARN', i.arn,
-        'Instance ID', i.ec2_instance_id,
-        'Status', i.status,
-        'Account ID', i.account_id,
-        'Region', i.region
-      ) as properties
-    from
-      aws_ecs_container_instance as i
-      left join aws_ec2_instance as e on i.ec2_instance_id = e.instance_id
-    where
-      i.cluster_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecs_cluster_to_ecs_container_instance_edge" {
-  title = "container instance"
-
-  sql = <<-EOQ
-    select
-      'EC2' as from_id,
-      i.arn as to_id
-    from
-      aws_ecs_container_instance as i
-    where
-      i.cluster_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_cluster_ecs_container_instance_to_vpc_subnet_node" {
-  category = category.vpc_subnet
-
-  sql = <<-EOQ
-    select
-      s.subnet_arn as id,
-      s.title as title,
-      jsonb_build_object(
-        'ARN', s.subnet_arn,
-        'Subnet ID', s.subnet_id,
-        'Account ID', s.account_id,
-        'Region', s.region
-      ) as properties
-    from
-      aws_ecs_container_instance as i
-      right join
-        aws_ec2_instance as c
-        on c.instance_id = i.ec2_instance_id
-      right join
-        aws_vpc_subnet as s
-        on s.subnet_id = c.subnet_id
-    where
-      i.cluster_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecs_cluster_ecs_container_instance_to_vpc_subnet_edge" {
-  title = "subnet"
-
-  sql = <<-EOQ
-    select
-      i.arn as from_id,
-      s.subnet_arn as to_id
-    from
-      aws_ecs_container_instance as i
-      right join
-        aws_ec2_instance as c
-        on c.instance_id = i.ec2_instance_id
-      right join
-        aws_vpc_subnet as s
-        on s.subnet_id = c.subnet_id
-    where
-      i.cluster_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_cluster_vpc_subnet_to_vpc_node" {
-  category = category.vpc_vpc
-
-  sql = <<-EOQ
-    select
-      v.vpc_id as id,
-      v.title as title,
-      jsonb_build_object(
-        'ARN', v.arn,
-        'VPC ID', v.vpc_id,
-        'Account ID', v.account_id,
-        'Region', v.region
-      ) as properties
-    from
-      aws_ecs_container_instance as i
-      right join aws_ec2_instance as c on c.instance_id = i.ec2_instance_id
-      right join aws_vpc_subnet as s on s.subnet_id = c.subnet_id
-      right join aws_vpc as v on v.vpc_id = s.vpc_id
-    where
-      i.cluster_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecs_cluster_vpc_subnet_to_vpc_edge" {
-  title = "vpc"
-
-  sql = <<-EOQ
-    select
-      s.subnet_arn as from_id,
-      v.vpc_id as to_id
-    from
-      aws_ecs_container_instance as i
-      right join aws_ec2_instance as c  on c.instance_id = i.ec2_instance_id
-      right join aws_vpc_subnet as s on s.subnet_id = c.subnet_id
-      right join aws_vpc as v on v.vpc_id = s.vpc_id
-    where
-      i.cluster_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_cluster_ecs_service_to_vpc_subnet_node" {
-  category = category.vpc_subnet
-
-  sql = <<-EOQ
-    select
-      sb.subnet_arn as id,
-      sb.title as title,
-      jsonb_build_object(
-        'ARN', sb.subnet_arn,
-        'Subnet ID', sb.subnet_id,
-        'Account ID', sb.account_id,
-        'Region', sb.region
-      ) as properties
-    from
-      aws_ecs_service as e,
-      jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
-      left join
-        aws_vpc_subnet as sb
-        on sb.subnet_id = trim((s::text ), '""')
-    where
-      e.network_configuration is not null
-      and e.cluster_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecs_cluster_ecs_service_to_vpc_subnet_edge" {
-  title = "subnet"
-
-  sql = <<-EOQ
-    select
-      e.arn as from_id,
-      sb.subnet_arn as to_id
-    from
-      aws_ecs_service as e,
-      jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
-      left join
-        aws_vpc_subnet as sb
-        on sb.subnet_id = trim((s::text ), '""')
-    where
-      e.network_configuration is not null
-      and e.cluster_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_cluster_ecs_service_subnet_to_vpc_node" {
-  category = category.vpc_vpc
-
-  sql = <<-EOQ
-    select
-      v.arn as id,
-      v.title as title,
-      jsonb_build_object(
-        'ARN', v.arn,
-        'VPC ID', v.vpc_id,
-        'Account ID', v.account_id,
-        'Region', v.region
-      ) as properties
-    from
-      aws_ecs_service as e,
-      jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
-      left join
-        aws_vpc_subnet as sb
-        on sb.subnet_id = trim((s::text ), '""'),
-      aws_vpc as v
-    where
-      e.network_configuration is not null
-      and e.cluster_arn = $1
-      and v.vpc_id = sb.vpc_id;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecs_cluster_ecs_service_subnet_to_vpc_edge" {
-  title = "vpc"
-
-  sql = <<-EOQ
-    select
-      sb.subnet_arn as from_id,
-      v.arn as to_id
-    from
-      aws_ecs_service as e,
-      jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
-      left join aws_vpc_subnet as sb on sb.subnet_id = trim((s::text ), '""'),
-      aws_vpc as v
-    where
-      e.network_configuration is not null
-      and e.cluster_arn = $1
-      and v.vpc_id = sb.vpc_id;
   EOQ
 
   param "arn" {}

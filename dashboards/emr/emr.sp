@@ -8,14 +8,14 @@ category "emr_cluster" {
   title = "EMR Cluster"
   color = local.analytics_color
   href  = "/aws_insights.dashboard.emr_cluster_detail?input.emr_cluster_arn={{.properties.'ARN' | @uri}}"
-  icon  = "text:EMR"
+  icon  = "hub"
 }
 
 category "emr_instance" {
   title = "EMR Instance"
   color = local.analytics_color
   href  = "/aws_insights.dashboard.ec2_instance_detail?input.instance_arn={{.properties.'EC2 Instance ARN' | @uri}}"
-  icon  = "cpu-chip"
+  icon  = "memory"
 }
 
 category "emr_instance_fleet" {
@@ -27,5 +27,5 @@ category "emr_instance_fleet" {
 category "emr_instance_group" {
   title = "EMR instance group"
   color = local.analytics_color
-  icon  = "rectangle-group"
+  icon  = "dashboard"
 }

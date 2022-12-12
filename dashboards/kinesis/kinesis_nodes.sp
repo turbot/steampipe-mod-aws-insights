@@ -1,25 +1,22 @@
-node "dynamodb_table_to_kinesis_stream_node" {
+node "kinesis_stream" {
   category = category.kinesis_stream
 
   sql = <<-EOQ
   select
-    s.stream_arn as id,
-    s.title as title,
+    stream_arn as id,
+    title as title,
     jsonb_build_object(
-      'ARN', s.stream_arn,
+      'ARN', stream_arn,
       'Status', stream_status,
       'Encryption Type', encryption_type,
-      'Region', s.region ,
-      'Account ID', s.account_id
+      'Region', region ,
+      'Account ID', account_id
     ) as properties
   from
-    aws_kinesis_stream as s,
-    aws_dynamodb_table as t,
-    jsonb_array_elements(t.streaming_destination -> 'KinesisDataStreamDestinations') as d
+    aws_kinesis_stream
   where
-    d ->> 'StreamArn' = s.stream_arn
-    and t.arn = any($1);
+    stream_arn = any($1);
   EOQ
 
-  param "dynamodb_table_arns" {}
+  param "kinesis_stream_arns" {}
 }

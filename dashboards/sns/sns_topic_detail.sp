@@ -39,6 +39,32 @@ dashboard "sns_topic_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "cloudtrail_trails" {
+        sql = <<-EOQ
+          select
+            arn as trail_arn
+          from
+            aws_cloudtrail_trail
+          where
+            sns_topic_arn = $1;
+        EOQ
+
+        args = [self.input.topic_arn.value]
+      }
+
+      with "elasticache_clusters" {
+        sql = <<-EOQ
+          select
+            arn as elasticache_cluster_arn
+          from
+            aws_elasticache_cluster
+          where
+            notification_configuration ->> 'TopicArn' = $1;
+        EOQ
+
+        args = [self.input.topic_arn.value]
+      }
+
       with "kms_keys" {
         sql = <<-EOQ
           select
@@ -48,25 +74,6 @@ dashboard "sns_topic_detail" {
           where
             kms_master_key_id is not null
             and topic_arn = $1;
-        EOQ
-
-        args = [self.input.topic_arn.value]
-      }
-
-      with "s3_buckets" {
-        sql = <<-EOQ
-          select
-            b.arn as bucket_arn
-          from
-            aws_s3_bucket as b,
-            jsonb_array_elements(
-              case jsonb_typeof(event_notification_configuration -> 'TopicConfigurations')
-                when 'array' then (event_notification_configuration -> 'TopicConfigurations')
-                else null end
-              )
-              as t
-          where
-            t ->> 'TopicArn' = $1;
         EOQ
 
         args = [self.input.topic_arn.value]
@@ -104,63 +111,70 @@ dashboard "sns_topic_detail" {
         args = [self.input.topic_arn.value]
       }
 
-      with "cloudtrail_trails" {
+      with "s3_buckets" {
         sql = <<-EOQ
           select
-            arn as trail_arn
+            b.arn as bucket_arn
           from
-            aws_cloudtrail_trail
+            aws_s3_bucket as b,
+            jsonb_array_elements(
+              case jsonb_typeof(event_notification_configuration -> 'TopicConfigurations')
+                when 'array' then (event_notification_configuration -> 'TopicConfigurations')
+                else null end
+              )
+              as t
           where
-            sns_topic_arn = $1;
+            t ->> 'TopicArn' = $1;
         EOQ
 
         args = [self.input.topic_arn.value]
       }
 
-      with "elasticache_clusters" {
+      with "sns_topic_subscriptions" {
         sql = <<-EOQ
           select
-            arn as elasticache_cluster_arn
+            subscription_arn as subscription_arn
           from
-            aws_elasticache_cluster
+            aws_sns_topic_subscription
           where
-            notification_configuration ->> 'TopicArn' = $1;
+            topic_arn = $1;
         EOQ
 
         args = [self.input.topic_arn.value]
       }
 
       nodes = [
-        node.sns_topic,
+        node.cloudformation_stack,
+        node.cloudtrail_trail,
+        node.elasticache_cluster,
         node.kms_key,
-        node.sns_topic_subscription,
-        node.s3_bucket,
         node.rds_db_instance,
         node.redshift_cluster,
-        node.cloudtrail_trail,
-        node.cloudformation_stack,
-        node.elasticache_cluster
+        node.s3_bucket,
+        node.sns_topic,
+        node.sns_topic_subscription
       ]
 
       edges = [
-        edge.sns_topic_to_kms_key,
-        edge.sns_topic_to_sns_topic_subscription,
-        edge.s3_bucket_to_sns_topic,
+        edge.cloudformation_stack_to_sns_topic,
+        edge.cloudtrail_trail_to_sns_topic,
+        edge.elasticache_cluster_to_sns_topic,
         edge.rds_db_instance_to_sns_topic,
         edge.redshift_cluster_to_sns_topic,
-        edge.cloudtrail_trail_to_sns_topic,
-        edge.cloudformation_stack_to_sns_topic,
-        edge.elasticache_cluster_to_sns_topic
+        edge.s3_bucket_to_sns_topic,
+        edge.sns_topic_to_kms_key,
+        edge.sns_topic_to_sns_subscription
       ]
 
       args = {
-        sns_topic_arns           = [self.input.topic_arn.value]
-        kms_key_arns             = with.kms_keys.rows[*].key_arn
-        redshift_cluster_arns    = with.redshift_clusters.rows[*].cluster_arn
-        s3_bucket_arns           = with.s3_buckets.rows[*].bucket_arn
-        cloudtrail_trail_arns    = with.cloudtrail_trails.rows[*].trail_arn
-        rds_db_instance_arns     = with.rds_db_instances.rows[*].db_instance_arn
-        elasticache_cluster_arns = with.elasticache_clusters.rows[*].elasticache_cluster_arn
+        cloudtrail_trail_arns       = with.cloudtrail_trails.rows[*].trail_arn
+        elasticache_cluster_arns    = with.elasticache_clusters.rows[*].elasticache_cluster_arn
+        kms_key_arns                = with.kms_keys.rows[*].key_arn
+        rds_db_instance_arns        = with.rds_db_instances.rows[*].db_instance_arn
+        redshift_cluster_arns       = with.redshift_clusters.rows[*].cluster_arn
+        s3_bucket_arns              = with.s3_buckets.rows[*].bucket_arn
+        sns_topic_arns              = [self.input.topic_arn.value]
+        sns_topic_subscription_arns = with.sns_topic_subscriptions.rows[*].subscription_arn
       }
     }
   }
@@ -358,181 +372,4 @@ query "sns_topic_policy_standard" {
   EOQ
 
   param "arn" {}
-}
-
-node "sns_topic" {
-  category = category.sns_topic
-
-  sql = <<-EOQ
-    select
-      topic_arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', topic_arn,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_sns_topic as q
-    where
-      q.topic_arn = any($1);
-  EOQ
-
-  param "sns_topic_arns" {}
-}
-
-edge "sns_topic_to_kms_key" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      topic_arn as from_id,
-      kms_master_key_id as to_id
-    from
-      aws_sns_topic
-    where
-      topic_arn = any($1);
-  EOQ
-
-  param "sns_topic_arns" {}
-}
-
-node "sns_topic_subscription" {
-  category = category.sns_topic_subscription
-
-  sql = <<-EOQ
-    select
-      subscription_arn as id,
-      left(title,8) as title,
-      jsonb_build_object(
-        'ARN', subscription_arn,
-        'Pending Confirmation', pending_confirmation,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_sns_topic_subscription
-    where
-      topic_arn = any($1);
-  EOQ
-
-  param "sns_topic_arns" {}
-}
-
-edge "sns_topic_to_sns_topic_subscription" {
-  title = "subscription"
-
-  sql = <<-EOQ
-    select
-      topic_arn as from_id,
-      subscription_arn as to_id
-    from
-      aws_sns_topic_subscription
-    where
-      topic_arn = any($1);
-  EOQ
-
-  param "sns_topic_arns" {}
-}
-
-edge "redshift_cluster_to_sns_topic" {
-  title = "notifies"
-
-  sql = <<-EOQ
-    select
-      c.arn as from_id,
-      s.sns_topic_arn as to_id
-    from
-      aws_redshift_event_subscription as s,
-      jsonb_array_elements_text(source_ids_list) as ids
-      join aws_redshift_cluster as c
-      on ids = c.cluster_identifier
-    where
-      c.arn = any($1);
-  EOQ
-
-  param "redshift_cluster_arns" {}
-}
-
-edge "cloudtrail_trail_to_sns_topic" {
-  title = "notifies"
-
-  sql = <<-EOQ
-    select
-      arn as from_id,
-      sns_topic_arn as to_id
-    from
-      aws_cloudtrail_trail
-    where
-      arn = any($1);
-  EOQ
-
-  param "cloudtrail_trail_arns" {}
-}
-
-node "cloudformation_stack" {
-  category = category.cloudformation_stack
-
-  sql = <<-EOQ
-    select
-      s.id as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', s.id,
-        'Last Updated Time', s.last_updated_time,
-        'Status', s.status,
-        'Account ID', s.account_id,
-        'Region', s.region
-      ) as properties
-    from
-      aws_cloudformation_stack as s,
-      jsonb_array_elements(
-        case jsonb_typeof(notification_arns)
-          when 'array' then (notification_arns)
-          else null end
-      ) n
-    where
-      trim((n::text ), '""') = any($1);
-  EOQ
-
-  param "sns_topic_arns" {}
-}
-
-edge "cloudformation_stack_to_sns_topic" {
-  title = "notifies"
-
-  sql = <<-EOQ
-    select
-      s.id as from_id,
-      t.topic_arn as to_id
-    from
-      aws_sns_topic as t,
-      aws_cloudformation_stack as s,
-      jsonb_array_elements(
-        case jsonb_typeof(notification_arns)
-          when 'array' then (notification_arns)
-          else null end
-      ) n
-    where
-      t.topic_arn = trim((n::text ), '""')
-      and t.topic_arn = any($1);
-  EOQ
-
-  param "sns_topic_arns" {}
-}
-
-edge "elasticache_cluster_to_sns_topic" {
-  title = "notifies"
-
-  sql = <<-EOQ
-    select
-      arn as from_id,
-      notification_configuration ->> 'TopicArn' as to_id
-    from
-      aws_elasticache_cluster as c
-    where
-      arn = any($1);
-  EOQ
-
-  param "elasticache_cluster_arns" {}
 }

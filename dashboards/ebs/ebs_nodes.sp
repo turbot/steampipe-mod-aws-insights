@@ -1,3 +1,26 @@
+node "ebs_snapshot" {
+  category = category.ebs_snapshot
+
+  sql = <<-EOQ
+    select
+      arn as id,
+      title as title,
+      jsonb_build_object(
+        'ID', snapshot_id,
+        'ARN', arn,
+        'Start Time', start_time,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_ebs_snapshot
+    where
+      arn = any($1);
+  EOQ
+
+  param "ebs_snapshot_arns" {}
+}
+
 node "ebs_volume" {
   category = category.ebs_volume
 

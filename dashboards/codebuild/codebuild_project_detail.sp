@@ -48,36 +48,199 @@ dashboard "codebuild_project_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "cloudwatch_groups" {
+        sql = <<-EOQ
+          select
+            c.arn as cloudwatch_log_group_arn
+          from
+            aws_codebuild_project as p
+            left join aws_cloudwatch_log_group c
+            on c.name = logs_config -> 'CloudWatchLogs' ->> 'GroupName'
+          where
+            c.arn is not null
+            and p.arn = $1;
+        EOQ
+
+        args = [self.input.codebuild_project_arn.value]
+      }
+
+      with "codecommit_repositories" {
+        sql = <<-EOQ
+          select
+            distinct r.arn as codecommit_repository_arn
+          from
+            aws_codebuild_project as p
+            left join aws_codecommit_repository as r on r.clone_url_http in (
+              with code_sources as (
+                select
+                  source,
+                  secondary_sources
+                from
+                  aws_codebuild_project
+                where
+                  arn = $1
+              )
+              select source ->> 'Location' as "Location" from code_sources
+              union all
+              select s ->> 'Location' as "Location" from code_sources, jsonb_array_elements(secondary_sources) as s
+            )
+          where
+            r.arn is not null
+            and p.arn = $1;
+        EOQ
+
+        args = [self.input.codebuild_project_arn.value]
+      }
+
+      with "ecr_repositories" {
+        sql = <<-EOQ
+          select
+            r.arn as ecr_repository_arn
+          from
+            aws_codebuild_project as p
+            left join aws_ecr_repository as r on r.repository_uri = split_part(p.environment ->> 'Image', ':', 1)
+          where
+            r.arn is not null
+            and p.arn = $1;
+        EOQ
+
+        args = [self.input.codebuild_project_arn.value]
+      }
+
+      with "iam_roles" {
+        sql = <<-EOQ
+          select
+            service_role as iam_role_arn
+          from
+            aws_codebuild_project
+          where
+            arn = $1;
+        EOQ
+
+        args = [self.input.codebuild_project_arn.value]
+      }
+
+      with "kms_keys" {
+        sql = <<-EOQ
+          select
+            encryption_key as kms_key_arn
+          from
+            aws_codebuild_project
+          where
+            arn = $1;
+        EOQ
+
+        args = [self.input.codebuild_project_arn.value]
+      }
+
+      with "s3_buckets" {
+        sql = <<-EOQ
+          select
+            s3.arn as s3_bucket_arn
+          from
+            aws_codebuild_project as p,
+            aws_s3_bucket as s3
+          where
+            p.arn = $1
+            and (s3.name = split_part(p.cache ->> 'Location', '/', 1)
+              or s3.name = p.artifacts ->> 'Location'
+              or s3.name = split_part(p.logs_config -> 'S3Logs' ->> 'Location', '/', 1)
+              or s3.name = split_part(p.source ->> 'Location', '/', 1)
+            );
+        EOQ
+
+        args = [self.input.codebuild_project_arn.value]
+      }
+
+      with "vpc_security_groups" {
+        sql = <<-EOQ
+          with sg_id as (
+          select
+            vpc_config -> 'SecurityGroupIds' as sg,
+            arn
+          from
+            aws_codebuild_project
+        )
+        select
+          s.group_id as vpc_security_group_id
+        from
+          sg_id as c,
+          aws_vpc_security_group as s
+        where
+          sg ?& array[s.group_id]
+          and c.arn = $1;
+        EOQ
+
+        args = [self.input.codebuild_project_arn.value]
+      }
+
+      with "vpc_subnets" {
+        sql = <<-EOQ
+          select
+            trim((s::text), '""') as vpc_subnet_id
+          from
+            aws_codebuild_project,
+            jsonb_array_elements( vpc_config -> 'Subnets') as s
+          where
+            arn = $1
+        EOQ
+
+        args = [self.input.codebuild_project_arn.value]
+      }
+
+      with "vpc_vpcs" {
+        sql = <<-EOQ
+          select
+            vpc_config ->> 'VpcId' as vpc_vpc_id
+          from
+            aws_codebuild_project
+          where
+            vpc_config ->> 'VpcId' is not null
+            and arn = $1;
+        EOQ
+
+        args = [self.input.codebuild_project_arn.value]
+      }
+
       nodes = [
-        node.codebuild_project_node,
-        node.codebuild_project_to_s3_bucket_node,
-        node.codebuild_project_to_cloudwatch_group_node,
-        node.codebuild_project_to_kms_key_node,
-        node.codebuild_project_to_iam_role_node,
-        node.codebuild_project_to_ecr_repository_node,
-        node.codebuild_project_to_codecommit_repository_node,
-        node.codebuild_project_to_vpc_security_group_node,
-        node.codebuild_project_vpc_security_group_to_subnet_node,
-        node.codebuild_project_vpc_security_group_subnet_to_vpc_node
+        node.cloudwatch_log_group,
+        node.codebuild_project,
+        node.codecommit_repository,
+        node.ecr_repository,
+        node.iam_role,
+        node.kms_key,
+        node.s3_bucket,
+        node.vpc_security_group,
+        node.vpc_subnet,
+        node.vpc_vpc
       ]
 
       edges = [
-        edge.codebuild_project_to_s3_bucket_edge,
-        edge.codebuild_project_to_artifact_s3_bucket_edge,
-        edge.codebuild_project_to_cache_s3_bucket_edge,
-        edge.codebuild_project_from_s3_bucket_edge,
-        edge.codebuild_project_to_cloudwatch_group_edge,
-        edge.codebuild_project_to_kms_key_edge,
-        edge.codebuild_project_to_iam_role_edge,
-        edge.codebuild_project_to_ecr_repository_edge,
-        edge.codebuild_project_to_codecommit_repository_edge,
-        edge.codebuild_project_to_vpc_security_group_edge,
-        edge.codebuild_project_vpc_security_group_to_subnet_edge,
-        edge.codebuild_project_vpc_security_group_subnet_to_vpc_edge
+        edge.codebuild_project_to_artifact_s3_bucket,
+        edge.codebuild_project_to_cache_s3_bucket,
+        edge.codebuild_project_to_cloudwatch_group,
+        edge.codebuild_project_to_ecr_repository,
+        edge.codebuild_project_to_iam_role,
+        edge.codebuild_project_to_kms_key,
+        edge.codebuild_project_to_s3_bucket,
+        edge.codebuild_project_to_vpc_security_group,
+        edge.codebuild_project_to_vpc_subnet,
+        edge.codecommit_repository_to_codebuild_project,
+        edge.s3_bucket_to_codebuild_project,
+        edge.vpc_subnet_to_vpc_vpc
       ]
 
       args = {
-        arn = self.input.codebuild_project_arn.value
+        cloudwatch_log_group_arns  = with.cloudwatch_groups.rows[*].cloudwatch_log_group_arn
+        codebuild_project_arns     = [self.input.codebuild_project_arn.value]
+        codecommit_repository_arns = with.codecommit_repositories.rows[*].codecommit_repository_arn
+        ecr_repository_arns        = with.ecr_repositories.rows[*].ecr_repository_arn
+        iam_role_arns              = with.iam_roles.rows[*].iam_role_arn
+        kms_key_arns               = with.kms_keys.rows[*].kms_key_arn
+        s3_bucket_arns             = with.s3_buckets.rows[*].s3_bucket_arn
+        vpc_security_group_ids     = with.vpc_security_groups.rows[*].vpc_security_group_id
+        vpc_subnet_ids             = with.vpc_subnets.rows[*].vpc_subnet_id
+        vpc_vpc_ids                = with.vpc_vpcs.rows[*].vpc_vpc_id
       }
     }
   }
@@ -252,539 +415,4 @@ query "codebuild_project_input" {
     order by
       title;
   EOQ
-}
-
-node "codebuild_project_node" {
-  category = category.codebuild_project
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'Name', name,
-        'ARN', arn,
-        'Project Visibility', project_visibility,
-        'Account ID', account_id,
-        'region', region
-      ) as properties
-    from
-      aws_codebuild_project
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "codebuild_project_to_s3_bucket_node" {
-  category = category.s3_bucket
-
-  sql = <<-EOQ
-    select
-      s3.arn as id,
-      s3.title as title,
-      jsonb_build_object(
-        'Name', s3.name,
-        'ARN', s3.arn,
-        'Account ID', s3.account_id,
-        'Region', s3.region
-      ) as properties
-    from
-      aws_codebuild_project as p,
-      aws_s3_bucket as s3
-    where
-      p.arn = $1
-      and (s3.name = split_part(p.cache ->> 'Location', '/', 1)
-        or s3.name = p.artifacts ->> 'Location'
-        or s3.name = split_part(p.logs_config -> 'S3Logs' ->> 'Location', '/', 1)
-        or s3.name = split_part(p.source ->> 'Location', '/', 1)
-      );
-  EOQ
-
-  param "arn" {}
-}
-
-edge "codebuild_project_to_s3_bucket_edge" {
-  title = "logs to"
-
-  sql = <<-EOQ
-    select
-      p.arn as from_id,
-      s3.arn as to_id
-    from
-      aws_codebuild_project as p,
-      aws_s3_bucket as s3
-    where
-      p.arn = $1
-      and  s3.name = split_part(p.logs_config -> 'S3Logs' ->> 'Location', '/', 1);
-  EOQ
-
-  param "arn" {}
-}
-
-edge "codebuild_project_to_artifact_s3_bucket_edge" {
-  title = "artifact"
-
-  sql = <<-EOQ
-    select
-      p.arn as from_id,
-      s3.arn as to_id
-    from
-      aws_codebuild_project as p,
-      aws_s3_bucket as s3
-    where
-      p.arn = $1
-      and s3.name = p.artifacts ->> 'Location';
-  EOQ
-
-  param "arn" {}
-}
-
-edge "codebuild_project_to_cache_s3_bucket_edge" {
-  title = "cache"
-
-  sql = <<-EOQ
-    select
-      p.arn as from_id,
-      s3.arn as to_id
-    from
-      aws_codebuild_project as p,
-      aws_s3_bucket as s3
-    where
-      p.arn = $1
-      and s3.name = split_part(p.cache ->> 'Location', '/', 1);
-  EOQ
-
-  param "arn" {}
-}
-
-edge "codebuild_project_from_s3_bucket_edge" {
-  title = "source provider"
-
-  sql = <<-EOQ
-    select
-      s3.arn as from_id,
-      p.arn as to_id
-    from
-      aws_codebuild_project as p,
-      aws_s3_bucket as s3
-    where
-      p.arn = $1
-      and s3.name = split_part(p.source ->> 'Location', '/', 1);
-  EOQ
-
-  param "arn" {}
-}
-
-node "codebuild_project_to_cloudwatch_group_node" {
-  category = category.cloudwatch_log_group
-
-  sql = <<-EOQ
-    select
-      c.arn as id,
-      c.title as title,
-      jsonb_build_object(
-        'ARN', c.arn,
-        'Account ID', c.account_id,
-        'Region', c.region,
-        'Retention days', c.retention_in_days
-      ) as properties
-    from
-      aws_codebuild_project as p
-      left join aws_cloudwatch_log_group c
-      on c.name = logs_config -> 'CloudWatchLogs' ->> 'GroupName'
-    where
-      p.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "codebuild_project_to_cloudwatch_group_edge" {
-  title = "logs to"
-
-  sql = <<-EOQ
-    select
-      p.arn as from_id,
-      c.arn as to_id
-    from
-      aws_codebuild_project as p
-      left join aws_cloudwatch_log_group c on c.name = logs_config -> 'CloudWatchLogs' ->> 'GroupName'
-    where
-      p.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "codebuild_project_to_kms_key_node" {
-  category = category.kms_key
-
-  sql = <<-EOQ
-    select
-      k.arn as id,
-      k.title as title,
-      jsonb_build_object(
-        'ARN', k.arn,
-        'Key Manager',k. key_manager,
-        'Creation Date', k.creation_date,
-        'Enabled', k.enabled::text,
-        'Account ID', k.account_id,
-        'Region', k.region
-      ) as properties
-    from
-      aws_codebuild_project as p
-      left join aws_kms_key as k
-      on k.arn = encryption_key
-    where
-      p.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "codebuild_project_to_kms_key_edge" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      p.arn as from_id,
-      k.arn as to_id
-    from
-      aws_codebuild_project as p
-      left join aws_kms_key as k
-      on k.arn = p.encryption_key
-    where
-      p.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "codebuild_project_to_iam_role_node" {
-  category = category.iam_role
-
-  sql = <<-EOQ
-    select
-      r.arn as id,
-      r.title as title,
-      jsonb_build_object(
-        'ARN', r.arn,
-        'Path', r.path,
-        'Account ID', r.account_id,
-        'Region', r.region
-      ) as properties
-    from
-      aws_codebuild_project as p
-      left join aws_iam_role as r on r.arn = p.service_role
-    where
-      p.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "codebuild_project_to_iam_role_edge" {
-  title = "assumes"
-
-  sql = <<-EOQ
-    select
-      p.arn as from_id,
-      r.arn as to_id
-    from
-      aws_codebuild_project as p
-      left join aws_iam_role as r on r.arn = p.service_role
-    where
-      p.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "codebuild_project_to_ecr_repository_node" {
-  category = category.ecr_repository
-
-  sql = <<-EOQ
-    select
-      r.arn as id,
-      r.title as title,
-      jsonb_build_object(
-        'ARN', r.arn,
-        'Created At', r.created_at,
-        'Repository URI', r.repository_uri,
-        'Account ID', r.account_id,
-        'Region', r.region
-      ) as properties
-    from
-      aws_codebuild_project as p
-      left join aws_ecr_repository as r on r.repository_uri = split_part(p.environment ->> 'Image', ':', 1)
-    where
-      p.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "codebuild_project_to_ecr_repository_edge" {
-  title = "build environment"
-
-  sql = <<-EOQ
-    select
-      p.arn as from_id,
-      r.arn as to_id
-    from
-      aws_codebuild_project as p
-      left join aws_ecr_repository as r on r.repository_uri = split_part(p.environment ->> 'Image', ':', 1)
-    where
-      p.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "codebuild_project_to_codecommit_repository_node" {
-  category = category.codecommit_repository
-
-  sql = <<-EOQ
-    select
-      r.arn as id,
-      r.title as title,
-      jsonb_build_object(
-        'ARN', r.arn,
-        'Default Branch', r.default_branch,
-        'Repository Clone HTTP URL', r.clone_url_http,
-        'Repository Clone SSH URL', r.clone_url_ssh,
-        'Account ID', r.account_id,
-        'Region', r.region
-      ) as properties
-    from
-      aws_codebuild_project as p
-      left join aws_codecommit_repository as r on r.clone_url_http in (
-        with code_sources as (
-          select
-            source,
-            secondary_sources
-          from
-            aws_codebuild_project
-          where
-            arn = $1
-        )
-        select source ->> 'Location' as "Location" from code_sources
-        union all
-        select s ->> 'Location' as "Location" from code_sources, jsonb_array_elements(secondary_sources) as s
-      )
-    where
-      p.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "codebuild_project_to_codecommit_repository_edge" {
-  title = "codecommit repository"
-
-  sql = <<-EOQ
-    select
-      p.arn as from_id,
-      r.arn as to_id
-    from
-      aws_codebuild_project as p
-      left join aws_codecommit_repository as r on r.clone_url_http in (
-        with code_sources as (
-          select
-            source,
-            secondary_sources
-          from
-            aws_codebuild_project
-          where
-            arn = $1
-        )
-        select source ->> 'Location' as "Location" from code_sources
-        union all
-        select s ->> 'Location' as "Location" from code_sources, jsonb_array_elements(secondary_sources) as s
-      )
-    where
-      p.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "codebuild_project_to_vpc_security_group_node" {
-  category = category.vpc_security_group
-
-  sql = <<-EOQ
-    with sg_id as (
-      select
-        vpc_config -> 'SecurityGroupIds' as sg,
-        arn
-      from
-        aws_codebuild_project
-    )
-    select
-      s.group_id as id,
-      s.title as title,
-      jsonb_build_object(
-        'ARN', s.arn,
-        'Group Name', s.group_name,
-        'Account ID', s.account_id,
-        'Region', s.region
-      ) as properties
-    from
-      sg_id as c,
-      aws_vpc_security_group as s
-    where
-      sg ?& array[s.group_id]
-      and c.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "codebuild_project_to_vpc_security_group_edge" {
-  title = "security group"
-
-  sql = <<-EOQ
-    with sg_id as (
-      select
-        vpc_config -> 'SecurityGroupIds' as sg,
-        arn
-      from
-        aws_codebuild_project
-    )
-    select
-      c.arn as from_id,
-      s.group_id as to_id
-    from
-      sg_id as c,
-      aws_vpc_security_group as s
-    where
-      sg ?& array[s.group_id]
-      and c.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "codebuild_project_vpc_security_group_to_subnet_node" {
-  category = category.vpc_subnet
-
-  sql = <<-EOQ
-    with sn_id as (
-      select
-        trim((s::text), '""') as subnet_id
-      from
-        aws_codebuild_project,
-        jsonb_array_elements( vpc_config -> 'Subnets') as s
-      where
-        arn = $1
-    )
-    select
-      s.subnet_id as id,
-      s.title as title,
-      jsonb_build_object(
-        'ARN', s.subnet_arn,
-        'CIDR Block', s.cidr_block,
-        'Account ID', s.account_id,
-        'Region', s.region
-      ) as properties
-    from
-      sn_id as c
-      left join aws_vpc_subnet as s on c.subnet_id = s.subnet_id
-  EOQ
-
-  param "arn" {}
-}
-
-edge "codebuild_project_vpc_security_group_to_subnet_edge" {
-  title = "subnet"
-
-  sql = <<-EOQ
-    with subnet_list as (
-      select
-        trim((s::text), '""') as subnet_id
-      from
-        aws_codebuild_project,
-        jsonb_array_elements(vpc_config -> 'Subnets') as s
-      where
-        arn = $1
-    ),
-    sg_list as (
-      select
-        trim((s::text), '""') as sg_id
-      from
-        aws_codebuild_project,
-        jsonb_array_elements(vpc_config -> 'SecurityGroupIds') as s
-      where
-        arn = $1
-    )
-    select
-      sgl.sg_id as from_id,
-      sl.subnet_id as to_id
-    from
-      subnet_list as sl,
-      sg_list as sgl
-  EOQ
-
-  param "arn" {}
-}
-
-node "codebuild_project_vpc_security_group_subnet_to_vpc_node" {
-  category = category.vpc_vpc
-
-  sql = <<-EOQ
-    with vpc_list as (
-      select
-        vpc_config ->>'VpcId' as v_id
-      from
-        aws_codebuild_project
-      where
-        arn = $1
-    )
-    select
-      vp.vpc_id as id,
-      vp.title as title,
-      jsonb_build_object(
-        'ARN', vp.arn,
-        'CIDR Block', vp.cidr_block,
-        'Account ID', vp.account_id,
-        'Region', vp.region
-      ) as properties
-    from
-      vpc_list as v
-      left join aws_vpc as vp on v.v_id = vp.vpc_id
-  EOQ
-
-  param "arn" {}
-}
-
-edge "codebuild_project_vpc_security_group_subnet_to_vpc_edge" {
-  title = "vpc"
-
-  sql = <<-EOQ
-    with vpc_list as (
-      select
-        vpc_config ->>'VpcId' as v_id
-      from
-        aws_codebuild_project
-       where
-        arn = $1
-    ),
-    subnet_list as (
-      select
-        trim((s::text), '""') as subnet_id
-      from
-        aws_codebuild_project,
-        jsonb_array_elements(vpc_config -> 'Subnets') as s
-    )
-    select
-      sl.subnet_id as from_id,
-      vpcl.v_id as to_id
-    from
-      subnet_list as sl,
-      vpc_list as vpcl
-  EOQ
-
-  param "arn" {}
 }

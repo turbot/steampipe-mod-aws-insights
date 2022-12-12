@@ -79,15 +79,20 @@ dashboard "ec2_instance_detail" {
         args = [self.input.instance_arn.value]
       }
 
-      with "ec2_network_interfaces" {
+      with "ec2_application_load_balancers" {
         sql = <<-EOQ
           select
-            network_interface ->> 'NetworkInterfaceId' as network_interface_id
+            distinct lb.arn as application_load_balancer_arn
           from
             aws_ec2_instance as i,
-            jsonb_array_elements(network_interfaces) as network_interface
+            aws_ec2_target_group as target,
+            jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
+            jsonb_array_elements_text(target.load_balancer_arns) as l,
+            aws_ec2_application_load_balancer as lb
           where
-            i.arn = $1;
+            health_descriptions -> 'Target' ->> 'Id' = i.instance_id
+            and l = lb.arn
+            and i.arn = $1;
         EOQ
 
         args = [self.input.instance_arn.value]
@@ -109,20 +114,34 @@ dashboard "ec2_instance_detail" {
         args = [self.input.instance_arn.value]
       }
 
-      with "ec2_application_load_balancers" {
+      with "ec2_gateway_load_balancers" {
         sql = <<-EOQ
           select
-            distinct lb.arn as application_load_balancer_arn
+            distinct lb.arn as gateway_load_balancer_arn
           from
             aws_ec2_instance as i,
             aws_ec2_target_group as target,
             jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
             jsonb_array_elements_text(target.load_balancer_arns) as l,
-            aws_ec2_application_load_balancer as lb
+            aws_ec2_gateway_load_balancer as lb
           where
             health_descriptions -> 'Target' ->> 'Id' = i.instance_id
             and l = lb.arn
             and i.arn = $1;
+        EOQ
+
+        args = [self.input.instance_arn.value]
+      }
+
+      with "ec2_network_interfaces" {
+        sql = <<-EOQ
+          select
+            network_interface ->> 'NetworkInterfaceId' as network_interface_id
+          from
+            aws_ec2_instance as i,
+            jsonb_array_elements(network_interfaces) as network_interface
+          where
+            i.arn = $1;
         EOQ
 
         args = [self.input.instance_arn.value]
@@ -147,20 +166,17 @@ dashboard "ec2_instance_detail" {
         args = [self.input.instance_arn.value]
       }
 
-      with "ec2_gateway_load_balancers" {
+      with "ec2_target_groups" {
         sql = <<-EOQ
           select
-            distinct lb.arn as gateway_load_balancer_arn
+            target.target_group_arn
           from
             aws_ec2_instance as i,
             aws_ec2_target_group as target,
-            jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
-            jsonb_array_elements_text(target.load_balancer_arns) as l,
-            aws_ec2_gateway_load_balancer as lb
+            jsonb_array_elements(target.target_health_descriptions) as health_descriptions
           where
-            health_descriptions -> 'Target' ->> 'Id' = i.instance_id
-            and l = lb.arn
-            and i.arn = $1;
+            i.arn = $1
+            and health_descriptions -> 'Target' ->> 'Id' = i.instance_id;
         EOQ
 
         args = [self.input.instance_arn.value]
@@ -257,23 +273,21 @@ dashboard "ec2_instance_detail" {
       nodes = [
         node.ebs_volume,
         node.ec2_application_load_balancer,
+        node.ec2_autoscaling_group,
         node.ec2_classic_load_balancer,
         node.ec2_gateway_load_balancer,
         node.ec2_instance,
+        node.ec2_key_pair,
         node.ec2_network_interface,
         node.ec2_network_load_balancer,
+        node.ec2_target_group,
         node.ecs_cluster,
+        node.iam_instance_profile,
         node.iam_role,
         node.vpc_eip,
         node.vpc_security_group,
         node.vpc_subnet,
-        node.vpc_vpc,
-
-        # TODO: What should these nodes be named and where should they live since they're specific to EC2 instance graphs?
-        node.ec2_instance_iam_instance_profile,
-        node.ec2_instance_ec2_key_pair,
-        node.ec2_instance_ec2_autoscaling_group,
-        node.ec2_instance_ec2_target_group,
+        node.vpc_vpc
       ]
 
       edges = [
@@ -283,16 +297,14 @@ dashboard "ec2_instance_detail" {
         edge.ec2_instance_to_ec2_key_pair,
         edge.ec2_instance_to_ec2_network_interface,
         edge.ec2_instance_to_iam_instance_profile,
-        edge.ec2_instance_to_iam_role,
         edge.ec2_instance_to_vpc_security_group,
         edge.ec2_instance_to_vpc_subnet,
+        edge.ec2_load_balancer_to_ec2_target_group,
         edge.ec2_network_interface_to_vpc_eip,
         edge.ec2_target_group_to_ec2_instance,
         edge.ecs_cluster_to_ec2_instance,
-        edge.vpc_subnet_to_vpc_vpc,
-
-        # TODO: What should this edge be named and where should it live since it's specific to EC2 instance graphs?
-        edge.ec2_load_balancer_to_target_group,
+        edge.iam_instance_profile_to_iam_role,
+        edge.vpc_subnet_to_vpc_vpc
       ]
 
       args = {
@@ -303,12 +315,13 @@ dashboard "ec2_instance_detail" {
         ec2_instance_arns                  = [self.input.instance_arn.value]
         ec2_network_interface_ids          = with.ec2_network_interfaces.rows[*].network_interface_id
         ec2_network_load_balancer_arns     = with.ec2_network_load_balancers.rows[*].network_load_balancer_arn
+        ec2_target_group_arns              = with.ec2_target_groups.rows[*].target_group_arn
         ecs_cluster_arns                   = with.ecs_clusters.rows[*].cluster_arn
         iam_role_arns                      = with.iam_roles.rows[*].role_arn
         vpc_eip_arns                       = with.vpc_eips.rows[*].eip_arn
-        vpc_vpc_ids                        = with.vpc_vpcs.rows[*].vpc_id
         vpc_security_group_ids             = with.vpc_security_groups.rows[*].security_group_id
         vpc_subnet_ids                     = with.vpc_subnets.rows[*].subnet_id
+        vpc_vpc_ids                        = with.vpc_vpcs.rows[*].vpc_id
       }
     }
   }
@@ -501,102 +514,6 @@ query "ec2_instance_ebs_optimized" {
   EOQ
 
   param "arn" {}
-}
-
-node "ec2_instance_iam_instance_profile" {
-  category = category.iam_instance_profile
-
-  sql = <<-EOQ
-    select
-      iam_instance_profile_arn as id,
-      split_part(iam_instance_profile_arn, ':instance-profile/',2) as title,
-      jsonb_build_object(
-        'Instance Profile ARN', iam_instance_profile_arn,
-        'Instance Profile ID', iam_instance_profile_id
-      ) as properties
-    from
-      aws_ec2_instance as i
-    where
-      iam_instance_profile_arn is not null
-      and i.arn = any($1);
-  EOQ
-
-  param "ec2_instance_arns" {}
-}
-
-node "ec2_instance_ec2_key_pair" {
-  category = category.ec2_key_pair
-
-  sql = <<-EOQ
-    select
-      k.key_name as id,
-      k.title as title,
-      jsonb_build_object(
-        'Name', k.key_name,
-        'ID', k.key_pair_id,
-        'Fingerprint', key_fingerprint
-      ) as properties
-    from
-      aws_ec2_instance as i,
-      aws_ec2_key_pair as k
-    where
-      i.key_name = k.key_name
-      and i.account_id = k.account_id
-      and i.region = k.region
-      and i.arn = any($1);
-  EOQ
-
-  param "ec2_instance_arns" {}
-}
-
-node "ec2_instance_ec2_autoscaling_group" {
-  category = category.ec2_autoscaling_group
-
-  sql = <<-EOQ
-    select
-      k.autoscaling_group_arn as id,
-      k.name as title,
-      jsonb_build_object(
-        'instance', group_instance ->> 'InstanceId',
-        'i', i.instance_id,
-        'asg', group_instance
-      ) as properties
-    from
-      aws_ec2_autoscaling_group as k,
-      jsonb_array_elements(k.instances) as group_instance,
-      aws_ec2_instance as i
-    where
-      i.arn = any($1)
-      and group_instance ->> 'InstanceId' = i.instance_id;
-  EOQ
-
-  param "ec2_instance_arns" {}
-}
-
-node "ec2_instance_ec2_target_group" {
-  category = category.ec2_target_group
-
-  sql = <<-EOQ
-    select
-      target.target_group_arn as id,
-      target.target_group_name as title,
-      jsonb_build_object(
-        'Name', target.target_group_name,
-        'ARN', target.target_group_arn,
-        'Health Check Enabled', target.health_check_enabled,
-        'Region', target.region,
-        'Account ID', target.account_id
-      ) as properties
-    from
-      aws_ec2_instance as i,
-      aws_ec2_target_group as target,
-      jsonb_array_elements(target.target_health_descriptions) as health_descriptions
-    where
-      i.arn = any($1)
-      and health_descriptions -> 'Target' ->> 'Id' = i.instance_id
-  EOQ
-
-  param "ec2_instance_arns" {}
 }
 
 query "ec2_instance_overview" {

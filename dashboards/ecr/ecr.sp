@@ -10,6 +10,12 @@ category "ecr_image" {
   icon  = "text:Image"
 }
 
+category "ecr_image_tag" {
+  title = "ECR Image Tag"
+  color = local.containers_color
+  icon  = "sell"
+}
+
 category "ecr_repository" {
   title = "ECR Repository"
   color = local.containers_color

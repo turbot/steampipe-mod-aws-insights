@@ -56,27 +56,127 @@ dashboard "cloudwatch_log_group_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "cloudtrail_trails" {
+        sql = <<-EOQ
+          select
+            arn as cloudtrail_trail_arn
+          from
+            aws_cloudtrail_trail
+          where
+            log_group_arn is not null
+            and log_group_arn = $1;
+        EOQ
+
+        args = [self.input.log_group_arn.value]
+      }
+
+      with "cloudwatch_log_metric_filters" {
+        sql = <<-EOQ
+          select
+            f.name as log_metric_filter_name
+          from
+            aws_cloudwatch_log_group as g
+            left join aws_cloudwatch_log_metric_filter as f on g.name = f.log_group_name
+          where
+            f.region = g.region
+            and g.arn = $1;
+        EOQ
+
+        args = [self.input.log_group_arn.value]
+      }
+
+      with "kinesis_streams" {
+        sql = <<-EOQ
+          select
+            s.stream_arn
+          from
+            aws_cloudwatch_log_group as g,
+            aws_cloudwatch_log_subscription_filter as f,
+            aws_kinesis_stream as s
+          where
+            f.region = g.region
+            and g.name = f.log_group_name
+            and s.stream_arn = f.destination_arn
+            and g.arn = $1;
+        EOQ
+
+        args = [self.input.log_group_arn.value]
+      }
+
+      with "kms_keys" {
+        sql = <<-EOQ
+          select
+            kms_key_id
+          from
+            aws_cloudwatch_log_group
+          where
+            kms_key_id is not null
+            and arn = $1;
+        EOQ
+
+        args = [self.input.log_group_arn.value]
+      }
+
+      with "lambda_functions" {
+        sql = <<-EOQ
+          select
+            f.arn as lambda_function_arn
+          from
+            aws_cloudwatch_log_group as g
+            left join aws_lambda_function as f on f.name = split_part(g.name, '/', 4)
+          where
+            g.name like '/aws/lambda/%'
+            and g.region = f.region
+            and g.arn = $1;
+        EOQ
+
+        args = [self.input.log_group_arn.value]
+      }
+
+      with "vpc_flow_logs" {
+        sql = <<-EOQ
+          select
+            distinct f.flow_log_id
+          from
+            aws_cloudwatch_log_group as g,
+            aws_vpc_flow_log as f
+          where
+            f.log_group_name = g.name
+            and f.log_destination_type = 'cloud-watch-logs'
+            and f.region = g.region
+            and g.arn = $1;
+        EOQ
+
+        args = [self.input.log_group_arn.value]
+      }
+
       nodes = [
-        node.cloudwatch_log_group_node,
-        node.cloudwatch_log_group_to_kms_key_node,
-        node.cloudwatch_log_group_from_cloudtrail_trail_node,
-        node.cloudwatch_log_group_from_lambda_function_node,
-        node.cloudwatch_log_group_from_vpc_flow_logs_node,
-        node.cloudwatch_log_group_from_kinesis_stream_node,
-        node.cloudwatch_log_group_to_log_metric_filter_node
+        node.cloudtrail_trail,
+        node.cloudwatch_log_group,
+        node.cloudwatch_log_metric_filter,
+        node.kinesis_stream,
+        node.kms_key,
+        node.lambda_function,
+        node.vpc_flow_log
       ]
 
       edges = [
-        edge.cloudwatch_log_group_to_kms_key_edge,
-        edge.cloudwatch_log_group_from_cloudtrail_trail_edge,
-        edge.cloudwatch_log_group_from_lambda_function_edge,
-        edge.cloudwatch_log_group_from_vpc_flow_logs_edge,
-        edge.cloudwatch_log_group_from_kinesis_stream_edge,
-        edge.cloudwatch_log_group_to_log_metric_filter_edge
+        edge.cloudtrail_trail_to_cloudwatch_log_group,
+        edge.cloudwatch_log_group_to_cloudwatch_log_metric_filter_edge,
+        edge.cloudwatch_log_group_to_kms_key,
+        edge.kinesis_stream_to_cloudwatch_log_group,
+        edge.lambda_function_to_cloudwatch_log_group,
+        edge.vpc_flow_log_to_cloudwatch_log_group
       ]
 
       args = {
-        log_group_arn = self.input.log_group_arn.value
+        cloudtrail_trail_arns     = with.cloudtrail_trails.rows[*].cloudtrail_trail_arn
+        cloudwatch_log_group_arns = [self.input.log_group_arn.value]
+        kinesis_stream_arns       = with.kinesis_streams.rows[*].stream_arn
+        kms_key_arns              = with.kms_keys.rows[*].kms_key_id
+        lambda_function_arns      = with.lambda_functions.rows[*].lambda_function_arn
+        log_metric_filter_name    = with.cloudwatch_log_metric_filters.rows[*].log_metric_filter_name
+        vpc_flow_log_ids          = with.vpc_flow_logs.rows[*].flow_log_id
       }
 
     }
@@ -251,287 +351,6 @@ query "cloudwatch_log_group_encryption_details" {
       aws_cloudwatch_log_group
     where
       arn = $1;
-  EOQ
-
-  param "log_group_arn" {}
-}
-
-node "cloudwatch_log_group_node" {
-  category = category.cloudwatch_log_group
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'Name', name,
-        'ARN', arn,
-        'Creation Time', creation_time,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_cloudwatch_log_group
-    where
-      arn = $1;
-  EOQ
-
-  param "log_group_arn" {}
-}
-
-node "cloudwatch_log_group_to_kms_key_node" {
-  category = category.kms_key
-
-  sql = <<-EOQ
-    select
-      k.arn as id,
-      k.title as title,
-      jsonb_build_object(
-        'ARN', k.arn,
-        'ID', k.id,
-        'Account ID', k.account_id,
-        'Region', k.region
-      ) as properties
-    from
-      aws_cloudwatch_log_group as g
-      left join aws_kms_key as k on k.arn = g.kms_key_id
-    where
-      k.region = g.region
-      and g.arn = $1;
-  EOQ
-
-  param "log_group_arn" {}
-}
-
-edge "cloudwatch_log_group_to_kms_key_edge" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      g.arn as from_id,
-      k.arn as to_id
-    from
-      aws_cloudwatch_log_group as g
-      left join aws_kms_key as k on k.arn = g.kms_key_id
-    where
-      k.region = g.region
-      and g.arn = $1;
-  EOQ
-
-  param "log_group_arn" {}
-}
-
-node "cloudwatch_log_group_from_cloudtrail_trail_node" {
-  category = category.cloudtrail_trail
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', t.arn,
-        'Is Logging', t.is_logging,
-        'Account ID', t.account_id,
-        'Region', t.region
-      ) as properties
-    from
-      aws_cloudtrail_trail as t
-    where
-      t.log_group_arn = $1;
-  EOQ
-
-  param "log_group_arn" {}
-}
-
-edge "cloudwatch_log_group_from_cloudtrail_trail_edge" {
-  title = "logs to"
-
-  sql = <<-EOQ
-    select
-      t.arn as from_id,
-      $1 as to_id
-    from
-      aws_cloudtrail_trail as t
-    where
-      t.log_group_arn = $1;
-  EOQ
-
-  param "log_group_arn" {}
-}
-
-node "cloudwatch_log_group_from_lambda_function_node" {
-  category = category.lambda_function
-
-  sql = <<-EOQ
-    select
-      f.arn as id,
-      f.title as title,
-      jsonb_build_object(
-        'ARN', f.arn,
-        'State', f.state,
-        'runtime', f.runtime,
-        'Account ID', f.account_id,
-        'Region', f.region
-      ) as properties
-    from
-      aws_cloudwatch_log_group as g
-      left join aws_lambda_function as f on f.name = split_part(g.name, '/', 4)
-    where
-      g.name like '/aws/lambda/%'
-      and g.region = f.region
-      and g.arn = $1;
-  EOQ
-
-  param "log_group_arn" {}
-}
-
-edge "cloudwatch_log_group_from_lambda_function_edge" {
-  title = "logs to"
-
-  sql = <<-EOQ
-    select
-      f.arn as from_id,
-      $1 as to_id
-    from
-      aws_cloudwatch_log_group as g
-      left join aws_lambda_function as f on f.name = split_part(g.name, '/', 4)
-    where
-      g.name like '/aws/lambda/%'
-      and g.region = f.region
-      and g.arn = $1;
-  EOQ
-
-  param "log_group_arn" {}
-}
-
-node "cloudwatch_log_group_from_vpc_flow_logs_node" {
-  category = category.vpc_flow_log
-
-  sql = <<-EOQ
-    select
-      f.flow_log_id as id,
-      f.title as title,
-      jsonb_build_object(
-        'Flow Log ID', f.flow_log_id ,
-        'Traffic Type', f.traffic_type,
-        'Resource ID', f.resource_id,
-        'Account ID', f.account_id,
-        'Region', f.region
-      ) as properties
-    from
-      aws_cloudwatch_log_group as g
-      left join aws_vpc_flow_log as f on g.name = f.log_group_name
-    where
-      f.region = g.region
-      and g.arn = $1;
-  EOQ
-
-  param "log_group_arn" {}
-}
-
-edge "cloudwatch_log_group_from_vpc_flow_logs_edge" {
-  title = "logs to"
-
-  sql = <<-EOQ
-    select
-      f.flow_log_id as from_id,
-      $1 as to_id
-    from
-      aws_cloudwatch_log_group as g
-      left join aws_vpc_flow_log as f on g.name = f.log_group_name
-    where
-      f.region = g.region
-      and g.arn = $1;
-  EOQ
-
-  param "log_group_arn" {}
-}
-
-node "cloudwatch_log_group_from_kinesis_stream_node" {
-  category = category.kinesis_stream
-
-  sql = <<-EOQ
-    select
-      s.stream_arn as id,
-      s.title as title,
-      jsonb_build_object(
-        'ARN', s.stream_arn,
-        'Stream Status', s.stream_status,
-        'Creation Timestamp', s.stream_creation_timestamp,
-        'Account ID', f.account_id,
-        'Region', s.region
-      ) as properties
-    from
-      aws_cloudwatch_log_group as g
-      left join aws_cloudwatch_log_subscription_filter as f on g.name = f.log_group_name
-      right join aws_kinesis_stream as s on s.stream_arn = f.destination_arn
-    where
-      f.region = g.region
-      and g.arn = $1;
-  EOQ
-
-  param "log_group_arn" {}
-}
-
-edge "cloudwatch_log_group_from_kinesis_stream_edge" {
-  title = "logs to"
-
-  sql = <<-EOQ
-    select
-      s.stream_arn as from_id,
-      $1 as to_id
-    from
-      aws_cloudwatch_log_group as g
-      left join aws_cloudwatch_log_subscription_filter as f on g.name = f.log_group_name
-      right join aws_kinesis_stream as s on s.stream_arn = f.destination_arn
-    where
-      f.region = g.region
-      and g.arn = $1;
-  EOQ
-
-  param "log_group_arn" {}
-}
-
-node "cloudwatch_log_group_to_log_metric_filter_node" {
-  category = category.cloudwatch_log_metric_filter
-
-  sql = <<-EOQ
-    select
-      f.name as id,
-      f.title as title,
-      jsonb_build_object(
-        'Creation Time', f.creation_time,
-        'Metric Transformation Name', f.metric_transformation_name,
-        'Metric Transformation Namespace', f.metric_transformation_namespace,
-        'Metric Transformation Value', f.metric_transformation_value,
-        'Account ID', f.account_id,
-        'Region', f.region
-      ) as properties
-    from
-      aws_cloudwatch_log_group as g
-      left join aws_cloudwatch_log_metric_filter as f on g.name = f.log_group_name
-    where
-      f.region = g.region
-      and g.arn = $1;
-  EOQ
-
-  param "log_group_arn" {}
-}
-
-edge "cloudwatch_log_group_to_log_metric_filter_edge" {
-  title = "metric filter"
-
-  sql = <<-EOQ
-    select
-      g.arn as from_id,
-      f.name as to_id
-    from
-     aws_cloudwatch_log_group as g,
-     aws_cloudwatch_log_metric_filter as f
-    where
-      g.name = f.log_group_name
-      and f.region = g.region
-      and g.arn = $1;
   EOQ
 
   param "log_group_arn" {}

@@ -56,30 +56,132 @@ dashboard "ecs_task_definition_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "cloudwatch_log_groups" {
+        sql = <<-EOQ
+          select
+            g.arn as log_group_arn
+          from
+            aws_ecs_task_definition as td,
+            jsonb_array_elements(container_definitions) as d
+            left join aws_cloudwatch_log_group as g on g.name = d -> 'LogConfiguration' -> 'Options' ->> 'awslogs-group'
+          where
+            d -> 'LogConfiguration' -> 'Options' ->> 'awslogs-region' = g.region
+            and td.task_definition_arn = $1;
+        EOQ
+
+        args = [self.input.task_definition_arn.value]
+      }
+
+      with "ecr_repositories" {
+        sql = <<-EOQ
+          select
+            r.arn as repository_arn
+          from
+            aws_ecs_task_definition as td,
+            jsonb_array_elements(container_definitions) as d
+            left join aws_ecr_repository as r on r.repository_uri = split_part(d ->> 'Image', ':', 1)
+          where
+            r.arn is not null
+            and td.task_definition_arn = $1;
+        EOQ
+
+        args = [self.input.task_definition_arn.value]
+      }
+
+      with "ecs_services" {
+        sql = <<-EOQ
+          select
+            arn as service_arn
+          from
+            aws_ecs_service
+          where
+            task_definition = $1;
+        EOQ
+
+        args = [self.input.task_definition_arn.value]
+      }
+
+      with "ecs_tasks" {
+        sql = <<-EOQ
+          select
+            task_arn as task_arn
+          from
+            aws_ecs_task
+          where
+            task_definition_arn = $1;
+        EOQ
+
+        args = [self.input.task_definition_arn.value]
+      }
+
+      with "efs_file_systems" {
+        sql = <<-EOQ
+          select
+            f.arn as file_system_arn
+          from
+            aws_ecs_task_definition as td,
+            jsonb_array_elements(volumes) as v
+            left join aws_efs_file_system as f on f.file_system_id = v -> 'EfsVolumeConfiguration' ->> 'FileSystemId'
+          where
+            td.task_definition_arn = $1;
+        EOQ
+
+        args = [self.input.task_definition_arn.value]
+      }
+
+      with "iam_roles" {
+        sql = <<-EOQ
+          select
+            r.arn as role_arn
+          from
+            aws_ecs_task_definition as d
+            left join
+              aws_iam_role as r
+              on r.arn = d.execution_role_arn
+              and d.task_definition_arn = $1
+          where
+            r.arn is not null
+          union
+          select
+            r.arn as role_arn
+          from
+            aws_ecs_task_definition as d
+            left join aws_iam_role as r on r.arn = d.task_role_arn and d.task_definition_arn = $1
+          where
+            r.arn is not null
+        EOQ
+
+        args = [self.input.task_definition_arn.value]
+      }
 
       nodes = [
-        node.ecs_task_definition_node,
-        node.ecs_task_definition_from_ecs_service_node,
-        node.ecs_task_definition_from_ecs_task_node,
-        node.ecs_task_definition_to_iam_execution_role_node,
-        node.ecs_task_definition_to_iam_task_role_node,
-        node.ecs_task_definition_to_cloudwatch_log_group_node,
-        node.ecs_task_definition_to_efs_file_system_node,
-        node.ecs_task_definition_to_ecr_repository_node
+        node.cloudwatch_log_group,
+        node.ecr_repository,
+        node.ecs_service,
+        node.ecs_task,
+        node.ecs_task_definition,
+        node.efs_file_system,
+        node.iam_role
       ]
 
       edges = [
-        edge.ecs_task_definition_from_ecs_service_edge,
-        edge.ecs_task_definition_from_ecs_task_edge,
-        edge.ecs_task_definition_to_iam_execution_role_edge,
-        edge.ecs_task_definition_to_iam_task_role_edge,
-        edge.ecs_task_definition_to_cloudwatch_log_group_edge,
-        edge.ecs_task_definition_to_efs_file_system_edge,
-        edge.ecs_task_definition_to_ecr_repository_edge
+        edge.ecs_service_to_ecs_task_definition,
+        edge.ecs_task_definition_to_cloudwatch_log_group,
+        edge.ecs_task_definition_to_ecr_repository,
+        edge.ecs_task_definition_to_efs_file_system,
+        edge.ecs_task_definition_to_iam_execution_role,
+        edge.ecs_task_definition_to_iam_task_role,
+        edge.ecs_task_to_ecs_task_definition
       ]
 
       args = {
-        arn = self.input.task_definition_arn.value
+        cloudwatch_log_group_arns = with.cloudwatch_log_groups.rows[*].log_group_arn
+        ecr_repository_arns       = with.ecr_repositories.rows[*].repository_arn
+        ecs_service_arns          = with.ecs_services.rows[*].service_arn
+        ecs_task_arns             = with.ecs_tasks.rows[*].task_arn
+        ecs_task_definition_arns  = [self.input.task_definition_arn.value]
+        efs_file_system_arns      = with.efs_file_systems.rows[*].file_system_arn
+        iam_role_arns             = with.iam_roles.rows[*].role_arn
       }
     }
   }
@@ -163,7 +265,6 @@ query "ecs_task_definition_cpu_units" {
   param "arn" {}
 }
 
-
 query "ecs_task_definition_memory" {
   sql = <<-EOQ
     select
@@ -178,7 +279,6 @@ query "ecs_task_definition_memory" {
   param "arn" {}
 }
 
-
 query "ecs_task_definition_requires_compatibilities" {
   sql = <<-EOQ
     select
@@ -192,7 +292,6 @@ query "ecs_task_definition_requires_compatibilities" {
 
   param "arn" {}
 }
-
 
 query "ecs_task_definition_overview" {
   sql = <<-EOQ
@@ -227,310 +326,6 @@ query "ecs_task_definition_tags" {
       task_definition_arn = $1
     order by
       tag ->> 'Key';
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_task_definition_node" {
-  category = category.ecs_task_definition
-
-  sql = <<-EOQ
-    select
-      task_definition_arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', task_definition_arn,
-        'Status', status,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_ecs_task_definition
-    where
-      task_definition_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_task_definition_from_ecs_service_node" {
-  category = category.ecs_service
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Service Name', service_name,
-        'Status', status,
-        'Launch Type', launch_type,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_ecs_service
-    where
-      task_definition = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecs_task_definition_from_ecs_service_edge" {
-  title = "service"
-
-  sql = <<-EOQ
-    select
-      arn as from_id,
-      $1 as to_id
-    from
-      aws_ecs_service
-    where
-      task_definition = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_task_definition_from_ecs_task_node" {
-  category = category.ecs_task
-
-  sql = <<-EOQ
-    select
-      task_arn as id,
-      concat(split_part(task_arn, '/', 2),'/' ,split_part(task_arn, '/', 3)) as title,
-      jsonb_build_object(
-        'ARN', task_arn,
-        'cluster arn', cluster_arn,
-        'Last Status', last_status,
-        'Launch Type', launch_type,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_ecs_task
-    where
-      task_definition_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecs_task_definition_from_ecs_task_edge" {
-  title = "task"
-
-  sql = <<-EOQ
-    select
-      task_arn as from_id,
-      $1 as to_id
-    from
-      aws_ecs_task
-    where
-      task_definition_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_task_definition_to_iam_execution_role_node" {
-  category = category.iam_role
-
-  sql = <<-EOQ
-    select
-      r.arn as id,
-      r.name as title,
-      jsonb_build_object(
-        'ARN', r.arn,
-        'Create Date', r.create_date,
-        'Account ID', r.account_id
-      ) as properties
-    from
-      aws_ecs_task_definition as d
-      left join
-        aws_iam_role as r
-        on r.arn = d.execution_role_arn
-        and d.task_definition_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecs_task_definition_to_iam_execution_role_edge" {
-  title = "assumes"
-
-  sql = <<-EOQ
-    select
-      d.task_definition_arn as from_id,
-      d.execution_role_arn as to_id
-    from
-      aws_ecs_task_definition as d
-      left join aws_iam_role as r on r.arn = d.execution_role_arn and d.task_definition_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_task_definition_to_iam_task_role_node" {
-  category = category.iam_role
-
-  sql = <<-EOQ
-    select
-      r.arn as id,
-      r.title as title,
-      jsonb_build_object(
-        'ARN', r.arn,
-        'Create Date', r.create_date,
-        'Account ID', r.account_id
-      ) as properties
-    from
-      aws_ecs_task_definition as d
-      left join aws_iam_role as r on r.arn = d.task_role_arn and d.task_definition_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecs_task_definition_to_iam_task_role_edge" {
-  title = "assumes task role"
-
-  sql = <<-EOQ
-    select
-      d.task_definition_arn as from_id,
-      d.task_role_arn as to_id
-    from
-      aws_ecs_task_definition as d
-      left join aws_iam_role as r on r.arn = d.task_role_arn and d.task_definition_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_task_definition_to_cloudwatch_log_group_node" {
-  category = category.cloudwatch_log_group
-
-  sql = <<-EOQ
-    select
-      g.arn as id,
-      g.title as title,
-      jsonb_build_object(
-        'ARN', g.arn,
-        'Creation Time', g.creation_time,
-        'Retention in days', g.retention_in_days
-      ) as properties
-    from
-      aws_ecs_task_definition as td,
-      jsonb_array_elements(container_definitions) as d
-      left join aws_cloudwatch_log_group as g on g.name = d -> 'LogConfiguration' -> 'Options' ->> 'awslogs-group'
-    where
-      d -> 'LogConfiguration' -> 'Options' ->> 'awslogs-region' = g.region
-      and td.task_definition_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecs_task_definition_to_cloudwatch_log_group_edge" {
-  title = "logs to"
-
-  sql = <<-EOQ
-    select
-      task_definition_arn as from_id,
-      g.arn as to_id
-    from
-      aws_ecs_task_definition as td,
-      jsonb_array_elements(container_definitions) as d
-      left join aws_cloudwatch_log_group as g on g.name = d -> 'LogConfiguration' -> 'Options' ->> 'awslogs-group'
-    where
-      d -> 'LogConfiguration' -> 'Options' ->> 'awslogs-region' = g.region
-      and td.task_definition_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_task_definition_to_efs_file_system_node" {
-  category = category.efs_file_system
-
-  sql = <<-EOQ
-    select
-      f.arn as id,
-      f.title as title,
-      jsonb_build_object(
-        'ARN', f.arn,
-        'Creation Time', f.creation_time,
-        'Encrypted', f.encrypted,
-        'Account ID', f.account_id,
-        'Region', f.region
-      ) as properties
-    from
-      aws_ecs_task_definition as td,
-      jsonb_array_elements(volumes) as v
-      left join aws_efs_file_system as f on f.file_system_id = v -> 'EfsVolumeConfiguration' ->> 'FileSystemId'
-    where
-      td.task_definition_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecs_task_definition_to_efs_file_system_edge" {
-  title = "volume"
-
-  sql = <<-EOQ
-    select
-      task_definition_arn as from_id,
-      f.arn as to_id
-    from
-      aws_ecs_task_definition as td,
-      jsonb_array_elements(volumes) as v
-      left join aws_efs_file_system as f on f.file_system_id = v -> 'EfsVolumeConfiguration' ->> 'FileSystemId'
-    where
-      td.task_definition_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecs_task_definition_to_ecr_repository_node" {
-  category = category.ecr_repository
-
-  sql = <<-EOQ
-    select
-      r.arn as id,
-      r.title as title,
-      jsonb_build_object(
-        'ARN', r.arn,
-        'Created At', r.created_at,
-        'Repository URI', r.repository_uri,
-        'Account ID', r.account_id,
-        'Region', r.region
-      ) as properties
-    from
-      aws_ecs_task_definition as td,
-      jsonb_array_elements(container_definitions) as d
-      left join aws_ecr_repository as r on r.repository_uri = split_part(d ->> 'Image', ':', 1)
-    where
-      td.task_definition_arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecs_task_definition_to_ecr_repository_edge" {
-  title = "ecr repository"
-
-  sql = <<-EOQ
-    select
-      task_definition_arn as from_id,
-      r.arn as to_id
-    from
-      aws_ecs_task_definition as td,
-      jsonb_array_elements(container_definitions) as d
-      left join aws_ecr_repository as r on r.repository_uri = split_part(d ->> 'Image', ':', 1)
-    where
-      td.task_definition_arn = $1;
   EOQ
 
   param "arn" {}

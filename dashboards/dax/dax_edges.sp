@@ -1,9 +1,55 @@
+edge "dax_cluster_to_dax_cluster_node" {
+  title = "node"
+  sql   = <<-EOQ
+    select
+      arn as from_id,
+      n ->> 'NodeId' as to_id
+    from
+      aws_dax_cluster,
+      jsonb_array_elements(nodes) as n
+    where
+      arn = any($1);
+  EOQ
+
+  param "dax_cluster_arns" {}
+}
+
+edge "dax_cluster_to_dax_parameter_group" {
+  title = "parameter group"
+  sql   = <<-EOQ
+    select
+      arn as from_id,
+      parameter_group ->> 'ParameterGroupName' as to_id
+    from
+      aws_dax_cluster
+    where
+      arn = any($1);
+  EOQ
+
+  param "dax_cluster_arns" {}
+}
+
 edge "dax_cluster_to_iam_role" {
   title = "assumes"
   sql   = <<-EOQ
     select
       arn as from_id,
       iam_role_arn as to_id
+    from
+      aws_dax_cluster
+    where
+      arn = any($1);
+  EOQ
+
+  param "dax_cluster_arns" {}
+}
+
+edge "dax_cluster_to_sns_topic" {
+  title = "notifies"
+  sql   = <<-EOQ
+    select
+      arn as from_id,
+      notification_configuration ->> 'TopicArn' as to_id
     from
       aws_dax_cluster
     where
@@ -42,36 +88,6 @@ edge "dax_subnet_group_to_vpc_subnet" {
     where
       g.subnet_group_name = c.subnet_group
       and c.arn = any($1);
-  EOQ
-
-  param "dax_cluster_arns" {}
-}
-
-edge "dax_cluster_to_sns_topic" {
-  title = "notifies"
-  sql   = <<-EOQ
-    select
-      arn as from_id,
-      notification_configuration ->> 'TopicArn' as to_id
-    from
-      aws_dax_cluster
-    where
-      arn = any($1);
-  EOQ
-
-  param "dax_cluster_arns" {}
-}
-
-edge "dax_cluster_to_dax_parameter_group" {
-  title = "parameter group"
-  sql   = <<-EOQ
-    select
-      arn as from_id,
-      parameter_group ->> 'ParameterGroupName' as to_id
-    from
-      aws_dax_cluster
-    where
-      arn = any($1);
   EOQ
 
   param "dax_cluster_arns" {}

@@ -46,6 +46,36 @@ dashboard "api_gatewayv2_api_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "ec2_load_balancer_listeners" {
+        sql = <<-EOQ
+          select
+            lb.arn as listener_arn
+          from
+            aws_api_gatewayv2_integration as i
+            join aws_ec2_load_balancer_listener as lb on i.integration_uri = lb.arn
+            join aws_api_gatewayv2_api as a on a.api_id = i.api_id
+          where
+            a.api_id = $1;
+        EOQ
+
+        args = [self.input.api_id.value]
+      }
+
+      with "kinesis_streams" {
+        sql = <<-EOQ
+          select
+            s.stream_arn as kinesis_stream_arn
+          from
+            aws_api_gatewayv2_integration as i
+            join aws_kinesis_stream as s on i.request_parameters ->> 'StreamName' = s.stream_name
+            join aws_api_gatewayv2_api as a on a.api_id = i.api_id
+          where
+            integration_subtype like '%Kinesis-%' and a.api_id = $1;
+        EOQ
+
+        args = [self.input.api_id.value]
+      }
+
       with "lambda_functions" {
         sql = <<-EOQ
           select
@@ -78,27 +108,29 @@ dashboard "api_gatewayv2_api_detail" {
 
       nodes = [
         node.api_gatewayv2_api,
-        node.lambda_function,
-        node.sqs_queue,
-        node.sfn_state_machine,
-        node.kinesis_stream,
+        node.api_gatewayv2_stage,
         node.ec2_load_balancer_listener,
-        node.api_gatewayv2_stage
+        node.kinesis_stream,
+        node.lambda_function,
+        node.sfn_state_machine,
+        node.sqs_queue
       ]
 
       edges = [
-        edge.api_gatewayv2_api_to_lambda_function,
-        edge.api_gatewayv2_api_to_sqs_queue,
-        edge.api_gatewayv2_api_to_sfn_state_machine,
-        edge.api_gatewayv2_api_to_kinesis_stream,
         edge.api_gatewayv2_api_to_ec2_load_balancer_listener,
+        edge.api_gatewayv2_api_to_kinesis_stream,
+        edge.api_gatewayv2_api_to_lambda_function,
+        edge.api_gatewayv2_api_to_sfn_state_machine,
+        edge.api_gatewayv2_api_to_sqs_queue,
         edge.api_gatewayv2_stage_to_api_gatewayv2_api
       ]
 
       args = {
-        api_gatewayv2_api_ids = [self.input.api_id.value]
-        sqs_queue_arns        = with.sqs_queues.rows[*].queue_arn
-        lambda_function_arns  = with.lambda_functions.rows[*].function_arn
+        api_gatewayv2_api_ids           = [self.input.api_id.value]
+        ec2_load_balancer_listener_arns = with.ec2_load_balancer_listeners.rows[*].listener_arn
+        kinesis_stream_arns             = with.kinesis_streams.rows[*].kinesis_stream_arn
+        lambda_function_arns            = with.lambda_functions.rows[*].function_arn
+        sqs_queue_arns                  = with.sqs_queues.rows[*].queue_arn
       }
     }
   }
@@ -293,232 +325,4 @@ query "api_gatewayv2_api_integrations" {
   EOQ
 
   param "api_id" {}
-}
-
-node "api_gatewayv2_api" {
-  category = category.api_gatewayv2_api
-
-  sql = <<-EOQ
-    select
-      api_id as id,
-      left(title, 30) as title,
-      jsonb_build_object(
-        'Name', name,
-        'ID', api_id,
-        'Endpoint', api_endpoint,
-        'Region', region,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_api_gatewayv2_api
-    where
-      api_id = any($1);
-  EOQ
-
-  param "api_gatewayv2_api_ids" {}
-}
-
-edge "api_gatewayv2_api_to_lambda_function" {
-  title = "lambda function"
-
-  sql = <<-EOQ
-     select
-      a.api_id as from_id,
-      f.arn as to_id
-    from
-      aws_api_gatewayv2_integration as i
-      join aws_lambda_function as f on i.integration_uri = f.arn
-      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
-    where
-      a.api_id = any($1);
-  EOQ
-
-  param "api_gatewayv2_api_ids" {}
-}
-
-edge "api_gatewayv2_api_to_sqs_queue" {
-  title = "sqs queue"
-
-  sql = <<-EOQ
-     select
-      a.api_id as from_id,
-      q.queue_arn as to_id
-    from
-      aws_api_gatewayv2_integration as i
-      join aws_sqs_queue as q on i.request_parameters ->> 'QueueUrl' = q.queue_url
-      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
-    where
-      integration_subtype like '%SQS-%' and a.api_id = any($1);
-  EOQ
-
-  param "api_gatewayv2_api_ids" {}
-}
-
-node "sfn_state_machine" {
-  category = category.sfn_state_machine
-
-  sql = <<-EOQ
-    select
-      sm.arn as id,
-      sm.title as title,
-      jsonb_build_object (
-        'ARN', sm.arn,
-        'Region', sm.region,
-        'Account ID', sm.account_id,
-        'Status', sm.status,
-        'Type', sm.type
-      ) as properties
-    from
-      aws_api_gatewayv2_integration as i
-      join aws_sfn_state_machine as sm on i.request_parameters ->> 'StateMachineArn' = sm.arn
-      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
-    where
-      integration_subtype like '%StepFunctions-%' and a.api_id = any($1);
-  EOQ
-
-  param "api_gatewayv2_api_ids" {}
-}
-
-edge "api_gatewayv2_api_to_sfn_state_machine" {
-  title = "sfn state machine"
-
-  sql = <<-EOQ
-     select
-      a.api_id as from_id,
-      sm.arn as to_id
-    from
-      aws_api_gatewayv2_integration as i
-      join aws_sfn_state_machine as sm on i.request_parameters ->> 'StateMachineArn' = sm.arn
-      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
-    where
-      integration_subtype like '%StepFunctions-%' and a.api_id = any($1);
-  EOQ
-
-  param "api_gatewayv2_api_ids" {}
-}
-
-node "kinesis_stream" {
-  category = category.kinesis_stream
-
-  sql = <<-EOQ
-    select
-      s.stream_arn as id,
-      s.title as title,
-      jsonb_build_object (
-        'ARN', s.stream_arn,
-        'Region', s.region,
-        'Account ID', s.account_id,
-        'Status', s.stream_status,
-        'Encryption Type', s.encryption_type
-      ) as properties
-    from
-      aws_api_gatewayv2_integration as i
-      join aws_kinesis_stream as s on i.request_parameters ->> 'StreamName' = s.stream_name
-      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
-    where
-      integration_subtype like '%Kinesis-%' and a.api_id = any($1);
-  EOQ
-
-  param "api_gatewayv2_api_ids" {}
-}
-
-edge "api_gatewayv2_api_to_kinesis_stream" {
-  title = "kinesis stream"
-
-  sql = <<-EOQ
-     select
-      a.api_id as from_id,
-      s.stream_arn as to_id
-    from
-      aws_api_gatewayv2_integration as i
-      join aws_kinesis_stream as s on i.request_parameters ->> 'StreamName' = s.stream_name
-      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
-    where
-      integration_subtype like '%Kinesis-%' and a.api_id = any($1);
-  EOQ
-
-  param "api_gatewayv2_api_ids" {}
-}
-
-node "ec2_load_balancer_listener" {
-  category = category.ec2_load_balancer_listener
-
-  sql = <<-EOQ
-    select
-      lb.arn as id,
-      lb.title as title,
-      jsonb_build_object (
-        'ARN', lb.arn,
-        'Account ID', lb.account_id,
-        'Region', lb.region,
-        'Protocol', lb.protocol,
-        'Port', lb.port,
-        'SSL Policy', coalesce(lb.ssl_policy, 'None')
-      ) as properties
-    from
-      aws_api_gatewayv2_integration as i
-      join aws_ec2_load_balancer_listener as lb on i.integration_uri = lb.arn
-      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
-    where
-      a.api_id = any($1);
-  EOQ
-
-  param "api_gatewayv2_api_ids" {}
-}
-
-edge "api_gatewayv2_api_to_ec2_load_balancer_listener" {
-  title = "lb listener"
-
-  sql = <<-EOQ
-     select
-      a.api_id as from_id,
-      lb.arn as to_id
-    from
-      aws_api_gatewayv2_integration as i
-      join aws_ec2_load_balancer_listener as lb on i.integration_uri = lb.arn
-      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
-    where
-      a.api_id = any($1);
-  EOQ
-
-  param "api_gatewayv2_api_ids" {}
-}
-
-node "api_gatewayv2_stage" {
-  category = category.api_gatewayv2_stage
-
-  sql = <<-EOQ
-    select
-      stage_name as id,
-      title as title,
-      jsonb_build_object (
-        'Deployment ID', deployment_id,
-        'Auto Deploy', auto_deploy,
-        'Created Time', created_date,
-        'Region', region,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_api_gatewayv2_stage
-    where
-      api_id = any($1);
-  EOQ
-
-  param "api_gatewayv2_api_ids" {}
-}
-
-edge "api_gatewayv2_stage_to_api_gatewayv2_api" {
-  title = "deploys"
-
-  sql = <<-EOQ
-    select
-      stage_name as from_id,
-      api_id as to_id
-    from
-      aws_api_gatewayv2_stage
-    where
-      api_id = any($1);
-  EOQ
-
-  param "api_gatewayv2_api_ids" {}
 }

@@ -8,7 +8,7 @@ category "elasticache_cluster" {
   title = "ElastiCache Cluster"
   color = local.database_color
   href  = "/aws_insights.dashboard.elasticache_cluster_detail.url_path?input.elasticache_cluster_arn={{.properties.ARN | @uri}}"
-  icon  = "circle-stack"
+  icon  = "database"
 }
 
 category "elasticache_parameter_group" {

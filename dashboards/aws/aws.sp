@@ -6,18 +6,18 @@ locals {
 
 category "account" {
   title = "Account"
-  icon  = "globe-alt"
+  icon  = "heroicons-outline:globe-alt"
   color = local.compute_color
 }
 
 category "availability_zone" {
   title = "Availability Zone"
-  icon  = "building-office"
+  icon  = "apartment"
   color = local.networking_color
 }
 
 category "region" {
   title = "Region"
-  icon  = "globe-americas"
+  icon  = "heroicons-outline:globe-americas"
   color = local.compute_color
 }

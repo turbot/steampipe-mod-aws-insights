@@ -79,17 +79,17 @@ dashboard "acm_certificate_detail" {
             where
               certificate_arn = $1
           );
-      EOQ
+        EOQ
 
         args = [self.input.certificate_arn.value]
       }
 
-      with "ec2_classic_load_balancers" {
+      with "ec2_application_load_balancers" {
         sql = <<-EOQ
           select
-            arn as clb_arn
+            arn as alb_arn
           from
-            aws_ec2_classic_load_balancer
+            aws_ec2_application_load_balancer
           where
             arn in
             (
@@ -105,12 +105,12 @@ dashboard "acm_certificate_detail" {
         args = [self.input.certificate_arn.value]
       }
 
-      with "ec2_application_load_balancers" {
+      with "ec2_classic_load_balancers" {
         sql = <<-EOQ
           select
-            arn as alb_arn
+            arn as clb_arn
           from
-            aws_ec2_application_load_balancer
+            aws_ec2_classic_load_balancer
           where
             arn in
             (
@@ -163,10 +163,10 @@ dashboard "acm_certificate_detail" {
       nodes = [
         node.acm_certificate,
         node.cloudfront_distribution,
-        node.ec2_classic_load_balancer,
         node.ec2_application_load_balancer,
+        node.ec2_classic_load_balancer,
         node.ec2_network_load_balancer,
-        node.acm_certificate_from_opensearch_domain
+        node.opensearch_domain
       ]
 
       edges = [
@@ -344,22 +344,6 @@ query "acm_certificate_transparency_logging_status" {
   EOQ
 
   param "arn" {}
-}
-
-edge "opensearch_domain_to_acm_certificate" {
-  title = "ssl via"
-
-  sql = <<-EOQ
-    select
-      domain_endpoint_options ->> 'CustomEndpointCertificateArn' as to_id,
-      arn as from_id
-    from
-      aws_opensearch_domain
-    where
-      domain_endpoint_options ->> 'CustomEndpointCertificateArn' = any($1);
-  EOQ
-
-  param "acm_certificate_arns" {}
 }
 
 query "acm_certificate_overview" {

@@ -7,12 +7,12 @@ locals {
 category "s3_access_point" {
   title = "S3 Access Point"
   color = local.storage_color
-  icon  = "text:AP"
+  icon  = "file-open"
 }
 
 category "s3_bucket" {
   title = "S3 Bucket"
   href  = "/aws_insights.dashboard.s3_bucket_detail?input.bucket_arn={{.properties.'ARN' | @uri}}"
-  icon  = "archive-box"
+  icon  = "heroicons-outline:archive-box"
   color = local.storage_color
 }

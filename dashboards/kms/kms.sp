@@ -6,13 +6,13 @@ locals {
 
 category "kms_alias" {
   title = "KMS Key Alias"
-  icon  = "key"
+  icon  = "heroicons-outline:key"
   color = local.security_color
 }
 
 category "kms_key" {
   title = "KMS Key"
   href  = "/aws_insights.dashboard.kms_key_detail?input.key_arn={{.properties.'ARN' | @uri}}"
-  icon  = "key"
+  icon  = "heroicons-outline:key"
   color = local.security_color
 }

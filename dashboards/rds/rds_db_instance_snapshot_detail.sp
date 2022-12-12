@@ -70,6 +70,20 @@ dashboard "rds_db_snapshot_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "kms_keys" {
+        sql = <<-EOQ
+          select
+            kms_key_id as key_arn
+          from
+            aws_rds_db_snapshot
+          where
+            kms_key_id is not null
+            and arn = $1;
+        EOQ
+
+        args = [self.input.db_snapshot_arn.value]
+      }
+
       with "rds_instances" {
         sql = <<-EOQ
           select
@@ -85,34 +99,20 @@ dashboard "rds_db_snapshot_detail" {
         args = [self.input.db_snapshot_arn.value]
       }
 
-      with "kms_keys" {
-        sql = <<-EOQ
-          select
-            kms_key_id as key_arn
-          from
-            aws_rds_db_snapshot
-          where
-            kms_key_id is not null
-            and arn = $1;
-        EOQ
-
-        args = [self.input.db_snapshot_arn.value]
-      }
-
       nodes = [
-        node.rds_db_snapshot,
         node.kms_key,
-        node.rds_db_instance
+        node.rds_db_instance,
+        node.rds_db_snapshot
       ]
 
       edges = [
-        edge.rds_db_snapshot_to_kms_key,
-        edge.rds_db_instance_to_rds_db_snapshot
+        edge.rds_db_instance_to_rds_db_snapshot,
+        edge.rds_db_snapshot_to_kms_key
       ]
 
       args = {
-        rds_db_instance_arns = with.rds_instances.rows[*].rds_instance_arn
         kms_key_arns         = with.kms_keys.rows[*].key_arn
+        rds_db_instance_arns = with.rds_instances.rows[*].rds_instance_arn
         rds_db_snapshot_arns = [self.input.db_snapshot_arn.value]
       }
     }
@@ -330,47 +330,4 @@ query "rds_db_snapshot_storage" {
   EOQ
 
   param "arn" {}
-}
-
-node "rds_db_snapshot" {
-  category = category.rds_db_snapshot
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Status', status,
-        'Availability Zone', availability_zone,
-        'DB Instance Identifier', db_instance_identifier,
-        'Create Time', create_time,
-        'Encrypted', encrypted::text,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_rds_db_snapshot
-    where
-      arn = any($1);
-  EOQ
-
-  param "rds_db_snapshot_arns" {}
-}
-
-edge "rds_db_snapshot_to_kms_key" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      arn as from_id,
-      kms_key_id as to_id
-    from
-      aws_rds_db_snapshot
-    where
-      kms_key_id is not null
-      and arn = any($1);
-  EOQ
-
-  param "rds_db_snapshot_arns" {}
 }

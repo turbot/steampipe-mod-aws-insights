@@ -72,6 +72,20 @@ dashboard "rds_db_cluster_snapshot_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "kms_keys" {
+        sql = <<-EOQ
+          select
+            kms_key_id as key_arn
+          from
+            aws_rds_db_cluster_snapshot
+          where
+            kms_key_id is not null
+            and arn = $1;
+        EOQ
+
+        args = [self.input.snapshot_arn.value]
+      }
+
       with "rds_clusters" {
         sql = <<-EOQ
           select
@@ -87,24 +101,10 @@ dashboard "rds_db_cluster_snapshot_detail" {
         args = [self.input.snapshot_arn.value]
       }
 
-      with "kms_keys" {
-        sql = <<-EOQ
-          select
-            kms_key_id as key_arn
-          from
-            aws_rds_db_cluster_snapshot
-          where
-            kms_key_id is not null
-            and arn = $1;
-        EOQ
-
-        args = [self.input.snapshot_arn.value]
-      }
-
       nodes = [
-        node.rds_db_cluster_snapshot,
         node.kms_key,
-        node.rds_db_cluster
+        node.rds_db_cluster,
+        node.rds_db_cluster_snapshot
       ]
 
       edges = [
@@ -113,8 +113,8 @@ dashboard "rds_db_cluster_snapshot_detail" {
       ]
 
       args = {
-        rds_db_cluster_arns          = with.rds_clusters.rows[*].rds_cluster_arn
         kms_key_arns                 = with.kms_keys.rows[*].key_arn
+        rds_db_cluster_arns          = with.rds_clusters.rows[*].rds_cluster_arn
         rds_db_cluster_snapshot_arns = [self.input.snapshot_arn.value]
       }
     }
@@ -319,48 +319,5 @@ query "rds_db_cluster_snapshot_attributes" {
   EOQ
 
   param "arn" {}
-}
-
-node "rds_db_cluster_snapshot" {
-  category = category.rds_db_cluster_snapshot
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Status', status,
-        'Type', type,
-        'DB Cluster Identifier', db_cluster_identifier,
-        'Create Time', create_time,
-        'Encrypted', storage_encrypted::text,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_rds_db_cluster_snapshot
-    where
-      arn = any($1);
-  EOQ
-
-  param "rds_db_cluster_snapshot_arns" {}
-}
-
-edge "rds_db_cluster_snapshot_to_kms_key" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      arn as from_id,
-      kms_key_id as to_id
-    from
-      aws_rds_db_cluster_snapshot
-    where
-      kms_key_id is not null
-      and arn = $1;
-  EOQ
-
-  param "rds_db_cluster_snapshot_arns" {}
 }
 

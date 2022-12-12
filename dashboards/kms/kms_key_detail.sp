@@ -57,7 +57,7 @@ dashboard "kms_key_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "trails" {
+      with "cloudtrail_trails" {
         sql = <<-EOQ
           select
             t.arn as trail_arn
@@ -70,7 +70,7 @@ dashboard "kms_key_detail" {
         args = [self.input.key_arn.value]
       }
 
-      with "volumes" {
+      with "ebs_volumes" {
         sql = <<-EOQ
           select
             v.arn as volume_arn
@@ -78,6 +78,19 @@ dashboard "kms_key_detail" {
             aws_ebs_volume as v
           where
             v.kms_key_id = $1;
+        EOQ
+
+        args = [self.input.key_arn.value]
+      }
+
+      with "lambda_functions" {
+        sql = <<-EOQ
+          select
+            arn as function_arn
+          from
+            aws_lambda_function
+          where
+            kms_key_arn = $1;
         EOQ
 
         args = [self.input.key_arn.value]
@@ -122,6 +135,20 @@ dashboard "kms_key_detail" {
         args = [self.input.key_arn.value]
       }
 
+      with "rds_db_snapshots" {
+        sql = <<-EOQ
+          select
+            arn as db_snapshot_arn
+          from
+            aws_rds_db_snapshot as s
+          where
+            s.kms_key_id = $1;
+        EOQ
+
+        args = [self.input.key_arn.value]
+
+      }
+
       with "redshift_clusters" {
         sql = <<-EOQ
           select
@@ -133,6 +160,23 @@ dashboard "kms_key_detail" {
         EOQ
 
         args = [self.input.key_arn.value]
+      }
+
+      with "s3_buckets" {
+        sql = <<-EOQ
+          select
+            b.arn as bucket_arn
+          from
+            aws_s3_bucket as b
+            cross join jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as r
+            join aws_kms_key as k
+            on k.arn = r -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID'
+          where
+            k.arn = $1;
+        EOQ
+
+        args = [self.input.key_arn.value]
+
       }
 
       with "sns_topics" {
@@ -170,97 +214,50 @@ dashboard "kms_key_detail" {
         args = [self.input.key_arn.value]
       }
 
-      with "lambda_functions" {
-        sql = <<-EOQ
-          select
-            l.arn as function_arn
-          from
-            aws_lambda_function as l,
-            aws_kms_key as k
-          where
-            k.arn = l.kms_key_arn
-            and k.arn = $1;
-        EOQ
-
-        args = [self.input.key_arn.value]
-      }
-
-      with "rds_db_snapshots" {
-        sql = <<-EOQ
-          select
-            arn as db_snapshot_arn
-          from
-            aws_rds_db_snapshot as s
-          where
-            s.kms_key_id = $1;
-        EOQ
-
-        args = [self.input.key_arn.value]
-
-      }
-
-      with "s3_buckets" {
-        sql = <<-EOQ
-          select
-            b.arn as bucket_arn
-          from
-            aws_s3_bucket as b
-            cross join jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as r
-            join aws_kms_key as k
-            on k.arn = r -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID'
-          where
-            k.arn = $1;
-        EOQ
-
-        args = [self.input.key_arn.value]
-
-      }
-
       nodes = [
-        node.kms_key,
-        node.kms_key_alias,
         node.cloudtrail_trail,
         node.ebs_volume,
-        node.rds_db_cluster_snapshot,
+        node.kms_key,
+        node.kms_key_alias,
+        node.lambda_function,
         node.rds_db_cluster,
-        node.redshift_cluster,
-        node.sns_topic,
-        node.sqs_queue,
+        node.rds_db_cluster_snapshot,
         node.rds_db_instance,
         node.rds_db_snapshot,
-        node.lambda_function,
-        node.s3_bucket
+        node.redshift_cluster,
+        node.s3_bucket,
+        node.sns_topic,
+        node.sqs_queue
       ]
 
       edges = [
-        edge.kms_key_to_kms_alias,
         edge.cloudtrail_trail_to_kms_key,
         edge.ebs_volume_to_kms_key,
+        edge.kms_key_to_kms_alias,
+        edge.lambda_function_to_kms_key,
         edge.rds_db_cluster_snapshot_to_kms_key,
         edge.rds_db_cluster_to_kms_key,
-        edge.redshift_cluster_to_kms_key,
-        edge.sns_topic_to_kms_key,
-        edge.sqs_queue_to_kms_key_alias,
         edge.rds_db_instance_to_kms_key,
         edge.rds_db_snapshot_to_kms_key,
-        edge.lambda_function_to_kms_key,
-        edge.s3_bucket_to_kms_key
+        edge.redshift_cluster_to_kms_key,
+        edge.s3_bucket_to_kms_key,
+        edge.sns_topic_to_kms_key,
+        edge.sqs_queue_to_kms_key_alias
       ]
 
       args = {
+        cloudtrail_trail_arns        = with.cloudtrail_trails.rows[*].trail_arn
+        ebs_volume_arns              = with.ebs_volumes.rows[*].volume_arn
         kms_key_arns                 = [self.input.key_arn.value]
-        cloudtrail_trail_arns        = with.trails.rows[*].trail_arn
-        ebs_volume_arns              = with.volumes.rows[*].volume_arn
-        rds_db_cluster_snapshot_arns = with.rds_db_cluster_snapshots.rows[*].cluster_snapshot_arn
+        lambda_function_arns         = with.lambda_functions.rows[*].function_arn
         rds_db_cluster_arns          = with.rds_db_clusters.rows[*].cluster_arn
+        rds_db_cluster_snapshot_arns = with.rds_db_cluster_snapshots.rows[*].cluster_snapshot_arn
         rds_db_instance_arns         = with.rds_db_instances.rows[*].db_instance_arn
         rds_db_snapshot_arns         = with.rds_db_snapshots.rows[*].db_snapshot_arn
         redshift_cluster_arns        = with.redshift_clusters.rows[*].redshift_cluster_arn
+        s3_bucket_arns               = with.s3_buckets.rows[*].bucket_arn
         sns_topic_arns               = with.sns_topics.rows[*].topic_arn
         sqs_queue_arns               = with.sqs_queues.rows[*].queue_arn
-        lambda_function_arns         = with.lambda_functions.rows[*].function_arn
-        s3_bucket_arns               = with.s3_buckets.rows[*].bucket_arn
-        arn                          = self.input.key_arn.value
       }
     }
   }
@@ -455,104 +452,6 @@ query "kms_key_policy" {
   EOQ
 
   param "arn" {}
-}
-
-node "kms_key" {
-  category = category.kms_key
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      left(id,8) as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Key Manager', key_manager,
-        'Creation Date', creation_date,
-        'Enabled', enabled::text,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_kms_key
-    where
-      arn = any($1);
-  EOQ
-
-  param "kms_key_arns" {}
-}
-
-edge "cloudtrail_trail_to_kms_key" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      arn as from_id,
-      kms_key_id as to_id
-    from
-      aws_cloudtrail_trail
-    where
-      arn = any($1);
-  EOQ
-
-  param "cloudtrail_trail_arns" {}
-}
-
-edge "ebs_volume_to_kms_key" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      arn as from_id,
-      kms_key_id as to_id
-    from
-      aws_ebs_volume
-    where
-      arn = any($1);
-  EOQ
-
-  param "ebs_volume_arns" {}
-}
-
-node "kms_key_alias" {
-  category = category.kms_alias
-
-  sql = <<-EOQ
-    select
-      a.arn as id,
-      a.title as title,
-      jsonb_build_object(
-        'ARN', a.arn,
-        'Create Date', a.creation_date,
-        'Account ID', a.account_id,
-        'Region', a.region
-      ) as properties
-    from
-      aws_kms_alias as a
-      join aws_kms_key as k
-      on a.target_key_id = k.id
-    where
-      k.arn = any($1);
-  EOQ
-
-  param "kms_key_arns" {}
-}
-
-edge "kms_key_to_kms_alias" {
-  title = "key"
-
-  sql = <<-EOQ
-    select
-      a.arn as from_id,
-      k.arn as to_id
-    from
-      aws_kms_alias as a
-      join aws_kms_key as k
-      on a.target_key_id = k.id
-    where
-      k.arn = any($1);
-  EOQ
-
-  param "kms_key_arns" {}
 }
 
 query "kms_key_overview" {

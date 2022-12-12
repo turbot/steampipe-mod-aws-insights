@@ -42,7 +42,7 @@ dashboard "iam_group_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "attached_policies" {
+      with "iam_policies" {
         sql = <<-EOQ
           select
             jsonb_array_elements_text(attached_policy_arns) as policy_arn
@@ -55,7 +55,7 @@ dashboard "iam_group_detail" {
         args = [self.input.group_arn.value]
       }
 
-      with "members" {
+      with "iam_users" {
         sql = <<-EOQ
           select
             member ->> 'Arn' as user_arn
@@ -71,21 +71,21 @@ dashboard "iam_group_detail" {
 
       nodes = [
         node.iam_group,
-        node.iam_policy,
-        node.iam_user,
         node.iam_group_inline_policy,
+        node.iam_policy,
+        node.iam_user
       ]
 
       edges = [
-        edge.iam_policy_from_iam_group,
+        edge.iam_group_to_iam_policy,
         edge.iam_group_to_iam_user,
-        edge.iam_group_to_inline_policy,
+        edge.iam_group_to_inline_policy
       ]
 
       args = {
         iam_group_arns  = [self.input.group_arn.value]
-        iam_policy_arns = with.attached_policies.rows[*].policy_arn
-        iam_user_arns   = with.members.rows[*].user_arn
+        iam_policy_arns = with.iam_policies.rows[*].policy_arn
+        iam_user_arns   = with.iam_users.rows[*].user_arn
       }
     }
   }
@@ -244,84 +244,4 @@ query "iam_all_policies_for_group" {
   EOQ
 
   param "arn" {}
-}
-
-
-node "iam_group" {
-  category = category.iam_group
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      name as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Path', path,
-        'Create Date', create_date,
-        'Account ID', account_id
-      ) as properties
-    from
-      aws_iam_group
-    where
-      arn = any($1);
-  EOQ
-
-  param "iam_group_arns" {}
-}
-
-
-
-edge "iam_group_to_iam_user" {
-  title = "has member"
-
-  sql = <<-EOQ
-   select
-      iam_user_arn as to_id,
-      iam_group_arn as from_id
-    from
-      unnest($1::text[]) as iam_user_arn,
-      unnest($2::text[]) as iam_group_arn
-  EOQ
-
-  param "iam_user_arns" {}
-  param "iam_group_arns" {}
-
-}
-
-node "iam_group_inline_policy" {
-  category = category.iam_inline_policy
-
-  sql = <<-EOQ
-    select
-      concat(g.arn, ':inline_', i ->> 'PolicyName') as id,
-      i ->> 'PolicyName' as title,
-      jsonb_build_object(
-        'PolicyName', i ->> 'PolicyName',
-        'Type', 'Inline Policy'
-      ) as properties
-    from
-      aws_iam_group as g,
-      jsonb_array_elements(inline_policies_std) as i
-    where
-      g.arn = any($1)
-  EOQ
-
-  param "iam_group_arns" {}
-}
-
-edge "iam_group_to_inline_policy" {
-  title = "inline policy"
-
-  sql = <<-EOQ
-    select
-      g.arn as from_id,
-      concat(g.arn, ':inline_', i ->> 'PolicyName') as to_id
-    from
-      aws_iam_group as g,
-      jsonb_array_elements(inline_policies_std) as i
-    where
-      g.arn = any($1)
-  EOQ
-
-  param "iam_group_arns" {}
 }

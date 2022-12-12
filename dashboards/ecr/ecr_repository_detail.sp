@@ -55,21 +55,54 @@ dashboard "ecr_repository_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "ecs_task_definitions" {
+        sql = <<-EOQ
+          select
+            t.task_definition_arn as task_definition_arn
+          from
+            aws_ecr_repository as r,
+            aws_ecs_task_definition as t,
+            jsonb_array_elements(container_definitions) as d
+          where
+            r.repository_uri = split_part(d ->> 'Image', ':', 1)
+            and r.arn = $1
+        EOQ
+
+        args = [self.input.ecr_repository_arn.value]
+      }
+
+      with "kms_keys" {
+        sql = <<-EOQ
+          select
+            encryption_configuration ->> 'KmsKey' as kms_key_arn
+          from
+            aws_ecr_repository
+          where
+            arn = $1;
+        EOQ
+
+        args = [self.input.ecr_repository_arn.value]
+      }
+
       nodes = [
-        node.ecr_repository_node,
-        node.ecr_repository_to_ecr_image_node,
-        node.ecr_repository_to_ecs_task_definition_node,
-        node.ecr_repository_to_kms_key_node
+        node.ecr_image,
+        node.ecr_image_tag,
+        node.ecr_repository,
+        node.ecs_task_definition,
+        node.kms_key
       ]
 
       edges = [
-        edge.ecr_repository_to_ecr_image_edge,
-        edge.ecr_repository_to_ecs_task_definition_edge,
-        edge.ecr_repository_to_kms_key_edge
+        edge.ecr_image_to_ecr_image_tag,
+        edge.ecr_repository_to_ecr_image,
+        edge.ecr_repository_to_ecs_task_definition,
+        edge.ecr_repository_to_kms_key
       ]
 
       args = {
-        arn = self.input.ecr_repository_arn.value
+        ecr_repository_arns      = [self.input.ecr_repository_arn.value]
+        ecs_task_definition_arns = with.ecs_task_definitions.rows[*].task_definition_arn
+        kms_key_arns             = with.kms_keys.rows[*].kms_key_arn
       }
     }
   }
@@ -240,154 +273,3 @@ query "ecr_repository_input" {
   EOQ
 }
 
-node "ecr_repository_node" {
-  category = category.ecr_repository
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'Registry ID', registry_id,
-        'Repository URI', repository_uri,
-        'Image Tag Mutability', image_tag_mutability,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_ecr_repository
-    where
-      arn = $1
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecr_repository_to_ecr_image_node" {
-  category = category.ecr_image
-
-  sql = <<-EOQ
-    select
-      i.image_digest as id,
-      i.image_digest as title,
-      jsonb_build_object(
-        'Manifest Media Type', i.image_manifest_media_type,
-        'Artifact Media Type', i.artifact_media_type,
-        'Image Size (in Bytes)', i.image_size_in_bytes,
-        'Account ID', i.account_id,
-        'Region', i.region
-      ) as properties
-    from
-      aws_ecr_repository as r
-      left join aws_ecr_image i on i.registry_id = i.registry_id and i.repository_name = r.repository_name
-    where
-      r.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecr_repository_to_ecr_image_edge" {
-  title = "image"
-
-  sql = <<-EOQ
-    select
-      r.arn as from_id,
-      i.image_digest as to_id
-    from
-      aws_ecr_repository as r
-      left join aws_ecr_image i on i.registry_id = r.registry_id and i.repository_name = r.repository_name
-    where
-      r.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecr_repository_to_ecs_task_definition_node" {
-  category = category.ecs_task_definition
-
-  sql = <<-EOQ
-    select
-      t.task_definition_arn as id,
-      t.title as title,
-      jsonb_build_object(
-        'ARN', t.task_definition_arn,
-        'Status', t.status,
-        'Image', d ->> 'Image',
-        'Account ID', t.account_id,
-        'Region', t.region
-      ) as properties
-    from
-      aws_ecr_repository as r,
-      aws_ecs_task_definition as t,
-      jsonb_array_elements(container_definitions) as d
-    where
-      r.repository_uri = split_part(d ->> 'Image', ':', 1)
-      and r.arn = $1
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecr_repository_to_ecs_task_definition_edge" {
-  title = "task definition"
-
-  sql = <<-EOQ
-    select
-      r.arn as from_id,
-      t.task_definition_arn as to_id
-    from
-      aws_ecr_repository as r,
-      aws_ecs_task_definition as t,
-      jsonb_array_elements(container_definitions) as d
-    where
-      r.repository_uri = split_part(d ->> 'Image', ':', 1)
-      and r.arn = $1
-  EOQ
-
-  param "arn" {}
-}
-
-node "ecr_repository_to_kms_key_node" {
-  category = category.kms_key
-
-  sql = <<-EOQ
-    select
-      k.arn as id,
-      k.title as title,
-      jsonb_build_object(
-        'ARN', k.arn,
-        'Enabled', enabled,
-        'ID', id,
-        'Account ID', k.account_id,
-        'Region', k.region,
-        'Key Manager', k.key_manager
-      ) as properties
-    from
-      aws_ecr_repository as r
-      left join aws_kms_key as k on k.arn = r.encryption_configuration ->> 'KmsKey'
-    where
-      r.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-edge "ecr_repository_to_kms_key_edge" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      r.arn as from_id,
-      k.arn as to_id
-    from
-      aws_ecr_repository as r
-      left join aws_kms_key as k on k.arn = r.encryption_configuration ->> 'KmsKey'
-    where
-      r.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
