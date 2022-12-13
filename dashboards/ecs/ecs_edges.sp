@@ -289,17 +289,37 @@ edge "ecs_task_definition_to_ecs_task" {
   param "ecs_task_definition_arns" {}
 }
 
+edge "ecs_service_to_ecs_task" {
+  title = "task"
+
+  sql = <<-EOQ
+    select
+      arn as from_id,
+      task_arn as to_id
+    from
+      aws_ecs_service as s,
+      aws_ecs_task as t
+    where
+      s.task_definition = t.task_definition_arn
+      and arn = any($1);
+  EOQ
+
+  param "ecs_service_arns" {}
+}
+
 edge "ecs_service_to_ecs_task_definition" {
   title = "task definition"
 
   sql = <<-EOQ
     select
-      arn as from_id,
+      coalesce(task_arn, arn) as from_id,
       task_definition as to_id
     from
-      aws_ecs_service
+      aws_ecs_service as s,
+      aws_ecs_task as t
     where
-      arn = any($1);
+      s.task_definition = t.task_definition_arn
+      and arn = any($1);
   EOQ
 
   param "ecs_service_arns" {}
@@ -468,8 +488,8 @@ edge "ecs_task_to_ecs_task_definition" {
     from
       aws_ecs_task
     where
-      task_definition_arn = any($1);
+      task_arn = any($1);
   EOQ
 
-  param "ecs_task_definition_arns" {}
+  param "ecs_task_arns" {}
 }
