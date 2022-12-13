@@ -267,7 +267,6 @@ dashboard "s3_bucket_detail" {
         title = "Tags"
         width = 6
         query = query.s3_bucket_tags_detail
-        param "arn" {}
         args = {
           arn = self.input.bucket_arn.value
         }

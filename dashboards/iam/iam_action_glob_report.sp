@@ -7,12 +7,12 @@ dashboard "iam_action_glob_report" {
     category = "Security"
   })
 
-  input "action_glob" {
-    type        = "text"
-    title       = "Action:"
-    placeholder = "Enter an action glob (e.g. ec2: desc*)"
-    width       = 4
-  }
+  # input "action_glob" {
+  #   type        = "text"
+  #   title       = "Action:"
+  #   placeholder = "Enter an action glob (e.g. ec2: desc*)"
+  #   width       = 4
+  # }
 
   container {
 

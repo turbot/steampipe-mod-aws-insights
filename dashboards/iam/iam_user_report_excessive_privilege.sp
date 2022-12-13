@@ -7,26 +7,26 @@ dashboard "iam_user_excessive_privilege_report" {
     category = "Permissions"
   })
 
-   input "threshold_in_days" {
-     title = "Last Authenticated Threshold"
-     width = 2
+  #  input "threshold_in_days" {
+  #    title = "Last Authenticated Threshold"
+  #    width = 2
 
-     option "30" {
-       label = "More than 30 days ago"
-     }
-     option "60" {
-       label = "More than 60 days ago"
-     }
-     option "90" {
-       label = "More than 90 days ago"
-     }
-     option "180" {
-       label = "More than 180 days ago"
-     }
-     option "360" {
-       label = "More than 360 days ago"
-     }
-   }
+  #    option "30" {
+  #      label = "More than 30 days ago"
+  #    }
+  #    option "60" {
+  #      label = "More than 60 days ago"
+  #    }
+  #    option "90" {
+  #      label = "More than 90 days ago"
+  #    }
+  #    option "180" {
+  #      label = "More than 180 days ago"
+  #    }
+  #    option "360" {
+  #      label = "More than 360 days ago"
+  #    }
+  #  }
 
   container {
 

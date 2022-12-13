@@ -393,24 +393,24 @@ dashboard "vpc_detail" {
     title = "Routing"
 
 
-    flow {
-      nodes = [
-        node.vpc_routing_vpc_node,
-        node.vpc_routing_subnet_node,
-        node.vpc_routing_cidr_node,
-        node.vpc_routing_gateway_node
-      ]
+    # flow {
+    #   nodes = [
+    #     node.vpc_routing_vpc_node,
+    #     node.vpc_routing_subnet_node,
+    #     node.vpc_routing_cidr_node,
+    #     node.vpc_routing_gateway_node
+    #   ]
 
-      edges = [
-        edge.vpc_routing_subnet_vpc_to_cidr_edge,
-        edge.vpc_routing_cidr_to_gateway_edge
-      ]
+    #   edges = [
+    #     edge.vpc_routing_subnet_vpc_to_cidr_edge,
+    #     edge.vpc_routing_cidr_to_gateway_edge
+    #   ]
 
-      args = {
-        vpc_id = self.input.vpc_id.value
-      }
+    #   args = {
+    #     vpc_id = self.input.vpc_id.value
+    #   }
 
-    }
+    # }
 
     table {
       title = "Route Tables"
