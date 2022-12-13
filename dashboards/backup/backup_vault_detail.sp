@@ -24,78 +24,109 @@ dashboard "backup_vault_detail" {
     }
   }
 
-  # container {
+  with "backup_plans" {
+    sql = <<-EOQ
+      select
+        p.arn as backup_plan_arn
+      from
+        aws_backup_vault as v,
+        aws_backup_plan as p,
+        jsonb_array_elements(backup_plan -> 'Rules') as r
+      where
+        r ->> 'TargetBackupVaultName' = v.name
+        and v.arn = $1
+    EOQ
 
-  #   graph {
-  #     title     = "Relationships"
-  #     type      = "graph"
-  #     direction = "TD"
+    args = [self.input.backup_vault_arn.value]
+  }
 
-  #     with "backup_plans" {
-  #       sql = <<-EOQ
-  #         select
-  #           p.arn as backup_plan_arn
-  #         from
-  #           aws_backup_vault as v,
-  #           aws_backup_plan as p,
-  #           jsonb_array_elements(backup_plan -> 'Rules') as r
-  #         where
-  #           r ->> 'TargetBackupVaultName' = v.name
-  #           and v.arn = $1
-  #       EOQ
+  with "kms_keys" {
+    sql = <<-EOQ
+      select
+        encryption_key_arn as kms_key_arn
+      from
+        aws_backup_vault
+      where
+        encryption_key_arn is not null
+        and arn = $1;
+    EOQ
 
-  #       args = [self.input.backup_vault_arn.value]
-  #     }
+    args = [self.input.backup_vault_arn.value]
+  }
 
-  #     with "kms_keys" {
-  #       sql = <<-EOQ
-  #         select
-  #           encryption_key_arn as kms_key_arn
-  #         from
-  #           aws_backup_vault
-  #         where
-  #           encryption_key_arn is not null
-  #           and arn = $1;
-  #       EOQ
+  with "sns_topics" {
+    sql = <<-EOQ
+      select
+        sns_topic_arn
+      from
+        aws_backup_vault
+      where
+        sns_topic_arn is not null
+        and arn = $1;
+    EOQ
 
-  #       args = [self.input.backup_vault_arn.value]
-  #     }
+    args = [self.input.backup_vault_arn.value]
+  }
 
-  #     with "sns_topics" {
-  #       sql = <<-EOQ
-  #         select
-  #           sns_topic_arn
-  #         from
-  #           aws_backup_vault
-  #         where
-  #           sns_topic_arn is not null
-  #           and arn = $1;
-  #       EOQ
 
-  #       args = [self.input.backup_vault_arn.value]
-  #     }
+  container {
 
-  #     nodes = [
-  #       node.backup_plan,
-  #       node.backup_vault,
-  #       node.kms_key,
-  #       node.sns_topic
-  #     ]
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
 
-  #     edges = [
-  #       edge.backup_plan_to_backup_vault,
-  #       edge.backup_vault_to_kms_key,
-  #       edge.backup_vault_to_sns_topic
-  #     ]
+      node {
+        base = node.backup_plan
+        args = {
+          backup_plan_arns = with.backup_plans.rows[*].backup_plan_arn
+        }
+      }
 
-  #     args = {
-  #       backup_plan_arns  = with.backup_plans.rows[*].backup_plan_arn
-  #       backup_vault_arns = [self.input.backup_vault_arn.value]
-  #       kms_key_arns      = with.kms_keys.rows[*].kms_key_arn
-  #       sns_topic_arns    = with.sns_topics.rows[*].sns_topic_arn
-  #     }
-  #   }
-  # }
+      node {
+        base = node.backup_vault
+        args = {
+          backup_vault_arns = [self.input.backup_vault_arn.value]
+        }
+      }
+
+      node {
+        base = node.kms_key
+        args = {
+          kms_key_arns = with.kms_keys.rows[*].kms_key_arn
+        }
+      }
+
+      node {
+        base = node.sns_topic
+        args = {
+          sns_topic_arns = with.sns_topics.rows[*].sns_topic_arn
+        }
+      }
+
+      edge {
+        base = edge.backup_plan_to_backup_vault
+        args = {
+          backup_plan_arns = with.backup_plans.rows[*].backup_plan_arn
+        }
+      }
+
+      edge {
+        base = edge.backup_vault_to_kms_key
+        args = {
+          backup_vault_arns = [self.input.backup_vault_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.backup_vault_to_sns_topic
+        args = {
+          backup_vault_arns = [self.input.backup_vault_arn.value]
+        }
+      }
+
+    }
+  }
 
   container {
 

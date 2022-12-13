@@ -234,23 +234,6 @@ edge "rds_db_instance_to_vpc_security_group" {
   param "rds_db_instance_arns" {}
 }
 
-edge "rds_db_instance_vpc_subnet_to_vpc" {
-  title = "vpc"
-
-  sql = <<-EOQ
-    select
-      subnet ->> 'SubnetIdentifier' as from_id,
-      vpc_id as to_id
-    from
-      aws_rds_db_instance as rdb,
-      jsonb_array_elements(subnets) as subnet
-    where
-      arn = any($1);
-  EOQ
-
-  param "rds_db_instance_arns" {}
-}
-
 edge "rds_db_snapshot_to_kms_key" {
   title = "encrypted with"
 

@@ -49,138 +49,200 @@ dashboard "cloudwatch_log_group_detail" {
 
   }
 
-  # container {
+  with "cloudtrail_trails" {
+    sql = <<-EOQ
+      select
+        arn as cloudtrail_trail_arn
+      from
+        aws_cloudtrail_trail
+      where
+        log_group_arn is not null
+        and log_group_arn = $1;
+    EOQ
 
-  #   graph {
-  #     title     = "Relationships"
-  #     type      = "graph"
-  #     direction = "TD"
+    args = [self.input.log_group_arn.value]
+  }
 
-  #     with "cloudtrail_trails" {
-  #       sql = <<-EOQ
-  #         select
-  #           arn as cloudtrail_trail_arn
-  #         from
-  #           aws_cloudtrail_trail
-  #         where
-  #           log_group_arn is not null
-  #           and log_group_arn = $1;
-  #       EOQ
+  with "cloudwatch_log_metric_filters" {
+    sql = <<-EOQ
+      select
+        f.name as log_metric_filter_name
+      from
+        aws_cloudwatch_log_group as g
+        left join aws_cloudwatch_log_metric_filter as f on g.name = f.log_group_name
+      where
+        f.region = g.region
+        and g.arn = $1;
+    EOQ
 
-  #       args = [self.input.log_group_arn.value]
-  #     }
+    args = [self.input.log_group_arn.value]
+  }
 
-  #     with "cloudwatch_log_metric_filters" {
-  #       sql = <<-EOQ
-  #         select
-  #           f.name as log_metric_filter_name
-  #         from
-  #           aws_cloudwatch_log_group as g
-  #           left join aws_cloudwatch_log_metric_filter as f on g.name = f.log_group_name
-  #         where
-  #           f.region = g.region
-  #           and g.arn = $1;
-  #       EOQ
+  with "kinesis_streams" {
+    sql = <<-EOQ
+      select
+        s.stream_arn
+      from
+        aws_cloudwatch_log_group as g,
+        aws_cloudwatch_log_subscription_filter as f,
+        aws_kinesis_stream as s
+      where
+        f.region = g.region
+        and g.name = f.log_group_name
+        and s.stream_arn = f.destination_arn
+        and g.arn = $1;
+    EOQ
 
-  #       args = [self.input.log_group_arn.value]
-  #     }
+    args = [self.input.log_group_arn.value]
+  }
 
-  #     with "kinesis_streams" {
-  #       sql = <<-EOQ
-  #         select
-  #           s.stream_arn
-  #         from
-  #           aws_cloudwatch_log_group as g,
-  #           aws_cloudwatch_log_subscription_filter as f,
-  #           aws_kinesis_stream as s
-  #         where
-  #           f.region = g.region
-  #           and g.name = f.log_group_name
-  #           and s.stream_arn = f.destination_arn
-  #           and g.arn = $1;
-  #       EOQ
+  with "kms_keys" {
+    sql = <<-EOQ
+      select
+        kms_key_id
+      from
+        aws_cloudwatch_log_group
+      where
+        kms_key_id is not null
+        and arn = $1;
+    EOQ
 
-  #       args = [self.input.log_group_arn.value]
-  #     }
+    args = [self.input.log_group_arn.value]
+  }
 
-  #     with "kms_keys" {
-  #       sql = <<-EOQ
-  #         select
-  #           kms_key_id
-  #         from
-  #           aws_cloudwatch_log_group
-  #         where
-  #           kms_key_id is not null
-  #           and arn = $1;
-  #       EOQ
+  with "lambda_functions" {
+    sql = <<-EOQ
+      select
+        f.arn as lambda_function_arn
+      from
+        aws_cloudwatch_log_group as g
+        left join aws_lambda_function as f on f.name = split_part(g.name, '/', 4)
+      where
+        g.name like '/aws/lambda/%'
+        and g.region = f.region
+        and g.arn = $1;
+    EOQ
 
-  #       args = [self.input.log_group_arn.value]
-  #     }
+    args = [self.input.log_group_arn.value]
+  }
 
-  #     with "lambda_functions" {
-  #       sql = <<-EOQ
-  #         select
-  #           f.arn as lambda_function_arn
-  #         from
-  #           aws_cloudwatch_log_group as g
-  #           left join aws_lambda_function as f on f.name = split_part(g.name, '/', 4)
-  #         where
-  #           g.name like '/aws/lambda/%'
-  #           and g.region = f.region
-  #           and g.arn = $1;
-  #       EOQ
+  with "vpc_flow_logs" {
+    sql = <<-EOQ
+      select
+        distinct f.flow_log_id
+      from
+        aws_cloudwatch_log_group as g,
+        aws_vpc_flow_log as f
+      where
+        f.log_group_name = g.name
+        and f.log_destination_type = 'cloud-watch-logs'
+        and f.region = g.region
+        and g.arn = $1;
+    EOQ
 
-  #       args = [self.input.log_group_arn.value]
-  #     }
+    args = [self.input.log_group_arn.value]
+  }
 
-  #     with "vpc_flow_logs" {
-  #       sql = <<-EOQ
-  #         select
-  #           distinct f.flow_log_id
-  #         from
-  #           aws_cloudwatch_log_group as g,
-  #           aws_vpc_flow_log as f
-  #         where
-  #           f.log_group_name = g.name
-  #           and f.log_destination_type = 'cloud-watch-logs'
-  #           and f.region = g.region
-  #           and g.arn = $1;
-  #       EOQ
 
-  #       args = [self.input.log_group_arn.value]
-  #     }
+  container {
 
-  #     nodes = [
-  #       node.cloudtrail_trail,
-  #       node.cloudwatch_log_group,
-  #       node.cloudwatch_log_metric_filter,
-  #       node.kinesis_stream,
-  #       node.kms_key,
-  #       node.lambda_function,
-  #       node.vpc_flow_log
-  #     ]
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
 
-  #     edges = [
-  #       edge.cloudtrail_trail_to_cloudwatch_log_group,
-  #       edge.cloudwatch_log_group_to_cloudwatch_log_metric_filter_edge,
-  #       edge.cloudwatch_log_group_to_kms_key,
-  #       edge.kinesis_stream_to_cloudwatch_log_group,
-  #       edge.lambda_function_to_cloudwatch_log_group,
-  #       edge.vpc_flow_log_to_cloudwatch_log_group
-  #     ]
+      node {
+        base = node.cloudtrail_trail
+        args = {
+          cloudtrail_trail_arns = with.cloudtrail_trails.rows[*].cloudtrail_trail_arn
+        }
+      }
 
-  #     args = {
-  #       cloudtrail_trail_arns     = with.cloudtrail_trails.rows[*].cloudtrail_trail_arn
-  #       cloudwatch_log_group_arns = [self.input.log_group_arn.value]
-  #       kinesis_stream_arns       = with.kinesis_streams.rows[*].stream_arn
-  #       kms_key_arns              = with.kms_keys.rows[*].kms_key_id
-  #       lambda_function_arns      = with.lambda_functions.rows[*].lambda_function_arn
-  #       log_metric_filter_name    = with.cloudwatch_log_metric_filters.rows[*].log_metric_filter_name
-  #       vpc_flow_log_ids          = with.vpc_flow_logs.rows[*].flow_log_id
-  #     }
+      node {
+        base = node.cloudwatch_log_group
+        args = {
+          cloudwatch_log_group_arns = [self.input.log_group_arn.value]
+        }
+      }
 
-  #   }
-  # }
+      node {
+        base = node.cloudwatch_log_metric_filter
+        args = {
+          log_metric_filter_name = with.cloudwatch_log_metric_filters.rows[*].log_metric_filter_name
+        }
+      }
+
+      node {
+        base = node.kinesis_stream
+        args = {
+          kinesis_stream_arns = with.kinesis_streams.rows[*].stream_arn
+        }
+      }
+
+      node {
+        base = node.kms_key
+        args = {
+          kms_key_arns = with.kms_keys.rows[*].kms_key_id
+        }
+      }
+
+      node {
+        base = node.lambda_function
+        args = {
+          lambda_function_arns = with.lambda_functions.rows[*].lambda_function_arn
+        }
+      }
+
+      node {
+        base = node.vpc_flow_log
+        args = {
+          vpc_flow_log_ids = with.vpc_flow_logs.rows[*].flow_log_id
+        }
+      }
+
+      edge {
+        base = edge.cloudtrail_trail_to_cloudwatch_log_group
+        args = {
+          cloudtrail_trail_arns = with.cloudtrail_trails.rows[*].cloudtrail_trail_arn
+        }
+      }
+
+      edge {
+        base = edge.cloudwatch_log_group_to_cloudwatch_log_metric_filter_edge
+        args = {
+          cloudwatch_log_group_arns = [self.input.log_group_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.cloudwatch_log_group_to_kms_key
+        args = {
+          cloudwatch_log_group_arns = [self.input.log_group_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.kinesis_stream_to_cloudwatch_log_group
+        args = {
+          kinesis_stream_arns = with.kinesis_streams.rows[*].stream_arn
+        }
+      }
+
+      edge {
+        base = edge.lambda_function_to_cloudwatch_log_group
+        args = {
+          lambda_function_arns = with.lambda_functions.rows[*].lambda_function_arn
+        }
+      }
+
+      edge {
+        base = edge.vpc_flow_log_to_cloudwatch_log_group
+        args = {
+          vpc_flow_log_ids = with.vpc_flow_logs.rows[*].flow_log_id
+        }
+      }
+    }
+  }
 
   container {
 

@@ -96,19 +96,6 @@ dashboard "kms_key_detail" {
   #       args = [self.input.key_arn.value]
   #     }
 
-  #     with "rds_db_cluster_snapshots" {
-  #       sql = <<-EOQ
-  #         select
-  #           s.arn as cluster_snapshot_arn
-  #         from
-  #           aws_rds_db_cluster_snapshot as s
-  #         where
-  #           s.kms_key_id = $1;
-  #       EOQ
-
-  #       args = [self.input.key_arn.value]
-  #     }
-
   #     with "rds_db_clusters" {
   #       sql = <<-EOQ
   #         select
@@ -117,6 +104,19 @@ dashboard "kms_key_detail" {
   #           aws_rds_db_cluster as c
   #         where
   #           c.kms_key_id = $1;
+  #       EOQ
+
+  #       args = [self.input.key_arn.value]
+  #     }
+
+  #     with "rds_db_cluster_snapshots" {
+  #       sql = <<-EOQ
+  #         select
+  #           s.arn as cluster_snapshot_arn
+  #         from
+  #           aws_rds_db_cluster_snapshot as s
+  #         where
+  #           s.kms_key_id = $1;
   #       EOQ
 
   #       args = [self.input.key_arn.value]

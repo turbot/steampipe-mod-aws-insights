@@ -58,452 +58,459 @@ dashboard "ec2_instance_detail" {
 
   with "ebs_volumes" {
     sql = <<-EOQ
-          select
-            v.arn as volume_arn
-          from
-            aws_ec2_instance as i,
-            jsonb_array_elements(block_device_mappings) as bd,
-            aws_ebs_volume as v
-          where
-            v.volume_id = bd -> 'Ebs' ->> 'VolumeId'
-            and i.arn = $1;
-        EOQ
+      select
+        v.arn as volume_arn
+      from
+        aws_ec2_instance as i,
+        jsonb_array_elements(block_device_mappings) as bd,
+        aws_ebs_volume as v
+      where
+        v.volume_id = bd -> 'Ebs' ->> 'VolumeId'
+        and i.arn = $1;
+    EOQ
 
     args = [self.input.instance_arn.value]
   }
 
   with "ebs_volumes" {
     sql = <<-EOQ
-          select
-            v.arn as volume_arn
-          from
-            aws_ec2_instance as i,
-            jsonb_array_elements(block_device_mappings) as bd,
-            aws_ebs_volume as v
-          where
-            v.volume_id = bd -> 'Ebs' ->> 'VolumeId'
-            and i.arn = $1;
-        EOQ
+      select
+        v.arn as volume_arn
+      from
+        aws_ec2_instance as i,
+        jsonb_array_elements(block_device_mappings) as bd,
+        aws_ebs_volume as v
+      where
+        v.volume_id = bd -> 'Ebs' ->> 'VolumeId'
+        and i.arn = $1;
+    EOQ
 
     args = [self.input.instance_arn.value]
   }
 
   with "ec2_application_load_balancers" {
     sql = <<-EOQ
-          select
-            distinct lb.arn as application_load_balancer_arn
-          from
-            aws_ec2_instance as i,
-            aws_ec2_target_group as target,
-            jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
-            jsonb_array_elements_text(target.load_balancer_arns) as l,
-            aws_ec2_application_load_balancer as lb
-          where
-            health_descriptions -> 'Target' ->> 'Id' = i.instance_id
-            and l = lb.arn
-            and i.arn = $1;
-        EOQ
+      select
+        distinct lb.arn as application_load_balancer_arn
+      from
+        aws_ec2_instance as i,
+        aws_ec2_target_group as target,
+        jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
+        jsonb_array_elements_text(target.load_balancer_arns) as l,
+        aws_ec2_application_load_balancer as lb
+      where
+        health_descriptions -> 'Target' ->> 'Id' = i.instance_id
+        and l = lb.arn
+        and i.arn = $1;
+    EOQ
 
     args = [self.input.instance_arn.value]
   }
 
   with "ec2_classic_load_balancers" {
     sql = <<-EOQ
-          select
-            distinct clb.arn as classic_load_balancer_arn
-          from
-            aws_ec2_classic_load_balancer as clb,
-            jsonb_array_elements(clb.instances) as instance,
-            aws_ec2_instance as i
-          where
-            i.arn = $1
-            and instance ->> 'InstanceId' = i.instance_id;
-        EOQ
+      select
+        distinct clb.arn as classic_load_balancer_arn
+      from
+        aws_ec2_classic_load_balancer as clb,
+        jsonb_array_elements(clb.instances) as instance,
+        aws_ec2_instance as i
+      where
+        i.arn = $1
+        and instance ->> 'InstanceId' = i.instance_id;
+    EOQ
 
     args = [self.input.instance_arn.value]
   }
 
   with "ec2_gateway_load_balancers" {
     sql = <<-EOQ
-          select
-            distinct lb.arn as gateway_load_balancer_arn
-          from
-            aws_ec2_instance as i,
-            aws_ec2_target_group as target,
-            jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
-            jsonb_array_elements_text(target.load_balancer_arns) as l,
-            aws_ec2_gateway_load_balancer as lb
-          where
-            health_descriptions -> 'Target' ->> 'Id' = i.instance_id
-            and l = lb.arn
-            and i.arn = $1;
-        EOQ
+      select
+        distinct lb.arn as gateway_load_balancer_arn
+      from
+        aws_ec2_instance as i,
+        aws_ec2_target_group as target,
+        jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
+        jsonb_array_elements_text(target.load_balancer_arns) as l,
+        aws_ec2_gateway_load_balancer as lb
+      where
+        health_descriptions -> 'Target' ->> 'Id' = i.instance_id
+        and l = lb.arn
+        and i.arn = $1;
+    EOQ
 
     args = [self.input.instance_arn.value]
   }
 
   with "ec2_network_interfaces" {
     sql = <<-EOQ
-          select
-            network_interface ->> 'NetworkInterfaceId' as network_interface_id
-          from
-            aws_ec2_instance as i,
-            jsonb_array_elements(network_interfaces) as network_interface
-          where
-            i.arn = $1;
-        EOQ
+      select
+        network_interface ->> 'NetworkInterfaceId' as network_interface_id
+      from
+        aws_ec2_instance as i,
+        jsonb_array_elements(network_interfaces) as network_interface
+      where
+        i.arn = $1;
+    EOQ
 
     args = [self.input.instance_arn.value]
   }
 
   with "ec2_network_load_balancers" {
     sql = <<-EOQ
-          select
-            distinct lb.arn as network_load_balancer_arn
-          from
-            aws_ec2_instance as i,
-            aws_ec2_target_group as target,
-            jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
-            jsonb_array_elements_text(target.load_balancer_arns) as l,
-            aws_ec2_network_load_balancer as lb
-          where
-            health_descriptions -> 'Target' ->> 'Id' = i.instance_id
-            and l = lb.arn
-            and i.arn = $1;
-        EOQ
+      select
+        distinct lb.arn as network_load_balancer_arn
+      from
+        aws_ec2_instance as i,
+        aws_ec2_target_group as target,
+        jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
+        jsonb_array_elements_text(target.load_balancer_arns) as l,
+        aws_ec2_network_load_balancer as lb
+      where
+        health_descriptions -> 'Target' ->> 'Id' = i.instance_id
+        and l = lb.arn
+        and i.arn = $1;
+    EOQ
 
     args = [self.input.instance_arn.value]
   }
 
   with "ec2_target_groups" {
     sql = <<-EOQ
-          select
-            target.target_group_arn
-          from
-            aws_ec2_instance as i,
-            aws_ec2_target_group as target,
-            jsonb_array_elements(target.target_health_descriptions) as health_descriptions
-          where
-            i.arn = $1
-            and health_descriptions -> 'Target' ->> 'Id' = i.instance_id;
-        EOQ
+      select
+        target.target_group_arn
+      from
+        aws_ec2_instance as i,
+        aws_ec2_target_group as target,
+        jsonb_array_elements(target.target_health_descriptions) as health_descriptions
+      where
+        i.arn = $1
+        and health_descriptions -> 'Target' ->> 'Id' = i.instance_id;
+    EOQ
 
     args = [self.input.instance_arn.value]
   }
 
   with "ecs_clusters" {
     sql = <<-EOQ
-          select
-            distinct cluster.cluster_arn as cluster_arn
-          from
-            aws_ec2_instance as i,
-            aws_ecs_container_instance as ci,
-            aws_ecs_cluster as cluster
-          where
-            ci.ec2_instance_id = i.instance_id
-            and ci.cluster_arn = cluster.cluster_arn
-            and i.arn = $1;
-        EOQ
+      select
+        distinct cluster.cluster_arn as cluster_arn
+      from
+        aws_ec2_instance as i,
+        aws_ecs_container_instance as ci,
+        aws_ecs_cluster as cluster
+      where
+        ci.ec2_instance_id = i.instance_id
+        and ci.cluster_arn = cluster.cluster_arn
+        and i.arn = $1;
+    EOQ
 
     args = [self.input.instance_arn.value]
   }
 
   with "iam_roles" {
     sql = <<-EOQ
-          select
-            distinct r.arn as role_arn
-          from
-            aws_ec2_instance as i,
-            aws_iam_role as r,
-            jsonb_array_elements_text(instance_profile_arns) as instance_profile
-          where
-            instance_profile = i.iam_instance_profile_arn
-            and i.arn = $1;
-        EOQ
+      select
+        distinct r.arn as role_arn
+      from
+        aws_ec2_instance as i,
+        aws_iam_role as r,
+        jsonb_array_elements_text(instance_profile_arns) as instance_profile
+      where
+        instance_profile = i.iam_instance_profile_arn
+        and i.arn = $1;
+    EOQ
 
     args = [self.input.instance_arn.value]
   }
 
   with "vpc_eips" {
     sql = <<-EOQ
-          select
-            e.arn as eip_arn
-          from
-            aws_vpc_eip as e,
-            aws_ec2_instance as i
-          where
-            e.instance_id = i.instance_id
-            and i.arn = $1;
-        EOQ
+      select
+        e.arn as eip_arn
+      from
+        aws_vpc_eip as e,
+        aws_ec2_instance as i
+      where
+        e.instance_id = i.instance_id
+        and i.arn = $1;
+    EOQ
 
     args = [self.input.instance_arn.value]
   }
 
   with "vpc_security_groups" {
     sql = <<-EOQ
-          select
-            sg ->> 'GroupId' as security_group_id
-          from
-            aws_ec2_instance as i,
-            jsonb_array_elements(security_groups) as sg
-          where
-            arn = $1;
-        EOQ
+      select
+        sg ->> 'GroupId' as security_group_id
+      from
+        aws_ec2_instance as i,
+        jsonb_array_elements(security_groups) as sg
+      where
+        arn = $1;
+    EOQ
 
     args = [self.input.instance_arn.value]
   }
 
   with "vpc_subnets" {
     sql = <<-EOQ
-          select
-            subnet_id as subnet_id
-          from
-            aws_ec2_instance as i
-          where
-            arn = $1;
-        EOQ
+      select
+        subnet_id as subnet_id
+      from
+        aws_ec2_instance as i
+      where
+        arn = $1;
+    EOQ
 
     args = [self.input.instance_arn.value]
   }
 
   with "vpc_vpcs" {
     sql = <<-EOQ
-          select
-            vpc_id as vpc_id
-          from
-            aws_ec2_instance
-          where
-            arn = $1;
-        EOQ
+      select
+        vpc_id as vpc_id
+      from
+        aws_ec2_instance
+      where
+        arn = $1;
+    EOQ
 
     args = [self.input.instance_arn.value]
   }
 
-  graph {
+  container {
 
-    node {
-      base = node.ebs_volume
-      args = {
-        ebs_volume_arns = with.ebs_volumes.rows[*].volume_arn
+    graph {
+
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      node {
+        base = node.ebs_volume
+        args = {
+          ebs_volume_arns = with.ebs_volumes.rows[*].volume_arn
+        }
       }
-    }
 
-    node {
-      base = node.ec2_application_load_balancer
-      args = {
-        ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].application_load_balancer_arn
+      node {
+        base = node.ec2_application_load_balancer
+        args = {
+          ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].application_load_balancer_arn
+        }
       }
-    }
 
-    node {
-      base = node.ec2_autoscaling_group
-      args = {
-        ec2_instance_arns = [self.input.instance_arn.value]
+      node {
+        base = node.ec2_autoscaling_group
+        args = {
+          ec2_instance_arns = [self.input.instance_arn.value]
+        }
       }
-    }
 
 
-    node {
-      base = node.ec2_classic_load_balancer
-      args = {
-        ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers.rows[*].classic_load_balancer_arn
+      node {
+        base = node.ec2_classic_load_balancer
+        args = {
+          ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers.rows[*].classic_load_balancer_arn
+        }
       }
-    }
 
 
-    node {
-      base = node.ec2_gateway_load_balancer
-      args = {
-        ec2_gateway_load_balancer_arns = with.ec2_gateway_load_balancers.rows[*].gateway_load_balancer_arn
+      node {
+        base = node.ec2_gateway_load_balancer
+        args = {
+          ec2_gateway_load_balancer_arns = with.ec2_gateway_load_balancers.rows[*].gateway_load_balancer_arn
+        }
       }
-    }
 
-    node {
-      base = node.ec2_instance
-      args = {
-        ec2_instance_arns = [self.input.instance_arn.value]
+      node {
+        base = node.ec2_instance
+        args = {
+          ec2_instance_arns = [self.input.instance_arn.value]
+        }
       }
-    }
 
-    node {
-      base = node.ec2_key_pair
-      args = {
-        ec2_instance_arns = [self.input.instance_arn.value]
+      node {
+        base = node.ec2_key_pair
+        args = {
+          ec2_instance_arns = [self.input.instance_arn.value]
+        }
       }
-    }
 
 
-    node {
-      base = node.ec2_network_interface
-      args = {
-        ec2_network_interface_ids = with.ec2_network_interfaces.rows[*].network_interface_id
+      node {
+        base = node.ec2_network_interface
+        args = {
+          ec2_network_interface_ids = with.ec2_network_interfaces.rows[*].network_interface_id
+        }
       }
-    }
 
-    node {
-      base = node.ec2_network_load_balancer
-      args = {
-        ec2_network_load_balancer_arns = with.ec2_network_load_balancers.rows[*].network_load_balancer_arn
+      node {
+        base = node.ec2_network_load_balancer
+        args = {
+          ec2_network_load_balancer_arns = with.ec2_network_load_balancers.rows[*].network_load_balancer_arn
+        }
       }
-    }
 
 
-    node {
-      base = node.ec2_target_group
-      args = {
-        ec2_target_group_arns = with.ec2_target_groups.rows[*].target_group_arn
+      node {
+        base = node.ec2_target_group
+        args = {
+          ec2_target_group_arns = with.ec2_target_groups.rows[*].target_group_arn
+        }
       }
-    }
 
-    node {
-      base = node.ecs_cluster
-      args = {
-        ecs_cluster_arns = with.ecs_clusters.rows[*].cluster_arn
+      node {
+        base = node.ecs_cluster
+        args = {
+          ecs_cluster_arns = with.ecs_clusters.rows[*].cluster_arn
+        }
       }
-    }
 
-    node {
-      base = node.iam_instance_profile
-      args = {
-        ec2_instance_arns = [self.input.instance_arn.value]
+      node {
+        base = node.iam_instance_profile
+        args = {
+          ec2_instance_arns = [self.input.instance_arn.value]
+        }
       }
-    }
 
-    node {
-      base = node.iam_role
-      args = {
-        iam_role_arns = with.iam_roles.rows[*].role_arn
+      node {
+        base = node.iam_role
+        args = {
+          iam_role_arns = with.iam_roles.rows[*].role_arn
+        }
       }
-    }
 
-    node {
-      base = node.vpc_eip
-      args = {
-        vpc_eip_arns = with.vpc_eips.rows[*].eip_arn
+      node {
+        base = node.vpc_eip
+        args = {
+          vpc_eip_arns = with.vpc_eips.rows[*].eip_arn
+        }
       }
-    }
 
-    node {
-      base = node.vpc_security_group
-      args = {
-        vpc_security_group_ids = with.vpc_security_groups.rows[*].security_group_id
+      node {
+        base = node.vpc_security_group
+        args = {
+          vpc_security_group_ids = with.vpc_security_groups.rows[*].security_group_id
+        }
       }
-    }
 
-    node {
-      base = node.vpc_subnet
-      args = {
-        vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+      node {
+        base = node.vpc_subnet
+        args = {
+          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+        }
       }
-    }
 
-    node {
-      base = node.vpc_vpc
-      args = {
-        vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_id
+      node {
+        base = node.vpc_vpc
+        args = {
+          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_id
+        }
       }
-    }
 
-    edge {
-      base = edge.ec2_autoscaling_group_to_ec2_instance
-      args = {
-        ec2_instance_arns = [self.input.instance_arn.value]
+      edge {
+        base = edge.ec2_autoscaling_group_to_ec2_instance
+        args = {
+          ec2_instance_arns = [self.input.instance_arn.value]
+        }
       }
-    }
 
-    edge {
-      base = edge.ec2_classic_load_balancer_to_ec2_instance
-      args = {
-        ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers.rows[*].classic_load_balancer_arn
+      edge {
+        base = edge.ec2_classic_load_balancer_to_ec2_instance
+        args = {
+          ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers.rows[*].classic_load_balancer_arn
+        }
       }
-    }
 
-    edge {
-      base = edge.ec2_instance_to_ebs_volume
-      args = {
-        ec2_instance_arns = [self.input.instance_arn.value]
+      edge {
+        base = edge.ec2_instance_to_ebs_volume
+        args = {
+          ec2_instance_arns = [self.input.instance_arn.value]
+        }
       }
-    }
 
-    edge {
-      base = edge.ec2_instance_to_ec2_key_pair
-      args = {
-        ec2_instance_arns = [self.input.instance_arn.value]
+      edge {
+        base = edge.ec2_instance_to_ec2_key_pair
+        args = {
+          ec2_instance_arns = [self.input.instance_arn.value]
+        }
       }
-    }
 
-    edge {
-      base = edge.ec2_instance_to_ec2_network_interface
-      args = {
-        ec2_instance_arns = [self.input.instance_arn.value]
+      edge {
+        base = edge.ec2_instance_to_ec2_network_interface
+        args = {
+          ec2_instance_arns = [self.input.instance_arn.value]
+        }
       }
-    }
 
-    edge {
-      base = edge.ec2_instance_to_iam_instance_profile
-      args = {
-        ec2_instance_arns = [self.input.instance_arn.value]
+      edge {
+        base = edge.ec2_instance_to_iam_instance_profile
+        args = {
+          ec2_instance_arns = [self.input.instance_arn.value]
+        }
       }
-    }
 
-    edge {
-      base = edge.ec2_instance_to_vpc_security_group
-      args = {
-        ec2_instance_arns = [self.input.instance_arn.value]
+      edge {
+        base = edge.ec2_instance_to_vpc_security_group
+        args = {
+          ec2_instance_arns = [self.input.instance_arn.value]
+        }
       }
-    }
 
-    edge {
-      base = edge.ec2_instance_to_vpc_subnet
-      args = {
-        ec2_instance_arns = [self.input.instance_arn.value]
+      edge {
+        base = edge.ec2_instance_to_vpc_subnet
+        args = {
+          ec2_instance_arns = [self.input.instance_arn.value]
+        }
       }
-    }
 
-    edge {
-      base = edge.ec2_load_balancer_to_ec2_target_group
-      args = {
-        ec2_instance_arns = [self.input.instance_arn.value]
+      edge {
+        base = edge.ec2_load_balancer_to_ec2_target_group
+        args = {
+          ec2_instance_arns = [self.input.instance_arn.value]
+        }
       }
-    }
 
-    edge {
-      base = edge.ec2_network_interface_to_vpc_eip
-      args = {
-        ec2_network_interface_ids = with.ec2_network_interfaces.rows[*].network_interface_id
+      edge {
+        base = edge.ec2_network_interface_to_vpc_eip
+        args = {
+          ec2_network_interface_ids = with.ec2_network_interfaces.rows[*].network_interface_id
+        }
       }
-    }
 
-    edge {
-      base = edge.ec2_target_group_to_ec2_instance
-      args = {
-        ec2_target_group_arns = with.ec2_target_groups.rows[*].target_group_arn
+      edge {
+        base = edge.ec2_target_group_to_ec2_instance
+        args = {
+          ec2_target_group_arns = with.ec2_target_groups.rows[*].target_group_arn
+        }
       }
-    }
 
-    edge {
-      base = edge.ecs_cluster_to_ec2_instance
-      args = {
-        ec2_instance_arns = [self.input.instance_arn.value]
+      edge {
+        base = edge.ecs_cluster_to_ec2_instance
+        args = {
+          ec2_instance_arns = [self.input.instance_arn.value]
+        }
       }
-    }
 
-    edge {
-      base = edge.iam_instance_profile_to_iam_role
-      args = {
-        iam_role_arns = with.iam_roles.rows[*].role_arn
+      edge {
+        base = edge.iam_instance_profile_to_iam_role
+        args = {
+          iam_role_arns = with.iam_roles.rows[*].role_arn
+        }
       }
-    }
 
-    edge {
-      base = edge.vpc_subnet_to_vpc_vpc
-      args = {
-        vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+      edge {
+        base = edge.vpc_subnet_to_vpc_vpc
+        args = {
+          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+        }
       }
+
     }
 
   }
-
 
   container {
 

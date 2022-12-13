@@ -1,4 +1,3 @@
-
 edge "sqs_queue_to_kms_key" {
   title = "encrypted with"
 

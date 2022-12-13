@@ -24,46 +24,65 @@ dashboard "backup_plan_detail" {
     }
   }
 
-  # container {
+  with "backup_vaults" {
+    sql = <<-EOQ
+      select
+        v.arn as backup_vault_arn
+      from
+        aws_backup_vault as v,
+        aws_backup_plan as p,
+        jsonb_array_elements(backup_plan -> 'Rules') as r
+      where
+        r ->> 'TargetBackupVaultName' = v.name
+        and p.arn = $1;
+    EOQ
 
-  #   graph {
-  #     title     = "Relationships"
-  #     type      = "graph"
-  #     direction = "TD"
+    args = [self.input.backup_plan_arn.value]
+  }
 
-  #     with "backup_vaults" {
-  #       sql = <<-EOQ
-  #         select
-  #           v.arn as backup_vault_arn
-  #         from
-  #           aws_backup_vault as v,
-  #           aws_backup_plan as p,
-  #           jsonb_array_elements(backup_plan -> 'Rules') as r
-  #         where
-  #           r ->> 'TargetBackupVaultName' = v.name
-  #           and p.arn = $1;
-  #       EOQ
+  container {
 
-  #       args = [self.input.backup_plan_arn.value]
-  #     }
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
 
-  #     nodes = [
-  #       node.backup_plan,
-  #       node.backup_selection,
-  #       node.backup_vault
-  #     ]
+      node {
+        base = node.backup_plan
+        args = {
+          backup_plan_arns = [self.input.backup_plan_arn.value]
+        }
+      }
 
-  #     edges = [
-  #       edge.backup_plan_to_backup_selection,
-  #       edge.backup_plan_to_backup_vault
-  #     ]
+      node {
+        base = node.backup_selection
+        args = {
+          backup_plan_arns = [self.input.backup_plan_arn.value]
+        }
+      }
 
-  #     args = {
-  #       backup_plan_arns  = [self.input.backup_plan_arn.value]
-  #       backup_vault_arns = with.backup_vaults.rows[*].backup_vault_arn
-  #     }
-  #   }
-  # }
+      node {
+        base = node.backup_vault
+        args = {
+          backup_vault_arns = with.backup_vaults.rows[*].backup_vault_arn
+        }
+      }
+
+      edge {
+        base = edge.backup_plan_to_backup_selection
+        args = {
+          backup_plan_arns = [self.input.backup_plan_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.backup_plan_to_backup_vault
+        args = {
+          backup_plan_arns = [self.input.backup_plan_arn.value]
+        }
+      }
+    }
+  }
 
   container {
 

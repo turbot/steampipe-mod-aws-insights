@@ -116,6 +116,7 @@ dashboard "elasticache_cluster_detail" {
   #         where
   #           c.arn = $1
   #           and c.replication_group_id = g.replication_group_id
+  #           and kms_key_id is not null;
   #       EOQ
 
   #       args = [self.input.elasticache_cluster_arn.value]
@@ -129,6 +130,7 @@ dashboard "elasticache_cluster_detail" {
   #           aws_elasticache_cluster
   #         where
   #           arn = $1
+  #           and notification_configuration ->> 'TopicArn' not null;
   #       EOQ
 
   #       args = [self.input.elasticache_cluster_arn.value]

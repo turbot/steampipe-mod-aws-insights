@@ -171,14 +171,15 @@ edge "ecs_cluster_to_ecs_service" {
 
   sql = <<-EOQ
     select
-      c.cluster_arn as from_id,
-      s.arn to_id
+      cluster_arn as from_id,
+      arn to_id
     from
-      aws_ecs_service as s
-      left join aws_ecs_cluster as c on s.cluster_arn = c.cluster_arn and s.arn = any($1);
+      aws_ecs_service
+    where
+      cluster_arn = any($1);
   EOQ
 
-  param "ecs_service_arns" {}
+  param "ecs_cluster_arns" {}
 }
 
 edge "ecs_cluster_to_ecs_task_definition" {
@@ -272,23 +273,20 @@ edge "ecs_service_to_ecs_container_instance" {
   param "ecs_service_arns" {}
 }
 
-edge "ecs_service_to_ecs_task" {
+edge "ecs_task_definition_to_ecs_task" {
   title = "task"
 
   sql = <<-EOQ
     select
-      s.arn as from_id,
-      t.task_arn as to_id
+      task_definition_arn as from_id,
+      task_arn as to_id
     from
-      aws_ecs_task as t,
-      aws_ecs_service as s
+      aws_ecs_task
     where
-      s.arn = any($1)
-      and t.service_name = s.service_name
-      and t.region = s.region;
+      task_definition_arn = any($1);
   EOQ
 
-  param "ecs_service_arns" {}
+  param "ecs_task_definition_arns" {}
 }
 
 edge "ecs_service_to_ecs_task_definition" {
@@ -301,10 +299,10 @@ edge "ecs_service_to_ecs_task_definition" {
     from
       aws_ecs_service
     where
-      task_definition = any($1);
+      arn = any($1);
   EOQ
 
-  param "ecs_task_definition_arns" {}
+  param "ecs_service_arns" {}
 }
 
 edge "ecs_service_to_iam_role" {
