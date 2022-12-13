@@ -472,6 +472,7 @@ dashboard "ec2_instance_detail" {
         }
       }
     }
+
     container {
       width = 6
 
@@ -546,6 +547,8 @@ dashboard "ec2_instance_detail" {
 
 }
 
+# Input queries
+
 query "ec2_instance_input" {
   sql = <<-EOQ
     select
@@ -562,6 +565,8 @@ query "ec2_instance_input" {
       title;
   EOQ
 }
+
+# With queries
 
 query "ec2_instance_ebs_volumes" {
   sql = <<-EOQ
@@ -624,6 +629,8 @@ query "ec2_instance_ec2_gateway_load_balancers" {
       and i.arn = $1;
   EOQ
 }
+
+# Card queries
 
 query "ec2_instance_status" {
   sql = <<-EOQ
@@ -697,6 +704,8 @@ query "ec2_instance_ebs_optimized" {
 
   param "arn" {}
 }
+
+# Misc queries
 
 query "ec2_instance_overview" {
   sql = <<-EOQ
