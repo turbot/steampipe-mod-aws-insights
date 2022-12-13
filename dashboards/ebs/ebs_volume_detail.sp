@@ -231,9 +231,7 @@ dashboard "ebs_volume_detail" {
         order by timestamp
       EOQ
 
-      args = {
-        arn = self.input.volume_arn.value
-      }
+      args = [self.input.volume_arn.value]
     }
 
     chart {
@@ -252,9 +250,7 @@ dashboard "ebs_volume_detail" {
         order by timestamp;
       EOQ
 
-      args = {
-        arn = self.input.volume_arn.value
-      }
+      args = [self.input.volume_arn.value]
     }
 
   }
