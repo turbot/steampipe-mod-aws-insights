@@ -56,90 +56,25 @@ dashboard "ec2_instance_detail" {
     }
   }
 
+  # TODO: Which format to use for "with" resources?
   with "ebs_volumes" {
-    sql = <<-EOQ
-      select
-        v.arn as volume_arn
-      from
-        aws_ec2_instance as i,
-        jsonb_array_elements(block_device_mappings) as bd,
-        aws_ebs_volume as v
-      where
-        v.volume_id = bd -> 'Ebs' ->> 'VolumeId'
-        and i.arn = $1;
-    EOQ
-
-    args = [self.input.instance_arn.value]
-  }
-
-  with "ebs_volumes" {
-    sql = <<-EOQ
-      select
-        v.arn as volume_arn
-      from
-        aws_ec2_instance as i,
-        jsonb_array_elements(block_device_mappings) as bd,
-        aws_ebs_volume as v
-      where
-        v.volume_id = bd -> 'Ebs' ->> 'VolumeId'
-        and i.arn = $1;
-    EOQ
-
-    args = [self.input.instance_arn.value]
+    query = query.ec2_instance_ebs_volumes
+    args  = [self.input.instance_arn.value]
   }
 
   with "ec2_application_load_balancers" {
-    sql = <<-EOQ
-      select
-        distinct lb.arn as application_load_balancer_arn
-      from
-        aws_ec2_instance as i,
-        aws_ec2_target_group as target,
-        jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
-        jsonb_array_elements_text(target.load_balancer_arns) as l,
-        aws_ec2_application_load_balancer as lb
-      where
-        health_descriptions -> 'Target' ->> 'Id' = i.instance_id
-        and l = lb.arn
-        and i.arn = $1;
-    EOQ
-
-    args = [self.input.instance_arn.value]
+    query = query.ec2_instance_ec2_application_load_balancers
+    args  = [self.input.instance_arn.value]
   }
 
   with "ec2_classic_load_balancers" {
-    sql = <<-EOQ
-      select
-        distinct clb.arn as classic_load_balancer_arn
-      from
-        aws_ec2_classic_load_balancer as clb,
-        jsonb_array_elements(clb.instances) as instance,
-        aws_ec2_instance as i
-      where
-        i.arn = $1
-        and instance ->> 'InstanceId' = i.instance_id;
-    EOQ
-
+    query = query.ec2_instance_ec2_classic_load_balancers
     args = [self.input.instance_arn.value]
   }
 
   with "ec2_gateway_load_balancers" {
-    sql = <<-EOQ
-      select
-        distinct lb.arn as gateway_load_balancer_arn
-      from
-        aws_ec2_instance as i,
-        aws_ec2_target_group as target,
-        jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
-        jsonb_array_elements_text(target.load_balancer_arns) as l,
-        aws_ec2_gateway_load_balancer as lb
-      where
-        health_descriptions -> 'Target' ->> 'Id' = i.instance_id
-        and l = lb.arn
-        and i.arn = $1;
-    EOQ
-
-    args = [self.input.instance_arn.value]
+    query = query.ec2_instance_ec2_gateway_load_balancers
+    args  = [self.input.instance_arn.value]
   }
 
   with "ec2_network_interfaces" {
@@ -625,6 +560,68 @@ query "ec2_instance_input" {
       aws_ec2_instance
     order by
       title;
+  EOQ
+}
+
+query "ec2_instance_ebs_volumes" {
+  sql = <<-EOQ
+    select
+      v.arn as volume_arn
+    from
+      aws_ec2_instance as i,
+      jsonb_array_elements(block_device_mappings) as bd,
+      aws_ebs_volume as v
+    where
+      v.volume_id = bd -> 'Ebs' ->> 'VolumeId'
+      and i.arn = $1;
+  EOQ
+}
+
+query "ec2_instance_ec2_application_load_balancers" {
+  sql = <<-EOQ
+    select
+      distinct lb.arn as application_load_balancer_arn
+    from
+      aws_ec2_instance as i,
+      aws_ec2_target_group as target,
+      jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
+      jsonb_array_elements_text(target.load_balancer_arns) as l,
+      aws_ec2_application_load_balancer as lb
+    where
+      health_descriptions -> 'Target' ->> 'Id' = i.instance_id
+      and l = lb.arn
+      and i.arn = $1;
+  EOQ
+}
+
+query "ec2_instance_ec2_classic_load_balancers" {
+  sql = <<-EOQ
+    select
+      distinct clb.arn as classic_load_balancer_arn
+    from
+      aws_ec2_classic_load_balancer as clb,
+      jsonb_array_elements(clb.instances) as instance,
+      aws_ec2_instance as i
+    where
+      i.arn = $1
+      and instance ->> 'InstanceId' = i.instance_id;
+  EOQ
+}
+
+query "ec2_instance_ec2_gateway_load_balancers" {
+  sql = <<-EOQ
+    select
+      distinct lb.arn as gateway_load_balancer_arn
+    from
+      aws_ec2_instance as i,
+      aws_ec2_target_group as target,
+      jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
+      jsonb_array_elements_text(target.load_balancer_arns) as l,
+      aws_ec2_gateway_load_balancer as lb
+    where
+      health_descriptions -> 'Target' ->> 'Id' = i.instance_id
+      and l = lb.arn
+      and i.arn = $1;
   EOQ
 }
 
