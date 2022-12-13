@@ -77,6 +77,6 @@ category "vpc_vpc" {
 
 category "vpc_vpn_gateway" {
   title = "VPC VPN Gateway"
-  icon  = "vpn_lock"
+  icon  = "vpn-lock"
   color = local.networking_color
 }

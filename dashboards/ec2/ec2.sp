@@ -47,7 +47,7 @@ category "ec2_instance" {
 
 category "ec2_key_pair" {
   title = "EC2 Key Pair"
-  icon  = "vpn_key"
+  icon  = "vpn-key"
   color = local.compute_color
 }
 
