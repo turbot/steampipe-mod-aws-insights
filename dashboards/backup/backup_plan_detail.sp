@@ -55,6 +55,13 @@ dashboard "backup_plan_detail" {
       }
 
       node {
+        base = node.backup_plan_rule
+        args = {
+          backup_plan_arns = [self.input.backup_plan_arn.value]
+        }
+      }
+
+      node {
         base = node.backup_selection
         args = {
           backup_plan_arns = [self.input.backup_plan_arn.value]
@@ -69,14 +76,21 @@ dashboard "backup_plan_detail" {
       }
 
       edge {
-        base = edge.backup_plan_to_backup_selection
+        base = edge.backup_plan_to_backup_rule
         args = {
           backup_plan_arns = [self.input.backup_plan_arn.value]
         }
       }
 
       edge {
-        base = edge.backup_plan_to_backup_vault
+        base = edge.backup_plan_rule_to_backup_vault
+        args = {
+          backup_plan_arns = [self.input.backup_plan_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.backup_selection_to_backup_plan
         args = {
           backup_plan_arns = [self.input.backup_plan_arn.value]
         }
