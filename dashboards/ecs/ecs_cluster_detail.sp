@@ -65,143 +65,244 @@ dashboard "ecs_cluster_detail" {
 
   }
 
-  # container {
+  with "ecs_container_instances" {
+    sql = <<-EOQ
+      select
+        i.arn as container_instance_arn
+      from
+        aws_ecs_container_instance as i
+        left join aws_ec2_instance as e on i.ec2_instance_id = e.instance_id
+      where
+        i.arn is not null
+        and i.cluster_arn = $1;
+    EOQ
 
-  #   graph {
-  #     title     = "Relationships"
-  #     type      = "graph"
-  #     direction = "TD"
+    args = [self.input.ecs_cluster_arn.value]
+  }
 
-  #     with "ecs_container_instances" {
-  #       sql = <<-EOQ
-  #         select
-  #           i.arn as container_instance_arn
-  #         from
-  #           aws_ecs_container_instance as i
-  #           left join aws_ec2_instance as e on i.ec2_instance_id = e.instance_id
-  #         where
-  #           i.arn is not null
-  #           and i.cluster_arn = $1;
-  #       EOQ
+  with "ecs_services" {
+    sql = <<-EOQ
+      select
+        s.arn as service_arn
+      from
+        aws_ecs_service as s
+      where
+        s.cluster_arn = $1;
+    EOQ
 
-  #       args = [self.input.ecs_cluster_arn.value]
-  #     }
+    args = [self.input.ecs_cluster_arn.value]
+  }
 
-  #     with "ecs_services" {
-  #       sql = <<-EOQ
-  #         select
-  #           s.arn as service_arn
-  #         from
-  #           aws_ecs_service as s
-  #         where
-  #           s.cluster_arn = $1;
-  #       EOQ
+  with "ecs_task_definitions" {
+    sql = <<-EOQ
+      with list_all_task_definitions as (
+        select
+          distinct task_definition_arn as task_definition
+        from
+          aws_ecs_task
+        where
+          cluster_arn = $1
+        union
+        select
+          distinct task_definition as task_definition
+        from
+          aws_ecs_service
+        where
+          cluster_arn = $1
+      )
+    select
+      d.task_definition_arn as task_definition_arn
+    from
+      aws_ecs_task_definition as d
+    where
+      d.task_definition_arn in (
+        select
+          distinct task_definition
+        from
+          list_all_task_definitions
+      );
+    EOQ
 
-  #       args = [self.input.ecs_cluster_arn.value]
-  #     }
+    args = [self.input.ecs_cluster_arn.value]
+  }
 
-  #     with "ecs_task_definitions" {
-  #       sql = <<-EOQ
-  #         with list_all_task_definitions as (
-  #           select
-  #             distinct task_definition_arn as task_definition
-  #           from
-  #             aws_ecs_task
-  #           where
-  #             cluster_arn = $1
-  #           union
-  #           select
-  #             distinct task_definition as task_definition
-  #           from
-  #             aws_ecs_service
-  #           where
-  #             cluster_arn = $1
-  #         )
-  #       select
-  #         d.task_definition_arn as task_definition_arn
-  #       from
-  #         aws_ecs_task_definition as d
-  #       where
-  #         d.task_definition_arn in (
-  #           select
-  #             distinct task_definition
-  #           from
-  #             list_all_task_definitions
-  #         );
-  #       EOQ
+  with "vpc_subnets" {
+    sql = <<-EOQ
+      select
+        s.subnet_id as subnet_id
+      from
+        aws_ecs_container_instance as i
+        right join
+          aws_ec2_instance as c
+          on c.instance_id = i.ec2_instance_id
+        right join
+          aws_vpc_subnet as s
+          on s.subnet_id = c.subnet_id
+      where
+        i.cluster_arn = $1;
+    EOQ
 
-  #       args = [self.input.ecs_cluster_arn.value]
-  #     }
+    args = [self.input.ecs_cluster_arn.value]
+  }
 
-  #     with "vpc_subnets" {
-  #       sql = <<-EOQ
-  #         select
-  #           s.subnet_id as subnet_id
-  #         from
-  #           aws_ecs_container_instance as i
-  #           right join
-  #             aws_ec2_instance as c
-  #             on c.instance_id = i.ec2_instance_id
-  #           right join
-  #             aws_vpc_subnet as s
-  #             on s.subnet_id = c.subnet_id
-  #         where
-  #           i.cluster_arn = $1;
-  #       EOQ
+  with "vpc_vpcs" {
+    sql = <<-EOQ
+      select
+      v.vpc_id as vpc_id
+    from
+      aws_ecs_container_instance as i
+      right join aws_ec2_instance as c on c.instance_id = i.ec2_instance_id
+      right join aws_vpc_subnet as s on s.subnet_id = c.subnet_id
+      right join aws_vpc as v on v.vpc_id = s.vpc_id
+    where
+      v.vpc_id is not null
+      and i.cluster_arn = $1;
+    EOQ
 
-  #       args = [self.input.ecs_cluster_arn.value]
-  #     }
+    args = [self.input.ecs_cluster_arn.value]
+  }
 
-  #     with "vpc_vpcs" {
-  #       sql = <<-EOQ
-  #        select
-  #         v.vpc_id as vpc_id
-  #       from
-  #         aws_ecs_container_instance as i
-  #         right join aws_ec2_instance as c on c.instance_id = i.ec2_instance_id
-  #         right join aws_vpc_subnet as s on s.subnet_id = c.subnet_id
-  #         right join aws_vpc as v on v.vpc_id = s.vpc_id
-  #       where
-  #         v.vpc_id is not null
-  #         and i.cluster_arn = $1;
-  #       EOQ
+  container {
 
-  #       args = [self.input.ecs_cluster_arn.value]
-  #     }
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
 
-  #     nodes = [
-  #       node.ecs_cluster,
-  #       node.ecs_cluster_ec2_launch_type,
-  #       node.ecs_cluster_external_launch_type,
-  #       node.ecs_cluster_fargate_launch_type,
-  #       node.ecs_container_instance,
-  #       node.ecs_service,
-  #       node.ecs_task_definition,
-  #       node.vpc_subnet,
-  #       node.vpc_vpc
-  #     ]
+      node {
+        base = node.ecs_cluster
+        args = {
+          ecs_cluster_arns = [self.input.ecs_cluster_arn.value]
+        }
+      }
 
-  #     edges = [
-  #       edge.ecs_cluster_to_ecs_cluster_ec2_launch_type,
-  #       edge.ecs_cluster_to_ecs_cluster_external_launch_type,
-  #       edge.ecs_cluster_to_ecs_cluster_fargate_launch_type,
-  #       edge.ecs_cluster_to_ecs_container_instance,
-  #       edge.ecs_cluster_to_ecs_task_definition,
-  #       edge.ecs_container_instance_to_vpc_subnet,
-  #       edge.ecs_task_definition_to_ecs_service,
-  #       edge.vpc_subnet_to_vpc_vpc
-  #     ]
+      node {
+        base = node.ecs_cluster_ec2_launch_type
+        args = {
+          ecs_cluster_arns = [self.input.ecs_cluster_arn.value]
+        }
+      }
 
-  #     args = {
-  #       ecs_cluster_arns            = [self.input.ecs_cluster_arn.value]
-  #       ecs_container_instance_arns = with.ecs_container_instances.rows[*].container_instance_arn
-  #       ecs_service_arns            = with.ecs_services.rows[*].service_arn
-  #       ecs_task_definition_arns    = with.ecs_task_definitions.rows[*].task_definition_arn
-  #       vpc_subnet_ids              = with.vpc_subnets.rows[*].subnet_id
-  #       vpc_vpc_ids                 = with.vpc_vpcs.rows[*].vpc_id
-  #     }
-  #   }
-  # }
+      node {
+        base = node.ecs_cluster_external_launch_type
+        args = {
+          ecs_cluster_arns = [self.input.ecs_cluster_arn.value]
+        }
+      }
+
+      node {
+        base = node.ecs_cluster_fargate_launch_type
+        args = {
+          ecs_cluster_arns = [self.input.ecs_cluster_arn.value]
+        }
+      }
+
+      node {
+        base = node.ecs_container_instance
+        args = {
+          ecs_container_instance_arns = with.ecs_container_instances.rows[*].container_instance_arn
+        }
+      }
+
+      node {
+        base = node.ecs_service
+        args = {
+          ecs_service_arns = with.ecs_services.rows[*].service_arn
+        }
+      }
+
+      node {
+        base = node.ecs_task_definition
+        args = {
+          ecs_task_definition_arns = with.ecs_task_definitions.rows[*].task_definition_arn
+        }
+      }
+
+      node {
+        base = node.ecs_service
+        args = {
+          ecs_service_arns = with.ecs_services.rows[*].service_arn
+        }
+      }
+
+      node {
+        base = node.ecs_task_definition
+        args = {
+          ecs_task_definition_arns = with.ecs_task_definitions.rows[*].task_definition_arn
+        }
+      }
+
+      node {
+        base = node.vpc_subnet
+        args = {
+          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+        }
+      }
+
+      node {
+        base = node.vpc_vpc
+        args = {
+          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_id
+        }
+      }
+
+      edge {
+        base = edge.ecs_cluster_to_ecs_cluster_ec2_launch_type
+        args = {
+          ecs_cluster_arns = [self.input.ecs_cluster_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.ecs_cluster_to_ecs_cluster_external_launch_type
+        args = {
+          ecs_cluster_arns = [self.input.ecs_cluster_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.ecs_cluster_to_ecs_cluster_fargate_launch_type
+        args = {
+          ecs_cluster_arns = [self.input.ecs_cluster_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.ecs_cluster_to_ecs_container_instance
+        args = {
+          ecs_cluster_arns = [self.input.ecs_cluster_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.ecs_cluster_to_ecs_task_definition
+        args = {
+          ecs_cluster_arns = [self.input.ecs_cluster_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.ecs_container_instance_to_vpc_subnet
+        args = {
+          ecs_container_instance_arns = with.ecs_container_instances.rows[*].container_instance_arn
+        }
+      }
+
+      edge {
+        base = edge.ecs_task_definition_to_ecs_service
+        args = {
+          ecs_task_definition_arns = with.ecs_task_definitions.rows[*].task_definition_arn
+        }
+      }
+
+      edge {
+        base = edge.vpc_subnet_to_vpc_vpc
+        args = {
+          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+        }
+      }
+    }
+  }
 
   container {
 
