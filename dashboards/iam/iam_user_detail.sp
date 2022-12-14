@@ -49,62 +49,105 @@ dashboard "iam_user_detail" {
 
   }
 
-  # container {
+  with "iam_groups" {
+    sql = <<-EOQ
+      select
+        g ->> 'Arn' as group_arn
+      from
+        aws_iam_user,
+        jsonb_array_elements(groups) as g
+      where
+        arn = $1
+    EOQ
 
-  #   graph {
-  #     title     = "Relationships"
-  #     type      = "graph"
-  #     direction = "TD"
+    args = [self.input.user_arn.value]
+  }
 
-  #     with "iam_groups" {
-  #       sql = <<-EOQ
-  #         select
-  #           g ->> 'Arn' as group_arn
-  #         from
-  #           aws_iam_user,
-  #           jsonb_array_elements(groups) as g
-  #         where
-  #           arn = $1
-  #       EOQ
+  with "iam_policies" {
+    sql = <<-EOQ
+      select
+        jsonb_array_elements_text(attached_policy_arns) as policy_arn
+      from
+        aws_iam_user
+      where
+        arn = $1
+    EOQ
 
-  #       args = [self.input.user_arn.value]
-  #     }
+    args = [self.input.user_arn.value]
+  }
 
-  #     with "iam_policies" {
-  #       sql = <<-EOQ
-  #         select
-  #           jsonb_array_elements_text(attached_policy_arns) as policy_arn
-  #         from
-  #           aws_iam_user
-  #         where
-  #           arn = $1
-  #       EOQ
 
-  #       args = [self.input.user_arn.value]
-  #     }
+  container {
 
-  #     nodes = [
-  #       node.iam_group,
-  #       node.iam_policy,
-  #       node.iam_user,
-  #       node.iam_user_access_key,
-  #       node.iam_user_inline_policy
-  #     ]
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
 
-  #     edges = [
-  #       edge.iam_group_to_iam_user,
-  #       edge.iam_user_to_iam_access_key,
-  #       edge.iam_user_to_iam_policy,
-  #       edge.iam_user_to_inline_policy
-  #     ]
+      node {
+        base = node.iam_group
+        args = {
+          iam_group_arns = with.iam_groups.rows[*].group_arn
+        }
+      }
 
-  #     args = {
-  #       iam_group_arns  = with.iam_groups.rows[*].group_arn
-  #       iam_policy_arns = with.iam_policies.rows[*].policy_arn
-  #       iam_user_arns   = [self.input.user_arn.value]
-  #     }
-  #   }
-  # }
+      node {
+        base = node.iam_policy
+        args = {
+          iam_policy_arns = with.iam_policies.rows[*].policy_arn
+        }
+      }
+
+      node {
+        base = node.iam_user
+        args = {
+          iam_user_arns = [self.input.user_arn.value]
+        }
+      }
+
+      node {
+        base = node.iam_user_access_key
+        args = {
+          iam_user_arns = [self.input.user_arn.value]
+        }
+      }
+
+      node {
+        base = node.iam_user_inline_policy
+        args = {
+          iam_user_arns = [self.input.user_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.iam_group_to_iam_user
+        args = {
+          iam_group_arns = with.iam_groups.rows[*].group_arn
+        }
+      }
+
+      edge {
+        base = edge.iam_user_to_iam_access_key
+        args = {
+          iam_user_arns = [self.input.user_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.iam_user_to_iam_policy
+        args = {
+          iam_user_arns = [self.input.user_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.iam_user_to_inline_policy
+        args = {
+          iam_user_arns = [self.input.user_arn.value]
+        }
+      }
+    }
+  }
 
   container {
 
