@@ -41,209 +41,324 @@ dashboard "codebuild_project_detail" {
 
   }
 
-  # container {
+  with "cloudwatch_groups" {
+    sql = <<-EOQ
+      select
+        c.arn as cloudwatch_log_group_arn
+      from
+        aws_codebuild_project as p
+        left join aws_cloudwatch_log_group c
+        on c.name = logs_config -> 'CloudWatchLogs' ->> 'GroupName'
+      where
+        c.arn is not null
+        and p.arn = $1;
+    EOQ
 
-  #   graph {
-  #     title     = "Relationships"
-  #     type      = "graph"
-  #     direction = "TD"
+    args = [self.input.codebuild_project_arn.value]
+  }
 
-  #     with "cloudwatch_groups" {
-  #       sql = <<-EOQ
-  #         select
-  #           c.arn as cloudwatch_log_group_arn
-  #         from
-  #           aws_codebuild_project as p
-  #           left join aws_cloudwatch_log_group c
-  #           on c.name = logs_config -> 'CloudWatchLogs' ->> 'GroupName'
-  #         where
-  #           c.arn is not null
-  #           and p.arn = $1;
-  #       EOQ
+  with "codecommit_repositories" {
+    sql = <<-EOQ
+      select
+        distinct r.arn as codecommit_repository_arn
+      from
+        aws_codebuild_project as p
+        left join aws_codecommit_repository as r on r.clone_url_http in (
+          with code_sources as (
+            select
+              source,
+              secondary_sources
+            from
+              aws_codebuild_project
+            where
+              arn = $1
+          )
+          select source ->> 'Location' as "Location" from code_sources
+          union all
+          select s ->> 'Location' as "Location" from code_sources, jsonb_array_elements(secondary_sources) as s
+        )
+      where
+        r.arn is not null
+        and p.arn = $1;
+    EOQ
 
-  #       args = [self.input.codebuild_project_arn.value]
-  #     }
+    args = [self.input.codebuild_project_arn.value]
+  }
 
-  #     with "codecommit_repositories" {
-  #       sql = <<-EOQ
-  #         select
-  #           distinct r.arn as codecommit_repository_arn
-  #         from
-  #           aws_codebuild_project as p
-  #           left join aws_codecommit_repository as r on r.clone_url_http in (
-  #             with code_sources as (
-  #               select
-  #                 source,
-  #                 secondary_sources
-  #               from
-  #                 aws_codebuild_project
-  #               where
-  #                 arn = $1
-  #             )
-  #             select source ->> 'Location' as "Location" from code_sources
-  #             union all
-  #             select s ->> 'Location' as "Location" from code_sources, jsonb_array_elements(secondary_sources) as s
-  #           )
-  #         where
-  #           r.arn is not null
-  #           and p.arn = $1;
-  #       EOQ
+  with "ecr_repositories" {
+    sql = <<-EOQ
+      select
+        r.arn as ecr_repository_arn
+      from
+        aws_codebuild_project as p
+        left join aws_ecr_repository as r on r.repository_uri = split_part(p.environment ->> 'Image', ':', 1)
+      where
+        r.arn is not null
+        and p.arn = $1;
+    EOQ
 
-  #       args = [self.input.codebuild_project_arn.value]
-  #     }
+    args = [self.input.codebuild_project_arn.value]
+  }
 
-  #     with "ecr_repositories" {
-  #       sql = <<-EOQ
-  #         select
-  #           r.arn as ecr_repository_arn
-  #         from
-  #           aws_codebuild_project as p
-  #           left join aws_ecr_repository as r on r.repository_uri = split_part(p.environment ->> 'Image', ':', 1)
-  #         where
-  #           r.arn is not null
-  #           and p.arn = $1;
-  #       EOQ
+  with "iam_roles" {
+    sql = <<-EOQ
+      select
+        service_role as iam_role_arn
+      from
+        aws_codebuild_project
+      where
+        arn = $1;
+    EOQ
 
-  #       args = [self.input.codebuild_project_arn.value]
-  #     }
+    args = [self.input.codebuild_project_arn.value]
+  }
 
-  #     with "iam_roles" {
-  #       sql = <<-EOQ
-  #         select
-  #           service_role as iam_role_arn
-  #         from
-  #           aws_codebuild_project
-  #         where
-  #           arn = $1;
-  #       EOQ
+  with "kms_keys" {
+    sql = <<-EOQ
+      select
+        encryption_key as kms_key_arn
+      from
+        aws_codebuild_project
+      where
+        arn = $1;
+    EOQ
 
-  #       args = [self.input.codebuild_project_arn.value]
-  #     }
+    args = [self.input.codebuild_project_arn.value]
+  }
 
-  #     with "kms_keys" {
-  #       sql = <<-EOQ
-  #         select
-  #           encryption_key as kms_key_arn
-  #         from
-  #           aws_codebuild_project
-  #         where
-  #           arn = $1;
-  #       EOQ
+  with "s3_buckets" {
+    sql = <<-EOQ
+      select
+        s3.arn as s3_bucket_arn
+      from
+        aws_codebuild_project as p,
+        aws_s3_bucket as s3
+      where
+        p.arn = $1
+        and (s3.name = split_part(p.cache ->> 'Location', '/', 1)
+          or s3.name = p.artifacts ->> 'Location'
+          or s3.name = split_part(p.logs_config -> 'S3Logs' ->> 'Location', '/', 1)
+          or s3.name = split_part(p.source ->> 'Location', '/', 1)
+        );
+    EOQ
 
-  #       args = [self.input.codebuild_project_arn.value]
-  #     }
+    args = [self.input.codebuild_project_arn.value]
+  }
 
-  #     with "s3_buckets" {
-  #       sql = <<-EOQ
-  #         select
-  #           s3.arn as s3_bucket_arn
-  #         from
-  #           aws_codebuild_project as p,
-  #           aws_s3_bucket as s3
-  #         where
-  #           p.arn = $1
-  #           and (s3.name = split_part(p.cache ->> 'Location', '/', 1)
-  #             or s3.name = p.artifacts ->> 'Location'
-  #             or s3.name = split_part(p.logs_config -> 'S3Logs' ->> 'Location', '/', 1)
-  #             or s3.name = split_part(p.source ->> 'Location', '/', 1)
-  #           );
-  #       EOQ
+  with "vpc_security_groups" {
+    sql = <<-EOQ
+      with sg_id as (
+      select
+        vpc_config -> 'SecurityGroupIds' as sg,
+        arn
+      from
+        aws_codebuild_project
+    )
+    select
+      s.group_id as vpc_security_group_id
+    from
+      sg_id as c,
+      aws_vpc_security_group as s
+    where
+      sg ?& array[s.group_id]
+      and c.arn = $1;
+    EOQ
 
-  #       args = [self.input.codebuild_project_arn.value]
-  #     }
+    args = [self.input.codebuild_project_arn.value]
+  }
 
-  #     with "vpc_security_groups" {
-  #       sql = <<-EOQ
-  #         with sg_id as (
-  #         select
-  #           vpc_config -> 'SecurityGroupIds' as sg,
-  #           arn
-  #         from
-  #           aws_codebuild_project
-  #       )
-  #       select
-  #         s.group_id as vpc_security_group_id
-  #       from
-  #         sg_id as c,
-  #         aws_vpc_security_group as s
-  #       where
-  #         sg ?& array[s.group_id]
-  #         and c.arn = $1;
-  #       EOQ
+  with "vpc_subnets" {
+    sql = <<-EOQ
+      select
+        trim((s::text), '""') as vpc_subnet_id
+      from
+        aws_codebuild_project,
+        jsonb_array_elements( vpc_config -> 'Subnets') as s
+      where
+        arn = $1
+    EOQ
 
-  #       args = [self.input.codebuild_project_arn.value]
-  #     }
+    args = [self.input.codebuild_project_arn.value]
+  }
 
-  #     with "vpc_subnets" {
-  #       sql = <<-EOQ
-  #         select
-  #           trim((s::text), '""') as vpc_subnet_id
-  #         from
-  #           aws_codebuild_project,
-  #           jsonb_array_elements( vpc_config -> 'Subnets') as s
-  #         where
-  #           arn = $1
-  #       EOQ
+  with "vpc_vpcs" {
+    sql = <<-EOQ
+      select
+        vpc_config ->> 'VpcId' as vpc_vpc_id
+      from
+        aws_codebuild_project
+      where
+        vpc_config ->> 'VpcId' is not null
+        and arn = $1;
+    EOQ
 
-  #       args = [self.input.codebuild_project_arn.value]
-  #     }
+    args = [self.input.codebuild_project_arn.value]
+  }
 
-  #     with "vpc_vpcs" {
-  #       sql = <<-EOQ
-  #         select
-  #           vpc_config ->> 'VpcId' as vpc_vpc_id
-  #         from
-  #           aws_codebuild_project
-  #         where
-  #           vpc_config ->> 'VpcId' is not null
-  #           and arn = $1;
-  #       EOQ
 
-  #       args = [self.input.codebuild_project_arn.value]
-  #     }
+  container {
 
-  #     nodes = [
-  #       node.cloudwatch_log_group,
-  #       node.codebuild_project,
-  #       node.codecommit_repository,
-  #       node.ecr_repository,
-  #       node.iam_role,
-  #       node.kms_key,
-  #       node.s3_bucket,
-  #       node.vpc_security_group,
-  #       node.vpc_subnet,
-  #       node.vpc_vpc
-  #     ]
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
 
-  #     edges = [
-  #       edge.codebuild_project_to_artifact_s3_bucket,
-  #       edge.codebuild_project_to_cache_s3_bucket,
-  #       edge.codebuild_project_to_cloudwatch_group,
-  #       edge.codebuild_project_to_ecr_repository,
-  #       edge.codebuild_project_to_iam_role,
-  #       edge.codebuild_project_to_kms_key,
-  #       edge.codebuild_project_to_s3_bucket,
-  #       edge.codebuild_project_to_vpc_security_group,
-  #       edge.codebuild_project_to_vpc_subnet,
-  #       edge.codecommit_repository_to_codebuild_project,
-  #       edge.s3_bucket_to_codebuild_project,
-  #       edge.vpc_subnet_to_vpc_vpc
-  #     ]
+      node {
+        base = node.cloudwatch_log_group
+        args = {
+          cloudwatch_log_group_arns = with.cloudwatch_groups.rows[*].cloudwatch_log_group_arn
+        }
+      }
 
-  #     args = {
-  #       cloudwatch_log_group_arns  = with.cloudwatch_groups.rows[*].cloudwatch_log_group_arn
-  #       codebuild_project_arns     = [self.input.codebuild_project_arn.value]
-  #       codecommit_repository_arns = with.codecommit_repositories.rows[*].codecommit_repository_arn
-  #       ecr_repository_arns        = with.ecr_repositories.rows[*].ecr_repository_arn
-  #       iam_role_arns              = with.iam_roles.rows[*].iam_role_arn
-  #       kms_key_arns               = with.kms_keys.rows[*].kms_key_arn
-  #       s3_bucket_arns             = with.s3_buckets.rows[*].s3_bucket_arn
-  #       vpc_security_group_ids     = with.vpc_security_groups.rows[*].vpc_security_group_id
-  #       vpc_subnet_ids             = with.vpc_subnets.rows[*].vpc_subnet_id
-  #       vpc_vpc_ids                = with.vpc_vpcs.rows[*].vpc_vpc_id
-  #     }
-  #   }
-  # }
+      node {
+        base = node.codebuild_project
+        args = {
+          codebuild_project_arns = [self.input.codebuild_project_arn.value]
+        }
+      }
+
+      node {
+        base = node.codecommit_repository
+        args = {
+          codecommit_repository_arns = with.codecommit_repositories.rows[*].codecommit_repository_arn
+        }
+      }
+
+      node {
+        base = node.ecr_repository
+        args = {
+          ecr_repository_arns = with.ecr_repositories.rows[*].ecr_repository_arn
+        }
+      }
+
+      node {
+        base = node.iam_role
+        args = {
+          iam_role_arns = with.iam_roles.rows[*].iam_role_arn
+        }
+      }
+
+      node {
+        base = node.kms_key
+        args = {
+          kms_key_arns = with.kms_keys.rows[*].kms_key_arn
+        }
+      }
+
+      node {
+        base = node.s3_bucket
+        args = {
+          s3_bucket_arns = with.s3_buckets.rows[*].s3_bucket_arn
+        }
+      }
+
+      node {
+        base = node.vpc_security_group
+        args = {
+          vpc_security_group_ids = with.vpc_security_groups.rows[*].vpc_security_group_id
+        }
+      }
+
+      node {
+        base = node.vpc_subnet
+        args = {
+          vpc_subnet_ids = with.vpc_subnets.rows[*].vpc_subnet_id
+        }
+      }
+
+      node {
+        base = node.vpc_vpc
+        args = {
+          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_vpc_id
+        }
+      }
+
+      edge {
+        base = edge.codebuild_project_to_artifact_s3_bucket
+        args = {
+          codebuild_project_arns = [self.input.codebuild_project_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.codebuild_project_to_cache_s3_bucket
+        args = {
+          codebuild_project_arns = [self.input.codebuild_project_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.codebuild_project_to_cloudwatch_group
+        args = {
+          codebuild_project_arns = [self.input.codebuild_project_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.codebuild_project_to_ecr_repository
+        args = {
+          codebuild_project_arns = [self.input.codebuild_project_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.codebuild_project_to_iam_role
+        args = {
+          codebuild_project_arns = [self.input.codebuild_project_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.codebuild_project_to_kms_key
+        args = {
+          codebuild_project_arns = [self.input.codebuild_project_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.codebuild_project_to_s3_bucket
+        args = {
+          codebuild_project_arns = [self.input.codebuild_project_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.codebuild_project_to_vpc_security_group
+        args = {
+          codebuild_project_arns = [self.input.codebuild_project_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.codebuild_project_to_vpc_subnet
+        args = {
+          codebuild_project_arns = [self.input.codebuild_project_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.codecommit_repository_to_codebuild_project
+        args = {
+          codecommit_repository_arns = with.codecommit_repositories.rows[*].codecommit_repository_arn
+        }
+      }
+
+      edge {
+        base = edge.s3_bucket_to_codebuild_project
+        args = {
+          codebuild_project_arns = [self.input.codebuild_project_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_subnet_to_vpc_vpc
+        args = {
+          vpc_subnet_ids = with.vpc_subnets.rows[*].vpc_subnet_i
+        }
+      }
+
+    }
+  }
 
   container {
     width = 6
