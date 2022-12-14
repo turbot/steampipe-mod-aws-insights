@@ -49,63 +49,105 @@ dashboard "ecr_repository_detail" {
 
   }
 
-  # container {
-  #   graph {
-  #     title     = "Relationships"
-  #     type      = "graph"
-  #     direction = "TD"
+  with "ecs_task_definitions" {
+    sql = <<-EOQ
+      select
+        t.task_definition_arn as task_definition_arn
+      from
+        aws_ecr_repository as r,
+        aws_ecs_task_definition as t,
+        jsonb_array_elements(container_definitions) as d
+      where
+        r.repository_uri = split_part(d ->> 'Image', ':', 1)
+        and r.arn = $1
+    EOQ
 
-  #     with "ecs_task_definitions" {
-  #       sql = <<-EOQ
-  #         select
-  #           t.task_definition_arn as task_definition_arn
-  #         from
-  #           aws_ecr_repository as r,
-  #           aws_ecs_task_definition as t,
-  #           jsonb_array_elements(container_definitions) as d
-  #         where
-  #           r.repository_uri = split_part(d ->> 'Image', ':', 1)
-  #           and r.arn = $1
-  #       EOQ
+    args = [self.input.ecr_repository_arn.value]
+  }
 
-  #       args = [self.input.ecr_repository_arn.value]
-  #     }
+  with "kms_keys" {
+    sql = <<-EOQ
+      select
+        encryption_configuration ->> 'KmsKey' as kms_key_arn
+      from
+        aws_ecr_repository
+      where
+        arn = $1;
+    EOQ
 
-  #     with "kms_keys" {
-  #       sql = <<-EOQ
-  #         select
-  #           encryption_configuration ->> 'KmsKey' as kms_key_arn
-  #         from
-  #           aws_ecr_repository
-  #         where
-  #           arn = $1;
-  #       EOQ
+    args = [self.input.ecr_repository_arn.value]
+  }
 
-  #       args = [self.input.ecr_repository_arn.value]
-  #     }
+  container {
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
 
-  #     nodes = [
-  #       node.ecr_image,
-  #       node.ecr_image_tag,
-  #       node.ecr_repository,
-  #       node.ecs_task_definition,
-  #       node.kms_key
-  #     ]
+      node {
+        base = node.ecr_image
+        args = {
+          ecr_repository_arns = [self.input.ecr_repository_arn.value]
+        }
+      }
 
-  #     edges = [
-  #       edge.ecr_image_to_ecr_image_tag,
-  #       edge.ecr_repository_to_ecr_image,
-  #       edge.ecr_repository_to_ecs_task_definition,
-  #       edge.ecr_repository_to_kms_key
-  #     ]
+      node {
+        base = node.ecr_image_tag
+        args = {
+          ecr_repository_arns = [self.input.ecr_repository_arn.value]
+        }
+      }
 
-  #     args = {
-  #       ecr_repository_arns      = [self.input.ecr_repository_arn.value]
-  #       ecs_task_definition_arns = with.ecs_task_definitions.rows[*].task_definition_arn
-  #       kms_key_arns             = with.kms_keys.rows[*].kms_key_arn
-  #     }
-  #   }
-  # }
+      node {
+        base = node.ecr_repository
+        args = {
+          ecr_repository_arns = [self.input.ecr_repository_arn.value]
+        }
+      }
+
+      node {
+        base = node.ecs_task_definition
+        args = {
+          ecs_task_definition_arns = with.ecs_task_definitions.rows[*].task_definition_arn
+        }
+      }
+
+      node {
+        base = node.kms_key
+        args = {
+          kms_key_arns = with.kms_keys.rows[*].kms_key_arn
+        }
+      }
+
+      edge {
+        base = edge.ecr_image_to_ecr_image_tag
+        args = {
+          ecr_repository_arns = [self.input.ecr_repository_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.ecr_repository_to_ecr_image
+        args = {
+          ecr_repository_arns = [self.input.ecr_repository_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.ecr_repository_to_ecs_task_definition
+        args = {
+          ecr_repository_arns = [self.input.ecr_repository_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.ecr_repository_to_kms_key
+        args = {
+          ecr_repository_arns = [self.input.ecr_repository_arn.value]
+        }
+      }
+    }
+  }
 
   container {
 
