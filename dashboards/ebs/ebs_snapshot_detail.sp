@@ -44,102 +44,141 @@ dashboard "ebs_snapshot_detail" {
         arn = self.input.snapshot_arn.value
       }
     }
-
   }
 
-  # container {
+  with "ebs_volumes" {
+    sql = <<-EOQ
+      select
+        v.arn as volume_arn
+      from
+        aws_ebs_volume as v,
+        aws_ebs_snapshot as s
+      where
+        s.snapshot_id = v.snapshot_id
+        and s.arn = $1;
+    EOQ
 
-  #   graph {
-  #     title     = "Relationships"
-  #     type      = "graph"
-  #     direction = "TD"
+    args = [self.input.snapshot_arn.value]
+  }
 
-  #     with "ebs_volumes" {
-  #       sql = <<-EOQ
-  #         select
-  #           v.arn as volume_arn
-  #         from
-  #           aws_ebs_volume as v,
-  #           aws_ebs_snapshot as s
-  #         where
-  #           s.snapshot_id = v.snapshot_id
-  #           and s.arn = $1;
-  #       EOQ
+  with "ec2_amis" {
+    sql = <<-EOQ
+      select
+        images.image_id as image_id
+      from
+        aws_ec2_ami as images,
+        jsonb_array_elements(images.block_device_mappings) as bdm,
+        aws_ebs_snapshot as s
+      where
+        bdm -> 'Ebs' is not null
+        and bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
+        and s.arn = $1;
+    EOQ
 
-  #       args = [self.input.snapshot_arn.value]
-  #     }
+    args = [self.input.snapshot_arn.value]
+  }
 
-  #     with "ec2_amis" {
-  #       sql = <<-EOQ
-  #         select
-  #           images.image_id as image_id
-  #         from
-  #           aws_ec2_ami as images,
-  #           jsonb_array_elements(images.block_device_mappings) as bdm,
-  #           aws_ebs_snapshot as s
-  #         where
-  #           bdm -> 'Ebs' is not null
-  #           and bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
-  #           and s.arn = $1;
-  #       EOQ
+  with "ec2_launch_configurations" {
+    sql = <<-EOQ
+      select
+        launch_config.launch_configuration_arn as launch_configuration_arn
+      from
+        aws_ec2_launch_configuration as launch_config,
+        jsonb_array_elements(launch_config.block_device_mappings) as bdm,
+        aws_ebs_snapshot as s
+      where
+        bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
+        and s.arn = $1;
+    EOQ
 
-  #       args = [self.input.snapshot_arn.value]
-  #     }
+    args = [self.input.snapshot_arn.value]
+  }
 
-  #     with "ec2_launch_configurations" {
-  #       sql = <<-EOQ
-  #         select
-  #           launch_config.launch_configuration_arn as launch_configuration_arn
-  #         from
-  #           aws_ec2_launch_configuration as launch_config,
-  #           jsonb_array_elements(launch_config.block_device_mappings) as bdm,
-  #           aws_ebs_snapshot as s
-  #         where
-  #           bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
-  #           and s.arn = $1;
-  #       EOQ
+  with "kms_keys" {
+    sql = <<-EOQ
+    select
+      kms_key_id as key_arn
+    from
+      aws_ebs_snapshot
+    where
+      kms_key_id is not null
+      and arn = $1
+    EOQ
 
-  #       args = [self.input.snapshot_arn.value]
-  #     }
+    args = [self.input.snapshot_arn.value]
+  }
 
-  #     with "kms_keys" {
-  #       sql = <<-EOQ
-  #       select
-  #         kms_key_id as key_arn
-  #       from
-  #         aws_ebs_snapshot
-  #       where
-  #         kms_key_id is not null
-  #         and arn = $1
-  #       EOQ
+  container {
 
-  #       args = [self.input.snapshot_arn.value]
-  #     }
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
 
-  #     nodes = [
-  #       node.ebs_snapshot,
-  #       node.ebs_volume,
-  #       node.ec2_ami,
-  #       node.ec2_launch_configuration,
-  #       node.kms_key
-  #     ]
+      node {
+        base = node.ebs_snapshot
+        args = {
+          ebs_snapshot_arns = [self.input.snapshot_arn.value]
+        }
+      }
 
-  #     edges = [
-  #       edge.ebs_snapshot_to_ec2_ami,
-  #       edge.ebs_snapshot_to_kms_key,
-  #       edge.ebs_volume_to_ebs_snapshot,
-  #       edge.ec2_launch_configuration_to_ebs_snapshot
-  #     ]
+      node {
+        base = node.ebs_volume
+        args = {
+          ebs_volume_arns = with.ebs_volumes.rows[*].volume_arn
+        }
+      }
 
-  #     args = {
-  #       ebs_snapshot_arns             = [self.input.snapshot_arn.value]
-  #       ebs_volume_arns               = with.ebs_volumes.rows[*].volume_arn
-  #       ec2_ami_image_ids             = with.ec2_amis.rows[*].image_id
-  #       ec2_launch_configuration_arns = with.ec2_launch_configurations.rows[*].launch_configuration_arn
-  #       kms_key_arns                  = with.kms_keys.rows[*].key_arn
-  #     }
-  #   }
-  # }
+      node {
+        base = node.ec2_ami
+        args = {
+          ec2_ami_image_ids = with.ec2_amis.rows[*].image_id
+        }
+      }
+
+      node {
+        base = node.ec2_launch_configuration
+        args = {
+          ec2_launch_configuration_arns = with.ec2_launch_configurations.rows[*].launch_configuration_arn
+        }
+      }
+
+      node {
+        base = node.kms_key
+        args = {
+          kms_key_arns = with.kms_keys.rows[*].key_arn
+        }
+      }
+
+      edge {
+        base = edge.ebs_snapshot_to_ec2_ami
+        args = {
+          ebs_snapshot_arns = [self.input.snapshot_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.ebs_snapshot_to_kms_key
+        args = {
+          ebs_snapshot_arns = [self.input.snapshot_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.ebs_volume_to_ebs_snapshot
+        args = {
+          ebs_volume_arns = with.ebs_volumes.rows[*].volume_arn
+        }
+      }
+
+      edge {
+        base = edge.ec2_launch_configuration_to_ebs_snapshot
+        args = {
+          ebs_snapshot_arns = [self.input.snapshot_arn.value]
+        }
+      }
+    }
+  }
 
   container {
 
