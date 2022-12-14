@@ -62,99 +62,138 @@ dashboard "dynamodb_table_detail" {
         arn = self.input.table_arn.value
       }
     }
-
   }
 
-  # container {
+  with "dynamodb_backups" {
+    sql = <<-EOQ
+      select
+        b.arn as dbynamodb_backup_arn
+      from
+        aws_dynamodb_backup as b,
+        aws_dynamodb_table as t
+      where
+        t.arn = b.table_arn
+        and t.arn = $1;
+    EOQ
 
-  #   graph {
-  #     title     = "Relationships"
-  #     type      = "graph"
-  #     direction = "TD"
+    args = [self.input.table_arn.value]
+  }
 
-  #     with "dynamodb_backups" {
-  #       sql = <<-EOQ
-  #         select
-  #           b.arn as dbynamodb_backup_arn
-  #         from
-  #           aws_dynamodb_backup as b,
-  #           aws_dynamodb_table as t
-  #         where
-  #           t.arn = b.table_arn
-  #           and t.arn = $1;
-  #       EOQ
+  with "kinesis_streams" {
+    sql = <<-EOQ
+      select
+        s.stream_arn as kinesis_stream_arn
+      from
+        aws_kinesis_stream as s,
+        aws_dynamodb_table as t,
+        jsonb_array_elements(t.streaming_destination -> 'KinesisDataStreamDestinations') as d
+      where
+        d ->> 'StreamArn' = s.stream_arn
+        and t.arn = $1;
+      EOQ
 
-  #       args = [self.input.table_arn.value]
-  #     }
+    args = [self.input.table_arn.value]
+  }
 
-  #     with "kinesis_streams" {
-  #       sql = <<-EOQ
-  #         select
-  #           s.stream_arn as kinesis_stream_arn
-  #         from
-  #           aws_kinesis_stream as s,
-  #           aws_dynamodb_table as t,
-  #           jsonb_array_elements(t.streaming_destination -> 'KinesisDataStreamDestinations') as d
-  #         where
-  #           d ->> 'StreamArn' = s.stream_arn
-  #           and t.arn = $1;
-  #         EOQ
+  with "kms_keys" {
+    sql = <<-EOQ
+      select
+        sse_description ->> 'KMSMasterKeyArn' as key_arn
+      from
+        aws_dynamodb_table
+      where
+        arn = $1;
+    EOQ
 
-  #       args = [self.input.table_arn.value]
-  #     }
+    args = [self.input.table_arn.value]
+  }
 
-  #     with "kms_keys" {
-  #       sql = <<-EOQ
-  #         select
-  #           sse_description ->> 'KMSMasterKeyArn' as key_arn
-  #         from
-  #           aws_dynamodb_table
-  #         where
-  #           arn = $1;
-  #       EOQ
+  with "s3_buckets" {
+    sql = <<-EOQ
+      select
+        b.arn as bucket_arn
+      from
+        aws_s3_bucket as b,
+        aws_dynamodb_table_export as t
+      where
+        b.name = t.s3_bucket
+        and t.table_arn = $1;
+    EOQ
 
-  #       args = [self.input.table_arn.value]
-  #     }
+    args = [self.input.table_arn.value]
+  }
 
-  #     with "s3_buckets" {
-  #       sql = <<-EOQ
-  #         select
-  #           b.arn as bucket_arn
-  #         from
-  #           aws_s3_bucket as b,
-  #           aws_dynamodb_table_export as t
-  #         where
-  #           b.name = t.s3_bucket
-  #           and t.table_arn = $1;
-  #       EOQ
+  container {
 
-  #       args = [self.input.table_arn.value]
-  #     }
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
 
-  #     nodes = [
-  #       node.dynamodb_backup,
-  #       node.dynamodb_table,
-  #       node.kinesis_stream,
-  #       node.kms_key,
-  #       node.s3_bucket
-  #     ]
+      node {
+        base = node.dynamodb_backup
+        args = {
+          dbynamodb_backup_arns = with.dynamodb_backups.rows[*].dbynamodb_backup_arn
+        }
+      }
 
-  #     edges = [
-  #       edge.dynamodb_table_to_dynamodb_backup,
-  #       edge.dynamodb_table_to_kinesis_stream,
-  #       edge.dynamodb_table_to_kms_key,
-  #       edge.dynamodb_table_to_s3_bucket
-  #     ]
+      node {
+        base = node.dynamodb_table
+        args = {
+          dynamodb_table_arns = [self.input.table_arn.value]
+        }
+      }
 
-  #     args = {
-  #       dbynamodb_backup_arns = with.dynamodb_backups.rows[*].dbynamodb_backup_arn
-  #       dynamodb_table_arns   = [self.input.table_arn.value]
-  #       kinesis_stream_arns   = with.kinesis_streams.rows[*].kinesis_stream_arn
-  #       kms_key_arns          = with.kms_keys.rows[*].key_arn
-  #       s3_bucket_arns        = with.s3_buckets.rows[*].bucket_arn
-  #     }
-  #   }
-  # }
+      node {
+        base = node.kinesis_stream
+        args = {
+          kinesis_stream_arns = with.kinesis_streams.rows[*].kinesis_stream_arn
+        }
+      }
+
+      node {
+        base = node.kms_key
+        args = {
+          kms_key_arns = with.kms_keys.rows[*].key_arn
+        }
+      }
+
+      node {
+        base = node.s3_bucket
+        args = {
+          s3_bucket_arns = with.s3_buckets.rows[*].bucket_arn
+        }
+      }
+
+      edge {
+        base = edge.dynamodb_table_to_dynamodb_backup
+        args = {
+          dynamodb_table_arns = [self.input.table_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.dynamodb_table_to_kinesis_stream
+        args = {
+          dynamodb_table_arns = [self.input.table_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.dynamodb_table_to_kms_key
+        args = {
+          dynamodb_table_arns = [self.input.table_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.dynamodb_table_to_s3_bucket
+        args = {
+          dynamodb_table_arns = [self.input.table_arn.value]
+        }
+      }
+    }
+  }
 
   container {
 
