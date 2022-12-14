@@ -18,45 +18,34 @@ dashboard "ec2_instance_detail" {
     card {
       width = 2
       query = query.ec2_instance_status
-      args = {
-        arn = self.input.instance_arn.value
-      }
+      args  = [self.input.instance_arn.value]
     }
 
     card {
       width = 2
       query = query.ec2_instance_type
-      args = {
-        arn = self.input.instance_arn.value
-      }
+      args  = [self.input.instance_arn.value]
     }
 
     card {
       width = 2
       query = query.ec2_instance_total_cores_count
-      args = {
-        arn = self.input.instance_arn.value
-      }
+      args  = [self.input.instance_arn.value]
     }
 
     card {
       width = 2
       query = query.ec2_instance_public_access
-      args = {
-        arn = self.input.instance_arn.value
-      }
+      args  = [self.input.instance_arn.value]
     }
 
     card {
       width = 2
       query = query.ec2_instance_ebs_optimized
-      args = {
-        arn = self.input.instance_arn.value
-      }
+      args  = [self.input.instance_arn.value]
     }
   }
 
-  # TODO: Which format to use for "with" resources?
   with "ebs_volumes" {
     query = query.ec2_instance_ebs_volumes
     args  = [self.input.instance_arn.value]
@@ -69,7 +58,7 @@ dashboard "ec2_instance_detail" {
 
   with "ec2_classic_load_balancers" {
     query = query.ec2_instance_ec2_classic_load_balancers
-    args = [self.input.instance_arn.value]
+    args  = [self.input.instance_arn.value]
   }
 
   with "ec2_gateway_load_balancers" {
@@ -78,140 +67,48 @@ dashboard "ec2_instance_detail" {
   }
 
   with "ec2_network_interfaces" {
-    sql = <<-EOQ
-      select
-        network_interface ->> 'NetworkInterfaceId' as network_interface_id
-      from
-        aws_ec2_instance as i,
-        jsonb_array_elements(network_interfaces) as network_interface
-      where
-        i.arn = $1;
-    EOQ
-
-    args = [self.input.instance_arn.value]
+    query = query.ec2_instance_ec2_network_interfaces
+    args  = [self.input.instance_arn.value]
   }
 
   with "ec2_network_load_balancers" {
-    sql = <<-EOQ
-      select
-        distinct lb.arn as network_load_balancer_arn
-      from
-        aws_ec2_instance as i,
-        aws_ec2_target_group as target,
-        jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
-        jsonb_array_elements_text(target.load_balancer_arns) as l,
-        aws_ec2_network_load_balancer as lb
-      where
-        health_descriptions -> 'Target' ->> 'Id' = i.instance_id
-        and l = lb.arn
-        and i.arn = $1;
-    EOQ
-
-    args = [self.input.instance_arn.value]
+    query = query.ec2_instance_ec2_network_load_balancers
+    args  = [self.input.instance_arn.value]
   }
 
   with "ec2_target_groups" {
-    sql = <<-EOQ
-      select
-        target.target_group_arn
-      from
-        aws_ec2_instance as i,
-        aws_ec2_target_group as target,
-        jsonb_array_elements(target.target_health_descriptions) as health_descriptions
-      where
-        i.arn = $1
-        and health_descriptions -> 'Target' ->> 'Id' = i.instance_id;
-    EOQ
-
-    args = [self.input.instance_arn.value]
+    query = query.ec2_instance_ec2_target_groups
+    args  = [self.input.instance_arn.value]
   }
 
   with "ecs_clusters" {
-    sql = <<-EOQ
-      select
-        distinct cluster.cluster_arn as cluster_arn
-      from
-        aws_ec2_instance as i,
-        aws_ecs_container_instance as ci,
-        aws_ecs_cluster as cluster
-      where
-        ci.ec2_instance_id = i.instance_id
-        and ci.cluster_arn = cluster.cluster_arn
-        and i.arn = $1;
-    EOQ
-
-    args = [self.input.instance_arn.value]
+    query = query.ec2_instance_ecs_clusters
+    args  = [self.input.instance_arn.value]
   }
 
   with "iam_roles" {
-    sql = <<-EOQ
-      select
-        distinct r.arn as role_arn
-      from
-        aws_ec2_instance as i,
-        aws_iam_role as r,
-        jsonb_array_elements_text(instance_profile_arns) as instance_profile
-      where
-        instance_profile = i.iam_instance_profile_arn
-        and i.arn = $1;
-    EOQ
-
-    args = [self.input.instance_arn.value]
+    query = query.ec2_instance_iam_roles
+    args  = [self.input.instance_arn.value]
   }
 
   with "vpc_eips" {
-    sql = <<-EOQ
-      select
-        e.arn as eip_arn
-      from
-        aws_vpc_eip as e,
-        aws_ec2_instance as i
-      where
-        e.instance_id = i.instance_id
-        and i.arn = $1;
-    EOQ
-
-    args = [self.input.instance_arn.value]
+    query = query.ec2_instance_vpc_eips
+    args  = [self.input.instance_arn.value]
   }
 
   with "vpc_security_groups" {
-    sql = <<-EOQ
-      select
-        sg ->> 'GroupId' as security_group_id
-      from
-        aws_ec2_instance as i,
-        jsonb_array_elements(security_groups) as sg
-      where
-        arn = $1;
-    EOQ
-
-    args = [self.input.instance_arn.value]
+    query = query.ec2_instance_vpc_security_groups
+    args  = [self.input.instance_arn.value]
   }
 
   with "vpc_subnets" {
-    sql = <<-EOQ
-      select
-        subnet_id as subnet_id
-      from
-        aws_ec2_instance as i
-      where
-        arn = $1;
-    EOQ
-
-    args = [self.input.instance_arn.value]
+    query = query.ec2_instance_vpc_subnets
+    args  = [self.input.instance_arn.value]
   }
 
   with "vpc_vpcs" {
-    sql = <<-EOQ
-      select
-        vpc_id as vpc_id
-      from
-        aws_ec2_instance
-      where
-        arn = $1;
-    EOQ
-
-    args = [self.input.instance_arn.value]
+    query = query.ec2_instance_vpc_vpcs
+    args  = [self.input.instance_arn.value]
   }
 
   container {
@@ -457,9 +354,7 @@ dashboard "ec2_instance_detail" {
         type  = "line"
         width = 6
         query = query.ec2_instance_overview
-        args = {
-          arn = self.input.instance_arn.value
-        }
+        args  = [self.input.instance_arn.value]
 
       }
 
@@ -467,9 +362,7 @@ dashboard "ec2_instance_detail" {
         title = "Tags"
         width = 6
         query = query.ec2_instance_tags
-        args = {
-          arn = self.input.instance_arn.value
-        }
+        args  = [self.input.instance_arn.value]
       }
     }
 
@@ -479,9 +372,7 @@ dashboard "ec2_instance_detail" {
       table {
         title = "Block Device Mappings"
         query = query.ec2_instance_block_device_mapping
-        args = {
-          arn = self.input.instance_arn.value
-        }
+        args  = [self.input.instance_arn.value]
 
         column "Volume ARN" {
           display = "none"
@@ -502,9 +393,7 @@ dashboard "ec2_instance_detail" {
     table {
       title = "Network Interfaces"
       query = query.ec2_instance_network_interfaces
-      args = {
-        arn = self.input.instance_arn.value
-      }
+      args  = [self.input.instance_arn.value]
 
       column "VPC ID" {
         // cyclic dependency prevents use of url_path, hardcode for now
@@ -520,9 +409,7 @@ dashboard "ec2_instance_detail" {
     table {
       title = "Security Groups"
       query = query.ec2_instance_security_groups
-      args = {
-        arn = self.input.instance_arn.value
-      }
+      args  = [self.input.instance_arn.value]
 
       column "Group ID" {
         // cyclic dependency prevents use of url_path, hardcode for now
@@ -538,9 +425,7 @@ dashboard "ec2_instance_detail" {
     table {
       title = "CPU cores"
       query = query.ec2_instance_cpu_cores
-      args = {
-        arn = self.input.instance_arn.value
-      }
+      args  = [self.input.instance_arn.value]
     }
 
   }
@@ -630,6 +515,125 @@ query "ec2_instance_ec2_gateway_load_balancers" {
   EOQ
 }
 
+query "ec2_instance_ec2_network_interfaces" {
+  sql = <<-EOQ
+    select
+      network_interface ->> 'NetworkInterfaceId' as network_interface_id
+    from
+      aws_ec2_instance as i,
+      jsonb_array_elements(network_interfaces) as network_interface
+    where
+      i.arn = $1;
+  EOQ
+}
+
+query "ec2_instance_ec2_network_load_balancers" {
+  sql = <<-EOQ
+    select
+      distinct lb.arn as network_load_balancer_arn
+    from
+      aws_ec2_instance as i,
+      aws_ec2_target_group as target,
+      jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
+      jsonb_array_elements_text(target.load_balancer_arns) as l,
+      aws_ec2_network_load_balancer as lb
+    where
+      health_descriptions -> 'Target' ->> 'Id' = i.instance_id
+      and l = lb.arn
+      and i.arn = $1;
+  EOQ
+}
+
+query "ec2_instance_ec2_target_groups" {
+  sql = <<-EOQ
+    select
+      target.target_group_arn
+    from
+      aws_ec2_instance as i,
+      aws_ec2_target_group as target,
+      jsonb_array_elements(target.target_health_descriptions) as health_descriptions
+    where
+      i.arn = $1
+      and health_descriptions -> 'Target' ->> 'Id' = i.instance_id;
+  EOQ
+}
+
+query "ec2_instance_ecs_clusters" {
+  sql = <<-EOQ
+    select
+      distinct cluster.cluster_arn as cluster_arn
+    from
+      aws_ec2_instance as i,
+      aws_ecs_container_instance as ci,
+      aws_ecs_cluster as cluster
+    where
+      ci.ec2_instance_id = i.instance_id
+      and ci.cluster_arn = cluster.cluster_arn
+      and i.arn = $1;
+  EOQ
+}
+
+query "ec2_instance_iam_roles" {
+  sql = <<-EOQ
+    select
+      distinct r.arn as role_arn
+    from
+      aws_ec2_instance as i,
+      aws_iam_role as r,
+      jsonb_array_elements_text(instance_profile_arns) as instance_profile
+    where
+      instance_profile = i.iam_instance_profile_arn
+      and i.arn = $1;
+  EOQ
+}
+
+query "ec2_instance_vpc_eips" {
+  sql = <<-EOQ
+    select
+      e.arn as eip_arn
+    from
+      aws_vpc_eip as e,
+      aws_ec2_instance as i
+    where
+      e.instance_id = i.instance_id
+      and i.arn = $1;
+  EOQ
+}
+
+query "ec2_instance_vpc_security_groups" {
+  sql = <<-EOQ
+    select
+      sg ->> 'GroupId' as security_group_id
+    from
+      aws_ec2_instance as i,
+      jsonb_array_elements(security_groups) as sg
+    where
+      arn = $1;
+  EOQ
+}
+
+query "ec2_instance_vpc_subnets" {
+  sql = <<-EOQ
+    select
+      subnet_id as subnet_id
+    from
+      aws_ec2_instance as i
+    where
+      arn = $1;
+  EOQ
+}
+
+query "ec2_instance_vpc_vpcs" {
+  sql = <<-EOQ
+    select
+      vpc_id as vpc_id
+    from
+      aws_ec2_instance
+    where
+      arn = $1;
+  EOQ
+}
+
 # Card queries
 
 query "ec2_instance_status" {
@@ -642,9 +646,6 @@ query "ec2_instance_status" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
-
 }
 
 query "ec2_instance_type" {
@@ -657,8 +658,6 @@ query "ec2_instance_type" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "ec2_instance_total_cores_count" {
@@ -671,8 +670,6 @@ query "ec2_instance_total_cores_count" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "ec2_instance_public_access" {
@@ -686,8 +683,6 @@ query "ec2_instance_public_access" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "ec2_instance_ebs_optimized" {
@@ -701,8 +696,6 @@ query "ec2_instance_ebs_optimized" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 # Misc queries
@@ -720,10 +713,8 @@ query "ec2_instance_overview" {
     from
       aws_ec2_instance
     where
-      arn = $1
+      arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "ec2_instance_tags" {
@@ -739,8 +730,6 @@ query "ec2_instance_tags" {
     order by
       tag ->> 'Key';
     EOQ
-
-  param "arn" {}
 }
 
 query "ec2_instance_block_device_mapping" {
@@ -772,8 +761,6 @@ query "ec2_instance_block_device_mapping" {
     where
       v.volume_id in (select "Volume ID" from volume_details)
   EOQ
-
-  param "arn" {}
 }
 
 query "ec2_instance_security_groups" {
@@ -787,8 +774,6 @@ query "ec2_instance_security_groups" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "ec2_instance_network_interfaces" {
@@ -808,8 +793,6 @@ query "ec2_instance_network_interfaces" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "ec2_instance_cpu_cores" {
@@ -822,6 +805,4 @@ query "ec2_instance_cpu_cores" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
