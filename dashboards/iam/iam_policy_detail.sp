@@ -30,106 +30,217 @@ dashboard "iam_policy_detail" {
     }
   }
 
-  # container {
+  with "iam_groups" {
+    sql = <<-EOQ
+      select
+        arn as group_arn
+      from
+        aws_iam_group,
+        jsonb_array_elements_text(attached_policy_arns) as policy_arn
+      where
+        policy_arn = $1;
+    EOQ
 
-  #   graph {
-  #     title = "Relationships"
-  #     type  = "graph"
+    args = [self.input.policy_arn.value]
+  }
 
-  #     with "iam_groups" {
-  #       sql = <<-EOQ
-  #         select
-  #           arn as group_arn
-  #         from
-  #           aws_iam_group,
-  #           jsonb_array_elements_text(attached_policy_arns) as policy_arn
-  #         where
-  #           policy_arn = $1;
-  #       EOQ
+  with "iam_policy_std" {
+    sql = <<-EOQ
+      select
+        policy_std
+      from
+        aws_iam_policy
+      where
+        arn = $1
+      limit 1;  -- aws managed policies will appear once for each connection in the aggregator, but we only need one...
+    EOQ
 
-  #       args = [self.input.policy_arn.value]
-  #     }
+    args = [self.input.policy_arn.value]
+  }
 
-  #     with "iam_policy_std" {
-  #       sql = <<-EOQ
-  #         select
-  #           policy_std
-  #         from
-  #           aws_iam_policy
-  #         where
-  #           arn = $1
-  #         limit 1;  -- aws managed policies will appear once for each connection in the aggregator, but we only need one...
-  #       EOQ
+  with "iam_roles" {
+    sql = <<-EOQ
+      select
+        arn as role_arn
+      from
+        aws_iam_role,
+        jsonb_array_elements_text(attached_policy_arns) as policy_arn
+      where
+        policy_arn = $1;
+    EOQ
 
-  #       args = [self.input.policy_arn.value]
-  #     }
+    args = [self.input.policy_arn.value]
+  }
 
-  #     with "iam_roles" {
-  #       sql = <<-EOQ
-  #         select
-  #           arn as role_arn
-  #         from
-  #           aws_iam_role,
-  #           jsonb_array_elements_text(attached_policy_arns) as policy_arn
-  #         where
-  #           policy_arn = $1;
-  #       EOQ
+  with "iam_users" {
+    sql = <<-EOQ
+      select
+        arn as user_arn
+      from
+        aws_iam_user,
+        jsonb_array_elements_text(attached_policy_arns) as policy_arn
+      where
+        policy_arn = $1;
+    EOQ
 
-  #       args = [self.input.policy_arn.value]
-  #     }
+    args = [self.input.policy_arn.value]
+  }
 
-  #     with "iam_users" {
-  #       sql = <<-EOQ
-  #         select
-  #           arn as user_arn
-  #         from
-  #           aws_iam_user,
-  #           jsonb_array_elements_text(attached_policy_arns) as policy_arn
-  #         where
-  #           policy_arn = $1;
-  #       EOQ
+  container {
 
-  #       args = [self.input.policy_arn.value]
-  #     }
+    graph {
+      title = "Relationships"
+      type  = "graph"
 
-  #     nodes = [
-  #       node.iam_group,
-  #       node.iam_policy,
-  #       node.iam_policy_statement,
-  #       node.iam_policy_statement_action_notaction,
-  #       node.iam_policy_statement_condition,
-  #       node.iam_policy_statement_condition_key,
-  #       node.iam_policy_statement_condition_key_value,
-  #       node.iam_policy_statement_resource_notresource,
-  #       node.iam_role,
-  #       node.iam_user
-  #     ]
+      node {
+        base = node.iam_group
+        args = {
+          iam_group_arns = with.iam_groups.rows[*].group_arn
+        }
+      }
 
-  #     edges = [
+      node {
+        base = node.iam_policy
+        args = {
+          iam_policy_arns = [self.input.policy_arn.value]
+        }
+      }
 
-  #       edge.iam_group_to_iam_policy,
-  #       edge.iam_policy_statement,
-  #       edge.iam_policy_statement_action,
-  #       edge.iam_policy_statement_condition,
-  #       edge.iam_policy_statement_condition_key,
-  #       edge.iam_policy_statement_condition_key_value,
-  #       edge.iam_policy_statement_notaction,
-  #       edge.iam_policy_statement_notresource,
-  #       edge.iam_policy_statement_resource,
-  #       edge.iam_role_to_iam_policy,
-  #       edge.iam_user_to_iam_policy
-  #     ]
+      node {
+        base = node.iam_policy_statement
+        args = {
+          iam_policy_stds = with.iam_policy_std.rows[0].policy_std
+        }
+      }
 
-  #     args = {
-  #       iam_group_arns  = with.iam_groups.rows[*].group_arn
-  #       iam_policy_arns = [self.input.policy_arn.value]
-  #       iam_policy_stds = with.iam_policy_std.rows[0].policy_std
-  #       iam_role_arns   = with.iam_roles.rows[*].role_arn
-  #       iam_user_arns   = with.iam_users.rows[*].user_arn
-  #     }
-  #   }
+      node {
+        base = node.iam_policy_statement_action_notaction
+        args = {
+          iam_policy_stds = with.iam_policy_std.rows[0].policy_std
+        }
+      }
 
-  # }
+      node {
+        base = node.iam_policy_statement_condition
+        args = {
+          iam_policy_stds = with.iam_policy_std.rows[0].policy_std
+        }
+      }
+
+      node {
+        base = node.iam_policy_statement_condition_key
+        args = {
+          iam_policy_stds = with.iam_policy_std.rows[0].policy_std
+        }
+      }
+
+      node {
+        base = node.iam_policy_statement_condition_key_value
+        args = {
+          iam_policy_stds = with.iam_policy_std.rows[0].policy_std
+        }
+      }
+
+      node {
+        base = node.iam_policy_statement_resource_notresource
+        args = {
+          iam_policy_stds = with.iam_policy_std.rows[0].policy_std
+        }
+      }
+
+      node {
+        base = node.iam_role
+        args = {
+          iam_role_arns = with.iam_roles.rows[*].role_arn
+        }
+      }
+
+      node {
+        base = node.iam_user
+        args = {
+          iam_user_arns = with.iam_users.rows[*].user_arn
+        }
+      }
+
+      edge {
+        base = edge.iam_group_to_iam_policy
+        args = {
+          iam_group_arns = with.iam_groups.rows[*].group_arn
+        }
+      }
+
+      edge {
+        base = edge.iam_policy_statement
+        args = {
+          iam_policy_arns = [self.input.policy_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.iam_policy_statement_action
+        args = {
+          iam_policy_stds = with.iam_policy_std.rows[0].policy_std
+        }
+      }
+
+      edge {
+        base = edge.iam_policy_statement_condition
+        args = {
+          iam_policy_stds = with.iam_policy_std.rows[0].policy_std
+        }
+      }
+
+      edge {
+        base = edge.iam_policy_statement_condition_key
+        args = {
+          iam_policy_stds = with.iam_policy_std.rows[0].policy_std
+        }
+      }
+
+      edge {
+        base = edge.iam_policy_statement_condition_key_value
+        args = {
+          iam_policy_stds = with.iam_policy_std.rows[0].policy_std
+        }
+      }
+
+      edge {
+        base = edge.iam_policy_statement_notaction
+        args = {
+          iam_policy_stds = with.iam_policy_std.rows[0].policy_std
+        }
+      }
+
+      edge {
+        base = edge.iam_policy_statement_notresource
+        args = {
+          iam_policy_stds = with.iam_policy_std.rows[0].policy_std
+        }
+      }
+
+      edge {
+        base = edge.iam_policy_statement_resource
+        args = {
+          iam_policy_stds = with.iam_policy_std.rows[0].policy_std
+        }
+      }
+
+      edge {
+        base = edge.iam_role_to_iam_policy
+        args = {
+          iam_role_arns = with.iam_roles.rows[*].role_arn
+        }
+      }
+
+      edge {
+        base = edge.iam_user_to_iam_policy
+        args = {
+          iam_user_arns = with.iam_users.rows[*].user_arn
+        }
+      }
+    }
+
+  }
 
   container {
 
