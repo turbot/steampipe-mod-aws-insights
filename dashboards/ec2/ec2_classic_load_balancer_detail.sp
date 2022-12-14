@@ -56,150 +56,223 @@ dashboard "ec2_classic_load_balancer_detail" {
 
   }
 
-  # container {
-  #   graph {
-  #     title     = "Relationships"
-  #     type      = "graph"
-  #     direction = "TD"
+  with "acm_certificates" {
+    sql = <<-EOQ
+      select
+        c.certificate_arn
+      from
+        aws_acm_certificate c,
+        jsonb_array_elements_text(in_use_by) u
+      where
+        u = $1
+    EOQ
 
-  #     with "acm_certificates" {
-  #       sql = <<-EOQ
-  #         select
-  #           c.certificate_arn
-  #         from
-  #           aws_acm_certificate c,
-  #           jsonb_array_elements_text(in_use_by) u
-  #         where
-  #           u = $1
-  #       EOQ
+    args = [self.input.clb.value]
+  }
 
-  #       args = [self.input.clb.value]
-  #     }
+  with "ec2_instances" {
+    sql = <<-EOQ
+      select
+        i.arn as instance_arn
+      from
+        aws_ec2_classic_load_balancer as clb
+        cross join jsonb_array_elements(clb.instances) as ci
+        left join aws_ec2_instance i on i.instance_id = ci ->> 'InstanceId'
+      where
+        clb.arn = $1;
+    EOQ
 
-  #     with "ec2_instances" {
-  #       sql = <<-EOQ
-  #         select
-  #           i.arn as instance_arn
-  #         from
-  #           aws_ec2_classic_load_balancer as clb
-  #           cross join jsonb_array_elements(clb.instances) as ci
-  #           left join aws_ec2_instance i on i.instance_id = ci ->> 'InstanceId'
-  #         where
-  #           clb.arn = $1;
-  #       EOQ
+    args = [self.input.clb.value]
+  }
 
-  #       args = [self.input.clb.value]
-  #     }
+  with "ec2_load_balancer_listeners" {
+    sql = <<-EOQ
+      select
+        lblistener.arn as listener_arn
+      from
+        aws_ec2_load_balancer_listener lblistener
+      where
+        lblistener.load_balancer_arn = $1;
+    EOQ
 
-  #     with "ec2_load_balancer_listeners" {
-  #       sql = <<-EOQ
-  #         select
-  #           lblistener.arn as listener_arn
-  #         from
-  #           aws_ec2_load_balancer_listener lblistener
-  #         where
-  #           lblistener.load_balancer_arn = $1;
-  #       EOQ
+    args = [self.input.clb.value]
+  }
 
-  #       args = [self.input.clb.value]
-  #     }
+  with "s3_buckets" {
+    sql = <<-EOQ
+      select
+        b.arn as bucket_arn
+      from
+        aws_s3_bucket b,
+        aws_ec2_classic_load_balancer as clb
+      where
+        clb.arn = $1
+        and b.name = clb.access_log_s3_bucket_name;
+    EOQ
 
-  #     with "s3_buckets" {
-  #       sql = <<-EOQ
-  #         select
-  #           b.arn as bucket_arn
-  #         from
-  #           aws_s3_bucket b,
-  #           aws_ec2_classic_load_balancer as clb
-  #         where
-  #           clb.arn = $1
-  #           and b.name = clb.access_log_s3_bucket_name;
-  #       EOQ
+    args = [self.input.clb.value]
+  }
 
-  #       args = [self.input.clb.value]
-  #     }
+  with "vpc_security_groups" {
+    sql = <<-EOQ
+      select
+        sg.group_id
+      from
+        aws_vpc_security_group sg,
+        aws_ec2_classic_load_balancer as alb
+      where
+        alb.arn = $1
+        and sg.group_id in
+        (
+          select
+            jsonb_array_elements_text(alb.security_groups)
+        );
+    EOQ
 
-  #     with "vpc_security_groups" {
-  #       sql = <<-EOQ
-  #         select
-  #           sg.group_id
-  #         from
-  #           aws_vpc_security_group sg,
-  #           aws_ec2_classic_load_balancer as alb
-  #         where
-  #           alb.arn = $1
-  #           and sg.group_id in
-  #           (
-  #             select
-  #               jsonb_array_elements_text(alb.security_groups)
-  #           );
-  #       EOQ
+    args = [self.input.clb.value]
+  }
 
-  #       args = [self.input.clb.value]
-  #     }
+  with "vpc_subnets" {
+    sql = <<-EOQ
+      select
+        s.subnet_id as subnet_id
+      from
+        aws_vpc_subnet s,
+        aws_ec2_classic_load_balancer as clb,
+        jsonb_array_elements(availability_zones) as az
+      where
+        alb.arn = $1
+        and s.subnet_id = az ->> 'SubnetId';
+    EOQ
 
-  #     with "vpc_subnets" {
-  #       sql = <<-EOQ
-  #         select
-  #           s.subnet_id as subnet_id
-  #         from
-  #           aws_vpc_subnet s,
-  #           aws_ec2_classic_load_balancer as alb,
-  #           jsonb_array_elements(availability_zones) as az
-  #         where
-  #           alb.arn = $1
-  #           and s.subnet_id = az ->> 'SubnetId';
-  #       EOQ
+    args = [self.input.clb.value]
+  }
 
-  #       args = [self.input.clb.value]
-  #     }
+  with "vpc_vpcs" {
+    sql = <<-EOQ
+      select
+        alb.vpc_id as vpc_id
+      from
+        aws_ec2_classic_load_balancer as alb
+      where
+        alb.arn = $1;
+    EOQ
 
-  #     with "vpc_vpcs" {
-  #       sql = <<-EOQ
-  #         select
-  #           alb.vpc_id as vpc_id
-  #         from
-  #           aws_ec2_classic_load_balancer as alb
-  #         where
-  #           alb.arn = $1;
-  #       EOQ
+    args = [self.input.clb.value]
+  }
 
-  #       args = [self.input.clb.value]
-  #     }
+  container {
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
 
-  #     nodes = [
-  #       node.acm_certificate,
-  #       node.ec2_classic_load_balancer,
-  #       node.ec2_instance,
-  #       node.ec2_load_balancer_listener,
-  #       node.s3_bucket,
-  #       node.vpc_security_group,
-  #       node.vpc_subnet,
-  #       node.vpc_vpc
-  #     ]
+      node {
+        base = node.acm_certificate
+        args = {
+          acm_certificate_arns = with.acm_certificates.rows[*].certificate_arn
+        }
+      }
 
-  #     edges = [
-  #       edge.ec2_classic_load_balancer_to_acm_certificate,
-  #       edge.ec2_classic_load_balancer_to_ec2_instance,
-  #       edge.ec2_classic_load_balancer_to_s3_bucket,
-  #       edge.ec2_classic_load_balancer_to_vpc_security_group,
-  #       edge.ec2_classic_load_balancer_to_vpc_subnet,
-  #       edge.ec2_load_balancer_listener_to_ec2_load_balancer,
-  #       edge.vpc_subnet_to_vpc_vpc
-  #     ]
+      node {
+        base = node.ec2_classic_load_balancer
+        args = {
+          ec2_classic_load_balancer_arns = [self.input.clb.value]
+        }
+      }
 
-  #     args = {
-  #       acm_certificate_arns            = with.acm_certificates.rows[*].certificate_arn
-  #       ec2_classic_load_balancer_arns  = [self.input.clb.value]
-  #       ec2_instance_arns               = with.ec2_instances.rows[*].instance_arn
-  #       ec2_load_balancer_listener_arns = with.ec2_load_balancer_listeners.rows[*].listener_arn
-  #       s3_bucket_arns                  = with.s3_buckets.rows[*].bucket_arn
-  #       vpc_security_group_ids          = with.vpc_security_groups.rows[*].group_id
-  #       vpc_subnet_ids                  = with.vpc_subnets.rows[*].subnet_id
-  #       vpc_vpc_ids                     = with.vpc_vpcs.rows[*].vpc_id
-  #     }
-  #   }
-  # }
+      node {
+        base = node.ec2_instance
+        args = {
+          ec2_instance_arns = with.ec2_instances.rows[*].instance_arn
+        }
+      }
+
+      node {
+        base = node.ec2_load_balancer_listener
+        args = {
+          ec2_load_balancer_listener_arns = with.ec2_load_balancer_listeners.rows[*].listener_arn
+        }
+      }
+
+      node {
+        base = node.s3_bucket
+        args = {
+          s3_bucket_arns = with.s3_buckets.rows[*].bucket_arn
+        }
+      }
+
+      node {
+        base = node.vpc_security_group
+        args = {
+          vpc_security_group_ids = with.vpc_security_groups.rows[*].group_id
+        }
+      }
+
+      node {
+        base = node.vpc_subnet
+        args = {
+          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+        }
+      }
+
+      node {
+        base = node.vpc_vpc
+        args = {
+          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_id
+        }
+      }
+
+      edge {
+        base = edge.ec2_classic_load_balancer_to_acm_certificate
+        args = {
+          ec2_classic_load_balancer_arns = [self.input.clb.value]
+        }
+      }
+
+      edge {
+        base = edge.ec2_classic_load_balancer_to_ec2_instance
+        args = {
+          ec2_classic_load_balancer_arns = [self.input.clb.value]
+        }
+      }
+
+      edge {
+        base = edge.ec2_classic_load_balancer_to_s3_bucket
+        args = {
+          ec2_classic_load_balancer_arns = [self.input.clb.value]
+        }
+      }
+
+      edge {
+        base = edge.ec2_classic_load_balancer_to_vpc_security_group
+        args = {
+          ec2_classic_load_balancer_arns = [self.input.clb.value]
+        }
+      }
+
+      edge {
+        base = edge.ec2_classic_load_balancer_to_vpc_subnet
+        args = {
+          ec2_classic_load_balancer_arns = [self.input.clb.value]
+        }
+      }
+
+      edge {
+        base = edge.ec2_load_balancer_listener_to_ec2_load_balancer
+        args = {
+          ec2_load_balancer_listener_arns = with.ec2_load_balancer_listeners.rows[*].listener_arn
+        }
+      }
+
+      edge {
+        base = edge.vpc_subnet_to_vpc_vpc
+        args = {
+          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+        }
+      }
+    }
+  }
 
   container {
 
