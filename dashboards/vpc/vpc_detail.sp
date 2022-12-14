@@ -49,267 +49,549 @@ dashboard "vpc_detail" {
 
   }
 
+  with "ec2_application_load_balancers" {
+    sql = <<-EOQ
+          select
+            arn as alb_arn
+          from
+            aws_ec2_application_load_balancer
+          where
+            vpc_id = $1;
+        EOQ
 
-  # container {
-  #   graph {
-  #     title = "Relationships"
-  #     width = 12
-  #     type  = "graph"
+    args = [self.input.vpc_id.value]
+  }
 
-  #     with "ec2_application_load_balancers" {
-  #       sql = <<-EOQ
-  #         select
-  #           arn as alb_arn
-  #         from
-  #           aws_ec2_application_load_balancer
-  #         where
-  #           vpc_id = $1;
-  #       EOQ
+  with "ec2_classic_load_balancers" {
+    sql = <<-EOQ
+          select
+            arn as clb_arn
+          from
+            aws_ec2_classic_load_balancer
+          where
+            vpc_id = $1;
+        EOQ
 
-  #       args = [self.input.vpc_id.value]
-  #     }
+    args = [self.input.vpc_id.value]
+  }
 
-  #     with "ec2_classic_load_balancers" {
-  #       sql = <<-EOQ
-  #         select
-  #           arn as clb_arn
-  #         from
-  #           aws_ec2_classic_load_balancer
-  #         where
-  #           vpc_id = $1;
-  #       EOQ
+  with "ec2_gateway_load_balancers" {
+    sql = <<-EOQ
+          select
+            arn as glb_arn
+          from
+            aws_ec2_gateway_load_balancer
+          where
+            vpc_id = $1;
+        EOQ
 
-  #       args = [self.input.vpc_id.value]
-  #     }
+    args = [self.input.vpc_id.value]
+  }
 
-  #     with "ec2_gateway_load_balancers" {
-  #       sql = <<-EOQ
-  #         select
-  #           arn as glb_arn
-  #         from
-  #           aws_ec2_gateway_load_balancer
-  #         where
-  #           vpc_id = $1;
-  #       EOQ
+  with "ec2_instances" {
+    sql = <<-EOQ
+          select
+            arn as instance_arn
+          from
+            aws_ec2_instance
+          where
+            vpc_id = $1;
+        EOQ
 
-  #       args = [self.input.vpc_id.value]
-  #     }
+    args = [self.input.vpc_id.value]
+  }
 
-  #     with "ec2_instances" {
-  #       sql = <<-EOQ
-  #         select
-  #           arn as instance_arn
-  #         from
-  #           aws_ec2_instance
-  #         where
-  #           vpc_id = $1;
-  #       EOQ
+  with "ec2_network_interfaces" {
+    sql = <<-EOQ
+          select
+            network_interface_id as network_interface_id
+          from
+            aws_ec2_network_interface
+          where
+            vpc_id = $1;
+        EOQ
 
-  #       args = [self.input.vpc_id.value]
-  #     }
-
-  #     with "ec2_network_interfaces" {
-  #       sql = <<-EOQ
-  #         select
-  #           network_interface_id as network_interface_id
-  #         from
-  #           aws_ec2_network_interface
-  #         where
-  #           vpc_id = $1;
-  #       EOQ
-
-  #       args = [self.input.vpc_id.value]
-  #     }
+    args = [self.input.vpc_id.value]
+  }
 
 
-  #     with "ec2_network_load_balancers" {
-  #       sql = <<-EOQ
-  #         select
-  #           arn as nlb_arn
-  #         from
-  #           aws_ec2_network_load_balancer
-  #         where
-  #           vpc_id = $1;
-  #       EOQ
+  with "ec2_network_load_balancers" {
+    sql = <<-EOQ
+          select
+            arn as nlb_arn
+          from
+            aws_ec2_network_load_balancer
+          where
+            vpc_id = $1;
+        EOQ
 
-  #       args = [self.input.vpc_id.value]
-  #     }
+    args = [self.input.vpc_id.value]
+  }
 
-  #     with "lambda_functions" {
-  #       sql = <<-EOQ
-  #         select
-  #           arn as function_arn
-  #         from
-  #           aws_lambda_function
-  #         where
-  #           vpc_id = $1;
-  #       EOQ
+  with "lambda_functions" {
+    sql = <<-EOQ
+          select
+            arn as function_arn
+          from
+            aws_lambda_function
+          where
+            vpc_id = $1;
+        EOQ
 
-  #       args = [self.input.vpc_id.value]
-  #     }
+    args = [self.input.vpc_id.value]
+  }
 
-  #     with "rds_db_instances" {
-  #       sql = <<-EOQ
-  #         select
-  #           arn as rds_instance_arn
-  #         from
-  #           aws_rds_db_instance
-  #         where
-  #           vpc_id = $1;
-  #       EOQ
+  with "rds_db_instances" {
+    sql = <<-EOQ
+          select
+            arn as rds_instance_arn
+          from
+            aws_rds_db_instance
+          where
+            vpc_id = $1;
+        EOQ
 
-  #       args = [self.input.vpc_id.value]
-  #     }
+    args = [self.input.vpc_id.value]
+  }
 
-  #     with "redshift_clusters" {
-  #       sql = <<-EOQ
-  #         select
-  #           arn as redshift_cluster_arn
-  #         from
-  #           aws_redshift_cluster
-  #         where
-  #           vpc_id = $1;
-  #       EOQ
+  with "redshift_clusters" {
+    sql = <<-EOQ
+          select
+            arn as redshift_cluster_arn
+          from
+            aws_redshift_cluster
+          where
+            vpc_id = $1;
+        EOQ
 
-  #       args = [self.input.vpc_id.value]
-  #     }
+    args = [self.input.vpc_id.value]
+  }
 
-  #     with "vpc_endpoints" {
-  #       sql = <<-EOQ
-  #         select
-  #           vpc_endpoint_id
-  #         from
-  #           aws_vpc_endpoint
-  #         where
-  #           vpc_id = $1;
-  #       EOQ
+  with "vpc_endpoints" {
+    sql = <<-EOQ
+          select
+            vpc_endpoint_id
+          from
+            aws_vpc_endpoint
+          where
+            vpc_id = $1;
+        EOQ
 
-  #       args = [self.input.vpc_id.value]
-  #     }
+    args = [self.input.vpc_id.value]
+  }
 
-  #     with "vpc_flow_logs" {
-  #       sql = <<-EOQ
-  #         select
-  #           flow_log_id as flow_log_id
-  #         from
-  #           aws_vpc_flow_log
-  #         where
-  #           resource_id = $1;
-  #       EOQ
+  with "vpc_flow_logs" {
+    sql = <<-EOQ
+          select
+            flow_log_id as flow_log_id
+          from
+            aws_vpc_flow_log
+          where
+            resource_id = $1;
+        EOQ
 
-  #       args = [self.input.vpc_id.value]
-  #     }
+    args = [self.input.vpc_id.value]
+  }
 
-  #     with "vpc_nat_gateways" {
-  #       sql = <<-EOQ
-  #         select
-  #           arn as gateway_arn
-  #         from
-  #           aws_vpc_nat_gateway
-  #         where
-  #           vpc_id = $1;
-  #       EOQ
+  with "vpc_nat_gateways" {
+    sql = <<-EOQ
+          select
+            arn as gateway_arn
+          from
+            aws_vpc_nat_gateway
+          where
+            vpc_id = $1;
+        EOQ
 
-  #       args = [self.input.vpc_id.value]
-  #     }
+    args = [self.input.vpc_id.value]
+  }
 
-  #     with "vpc_security_groups" {
-  #       sql = <<-EOQ
-  #         select
-  #           group_id as security_group_id
-  #         from
-  #           aws_vpc_security_group
-  #         where
-  #           vpc_id = $1;
-  #       EOQ
+  with "vpc_security_groups" {
+    sql = <<-EOQ
+          select
+            group_id as security_group_id
+          from
+            aws_vpc_security_group
+          where
+            vpc_id = $1;
+        EOQ
 
-  #       args = [self.input.vpc_id.value]
-  #     }
+    args = [self.input.vpc_id.value]
+  }
 
-  #     with "vpc_subnets" {
-  #       sql = <<-EOQ
-  #         select
-  #           subnet_id as subnet_id
-  #         from
-  #           aws_vpc_subnet
-  #         where
-  #           vpc_id = $1;
-  #       EOQ
+  with "vpc_subnets" {
+    sql = <<-EOQ
+          select
+            subnet_id as subnet_id
+          from
+            aws_vpc_subnet
+          where
+            vpc_id = $1;
+        EOQ
 
-  #       args = [self.input.vpc_id.value]
-  #     }
+    args = [self.input.vpc_id.value]
+  }
 
-  #     nodes = [
+  container {
+    graph {
+      title = "Relationships"
+      width = 12
+      type  = "graph"
 
-  #       node.ec2_application_load_balancer,
-  #       node.ec2_availability_zone,
-  #       node.ec2_classic_load_balancer,
-  #       node.ec2_gateway_load_balancer,
-  #       node.ec2_instance,
-  #       node.ec2_network_load_balancer,
-  #       node.ec2_transit_gateway,
-  #       node.lambda_function,
-  #       node.rds_db_instance,
-  #       node.redshift_cluster,
-  #       node.vpc_az_route_table,
-  #       node.vpc_endpoint,
-  #       node.vpc_flow_log,
-  #       node.vpc_internet_gateway,
-  #       node.vpc_nat_gateway,
-  #       node.vpc_peered_vpc,
-  #       node.vpc_s3_access_point,
-  #       node.vpc_security_group,
-  #       node.vpc_subnet,
-  #       node.vpc_vpc,
-  #       node.vpc_vpn_gateway
-  #     ]
+      node {
+        base = node.ec2_application_load_balancer
+        args = {
+          ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
+        }
+      }
 
-  #     edges = [
+      node {
+        base = node.ec2_classic_load_balancer
+        args = {
+          ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers.rows[*].clb_arn
+        }
+      }
 
-  #       edge.ec2_availability_zone_to_vpc_subnet,
-  #       edge.vpc_peered_vpc,
-  #       edge.vpc_subnet_to_ec2_application_load_balancer,
-  #       edge.vpc_subnet_to_ec2_classic_load_balancer,
-  #       edge.vpc_subnet_to_ec2_gateway_load_balancer,
-  #       edge.vpc_subnet_to_ec2_instance,
-  #       edge.vpc_subnet_to_ec2_network_load_balancer,
-  #       edge.vpc_subnet_to_lambda_function,
-  #       edge.vpc_subnet_to_nat_gateway,
-  #       edge.vpc_subnet_to_rds_db_instance,
-  #       edge.vpc_subnet_to_vpc_endpoint,
-  #       edge.vpc_subnet_to_vpc_route_table,
-  #       edge.vpc_vpc_to_ec2_availability_zone,
-  #       edge.vpc_vpc_to_ec2_transit_gateway,
-  #       edge.vpc_vpc_to_s3_access_point,
-  #       edge.vpc_vpc_to_vpc_flow_log,
-  #       edge.vpc_vpc_to_vpc_internet_gateway,
-  #       edge.vpc_vpc_to_vpc_route_table,
-  #       edge.vpc_vpc_to_vpc_security_group,
-  #       edge.vpc_vpc_to_vpc_vpn_gateway,
-  #     ]
+      node {
+        base = node.ec2_gateway_load_balancer
+        args = {
+          ec2_gateway_load_balancer_arns = with.ec2_gateway_load_balancers.rows[*].glb_arn
+        }
+      }
 
-  #     args = {
-  #       ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
-  #       ec2_classic_load_balancer_arns     = with.ec2_classic_load_balancers.rows[*].clb_arn
-  #       ec2_gateway_load_balancer_arns     = with.ec2_gateway_load_balancers.rows[*].glb_arn
-  #       ec2_instance_arns                  = with.ec2_instances.rows[*].instance_arn
-  #       ec2_network_interface_ids          = with.ec2_network_interfaces.rows[*].network_interface_id
-  #       ec2_network_load_balancer_arns     = with.ec2_network_load_balancers.rows[*].nlb_arn
-  #       lambda_function_arns               = with.lambda_functions.rows[*].function_arn
-  #       rds_db_instance_arns               = with.rds_db_instances.rows[*].rds_instance_arn
-  #       redshift_cluster_arns              = with.redshift_clusters.rows[*].redshift_cluster_arn
-  #       vpc_endpoint_ids                   = with.vpc_endpoints.rows[*].vpc_endpoint_id
-  #       vpc_flow_log_ids                   = with.vpc_flow_logs.rows[*].flow_log_id
-  #       vpc_nat_gateway_arns               = with.vpc_nat_gateways.rows[*].gateway_arn
-  #       vpc_security_group_ids             = with.vpc_security_groups.rows[*].security_group_id
-  #       vpc_subnet_ids                     = with.vpc_subnets.rows[*].subnet_id
-  #       vpc_vpc_ids                        = [self.input.vpc_id.value]
-  #     }
-  #   }
+      node {
+        base = node.ec2_instance
+        args = {
+          ec2_instance_arns = with.ec2_instances.rows[*].instance_arn
+        }
+      }
 
+      node {
+        base = node.ec2_network_load_balancer
+        args = {
+          ec2_network_load_balancer_arns = with.ec2_network_load_balancers.rows[*].nlb_arn
+        }
+      }
 
+      node {
+        base = node.lambda_function
+        args = {
+          lambda_function_arns = with.lambda_functions.rows[*].function_arn
+        }
+      }
 
-  # }
+      node {
+        base = node.rds_db_instance
+        args = {
+          rds_db_instance_arns = with.rds_db_instances.rows[*].rds_instance_arn
+        }
+      }
+
+      node {
+        base = node.redshift_cluster
+        args = {
+          redshift_cluster_arns = with.redshift_clusters.rows[*].redshift_cluster_arn
+        }
+      }
+
+      node {
+        base = node.vpc_availability_zone
+        args = {
+          vpc_vpc_ids = [self.input.vpc_id.value]
+        }
+      }
+
+      node {
+        base = node.vpc_az_route_table
+        args = {
+          vpc_vpc_ids = [self.input.vpc_id.value]
+        }
+      }
+
+      node {
+        base = node.vpc_endpoint
+        args = {
+          vpc_endpoint_ids = with.vpc_endpoints.rows[*].vpc_endpoint_id
+        }
+      }
+
+      node {
+        base = node.vpc_flow_log
+        args = {
+          vpc_flow_log_ids = with.vpc_flow_logs.rows[*].flow_log_id
+        }
+      }
+
+      node {
+        base = node.vpc_internet_gateway
+        args = {
+          vpc_vpc_ids = [self.input.vpc_id.value]
+        }
+      }
+
+      node {
+        base = node.vpc_nat_gateway
+        args = {
+          vpc_nat_gateway_arns = with.vpc_nat_gateways.rows[*].gateway_arn
+        }
+      }
+
+      node {
+        base = node.vpc_peered_vpc
+        args = {
+          vpc_vpc_ids = [self.input.vpc_id.value]
+        }
+      }
+
+      node {
+        base = node.vpc_s3_access_point
+        args = {
+          vpc_vpc_ids = [self.input.vpc_id.value]
+        }
+      }
+
+      node {
+        base = node.vpc_security_group
+        args = {
+          vpc_security_group_ids = with.vpc_security_groups.rows[*].security_group_id
+        }
+      }
+
+      node {
+        base = node.vpc_subnet
+        args = {
+          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+        }
+      }
+
+      node {
+        base = node.vpc_transit_gateway
+        args = {
+          vpc_vpc_ids = [self.input.vpc_id.value]
+        }
+      }
+      
+      node {
+        base = node.vpc_vpc
+        args = {
+          vpc_vpc_ids = [self.input.vpc_id.value]
+        }
+      }
+
+      node {
+        base = node.vpc_vpn_gateway
+        args = {
+          vpc_vpc_ids = [self.input.vpc_id.value]
+        }
+      }
+
+      edge {
+        base = edge.ec2_availability_zone_to_vpc_subnet
+        args = {
+          vpc_vpc_ids = [self.input.vpc_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_peered_vpc
+        args = {
+          vpc_vpc_ids = [self.input.vpc_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_subnet_to_ec2_application_load_balancer
+        args = {
+          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+        }
+      }
+
+      edge {
+        base = edge.vpc_subnet_to_ec2_classic_load_balancer
+        args = {
+          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+        }
+      }
+
+      edge {
+        base = edge.vpc_subnet_to_ec2_gateway_load_balancer
+        args = {
+          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+        }
+      }
+
+      edge {
+        base = edge.vpc_subnet_to_ec2_instance
+        args = {
+          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+        }
+      }
+
+      edge {
+        base = edge.vpc_subnet_to_ec2_network_load_balancer
+        args = {
+          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+        }
+      }
+
+      edge {
+        base = edge.vpc_subnet_to_lambda_function
+        args = {
+          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+        }
+      }
+
+      edge {
+        base = edge.vpc_subnet_to_nat_gateway
+        args = {
+          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+        }
+      }
+
+      edge {
+        base = edge.vpc_subnet_to_rds_db_instance
+        args = {
+          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+        }
+      }
+
+      edge {
+        base = edge.vpc_subnet_to_vpc_endpoint
+        args = {
+          vpc_vpc_ids = [self.input.vpc_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_subnet_to_vpc_route_table
+        args = {
+          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+        }
+      }
+
+      edge {
+        base = edge.vpc_vpc_to_ec2_availability_zone
+        args = {
+          vpc_vpc_ids = [self.input.vpc_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_vpc_to_ec2_transit_gateway
+        args = {
+          vpc_vpc_ids = [self.input.vpc_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_vpc_to_s3_access_point
+        args = {
+          vpc_vpc_ids = [self.input.vpc_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_vpc_to_vpc_flow_log
+        args = {
+          vpc_vpc_ids = [self.input.vpc_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_vpc_to_vpc_internet_gateway
+        args = {
+          vpc_vpc_ids = [self.input.vpc_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_vpc_to_vpc_route_table
+        args = {
+          vpc_vpc_ids = [self.input.vpc_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_vpc_to_vpc_security_group
+        args = {
+          vpc_vpc_ids = [self.input.vpc_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_vpc_to_vpc_vpn_gateway
+        args = {
+          vpc_vpc_ids = [self.input.vpc_id.value]
+        }
+      }
+      #     nodes = [
+
+      #       node.ec2_application_load_balancer,
+      #       node.ec2_availability_zone,
+      #       node.ec2_classic_load_balancer,
+      #       node.ec2_gateway_load_balancer,
+      #       node.ec2_instance,
+      #       node.ec2_network_load_balancer,
+      #       node.ec2_transit_gateway,
+      #       node.lambda_function,
+      #       node.rds_db_instance,
+      #       node.redshift_cluster,
+      #       node.vpc_az_route_table,
+      #       node.vpc_endpoint,
+      #       node.vpc_flow_log,
+      #       node.vpc_internet_gateway,
+      #       node.vpc_nat_gateway,
+      #       node.vpc_peered_vpc,
+      #       node.vpc_s3_access_point,
+      #       node.vpc_security_group,
+      #       node.vpc_subnet,
+      #       node.vpc_vpc,
+      #       node.vpc_vpn_gateway
+      #     ]
+
+      #     edges = [
+
+      #       edge.ec2_availability_zone_to_vpc_subnet,
+      #       edge.vpc_peered_vpc,
+      #       edge.vpc_subnet_to_ec2_application_load_balancer,
+      #       edge.vpc_subnet_to_ec2_classic_load_balancer,
+      #       edge.vpc_subnet_to_ec2_gateway_load_balancer,
+      #       edge.vpc_subnet_to_ec2_instance,
+      #       edge.vpc_subnet_to_ec2_network_load_balancer,
+      #       edge.vpc_subnet_to_lambda_function,
+      #       edge.vpc_subnet_to_nat_gateway,
+      #       edge.vpc_subnet_to_rds_db_instance,
+      #       edge.vpc_subnet_to_vpc_endpoint,
+      #       edge.vpc_subnet_to_vpc_route_table,
+      #       edge.vpc_vpc_to_ec2_availability_zone,
+      #       edge.vpc_vpc_to_ec2_transit_gateway,
+      #       edge.vpc_vpc_to_s3_access_point,
+      #       edge.vpc_vpc_to_vpc_flow_log,
+      #       edge.vpc_vpc_to_vpc_internet_gateway,
+      #       edge.vpc_vpc_to_vpc_route_table,
+      #       edge.vpc_vpc_to_vpc_security_group,
+      #       edge.vpc_vpc_to_vpc_vpn_gateway,
+      #     ]
+
+      #     args = {
+      #       ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
+      #       ec2_classic_load_balancer_arns     = with.ec2_classic_load_balancers.rows[*].clb_arn
+      #       ec2_gateway_load_balancer_arns     = with.ec2_gateway_load_balancers.rows[*].glb_arn
+      #       ec2_instance_arns                  = with.ec2_instances.rows[*].instance_arn
+      #       ec2_network_interface_ids          = with.ec2_network_interfaces.rows[*].network_interface_id
+      #       ec2_network_load_balancer_arns     = with.ec2_network_load_balancers.rows[*].nlb_arn
+      #       lambda_function_arns               = with.lambda_functions.rows[*].function_arn
+      #       rds_db_instance_arns               = with.rds_db_instances.rows[*].rds_instance_arn
+      #       redshift_cluster_arns              = with.redshift_clusters.rows[*].redshift_cluster_arn
+      #       vpc_endpoint_ids                   = with.vpc_endpoints.rows[*].vpc_endpoint_id
+      #       vpc_flow_log_ids                   = with.vpc_flow_logs.rows[*].flow_log_id
+      #       vpc_nat_gateway_arns               = with.vpc_nat_gateways.rows[*].gateway_arn
+      #       vpc_security_group_ids             = with.vpc_security_groups.rows[*].security_group_id
+      #       vpc_subnet_ids                     = with.vpc_subnets.rows[*].subnet_id
+      #       vpc_vpc_ids                        = [self.input.vpc_id.value]
+      #     }
+    }
+  }
 
 
   container {
