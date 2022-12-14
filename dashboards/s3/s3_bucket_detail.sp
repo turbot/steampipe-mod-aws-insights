@@ -64,188 +64,326 @@ dashboard "s3_bucket_detail" {
     }
 
   }
+      with "cloudtrail_trails" {
+        sql = <<-EOQ
+          select
+            distinct trail.arn as trail_arn
+          from
+            aws_cloudtrail_trail as trail,
+            aws_s3_bucket as b
+          where
+            b.arn = $1
+            and trail.s3_bucket_name = b.name;
+        EOQ
 
-  # container {
+        args = [self.input.bucket_arn.value]
+      }
 
-  #   graph {
-  #     title     = "Relationships"
-  #     type      = "graph"
-  #     direction = "TD"
+      with "ec2_application_load_balancers" {
+        sql = <<-EOQ
+          select
+            alb.arn as alb_arn
+          from
+            aws_ec2_application_load_balancer as alb,
+            jsonb_array_elements(alb.load_balancer_attributes) as attributes,
+            aws_s3_bucket as b
+          where
+            b.arn = $1
+            and attributes ->> 'Key' = 'access_logs.s3.bucket'
+            and attributes ->> 'Value' = b.name;
+        EOQ
 
-  #     with "cloudtrail_trails" {
-  #       sql = <<-EOQ
-  #         select
-  #           distinct trail.arn as trail_arn
-  #         from
-  #           aws_cloudtrail_trail as trail,
-  #           aws_s3_bucket as b
-  #         where
-  #           b.arn = $1
-  #           and trail.s3_bucket_name = b.name;
-  #       EOQ
+        args = [self.input.bucket_arn.value]
+      }
 
-  #       args = [self.input.bucket_arn.value]
-  #     }
+      with "ec2_classic_load_balancers" {
+        sql = <<-EOQ
+          select
+            clb.arn as clb_arn
+          from
+            aws_ec2_classic_load_balancer clb,
+            aws_s3_bucket as b
+          where
+            b.arn = $1
+            and clb.access_log_s3_bucket_name = b.name;
+        EOQ
 
-  #     with "ec2_application_load_balancers" {
-  #       sql = <<-EOQ
-  #         select
-  #           alb.arn as alb_arn
-  #         from
-  #           aws_ec2_application_load_balancer as alb,
-  #           jsonb_array_elements(alb.load_balancer_attributes) as attributes,
-  #           aws_s3_bucket as b
-  #         where
-  #           b.arn = $1
-  #           and attributes ->> 'Key' = 'access_logs.s3.bucket'
-  #           and attributes ->> 'Value' = b.name;
-  #       EOQ
+        args = [self.input.bucket_arn.value]
+      }
 
-  #       args = [self.input.bucket_arn.value]
-  #     }
+      with "ec2_network_load_balancers" {
+        sql = <<-EOQ
+          select
+            nlb.arn as nlb_arn
+          from
+            aws_ec2_network_load_balancer as nlb,
+            jsonb_array_elements(nlb.load_balancer_attributes) as attributes,
+            aws_s3_bucket as b
+          where
+            b.arn = $1
+            and attributes ->> 'Key' = 'access_logs.s3.bucket'
+            and attributes ->> 'Value' = b.name;
+        EOQ
 
-  #     with "ec2_classic_load_balancers" {
-  #       sql = <<-EOQ
-  #         select
-  #           clb.arn as clb_arn
-  #         from
-  #           aws_ec2_classic_load_balancer clb,
-  #           aws_s3_bucket as b
-  #         where
-  #           b.arn = $1
-  #           and clb.access_log_s3_bucket_name = b.name;
-  #       EOQ
+        args = [self.input.bucket_arn.value]
+      }
 
-  #       args = [self.input.bucket_arn.value]
-  #     }
+      with "from_s3_buckets" {
+        sql = <<-EOQ
+          select
+            lb.arn as bucket_arn
+          from
+            aws_s3_bucket as lb,
+            aws_s3_bucket as b
+          where
+            b.arn = $1
+            and lb.logging ->> 'TargetBucket' = b.name;
+        EOQ
 
-  #     with "ec2_network_load_balancers" {
-  #       sql = <<-EOQ
-  #         select
-  #           nlb.arn as nlb_arn
-  #         from
-  #           aws_ec2_network_load_balancer as nlb,
-  #           jsonb_array_elements(nlb.load_balancer_attributes) as attributes,
-  #           aws_s3_bucket as b
-  #         where
-  #           b.arn = $1
-  #           and attributes ->> 'Key' = 'access_logs.s3.bucket'
-  #           and attributes ->> 'Value' = b.name;
-  #       EOQ
+        args = [self.input.bucket_arn.value]
+      }
 
-  #       args = [self.input.bucket_arn.value]
-  #     }
+      with "kms_keys" {
+        sql = <<-EOQ
+          select
+            k.arn as key_arn
+          from
+            aws_s3_bucket as b
+            cross join jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as r
+            join aws_kms_key as k
+            on k.arn = r -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID'
+          where
+            b.arn = $1;
+        EOQ
 
-  #     with "kms_keys" {
-  #       sql = <<-EOQ
-  #         select
-  #           k.arn as key_arn
-  #         from
-  #           aws_s3_bucket as b
-  #           cross join jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as r
-  #           join aws_kms_key as k
-  #           on k.arn = r -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID'
-  #         where
-  #           b.arn = $1;
-  #       EOQ
+        args = [self.input.bucket_arn.value]
+      }
 
-  #       args = [self.input.bucket_arn.value]
-  #     }
+      with "lambda_functions" {
+        sql = <<-EOQ
+          select
+            t ->> 'LambdaFunctionArn' as function_arn
+          from
+            aws_s3_bucket as b,
+            jsonb_array_elements(event_notification_configuration -> 'LambdaFunctionConfigurations') as t
+          where
+            event_notification_configuration -> 'LambdaFunctionConfigurations' <> 'null'
+            and b.arn = $1;
+        EOQ
 
-  #     with "lambda_functions" {
-  #       sql = <<-EOQ
-  #         select
-  #           t ->> 'LambdaFunctionArn' as function_arn
-  #         from
-  #           aws_s3_bucket as b,
-  #           jsonb_array_elements(event_notification_configuration -> 'LambdaFunctionConfigurations') as t
-  #         where
-  #           event_notification_configuration -> 'LambdaFunctionConfigurations' <> 'null'
-  #           and b.arn = $1;
-  #       EOQ
+        args = [self.input.bucket_arn.value]
+      }
 
-  #       args = [self.input.bucket_arn.value]
-  #     }
+      with "sns_topics" {
+        sql = <<-EOQ
+          select
+            t ->> 'TopicArn' as topic_arn
+          from
+            aws_s3_bucket as b,
+            jsonb_array_elements(
+              case jsonb_typeof(event_notification_configuration -> 'TopicConfigurations')
+                when 'array' then (event_notification_configuration -> 'TopicConfigurations')
+                else null end
+              )
+              as t
+          where
+            b.arn = $1;
+        EOQ
 
-  #     with "sns_topics" {
-  #       sql = <<-EOQ
-  #         select
-  #           t ->> 'TopicArn' as topic_arn
-  #         from
-  #           aws_s3_bucket as b,
-  #           jsonb_array_elements(
-  #             case jsonb_typeof(event_notification_configuration -> 'TopicConfigurations')
-  #               when 'array' then (event_notification_configuration -> 'TopicConfigurations')
-  #               else null end
-  #             )
-  #             as t
-  #         where
-  #           b.arn = $1;
-  #       EOQ
+        args = [self.input.bucket_arn.value]
+      }
 
-  #       args = [self.input.bucket_arn.value]
-  #     }
+      with "sqs_queues" {
+        sql = <<-EOQ
+          select
+            q.queue_arn as queue_arn
+          from
+            aws_s3_bucket as b,
+            jsonb_array_elements(
+              case jsonb_typeof(event_notification_configuration -> 'QueueConfigurations')
+                when 'array' then (event_notification_configuration -> 'QueueConfigurations')
+                else null end
+              )
+              as t
+            left join aws_sqs_queue as q on q.queue_arn = t ->> 'QueueArn'
+          where
+            b.arn = $1;
+        EOQ
 
-  #     with "sqs_queues" {
-  #       sql = <<-EOQ
-  #         select
-  #           q.queue_arn as queue_arn
-  #         from
-  #           aws_s3_bucket as b,
-  #           jsonb_array_elements(
-  #             case jsonb_typeof(event_notification_configuration -> 'QueueConfigurations')
-  #               when 'array' then (event_notification_configuration -> 'QueueConfigurations')
-  #               else null end
-  #             )
-  #             as t
-  #           left join aws_sqs_queue as q on q.queue_arn = t ->> 'QueueArn'
-  #         where
-  #           b.arn = $1;
-  #       EOQ
+        args = [self.input.bucket_arn.value]
+      }
 
-  #       args = [self.input.bucket_arn.value]
-  #     }
+      with "to_s3_buckets" {
+        sql = <<-EOQ
+          select
+            lb.arn as bucket_arn
+          from
+            aws_s3_bucket as lb,
+            aws_s3_bucket as b
+          where
+            b.arn = $1
+            and lb.name = b.logging ->> 'TargetBucket';
+        EOQ
 
-  #     nodes = [
-  #       node.cloudtrail_trail,
-  #       node.ec2_application_load_balancer,
-  #       node.ec2_classic_load_balancer,
-  #       node.ec2_network_load_balancer,
-  #       node.kms_key,
-  #       node.lambda_function,
-  #       node.s3_bucket,
-  #       node.s3_bucket_from_s3_bucket,
-  #       node.s3_bucket_to_s3_bucket,
-  #       node.sns_topic,
-  #       node.sqs_queue
-  #     ]
+        args = [self.input.bucket_arn.value]
+      }
 
-  #     edges = [
-  #       edge.cloudtrail_trail_to_s3_bucket,
-  #       edge.ec2_application_load_balancer_to_s3_bucket,
-  #       edge.ec2_classic_load_balancer_to_s3_bucket,
-  #       edge.ec2_network_load_balancer_to_s3_bucket,
-  #       edge.s3_bucket_from_s3_bucket,
-  #       edge.s3_bucket_to_kms_key,
-  #       edge.s3_bucket_to_lambda_function,
-  #       edge.s3_bucket_to_s3_bucket,
-  #       edge.s3_bucket_to_sns_topic,
-  #       edge.s3_bucket_to_sqs_queue
-  #     ]
+  container {
 
-  #     args = {
-  #       cloudtrail_trail_arns              = with.cloudtrail_trails.rows[*].trail_arn
-  #       ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
-  #       ec2_classic_load_balancer_arns     = with.ec2_classic_load_balancers.rows[*].clb_arn
-  #       ec2_network_load_balancer_arns     = with.ec2_network_load_balancers.rows[*].nlb_arn
-  #       kms_key_arns                       = with.kms_keys.rows[*].key_arn
-  #       lambda_function_arns               = with.lambda_functions.rows[*].function_arn
-  #       s3_bucket_arns                     = [self.input.bucket_arn.value]
-  #       sns_topic_arns                     = with.sns_topics.rows[*].topic_arn
-  #       sqs_queue_arns                     = with.sqs_queues.rows[*].queue_arn
-  #     }
-  #   }
-  # }
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+
+      node {
+        base = node.cloudtrail_trail
+        args = {
+          cloudtrail_trail_arns = with.cloudtrail_trails.rows[*].trail_arn
+        }
+      }
+
+      node {
+        base = node.ec2_application_load_balancer
+        args = {
+          ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
+        }
+      }
+
+      node {
+        base = node.ec2_classic_load_balancer
+        args = {
+          ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers.rows[*].clb_arn
+        }
+      }  
+
+      node {
+        base = node.ec2_network_load_balancer
+        args = {
+          ec2_network_load_balancer_arns = with.ec2_network_load_balancers.rows[*].nlb_arn
+        }
+      }    
+
+      node {
+        base = node.kms_key
+        args = {
+          kms_key_arns = with.kms_keys.rows[*].key_arn
+        }
+      }
+
+      node {
+        base = node.lambda_function
+        args = {
+          lambda_function_arns = with.lambda_functions.rows[*].function_arn
+        }
+      }  
+
+      node {
+        base = node.s3_bucket
+        args = {
+          s3_bucket_arns = [self.input.bucket_arn.value]
+        }
+      }
+
+      node {
+        base = node.s3_bucket
+        args = {
+          s3_bucket_arns = with.from_s3_buckets.rows[*].bucket_arn
+        }
+      }
+
+      node {
+        base = node.s3_bucket
+        args = {
+          s3_bucket_arns = with.to_s3_buckets.rows[*].bucket_arn
+        }
+      }
+
+      node {
+        base = node.sns_topic
+        args = {
+          sns_topic_arns = with.sns_topics.rows[*].topic_arn
+        }
+      }
+
+      node {
+        base = node.sqs_queue
+        args = {
+          sqs_queue_arns = with.sqs_queues.rows[*].queue_arn
+        }
+      }     
+
+      edge {
+        base = edge.cloudtrail_trail_to_s3_bucket
+        args = {
+          cloudtrail_trail_arns = with.cloudtrail_trails.rows[*].trail_arn
+        }
+      }
+
+      edge {
+        base = edge.ec2_application_load_balancer_to_s3_bucket
+        args = {
+          ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
+        }
+      }
+
+      edge {
+        base = edge.ec2_classic_load_balancer_to_s3_bucket
+        args = {
+          ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers.rows[*].clb_arn
+        }
+      }
+
+      edge {
+        base = edge.ec2_network_load_balancer_to_s3_bucket
+        args = {
+          ec2_network_load_balancer_arns = with.ec2_network_load_balancers.rows[*].nlb_arn
+        }
+      }  
+
+      edge {
+        base = edge.s3_bucket_to_kms_key
+        args = {
+          s3_bucket_arns = [self.input.bucket_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.s3_bucket_to_lambda_function
+        args = {
+          s3_bucket_arns = [self.input.bucket_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.s3_bucket_to_s3_bucket
+        args = {
+          s3_bucket_arns = [self.input.bucket_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.s3_bucket_to_s3_bucket
+        args = {
+          s3_bucket_arns = with.from_s3_buckets.rows[*].bucket_arn
+        }
+      }  
+
+      edge {
+        base = edge.s3_bucket_to_sns_topic
+        args = {
+          s3_bucket_arns = [self.input.bucket_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.s3_bucket_to_sqs_queue
+        args = {
+          s3_bucket_arns = [self.input.bucket_arn.value]
+        }
+      }
+    }
+  }
 
   container {
 

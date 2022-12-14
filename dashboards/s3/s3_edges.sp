@@ -1,21 +1,3 @@
-edge "s3_bucket_from_s3_bucket" {
-  title = "logs to"
-
-  sql = <<-EOQ
-    select
-      b.arn as to_id,
-      lb.arn as from_id
-    from
-      aws_s3_bucket as lb,
-      aws_s3_bucket as b
-    where
-      b.arn = any($1)
-      and lb.logging ->> 'TargetBucket' = b.name;
-  EOQ
-
-  param "s3_bucket_arns" {}
-}
-
 edge "s3_bucket_to_codebuild_project" {
   title = "source provider"
 
