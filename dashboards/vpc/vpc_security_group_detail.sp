@@ -57,249 +57,413 @@ dashboard "vpc_security_group_detail" {
 
   }
 
-  # container {
+  with "dax_clusters" {
+    sql = <<-EOQ
+          select
+            arn as dax_cluster_arn
+          from
+            aws_dax_cluster,
+            jsonb_array_elements(security_groups) as sg
+          where
+            sg ->> 'SecurityGroupIdentifier' = $1;
+        EOQ
 
-  #   graph {
-  #     title     = "Relationships"
-  #     type      = "graph"
-  #     direction = "TD"
+    args = [self.input.security_group_id.value]
+  }
 
-  #     with "dax_clusters" {
-  #       sql = <<-EOQ
-  #         select
-  #           arn as dax_cluster_arn
-  #         from
-  #           aws_dax_cluster,
-  #           jsonb_array_elements(security_groups) as sg
-  #         where
-  #           sg ->> 'SecurityGroupIdentifier' = $1;
-  #       EOQ
+  with "ec2_application_load_balancers" {
+    sql = <<-EOQ
+          select
+            arn as alb_arn
+          from
+            aws_ec2_application_load_balancer,
+            jsonb_array_elements_text(security_groups) as sg
+          where
+            sg = $1;
+        EOQ
 
-  #       args = [self.input.security_group_id.value]
-  #     }
+    args = [self.input.security_group_id.value]
+  }
 
-  #     with "ec2_application_load_balancers" {
-  #       sql = <<-EOQ
-  #         select
-  #           arn as alb_arn
-  #         from
-  #           aws_ec2_application_load_balancer,
-  #           jsonb_array_elements_text(security_groups) as sg
-  #         where
-  #           sg = $1;
-  #       EOQ
+  with "ec2_classic_load_balancers" {
+    sql = <<-EOQ
+          select
+            arn as clb_arn
+          from
+            aws_ec2_classic_load_balancer,
+            jsonb_array_elements_text(security_groups) as sg
+          where
+            sg = $1;
+        EOQ
 
-  #       args = [self.input.security_group_id.value]
-  #     }
+    args = [self.input.security_group_id.value]
+  }
 
-  #     with "ec2_classic_load_balancers" {
-  #       sql = <<-EOQ
-  #         select
-  #           arn as clb_arn
-  #         from
-  #           aws_ec2_classic_load_balancer,
-  #           jsonb_array_elements_text(security_groups) as sg
-  #         where
-  #           sg = $1;
-  #       EOQ
+  with "ec2_instances" {
+    sql = <<-EOQ
+          select
+            arn as instance_arn
+          from
+            aws_ec2_instance as i,
+            jsonb_array_elements(security_groups) as sg
+          where
+            sg ->> 'GroupId' = $1;
+        EOQ
 
-  #       args = [self.input.security_group_id.value]
-  #     }
+    args = [self.input.security_group_id.value]
+  }
 
-  #     with "ec2_instances" {
-  #       sql = <<-EOQ
-  #         select
-  #           arn as instance_arn
-  #         from
-  #           aws_ec2_instance as i,
-  #           jsonb_array_elements(security_groups) as sg
-  #         where
-  #           sg ->> 'GroupId' = $1;
-  #       EOQ
+  with "ec2_launch_configurations" {
+    sql = <<-EOQ
+          select
+            launch_configuration_arn as launch_configuration_arn
+          from
+            aws_ec2_launch_configuration,
+            jsonb_array_elements_text(security_groups) as sg
+          where
+            sg = $1;
+        EOQ
 
-  #       args = [self.input.security_group_id.value]
-  #     }
+    args = [self.input.security_group_id.value]
+  }
 
-  #     with "ec2_launch_configurations" {
-  #       sql = <<-EOQ
-  #         select
-  #           launch_configuration_arn as launch_configuration_arn
-  #         from
-  #           aws_ec2_launch_configuration,
-  #           jsonb_array_elements_text(security_groups) as sg
-  #         where
-  #           sg = $1;
-  #       EOQ
+  with "efs_mount_targets" {
+    sql = <<-EOQ
+          select
+            mount_target_id as mount_target_id
+          from
+            aws_efs_mount_target,
+            jsonb_array_elements_text(security_groups) as sg
+          where
+            sg = $1;
+        EOQ
 
-  #       args = [self.input.security_group_id.value]
-  #     }
+    args = [self.input.security_group_id.value]
+  }
 
-  #     with "efs_mount_targets" {
-  #       sql = <<-EOQ
-  #         select
-  #           mount_target_id as mount_target_id
-  #         from
-  #           aws_efs_mount_target,
-  #           jsonb_array_elements_text(security_groups) as sg
-  #         where
-  #           sg = $1;
-  #       EOQ
+  with "elasticache_clusters" {
+    sql = <<-EOQ
+          select
+            arn as elasticache_cluster_arn
+          from
+            aws_elasticache_cluster,
+            jsonb_array_elements(security_groups) as sg
+          where
+            sg ->> 'SecurityGroupId' = $1;
+        EOQ
 
-  #       args = [self.input.security_group_id.value]
-  #     }
+    args = [self.input.security_group_id.value]
+  }
 
-  #     with "elasticache_clusters" {
-  #       sql = <<-EOQ
-  #         select
-  #           arn as elasticache_cluster_arn
-  #         from
-  #           aws_elasticache_cluster,
-  #           jsonb_array_elements(security_groups) as sg
-  #         where
-  #           sg ->> 'SecurityGroupId' = $1;
-  #       EOQ
+  with "lambda_functions" {
+    sql = <<-EOQ
+          select
+            arn as lambda_arn
+          from
+            aws_lambda_function,
+            jsonb_array_elements_text(vpc_security_group_ids) as s
+          where
+            s = $1;
+        EOQ
 
-  #       args = [self.input.security_group_id.value]
-  #     }
+    args = [self.input.security_group_id.value]
+  }
 
-  #     with "lambda_functions" {
-  #       sql = <<-EOQ
-  #         select
-  #           arn as lambda_arn
-  #         from
-  #           aws_lambda_function,
-  #           jsonb_array_elements_text(vpc_security_group_ids) as s
-  #         where
-  #           s = $1;
-  #       EOQ
+  with "rds_db_clusters" {
+    sql = <<-EOQ
+          select
+            arn as rds_db_cluster_arn
+          from
+            aws_rds_db_cluster,
+            jsonb_array_elements(vpc_security_groups) as sg
+          where
+            sg ->> 'VpcSecurityGroupId' = $1;
+        EOQ
 
-  #       args = [self.input.security_group_id.value]
-  #     }
+    args = [self.input.security_group_id.value]
+  }
 
-  #     with "rds_db_clusters" {
-  #       sql = <<-EOQ
-  #         select
-  #           arn as rds_db_cluster_arn
-  #         from
-  #           aws_rds_db_cluster,
-  #           jsonb_array_elements(vpc_security_groups) as sg
-  #         where
-  #           sg ->> 'VpcSecurityGroupId' = $1;
-  #       EOQ
+  with "rds_db_instances" {
+    sql = <<-EOQ
+          select
+            arn as rds_db_instance_arn
+          from
+            aws_rds_db_instance,
+            jsonb_array_elements(vpc_security_groups) as sg
+          where
+            sg ->> 'VpcSecurityGroupId' = $1;
+        EOQ
 
-  #       args = [self.input.security_group_id.value]
-  #     }
+    args = [self.input.security_group_id.value]
+  }
 
-  #     with "rds_db_instances" {
-  #       sql = <<-EOQ
-  #         select
-  #           arn as rds_db_instance_arn
-  #         from
-  #           aws_rds_db_instance,
-  #           jsonb_array_elements(vpc_security_groups) as sg
-  #         where
-  #           sg ->> 'VpcSecurityGroupId' = $1;
-  #       EOQ
+  with "redshift_clusters" {
+    sql = <<-EOQ
+          select
+            arn as redshift_cluster_arn
+          from
+            aws_redshift_cluster,
+            jsonb_array_elements(vpc_security_groups) as sg
+          where
+            sg ->> 'VpcSecurityGroupId' = $1;
+        EOQ
 
-  #       args = [self.input.security_group_id.value]
-  #     }
+    args = [self.input.security_group_id.value]
+  }
 
-  #     with "redshift_clusters" {
-  #       sql = <<-EOQ
-  #         select
-  #           arn as redshift_cluster_arn
-  #         from
-  #           aws_redshift_cluster,
-  #           jsonb_array_elements(vpc_security_groups) as sg
-  #         where
-  #           sg ->> 'VpcSecurityGroupId' = $1;
-  #       EOQ
+  with "sagemaker_notebook_instances" {
+    sql = <<-EOQ
+          select
+            arn as notebook_instance_arn
+          from
+            aws_sagemaker_notebook_instance,
+            jsonb_array_elements_text(security_groups) as sg
+          where
+            sg = $1;
+        EOQ
 
-  #       args = [self.input.security_group_id.value]
-  #     }
+    args = [self.input.security_group_id.value]
+  }
 
-  #     with "sagemaker_notebook_instances" {
-  #       sql = <<-EOQ
-  #         select
-  #           arn as notebook_instance_arn
-  #         from
-  #           aws_sagemaker_notebook_instance,
-  #           jsonb_array_elements_text(security_groups) as sg
-  #         where
-  #           sg = $1;
-  #       EOQ
+  with "vpc_vpcs" {
+    sql = <<-EOQ
+          select
+            vpc_id as vpc_id
+          from
+            aws_vpc_security_group
+          where
+            group_id = $1;
+        EOQ
 
-  #       args = [self.input.security_group_id.value]
-  #     }
+    args = [self.input.security_group_id.value]
+  }
 
-  #     with "vpc_vpcs" {
-  #       sql = <<-EOQ
-  #         select
-  #           vpc_id as vpc_id
-  #         from
-  #           aws_vpc_security_group
-  #         where
-  #           group_id = $1;
-  #       EOQ
+  container {
 
-  #       args = [self.input.security_group_id.value]
-  #     }
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
 
-  #     nodes = [
-  #       node.dax_cluster,
-  #       node.dms_replication_instance,
-  #       node.docdb_cluster,
-  #       node.ec2_application_load_balancer,
-  #       node.ec2_classic_load_balancer,
-  #       node.ec2_instance,
-  #       node.ec2_launch_configuration,
-  #       node.efs_mount_target,
-  #       node.elasticache_cluster,
-  #       node.lambda_function,
-  #       node.rds_db_cluster,
-  #       node.rds_db_instance,
-  #       node.redshift_cluster,
-  #       node.sagemaker_notebook_instance,
-  #       node.vpc_security_group,
-  #       node.vpc_vpc
-  #     ]
+      node {
+        base = node.dax_cluster
+        args = {
+          dax_cluster_arns = with.dax_clusters.rows[*].dax_cluster_arn
+        }
+      }
 
-  #     edges = [
-  #       edge.vpc_security_group_to_dax_cluster,
-  #       edge.vpc_security_group_to_dms_replication_instance,
-  #       edge.vpc_security_group_to_docdb_cluster,
-  #       edge.vpc_security_group_to_ec2_application_load_balancer,
-  #       edge.vpc_security_group_to_ec2_classic_load_balancer,
-  #       edge.vpc_security_group_to_ec2_instance,
-  #       edge.vpc_security_group_to_ec2_launch_configuration,
-  #       edge.vpc_security_group_to_efs_mount_target,
-  #       edge.vpc_security_group_to_elasticache_cluster,
-  #       edge.vpc_security_group_to_lambda_function,
-  #       edge.vpc_security_group_to_rds_db_cluster,
-  #       edge.vpc_security_group_to_rds_db_instance,
-  #       edge.vpc_security_group_to_redshift_cluster,
-  #       edge.vpc_security_group_to_sagemaker_notebook_instance,
-  #       edge.vpc_vpc_to_vpc_security_group
-  #     ]
+      node {
+        base = node.dms_replication_instance
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
 
-  #     args = {
-  #       dax_cluster_arns                   = with.dax_clusters.rows[*].dax_cluster_arn
-  #       ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
-  #       ec2_classic_load_balancer_arns     = with.ec2_classic_load_balancers.rows[*].clb_arn
-  #       ec2_instance_arns                  = with.ec2_instances.rows[*].instance_arn
-  #       ec2_launch_configuration_arns      = with.ec2_launch_configurations.rows[*].launch_configuration_arn
-  #       efs_mount_target_ids               = with.efs_mount_targets.rows[*].mount_target_id
-  #       elasticache_cluster_arns           = with.elasticache_clusters.rows[*].elasticache_cluster_arn
-  #       lambda_function_arns               = with.lambda_functions.rows[*].lambda_arn
-  #       rds_db_cluster_arns                = with.rds_db_clusters.rows[*].rds_db_cluster_arn
-  #       rds_db_instance_arns               = with.rds_db_instances.rows[*].rds_db_instance_arn
-  #       redshift_cluster_arns              = with.redshift_clusters.rows[*].redshift_cluster_arn
-  #       sagemaker_notebook_instance_arns   = with.sagemaker_notebook_instances.rows[*].notebook_instance_arn
-  #       vpc_security_group_ids             = [self.input.security_group_id.value]
-  #       vpc_vpc_ids                        = with.vpc_vpcs.rows[*].vpc_id
-  #     }
-  #   }
-  # }
+      node {
+        base = node.docdb_cluster
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      node {
+        base = node.ec2_application_load_balancer
+        args = {
+          ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
+        }
+      }
+
+      node {
+        base = node.ec2_classic_load_balancer
+        args = {
+          ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers.rows[*].clb_arn
+        }
+      }
+
+      node {
+        base = node.ec2_instance
+        args = {
+          ec2_instance_arns = with.ec2_instances.rows[*].instance_arn
+        }
+      }
+
+      node {
+        base = node.ec2_launch_configuration
+        args = {
+          ec2_launch_configuration_arns = with.ec2_launch_configurations.rows[*].launch_configuration_arn
+        }
+      }
+
+      node {
+        base = node.efs_mount_target
+        args = {
+          efs_mount_target_ids = with.efs_mount_targets.rows[*].mount_target_id
+        }
+      }
+
+      node {
+        base = node.elasticache_cluster
+        args = {
+          elasticache_cluster_arns = with.elasticache_clusters.rows[*].elasticache_cluster_arn
+        }
+      }
+
+      node {
+        base = node.lambda_function
+        args = {
+          lambda_function_arns = with.lambda_functions.rows[*].lambda_arn
+        }
+      }
+
+      node {
+        base = node.rds_db_cluster
+        args = {
+          rds_db_cluster_arns = with.rds_db_clusters.rows[*].rds_db_cluster_arn
+        }
+      }
+
+      node {
+        base = node.rds_db_instance
+        args = {
+          rds_db_instance_arns = with.rds_db_instances.rows[*].rds_db_instance_arn
+        }
+      }
+
+      node {
+        base = node.redshift_cluster
+        args = {
+          redshift_cluster_arns = with.redshift_clusters.rows[*].redshift_cluster_arn
+        }
+      }
+
+      node {
+        base = node.sagemaker_notebook_instance
+        args = {
+          sagemaker_notebook_instance_arns = with.sagemaker_notebook_instances.rows[*].notebook_instance_arn
+        }
+      }
+
+      node {
+        base = node.vpc_security_group
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      node {
+        base = node.vpc_vpc
+        args = {
+          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_id
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_dax_cluster
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_dms_replication_instance
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_docdb_cluster
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_ec2_application_load_balancer
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_ec2_classic_load_balancer
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_ec2_instance
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_ec2_launch_configuration
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_efs_mount_target
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_elasticache_cluster
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_lambda_function
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_rds_db_cluster
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_rds_db_instance
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_redshift_cluster
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_sagemaker_notebook_instance
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_vpc_to_vpc_security_group
+        args = {
+          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_id
+        }
+      }
+
+    }
+  }
 
   container {
 
