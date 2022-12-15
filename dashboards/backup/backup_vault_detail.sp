@@ -18,56 +18,25 @@ dashboard "backup_vault_detail" {
     card {
       query = query.backup_vault_recovery_points
       width = 2
-      args = {
-        arn = self.input.backup_vault_arn.value
-      }
+      args  = [self.input.backup_vault_arn.value]
     }
+
   }
 
   with "backup_plans" {
-    sql = <<-EOQ
-      select
-        p.arn as backup_plan_arn
-      from
-        aws_backup_vault as v,
-        aws_backup_plan as p,
-        jsonb_array_elements(backup_plan -> 'Rules') as r
-      where
-        r ->> 'TargetBackupVaultName' = v.name
-        and v.arn = $1
-    EOQ
-
-    args = [self.input.backup_vault_arn.value]
+    query = query.backup_vault_backup_plans
+    args  = [self.input.backup_vault_arn.value]
   }
 
   with "kms_keys" {
-    sql = <<-EOQ
-      select
-        encryption_key_arn as kms_key_arn
-      from
-        aws_backup_vault
-      where
-        encryption_key_arn is not null
-        and arn = $1;
-    EOQ
-
-    args = [self.input.backup_vault_arn.value]
+    query = query.backup_vault_kms_keys
+    args  = [self.input.backup_vault_arn.value]
   }
 
   with "sns_topics" {
-    sql = <<-EOQ
-      select
-        sns_topic_arn
-      from
-        aws_backup_vault
-      where
-        sns_topic_arn is not null
-        and arn = $1;
-    EOQ
-
-    args = [self.input.backup_vault_arn.value]
+    query = query.backup_vault_to_sns_topics
+    args  = [self.input.backup_vault_arn.value]
   }
-
 
   container {
 
@@ -124,8 +93,8 @@ dashboard "backup_vault_detail" {
           backup_vault_arns = [self.input.backup_vault_arn.value]
         }
       }
-
     }
+
   }
 
   container {
@@ -140,7 +109,6 @@ dashboard "backup_vault_detail" {
         args = {
           arn = self.input.backup_vault_arn.value
         }
-
       }
 
       table {
@@ -150,11 +118,15 @@ dashboard "backup_vault_detail" {
         args = {
           arn = self.input.backup_vault_arn.value
         }
-
       }
+
     }
+
   }
+  
 }
+
+# Input queries
 
 query "backup_vault_input" {
   sql = <<-EOQ
@@ -172,6 +144,48 @@ query "backup_vault_input" {
   EOQ
 }
 
+#With queries
+
+query "backup_vault_backup_plans" {
+  sql = <<-EOQ
+    select
+      p.arn as backup_plan_arn
+    from
+      aws_backup_vault as v,
+      aws_backup_plan as p,
+      jsonb_array_elements(backup_plan -> 'Rules') as r
+    where
+      r ->> 'TargetBackupVaultName' = v.name
+      and v.arn = $1
+  EOQ
+}
+
+query "backup_vault_kms_keys" {
+  sql = <<-EOQ
+    select
+      encryption_key_arn as kms_key_arn
+    from
+      aws_backup_vault
+    where
+      encryption_key_arn is not null
+      and arn = $1;
+  EOQ
+}
+
+query "backup_vault_to_sns_topics" {
+  sql = <<-EOQ
+    select
+      sns_topic_arn
+    from
+      aws_backup_vault
+    where
+      sns_topic_arn is not null
+      and arn = $1;
+  EOQ
+}
+
+# Card queries
+
 query "backup_vault_recovery_points" {
   sql = <<-EOQ
     select
@@ -182,9 +196,9 @@ query "backup_vault_recovery_points" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
+
+# Other detail page queries
 
 query "backup_vault_overview" {
   sql = <<-EOQ
@@ -199,8 +213,6 @@ query "backup_vault_overview" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "backup_vault_policy" {
@@ -216,6 +228,4 @@ query "backup_vault_policy" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }

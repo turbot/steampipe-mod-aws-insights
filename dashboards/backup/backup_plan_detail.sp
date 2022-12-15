@@ -18,26 +18,14 @@ dashboard "backup_plan_detail" {
     card {
       query = query.backup_plan_resource_assignment
       width = 2
-      args = {
-        arn = self.input.backup_plan_arn.value
-      }
+      args  = [self.input.backup_plan_arn.value]
     }
+    
   }
 
   with "backup_vaults" {
-    sql = <<-EOQ
-      select
-        v.arn as backup_vault_arn
-      from
-        aws_backup_vault as v,
-        aws_backup_plan as p,
-        jsonb_array_elements(backup_plan -> 'Rules') as r
-      where
-        r ->> 'TargetBackupVaultName' = v.name
-        and p.arn = $1;
-    EOQ
-
-    args = [self.input.backup_plan_arn.value]
+    query = query.backup_plan_backup_vaults
+    args  = [self.input.backup_plan_arn.value]
   }
 
   container {
@@ -96,6 +84,7 @@ dashboard "backup_plan_detail" {
         }
       }
     }
+
   }
 
   container {
@@ -107,24 +96,23 @@ dashboard "backup_plan_detail" {
         type  = "line"
         width = 3
         query = query.backup_plan_overview
-        args = {
-          arn = self.input.backup_plan_arn.value
-        }
-
+        args  = [self.input.backup_plan_arn.value]
       }
 
       table {
         title = "Rules"
         width = 9
         query = query.backup_plan_rules
-        args = {
-          arn = self.input.backup_plan_arn.value
-        }
-
+        args  = [self.input.backup_plan_arn.value]
       }
+
     }
+
   }
+
 }
+
+# Input queries
 
 query "backup_plan_input" {
   sql = <<-EOQ
@@ -144,6 +132,24 @@ query "backup_plan_input" {
   EOQ
 }
 
+# With queries
+
+query "backup_plan_backup_vaults" {
+  sql = <<-EOQ
+    select
+      v.arn as backup_vault_arn
+    from
+      aws_backup_vault as v,
+      aws_backup_plan as p,
+      jsonb_array_elements(backup_plan -> 'Rules') as r
+    where
+      r ->> 'TargetBackupVaultName' = v.name
+      and p.arn = $1;
+  EOQ
+}
+
+# Card queries
+
 query "backup_plan_resource_assignment" {
   sql = <<-EOQ
     select
@@ -156,9 +162,9 @@ query "backup_plan_resource_assignment" {
       s.backup_plan_id = p.backup_plan_id
       and p.arn = $1;
   EOQ
-
-  param "arn" {}
 }
+
+# Other detail page queries
 
 query "backup_plan_overview" {
   sql = <<-EOQ
@@ -174,8 +180,6 @@ query "backup_plan_overview" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "backup_plan_rules" {
@@ -196,6 +200,4 @@ query "backup_plan_rules" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
