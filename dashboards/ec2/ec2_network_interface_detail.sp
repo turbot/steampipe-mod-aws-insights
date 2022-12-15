@@ -16,137 +16,68 @@ dashboard "ec2_network_interface_detail" {
 
     card {
       width = 2
-      query = query.ec2_eni_public_ip
-      args = {
-        network_interface_id = self.input.network_interface_id.value
-      }
+      query = query.ec2_network_interface_public_ip
+      args = [self.input.network_interface_id.value]
     }
 
     card {
       width = 2
-      query = query.ec2_eni_type
-      args = {
-        network_interface_id = self.input.network_interface_id.value
-      }
+      query = query.ec2_network_interface_type
+      args = [self.input.network_interface_id.value]
     }
 
     card {
       width = 2
-      query = query.ec2_eni_delete_on_termination
-      args = {
-        network_interface_id = self.input.network_interface_id.value
-      }
+      query = query.ec2_network_interface_delete_on_termination
+      args = [self.input.network_interface_id.value]
     }
 
     card {
       width = 2
-      query = query.ec2_eni_status
-      args = {
-        network_interface_id = self.input.network_interface_id.value
-      }
+      query = query.ec2_network_interface_status
+      args = [self.input.network_interface_id.value]
     }
 
     card {
       width = 2
-      query = query.ec2_eni_attachment_status
-      args = {
-        network_interface_id = self.input.network_interface_id.value
-      }
+      query = query.ec2_network_interface_attachment_status
+      args = [self.input.network_interface_id.value]
     }
 
   }
 
   with "ec2_instances" {
-    sql = <<-EOQ
-      select
-        i.arn as instance_arn
-      from
-        aws_ec2_instance as i,
-        jsonb_array_elements(network_interfaces) as eni
-      where
-        eni ->> 'NetworkInterfaceId' = $1;
-    EOQ
-
+    query = query.ec2_network_interface_ec2_instances
     args = [self.input.network_interface_id.value]
   }
 
   with "vpc_eips" {
-    sql = <<-EOQ
-      select
-        arn as eip_arn
-      from
-        aws_vpc_eip
-      where
-        network_interface_id = $1;
-    EOQ
-
+    query = query.ec2_network_interface_vpc_eips
     args = [self.input.network_interface_id.value]
   }
 
   with "vpc_flow_logs" {
-    sql = <<-EOQ
-      select
-        flow_log_id as flow_log_id
-      from
-        aws_vpc_flow_log
-      where
-        resource_id = $1;
-    EOQ
-
+    query = query.ec2_network_interface_vpc_flow_logs
     args = [self.input.network_interface_id.value]
   }
 
   with "vpc_nat_gateways" {
-    sql = <<-EOQ
-      select
-        arn as gateway_arn
-      from
-        aws_vpc_nat_gateway,
-        jsonb_array_elements(nat_gateway_addresses) as a
-      where
-        a ->> 'NetworkInterfaceId' = $1;
-    EOQ
-
+    query = query.ec2_network_interface_vpc_nat_gateways
     args = [self.input.network_interface_id.value]
   }
 
   with "vpc_security_groups" {
-    sql = <<-EOQ
-      select
-        distinct sg ->> 'GroupId' as security_group_id
-      from
-        aws_ec2_network_interface as eni,
-        jsonb_array_elements(groups) as sg
-      where
-        eni.network_interface_id = $1;
-    EOQ
-
+    query = query.ec2_network_interface_vpc_security_groups
     args = [self.input.network_interface_id.value]
   }
 
   with "vpc_subnets" {
-    sql = <<-EOQ
-      select
-        subnet_id as subnet_id
-      from
-        aws_ec2_network_interface
-      where
-        network_interface_id = $1;
-    EOQ
-
+    query = query.ec2_network_interface_vpc_subnets
     args = [self.input.network_interface_id.value]
   }
 
   with "vpc_vpcs" {
-    sql = <<-EOQ
-      select
-        vpc_id as vpc_id
-      from
-        aws_ec2_network_interface
-      where
-        network_interface_id = $1;
-    EOQ
-
+    query = query.ec2_network_interface_vpc_vpcs
     args = [self.input.network_interface_id.value]
   }
 
@@ -270,19 +201,15 @@ dashboard "ec2_network_interface_detail" {
       title = "Overview"
       type  = "line"
       width = 2
-      query = query.ec2_eni_overview
-      args = {
-        network_interface_id = self.input.network_interface_id.value
-      }
+      query = query.ec2_network_interface_overview
+      args = [self.input.network_interface_id.value]
     }
 
     table {
       title = "Tags"
       width = 3
-      query = query.ec2_eni_tags
-      args = {
-        network_interface_id = self.input.network_interface_id.value
-      }
+      query = query.ec2_network_interface_tags
+      args = [self.input.network_interface_id.value]
     }
 
     container {
@@ -290,10 +217,8 @@ dashboard "ec2_network_interface_detail" {
 
       table {
         title = "Associations"
-        query = query.ec2_eni_association_details
-        args = {
-          network_interface_id = self.input.network_interface_id.value
-        }
+        query = query.ec2_network_interface_association_details
+        args = [self.input.network_interface_id.value]
         column "eip_alloc_arn" {
           display = "none"
         }
@@ -304,15 +229,15 @@ dashboard "ec2_network_interface_detail" {
 
       table {
         title = "Private IP Addresses"
-        query = query.ec2_eni_private_ip
-        args = {
-          network_interface_id = self.input.network_interface_id.value
-        }
+        query = query.ec2_network_interface_private_ip
+        args = [self.input.network_interface_id.value]
       }
     }
 
   }
 }
+
+# Input queries
 
 query "network_interface_id" {
   sql = <<-EOQ
@@ -331,7 +256,91 @@ query "network_interface_id" {
   EOQ
 }
 
-query "ec2_eni_status" {
+# With queries
+
+query "ec2_network_interface_ec2_instances" {
+  sql = <<-EOQ
+    select
+      i.arn as instance_arn
+    from
+      aws_ec2_instance as i,
+      jsonb_array_elements(network_interfaces) as eni
+    where
+      eni ->> 'NetworkInterfaceId' = $1;
+  EOQ
+}
+
+query "ec2_network_interface_vpc_eips" {
+  sql = <<-EOQ
+    select
+      arn as eip_arn
+    from
+      aws_vpc_eip
+    where
+      network_interface_id = $1;
+  EOQ
+}
+
+query "ec2_network_interface_vpc_flow_logs" {
+  sql = <<-EOQ
+    select
+      flow_log_id as flow_log_id
+    from
+      aws_vpc_flow_log
+    where
+      resource_id = $1;
+  EOQ
+}
+
+query "ec2_network_interface_vpc_nat_gateways" {
+  sql = <<-EOQ
+    select
+      arn as gateway_arn
+    from
+      aws_vpc_nat_gateway,
+      jsonb_array_elements(nat_gateway_addresses) as a
+    where
+      a ->> 'NetworkInterfaceId' = $1;
+  EOQ
+}
+
+query "ec2_network_interface_vpc_security_groups" {
+  sql = <<-EOQ
+    select
+      distinct sg ->> 'GroupId' as security_group_id
+    from
+      aws_ec2_network_interface as eni,
+      jsonb_array_elements(groups) as sg
+    where
+      eni.network_interface_id = $1;
+  EOQ
+}
+
+query "ec2_network_interface_vpc_subnets" {
+  sql = <<-EOQ
+    select
+      subnet_id as subnet_id
+    from
+      aws_ec2_network_interface
+    where
+      network_interface_id = $1;
+  EOQ
+}
+
+query "ec2_network_interface_vpc_vpcs" {
+  sql = <<-EOQ
+    select
+      vpc_id as vpc_id
+    from
+      aws_ec2_network_interface
+    where
+      network_interface_id = $1;
+  EOQ
+}
+
+# Card queries
+
+query "ec2_network_interface_status" {
   sql = <<-EOQ
     select
       'Status' as label,
@@ -342,11 +351,9 @@ query "ec2_eni_status" {
     where
       network_interface_id = $1
   EOQ
-
-  param "network_interface_id" {}
 }
 
-query "ec2_eni_type" {
+query "ec2_network_interface_type" {
   sql = <<-EOQ
     select
       'Type' as label,
@@ -356,11 +363,9 @@ query "ec2_eni_type" {
     where
       network_interface_id = $1
   EOQ
-
-  param "network_interface_id" {}
 }
 
-query "ec2_eni_attachment_status" {
+query "ec2_network_interface_attachment_status" {
   sql = <<-EOQ
     select
       'Attachment Status' as label,
@@ -371,11 +376,9 @@ query "ec2_eni_attachment_status" {
     where
       network_interface_id = $1
   EOQ
-
-  param "network_interface_id" {}
 }
 
-query "ec2_eni_delete_on_termination" {
+query "ec2_network_interface_delete_on_termination" {
   sql = <<-EOQ
     select
       'Delete on Instance Terminate' as label,
@@ -398,11 +401,9 @@ query "ec2_eni_delete_on_termination" {
     where
       network_interface_id = $1;
   EOQ
-
-  param "network_interface_id" {}
 }
 
-query "ec2_eni_public_ip" {
+query "ec2_network_interface_public_ip" {
   sql = <<-EOQ
     select
       'Public IP' as label,
@@ -412,11 +413,43 @@ query "ec2_eni_public_ip" {
     where
       network_interface_id = $1
   EOQ
-
-  param "network_interface_id" {}
 }
 
-query "ec2_eni_private_ip" {
+# Other detail page queries
+
+query "ec2_network_interface_overview" {
+  sql = <<-EOQ
+    select
+      title as "Title",
+      attachment_time as "Attachment Time",
+      private_dns_name as "Private DNS Name",
+      mac_address as "MAC Address",
+      availability_zone as "Availibility Zone",
+      region as "Region",
+      account_id as "Account ID"
+    from
+      aws_ec2_network_interface
+    where
+      network_interface_id = $1
+  EOQ
+}
+
+query "ec2_network_interface_tags" {
+  sql = <<-EOQ
+    select
+      tag ->> 'Key' as "Key",
+      tag ->> 'Value' as "Value"
+    from
+      aws_ec2_network_interface,
+      jsonb_array_elements(tags_src) as tag
+    where
+      network_interface_id = $1
+    order by
+      tag ->> 'Key';
+    EOQ
+}
+
+query "ec2_network_interface_private_ip" {
   sql = <<-EOQ
     select
       pvt_ip_addr ->> 'PrivateIpAddress' as "IP Address",
@@ -430,11 +463,9 @@ query "ec2_eni_private_ip" {
       -- primary first
       pvt_ip_addr ->> 'Primary' desc
   EOQ
-
-  param "network_interface_id" {}
 }
 
-query "ec2_eni_association_details" {
+query "ec2_network_interface_association_details" {
   sql = <<-EOQ
     select
       eni.association_allocation_id "Allocation ID",
@@ -454,42 +485,4 @@ query "ec2_eni_association_details" {
       eni.network_interface_id = $1
       and eni.association_allocation_id is not null;
   EOQ
-
-  param "network_interface_id" {}
-}
-
-query "ec2_eni_overview" {
-  sql = <<-EOQ
-    select
-      title as "Title",
-      attachment_time as "Attachment Time",
-      private_dns_name as "Private DNS Name",
-      mac_address as "MAC Address",
-      availability_zone as "Availibility Zone",
-      region as "Region",
-      account_id as "Account ID"
-    from
-      aws_ec2_network_interface
-    where
-      network_interface_id = $1
-  EOQ
-
-  param "network_interface_id" {}
-}
-
-query "ec2_eni_tags" {
-  sql = <<-EOQ
-    select
-      tag ->> 'Key' as "Key",
-      tag ->> 'Value' as "Value"
-    from
-      aws_ec2_network_interface,
-      jsonb_array_elements(tags_src) as tag
-    where
-      network_interface_id = $1
-    order by
-      tag ->> 'Key';
-    EOQ
-
-  param "network_interface_id" {}
 }

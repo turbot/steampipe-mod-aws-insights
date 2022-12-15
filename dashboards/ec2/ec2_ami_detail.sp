@@ -18,64 +18,36 @@ dashboard "ec2_ami_detail" {
     card {
       width = 2
       query = query.ec2_ami_state
-      args = {
-        image_id = self.input.ami.value
-      }
+      args = [self.input.ami.value]
     }
 
     card {
       width = 2
       query = query.ec2_ami_architecture
-      args = {
-        image_id = self.input.ami.value
-      }
+      args = [self.input.ami.value]
     }
 
     card {
       width = 2
       query = query.ec2_ami_hypervisor
-      args = {
-        image_id = self.input.ami.value
-      }
+      args = [self.input.ami.value]
     }
 
     card {
       width = 2
       query = query.ec2_ami_virtualization
-      args = {
-        image_id = self.input.ami.value
-      }
+      args = [self.input.ami.value]
     }
 
   }
 
   with "ebs_snapshots" {
-    sql = <<-EOQ
-      select
-        s.arn as ebs_snapshot_arn
-      from
-        aws_ebs_snapshot as s,
-        aws_ec2_ami as ami,
-        jsonb_array_elements(ami.block_device_mappings) as device_mappings
-      where
-        device_mappings -> 'Ebs' is not null
-        and s.snapshot_id = device_mappings -> 'Ebs' ->> 'SnapshotId'
-        and ami.image_id = $1
-    EOQ
-
+    query = query.ec2_ami_ebs_snapshots
     args = [self.input.ami.value]
   }
 
   with "ec2_instances" {
-    sql = <<-EOQ
-      select
-        arn as ec2_instance_arn
-      from
-        aws_ec2_instance
-      where
-        image_id = $1;
-    EOQ
-
+    query = query.ec2_ami_ec2_instances
     args = [self.input.ami.value]
   }
 
@@ -132,18 +104,14 @@ dashboard "ec2_ami_detail" {
         type  = "line"
         width = 6
         query = query.ec2_ami_overview
-        args = {
-          image_id = self.input.ami.value
-        }
+        args = [self.input.ami.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.ec2_ami_tags
-        args = {
-          image_id = self.input.ami.value
-        }
+        args = [self.input.ami.value]
       }
     }
 
@@ -153,17 +121,13 @@ dashboard "ec2_ami_detail" {
       table {
         title = "Sharing"
         query = query.ec2_ami_shared_with
-        args = {
-          image_id = self.input.ami.value
-        }
+        args = [self.input.ami.value]
       }
 
       table {
         title = "Instances"
         query = query.ec2_ami_instances
-        args = {
-          image_id = self.input.ami.value
-        }
+        args = [self.input.ami.value]
         column "link" {
           display = "none"
         }
@@ -176,6 +140,8 @@ dashboard "ec2_ami_detail" {
   }
 
 }
+
+# Input queries
 
 query "ec2_ami_input" {
   sql = <<-EOQ
@@ -193,6 +159,119 @@ query "ec2_ami_input" {
   EOQ
 }
 
+# With queries
+
+query "ec2_ami_ebs_snapshots" {
+  sql = <<-EOQ
+    select
+      s.arn as ebs_snapshot_arn
+    from
+      aws_ebs_snapshot as s,
+      aws_ec2_ami as ami,
+      jsonb_array_elements(ami.block_device_mappings) as device_mappings
+    where
+      device_mappings -> 'Ebs' is not null
+      and s.snapshot_id = device_mappings -> 'Ebs' ->> 'SnapshotId'
+      and ami.image_id = $1
+  EOQ
+}
+
+query "ec2_ami_ec2_instances" {
+  sql = <<-EOQ
+    select
+      arn as ec2_instance_arn
+    from
+      aws_ec2_instance
+    where
+      image_id = $1;
+  EOQ
+}
+
+# Card queries
+
+query "ec2_ami_state" {
+  sql = <<-EOQ
+    select
+      'State' as label,
+      initcap(state) as value
+    from
+      aws_ec2_ami
+    where
+      image_id = $1;
+  EOQ
+}
+
+query "ec2_ami_architecture" {
+  sql = <<-EOQ
+    select
+      'Architecture' as label,
+      architecture as value
+    from
+      aws_ec2_ami
+    where
+      image_id = $1;
+  EOQ
+}
+
+query "ec2_ami_hypervisor" {
+  sql = <<-EOQ
+    select
+      'Hypervisor' as label,
+      hypervisor as value
+    from
+      aws_ec2_ami
+    where
+      image_id = $1;
+  EOQ
+}
+
+query "ec2_ami_virtualization" {
+  sql = <<-EOQ
+    select
+      'Virtualization Type' as label,
+      virtualization_type as value
+    from
+      aws_ec2_ami
+    where
+      image_id = $1;
+  EOQ
+}
+
+# Other detail page queries
+
+query "ec2_ami_overview" {
+  sql = <<-EOQ
+    select
+      name as "Name",
+      image_id as "Image ID",
+      image_type as "Image Type",
+      image_location as "Image Location",
+      root_device_type as "Root Device Type",
+      ena_support as "ENA Support",
+      account_id as "Account ID",
+      region as "Region"
+    from
+      aws_ec2_ami
+    where
+      image_id = $1;
+  EOQ
+}
+
+query "ec2_ami_tags" {
+  sql = <<-EOQ
+    select
+      t ->> 'Key' as "Key",
+      t ->> 'Value' as "Value"
+    from
+      aws_ec2_ami a,
+      jsonb_array_elements(a.tags_src) as t
+    where
+      image_id = $1
+    order by
+      t ->> 'Key';
+    EOQ
+}
+
 query "ec2_ami_instances" {
   sql = <<-EOQ
     select
@@ -205,9 +284,6 @@ query "ec2_ami_instances" {
     where
       image_id = $1;
   EOQ
-
-  param "image_id" {}
-
 }
 
 query "ec2_ami_shared_with" {
@@ -247,104 +323,4 @@ query "ec2_ami_shared_with" {
     where
       lp ->> 'OrganizationalUnitArn' is not null
   EOQ
-
-  param "image_id" {}
-
-}
-
-query "ec2_ami_state" {
-  sql = <<-EOQ
-    select
-      'State' as label,
-      initcap(state) as value
-    from
-      aws_ec2_ami
-    where
-      image_id = $1;
-  EOQ
-
-  param "image_id" {}
-
-}
-
-query "ec2_ami_architecture" {
-  sql = <<-EOQ
-    select
-      'Architecture' as label,
-      architecture as value
-    from
-      aws_ec2_ami
-    where
-      image_id = $1;
-  EOQ
-
-  param "image_id" {}
-
-}
-
-query "ec2_ami_hypervisor" {
-  sql = <<-EOQ
-    select
-      'Hypervisor' as label,
-      hypervisor as value
-    from
-      aws_ec2_ami
-    where
-      image_id = $1;
-  EOQ
-
-  param "image_id" {}
-
-}
-
-query "ec2_ami_virtualization" {
-  sql = <<-EOQ
-    select
-      'Virtualization Type' as label,
-      virtualization_type as value
-    from
-      aws_ec2_ami
-    where
-      image_id = $1;
-  EOQ
-
-  param "image_id" {}
-
-}
-
-query "ec2_ami_overview" {
-  sql = <<-EOQ
-    select
-      name as "Name",
-      image_id as "Image ID",
-      image_type as "Image Type",
-      image_location as "Image Location",
-      root_device_type as "Root Device Type",
-      ena_support as "ENA Support",
-      account_id as "Account ID",
-      region as "Region"
-    from
-      aws_ec2_ami
-    where
-      image_id = $1;
-  EOQ
-
-  param "image_id" {}
-}
-
-query "ec2_ami_tags" {
-  sql = <<-EOQ
-    select
-      t ->> 'Key' as "Key",
-      t ->> 'Value' as "Value"
-    from
-      aws_ec2_ami a,
-      jsonb_array_elements(a.tags_src) as t
-    where
-      image_id = $1
-    order by
-      t ->> 'Key';
-    EOQ
-
-  param "image_id" {}
 }
