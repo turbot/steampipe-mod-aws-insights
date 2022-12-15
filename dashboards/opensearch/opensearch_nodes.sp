@@ -16,7 +16,7 @@ node "opensearch_domain" {
     from
       aws_opensearch_domain
     where
-     domain_endpoint_options ->> 'CustomEndpointCertificateArn' = any($1);
+      domain_endpoint_options ->> 'CustomEndpointCertificateArn' = any($1);
   EOQ
 
   param "opensearch_arns" {}

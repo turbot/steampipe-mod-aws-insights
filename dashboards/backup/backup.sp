@@ -11,6 +11,12 @@ category "backup_plan" {
   icon  = "backup"
 }
 
+category "backup_plan_rule" {
+  title = "Backup Plan Rule"
+  color = local.storage_color
+  icon  = "density-small"
+}
+
 category "backup_recovery_point" {
   title = "Backup Recovery Point"
   color = local.storage_color

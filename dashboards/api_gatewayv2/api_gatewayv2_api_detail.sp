@@ -40,98 +40,165 @@ dashboard "api_gatewayv2_api_detail" {
 
   }
 
+  with "ec2_load_balancer_listeners" {
+    sql = <<-EOQ
+      select
+        lb.arn as listener_arn
+      from
+        aws_api_gatewayv2_integration as i
+        join aws_ec2_load_balancer_listener as lb on i.integration_uri = lb.arn
+        join aws_api_gatewayv2_api as a on a.api_id = i.api_id
+      where
+        a.api_id = $1;
+    EOQ
+
+    args = [self.input.api_id.value]
+  }
+
+  with "kinesis_streams" {
+    sql = <<-EOQ
+      select
+        s.stream_arn as kinesis_stream_arn
+      from
+        aws_api_gatewayv2_integration as i
+        join aws_kinesis_stream as s on i.request_parameters ->> 'StreamName' = s.stream_name
+        join aws_api_gatewayv2_api as a on a.api_id = i.api_id
+      where
+        integration_subtype like '%Kinesis-%' and a.api_id = $1;
+    EOQ
+
+    args = [self.input.api_id.value]
+  }
+
+  with "lambda_functions" {
+    sql = <<-EOQ
+      select
+        f.arn as function_arn
+      from
+        aws_api_gatewayv2_integration as i
+        join aws_lambda_function as f on i.integration_uri = f.arn
+        join aws_api_gatewayv2_api as a on a.api_id = i.api_id
+      where
+        a.api_id = $1;
+    EOQ
+
+    args = [self.input.api_id.value]
+  }
+
+  with "sqs_queues" {
+    sql = <<-EOQ
+      select
+        q.queue_arn as queue_arn
+      from
+        aws_api_gatewayv2_integration as i
+        join aws_sqs_queue as q on i.request_parameters ->> 'QueueUrl' = q.queue_url
+        join aws_api_gatewayv2_api as a on a.api_id = i.api_id
+      where
+        integration_subtype like '%SQS-%' and a.api_id = $1;
+    EOQ
+
+    args = [self.input.api_id.value]
+  }
+
   container {
+
     graph {
       title     = "Relationships"
       type      = "graph"
       direction = "TD"
 
-      with "ec2_load_balancer_listeners" {
-        sql = <<-EOQ
-          select
-            lb.arn as listener_arn
-          from
-            aws_api_gatewayv2_integration as i
-            join aws_ec2_load_balancer_listener as lb on i.integration_uri = lb.arn
-            join aws_api_gatewayv2_api as a on a.api_id = i.api_id
-          where
-            a.api_id = $1;
-        EOQ
-
-        args = [self.input.api_id.value]
+      node {
+        base = node.api_gatewayv2_api
+        args = {
+          api_gatewayv2_api_ids = [self.input.api_id.value]
+        }
+      }
+      
+      node {
+        base = node.api_gatewayv2_stage
+        args = {
+          api_gatewayv2_api_ids = [self.input.api_id.value]
+        }
       }
 
-      with "kinesis_streams" {
-        sql = <<-EOQ
-          select
-            s.stream_arn as kinesis_stream_arn
-          from
-            aws_api_gatewayv2_integration as i
-            join aws_kinesis_stream as s on i.request_parameters ->> 'StreamName' = s.stream_name
-            join aws_api_gatewayv2_api as a on a.api_id = i.api_id
-          where
-            integration_subtype like '%Kinesis-%' and a.api_id = $1;
-        EOQ
-
-        args = [self.input.api_id.value]
+      node {
+        base = node.ec2_load_balancer_listener
+        args = {
+          ec2_load_balancer_listener_arns = with.ec2_load_balancer_listeners.rows[*].listener_arn
+        }
       }
 
-      with "lambda_functions" {
-        sql = <<-EOQ
-          select
-            f.arn as function_arn
-          from
-            aws_api_gatewayv2_integration as i
-            join aws_lambda_function as f on i.integration_uri = f.arn
-            join aws_api_gatewayv2_api as a on a.api_id = i.api_id
-          where
-            a.api_id = $1;
-        EOQ
-
-        args = [self.input.api_id.value]
+      node {
+        base = node.kinesis_stream
+        args = {
+          kinesis_stream_arns = with.kinesis_streams.rows[*].kinesis_stream_arn
+        }
       }
 
-      with "sqs_queues" {
-        sql = <<-EOQ
-          select
-            q.queue_arn as queue_arn
-          from
-            aws_api_gatewayv2_integration as i
-            join aws_sqs_queue as q on i.request_parameters ->> 'QueueUrl' = q.queue_url
-            join aws_api_gatewayv2_api as a on a.api_id = i.api_id
-          where
-            integration_subtype like '%SQS-%' and a.api_id = $1;
-        EOQ
-
-        args = [self.input.api_id.value]
+      node {
+        base = node.lambda_function
+        args = {
+          lambda_function_arns = with.lambda_functions.rows[*].function_arn
+        }
       }
 
-      nodes = [
-        node.api_gatewayv2_api,
-        node.api_gatewayv2_stage,
-        node.ec2_load_balancer_listener,
-        node.kinesis_stream,
-        node.lambda_function,
-        node.sfn_state_machine,
-        node.sqs_queue
-      ]
-
-      edges = [
-        edge.api_gatewayv2_api_to_ec2_load_balancer_listener,
-        edge.api_gatewayv2_api_to_kinesis_stream,
-        edge.api_gatewayv2_api_to_lambda_function,
-        edge.api_gatewayv2_api_to_sfn_state_machine,
-        edge.api_gatewayv2_api_to_sqs_queue,
-        edge.api_gatewayv2_stage_to_api_gatewayv2_api
-      ]
-
-      args = {
-        api_gatewayv2_api_ids           = [self.input.api_id.value]
-        ec2_load_balancer_listener_arns = with.ec2_load_balancer_listeners.rows[*].listener_arn
-        kinesis_stream_arns             = with.kinesis_streams.rows[*].kinesis_stream_arn
-        lambda_function_arns            = with.lambda_functions.rows[*].function_arn
-        sqs_queue_arns                  = with.sqs_queues.rows[*].queue_arn
+      node {
+        base = node.sfn_state_machine
+        args = {
+          api_gatewayv2_api_ids = [self.input.api_id.value]
+        }
       }
+
+      node {
+        base = node.sqs_queue
+        args = {
+          sqs_queue_arns = with.sqs_queues.rows[*].queue_arn
+        }
+      }
+
+      edge {
+        base = edge.api_gatewayv2_api_to_ec2_load_balancer_listener
+        args = {
+          api_gatewayv2_api_ids = [self.input.api_id.value]
+        }
+      }
+
+
+      edge {
+        base = edge.api_gatewayv2_api_to_kinesis_stream
+        args = {
+          api_gatewayv2_api_ids = [self.input.api_id.value]
+        }
+      }
+
+      edge {
+        base = edge.api_gatewayv2_api_to_lambda_function
+        args = {
+          api_gatewayv2_api_ids = [self.input.api_id.value]
+        }
+      }
+
+      edge {
+        base = edge.api_gatewayv2_api_to_sfn_state_machine
+        args = {
+          api_gatewayv2_api_ids = [self.input.api_id.value]
+        }
+      }
+
+      edge {
+        base = edge.api_gatewayv2_api_to_sqs_queue
+        args = {
+          api_gatewayv2_api_ids = [self.input.api_id.value]
+        }
+      }
+
+      edge {
+        base = edge.api_gatewayv2_stage_to_api_gatewayv2_api
+        args = {
+          api_gatewayv2_api_ids = [self.input.api_id.value]
+        }
+      }
+
     }
   }
 

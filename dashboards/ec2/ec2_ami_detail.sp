@@ -49,6 +49,36 @@ dashboard "ec2_ami_detail" {
 
   }
 
+  with "ebs_snapshots" {
+    sql = <<-EOQ
+      select
+        s.arn as ebs_snapshot_arn
+      from
+        aws_ebs_snapshot as s,
+        aws_ec2_ami as ami,
+        jsonb_array_elements(ami.block_device_mappings) as device_mappings
+      where
+        device_mappings -> 'Ebs' is not null
+        and s.snapshot_id = device_mappings -> 'Ebs' ->> 'SnapshotId'
+        and ami.image_id = $1
+    EOQ
+
+    args = [self.input.ami.value]
+  }
+
+  with "ec2_instances" {
+    sql = <<-EOQ
+      select
+        arn as ec2_instance_arn
+      from
+        aws_ec2_instance
+      where
+        image_id = $1;
+    EOQ
+
+    args = [self.input.ami.value]
+  }
+
   container {
 
     graph {
@@ -56,51 +86,39 @@ dashboard "ec2_ami_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "ebs_snapshots" {
-        sql = <<-EOQ
-          select
-            s.arn as ebs_snapshot_arn
-          from
-            aws_ebs_snapshot as s,
-            aws_ec2_ami as ami,
-            jsonb_array_elements(ami.block_device_mappings) as device_mappings
-          where
-            device_mappings -> 'Ebs' is not null
-            and s.snapshot_id = device_mappings -> 'Ebs' ->> 'SnapshotId'
-            and ami.image_id = $1
-        EOQ
-
-        args = [self.input.ami.value]
+      node {
+        base = node.ebs_snapshot
+        args = {
+          ebs_snapshot_arns = with.ebs_snapshots.rows[*].ebs_snapshot_arn
+        }
       }
 
-      with "ec2_instances" {
-        sql = <<-EOQ
-          select
-            arn as ec2_instance_arn
-          from
-            aws_ec2_instance
-          where
-            image_id = $1;
-        EOQ
-
-        args = [self.input.ami.value]
+      node {
+        base = node.ec2_ami
+        args = {
+          ec2_ami_image_ids = [self.input.ami.value]
+        }
       }
 
-      nodes = [
-        node.ebs_snapshot,
-        node.ec2_ami,
-        node.ec2_instance
-      ]
+      node {
+        base = node.ec2_instance
+        args = {
+          ec2_instance_arns = with.ec2_instances.rows[*].ec2_instance_arn
+        }
+      }
 
-      edges = [
-        edge.ebs_snapshot_to_ec2_ami,
-        edge.ec2_ami_to_ec2_instance_edge
-      ]
+      edge {
+        base = edge.ebs_snapshot_to_ec2_ami
+        args = {
+          ebs_snapshot_arns = with.ebs_snapshots.rows[*].ebs_snapshot_arn
+        }
+      }
 
-      args = {
-        ec2_ami_image_ids = [self.input.ami.value]
-        ebs_snapshot_arns = with.ebs_snapshots.rows[*].ebs_snapshot_arn
-        ec2_instance_arns = with.ec2_instances.rows[*].ec2_instance_arn
+      edge {
+        base = edge.ec2_ami_to_ec2_instance_edge
+        args = {
+          ec2_instance_arns = with.ec2_instances.rows[*].ec2_instance_arn
+        }
       }
     }
   }

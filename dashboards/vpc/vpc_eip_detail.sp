@@ -40,15 +40,8 @@ dashboard "vpc_eip_detail" {
     }
   }
 
-  container {
-
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
-
-      with "ec2_instances" {
-        sql = <<-EOQ
+  with "ec2_instances" {
+    sql = <<-EOQ
           select
             i.arn as instance_arn
           from
@@ -59,11 +52,11 @@ dashboard "vpc_eip_detail" {
             and e.arn = $1;
         EOQ
 
-        args = [self.input.eip_arn.value]
-      }
+    args = [self.input.eip_arn.value]
+  }
 
-      with "ec2_network_interfaces" {
-        sql = <<-EOQ
+  with "ec2_network_interfaces" {
+    sql = <<-EOQ
           select
             network_interface_id as eni_id
           from
@@ -73,11 +66,11 @@ dashboard "vpc_eip_detail" {
             and arn = $1;
         EOQ
 
-        args = [self.input.eip_arn.value]
-      }
+    args = [self.input.eip_arn.value]
+  }
 
-      with "vpc_nat_gateways" {
-        sql = <<-EOQ
+  with "vpc_nat_gateways" {
+    sql = <<-EOQ
           select
             g.arn as gateway_arn
           from
@@ -89,29 +82,63 @@ dashboard "vpc_eip_detail" {
             and e.arn = $1;
         EOQ
 
-        args = [self.input.eip_arn.value]
+    args = [self.input.eip_arn.value]
+  }
+
+  container {
+
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      node {
+        base = node.ec2_instance
+        args = {
+          ec2_instance_arns = with.ec2_instances.rows[*].instance_arn
+        }
       }
 
-      nodes = [
+      node {
+        base = node.ec2_network_interface
+        args = {
+          ec2_network_interface_ids = with.ec2_network_interfaces.rows[*].eni_id
+        }
+      }
 
-        node.ec2_instance,
-        node.ec2_network_interface,
-        node.vpc_eip,
-        node.vpc_nat_gateway
-      ]
+      node {
+        base = node.vpc_eip
+        args = {
+          vpc_eip_arns = [self.input.eip_arn.value]
+        }
+      }
 
-      edges = [
+      node {
+        base = node.vpc_nat_gateway
+        args = {
+          vpc_nat_gateway_arns = with.vpc_nat_gateways.rows[*].gateway_arn
+        }
+      }
 
-        edge.ec2_instance_to_ec2_network_interface,
-        edge.ec2_network_interface_to_vpc_eip,
-        edge.vpc_nat_gateway_to_ec2_network_interface
-      ]
+      edge {
+        base = edge.ec2_instance_to_ec2_network_interface
+        args = {
+          ec2_instance_arns = with.ec2_instances.rows[*].instance_arn
+        }
+      }
 
-      args = {
-        ec2_instance_arns         = with.ec2_instances.rows[*].instance_arn
-        ec2_network_interface_ids = with.ec2_network_interfaces.rows[*].eni_id
-        vpc_eip_arns              = [self.input.eip_arn.value]
-        vpc_nat_gateway_arns      = with.vpc_nat_gateways.rows[*].gateway_arn
+      edge {
+        base = edge.ec2_network_interface_to_vpc_eip
+        args = {
+          ec2_network_interface_ids = with.ec2_network_interfaces.rows[*].eni_id
+        }
+      }
+
+      edge {
+        base = edge.vpc_nat_gateway_to_ec2_network_interface
+        args = {
+          ec2_network_interface_ids = with.ec2_network_interfaces.rows[*].eni_id
+        }
       }
     }
   }

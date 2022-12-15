@@ -64,16 +64,8 @@ dashboard "efs_file_system_detail" {
     }
 
   }
-
-  container {
-
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
-
-      with "efs_access_points" {
-        sql = <<-EOQ
+  with "efs_access_points" {
+    sql = <<-EOQ
           select
             a.access_point_arn as access_point_arn
           from
@@ -83,11 +75,11 @@ dashboard "efs_file_system_detail" {
             f.arn = $1;
         EOQ
 
-        args = [self.input.efs_file_system_arn.value]
-      }
+    args = [self.input.efs_file_system_arn.value]
+  }
 
-      with "efs_mount_targets" {
-        sql = <<-EOQ
+  with "efs_mount_targets" {
+    sql = <<-EOQ
           select
             mount_target_id
           from
@@ -97,11 +89,11 @@ dashboard "efs_file_system_detail" {
             f.arn = $1;
         EOQ
 
-        args = [self.input.efs_file_system_arn.value]
-      }
+    args = [self.input.efs_file_system_arn.value]
+  }
 
-      with "kms_keys" {
-        sql = <<-EOQ
+  with "kms_keys" {
+    sql = <<-EOQ
         select
           kms_key_id as key_arn
         from
@@ -110,11 +102,11 @@ dashboard "efs_file_system_detail" {
           arn = $1
         EOQ
 
-        args = [self.input.efs_file_system_arn.value]
-      }
+    args = [self.input.efs_file_system_arn.value]
+  }
 
-      with "vpc_security_groups" {
-        sql = <<-EOQ
+  with "vpc_security_groups" {
+    sql = <<-EOQ
           select
             jsonb_array_elements_text(t.security_groups) as security_group_id
           from
@@ -125,11 +117,11 @@ dashboard "efs_file_system_detail" {
             and s.arn = $1
         EOQ
 
-        args = [self.input.efs_file_system_arn.value]
-      }
+    args = [self.input.efs_file_system_arn.value]
+  }
 
-      with "vpc_subnets" {
-        sql = <<-EOQ
+  with "vpc_subnets" {
+    sql = <<-EOQ
           select
             s.subnet_id as subnet_id
           from
@@ -140,11 +132,11 @@ dashboard "efs_file_system_detail" {
             f.arn = $1;
         EOQ
 
-        args = [self.input.efs_file_system_arn.value]
-      }
+    args = [self.input.efs_file_system_arn.value]
+  }
 
-      with "vpc_vpcs" {
-        sql = <<-EOQ
+  with "vpc_vpcs" {
+    sql = <<-EOQ
           select
             v.vpc_id as vpc_id
           from
@@ -155,37 +147,106 @@ dashboard "efs_file_system_detail" {
             f.arn = $1;
         EOQ
 
-        args = [self.input.efs_file_system_arn.value]
+    args = [self.input.efs_file_system_arn.value]
+  }
+  container {
+
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      node {
+        base = node.efs_access_point
+        args = {
+          efs_access_point_arns = with.efs_access_points.rows[*].access_point_arn
+        }
       }
 
-      nodes = [
-        node.efs_access_point,
-        node.efs_file_system,
-        node.efs_mount_target,
-        node.kms_key,
-        node.vpc_security_group,
-        node.vpc_subnet,
-        node.vpc_vpc
-      ]
-
-      edges = [
-        edge.efs_file_system_to_efs_access_point,
-        edge.efs_file_system_to_efs_mount_target,
-        edge.efs_file_system_to_kms_key,
-        edge.efs_mount_target_to_vpc_security_group,
-        edge.efs_mount_target_to_vpc_subnet,
-        edge.vpc_subnet_to_vpc_vpc
-      ]
-
-      args = {
-        efs_access_point_arns  = with.efs_access_points.rows[*].access_point_arn
-        efs_file_system_arns   = [self.input.efs_file_system_arn.value]
-        efs_mount_target_ids   = with.efs_mount_targets.rows[*].mount_target_id
-        kms_key_arns           = with.kms_keys.rows[*].key_arn
-        vpc_security_group_ids = with.vpc_security_groups.rows[*].security_group_id
-        vpc_subnet_ids         = with.vpc_subnets.rows[*].subnet_id
-        vpc_vpc_ids            = with.vpc_vpcs.rows[*].vpc_id
+      node {
+        base = node.efs_file_system
+        args = {
+          efs_file_system_arns = [self.input.efs_file_system_arn.value]
+        }
       }
+
+      node {
+        base = node.efs_mount_target
+        args = {
+          efs_mount_target_ids = with.efs_mount_targets.rows[*].mount_target_id
+        }
+      }
+
+      node {
+        base = node.kms_key
+        args = {
+          kms_key_arns = with.kms_keys.rows[*].key_arn
+        }
+      }
+
+      node {
+        base = node.vpc_security_group
+        args = {
+          vpc_security_group_ids = with.vpc_security_groups.rows[*].security_group_id
+        }
+      }
+
+      node {
+        base = node.vpc_subnet
+        args = {
+          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+        }
+      }
+
+      node {
+        base = node.vpc_vpc
+        args = {
+          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_id
+        }
+      }
+
+      edge {
+        base = edge.efs_file_system_to_efs_access_point
+        args = {
+          efs_file_system_arns = [self.input.efs_file_system_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.efs_file_system_to_efs_mount_target
+        args = {
+          efs_file_system_arns = [self.input.efs_file_system_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.efs_file_system_to_kms_key
+        args = {
+          efs_file_system_arns = [self.input.efs_file_system_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.efs_mount_target_to_vpc_security_group
+        args = {
+          efs_mount_target_ids = with.efs_mount_targets.rows[*].mount_target_id
+        }
+      }
+
+      edge {
+        base = edge.efs_mount_target_to_vpc_subnet
+        args = {
+          efs_mount_target_ids = with.efs_mount_targets.rows[*].mount_target_id
+        }
+      }
+
+      edge {
+        base = edge.vpc_subnet_to_vpc_vpc
+        args = {
+          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+        }
+      }
+
     }
   }
 

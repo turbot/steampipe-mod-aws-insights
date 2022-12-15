@@ -32,15 +32,8 @@ dashboard "sns_topic_detail" {
     }
   }
 
-  container {
-
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
-
-      with "cloudtrail_trails" {
-        sql = <<-EOQ
+  with "cloudtrail_trails" {
+    sql = <<-EOQ
           select
             arn as trail_arn
           from
@@ -49,11 +42,11 @@ dashboard "sns_topic_detail" {
             sns_topic_arn = $1;
         EOQ
 
-        args = [self.input.topic_arn.value]
-      }
+    args = [self.input.topic_arn.value]
+  }
 
-      with "elasticache_clusters" {
-        sql = <<-EOQ
+  with "elasticache_clusters" {
+    sql = <<-EOQ
           select
             arn as elasticache_cluster_arn
           from
@@ -62,11 +55,11 @@ dashboard "sns_topic_detail" {
             notification_configuration ->> 'TopicArn' = $1;
         EOQ
 
-        args = [self.input.topic_arn.value]
-      }
+    args = [self.input.topic_arn.value]
+  }
 
-      with "kms_keys" {
-        sql = <<-EOQ
+  with "kms_keys" {
+    sql = <<-EOQ
           select
             kms_master_key_id as key_arn
           from
@@ -76,11 +69,11 @@ dashboard "sns_topic_detail" {
             and topic_arn = $1;
         EOQ
 
-        args = [self.input.topic_arn.value]
-      }
+    args = [self.input.topic_arn.value]
+  }
 
-      with "rds_db_instances" {
-        sql = <<-EOQ
+  with "rds_db_instances" {
+    sql = <<-EOQ
           select
             i.arn as db_instance_arn
           from
@@ -92,11 +85,11 @@ dashboard "sns_topic_detail" {
             s.sns_topic_arn = $1;
         EOQ
 
-        args = [self.input.topic_arn.value]
-      }
+    args = [self.input.topic_arn.value]
+  }
 
-      with "redshift_clusters" {
-        sql = <<-EOQ
+  with "redshift_clusters" {
+    sql = <<-EOQ
           select
             c.arn as cluster_arn
           from
@@ -108,11 +101,11 @@ dashboard "sns_topic_detail" {
             s.sns_topic_arn = $1;
         EOQ
 
-        args = [self.input.topic_arn.value]
-      }
+    args = [self.input.topic_arn.value]
+  }
 
-      with "s3_buckets" {
-        sql = <<-EOQ
+  with "s3_buckets" {
+    sql = <<-EOQ
           select
             b.arn as bucket_arn
           from
@@ -127,11 +120,11 @@ dashboard "sns_topic_detail" {
             t ->> 'TopicArn' = $1;
         EOQ
 
-        args = [self.input.topic_arn.value]
-      }
+    args = [self.input.topic_arn.value]
+  }
 
-      with "sns_topic_subscriptions" {
-        sql = <<-EOQ
+  with "sns_topic_subscriptions" {
+    sql = <<-EOQ
           select
             subscription_arn as subscription_arn
           from
@@ -140,41 +133,134 @@ dashboard "sns_topic_detail" {
             topic_arn = $1;
         EOQ
 
-        args = [self.input.topic_arn.value]
+    args = [self.input.topic_arn.value]
+  }
+
+  container {
+
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+
+      node {
+        base = node.cloudformation_stack
+        args = {
+          sns_topic_arns = [self.input.topic_arn.value]
+        }
       }
 
-      nodes = [
-        node.cloudformation_stack,
-        node.cloudtrail_trail,
-        node.elasticache_cluster,
-        node.kms_key,
-        node.rds_db_instance,
-        node.redshift_cluster,
-        node.s3_bucket,
-        node.sns_topic,
-        node.sns_topic_subscription
-      ]
+      node {
+        base = node.cloudtrail_trail
+        args = {
+          cloudtrail_trail_arns = with.cloudtrail_trails.rows[*].trail_arn
+        }
+      }
 
-      edges = [
-        edge.cloudformation_stack_to_sns_topic,
-        edge.cloudtrail_trail_to_sns_topic,
-        edge.elasticache_cluster_to_sns_topic,
-        edge.rds_db_instance_to_sns_topic,
-        edge.redshift_cluster_to_sns_topic,
-        edge.s3_bucket_to_sns_topic,
-        edge.sns_topic_to_kms_key,
-        edge.sns_topic_to_sns_subscription
-      ]
+      node {
+        base = node.elasticache_cluster
+        args = {
+          elasticache_cluster_arns = with.elasticache_clusters.rows[*].elasticache_cluster_arn
+        }
+      }
 
-      args = {
-        cloudtrail_trail_arns       = with.cloudtrail_trails.rows[*].trail_arn
-        elasticache_cluster_arns    = with.elasticache_clusters.rows[*].elasticache_cluster_arn
-        kms_key_arns                = with.kms_keys.rows[*].key_arn
-        rds_db_instance_arns        = with.rds_db_instances.rows[*].db_instance_arn
-        redshift_cluster_arns       = with.redshift_clusters.rows[*].cluster_arn
-        s3_bucket_arns              = with.s3_buckets.rows[*].bucket_arn
-        sns_topic_arns              = [self.input.topic_arn.value]
-        sns_topic_subscription_arns = with.sns_topic_subscriptions.rows[*].subscription_arn
+      node {
+        base = node.kms_key
+        args = {
+          kms_key_arns = with.kms_keys.rows[*].key_arn
+        }
+      }
+
+      node {
+        base = node.rds_db_instance
+        args = {
+          rds_db_instance_arns = with.rds_db_instances.rows[*].db_instance_arn
+        }
+      }
+
+      node {
+        base = node.redshift_cluster
+        args = {
+          redshift_cluster_arns = with.redshift_clusters.rows[*].cluster_arn
+        }
+      }
+
+      node {
+        base = node.s3_bucket
+        args = {
+          s3_bucket_arns = with.s3_buckets.rows[*].bucket_arn
+        }
+      }
+
+      node {
+        base = node.sns_topic
+        args = {
+          sns_topic_arns = [self.input.topic_arn.value]
+        }
+      }
+
+      node {
+        base = node.sns_topic_subscription
+        args = {
+          sns_topic_subscription_arns = with.sns_topic_subscriptions.rows[*].subscription_arn
+        }
+      }
+
+      edge {
+        base = edge.cloudformation_stack_to_sns_topic
+        args = {
+          sns_topic_arns = [self.input.topic_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.cloudtrail_trail_to_sns_topic
+        args = {
+          cloudtrail_trail_arns = with.cloudtrail_trails.rows[*].trail_arn
+        }
+      }
+
+      edge {
+        base = edge.elasticache_cluster_to_sns_topic
+        args = {
+          elasticache_cluster_arns = with.elasticache_clusters.rows[*].elasticache_cluster_arn
+        }
+      }
+
+      edge {
+        base = edge.rds_db_instance_to_sns_topic
+        args = {
+          rds_db_instance_arns = with.rds_db_instances.rows[*].db_instance_arn
+        }
+      }
+
+      edge {
+        base = edge.redshift_cluster_to_sns_topic
+        args = {
+          redshift_cluster_arns = with.redshift_clusters.rows[*].cluster_arn
+        }
+      }
+
+      edge {
+        base = edge.s3_bucket_to_sns_topic
+        args = {
+          s3_bucket_arns = with.s3_buckets.rows[*].bucket_arn
+        }
+      }
+
+      edge {
+        base = edge.sns_topic_to_kms_key
+        args = {
+          sns_topic_arns = [self.input.topic_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.sns_topic_to_sns_subscription
+        args = {
+          sns_topic_arns = [self.input.topic_arn.value]
+        }
       }
     }
   }

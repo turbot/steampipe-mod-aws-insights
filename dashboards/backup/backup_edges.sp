@@ -1,16 +1,15 @@
-edge "backup_plan_to_backup_selection" {
-  title = "backup selection"
+edge "backup_plan_to_backup_rule" {
+  title = "rule"
 
   sql = <<-EOQ
     select
       p.arn as from_id,
-      s.arn as to_id
+      r ->> 'RuleId' as to_id
     from
-      aws_backup_selection as s,
-      aws_backup_plan as p
+      aws_backup_plan as p,
+      jsonb_array_elements(backup_plan -> 'Rules') as r
     where
-      s.backup_plan_id = p.backup_plan_id
-      and p.arn = any($1);
+      p.arn = any($1);
   EOQ
 
   param "backup_plan_arns" {}
@@ -29,6 +28,43 @@ edge "backup_plan_to_backup_vault" {
       jsonb_array_elements(backup_plan -> 'Rules') as r
     where
       r ->> 'TargetBackupVaultName' = v.name
+      and p.arn = any($1);
+  EOQ
+
+  param "backup_plan_arns" {}
+}
+
+edge "backup_plan_rule_to_backup_vault" {
+  title = "backup vault"
+
+  sql = <<-EOQ
+    select
+      r ->> 'RuleId' as from_id,
+      v.arn as to_id
+    from
+      aws_backup_vault as v,
+      aws_backup_plan as p,
+      jsonb_array_elements(backup_plan -> 'Rules') as r
+    where
+      r ->> 'TargetBackupVaultName' = v.name
+      and p.arn = any($1);
+  EOQ
+
+  param "backup_plan_arns" {}
+}
+
+edge "backup_selection_to_backup_plan" {
+  title = "backup plan"
+
+  sql = <<-EOQ
+    select
+      s.arn as from_id,
+      p.arn as to_id
+    from
+      aws_backup_selection as s,
+      aws_backup_plan as p
+    where
+      s.backup_plan_id = p.backup_plan_id
       and p.arn = any($1);
   EOQ
 

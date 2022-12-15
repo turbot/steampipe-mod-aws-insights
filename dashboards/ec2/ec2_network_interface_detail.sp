@@ -56,6 +56,100 @@ dashboard "ec2_network_interface_detail" {
 
   }
 
+  with "ec2_instances" {
+    sql = <<-EOQ
+      select
+        i.arn as instance_arn
+      from
+        aws_ec2_instance as i,
+        jsonb_array_elements(network_interfaces) as eni
+      where
+        eni ->> 'NetworkInterfaceId' = $1;
+    EOQ
+
+    args = [self.input.network_interface_id.value]
+  }
+
+  with "vpc_eips" {
+    sql = <<-EOQ
+      select
+        arn as eip_arn
+      from
+        aws_vpc_eip
+      where
+        network_interface_id = $1;
+    EOQ
+
+    args = [self.input.network_interface_id.value]
+  }
+
+  with "vpc_flow_logs" {
+    sql = <<-EOQ
+      select
+        flow_log_id as flow_log_id
+      from
+        aws_vpc_flow_log
+      where
+        resource_id = $1;
+    EOQ
+
+    args = [self.input.network_interface_id.value]
+  }
+
+  with "vpc_nat_gateways" {
+    sql = <<-EOQ
+      select
+        arn as gateway_arn
+      from
+        aws_vpc_nat_gateway,
+        jsonb_array_elements(nat_gateway_addresses) as a
+      where
+        a ->> 'NetworkInterfaceId' = $1;
+    EOQ
+
+    args = [self.input.network_interface_id.value]
+  }
+
+  with "vpc_security_groups" {
+    sql = <<-EOQ
+      select
+        distinct sg ->> 'GroupId' as security_group_id
+      from
+        aws_ec2_network_interface as eni,
+        jsonb_array_elements(groups) as sg
+      where
+        eni.network_interface_id = $1;
+    EOQ
+
+    args = [self.input.network_interface_id.value]
+  }
+
+  with "vpc_subnets" {
+    sql = <<-EOQ
+      select
+        subnet_id as subnet_id
+      from
+        aws_ec2_network_interface
+      where
+        network_interface_id = $1;
+    EOQ
+
+    args = [self.input.network_interface_id.value]
+  }
+
+  with "vpc_vpcs" {
+    sql = <<-EOQ
+      select
+        vpc_id as vpc_id
+      from
+        aws_ec2_network_interface
+      where
+        network_interface_id = $1;
+    EOQ
+
+    args = [self.input.network_interface_id.value]
+  }
+
   container {
 
     graph {
@@ -63,130 +157,109 @@ dashboard "ec2_network_interface_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "ec2_instances" {
-        sql = <<-EOQ
-          select
-            i.arn as instance_arn
-          from
-            aws_ec2_instance as i,
-            jsonb_array_elements(network_interfaces) as eni
-          where
-            eni ->> 'NetworkInterfaceId' = $1;
-        EOQ
-
-        args = [self.input.network_interface_id.value]
+      node {
+        base = node.ec2_instance
+        args = {
+          ec2_instance_arns = with.ec2_instances.rows[*].instance_arn
+        }
       }
 
-      with "vpc_eips" {
-        sql = <<-EOQ
-          select
-            arn as eip_arn
-          from
-            aws_vpc_eip
-          where
-            network_interface_id = $1;
-        EOQ
-
-        args = [self.input.network_interface_id.value]
+      node {
+        base = node.ec2_network_interface
+        args = {
+          ec2_network_interface_ids = [self.input.network_interface_id.value]
+        }
       }
 
-      with "vpc_flow_logs" {
-        sql = <<-EOQ
-          select
-            flow_log_id as flow_log_id
-          from
-            aws_vpc_flow_log
-          where
-            resource_id = $1;
-        EOQ
-
-        args = [self.input.network_interface_id.value]
+      node {
+        base = node.vpc_eip
+        args = {
+          vpc_eip_arns = with.vpc_eips.rows[*].eip_arn
+        }
       }
 
-      with "vpc_nat_gateways" {
-        sql = <<-EOQ
-          select
-            arn as gateway_arn
-          from
-            aws_vpc_nat_gateway,
-            jsonb_array_elements(nat_gateway_addresses) as a
-          where
-            a ->> 'NetworkInterfaceId' = $1;
-        EOQ
-
-        args = [self.input.network_interface_id.value]
+      node {
+        base = node.vpc_flow_log
+        args = {
+          vpc_flow_log_ids = with.vpc_flow_logs.rows[*].flow_log_id
+        }
       }
 
-      with "vpc_security_groups" {
-        sql = <<-EOQ
-          select
-           distinct sg ->> 'GroupId' as security_group_id
-          from
-            aws_ec2_network_interface as eni,
-            jsonb_array_elements(groups) as sg
-          where
-            eni.network_interface_id = $1;
-        EOQ
-
-        args = [self.input.network_interface_id.value]
+      node {
+        base = node.vpc_nat_gateway
+        args = {
+          vpc_nat_gateway_arns = with.vpc_nat_gateways.rows[*].gateway_arn
+        }
       }
 
-      with "vpc_subnets" {
-        sql = <<-EOQ
-          select
-            subnet_id as subnet_id
-          from
-            aws_ec2_network_interface
-          where
-            network_interface_id = $1;
-        EOQ
-
-        args = [self.input.network_interface_id.value]
+      node {
+        base = node.vpc_security_group
+        args = {
+          vpc_security_group_ids = with.vpc_security_groups.rows[*].security_group_id
+        }
       }
 
-      with "vpc_vpcs" {
-        sql = <<-EOQ
-          select
-            vpc_id as vpc_id
-          from
-            aws_ec2_network_interface
-          where
-            network_interface_id = $1;
-        EOQ
-
-        args = [self.input.network_interface_id.value]
+      node {
+        base = node.vpc_subnet
+        args = {
+          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+        }
       }
 
-      nodes = [
-        node.ec2_instance,
-        node.ec2_network_interface,
-        node.vpc_eip,
-        node.vpc_flow_log,
-        node.vpc_nat_gateway,
-        node.vpc_security_group,
-        node.vpc_subnet,
-        node.vpc_vpc
-      ]
+      node {
+        base = node.vpc_vpc
+        args = {
+          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_id
+        }
+      }
 
-      edges = [
-        edge.ec2_instance_to_ec2_network_interface,
-        edge.ec2_network_interface_to_vpc_eip,
-        edge.ec2_network_interface_to_vpc_flow_log,
-        edge.ec2_network_interface_to_vpc_security_group,
-        edge.ec2_network_interface_to_vpc_subnet,
-        edge.vpc_nat_gateway_to_ec2_network_interface,
-        edge.vpc_subnet_to_vpc_vpc
-      ]
+      edge {
+        base = edge.ec2_instance_to_ec2_network_interface
+        args = {
+          ec2_instance_arns = with.ec2_instances.rows[*].instance_arn
+        }
+      }
 
-      args = {
-        ec2_instance_arns         = with.ec2_instances.rows[*].instance_arn
-        ec2_network_interface_ids = [self.input.network_interface_id.value]
-        vpc_eip_arns              = with.vpc_eips.rows[*].eip_arn
-        vpc_flow_log_ids          = with.vpc_flow_logs.rows[*].flow_log_id
-        vpc_nat_gateway_arns      = with.vpc_nat_gateways.rows[*].gateway_arn
-        vpc_security_group_ids    = with.vpc_security_groups.rows[*].security_group_id
-        vpc_subnet_ids            = with.vpc_subnets.rows[*].subnet_id
-        vpc_vpc_ids               = with.vpc_vpcs.rows[*].vpc_id
+      edge {
+        base = edge.ec2_network_interface_to_vpc_eip
+        args = {
+          ec2_network_interface_ids = [self.input.network_interface_id.value]
+        }
+      }
+
+      edge {
+        base = edge.ec2_network_interface_to_vpc_flow_log
+        args = {
+          ec2_network_interface_ids = [self.input.network_interface_id.value]
+        }
+      }
+
+      edge {
+        base = edge.ec2_network_interface_to_vpc_security_group
+        args = {
+          ec2_network_interface_ids = [self.input.network_interface_id.value]
+        }
+      }
+
+      edge {
+        base = edge.ec2_network_interface_to_vpc_subnet
+        args = {
+          ec2_network_interface_ids = [self.input.network_interface_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_nat_gateway_to_ec2_network_interface
+        args = {
+          ec2_network_interface_ids = [self.input.network_interface_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_subnet_to_vpc_vpc
+        args = {
+          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+        }
       }
     }
   }

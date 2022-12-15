@@ -65,6 +65,133 @@ dashboard "elasticache_cluster_detail" {
 
   }
 
+  with "elasticache_parameter_groups" {
+    sql = <<-EOQ
+      select
+        g.arn as elasticache_parameter_group_arn
+      from
+        aws_elasticache_cluster as c,
+        aws_elasticache_parameter_group as g
+      where
+        c.cache_parameter_group ->> 'CacheParameterGroupName' = g.cache_parameter_group_name
+        and c.region = g.region
+        and c.arn = $1;
+    EOQ
+
+    args = [self.input.elasticache_cluster_arn.value]
+  }
+
+  with "elasticache_subnet_groups" {
+    sql = <<-EOQ
+      select
+        g.arn as elasticache_subnet_group_arn
+      from
+        aws_elasticache_cluster as c,
+        jsonb_array_elements(security_groups) as sg,
+        aws_elasticache_subnet_group as g
+      where
+        g.cache_subnet_group_name = c.cache_subnet_group_name
+        and g.region = c.region
+        and g.arn is not null
+        and c.arn = $1;
+    EOQ
+
+    args = [self.input.elasticache_cluster_arn.value]
+  }
+
+  with "kms_keys" {
+    sql = <<-EOQ
+      select
+        kms_key_id as kms_key_arn
+      from
+        aws_elasticache_cluster as c,
+        aws_elasticache_replication_group as g
+      where
+        c.arn = $1
+        and c.replication_group_id = g.replication_group_id
+        and kms_key_id is not null;
+    EOQ
+
+    args = [self.input.elasticache_cluster_arn.value]
+  }
+
+  with "sns_topics" {
+    sql = <<-EOQ
+      select
+        notification_configuration ->> 'TopicArn' as sns_topic_arn
+      from
+        aws_elasticache_cluster
+      where
+        arn = $1
+        and notification_configuration ->> 'TopicArn' not null;
+    EOQ
+
+    args = [self.input.elasticache_cluster_arn.value]
+  }
+
+  with "vpc_security_groups" {
+    sql = <<-EOQ
+      select
+        group_id as vpc_security_group_id
+      from
+        aws_vpc_security_group
+      where
+        group_id in
+        (
+          select
+            sg ->> 'SecurityGroupId'
+          from
+            aws_elasticache_cluster,
+            jsonb_array_elements(security_groups) as sg
+          where
+            arn = $1
+        );
+    EOQ
+
+    args = [self.input.elasticache_cluster_arn.value]
+  }
+
+  with "vpc_subnets" {
+    sql = <<-EOQ
+      select
+        subnet ->> 'SubnetIdentifier' as vpc_subnet_id
+      from
+        aws_elasticache_cluster as c,
+        aws_elasticache_subnet_group as g,
+        jsonb_array_elements(subnets) as subnet
+      where
+        g.cache_subnet_group_name = c.cache_subnet_group_name
+        and g.region = c.region
+        and c.arn = $1
+    EOQ
+
+    args = [self.input.elasticache_cluster_arn.value]
+  }
+
+  with "vpc_vpcs" {
+    sql = <<-EOQ
+      select
+        vpc_id as vpc_vpc_id
+      from
+        aws_vpc
+      where
+        vpc_id in
+        (
+          select
+            vpc_id
+          from
+            aws_elasticache_cluster as c,
+            aws_elasticache_subnet_group as g
+          where
+            g.cache_subnet_group_name = c.cache_subnet_group_name
+            and g.region = c.region
+            and c.arn = $1
+        );
+    EOQ
+
+    args = [self.input.elasticache_cluster_arn.value]
+  }
+
   container {
 
     graph {
@@ -72,161 +199,109 @@ dashboard "elasticache_cluster_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "elasticache_parameter_groups" {
-        sql = <<-EOQ
-          select
-            g.arn as elasticache_parameter_group_arn
-          from
-            aws_elasticache_cluster as c,
-            aws_elasticache_parameter_group as g
-          where
-            c.cache_parameter_group ->> 'CacheParameterGroupName' = g.cache_parameter_group_name
-            and c.region = g.region
-            and c.arn = $1;
-        EOQ
-
-        args = [self.input.elasticache_cluster_arn.value]
+      node {
+        base = node.elasticache_cluster
+        args = {
+          elasticache_cluster_arns = [self.input.elasticache_cluster_arn.value]
+        }
       }
 
-      with "elasticache_subnet_groups" {
-        sql = <<-EOQ
-          select
-            g.arn as elasticache_subnet_group_arn
-          from
-            aws_elasticache_cluster as c,
-            jsonb_array_elements(security_groups) as sg,
-            aws_elasticache_subnet_group as g
-          where
-            g.cache_subnet_group_name = c.cache_subnet_group_name
-            and g.region = c.region
-            and g.arn is not null
-            and c.arn = $1;
-        EOQ
-
-        args = [self.input.elasticache_cluster_arn.value]
+      node {
+        base = node.elasticache_parameter_group
+        args = {
+          elsticache_parameter_group_arns = with.elasticache_parameter_groups.rows[*].elasticache_parameter_group_arn
+        }
       }
 
-      with "kms_keys" {
-        sql = <<-EOQ
-          select
-            kms_key_id as kms_key_arn
-          from
-            aws_elasticache_cluster as c,
-            aws_elasticache_replication_group as g
-          where
-            c.arn = $1
-            and c.replication_group_id = g.replication_group_id
-        EOQ
-
-        args = [self.input.elasticache_cluster_arn.value]
+      node {
+        base = node.elasticache_subnet_group
+        args = {
+          elasticache_subnet_group_arns = with.elasticache_subnet_groups.rows[*].elasticache_subnet_group_arn
+        }
       }
 
-      with "sns_topics" {
-        sql = <<-EOQ
-          select
-            notification_configuration ->> 'TopicArn' as sns_topic_arn
-          from
-            aws_elasticache_cluster
-          where
-            arn = $1
-        EOQ
-
-        args = [self.input.elasticache_cluster_arn.value]
+      node {
+        base = node.kms_key
+        args = {
+          kms_key_arns = with.kms_keys.rows[*].kms_key_arn
+        }
       }
 
-      with "vpc_security_groups" {
-        sql = <<-EOQ
-          select
-            group_id as vpc_security_group_id
-          from
-            aws_vpc_security_group
-          where
-            group_id in
-            (
-              select
-                sg ->> 'SecurityGroupId'
-              from
-                aws_elasticache_cluster,
-                jsonb_array_elements(security_groups) as sg
-              where
-                arn = $1
-            );
-        EOQ
-
-        args = [self.input.elasticache_cluster_arn.value]
+      node {
+        base = node.sns_topic
+        args = {
+          sns_topic_arns = with.sns_topics.rows[*].sns_topic_arn
+        }
       }
 
-      with "vpc_subnets" {
-        sql = <<-EOQ
-          select
-            subnet ->> 'SubnetIdentifier' as vpc_subnet_id
-          from
-            aws_elasticache_cluster as c,
-            aws_elasticache_subnet_group as g,
-            jsonb_array_elements(subnets) as subnet
-          where
-            g.cache_subnet_group_name = c.cache_subnet_group_name
-            and g.region = c.region
-            and c.arn = $1
-        EOQ
-
-        args = [self.input.elasticache_cluster_arn.value]
+      node {
+        base = node.vpc_security_group
+        args = {
+          vpc_security_group_ids = with.vpc_security_groups.rows[*].vpc_security_group_id
+        }
       }
 
-      with "vpc_vpcs" {
-        sql = <<-EOQ
-          select
-            vpc_id as vpc_vpc_id
-          from
-            aws_vpc
-          where
-            vpc_id in
-            (
-              select
-                vpc_id
-              from
-                aws_elasticache_cluster as c,
-                aws_elasticache_subnet_group as g
-              where
-                g.cache_subnet_group_name = c.cache_subnet_group_name
-                and g.region = c.region
-                and c.arn = $1
-            );
-        EOQ
-
-        args = [self.input.elasticache_cluster_arn.value]
+      node {
+        base = node.vpc_subnet
+        args = {
+          vpc_subnet_ids = with.vpc_subnets.rows[*].vpc_subnet_id
+        }
       }
 
-      nodes = [
-        node.elasticache_cluster,
-        node.elasticache_parameter_group,
-        node.elasticache_subnet_group,
-        node.kms_key,
-        node.sns_topic,
-        node.vpc_security_group,
-        node.vpc_subnet,
-        node.vpc_vpc
-      ]
+      node {
+        base = node.vpc_vpc
+        args = {
+          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_vpc_id
+        }
+      }
 
-      edges = [
-        edge.elasticache_cluster_to_elasticache_parameter_group,
-        edge.elasticache_cluster_to_kms_key,
-        edge.elasticache_cluster_to_sns_topic,
-        edge.elasticache_cluster_to_vpc_security_group,
-        edge.elasticache_subnet_group_to_vpc_subnet,
-        edge.vpc_security_group_to_elasticache_subnet_group,
-        edge.vpc_subnet_to_vpc_vpc
-      ]
+      edge {
+        base = edge.elasticache_cluster_to_elasticache_parameter_group
+        args = {
+          elsticache_parameter_group_arns = with.elasticache_parameter_groups.rows[*].elasticache_parameter_group_arn
+        }
+      }
 
-      args = {
-        elasticache_cluster_arns        = [self.input.elasticache_cluster_arn.value]
-        elasticache_subnet_group_arns   = with.elasticache_subnet_groups.rows[*].elasticache_subnet_group_arn
-        elsticache_parameter_group_arns = with.elasticache_parameter_groups.rows[*].elasticache_parameter_group_arn
-        kms_key_arns                    = with.kms_keys.rows[*].kms_key_arn
-        sns_topic_arns                  = with.sns_topics.rows[*].sns_topic_arn
-        vpc_security_group_ids          = with.vpc_security_groups.rows[*].vpc_security_group_id
-        vpc_subnet_ids                  = with.vpc_subnets.rows[*].vpc_subnet_id
-        vpc_vpc_ids                     = with.vpc_vpcs.rows[*].vpc_vpc_id
+      edge {
+        base = edge.elasticache_cluster_to_kms_key
+        args = {
+          kms_key_arns = with.kms_keys.rows[*].kms_key_arn
+        }
+      }
+
+      edge {
+        base = edge.elasticache_cluster_to_sns_topic
+        args = {
+          elasticache_cluster_arns = [self.input.elasticache_cluster_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.elasticache_cluster_to_vpc_security_group
+        args = {
+          vpc_security_group_ids = with.vpc_security_groups.rows[*].vpc_security_group_id
+        }
+      }
+
+      edge {
+        base = edge.elasticache_subnet_group_to_vpc_subnet
+        args = {
+          vpc_subnet_ids = with.vpc_subnets.rows[*].vpc_subnet_id
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_elasticache_subnet_group
+        args = {
+          elasticache_subnet_group_arns = with.elasticache_subnet_groups.rows[*].elasticache_subnet_group_arn
+        }
+      }
+
+      edge {
+        base = edge.vpc_subnet_to_vpc_vpc
+        args = {
+          vpc_subnet_ids = with.vpc_subnets.rows[*].vpc_subnet_id
+        }
       }
     }
   }

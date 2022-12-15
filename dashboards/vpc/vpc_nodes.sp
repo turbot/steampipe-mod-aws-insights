@@ -1,4 +1,4 @@
-node "ec2_availability_zone" {
+node "vpc_availability_zone" {
   category = category.availability_zone
 
   sql = <<-EOQ
@@ -16,31 +16,6 @@ node "ec2_availability_zone" {
       aws_vpc_subnet
     where
       vpc_id = any($1)
-  EOQ
-
-  param "vpc_vpc_ids" {}
-}
-
-node "ec2_transit_gateway" {
-  category = category.ec2_transit_gateway
-
-  sql = <<-EOQ
-    select
-      g.transit_gateway_id as id,
-      g.title as title,
-      jsonb_build_object(
-        'ID', g.transit_gateway_id,
-        'ARN', g.transit_gateway_arn,
-        'Attachment Id', t.transit_gateway_attachment_id,
-        'Association State', t.association_state,
-        'Region', g.region,
-        'Account ID', g.account_id
-      ) as properties
-    from
-      aws_ec2_transit_gateway_vpc_attachment as t
-      left join aws_ec2_transit_gateway as g on t.transit_gateway_id = g.transit_gateway_id
-    where
-      t.resource_id = any($1) and resource_type = 'vpc';
   EOQ
 
   param "vpc_vpc_ids" {}
@@ -341,6 +316,31 @@ node "vpc_subnet" {
   EOQ
 
   param "vpc_subnet_ids" {}
+}
+
+node "vpc_transit_gateway" {
+  category = category.ec2_transit_gateway
+
+  sql = <<-EOQ
+    select
+      g.transit_gateway_id as id,
+      g.title as title,
+      jsonb_build_object(
+        'ID', g.transit_gateway_id,
+        'ARN', g.transit_gateway_arn,
+        'Attachment Id', t.transit_gateway_attachment_id,
+        'Association State', t.association_state,
+        'Region', g.region,
+        'Account ID', g.account_id
+      ) as properties
+    from
+      aws_ec2_transit_gateway_vpc_attachment as t
+      left join aws_ec2_transit_gateway as g on t.transit_gateway_id = g.transit_gateway_id
+    where
+      t.resource_id = any($1) and resource_type = 'vpc';
+  EOQ
+
+  param "vpc_vpc_ids" {}
 }
 
 node "vpc_vpc" {

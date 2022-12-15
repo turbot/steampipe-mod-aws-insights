@@ -65,6 +65,35 @@ dashboard "redshift_snapshot_detail" {
 
   }
 
+  with "kms_keys" {
+    sql = <<-EOQ
+      select
+        kms_key_id as key_arn
+      from
+        aws_redshift_snapshot
+      where
+        kms_key_id is not null
+        and akas::text = $1;
+    EOQ
+
+    args = [self.input.snapshot_arn.value]
+  }
+
+  with "redshift_clusters" {
+    sql = <<-EOQ
+      select
+        c.arn as redshift_cluster_arn
+      from
+        aws_redshift_snapshot as s,
+        aws_redshift_cluster as c
+      where
+        s.cluster_identifier = c.cluster_identifier
+        and s.akas::text = $1;
+    EOQ
+
+    args = [self.input.snapshot_arn.value]
+  }
+
   container {
 
     graph {
@@ -72,50 +101,39 @@ dashboard "redshift_snapshot_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "kms_keys" {
-        sql = <<-EOQ
-          select
-            kms_key_id as key_arn
-          from
-            aws_redshift_snapshot
-          where
-            kms_key_id is not null
-            and akas::text = $1;
-        EOQ
-
-        args = [self.input.snapshot_arn.value]
+      node {
+        base = node.kms_key
+        args = {
+          kms_key_arns = with.kms_keys.rows[*].key_arn
+        }
       }
 
-      with "redshift_clusters" {
-        sql = <<-EOQ
-          select
-            c.arn as redshift_cluster_arn
-          from
-            aws_redshift_snapshot as s,
-            aws_redshift_cluster as c
-          where
-            s.cluster_identifier = c.cluster_identifier
-            and s.akas::text = $1;
-        EOQ
-
-        args = [self.input.snapshot_arn.value]
+      node {
+        base = node.redshift_cluster
+        args = {
+          redshift_cluster_arns = with.redshift_clusters.rows[*].redshift_cluster_arn
+        }
       }
 
-      nodes = [
-        node.kms_key,
-        node.redshift_cluster,
-        node.redshift_snapshot
-      ]
+      node {
+        base = node.redshift_snapshot
+        args = {
+          redshift_snapshot_arns = [self.input.snapshot_arn.value]
+        }
+      }
 
-      edges = [
-        edge.redshift_cluster_to_redshift_snapshot,
-        edge.redshift_snapshot_to_kms_key
-      ]
+      edge {
+        base = edge.redshift_cluster_to_redshift_snapshot
+        args = {
+          redshift_cluster_arns = with.redshift_clusters.rows[*].redshift_cluster_arn
+        }
+      }
 
-      args = {
-        kms_key_arns           = with.kms_keys.rows[*].key_arn
-        redshift_cluster_arns  = with.redshift_clusters.rows[*].redshift_cluster_arn
-        redshift_snapshot_arns = [self.input.snapshot_arn.value]
+      edge {
+        base = edge.redshift_snapshot_to_kms_key
+        args = {
+          redshift_snapshot_arns = [self.input.snapshot_arn.value]
+        }
       }
     }
   }

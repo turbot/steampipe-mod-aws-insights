@@ -64,14 +64,6 @@ dashboard "s3_bucket_detail" {
     }
 
   }
-
-  container {
-
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
-
       with "cloudtrail_trails" {
         sql = <<-EOQ
           select
@@ -131,6 +123,21 @@ dashboard "s3_bucket_detail" {
             b.arn = $1
             and attributes ->> 'Key' = 'access_logs.s3.bucket'
             and attributes ->> 'Value' = b.name;
+        EOQ
+
+        args = [self.input.bucket_arn.value]
+      }
+
+      with "from_s3_buckets" {
+        sql = <<-EOQ
+          select
+            lb.arn as bucket_arn
+          from
+            aws_s3_bucket as lb,
+            aws_s3_bucket as b
+          where
+            b.arn = $1
+            and lb.logging ->> 'TargetBucket' = b.name;
         EOQ
 
         args = [self.input.bucket_arn.value]
@@ -206,43 +213,174 @@ dashboard "s3_bucket_detail" {
         args = [self.input.bucket_arn.value]
       }
 
-      nodes = [
-        node.cloudtrail_trail,
-        node.ec2_application_load_balancer,
-        node.ec2_classic_load_balancer,
-        node.ec2_network_load_balancer,
-        node.kms_key,
-        node.lambda_function,
-        node.s3_bucket,
-        node.s3_bucket_from_s3_bucket,
-        node.s3_bucket_to_s3_bucket,
-        node.sns_topic,
-        node.sqs_queue
-      ]
+      with "to_s3_buckets" {
+        sql = <<-EOQ
+          select
+            lb.arn as bucket_arn
+          from
+            aws_s3_bucket as lb,
+            aws_s3_bucket as b
+          where
+            b.arn = $1
+            and lb.name = b.logging ->> 'TargetBucket';
+        EOQ
 
-      edges = [
-        edge.cloudtrail_trail_to_s3_bucket,
-        edge.ec2_application_load_balancer_to_s3_bucket,
-        edge.ec2_classic_load_balancer_to_s3_bucket,
-        edge.ec2_network_load_balancer_to_s3_bucket,
-        edge.s3_bucket_from_s3_bucket,
-        edge.s3_bucket_to_kms_key,
-        edge.s3_bucket_to_lambda_function,
-        edge.s3_bucket_to_s3_bucket,
-        edge.s3_bucket_to_sns_topic,
-        edge.s3_bucket_to_sqs_queue
-      ]
+        args = [self.input.bucket_arn.value]
+      }
 
-      args = {
-        cloudtrail_trail_arns              = with.cloudtrail_trails.rows[*].trail_arn
-        ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
-        ec2_classic_load_balancer_arns     = with.ec2_classic_load_balancers.rows[*].clb_arn
-        ec2_network_load_balancer_arns     = with.ec2_network_load_balancers.rows[*].nlb_arn
-        kms_key_arns                       = with.kms_keys.rows[*].key_arn
-        lambda_function_arns               = with.lambda_functions.rows[*].function_arn
-        s3_bucket_arns                     = [self.input.bucket_arn.value]
-        sns_topic_arns                     = with.sns_topics.rows[*].topic_arn
-        sqs_queue_arns                     = with.sqs_queues.rows[*].queue_arn
+  container {
+
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+
+      node {
+        base = node.cloudtrail_trail
+        args = {
+          cloudtrail_trail_arns = with.cloudtrail_trails.rows[*].trail_arn
+        }
+      }
+
+      node {
+        base = node.ec2_application_load_balancer
+        args = {
+          ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
+        }
+      }
+
+      node {
+        base = node.ec2_classic_load_balancer
+        args = {
+          ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers.rows[*].clb_arn
+        }
+      }  
+
+      node {
+        base = node.ec2_network_load_balancer
+        args = {
+          ec2_network_load_balancer_arns = with.ec2_network_load_balancers.rows[*].nlb_arn
+        }
+      }    
+
+      node {
+        base = node.kms_key
+        args = {
+          kms_key_arns = with.kms_keys.rows[*].key_arn
+        }
+      }
+
+      node {
+        base = node.lambda_function
+        args = {
+          lambda_function_arns = with.lambda_functions.rows[*].function_arn
+        }
+      }  
+
+      node {
+        base = node.s3_bucket
+        args = {
+          s3_bucket_arns = [self.input.bucket_arn.value]
+        }
+      }
+
+      node {
+        base = node.s3_bucket
+        args = {
+          s3_bucket_arns = with.from_s3_buckets.rows[*].bucket_arn
+        }
+      }
+
+      node {
+        base = node.s3_bucket
+        args = {
+          s3_bucket_arns = with.to_s3_buckets.rows[*].bucket_arn
+        }
+      }
+
+      node {
+        base = node.sns_topic
+        args = {
+          sns_topic_arns = with.sns_topics.rows[*].topic_arn
+        }
+      }
+
+      node {
+        base = node.sqs_queue
+        args = {
+          sqs_queue_arns = with.sqs_queues.rows[*].queue_arn
+        }
+      }     
+
+      edge {
+        base = edge.cloudtrail_trail_to_s3_bucket
+        args = {
+          cloudtrail_trail_arns = with.cloudtrail_trails.rows[*].trail_arn
+        }
+      }
+
+      edge {
+        base = edge.ec2_application_load_balancer_to_s3_bucket
+        args = {
+          ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
+        }
+      }
+
+      edge {
+        base = edge.ec2_classic_load_balancer_to_s3_bucket
+        args = {
+          ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers.rows[*].clb_arn
+        }
+      }
+
+      edge {
+        base = edge.ec2_network_load_balancer_to_s3_bucket
+        args = {
+          ec2_network_load_balancer_arns = with.ec2_network_load_balancers.rows[*].nlb_arn
+        }
+      }  
+
+      edge {
+        base = edge.s3_bucket_to_kms_key
+        args = {
+          s3_bucket_arns = [self.input.bucket_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.s3_bucket_to_lambda_function
+        args = {
+          s3_bucket_arns = [self.input.bucket_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.s3_bucket_to_s3_bucket
+        args = {
+          s3_bucket_arns = [self.input.bucket_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.s3_bucket_to_s3_bucket
+        args = {
+          s3_bucket_arns = with.from_s3_buckets.rows[*].bucket_arn
+        }
+      }  
+
+      edge {
+        base = edge.s3_bucket_to_sns_topic
+        args = {
+          s3_bucket_arns = [self.input.bucket_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.s3_bucket_to_sqs_queue
+        args = {
+          s3_bucket_arns = [self.input.bucket_arn.value]
+        }
       }
     }
   }
@@ -267,7 +405,6 @@ dashboard "s3_bucket_detail" {
         title = "Tags"
         width = 6
         query = query.s3_bucket_tags_detail
-        param "arn" {}
         args = {
           arn = self.input.bucket_arn.value
         }

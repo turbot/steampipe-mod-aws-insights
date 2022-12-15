@@ -300,7 +300,7 @@ edge "vpc_security_group_to_elasticache_subnet_group" {
 
   sql = <<-EOQ
     select
-       coalesce(
+      coalesce(
         sg ->> 'SecurityGroupId',
         c.cache_cluster_id
       ) as from_id,

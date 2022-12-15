@@ -31,6 +31,67 @@ dashboard "eventbridge_rule_detail" {
     }
   }
 
+  with "cloudwatch_log_groups" {
+    sql = <<-EOQ
+      select
+        (t ->> 'Arn')::text || ':*' as cloudwatch_log_group_arn
+      from
+        aws_eventbridge_rule r,
+        jsonb_array_elements(targets) t
+      where
+        r.arn = $1
+        and t ->> 'Arn' like '%logs%;
+    EOQ
+
+    args = [self.input.eventbridge_rule_arn.value]
+  }
+
+  with "eventbridge_buses" {
+    sql = <<-EOQ
+      select
+        b.arn as eventbridge_bus_arn
+      from
+        aws_eventbridge_rule r
+        join aws_eventbridge_bus b on b.name = r.event_bus_name
+        and b.region = r.region
+        and b.account_id = r.account_id
+      where
+        r.arn = $1;
+    EOQ
+
+    args = [self.input.eventbridge_rule_arn.value]
+  }
+
+  with "lambda_functions" {
+    sql = <<-EOQ
+      select
+        (t ->> 'Arn')::text as function_arn
+      from
+        aws_eventbridge_rule r,
+        jsonb_array_elements(targets) t
+      where
+        r.arn = $1
+        and t ->> 'Arn' like '%lambda%;
+    EOQ
+
+    args = [self.input.eventbridge_rule_arn.value]
+  }
+
+  with "sns_topics" {
+    sql = <<-EOQ
+      select
+        (t ->> 'Arn')::text as topic_arn
+      from
+        aws_eventbridge_rule r,
+        jsonb_array_elements(targets) t
+      where
+        arn = $1
+        and t ->> 'Arn' like '%sns%';
+    EOQ
+
+    args = [self.input.eventbridge_rule_arn.value]
+  }
+
   container {
 
     graph {
@@ -38,88 +99,67 @@ dashboard "eventbridge_rule_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "cloudwatch_log_groups" {
-        sql = <<-EOQ
-          select
-            (t ->> 'Arn')::text || ':*' as cloudwatch_log_group_arn
-          from
-            aws_eventbridge_rule r,
-            jsonb_array_elements(targets) t
-          where
-            r.arn = $1
-            and t ->> 'Arn' like '%logs%;
-        EOQ
-
-        args = [self.input.eventbridge_rule_arn.value]
+      node {
+        base = node.cloudwatch_log_group
+        args = {
+          cloudwatch_log_group_arns = with.cloudwatch_log_groups.rows[*].cloudwatch_log_group_arn
+        }
       }
 
-      with "eventbridge_buses" {
-        sql = <<-EOQ
-          select
-            b.arn as eventbridge_bus_arn
-          from
-            aws_eventbridge_rule r
-            join aws_eventbridge_bus b on b.name = r.event_bus_name
-            and b.region = r.region
-            and b.account_id = r.account_id
-          where
-            r.arn = $1;
-        EOQ
-
-        args = [self.input.eventbridge_rule_arn.value]
+      node {
+        base = node.eventbridge_bus
+        args = {
+          eventbridge_bus_arns = with.eventbridge_buses.rows[*].eventbridge_bus_arn
+        }
       }
 
-      with "lambda_functions" {
-        sql = <<-EOQ
-          select
-            (t ->> 'Arn')::text as function_arn
-          from
-            aws_eventbridge_rule r,
-            jsonb_array_elements(targets) t
-          where
-            r.arn = $1
-            and t ->> 'Arn' like '%lambda%;
-        EOQ
-
-        args = [self.input.eventbridge_rule_arn.value]
+      node {
+        base = node.eventbridge_rule
+        args = {
+          eventbridge_rule_arns = [self.input.eventbridge_rule_arn.value]
+        }
       }
 
-      with "sns_topics" {
-        sql = <<-EOQ
-          select
-            (t ->> 'Arn')::text as topic_arn
-          from
-            aws_eventbridge_rule r,
-            jsonb_array_elements(targets) t
-          where
-            arn = $1
-            and t ->> 'Arn' like '%sns%';
-        EOQ
-
-        args = [self.input.eventbridge_rule_arn.value]
+      node {
+        base = node.lambda_function
+        args = {
+          lambda_function_arns = with.lambda_functions.rows[*].function_arn
+        }
       }
 
-      nodes = [
-        node.cloudwatch_log_group,
-        node.eventbridge_bus,
-        node.eventbridge_rule,
-        node.lambda_function,
-        node.sns_topic
-      ]
+      node {
+        base = node.sns_topic
+        args = {
+          sns_topic_arns = with.sns_topics.rows[*].topic_arn
+        }
+      }
 
-      edges = [
-        edge.eventbridge_rule_to_cloudwatch_log_group,
-        edge.eventbridge_rule_to_eventbridge_bus,
-        edge.eventbridge_rule_to_lambda_function,
-        edge.eventbridge_rule_to_sns_topic
-      ]
+      edge {
+        base = edge.eventbridge_rule_to_cloudwatch_log_group
+        args = {
+          eventbridge_rule_arns = [self.input.eventbridge_rule_arn.value]
+        }
+      }
 
-      args = {
-        cloudwatch_log_group_arns = with.cloudwatch_log_groups.rows[*].cloudwatch_log_group_arn
-        eventbridge_bus_arns      = with.eventbridge_buses.rows[*].eventbridge_bus_arn
-        eventbridge_rule_arns     = [self.input.eventbridge_rule_arn.value]
-        lambda_function_arns      = with.lambda_functions.rows[*].function_arn
-        sns_topic_arns            = with.sns_topics.rows[*].topic_arn
+      edge {
+        base = edge.eventbridge_rule_to_eventbridge_bus
+        args = {
+          eventbridge_rule_arns = [self.input.eventbridge_rule_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.eventbridge_rule_to_lambda_function
+        args = {
+          eventbridge_rule_arns = [self.input.eventbridge_rule_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.eventbridge_rule_to_sns_topic
+        args = {
+          eventbridge_rule_arns = [self.input.eventbridge_rule_arn.value]
+        }
       }
     }
   }

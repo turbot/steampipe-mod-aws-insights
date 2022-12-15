@@ -48,83 +48,153 @@ dashboard "emr_cluster_detail" {
 
   }
 
+  with "ec2_amis" {
+    sql = <<-EOQ
+      select
+        custom_ami_id as image_id
+      from
+        aws_emr_cluster
+      where
+        custom_ami_id is not null
+        and cluster_arn = $1;
+    EOQ
+
+    args = [self.input.emr_cluster_arn.value]
+  }
+
+  with "iam_roles" {
+    sql = <<-EOQ
+      select
+        r.arn as role_arn
+      from
+        aws_iam_role as r,
+        aws_emr_cluster as c
+      where
+        c.cluster_arn = $1
+        and r.name = c.service_role;
+    EOQ
+
+    args = [self.input.emr_cluster_arn.value]
+  }
+
+  with "s3_buckets" {
+    sql = <<-EOQ
+      select
+        b.arn as s3_bucket_arn
+      from
+        aws_emr_cluster as c
+      left join
+        aws_s3_bucket as b
+        on split_part(log_uri, '/', 3) = b.name
+      where
+        cluster_arn = $1;
+    EOQ
+
+    args = [self.input.emr_cluster_arn.value]
+  }
+
   container {
     graph {
       title     = "Relationships"
       type      = "graph"
       direction = "TD"
 
-      with "ec2_amis" {
-        sql = <<-EOQ
-          select
-            custom_ami_id as image_id
-          from
-            aws_emr_cluster
-          where
-            custom_ami_id is not null
-            and cluster_arn = $1;
-        EOQ
-
-        args = [self.input.emr_cluster_arn.value]
+      node {
+        base = node.ec2_ami
+        args = {
+          ec2_ami_image_ids = with.ec2_amis.rows[*].image_id
+        }
       }
 
-      with "iam_roles" {
-        sql = <<-EOQ
-          select
-            r.arn as role_arn
-          from
-            aws_iam_role as r,
-            aws_emr_cluster as c
-          where
-            c.cluster_arn = $1
-            and r.name = c.service_role;
-        EOQ
-
-        args = [self.input.emr_cluster_arn.value]
+      node {
+        base = node.emr_cluster
+        args = {
+          emr_cluster_arns = [self.input.emr_cluster_arn.value]
+        }
       }
 
-      with "s3_buckets" {
-        sql = <<-EOQ
-          select
-            b.arn as s3_bucket_arn
-          from
-            aws_emr_cluster as c
-          left join
-            aws_s3_bucket as b
-            on split_part(log_uri, '/', 3) = b.name
-          where
-            cluster_arn = $1;
-        EOQ
-
-        args = [self.input.emr_cluster_arn.value]
+      node {
+        base = node.emr_instance
+        args = {
+          emr_cluster_arns = [self.input.emr_cluster_arn.value]
+        }
       }
 
-      nodes = [
-        node.ec2_ami,
-        node.emr_cluster,
-        node.emr_instance,
-        node.emr_instance_fleet,
-        node.emr_instance_group,
-        node.iam_role,
-        node.s3_bucket
-      ]
+      node {
+        base = node.emr_instance_fleet
+        args = {
+          emr_cluster_arns = [self.input.emr_cluster_arn.value]
+        }
+      }
 
-      edges = [
-        edge.emr_cluster_to_ec2_ami,
-        edge.emr_cluster_to_emr_instance_fleet,
-        edge.emr_cluster_to_emr_instance_group,
-        edge.emr_cluster_to_iam_role,
-        edge.emr_cluster_to_s3_bucket,
-        edge.emr_instance_fleet_to_emr_instance,
-        edge.emr_instance_group_to_emr_instance
+      node {
+        base = node.emr_instance_group
+        args = {
+          emr_cluster_arns = [self.input.emr_cluster_arn.value]
+        }
+      }
 
-      ]
+      node {
+        base = node.iam_role
+        args = {
+          iam_role_arns = with.iam_roles.rows[*].role_arn
+        }
+      }
 
-      args = {
-        ec2_ami_image_ids = with.ec2_amis.rows[*].image_id
-        emr_cluster_arns  = [self.input.emr_cluster_arn.value]
-        iam_role_arns     = with.iam_roles.rows[*].role_arn
-        s3_bucket_arns    = with.s3_buckets.rows[*].s3_bucket_arn
+      node {
+        base = node.s3_bucket
+        args = {
+          s3_bucket_arns = with.s3_buckets.rows[*].s3_bucket_arn
+        }
+      }
+
+      edge {
+        base = edge.emr_cluster_to_ec2_ami
+        args = {
+          emr_cluster_arns = [self.input.emr_cluster_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.emr_cluster_to_emr_instance_fleet
+        args = {
+          emr_cluster_arns = [self.input.emr_cluster_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.emr_cluster_to_emr_instance_group
+        args = {
+          emr_cluster_arns = [self.input.emr_cluster_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.emr_cluster_to_iam_role
+        args = {
+          emr_cluster_arns = [self.input.emr_cluster_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.emr_cluster_to_s3_bucket
+        args = {
+          emr_cluster_arns = [self.input.emr_cluster_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.emr_instance_fleet_to_emr_instance
+        args = {
+          emr_cluster_arns = [self.input.emr_cluster_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.emr_instance_group_to_emr_instance
+        args = {
+          emr_cluster_arns = [self.input.emr_cluster_arn.value]
+        }
       }
     }
   }
