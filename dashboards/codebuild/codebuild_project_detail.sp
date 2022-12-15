@@ -481,6 +481,8 @@ query "codebuild_project_privileged_mode" {
   EOQ
 }
 
+# Other detail page queries
+
 query "codebuild_project_overview" {
   sql = <<-EOQ
     select

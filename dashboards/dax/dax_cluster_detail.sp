@@ -18,96 +18,44 @@ dashboard "dax_cluster_detail" {
     card {
       query = query.dax_cluster_status
       width = 2
-      args = {
-        arn = self.input.dax_cluster_arn.value
-      }
+      args = [self.input.dax_cluster_arn.value]
     }
 
     card {
       query = query.dax_cluster_node_type
       width = 2
-      args = {
-        arn = self.input.dax_cluster_arn.value
-      }
+      args = [self.input.dax_cluster_arn.value]
     }
 
     card {
       query = query.dax_cluster_encryption
       width = 2
-      args = {
-        arn = self.input.dax_cluster_arn.value
-      }
+      args = [self.input.dax_cluster_arn.value]
     }
   }
 
-  with "iam_role_arns" {
-    sql = <<-EOQ
-      select
-        iam_role_arn
-      from
-        aws_dax_cluster
-      where
-        arn = $1;
-    EOQ
-
+  with "iam_roles" {
+    query = query.dax_cluster_iam_roles
     args = [self.input.dax_cluster_arn.value]
   }
 
   with "sns_topics" {
-    sql = <<-EOQ
-    select
-      notification_configuration ->> 'TopicArn' as topic_arn
-    from
-      aws_dax_cluster
-    where
-      arn = $1;
-    EOQ
-
+    query = query.dax_cluster_sns_topics
     args = [self.input.dax_cluster_arn.value]
   }
 
   with "vpc_security_groups" {
-    sql = <<-EOQ
-      select
-      sg ->> 'SecurityGroupIdentifier' as security_group_id
-    from
-      aws_dax_cluster,
-      jsonb_array_elements(security_groups) as sg
-    where
-      arn = $1;
-    EOQ
-
+    query = query.dax_cluster_vpc_security_groups
     args = [self.input.dax_cluster_arn.value]
   }
 
   with "vpc_subnets" {
-    sql = <<-EOQ
-      select
-      s ->> 'SubnetIdentifier' as subnet_id
-    from
-      aws_dax_cluster as c,
-      aws_dax_subnet_group as g,
-      jsonb_array_elements(subnets) as s
-    where
-      g.subnet_group_name = c.subnet_group
-      and c.arn = $1;
-    EOQ
-
+    query = query.dax_cluster_vpc_subnets
     args = [self.input.dax_cluster_arn.value]
   }
 
   with "vpc_vpcs" {
-    sql = <<-EOQ
-    select
-      g.vpc_id as vpc_id
-    from
-      aws_dax_cluster as c,
-      aws_dax_subnet_group as g
-    where
-      g.subnet_group_name = c.subnet_group
-      and c.arn = $1;
-    EOQ
-
+    query = query.dax_cluster_vpc_vpcs
     args = [self.input.dax_cluster_arn.value]
   }
 
@@ -148,7 +96,7 @@ dashboard "dax_cluster_detail" {
       node {
         base = node.iam_role
         args = {
-          iam_role_arns = with.iam_role_arns.rows[*].iam_role_arn
+          iam_role_arns = with.iam_roles.rows[*].iam_role_arn
         }
       }
 
@@ -248,9 +196,7 @@ dashboard "dax_cluster_detail" {
         type  = "line"
         width = 6
         query = query.dax_cluster_overview
-        args = {
-          arn = self.input.dax_cluster_arn.value
-        }
+        args = [self.input.dax_cluster_arn.value]
 
       }
 
@@ -258,9 +204,7 @@ dashboard "dax_cluster_detail" {
         title = "Tags"
         width = 6
         query = query.dax_cluster_tags
-        args = {
-          arn = self.input.dax_cluster_arn.value
-        }
+        args = [self.input.dax_cluster_arn.value]
 
       }
     }
@@ -270,22 +214,20 @@ dashboard "dax_cluster_detail" {
       table {
         title = "Cluster Discovery Endpoint"
         query = query.dax_cluster_discovery_endpoint
-        args = {
-          arn = self.input.dax_cluster_arn.value
-        }
+        args = [self.input.dax_cluster_arn.value]
       }
 
       table {
         title = "Nodes"
         query = query.dax_cluster_node_details
-        args = {
-          arn = self.input.dax_cluster_arn.value
-        }
+        args = [self.input.dax_cluster_arn.value]
       }
     }
   }
 
 }
+
+# Input queries
 
 query "dax_cluster_input" {
   sql = <<-EOQ
@@ -303,6 +245,71 @@ query "dax_cluster_input" {
   EOQ
 }
 
+# With queries
+
+query "dax_cluster_iam_roles" {
+  sql = <<-EOQ
+    select
+      iam_role_arn
+    from
+      aws_dax_cluster
+    where
+      arn = $1;
+  EOQ
+}
+
+query "dax_cluster_sns_topics" {
+  sql = <<-EOQ
+    select
+      notification_configuration ->> 'TopicArn' as topic_arn
+    from
+      aws_dax_cluster
+    where
+      arn = $1;
+  EOQ
+}
+
+query "dax_cluster_vpc_security_groups" {
+  sql = <<-EOQ
+    select
+      sg ->> 'SecurityGroupIdentifier' as security_group_id
+    from
+      aws_dax_cluster,
+      jsonb_array_elements(security_groups) as sg
+    where
+      arn = $1;
+  EOQ
+}
+
+query "dax_cluster_vpc_subnets" {
+  sql = <<-EOQ
+    select
+      s ->> 'SubnetIdentifier' as subnet_id
+    from
+      aws_dax_cluster as c,
+      aws_dax_subnet_group as g,
+      jsonb_array_elements(subnets) as s
+    where
+      g.subnet_group_name = c.subnet_group
+      and c.arn = $1;
+  EOQ
+}
+
+query "dax_cluster_vpc_vpcs" {
+  sql = <<-EOQ
+    select
+      g.vpc_id as vpc_id
+    from
+      aws_dax_cluster as c,
+      aws_dax_subnet_group as g
+    where
+      g.subnet_group_name = c.subnet_group
+      and c.arn = $1;
+  EOQ
+}
+
+# Card queries
+
 query "dax_cluster_status" {
   sql = <<-EOQ
     select
@@ -313,8 +320,6 @@ query "dax_cluster_status" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "dax_cluster_node_type" {
@@ -327,8 +332,6 @@ query "dax_cluster_node_type" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "dax_cluster_encryption" {
@@ -342,9 +345,9 @@ query "dax_cluster_encryption" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
+
+# Other detail page queries
 
 query "dax_cluster_overview" {
   sql = <<-EOQ
@@ -360,8 +363,6 @@ query "dax_cluster_overview" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "dax_cluster_tags" {
@@ -377,8 +378,6 @@ query "dax_cluster_tags" {
     order by
       tag ->> 'Key';
   EOQ
-
-  param "arn" {}
 }
 
 query "dax_cluster_discovery_endpoint" {
@@ -392,8 +391,6 @@ query "dax_cluster_discovery_endpoint" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "dax_cluster_node_details" {
@@ -410,6 +407,4 @@ query "dax_cluster_node_details" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
