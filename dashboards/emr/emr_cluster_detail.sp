@@ -17,79 +17,41 @@ dashboard "emr_cluster_detail" {
     card {
       width = 2
       query = query.emr_cluster_auto_termination
-      args = {
-        arn = self.input.emr_cluster_arn.value
-      }
+      args = [self.input.emr_cluster_arn.value]
     }
 
     card {
       width = 2
       query = query.emr_cluster_state
-      args = {
-        arn = self.input.emr_cluster_arn.value
-      }
+      args = [self.input.emr_cluster_arn.value]
     }
 
     card {
       width = 2
       query = query.emr_cluster_logging
-      args = {
-        arn = self.input.emr_cluster_arn.value
-      }
+      args = [self.input.emr_cluster_arn.value]
     }
 
     card {
       width = 2
       query = query.emr_cluster_log_encryption
-      args = {
-        arn = self.input.emr_cluster_arn.value
-      }
+      args = [self.input.emr_cluster_arn.value]
     }
 
   }
 
   with "ec2_amis" {
-    sql = <<-EOQ
-      select
-        custom_ami_id as image_id
-      from
-        aws_emr_cluster
-      where
-        custom_ami_id is not null
-        and cluster_arn = $1;
-    EOQ
-
+    query = query.emr_cluster_ec2_amis
     args = [self.input.emr_cluster_arn.value]
   }
 
   with "iam_roles" {
-    sql = <<-EOQ
-      select
-        r.arn as role_arn
-      from
-        aws_iam_role as r,
-        aws_emr_cluster as c
-      where
-        c.cluster_arn = $1
-        and r.name = c.service_role;
-    EOQ
-
+    query = query.emr_cluster_iam_roles
     args = [self.input.emr_cluster_arn.value]
   }
 
   with "s3_buckets" {
-    sql = <<-EOQ
-      select
-        b.arn as s3_bucket_arn
-      from
-        aws_emr_cluster as c
-      left join
-        aws_s3_bucket as b
-        on split_part(log_uri, '/', 3) = b.name
-      where
-        cluster_arn = $1;
-    EOQ
-
+    query = query.emr_cluster_s3_buckets
     args = [self.input.emr_cluster_arn.value]
   }
 
@@ -209,19 +171,14 @@ dashboard "emr_cluster_detail" {
         type  = "line"
         width = 6
         query = query.emr_cluster_overview
-        args = {
-          arn = self.input.emr_cluster_arn.value
-        }
-
+        args = [self.input.emr_cluster_arn.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.emr_cluster_tags
-        args = {
-          arn = self.input.emr_cluster_arn.value
-        }
+        args = [self.input.emr_cluster_arn.value]
       }
     }
     container {
@@ -230,17 +187,13 @@ dashboard "emr_cluster_detail" {
       table {
         title = "Status"
         query = query.emr_cluster_status
-        args = {
-          arn = self.input.emr_cluster_arn.value
-        }
+        args = [self.input.emr_cluster_arn.value]
       }
 
       table {
         title = "Instances"
         query = query.emr_cluster_instance
-        args = {
-          arn = self.input.emr_cluster_arn.value
-        }
+        args = [self.input.emr_cluster_arn.value]
 
         column "ARN" {
           display = "none"
@@ -260,9 +213,7 @@ dashboard "emr_cluster_detail" {
       title = "Applications"
       width = 6
       query = query.emr_cluster_applications
-      args = {
-        arn = self.input.emr_cluster_arn.value
-      }
+      args = [self.input.emr_cluster_arn.value]
 
     }
 
@@ -270,13 +221,13 @@ dashboard "emr_cluster_detail" {
       title = "EC2 Instance Attributes"
       width = 6
       query = query.emr_cluster_ec2_instance_attributes
-      args = {
-        arn = self.input.emr_cluster_arn.value
-      }
+      args = [self.input.emr_cluster_arn.value]
 
     }
   }
 }
+
+# Input queries
 
 query "emr_cluster_input" {
   sql = <<-EOQ
@@ -295,6 +246,49 @@ query "emr_cluster_input" {
 EOQ
 }
 
+# With queries
+
+query "emr_cluster_ec2_amis" {
+  sql = <<-EOQ
+    select
+      custom_ami_id as image_id
+    from
+      aws_emr_cluster
+    where
+      custom_ami_id is not null
+      and cluster_arn = $1;
+  EOQ
+}
+
+query "emr_cluster_iam_roles" {
+  sql = <<-EOQ
+    select
+      r.arn as role_arn
+    from
+      aws_iam_role as r,
+      aws_emr_cluster as c
+    where
+      c.cluster_arn = $1
+      and r.name = c.service_role;
+  EOQ
+}
+
+query "emr_cluster_s3_buckets" {
+  sql = <<-EOQ
+    select
+      b.arn as s3_bucket_arn
+    from
+      aws_emr_cluster as c
+    left join
+      aws_s3_bucket as b
+      on split_part(log_uri, '/', 3) = b.name
+    where
+      cluster_arn = $1;
+  EOQ
+}
+
+# Card queries
+
 query "emr_cluster_auto_termination" {
   sql = <<-EOQ
     select
@@ -305,8 +299,6 @@ query "emr_cluster_auto_termination" {
     where
       cluster_arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "emr_cluster_state" {
@@ -320,8 +312,6 @@ query "emr_cluster_state" {
     where
       cluster_arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "emr_cluster_logging" {
@@ -335,8 +325,6 @@ query "emr_cluster_logging" {
     where
       cluster_arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "emr_cluster_log_encryption" {
@@ -350,9 +338,9 @@ query "emr_cluster_log_encryption" {
     where
       cluster_arn = $1;
   EOQ
-
-  param "arn" {}
 }
+
+# Other detail page queries
 
 query "emr_cluster_overview" {
   sql = <<-EOQ
@@ -368,8 +356,6 @@ query "emr_cluster_overview" {
     where
       cluster_arn = $1
   EOQ
-
-  param "arn" {}
 }
 
 query "emr_cluster_tags" {
@@ -385,8 +371,6 @@ query "emr_cluster_tags" {
     order by
       tag ->> 'Key';
     EOQ
-
-  param "arn" {}
 }
 
 query "emr_cluster_instance" {
@@ -407,8 +391,6 @@ query "emr_cluster_instance" {
       and i.ec2_instance_id = ec2i.instance_id
       and cluster_arn = $1;
     EOQ
-
-  param "arn" {}
 }
 
 query "emr_cluster_status" {
@@ -424,8 +406,6 @@ query "emr_cluster_status" {
     where
       cluster_arn = $1;
     EOQ
-
-  param "arn" {}
 }
 
 query "emr_cluster_applications" {
@@ -441,8 +421,6 @@ query "emr_cluster_applications" {
     where
       cluster_arn = $1;
     EOQ
-
-  param "arn" {}
 }
 
 query "emr_cluster_ec2_instance_attributes" {
@@ -460,6 +438,4 @@ query "emr_cluster_ec2_instance_attributes" {
     where
       cluster_arn = $1;
     EOQ
-
-  param "arn" {}
 }
