@@ -18,104 +18,51 @@ dashboard "ebs_volume_detail" {
     card {
       width = 2
       query = query.ebs_volume_storage
-      args = {
-        arn = self.input.volume_arn.value
-      }
+      args = [self.input.volume_arn.value]
     }
 
     card {
       width = 2
       query = query.ebs_volume_iops
-      args = {
-        arn = self.input.volume_arn.value
-      }
+      args = [self.input.volume_arn.value]
     }
 
     card {
       width = 2
       query = query.ebs_volume_type
-      args = {
-        arn = self.input.volume_arn.value
-      }
+      args = [self.input.volume_arn.value]
     }
 
     card {
       width = 2
       query = query.ebs_volume_attached_instances_count
-      args = {
-        arn = self.input.volume_arn.value
-      }
+      args = [self.input.volume_arn.value]
     }
 
     card {
       width = 2
       query = query.ebs_volume_encryption
-      args = {
-        arn = self.input.volume_arn.value
-      }
+      args = [self.input.volume_arn.value]
     }
   }
 
   with "ebs_snapshots" {
-    sql = <<-EOQ
-      select
-        s.arn as snapshot_arn
-      from
-        aws_ebs_volume as v,
-        aws_ebs_snapshot as s
-      where
-        s.snapshot_id = v.snapshot_id
-        and v.arn = $1;
-    EOQ
-
+    query = query.ebs_volume_ebs_snapshots
     args = [self.input.volume_arn.value]
   }
 
   with "ec2_amis" {
-    sql = <<-EOQ
-      select
-        a.image_id as image_id
-      from
-        aws_ebs_volume as v,
-        aws_ebs_snapshot as s,
-        aws_ec2_ami as a,
-        jsonb_array_elements(block_device_mappings) as s_id
-      where
-        v.snapshot_id = s.snapshot_id
-        and s_id -> 'Ebs'->> 'SnapshotId' = s.snapshot_id
-        and v.arn = $1
-    EOQ
-
+    query = query.ebs_volume_ec2_amis
     args = [self.input.volume_arn.value]
   }
 
   with "ec2_instances" {
-    sql = <<-EOQ
-      select
-        e.arn as instance_arn
-      from
-        aws_ebs_volume as v,
-        jsonb_array_elements(attachments) as a,
-        aws_ec2_instance as e
-      where
-        a ->> 'InstanceId' = e.instance_id
-        and v.arn = $1;
-    EOQ
-
+    query = query.ebs_volume_ec2_instances
     args = [self.input.volume_arn.value]
   }
 
   with "kms_keys" {
-    sql = <<-EOQ
-      select
-        kms_key_id as key_arn
-      from
-        aws_ebs_volume
-      where
-        kms_key_id is not null
-        and arn = $1;
-    EOQ
-
+    query = query.ebs_volume_kms_keys
     args = [self.input.volume_arn.value]
   }
 
@@ -202,18 +149,14 @@ dashboard "ebs_volume_detail" {
         type  = "line"
         width = 6
         query = query.ebs_volume_overview
-        args = {
-          arn = self.input.volume_arn.value
-        }
+        args = [self.input.volume_arn.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.ebs_volume_tags
-        args = {
-          arn = self.input.volume_arn.value
-        }
+        args = [self.input.volume_arn.value]
       }
     }
 
@@ -224,9 +167,7 @@ dashboard "ebs_volume_detail" {
       table {
         title = "Attached To"
         query = query.ebs_volume_attached_instances
-        args = {
-          arn = self.input.volume_arn.value
-        }
+        args = [self.input.volume_arn.value]
 
         column "Instance ARN" {
           display = "none"
@@ -243,9 +184,7 @@ dashboard "ebs_volume_detail" {
           href = "${dashboard.kms_key_detail.url_path}?input.key_arn={{.'KMS Key ID' | @uri}}"
         }
         query = query.ebs_volume_encryption_status
-        args = {
-          arn = self.input.volume_arn.value
-        }
+        args = [self.input.volume_arn.value]
       }
     }
   }
@@ -296,6 +235,8 @@ dashboard "ebs_volume_detail" {
 
 }
 
+# Input queries
+
 query "ebs_volume_input" {
   sql = <<-EOQ
     select
@@ -313,6 +254,65 @@ query "ebs_volume_input" {
   EOQ
 }
 
+# With queries
+
+query "ebs_volume_ebs_snapshots" {
+  sql = <<-EOQ
+    select
+      s.arn as snapshot_arn
+    from
+      aws_ebs_volume as v,
+      aws_ebs_snapshot as s
+    where
+      s.snapshot_id = v.snapshot_id
+      and v.arn = $1;
+  EOQ
+}
+
+query "ebs_volume_ec2_amis" {
+  sql = <<-EOQ
+    select
+      a.image_id as image_id
+    from
+      aws_ebs_volume as v,
+      aws_ebs_snapshot as s,
+      aws_ec2_ami as a,
+      jsonb_array_elements(block_device_mappings) as s_id
+    where
+      v.snapshot_id = s.snapshot_id
+      and s_id -> 'Ebs'->> 'SnapshotId' = s.snapshot_id
+      and v.arn = $1
+  EOQ
+}
+
+query "ebs_volume_ec2_instances" {
+  sql = <<-EOQ
+    select
+      e.arn as instance_arn
+    from
+      aws_ebs_volume as v,
+      jsonb_array_elements(attachments) as a,
+      aws_ec2_instance as e
+    where
+      a ->> 'InstanceId' = e.instance_id
+      and v.arn = $1;
+  EOQ
+}
+
+query "ebs_volume_kms_keys" {
+  sql = <<-EOQ
+    select
+      kms_key_id as key_arn
+    from
+      aws_ebs_volume
+    where
+      kms_key_id is not null
+      and arn = $1;
+  EOQ
+}
+
+# Card queries
+
 query "ebs_volume_storage" {
   sql = <<-EOQ
     select
@@ -323,8 +323,6 @@ query "ebs_volume_storage" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "ebs_volume_iops" {
@@ -337,8 +335,6 @@ query "ebs_volume_iops" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "ebs_volume_type" {
@@ -351,8 +347,6 @@ query "ebs_volume_type" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "ebs_volume_state" {
@@ -365,8 +359,6 @@ query "ebs_volume_state" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "ebs_volume_attached_instances_count" {
@@ -386,8 +378,6 @@ query "ebs_volume_attached_instances_count" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "ebs_volume_encryption" {
@@ -401,8 +391,6 @@ query "ebs_volume_encryption" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "ebs_volume_attached_instances" {
@@ -424,8 +412,6 @@ query "ebs_volume_attached_instances" {
     order by
       i.instance_id;
   EOQ
-
-  param "arn" {}
 }
 
 query "ebs_volume_encryption_status" {
@@ -438,9 +424,9 @@ query "ebs_volume_encryption_status" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
+
+# Other detail page queries
 
 query "ebs_volume_overview" {
   sql = <<-EOQ
@@ -458,8 +444,6 @@ query "ebs_volume_overview" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }
 
 query "ebs_volume_tags" {
@@ -475,6 +459,4 @@ query "ebs_volume_tags" {
     order by
       tag ->> 'Key';
   EOQ
-
-  param "arn" {}
 }

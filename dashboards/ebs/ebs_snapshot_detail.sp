@@ -17,94 +17,44 @@ dashboard "ebs_snapshot_detail" {
     card {
       width = 2
       query = query.ebs_snapshot_state
-      args = {
-        arn = self.input.snapshot_arn.value
-      }
+      args = [self.input.snapshot_arn.value]
     }
 
     card {
       width = 2
       query = query.ebs_snapshot_storage
-      args = {
-        arn = self.input.snapshot_arn.value
-      }
+      args = [self.input.snapshot_arn.value]
     }
     card {
       width = 2
       query = query.ebs_snapshot_encryption
-      args = {
-        arn = self.input.snapshot_arn.value
-      }
+      args = [self.input.snapshot_arn.value]
     }
 
     card {
       width = 2
       query = query.ebs_snapshot_age
-      args = {
-        arn = self.input.snapshot_arn.value
-      }
+      args = [self.input.snapshot_arn.value]
     }
   }
 
   with "ebs_volumes" {
-    sql = <<-EOQ
-      select
-        v.arn as volume_arn
-      from
-        aws_ebs_volume as v,
-        aws_ebs_snapshot as s
-      where
-        s.snapshot_id = v.snapshot_id
-        and s.arn = $1;
-    EOQ
-
+    query = query.ebs_snapshot_ebs_volumes
     args = [self.input.snapshot_arn.value]
   }
 
   with "ec2_amis" {
-    sql = <<-EOQ
-      select
-        images.image_id as image_id
-      from
-        aws_ec2_ami as images,
-        jsonb_array_elements(images.block_device_mappings) as bdm,
-        aws_ebs_snapshot as s
-      where
-        bdm -> 'Ebs' is not null
-        and bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
-        and s.arn = $1;
-    EOQ
-
+    query = query.ebs_snapshot_ec2_amis
     args = [self.input.snapshot_arn.value]
   }
 
   with "ec2_launch_configurations" {
-    sql = <<-EOQ
-      select
-        launch_config.launch_configuration_arn as launch_configuration_arn
-      from
-        aws_ec2_launch_configuration as launch_config,
-        jsonb_array_elements(launch_config.block_device_mappings) as bdm,
-        aws_ebs_snapshot as s
-      where
-        bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
-        and s.arn = $1;
-    EOQ
-
+    query = query.ebs_snapshot_ec2_launch_configurations
     args = [self.input.snapshot_arn.value]
   }
 
   with "kms_keys" {
-    sql = <<-EOQ
-    select
-      kms_key_id as key_arn
-    from
-      aws_ebs_snapshot
-    where
-      kms_key_id is not null
-      and arn = $1
-    EOQ
-
+    query = query.ebs_snapshot_kms_keys
     args = [self.input.snapshot_arn.value]
   }
 
@@ -187,21 +137,19 @@ dashboard "ebs_snapshot_detail" {
       type  = "line"
       width = 3
       query = query.ebs_snapshot_overview
-      args = {
-        arn = self.input.snapshot_arn.value
-      }
+      args = [self.input.snapshot_arn.value]
     }
 
     table {
       title = "Tags"
       width = 3
       query = query.ebs_snapshot_tags
-      args = {
-        arn = self.input.snapshot_arn.value
-      }
+      args = [self.input.snapshot_arn.value]
     }
   }
 }
+
+# Input queries
 
 query "ebs_snapshot_input" {
   sql = <<-EOQ
@@ -221,39 +169,63 @@ query "ebs_snapshot_input" {
   EOQ
 }
 
-query "ebs_snapshot_overview" {
+# With queries
+
+query "ebs_snapshot_ebs_volumes" {
   sql = <<-EOQ
     select
-      snapshot_id as "Snapshot ID",
-      title as "Title",
-      region as "Region",
-      account_id as "Account ID",
-      arn as "ARN"
+      v.arn as volume_arn
+    from
+      aws_ebs_volume as v,
+      aws_ebs_snapshot as s
+    where
+      s.snapshot_id = v.snapshot_id
+      and s.arn = $1;
+  EOQ
+}
+
+query "ebs_snapshot_ec2_amis" {
+  sql = <<-EOQ
+    select
+      images.image_id as image_id
+    from
+      aws_ec2_ami as images,
+      jsonb_array_elements(images.block_device_mappings) as bdm,
+      aws_ebs_snapshot as s
+    where
+      bdm -> 'Ebs' is not null
+      and bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
+      and s.arn = $1;
+  EOQ
+}
+
+query "ebs_snapshot_ec2_launch_configurations" {
+  sql = <<-EOQ
+    select
+      launch_config.launch_configuration_arn as launch_configuration_arn
+    from
+      aws_ec2_launch_configuration as launch_config,
+      jsonb_array_elements(launch_config.block_device_mappings) as bdm,
+      aws_ebs_snapshot as s
+    where
+      bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
+      and s.arn = $1;
+  EOQ
+}
+
+query "ebs_snapshot_kms_keys" {
+  sql = <<-EOQ
+    select
+      kms_key_id as key_arn
     from
       aws_ebs_snapshot
     where
-      arn = $1
+      kms_key_id is not null
+      and arn = $1
   EOQ
-
-  param "arn" {}
 }
 
-query "ebs_snapshot_tags" {
-  sql = <<-EOQ
-    select
-      tag ->> 'Key' as "Key",
-      tag ->> 'Value' as "Value"
-    from
-      aws_ebs_snapshot,
-      jsonb_array_elements(tags_src) as tag
-    where
-      arn = $1
-    order by
-      tag ->> 'Key';
-  EOQ
-
-  param "arn" {}
-}
+# Card queries
 
 query "ebs_snapshot_storage" {
   sql = <<-EOQ
@@ -265,8 +237,6 @@ query "ebs_snapshot_storage" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "ebs_snapshot_encryption" {
@@ -280,8 +250,6 @@ query "ebs_snapshot_encryption" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "ebs_snapshot_state" {
@@ -294,8 +262,6 @@ query "ebs_snapshot_state" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "ebs_snapshot_age" {
@@ -315,52 +281,37 @@ query "ebs_snapshot_age" {
     from
       data;
   EOQ
-
-  param "arn" {}
 }
 
-node "ebs_snapshot_node" {
-  category = category.ebs_snapshot
 
+# Other detail page queries
+
+query "ebs_snapshot_overview" {
   sql = <<-EOQ
     select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'ID', s.snapshot_id,
-        'ARN', s.arn,
-        'Start Time', s.start_time,
-        'Account ID', s.account_id,
-        'Region', s.region
-      ) as properties
+      snapshot_id as "Snapshot ID",
+      title as "Title",
+      region as "Region",
+      account_id as "Account ID",
+      arn as "ARN"
     from
-      aws_ebs_snapshot as s
+      aws_ebs_snapshot
     where
-      arn = any($1);
+      arn = $1
   EOQ
-
-  param "ebs_snapshot_arns" {}
 }
 
-node "ebs_snapshot_from_ebs_volume_node" {
-  category = category.ebs_volume
-
+query "ebs_snapshot_tags" {
   sql = <<-EOQ
     select
-      v.volume_id as id,
-      v.title as title,
-      jsonb_build_object(
-        'Volume ID', v.volume_id,
-        'ARN', v.arn,
-        'Size', v.size,
-        'Account ID', v.account_id,
-        'Region', v.region
-      ) as properties
+      tag ->> 'Key' as "Key",
+      tag ->> 'Value' as "Value"
     from
-      aws_ebs_snapshot as s
-      left join aws_ebs_volume as v on s.volume_id = v.volume_id and s.arn = $1;
+      aws_ebs_snapshot,
+      jsonb_array_elements(tags_src) as tag
+    where
+      arn = $1
+    order by
+      tag ->> 'Key';
   EOQ
-
-  param "arn" {}
 }
-

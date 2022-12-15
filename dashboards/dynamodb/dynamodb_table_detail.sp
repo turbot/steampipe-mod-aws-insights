@@ -18,108 +18,57 @@ dashboard "dynamodb_table_detail" {
     card {
       query = query.dynamodb_table_status
       width = 2
-      args = {
-        arn = self.input.table_arn.value
-      }
+      args = [self.input.table_arn.value]
     }
 
     card {
       query = query.dynamodb_table_class
       width = 2
-      args = {
-        arn = self.input.table_arn.value
-      }
+      args = [self.input.table_arn.value]
     }
 
     card {
       query = query.dynamodb_table_backup_count
       width = 2
-      args = {
-        arn = self.input.table_arn.value
-      }
+      args = [self.input.table_arn.value]
     }
 
     card {
       query = query.dynamodb_table_encryption_type
       width = 2
-      args = {
-        arn = self.input.table_arn.value
-      }
+      args = [self.input.table_arn.value]
     }
 
     card {
       query = query.dynamodb_table_continuous_backups
       width = 2
-      args = {
-        arn = self.input.table_arn.value
-      }
+      args = [self.input.table_arn.value]
     }
 
     card {
       query = query.dynamodb_table_autoscaling_state
       width = 2
-      args = {
-        arn = self.input.table_arn.value
-      }
+      args = [self.input.table_arn.value]
     }
   }
 
   with "dynamodb_backups" {
-    sql = <<-EOQ
-      select
-        b.arn as dbynamodb_backup_arn
-      from
-        aws_dynamodb_backup as b,
-        aws_dynamodb_table as t
-      where
-        t.arn = b.table_arn
-        and t.arn = $1;
-    EOQ
-
+    query = query.dynamodb_table_dynamodb_backups
     args = [self.input.table_arn.value]
   }
 
   with "kinesis_streams" {
-    sql = <<-EOQ
-      select
-        s.stream_arn as kinesis_stream_arn
-      from
-        aws_kinesis_stream as s,
-        aws_dynamodb_table as t,
-        jsonb_array_elements(t.streaming_destination -> 'KinesisDataStreamDestinations') as d
-      where
-        d ->> 'StreamArn' = s.stream_arn
-        and t.arn = $1;
-      EOQ
-
+    query = query.dynamodb_table_kinesis_streams
     args = [self.input.table_arn.value]
   }
 
   with "kms_keys" {
-    sql = <<-EOQ
-      select
-        sse_description ->> 'KMSMasterKeyArn' as key_arn
-      from
-        aws_dynamodb_table
-      where
-        arn = $1;
-    EOQ
-
+    query = query.dynamodb_table_kms_keys
     args = [self.input.table_arn.value]
   }
 
   with "s3_buckets" {
-    sql = <<-EOQ
-      select
-        b.arn as bucket_arn
-      from
-        aws_s3_bucket as b,
-        aws_dynamodb_table_export as t
-      where
-        b.name = t.s3_bucket
-        and t.table_arn = $1;
-    EOQ
-
+    query = query.dynamodb_table_s3_buckets
     args = [self.input.table_arn.value]
   }
 
@@ -205,9 +154,7 @@ dashboard "dynamodb_table_detail" {
         type  = "line"
         width = 6
         query = query.dynamodb_table_overview
-        args = {
-          arn = self.input.table_arn.value
-        }
+        args = [self.input.table_arn.value]
 
       }
 
@@ -215,9 +162,7 @@ dashboard "dynamodb_table_detail" {
         title = "Tags"
         width = 6
         query = query.dynamodb_table_tags
-        args = {
-          arn = self.input.table_arn.value
-        }
+        args = [self.input.table_arn.value]
 
       }
     }
@@ -229,33 +174,29 @@ dashboard "dynamodb_table_detail" {
         title = "Read/Write Capacity"
         width = 6
         query = query.dynamodb_table_read_write_capacity
-        args = {
-          arn = self.input.table_arn.value
-        }
+        args = [self.input.table_arn.value]
       }
 
       table {
         title = "Primary Key Schema"
         width = 6
         query = query.dynamodb_table_key_schema
-        args = {
-          arn = self.input.table_arn.value
-        }
+        args = [self.input.table_arn.value]
       }
 
       table {
         title = "Point-in-Time Recovery (PITR)"
         width = 12
         query = query.dynamodb_table_point_in_time_recovery
-        args = {
-          arn = self.input.table_arn.value
-        }
+        args = [self.input.table_arn.value]
       }
 
     }
 
   }
 }
+
+# Input queries
 
 query "dynamodb_table_input" {
   sql = <<-EOQ
@@ -274,6 +215,61 @@ query "dynamodb_table_input" {
   EOQ
 }
 
+# With queries
+
+query "dynamodb_table_dynamodb_backups" {
+  sql = <<-EOQ
+    select
+      b.arn as dbynamodb_backup_arn
+    from
+      aws_dynamodb_backup as b,
+      aws_dynamodb_table as t
+    where
+      t.arn = b.table_arn
+      and t.arn = $1;
+  EOQ
+}
+
+query "dynamodb_table_kinesis_streams" {
+  sql = <<-EOQ
+    select
+      s.stream_arn as kinesis_stream_arn
+    from
+      aws_kinesis_stream as s,
+      aws_dynamodb_table as t,
+      jsonb_array_elements(t.streaming_destination -> 'KinesisDataStreamDestinations') as d
+    where
+      d ->> 'StreamArn' = s.stream_arn
+      and t.arn = $1;
+    EOQ
+}
+
+query "dynamodb_table_kms_keys" {
+  sql = <<-EOQ
+    select
+      sse_description ->> 'KMSMasterKeyArn' as key_arn
+    from
+      aws_dynamodb_table
+    where
+      arn = $1;
+  EOQ
+}
+
+query "dynamodb_table_s3_buckets" {
+  sql = <<-EOQ
+    select
+      b.arn as bucket_arn
+    from
+      aws_s3_bucket as b,
+      aws_dynamodb_table_export as t
+    where
+      b.name = t.s3_bucket
+      and t.table_arn = $1;
+  EOQ
+}
+
+# Card queries
+
 query "dynamodb_table_status" {
   sql = <<-EOQ
     select
@@ -284,8 +280,6 @@ query "dynamodb_table_status" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "dynamodb_table_size" {
@@ -298,8 +292,6 @@ query "dynamodb_table_size" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "dynamodb_table_backup_count" {
@@ -312,8 +304,6 @@ query "dynamodb_table_backup_count" {
     where
       table_arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "dynamodb_table_encryption_type" {
@@ -340,8 +330,6 @@ query "dynamodb_table_encryption_type" {
       table_encryption_status
       group by encryption_type;
   EOQ
-
-  param "arn" {}
 }
 
 query "dynamodb_table_class" {
@@ -354,8 +342,6 @@ query "dynamodb_table_class" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "dynamodb_table_continuous_backups" {
@@ -369,8 +355,6 @@ query "dynamodb_table_continuous_backups" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "dynamodb_table_autoscaling_state" {
@@ -393,9 +377,9 @@ query "dynamodb_table_autoscaling_state" {
     where
       d.arn = $1;
   EOQ
-
-  param "arn" {}
 }
+
+# Other detail page queries
 
 query "dynamodb_table_overview" {
   sql = <<-EOQ
@@ -412,8 +396,6 @@ query "dynamodb_table_overview" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "dynamodb_table_tags" {
@@ -429,8 +411,6 @@ query "dynamodb_table_tags" {
     order by
       tag ->> 'Key';
   EOQ
-
-  param "arn" {}
 }
 
 query "dynamodb_table_key_schema" {
@@ -444,8 +424,6 @@ query "dynamodb_table_key_schema" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "dynamodb_table_read_write_capacity" {
@@ -458,8 +436,6 @@ query "dynamodb_table_read_write_capacity" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "dynamodb_table_point_in_time_recovery" {
@@ -473,6 +449,4 @@ query "dynamodb_table_point_in_time_recovery" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
