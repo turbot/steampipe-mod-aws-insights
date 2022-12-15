@@ -18,63 +18,36 @@ dashboard "ecr_repository_detail" {
     card {
       query = query.ecr_repository_encrypted
       width = 2
-      args = {
-        arn = self.input.ecr_repository_arn.value
-      }
+      args = [self.input.ecr_repository_arn.value]
     }
 
     card {
       query = query.ecr_repository_scan_on_push
       width = 2
-      args = {
-        arn = self.input.ecr_repository_arn.value
-      }
+      args = [self.input.ecr_repository_arn.value]
     }
 
     card {
       query = query.ecr_repository_tagging
       width = 2
-      args = {
-        arn = self.input.ecr_repository_arn.value
-      }
+      args = [self.input.ecr_repository_arn.value]
     }
 
     card {
       query = query.ecr_repository_tag_immutability
       width = 2
-      args = {
-        arn = self.input.ecr_repository_arn.value
-      }
+      args = [self.input.ecr_repository_arn.value]
     }
 
   }
 
   with "ecs_task_definitions" {
-    sql = <<-EOQ
-      select
-        t.task_definition_arn as task_definition_arn
-      from
-        aws_ecr_repository as r,
-        aws_ecs_task_definition as t,
-        jsonb_array_elements(container_definitions) as d
-      where
-        r.repository_uri = split_part(d ->> 'Image', ':', 1)
-        and r.arn = $1
-    EOQ
-
+    query = query.ecr_repository_ecs_task_definitions
     args = [self.input.ecr_repository_arn.value]
   }
 
   with "kms_keys" {
-    sql = <<-EOQ
-      select
-        encryption_configuration ->> 'KmsKey' as kms_key_arn
-      from
-        aws_ecr_repository
-      where
-        arn = $1;
-    EOQ
-
+    query = query.ecr_repository_kms_keys
     args = [self.input.ecr_repository_arn.value]
   }
 
@@ -159,22 +132,65 @@ dashboard "ecr_repository_detail" {
         type  = "line"
         width = 6
         query = query.ecr_repository_overview
-        args = {
-          arn = self.input.ecr_repository_arn.value
-        }
+        args = [self.input.ecr_repository_arn.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.ecr_repository_tags
-        args = {
-          arn = self.input.ecr_repository_arn.value
-        }
+        args = [self.input.ecr_repository_arn.value]
       }
     }
   }
 }
+
+# Input queries
+
+query "ecr_repository_input" {
+  sql = <<-EOQ
+    select
+      title as label,
+      arn as value,
+      json_build_object(
+        'account_id', account_id,
+        'region', region
+      ) as tags
+    from
+      aws_ecr_repository
+    order by
+      title;
+  EOQ
+}
+
+# With queries
+
+query "ecr_repository_ecs_task_definitions" {
+  sql = <<-EOQ
+    select
+      t.task_definition_arn as task_definition_arn
+    from
+      aws_ecr_repository as r,
+      aws_ecs_task_definition as t,
+      jsonb_array_elements(container_definitions) as d
+    where
+      r.repository_uri = split_part(d ->> 'Image', ':', 1)
+      and r.arn = $1
+  EOQ
+}
+
+query "ecr_repository_kms_keys" {
+  sql = <<-EOQ
+    select
+      encryption_configuration ->> 'KmsKey' as kms_key_arn
+    from
+      aws_ecr_repository
+    where
+      arn = $1;
+  EOQ
+}
+
+# Card queries
 
 query "ecr_repository_encrypted" {
   sql = <<-EOQ
@@ -187,8 +203,6 @@ query "ecr_repository_encrypted" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "ecr_repository_tagging" {
@@ -208,8 +222,6 @@ query "ecr_repository_tagging" {
     from
       num_tags;
   EOQ
-
-  param "arn" {}
 }
 
 query "ecr_repository_public_access" {
@@ -223,8 +235,6 @@ query "ecr_repository_public_access" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "ecr_repository_tag_immutability" {
@@ -238,8 +248,6 @@ query "ecr_repository_tag_immutability" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "ecr_repository_scan_on_push" {
@@ -259,9 +267,9 @@ query "ecr_repository_scan_on_push" {
     from
       scan_on_push;
   EOQ
-
-  param "arn" {}
 }
+
+# Other detail page queries
 
 query "ecr_repository_overview" {
   sql = <<-EOQ
@@ -278,8 +286,6 @@ query "ecr_repository_overview" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "ecr_repository_tags" {
@@ -295,23 +301,4 @@ query "ecr_repository_tags" {
     order by
       tag ->> 'Key';
   EOQ
-
-  param "arn" {}
 }
-
-query "ecr_repository_input" {
-  sql = <<-EOQ
-    select
-      title as label,
-      arn as value,
-      json_build_object(
-        'account_id', account_id,
-        'region', region
-      ) as tags
-    from
-      aws_ecr_repository
-    order by
-      title;
-  EOQ
-}
-

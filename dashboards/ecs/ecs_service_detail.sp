@@ -18,158 +18,59 @@ dashboard "ecs_service_detail" {
     card {
       query = query.ecs_service_status
       width = 2
-      args = {
-        arn = self.input.service_arn.value
-      }
+      args = [self.input.service_arn.value]
     }
 
     card {
       query = query.ecs_service_launch_type
       width = 2
-      args = {
-        arn = self.input.service_arn.value
-      }
+      args = [self.input.service_arn.value]
     }
 
   }
 
   with "ec2_target_groups" {
-    sql = <<-EOQ
-      select
-        t.target_group_arn as target_group_arn
-      from
-        aws_ecs_service as s,
-        jsonb_array_elements(load_balancers) as l
-        left join aws_ec2_target_group as t on t.target_group_arn = l ->> 'TargetGroupArn'
-      where
-        s.arn = $1;
-    EOQ
-
+    query = query.ecs_service_ec2_target_groups
     args = [self.input.service_arn.value]
   }
 
   with "ecs_clusters" {
-    sql = <<-EOQ
-      select
-        c.cluster_arn as cluster_arn
-      from
-        aws_ecs_service as s
-        left join aws_ecs_cluster as c on s.cluster_arn = c.cluster_arn and s.arn = $1
-      where
-        c.cluster_arn is not null
-    EOQ
-
+    query = query.ecs_service_ecs_clusters
     args = [self.input.service_arn.value]
   }
 
   with "ecs_container_instances" {
-    sql = <<-EOQ
-      select
-        i.arn as container_instance_arn
-      from
-        aws_ecs_service as s
-        left join aws_ecs_container_instance as i on s.cluster_arn = i.cluster_arn
-        left join aws_ec2_instance as e on i.ec2_instance_id = e.instance_id
-      where
-        i.arn  is not null
-        and s.arn = $1;
-    EOQ
-
+    query = query.ecs_service_ecs_container_instances
     args = [self.input.service_arn.value]
   }
 
   with "ecs_tasks" {
-    sql = <<-EOQ
-      select
-        t.task_arn as task_arn
-      from
-        aws_ecs_task as t,
-        aws_ecs_service as s
-      where
-        s.arn = $1
-        and t.service_name = s.service_name
-        and t.region = s.region;
-    EOQ
-
+    query = query.ecs_service_ecs_tasks
     args = [self.input.service_arn.value]
   }
 
   with "ecs_task_definitions" {
-    sql = <<-EOQ
-      select
-        d.task_definition_arn as task_definition_arn
-      from
-        aws_ecs_task_definition as d,
-        aws_ecs_service as s
-      where
-        d.task_definition_arn = s.task_definition
-        and s.arn = $1;
-    EOQ
-
+    query = query.ecs_service_ecs_task_definitions
     args = [self.input.service_arn.value]
   }
 
   with "iam_roles" {
-    sql = <<-EOQ
-      select
-        r.arn as role_arn
-      from
-        aws_ecs_service as s
-        left join aws_iam_role as r on r.arn = s.role_arn and s.arn = $1
-      where
-        r.arn is not null
-    EOQ
-
+    query = query.ecs_service_iam_roles
     args = [self.input.service_arn.value]
   }
 
   with "vpc_security_groups" {
-    sql = <<-EOQ
-      select
-        sg.group_id as group_id
-      from
-        aws_ecs_service as e,
-        jsonb_array_elements_text(e.network_configuration -> 'AwsvpcConfiguration' -> 'SecurityGroups') as s
-        left join aws_vpc_security_group as sg on sg.group_id = s
-      where
-        e.arn = $1
-        and e.network_configuration is not null;
-    EOQ
-
+    query = query.ecs_service_vpc_security_groups
     args = [self.input.service_arn.value]
   }
 
   with "vpc_subnets" {
-    sql = <<-EOQ
-      select
-        sb.subnet_id as subnet_id
-      from
-        aws_ecs_service as e,
-        jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
-        left join aws_vpc_subnet as sb on sb.subnet_id = trim((s::text ), '""')
-      where
-        e.arn = $1
-        and e.network_configuration is not null;
-    EOQ
-
+    query = query.ecs_service_vpc_subnets
     args = [self.input.service_arn.value]
   }
 
   with "vpc_vpcs" {
-    sql = <<-EOQ
-      select
-        v.arn as vpc_arn
-      from
-        aws_ecs_service as e,
-        jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
-        left join aws_vpc_subnet as sb on sb.subnet_id = trim((s::text ), '""'),
-        aws_vpc as v
-      where
-        e.arn = $1
-        and e.network_configuration is not null
-        and v.vpc_id = sb.vpc_id;
-    EOQ
-
+    query = query.ecs_service_vpc_vpcs
     args = [self.input.service_arn.value]
   }
 
@@ -327,9 +228,7 @@ dashboard "ecs_service_detail" {
         type  = "line"
         width = 6
         query = query.ecs_service_overview
-        args = {
-          arn = self.input.service_arn.value
-        }
+        args = [self.input.service_arn.value]
 
       }
 
@@ -337,9 +236,7 @@ dashboard "ecs_service_detail" {
         title = "Tags"
         width = 6
         query = query.ecs_service_tags
-        args = {
-          arn = self.input.service_arn.value
-        }
+        args = [self.input.service_arn.value]
 
       }
     }
@@ -350,15 +247,15 @@ dashboard "ecs_service_detail" {
       table {
         title = "Tasks"
         query = query.ecs_service_tasks
-        args = {
-          arn = self.input.service_arn.value
-        }
+        args = [self.input.service_arn.value]
       }
 
     }
 
   }
 }
+
+# Input queries
 
 query "ecs_service_input" {
   sql = <<-EOQ
@@ -377,6 +274,133 @@ query "ecs_service_input" {
   EOQ
 }
 
+# With queries
+
+query "ecs_service_ec2_target_groups" {
+  sql = <<-EOQ
+    select
+      t.target_group_arn as target_group_arn
+    from
+      aws_ecs_service as s,
+      jsonb_array_elements(load_balancers) as l
+      left join aws_ec2_target_group as t on t.target_group_arn = l ->> 'TargetGroupArn'
+    where
+      s.arn = $1;
+  EOQ
+}
+
+query "ecs_service_ecs_clusters" {
+  sql = <<-EOQ
+    select
+      c.cluster_arn as cluster_arn
+    from
+      aws_ecs_service as s
+      left join aws_ecs_cluster as c on s.cluster_arn = c.cluster_arn and s.arn = $1
+    where
+      c.cluster_arn is not null
+  EOQ
+}
+
+query "ecs_service_ecs_container_instances" {
+  sql = <<-EOQ
+    select
+      i.arn as container_instance_arn
+    from
+      aws_ecs_service as s
+      left join aws_ecs_container_instance as i on s.cluster_arn = i.cluster_arn
+      left join aws_ec2_instance as e on i.ec2_instance_id = e.instance_id
+    where
+      i.arn  is not null
+      and s.arn = $1;
+  EOQ
+}
+
+query "ecs_service_ecs_tasks" {
+  sql = <<-EOQ
+    select
+      t.task_arn as task_arn
+    from
+      aws_ecs_task as t,
+      aws_ecs_service as s
+    where
+      s.arn = $1
+      and t.service_name = s.service_name
+      and t.region = s.region;
+  EOQ
+}
+
+query "ecs_service_ecs_task_definitions" {
+  sql = <<-EOQ
+    select
+      d.task_definition_arn as task_definition_arn
+    from
+      aws_ecs_task_definition as d,
+      aws_ecs_service as s
+    where
+      d.task_definition_arn = s.task_definition
+      and s.arn = $1;
+  EOQ
+}
+
+query "ecs_service_iam_roles" {
+  sql = <<-EOQ
+    select
+      r.arn as role_arn
+    from
+      aws_ecs_service as s
+      left join aws_iam_role as r on r.arn = s.role_arn and s.arn = $1
+    where
+      r.arn is not null
+  EOQ
+}
+
+query "ecs_service_vpc_security_groups" {
+  sql = <<-EOQ
+    select
+      sg.group_id as group_id
+    from
+      aws_ecs_service as e,
+      jsonb_array_elements_text(e.network_configuration -> 'AwsvpcConfiguration' -> 'SecurityGroups') as s
+      left join aws_vpc_security_group as sg on sg.group_id = s
+    where
+      e.arn = $1
+      and e.network_configuration is not null;
+  EOQ
+}
+
+query "ecs_service_vpc_subnets" {
+  sql = <<-EOQ
+    select
+      sb.subnet_id as subnet_id
+    from
+      aws_ecs_service as e,
+      jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
+      left join aws_vpc_subnet as sb on sb.subnet_id = trim((s::text ), '""')
+    where
+      e.arn is not null
+      and e.arn = $1
+      and e.network_configuration is not null;
+  EOQ
+}
+
+query "ecs_service_vpc_vpcs" {
+  sql = <<-EOQ
+    select
+      v.arn as vpc_arn
+    from
+      aws_ecs_service as e,
+      jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
+      left join aws_vpc_subnet as sb on sb.subnet_id = trim((s::text ), '""'),
+      aws_vpc as v
+    where
+      e.arn = $1
+      and e.network_configuration is not null
+      and v.vpc_id = sb.vpc_id;
+  EOQ
+}
+
+# Card queries
+
 query "ecs_service_status" {
   sql = <<-EOQ
     select
@@ -387,8 +411,6 @@ query "ecs_service_status" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "ecs_service_launch_type" {
@@ -401,9 +423,9 @@ query "ecs_service_launch_type" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
+
+# Other detail page queries
 
 query "ecs_service_overview" {
   sql = <<-EOQ
@@ -421,8 +443,6 @@ query "ecs_service_overview" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "ecs_service_tasks" {
@@ -436,8 +456,6 @@ query "ecs_service_tasks" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "ecs_service_tags" {
@@ -453,6 +471,4 @@ query "ecs_service_tags" {
     order by
       tag ->> 'Key';
   EOQ
-
-  param "arn" {}
 }
