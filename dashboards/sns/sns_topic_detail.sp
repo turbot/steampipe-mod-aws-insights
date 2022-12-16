@@ -271,7 +271,6 @@ query "sns_topic_encryption_status" {
       topic_arn = $1;
   EOQ
 
-  param "arn" {}
 }
 
 query "sns_topic_subscriptions_confirmed_count" {
@@ -286,7 +285,6 @@ query "sns_topic_subscriptions_confirmed_count" {
       topic_arn = $1;
   EOQ
 
-  param "arn" {}
 }
 
 # with queries
@@ -399,7 +397,6 @@ query "sns_topic_overview" {
       topic_arn = $1;
   EOQ
 
-  param "arn" {}
 }
 
 query "sns_topic_tags" {
@@ -416,7 +413,6 @@ query "sns_topic_tags" {
       tag ->> 'Key';
   EOQ
 
-  param "arn" {}
 }
 
 query "sns_topic_subscriptions" {
@@ -431,7 +427,6 @@ query "sns_topic_subscriptions" {
       topic_arn = $1;
   EOQ
 
-  param "arn" {}
 }
 
 query "sns_topic_delivery_policy" {
@@ -451,7 +446,6 @@ query "sns_topic_delivery_policy" {
       topic_arn = $1;
   EOQ
 
-  param "arn" {}
 }
 
 query "sns_topic_policy_standard" {
@@ -470,5 +464,4 @@ query "sns_topic_policy_standard" {
       topic_arn = $1;
   EOQ
 
-  param "arn" {}
 }

@@ -19,123 +19,56 @@ dashboard "sqs_queue_detail" {
     card {
       width = 2
       query = query.sqs_queue_encryption
-      args = {
-        queue_arn = self.input.queue_arn.value
-      }
+      args  = [self.input.queue_arn.value]
     }
 
     card {
       width = 2
       query = query.sqs_queue_content_based_deduplication
-      args = {
-        queue_arn = self.input.queue_arn.value
-      }
+      args  = [self.input.queue_arn.value]
     }
 
     card {
       width = 2
       query = query.sqs_queue_delay_seconds
-      args = {
-        queue_arn = self.input.queue_arn.value
-      }
+      args  = [self.input.queue_arn.value]
     }
 
     card {
       width = 2
       query = query.sqs_queue_message_retention_seconds
-      args = {
-        queue_arn = self.input.queue_arn.value
-      }
+      args  = [self.input.queue_arn.value]
     }
 
   }
 
   with "eventbridge_rules" {
-    sql = <<-EOQ
-            select
-              arn as eventbridge_rule_arn
-            from
-              aws_eventbridge_rule as r,
-              jsonb_array_elements(targets) as t
-            where
-              t ->> 'Arn' = $1;
-          EOQ
-
+      query = query.sqs_queue_eventbridge_rules
     args = [self.input.queue_arn.value]
   }
 
   with "kms_keys" {
-    sql = <<-EOQ
-          select
-            k.arn as key_arn
-          from
-            aws_sqs_queue as q,
-            aws_kms_key as k,
-            jsonb_array_elements(aliases) as a
-          where
-            a ->> 'AliasName' = q.kms_master_key_id
-            and k.region = q.region
-            and q.queue_arn = $1;
-        EOQ
-
+query = query.sqs_queue_kms_keys
     args = [self.input.queue_arn.value]
   }
 
   with "lambda_functions" {
-    sql = <<-EOQ
-          select
-            arn as function_arn
-          from
-            aws_lambda_function
-          where
-            dead_letter_config_target_arn = $1;
-        EOQ
-
+query = query.sqs_queue_lambda_functions
     args = [self.input.queue_arn.value]
   }
 
   with "s3_buckets" {
-    sql = <<-EOQ
-          select
-            b.arn as bucket_arn
-          from
-            aws_s3_bucket as b,
-            jsonb_array_elements(event_notification_configuration -> 'QueueConfigurations') as q
-          where
-            event_notification_configuration -> 'QueueConfigurations' <> 'null'
-            and q ->> 'QueueArn' = $1;
-        EOQ
-
+query = query.sqs_queue_s3_buckets
     args = [self.input.queue_arn.value]
   }
 
   with "vpc_endpoints" {
-    sql = <<-EOQ
-          select
-            vpc_endpoint_id
-          from
-            aws_vpc_endpoint,
-            jsonb_array_elements(policy_std -> 'Statement') as s,
-            jsonb_array_elements_text(s -> 'Resource') as r
-          where
-            r = $1;
-        EOQ
-
+query = query.sqs_queue_vpc_endpoints
     args = [self.input.queue_arn.value]
   }
 
   with "vpc_vpcs" {
-    sql = <<-EOQ
-          select
-            vpc_id
-          from
-            aws_vpc_endpoint,
-            jsonb_array_elements(policy_std -> 'Statement') as s,
-            jsonb_array_elements_text(s -> 'Resource') as r
-          where
-            r = $1;
-        EOQ
-
+query = query.sqs_queue_vpc_vpcs
     args = [self.input.queue_arn.value]
   }
 
@@ -278,9 +211,7 @@ dashboard "sqs_queue_detail" {
         type  = "line"
         width = 6
         query = query.sqs_queue_overview
-        args = {
-          queue_arn = self.input.queue_arn.value
-        }
+        args  = [self.input.queue_arn.value]
 
       }
 
@@ -288,9 +219,7 @@ dashboard "sqs_queue_detail" {
         title = "Tags"
         width = 6
         query = query.sqs_queue_tags_detail
-        args = {
-          queue_arn = self.input.queue_arn.value
-        }
+        args  = [self.input.queue_arn.value]
       }
 
     }
@@ -302,17 +231,13 @@ dashboard "sqs_queue_detail" {
       table {
         title = "Message Details"
         query = query.sqs_queue_message
-        args = {
-          queue_arn = self.input.queue_arn.value
-        }
+        args  = [self.input.queue_arn.value]
       }
 
       table {
         title = "Encryption Details"
         query = query.sqs_queue_encryption_details
-        args = {
-          queue_arn = self.input.queue_arn.value
-        }
+        args  = [self.input.queue_arn.value]
       }
 
     }
@@ -326,9 +251,7 @@ dashboard "sqs_queue_detail" {
     table {
       title = "Policy"
       query = query.sqs_queue_policy
-      args = {
-        queue_arn = self.input.queue_arn.value
-      }
+      args  = [self.input.queue_arn.value]
     }
 
   }
@@ -351,6 +274,8 @@ query "sqs_queue_input" {
   EOQ
 }
 
+# card queries
+
 query "sqs_queue_encryption" {
   sql = <<-EOQ
     select
@@ -363,7 +288,6 @@ query "sqs_queue_encryption" {
       queue_arn = $1;
   EOQ
 
-  param "queue_arn" {}
 }
 
 query "sqs_queue_content_based_deduplication" {
@@ -377,7 +301,6 @@ query "sqs_queue_content_based_deduplication" {
       queue_arn = $1;
   EOQ
 
-  param "queue_arn" {}
 }
 
 query "sqs_queue_delay_seconds" {
@@ -391,7 +314,6 @@ query "sqs_queue_delay_seconds" {
       queue_arn = $1;
   EOQ
 
-  param "queue_arn" {}
 }
 
 query "sqs_queue_message_retention_seconds" {
@@ -405,8 +327,88 @@ query "sqs_queue_message_retention_seconds" {
       queue_arn = $1;
   EOQ
 
-  param "queue_arn" {}
 }
+
+# with queries
+
+query "sqs_queue_eventbridge_rules" {
+  sql = <<-EOQ
+    select
+      arn as eventbridge_rule_arn
+    from
+      aws_eventbridge_rule as r,
+      jsonb_array_elements(targets) as t
+    where
+      t ->> 'Arn' = $1;
+  EOQ
+}
+
+query "sqs_queue_kms_keys" {
+  sql = <<-EOQ
+    select
+      k.arn as key_arn
+    from
+      aws_sqs_queue as q,
+      aws_kms_key as k,
+      jsonb_array_elements(aliases) as a
+    where
+      a ->> 'AliasName' = q.kms_master_key_id
+      and k.region = q.region
+      and q.queue_arn = $1;
+  EOQ
+}
+
+query "sqs_queue_lambda_functions" {
+  sql = <<-EOQ
+    select
+      arn as function_arn
+    from
+      aws_lambda_function
+    where
+      dead_letter_config_target_arn = $1;
+  EOQ
+}
+
+query "sqs_queue_s3_buckets" {
+  sql = <<-EOQ
+    select
+      b.arn as bucket_arn
+    from
+      aws_s3_bucket as b,
+      jsonb_array_elements(event_notification_configuration -> 'QueueConfigurations') as q
+    where
+      event_notification_configuration -> 'QueueConfigurations' <> 'null'
+      and q ->> 'QueueArn' = $1;
+  EOQ
+}
+
+query "sqs_queue_vpc_endpoints" {
+  sql = <<-EOQ
+    select
+      vpc_endpoint_id
+    from
+      aws_vpc_endpoint,
+      jsonb_array_elements(policy_std -> 'Statement') as s,
+      jsonb_array_elements_text(s -> 'Resource') as r
+    where
+      r = $1;
+  EOQ
+}
+
+query "sqs_queue_vpc_vpcs" {
+  sql = <<-EOQ
+    select
+      vpc_id
+    from
+      aws_vpc_endpoint,
+      jsonb_array_elements(policy_std -> 'Statement') as s,
+      jsonb_array_elements_text(s -> 'Resource') as r
+    where
+      r = $1;
+  EOQ
+}
+
+# table queries
 
 query "sqs_queue_overview" {
   sql = <<-EOQ
@@ -422,7 +424,6 @@ query "sqs_queue_overview" {
       queue_arn = $1;
   EOQ
 
-  param "queue_arn" {}
 }
 
 query "sqs_queue_tags_detail" {
@@ -445,7 +446,6 @@ query "sqs_queue_tags_detail" {
       key;
   EOQ
 
-  param "queue_arn" {}
 }
 
 query "sqs_queue_policy" {
@@ -464,7 +464,6 @@ query "sqs_queue_policy" {
       queue_arn = $1;
   EOQ
 
-  param "queue_arn" {}
 }
 
 query "sqs_queue_message" {
@@ -479,7 +478,6 @@ query "sqs_queue_message" {
       queue_arn = $1;
   EOQ
 
-  param "queue_arn" {}
 }
 
 query "sqs_queue_encryption_details" {
@@ -493,5 +491,4 @@ query "sqs_queue_encryption_details" {
       queue_arn = $1;
   EOQ
 
-  param "queue_arn" {}
 }
