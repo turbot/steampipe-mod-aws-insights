@@ -18,61 +18,36 @@ dashboard "iam_user_detail" {
     card {
       width = 2
       query = query.iam_user_mfa_for_user
-      args = {
-        arn = self.input.user_arn.value
-      }
+      args = [self.input.user_arn.value]
     }
 
     card {
       width = 2
       query = query.iam_boundary_policy_for_user
-      args = {
-        arn = self.input.user_arn.value
-      }
+      args = [self.input.user_arn.value]
     }
 
     card {
       width = 2
       query = query.iam_user_inline_policy_count_for_user
-      args = {
-        arn = self.input.user_arn.value
-      }
+      args = [self.input.user_arn.value]
     }
 
     card {
       width = 2
       query = query.iam_user_direct_attached_policy_count_for_user
-      args = {
-        arn = self.input.user_arn.value
-      }
+      args = [self.input.user_arn.value]
     }
 
   }
 
   with "iam_groups" {
-    sql = <<-EOQ
-      select
-        g ->> 'Arn' as group_arn
-      from
-        aws_iam_user,
-        jsonb_array_elements(groups) as g
-      where
-        arn = $1
-    EOQ
-
+    query = query.iam_user_iam_groups
     args = [self.input.user_arn.value]
   }
 
   with "iam_policies" {
-    sql = <<-EOQ
-      select
-        jsonb_array_elements_text(attached_policy_arns) as policy_arn
-      from
-        aws_iam_user
-      where
-        arn = $1
-    EOQ
-
+    query = query.iam_user_iam_policies
     args = [self.input.user_arn.value]
   }
 
@@ -160,18 +135,14 @@ dashboard "iam_user_detail" {
         type  = "line"
         width = 6
         query = query.iam_user_overview
-        args = {
-          arn = self.input.user_arn.value
-        }
+        args = [self.input.user_arn.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.iam_user_tags
-        args = {
-          arn = self.input.user_arn.value
-        }
+        args = [self.input.user_arn.value]
       }
 
     }
@@ -183,25 +154,19 @@ dashboard "iam_user_detail" {
       table {
         title = "Console Password"
         query = query.iam_user_console_password
-        args = {
-          arn = self.input.user_arn.value
-        }
+        args = [self.input.user_arn.value]
       }
 
       table {
         title = "Access Keys"
         query = query.iam_user_access_keys
-        args = {
-          arn = self.input.user_arn.value
-        }
+        args = [self.input.user_arn.value]
       }
 
       table {
         title = "MFA Devices"
         query = query.iam_user_mfa_devices
-        args = {
-          arn = self.input.user_arn.value
-        }
+        args = [self.input.user_arn.value]
       }
 
     }
@@ -216,9 +181,7 @@ dashboard "iam_user_detail" {
       type  = "sankey"
       title = "Attached Policies"
       query = query.iam_user_manage_policies_sankey
-      args = {
-        arn = self.input.user_arn.value
-      }
+      args = [self.input.user_arn.value]
 
       category "iam_group" {
         color = "ok"
@@ -229,9 +192,7 @@ dashboard "iam_user_detail" {
       title = "Groups"
       width = 6
       query = query.iam_groups_for_user
-      args = {
-        arn = self.input.user_arn.value
-      }
+      args = [self.input.user_arn.value]
 
       column "Name" {
         // cyclic dependency prevents use of url_path, hardcode for now
@@ -245,14 +206,14 @@ dashboard "iam_user_detail" {
       title = "Policies"
       width = 6
       query = query.iam_all_policies_for_user
-      args = {
-        arn = self.input.user_arn.value
-      }
+      args = [self.input.user_arn.value]
     }
 
   }
 
 }
+
+# Input queries
 
 query "iam_user_input" {
   sql = <<-EOQ
@@ -269,6 +230,33 @@ query "iam_user_input" {
   EOQ
 }
 
+# With queries
+
+query "iam_user_iam_groups" {
+  sql = <<-EOQ
+    select
+      g ->> 'Arn' as group_arn
+    from
+      aws_iam_user,
+      jsonb_array_elements(groups) as g
+    where
+      arn = $1
+  EOQ
+}
+
+query "iam_user_iam_policies" {
+  sql = <<-EOQ
+    select
+      jsonb_array_elements_text(attached_policy_arns) as policy_arn
+    from
+      aws_iam_user
+    where
+      arn = $1
+  EOQ
+}
+
+# Card queries
+
 query "iam_user_mfa_for_user" {
   sql = <<-EOQ
     select
@@ -280,8 +268,6 @@ query "iam_user_mfa_for_user" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }
 
 query "iam_boundary_policy_for_user" {
@@ -304,8 +290,6 @@ query "iam_boundary_policy_for_user" {
       arn = $1
   EOQ
 
-  param "arn" {}
-
 }
 
 query "iam_user_inline_policy_count_for_user" {
@@ -319,8 +303,6 @@ query "iam_user_inline_policy_count_for_user" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }
 
 query "iam_user_direct_attached_policy_count_for_user" {
@@ -334,9 +316,9 @@ query "iam_user_direct_attached_policy_count_for_user" {
     where
      arn = $1
   EOQ
-
-  param "arn" {}
 }
+
+# Other detail page queries
 
 query "iam_user_overview" {
   sql = <<-EOQ
@@ -352,8 +334,6 @@ query "iam_user_overview" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }
 
 query "iam_user_tags" {
@@ -369,8 +349,6 @@ query "iam_user_tags" {
     order by
       tag ->> 'Key'
   EOQ
-
-  param "arn" {}
 }
 
 query "iam_user_console_password" {
@@ -383,8 +361,6 @@ query "iam_user_console_password" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }
 
 query "iam_user_access_keys" {
@@ -398,8 +374,6 @@ query "iam_user_access_keys" {
     where
       u.arn = $1
   EOQ
-
-  param "arn" {}
 }
 
 query "iam_user_mfa_devices" {
@@ -414,8 +388,6 @@ query "iam_user_mfa_devices" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }
 
 query "iam_user_manage_policies_sankey" {
@@ -504,8 +476,6 @@ query "iam_user_manage_policies_sankey" {
     where
       u.arn in (select iam_user_arn from args)
   EOQ
-
-  param "arn" {}
 }
 
 query "iam_groups_for_user" {
@@ -519,8 +489,6 @@ query "iam_groups_for_user" {
     where
       u.arn = $1
   EOQ
-
-  param "arn" {}
 }
 
 query "iam_all_policies_for_user" {
@@ -575,8 +543,6 @@ query "iam_all_policies_for_user" {
     where
       u.arn = $1
   EOQ
-
-  param "arn" {}
 }
 
 

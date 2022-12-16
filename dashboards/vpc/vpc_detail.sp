@@ -18,218 +18,98 @@ dashboard "vpc_detail" {
     card {
       width = 2
       query = query.vpc_num_ips_for_vpc
-      args = {
-        vpc_id = self.input.vpc_id.value
-      }
+      args  = [self.input.vpc_id.value]
     }
 
     card {
       width = 2
       query = query.subnet_count_for_vpc
-      args = {
-        vpc_id = self.input.vpc_id.value
-      }
+      args  = [self.input.vpc_id.value]
     }
 
     card {
       width = 2
       query = query.vpc_is_default
-      args = {
-        vpc_id = self.input.vpc_id.value
-      }
+      args  = [self.input.vpc_id.value]
     }
 
     card {
       width = 2
       query = query.flow_logs_count_for_vpc
-      args = {
-        vpc_id = self.input.vpc_id.value
-      }
+      args  = [self.input.vpc_id.value]
     }
 
   }
 
   with "ec2_application_load_balancers" {
-    sql = <<-EOQ
-          select
-            arn as alb_arn
-          from
-            aws_ec2_application_load_balancer
-          where
-            vpc_id = $1;
-        EOQ
-
-    args = [self.input.vpc_id.value]
+    query = query.vpc_ec2_application_load_balancers
+    args  = [self.input.vpc_id.value]
   }
 
   with "ec2_classic_load_balancers" {
-    sql = <<-EOQ
-          select
-            arn as clb_arn
-          from
-            aws_ec2_classic_load_balancer
-          where
-            vpc_id = $1;
-        EOQ
-
-    args = [self.input.vpc_id.value]
+    query = query.vpc_ec2_classic_load_balancers
+    args  = [self.input.vpc_id.value]
   }
 
   with "ec2_gateway_load_balancers" {
-    sql = <<-EOQ
-          select
-            arn as glb_arn
-          from
-            aws_ec2_gateway_load_balancer
-          where
-            vpc_id = $1;
-        EOQ
-
-    args = [self.input.vpc_id.value]
+    query = query.vpc_ec2_gateway_load_balancers
+    args  = [self.input.vpc_id.value]
   }
 
   with "ec2_instances" {
-    sql = <<-EOQ
-          select
-            arn as instance_arn
-          from
-            aws_ec2_instance
-          where
-            vpc_id = $1;
-        EOQ
-
-    args = [self.input.vpc_id.value]
+    query = query.vpc_ec2_instances
+    args  = [self.input.vpc_id.value]
   }
 
   with "ec2_network_interfaces" {
-    sql = <<-EOQ
-          select
-            network_interface_id as network_interface_id
-          from
-            aws_ec2_network_interface
-          where
-            vpc_id = $1;
-        EOQ
-
-    args = [self.input.vpc_id.value]
+    query = query.vpc_ec2_network_interfaces
+    args  = [self.input.vpc_id.value]
   }
 
 
   with "ec2_network_load_balancers" {
-    sql = <<-EOQ
-          select
-            arn as nlb_arn
-          from
-            aws_ec2_network_load_balancer
-          where
-            vpc_id = $1;
-        EOQ
-
-    args = [self.input.vpc_id.value]
+    query = query.vpc_ec2_network_load_balancers
+    args  = [self.input.vpc_id.value]
   }
 
   with "lambda_functions" {
-    sql = <<-EOQ
-          select
-            arn as function_arn
-          from
-            aws_lambda_function
-          where
-            vpc_id = $1;
-        EOQ
-
-    args = [self.input.vpc_id.value]
+    query = query.vpc_lambda_functions
+    args  = [self.input.vpc_id.value]
   }
 
   with "rds_db_instances" {
-    sql = <<-EOQ
-          select
-            arn as rds_instance_arn
-          from
-            aws_rds_db_instance
-          where
-            vpc_id = $1;
-        EOQ
-
-    args = [self.input.vpc_id.value]
+    query = query.vpc_rds_db_instances
+    args  = [self.input.vpc_id.value]
   }
 
   with "redshift_clusters" {
-    sql = <<-EOQ
-          select
-            arn as redshift_cluster_arn
-          from
-            aws_redshift_cluster
-          where
-            vpc_id = $1;
-        EOQ
-
-    args = [self.input.vpc_id.value]
+    query = query.vpc_redshift_clusters
+    args  = [self.input.vpc_id.value]
   }
 
   with "vpc_endpoints" {
-    sql = <<-EOQ
-          select
-            vpc_endpoint_id
-          from
-            aws_vpc_endpoint
-          where
-            vpc_id = $1;
-        EOQ
-
-    args = [self.input.vpc_id.value]
+    query = query.vpc_vpc_endpoints
+    args  = [self.input.vpc_id.value]
   }
 
   with "vpc_flow_logs" {
-    sql = <<-EOQ
-          select
-            flow_log_id as flow_log_id
-          from
-            aws_vpc_flow_log
-          where
-            resource_id = $1;
-        EOQ
-
-    args = [self.input.vpc_id.value]
+    query = query.vpc_vpc_flow_logs
+    args  = [self.input.vpc_id.value]
   }
 
   with "vpc_nat_gateways" {
-    sql = <<-EOQ
-          select
-            arn as gateway_arn
-          from
-            aws_vpc_nat_gateway
-          where
-            vpc_id = $1;
-        EOQ
-
-    args = [self.input.vpc_id.value]
+    query = query.vpc_vpc_nat_gateways
+    args  = [self.input.vpc_id.value]
   }
 
   with "vpc_security_groups" {
-    sql = <<-EOQ
-          select
-            group_id as security_group_id
-          from
-            aws_vpc_security_group
-          where
-            vpc_id = $1;
-        EOQ
-
-    args = [self.input.vpc_id.value]
+    query = query.vpc_vpc_security_groups
+    args  = [self.input.vpc_id.value]
   }
 
   with "vpc_subnets" {
-    sql = <<-EOQ
-          select
-            subnet_id as subnet_id
-          from
-            aws_vpc_subnet
-          where
-            vpc_id = $1;
-        EOQ
-
-    args = [self.input.vpc_id.value]
+    query = query.vpc_vpc_subnets
+    args  = [self.input.vpc_id.value]
   }
 
   container {
@@ -539,18 +419,14 @@ dashboard "vpc_detail" {
         type  = "line"
         width = 6
         query = query.vpc_overview
-        args = {
-          vpc_id = self.input.vpc_id.value
-        }
+        args  = [self.input.vpc_id.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.vpc_tags
-        args = {
-          vpc_id = self.input.vpc_id.value
-        }
+        args  = [self.input.vpc_id.value]
       }
 
     }
@@ -562,17 +438,13 @@ dashboard "vpc_detail" {
       table {
         title = "CIDR Blocks"
         query = query.vpc_cidr_blocks
-        args = {
-          vpc_id = self.input.vpc_id.value
-        }
+        args  = [self.input.vpc_id.value]
       }
 
       table {
         title = "DHCP Options"
         query = query.vpc_dhcp_options
-        args = {
-          vpc_id = self.input.vpc_id.value
-        }
+        args  = [self.input.vpc_id.value]
       }
 
     }
@@ -588,18 +460,14 @@ dashboard "vpc_detail" {
       type  = "column"
       width = 4
       query = query.vpc_subnet_by_az
-      args = {
-        vpc_id = self.input.vpc_id.value
-      }
+      args  = [self.input.vpc_id.value]
 
     }
 
     table {
       query = query.vpc_subnets_for_vpc
       width = 6
-      args = {
-        vpc_id = self.input.vpc_id.value
-      }
+      args  = [self.input.vpc_id.value]
     }
 
   }
@@ -608,42 +476,18 @@ dashboard "vpc_detail" {
 
     title = "Routing"
 
-
-    # flow {
-    #   nodes = [
-    #     node.vpc_routing_vpc_node,
-    #     node.vpc_routing_subnet_node,
-    #     node.vpc_routing_cidr_node,
-    #     node.vpc_routing_gateway_node
-    #   ]
-
-    #   edges = [
-    #     edge.vpc_routing_subnet_vpc_to_cidr_edge,
-    #     edge.vpc_routing_cidr_to_gateway_edge
-    #   ]
-
-    #   args = {
-    #     vpc_id = self.input.vpc_id.value
-    #   }
-
-    # }
-
     table {
       title = "Route Tables"
       query = query.vpc_route_tables_for_vpc
       width = 6
-      args = {
-        vpc_id = self.input.vpc_id.value
-      }
+      args  = [self.input.vpc_id.value]
     }
 
     table {
       title = "Routes"
       query = query.vpc_routes_for_vpc
       width = 6
-      args = {
-        vpc_id = self.input.vpc_id.value
-      }
+      args  = [self.input.vpc_id.value]
     }
 
   }
@@ -656,9 +500,7 @@ dashboard "vpc_detail" {
     table {
       title = "Peering Connections"
       query = query.vpc_peers_for_vpc
-      args = {
-        vpc_id = self.input.vpc_id.value
-      }
+      args  = [self.input.vpc_id.value]
     }
 
   }
@@ -673,9 +515,7 @@ dashboard "vpc_detail" {
       title = "Ingress NACLs"
       width = 6
       query = query.ingress_nacl_for_vpc_sankey
-      args = {
-        vpc_id = self.input.vpc_id.value
-      }
+      args  = [self.input.vpc_id.value]
     }
 
 
@@ -684,9 +524,7 @@ dashboard "vpc_detail" {
       title = "Egress NACLs"
       width = 6
       query = query.egress_nacl_for_vpc_sankey
-      args = {
-        vpc_id = self.input.vpc_id.value
-      }
+      args  = [self.input.vpc_id.value]
     }
 
 
@@ -701,18 +539,14 @@ dashboard "vpc_detail" {
 
       query = query.vpc_endpoints_for_vpc
       width = 6
-      args = {
-        vpc_id = self.input.vpc_id.value
-      }
+      args  = [self.input.vpc_id.value]
     }
 
     table {
       title = "Gateways"
       query = query.vpc_gateways_for_vpc
       width = 6
-      args = {
-        vpc_id = self.input.vpc_id.value
-      }
+      args  = [self.input.vpc_id.value]
     }
 
   }
@@ -724,9 +558,7 @@ dashboard "vpc_detail" {
     table {
       query = query.vpc_security_groups_for_vpc
       width = 12
-      args = {
-        vpc_id = self.input.vpc_id.value
-      }
+      args  = [self.input.vpc_id.value]
 
       column "Group Name" {
         href = "${dashboard.vpc_security_group_detail.url_path}?input.security_group_id={{.'Group ID' | @uri}}"
@@ -769,6 +601,8 @@ query "vpc_input" {
   EOQ
 }
 
+# card queries
+
 query "subnet_count_for_vpc" {
   sql = <<-EOQ
     select
@@ -781,7 +615,6 @@ query "subnet_count_for_vpc" {
       vpc_id = $1
   EOQ
 
-  param "vpc_id" {}
 }
 
 query "vpc_is_default" {
@@ -796,7 +629,6 @@ query "vpc_is_default" {
       vpc_id = $1;
   EOQ
 
-  param "vpc_id" {}
 }
 
 query "vpc_num_ips_for_vpc" {
@@ -818,7 +650,6 @@ query "vpc_num_ips_for_vpc" {
 
   EOQ
 
-  param "vpc_id" {}
 }
 
 query "flow_logs_count_for_vpc" {
@@ -832,8 +663,165 @@ query "flow_logs_count_for_vpc" {
     where resource_id = reverse(split_part(reverse($1), '/', 1));
   EOQ
 
-  param "vpc_id" {}
 }
+
+# with queries
+
+query "vpc_ec2_application_load_balancers" {
+  sql   = <<-EOQ
+    select
+      arn as alb_arn
+    from
+      aws_ec2_application_load_balancer
+    where
+      vpc_id = $1;
+  EOQ
+}
+
+query "vpc_ec2_classic_load_balancers" {
+  sql   = <<-EOQ
+    select
+      arn as clb_arn
+    from
+      aws_ec2_classic_load_balancer
+    where
+      vpc_id = $1;
+  EOQ
+}
+
+query "vpc_ec2_gateway_load_balancers" {
+  sql   = <<-EOQ
+    select
+      arn as glb_arn
+    from
+      aws_ec2_gateway_load_balancer
+    where
+      vpc_id = $1;
+  EOQ
+}
+
+query "vpc_ec2_instances" {
+  sql   = <<-EOQ
+    select
+      arn as instance_arn
+    from
+      aws_ec2_instance
+    where
+      vpc_id = $1;
+  EOQ
+}
+
+query "vpc_ec2_network_interfaces" {
+  sql   = <<-EOQ
+    select
+      network_interface_id as network_interface_id
+    from
+      aws_ec2_network_interface
+    where
+      vpc_id = $1;
+  EOQ
+}
+
+query "vpc_ec2_network_load_balancers" {
+  sql   = <<-EOQ
+    select
+      arn as nlb_arn
+    from
+      aws_ec2_network_load_balancer
+    where
+      vpc_id = $1;
+  EOQ
+}
+
+query "vpc_lambda_functions" {
+  sql   = <<-EOQ
+    select
+      arn as function_arn
+    from
+      aws_lambda_function
+    where
+      vpc_id = $1;
+  EOQ
+}
+
+query "vpc_rds_db_instances" {
+  sql   = <<-EOQ
+    select
+      arn as rds_instance_arn
+    from
+      aws_rds_db_instance
+    where
+      vpc_id = $1;
+  EOQ
+}
+
+query "vpc_redshift_clusters" {
+  sql   = <<-EOQ
+    select
+      arn as redshift_cluster_arn
+    from
+      aws_redshift_cluster
+    where
+      vpc_id = $1;
+  EOQ
+}
+
+query "vpc_vpc_endpoints" {
+  sql   = <<-EOQ
+    select
+      vpc_endpoint_id
+    from
+      aws_vpc_endpoint
+    where
+      vpc_id = $1;
+  EOQ
+}
+
+query "vpc_vpc_flow_logs" {
+  sql   = <<-EOQ
+    select
+      flow_log_id as flow_log_id
+    from
+      aws_vpc_flow_log
+    where
+      resource_id = $1;
+  EOQ
+}
+
+query "vpc_vpc_nat_gateways" {
+  sql   = <<-EOQ
+    select
+      arn as gateway_arn
+    from
+      aws_vpc_nat_gateway
+    where
+      vpc_id = $1;
+  EOQ
+}
+
+query "vpc_vpc_security_groups" {
+  sql   = <<-EOQ
+    select
+      group_id as security_group_id
+    from
+      aws_vpc_security_group
+    where
+      vpc_id = $1;
+  EOQ
+}
+
+query "vpc_vpc_subnets" {
+  sql   = <<-EOQ
+    select
+      subnet_id as subnet_id
+    from
+      aws_vpc_subnet
+    where
+      vpc_id = $1;
+  EOQ
+}
+
+# table queries
 
 query "vpc_subnets_for_vpc" {
   sql = <<-EOQ
@@ -864,7 +852,6 @@ query "vpc_subnets_for_vpc" {
       subnet_id;
   EOQ
 
-  param "vpc_id" {}
 }
 
 query "vpc_security_groups_for_vpc" {
@@ -879,7 +866,6 @@ query "vpc_security_groups_for_vpc" {
       vpc_id = $1
   EOQ
 
-  param "vpc_id" {}
 }
 
 query "vpc_endpoints_for_vpc" {
@@ -896,7 +882,6 @@ query "vpc_endpoints_for_vpc" {
       vpc_endpoint_id;
   EOQ
 
-  param "vpc_id" {}
 }
 
 query "vpc_route_tables_for_vpc" {
@@ -912,7 +897,6 @@ query "vpc_route_tables_for_vpc" {
       route_table_id;
   EOQ
 
-  param "vpc_id" {}
 }
 
 query "vpc_routes_for_vpc" {
@@ -953,7 +937,6 @@ query "vpc_routes_for_vpc" {
       "Associated To"
   EOQ
 
-  param "vpc_id" {}
 }
 
 query "vpc_peers_for_vpc" {
@@ -979,7 +962,6 @@ query "vpc_peers_for_vpc" {
       id
   EOQ
 
-  param "vpc_id" {}
 }
 
 query "vpc_gateways_for_vpc" {
@@ -992,7 +974,7 @@ query "vpc_gateways_for_vpc" {
     from
       aws_vpc_internet_gateway,
       jsonb_array_elements(attachments) as a
-     where
+    where
       a ->> 'VpcId' = reverse(split_part(reverse($1), '/', 1))
     union all
     select
@@ -1003,7 +985,7 @@ query "vpc_gateways_for_vpc" {
     from
       aws_vpc_egress_only_internet_gateway,
       jsonb_array_elements(attachments) as a
-     where
+    where
       a ->> 'VpcId' = reverse(split_part(reverse($1), '/', 1))
     union all
     select
@@ -1024,11 +1006,10 @@ query "vpc_gateways_for_vpc" {
       state as "State"
     from
       aws_vpc_nat_gateway
-     where
-       vpc_id = $1
+    where
+      vpc_id = $1
   EOQ
 
-  param "vpc_id" {}
 }
 
 query "ingress_nacl_for_vpc_sankey" {
@@ -1160,7 +1141,6 @@ query "ingress_nacl_for_vpc_sankey" {
 
   EOQ
 
-  param "vpc_id" {}
 }
 
 query "egress_nacl_for_vpc_sankey" {
@@ -1299,7 +1279,6 @@ query "egress_nacl_for_vpc_sankey" {
 
   EOQ
 
-  param "vpc_id" {}
 }
 
 query "vpc_overview" {
@@ -1316,7 +1295,6 @@ query "vpc_overview" {
       vpc_id = $1
   EOQ
 
-  param "vpc_id" {}
 }
 
 query "vpc_tags" {
@@ -1333,7 +1311,6 @@ query "vpc_tags" {
       tag ->> 'Key';
   EOQ
 
-  param "vpc_id" {}
 }
 
 query "vpc_cidr_blocks" {
@@ -1357,7 +1334,6 @@ query "vpc_cidr_blocks" {
       vpc_id = $1;
   EOQ
 
-  param "vpc_id" {}
 }
 
 query "vpc_dhcp_options" {
@@ -1380,7 +1356,6 @@ query "vpc_dhcp_options" {
       d.dhcp_options_id;
   EOQ
 
-  param "vpc_id" {}
 }
 
 query "vpc_subnet_by_az" {
@@ -1398,7 +1373,6 @@ query "vpc_subnet_by_az" {
       availability_zone
   EOQ
 
-  param "vpc_id" {}
 }
 
 
@@ -1419,7 +1393,6 @@ node "vpc_routing_subnet_node" {
       and a ->> 'SubnetId' is not null
   EOQ
 
-  param "vpc_id" {}
 }
 
 node "vpc_routing_vpc_node" {
@@ -1440,7 +1413,6 @@ node "vpc_routing_vpc_node" {
 
   EOQ
 
-  param "vpc_id" {}
 }
 
 node "vpc_routing_cidr_node" {
@@ -1460,7 +1432,6 @@ node "vpc_routing_cidr_node" {
       vpc_id = $1
   EOQ
 
-  param "vpc_id" {}
 }
 
 edge "vpc_routing_subnet_vpc_to_cidr_edge" {
@@ -1478,7 +1449,6 @@ edge "vpc_routing_subnet_vpc_to_cidr_edge" {
       vpc_id = $1
   EOQ
 
-  param "vpc_id" {}
 }
 
 node "vpc_routing_gateway_node" {
@@ -1523,7 +1493,6 @@ node "vpc_routing_gateway_node" {
         vpc_id = $1
   EOQ
 
-  param "vpc_id" {}
 }
 
 edge "vpc_routing_cidr_to_gateway_edge" {
@@ -1558,6 +1527,5 @@ edge "vpc_routing_cidr_to_gateway_edge" {
         vpc_id = $1
   EOQ
 
-  param "vpc_id" {}
 }
 

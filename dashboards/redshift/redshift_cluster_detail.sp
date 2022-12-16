@@ -18,183 +18,83 @@ dashboard "redshift_cluster_detail" {
     card {
       width = 2
       query = query.redshift_cluster_status
-      args = {
-        arn = self.input.cluster_arn.value
-      }
+      args = [self.input.cluster_arn.value]
     }
 
     card {
       width = 2
       query = query.redshift_cluster_version
-      args = {
-        arn = self.input.cluster_arn.value
-      }
+      args = [self.input.cluster_arn.value]
     }
 
     card {
       width = 2
       query = query.redshift_cluster_node_type
-      args = {
-        arn = self.input.cluster_arn.value
-      }
+      args = [self.input.cluster_arn.value]
     }
 
     card {
       width = 2
       query = query.redshift_cluster_number_of
-      args = {
-        arn = self.input.cluster_arn.value
-      }
+      args = [self.input.cluster_arn.value]
     }
 
     card {
       width = 2
       query = query.redshift_cluster_public
-      args = {
-        arn = self.input.cluster_arn.value
-      }
+      args = [self.input.cluster_arn.value]
     }
 
     card {
       width = 2
       query = query.redshift_cluster_encryption
-      args = {
-        arn = self.input.cluster_arn.value
-      }
+      args = [self.input.cluster_arn.value]
     }
 
   }
 
   with "cloudwatch_log_groups" {
-    sql = <<-EOQ
-      select
-        g.arn as log_group_arn
-      from
-        aws_redshift_cluster as c,
-        aws_cloudwatch_log_group as g
-      where
-        g.title like '%' || c.title || '%'
-        and c.arn = $1;
-    EOQ
-
+    query = query.redshift_cluster_cloudwatch_log_groups
     args = [self.input.cluster_arn.value]
   }
 
   with "iam_roles" {
-    sql = <<-EOQ
-      select
-        r ->> 'IamRoleArn' as role_arn
-      from
-        aws_redshift_cluster,
-        jsonb_array_elements(iam_roles) as r
-      where
-        arn = $1;
-    EOQ
-
+    query = query.redshift_cluster_iam_roles
     args = [self.input.cluster_arn.value]
   }
 
   with "kms_keys" {
-    sql = <<-EOQ
-      select
-        kms_key_id as key_arn
-      from
-        aws_redshift_cluster
-      where
-        kms_key_id is not null
-        and arn = $1;
-    EOQ
-
+    query = query.redshift_cluster_kms_keys
     args = [self.input.cluster_arn.value]
   }
 
   with "redshift_snapshots" {
-    sql = <<-EOQ
-      select
-        s.akas::text as snapshot_arn
-      from
-        aws_redshift_snapshot as s,
-        aws_redshift_cluster as c
-      where
-        s.cluster_identifier = c.cluster_identifier
-        and c.arn = $1;
-    EOQ
-
+    query = query.redshift_cluster_redshift_snapshots
     args = [self.input.cluster_arn.value]
   }
 
   with "s3_buckets" {
-    sql = <<-EOQ
-      select
-        b.arn as bucket_arn
-      from
-        aws_redshift_cluster as c,
-        aws_s3_bucket as b
-      where
-        b.name = c.logging_status ->> 'BucketName'
-        and c.arn = $1;
-    EOQ
-
+    query = query.redshift_cluster_s3_buckets
     args = [self.input.cluster_arn.value]
   }
 
   with "vpc_eips" {
-    sql = <<-EOQ
-      select
-        e.arn as eip_arn
-      from
-        aws_redshift_cluster as c,
-        aws_vpc_eip as e
-      where
-        c.elastic_ip_status is not null
-        and e.public_ip = (c.elastic_ip_status ->> 'ElasticIp')::inet
-        and c.arn = $1;
-    EOQ
-
+    query = query.redshift_cluster_vpc_eips
     args = [self.input.cluster_arn.value]
   }
 
   with "vpc_security_groups" {
-    sql = <<-EOQ
-      select
-        s ->> 'VpcSecurityGroupId' as security_group_id
-      from
-        aws_redshift_cluster,
-        jsonb_array_elements(vpc_security_groups) as s
-      where
-        arn = $1;
-    EOQ
-
+    query = query.redshift_cluster_vpc_security_groups
     args = [self.input.cluster_arn.value]
   }
 
   with "vpc_subnets" {
-    sql = <<-EOQ
-      select
-        subnet ->> 'SubnetIdentifier' as subnet_id
-      from
-        aws_redshift_subnet_group as s
-        cross join jsonb_array_elements(s.subnets) subnet
-      join
-        aws_redshift_cluster as c
-        on c.cluster_subnet_group_name = s.cluster_subnet_group_name
-        and c.region = s.region
-        and c.arn = $1;
-    EOQ
-
+    query = query.redshift_cluster_vpc_subnets
     args = [self.input.cluster_arn.value]
   }
 
   with "vpc_vpcs" {
-    sql = <<-EOQ
-      select
-        vpc_id as vpc_id
-      from
-        aws_redshift_cluster
-      where
-        arn = $1;
-    EOQ
-
+    query = query.redshift_cluster_vpc_vpcs
     args = [self.input.cluster_arn.value]
   }
 
@@ -379,18 +279,14 @@ dashboard "redshift_cluster_detail" {
         type  = "line"
         width = 6
         query = query.redshift_cluster_overview
-        args = {
-          arn = self.input.cluster_arn.value
-        }
+        args = [self.input.cluster_arn.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.redshift_cluster_tags
-        args = {
-          arn = self.input.cluster_arn.value
-        }
+        args = [self.input.cluster_arn.value]
       }
 
     }
@@ -402,17 +298,13 @@ dashboard "redshift_cluster_detail" {
       table {
         title = "Cluster Nodes"
         query = query.redshift_cluster_node_details
-        args = {
-          arn = self.input.cluster_arn.value
-        }
+        args = [self.input.cluster_arn.value]
       }
 
       table {
         title = "Cluster Parameter Groups"
         query = query.redshift_cluster_parameter_groups
-        args = {
-          arn = self.input.cluster_arn.value
-        }
+        args = [self.input.cluster_arn.value]
       }
 
     }
@@ -421,22 +313,20 @@ dashboard "redshift_cluster_detail" {
 
       title = "Logging"
       query = query.redshift_cluster_logging
-      args = {
-        arn = self.input.cluster_arn.value
-      }
+      args = [self.input.cluster_arn.value]
     }
 
     table {
       title = "Scheduled Actions"
       query = query.redshift_cluster_scheduled_actions
-      args = {
-        arn = self.input.cluster_arn.value
-      }
+      args = [self.input.cluster_arn.value]
     }
 
   }
 
 }
+
+# Input queries
 
 query "redshift_cluster_input" {
   sql = <<-EOQ
@@ -454,6 +344,125 @@ query "redshift_cluster_input" {
   EOQ
 }
 
+# With queries
+
+query "redshift_cluster_cloudwatch_log_groups" {
+  sql = <<-EOQ
+    select
+      g.arn as log_group_arn
+    from
+      aws_redshift_cluster as c,
+      aws_cloudwatch_log_group as g
+    where
+      g.title like '%' || c.title || '%'
+      and c.arn = $1;
+  EOQ
+}
+
+query "redshift_cluster_iam_roles" {
+  sql = <<-EOQ
+    select
+      r ->> 'IamRoleArn' as role_arn
+    from
+      aws_redshift_cluster,
+      jsonb_array_elements(iam_roles) as r
+    where
+      arn = $1;
+  EOQ
+}
+
+query "redshift_cluster_kms_keys" {
+  sql = <<-EOQ
+    select
+      kms_key_id as key_arn
+    from
+      aws_redshift_cluster
+    where
+      kms_key_id is not null
+      and arn = $1;
+  EOQ
+}
+
+query "redshift_cluster_redshift_snapshots" {
+  sql = <<-EOQ
+    select
+      s.akas::text as snapshot_arn
+    from
+      aws_redshift_snapshot as s,
+      aws_redshift_cluster as c
+    where
+      s.cluster_identifier = c.cluster_identifier
+      and c.arn = $1;
+  EOQ
+}
+
+query "redshift_cluster_s3_buckets" {
+  sql = <<-EOQ
+    select
+      b.arn as bucket_arn
+    from
+      aws_redshift_cluster as c,
+      aws_s3_bucket as b
+    where
+      b.name = c.logging_status ->> 'BucketName'
+      and c.arn = $1;
+  EOQ
+}
+
+query "redshift_cluster_vpc_eips" {
+  sql = <<-EOQ
+    select
+      e.arn as eip_arn
+    from
+      aws_redshift_cluster as c,
+      aws_vpc_eip as e
+    where
+      c.elastic_ip_status is not null
+      and e.public_ip = (c.elastic_ip_status ->> 'ElasticIp')::inet
+      and c.arn = $1;
+  EOQ
+}
+
+query "redshift_cluster_vpc_security_groups" {
+  sql = <<-EOQ
+    select
+      s ->> 'VpcSecurityGroupId' as security_group_id
+    from
+      aws_redshift_cluster,
+      jsonb_array_elements(vpc_security_groups) as s
+    where
+      arn = $1;
+  EOQ
+}
+
+query "redshift_cluster_vpc_subnets" {
+  sql = <<-EOQ
+    select
+      subnet ->> 'SubnetIdentifier' as subnet_id
+    from
+      aws_redshift_subnet_group as s
+      cross join jsonb_array_elements(s.subnets) subnet
+    join
+      aws_redshift_cluster as c
+      on c.cluster_subnet_group_name = s.cluster_subnet_group_name
+      and c.region = s.region
+      and c.arn = $1;
+  EOQ
+}
+
+query "redshift_cluster_vpc_vpcs" {
+  sql = <<-EOQ
+    select
+      vpc_id as vpc_id
+    from
+      aws_redshift_cluster
+    where
+      arn = $1;
+  EOQ
+}
+
+# Card queries
+
 query "redshift_cluster_status" {
   sql = <<-EOQ
     select
@@ -464,8 +473,6 @@ query "redshift_cluster_status" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "redshift_cluster_version" {
@@ -478,8 +485,6 @@ query "redshift_cluster_version" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "redshift_cluster_node_type" {
@@ -492,8 +497,6 @@ query "redshift_cluster_node_type" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "redshift_cluster_number_of" {
@@ -506,8 +509,6 @@ query "redshift_cluster_number_of" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "redshift_cluster_encryption" {
@@ -521,8 +522,6 @@ query "redshift_cluster_encryption" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "redshift_cluster_public" {
@@ -536,9 +535,9 @@ query "redshift_cluster_public" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
+
+# Other detail page queries
 
 query "redshift_cluster_node_details" {
   sql = <<-EOQ
@@ -552,8 +551,6 @@ query "redshift_cluster_node_details" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "redshift_cluster_parameter_groups" {
@@ -568,8 +565,6 @@ query "redshift_cluster_parameter_groups" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "redshift_cluster_scheduled_actions" {
@@ -590,8 +585,6 @@ query "redshift_cluster_scheduled_actions" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "redshift_cluster_logging" {
@@ -608,8 +601,6 @@ query "redshift_cluster_logging" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "redshift_cluster_security_groups" {
@@ -623,8 +614,6 @@ query "redshift_cluster_security_groups" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "redshift_cluster_overview" {
@@ -644,8 +633,6 @@ query "redshift_cluster_overview" {
     where
       arn = $1
     EOQ
-
-  param "arn" {}
 }
 
 query "redshift_cluster_tags" {
@@ -661,6 +648,4 @@ query "redshift_cluster_tags" {
     order by
       tag ->> 'Key';
     EOQ
-
-  param "arn" {}
 }

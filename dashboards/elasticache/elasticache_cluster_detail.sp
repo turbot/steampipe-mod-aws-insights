@@ -18,178 +18,74 @@ dashboard "elasticache_cluster_detail" {
     card {
       query = query.elasticache_cluster_status
       width = 2
-      args = {
-        arn = self.input.elasticache_cluster_arn.value
-      }
+      args  = [self.input.elasticache_cluster_arn.value]
     }
 
     card {
       query = query.elasticache_cluster_node_type
       width = 2
-      args = {
-        arn = self.input.elasticache_cluster_arn.value
-      }
+      args  = [self.input.elasticache_cluster_arn.value]
     }
 
     card {
       query = query.elasticache_cluster_automatic_backup
       width = 2
-      args = {
-        arn = self.input.elasticache_cluster_arn.value
-      }
+      args  = [self.input.elasticache_cluster_arn.value]
     }
 
     card {
       query = query.elasticache_cluster_encryption_transit
       width = 2
-      args = {
-        arn = self.input.elasticache_cluster_arn.value
-      }
+      args  = [self.input.elasticache_cluster_arn.value]
     }
 
     card {
       query = query.elasticache_cluster_encryption_rest
       width = 2
-      args = {
-        arn = self.input.elasticache_cluster_arn.value
-      }
+      args  = [self.input.elasticache_cluster_arn.value]
     }
 
     card {
       query = query.elasticache_cluster_auth_token
       width = 2
-      args = {
-        arn = self.input.elasticache_cluster_arn.value
-      }
+      args  = [self.input.elasticache_cluster_arn.value]
     }
 
   }
 
   with "elasticache_parameter_groups" {
-    sql = <<-EOQ
-      select
-        g.arn as elasticache_parameter_group_arn
-      from
-        aws_elasticache_cluster as c,
-        aws_elasticache_parameter_group as g
-      where
-        c.cache_parameter_group ->> 'CacheParameterGroupName' = g.cache_parameter_group_name
-        and c.region = g.region
-        and c.arn = $1;
-    EOQ
-
-    args = [self.input.elasticache_cluster_arn.value]
+    query = query.elasticache_cluster_elasticache_parameter_groups
+    args  = [self.input.elasticache_cluster_arn.value]
   }
 
   with "elasticache_subnet_groups" {
-    sql = <<-EOQ
-      select
-        g.arn as elasticache_subnet_group_arn
-      from
-        aws_elasticache_cluster as c,
-        jsonb_array_elements(security_groups) as sg,
-        aws_elasticache_subnet_group as g
-      where
-        g.cache_subnet_group_name = c.cache_subnet_group_name
-        and g.region = c.region
-        and g.arn is not null
-        and c.arn = $1;
-    EOQ
-
-    args = [self.input.elasticache_cluster_arn.value]
+    query = query.elasticache_cluster_elasticache_subnet_groups
+    args  = [self.input.elasticache_cluster_arn.value]
   }
 
   with "kms_keys" {
-    sql = <<-EOQ
-      select
-        kms_key_id as kms_key_arn
-      from
-        aws_elasticache_cluster as c,
-        aws_elasticache_replication_group as g
-      where
-        c.arn = $1
-        and c.replication_group_id = g.replication_group_id
-        and kms_key_id is not null;
-    EOQ
-
-    args = [self.input.elasticache_cluster_arn.value]
+    query = query.elasticache_cluster_kms_keys
+    args  = [self.input.elasticache_cluster_arn.value]
   }
 
   with "sns_topics" {
-    sql = <<-EOQ
-      select
-        notification_configuration ->> 'TopicArn' as sns_topic_arn
-      from
-        aws_elasticache_cluster
-      where
-        arn = $1
-        and notification_configuration ->> 'TopicArn' not null;
-    EOQ
-
-    args = [self.input.elasticache_cluster_arn.value]
+    query = query.elasticache_cluster_sns_topics
+    args  = [self.input.elasticache_cluster_arn.value]
   }
 
   with "vpc_security_groups" {
-    sql = <<-EOQ
-      select
-        group_id as vpc_security_group_id
-      from
-        aws_vpc_security_group
-      where
-        group_id in
-        (
-          select
-            sg ->> 'SecurityGroupId'
-          from
-            aws_elasticache_cluster,
-            jsonb_array_elements(security_groups) as sg
-          where
-            arn = $1
-        );
-    EOQ
-
-    args = [self.input.elasticache_cluster_arn.value]
+    query = query.elasticache_cluster_vpc_security_groups
+    args  = [self.input.elasticache_cluster_arn.value]
   }
 
   with "vpc_subnets" {
-    sql = <<-EOQ
-      select
-        subnet ->> 'SubnetIdentifier' as vpc_subnet_id
-      from
-        aws_elasticache_cluster as c,
-        aws_elasticache_subnet_group as g,
-        jsonb_array_elements(subnets) as subnet
-      where
-        g.cache_subnet_group_name = c.cache_subnet_group_name
-        and g.region = c.region
-        and c.arn = $1
-    EOQ
-
-    args = [self.input.elasticache_cluster_arn.value]
+    query = query.elasticache_cluster_vpc_subnets
+    args  = [self.input.elasticache_cluster_arn.value]
   }
 
   with "vpc_vpcs" {
-    sql = <<-EOQ
-      select
-        vpc_id as vpc_vpc_id
-      from
-        aws_vpc
-      where
-        vpc_id in
-        (
-          select
-            vpc_id
-          from
-            aws_elasticache_cluster as c,
-            aws_elasticache_subnet_group as g
-          where
-            g.cache_subnet_group_name = c.cache_subnet_group_name
-            and g.region = c.region
-            and c.arn = $1
-        );
-    EOQ
-
-    args = [self.input.elasticache_cluster_arn.value]
+    query = query.elasticache_cluster_vpc_vpcs
+    args  = [self.input.elasticache_cluster_arn.value]
   }
 
   container {
@@ -316,9 +212,7 @@ dashboard "elasticache_cluster_detail" {
         type  = "line"
         width = 6
         query = query.elasticache_cluster_overview
-        args = {
-          arn = self.input.elasticache_cluster_arn.value
-        }
+        args  = [self.input.elasticache_cluster_arn.value]
 
       }
 
@@ -326,9 +220,7 @@ dashboard "elasticache_cluster_detail" {
         title = "Tags"
         width = 6
         query = query.elasticache_cluster_tags
-        args = {
-          arn = self.input.elasticache_cluster_arn.value
-        }
+        args  = [self.input.elasticache_cluster_arn.value]
 
       }
     }
@@ -338,14 +230,13 @@ dashboard "elasticache_cluster_detail" {
       table {
         title = "Notification Configuration"
         query = query.elasticache_cluster_notification_configuration
-        args = {
-          arn = self.input.elasticache_cluster_arn.value
-        }
+        args  = [self.input.elasticache_cluster_arn.value]
       }
     }
   }
 }
 
+# Input queries
 
 query "elasticache_cluster_input" {
   sql = <<-EOQ
@@ -363,6 +254,123 @@ query "elasticache_cluster_input" {
   EOQ
 }
 
+# With queries
+
+query "elasticache_cluster_elasticache_parameter_groups" {
+  sql = <<-EOQ
+    select
+      g.arn as elasticache_parameter_group_arn
+    from
+      aws_elasticache_cluster as c,
+      aws_elasticache_parameter_group as g
+    where
+      c.cache_parameter_group ->> 'CacheParameterGroupName' = g.cache_parameter_group_name
+      and c.region = g.region
+      and c.arn = $1;
+  EOQ
+}
+
+query "elasticache_cluster_elasticache_subnet_groups" {
+  sql = <<-EOQ
+    select
+      g.arn as elasticache_subnet_group_arn
+    from
+      aws_elasticache_cluster as c,
+      jsonb_array_elements(security_groups) as sg,
+      aws_elasticache_subnet_group as g
+    where
+      g.cache_subnet_group_name = c.cache_subnet_group_name
+      and g.region = c.region
+      and g.arn is not null
+      and c.arn = $1;
+  EOQ
+}
+
+query "elasticache_cluster_kms_keys" {
+  sql = <<-EOQ
+    select
+      kms_key_id as kms_key_arn
+    from
+      aws_elasticache_cluster as c,
+      aws_elasticache_replication_group as g
+    where
+      c.arn = $1
+      and c.replication_group_id = g.replication_group_id
+      and kms_key_id is not null;
+  EOQ
+}
+
+query "elasticache_cluster_sns_topics" {
+  sql = <<-EOQ
+    select
+      notification_configuration ->> 'TopicArn' as sns_topic_arn
+    from
+      aws_elasticache_cluster
+    where
+      arn = $1
+      and notification_configuration ->> 'TopicArn' is not null;
+  EOQ
+}
+
+query "elasticache_cluster_vpc_security_groups" {
+  sql = <<-EOQ
+    select
+      group_id as vpc_security_group_id
+    from
+      aws_vpc_security_group
+    where
+      group_id in
+      (
+        select
+          sg ->> 'SecurityGroupId'
+        from
+          aws_elasticache_cluster,
+          jsonb_array_elements(security_groups) as sg
+        where
+          arn = $1
+      );
+  EOQ
+}
+
+query "elasticache_cluster_vpc_subnets" {
+  sql = <<-EOQ
+    select
+      subnet ->> 'SubnetIdentifier' as vpc_subnet_id
+    from
+      aws_elasticache_cluster as c,
+      aws_elasticache_subnet_group as g,
+      jsonb_array_elements(subnets) as subnet
+    where
+      g.cache_subnet_group_name = c.cache_subnet_group_name
+      and g.region = c.region
+      and c.arn = $1
+  EOQ
+}
+
+query "elasticache_cluster_vpc_vpcs" {
+  sql = <<-EOQ
+    select
+      vpc_id as vpc_vpc_id
+    from
+      aws_vpc
+    where
+      vpc_id in
+      (
+        select
+          vpc_id
+        from
+          aws_elasticache_cluster as c,
+          aws_elasticache_subnet_group as g
+        where
+          g.cache_subnet_group_name = c.cache_subnet_group_name
+          and g.region = c.region
+          and c.arn = $1
+      );
+  EOQ
+}
+
+# Card queries
+
 query "elasticache_cluster_status" {
   sql = <<-EOQ
     select
@@ -373,8 +381,6 @@ query "elasticache_cluster_status" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "elasticache_cluster_node_type" {
@@ -387,8 +393,6 @@ query "elasticache_cluster_node_type" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "elasticache_cluster_automatic_backup" {
@@ -402,8 +406,6 @@ query "elasticache_cluster_automatic_backup" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "elasticache_cluster_encryption_transit" {
@@ -417,8 +419,6 @@ query "elasticache_cluster_encryption_transit" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "elasticache_cluster_encryption_rest" {
@@ -432,9 +432,6 @@ query "elasticache_cluster_encryption_rest" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
-
 }
 
 query "elasticache_cluster_auth_token" {
@@ -448,10 +445,9 @@ query "elasticache_cluster_auth_token" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
-
 }
+
+# Other detail page queries
 
 query "elasticache_cluster_overview" {
   sql = <<-EOQ
@@ -472,8 +468,6 @@ query "elasticache_cluster_overview" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "elasticache_cluster_tags" {
@@ -489,8 +483,6 @@ query "elasticache_cluster_tags" {
     order by
       tag ->> 'Key';
   EOQ
-
-  param "arn" {}
 }
 
 query "elasticache_cluster_notification_configuration" {
@@ -506,7 +498,5 @@ query "elasticache_cluster_notification_configuration" {
     where
       c.arn = $1;
   EOQ
-
-  param "arn" {}
 }
 

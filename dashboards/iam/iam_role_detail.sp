@@ -18,98 +18,46 @@ dashboard "iam_role_detail" {
     card {
       width = 2
       query = query.iam_boundary_policy_for_role
-      args = {
-        arn = self.input.role_arn.value
-      }
+      args  = [self.input.role_arn.value]
     }
 
     card {
       width = 2
       query = query.iam_role_inline_policy_count_for_role
-      args = {
-        arn = self.input.role_arn.value
-      }
+      args  = [self.input.role_arn.value]
     }
 
     card {
       width = 2
       query = query.iam_role_direct_attached_policy_count_for_role
-      args = {
-        arn = self.input.role_arn.value
-      }
+      args  = [self.input.role_arn.value]
     }
 
   }
 
   with "ec2_instances" {
-    sql = <<-EOQ
-      select
-        i.arn as instance_arn
-      from
-        aws_ec2_instance as i,
-        aws_iam_role as r,
-        jsonb_array_elements_text(instance_profile_arns) as instance_profile
-      where
-        r.arn = $1
-        and instance_profile = i.iam_instance_profile_arn;
-    EOQ
-
-    args = [self.input.role_arn.value]
+    query = query.iam_role_ec2_instances
+    args  = [self.input.role_arn.value]
   }
 
   with "emr_clusters" {
-    sql = <<-EOQ
-      select
-        c.cluster_arn as cluster_arn
-      from
-        aws_iam_role as r,
-        aws_emr_cluster as c
-      where
-        r.arn = $1
-        and r.name = c.service_role;
-    EOQ
-
-    args = [self.input.role_arn.value]
+    query = query.iam_role_emr_clusters
+    args  = [self.input.role_arn.value]
   }
 
   with "guardduty_detectors" {
-    sql = <<-EOQ
-      select
-        arn as guardduty_detector_arn
-      from
-        aws_guardduty_detector
-      where
-        service_role = $1;
-    EOQ
-
-    args = [self.input.role_arn.value]
+    query = query.iam_role_guardduty_detectors
+    args  = [self.input.role_arn.value]
   }
 
   with "iam_policies" {
-    sql = <<-EOQ
-      select
-        policy_arn
-      from
-        aws_iam_role,
-        jsonb_array_elements_text(attached_policy_arns) as policy_arn
-      where
-        arn = $1;
-    EOQ
-
-    args = [self.input.role_arn.value]
+    query = query.iam_role_iam_policies
+    args  = [self.input.role_arn.value]
   }
 
   with "lambda_functions" {
-    sql = <<-EOQ
-      select
-        arn as function_arn
-      from
-        aws_lambda_function
-      where
-        role = $1;
-    EOQ
-
-    args = [self.input.role_arn.value]
+    query = query.iam_role_lambda_functions
+    args  = [self.input.role_arn.value]
   }
 
   container {
@@ -265,18 +213,14 @@ dashboard "iam_role_detail" {
         type  = "line"
         width = 6
         query = query.iam_role_overview
-        args = {
-          arn = self.input.role_arn.value
-        }
+        args  = [self.input.role_arn.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.iam_role_tags
-        args = {
-          arn = self.input.role_arn.value
-        }
+        args  = [self.input.role_arn.value]
       }
     }
 
@@ -289,9 +233,7 @@ dashboard "iam_role_detail" {
         width = 6
         title = "Attached Policies"
         query = query.iam_user_manage_policies_hierarchy
-        args = {
-          arn = self.input.role_arn.value
-        }
+        args  = [self.input.role_arn.value]
 
         category "inline_policy" {
           color = "alert"
@@ -307,15 +249,15 @@ dashboard "iam_role_detail" {
         title = "Policies"
         width = 6
         query = query.iam_all_policies_for_role
-        args = {
-          arn = self.input.role_arn.value
-        }
+        args  = [self.input.role_arn.value]
       }
 
     }
   }
 
 }
+
+# Input queries
 
 query "iam_role_input" {
   sql = <<-EOQ
@@ -331,6 +273,71 @@ query "iam_role_input" {
       title;
   EOQ
 }
+
+# With queries
+
+query "iam_role_ec2_instances" {
+  sql = <<-EOQ
+    select
+      i.arn as instance_arn
+    from
+      aws_ec2_instance as i,
+      aws_iam_role as r,
+      jsonb_array_elements_text(instance_profile_arns) as instance_profile
+    where
+      r.arn = $1
+      and instance_profile = i.iam_instance_profile_arn;
+  EOQ
+}
+
+query "iam_role_emr_clusters" {
+  sql = <<-EOQ
+    select
+      c.cluster_arn as cluster_arn
+    from
+      aws_iam_role as r,
+      aws_emr_cluster as c
+    where
+      r.arn = $1
+      and r.name = c.service_role;
+  EOQ
+}
+
+query "iam_role_guardduty_detectors" {
+  sql = <<-EOQ
+    select
+      arn as guardduty_detector_arn
+    from
+      aws_guardduty_detector
+    where
+      service_role = $1;
+  EOQ
+}
+
+query "iam_role_iam_policies" {
+  sql = <<-EOQ
+    select
+      policy_arn
+    from
+      aws_iam_role,
+      jsonb_array_elements_text(attached_policy_arns) as policy_arn
+    where
+      arn = $1;
+  EOQ
+}
+
+query "iam_role_lambda_functions" {
+  sql = <<-EOQ
+    select
+      arn as function_arn
+    from
+      aws_lambda_function
+    where
+      role = $1;
+  EOQ
+}
+
+# Card queries
 
 query "iam_boundary_policy_for_role" {
   sql = <<-EOQ
@@ -351,8 +358,6 @@ query "iam_boundary_policy_for_role" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }
 
 query "iam_role_inline_policy_count_for_role" {
@@ -366,8 +371,6 @@ query "iam_role_inline_policy_count_for_role" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }
 
 query "iam_role_direct_attached_policy_count_for_role" {
@@ -381,11 +384,9 @@ query "iam_role_direct_attached_policy_count_for_role" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }
 
-//*******
+# Other detail page queries
 
 query "iam_role_overview" {
   sql = <<-EOQ
@@ -401,8 +402,6 @@ query "iam_role_overview" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }
 
 query "iam_all_policies_for_role" {
@@ -430,8 +429,6 @@ query "iam_all_policies_for_role" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }
 
 query "iam_role_tags" {
@@ -447,8 +444,6 @@ query "iam_role_tags" {
     order by
       tag ->> 'Key'
   EOQ
-
-  param "arn" {}
 }
 
 query "iam_user_manage_policies_hierarchy" {
@@ -483,6 +478,4 @@ query "iam_user_manage_policies_hierarchy" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }

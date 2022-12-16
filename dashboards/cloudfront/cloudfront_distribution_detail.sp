@@ -17,145 +17,58 @@ dashboard "cloudfront_distribution_detail" {
     card {
       query = query.cloudfront_distribution_status
       width = 2
-      args = {
-        arn = self.input.distribution_arn.value
-      }
+      args = [self.input.distribution_arn.value]
     }
 
     card {
       query = query.cloudfront_distribution_price_class
       width = 2
-      args = {
-        arn = self.input.distribution_arn.value
-      }
+      args = [self.input.distribution_arn.value]
     }
 
     card {
       query = query.cloudfront_distribution_logging
       width = 2
-      args = {
-        arn = self.input.distribution_arn.value
-      }
+      args = [self.input.distribution_arn.value]
     }
 
     card {
       query = query.cloudfront_distribution_field_level_encryption
       width = 2
-      args = {
-        arn = self.input.distribution_arn.value
-      }
+      args = [self.input.distribution_arn.value]
     }
 
     card {
       query = query.cloudfront_distribution_sni
       width = 2
-      args = {
-        arn = self.input.distribution_arn.value
-      }
+      args = [self.input.distribution_arn.value]
     }
 
   }
 
   with "acm_certificates" {
-    sql = <<-EOQ
-      select
-        viewer_certificate ->> 'ACMCertificateArn' as certificate_arn
-      from
-        aws_cloudfront_distribution
-      where
-        viewer_certificate ->> 'ACMCertificateArn' is not null
-        and arn = $1
-    EOQ
-
-    args = [self.input.distribution_arn.value]
+    query = query.cloudfront_distribution_acm_certificates
+    args  = [self.input.distribution_arn.value]
   }
 
   with "ec2_application_load_balancers" {
-    sql = <<-EOQ
-      select
-        arn as alb_arn
-      from
-        aws_ec2_application_load_balancer
-      where
-        dns_name in
-        (
-          select
-            origin ->> 'DomainName'
-          from
-            aws_cloudfront_distribution,
-            jsonb_array_elements(origins) as origin
-          where
-            arn = $1
-        );
-    EOQ
-
-    args = [self.input.distribution_arn.value]
+    query = query.cloudfront_distribution_ec2_application_load_balancers
+    args  = [self.input.distribution_arn.value]
   }
 
   with "media_stores" {
-    sql = <<-EOQ
-      select
-        arn as mediastore_arn
-      from
-        aws_media_store_container
-      where
-        endpoint in
-        (
-          select
-            'https://' || (origin ->> 'DomainName')
-          from
-            aws_cloudfront_distribution,
-            jsonb_array_elements(origins) as origin
-          where
-            arn = $1
-        );
-    EOQ
-
-    args = [self.input.distribution_arn.value]
+    query = query.cloudfront_distribution_media_stores
+    args  = [self.input.distribution_arn.value]
   }
 
   with "s3_buckets" {
-    sql = <<-EOQ
-      select
-        arn as bucket_arn
-      from
-        aws_s3_bucket
-      where
-        name in
-        (
-          select distinct
-            split_part(origin ->> 'DomainName', '.', 1) as bucket_name
-          from
-            aws_cloudfront_distribution,
-            jsonb_array_elements(origins) as origin
-          where
-            origin ->> 'DomainName' like '%s3%'
-            and arn = $1
-        );
-    EOQ
-
-    args = [self.input.distribution_arn.value]
+    query = query.cloudfront_distribution_s3_buckets
+    args  = [self.input.distribution_arn.value]
   }
 
   with "wafv2_web_acls" {
-    sql = <<-EOQ
-      select
-        arn as wafv2_acl_arn
-      from
-        aws_wafv2_web_acl
-      where
-        arn in
-        (
-          select
-            web_acl_id
-          from
-            aws_cloudfront_distribution
-          where
-            arn = $1
-        );
-    EOQ
-
-    args = [self.input.distribution_arn.value]
+    query = query.cloudfront_distribution_wafv2_web_acls
+    args  = [self.input.distribution_arn.value]
   }
 
   container {
@@ -253,9 +166,7 @@ dashboard "cloudfront_distribution_detail" {
         type  = "line"
         width = 6
         query = query.cloudfront_distribution_overview
-        args = {
-          arn = self.input.distribution_arn.value
-        }
+        args = [self.input.distribution_arn.value]
 
       }
 
@@ -263,9 +174,7 @@ dashboard "cloudfront_distribution_detail" {
         title = "Tags"
         width = 6
         query = query.cloudfront_distribution_tags
-        args = {
-          arn = self.input.distribution_arn.value
-        }
+        args = [self.input.distribution_arn.value]
 
       }
     }
@@ -275,13 +184,13 @@ dashboard "cloudfront_distribution_detail" {
       table {
         title = "Restrictions"
         query = query.cloudfront_distribution_restrictions
-        args = {
-          arn = self.input.distribution_arn.value
-        }
+        args = [self.input.distribution_arn.value]
       }
     }
   }
 }
+
+# Input queries
 
 query "cloudfront_distribution_input" {
   sql = <<-EOQ
@@ -298,6 +207,102 @@ query "cloudfront_distribution_input" {
   EOQ
 }
 
+# With queries
+
+query "cloudfront_distribution_acm_certificates" {
+  sql = <<-EOQ
+    select
+      arn as alb_arn
+    from
+      aws_ec2_application_load_balancer
+    where
+      dns_name in
+      (
+        select
+          origin ->> 'DomainName'
+        from
+          aws_cloudfront_distribution,
+          jsonb_array_elements(origins) as origin
+        where
+          arn = $1
+      );
+  EOQ
+}
+
+query "cloudfront_distribution_ec2_application_load_balancers" {
+  sql = <<-EOQ
+    select
+      viewer_certificate ->> 'ACMCertificateArn' as certificate_arn
+    from
+      aws_cloudfront_distribution
+    where
+      viewer_certificate ->> 'ACMCertificateArn' is not null
+      and arn = $1
+    EOQ
+}
+
+query "cloudfront_distribution_media_stores" {
+  sql = <<-EOQ
+    select
+      arn as mediastore_arn
+    from
+      aws_media_store_container
+    where
+      endpoint in
+      (
+        select
+          'https://' || (origin ->> 'DomainName')
+        from
+          aws_cloudfront_distribution,
+          jsonb_array_elements(origins) as origin
+        where
+          arn = $1
+      );
+  EOQ
+}
+
+query "cloudfront_distribution_s3_buckets" {
+  sql = <<-EOQ
+    select
+      arn as bucket_arn
+    from
+      aws_s3_bucket
+    where
+      name in
+      (
+        select distinct
+          split_part(origin ->> 'DomainName', '.', 1) as bucket_name
+        from
+          aws_cloudfront_distribution,
+          jsonb_array_elements(origins) as origin
+        where
+          origin ->> 'DomainName' like '%s3%'
+          and arn = $1
+      );
+  EOQ
+}
+
+query "cloudfront_distribution_wafv2_web_acls" {
+  sql = <<-EOQ
+    select
+      arn as wafv2_acl_arn
+    from
+      aws_wafv2_web_acl
+    where
+      arn in
+      (
+        select
+          web_acl_id
+        from
+          aws_cloudfront_distribution
+        where
+          arn = $1
+      );
+  EOQ
+}
+
+# Card queries
+
 query "cloudfront_distribution_status" {
   sql = <<-EOQ
     select
@@ -308,8 +313,6 @@ query "cloudfront_distribution_status" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "cloudfront_distribution_price_class" {
@@ -322,8 +325,6 @@ query "cloudfront_distribution_price_class" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "cloudfront_distribution_logging" {
@@ -337,8 +338,6 @@ query "cloudfront_distribution_logging" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "cloudfront_distribution_field_level_encryption" {
@@ -352,8 +351,6 @@ query "cloudfront_distribution_field_level_encryption" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "cloudfront_distribution_sni" {
@@ -367,9 +364,9 @@ query "cloudfront_distribution_sni" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
+
+# Other detail page queries
 
 query "cloudfront_distribution_overview" {
   sql = <<-EOQ
@@ -387,8 +384,6 @@ query "cloudfront_distribution_overview" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "cloudfront_distribution_tags" {
@@ -404,8 +399,6 @@ query "cloudfront_distribution_tags" {
     order by
       tag ->> 'Key';
   EOQ
-
-  param "arn" {}
 }
 
 query "cloudfront_distribution_restrictions" {
@@ -419,6 +412,4 @@ query "cloudfront_distribution_restrictions" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }

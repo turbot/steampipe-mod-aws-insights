@@ -17,206 +17,78 @@ dashboard "eks_cluster_detail" {
     card {
       width = 2
       query = query.eks_cluster_status
-      args = {
-        arn = self.input.eks_cluster_arn.value
-      }
+      args  = [self.input.eks_cluster_arn.value]
     }
 
     card {
       width = 2
       query = query.eks_cluster_kubernetes_version
-      args = {
-        arn = self.input.eks_cluster_arn.value
-      }
+      args  = [self.input.eks_cluster_arn.value]
     }
 
     card {
       width = 2
       query = query.eks_cluster_secrets_encryption
-      args = {
-        arn = self.input.eks_cluster_arn.value
-      }
+      args  = [self.input.eks_cluster_arn.value]
     }
 
     card {
       width = 2
       query = query.eks_cluster_endpoint_restrict_public_access
-      args = {
-        arn = self.input.eks_cluster_arn.value
-      }
+      args  = [self.input.eks_cluster_arn.value]
     }
 
     card {
       width = 2
       query = query.eks_cluster_control_plane_audit_logging
-      args = {
-        arn = self.input.eks_cluster_arn.value
-      }
+      args  = [self.input.eks_cluster_arn.value]
     }
 
   }
 
   with "eks_addons" {
-    sql = <<-EOQ
-      select
-        arn as eks_addon_arn
-      from
-        aws_eks_addon
-      where
-        cluster_name in
-        (
-          select
-            name
-          from
-            aws_eks_cluster
-          where
-            arn = $1
-        )
-    EOQ
-
-    args = [self.input.eks_cluster_arn.value]
+    query = query.eks_cluster_eks_addons
+    args  = [self.input.eks_cluster_arn.value]
   }
 
   with "eks_fargate_profiles" {
-    sql = <<-EOQ
-      select
-        p.fargate_profile_arn as eks_fargate_profile_arn
-      from
-      aws_eks_cluster as c
-      left join aws_eks_fargate_profile as p on p.cluster_name = c.name
-      where
-        p.region = c.region
-        and c.arn = $1;
-    EOQ
-
-    args = [self.input.eks_cluster_arn.value]
+    query = query.eks_cluster_eks_fargate_profiles
+    args  = [self.input.eks_cluster_arn.value]
   }
 
   with "eks_identity_providers" {
-    sql = <<-EOQ
-      select
-        arn as eks_identity_provider_arn
-      from
-        aws_eks_identity_provider_config
-      where
-        cluster_name in
-        (
-          select
-            name
-          from
-            aws_eks_cluster
-          where
-            arn = $1
-        )
-    EOQ
-
-    args = [self.input.eks_cluster_arn.value]
+    query = query.eks_cluster_eks_identity_providers
+    args  = [self.input.eks_cluster_arn.value]
   }
 
   with "eks_node_groups" {
-    sql = <<-EOQ
-      select
-        arn as eks_node_group_arn
-      from
-        aws_eks_node_group
-      where
-        cluster_name in
-        (
-          select
-            name
-          from
-            aws_eks_cluster
-          where
-            arn = $1
-        )
-    EOQ
-
-    args = [self.input.eks_cluster_arn.value]
+    query = query.eks_cluster_eks_node_groups
+    args  = [self.input.eks_cluster_arn.value]
   }
 
   with "iam_roles" {
-    sql = <<-EOQ
-      select
-        role_arn as iam_role_arn
-      from
-        aws_eks_cluster as c
-      where
-        arn = $1
-    EOQ
-
-    args = [self.input.eks_cluster_arn.value]
+    query = query.eks_cluster_iam_roles
+    args  = [self.input.eks_cluster_arn.value]
   }
 
   with "kms_keys" {
-    sql = <<-EOQ
-      select
-        e -> 'Provider' ->> 'KeyArn' as kms_key_arn
-      from
-        aws_eks_cluster,
-        jsonb_array_elements(encryption_config) as e
-      where
-        arn = $1
-    EOQ
-
-    args = [self.input.eks_cluster_arn.value]
+    query = query.eks_cluster_kms_keys
+    args  = [self.input.eks_cluster_arn.value]
   }
 
   with "vpc_security_groups" {
-    sql = <<-EOQ
-      select
-        group_id as vpc_security_group_id
-      from
-        aws_vpc_security_group
-      where
-        group_id in
-        (
-          select
-            s
-          from
-            aws_eks_cluster,
-            jsonb_array_elements_text(resources_vpc_config -> 'SecurityGroupIds') as s
-          where
-            arn = $1
-        )
-    EOQ
-
-    args = [self.input.eks_cluster_arn.value]
+    query = query.eks_cluster_vpc_security_groups
+    args  = [self.input.eks_cluster_arn.value]
   }
 
   with "vpc_subnets" {
-    sql = <<-EOQ
-      select
-        subnet_id as vpc_subnet_id
-      from
-        aws_vpc_subnet
-      where
-        subnet_id in
-        (
-          select
-            s
-          from
-            aws_eks_cluster,
-            jsonb_array_elements_text(resources_vpc_config -> 'SubnetIds') as s
-          where
-            arn = $1
-        )
-    EOQ
-
-    args = [self.input.eks_cluster_arn.value]
+    query = query.eks_cluster_vpc_subnets
+    args  = [self.input.eks_cluster_arn.value]
   }
 
   with "vpc_vpcs" {
-    sql = <<-EOQ
-      select
-        resources_vpc_config ->> 'VpcId' as vpc_vpc_id
-      from
-        aws_eks_cluster
-      where
-        resources_vpc_config ->> 'VpcId' is not null
-        and arn = $1
-    EOQ
-
-    args = [self.input.eks_cluster_arn.value]
+    query = query.eks_cluster_vpc_vpcs
+    args  = [self.input.eks_cluster_arn.value]
   }
 
   container {
@@ -370,9 +242,7 @@ dashboard "eks_cluster_detail" {
         type  = "line"
         width = 6
         query = query.eks_cluster_overview
-        args = {
-          arn = self.input.eks_cluster_arn.value
-        }
+        args  = [self.input.eks_cluster_arn.value]
 
       }
 
@@ -380,9 +250,7 @@ dashboard "eks_cluster_detail" {
         title = "Tags"
         width = 6
         query = query.eks_cluster_tags
-        args = {
-          arn = self.input.eks_cluster_arn.value
-        }
+        args  = [self.input.eks_cluster_arn.value]
       }
     }
     container {
@@ -391,17 +259,13 @@ dashboard "eks_cluster_detail" {
       table {
         title = "Resources VPC Config"
         query = query.eks_cluster_resources_vpc_config
-        args = {
-          arn = self.input.eks_cluster_arn.value
-        }
+        args  = [self.input.eks_cluster_arn.value]
       }
 
       table {
         title = "Control Plane Logging"
         query = query.eks_cluster_logging
-        args = {
-          arn = self.input.eks_cluster_arn.value
-        }
+        args  = [self.input.eks_cluster_arn.value]
       }
     }
 
@@ -412,13 +276,13 @@ dashboard "eks_cluster_detail" {
     table {
       title = "Node Groups"
       query = query.eks_cluster_node_group
-      args = {
-        arn = self.input.eks_cluster_arn.value
-      }
+      args  = [self.input.eks_cluster_arn.value]
     }
 
   }
 }
+
+# Input queries
 
 query "eks_cluster_input" {
   sql = <<-EOQ
@@ -433,8 +297,157 @@ query "eks_cluster_input" {
       aws_eks_cluster
     order by
       title;
-EOQ
+  EOQ
 }
+
+# With queries
+
+query "eks_cluster_eks_addons" {
+  sql = <<-EOQ
+    select
+      arn as eks_addon_arn
+    from
+      aws_eks_addon
+    where
+      cluster_name in
+      (
+        select
+          name
+        from
+          aws_eks_cluster
+        where
+          arn = $1
+      )
+  EOQ
+}
+
+query "eks_cluster_eks_fargate_profiles" {
+  sql = <<-EOQ
+    select
+      p.fargate_profile_arn as eks_fargate_profile_arn
+    from
+    aws_eks_cluster as c
+    left join aws_eks_fargate_profile as p on p.cluster_name = c.name
+    where
+      p.region = c.region
+      and c.arn = $1;
+  EOQ
+}
+
+query "eks_cluster_eks_identity_providers" {
+  sql = <<-EOQ
+    select
+      arn as eks_identity_provider_arn
+    from
+      aws_eks_identity_provider_config
+    where
+      cluster_name in
+      (
+        select
+          name
+        from
+          aws_eks_cluster
+        where
+          arn = $1
+      )
+  EOQ
+}
+
+query "eks_cluster_eks_node_groups" {
+  sql = <<-EOQ
+    select
+      arn as eks_node_group_arn
+    from
+      aws_eks_node_group
+    where
+      cluster_name in
+      (
+        select
+          name
+        from
+          aws_eks_cluster
+        where
+          arn = $1
+      )
+  EOQ
+}
+
+query "eks_cluster_iam_roles" {
+  sql = <<-EOQ
+    select
+      role_arn as iam_role_arn
+    from
+      aws_eks_cluster as c
+    where
+      arn = $1
+  EOQ
+}
+
+query "eks_cluster_kms_keys" {
+  sql = <<-EOQ
+    select
+      e -> 'Provider' ->> 'KeyArn' as kms_key_arn
+    from
+      aws_eks_cluster,
+      jsonb_array_elements(encryption_config) as e
+    where
+      arn = $1
+  EOQ
+}
+
+query "eks_cluster_vpc_security_groups" {
+  sql = <<-EOQ
+    select
+      group_id as vpc_security_group_id
+    from
+      aws_vpc_security_group
+    where
+      group_id in
+      (
+        select
+          s
+        from
+          aws_eks_cluster,
+          jsonb_array_elements_text(resources_vpc_config -> 'SecurityGroupIds') as s
+        where
+          arn = $1
+      )
+  EOQ
+}
+
+query "eks_cluster_vpc_subnets" {
+  sql = <<-EOQ
+    select
+      subnet_id as vpc_subnet_id
+    from
+      aws_vpc_subnet
+    where
+      subnet_id in
+      (
+        select
+          s
+        from
+          aws_eks_cluster,
+          jsonb_array_elements_text(resources_vpc_config -> 'SubnetIds') as s
+        where
+          arn = $1
+      )
+  EOQ
+}
+
+query "eks_cluster_vpc_vpcs" {
+  sql = <<-EOQ
+    select
+      resources_vpc_config ->> 'VpcId' as vpc_vpc_id
+    from
+      aws_eks_cluster
+    where
+      resources_vpc_config ->> 'VpcId' is not null
+      and arn = $1
+  EOQ
+}
+
+# Card queries
 
 query "eks_cluster_status" {
   sql = <<-EOQ
@@ -446,9 +459,6 @@ query "eks_cluster_status" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
-
 }
 
 query "eks_cluster_kubernetes_version" {
@@ -461,9 +471,6 @@ query "eks_cluster_kubernetes_version" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
-
 }
 
 query "eks_cluster_secrets_encryption" {
@@ -477,9 +484,6 @@ query "eks_cluster_secrets_encryption" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
-
 }
 
 query "eks_cluster_endpoint_restrict_public_access" {
@@ -493,9 +497,6 @@ query "eks_cluster_endpoint_restrict_public_access" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
-
 }
 
 query "eks_cluster_control_plane_audit_logging" {
@@ -512,10 +513,9 @@ query "eks_cluster_control_plane_audit_logging" {
       t = 'audit'
       and arn = $1;
   EOQ
-
-  param "arn" {}
-
 }
+
+# Other detail page queries
 
 query "eks_cluster_overview" {
   sql = <<-EOQ
@@ -531,8 +531,6 @@ query "eks_cluster_overview" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "eks_cluster_tags" {
@@ -552,8 +550,6 @@ query "eks_cluster_tags" {
       jsondata,
       json_each_text(tags);
     EOQ
-
-  param "arn" {}
 }
 
 query "eks_cluster_logging" {
@@ -568,9 +564,6 @@ query "eks_cluster_logging" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
-
 }
 
 query "eks_cluster_resources_vpc_config" {
@@ -587,9 +580,6 @@ query "eks_cluster_resources_vpc_config" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
-
 }
 
 query "eks_cluster_node_group" {
@@ -611,38 +601,4 @@ query "eks_cluster_node_group" {
       g.cluster_name = c.name
       and c.arn = $1;
   EOQ
-
-  param "arn" {}
-
-}
-
-node "eks_cluster_to_vpc_node" {
-  category = category.vpc_vpc
-
-  sql = <<-EOQ
-    select
-      vpc_id as id,
-      title as title,
-      jsonb_build_object(
-        'ARN', arn,
-        'VPC ID', vpc_id,
-        'Default', is_default::text,
-        'State', state,
-        'Account ID', account_id,
-        'Region', region ) as properties
-    from
-      aws_vpc
-    where
-      vpc_id in
-      (
-        select
-          resources_vpc_config ->> 'VpcId'
-        from
-          aws_eks_cluster
-        where
-          arn = $1
-      )
-  EOQ
-
-  param "arn" {}
 }

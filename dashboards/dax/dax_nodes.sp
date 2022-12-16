@@ -49,7 +49,7 @@ node "dax_cluster_node" {
 
 node "dax_parameter_group" {
   category = category.dax_parameter_group
-  sql      = <<-EOQ
+  sql = <<-EOQ
     select
       p.parameter_group_name as id,
       p.title as title,

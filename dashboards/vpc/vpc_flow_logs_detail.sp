@@ -18,108 +18,45 @@ dashboard "vpc_flow_logs_detail" {
     card {
       width = 2
       query = query.vpc_flow_log_resource_id
-      args = {
-        flow_log_id = self.input.flow_log_id.value
-      }
+      args  = [self.input.flow_log_id.value]
     }
 
     card {
       width = 2
       query = query.vpc_flow_log_deliver_logs_status
-      args = {
-        flow_log_id = self.input.flow_log_id.value
-      }
+      args  = [self.input.flow_log_id.value]
     }
 
   }
 
   with "cloudwatch_log_groups" {
-    sql = <<-EOQ
-          select
-            distinct g.arn as log_group_arn
-          from
-            aws_vpc_flow_log as f,
-            aws_cloudwatch_log_group as g
-          where
-            f.log_group_name = g.name
-            and f.log_destination_type = 'cloud-watch-logs'
-            and f.region = g.region
-            and f.flow_log_id = $1;
-        EOQ
-
-    args = [self.input.flow_log_id.value]
+    query = query.vpc_flow_log_cloudwatch_log_groups
+    args  = [self.input.flow_log_id.value]
   }
 
   with "ec2_network_interfaces" {
-    sql = <<-EOQ
-          select
-            resource_id as eni_id
-          from
-            aws_vpc_flow_log
-          where
-            resource_id like 'eni-%'
-            and flow_log_id = $1;
-        EOQ
-
-    args = [self.input.flow_log_id.value]
+    query = query.vpc_flow_log_ec2_network_interfaces
+    args  = [self.input.flow_log_id.value]
   }
 
   with "iam_roles" {
-    sql = <<-EOQ
-          select
-            deliver_logs_permission_arn as role_arn
-          from
-            aws_vpc_flow_log
-          where
-            deliver_logs_permission_arn is not null
-            and flow_log_id = $1;
-        EOQ
-
-    args = [self.input.flow_log_id.value]
+    query = query.vpc_flow_log_iam_roles
+    args  = [self.input.flow_log_id.value]
   }
 
   with "s3_buckets" {
-    sql = <<-EOQ
-          select
-            distinct s.arn as bucket_arn
-          from
-            aws_vpc_flow_log as f,
-            aws_s3_bucket as s
-          where
-            f.bucket_name = s.name
-            and f.log_destination_type = 's3'
-            and f.flow_log_id = $1;
-        EOQ
-
-    args = [self.input.flow_log_id.value]
+    query = query.vpc_flow_log_s3_buckets
+    args  = [self.input.flow_log_id.value]
   }
 
   with "vpc_subnets" {
-    sql = <<-EOQ
-          select
-            resource_id as subnet_id
-          from
-            aws_vpc_flow_log
-          where
-            resource_id like 'subnet-%'
-            and flow_log_id = $1;
-        EOQ
-
-    args = [self.input.flow_log_id.value]
+    query = query.vpc_flow_log_vpc_subnets
+    args  = [self.input.flow_log_id.value]
   }
 
   with "vpc_vpcs" {
-    sql = <<-EOQ
-          select
-            resource_id as vpc_id
-          from
-            aws_vpc_flow_log
-          where
-            resource_id like 'vpc-%'
-            and flow_log_id = $1;
-        EOQ
-
-    args = [self.input.flow_log_id.value]
+    query = query.vpc_flow_log_vpc_vpcs
+    args  = [self.input.flow_log_id.value]
   }
 
   container {
@@ -232,9 +169,7 @@ dashboard "vpc_flow_logs_detail" {
         type  = "line"
         width = 6
         query = query.vpc_flow_log_overview
-        args = {
-          flow_log_id = self.input.flow_log_id.value
-        }
+        args  = [self.input.flow_log_id.value]
 
       }
 
@@ -242,9 +177,7 @@ dashboard "vpc_flow_logs_detail" {
         title = "Tags"
         width = 6
         query = query.vpc_flow_tags
-        args = {
-          flow_log_id = self.input.flow_log_id.value
-        }
+        args  = [self.input.flow_log_id.value]
 
       }
     }
@@ -256,9 +189,7 @@ dashboard "vpc_flow_logs_detail" {
         title = "Log Destination"
         width = 12
         query = query.vpc_flow_log_destination
-        args = {
-          flow_log_id = self.input.flow_log_id.value
-        }
+        args  = [self.input.flow_log_id.value]
 
         column "Bucket" {
           href = "${dashboard.s3_bucket_detail.url_path}?input.bucket_arn={{.'Bucket' | @uri}}"
@@ -289,6 +220,8 @@ query "vpc_flow_log_input" {
 
 }
 
+# card queries
+
 query "vpc_flow_log_resource_id" {
   sql = <<-EOQ
     select
@@ -300,7 +233,6 @@ query "vpc_flow_log_resource_id" {
       flow_log_id = $1
   EOQ
 
-  param "flow_log_id" {}
 }
 
 query "vpc_flow_log_deliver_logs_status" {
@@ -315,8 +247,88 @@ query "vpc_flow_log_deliver_logs_status" {
       flow_log_id = $1
   EOQ
 
-  param "flow_log_id" {}
 }
+
+# with queries
+
+query "vpc_flow_log_cloudwatch_log_groups" {
+  sql   = <<-EOQ
+    select
+      distinct g.arn as log_group_arn
+    from
+      aws_vpc_flow_log as f,
+      aws_cloudwatch_log_group as g
+    where
+      f.log_group_name = g.name
+      and f.log_destination_type = 'cloud-watch-logs'
+      and f.region = g.region
+      and f.flow_log_id = $1;
+  EOQ
+}
+
+query "vpc_flow_log_ec2_network_interfaces" {
+  sql   = <<-EOQ
+    select
+      resource_id as eni_id
+    from
+      aws_vpc_flow_log
+    where
+      resource_id like 'eni-%'
+      and flow_log_id = $1;
+  EOQ
+}
+
+query "vpc_flow_log_iam_roles" {
+  sql   = <<-EOQ
+    select
+      deliver_logs_permission_arn as role_arn
+    from
+      aws_vpc_flow_log
+    where
+      deliver_logs_permission_arn is not null
+      and flow_log_id = $1;
+  EOQ
+}
+
+query "vpc_flow_log_s3_buckets" {
+  sql   = <<-EOQ
+    select
+      distinct s.arn as bucket_arn
+    from
+      aws_vpc_flow_log as f,
+      aws_s3_bucket as s
+    where
+      f.bucket_name = s.name
+      and f.log_destination_type = 's3'
+      and f.flow_log_id = $1;
+  EOQ
+}
+
+query "vpc_flow_log_vpc_subnets" {
+  sql   = <<-EOQ
+    select
+      resource_id as subnet_id
+    from
+      aws_vpc_flow_log
+    where
+      resource_id like 'subnet-%'
+      and flow_log_id = $1;
+  EOQ
+}
+
+query "vpc_flow_log_vpc_vpcs" {
+  sql   = <<-EOQ
+    select
+      resource_id as vpc_id
+    from
+      aws_vpc_flow_log
+    where
+      resource_id like 'vpc-%'
+      and flow_log_id = $1;
+  EOQ
+}
+
+# table queries
 
 query "vpc_flow_log_overview" {
   sql = <<-EOQ
@@ -334,7 +346,6 @@ query "vpc_flow_log_overview" {
       flow_log_id = $1
   EOQ
 
-  param "flow_log_id" {}
 }
 
 query "vpc_flow_tags" {
@@ -351,7 +362,6 @@ query "vpc_flow_tags" {
       tag ->> 'Key';
   EOQ
 
-  param "flow_log_id" {}
 }
 
 query "vpc_flow_log_destination" {
@@ -369,6 +379,5 @@ query "vpc_flow_log_destination" {
       flow_log_id = $1
   EOQ
 
-  param "flow_log_id" {}
 }
 

@@ -18,176 +18,76 @@ dashboard "vpc_subnet_detail" {
     card {
       width = 2
       query = query.vpc_subnet_num_ips
-      args = {
-        subnet_id = self.input.subnet_id.value
-      }
+      args  = [self.input.subnet_id.value]
     }
 
     card {
       width = 2
       query = query.vpc_subnet_cidr_block
-      args = {
-        subnet_id = self.input.subnet_id.value
-      }
+      args  = [self.input.subnet_id.value]
     }
 
     card {
       width = 2
       query = query.vpc_subnet_map_public_ip_on_launch_disabled
-      args = {
-        subnet_id = self.input.subnet_id.value
-      }
+      args  = [self.input.subnet_id.value]
     }
 
   }
 
   with "ec2_application_load_balancers" {
-    sql = <<-EOQ
-          select
-            arn as alb_arn
-          from
-            aws_ec2_application_load_balancer,
-            jsonb_array_elements(availability_zones) as az
-          where
-            az ->> 'SubnetId' = $1;
-        EOQ
-
-    args = [self.input.subnet_id.value]
+    query = query.vpc_subnet_ec2_application_load_balancers
+    args  = [self.input.subnet_id.value]
   }
 
   with "ec2_classic_load_balancers" {
-    sql = <<-EOQ
-          select
-            arn as clb_arn
-          from
-            aws_ec2_classic_load_balancer,
-            jsonb_array_elements(availability_zones) as az
-          where
-            az ->> 'SubnetId' = $1;
-        EOQ
-
-    args = [self.input.subnet_id.value]
+    query = query.vpc_subnet_ec2_classic_load_balancers
+    args  = [self.input.subnet_id.value]
   }
 
   with "ec2_gateway_load_balancers" {
-    sql = <<-EOQ
-          select
-            arn as glb_arn
-          from
-            aws_ec2_gateway_load_balancer,
-            jsonb_array_elements(availability_zones) as az
-          where
-            az ->> 'SubnetId' = $1;
-        EOQ
-
-    args = [self.input.subnet_id.value]
+    query = query.vpc_subnet_ec2_gateway_load_balancers
+    args  = [self.input.subnet_id.value]
   }
 
   with "ec2_instances" {
-    sql = <<-EOQ
-          select
-            arn as instance_arn
-          from
-            aws_ec2_instance
-          where
-            subnet_id = $1;
-        EOQ
-
-    args = [self.input.subnet_id.value]
+    query = query.vpc_subnet_ec2_instances
+    args  = [self.input.subnet_id.value]
   }
 
   with "ec2_network_interfaces" {
-    sql = <<-EOQ
-          select
-            network_interface_id as eni_id
-          from
-            aws_ec2_network_interface
-          where
-            subnet_id = $1;
-        EOQ
-
-    args = [self.input.subnet_id.value]
+    query = query.vpc_subnet_ec2_network_interfaces
+    args  = [self.input.subnet_id.value]
   }
 
   with "ec2_network_load_balancers" {
-    sql = <<-EOQ
-          select
-            arn as nlb_arn
-          from
-            aws_ec2_network_load_balancer,
-            jsonb_array_elements(availability_zones) as az
-          where
-            az ->> 'SubnetId' = $1;
-        EOQ
-
-    args = [self.input.subnet_id.value]
+    query = query.vpc_subnet_ec2_network_load_balancers
+    args  = [self.input.subnet_id.value]
   }
 
   with "lambda_functions" {
-    sql = <<-EOQ
-          select
-            arn as lambda_arn
-          from
-            aws_lambda_function,
-            jsonb_array_elements_text(vpc_subnet_ids) as s
-          where
-            s = $1;
-        EOQ
-
-    args = [self.input.subnet_id.value]
+    query = query.vpc_subnet_lambda_functions
+    args  = [self.input.subnet_id.value]
   }
 
   with "rds_db_instances" {
-    sql = <<-EOQ
-          select
-            arn as rds_instance_arn
-          from
-            aws_rds_db_instance,
-            jsonb_array_elements(subnets) as s
-          where
-            s ->> 'SubnetIdentifier' = $1;
-        EOQ
-
-    args = [self.input.subnet_id.value]
+    query = query.vpc_subnet_rds_db_instances
+    args  = [self.input.subnet_id.value]
   }
 
   with "sagemaker_notebook_instances" {
-    sql = <<-EOQ
-          select
-            arn as notebook_instance_arn
-          from
-            aws_sagemaker_notebook_instance
-          where
-            subnet_id = $1;
-        EOQ
-
-    args = [self.input.subnet_id.value]
+    query = query.vpc_subnet_sagemaker_notebook_instances
+    args  = [self.input.subnet_id.value]
   }
 
   with "vpc_flow_logs" {
-    sql = <<-EOQ
-          select
-            flow_log_id as flow_log_id
-          from
-            aws_vpc_flow_log
-          where
-            resource_id = $1;
-        EOQ
-
-    args = [self.input.subnet_id.value]
+    query = query.vpc_subnet_vpc_flow_logs
+    args  = [self.input.subnet_id.value]
   }
 
   with "vpc_vpcs" {
-    sql = <<-EOQ
-          select
-            vpc_id as vpc_id
-          from
-            aws_vpc_subnet
-          where
-            subnet_id = $1;
-        EOQ
-
-    args = [self.input.subnet_id.value]
+    query = query.vpc_subnet_vpc_vpcs
+    args  = [self.input.subnet_id.value]
   }
 
   container {
@@ -399,18 +299,14 @@ dashboard "vpc_subnet_detail" {
         type  = "line"
         width = 6
         query = query.vpc_subnet_overview
-        args = {
-          subnet_id = self.input.subnet_id.value
-        }
+        args  = [self.input.subnet_id.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.vpc_subnet_tags
-        args = {
-          subnet_id = self.input.subnet_id.value
-        }
+        args  = [self.input.subnet_id.value]
       }
 
     }
@@ -421,9 +317,7 @@ dashboard "vpc_subnet_detail" {
       table {
         title = "Launched Resources"
         query = query.vpc_subnet_association
-        args = {
-          subnet_id = self.input.subnet_id.value
-        }
+        args  = [self.input.subnet_id.value]
 
         column "link" {
           display = "none"
@@ -458,6 +352,8 @@ query "vpc_subnet_input" {
 
 }
 
+# card queries
+
 query "vpc_subnet_num_ips" {
   sql = <<-EOQ
     select
@@ -468,7 +364,6 @@ query "vpc_subnet_num_ips" {
       subnet_id = $1
   EOQ
 
-  param "subnet_id" {}
 }
 
 query "vpc_subnet_cidr_block" {
@@ -481,7 +376,6 @@ query "vpc_subnet_cidr_block" {
       subnet_id = $1
   EOQ
 
-  param "subnet_id" {}
 }
 
 query "vpc_subnet_map_public_ip_on_launch_disabled" {
@@ -496,8 +390,138 @@ query "vpc_subnet_map_public_ip_on_launch_disabled" {
       subnet_id = $1
   EOQ
 
-  param "subnet_id" {}
 }
+
+# with queries
+
+query "vpc_subnet_ec2_application_load_balancers" {
+  sql = <<-EOQ
+    select
+      arn as alb_arn
+    from
+      aws_ec2_application_load_balancer,
+      jsonb_array_elements(availability_zones) as az
+    where
+      az ->> 'SubnetId' = $1;
+  EOQ
+}
+
+query "vpc_subnet_ec2_classic_load_balancers" {
+  sql = <<-EOQ
+    select
+      arn as clb_arn
+    from
+      aws_ec2_classic_load_balancer,
+      jsonb_array_elements(availability_zones) as az
+    where
+      az ->> 'SubnetId' = $1;
+  EOQ
+}
+
+query "vpc_subnet_ec2_gateway_load_balancers" {
+  sql = <<-EOQ
+    select
+      arn as glb_arn
+    from
+      aws_ec2_gateway_load_balancer,
+      jsonb_array_elements(availability_zones) as az
+    where
+      az ->> 'SubnetId' = $1;
+  EOQ
+}
+
+query "vpc_subnet_ec2_instances" {
+  sql   = <<-EOQ
+    select
+      arn as instance_arn
+    from
+      aws_ec2_instance
+    where
+      subnet_id = $1;
+  EOQ
+}
+
+query "vpc_subnet_ec2_network_interfaces" {
+  sql   = <<-EOQ
+    select
+      network_interface_id as eni_id
+    from
+      aws_ec2_network_interface
+    where
+      subnet_id = $1;
+  EOQ
+}
+
+query "vpc_subnet_ec2_network_load_balancers" {
+  sql   = <<-EOQ
+    select
+      arn as nlb_arn
+    from
+      aws_ec2_network_load_balancer,
+      jsonb_array_elements(availability_zones) as az
+    where
+      az ->> 'SubnetId' = $1;
+  EOQ
+}
+
+query "vpc_subnet_lambda_functions" {
+  sql   = <<-EOQ
+    select
+      arn as lambda_arn
+    from
+      aws_lambda_function,
+      jsonb_array_elements_text(vpc_subnet_ids) as s
+    where
+      s = $1;
+  EOQ
+}
+
+query "vpc_subnet_rds_db_instances" {
+  sql   = <<-EOQ
+    select
+      arn as rds_instance_arn
+    from
+      aws_rds_db_instance,
+      jsonb_array_elements(subnets) as s
+    where
+      s ->> 'SubnetIdentifier' = $1;
+  EOQ
+}
+
+query "vpc_subnet_sagemaker_notebook_instances" {
+  sql   = <<-EOQ
+    select
+      arn as notebook_instance_arn
+    from
+      aws_sagemaker_notebook_instance
+    where
+      subnet_id = $1;
+  EOQ
+}
+
+query "vpc_subnet_vpc_flow_logs" {
+  sql   = <<-EOQ
+    select
+      flow_log_id as flow_log_id
+    from
+      aws_vpc_flow_log
+    where
+      resource_id = $1;
+  EOQ
+}
+
+query "vpc_subnet_vpc_vpcs" {
+  sql   = <<-EOQ
+    select
+      vpc_id as vpc_id
+    from
+      aws_vpc_subnet
+    where
+      subnet_id = $1;
+  EOQ
+}
+
+# table queries
 
 query "vpc_subnet_overview" {
   sql = <<-EOQ
@@ -517,7 +541,6 @@ query "vpc_subnet_overview" {
       subnet_id = $1
   EOQ
 
-  param "subnet_id" {}
 }
 
 query "vpc_subnet_tags" {
@@ -534,7 +557,6 @@ query "vpc_subnet_tags" {
       tag ->> 'Key';
   EOQ
 
-  param "subnet_id" {}
 }
 
 query "vpc_subnet_association" {
@@ -616,5 +638,4 @@ query "vpc_subnet_association" {
       a ->> 'SubnetId' = $1;
   EOQ
 
-  param "subnet_id" {}
 }

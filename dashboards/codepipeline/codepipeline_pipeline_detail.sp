@@ -18,155 +18,37 @@ dashboard "codepipeline_pipeline_detail" {
     card {
       query = query.codepipeline_pipeline_encryption
       width = 2
-      args = {
-        arn = self.input.pipeline_arn.value
-      }
+      args = [self.input.pipeline_arn.value]
     }
 
   }
   with "codebuild_projects" {
-    sql = <<-EOQ
-      select
-        arn as codebuild_project_arn
-      from
-        aws_codebuild_project
-      where
-        name in
-        (
-          select
-            a -> 'Configuration' ->> 'ProjectName'
-          from
-            aws_codepipeline_pipeline,
-            jsonb_array_elements(stages) as s,
-            jsonb_array_elements(s -> 'Actions') as a
-          where
-            s ->> 'Name' = 'Build'
-            and a -> 'ActionTypeId' ->> 'Provider' = 'CodeBuild'
-            and arn = $1
-        );
-    EOQ
-
+    query = query.codepipeline_pipeline_codebuild_projects
     args = [self.input.pipeline_arn.value]
   }
 
   with "codecommit_repositories" {
-    sql = <<-EOQ
-      select
-        arn as codecommit_repository_arn
-      from
-        aws_codecommit_repository
-      where
-        repository_name in
-        (
-          select
-            a -> 'Configuration' ->> 'RepositoryName'
-          from
-            aws_codepipeline_pipeline,
-            jsonb_array_elements(stages) as s,
-            jsonb_array_elements(s -> 'Actions') as a
-          where
-            s ->> 'Name' = 'Source'
-            and a -> 'ActionTypeId' ->> 'Provider' = 'CodeCommit'
-            and arn = $1
-        );
-    EOQ
-
+    query = query.codepipeline_pipeline_codecommit_repositories
     args = [self.input.pipeline_arn.value]
   }
 
   with "ecr_repositories" {
-    sql = <<-EOQ
-      select
-        arn as ecr_repository_arn
-      from
-        aws_ecr_repository
-      where
-        repository_name in
-        (
-          select
-            a -> 'Configuration' ->> 'RepositoryName'
-          from
-            aws_codepipeline_pipeline,
-            jsonb_array_elements(stages) as s,
-            jsonb_array_elements(s -> 'Actions') as a
-          where
-            s ->> 'Name' = 'Source'
-            and a -> 'ActionTypeId' ->> 'Provider' = 'ECR'
-            and arn = $1
-        );
-    EOQ
-
+    query = query.codepipeline_pipeline_ecr_repositories
     args = [self.input.pipeline_arn.value]
   }
 
   with "iam_roles" {
-    sql = <<-EOQ
-      select
-        role_id as iam_role_id
-      from
-        aws_iam_role
-      where
-        arn in
-        (
-          select
-            role_arn
-          from
-            aws_codepipeline_pipeline
-          where
-            arn = $1
-        );
-    EOQ
-
+    query = query.codepipeline_pipeline_iam_roles
     args = [self.input.pipeline_arn.value]
   }
 
   with "kms_keys" {
-    sql = <<-EOQ
-      select
-        encryption_key ->> 'Id' as kms_key_arn
-      from
-        aws_codepipeline_pipeline
-      where
-        encryption_key ->> 'Id' is not null
-        and arn = $1
-    EOQ
-
+    query = query.codepipeline_pipeline_kms_keys
     args = [self.input.pipeline_arn.value]
   }
 
   with "s3_buckets" {
-    sql = <<-EOQ
-      select
-        arn as s3_bucket_deploy_arn
-      from
-        aws_s3_bucket
-      where
-        name in
-        (
-          select
-            a -> 'Configuration' ->> 'BucketName' as bucket_name
-          from
-            aws_codepipeline_pipeline,
-            jsonb_array_elements(stages) as s,
-            jsonb_array_elements(s -> 'Actions') as a
-          where
-            s ->> 'Name' = 'Deploy'
-            and a -> 'ActionTypeId' ->> 'Provider' = 'S3'
-            and arn = $1
-          union
-          select
-            a -> 'Configuration' ->> 'S3Bucket' as bucket_name
-          from
-            aws_codepipeline_pipeline,
-            jsonb_array_elements(stages) as s,
-            jsonb_array_elements(s -> 'Actions') as a
-          where
-            s ->> 'Name' = 'Source'
-            and a -> 'ActionTypeId' ->> 'Provider' = 'S3'
-            and arn = $1
-        );
-    EOQ
-
+    query = query.codepipeline_pipeline_s3_buckets
     args = [self.input.pipeline_arn.value]
   }
 
@@ -301,9 +183,7 @@ dashboard "codepipeline_pipeline_detail" {
         type  = "line"
         width = 6
         query = query.codepipeline_pipeline_overview
-        args = {
-          arn = self.input.pipeline_arn.value
-        }
+        args = [self.input.pipeline_arn.value]
 
       }
 
@@ -311,9 +191,7 @@ dashboard "codepipeline_pipeline_detail" {
         title = "Tags"
         width = 6
         query = query.codepipeline_pipeline_tags
-        args = {
-          arn = self.input.pipeline_arn.value
-        }
+        args = [self.input.pipeline_arn.value]
 
       }
     }
@@ -323,13 +201,13 @@ dashboard "codepipeline_pipeline_detail" {
       table {
         title = "Stages"
         query = query.codepipeline_pipeline_stages
-        args = {
-          arn = self.input.pipeline_arn.value
-        }
+        args = [self.input.pipeline_arn.value]
       }
     }
   }
 }
+
+# Input queries
 
 query "codepipeline_pipeline_input" {
   sql = <<-EOQ
@@ -347,6 +225,144 @@ query "codepipeline_pipeline_input" {
   EOQ
 }
 
+# With queries
+
+query "codepipeline_pipeline_codebuild_projects" {
+  sql = <<-EOQ
+    select
+      arn as codebuild_project_arn
+    from
+      aws_codebuild_project
+    where
+      name in
+      (
+        select
+          a -> 'Configuration' ->> 'ProjectName'
+        from
+          aws_codepipeline_pipeline,
+          jsonb_array_elements(stages) as s,
+          jsonb_array_elements(s -> 'Actions') as a
+        where
+          s ->> 'Name' = 'Build'
+          and a -> 'ActionTypeId' ->> 'Provider' = 'CodeBuild'
+          and arn = $1
+      );
+  EOQ
+}
+
+query "codepipeline_pipeline_codecommit_repositories" {
+  sql = <<-EOQ
+    select
+      arn as codecommit_repository_arn
+    from
+      aws_codecommit_repository
+    where
+      repository_name in
+      (
+        select
+          a -> 'Configuration' ->> 'RepositoryName'
+        from
+          aws_codepipeline_pipeline,
+          jsonb_array_elements(stages) as s,
+          jsonb_array_elements(s -> 'Actions') as a
+        where
+          s ->> 'Name' = 'Source'
+          and a -> 'ActionTypeId' ->> 'Provider' = 'CodeCommit'
+          and arn = $1
+      );
+  EOQ
+}
+
+query "codepipeline_pipeline_ecr_repositories" {
+  sql = <<-EOQ
+    select
+      arn as ecr_repository_arn
+    from
+      aws_ecr_repository
+    where
+      repository_name in
+      (
+        select
+          a -> 'Configuration' ->> 'RepositoryName'
+        from
+          aws_codepipeline_pipeline,
+          jsonb_array_elements(stages) as s,
+          jsonb_array_elements(s -> 'Actions') as a
+        where
+          s ->> 'Name' = 'Source'
+          and a -> 'ActionTypeId' ->> 'Provider' = 'ECR'
+          and arn = $1
+      );
+  EOQ
+}
+
+query "codepipeline_pipeline_iam_roles" {
+  sql = <<-EOQ
+    select
+      role_id as iam_role_id
+    from
+      aws_iam_role
+    where
+      arn in
+      (
+        select
+          role_arn
+        from
+          aws_codepipeline_pipeline
+        where
+          arn = $1
+      );
+  EOQ
+}
+
+query "codepipeline_pipeline_kms_keys" {
+  sql = <<-EOQ
+    select
+      encryption_key ->> 'Id' as kms_key_arn
+    from
+      aws_codepipeline_pipeline
+    where
+      encryption_key ->> 'Id' is not null
+      and arn = $1
+  EOQ
+}
+
+query "codepipeline_pipeline_s3_buckets" {
+  sql = <<-EOQ
+    select
+      arn as s3_bucket_deploy_arn
+    from
+      aws_s3_bucket
+    where
+      name in
+      (
+        select
+          a -> 'Configuration' ->> 'BucketName' as bucket_name
+        from
+          aws_codepipeline_pipeline,
+          jsonb_array_elements(stages) as s,
+          jsonb_array_elements(s -> 'Actions') as a
+        where
+          s ->> 'Name' = 'Deploy'
+          and a -> 'ActionTypeId' ->> 'Provider' = 'S3'
+          and arn = $1
+        union
+        select
+          a -> 'Configuration' ->> 'S3Bucket' as bucket_name
+        from
+          aws_codepipeline_pipeline,
+          jsonb_array_elements(stages) as s,
+          jsonb_array_elements(s -> 'Actions') as a
+        where
+          s ->> 'Name' = 'Source'
+          and a -> 'ActionTypeId' ->> 'Provider' = 'S3'
+          and arn = $1
+      );
+  EOQ
+}
+
+# Card queries
+
 query "codepipeline_pipeline_encryption" {
   sql = <<-EOQ
     select
@@ -358,9 +374,9 @@ query "codepipeline_pipeline_encryption" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
+
+# Other detail page queries
 
 query "codepipeline_pipeline_overview" {
   sql = <<-EOQ
@@ -377,8 +393,6 @@ query "codepipeline_pipeline_overview" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "codepipeline_pipeline_tags" {
@@ -394,8 +408,6 @@ query "codepipeline_pipeline_tags" {
     order by
       tag ->> 'Key';
   EOQ
-
-  param "arn" {}
 }
 
 query "codepipeline_pipeline_stages" {
@@ -410,6 +422,4 @@ query "codepipeline_pipeline_stages" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }

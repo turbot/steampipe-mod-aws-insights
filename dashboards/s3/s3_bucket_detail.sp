@@ -18,215 +18,89 @@ dashboard "s3_bucket_detail" {
     card {
       width = 2
       query = query.s3_bucket_public
-      args = {
-        arn = self.input.bucket_arn.value
-      }
+      args = [self.input.bucket_arn.value]
     }
 
     card {
       width = 2
       query = query.s3_bucket_versioning
-      args = {
-        arn = self.input.bucket_arn.value
-      }
+      args = [self.input.bucket_arn.value]
     }
 
     card {
       query = query.s3_bucket_logging_enabled
       width = 2
-      args = {
-        arn = self.input.bucket_arn.value
-      }
+      args = [self.input.bucket_arn.value]
     }
 
     card {
       width = 2
       query = query.s3_bucket_encryption
-      args = {
-        arn = self.input.bucket_arn.value
-      }
+      args = [self.input.bucket_arn.value]
     }
 
     card {
       width = 2
       query = query.s3_bucket_cross_region_replication
-      args = {
-        arn = self.input.bucket_arn.value
-      }
+      args = [self.input.bucket_arn.value]
     }
 
     card {
       width = 2
       query = query.s3_bucket_https_enforce
-      args = {
-        arn = self.input.bucket_arn.value
-      }
+      args = [self.input.bucket_arn.value]
     }
 
   }
-      with "cloudtrail_trails" {
-        sql = <<-EOQ
-          select
-            distinct trail.arn as trail_arn
-          from
-            aws_cloudtrail_trail as trail,
-            aws_s3_bucket as b
-          where
-            b.arn = $1
-            and trail.s3_bucket_name = b.name;
-        EOQ
+  with "cloudtrail_trails" {
+    query = query.s3_bucket_cloudtrail_trails
+    args = [self.input.bucket_arn.value]
+  }
 
-        args = [self.input.bucket_arn.value]
-      }
+  with "ec2_application_load_balancers" {
+    query = query.s3_bucket_ec2_application_load_balancers
+    args = [self.input.bucket_arn.value]
+  }
 
-      with "ec2_application_load_balancers" {
-        sql = <<-EOQ
-          select
-            alb.arn as alb_arn
-          from
-            aws_ec2_application_load_balancer as alb,
-            jsonb_array_elements(alb.load_balancer_attributes) as attributes,
-            aws_s3_bucket as b
-          where
-            b.arn = $1
-            and attributes ->> 'Key' = 'access_logs.s3.bucket'
-            and attributes ->> 'Value' = b.name;
-        EOQ
+  with "ec2_classic_load_balancers" {
+    query = query.s3_bucket_ec2_classic_load_balancers
+    args = [self.input.bucket_arn.value]
+  }
 
-        args = [self.input.bucket_arn.value]
-      }
+  with "ec2_network_load_balancers" {
+    query = query.s3_bucket_ec2_network_load_balancers
+    args = [self.input.bucket_arn.value]
+  }
 
-      with "ec2_classic_load_balancers" {
-        sql = <<-EOQ
-          select
-            clb.arn as clb_arn
-          from
-            aws_ec2_classic_load_balancer clb,
-            aws_s3_bucket as b
-          where
-            b.arn = $1
-            and clb.access_log_s3_bucket_name = b.name;
-        EOQ
+  with "from_s3_buckets" {
+    query = query.s3_bucket_from_s3_buckets
+    args = [self.input.bucket_arn.value]
+  }
 
-        args = [self.input.bucket_arn.value]
-      }
+  with "kms_keys" {
+    query = query.s3_bucket_kms_keys
+    args = [self.input.bucket_arn.value]
+  }
 
-      with "ec2_network_load_balancers" {
-        sql = <<-EOQ
-          select
-            nlb.arn as nlb_arn
-          from
-            aws_ec2_network_load_balancer as nlb,
-            jsonb_array_elements(nlb.load_balancer_attributes) as attributes,
-            aws_s3_bucket as b
-          where
-            b.arn = $1
-            and attributes ->> 'Key' = 'access_logs.s3.bucket'
-            and attributes ->> 'Value' = b.name;
-        EOQ
+  with "lambda_functions" {
+    query = query.s3_bucket_lambda_functions
+    args = [self.input.bucket_arn.value]
+  }
 
-        args = [self.input.bucket_arn.value]
-      }
+  with "sns_topics" {
+    query = query.s3_bucket_sns_topics
+    args = [self.input.bucket_arn.value]
+  }
 
-      with "from_s3_buckets" {
-        sql = <<-EOQ
-          select
-            lb.arn as bucket_arn
-          from
-            aws_s3_bucket as lb,
-            aws_s3_bucket as b
-          where
-            b.arn = $1
-            and lb.logging ->> 'TargetBucket' = b.name;
-        EOQ
+  with "sqs_queues" {
+    query = query.s3_bucket_sqs_queues
+    args = [self.input.bucket_arn.value]
+  }
 
-        args = [self.input.bucket_arn.value]
-      }
-
-      with "kms_keys" {
-        sql = <<-EOQ
-          select
-            k.arn as key_arn
-          from
-            aws_s3_bucket as b
-            cross join jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as r
-            join aws_kms_key as k
-            on k.arn = r -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID'
-          where
-            b.arn = $1;
-        EOQ
-
-        args = [self.input.bucket_arn.value]
-      }
-
-      with "lambda_functions" {
-        sql = <<-EOQ
-          select
-            t ->> 'LambdaFunctionArn' as function_arn
-          from
-            aws_s3_bucket as b,
-            jsonb_array_elements(event_notification_configuration -> 'LambdaFunctionConfigurations') as t
-          where
-            event_notification_configuration -> 'LambdaFunctionConfigurations' <> 'null'
-            and b.arn = $1;
-        EOQ
-
-        args = [self.input.bucket_arn.value]
-      }
-
-      with "sns_topics" {
-        sql = <<-EOQ
-          select
-            t ->> 'TopicArn' as topic_arn
-          from
-            aws_s3_bucket as b,
-            jsonb_array_elements(
-              case jsonb_typeof(event_notification_configuration -> 'TopicConfigurations')
-                when 'array' then (event_notification_configuration -> 'TopicConfigurations')
-                else null end
-              )
-              as t
-          where
-            b.arn = $1;
-        EOQ
-
-        args = [self.input.bucket_arn.value]
-      }
-
-      with "sqs_queues" {
-        sql = <<-EOQ
-          select
-            q.queue_arn as queue_arn
-          from
-            aws_s3_bucket as b,
-            jsonb_array_elements(
-              case jsonb_typeof(event_notification_configuration -> 'QueueConfigurations')
-                when 'array' then (event_notification_configuration -> 'QueueConfigurations')
-                else null end
-              )
-              as t
-            left join aws_sqs_queue as q on q.queue_arn = t ->> 'QueueArn'
-          where
-            b.arn = $1;
-        EOQ
-
-        args = [self.input.bucket_arn.value]
-      }
-
-      with "to_s3_buckets" {
-        sql = <<-EOQ
-          select
-            lb.arn as bucket_arn
-          from
-            aws_s3_bucket as lb,
-            aws_s3_bucket as b
-          where
-            b.arn = $1
-            and lb.name = b.logging ->> 'TargetBucket';
-        EOQ
-
-        args = [self.input.bucket_arn.value]
-      }
+  with "to_s3_buckets" {
+    query = query.s3_bucket_to_s3_buckets
+    args = [self.input.bucket_arn.value]
+  }
 
   container {
 
@@ -255,14 +129,14 @@ dashboard "s3_bucket_detail" {
         args = {
           ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers.rows[*].clb_arn
         }
-      }  
+      }
 
       node {
         base = node.ec2_network_load_balancer
         args = {
           ec2_network_load_balancer_arns = with.ec2_network_load_balancers.rows[*].nlb_arn
         }
-      }    
+      }
 
       node {
         base = node.kms_key
@@ -276,7 +150,7 @@ dashboard "s3_bucket_detail" {
         args = {
           lambda_function_arns = with.lambda_functions.rows[*].function_arn
         }
-      }  
+      }
 
       node {
         base = node.s3_bucket
@@ -311,7 +185,7 @@ dashboard "s3_bucket_detail" {
         args = {
           sqs_queue_arns = with.sqs_queues.rows[*].queue_arn
         }
-      }     
+      }
 
       edge {
         base = edge.cloudtrail_trail_to_s3_bucket
@@ -339,7 +213,7 @@ dashboard "s3_bucket_detail" {
         args = {
           ec2_network_load_balancer_arns = with.ec2_network_load_balancers.rows[*].nlb_arn
         }
-      }  
+      }
 
       edge {
         base = edge.s3_bucket_to_kms_key
@@ -367,7 +241,7 @@ dashboard "s3_bucket_detail" {
         args = {
           s3_bucket_arns = with.from_s3_buckets.rows[*].bucket_arn
         }
-      }  
+      }
 
       edge {
         base = edge.s3_bucket_to_sns_topic
@@ -395,9 +269,7 @@ dashboard "s3_bucket_detail" {
         type  = "line"
         width = 6
         query = query.s3_bucket_overview
-        args = {
-          arn = self.input.bucket_arn.value
-        }
+        args = [self.input.bucket_arn.value]
 
       }
 
@@ -405,9 +277,7 @@ dashboard "s3_bucket_detail" {
         title = "Tags"
         width = 6
         query = query.s3_bucket_tags_detail
-        args = {
-          arn = self.input.bucket_arn.value
-        }
+        args = [self.input.bucket_arn.value]
       }
     }
 
@@ -417,17 +287,13 @@ dashboard "s3_bucket_detail" {
       table {
         title = "Public Access"
         query = query.s3_bucket_public_access
-        args = {
-          arn = self.input.bucket_arn.value
-        }
+        args = [self.input.bucket_arn.value]
       }
 
       table {
         title = "Logging"
         query = query.s3_bucket_logging
-        args = {
-          arn = self.input.bucket_arn.value
-        }
+        args = [self.input.bucket_arn.value]
       }
 
     }
@@ -437,9 +303,7 @@ dashboard "s3_bucket_detail" {
       table {
         title = "Policy"
         query = query.s3_bucket_policy
-        args = {
-          arn = self.input.bucket_arn.value
-        }
+        args = [self.input.bucket_arn.value]
       }
     }
 
@@ -448,9 +312,7 @@ dashboard "s3_bucket_detail" {
       table {
         title = "Lifecycle Rules"
         query = query.s3_bucket_lifecycle_policy
-        args = {
-          arn = self.input.bucket_arn.value
-        }
+        args = [self.input.bucket_arn.value]
       }
     }
 
@@ -459,15 +321,15 @@ dashboard "s3_bucket_detail" {
       table {
         title = "Server Side Encryption"
         query = query.s3_bucket_server_side_encryption
-        args = {
-          arn = self.input.bucket_arn.value
-        }
+        args = [self.input.bucket_arn.value]
       }
     }
 
   }
 
 }
+
+# Input queries
 
 query "s3_bucket_input" {
   sql = <<-EOQ
@@ -485,6 +347,154 @@ query "s3_bucket_input" {
   EOQ
 }
 
+# With queries
+
+query "s3_bucket_cloudtrail_trails" {
+  sql = <<-EOQ
+    select
+      distinct trail.arn as trail_arn
+    from
+      aws_cloudtrail_trail as trail,
+      aws_s3_bucket as b
+    where
+      b.arn = $1
+      and trail.s3_bucket_name = b.name;
+  EOQ
+}
+
+query "s3_bucket_ec2_application_load_balancers" {
+  sql = <<-EOQ
+    select
+      alb.arn as alb_arn
+    from
+      aws_ec2_application_load_balancer as alb,
+      jsonb_array_elements(alb.load_balancer_attributes) as attributes,
+      aws_s3_bucket as b
+    where
+      b.arn = $1
+      and attributes ->> 'Key' = 'access_logs.s3.bucket'
+      and attributes ->> 'Value' = b.name;
+  EOQ
+}
+
+query "s3_bucket_ec2_classic_load_balancers" {
+  sql = <<-EOQ
+    select
+      clb.arn as clb_arn
+    from
+      aws_ec2_classic_load_balancer clb,
+      aws_s3_bucket as b
+    where
+      b.arn = $1
+      and clb.access_log_s3_bucket_name = b.name;
+  EOQ
+}
+
+query "s3_bucket_ec2_network_load_balancers" {
+  sql = <<-EOQ
+    select
+      nlb.arn as nlb_arn
+    from
+      aws_ec2_network_load_balancer as nlb,
+      jsonb_array_elements(nlb.load_balancer_attributes) as attributes,
+      aws_s3_bucket as b
+    where
+      b.arn = $1
+      and attributes ->> 'Key' = 'access_logs.s3.bucket'
+      and attributes ->> 'Value' = b.name;
+  EOQ
+}
+
+query "s3_bucket_from_s3_buckets" {
+  sql = <<-EOQ
+    select
+      lb.arn as bucket_arn
+    from
+      aws_s3_bucket as lb,
+      aws_s3_bucket as b
+    where
+      b.arn = $1
+      and lb.logging ->> 'TargetBucket' = b.name;
+  EOQ
+}
+
+query "s3_bucket_kms_keys" {
+  sql = <<-EOQ
+    select
+      k.arn as key_arn
+    from
+      aws_s3_bucket as b
+      cross join jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as r
+      join aws_kms_key as k
+      on k.arn = r -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID'
+    where
+      b.arn = $1;
+  EOQ
+}
+
+query "s3_bucket_lambda_functions" {
+  sql = <<-EOQ
+    select
+      t ->> 'LambdaFunctionArn' as function_arn
+    from
+      aws_s3_bucket as b,
+      jsonb_array_elements(event_notification_configuration -> 'LambdaFunctionConfigurations') as t
+    where
+      event_notification_configuration -> 'LambdaFunctionConfigurations' <> 'null'
+      and b.arn = $1;
+  EOQ
+}
+
+query "s3_bucket_sns_topics" {
+  sql = <<-EOQ
+    select
+      t ->> 'TopicArn' as topic_arn
+    from
+      aws_s3_bucket as b,
+      jsonb_array_elements(
+        case jsonb_typeof(event_notification_configuration -> 'TopicConfigurations')
+          when 'array' then (event_notification_configuration -> 'TopicConfigurations')
+          else null end
+        )
+        as t
+    where
+      b.arn = $1;
+  EOQ
+}
+
+query "s3_bucket_sqs_queues" {
+  sql = <<-EOQ
+    select
+      q.queue_arn as queue_arn
+    from
+      aws_s3_bucket as b,
+      jsonb_array_elements(
+        case jsonb_typeof(event_notification_configuration -> 'QueueConfigurations')
+          when 'array' then (event_notification_configuration -> 'QueueConfigurations')
+          else null end
+        )
+        as t
+      left join aws_sqs_queue as q on q.queue_arn = t ->> 'QueueArn'
+    where
+      b.arn = $1;
+  EOQ
+}
+
+query "s3_bucket_to_s3_buckets" {
+  sql = <<-EOQ
+    select
+      lb.arn as bucket_arn
+    from
+      aws_s3_bucket as lb,
+      aws_s3_bucket as b
+    where
+      b.arn = $1
+      and lb.name = b.logging ->> 'TargetBucket';
+  EOQ
+}
+
+# Card queries
+
 query "s3_bucket_versioning" {
   sql = <<-EOQ
     select
@@ -496,8 +506,6 @@ query "s3_bucket_versioning" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "s3_bucket_public" {
@@ -511,8 +519,6 @@ query "s3_bucket_public" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "s3_bucket_logging_enabled" {
@@ -526,8 +532,6 @@ query "s3_bucket_logging_enabled" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "s3_bucket_encryption" {
@@ -541,8 +545,6 @@ query "s3_bucket_encryption" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "s3_bucket_cross_region_replication" {
@@ -565,8 +567,6 @@ query "s3_bucket_cross_region_replication" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "s3_bucket_https_enforce" {
@@ -598,9 +598,9 @@ query "s3_bucket_https_enforce" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
+
+# Other detail page queries
 
 query "s3_bucket_overview" {
   sql = <<-EOQ
@@ -616,8 +616,6 @@ query "s3_bucket_overview" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "s3_bucket_tags_detail" {
@@ -633,8 +631,6 @@ query "s3_bucket_tags_detail" {
     order by
       tag ->> 'Key';
   EOQ
-
-  param "arn" {}
 }
 
 query "s3_bucket_server_side_encryption" {
@@ -649,8 +645,6 @@ query "s3_bucket_server_side_encryption" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "s3_bucket_logging" {
@@ -664,8 +658,6 @@ query "s3_bucket_logging" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "s3_bucket_public_access" {
@@ -681,8 +673,6 @@ query "s3_bucket_public_access" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "s3_bucket_policy" {
@@ -701,8 +691,6 @@ query "s3_bucket_policy" {
       arn = $1
     order by p ->> 'SID';
   EOQ
-
-  param "arn" {}
 }
 
 query "s3_bucket_lifecycle_policy" {
@@ -724,6 +712,4 @@ query "s3_bucket_lifecycle_policy" {
     order by
       r ->> 'ID';
   EOQ
-
-  param "arn" {}
 }

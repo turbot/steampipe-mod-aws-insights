@@ -18,53 +18,17 @@ dashboard "codecommit_repository_detail" {
     card {
       width = 2
       query = query.codecommit_repository_default_branch
-      args = {
-        arn = self.input.codecommit_repository_arn.value
-      }
+      args = [self.input.codecommit_repository_arn.value]
     }
   }
 
   with "codebuild_projects" {
-    sql = <<-EOQ
-      select
-        p.arn as codebuild_project_arn
-      from
-        aws_codecommit_repository as r
-        left join aws_codebuild_project as p on r.clone_url_http in (
-          select
-            source ->> 'Location' as "l"
-          from
-            aws_codebuild_project
-          union all
-          select
-            s ->> 'Location' as "l"
-          from
-            aws_codebuild_project,
-            jsonb_array_elements(aws_codebuild_project.secondary_sources) as s
-        )
-      where
-        p.arn is not null
-        and r.arn = $1;
-    EOQ
-
+    query = query.codecommit_repository_codebuild_projects
     args = [self.input.codecommit_repository_arn.value]
   }
 
   with "codepipeline_pipelines" {
-    sql = <<-EOQ
-      select
-        p.arn as codepipeline_pipeline_arn
-      from
-        aws_codecommit_repository r
-        cross join aws_codepipeline_pipeline as p
-      where
-        r.arn = $1 and p.stages is not null
-        and r.repository_name in (
-          select
-            jsonb_path_query(p.stages, '$[*].Actions[*].Configuration.RepositoryName')::text
-        );
-    EOQ
-
+    query = query.codecommit_repository_codepipeline_pipelines
     args = [self.input.codecommit_repository_arn.value]
   }
 
@@ -120,72 +84,19 @@ dashboard "codecommit_repository_detail" {
       type  = "line"
       width = 6
       query = query.codecommit_repository_overview
-      args = {
-        arn = self.input.codecommit_repository_arn.value
-      }
+      args = [self.input.codecommit_repository_arn.value]
     }
 
     table {
       title = "Tags"
       width = 6
       query = query.codecommit_repository_tags
-      args = {
-        arn = self.input.codecommit_repository_arn.value
-      }
+      args = [self.input.codecommit_repository_arn.value]
     }
   }
 }
 
-query "codecommit_repository_default_branch" {
-  sql = <<-EOQ
-    select
-      'Default Branch' as "label",
-      default_branch as "value"
-    from
-      aws_codecommit_repository
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-query "codecommit_repository_overview" {
-  sql = <<-EOQ
-    select
-      repository_name as "Repository Name",
-      repository_id as "Repository ID",
-      description as "Description",
-      arn as "ARN",
-      clone_url_http as "HTTP Clone URL",
-      clone_url_ssh as "SSH Clone URL",
-      creation_date as "Creation date",
-      last_modified_date as "Last modified date"
-    from
-      aws_codecommit_repository
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-query "codecommit_repository_tags" {
-  sql = <<-EOQ
-    select
-      tag.Key as "Key",
-      tag.Value as "Value"
-    from
-      aws_codecommit_repository,
-      jsonb_each_text(tags) as tag
-    where
-      arn = $1
-    order by
-      tag.Key;
-  EOQ
-
-  param "arn" {}
-}
+# Input queries
 
 query "codecommit_repository_input" {
   sql = <<-EOQ
@@ -203,3 +114,96 @@ query "codecommit_repository_input" {
       title;
   EOQ
 }
+
+# With queries
+
+query "codecommit_repository_codebuild_projects" {
+  sql = <<-EOQ
+    select
+      p.arn as codebuild_project_arn
+    from
+      aws_codecommit_repository as r
+      left join aws_codebuild_project as p on r.clone_url_http in (
+        select
+          source ->> 'Location' as "l"
+        from
+          aws_codebuild_project
+        union all
+        select
+          s ->> 'Location' as "l"
+        from
+          aws_codebuild_project,
+          jsonb_array_elements(aws_codebuild_project.secondary_sources) as s
+      )
+    where
+      p.arn is not null
+      and r.arn = $1;
+  EOQ
+}
+
+query "codecommit_repository_codepipeline_pipelines" {
+  sql = <<-EOQ
+    select
+      p.arn as codepipeline_pipeline_arn
+    from
+      aws_codecommit_repository r
+      cross join aws_codepipeline_pipeline as p
+    where
+      r.arn = $1 and p.stages is not null
+      and r.repository_name in (
+        select
+          jsonb_path_query(p.stages, '$[*].Actions[*].Configuration.RepositoryName')::text
+      );
+  EOQ
+}
+
+# Card queries
+
+query "codecommit_repository_default_branch" {
+  sql = <<-EOQ
+    select
+      'Default Branch' as "label",
+      default_branch as "value"
+    from
+      aws_codecommit_repository
+    where
+      arn = $1;
+  EOQ
+}
+
+# Other detail page queries
+
+query "codecommit_repository_overview" {
+  sql = <<-EOQ
+    select
+      repository_name as "Repository Name",
+      repository_id as "Repository ID",
+      description as "Description",
+      arn as "ARN",
+      clone_url_http as "HTTP Clone URL",
+      clone_url_ssh as "SSH Clone URL",
+      creation_date as "Creation date",
+      last_modified_date as "Last modified date"
+    from
+      aws_codecommit_repository
+    where
+      arn = $1;
+  EOQ
+}
+
+query "codecommit_repository_tags" {
+  sql = <<-EOQ
+    select
+      tag.Key as "Key",
+      tag.Value as "Value"
+    from
+      aws_codecommit_repository,
+      jsonb_each_text(tags) as tag
+    where
+      arn = $1
+    order by
+      tag.Key;
+  EOQ
+}
+
+

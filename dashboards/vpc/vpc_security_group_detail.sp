@@ -18,224 +18,98 @@ dashboard "vpc_security_group_detail" {
     card {
       width = 2
       query = query.vpc_security_group_ingress_rules_count
-      args = {
-        group_id = self.input.security_group_id.value
-      }
+      args  = [self.input.security_group_id.value]
     }
 
     card {
       width = 2
       query = query.vpc_security_group_egress_rules_count
-      args = {
-        group_id = self.input.security_group_id.value
-      }
+      args  = [self.input.security_group_id.value]
     }
 
     card {
       width = 2
       query = query.vpc_security_attached_enis_count
-      args = {
-        group_id = self.input.security_group_id.value
-      }
+      args  = [self.input.security_group_id.value]
     }
 
     card {
       width = 2
       query = query.vpc_security_unrestricted_ingress
-      args = {
-        group_id = self.input.security_group_id.value
-      }
+      args  = [self.input.security_group_id.value]
     }
 
     card {
       width = 2
       query = query.vpc_security_unrestricted_egress
-      args = {
-        group_id = self.input.security_group_id.value
-      }
+      args  = [self.input.security_group_id.value]
     }
 
   }
 
   with "dax_clusters" {
-    sql = <<-EOQ
-          select
-            arn as dax_cluster_arn
-          from
-            aws_dax_cluster,
-            jsonb_array_elements(security_groups) as sg
-          where
-            sg ->> 'SecurityGroupIdentifier' = $1;
-        EOQ
-
-    args = [self.input.security_group_id.value]
+    query = query.vpc_security_group_dax_clusters
+    args  = [self.input.security_group_id.value]
   }
 
   with "ec2_application_load_balancers" {
-    sql = <<-EOQ
-          select
-            arn as alb_arn
-          from
-            aws_ec2_application_load_balancer,
-            jsonb_array_elements_text(security_groups) as sg
-          where
-            sg = $1;
-        EOQ
-
-    args = [self.input.security_group_id.value]
+    query = query.vpc_security_group_ec2_application_load_balancers
+    args  = [self.input.security_group_id.value]
   }
 
   with "ec2_classic_load_balancers" {
-    sql = <<-EOQ
-          select
-            arn as clb_arn
-          from
-            aws_ec2_classic_load_balancer,
-            jsonb_array_elements_text(security_groups) as sg
-          where
-            sg = $1;
-        EOQ
-
-    args = [self.input.security_group_id.value]
+    query = query.vpc_security_group_ec2_classic_load_balancers
+    args  = [self.input.security_group_id.value]
   }
 
   with "ec2_instances" {
-    sql = <<-EOQ
-          select
-            arn as instance_arn
-          from
-            aws_ec2_instance as i,
-            jsonb_array_elements(security_groups) as sg
-          where
-            sg ->> 'GroupId' = $1;
-        EOQ
-
-    args = [self.input.security_group_id.value]
+    query = query.vpc_security_group_ec2_instances
+    args  = [self.input.security_group_id.value]
   }
 
   with "ec2_launch_configurations" {
-    sql = <<-EOQ
-          select
-            launch_configuration_arn as launch_configuration_arn
-          from
-            aws_ec2_launch_configuration,
-            jsonb_array_elements_text(security_groups) as sg
-          where
-            sg = $1;
-        EOQ
-
-    args = [self.input.security_group_id.value]
+    query = query.vpc_security_group_ec2_launch_configurations
+    args  = [self.input.security_group_id.value]
   }
 
   with "efs_mount_targets" {
-    sql = <<-EOQ
-          select
-            mount_target_id as mount_target_id
-          from
-            aws_efs_mount_target,
-            jsonb_array_elements_text(security_groups) as sg
-          where
-            sg = $1;
-        EOQ
-
-    args = [self.input.security_group_id.value]
+    query = query.vpc_security_group_efs_mount_targets
+    args  = [self.input.security_group_id.value]
   }
 
   with "elasticache_clusters" {
-    sql = <<-EOQ
-          select
-            arn as elasticache_cluster_arn
-          from
-            aws_elasticache_cluster,
-            jsonb_array_elements(security_groups) as sg
-          where
-            sg ->> 'SecurityGroupId' = $1;
-        EOQ
-
-    args = [self.input.security_group_id.value]
+    query = query.vpc_security_group_elasticache_clusters
+    args  = [self.input.security_group_id.value]
   }
 
   with "lambda_functions" {
-    sql = <<-EOQ
-          select
-            arn as lambda_arn
-          from
-            aws_lambda_function,
-            jsonb_array_elements_text(vpc_security_group_ids) as s
-          where
-            s = $1;
-        EOQ
-
-    args = [self.input.security_group_id.value]
+    query = query.vpc_security_group_lambda_functions
+    args  = [self.input.security_group_id.value]
   }
 
   with "rds_db_clusters" {
-    sql = <<-EOQ
-          select
-            arn as rds_db_cluster_arn
-          from
-            aws_rds_db_cluster,
-            jsonb_array_elements(vpc_security_groups) as sg
-          where
-            sg ->> 'VpcSecurityGroupId' = $1;
-        EOQ
-
-    args = [self.input.security_group_id.value]
+    query = query.vpc_security_group_rds_db_clusters
+    args  = [self.input.security_group_id.value]
   }
 
   with "rds_db_instances" {
-    sql = <<-EOQ
-          select
-            arn as rds_db_instance_arn
-          from
-            aws_rds_db_instance,
-            jsonb_array_elements(vpc_security_groups) as sg
-          where
-            sg ->> 'VpcSecurityGroupId' = $1;
-        EOQ
-
-    args = [self.input.security_group_id.value]
+    query = query.vpc_security_group_rds_db_instances
+    args  = [self.input.security_group_id.value]
   }
 
   with "redshift_clusters" {
-    sql = <<-EOQ
-          select
-            arn as redshift_cluster_arn
-          from
-            aws_redshift_cluster,
-            jsonb_array_elements(vpc_security_groups) as sg
-          where
-            sg ->> 'VpcSecurityGroupId' = $1;
-        EOQ
-
-    args = [self.input.security_group_id.value]
+    query = query.vpc_security_group_redshift_clusters
+    args  = [self.input.security_group_id.value]
   }
 
   with "sagemaker_notebook_instances" {
-    sql = <<-EOQ
-          select
-            arn as notebook_instance_arn
-          from
-            aws_sagemaker_notebook_instance,
-            jsonb_array_elements_text(security_groups) as sg
-          where
-            sg = $1;
-        EOQ
-
-    args = [self.input.security_group_id.value]
+    query = query.vpc_security_group_sagemaker_notebook_instances
+    args  = [self.input.security_group_id.value]
   }
 
   with "vpc_vpcs" {
-    sql = <<-EOQ
-          select
-            vpc_id as vpc_id
-          from
-            aws_vpc_security_group
-          where
-            group_id = $1;
-        EOQ
-
-    args = [self.input.security_group_id.value]
+    query = query.vpc_security_group_vpc_vpcs
+    args  = [self.input.security_group_id.value]
   }
 
   container {
@@ -475,9 +349,7 @@ dashboard "vpc_security_group_detail" {
         type  = "line"
         width = 6
         query = query.vpc_security_group_overview
-        args = {
-          group_id = self.input.security_group_id.value
-        }
+        args  = [self.input.security_group_id.value]
 
         column "VPC ID" {
           // cyclic dependency prevents use of url_path, hardcode for now
@@ -492,9 +364,7 @@ dashboard "vpc_security_group_detail" {
         title = "Tags"
         width = 6
         query = query.vpc_security_group_tags
-        args = {
-          group_id = self.input.security_group_id.value
-        }
+        args  = [self.input.security_group_id.value]
       }
 
     }
@@ -506,9 +376,7 @@ dashboard "vpc_security_group_detail" {
       table {
         title = "Associated to"
         query = query.vpc_security_group_assoc
-        args = {
-          group_id = self.input.security_group_id.value
-        }
+        args  = [self.input.security_group_id.value]
 
         column "link" {
           display = "none"
@@ -532,18 +400,14 @@ dashboard "vpc_security_group_detail" {
       base  = flow.security_group_rules_sankey
       title = "Ingress Analysis"
       query = query.vpc_security_group_ingress_rule_sankey
-      args = {
-        group_id = self.input.security_group_id.value
-      }
+      args  = [self.input.security_group_id.value]
     }
 
 
     table {
       title = "Ingress Rules"
       query = query.vpc_security_group_ingress_rules
-      args = {
-        group_id = self.input.security_group_id.value
-      }
+      args  = [self.input.security_group_id.value]
     }
 
   }
@@ -556,17 +420,13 @@ dashboard "vpc_security_group_detail" {
       base  = flow.security_group_rules_sankey
       title = "Egress Analysis"
       query = query.vpc_security_group_egress_rule_sankey
-      args = {
-        group_id = self.input.security_group_id.value
-      }
+      args  = [self.input.security_group_id.value]
     }
 
     table {
       title = "Egress Rules"
       query = query.vpc_security_group_egress_rules
-      args = {
-        group_id = self.input.security_group_id.value
-      }
+      args  = [self.input.security_group_id.value]
     }
 
   }
@@ -603,6 +463,8 @@ query "vpc_security_group_input" {
   EOQ
 }
 
+# card queries
+
 query "vpc_security_group_ingress_rules_count" {
   sql = <<-EOQ
     select
@@ -615,7 +477,6 @@ query "vpc_security_group_ingress_rules_count" {
       and group_id = $1
   EOQ
 
-  param "group_id" {}
 }
 
 query "vpc_security_group_egress_rules_count" {
@@ -630,7 +491,6 @@ query "vpc_security_group_egress_rules_count" {
       and group_id = $1;
   EOQ
 
-  param "group_id" {}
 }
 
 query "vpc_security_attached_enis_count" {
@@ -646,7 +506,6 @@ query "vpc_security_attached_enis_count" {
       sg ->> 'GroupId' = $1;
   EOQ
 
-  param "group_id" {}
 }
 
 query "vpc_security_unrestricted_ingress" {
@@ -671,7 +530,6 @@ query "vpc_security_unrestricted_ingress" {
       and group_id = $1;
   EOQ
 
-  param "group_id" {}
 }
 
 query "vpc_security_unrestricted_egress" {
@@ -696,8 +554,166 @@ query "vpc_security_unrestricted_egress" {
       and group_id = $1;
   EOQ
 
-  param "group_id" {}
 }
+
+# with queries
+
+query "vpc_security_group_dax_clusters" {
+  sql = <<-EOQ
+    select
+      arn as dax_cluster_arn
+    from
+      aws_dax_cluster,
+      jsonb_array_elements(security_groups) as sg
+    where
+      sg ->> 'SecurityGroupIdentifier' = $1;
+  EOQ
+}
+
+query "vpc_security_group_ec2_application_load_balancers" {
+  sql = <<-EOQ
+    select
+      arn as alb_arn
+    from
+      aws_ec2_application_load_balancer,
+      jsonb_array_elements_text(security_groups) as sg
+    where
+      sg = $1;
+  EOQ
+}
+
+query "vpc_security_group_ec2_classic_load_balancers" {
+  sql = <<-EOQ
+    select
+      arn as clb_arn
+    from
+      aws_ec2_classic_load_balancer,
+      jsonb_array_elements_text(security_groups) as sg
+    where
+      sg = $1;
+  EOQ
+}
+
+query "vpc_security_group_ec2_instances" {
+  sql = <<-EOQ
+    select
+      arn as instance_arn
+    from
+      aws_ec2_instance as i,
+      jsonb_array_elements(security_groups) as sg
+    where
+      sg ->> 'GroupId' = $1;
+  EOQ
+}
+
+query "vpc_security_group_ec2_launch_configurations" {
+  sql = <<-EOQ
+    select
+      launch_configuration_arn as launch_configuration_arn
+    from
+      aws_ec2_launch_configuration,
+      jsonb_array_elements_text(security_groups) as sg
+    where
+      sg = $1;
+  EOQ
+}
+
+query "vpc_security_group_efs_mount_targets" {
+  sql = <<-EOQ
+    select
+      mount_target_id as mount_target_id
+    from
+      aws_efs_mount_target,
+      jsonb_array_elements_text(security_groups) as sg
+    where
+      sg = $1;
+  EOQ
+}
+
+query "vpc_security_group_elasticache_clusters" {
+  sql = <<-EOQ
+    select
+      arn as elasticache_cluster_arn
+    from
+      aws_elasticache_cluster,
+      jsonb_array_elements(security_groups) as sg
+    where
+      sg ->> 'SecurityGroupId' = $1;
+  EOQ 
+}
+
+query "vpc_security_group_lambda_functions" {
+  sql = <<-EOQ
+    select
+      arn as lambda_arn
+    from
+      aws_lambda_function,
+      jsonb_array_elements_text(vpc_security_group_ids) as s
+    where
+      s = $1;
+  EOQ
+}
+
+query "vpc_security_group_rds_db_clusters" {
+  sql = <<-EOQ
+    select
+      arn as rds_db_cluster_arn
+    from
+      aws_rds_db_cluster,
+      jsonb_array_elements(vpc_security_groups) as sg
+    where
+      sg ->> 'VpcSecurityGroupId' = $1;
+  EOQ
+}
+
+query "vpc_security_group_rds_db_instances" {
+  sql = <<-EOQ
+          select
+            arn as rds_db_instance_arn
+          from
+            aws_rds_db_instance,
+            jsonb_array_elements(vpc_security_groups) as sg
+          where
+            sg ->> 'VpcSecurityGroupId' = $1;
+        EOQ
+}
+
+query "vpc_security_group_redshift_clusters" {
+  sql = <<-EOQ
+    select
+      arn as redshift_cluster_arn
+    from
+      aws_redshift_cluster,
+      jsonb_array_elements(vpc_security_groups) as sg
+    where
+      sg ->> 'VpcSecurityGroupId' = $1;
+  EOQ
+}
+
+query "vpc_security_group_sagemaker_notebook_instances" {
+  sql = <<-EOQ
+    select
+      arn as notebook_instance_arn
+    from
+      aws_sagemaker_notebook_instance,
+      jsonb_array_elements_text(security_groups) as sg
+    where
+      sg = $1;
+  EOQ
+}
+
+query "vpc_security_group_vpc_vpcs" {
+  sql = <<-EOQ
+    select
+      vpc_id as vpc_id
+    from
+      aws_vpc_security_group
+    where
+      group_id = $1;
+  EOQ
+}
+
+# table queries
 
 query "vpc_security_group_assoc" {
   sql = <<-EOQ
@@ -889,10 +905,7 @@ query "vpc_security_group_assoc" {
       where
         sg = $1
 
-
   EOQ
-
-  param "group_id" {}
 
 }
 ## TODO: Add aws_rds_db_instance / db_security_groups, ELB, ALB, elasticache, etc....
@@ -1195,7 +1208,6 @@ query "vpc_security_group_ingress_rule_sankey" {
         rules
   EOQ
 
-  param "group_id" {}
 }
 
 query "vpc_security_group_egress_rule_sankey" {
@@ -1496,7 +1508,6 @@ query "vpc_security_group_egress_rule_sankey" {
       from
         rules
   EOQ
-  param "group_id" {}
 }
 
 query "vpc_security_group_ingress_rules" {
@@ -1527,7 +1538,6 @@ query "vpc_security_group_ingress_rules" {
       and not is_egress
   EOQ
 
-  param "group_id" {}
 }
 
 query "vpc_security_group_egress_rules" {
@@ -1558,7 +1568,6 @@ query "vpc_security_group_egress_rules" {
       and is_egress
   EOQ
 
-  param "group_id" {}
 }
 
 query "vpc_security_group_overview" {
@@ -1577,7 +1586,6 @@ query "vpc_security_group_overview" {
       group_id = $1
     EOQ
 
-  param "group_id" {}
 }
 
 query "vpc_security_group_tags" {
@@ -1594,5 +1602,4 @@ query "vpc_security_group_tags" {
       tag ->> 'Key';
     EOQ
 
-  param "group_id" {}
 }

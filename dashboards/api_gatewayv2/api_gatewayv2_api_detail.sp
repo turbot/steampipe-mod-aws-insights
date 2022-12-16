@@ -17,87 +17,41 @@ dashboard "api_gatewayv2_api_detail" {
     card {
       width = 2
       query = query.api_gatewayv2_api_protocol
-      args = {
-        api_id = self.input.api_id.value
-      }
+      args  = [self.input.api_id.value]
     }
 
     card {
       width = 2
       query = query.api_gatewayv2_stage_count
-      args = {
-        api_id = self.input.api_id.value
-      }
+      args  = [self.input.api_id.value]
     }
 
     card {
       width = 2
       query = query.api_gatewayv2_default_endpoint
-      args = {
-        api_id = self.input.api_id.value
-      }
+      args  = [self.input.api_id.value]
     }
 
   }
 
   with "ec2_load_balancer_listeners" {
-    sql = <<-EOQ
-      select
-        lb.arn as listener_arn
-      from
-        aws_api_gatewayv2_integration as i
-        join aws_ec2_load_balancer_listener as lb on i.integration_uri = lb.arn
-        join aws_api_gatewayv2_api as a on a.api_id = i.api_id
-      where
-        a.api_id = $1;
-    EOQ
-
-    args = [self.input.api_id.value]
+    query = query.api_gatewayv2_api_ec2_load_balancer_listeners
+    args  = [self.input.api_id.value]
   }
 
   with "kinesis_streams" {
-    sql = <<-EOQ
-      select
-        s.stream_arn as kinesis_stream_arn
-      from
-        aws_api_gatewayv2_integration as i
-        join aws_kinesis_stream as s on i.request_parameters ->> 'StreamName' = s.stream_name
-        join aws_api_gatewayv2_api as a on a.api_id = i.api_id
-      where
-        integration_subtype like '%Kinesis-%' and a.api_id = $1;
-    EOQ
-
-    args = [self.input.api_id.value]
+    query = query.api_gatewayv2_api_kinesis_streams
+    args  = [self.input.api_id.value]
   }
 
   with "lambda_functions" {
-    sql = <<-EOQ
-      select
-        f.arn as function_arn
-      from
-        aws_api_gatewayv2_integration as i
-        join aws_lambda_function as f on i.integration_uri = f.arn
-        join aws_api_gatewayv2_api as a on a.api_id = i.api_id
-      where
-        a.api_id = $1;
-    EOQ
-
-    args = [self.input.api_id.value]
+    query = query.api_gatewayv2_api_lambda_functions
+    args  = [self.input.api_id.value]
   }
 
   with "sqs_queues" {
-    sql = <<-EOQ
-      select
-        q.queue_arn as queue_arn
-      from
-        aws_api_gatewayv2_integration as i
-        join aws_sqs_queue as q on i.request_parameters ->> 'QueueUrl' = q.queue_url
-        join aws_api_gatewayv2_api as a on a.api_id = i.api_id
-      where
-        integration_subtype like '%SQS-%' and a.api_id = $1;
-    EOQ
-
-    args = [self.input.api_id.value]
+    query = query.api_gatewayv2_api_sqs_queues
+    args  = [self.input.api_id.value]
   }
 
   container {
@@ -113,7 +67,7 @@ dashboard "api_gatewayv2_api_detail" {
           api_gatewayv2_api_ids = [self.input.api_id.value]
         }
       }
-      
+
       node {
         base = node.api_gatewayv2_stage
         args = {
@@ -211,9 +165,7 @@ dashboard "api_gatewayv2_api_detail" {
         type  = "line"
         width = 3
         query = query.api_gatewayv2_api_overview
-        args = {
-          api_id = self.input.api_id.value
-        }
+        args  = [self.input.api_id.value]
 
       }
 
@@ -221,9 +173,7 @@ dashboard "api_gatewayv2_api_detail" {
         title = "Tags"
         width = 3
         query = query.api_gatewayv2_api_tags
-        args = {
-          api_id = self.input.api_id.value
-        }
+        args  = [self.input.api_id.value]
       }
 
 
@@ -231,10 +181,7 @@ dashboard "api_gatewayv2_api_detail" {
         title = "Stages"
         width = 6
         query = query.api_gatewayv2_api_stages
-        args = {
-          api_id = self.input.api_id.value
-        }
-
+        args  = [self.input.api_id.value]
       }
     }
 
@@ -248,17 +195,15 @@ dashboard "api_gatewayv2_api_detail" {
       table {
         title = "Integrations"
         query = query.api_gatewayv2_api_integrations
-        args = {
-          api_id = self.input.api_id.value
-        }
-
+        args  = [self.input.api_id.value]
       }
-
+      
     }
 
   }
-
 }
+
+# Input queries
 
 query "api_gatewayv2_api_input" {
   sql = <<-EOQ
@@ -276,6 +221,62 @@ query "api_gatewayv2_api_input" {
   EOQ
 }
 
+# With queries
+
+query "api_gatewayv2_api_ec2_load_balancer_listeners" {
+  sql = <<-EOQ
+    select
+      lb.arn as listener_arn
+    from
+      aws_api_gatewayv2_integration as i
+      join aws_ec2_load_balancer_listener as lb on i.integration_uri = lb.arn
+      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
+    where
+      a.api_id = $1;
+  EOQ
+}
+
+query "api_gatewayv2_api_kinesis_streams" {
+  sql = <<-EOQ
+    select
+      s.stream_arn as kinesis_stream_arn
+    from
+      aws_api_gatewayv2_integration as i
+      join aws_kinesis_stream as s on i.request_parameters ->> 'StreamName' = s.stream_name
+      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
+    where
+      integration_subtype like '%Kinesis-%' and a.api_id = $1;
+  EOQ
+}
+
+query "api_gatewayv2_api_lambda_functions" {
+  sql = <<-EOQ
+    select
+      f.arn as function_arn
+    from
+      aws_api_gatewayv2_integration as i
+      join aws_lambda_function as f on i.integration_uri = f.arn
+      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
+    where
+      a.api_id = $1;
+  EOQ
+}
+
+query "api_gatewayv2_api_sqs_queues" {
+  sql = <<-EOQ
+    select
+      q.queue_arn as queue_arn
+    from
+      aws_api_gatewayv2_integration as i
+      join aws_sqs_queue as q on i.request_parameters ->> 'QueueUrl' = q.queue_url
+      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
+    where
+      integration_subtype like '%SQS-%' and a.api_id = $1;
+  EOQ
+}
+
+# Card queries
+
 query "api_gatewayv2_api_protocol" {
   sql = <<-EOQ
     select
@@ -286,8 +287,6 @@ query "api_gatewayv2_api_protocol" {
     where
       api_id = $1;
   EOQ
-
-  param "api_id" {}
 }
 
 query "api_gatewayv2_stage_count" {
@@ -300,8 +299,6 @@ query "api_gatewayv2_stage_count" {
     where
       api_id = $1;
   EOQ
-
-  param "api_id" {}
 }
 
 query "api_gatewayv2_default_endpoint" {
@@ -315,9 +312,9 @@ query "api_gatewayv2_default_endpoint" {
     where
       api_id = $1;
   EOQ
-
-  param "api_id" {}
 }
+
+# Other detail page queries
 
 query "api_gatewayv2_api_overview" {
   sql = <<-EOQ
@@ -334,8 +331,6 @@ query "api_gatewayv2_api_overview" {
     where
       api_id = $1;
   EOQ
-
-  param "api_id" {}
 }
 
 query "api_gatewayv2_api_tags" {
@@ -355,8 +350,6 @@ query "api_gatewayv2_api_tags" {
       jsondata,
       json_each_text(tags);
     EOQ
-
-  param "api_id" {}
 }
 
 query "api_gatewayv2_api_stages" {
@@ -372,8 +365,6 @@ query "api_gatewayv2_api_stages" {
     where
       api_id = $1;
   EOQ
-
-  param "api_id" {}
 }
 
 query "api_gatewayv2_api_integrations" {
@@ -390,6 +381,4 @@ query "api_gatewayv2_api_integrations" {
     where
       api_id = $1;
   EOQ
-
-  param "api_id" {}
 }

@@ -16,74 +16,34 @@ dashboard "iam_policy_detail" {
     card {
       width = 2
       query = query.iam_policy_aws_managed
-      args = {
-        policy_arn = self.input.policy_arn.value
-      }
+      args  = [self.input.policy_arn.value]
     }
 
     card {
       width = 2
       query = query.iam_policy_attached
-      args = {
-        policy_arn = self.input.policy_arn.value
-      }
+      args  = [self.input.policy_arn.value]
     }
   }
 
   with "iam_groups" {
-    sql = <<-EOQ
-      select
-        arn as group_arn
-      from
-        aws_iam_group,
-        jsonb_array_elements_text(attached_policy_arns) as policy_arn
-      where
-        policy_arn = $1;
-    EOQ
-
-    args = [self.input.policy_arn.value]
+    query = query.iam_policy_iam_groups
+    args  = [self.input.policy_arn.value]
   }
 
   with "iam_policy_std" {
-    sql = <<-EOQ
-      select
-        policy_std
-      from
-        aws_iam_policy
-      where
-        arn = $1
-      limit 1;  -- aws managed policies will appear once for each connection in the aggregator, but we only need one...
-    EOQ
-
-    args = [self.input.policy_arn.value]
+    query = query.iam_policy_iam_policy_std
+    args  = [self.input.policy_arn.value]
   }
 
   with "iam_roles" {
-    sql = <<-EOQ
-      select
-        arn as role_arn
-      from
-        aws_iam_role,
-        jsonb_array_elements_text(attached_policy_arns) as policy_arn
-      where
-        policy_arn = $1;
-    EOQ
-
-    args = [self.input.policy_arn.value]
+    query = query.iam_policy_iam_roles
+    args  = [self.input.policy_arn.value]
   }
 
   with "iam_users" {
-    sql = <<-EOQ
-      select
-        arn as user_arn
-      from
-        aws_iam_user,
-        jsonb_array_elements_text(attached_policy_arns) as policy_arn
-      where
-        policy_arn = $1;
-    EOQ
-
-    args = [self.input.policy_arn.value]
+    query = query.iam_policy_iam_users
+    args  = [self.input.policy_arn.value]
   }
 
   container {
@@ -252,9 +212,7 @@ dashboard "iam_policy_detail" {
         type  = "line"
         width = 6
         query = query.iam_policy_overview
-        args = {
-          policy_arn = self.input.policy_arn.value
-        }
+        args  = [self.input.policy_arn.value]
 
       }
 
@@ -262,9 +220,7 @@ dashboard "iam_policy_detail" {
         title = "Tags"
         width = 6
         query = query.iam_policy_tags
-        args = {
-          policy_arn = self.input.policy_arn.value
-        }
+        args  = [self.input.policy_arn.value]
 
       }
 
@@ -275,9 +231,7 @@ dashboard "iam_policy_detail" {
       table {
         title = "Policy Statement"
         query = query.iam_policy_statement
-        args = {
-          policy_arn = self.input.policy_arn.value
-        }
+        args  = [self.input.policy_arn.value]
 
         column "Action" {
           href = "/aws_insights.dashboard.iam_action_glob_report?input.action_glob={{.\"Action\" | @uri}}"
@@ -291,6 +245,8 @@ dashboard "iam_policy_detail" {
 
   }
 }
+
+# Input queries
 
 query "iam_policy_input" {
   sql = <<-EOQ
@@ -326,6 +282,58 @@ query "iam_policy_input" {
   EOQ
 }
 
+# With queries
+
+query "iam_policy_iam_groups" {
+  sql = <<-EOQ
+    select
+      arn as group_arn
+    from
+      aws_iam_group,
+      jsonb_array_elements_text(attached_policy_arns) as policy_arn
+    where
+      policy_arn = $1;
+  EOQ
+}
+
+query "iam_policy_iam_policy_std" {
+  sql = <<-EOQ
+    select
+      policy_std
+    from
+      aws_iam_policy
+    where
+      arn = $1
+    limit 1;  -- aws managed policies will appear once for each connection in the aggregator, but we only need one...
+  EOQ
+}
+
+query "iam_policy_iam_roles" {
+  sql = <<-EOQ
+    select
+      arn as role_arn
+    from
+      aws_iam_role,
+      jsonb_array_elements_text(attached_policy_arns) as policy_arn
+    where
+      policy_arn = $1;
+  EOQ
+}
+
+query "iam_policy_iam_users" {
+  sql = <<-EOQ
+    select
+      arn as user_arn
+    from
+      aws_iam_user,
+      jsonb_array_elements_text(attached_policy_arns) as policy_arn
+    where
+      policy_arn = $1;
+  EOQ
+}
+
+# Card queries
+
 query "iam_policy_aws_managed" {
   sql = <<-EOQ
     select
@@ -336,8 +344,6 @@ query "iam_policy_aws_managed" {
     where
       arn = $1
   EOQ
-
-  param "policy_arn" {}
 }
 
 query "iam_policy_attached" {
@@ -351,10 +357,9 @@ query "iam_policy_attached" {
     where
       arn = $1
   EOQ
-
-  param "policy_arn" {}
 }
 
+# Other detail page queries
 
 query "iam_policy_overview" {
   sql = <<-EOQ
@@ -375,8 +380,6 @@ query "iam_policy_overview" {
       arn = $1
     limit 1
   EOQ
-
-  param "policy_arn" {}
 }
 
 query "iam_policy_tags" {
@@ -392,8 +395,6 @@ query "iam_policy_tags" {
     order by
       tag ->> 'Key'
   EOQ
-
-  param "policy_arn" {}
 }
 
 query "iam_policy_statement" {
@@ -423,8 +424,6 @@ query "iam_policy_statement" {
       left join jsonb_array_elements_text(t.stmt -> 'Resource') as resource on true
       left join jsonb_array_elements_text(t.stmt -> 'NotResource') as notresource on true
   EOQ
-
-  param "policy_arn" {}
 }
 
 

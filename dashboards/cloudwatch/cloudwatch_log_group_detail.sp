@@ -18,128 +18,56 @@ dashboard "cloudwatch_log_group_detail" {
     card {
       query = query.cloudwatch_log_group_retention_in_days
       width = 2
-      args = {
-        log_group_arn = self.input.log_group_arn.value
-      }
+      args = [self.input.log_group_arn.value]
     }
 
     card {
       query = query.cloudwatch_log_group_stored_bytes
       width = 2
-      args = {
-        log_group_arn = self.input.log_group_arn.value
-      }
+      args = [self.input.log_group_arn.value]
     }
 
     card {
       query = query.cloudwatch_log_group_metric_filter_count
       width = 2
-      args = {
-        log_group_arn = self.input.log_group_arn.value
-      }
+      args = [self.input.log_group_arn.value]
     }
 
     card {
       width = 2
       query = query.cloudwatch_log_group_unencrypted
-      args = {
-        log_group_arn = self.input.log_group_arn.value
-      }
+      args = [self.input.log_group_arn.value]
     }
 
   }
 
   with "cloudtrail_trails" {
-    sql = <<-EOQ
-      select
-        arn as cloudtrail_trail_arn
-      from
-        aws_cloudtrail_trail
-      where
-        log_group_arn is not null
-        and log_group_arn = $1;
-    EOQ
-
+    query = query.cloudwatch_log_group_cloudtrail_trails
     args = [self.input.log_group_arn.value]
   }
 
   with "cloudwatch_log_metric_filters" {
-    sql = <<-EOQ
-      select
-        f.name as log_metric_filter_name
-      from
-        aws_cloudwatch_log_group as g
-        left join aws_cloudwatch_log_metric_filter as f on g.name = f.log_group_name
-      where
-        f.region = g.region
-        and g.arn = $1;
-    EOQ
-
+    query = query.cloudwatch_log_group_cloudwatch_log_metric_filters
     args = [self.input.log_group_arn.value]
   }
 
   with "kinesis_streams" {
-    sql = <<-EOQ
-      select
-        s.stream_arn
-      from
-        aws_cloudwatch_log_group as g,
-        aws_cloudwatch_log_subscription_filter as f,
-        aws_kinesis_stream as s
-      where
-        f.region = g.region
-        and g.name = f.log_group_name
-        and s.stream_arn = f.destination_arn
-        and g.arn = $1;
-    EOQ
-
+    query = query.cloudwatch_log_group_kinesis_streams
     args = [self.input.log_group_arn.value]
   }
 
   with "kms_keys" {
-    sql = <<-EOQ
-      select
-        kms_key_id
-      from
-        aws_cloudwatch_log_group
-      where
-        kms_key_id is not null
-        and arn = $1;
-    EOQ
-
+    query = query.cloudwatch_log_group_kms_keys
     args = [self.input.log_group_arn.value]
   }
 
   with "lambda_functions" {
-    sql = <<-EOQ
-      select
-        f.arn as lambda_function_arn
-      from
-        aws_cloudwatch_log_group as g
-        left join aws_lambda_function as f on f.name = split_part(g.name, '/', 4)
-      where
-        g.name like '/aws/lambda/%'
-        and g.region = f.region
-        and g.arn = $1;
-    EOQ
-
+    query = query.cloudwatch_log_group_lambda_functions
     args = [self.input.log_group_arn.value]
   }
 
   with "vpc_flow_logs" {
-    sql = <<-EOQ
-      select
-        distinct f.flow_log_id
-      from
-        aws_cloudwatch_log_group as g,
-        aws_vpc_flow_log as f
-      where
-        f.log_group_name = g.name
-        and f.log_destination_type = 'cloud-watch-logs'
-        and f.region = g.region
-        and g.arn = $1;
-    EOQ
-
+    query = query.cloudwatch_log_group_vpc_flow_logs
     args = [self.input.log_group_arn.value]
   }
 
@@ -292,6 +220,8 @@ dashboard "cloudwatch_log_group_detail" {
 
 }
 
+# Input queries
+
 query "cloudwatch_log_group_input" {
   sql = <<-EOQ
     select
@@ -309,6 +239,92 @@ query "cloudwatch_log_group_input" {
   EOQ
 }
 
+# With queries
+
+query "cloudwatch_log_group_cloudtrail_trails" {
+  sql = <<-EOQ
+    select
+      arn as cloudtrail_trail_arn
+    from
+      aws_cloudtrail_trail
+    where
+      log_group_arn is not null
+      and log_group_arn = $1;
+  EOQ
+}
+
+query "cloudwatch_log_group_cloudwatch_log_metric_filters" {
+  sql = <<-EOQ
+    select
+      f.name as log_metric_filter_name
+    from
+      aws_cloudwatch_log_group as g
+      left join aws_cloudwatch_log_metric_filter as f on g.name = f.log_group_name
+    where
+      f.region = g.region
+      and g.arn = $1;
+  EOQ
+}
+
+query "cloudwatch_log_group_kinesis_streams" {
+  sql = <<-EOQ
+    select
+      s.stream_arn
+    from
+      aws_cloudwatch_log_group as g,
+      aws_cloudwatch_log_subscription_filter as f,
+      aws_kinesis_stream as s
+    where
+      f.region = g.region
+      and g.name = f.log_group_name
+      and s.stream_arn = f.destination_arn
+      and g.arn = $1;
+  EOQ
+}
+
+query "cloudwatch_log_group_kms_keys" {
+  sql = <<-EOQ
+    select
+      kms_key_id
+    from
+      aws_cloudwatch_log_group
+    where
+      kms_key_id is not null
+      and arn = $1;
+  EOQ
+}
+
+query "cloudwatch_log_group_lambda_functions" {
+  sql = <<-EOQ
+    select
+      f.arn as lambda_function_arn
+    from
+      aws_cloudwatch_log_group as g
+      left join aws_lambda_function as f on f.name = split_part(g.name, '/', 4)
+    where
+      g.name like '/aws/lambda/%'
+      and g.region = f.region
+      and g.arn = $1;
+  EOQ
+}
+
+query "cloudwatch_log_group_vpc_flow_logs" {
+  sql = <<-EOQ
+    select
+      distinct f.flow_log_id
+    from
+      aws_cloudwatch_log_group as g,
+      aws_vpc_flow_log as f
+    where
+      f.log_group_name = g.name
+      and f.log_destination_type = 'cloud-watch-logs'
+      and f.region = g.region
+      and g.arn = $1;
+  EOQ
+}
+
+# Card queries
+
 query "cloudwatch_log_group_retention_in_days" {
   sql = <<-EOQ
     select
@@ -319,8 +335,6 @@ query "cloudwatch_log_group_retention_in_days" {
     where
       arn = $1;
   EOQ
-
-  param "log_group_arn" {}
 }
 
 query "cloudwatch_log_group_stored_bytes" {
@@ -333,8 +347,6 @@ query "cloudwatch_log_group_stored_bytes" {
     where
       arn = $1;
   EOQ
-
-  param "log_group_arn" {}
 }
 
 query "cloudwatch_log_group_metric_filter_count" {
@@ -347,8 +359,6 @@ query "cloudwatch_log_group_metric_filter_count" {
     where
       arn = $1;
   EOQ
-
-  param "log_group_arn" {}
 }
 
 query "cloudwatch_log_group_unencrypted" {
@@ -362,9 +372,9 @@ query "cloudwatch_log_group_unencrypted" {
     where
       arn = $1;
   EOQ
-
-  param "log_group_arn" {}
 }
+
+# Other detail page queries
 
 query "cloudwatch_log_group_overview" {
   sql = <<-EOQ
@@ -379,8 +389,6 @@ query "cloudwatch_log_group_overview" {
     where
       arn = $1;
   EOQ
-
-  param "log_group_arn" {}
 }
 
 query "cloudwatch_log_group_tags" {
@@ -400,8 +408,6 @@ query "cloudwatch_log_group_tags" {
       jsondata,
       json_each_text(tags);
   EOQ
-
-  param "log_group_arn" {}
 }
 
 query "cloudwatch_log_group_encryption_details" {
@@ -414,29 +420,5 @@ query "cloudwatch_log_group_encryption_details" {
     where
       arn = $1;
   EOQ
-
-  param "log_group_arn" {}
 }
 
-node "cloudwatch_log_group" {
-  category = category.cloudwatch_log_group
-
-  sql = <<-EOQ
-    select
-      arn as id,
-      title as title,
-      jsonb_build_object(
-        'Name', name,
-        'ARN', arn,
-        'Creation Time', creation_time,
-        'Account ID', account_id,
-        'Region', region
-      ) as properties
-    from
-      aws_cloudwatch_log_group
-    where
-      arn = any($1 ::text[]);
-  EOQ
-
-  param "cloudwatch_log_group_arns" {}
-}

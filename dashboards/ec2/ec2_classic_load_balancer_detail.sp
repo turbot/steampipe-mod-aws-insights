@@ -8,7 +8,7 @@ dashboard "ec2_classic_load_balancer_detail" {
 
   input "clb" {
     title = "Select a Classic Load balancer:"
-    query = query.clb_input
+    query = query.ec2_classic_load_balancer_input
     width = 4
   }
 
@@ -16,148 +16,68 @@ dashboard "ec2_classic_load_balancer_detail" {
 
     card {
       width = 2
-      query = query.clb_scheme
-      args = {
-        arn = self.input.clb.value
-      }
+      query = query.ec2_classic_load_balancer_scheme
+      args = [self.input.clb.value]
     }
 
     card {
       width = 2
-      query = query.clb_instances
-      args = {
-        arn = self.input.clb.value
-      }
+      query = query.ec2_classic_load_balancer_instances
+      args = [self.input.clb.value]
     }
 
     card {
       width = 2
-      query = query.clb_logging_enabled
-      args = {
-        arn = self.input.clb.value
-      }
+      query = query.ec2_classic_load_balancer_logging_enabled
+      args = [self.input.clb.value]
     }
 
     card {
       width = 2
-      query = query.clb_az_zone
-      args = {
-        arn = self.input.clb.value
-      }
+      query = query.ec2_classic_load_balancer_az_zone
+      args = [self.input.clb.value]
     }
 
     card {
       width = 2
-      query = query.clb_cross_zone_enabled
-      args = {
-        arn = self.input.clb.value
-      }
+      query = query.ec2_classic_load_balancer_cross_zone_enabled
+      args = [self.input.clb.value]
     }
 
   }
 
   with "acm_certificates" {
-    sql = <<-EOQ
-      select
-        c.certificate_arn
-      from
-        aws_acm_certificate c,
-        jsonb_array_elements_text(in_use_by) u
-      where
-        u = $1
-    EOQ
-
+    query = query.ec2_classic_load_balancer_acm_certificates
     args = [self.input.clb.value]
   }
 
   with "ec2_instances" {
-    sql = <<-EOQ
-      select
-        i.arn as instance_arn
-      from
-        aws_ec2_classic_load_balancer as clb
-        cross join jsonb_array_elements(clb.instances) as ci
-        left join aws_ec2_instance i on i.instance_id = ci ->> 'InstanceId'
-      where
-        clb.arn = $1;
-    EOQ
-
+    query = query.ec2_classic_load_balancer_ec2_instances
     args = [self.input.clb.value]
   }
 
   with "ec2_load_balancer_listeners" {
-    sql = <<-EOQ
-      select
-        lblistener.arn as listener_arn
-      from
-        aws_ec2_load_balancer_listener lblistener
-      where
-        lblistener.load_balancer_arn = $1;
-    EOQ
-
+    query = query.ec2_classic_load_balancer_ec2_load_balancer_listeners
     args = [self.input.clb.value]
   }
 
   with "s3_buckets" {
-    sql = <<-EOQ
-      select
-        b.arn as bucket_arn
-      from
-        aws_s3_bucket b,
-        aws_ec2_classic_load_balancer as clb
-      where
-        clb.arn = $1
-        and b.name = clb.access_log_s3_bucket_name;
-    EOQ
-
+    query = query.ec2_classic_load_balancer_s3_buckets
     args = [self.input.clb.value]
   }
 
   with "vpc_security_groups" {
-    sql = <<-EOQ
-      select
-        sg.group_id
-      from
-        aws_vpc_security_group sg,
-        aws_ec2_classic_load_balancer as alb
-      where
-        alb.arn = $1
-        and sg.group_id in
-        (
-          select
-            jsonb_array_elements_text(alb.security_groups)
-        );
-    EOQ
-
+    query = query.ec2_classic_load_balancer_vpc_security_groups
     args = [self.input.clb.value]
   }
 
   with "vpc_subnets" {
-    sql = <<-EOQ
-      select
-        s.subnet_id as subnet_id
-      from
-        aws_vpc_subnet s,
-        aws_ec2_classic_load_balancer as clb,
-        jsonb_array_elements(availability_zones) as az
-      where
-        alb.arn = $1
-        and s.subnet_id = az ->> 'SubnetId';
-    EOQ
-
+    query = query.ec2_classic_load_balancer_vpc_subnets
     args = [self.input.clb.value]
   }
 
   with "vpc_vpcs" {
-    sql = <<-EOQ
-      select
-        alb.vpc_id as vpc_id
-      from
-        aws_ec2_classic_load_balancer as alb
-      where
-        alb.arn = $1;
-    EOQ
-
+    query = query.ec2_classic_load_balancer_vpc_vpcs
     args = [self.input.clb.value]
   }
 
@@ -280,26 +200,24 @@ dashboard "ec2_classic_load_balancer_detail" {
       title = "Overview"
       type  = "line"
       width = 3
-      query = query.ec2_clb_overview
-      args = {
-        arn = self.input.clb.value
-      }
+      query = query.ec2_classic_load_balancer_overview
+      args = [self.input.clb.value]
 
     }
 
     table {
       title = "Tags"
       width = 3
-      query = query.ec2_clb_tags
-      args = {
-        arn = self.input.clb.value
-      }
+      query = query.ec2_classic_load_balancer_tags
+      args = [self.input.clb.value]
     }
   }
 
 }
 
-query "clb_input" {
+# Input queries
+
+query "ec2_classic_load_balancer_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -315,7 +233,171 @@ query "clb_input" {
   EOQ
 }
 
-query "ec2_clb_overview" {
+# With queries
+
+query "ec2_classic_load_balancer_acm_certificates" {
+  sql = <<-EOQ
+    select
+      c.certificate_arn
+    from
+      aws_acm_certificate c,
+      jsonb_array_elements_text(in_use_by) u
+    where
+      u = $1
+  EOQ
+}
+
+query "ec2_classic_load_balancer_ec2_instances" {
+  sql = <<-EOQ
+    select
+      i.arn as instance_arn
+    from
+      aws_ec2_classic_load_balancer as ec2_classic_load_balancer
+      cross join jsonb_array_elements(clb.instances) as ci
+      left join aws_ec2_instance i on i.instance_id = ci ->> 'InstanceId'
+    where
+      clb.arn = $1;
+  EOQ
+}
+
+query "ec2_classic_load_balancer_ec2_load_balancer_listeners" {
+  sql = <<-EOQ
+    select
+      lblistener.arn as listener_arn
+    from
+      aws_ec2_load_balancer_listener lblistener
+    where
+      lblistener.load_balancer_arn = $1;
+  EOQ
+}
+
+query "ec2_classic_load_balancer_s3_buckets" {
+  sql = <<-EOQ
+    select
+      b.arn as bucket_arn
+    from
+      aws_s3_bucket b,
+      aws_ec2_classic_load_balancer as ec2_classic_load_balancer
+    where
+      clb.arn = $1
+      and b.name = clb.access_log_s3_bucket_name;
+  EOQ
+}
+
+query "ec2_classic_load_balancer_vpc_security_groups" {
+  sql = <<-EOQ
+    select
+      sg.group_id
+    from
+      aws_vpc_security_group sg,
+      aws_ec2_classic_load_balancer as alb
+    where
+      alb.arn = $1
+      and sg.group_id in
+      (
+        select
+          jsonb_array_elements_text(alb.security_groups)
+      );
+  EOQ
+}
+
+query "ec2_classic_load_balancer_vpc_subnets" {
+  sql = <<-EOQ
+    select
+      s.subnet_id as subnet_id
+    from
+      aws_vpc_subnet s,
+      aws_ec2_classic_load_balancer as clb,
+      jsonb_array_elements(availability_zones) as az
+    where
+      alb.arn = $1
+      and s.subnet_id = az ->> 'SubnetId';
+  EOQ
+}
+
+query "ec2_classic_load_balancer_vpc_vpcs" {
+  sql = <<-EOQ
+    select
+      alb.vpc_id as vpc_id
+    from
+      aws_ec2_classic_load_balancer as alb
+    where
+      alb.arn = $1;
+  EOQ
+}
+
+# Card queries
+
+query "ec2_classic_load_balancer_logging_enabled" {
+  sql = <<-EOQ
+    select
+      'Logging' as label,
+      case when access_log_enabled = 'false' then 'Disabled' else 'Enabled' end as value,
+      case when access_log_enabled = 'false' then 'alert' else 'ok' end as type
+    from
+      aws_ec2_classic_load_balancer
+    where
+      aws_clb.arn = $1;
+  EOQ
+}
+
+query "ec2_classic_load_balancer_az_zone" {
+  sql = <<-EOQ
+    select
+      'Availibility Zones' as label,
+      count(az ->> 'ZoneName') as value,
+      case when count(az ->> 'ZoneName') > 1 then 'ok' else 'alert' end as type
+    from
+      aws_ec2_classic_load_balancer
+      cross join jsonb_array_elements(availability_zones) as az
+    where
+      arn = $1;
+  EOQ
+}
+
+query "ec2_classic_load_balancer_cross_zone_enabled" {
+  sql = <<-EOQ
+    select
+      'Cross Zone' as label,
+      case when cross_zone_load_balancing_enabled then 'Enabled' else 'Disabled' end as value,
+      case when cross_zone_load_balancing_enabled then 'ok' else 'alert' end as type
+    from
+      aws_ec2_classic_load_balancer
+      cross join jsonb_array_elements(availability_zones) as az
+    where
+      arn = $1;
+  EOQ
+}
+
+query "ec2_classic_load_balancer_instances" {
+  sql = <<-EOQ
+    select
+      'Instances' as label,
+      count(i) as value,
+      case when count(i) >= 1 then 'ok' else 'alert' end as type
+    from
+      aws_ec2_classic_load_balancer
+      cross join jsonb_array_elements(instances) as i
+    where
+      arn = $1;
+  EOQ
+}
+
+query "ec2_classic_load_balancer_scheme" {
+  sql = <<-EOQ
+    select
+      'Scheme' as label,
+      initcap(scheme) as value
+    from
+      aws_ec2_classic_load_balancer
+    where
+      arn = $1;
+  EOQ
+}
+
+# Other detail page queries
+
+query "ec2_classic_load_balancer_overview" {
   sql = <<-EOQ
     select
       title as "Title",
@@ -328,13 +410,11 @@ query "ec2_clb_overview" {
     from
       aws_ec2_classic_load_balancer
     where
-      aws_ec2_classic_load_balancer.arn = $1;
+      aws_clb.arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "ec2_clb_tags" {
+query "ec2_classic_load_balancer_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -347,83 +427,4 @@ query "ec2_clb_tags" {
     order by
       tag ->> 'Key';
     EOQ
-
-  param "arn" {}
-}
-
-query "clb_logging_enabled" {
-  sql = <<-EOQ
-    select
-      'Logging' as label,
-      case when access_log_enabled = 'false' then 'Disabled' else 'Enabled' end as value,
-      case when access_log_enabled = 'false' then 'alert' else 'ok' end as type
-    from
-      aws_ec2_classic_load_balancer
-    where
-      aws_ec2_classic_load_balancer.arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-query "clb_az_zone" {
-  sql = <<-EOQ
-    select
-      'Availibility Zones' as label,
-      count(az ->> 'ZoneName') as value,
-      case when count(az ->> 'ZoneName') > 1 then 'ok' else 'alert' end as type
-    from
-      aws_ec2_classic_load_balancer
-      cross join jsonb_array_elements(availability_zones) as az
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-query "clb_cross_zone_enabled" {
-  sql = <<-EOQ
-    select
-      'Cross Zone' as label,
-      case when cross_zone_load_balancing_enabled then 'Enabled' else 'Disabled' end as value,
-      case when cross_zone_load_balancing_enabled then 'ok' else 'alert' end as type
-    from
-      aws_ec2_classic_load_balancer
-      cross join jsonb_array_elements(availability_zones) as az
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-query "clb_instances" {
-  sql = <<-EOQ
-    select
-      'Instances' as label,
-      count(i) as value,
-      case when count(i) >= 1 then 'ok' else 'alert' end as type
-    from
-      aws_ec2_classic_load_balancer
-      cross join jsonb_array_elements(instances) as i
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
-}
-
-query "clb_scheme" {
-  sql = <<-EOQ
-    select
-      'Scheme' as label,
-      initcap(scheme) as value
-    from
-      aws_ec2_classic_load_balancer
-    where
-      arn = $1;
-  EOQ
-
-  param "arn" {}
 }

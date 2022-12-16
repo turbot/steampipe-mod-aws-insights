@@ -18,136 +18,68 @@ dashboard "efs_file_system_detail" {
     card {
       query = query.efs_file_system_status
       width = 2
-      args = {
-        arn = self.input.efs_file_system_arn.value
-      }
+      args  = [self.input.efs_file_system_arn.value]
     }
 
     card {
       query = query.efs_file_system_performance_mode
       width = 2
-      args = {
-        arn = self.input.efs_file_system_arn.value
-      }
+      args  = [self.input.efs_file_system_arn.value]
     }
 
     card {
       query = query.efs_file_system_throughput_mode
       width = 2
-      args = {
-        arn = self.input.efs_file_system_arn.value
-      }
+      args  = [self.input.efs_file_system_arn.value]
     }
 
     card {
       query = query.efs_file_system_mount_targets
       width = 2
-      args = {
-        arn = self.input.efs_file_system_arn.value
-      }
+      args  = [self.input.efs_file_system_arn.value]
     }
 
     card {
       query = query.efs_file_system_encryption
       width = 2
-      args = {
-        arn = self.input.efs_file_system_arn.value
-      }
+      args  = [self.input.efs_file_system_arn.value]
     }
 
     card {
       query = query.efs_file_system_automatic_backup
       width = 2
-      args = {
-        arn = self.input.efs_file_system_arn.value
-      }
+      args  = [self.input.efs_file_system_arn.value]
     }
 
   }
   with "efs_access_points" {
-    sql = <<-EOQ
-          select
-            a.access_point_arn as access_point_arn
-          from
-            aws_efs_access_point as a
-            left join aws_efs_file_system as f on a.file_system_id = f.file_system_id
-          where
-            f.arn = $1;
-        EOQ
-
-    args = [self.input.efs_file_system_arn.value]
+    query = query.efs_file_system_efs_access_points
+    args  = [self.input.efs_file_system_arn.value]
   }
 
   with "efs_mount_targets" {
-    sql = <<-EOQ
-          select
-            mount_target_id
-          from
-            aws_efs_mount_target as m
-            left join aws_efs_file_system as f on m.file_system_id = f.file_system_id
-          where
-            f.arn = $1;
-        EOQ
-
-    args = [self.input.efs_file_system_arn.value]
+    query = query.efs_file_system_efs_mount_targets
+    args  = [self.input.efs_file_system_arn.value]
   }
 
   with "kms_keys" {
-    sql = <<-EOQ
-        select
-          kms_key_id as key_arn
-        from
-          aws_efs_file_system
-        where
-          arn = $1
-        EOQ
-
-    args = [self.input.efs_file_system_arn.value]
+    query = query.efs_file_system_kms_keys
+    args  = [self.input.efs_file_system_arn.value]
   }
 
   with "vpc_security_groups" {
-    sql = <<-EOQ
-          select
-            jsonb_array_elements_text(t.security_groups) as security_group_id
-          from
-            aws_efs_file_system as s,
-            aws_efs_mount_target as t
-          where
-            s.file_system_id = t.file_system_id
-            and s.arn = $1
-        EOQ
-
-    args = [self.input.efs_file_system_arn.value]
+    query = query.efs_file_system_vpc_security_groups
+    args  = [self.input.efs_file_system_arn.value]
   }
 
   with "vpc_subnets" {
-    sql = <<-EOQ
-          select
-            s.subnet_id as subnet_id
-          from
-            aws_efs_mount_target as m
-            left join aws_efs_file_system as f on f.file_system_id = m.file_system_id
-            left join aws_vpc_subnet as s on m.subnet_id = s.subnet_id
-          where
-            f.arn = $1;
-        EOQ
-
-    args = [self.input.efs_file_system_arn.value]
+    query = query.efs_file_system_vpc_subnets
+    args  = [self.input.efs_file_system_arn.value]
   }
 
   with "vpc_vpcs" {
-    sql = <<-EOQ
-          select
-            v.vpc_id as vpc_id
-          from
-            aws_efs_mount_target as m
-            left join aws_efs_file_system as f on f.file_system_id = m.file_system_id
-            left join aws_vpc as v on m.vpc_id= v.vpc_id
-          where
-            f.arn = $1;
-        EOQ
-
-    args = [self.input.efs_file_system_arn.value]
+    query = query.efs_file_system_vpc_vpcs
+    args  = [self.input.efs_file_system_arn.value]
   }
   container {
 
@@ -260,18 +192,14 @@ dashboard "efs_file_system_detail" {
         type  = "line"
         width = 6
         query = query.efs_file_system_overview
-        args = {
-          arn = self.input.efs_file_system_arn.value
-        }
+        args  = [self.input.efs_file_system_arn.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.efs_file_system_tags
-        args = {
-          arn = self.input.efs_file_system_arn.value
-        }
+        args  = [self.input.efs_file_system_arn.value]
       }
 
     }
@@ -283,9 +211,7 @@ dashboard "efs_file_system_detail" {
         title = "Size in Bytes"
         // type  = "line"
         query = query.efs_file_system_size_in_bytes
-        args = {
-          arn = self.input.efs_file_system_arn.value
-        }
+        args  = [self.input.efs_file_system_arn.value]
       }
 
     }
@@ -311,6 +237,8 @@ query "efs_file_system_input" {
   EOQ
 }
 
+# card queries
+
 query "efs_file_system_status" {
   sql = <<-EOQ
     select
@@ -322,7 +250,6 @@ query "efs_file_system_status" {
       arn = $1;
   EOQ
 
-  param "arn" {}
 }
 
 query "efs_file_system_performance_mode" {
@@ -336,7 +263,6 @@ query "efs_file_system_performance_mode" {
       arn = $1;
   EOQ
 
-  param "arn" {}
 }
 
 query "efs_file_system_throughput_mode" {
@@ -350,7 +276,6 @@ query "efs_file_system_throughput_mode" {
       arn = $1;
   EOQ
 
-  param "arn" {}
 }
 
 query "efs_file_system_mount_targets" {
@@ -364,7 +289,6 @@ query "efs_file_system_mount_targets" {
       arn = $1;
   EOQ
 
-  param "arn" {}
 }
 
 query "efs_file_system_encryption" {
@@ -379,7 +303,6 @@ query "efs_file_system_encryption" {
       arn = $1;
   EOQ
 
-  param "arn" {}
 }
 
 query "efs_file_system_automatic_backup" {
@@ -394,8 +317,85 @@ query "efs_file_system_automatic_backup" {
       arn = $1;
   EOQ
 
-  param "arn" {}
 }
+
+# with queries
+
+query "efs_file_system_efs_access_points" {
+  sql   = <<-EOQ
+    select
+      a.access_point_arn as access_point_arn
+    from
+      aws_efs_access_point as a
+      left join aws_efs_file_system as f on a.file_system_id = f.file_system_id
+    where
+      f.arn = $1;
+  EOQ
+}
+
+query "efs_file_system_efs_mount_targets" {
+  sql   = <<-EOQ
+    select
+      mount_target_id
+    from
+      aws_efs_mount_target as m
+      left join aws_efs_file_system as f on m.file_system_id = f.file_system_id
+    where
+      f.arn = $1;
+  EOQ
+}
+
+query "efs_file_system_kms_keys" {
+  sql   = <<-EOQ
+    select
+      kms_key_id as key_arn
+    from
+      aws_efs_file_system
+    where
+      arn = $1
+  EOQ
+}
+
+query "efs_file_system_vpc_security_groups" {
+  sql   = <<-EOQ
+    select
+      jsonb_array_elements_text(t.security_groups) as security_group_id
+    from
+      aws_efs_file_system as s,
+      aws_efs_mount_target as t
+    where
+      s.file_system_id = t.file_system_id
+      and s.arn = $1
+  EOQ
+}
+
+query "efs_file_system_vpc_subnets" {
+  sql   = <<-EOQ
+    select
+      s.subnet_id as subnet_id
+    from
+      aws_efs_mount_target as m
+      left join aws_efs_file_system as f on f.file_system_id = m.file_system_id
+      left join aws_vpc_subnet as s on m.subnet_id = s.subnet_id
+    where
+      f.arn = $1;
+  EOQ
+}
+
+query "efs_file_system_vpc_vpcs" {
+  sql   = <<-EOQ
+    select
+      v.vpc_id as vpc_id
+    from
+      aws_efs_mount_target as m
+      left join aws_efs_file_system as f on f.file_system_id = m.file_system_id
+      left join aws_vpc as v on m.vpc_id= v.vpc_id
+    where
+      f.arn = $1;
+  EOQ
+}
+
+# table queries
 
 query "efs_file_system_overview" {
   sql = <<-EOQ
@@ -413,7 +413,6 @@ query "efs_file_system_overview" {
       arn = $1;
   EOQ
 
-  param "arn" {}
 }
 
 query "efs_file_system_tags" {
@@ -430,7 +429,6 @@ query "efs_file_system_tags" {
       tag ->> 'Key';
   EOQ
 
-  param "arn" {}
 }
 
 query "efs_file_system_size_in_bytes" {
@@ -445,5 +443,4 @@ query "efs_file_system_size_in_bytes" {
       arn = $1;
   EOQ
 
-  param "arn" {}
 }

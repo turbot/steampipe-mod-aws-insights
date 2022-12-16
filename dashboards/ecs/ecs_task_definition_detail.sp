@@ -18,132 +18,56 @@ dashboard "ecs_task_definition_detail" {
     card {
       query = query.ecs_task_definition_network_mode
       width = 2
-      args = {
-        arn = self.input.task_definition_arn.value
-      }
+      args = [self.input.task_definition_arn.value]
     }
 
     card {
       query = query.ecs_task_definition_cpu_units
       width = 2
-      args = {
-        arn = self.input.task_definition_arn.value
-      }
+      args = [self.input.task_definition_arn.value]
     }
 
     card {
       query = query.ecs_task_definition_memory
       width = 2
-      args = {
-        arn = self.input.task_definition_arn.value
-      }
+      args = [self.input.task_definition_arn.value]
     }
 
     card {
       query = query.ecs_task_definition_requires_compatibilities
       width = 2
-      args = {
-        arn = self.input.task_definition_arn.value
-      }
+      args = [self.input.task_definition_arn.value]
     }
 
   }
 
   with "cloudwatch_log_groups" {
-    sql = <<-EOQ
-      select
-        g.arn as log_group_arn
-      from
-        aws_ecs_task_definition as td,
-        jsonb_array_elements(container_definitions) as d
-        left join aws_cloudwatch_log_group as g on g.name = d -> 'LogConfiguration' -> 'Options' ->> 'awslogs-group'
-      where
-        d -> 'LogConfiguration' -> 'Options' ->> 'awslogs-region' = g.region
-        and td.task_definition_arn = $1;
-    EOQ
-
+    query = query.ecs_task_definition_cloudwatch_log_groups
     args = [self.input.task_definition_arn.value]
   }
 
   with "ecr_repositories" {
-    sql = <<-EOQ
-      select
-        r.arn as repository_arn
-      from
-        aws_ecs_task_definition as td,
-        jsonb_array_elements(container_definitions) as d
-        left join aws_ecr_repository as r on r.repository_uri = split_part(d ->> 'Image', ':', 1)
-      where
-        r.arn is not null
-        and td.task_definition_arn = $1;
-    EOQ
-
+    query = query.ecs_task_definition_ecr_repositories
     args = [self.input.task_definition_arn.value]
   }
 
   with "ecs_services" {
-    sql = <<-EOQ
-      select
-        arn as service_arn
-      from
-        aws_ecs_service
-      where
-        task_definition = $1;
-    EOQ
-
+    query = query.ecs_task_definition_ecs_services
     args = [self.input.task_definition_arn.value]
   }
 
   with "ecs_tasks" {
-    sql = <<-EOQ
-      select
-        task_arn as task_arn
-      from
-        aws_ecs_task
-      where
-        task_definition_arn = $1;
-    EOQ
-
+    query = query.ecs_task_definition_ecs_tasks
     args = [self.input.task_definition_arn.value]
   }
 
   with "efs_file_systems" {
-    sql = <<-EOQ
-      select
-        f.arn as file_system_arn
-      from
-        aws_ecs_task_definition as td,
-        jsonb_array_elements(volumes) as v
-        left join aws_efs_file_system as f on f.file_system_id = v -> 'EfsVolumeConfiguration' ->> 'FileSystemId'
-      where
-        td.task_definition_arn = $1;
-    EOQ
-
+    query = query.ecs_task_definition_efs_file_systems
     args = [self.input.task_definition_arn.value]
   }
 
   with "iam_roles" {
-    sql = <<-EOQ
-      select
-        r.arn as role_arn
-      from
-        aws_ecs_task_definition as d
-        left join
-          aws_iam_role as r
-          on r.arn = d.execution_role_arn
-          and d.task_definition_arn = $1
-      where
-        r.arn is not null
-      union
-      select
-        r.arn as role_arn
-      from
-        aws_ecs_task_definition as d
-        left join aws_iam_role as r on r.arn = d.task_role_arn and d.task_definition_arn = $1
-      where
-        r.arn is not null
-    EOQ
-
+    query = query.ecs_task_definition_iam_roles
     args = [self.input.task_definition_arn.value]
   }
 
@@ -273,9 +197,7 @@ dashboard "ecs_task_definition_detail" {
         type  = "line"
         width = 6
         query = query.ecs_task_definition_overview
-        args = {
-          arn = self.input.task_definition_arn.value
-        }
+        args = [self.input.task_definition_arn.value]
 
       }
 
@@ -283,19 +205,15 @@ dashboard "ecs_task_definition_detail" {
         title = "Tags"
         width = 6
         query = query.ecs_task_definition_tags
-        args = {
-          arn = self.input.task_definition_arn.value
-        }
+        args = [self.input.task_definition_arn.value]
 
       }
     }
 
-    container {
-      width = 6
-    }
-
   }
 }
+
+# Input queries
 
 query "ecs_task_definition_input" {
   sql = <<-EOQ
@@ -314,6 +232,96 @@ query "ecs_task_definition_input" {
     EOQ
 }
 
+# With queries
+
+query "ecs_task_definition_cloudwatch_log_groups" {
+  sql = <<-EOQ
+    select
+      g.arn as log_group_arn
+    from
+      aws_ecs_task_definition as td,
+      jsonb_array_elements(container_definitions) as d
+      left join aws_cloudwatch_log_group as g on g.name = d -> 'LogConfiguration' -> 'Options' ->> 'awslogs-group'
+    where
+      d -> 'LogConfiguration' -> 'Options' ->> 'awslogs-region' = g.region
+      and td.task_definition_arn = $1;
+  EOQ
+}
+
+query "ecs_task_definition_ecr_repositories" {
+  sql = <<-EOQ
+    select
+      r.arn as repository_arn
+    from
+      aws_ecs_task_definition as td,
+      jsonb_array_elements(container_definitions) as d
+      left join aws_ecr_repository as r on r.repository_uri = split_part(d ->> 'Image', ':', 1)
+    where
+      r.arn is not null
+      and td.task_definition_arn = $1;
+  EOQ
+}
+
+query "ecs_task_definition_ecs_services" {
+  sql = <<-EOQ
+    select
+      arn as service_arn
+    from
+      aws_ecs_service
+    where
+      task_definition = $1;
+  EOQ
+}
+
+query "ecs_task_definition_ecs_tasks" {
+  sql = <<-EOQ
+    select
+      task_arn as task_arn
+    from
+      aws_ecs_task
+    where
+      task_definition_arn = $1;
+  EOQ
+}
+
+query "ecs_task_definition_efs_file_systems" {
+  sql = <<-EOQ
+    select
+      f.arn as file_system_arn
+    from
+      aws_ecs_task_definition as td,
+      jsonb_array_elements(volumes) as v
+      left join aws_efs_file_system as f on f.file_system_id = v -> 'EfsVolumeConfiguration' ->> 'FileSystemId'
+    where
+      td.task_definition_arn = $1;
+  EOQ
+}
+
+query "ecs_task_definition_iam_roles" {
+  sql = <<-EOQ
+    select
+      r.arn as role_arn
+    from
+      aws_ecs_task_definition as d
+      left join
+        aws_iam_role as r
+        on r.arn = d.execution_role_arn
+        and d.task_definition_arn = $1
+    where
+      r.arn is not null
+    union
+    select
+      r.arn as role_arn
+    from
+      aws_ecs_task_definition as d
+      left join aws_iam_role as r on r.arn = d.task_role_arn and d.task_definition_arn = $1
+    where
+      r.arn is not null
+  EOQ
+}
+
+# Card queries
+
 query "ecs_task_definition_network_mode" {
   sql = <<-EOQ
     select
@@ -324,8 +332,6 @@ query "ecs_task_definition_network_mode" {
     where
       task_definition_arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "ecs_task_definition_cpu_units" {
@@ -338,8 +344,6 @@ query "ecs_task_definition_cpu_units" {
     where
       task_definition_arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "ecs_task_definition_memory" {
@@ -352,8 +356,6 @@ query "ecs_task_definition_memory" {
     where
       task_definition_arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "ecs_task_definition_requires_compatibilities" {
@@ -366,9 +368,9 @@ query "ecs_task_definition_requires_compatibilities" {
     where
       task_definition_arn = $1;
   EOQ
-
-  param "arn" {}
 }
+
+# Other detail page queries
 
 query "ecs_task_definition_overview" {
   sql = <<-EOQ
@@ -387,8 +389,6 @@ query "ecs_task_definition_overview" {
     where
       task_definition_arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "ecs_task_definition_tags" {
@@ -404,6 +404,4 @@ query "ecs_task_definition_tags" {
     order by
       tag ->> 'Key';
   EOQ
-
-  param "arn" {}
 }
