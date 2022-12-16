@@ -18,71 +18,35 @@ dashboard "vpc_eip_detail" {
     card {
       width = 2
       query = query.vpc_eip_association
-      args = {
-        arn = self.input.eip_arn.value
-      }
+      args  = [self.input.eip_arn.value]
     }
 
     card {
       width = 2
       query = query.vpc_eip_private_ip_address
-      args = {
-        arn = self.input.eip_arn.value
-      }
+      args  = [self.input.eip_arn.value]
     }
 
     card {
       width = 2
       query = query.vpc_eip_public_ip_address
-      args = {
-        arn = self.input.eip_arn.value
-      }
+      args  = [self.input.eip_arn.value]
     }
   }
 
   with "ec2_instances" {
-    sql = <<-EOQ
-          select
-            i.arn as instance_arn
-          from
-            aws_vpc_eip as e,
-            aws_ec2_instance as i
-          where
-            e.instance_id = i.instance_id
-            and e.arn = $1;
-        EOQ
-
-    args = [self.input.eip_arn.value]
+    query = query.vpc_eip_ec2_instances
+    args  = [self.input.eip_arn.value]
   }
 
   with "ec2_network_interfaces" {
-    sql = <<-EOQ
-          select
-            network_interface_id as eni_id
-          from
-            aws_vpc_eip
-          where
-            network_interface_id is not null
-            and arn = $1;
-        EOQ
-
-    args = [self.input.eip_arn.value]
+    query = query.vpc_eip_ec2_network_interfaces
+    args  = [self.input.eip_arn.value]
   }
 
   with "vpc_nat_gateways" {
-    sql = <<-EOQ
-          select
-            g.arn as gateway_arn
-          from
-            aws_vpc_eip as e,
-            aws_vpc_nat_gateway as g,
-            jsonb_array_elements(nat_gateway_addresses) as a
-          where
-            a ->> 'NetworkInterfaceId' = e.network_interface_id
-            and e.arn = $1;
-        EOQ
-
-    args = [self.input.eip_arn.value]
+    query = query.vpc_eip_vpc_nat_gateways
+    args  = [self.input.eip_arn.value]
   }
 
   container {
@@ -154,18 +118,14 @@ dashboard "vpc_eip_detail" {
         type  = "line"
         width = 6
         query = query.vpc_eip_overview
-        args = {
-          arn = self.input.eip_arn.value
-        }
+        args  = [self.input.eip_arn.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.vpc_eip_tags
-        args = {
-          arn = self.input.eip_arn.value
-        }
+        args  = [self.input.eip_arn.value]
       }
 
     }
@@ -177,9 +137,7 @@ dashboard "vpc_eip_detail" {
       table {
         title = "Association"
         query = query.vpc_eip_association_details
-        args = {
-          arn = self.input.eip_arn.value
-        }
+        args  = [self.input.eip_arn.value]
 
         column "Instance ARN" {
           display = "none"
@@ -197,9 +155,7 @@ dashboard "vpc_eip_detail" {
       table {
         title = "Other IP Addresses"
         query = query.vpc_eip_other_ip
-        args = {
-          arn = self.input.eip_arn.value
-        }
+        args  = [self.input.eip_arn.value]
       }
     }
 
@@ -223,6 +179,8 @@ query "vpc_eip_input" {
   EOQ
 }
 
+# Card queries
+
 query "vpc_eip_association" {
   sql = <<-EOQ
     select
@@ -235,7 +193,6 @@ query "vpc_eip_association" {
       arn = $1;
   EOQ
 
-  param "arn" {}
 }
 
 query "vpc_eip_private_ip_address" {
@@ -249,7 +206,6 @@ query "vpc_eip_private_ip_address" {
       arn = $1;
   EOQ
 
-  param "arn" {}
 }
 
 query "vpc_eip_public_ip_address" {
@@ -263,9 +219,50 @@ query "vpc_eip_public_ip_address" {
       arn = $1;
   EOQ
 
-  param "arn" {}
 }
 
+# With Queries
+
+query "vpc_eip_ec2_instances" {
+  sql   = <<-EOQ
+    select
+      i.arn as instance_arn
+    from
+      aws_vpc_eip as e,
+      aws_ec2_instance as i
+    where
+      e.instance_id = i.instance_id
+      and e.arn = $1;
+  EOQ
+}
+
+query "vpc_eip_ec2_network_interfaces" {
+  sql   = <<-EOQ
+    select
+      network_interface_id as eni_id
+    from
+      aws_vpc_eip
+    where
+      network_interface_id is not null
+      and arn = $1;
+  EOQ
+}
+
+query "vpc_eip_vpc_nat_gateways" {
+  sql   = <<-EOQ
+    select
+      g.arn as gateway_arn
+    from
+      aws_vpc_eip as e,
+      aws_vpc_nat_gateway as g,
+      jsonb_array_elements(nat_gateway_addresses) as a
+    where
+      a ->> 'NetworkInterfaceId' = e.network_interface_id
+      and e.arn = $1;
+  EOQ
+}
+
+# Table Queries
 
 query "vpc_eip_overview" {
   sql = <<-EOQ
@@ -282,7 +279,6 @@ query "vpc_eip_overview" {
       arn = $1
   EOQ
 
-  param "arn" {}
 }
 
 query "vpc_eip_tags" {
@@ -299,7 +295,6 @@ query "vpc_eip_tags" {
       tag ->> 'Key';
   EOQ
 
-  param "arn" {}
 }
 
 query "vpc_eip_association_details" {
@@ -316,7 +311,6 @@ query "vpc_eip_association_details" {
       e.arn = $1;
   EOQ
 
-  param "arn" {}
 }
 
 query "vpc_eip_other_ip" {
@@ -330,6 +324,5 @@ query "vpc_eip_other_ip" {
       arn = $1;
   EOQ
 
-  param "arn" {}
 }
 
