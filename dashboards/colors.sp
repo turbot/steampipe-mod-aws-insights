@@ -21,7 +21,7 @@ locals {
   content_delivery_color        = "purple"
   cost_management_color         = "green"
   database_color                = "blue"
-  developer_tools_color          = "blue"
+  developer_tools_color         = "blue"
   end_user_computing_color      = "green"
   front_end_web_color           = "red"
   game_tech_color               = "purple"
