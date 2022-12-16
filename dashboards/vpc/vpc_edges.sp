@@ -107,16 +107,13 @@ edge "vpc_peered_vpc" {
 
   sql = <<-EOQ
     select
-      any($1) as to_id,
-      case
-        when accepter_vpc_id = any($1) then requester_vpc_id
-        else accepter_vpc_id
-      end as from_id
+      accepter_vpc_id as to_id,
+      requester_vpc_id as from_id
     from
       aws_vpc_peering_connection
     where
       accepter_vpc_id = any($1)
-      or requester_vpc_id = any($1)
+      or requester_vpc_id = any($1);
   EOQ
 
   param "vpc_vpc_ids" {}
