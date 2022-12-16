@@ -19,159 +19,71 @@ dashboard "lambda_function_detail" {
     card {
       width = 2
       query = query.lambda_function_memory
-      args = {
-        arn = self.input.lambda_arn.value
-      }
+      args = [self.input.lambda_arn.value]
     }
 
     card {
       width = 2
       query = query.lambda_function_runtime
-      args = {
-        arn = self.input.lambda_arn.value
-      }
+      args = [self.input.lambda_arn.value]
     }
 
     card {
       width = 2
       query = query.lambda_function_encryption
-      args = {
-        arn = self.input.lambda_arn.value
-      }
+      args = [self.input.lambda_arn.value]
     }
 
     card {
       width = 2
       query = query.lambda_function_public
-      args = {
-        arn = self.input.lambda_arn.value
-      }
+      args = [self.input.lambda_arn.value]
     }
 
   }
 
   with "api_gateway_apis" {
-    sql = <<-EOQ
-      select
-        api_id
-      from
-        aws_api_gatewayv2_integration
-      where
-        integration_uri = $1;
-    EOQ
-
+    query = query.lambda_function_api_gateway_apis
     args = [self.input.lambda_arn.value]
   }
 
   with "iam_roles" {
-    sql = <<-EOQ
-      select
-        role as role_arn
-      from
-        aws_lambda_function
-      where
-        arn = $1;
-    EOQ
-
+    query = query.lambda_function_iam_roles
     args = [self.input.lambda_arn.value]
   }
 
   with "kms_keys" {
-    sql = <<-EOQ
-      select
-        kms_key_arn
-      from
-        aws_lambda_function
-      where
-        kms_key_arn is not null
-        and arn = $1;
-    EOQ
-
+    query = query.lambda_function_kms_keys
     args = [self.input.lambda_arn.value]
   }
 
   with "s3_buckets" {
-    sql = <<-EOQ
-      select
-        arn as bucket_arn
-      from
-        aws_s3_bucket,
-        jsonb_array_elements(event_notification_configuration -> 'LambdaFunctionConfigurations') as t
-      where
-        event_notification_configuration -> 'LambdaFunctionConfigurations' <> 'null'
-        and t ->> 'LambdaFunctionArn' = $1;
-    EOQ
-
+    query = query.lambda_function_s3_buckets
     args = [self.input.lambda_arn.value]
   }
 
   with "sns_topic_subscriptions" {
-    sql = <<-EOQ
-      select
-        subscription_arn as subscription_arn
-      from
-        aws_sns_topic_subscription
-      where
-        protocol = 'lambda'
-        and endpoint = $1;
-    EOQ
-
+    query = query.lambda_function_sns_topic_subscriptions
     args = [self.input.lambda_arn.value]
   }
 
   with "sns_topics" {
-    sql = <<-EOQ
-      select
-        topic_arn as topic_arn
-      from
-        aws_sns_topic_subscription
-      where
-        protocol = 'lambda'
-        and endpoint = $1;
-    EOQ
-
+    query = query.lambda_function_sns_topics
     args = [self.input.lambda_arn.value]
   }
 
   with "vpc_security_groups" {
-    sql = <<-EOQ
-      select
-        s as group_id
-      from
-        aws_lambda_function,
-        jsonb_array_elements_text(vpc_security_group_ids) as s
-      where
-        arn = $1;
-    EOQ
-
+    query = query.lambda_function_vpc_security_groups
     args = [self.input.lambda_arn.value]
   }
 
   with "vpc_subnets" {
-    sql = <<-EOQ
-      select
-        s as subnet_id
-      from
-        aws_lambda_function,
-        jsonb_array_elements_text(vpc_subnet_ids) as s
-      where
-        arn = $1;
-    EOQ
-
+    query = query.lambda_function_vpc_subnets
     args = [self.input.lambda_arn.value]
   }
 
   with "vpc_vpcs" {
-    sql = <<-EOQ
-      select
-        vpc_id
-      from
-        aws_lambda_function
-      where
-        vpc_id is not null
-        and arn = $1;
-    EOQ
-
+    query = query.lambda_function_vpc_vpcs
     args = [self.input.lambda_arn.value]
   }
 
@@ -370,9 +282,7 @@ dashboard "lambda_function_detail" {
         type  = "line"
         width = 6
         query = query.lambda_function_overview
-        args = {
-          arn = self.input.lambda_arn.value
-        }
+        args = [self.input.lambda_arn.value]
 
       }
 
@@ -380,9 +290,7 @@ dashboard "lambda_function_detail" {
         title = "Tags"
         width = 6
         query = query.lambda_function_tags
-        args = {
-          arn = self.input.lambda_arn.value
-        }
+        args = [self.input.lambda_arn.value]
       }
 
     }
@@ -391,9 +299,7 @@ dashboard "lambda_function_detail" {
       width = 6
       title = "Last Update Status"
       query = query.lambda_function_last_update_status
-      args = {
-        arn = self.input.lambda_arn.value
-      }
+      args = [self.input.lambda_arn.value]
     }
 
   }
@@ -401,30 +307,26 @@ dashboard "lambda_function_detail" {
   table {
     title = "Policy"
     query = query.lambda_function_policy
-    args = {
-      arn = self.input.lambda_arn.value
-    }
+    args = [self.input.lambda_arn.value]
   }
 
   table {
     width = 6
     title = "Security Groups"
     query = query.lambda_function_security_groups
-    args = {
-      arn = self.input.lambda_arn.value
-    }
+    args = [self.input.lambda_arn.value]
   }
 
   table {
     width = 6
     title = "Subnets"
     query = query.lambda_function_subnet_ids
-    args = {
-      arn = self.input.lambda_arn.value
-    }
+    args = [self.input.lambda_arn.value]
   }
 
 }
+
+# Input queries
 
 query "lambda_function_input" {
   sql = <<-EOQ
@@ -442,6 +344,117 @@ query "lambda_function_input" {
   EOQ
 }
 
+# With queries
+
+query "lambda_function_api_gateway_apis" {
+  sql = <<-EOQ
+    select
+      api_id
+    from
+      aws_api_gatewayv2_integration
+    where
+      integration_uri = $1;
+  EOQ
+}
+
+query "lambda_function_iam_roles" {
+  sql = <<-EOQ
+    select
+      role as role_arn
+    from
+      aws_lambda_function
+    where
+      arn = $1;
+  EOQ
+}
+
+query "lambda_function_kms_keys" {
+  sql = <<-EOQ
+    select
+      kms_key_arn
+    from
+      aws_lambda_function
+    where
+      kms_key_arn is not null
+      and arn = $1;
+  EOQ
+}
+
+query "lambda_function_s3_buckets" {
+  sql = <<-EOQ
+    select
+      arn as bucket_arn
+    from
+      aws_s3_bucket,
+      jsonb_array_elements(event_notification_configuration -> 'LambdaFunctionConfigurations') as t
+    where
+      event_notification_configuration -> 'LambdaFunctionConfigurations' <> 'null'
+      and t ->> 'LambdaFunctionArn' = $1;
+  EOQ
+}
+
+query "lambda_function_sns_topic_subscriptions" {
+  sql = <<-EOQ
+    select
+      subscription_arn as subscription_arn
+    from
+      aws_sns_topic_subscription
+    where
+      protocol = 'lambda'
+      and endpoint = $1;
+  EOQ
+}
+
+query "lambda_function_sns_topics" {
+  sql = <<-EOQ
+    select
+      topic_arn as topic_arn
+    from
+      aws_sns_topic_subscription
+    where
+      protocol = 'lambda'
+      and endpoint = $1;
+  EOQ
+}
+
+query "lambda_function_vpc_security_groups" {
+  sql = <<-EOQ
+    select
+      s as group_id
+    from
+      aws_lambda_function,
+      jsonb_array_elements_text(vpc_security_group_ids) as s
+    where
+      arn = $1;
+  EOQ
+}
+
+query "lambda_function_vpc_subnets" {
+  sql = <<-EOQ
+    select
+      s as subnet_id
+    from
+      aws_lambda_function,
+      jsonb_array_elements_text(vpc_subnet_ids) as s
+    where
+      arn = $1;
+  EOQ
+}
+
+query "lambda_function_vpc_vpcs" {
+  sql = <<-EOQ
+    select
+      vpc_id
+    from
+      aws_lambda_function
+    where
+      vpc_id is not null
+      and arn = $1;
+  EOQ
+}
+
+# Card queries
+
 query "lambda_function_memory" {
   sql = <<-EOQ
     select
@@ -452,8 +465,6 @@ query "lambda_function_memory" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "lambda_function_runtime" {
@@ -466,8 +477,6 @@ query "lambda_function_runtime" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "lambda_function_public" {
@@ -490,8 +499,6 @@ query "lambda_function_public" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "lambda_function_encryption" {
@@ -505,9 +512,9 @@ query "lambda_function_encryption" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
+
+# Other detail page queries
 
 query "lambda_function_last_update_status" {
   sql = <<-EOQ
@@ -521,8 +528,6 @@ query "lambda_function_last_update_status" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "lambda_function_policy" {
@@ -539,8 +544,6 @@ query "lambda_function_policy" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "lambda_function_security_groups" {
@@ -553,8 +556,6 @@ query "lambda_function_security_groups" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "lambda_function_subnet_ids" {
@@ -567,8 +568,6 @@ query "lambda_function_subnet_ids" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "lambda_function_overview" {
@@ -588,8 +587,6 @@ query "lambda_function_overview" {
     where
       arn = $1;
     EOQ
-
-  param "arn" {}
 }
 
 query "lambda_function_tags" {
@@ -610,11 +607,5 @@ query "lambda_function_tags" {
       json_each_text(tags)
     order by
       key;
-    EOQ
-
-  param "arn" {}
+  EOQ
 }
-
-
-//******
-

@@ -17,79 +17,34 @@ dashboard "eventbridge_rule_detail" {
     card {
       query = query.eventbridge_rule_state
       width = 2
-      args = {
-        arn = self.input.eventbridge_rule_arn.value
-      }
+      args  = [self.input.eventbridge_rule_arn.value]
     }
 
     card {
       width = 2
       query = query.eventbridge_rule_target_count
-      args = {
-        arn = self.input.eventbridge_rule_arn.value
-      }
+      args  = [self.input.eventbridge_rule_arn.value]
     }
   }
 
   with "cloudwatch_log_groups" {
-    sql = <<-EOQ
-      select
-        (t ->> 'Arn')::text || ':*' as cloudwatch_log_group_arn
-      from
-        aws_eventbridge_rule r,
-        jsonb_array_elements(targets) t
-      where
-        r.arn = $1
-        and t ->> 'Arn' like '%logs%;
-    EOQ
-
-    args = [self.input.eventbridge_rule_arn.value]
+    query = query.eventbridge_rule_cloudwatch_log_groups
+    args  = [self.input.eventbridge_rule_arn.value]
   }
 
   with "eventbridge_buses" {
-    sql = <<-EOQ
-      select
-        b.arn as eventbridge_bus_arn
-      from
-        aws_eventbridge_rule r
-        join aws_eventbridge_bus b on b.name = r.event_bus_name
-        and b.region = r.region
-        and b.account_id = r.account_id
-      where
-        r.arn = $1;
-    EOQ
-
-    args = [self.input.eventbridge_rule_arn.value]
+    query = query.eventbridge_rule_eventbridge_buses
+    args  = [self.input.eventbridge_rule_arn.value]
   }
 
   with "lambda_functions" {
-    sql = <<-EOQ
-      select
-        (t ->> 'Arn')::text as function_arn
-      from
-        aws_eventbridge_rule r,
-        jsonb_array_elements(targets) t
-      where
-        r.arn = $1
-        and t ->> 'Arn' like '%lambda%;
-    EOQ
-
-    args = [self.input.eventbridge_rule_arn.value]
+    query = query.eventbridge_rule_lambda_functions
+    args  = [self.input.eventbridge_rule_arn.value]
   }
 
   with "sns_topics" {
-    sql = <<-EOQ
-      select
-        (t ->> 'Arn')::text as topic_arn
-      from
-        aws_eventbridge_rule r,
-        jsonb_array_elements(targets) t
-      where
-        arn = $1
-        and t ->> 'Arn' like '%sns%';
-    EOQ
-
-    args = [self.input.eventbridge_rule_arn.value]
+    query = query.eventbridge_rule_sns_topics
+    args  = [self.input.eventbridge_rule_arn.value]
   }
 
   container {
@@ -174,18 +129,14 @@ dashboard "eventbridge_rule_detail" {
         type  = "line"
         width = 6
         query = query.eventbridge_rule_overview
-        args = {
-          arn = self.input.eventbridge_rule_arn.value
-        }
+        args  = [self.input.eventbridge_rule_arn.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.eventbridge_rule_tags
-        args = {
-          arn = self.input.eventbridge_rule_arn.value
-        }
+        args  = [self.input.eventbridge_rule_arn.value]
       }
 
     }
@@ -196,14 +147,13 @@ dashboard "eventbridge_rule_detail" {
       table {
         title = "Targets"
         query = query.eventbridge_rule_targets
-        args = {
-          arn = self.input.eventbridge_rule_arn.value
-        }
+        args  = [self.input.eventbridge_rule_arn.value]
       }
     }
   }
 }
 
+# Input queries
 
 query "eventbridge_rule_input" {
   sql = <<-EOQ
@@ -221,6 +171,63 @@ query "eventbridge_rule_input" {
   EOQ
 }
 
+# With queries
+
+query "eventbridge_rule_cloudwatch_log_groups" {
+  sql = <<-EOQ
+    select
+      (t ->> 'Arn')::text || ':*' as cloudwatch_log_group_arn
+    from
+      aws_eventbridge_rule r,
+      jsonb_array_elements(targets) t
+    where
+      r.arn = $1
+      and t ->> 'Arn' like '%logs%;
+  EOQ
+}
+
+query "eventbridge_rule_eventbridge_buses" {
+  sql = <<-EOQ
+    select
+      b.arn as eventbridge_bus_arn
+    from
+      aws_eventbridge_rule r
+      join aws_eventbridge_bus b on b.name = r.event_bus_name
+      and b.region = r.region
+      and b.account_id = r.account_id
+    where
+      r.arn = $1;
+  EOQ
+}
+
+query "eventbridge_rule_lambda_functions" {
+  sql = <<-EOQ
+    select
+      (t ->> 'Arn')::text as function_arn
+    from
+      aws_eventbridge_rule r,
+      jsonb_array_elements(targets) t
+    where
+      r.arn = $1
+      and t ->> 'Arn' like '%lambda%;
+  EOQ
+}
+
+query "eventbridge_rule_sns_topics" {
+  sql = <<-EOQ
+    select
+      (t ->> 'Arn')::text as topic_arn
+    from
+      aws_eventbridge_rule r,
+      jsonb_array_elements(targets) t
+    where
+      arn = $1
+      and t ->> 'Arn' like '%sns%';
+  EOQ
+}
+
+# Card queries
+
 query "eventbridge_rule_state" {
   sql = <<-EOQ
     select
@@ -231,9 +238,21 @@ query "eventbridge_rule_state" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
+
+query "eventbridge_rule_target_count" {
+  sql = <<-EOQ
+    select
+      coalesce(jsonb_array_length(targets), 0) as value,
+      'Targets' as label
+    from
+      aws_eventbridge_rule
+    where
+      arn = $1
+  EOQ
+}
+
+# Other detail page queries
 
 query "eventbridge_rule_overview" {
   sql = <<-EOQ
@@ -249,8 +268,6 @@ query "eventbridge_rule_overview" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "eventbridge_rule_tags" {
@@ -266,8 +283,6 @@ query "eventbridge_rule_tags" {
     order by
       tag ->> 'Key';
   EOQ
-
-  param "arn" {}
 }
 
 query "eventbridge_rule_targets" {
@@ -282,21 +297,4 @@ query "eventbridge_rule_targets" {
     where
       c.arn = $1;
   EOQ
-
-  param "arn" {}
 }
-
-query "eventbridge_rule_target_count" {
-  sql = <<-EOQ
-    select
-      coalesce(jsonb_array_length(targets), 0) as value,
-      'Targets' as label
-    from
-      aws_eventbridge_rule
-    where
-      arn = $1
-  EOQ
-
-  param "arn" {}
-}
-

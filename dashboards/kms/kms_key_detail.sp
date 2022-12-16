@@ -19,191 +19,83 @@ dashboard "kms_key_detail" {
     card {
       width = 2
       query = query.kms_key_type
-      args = {
-        arn = self.input.key_arn.value
-      }
+      args = [self.input.key_arn.value]
     }
 
     card {
       width = 2
       query = query.kms_key_origin
-      args = {
-        arn = self.input.key_arn.value
-      }
+      args = [self.input.key_arn.value]
     }
 
     card {
       width = 2
       query = query.kms_key_state
-      args = {
-        arn = self.input.key_arn.value
-      }
+      args = [self.input.key_arn.value]
     }
 
     card {
       width = 2
       query = query.kms_key_rotation_enabled
-      args = {
-        arn = self.input.key_arn.value
-      }
+      args = [self.input.key_arn.value]
     }
 
   }
 
   with "cloudtrail_trails" {
-    sql = <<-EOQ
-      select
-        t.arn as trail_arn
-      from
-        aws_cloudtrail_trail as t
-      where
-        t.kms_key_id = $1;
-    EOQ
-
+    query = query.kms_key_cloudtrail_trails
     args = [self.input.key_arn.value]
   }
 
   with "ebs_volumes" {
-    sql = <<-EOQ
-      select
-        v.arn as volume_arn
-      from
-        aws_ebs_volume as v
-      where
-        v.kms_key_id = $1;
-    EOQ
-
+    query = query.kms_key_ebs_volumes
     args = [self.input.key_arn.value]
   }
 
   with "lambda_functions" {
-    sql = <<-EOQ
-      select
-        arn as function_arn
-      from
-        aws_lambda_function
-      where
-        kms_key_arn = $1;
-    EOQ
-
+    query = query.kms_key_lambda_functions
     args = [self.input.key_arn.value]
   }
 
   with "rds_db_clusters" {
-    sql = <<-EOQ
-      select
-        arn as cluster_arn
-      from
-        aws_rds_db_cluster as c
-      where
-        c.kms_key_id = $1;
-    EOQ
-
+    query = query.kms_key_rds_db_clusters
     args = [self.input.key_arn.value]
   }
 
   with "rds_db_cluster_snapshots" {
-    sql = <<-EOQ
-      select
-        s.arn as cluster_snapshot_arn
-      from
-        aws_rds_db_cluster_snapshot as s
-      where
-        s.kms_key_id = $1;
-    EOQ
-
+    query = query.kms_key_rds_db_cluster_snapshots
     args = [self.input.key_arn.value]
   }
 
   with "rds_db_instances" {
-    sql = <<-EOQ
-      select
-        arn as db_instance_arn
-      from
-        aws_rds_db_instance as i
-      where
-        i.kms_key_id = $1;
-    EOQ
-
+    query = query.kms_key_rds_db_instances
     args = [self.input.key_arn.value]
   }
 
   with "rds_db_snapshots" {
-    sql = <<-EOQ
-      select
-        arn as db_snapshot_arn
-      from
-        aws_rds_db_snapshot as s
-      where
-        s.kms_key_id = $1;
-    EOQ
-
+    query = query.kms_key_rds_db_snapshots
     args = [self.input.key_arn.value]
 
   }
 
   with "redshift_clusters" {
-    sql = <<-EOQ
-      select
-        arn as redshift_cluster_arn
-      from
-        aws_redshift_cluster as c
-      where
-        c.kms_key_id = $1;
-    EOQ
-
+    query = query.kms_key_redshift_clusters
     args = [self.input.key_arn.value]
   }
 
   with "s3_buckets" {
-    sql = <<-EOQ
-      select
-        b.arn as bucket_arn
-      from
-        aws_s3_bucket as b
-        cross join jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as r
-        join aws_kms_key as k
-        on k.arn = r -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID'
-      where
-        k.arn = $1;
-    EOQ
-
+    query = query.kms_key_s3_buckets
     args = [self.input.key_arn.value]
 
   }
 
   with "sns_topics" {
-    sql = <<-EOQ
-      select
-        t.topic_arn as topic_arn
-      from
-        aws_sns_topic as t
-        left join aws_kms_key as k on k.id = split_part(t.kms_master_key_id, '/', 2)
-      where
-        k.arn = $1
-        and k.region = t.region
-        and k.account_id = t.account_id;
-    EOQ
-
+    query = query.kms_key_sns_topics
     args = [self.input.key_arn.value]
   }
 
   with "sqs_queues" {
-    sql = <<-EOQ
-      select
-        q.queue_arn as queue_arn
-      from
-        aws_kms_key as k
-        join aws_kms_alias as a
-        on a.target_key_id = k.id
-        join aws_sqs_queue as q
-        on a.alias_name = q.kms_master_key_id
-        and k.region = q.region
-        and k.account_id = q.account_id
-      where
-        k.arn = $1;
-    EOQ
-
+    query = query.kms_key_sqs_queues
     args = [self.input.key_arn.value]
   }
 
@@ -402,19 +294,14 @@ dashboard "kms_key_detail" {
         type  = "line"
         width = 6
         query = query.kms_key_overview
-        args = {
-          arn = self.input.key_arn.value
-        }
-
+        args = [self.input.key_arn.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.kms_key_tags
-        args = {
-          arn = self.input.key_arn.value
-        }
+        args = [self.input.key_arn.value]
       }
 
     }
@@ -426,9 +313,7 @@ dashboard "kms_key_detail" {
       table {
         title = "Key Age"
         query = query.kms_key_age
-        args = {
-          arn = self.input.key_arn.value
-        }
+        args = [self.input.key_arn.value]
       }
 
     }
@@ -438,20 +323,18 @@ dashboard "kms_key_detail" {
   table {
     title = "Policy"
     query = query.kms_key_policy
-    args = {
-      arn = self.input.key_arn.value
-    }
+    args = [self.input.key_arn.value]
   }
 
   table {
     title = "Key Aliases"
     query = query.kms_key_aliases
-    args = {
-      arn = self.input.key_arn.value
-    }
+    args = [self.input.key_arn.value]
   }
 
 }
+
+# Input queries
 
 query "kms_key_input" {
   sql = <<-EOQ
@@ -472,6 +355,143 @@ query "kms_key_input" {
   EOQ
 }
 
+# With queries
+
+query "kms_key_cloudtrail_trails" {
+  sql = <<-EOQ
+    select
+      t.arn as trail_arn
+    from
+      aws_cloudtrail_trail as t
+    where
+      t.kms_key_id = $1;
+  EOQ
+}
+
+query "kms_key_ebs_volumes" {
+  sql = <<-EOQ
+    select
+      v.arn as volume_arn
+    from
+      aws_ebs_volume as v
+    where
+      v.kms_key_id = $1;
+  EOQ
+}
+
+query "kms_key_lambda_functions" {
+  sql = <<-EOQ
+    select
+      arn as function_arn
+    from
+      aws_lambda_function
+    where
+      kms_key_arn = $1;
+  EOQ
+}
+
+query "kms_key_rds_db_clusters" {
+  sql = <<-EOQ
+    select
+      arn as cluster_arn
+    from
+      aws_rds_db_cluster as c
+    where
+      c.kms_key_id = $1;
+  EOQ
+}
+
+query "kms_key_rds_db_cluster_snapshots" {
+  sql = <<-EOQ
+    select
+      s.arn as cluster_snapshot_arn
+    from
+      aws_rds_db_cluster_snapshot as s
+    where
+      s.kms_key_id = $1;
+  EOQ
+}
+
+query "kms_key_rds_db_instances" {
+  sql = <<-EOQ
+    select
+      arn as db_instance_arn
+    from
+      aws_rds_db_instance as i
+    where
+      i.kms_key_id = $1;
+  EOQ
+}
+
+query "kms_key_rds_db_snapshots" {
+  sql = <<-EOQ
+    select
+      arn as db_snapshot_arn
+    from
+      aws_rds_db_snapshot as s
+    where
+      s.kms_key_id = $1;
+  EOQ
+}
+
+query "kms_key_redshift_clusters" {
+  sql = <<-EOQ
+    select
+      arn as redshift_cluster_arn
+    from
+      aws_redshift_cluster as c
+    where
+      c.kms_key_id = $1;
+  EOQ
+}
+
+query "kms_key_s3_buckets" {
+  sql = <<-EOQ
+    select
+      b.arn as bucket_arn
+    from
+      aws_s3_bucket as b
+      cross join jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as r
+      join aws_kms_key as k
+      on k.arn = r -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID'
+    where
+      k.arn = $1;
+  EOQ
+}
+
+query "kms_key_sns_topics" {
+  sql = <<-EOQ
+    select
+      t.topic_arn as topic_arn
+    from
+      aws_sns_topic as t
+      left join aws_kms_key as k on k.id = split_part(t.kms_master_key_id, '/', 2)
+    where
+      k.arn = $1
+      and k.region = t.region
+      and k.account_id = t.account_id;
+  EOQ
+}
+
+query "kms_key_sqs_queues" {
+  sql = <<-EOQ
+    select
+      q.queue_arn as queue_arn
+    from
+      aws_kms_key as k
+      join aws_kms_alias as a
+      on a.target_key_id = k.id
+      join aws_sqs_queue as q
+      on a.alias_name = q.kms_master_key_id
+      and k.region = q.region
+      and k.account_id = q.account_id
+    where
+      k.arn = $1;
+  EOQ
+}
+
+# Card queries
+
 query "kms_key_type" {
   sql = <<-EOQ
     select
@@ -482,8 +502,6 @@ query "kms_key_type" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "kms_key_origin" {
@@ -496,8 +514,6 @@ query "kms_key_origin" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "kms_key_state" {
@@ -511,8 +527,6 @@ query "kms_key_state" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "kms_key_rotation_enabled" {
@@ -528,8 +542,38 @@ query "kms_key_rotation_enabled" {
     where
       arn = $1;
   EOQ
+}
 
-  param "arn" {}
+# Other detail page queries
+
+query "kms_key_overview" {
+  sql = <<-EOQ
+    select
+      id as "ID",
+      title as "Title",
+      region as "Region",
+      account_id as "Account ID",
+      arn as "ARN"
+    from
+      aws_kms_key
+    where
+      arn = $1
+    EOQ
+}
+
+query "kms_key_tags" {
+  sql = <<-EOQ
+    select
+      tag ->> 'Key' as "Key",
+      tag ->> 'Value' as "Value"
+    from
+      aws_kms_key,
+      jsonb_array_elements(tags_src) as tag
+    where
+      arn = $1
+    order by
+      tag ->> 'Key';
+    EOQ
 }
 
 query "kms_key_age" {
@@ -543,8 +587,6 @@ query "kms_key_age" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "kms_key_aliases" {
@@ -560,8 +602,6 @@ query "kms_key_aliases" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "kms_key_policy" {
@@ -579,40 +619,4 @@ query "kms_key_policy" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
-}
-
-query "kms_key_overview" {
-  sql = <<-EOQ
-    select
-      id as "ID",
-      title as "Title",
-      region as "Region",
-      account_id as "Account ID",
-      arn as "ARN"
-    from
-      aws_kms_key
-    where
-      arn = $1
-    EOQ
-
-  param "arn" {}
-}
-
-query "kms_key_tags" {
-  sql = <<-EOQ
-    select
-      tag ->> 'Key' as "Key",
-      tag ->> 'Value' as "Value"
-    from
-      aws_kms_key,
-      jsonb_array_elements(tags_src) as tag
-    where
-      arn = $1
-    order by
-      tag ->> 'Key';
-    EOQ
-
-  param "arn" {}
 }
