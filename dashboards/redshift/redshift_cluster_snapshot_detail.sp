@@ -18,79 +18,48 @@ dashboard "redshift_snapshot_detail" {
     card {
       query = query.redshift_snapshot_status
       width = 2
-      args = {
-        arn = self.input.snapshot_arn.value
-      }
+      args = [self.input.snapshot_arn.value]
     }
 
     card {
       query = query.redshift_snapshot_type
       width = 2
-      args = {
-        arn = self.input.snapshot_arn.value
-      }
+      args = [self.input.snapshot_arn.value]
     }
 
     card {
       query = query.redshift_snapshot_engine
       width = 2
-      args = {
-        arn = self.input.snapshot_arn.value
-      }
+      args = [self.input.snapshot_arn.value]
     }
 
     card {
       query = query.redshift_snapshot_backup_size
       width = 2
-      args = {
-        arn = self.input.snapshot_arn.value
-      }
+      args = [self.input.snapshot_arn.value]
     }
 
     card {
       query = query.redshift_snapshot_node_type
       width = 2
-      args = {
-        arn = self.input.snapshot_arn.value
-      }
+      args = [self.input.snapshot_arn.value]
     }
 
     card {
       query = query.redshift_snapshot_unencrypted
       width = 2
-      args = {
-        arn = self.input.snapshot_arn.value
-      }
+      args = [self.input.snapshot_arn.value]
     }
 
   }
 
   with "kms_keys" {
-    sql = <<-EOQ
-      select
-        kms_key_id as key_arn
-      from
-        aws_redshift_snapshot
-      where
-        kms_key_id is not null
-        and akas::text = $1;
-    EOQ
-
+    query = query.redshift_snapshot_kms_keys
     args = [self.input.snapshot_arn.value]
   }
 
   with "redshift_clusters" {
-    sql = <<-EOQ
-      select
-        c.arn as redshift_cluster_arn
-      from
-        aws_redshift_snapshot as s,
-        aws_redshift_cluster as c
-      where
-        s.cluster_identifier = c.cluster_identifier
-        and s.akas::text = $1;
-    EOQ
-
+    query = query.redshift_snapshot_redshift_clusters
     args = [self.input.snapshot_arn.value]
   }
 
@@ -148,9 +117,7 @@ dashboard "redshift_snapshot_detail" {
         type  = "line"
         width = 6
         query = query.redshift_snapshot_overview
-        args = {
-          arn = self.input.snapshot_arn.value
-        }
+        args = [self.input.snapshot_arn.value]
 
       }
 
@@ -158,14 +125,14 @@ dashboard "redshift_snapshot_detail" {
         title = "Tags"
         width = 6
         query = query.redshift_snapshot_tags
-        args = {
-          arn = self.input.snapshot_arn.value
-        }
+        args = [self.input.snapshot_arn.value]
 
       }
     }
   }
 }
+
+# Input queries
 
 query "redshift_snapshot_input" {
   sql = <<-EOQ
@@ -183,6 +150,35 @@ query "redshift_snapshot_input" {
   EOQ
 }
 
+# With queries
+
+query "redshift_snapshot_kms_keys" {
+  sql = <<-EOQ
+    select
+      kms_key_id as key_arn
+    from
+      aws_redshift_snapshot
+    where
+      kms_key_id is not null
+      and akas::text = $1;
+  EOQ
+}
+
+query "redshift_snapshot_redshift_clusters" {
+  sql = <<-EOQ
+    select
+      c.arn as redshift_cluster_arn
+    from
+      aws_redshift_snapshot as s,
+      aws_redshift_cluster as c
+    where
+      s.cluster_identifier = c.cluster_identifier
+      and s.akas::text = $1;
+  EOQ
+}
+
+# Card queries
+
 query "redshift_snapshot_type" {
   sql = <<-EOQ
     select
@@ -193,8 +189,6 @@ query "redshift_snapshot_type" {
     where
       akas::text = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "redshift_snapshot_engine" {
@@ -207,8 +201,6 @@ query "redshift_snapshot_engine" {
     where
       akas::text = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "redshift_snapshot_backup_size" {
@@ -221,8 +213,6 @@ query "redshift_snapshot_backup_size" {
     where
       akas::text = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "redshift_snapshot_node_type" {
@@ -235,8 +225,6 @@ query "redshift_snapshot_node_type" {
     where
       akas::text = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "redshift_snapshot_status" {
@@ -249,8 +237,6 @@ query "redshift_snapshot_status" {
     where
       akas::text = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "redshift_snapshot_unencrypted" {
@@ -264,9 +250,9 @@ query "redshift_snapshot_unencrypted" {
     where
       akas::text = $1;
   EOQ
-
-  param "arn" {}
 }
+
+# Other detail page queries
 
 query "redshift_snapshot_overview" {
   sql = <<-EOQ
@@ -286,8 +272,6 @@ query "redshift_snapshot_overview" {
     where
       akas::text = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "redshift_snapshot_tags" {
@@ -303,6 +287,4 @@ query "redshift_snapshot_tags" {
     order by
       tag ->> 'Key';
   EOQ
-
-  param "arn" {}
 }

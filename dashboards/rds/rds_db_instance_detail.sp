@@ -18,143 +18,67 @@ dashboard "rds_db_instance_detail" {
     card {
       width = 2
       query = query.rds_db_instance_engine_type
-      args = {
-        arn = self.input.db_instance_arn.value
-      }
+      args = [self.input.db_instance_arn.value]
     }
 
     card {
       width = 2
       query = query.rds_db_instance_class
-      args = {
-        arn = self.input.db_instance_arn.value
-      }
+      args = [self.input.db_instance_arn.value]
     }
 
     card {
       width = 2
       query = query.rds_db_instance_public
-      args = {
-        arn = self.input.db_instance_arn.value
-      }
+      args = [self.input.db_instance_arn.value]
     }
 
     card {
       width = 2
       query = query.rds_db_instance_unencrypted
-      args = {
-        arn = self.input.db_instance_arn.value
-      }
+      args = [self.input.db_instance_arn.value]
     }
 
     card {
       width = 2
       query = query.rds_db_instance_deletion_protection
-      args = {
-        arn = self.input.db_instance_arn.value
-      }
+      args = [self.input.db_instance_arn.value]
     }
 
   }
 
   with "kms_keys" {
-    sql = <<-EOQ
-      select
-        rdb.kms_key_id as key_arn
-      from
-        aws_rds_db_instance rdb
-      where
-        rdb.arn = $1;
-    EOQ
-
+    query = query.rds_db_instance_kms_keys
     args = [self.input.db_instance_arn.value]
   }
 
   with "rds_db_clusters" {
-    sql = <<-EOQ
-      select
-        c.arn as cluster_arn
-      from
-        aws_rds_db_instance as i
-        join
-          aws_rds_db_cluster as c
-          on i.db_cluster_identifier = c.db_cluster_identifier
-      where
-        i.arn = $1;
-    EOQ
-
+    query = query.rds_db_instance_rds_db_clusters
     args = [self.input.db_instance_arn.value]
   }
 
   with "rds_db_snapshots" {
-    sql = <<-EOQ
-      select
-        s.arn as snapshot_arn
-      from
-        aws_rds_db_instance as i
-        join aws_rds_db_snapshot as s
-          on s.dbi_resource_id = i.resource_id
-      where
-        i.arn = $1;
-    EOQ
-
+    query = query.rds_db_instance_rds_db_snapshots
     args = [self.input.db_instance_arn.value]
   }
 
   with "sns_topics" {
-    sql = <<-EOQ
-      select
-        s.sns_topic_arn
-      from
-        aws_rds_db_event_subscription as s,
-        jsonb_array_elements_text(source_ids_list) as ids
-        join aws_rds_db_instance as i
-        on ids = i.db_instance_identifier
-      where
-        i.arn = $1;
-    EOQ
-
+    query = query.rds_db_instance_sns_topics
     args = [self.input.db_instance_arn.value]
   }
 
   with "vpc_security_groups" {
-    sql = <<-EOQ
-      select
-        dsg ->> 'VpcSecurityGroupId' as security_group_id
-      from
-        aws_rds_db_instance as di,
-        jsonb_array_elements(di.vpc_security_groups) as dsg
-      where
-        di.arn = $1;
-    EOQ
-
+    query = query.rds_db_instance_vpc_security_groups
     args = [self.input.db_instance_arn.value]
   }
 
   with "vpc_subnets" {
-    sql = <<-EOQ
-      select
-        subnet ->> 'SubnetIdentifier' as subnet_id
-      from
-        aws_rds_db_instance as rdb,
-        jsonb_array_elements(subnets) as subnet
-      where
-        rdb.arn = $1;
-    EOQ
-
+    query = query.rds_db_instance_vpc_subnets
     args = [self.input.db_instance_arn.value]
   }
 
   with "vpc_vpcs" {
-    sql = <<-EOQ
-      select
-        vpc_id
-      from
-        aws_rds_db_instance as di
-      where
-        di.arn = $1;
-    EOQ
-
+    query = query.rds_db_instance_vpc_vpcs
     args = [self.input.db_instance_arn.value]
   }
 
@@ -311,18 +235,14 @@ dashboard "rds_db_instance_detail" {
         type  = "line"
         width = 6
         query = query.rds_db_instance_overview
-        args = {
-          arn = self.input.db_instance_arn.value
-        }
+        args = [self.input.db_instance_arn.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.rds_db_instance_tags
-        args = {
-          arn = self.input.db_instance_arn.value
-        }
+        args = [self.input.db_instance_arn.value]
       }
 
     }
@@ -334,17 +254,13 @@ dashboard "rds_db_instance_detail" {
       table {
         title = "DB Parameter Groups"
         query = query.rds_db_instance_parameter_groups
-        args = {
-          arn = self.input.db_instance_arn.value
-        }
+        args = [self.input.db_instance_arn.value]
       }
 
       table {
         title = "Subnets"
         query = query.rds_db_instance_subnets
-        args = {
-          arn = self.input.db_instance_arn.value
-        }
+        args = [self.input.db_instance_arn.value]
       }
 
     }
@@ -357,18 +273,14 @@ dashboard "rds_db_instance_detail" {
         width = 6
         title = "Storage"
         query = query.rds_db_instance_storage
-        args = {
-          arn = self.input.db_instance_arn.value
-        }
+        args = [self.input.db_instance_arn.value]
       }
 
       table {
         width = 6
         title = "Logging"
         query = query.rds_db_instance_logging
-        args = {
-          arn = self.input.db_instance_arn.value
-        }
+        args = [self.input.db_instance_arn.value]
       }
 
     }
@@ -381,18 +293,14 @@ dashboard "rds_db_instance_detail" {
         width = 6
         title = "Security Groups"
         query = query.rds_db_instance_security_groups
-        args = {
-          arn = self.input.db_instance_arn.value
-        }
+        args = [self.input.db_instance_arn.value]
       }
 
       table {
         width = 6
         title = "DB Subnet Groups"
         query = query.rds_db_instance_db_subnet_groups
-        args = {
-          arn = self.input.db_instance_arn.value
-        }
+        args = [self.input.db_instance_arn.value]
       }
 
     }
@@ -400,6 +308,8 @@ dashboard "rds_db_instance_detail" {
   }
 
 }
+
+# Input queries
 
 query "rds_db_instance_input" {
   sql = <<-EOQ
@@ -417,6 +327,97 @@ query "rds_db_instance_input" {
   EOQ
 }
 
+# With queries
+
+query "rds_db_instance_kms_keys" {
+  sql = <<-EOQ
+    select
+      rdb.kms_key_id as key_arn
+    from
+      aws_rds_db_instance rdb
+    where
+      rdb.arn = $1;
+  EOQ
+}
+
+query "rds_db_instance_rds_db_clusters" {
+  sql = <<-EOQ
+    select
+      c.arn as cluster_arn
+    from
+      aws_rds_db_instance as i
+      join
+        aws_rds_db_cluster as c
+        on i.db_cluster_identifier = c.db_cluster_identifier
+    where
+      i.arn = $1;
+  EOQ
+}
+
+query "rds_db_instance_rds_db_snapshots" {
+  sql = <<-EOQ
+    select
+      s.arn as snapshot_arn
+    from
+      aws_rds_db_instance as i
+      join aws_rds_db_snapshot as s
+        on s.dbi_resource_id = i.resource_id
+    where
+      i.arn = $1;
+  EOQ
+}
+
+query "rds_db_instance_sns_topics" {
+  sql = <<-EOQ
+    select
+      s.sns_topic_arn
+    from
+      aws_rds_db_event_subscription as s,
+      jsonb_array_elements_text(source_ids_list) as ids
+      join aws_rds_db_instance as i
+      on ids = i.db_instance_identifier
+    where
+      i.arn = $1;
+  EOQ
+}
+
+query "rds_db_instance_vpc_security_groups" {
+  sql = <<-EOQ
+    select
+      dsg ->> 'VpcSecurityGroupId' as security_group_id
+    from
+      aws_rds_db_instance as di,
+      jsonb_array_elements(di.vpc_security_groups) as dsg
+    where
+      di.arn = $1;
+  EOQ
+}
+
+query "rds_db_instance_vpc_subnets" {
+  sql = <<-EOQ
+    select
+      subnet ->> 'SubnetIdentifier' as subnet_id
+    from
+      aws_rds_db_instance as rdb,
+      jsonb_array_elements(subnets) as subnet
+    where
+      rdb.arn = $1;
+  EOQ
+}
+
+query "rds_db_instance_vpc_vpcs" {
+  sql = <<-EOQ
+    select
+      vpc_id
+    from
+      aws_rds_db_instance as di
+    where
+      di.arn = $1;
+  EOQ
+}
+
+# Card queries
+
 query "rds_db_instance_engine_type" {
   sql = <<-EOQ
     select
@@ -427,8 +428,6 @@ query "rds_db_instance_engine_type" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "rds_db_instance_class" {
@@ -441,8 +440,6 @@ query "rds_db_instance_class" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "rds_db_instance_public" {
@@ -456,8 +453,6 @@ query "rds_db_instance_public" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "rds_db_instance_unencrypted" {
@@ -471,8 +466,6 @@ query "rds_db_instance_unencrypted" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "rds_db_instance_deletion_protection" {
@@ -486,9 +479,9 @@ query "rds_db_instance_deletion_protection" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
+
+# Other detail page queries
 
 query "rds_db_instance_parameter_groups" {
   sql = <<-EOQ
@@ -501,8 +494,6 @@ query "rds_db_instance_parameter_groups" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "rds_db_instance_subnets" {
@@ -517,8 +508,6 @@ query "rds_db_instance_subnets" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "rds_db_instance_storage" {
@@ -533,8 +522,6 @@ query "rds_db_instance_storage" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "rds_db_instance_logging" {
@@ -547,8 +534,6 @@ query "rds_db_instance_logging" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "rds_db_instance_security_groups" {
@@ -562,8 +547,6 @@ query "rds_db_instance_security_groups" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "rds_db_instance_db_subnet_groups" {
@@ -577,8 +560,6 @@ query "rds_db_instance_db_subnet_groups" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "rds_db_instance_overview" {
@@ -599,8 +580,6 @@ query "rds_db_instance_overview" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
 query "rds_db_instance_tags" {
@@ -616,6 +595,4 @@ query "rds_db_instance_tags" {
     order by
       tag ->> 'Key';
     EOQ
-
-  param "arn" {}
 }
