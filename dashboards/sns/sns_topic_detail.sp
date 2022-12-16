@@ -18,122 +18,49 @@ dashboard "sns_topic_detail" {
     card {
       width = 2
       query = query.sns_topic_encryption_status
-      args = {
-        arn = self.input.topic_arn.value
-      }
+      args  = [self.input.topic_arn.value]
     }
 
     card {
       query = query.sns_topic_subscriptions_confirmed_count
       width = 2
-      args = {
-        arn = self.input.topic_arn.value
-      }
+      args  = [self.input.topic_arn.value]
     }
   }
 
   with "cloudtrail_trails" {
-    sql = <<-EOQ
-          select
-            arn as trail_arn
-          from
-            aws_cloudtrail_trail
-          where
-            sns_topic_arn = $1;
-        EOQ
-
-    args = [self.input.topic_arn.value]
+    query = query.sns_topic_cloudtrail_trails
+    args  = [self.input.topic_arn.value]
   }
 
   with "elasticache_clusters" {
-    sql = <<-EOQ
-          select
-            arn as elasticache_cluster_arn
-          from
-            aws_elasticache_cluster
-          where
-            notification_configuration ->> 'TopicArn' = $1;
-        EOQ
-
-    args = [self.input.topic_arn.value]
+    query = query.sns_topic_elasticache_clusters
+    args  = [self.input.topic_arn.value]
   }
 
   with "kms_keys" {
-    sql = <<-EOQ
-          select
-            kms_master_key_id as key_arn
-          from
-            aws_sns_topic
-          where
-            kms_master_key_id is not null
-            and topic_arn = $1;
-        EOQ
-
-    args = [self.input.topic_arn.value]
+    query = query.sns_topic_kms_keys
+    args  = [self.input.topic_arn.value]
   }
 
   with "rds_db_instances" {
-    sql = <<-EOQ
-          select
-            i.arn as db_instance_arn
-          from
-            aws_rds_db_event_subscription as s,
-            jsonb_array_elements_text(source_ids_list) as ids
-            join aws_rds_db_instance as i
-            on ids = i.db_instance_identifier
-          where
-            s.sns_topic_arn = $1;
-        EOQ
-
-    args = [self.input.topic_arn.value]
+    query = query.sns_topic_rds_db_instances
+    args  = [self.input.topic_arn.value]
   }
 
   with "redshift_clusters" {
-    sql = <<-EOQ
-          select
-            c.arn as cluster_arn
-          from
-            aws_redshift_event_subscription as s,
-            jsonb_array_elements_text(source_ids_list) as ids
-            join aws_redshift_cluster as c
-            on ids = c.cluster_identifier
-          where
-            s.sns_topic_arn = $1;
-        EOQ
-
-    args = [self.input.topic_arn.value]
+    query = query.sns_topic_redshift_clusters
+    args  = [self.input.topic_arn.value]
   }
 
   with "s3_buckets" {
-    sql = <<-EOQ
-          select
-            b.arn as bucket_arn
-          from
-            aws_s3_bucket as b,
-            jsonb_array_elements(
-              case jsonb_typeof(event_notification_configuration -> 'TopicConfigurations')
-                when 'array' then (event_notification_configuration -> 'TopicConfigurations')
-                else null end
-              )
-              as t
-          where
-            t ->> 'TopicArn' = $1;
-        EOQ
-
-    args = [self.input.topic_arn.value]
+    query = query.sns_topic_s3_buckets
+    args  = [self.input.topic_arn.value]
   }
 
   with "sns_topic_subscriptions" {
-    sql = <<-EOQ
-          select
-            subscription_arn as subscription_arn
-          from
-            aws_sns_topic_subscription
-          where
-            topic_arn = $1;
-        EOQ
-
-    args = [self.input.topic_arn.value]
+    query = query.sns_topic_sns_topic_subscriptions
+    args  = [self.input.topic_arn.value]
   }
 
   container {
@@ -275,9 +202,7 @@ dashboard "sns_topic_detail" {
         type  = "line"
         width = 6
         query = query.sns_topic_overview
-        args = {
-          arn = self.input.topic_arn.value
-        }
+        args  = [self.input.topic_arn.value]
 
       }
 
@@ -285,9 +210,7 @@ dashboard "sns_topic_detail" {
         title = "Tags"
         width = 6
         query = query.sns_topic_tags
-        args = {
-          arn = self.input.topic_arn.value
-        }
+        args  = [self.input.topic_arn.value]
 
       }
     }
@@ -298,9 +221,7 @@ dashboard "sns_topic_detail" {
       table {
         title = "Subscription Counts"
         query = query.sns_topic_subscriptions
-        args = {
-          arn = self.input.topic_arn.value
-        }
+        args  = [self.input.topic_arn.value]
       }
 
     }
@@ -311,17 +232,13 @@ dashboard "sns_topic_detail" {
       table {
         title = "Effective Delivery Policy"
         query = query.sns_topic_delivery_policy
-        args = {
-          arn = self.input.topic_arn.value
-        }
+        args  = [self.input.topic_arn.value]
       }
 
       table {
         title = "Policy"
         query = query.sns_topic_policy_standard
-        args = {
-          arn = self.input.topic_arn.value
-        }
+        args  = [self.input.topic_arn.value]
       }
     }
 
@@ -339,6 +256,8 @@ query "sns_topic_input" {
       topic_arn;
 EOQ
 }
+
+# card queries
 
 query "sns_topic_encryption_status" {
   sql = <<-EOQ
@@ -369,6 +288,100 @@ query "sns_topic_subscriptions_confirmed_count" {
 
   param "arn" {}
 }
+
+# with queries
+
+query "sns_topic_cloudtrail_trails" {
+  sql   = <<-EOQ
+    select
+      arn as trail_arn
+    from
+      aws_cloudtrail_trail
+    where
+      sns_topic_arn = $1;
+  EOQ
+}
+
+query "sns_topic_elasticache_clusters" {
+  sql   = <<-EOQ
+    select
+      arn as elasticache_cluster_arn
+    from
+      aws_elasticache_cluster
+    where
+      notification_configuration ->> 'TopicArn' = $1;
+  EOQ
+}
+
+query "sns_topic_kms_keys" {
+  sql   = <<-EOQ
+    select
+      kms_master_key_id as key_arn
+    from
+      aws_sns_topic
+    where
+      kms_master_key_id is not null
+      and topic_arn = $1;
+  EOQ
+}
+
+query "sns_topic_rds_db_instances" {
+  sql   = <<-EOQ
+    select
+      i.arn as db_instance_arn
+    from
+      aws_rds_db_event_subscription as s,
+      jsonb_array_elements_text(source_ids_list) as ids
+      join aws_rds_db_instance as i
+      on ids = i.db_instance_identifier
+    where
+      s.sns_topic_arn = $1;
+  EOQ
+}
+
+query "sns_topic_redshift_clusters" {
+  sql   = <<-EOQ
+    select
+      c.arn as cluster_arn
+    from
+      aws_redshift_event_subscription as s,
+      jsonb_array_elements_text(source_ids_list) as ids
+      join aws_redshift_cluster as c
+      on ids = c.cluster_identifier
+    where
+      s.sns_topic_arn = $1;
+  EOQ
+}
+
+query "sns_topic_s3_buckets" {
+  sql   = <<-EOQ
+    select
+      b.arn as bucket_arn
+    from
+      aws_s3_bucket as b,
+      jsonb_array_elements(
+        case jsonb_typeof(event_notification_configuration -> 'TopicConfigurations')
+          when 'array' then (event_notification_configuration -> 'TopicConfigurations')
+          else null end
+        )
+        as t
+    where
+      t ->> 'TopicArn' = $1;
+  EOQ
+}
+
+query "sns_topic_sns_topic_subscriptions" {
+  sql   = <<-EOQ
+    select
+      subscription_arn as subscription_arn
+    from
+      aws_sns_topic_subscription
+    where
+      topic_arn = $1;
+  EOQ
+}
+
+# table queries
 
 query "sns_topic_overview" {
   sql = <<-EOQ
