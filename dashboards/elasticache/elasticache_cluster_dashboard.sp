@@ -171,7 +171,7 @@ query "elasticache_cluster_count" {
 query "elasticache_cluster_cache_node_count" {
   sql = <<-EOQ
     select
-      count(num_cache) as "Cache Nodes"
+      count(num_cache_nodes) as "Cache Nodes"
     from
       aws_elasticache_cluster;
   EOQ
