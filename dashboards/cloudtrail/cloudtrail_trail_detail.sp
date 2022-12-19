@@ -234,7 +234,8 @@ query "cloudtrail_trail_cloudwatch_log_groups" {
     from
       aws_cloudtrail_trail
     where
-      log_group_arn is not null
+      region = home_region
+      and log_group_arn is not null
       and arn = $1;
   EOQ
 }
@@ -261,7 +262,8 @@ query "cloudtrail_trail_kms_keys" {
     from
       aws_cloudtrail_trail as t
     where
-      kms_key_id is not null
+      region = home_region
+      and kms_key_id is not null
       and arn = $1;
   EOQ
 }
@@ -274,7 +276,8 @@ query "cloudtrail_trail_s3_buckets" {
       aws_cloudtrail_trail as t,
       aws_s3_bucket as s
     where
-      t.s3_bucket_name = s.name
+      t.region = t.home_region
+      and t.s3_bucket_name = s.name
       and s3_bucket_name is not null
       and t.arn = $1;
   EOQ
@@ -287,7 +290,8 @@ query "cloudtrail_trail_sns_topics" {
     from
       aws_cloudtrail_trail
     where
-      sns_topic_arn is not null
+      region = home_region
+      and sns_topic_arn is not null
       and arn = $1;
   EOQ
 }
@@ -302,7 +306,8 @@ query "cloudtrail_trail_regional" {
     from
       aws_cloudtrail_trail
     where
-      region = home_region and arn = $1;
+      region = home_region
+      and arn = $1;
   EOQ
 }
 
@@ -314,7 +319,8 @@ query "cloudtrail_trail_multi_region" {
     from
       aws_cloudtrail_trail
     where
-      region = home_region and arn = $1;
+      region = home_region
+      and arn = $1;
   EOQ
 }
 
@@ -327,7 +333,8 @@ query "cloudtrail_trail_unencrypted" {
     from
       aws_cloudtrail_trail
     where
-      region = home_region and arn = $1;
+      region = home_region
+      and arn = $1;
   EOQ
 }
 
@@ -340,7 +347,8 @@ query "cloudtrail_trail_log_file_validation" {
     from
       aws_cloudtrail_trail
     where
-      region = home_region and arn = $1;
+      region = home_region
+      and arn = $1;
   EOQ
 }
 
@@ -358,7 +366,8 @@ query "cloudtrail_trail_overview" {
     from
       aws_cloudtrail_trail
     where
-      arn = $1;
+      region = home_region
+      and arn = $1;
   EOQ
 }
 
@@ -371,7 +380,8 @@ query "cloudtrail_trail_tags" {
       aws_cloudtrail_trail,
       jsonb_array_elements(tags_src) as tag
     where
-      arn = $1
+      region = home_region
+      and arn = $1
     order by
       tag ->> 'Key';
   EOQ
@@ -385,18 +395,21 @@ query "cloudtrail_trail_logging" {
     from
       aws_cloudtrail_trail
     where
-      region = home_region and arn = $1;
+      region = home_region
+      and arn = $1;
   EOQ
 }
 
 query "cloudtrail_trail_bucket" {
   sql = <<-EOQ
     select
+      t.arn,
       s3_bucket_name as "S3 Bucket Name",
       s.arn as "S3 Bucket ARN"
     from
       aws_cloudtrail_trail as t left join aws_s3_bucket as s on s.name = t.s3_bucket_name
     where
-      t.region = home_region and t.arn = $1;
+      t.region = home_region
+      and t.arn = $1;
   EOQ
 }
