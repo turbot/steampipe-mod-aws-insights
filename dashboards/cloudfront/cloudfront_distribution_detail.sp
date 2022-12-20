@@ -212,20 +212,12 @@ query "cloudfront_distribution_input" {
 query "cloudfront_distribution_acm_certificates" {
   sql = <<-EOQ
     select
-      arn as alb_arn
+      viewer_certificate ->> 'ACMCertificateArn' as certificate_arn
     from
-      aws_ec2_application_load_balancer
+      aws_cloudfront_distribution
     where
-      dns_name in
-      (
-        select
-          origin ->> 'DomainName'
-        from
-          aws_cloudfront_distribution,
-          jsonb_array_elements(origins) as origin
-        where
-          arn = $1
-      );
+      viewer_certificate ->> 'ACMCertificateArn' is not null
+      and arn = $1
   EOQ
 }
 
