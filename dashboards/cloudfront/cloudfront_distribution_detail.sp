@@ -212,32 +212,26 @@ query "cloudfront_distribution_input" {
 query "cloudfront_distribution_acm_certificates" {
   sql = <<-EOQ
     select
-      arn as alb_arn
-    from
-      aws_ec2_application_load_balancer
-    where
-      dns_name in
-      (
-        select
-          origin ->> 'DomainName'
-        from
-          aws_cloudfront_distribution,
-          jsonb_array_elements(origins) as origin
-        where
-          arn = $1
-      );
-  EOQ
-}
-
-query "cloudfront_distribution_ec2_application_load_balancers" {
-  sql = <<-EOQ
-    select
       viewer_certificate ->> 'ACMCertificateArn' as certificate_arn
     from
       aws_cloudfront_distribution
     where
       viewer_certificate ->> 'ACMCertificateArn' is not null
       and arn = $1
+  EOQ
+}
+
+query "cloudfront_distribution_ec2_application_load_balancers" {
+  sql = <<-EOQ
+    select
+      b.arn as alb_arn
+    from
+      aws_cloudfront_distribution as d,
+      jsonb_array_elements(origins) as origin
+      left join aws_ec2_application_load_balancer as b on b.dns_name = origin ->> 'DomainName'
+    where
+      b.arn is not null
+      and d.arn = $1;
     EOQ
 }
 
