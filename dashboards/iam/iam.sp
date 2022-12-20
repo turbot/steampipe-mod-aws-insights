@@ -11,9 +11,9 @@ category "iam_access_key" {
 }
 
 category "iam_federated_principal" {
+  title = "IAM Federated Principal"
   icon  = "group"
   color = local.iam_color
-  title = "Federated"
 }
 
 category "iam_group" {
@@ -24,9 +24,9 @@ category "iam_group" {
 }
 
 category "iam_inline_policy" {
+  title = "IAM Inline Policy"
   icon  = "admin-panel-settings"
   color = local.iam_color
-  title = "IAM Policy"
 }
 
 category "iam_instance_profile" {
@@ -43,52 +43,52 @@ category "iam_policy" {
 }
 
 category "iam_policy_action" {
+  title = "IAM Policy Action"
   href  = "/aws_insights.dashboard.iam_action_glob_report?input.action_glob={{.title | @uri}}"
   icon  = "electric-bolt"
   color = local.iam_color
-  title = "Action"
 }
 
 category "iam_policy_condition" {
+  title = "IAM Policy Condition"
   icon  = "help"
   color = local.iam_color
-  title = "Condition"
 }
 
 category "iam_policy_condition_key" {
+  title = "IAM Policy Condition Key"
   icon  = "vpn-key"
   color = local.iam_color
-  title = "Condition Key"
 }
 
 category "iam_policy_condition_value" {
+  title = "IAM Policy Condition Value"
   icon  = "text:val"
   color = local.iam_color
-  title = "Condition Value"
 }
 
 category "iam_policy_notaction" {
+  title = "IAM Policy NotAction"
   icon  = "flash-off"
   color = local.iam_color
-  title = "NotAction"
 }
 
 category "iam_policy_notresource" {
+  title = "IAM Policy NotResource"
   icon  = "bookmark-remove"
   color = local.iam_color
-  title = "NotResource"
 }
 
 category "iam_policy_resource" {
+  title = "IAM Policy Resource"
   icon  = "bookmark"
   color = local.iam_color
-  title = "Resource"
 }
 
 category "iam_policy_statement" {
+  title = "IAM Policy Statement"
   icon  = "assignment"
   color = local.iam_color
-  title = "Statement"
 }
 
 category "iam_role" {
@@ -99,9 +99,9 @@ category "iam_role" {
 }
 
 category "iam_service_principal" {
+  title = "IAM Service Service"
   icon  = "settings"
   color = local.iam_color
-  title = "Service"
 }
 
 category "iam_user" {
