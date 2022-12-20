@@ -36,7 +36,7 @@ category "iam_instance_profile" {
 }
 
 category "iam_policy" {
-  title = "IAM Policy"
+  title = "IAM Managed Policy"
   color = local.iam_color
   href  = "/aws_insights.dashboard.iam_policy_detail?input.policy_arn={{.properties.'ARN' | @uri}}"
   icon  = "rule"
