@@ -30,7 +30,7 @@ category "iam_inline_policy" {
 }
 
 category "iam_instance_profile" {
-  title = "IAM Profile"
+  title = "IAM Instance Profile"
   icon  = "person-add"
   color = local.iam_color
 }
