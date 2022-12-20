@@ -5,7 +5,7 @@ locals {
 }
 
 category "kms_alias" {
-  title = "KMS Key Alias"
+  title = "KMS Alias"
   icon  = "heroicons-outline:key"
   color = local.security_color
 }
