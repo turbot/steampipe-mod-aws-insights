@@ -119,7 +119,8 @@ edge "s3_bucket_to_sns_topic" {
       aws_s3_bucket as b,
       jsonb_array_elements(event_notification_configuration -> 'TopicConfigurations') as t
     where
-      arn = any($1);
+      event_notification_configuration ->> 'TopicConfigurations' is not null
+      and arn = any($1);
   EOQ
 
   param "s3_bucket_arns" {}
@@ -136,7 +137,8 @@ edge "s3_bucket_to_sqs_queue" {
       aws_s3_bucket as b,
       jsonb_array_elements(event_notification_configuration -> 'QueueConfigurations') as q
     where
-      arn = any($1);
+      event_notification_configuration ->> 'QueueConfigurations' is not null
+      and arn = any($1);
   EOQ
 
   param "s3_bucket_arns" {}

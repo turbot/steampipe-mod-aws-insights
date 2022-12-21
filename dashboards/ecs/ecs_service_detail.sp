@@ -18,60 +18,60 @@ dashboard "ecs_service_detail" {
     card {
       query = query.ecs_service_status
       width = 2
-      args = [self.input.service_arn.value]
+      args  = [self.input.service_arn.value]
     }
 
     card {
       query = query.ecs_service_launch_type
       width = 2
-      args = [self.input.service_arn.value]
+      args  = [self.input.service_arn.value]
     }
 
   }
 
   with "ec2_target_groups" {
     query = query.ecs_service_ec2_target_groups
-    args = [self.input.service_arn.value]
+    args  = [self.input.service_arn.value]
   }
 
   with "ecs_clusters" {
     query = query.ecs_service_ecs_clusters
-    args = [self.input.service_arn.value]
+    args  = [self.input.service_arn.value]
   }
 
   with "ecs_container_instances" {
     query = query.ecs_service_ecs_container_instances
-    args = [self.input.service_arn.value]
+    args  = [self.input.service_arn.value]
   }
 
   with "ecs_tasks" {
     query = query.ecs_service_ecs_tasks
-    args = [self.input.service_arn.value]
+    args  = [self.input.service_arn.value]
   }
 
   with "ecs_task_definitions" {
     query = query.ecs_service_ecs_task_definitions
-    args = [self.input.service_arn.value]
+    args  = [self.input.service_arn.value]
   }
 
   with "iam_roles" {
     query = query.ecs_service_iam_roles
-    args = [self.input.service_arn.value]
+    args  = [self.input.service_arn.value]
   }
 
   with "vpc_security_groups" {
     query = query.ecs_service_vpc_security_groups
-    args = [self.input.service_arn.value]
+    args  = [self.input.service_arn.value]
   }
 
   with "vpc_subnets" {
     query = query.ecs_service_vpc_subnets
-    args = [self.input.service_arn.value]
+    args  = [self.input.service_arn.value]
   }
 
   with "vpc_vpcs" {
     query = query.ecs_service_vpc_vpcs
-    args = [self.input.service_arn.value]
+    args  = [self.input.service_arn.value]
   }
 
   container {
@@ -148,7 +148,7 @@ dashboard "ecs_service_detail" {
       node {
         base = node.vpc_vpc
         args = {
-          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_arn
+          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_id
         }
       }
 
@@ -228,7 +228,7 @@ dashboard "ecs_service_detail" {
         type  = "line"
         width = 6
         query = query.ecs_service_overview
-        args = [self.input.service_arn.value]
+        args  = [self.input.service_arn.value]
 
       }
 
@@ -236,7 +236,7 @@ dashboard "ecs_service_detail" {
         title = "Tags"
         width = 6
         query = query.ecs_service_tags
-        args = [self.input.service_arn.value]
+        args  = [self.input.service_arn.value]
 
       }
     }
@@ -247,7 +247,7 @@ dashboard "ecs_service_detail" {
       table {
         title = "Tasks"
         query = query.ecs_service_tasks
-        args = [self.input.service_arn.value]
+        args  = [self.input.service_arn.value]
       }
 
     }
@@ -377,25 +377,22 @@ query "ecs_service_vpc_subnets" {
       jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
       left join aws_vpc_subnet as sb on sb.subnet_id = trim((s::text ), '""')
     where
-      e.arn is not null
-      and e.arn = $1
-      and e.network_configuration is not null;
+      e.network_configuration is not null
+      and e.arn = $1;
   EOQ
 }
 
 query "ecs_service_vpc_vpcs" {
   sql = <<-EOQ
     select
-      v.arn as vpc_arn
+      sb.vpc_id
     from
       aws_ecs_service as e,
       jsonb_array_elements(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
-      left join aws_vpc_subnet as sb on sb.subnet_id = trim((s::text ), '""'),
-      aws_vpc as v
+      left join aws_vpc_subnet as sb on sb.subnet_id = trim((s::text ), '""')
     where
-      e.arn = $1
-      and e.network_configuration is not null
-      and v.vpc_id = sb.vpc_id;
+      e.network_configuration is not null
+      and e.arn = $1;
   EOQ
 }
 

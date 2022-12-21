@@ -315,11 +315,10 @@ edge "ecs_service_to_ecs_task_definition" {
       coalesce(task_arn, arn) as from_id,
       task_definition as to_id
     from
-      aws_ecs_service as s,
-      aws_ecs_task as t
+      aws_ecs_service as s left join aws_ecs_task as t
+        on s.task_definition = t.task_definition_arn
     where
-      s.task_definition = t.task_definition_arn
-      and arn = any($1);
+      arn = any($1);
   EOQ
 
   param "ecs_service_arns" {}
