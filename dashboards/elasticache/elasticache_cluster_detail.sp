@@ -1,6 +1,6 @@
 dashboard "elasticache_cluster_detail" {
 
-  title         = "AWS ElastiCache Cluster Detail"
+  title         = "AWS ElastiCache Cluster Node Detail"
   documentation = file("./dashboards/elasticache/docs/elasticache_cluster_detail.md")
 
   tags = merge(local.elasticache_common_tags, {
@@ -8,7 +8,7 @@ dashboard "elasticache_cluster_detail" {
   })
 
   input "elasticache_cluster_arn" {
-    title = "Select a Cluster:"
+    title = "Select a Node:"
     query = query.elasticache_cluster_input
     width = 4
   }
