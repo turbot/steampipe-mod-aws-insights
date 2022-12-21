@@ -13,12 +13,12 @@ category "api_gatewayv2_api" {
 
 category "api_gatewayv2_integration" {
   title = "API Gateway V2 Integration"
-  icon  = "integration-instructions"
+  icon  = "extension"
   color = local.front_end_web_color
 }
 
 category "api_gatewayv2_stage" {
   title = "API Gateway V2 Stage"
   color = local.front_end_web_color
-  icon  = "developer-board"
+  icon  = "schema"
 }

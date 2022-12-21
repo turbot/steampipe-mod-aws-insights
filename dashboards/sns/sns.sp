@@ -13,6 +13,6 @@ category "sns_topic" {
 
 category "sns_topic_subscription" {
   title = "SNS Subscription"
-  icon  = "sensors"
+  icon  = "broadcast-on-personal"
   color = local.application_integration_color
 }

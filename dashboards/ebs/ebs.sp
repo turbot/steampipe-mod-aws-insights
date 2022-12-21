@@ -8,12 +8,12 @@ category "ebs_snapshot" {
   title = "EBS Snapshot"
   href  = "/aws_insights.dashboard.ebs_snapshot_detail?input.snapshot_arn={{.properties.'ARN' | @uri}}"
   color = local.storage_color
-  icon  = "heroicons-outline:viewfinder-circle"
+  icon  = "add-a-photo"
 }
 
 category "ebs_volume" {
   title = "EBS Volume"
   href  = "/aws_insights.dashboard.ebs_volume_detail?input.volume_arn={{.properties.'ARN' | @uri}}"
-  icon  = "heroicons-outline:inbox-stack"
+  icon  = "hard-drive"
   color = local.storage_color
 }

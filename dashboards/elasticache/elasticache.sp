@@ -22,7 +22,7 @@ category "elasticache_node_group" {
 category "elasticache_parameter_group" {
   title = "ElastiCache Parameter Group"
   color = local.database_color
-  icon  = "text:PG"
+  icon  = "tune"
 }
 
 category "elasticache_cluster" {
@@ -34,5 +34,5 @@ category "elasticache_cluster" {
 category "elasticache_subnet_group" {
   title = "ElastiCache Subnet Group"
   color = local.database_color
-  icon  = "text:SG"
+  icon  = "account-tree"
 }

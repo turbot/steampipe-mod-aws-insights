@@ -12,7 +12,7 @@ category "iam_access_key" {
 
 category "iam_federated_principal" {
   title = "IAM Federated Principal"
-  icon  = "group"
+  icon  = "groups"
   color = local.iam_color
 }
 
@@ -20,18 +20,18 @@ category "iam_group" {
   title = "IAM Group"
   color = local.iam_color
   href  = "/aws_insights.dashboard.iam_group_detail?input.group_arn={{.properties.'ARN' | @uri}}"
-  icon  = "groups"
+  icon  = "group"
 }
 
 category "iam_inline_policy" {
   title = "IAM Inline Policy"
-  icon  = "admin-panel-settings"
+  icon  = "rule"
   color = local.iam_color
 }
 
 category "iam_instance_profile" {
   title = "IAM Instance Profile"
-  icon  = "person-add"
+  icon  = "manage-accounts"
   color = local.iam_color
 }
 
@@ -39,7 +39,7 @@ category "iam_policy" {
   title = "IAM Managed Policy"
   color = local.iam_color
   href  = "/aws_insights.dashboard.iam_policy_detail?input.policy_arn={{.properties.'ARN' | @uri}}"
-  icon  = "rule"
+  icon  = "rule-folder"
 }
 
 category "iam_policy_action" {
@@ -63,7 +63,7 @@ category "iam_policy_condition_key" {
 
 category "iam_policy_condition_value" {
   title = "IAM Policy Condition Value"
-  icon  = "text:val"
+  icon  = "numbers"
   color = local.iam_color
 }
 
@@ -94,13 +94,13 @@ category "iam_policy_statement" {
 category "iam_role" {
   title = "IAM Role"
   href  = "/aws_insights.dashboard.iam_role_detail?input.role_arn={{.properties.'ARN' | @uri}}"
-  icon  = "person-add"
+  icon  = "engineering"
   color = local.iam_color
 }
 
 category "iam_service_principal" {
   title = "IAM Service Service"
-  icon  = "settings"
+  icon  = "component-exchange"
   color = local.iam_color
 }
 

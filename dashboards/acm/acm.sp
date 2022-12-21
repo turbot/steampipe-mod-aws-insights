@@ -7,7 +7,7 @@ locals {
 category "acm_certificate" {
   title = "ACM Certificate"
   href  = "/aws_insights.dashboard.acm_certificate_detail?input.certificate_arn={{.properties.'ARN' | @uri}}"
-  icon  = "fact-check"
+  icon  = "verified-user"
   color = local.security_color
 }
 

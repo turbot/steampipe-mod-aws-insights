@@ -14,38 +14,38 @@ category "vpc_eip" {
 category "vpc_endpoint" {
   title = "VPC Endpoint"
   color = local.networking_color
-  icon  = "mediation"
+  icon  = "pin-invoke"
 }
 
 category "vpc_flow_log" {
   title = "VPC Flow Log"
   href  = "/aws_insights.dashboard.vpc_flow_logs_detail?input.flow_log_id={{.properties.'Flow Log ID' | @uri}}"
   color = local.networking_color
-  icon  = "format-text-overflow"
+  icon  = "export-notes"
 }
 
 category "vpc_internet_gateway" {
   title = "VPC Internet Gateway"
-  icon  = "gate"
+  icon  = "router"
   color = local.networking_color
 }
 
 category "vpc_nat_gateway" {
   title = "VPC NAT Gateway"
-  icon  = "lan"
+  icon  = "merge"
   color = local.networking_color
 }
 
 category "vpc_network_acl" {
   title = "VPC Network ACL"
-  icon  = "fact-check"
+  icon  = "rule"
   color = local.networking_color
 }
 
 category "vpc_peering_connection" {
   title = "VPC Peering Connection"
   color = local.networking_color
-  icon  = "text:Peering"
+  icon  = "sync-alt"
 }
 
 category "vpc_route_table" {

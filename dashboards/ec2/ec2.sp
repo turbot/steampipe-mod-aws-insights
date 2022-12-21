@@ -41,7 +41,7 @@ category "ec2_gateway_load_balancer" {
 category "ec2_instance" {
   title = "EC2 Instance"
   href  = "/aws_insights.dashboard.ec2_instance_detail?input.instance_arn={{.properties.'ARN' | @uri}}"
-  icon  = "dns"
+  icon  = "memory"
   color = local.compute_color
 }
 
@@ -54,19 +54,19 @@ category "ec2_key_pair" {
 category "ec2_launch_configuration" {
   title = "EC2 Launch Configuration"
   color = local.compute_color
-  icon  = "receipt-long"
+  icon  = "rocket-launch"
 }
 
 category "ec2_load_balancer_listener" {
   title = "EC2 Load Balancer Listener"
   color = local.networking_color
-  icon  = "device-hub"
+  icon  = "hearing"
 }
 
 category "ec2_network_interface" {
   title = "EC2 Network Interface"
   href  = "/aws_insights.dashboard.ec2_network_interface_detail?input.network_interface_id={{.properties.'ID' | @uri}}"
-  icon  = "memory"
+  icon  = "settings-input-antenna"
   color = local.compute_color
 }
 
@@ -79,12 +79,12 @@ category "ec2_network_load_balancer" {
 
 category "ec2_target_group" {
   title = "EC2 Target Group"
-  icon  = "assignment-returned"
+  icon  = "directions"
   color = local.networking_color
 }
 
 category "ec2_transit_gateway" {
   title = "EC2 Transit Gateway"
-  icon  = "sync-alt"
+  icon  = "hub"
   color = local.networking_color
 }

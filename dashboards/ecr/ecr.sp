@@ -7,7 +7,7 @@ locals {
 category "ecr_image" {
   title = "ECR Image"
   color = local.containers_color
-  icon  = "text:Image"
+  icon  = "image"
 }
 
 category "ecr_image_tag" {
@@ -20,5 +20,5 @@ category "ecr_repository" {
   title = "ECR Repository"
   color = local.containers_color
   href  = "/aws_insights.dashboard.ecr_repository_detail?input.ecr_repository_arn={{.properties.'ARN' | @uri}}"
-  icon  = "text:ECR"
+  icon  = "photo-library"
 }

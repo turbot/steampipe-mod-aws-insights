@@ -13,12 +13,12 @@ category "lambda_alias" {
 category "lambda_function" {
   title = "Lambda Function"
   href  = "/aws_insights.dashboard.lambda_function_detail?input.lambda_arn={{.properties.'ARN' | @uri}}"
-  icon  = "code-blocks"
+  icon  = "function"
   color = local.compute_color
 }
 
 category "lambda_version" {
   title = "Lambda Version"
-  icon  = "content-copy"
+  icon  = "difference"
   color = local.compute_color
 }

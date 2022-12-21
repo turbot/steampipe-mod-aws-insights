@@ -8,7 +8,7 @@ category "backup_plan" {
   title = "Backup Plan"
   color = local.storage_color
   href  = "/aws_insights.dashboard.backup_plan_detail?input.backup_plan_arn={{.properties.'ARN' | @uri}}"
-  icon  = "backup"
+  icon  = "cloud-sync"
 }
 
 category "backup_plan_rule" {
@@ -26,12 +26,12 @@ category "backup_recovery_point" {
 category "backup_selection" {
   title = "Backup Selection"
   color = local.storage_color
-  icon  = "cloud-done"
+  icon  = "checklist"
 }
 
 category "backup_vault" {
   title = "Backup Vault"
   color = local.storage_color
   href  = "/aws_insights.dashboard.backup_vault_detail?input.backup_vault_arn={{.properties.'ARN' | @uri}}"
-  icon  = "hard-drive"
+  icon  = "shelves"
 }
