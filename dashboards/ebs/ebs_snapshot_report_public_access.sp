@@ -31,6 +31,10 @@ dashboard "ebs_snapshot_public_access_report" {
       display = "none"
     }
 
+    column "Snapshot ID" {
+      href = "${dashboard.ebs_snapshot_detail.url_path}?input.ebs_snapshot_arn={{.ARN | @uri}}"
+    }
+
     query = query.ebs_snapshot_public_table
   }
 
@@ -39,7 +43,7 @@ dashboard "ebs_snapshot_public_access_report" {
 query "ebs_snapshot_public_table" {
   sql = <<-EOQ
     select
-      s.snapshot_id as "Snapshot",
+      s.snapshot_id as "Snapshot ID",
       s.tags ->> 'Name' as "Name",
       case when s.create_volume_permissions @> '[{"Group": "all"}]' then 'Enabled' else null end as "Public Access",
       a.title as "Account",

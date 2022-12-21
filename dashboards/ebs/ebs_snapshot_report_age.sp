@@ -56,6 +56,10 @@ dashboard "ebs_snapshot_age_report" {
       display = "none"
     }
 
+    column "Snapshot ID" {
+      href = "${dashboard.ebs_snapshot_detail.url_path}?input.ebs_snapshot_arn={{.ARN | @uri}}"
+    }
+
     query = query.ebs_snapshot_age_table
   }
 
