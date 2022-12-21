@@ -20,7 +20,7 @@ category "redshift_parameter_group" {
 category "redshift_snapshot" {
   title = "Redshift Snapshot"
   color = local.database_color
-  href  = "/aws_insights.dashboard.redshift_snapshot_detail?input.snapshot_arn={{.properties.'ARN' | @uri}}"
+  href  = "/aws_insights.dashboard.redshift_snapshot_detail?input.redshift_snapshot_arn={{.properties.'ARN' | @uri}}"
   icon  = "add-a-photo"
 }
 

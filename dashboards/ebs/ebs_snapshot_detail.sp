@@ -7,7 +7,7 @@ dashboard "ebs_snapshot_detail" {
     type = "Detail"
   })
 
-  input "snapshot_arn" {
+  input "ebs_snapshot_arn" {
     title = "Select a snapshot:"
     query = query.ebs_snapshot_input
     width = 4
@@ -17,45 +17,45 @@ dashboard "ebs_snapshot_detail" {
     card {
       width = 2
       query = query.ebs_snapshot_state
-      args = [self.input.snapshot_arn.value]
+      args = [self.input.ebs_snapshot_arn.value]
     }
 
     card {
       width = 2
       query = query.ebs_snapshot_storage
-      args = [self.input.snapshot_arn.value]
+      args = [self.input.ebs_snapshot_arn.value]
     }
     card {
       width = 2
       query = query.ebs_snapshot_encryption
-      args = [self.input.snapshot_arn.value]
+      args = [self.input.ebs_snapshot_arn.value]
     }
 
     card {
       width = 2
       query = query.ebs_snapshot_age
-      args = [self.input.snapshot_arn.value]
+      args = [self.input.ebs_snapshot_arn.value]
     }
   }
 
   with "ebs_volumes" {
     query = query.ebs_snapshot_ebs_volumes
-    args = [self.input.snapshot_arn.value]
+    args = [self.input.ebs_snapshot_arn.value]
   }
 
   with "ec2_amis" {
     query = query.ebs_snapshot_ec2_amis
-    args = [self.input.snapshot_arn.value]
+    args = [self.input.ebs_snapshot_arn.value]
   }
 
   with "ec2_launch_configurations" {
     query = query.ebs_snapshot_ec2_launch_configurations
-    args = [self.input.snapshot_arn.value]
+    args = [self.input.ebs_snapshot_arn.value]
   }
 
   with "kms_keys" {
     query = query.ebs_snapshot_kms_keys
-    args = [self.input.snapshot_arn.value]
+    args = [self.input.ebs_snapshot_arn.value]
   }
 
   container {
@@ -68,7 +68,7 @@ dashboard "ebs_snapshot_detail" {
       node {
         base = node.ebs_snapshot
         args = {
-          ebs_snapshot_arns = [self.input.snapshot_arn.value]
+          ebs_snapshot_arns = [self.input.ebs_snapshot_arn.value]
         }
       }
 
@@ -103,14 +103,14 @@ dashboard "ebs_snapshot_detail" {
       edge {
         base = edge.ebs_snapshot_to_ec2_ami
         args = {
-          ebs_snapshot_arns = [self.input.snapshot_arn.value]
+          ebs_snapshot_arns = [self.input.ebs_snapshot_arn.value]
         }
       }
 
       edge {
         base = edge.ebs_snapshot_to_kms_key
         args = {
-          ebs_snapshot_arns = [self.input.snapshot_arn.value]
+          ebs_snapshot_arns = [self.input.ebs_snapshot_arn.value]
         }
       }
 
@@ -124,7 +124,7 @@ dashboard "ebs_snapshot_detail" {
       edge {
         base = edge.ec2_launch_configuration_to_ebs_snapshot
         args = {
-          ebs_snapshot_arns = [self.input.snapshot_arn.value]
+          ebs_snapshot_arns = [self.input.ebs_snapshot_arn.value]
         }
       }
     }
@@ -137,14 +137,14 @@ dashboard "ebs_snapshot_detail" {
       type  = "line"
       width = 3
       query = query.ebs_snapshot_overview
-      args = [self.input.snapshot_arn.value]
+      args = [self.input.ebs_snapshot_arn.value]
     }
 
     table {
       title = "Tags"
       width = 3
       query = query.ebs_snapshot_tags
-      args = [self.input.snapshot_arn.value]
+      args = [self.input.ebs_snapshot_arn.value]
     }
   }
 }
