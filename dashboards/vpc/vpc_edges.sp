@@ -313,7 +313,7 @@ edge "vpc_security_group_to_elasticache_subnet_group" {
       c.arn = any($1)
   EOQ
 
-  param "elasticache_cluster_arns" {}
+  param "elasticache_cluster_node_arns" {}
 }
 
 edge "vpc_security_group_to_lambda_function" {

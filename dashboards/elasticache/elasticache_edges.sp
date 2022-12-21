@@ -1,5 +1,4 @@
-
-edge "elasticache_cluster_to_elasticache_parameter_group" {
+edge "elasticache_cluster_node_to_elasticache_parameter_group" {
   title = "parameter group"
 
   sql = <<-EOQ
@@ -18,7 +17,7 @@ edge "elasticache_cluster_to_elasticache_parameter_group" {
   param "elsticache_parameter_group_arns" {}
 }
 
-edge "elasticache_cluster_to_kms_key" {
+edge "elasticache_cluster_node_to_kms_key" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -36,7 +35,7 @@ edge "elasticache_cluster_to_kms_key" {
   param "kms_key_arns" {}
 }
 
-edge "elasticache_cluster_to_sns_topic" {
+edge "elasticache_cluster_node_to_sns_topic" {
   title = "notifies"
 
   sql = <<-EOQ
@@ -49,10 +48,10 @@ edge "elasticache_cluster_to_sns_topic" {
       arn = any($1);
   EOQ
 
-  param "elasticache_cluster_arns" {}
+  param "elasticache_cluster_node_arns" {}
 }
 
-edge "elasticache_cluster_to_vpc_security_group" {
+edge "elasticache_cluster_node_to_vpc_security_group" {
   title = "security group"
 
   sql = <<-EOQ
@@ -71,7 +70,42 @@ edge "elasticache_cluster_to_vpc_security_group" {
   param "vpc_security_group_ids" {}
 }
 
-edge "elasticache_node_group_to_elasticache_cluster" {
+edge "elasticache_cluster_to_elasticache_cluster_node" {
+  title = "node"
+
+  sql = <<-EOQ
+    select
+      g.arn as from_id,
+      c.arn as to_id
+    from
+      aws_elasticache_cluster as c,
+      aws_elasticache_replication_group as g
+    where
+      c.replication_group_id = g.replication_group_id
+      and g.arn = any($1);
+  EOQ
+
+  param "elasticache_cluster_arns" {}
+}
+
+edge "elasticache_cluster_to_elasticache_node_group" {
+  title = "shard"
+
+  sql = <<-EOQ
+    select
+      rg.arn as from_id,
+      rg.title || '-' || (ng ->> 'NodeGroupId') as to_id
+    from
+      aws_elasticache_replication_group rg,
+      jsonb_array_elements(node_groups) ng
+    where
+      rg.arn = any($1);
+  EOQ
+
+  param "elasticache_cluster_arns" {}
+}
+
+edge "elasticache_node_group_to_elasticache_cluster_node" {
   title = "node"
 
   sql = <<-EOQ
@@ -91,42 +125,7 @@ edge "elasticache_node_group_to_elasticache_cluster" {
       and rg.arn = any($1);
   EOQ
 
-  param "elasticache_replication_group_arns" {}
-}
-
-edge "elasticache_replication_group_to_elasticache_cluster" {
-  title = "node"
-
-  sql = <<-EOQ
-    select
-      g.arn as from_id,
-      c.arn as to_id
-    from
-      aws_elasticache_cluster as c,
-      aws_elasticache_replication_group as g
-    where
-      c.replication_group_id = g.replication_group_id
-      and g.arn = any($1);
-  EOQ
-
-  param "elasticache_replication_group_arns" {}
-}
-
-edge "elasticache_replication_group_to_elasticache_node_group" {
-  title = "shard"
-
-  sql = <<-EOQ
-    select
-      rg.arn as from_id,
-      rg.title || '-' || (ng ->> 'NodeGroupId') as to_id
-    from
-      aws_elasticache_replication_group rg,
-      jsonb_array_elements(node_groups) ng
-    where
-      rg.arn = any($1);
-  EOQ
-
-  param "elasticache_replication_group_arns" {}
+  param "elasticache_cluster_arns" {}
 }
 
 edge "elasticache_subnet_group_to_vpc_subnet" {

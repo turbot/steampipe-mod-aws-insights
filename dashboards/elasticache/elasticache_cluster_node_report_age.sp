@@ -1,7 +1,7 @@
-dashboard "elasticache_cluster_age_report" {
+dashboard "elasticache_cluster_node_node_age_report" {
 
   title         = "AWS Elasticache Age Report"
-  documentation = file("./dashboards/elasticache/docs/elasticache_cluster_report_age.md")
+  documentation = file("./dashboards/elasticache/docs/elasticache_cluster_node_report_age.md")
 
   tags = merge(local.elasticache_common_tags, {
     type     = "Report"
@@ -11,38 +11,38 @@ dashboard "elasticache_cluster_age_report" {
   container {
 
     card {
-      query = query.elasticache_cluster_count
+      query = query.elasticache_cluster_node_count
       width = 2
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.elasticache_cluster_24_hours_count
+      query = query.elasticache_cluster_node_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.elasticache_cluster_30_days_count
+      query = query.elasticache_cluster_node_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.elasticache_cluster_30_90_days_count
+      query = query.elasticache_cluster_node_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query = query.elasticache_cluster_90_365_days_count
+      query = query.elasticache_cluster_node_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query = query.elasticache_cluster_1_year_count
+      query = query.elasticache_cluster_node_1_year_count
     }
 
   }
@@ -57,15 +57,15 @@ dashboard "elasticache_cluster_age_report" {
     }
 
     column "Cluster ID" {
-      href = "${dashboard.elasticache_cluster_detail.url_path}?input.elasticache_cluster_arn={{.ARN | @uri}}"
+      href = "${dashboard.elasticache_cluster_node_detail.url_path}?input.elasticache_cluster_node_arn={{.ARN | @uri}}"
     }
 
-    query = query.elasticache_cluster_age_table
+    query = query.elasticache_cluster_node_age_table
   }
 
 }
 
-query "elasticache_cluster_24_hours_count" {
+query "elasticache_cluster_node_24_hours_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -77,7 +77,7 @@ query "elasticache_cluster_24_hours_count" {
   EOQ
 }
 
-query "elasticache_cluster_30_days_count" {
+query "elasticache_cluster_node_30_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -89,7 +89,7 @@ query "elasticache_cluster_30_days_count" {
   EOQ
 }
 
-query "elasticache_cluster_30_90_days_count" {
+query "elasticache_cluster_node_30_90_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -101,7 +101,7 @@ query "elasticache_cluster_30_90_days_count" {
   EOQ
 }
 
-query "elasticache_cluster_90_365_days_count" {
+query "elasticache_cluster_node_90_365_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -113,7 +113,7 @@ query "elasticache_cluster_90_365_days_count" {
   EOQ
 }
 
-query "elasticache_cluster_1_year_count" {
+query "elasticache_cluster_node_1_year_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -125,7 +125,7 @@ query "elasticache_cluster_1_year_count" {
   EOQ
 }
 
-query "elasticache_cluster_age_table" {
+query "elasticache_cluster_node_age_table" {
   sql = <<-EOQ
     select
       e.cache_cluster_id as "Cluster ID",
