@@ -535,7 +535,6 @@ edge "ec2_network_interface_to_vpc_security_group" {
   title = "security group"
 
   sql = <<-EOQ
-    sql = <<-EOQ
     select
       network_interface_id as from_id,
       sg ->> 'GroupId' as to_id

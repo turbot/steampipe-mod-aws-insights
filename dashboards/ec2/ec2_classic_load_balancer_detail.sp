@@ -17,68 +17,68 @@ dashboard "ec2_classic_load_balancer_detail" {
     card {
       width = 2
       query = query.ec2_classic_load_balancer_scheme
-      args = [self.input.clb.value]
+      args  = [self.input.clb.value]
     }
 
     card {
       width = 2
       query = query.ec2_classic_load_balancer_instances
-      args = [self.input.clb.value]
+      args  = [self.input.clb.value]
     }
 
     card {
       width = 2
       query = query.ec2_classic_load_balancer_logging_enabled
-      args = [self.input.clb.value]
+      args  = [self.input.clb.value]
     }
 
     card {
       width = 2
       query = query.ec2_classic_load_balancer_az_zone
-      args = [self.input.clb.value]
+      args  = [self.input.clb.value]
     }
 
     card {
       width = 2
       query = query.ec2_classic_load_balancer_cross_zone_enabled
-      args = [self.input.clb.value]
+      args  = [self.input.clb.value]
     }
 
   }
 
   with "acm_certificates" {
     query = query.ec2_classic_load_balancer_acm_certificates
-    args = [self.input.clb.value]
+    args  = [self.input.clb.value]
   }
 
   with "ec2_instances" {
     query = query.ec2_classic_load_balancer_ec2_instances
-    args = [self.input.clb.value]
+    args  = [self.input.clb.value]
   }
 
   with "ec2_load_balancer_listeners" {
     query = query.ec2_classic_load_balancer_ec2_load_balancer_listeners
-    args = [self.input.clb.value]
+    args  = [self.input.clb.value]
   }
 
   with "s3_buckets" {
     query = query.ec2_classic_load_balancer_s3_buckets
-    args = [self.input.clb.value]
+    args  = [self.input.clb.value]
   }
 
   with "vpc_security_groups" {
     query = query.ec2_classic_load_balancer_vpc_security_groups
-    args = [self.input.clb.value]
+    args  = [self.input.clb.value]
   }
 
   with "vpc_subnets" {
     query = query.ec2_classic_load_balancer_vpc_subnets
-    args = [self.input.clb.value]
+    args  = [self.input.clb.value]
   }
 
   with "vpc_vpcs" {
     query = query.ec2_classic_load_balancer_vpc_vpcs
-    args = [self.input.clb.value]
+    args  = [self.input.clb.value]
   }
 
   container {
@@ -201,7 +201,7 @@ dashboard "ec2_classic_load_balancer_detail" {
       type  = "line"
       width = 3
       query = query.ec2_classic_load_balancer_overview
-      args = [self.input.clb.value]
+      args  = [self.input.clb.value]
 
     }
 
@@ -209,7 +209,7 @@ dashboard "ec2_classic_load_balancer_detail" {
       title = "Tags"
       width = 3
       query = query.ec2_classic_load_balancer_tags
-      args = [self.input.clb.value]
+      args  = [self.input.clb.value]
     }
   }
 
@@ -252,7 +252,7 @@ query "ec2_classic_load_balancer_ec2_instances" {
     select
       i.arn as instance_arn
     from
-      aws_ec2_classic_load_balancer as ec2_classic_load_balancer
+      aws_ec2_classic_load_balancer as clb
       cross join jsonb_array_elements(clb.instances) as ci
       left join aws_ec2_instance i on i.instance_id = ci ->> 'InstanceId'
     where
@@ -277,7 +277,7 @@ query "ec2_classic_load_balancer_s3_buckets" {
       b.arn as bucket_arn
     from
       aws_s3_bucket b,
-      aws_ec2_classic_load_balancer as ec2_classic_load_balancer
+      aws_ec2_classic_load_balancer as clb
     where
       clb.arn = $1
       and b.name = clb.access_log_s3_bucket_name;
@@ -304,14 +304,14 @@ query "ec2_classic_load_balancer_vpc_security_groups" {
 query "ec2_classic_load_balancer_vpc_subnets" {
   sql = <<-EOQ
     select
-      s.subnet_id as subnet_id
+      vs.subnet_id as subnet_id
     from
-      aws_vpc_subnet s,
-      aws_ec2_classic_load_balancer as clb,
-      jsonb_array_elements(availability_zones) as az
+      aws_vpc_subnet vs,
+      aws_ec2_classic_load_balancer as alb,
+      jsonb_array_elements_text(alb.subnets) as s
     where
       alb.arn = $1
-      and s.subnet_id = az ->> 'SubnetId';
+      and vs.subnet_id = s;
   EOQ
 }
 
@@ -337,7 +337,7 @@ query "ec2_classic_load_balancer_logging_enabled" {
     from
       aws_ec2_classic_load_balancer
     where
-      aws_clb.arn = $1;
+      arn = $1;
   EOQ
 }
 
@@ -410,7 +410,7 @@ query "ec2_classic_load_balancer_overview" {
     from
       aws_ec2_classic_load_balancer
     where
-      aws_clb.arn = $1;
+      arn = $1;
   EOQ
 }
 

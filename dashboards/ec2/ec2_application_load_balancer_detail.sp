@@ -17,84 +17,84 @@ dashboard "ec2_application_load_balancer_detail" {
     card {
       width = 2
       query = query.ec2_application_load_balancer_state
-      args = [self.input.alb.value]
+      args  = [self.input.alb.value]
     }
 
     card {
       width = 2
       query = query.ec2_application_load_balancer_scheme
-      args = [self.input.alb.value]
+      args  = [self.input.alb.value]
     }
 
     card {
       width = 2
       query = query.ec2_application_load_balancer_ip_type
-      args = [self.input.alb.value]
+      args  = [self.input.alb.value]
     }
 
     card {
       width = 2
       query = query.ec2_application_load_balancer_az_zone
-      args = [self.input.alb.value]
+      args  = [self.input.alb.value]
     }
 
     card {
       width = 2
       query = query.ec2_application_load_balancer_logging_enabled
-      args = [self.input.alb.value]
+      args  = [self.input.alb.value]
     }
 
     card {
       width = 2
       query = query.ec2_application_load_balancer_deletion_protection
-      args = [self.input.alb.value]
+      args  = [self.input.alb.value]
     }
 
   }
 
   with "acm_certificates" {
     query = query.ec2_application_load_balancer_acm_certificates
-    args = [self.input.alb.value]
+    args  = [self.input.alb.value]
   }
 
   with "cloudfront_distributions" {
     query = query.ec2_application_load_balancer_cloudfront_distributions
-    args = [self.input.alb.value]
+    args  = [self.input.alb.value]
   }
 
   with "ec2_instances" {
     query = query.ec2_application_load_balancer_ec2_instances
-    args = [self.input.alb.value]
+    args  = [self.input.alb.value]
   }
 
   with "ec2_load_balancer_listeners" {
     query = query.ec2_application_load_balancer_ec2_load_balancer_listeners
-    args = [self.input.alb.value]
+    args  = [self.input.alb.value]
   }
 
   with "ec2_target_groups" {
     query = query.ec2_application_load_balancer_ec2_target_groups
-    args = [self.input.alb.value]
+    args  = [self.input.alb.value]
   }
 
   with "s3_buckets" {
     query = query.ec2_application_load_balancer_s3_buckets
-    args = [self.input.alb.value]
+    args  = [self.input.alb.value]
   }
 
   with "vpc_security_groups" {
     query = query.ec2_application_load_balancer_vpc_security_groups
-    args = [self.input.alb.value]
+    args  = [self.input.alb.value]
   }
 
   with "vpc_subnets" {
     query = query.ec2_application_load_balancer_vpc_subnets
-    args = [self.input.alb.value]
+    args  = [self.input.alb.value]
   }
 
   with "vpc_vpcs" {
     query = query.ec2_application_load_balancer_vpc_vpcs
-    args = [self.input.alb.value]
+    args  = [self.input.alb.value]
   }
 
   container {
@@ -244,7 +244,7 @@ dashboard "ec2_application_load_balancer_detail" {
       type  = "line"
       width = 3
       query = query.ec2_application_load_balancer_overview
-      args = [self.input.alb.value]
+      args  = [self.input.alb.value]
 
     }
 
@@ -252,14 +252,14 @@ dashboard "ec2_application_load_balancer_detail" {
       title = "Tags"
       width = 3
       query = query.ec2_application_load_balancer_tags
-      args = [self.input.alb.value]
+      args  = [self.input.alb.value]
     }
 
     table {
       title = "Attributes"
       width = 6
       query = query.ec2_application_load_balancer_attributes
-      args = [self.input.alb.value]
+      args  = [self.input.alb.value]
     }
   }
 
@@ -306,7 +306,7 @@ query "ec2_application_load_balancer_cloudfront_distributions" {
       jsonb_array_elements(origins) as origin
       left join aws_ec2_application_load_balancer as b on b.dns_name = origin ->> 'DomainName'
     where
-      b.arn = any($1);
+      b.arn = $1;
   EOQ
 }
 
