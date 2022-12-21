@@ -1,7 +1,7 @@
-dashboard "elasticache_cluster_dashboard" {
+dashboard "elasticache_cluster_node_dashboard" {
 
   title         = "AWS ElastiCache Cluster Node Dashboard"
-  documentation = file("./dashboards/elasticache/docs/elasticache_cluster_dashboard.md")
+  documentation = file("./dashboards/elasticache/docs/elasticache_cluster_node_dashboard.md")
 
   tags = merge(local.elasticache_common_tags, {
     type = "Dashboard"
@@ -11,23 +11,23 @@ dashboard "elasticache_cluster_dashboard" {
 
     # Analysis
     card {
-      query = query.elasticache_cluster_count
+      query = query.elasticache_cluster_node_count
       width = 2
     }
 
     # Assessments
     card {
-      query = query.elasticache_cluster_encryption_at_rest_disabled_count
+      query = query.elasticache_cluster_node_encryption_at_rest_disabled_count
       width = 2
     }
 
     card {
-      query = query.elasticache_cluster_encryption_at_transit_disabled_count
+      query = query.elasticache_cluster_node_encryption_at_transit_disabled_count
       width = 2
     }
 
     card {
-      query = query.elasticache_cluster_automatic_backup_disabled_count
+      query = query.elasticache_cluster_node_automatic_backup_disabled_count
       width = 2
     }
 
@@ -42,7 +42,7 @@ dashboard "elasticache_cluster_dashboard" {
 
     chart {
       title = "Encryption at Rest"
-      query = query.elasticache_cluster_by_encryption_at_rest_status
+      query = query.elasticache_cluster_node_by_encryption_at_rest_status
       type  = "donut"
       width = 4
 
@@ -58,7 +58,7 @@ dashboard "elasticache_cluster_dashboard" {
 
     chart {
       title = "Encryption in Transit"
-      query = query.elasticache_cluster_by_encryption_at_transit_status
+      query = query.elasticache_cluster_node_by_encryption_at_transit_status
       type  = "donut"
       width = 4
 
@@ -74,7 +74,7 @@ dashboard "elasticache_cluster_dashboard" {
 
     chart {
       title = "Automatic Backup Status"
-      query = query.elasticache_cluster_by_automatic_backup_status
+      query = query.elasticache_cluster_node_by_automatic_backup_status
       type  = "donut"
       width = 4
 
@@ -97,14 +97,14 @@ dashboard "elasticache_cluster_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      query = query.elasticache_cluster_monthly_forecast_table
+      query = query.elasticache_cluster_node_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      query = query.elasticache_cluster_cost_per_month
+      query = query.elasticache_cluster_node_cost_per_month
     }
 
   }
@@ -115,35 +115,35 @@ dashboard "elasticache_cluster_dashboard" {
 
     chart {
       title = "Nodes by Account"
-      query = query.elasticache_cluster_by_account
+      query = query.elasticache_cluster_node_by_account
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Nodes by Region"
-      query = query.elasticache_cluster_by_region
+      query = query.elasticache_cluster_node_by_region
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Nodes by Engine"
-      query = query.elasticache_cluster_by_engine
+      query = query.elasticache_cluster_node_by_engine
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Nodes by Age"
-      query = query.elasticache_cluste_by_creation_month
+      query = query.elasticache_cluster_node_by_creation_month
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Nodes by Node Type"
-      query = query.elasticache_cluster_by_node_type
+      query = query.elasticache_cluster_node_by_node_type
       type  = "column"
       width = 3
     }
@@ -154,7 +154,7 @@ dashboard "elasticache_cluster_dashboard" {
 
 # Card Queries
 
-query "elasticache_cluster_count" {
+query "elasticache_cluster_node_count" {
   sql = <<-EOQ
     select
       count(*) as "Nodes"
@@ -163,7 +163,7 @@ query "elasticache_cluster_count" {
   EOQ
 }
 
-query "elasticache_cluster_encryption_at_rest_disabled_count" {
+query "elasticache_cluster_node_encryption_at_rest_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -177,7 +177,7 @@ query "elasticache_cluster_encryption_at_rest_disabled_count" {
   EOQ
 }
 
-query "elasticache_cluster_encryption_at_transit_disabled_count" {
+query "elasticache_cluster_node_encryption_at_transit_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -191,7 +191,7 @@ query "elasticache_cluster_encryption_at_transit_disabled_count" {
   EOQ
 }
 
-query "elasticache_cluster_automatic_backup_disabled_count" {
+query "elasticache_cluster_node_automatic_backup_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -206,7 +206,7 @@ query "elasticache_cluster_automatic_backup_disabled_count" {
 
 # Assessment Queries
 
-query "elasticache_cluster_by_encryption_at_rest_status" {
+query "elasticache_cluster_node_by_encryption_at_rest_status" {
   sql = <<-EOQ
     select
       encryption_status,
@@ -227,7 +227,7 @@ query "elasticache_cluster_by_encryption_at_rest_status" {
   EOQ
 }
 
-query "elasticache_cluster_by_encryption_at_transit_status" {
+query "elasticache_cluster_node_by_encryption_at_transit_status" {
   sql = <<-EOQ
     select
       encryption_status,
@@ -248,7 +248,7 @@ query "elasticache_cluster_by_encryption_at_transit_status" {
   EOQ
 }
 
-query "elasticache_cluster_by_automatic_backup_status" {
+query "elasticache_cluster_node_by_automatic_backup_status" {
   sql = <<-EOQ
     select
       automatic_backup_status,
@@ -271,7 +271,7 @@ query "elasticache_cluster_by_automatic_backup_status" {
 
 # Cost Queries
 
-query "elasticache_cluster_monthly_forecast_table" {
+query "elasticache_cluster_node_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
       select
@@ -311,7 +311,7 @@ query "elasticache_cluster_monthly_forecast_table" {
   EOQ
 }
 
-query "elasticache_cluster_cost_per_month" {
+query "elasticache_cluster_node_cost_per_month" {
   sql = <<-EOQ
     select
       to_char(period_start, 'Mon-YY') as "Month",
@@ -330,7 +330,7 @@ query "elasticache_cluster_cost_per_month" {
 
 # Analysis Queries
 
-query "elasticache_cluster_by_account" {
+query "elasticache_cluster_node_by_account" {
   sql = <<-EOQ
     select
       a.title as "account",
@@ -347,7 +347,7 @@ query "elasticache_cluster_by_account" {
   EOQ
 }
 
-query "elasticache_cluster_by_engine" {
+query "elasticache_cluster_node_by_engine" {
   sql = <<-EOQ
     select
       engine as "Type",
@@ -361,7 +361,7 @@ query "elasticache_cluster_by_engine" {
   EOQ
 }
 
-query "elasticache_cluster_by_region" {
+query "elasticache_cluster_node_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
@@ -375,7 +375,7 @@ query "elasticache_cluster_by_region" {
   EOQ
 }
 
-query "elasticache_cluster_by_node_type" {
+query "elasticache_cluster_node_by_node_type" {
   sql = <<-EOQ
     select
       cache_node_type as "Type",
@@ -389,7 +389,7 @@ query "elasticache_cluster_by_node_type" {
   EOQ
 }
 
-query "elasticache_cluste_by_creation_month" {
+query "elasticache_cluster_node_by_creation_month" {
   sql = <<-EOQ
     with clusters as (
       select

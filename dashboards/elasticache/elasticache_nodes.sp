@@ -1,5 +1,5 @@
-node "elasticache_cluster" {
-  category = category.elasticache_cluster
+node "elasticache_cluster_node" {
+  category = category.elasticache_cluster_node
 
   sql = <<-EOQ
     select
@@ -18,7 +18,7 @@ node "elasticache_cluster" {
       arn = any($1);
   EOQ
 
-  param "elasticache_cluster_arns" {}
+  param "elasticache_cluster_node_arns" {}
 }
 
 node "elasticache_node_group" {
@@ -65,8 +65,8 @@ node "elasticache_parameter_group" {
   param "elsticache_parameter_group_arns" {}
 }
 
-node "elasticache_replication_group" {
-  category = category.elasticache_replication_group
+node "elasticache_cluster" {
+  category = category.elasticache_cluster
 
   sql = <<-EOQ
     select
@@ -85,7 +85,7 @@ node "elasticache_replication_group" {
       arn = any($1);
   EOQ
 
-  param "elasticache_replication_group_arns" {}
+  param "elasticache_cluster_arns" {}
 }
 
 node "elasticache_subnet_group" {

@@ -176,9 +176,9 @@ dashboard "vpc_security_group_detail" {
       }
 
       node {
-        base = node.elasticache_cluster
+        base = node.elasticache_cluster_node
         args = {
-          elasticache_cluster_arns = with.elasticache_clusters.rows[*].elasticache_cluster_arn
+          elasticache_cluster_node_arns = with.elasticache_clusters.rows[*].elasticache_cluster_arn
         }
       }
 

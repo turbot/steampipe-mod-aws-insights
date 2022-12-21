@@ -86,9 +86,9 @@ dashboard "sns_topic_detail" {
       }
 
       node {
-        base = node.elasticache_cluster
+        base = node.elasticache_cluster_node
         args = {
-          elasticache_cluster_arns = with.elasticache_clusters.rows[*].elasticache_cluster_arn
+          elasticache_cluster_node_arns = with.elasticache_clusters.rows[*].elasticache_cluster_arn
         }
       }
 
@@ -149,9 +149,9 @@ dashboard "sns_topic_detail" {
       }
 
       edge {
-        base = edge.elasticache_cluster_to_sns_topic
+        base = edge.elasticache_cluster_node_to_sns_topic
         args = {
-          elasticache_cluster_arns = with.elasticache_clusters.rows[*].elasticache_cluster_arn
+          elasticache_cluster_node_arns = with.elasticache_clusters.rows[*].elasticache_cluster_arn
         }
       }
 
@@ -290,7 +290,7 @@ query "sns_topic_subscriptions_confirmed_count" {
 # with queries
 
 query "sns_topic_cloudtrail_trails" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       arn as trail_arn
     from
@@ -301,7 +301,7 @@ query "sns_topic_cloudtrail_trails" {
 }
 
 query "sns_topic_elasticache_clusters" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       arn as elasticache_cluster_arn
     from
@@ -312,7 +312,7 @@ query "sns_topic_elasticache_clusters" {
 }
 
 query "sns_topic_kms_keys" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       kms_master_key_id as key_arn
     from
@@ -324,7 +324,7 @@ query "sns_topic_kms_keys" {
 }
 
 query "sns_topic_rds_db_instances" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       i.arn as db_instance_arn
     from
@@ -338,7 +338,7 @@ query "sns_topic_rds_db_instances" {
 }
 
 query "sns_topic_redshift_clusters" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       c.arn as cluster_arn
     from
@@ -352,7 +352,7 @@ query "sns_topic_redshift_clusters" {
 }
 
 query "sns_topic_s3_buckets" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       b.arn as bucket_arn
     from
@@ -369,7 +369,7 @@ query "sns_topic_s3_buckets" {
 }
 
 query "sns_topic_sns_topic_subscriptions" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       subscription_arn as subscription_arn
     from

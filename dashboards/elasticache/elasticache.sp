@@ -4,10 +4,10 @@ locals {
   }
 }
 
-category "elasticache_cluster" {
-  title = "ElastiCache Cluster"
+category "elasticache_cluster_node" {
+  title = "ElastiCache Cluster Node"
   color = local.database_color
-  href  = "/aws_insights.dashboard.elasticache_cluster_detail.url_path?input.elasticache_cluster_arn={{.properties.ARN | @uri}}"
+  href  = "/aws_insights.dashboard.elasticache_cluster_node_detail.url_path?input.elasticache_cluster_node_arn={{.properties.ARN | @uri}}"
   icon  = "database"
 }
 
@@ -25,8 +25,8 @@ category "elasticache_parameter_group" {
   icon  = "text:PG"
 }
 
-category "elasticache_replication_group" {
-  title = "ElastiCache Replication Group"
+category "elasticache_cluster" {
+  title = "ElastiCache Cluster"
   color = local.database_color
   icon  = "hub"
 }
