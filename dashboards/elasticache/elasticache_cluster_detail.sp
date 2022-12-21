@@ -1,6 +1,6 @@
 dashboard "elasticache_cluster_detail" {
 
-  title         = "AWS ElastiCache Cluster Detail"
+  title         = "AWS ElastiCache Cluster Node Detail"
   documentation = file("./dashboards/elasticache/docs/elasticache_cluster_detail.md")
 
   tags = merge(local.elasticache_common_tags, {
@@ -8,7 +8,7 @@ dashboard "elasticache_cluster_detail" {
   })
 
   input "elasticache_cluster_arn" {
-    title = "Select a Cluster:"
+    title = "Select a Node:"
     query = query.elasticache_cluster_input
     width = 4
   }
@@ -53,8 +53,18 @@ dashboard "elasticache_cluster_detail" {
 
   }
 
+  with "elasticache_node_groups" {
+    query = query.elasticache_cluster_elasticache_node_groups
+    args  = [self.input.elasticache_cluster_arn.value]
+  }
+
   with "elasticache_parameter_groups" {
     query = query.elasticache_cluster_elasticache_parameter_groups
+    args  = [self.input.elasticache_cluster_arn.value]
+  }
+
+  with "elasticache_replication_groups" {
+    query = query.elasticache_cluster_elasticache_replication_group
     args  = [self.input.elasticache_cluster_arn.value]
   }
 
@@ -106,6 +116,20 @@ dashboard "elasticache_cluster_detail" {
         base = node.elasticache_parameter_group
         args = {
           elsticache_parameter_group_arns = with.elasticache_parameter_groups.rows[*].elasticache_parameter_group_arn
+        }
+      }
+
+      node {
+        base = node.elasticache_node_group
+        args = {
+          elasticache_node_group_ids = with.elasticache_node_groups.rows[*].elasticache_node_group_id
+        }
+      }
+
+      node {
+        base = node.elasticache_replication_group
+        args = {
+          elasticache_replication_group_arns = with.elasticache_replication_groups.rows[*].elasticache_replication_group_arn
         }
       }
 
@@ -180,6 +204,20 @@ dashboard "elasticache_cluster_detail" {
       }
 
       edge {
+        base = edge.elasticache_replication_group_to_elasticache_node_group
+        args = {
+          elasticache_replication_group_arns = with.elasticache_replication_groups.rows[*].elasticache_replication_group_arn
+        }
+      }
+
+      edge {
+        base = edge.elasticache_node_group_to_elasticache_cluster
+        args = {
+          elasticache_replication_group_arns = with.elasticache_replication_groups.rows[*].elasticache_replication_group_arn
+        }
+      }
+
+      edge {
         base = edge.elasticache_subnet_group_to_vpc_subnet
         args = {
           vpc_subnet_ids = with.vpc_subnets.rows[*].vpc_subnet_id
@@ -189,7 +227,7 @@ dashboard "elasticache_cluster_detail" {
       edge {
         base = edge.vpc_security_group_to_elasticache_subnet_group
         args = {
-          elasticache_subnet_group_arns = with.elasticache_subnet_groups.rows[*].elasticache_subnet_group_arn
+          elasticache_cluster_arns = [self.input.elasticache_cluster_arn.value]
         }
       }
 
@@ -266,6 +304,35 @@ query "elasticache_cluster_elasticache_parameter_groups" {
     where
       c.cache_parameter_group ->> 'CacheParameterGroupName' = g.cache_parameter_group_name
       and c.region = g.region
+      and c.account_id = g.account_id
+      and c.arn = $1;
+  EOQ
+}
+
+query "elasticache_cluster_elasticache_replication_group" {
+  sql = <<-EOQ
+    select
+      g.arn as elasticache_replication_group_arn
+    from
+      aws_elasticache_cluster as c,
+      aws_elasticache_replication_group as g
+    where
+      c.replication_group_id = g.replication_group_id
+      and c.arn = $1;
+  EOQ
+}
+
+query "elasticache_cluster_elasticache_node_groups" {
+  sql = <<-EOQ
+    select
+      rg.title || '-' || (ng ->> 'NodeGroupId') as elasticache_node_group_id
+    from
+      aws_elasticache_cluster as c,
+      aws_elasticache_replication_group rg,
+      jsonb_array_elements(node_groups) ng,
+      jsonb_array_elements(ng -> 'NodeGroupMembers') ngm
+    where
+      c.cache_cluster_id = ngm ->> 'CacheClusterId'
       and c.arn = $1;
   EOQ
 }
@@ -276,12 +343,10 @@ query "elasticache_cluster_elasticache_subnet_groups" {
       g.arn as elasticache_subnet_group_arn
     from
       aws_elasticache_cluster as c,
-      jsonb_array_elements(security_groups) as sg,
       aws_elasticache_subnet_group as g
     where
       g.cache_subnet_group_name = c.cache_subnet_group_name
       and g.region = c.region
-      and g.arn is not null
       and c.arn = $1;
   EOQ
 }

@@ -299,20 +299,21 @@ edge "vpc_security_group_to_elasticache_subnet_group" {
     select
       coalesce(
         sg ->> 'SecurityGroupId',
-        c.cache_cluster_id
+        c.arn
       ) as from_id,
       g.arn as to_id
     from
       aws_elasticache_cluster as c
-      cross join jsonb_array_elements(security_groups) as sg
+      left join jsonb_array_elements(security_groups) as sg 
+      on security_groups is not null
       join aws_elasticache_subnet_group as g
       on g.cache_subnet_group_name = c.cache_subnet_group_name
       and g.region = c.region
     where
-      g.arn = any($1);
+      c.arn = any($1)
   EOQ
 
-  param "elasticache_subnet_group_arns" {}
+  param "elasticache_cluster_arns" {}
 }
 
 edge "vpc_security_group_to_lambda_function" {

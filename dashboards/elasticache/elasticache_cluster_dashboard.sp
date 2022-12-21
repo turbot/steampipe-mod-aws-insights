@@ -1,6 +1,6 @@
 dashboard "elasticache_cluster_dashboard" {
 
-  title         = "AWS ElastiCache Cluster Dashboard"
+  title         = "AWS ElastiCache Cluster Node Dashboard"
   documentation = file("./dashboards/elasticache/docs/elasticache_cluster_dashboard.md")
 
   tags = merge(local.elasticache_common_tags, {
@@ -12,11 +12,6 @@ dashboard "elasticache_cluster_dashboard" {
     # Analysis
     card {
       query = query.elasticache_cluster_count
-      width = 2
-    }
-
-    card {
-      query = query.elasticache_cluster_cache_node_count
       width = 2
     }
 
@@ -119,35 +114,35 @@ dashboard "elasticache_cluster_dashboard" {
     title = "Analysis"
 
     chart {
-      title = "Clusters by Account"
+      title = "Nodes by Account"
       query = query.elasticache_cluster_by_account
       type  = "column"
       width = 3
     }
 
     chart {
-      title = "Clusters by Region"
+      title = "Nodes by Region"
       query = query.elasticache_cluster_by_region
       type  = "column"
       width = 3
     }
 
     chart {
-      title = "Clusters by Engine"
+      title = "Nodes by Engine"
       query = query.elasticache_cluster_by_engine
       type  = "column"
       width = 3
     }
 
     chart {
-      title = "Clusters by Age"
+      title = "Nodes by Age"
       query = query.elasticache_cluste_by_creation_month
       type  = "column"
       width = 3
     }
 
     chart {
-      title = "Clusters by Node Type"
+      title = "Nodes by Node Type"
       query = query.elasticache_cluster_by_node_type
       type  = "column"
       width = 3
@@ -162,16 +157,7 @@ dashboard "elasticache_cluster_dashboard" {
 query "elasticache_cluster_count" {
   sql = <<-EOQ
     select
-      count(*) as "Clusters"
-    from
-      aws_elasticache_cluster;
-  EOQ
-}
-
-query "elasticache_cluster_cache_node_count" {
-  sql = <<-EOQ
-    select
-      count(num_cache_nodes) as "Cache Nodes"
+      count(*) as "Nodes"
     from
       aws_elasticache_cluster;
   EOQ
