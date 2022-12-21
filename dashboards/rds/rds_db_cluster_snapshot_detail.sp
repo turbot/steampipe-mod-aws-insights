@@ -7,7 +7,7 @@ dashboard "rds_db_cluster_snapshot_detail" {
     type = "Detail"
   })
 
-  input "snapshot_arn" {
+  input "db_cluster_snapshot_arn" {
     title = "Select a snapshot:"
     query = query.rds_db_cluster_snapshot_input
     width = 4
@@ -18,49 +18,49 @@ dashboard "rds_db_cluster_snapshot_detail" {
     card {
       query = query.rds_db_cluster_snapshot_type
       width = 2
-      args = [self.input.snapshot_arn.value]
+      args  = [self.input.db_cluster_snapshot_arn.value]
     }
 
     card {
       query = query.rds_db_cluster_snapshot_engine
       width = 2
-      args = [self.input.snapshot_arn.value]
+      args  = [self.input.db_cluster_snapshot_arn.value]
     }
 
     card {
       query = query.rds_db_cluster_snapshot_allocated_storage
       width = 2
-      args = [self.input.snapshot_arn.value]
+      args  = [self.input.db_cluster_snapshot_arn.value]
     }
 
     card {
       query = query.rds_db_cluster_snapshot_status
       width = 2
-      args = [self.input.snapshot_arn.value]
+      args  = [self.input.db_cluster_snapshot_arn.value]
     }
 
     card {
       query = query.rds_db_cluster_snapshot_unencrypted
       width = 2
-      args = [self.input.snapshot_arn.value]
+      args  = [self.input.db_cluster_snapshot_arn.value]
     }
 
     card {
       query = query.rds_db_cluster_snapshot_iam_database_authentication_enabled
       width = 2
-      args = [self.input.snapshot_arn.value]
+      args  = [self.input.db_cluster_snapshot_arn.value]
     }
 
   }
 
   with "kms_keys" {
     query = query.rds_db_cluster_snapshot_kms_keys
-    args = [self.input.snapshot_arn.value]
+    args  = [self.input.db_cluster_snapshot_arn.value]
   }
 
   with "rds_clusters" {
     query = query.rds_db_cluster_snapshot_rds_clusters
-    args = [self.input.snapshot_arn.value]
+    args  = [self.input.db_cluster_snapshot_arn.value]
   }
 
   container {
@@ -87,14 +87,14 @@ dashboard "rds_db_cluster_snapshot_detail" {
       node {
         base = node.rds_db_cluster_snapshot
         args = {
-          rds_db_cluster_snapshot_arns = [self.input.snapshot_arn.value]
+          rds_db_cluster_snapshot_arns = [self.input.db_cluster_snapshot_arn.value]
         }
       }
 
       edge {
         base = edge.rds_db_cluster_snapshot_to_kms_key
         args = {
-          rds_db_cluster_snapshot_arns = [self.input.snapshot_arn.value]
+          rds_db_cluster_snapshot_arns = [self.input.db_cluster_snapshot_arn.value]
         }
       }
 
@@ -117,7 +117,7 @@ dashboard "rds_db_cluster_snapshot_detail" {
         type  = "line"
         width = 6
         query = query.rds_db_cluster_snapshot_overview
-        args = [self.input.snapshot_arn.value]
+        args  = [self.input.db_cluster_snapshot_arn.value]
 
       }
 
@@ -125,7 +125,7 @@ dashboard "rds_db_cluster_snapshot_detail" {
         title = "Tags"
         width = 6
         query = query.rds_db_cluster_snapshot_tags
-        args = [self.input.snapshot_arn.value]
+        args  = [self.input.db_cluster_snapshot_arn.value]
 
       }
     }
@@ -136,7 +136,7 @@ dashboard "rds_db_cluster_snapshot_detail" {
       table {
         title = "Attributes"
         query = query.rds_db_cluster_snapshot_attributes
-        args = [self.input.snapshot_arn.value]
+        args  = [self.input.db_cluster_snapshot_arn.value]
       }
 
     }

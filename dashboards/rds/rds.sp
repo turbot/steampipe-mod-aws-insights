@@ -20,7 +20,7 @@ category "rds_db_cluster_parameter_group" {
 category "rds_db_cluster_snapshot" {
   title = "RDS DB Cluster Snapshot"
   color = local.database_color
-  href  = "/aws_insights.dashboard.rds_db_cluster_snapshot_detail.url_path?input.snapshot_arn={{.properties.ARN | @uri}}"
+  href  = "/aws_insights.dashboard.rds_db_cluster_snapshot_detail.url_path?input.db_cluster_snapshot_arn={{.properties.ARN | @uri}}"
   icon  = "view-in-ar"
 }
 

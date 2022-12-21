@@ -33,7 +33,7 @@ dashboard "rds_db_cluster_snapshot_encryption_report" {
     }
 
     column "DB Cluster Snapshot Identifier" {
-      href = "${dashboard.rds_db_cluster_snapshot_detail.url_path}?input.snapshot_arn={{.ARN | @uri}}"
+      href = "${dashboard.rds_db_cluster_snapshot_detail.url_path}?input.db_cluster_snapshot_arn={{.ARN | @uri}}"
     }
 
     query = query.rds_db_cluster_snapshot_encryption_table

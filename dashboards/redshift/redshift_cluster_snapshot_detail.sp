@@ -7,7 +7,7 @@ dashboard "redshift_snapshot_detail" {
     type = "Detail"
   })
 
-  input "snapshot_arn" {
+  input "redshift_snapshot_arn" {
     title = "Select a snapshot:"
     query = query.redshift_snapshot_input
     width = 4
@@ -18,49 +18,49 @@ dashboard "redshift_snapshot_detail" {
     card {
       query = query.redshift_snapshot_status
       width = 2
-      args = [self.input.snapshot_arn.value]
+      args = [self.input.redshift_snapshot_arn.value]
     }
 
     card {
       query = query.redshift_snapshot_type
       width = 2
-      args = [self.input.snapshot_arn.value]
+      args = [self.input.redshift_snapshot_arn.value]
     }
 
     card {
       query = query.redshift_snapshot_engine
       width = 2
-      args = [self.input.snapshot_arn.value]
+      args = [self.input.redshift_snapshot_arn.value]
     }
 
     card {
       query = query.redshift_snapshot_backup_size
       width = 2
-      args = [self.input.snapshot_arn.value]
+      args = [self.input.redshift_snapshot_arn.value]
     }
 
     card {
       query = query.redshift_snapshot_node_type
       width = 2
-      args = [self.input.snapshot_arn.value]
+      args = [self.input.redshift_snapshot_arn.value]
     }
 
     card {
       query = query.redshift_snapshot_unencrypted
       width = 2
-      args = [self.input.snapshot_arn.value]
+      args = [self.input.redshift_snapshot_arn.value]
     }
 
   }
 
   with "kms_keys" {
     query = query.redshift_snapshot_kms_keys
-    args = [self.input.snapshot_arn.value]
+    args = [self.input.redshift_snapshot_arn.value]
   }
 
   with "redshift_clusters" {
     query = query.redshift_snapshot_redshift_clusters
-    args = [self.input.snapshot_arn.value]
+    args = [self.input.redshift_snapshot_arn.value]
   }
 
   container {
@@ -87,7 +87,7 @@ dashboard "redshift_snapshot_detail" {
       node {
         base = node.redshift_snapshot
         args = {
-          redshift_snapshot_arns = [self.input.snapshot_arn.value]
+          redshift_snapshot_arns = [self.input.redshift_snapshot_arn.value]
         }
       }
 
@@ -101,7 +101,7 @@ dashboard "redshift_snapshot_detail" {
       edge {
         base = edge.redshift_snapshot_to_kms_key
         args = {
-          redshift_snapshot_arns = [self.input.snapshot_arn.value]
+          redshift_snapshot_arns = [self.input.redshift_snapshot_arn.value]
         }
       }
     }
@@ -117,7 +117,7 @@ dashboard "redshift_snapshot_detail" {
         type  = "line"
         width = 6
         query = query.redshift_snapshot_overview
-        args = [self.input.snapshot_arn.value]
+        args = [self.input.redshift_snapshot_arn.value]
 
       }
 
@@ -125,7 +125,7 @@ dashboard "redshift_snapshot_detail" {
         title = "Tags"
         width = 6
         query = query.redshift_snapshot_tags
-        args = [self.input.snapshot_arn.value]
+        args = [self.input.redshift_snapshot_arn.value]
 
       }
     }
