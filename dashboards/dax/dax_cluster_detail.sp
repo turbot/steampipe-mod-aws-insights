@@ -265,7 +265,8 @@ query "dax_cluster_sns_topics" {
     from
       aws_dax_cluster
     where
-      arn = $1;
+      notification_configuration ->> 'TopicArn' is not null
+      and arn = $1
   EOQ
 }
 
