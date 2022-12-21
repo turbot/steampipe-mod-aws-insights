@@ -19,13 +19,13 @@ category "emr_instance" {
 }
 
 category "emr_instance_fleet" {
-  title = "EMR instance fleet"
+  title = "EMR Instance Fleet"
   color = local.analytics_color
   icon  = "text:EMR"
 }
 
 category "emr_instance_group" {
-  title = "EMR instance group"
+  title = "EMR Instance Group"
   color = local.analytics_color
   icon  = "dashboard"
 }
