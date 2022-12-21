@@ -18,57 +18,57 @@ dashboard "cloudwatch_log_group_detail" {
     card {
       query = query.cloudwatch_log_group_retention_in_days
       width = 2
-      args = [self.input.log_group_arn.value]
+      args  = [self.input.log_group_arn.value]
     }
 
     card {
       query = query.cloudwatch_log_group_stored_bytes
       width = 2
-      args = [self.input.log_group_arn.value]
+      args  = [self.input.log_group_arn.value]
     }
 
     card {
       query = query.cloudwatch_log_group_metric_filter_count
       width = 2
-      args = [self.input.log_group_arn.value]
+      args  = [self.input.log_group_arn.value]
     }
 
     card {
       width = 2
       query = query.cloudwatch_log_group_unencrypted
-      args = [self.input.log_group_arn.value]
+      args  = [self.input.log_group_arn.value]
     }
 
   }
 
   with "cloudtrail_trails" {
     query = query.cloudwatch_log_group_cloudtrail_trails
-    args = [self.input.log_group_arn.value]
+    args  = [self.input.log_group_arn.value]
   }
 
   with "cloudwatch_log_metric_filters" {
     query = query.cloudwatch_log_group_cloudwatch_log_metric_filters
-    args = [self.input.log_group_arn.value]
+    args  = [self.input.log_group_arn.value]
   }
 
   with "kinesis_streams" {
     query = query.cloudwatch_log_group_kinesis_streams
-    args = [self.input.log_group_arn.value]
+    args  = [self.input.log_group_arn.value]
   }
 
   with "kms_keys" {
     query = query.cloudwatch_log_group_kms_keys
-    args = [self.input.log_group_arn.value]
+    args  = [self.input.log_group_arn.value]
   }
 
   with "lambda_functions" {
     query = query.cloudwatch_log_group_lambda_functions
-    args = [self.input.log_group_arn.value]
+    args  = [self.input.log_group_arn.value]
   }
 
   with "vpc_flow_logs" {
     query = query.cloudwatch_log_group_vpc_flow_logs
-    args = [self.input.log_group_arn.value]
+    args  = [self.input.log_group_arn.value]
   }
 
 
@@ -96,7 +96,7 @@ dashboard "cloudwatch_log_group_detail" {
       node {
         base = node.cloudwatch_log_metric_filter
         args = {
-          log_metric_filter_name = with.cloudwatch_log_metric_filters.rows[*].log_metric_filter_name
+          cloudwatch_log_group_arns = [self.input.log_group_arn.value]
         }
       }
 
@@ -182,9 +182,7 @@ dashboard "cloudwatch_log_group_detail" {
         type  = "line"
         width = 6
         query = query.cloudwatch_log_group_overview
-        args = {
-          log_group_arn = self.input.log_group_arn.value
-        }
+        args  = [self.input.log_group_arn.value]
 
       }
 
@@ -192,9 +190,7 @@ dashboard "cloudwatch_log_group_detail" {
         title = "Tags"
         width = 6
         query = query.cloudwatch_log_group_tags
-        args = {
-          log_group_arn = self.input.log_group_arn.value
-        }
+        args  = [self.input.log_group_arn.value]
 
       }
     }
@@ -205,9 +201,7 @@ dashboard "cloudwatch_log_group_detail" {
       table {
         title = "Encryption Details"
         query = query.cloudwatch_log_group_encryption_details
-        args = {
-          log_group_arn = self.input.log_group_arn.value
-        }
+        args  = [self.input.log_group_arn.value]
 
         column "KMS Key ID" {
           href = "${dashboard.kms_key_detail.url_path}?input.key_arn={{.'KMS Key ID' | @uri}}"
