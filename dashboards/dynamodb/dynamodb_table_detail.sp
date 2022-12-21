@@ -18,58 +18,58 @@ dashboard "dynamodb_table_detail" {
     card {
       query = query.dynamodb_table_status
       width = 2
-      args = [self.input.table_arn.value]
+      args  = [self.input.table_arn.value]
     }
 
     card {
       query = query.dynamodb_table_class
       width = 2
-      args = [self.input.table_arn.value]
+      args  = [self.input.table_arn.value]
     }
 
     card {
       query = query.dynamodb_table_backup_count
       width = 2
-      args = [self.input.table_arn.value]
+      args  = [self.input.table_arn.value]
     }
 
     card {
       query = query.dynamodb_table_encryption_type
       width = 2
-      args = [self.input.table_arn.value]
+      args  = [self.input.table_arn.value]
     }
 
     card {
       query = query.dynamodb_table_continuous_backups
       width = 2
-      args = [self.input.table_arn.value]
+      args  = [self.input.table_arn.value]
     }
 
     card {
       query = query.dynamodb_table_autoscaling_state
       width = 2
-      args = [self.input.table_arn.value]
+      args  = [self.input.table_arn.value]
     }
   }
 
   with "dynamodb_backups" {
     query = query.dynamodb_table_dynamodb_backups
-    args = [self.input.table_arn.value]
+    args  = [self.input.table_arn.value]
   }
 
   with "kinesis_streams" {
     query = query.dynamodb_table_kinesis_streams
-    args = [self.input.table_arn.value]
+    args  = [self.input.table_arn.value]
   }
 
   with "kms_keys" {
     query = query.dynamodb_table_kms_keys
-    args = [self.input.table_arn.value]
+    args  = [self.input.table_arn.value]
   }
 
   with "s3_buckets" {
     query = query.dynamodb_table_s3_buckets
-    args = [self.input.table_arn.value]
+    args  = [self.input.table_arn.value]
   }
 
   container {
@@ -154,7 +154,7 @@ dashboard "dynamodb_table_detail" {
         type  = "line"
         width = 6
         query = query.dynamodb_table_overview
-        args = [self.input.table_arn.value]
+        args  = [self.input.table_arn.value]
 
       }
 
@@ -162,7 +162,7 @@ dashboard "dynamodb_table_detail" {
         title = "Tags"
         width = 6
         query = query.dynamodb_table_tags
-        args = [self.input.table_arn.value]
+        args  = [self.input.table_arn.value]
 
       }
     }
@@ -174,21 +174,21 @@ dashboard "dynamodb_table_detail" {
         title = "Read/Write Capacity"
         width = 6
         query = query.dynamodb_table_read_write_capacity
-        args = [self.input.table_arn.value]
+        args  = [self.input.table_arn.value]
       }
 
       table {
         title = "Primary Key Schema"
         width = 6
         query = query.dynamodb_table_key_schema
-        args = [self.input.table_arn.value]
+        args  = [self.input.table_arn.value]
       }
 
       table {
         title = "Point-in-Time Recovery (PITR)"
         width = 12
         query = query.dynamodb_table_point_in_time_recovery
-        args = [self.input.table_arn.value]
+        args  = [self.input.table_arn.value]
       }
 
     }
@@ -251,7 +251,8 @@ query "dynamodb_table_kms_keys" {
     from
       aws_dynamodb_table
     where
-      arn = $1;
+      sse_description is not null
+      and arn = $1;
   EOQ
 }
 
