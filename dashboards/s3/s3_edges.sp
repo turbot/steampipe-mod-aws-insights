@@ -84,7 +84,8 @@ edge "s3_bucket_to_lambda_function" {
       aws_s3_bucket as b,
       jsonb_array_elements(event_notification_configuration -> 'LambdaFunctionConfigurations') as t
     where
-      arn = any($1);
+      event_notification_configuration ->> 'LambdaFunctionConfigurations' is not null
+      and arn = any($1);
   EOQ
 
   param "s3_bucket_arns" {}

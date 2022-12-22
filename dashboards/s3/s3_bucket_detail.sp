@@ -18,88 +18,88 @@ dashboard "s3_bucket_detail" {
     card {
       width = 2
       query = query.s3_bucket_public
-      args = [self.input.bucket_arn.value]
+      args  = [self.input.bucket_arn.value]
     }
 
     card {
       width = 2
       query = query.s3_bucket_versioning
-      args = [self.input.bucket_arn.value]
+      args  = [self.input.bucket_arn.value]
     }
 
     card {
       query = query.s3_bucket_logging_enabled
       width = 2
-      args = [self.input.bucket_arn.value]
+      args  = [self.input.bucket_arn.value]
     }
 
     card {
       width = 2
       query = query.s3_bucket_encryption
-      args = [self.input.bucket_arn.value]
+      args  = [self.input.bucket_arn.value]
     }
 
     card {
       width = 2
       query = query.s3_bucket_cross_region_replication
-      args = [self.input.bucket_arn.value]
+      args  = [self.input.bucket_arn.value]
     }
 
     card {
       width = 2
       query = query.s3_bucket_https_enforce
-      args = [self.input.bucket_arn.value]
+      args  = [self.input.bucket_arn.value]
     }
 
   }
   with "cloudtrail_trails" {
     query = query.s3_bucket_cloudtrail_trails
-    args = [self.input.bucket_arn.value]
+    args  = [self.input.bucket_arn.value]
   }
 
   with "ec2_application_load_balancers" {
     query = query.s3_bucket_ec2_application_load_balancers
-    args = [self.input.bucket_arn.value]
+    args  = [self.input.bucket_arn.value]
   }
 
   with "ec2_classic_load_balancers" {
     query = query.s3_bucket_ec2_classic_load_balancers
-    args = [self.input.bucket_arn.value]
+    args  = [self.input.bucket_arn.value]
   }
 
   with "ec2_network_load_balancers" {
     query = query.s3_bucket_ec2_network_load_balancers
-    args = [self.input.bucket_arn.value]
+    args  = [self.input.bucket_arn.value]
   }
 
   with "from_s3_buckets" {
     query = query.s3_bucket_from_s3_buckets
-    args = [self.input.bucket_arn.value]
+    args  = [self.input.bucket_arn.value]
   }
 
   with "kms_keys" {
     query = query.s3_bucket_kms_keys
-    args = [self.input.bucket_arn.value]
+    args  = [self.input.bucket_arn.value]
   }
 
   with "lambda_functions" {
     query = query.s3_bucket_lambda_functions
-    args = [self.input.bucket_arn.value]
+    args  = [self.input.bucket_arn.value]
   }
 
   with "sns_topics" {
     query = query.s3_bucket_sns_topics
-    args = [self.input.bucket_arn.value]
+    args  = [self.input.bucket_arn.value]
   }
 
   with "sqs_queues" {
     query = query.s3_bucket_sqs_queues
-    args = [self.input.bucket_arn.value]
+    args  = [self.input.bucket_arn.value]
   }
 
   with "to_s3_buckets" {
     query = query.s3_bucket_to_s3_buckets
-    args = [self.input.bucket_arn.value]
+    args  = [self.input.bucket_arn.value]
   }
 
   container {
@@ -269,7 +269,7 @@ dashboard "s3_bucket_detail" {
         type  = "line"
         width = 6
         query = query.s3_bucket_overview
-        args = [self.input.bucket_arn.value]
+        args  = [self.input.bucket_arn.value]
 
       }
 
@@ -277,7 +277,7 @@ dashboard "s3_bucket_detail" {
         title = "Tags"
         width = 6
         query = query.s3_bucket_tags_detail
-        args = [self.input.bucket_arn.value]
+        args  = [self.input.bucket_arn.value]
       }
     }
 
@@ -287,13 +287,13 @@ dashboard "s3_bucket_detail" {
       table {
         title = "Public Access"
         query = query.s3_bucket_public_access
-        args = [self.input.bucket_arn.value]
+        args  = [self.input.bucket_arn.value]
       }
 
       table {
         title = "Logging"
         query = query.s3_bucket_logging
-        args = [self.input.bucket_arn.value]
+        args  = [self.input.bucket_arn.value]
       }
 
     }
@@ -303,7 +303,7 @@ dashboard "s3_bucket_detail" {
       table {
         title = "Policy"
         query = query.s3_bucket_policy
-        args = [self.input.bucket_arn.value]
+        args  = [self.input.bucket_arn.value]
       }
     }
 
@@ -312,7 +312,7 @@ dashboard "s3_bucket_detail" {
       table {
         title = "Lifecycle Rules"
         query = query.s3_bucket_lifecycle_policy
-        args = [self.input.bucket_arn.value]
+        args  = [self.input.bucket_arn.value]
       }
     }
 
@@ -321,7 +321,7 @@ dashboard "s3_bucket_detail" {
       table {
         title = "Server Side Encryption"
         query = query.s3_bucket_server_side_encryption
-        args = [self.input.bucket_arn.value]
+        args  = [self.input.bucket_arn.value]
       }
     }
 
