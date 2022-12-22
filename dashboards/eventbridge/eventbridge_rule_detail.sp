@@ -182,7 +182,7 @@ query "eventbridge_rule_cloudwatch_log_groups" {
       jsonb_array_elements(targets) t
     where
       r.arn = $1
-      and t ->> 'Arn' like '%logs%;
+      and t ->> 'Arn' like '%logs%';
   EOQ
 }
 
@@ -209,7 +209,7 @@ query "eventbridge_rule_lambda_functions" {
       jsonb_array_elements(targets) t
     where
       r.arn = $1
-      and t ->> 'Arn' like '%lambda%;
+      and t ->> 'Arn' like '%lambda%';
   EOQ
 }
 
