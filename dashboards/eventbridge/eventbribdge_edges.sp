@@ -10,7 +10,7 @@ edge "eventbridge_rule_to_cloudwatch_log_group" {
       jsonb_array_elements(targets) t
     where
       r.arn = any($1)
-      and t ->> 'Arn' like '%logs%;
+      and t ->> 'Arn' like '%logs%';
   EOQ
 
   param "eventbridge_rule_arns" {}
@@ -47,7 +47,7 @@ edge "eventbridge_rule_to_lambda_function" {
       jsonb_array_elements(targets) t
     where
       r.arn = any($1)
-      and t ->> 'Arn' like '%lambda%;
+      and t ->> 'Arn' like '%lambda%';
   EOQ
 
   param "eventbridge_rule_arns" {}
