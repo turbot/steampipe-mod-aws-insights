@@ -217,7 +217,7 @@ query "ecr_repository_tagging" {
     )
     select
       'Tags' as label,
-      num_tag_keys value,
+      num_tag_keys as value,
       case when num_tag_keys > 0 then 'ok' else 'alert' end as type
     from
       num_tags;
