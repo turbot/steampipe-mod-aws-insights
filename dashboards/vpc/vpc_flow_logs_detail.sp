@@ -252,22 +252,23 @@ query "vpc_flow_log_deliver_logs_status" {
 # with queries
 
 query "vpc_flow_log_cloudwatch_log_groups" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
-      distinct g.arn as log_group_arn
+      g.arn as log_group_arn
     from
-      aws_vpc_flow_log as f,
-      aws_cloudwatch_log_group as g
+      aws_vpc_flow_log as f
+      left join aws_cloudwatch_log_group as g
+      on f.log_group_name = g.name
+        and f.region = g.region
+        and f.account_id = g.account_id
     where
-      f.log_group_name = g.name
-      and f.log_destination_type = 'cloud-watch-logs'
-      and f.region = g.region
+      f.log_destination_type = 'cloud-watch-logs'
       and f.flow_log_id = $1;
   EOQ
 }
 
 query "vpc_flow_log_ec2_network_interfaces" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       resource_id as eni_id
     from
@@ -279,7 +280,7 @@ query "vpc_flow_log_ec2_network_interfaces" {
 }
 
 query "vpc_flow_log_iam_roles" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       deliver_logs_permission_arn as role_arn
     from
@@ -291,7 +292,7 @@ query "vpc_flow_log_iam_roles" {
 }
 
 query "vpc_flow_log_s3_buckets" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       distinct s.arn as bucket_arn
     from
@@ -305,7 +306,7 @@ query "vpc_flow_log_s3_buckets" {
 }
 
 query "vpc_flow_log_vpc_subnets" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       resource_id as subnet_id
     from
@@ -317,7 +318,7 @@ query "vpc_flow_log_vpc_subnets" {
 }
 
 query "vpc_flow_log_vpc_vpcs" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       resource_id as vpc_id
     from
