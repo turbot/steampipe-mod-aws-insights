@@ -61,6 +61,11 @@ dashboard "rds_db_cluster_detail" {
     args  = [self.input.db_cluster_arn.value]
   }
 
+  with "rds_db_subnet_groups" {
+    query = query.rds_db_cluster_rds_db_subnet_groups
+    args  = [self.input.db_cluster_arn.value]
+  }
+
   with "sns_topics" {
     query = query.rds_db_cluster_sns_topics
     args  = [self.input.db_cluster_arn.value]
@@ -133,7 +138,7 @@ dashboard "rds_db_cluster_detail" {
       node {
         base = node.rds_db_subnet_group
         args = {
-          rds_db_instance_arns = with.rds_db_instances.rows[*].instance_arn
+          rds_db_subnet_group_arns = with.rds_db_subnet_groups.rows[*].db_subnet_group_arn
         }
       }
 
@@ -217,14 +222,14 @@ dashboard "rds_db_cluster_detail" {
       edge {
         base = edge.rds_db_subnet_group_to_vpc_subnet
         args = {
-          rds_db_cluster_arns = [self.input.db_cluster_arn.value]
+          rds_db_subnet_group_arns = with.rds_db_subnet_groups.rows[*].db_subnet_group_arn
         }
       }
 
       edge {
         base = edge.vpc_security_group_to_rds_db_subnet_group
         args = {
-          rds_db_cluster_arns = [self.input.db_cluster_arn.value]
+          rds_db_subnet_group_arns = with.rds_db_subnet_groups.rows[*].db_subnet_group_arn
         }
       }
 
@@ -330,6 +335,21 @@ query "rds_db_cluster_rds_db_instances" {
         on i.db_cluster_identifier = c.db_cluster_identifier
     where
       c.arn = $1;
+  EOQ
+}
+
+query "rds_db_cluster_rds_db_subnet_groups" {
+  sql = <<-EOQ
+    select
+      g.arn as db_subnet_group_arn
+    from
+      aws_rds_db_cluster as c,
+      aws_rds_db_subnet_group g
+    where
+      c.db_subnet_group = g.name
+      and c.region = g.region
+      and c.account_id = g.account_id
+      and c.arn = $1;
   EOQ
 }
 

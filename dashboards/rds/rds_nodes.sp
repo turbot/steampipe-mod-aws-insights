@@ -169,15 +169,10 @@ node "rds_db_subnet_group" {
         'Region', rdsg.region
       ) as properties
     from
-      aws_rds_db_instance rdb
-      join
-        aws_rds_db_subnet_group as rdsg
-        on rdb.db_subnet_group_name = rdsg.name
-        and rdb.region = rdsg.region
-        and rdb.account_id = rdsg.account_id
+      aws_rds_db_subnet_group as rdsg
     where
-      rdb.arn = any($1);
+      rdsg.arn = any($1);
   EOQ
 
-  param "rds_db_instance_arns" {}
+  param "rds_db_subnet_group_arns" {}
 }

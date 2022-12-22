@@ -192,7 +192,7 @@ edge "rds_db_instance_to_rds_db_snapshot" {
       join aws_rds_db_snapshot as s
         on s.dbi_resource_id = i.resource_id
     where
-      s.arn = $1;
+      i.arn = any($1);
   EOQ
 
   param "rds_db_instance_arns" {}
@@ -259,17 +259,11 @@ edge "rds_db_subnet_group_to_vpc_subnet" {
       rdsg.arn as from_id,
       vs ->> 'SubnetIdentifier' as to_id
     from
-      aws_rds_db_cluster as rdc
-      left join
-        aws_rds_db_subnet_group as rdsg
-        on rdc.db_subnet_group = rdsg.name
-        and rdc.region = rdsg.region
-        and rdc.account_id = rdsg.account_id
-      cross join
-        jsonb_array_elements(rdsg.subnets) as vs
+      aws_rds_db_subnet_group as rdsg,
+      jsonb_array_elements(rdsg.subnets) as vs
     where
-      rdc.arn = any($1);
+      rdsg.arn = any($1);
   EOQ
 
-  param "rds_db_cluster_arns" {}
+  param "rds_db_subnet_group_arns" {}
 }

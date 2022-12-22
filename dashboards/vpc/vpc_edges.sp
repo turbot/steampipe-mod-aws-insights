@@ -372,26 +372,20 @@ edge "vpc_security_group_to_rds_db_subnet_group" {
 
   sql = <<-EOQ
     select
-      distinct
-      sg.group_id as from_id,
-      rdsg.arn as to_id
-    from
-      aws_rds_db_cluster as c
-      cross join
-        jsonb_array_elements(c.vpc_security_groups) as csg
-      join
-        aws_vpc_security_group as sg
-        on sg.group_id = csg ->> 'VpcSecurityGroupId'
-      join
-        aws_rds_db_subnet_group as rdsg
-        on c.db_subnet_group = rdsg.name
-        and c.region = rdsg.region
-        and c.account_id = rdsg.account_id
+      sg ->> 'VpcSecurityGroupId' as from_id,
+      sng.arn as to_id
+    from 
+      aws_rds_db_subnet_group sng,
+      aws_rds_db_instance i,
+      jsonb_array_elements(vpc_security_groups) sg
     where
-      c.arn = any($1);
+      sng.name = i.db_subnet_group_name
+      and sng.region = i.region
+      and sng.account_id = i.account_id
+      and sng.arn = any($1);
   EOQ
 
-  param "rds_db_cluster_arns" {}
+  param "rds_db_subnet_group_arns" {}
 }
 
 edge "vpc_security_group_to_redshift_cluster" {

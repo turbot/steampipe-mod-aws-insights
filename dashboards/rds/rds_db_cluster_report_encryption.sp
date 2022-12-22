@@ -31,6 +31,10 @@ dashboard "rds_db_cluster_encryption_report" {
       display = "none"
     }
 
+    column "DB Cluster Identifier" {
+      href = "${dashboard.rds_db_cluster_detail.url_path}?input.db_cluster_arn={{.ARN | @uri}}"
+    }
+
     query = query.rds_db_cluster_encryption_table
   }
 

@@ -57,7 +57,7 @@ dashboard "rds_db_instance_age_report" {
     }
 
     column "DB Instance Identifier" {
-      href = "${dashboard.rds_db_instance_detail.url_path}?input.db_instance_arnn={{.ARN | @uri}}"
+      href = "${dashboard.rds_db_instance_detail.url_path}?input.db_instance_arn={{.ARN | @uri}}"
     }
 
     query = query.rds_db_instance_age_table
