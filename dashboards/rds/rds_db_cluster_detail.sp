@@ -18,67 +18,67 @@ dashboard "rds_db_cluster_detail" {
     card {
       query = query.rds_db_cluster_unencrypted
       width = 2
-      args = [self.input.db_cluster_arn.value]
+      args  = [self.input.db_cluster_arn.value]
     }
 
     card {
       query = query.rds_db_cluster_logging_disabled
       width = 2
-      args = [self.input.db_cluster_arn.value]
+      args  = [self.input.db_cluster_arn.value]
     }
 
     card {
       query = query.rds_db_cluster_no_deletion_protection
       width = 2
-      args = [self.input.db_cluster_arn.value]
+      args  = [self.input.db_cluster_arn.value]
     }
 
     card {
       query = query.rds_db_cluster_status
       width = 2
-      args = [self.input.db_cluster_arn.value]
+      args  = [self.input.db_cluster_arn.value]
     }
 
   }
 
   with "iam_roles" {
     query = query.rds_db_cluster_iam_roles
-    args = [self.input.db_cluster_arn.value]
+    args  = [self.input.db_cluster_arn.value]
   }
 
   with "kms_keys" {
     query = query.rds_db_cluster_kms_keys
-    args = [self.input.db_cluster_arn.value]
+    args  = [self.input.db_cluster_arn.value]
   }
 
   with "rds_db_cluster_snapshots" {
     query = query.rds_db_cluster_rds_db_cluster_snapshots
-    args = [self.input.db_cluster_arn.value]
+    args  = [self.input.db_cluster_arn.value]
   }
 
   with "rds_db_instances" {
     query = query.rds_db_cluster_rds_db_instances
-    args = [self.input.db_cluster_arn.value]
+    args  = [self.input.db_cluster_arn.value]
   }
 
   with "sns_topics" {
     query = query.rds_db_cluster_sns_topics
-    args = [self.input.db_cluster_arn.value]
+    args  = [self.input.db_cluster_arn.value]
   }
 
   with "vpc_security_groups" {
     query = query.rds_db_cluster_vpc_security_groups
-    args = [self.input.db_cluster_arn.value]
+    args  = [self.input.db_cluster_arn.value]
   }
 
   with "vpc_subnets" {
     query = query.rds_db_cluster_vpc_subnets
-    args = [self.input.db_cluster_arn.value]
+    args  = [self.input.db_cluster_arn.value]
   }
 
   with "vpc_vpcs" {
     query = query.rds_db_cluster_vpc_vpcs
-    args = [self.input.db_cluster_arn.value]
+    args  = [self.input.db_cluster_arn.value]
   }
 
   container {
@@ -247,7 +247,7 @@ dashboard "rds_db_cluster_detail" {
         type  = "line"
         width = 6
         query = query.rds_db_cluster_overview
-        args = [self.input.db_cluster_arn.value]
+        args  = [self.input.db_cluster_arn.value]
 
       }
 
@@ -255,7 +255,7 @@ dashboard "rds_db_cluster_detail" {
         title = "Tags"
         width = 6
         query = query.rds_db_cluster_tags
-        args = [self.input.db_cluster_arn.value]
+        args  = [self.input.db_cluster_arn.value]
 
       }
     }
@@ -381,7 +381,7 @@ query "rds_db_cluster_vpc_subnets" {
 query "rds_db_cluster_vpc_vpcs" {
   sql = <<-EOQ
     select
-      distinct v.vpc_id as vpc_id
+      distinct avs.vpc_id as vpc_id
     from
       aws_rds_db_cluster as rdc
       join
@@ -396,11 +396,6 @@ query "rds_db_cluster_vpc_vpcs" {
         on avs.subnet_id = vs ->> 'SubnetIdentifier'
         and avs.account_id = rdsg.account_id
         and avs.region = rdsg.region
-      join
-        aws_vpc as v
-        on v.vpc_id = avs.vpc_id
-        and v.region = avs.region
-        and v.account_id = avs.account_id
     where
       rdc.arn = $1;
   EOQ

@@ -30,7 +30,7 @@ dashboard "rds_db_cluster_age_report" {
     card {
       width = 2
       type  = "info"
-      query = query.ebs_volume_30_90_days_count
+      query = query.rds_db_cluster_30_90_days_count
     }
 
     card {
