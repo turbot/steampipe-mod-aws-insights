@@ -18,84 +18,84 @@ dashboard "redshift_cluster_detail" {
     card {
       width = 2
       query = query.redshift_cluster_status
-      args = [self.input.cluster_arn.value]
+      args  = [self.input.cluster_arn.value]
     }
 
     card {
       width = 2
       query = query.redshift_cluster_version
-      args = [self.input.cluster_arn.value]
+      args  = [self.input.cluster_arn.value]
     }
 
     card {
       width = 2
       query = query.redshift_cluster_node_type
-      args = [self.input.cluster_arn.value]
+      args  = [self.input.cluster_arn.value]
     }
 
     card {
       width = 2
       query = query.redshift_cluster_number_of
-      args = [self.input.cluster_arn.value]
+      args  = [self.input.cluster_arn.value]
     }
 
     card {
       width = 2
       query = query.redshift_cluster_public
-      args = [self.input.cluster_arn.value]
+      args  = [self.input.cluster_arn.value]
     }
 
     card {
       width = 2
       query = query.redshift_cluster_encryption
-      args = [self.input.cluster_arn.value]
+      args  = [self.input.cluster_arn.value]
     }
 
   }
 
   with "cloudwatch_log_groups" {
     query = query.redshift_cluster_cloudwatch_log_groups
-    args = [self.input.cluster_arn.value]
+    args  = [self.input.cluster_arn.value]
   }
 
   with "iam_roles" {
     query = query.redshift_cluster_iam_roles
-    args = [self.input.cluster_arn.value]
+    args  = [self.input.cluster_arn.value]
   }
 
   with "kms_keys" {
     query = query.redshift_cluster_kms_keys
-    args = [self.input.cluster_arn.value]
+    args  = [self.input.cluster_arn.value]
   }
 
   with "redshift_snapshots" {
     query = query.redshift_cluster_redshift_snapshots
-    args = [self.input.cluster_arn.value]
+    args  = [self.input.cluster_arn.value]
   }
 
   with "s3_buckets" {
     query = query.redshift_cluster_s3_buckets
-    args = [self.input.cluster_arn.value]
+    args  = [self.input.cluster_arn.value]
   }
 
   with "vpc_eips" {
     query = query.redshift_cluster_vpc_eips
-    args = [self.input.cluster_arn.value]
+    args  = [self.input.cluster_arn.value]
   }
 
   with "vpc_security_groups" {
     query = query.redshift_cluster_vpc_security_groups
-    args = [self.input.cluster_arn.value]
+    args  = [self.input.cluster_arn.value]
   }
 
   with "vpc_subnets" {
     query = query.redshift_cluster_vpc_subnets
-    args = [self.input.cluster_arn.value]
+    args  = [self.input.cluster_arn.value]
   }
 
   with "vpc_vpcs" {
     query = query.redshift_cluster_vpc_vpcs
-    args = [self.input.cluster_arn.value]
+    args  = [self.input.cluster_arn.value]
   }
 
   container {
@@ -279,14 +279,14 @@ dashboard "redshift_cluster_detail" {
         type  = "line"
         width = 6
         query = query.redshift_cluster_overview
-        args = [self.input.cluster_arn.value]
+        args  = [self.input.cluster_arn.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.redshift_cluster_tags
-        args = [self.input.cluster_arn.value]
+        args  = [self.input.cluster_arn.value]
       }
 
     }
@@ -298,13 +298,13 @@ dashboard "redshift_cluster_detail" {
       table {
         title = "Cluster Nodes"
         query = query.redshift_cluster_node_details
-        args = [self.input.cluster_arn.value]
+        args  = [self.input.cluster_arn.value]
       }
 
       table {
         title = "Cluster Parameter Groups"
         query = query.redshift_cluster_parameter_groups
-        args = [self.input.cluster_arn.value]
+        args  = [self.input.cluster_arn.value]
       }
 
     }
@@ -313,13 +313,13 @@ dashboard "redshift_cluster_detail" {
 
       title = "Logging"
       query = query.redshift_cluster_logging
-      args = [self.input.cluster_arn.value]
+      args  = [self.input.cluster_arn.value]
     }
 
     table {
       title = "Scheduled Actions"
       query = query.redshift_cluster_scheduled_actions
-      args = [self.input.cluster_arn.value]
+      args  = [self.input.cluster_arn.value]
     }
 
   }
@@ -392,6 +392,8 @@ query "redshift_cluster_redshift_snapshots" {
       aws_redshift_cluster as c
     where
       s.cluster_identifier = c.cluster_identifier
+      and s.region = c.region
+      and s.account_id = c.account_id
       and c.arn = $1;
   EOQ
 }
@@ -440,13 +442,15 @@ query "redshift_cluster_vpc_subnets" {
     select
       subnet ->> 'SubnetIdentifier' as subnet_id
     from
-      aws_redshift_subnet_group as s
-      cross join jsonb_array_elements(s.subnets) subnet
+      aws_redshift_subnet_group s
     join
       aws_redshift_cluster as c
       on c.cluster_subnet_group_name = s.cluster_subnet_group_name
       and c.region = s.region
-      and c.arn = $1;
+      and c.account_id = s.account_id,
+      jsonb_array_elements(s.subnets) subnet
+    where
+      c.arn = $1;
   EOQ
 }
 

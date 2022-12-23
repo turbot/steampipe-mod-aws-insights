@@ -43,33 +43,33 @@ dashboard "sqs_queue_detail" {
   }
 
   with "eventbridge_rules" {
-      query = query.sqs_queue_eventbridge_rules
-    args = [self.input.queue_arn.value]
+    query = query.sqs_queue_eventbridge_rules
+    args  = [self.input.queue_arn.value]
   }
 
   with "kms_keys" {
-query = query.sqs_queue_kms_keys
-    args = [self.input.queue_arn.value]
+    query = query.sqs_queue_kms_keys
+    args  = [self.input.queue_arn.value]
   }
 
   with "lambda_functions" {
-query = query.sqs_queue_lambda_functions
-    args = [self.input.queue_arn.value]
+    query = query.sqs_queue_lambda_functions
+    args  = [self.input.queue_arn.value]
   }
 
   with "s3_buckets" {
-query = query.sqs_queue_s3_buckets
-    args = [self.input.queue_arn.value]
+    query = query.sqs_queue_s3_buckets
+    args  = [self.input.queue_arn.value]
   }
 
   with "vpc_endpoints" {
-query = query.sqs_queue_vpc_endpoints
-    args = [self.input.queue_arn.value]
+    query = query.sqs_queue_vpc_endpoints
+    args  = [self.input.queue_arn.value]
   }
 
   with "vpc_vpcs" {
-query = query.sqs_queue_vpc_vpcs
-    args = [self.input.queue_arn.value]
+    query = query.sqs_queue_vpc_vpcs
+    args  = [self.input.queue_arn.value]
   }
 
   container {
@@ -354,6 +354,7 @@ query "sqs_queue_kms_keys" {
     where
       a ->> 'AliasName' = q.kms_master_key_id
       and k.region = q.region
+      and k.account_id = q.account_id
       and q.queue_arn = $1;
   EOQ
 }

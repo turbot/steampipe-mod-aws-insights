@@ -469,13 +469,13 @@ edge "vpc_subnet_to_ec2_classic_load_balancer" {
 
   sql = <<-EOQ
     select
-      az ->> 'SubnetId' as from_id,
+      s as from_id,
       arn as to_id
     from
       aws_ec2_classic_load_balancer,
-      jsonb_array_elements(availability_zones) as az
+      jsonb_array_elements_text(subnets) as s
     where
-      az ->> 'SubnetId' = any($1);
+      s = any($1);
   EOQ
 
   param "vpc_subnet_ids" {}
