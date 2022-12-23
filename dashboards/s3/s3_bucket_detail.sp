@@ -102,6 +102,11 @@ dashboard "s3_bucket_detail" {
     args  = [self.input.bucket_arn.value]
   }
 
+  with "bucket_policy_std" {
+    query = query.s3_bucket_policy_std
+    args  = [self.input.bucket_arn.value]
+  }
+
   container {
 
     graph {
@@ -299,12 +304,21 @@ dashboard "s3_bucket_detail" {
     }
 
     container {
+      title = "Resource Policy"
       width = 12
+
+      graph {
+        base = graph.iam_resource_policy_structure
+        args = {
+          policy_std = with.bucket_policy_std.rows[0].policy_std
+        }
+      }
+      
       table {
-        title = "Policy"
         query = query.s3_bucket_policy
         args  = [self.input.bucket_arn.value]
       }
+
     }
 
     container {
@@ -490,6 +504,17 @@ query "s3_bucket_to_s3_buckets" {
     where
       b.arn = $1
       and lb.name = b.logging ->> 'TargetBucket';
+  EOQ
+}
+
+query "s3_bucket_policy_std" {
+  sql = <<-EOQ
+    select
+      policy_std
+    from
+      aws_s3_bucket 
+    where
+      arn = $1;
   EOQ
 }
 

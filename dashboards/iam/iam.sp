@@ -91,6 +91,12 @@ category "iam_policy_statement" {
   color = local.iam_color
 }
 
+category "iam_resource_policy" {
+  title = "Resource Policy"
+  color = local.iam_color
+  icon  = "rule-folder"
+}
+
 category "iam_role" {
   title = "IAM Role"
   href  = "/aws_insights.dashboard.iam_role_detail?input.role_arn={{.properties.'ARN' | @uri}}"
