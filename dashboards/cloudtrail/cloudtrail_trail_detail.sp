@@ -43,6 +43,13 @@ dashboard "cloudtrail_trail_detail" {
       args = [self.input.trail_arn.value]
     }
 
+    card {
+      width = 2
+
+      query = query.cloudtrail_trail_logging
+      args = [self.input.trail_arn.value]
+    }
+
   }
 
   with "cloudwatch_log_groups" {
@@ -184,12 +191,6 @@ dashboard "cloudtrail_trail_detail" {
       width = 6
 
       table {
-        title = "Logging"
-        query = query.cloudtrail_trail_logging
-        args = [self.input.trail_arn.value]
-      }
-
-      table {
         title = "Associated S3 Trail Buckets"
         column "S3 Bucket ARN" {
           href = "{{ if .'S3 Bucket ARN' == null then null else '${dashboard.s3_bucket_detail.url_path}?input.bucket_arn=' + (.'S3 Bucket ARN' | @uri) end }}"
@@ -248,7 +249,9 @@ query "cloudtrail_trail_guardduty_detectors" {
       aws_guardduty_detector as detector,
       aws_cloudtrail_trail as t
     where
-      detector.status = 'ENABLED'
+      t.account_id = detector.account_id
+      and t.region = detector.region
+      and detector.status = 'ENABLED'
       and detector.data_sources is not null
       and detector.data_sources -> 'CloudTrail' ->> 'Status' = 'ENABLED'
       and t.arn = $1;
@@ -352,6 +355,20 @@ query "cloudtrail_trail_log_file_validation" {
   EOQ
 }
 
+query "cloudtrail_trail_logging" {
+  sql = <<-EOQ
+    select
+      'Logging' as label,
+      case when is_logging then 'Enabled' else 'Disabled' end as value,
+      case when is_logging then 'ok' else 'alert' end as type
+    from
+      aws_cloudtrail_trail
+    where
+      region = home_region
+      and arn = $1;
+  EOQ
+}
+
 # Other detail page queries
 
 query "cloudtrail_trail_overview" {
@@ -387,23 +404,9 @@ query "cloudtrail_trail_tags" {
   EOQ
 }
 
-query "cloudtrail_trail_logging" {
-  sql = <<-EOQ
-    select
-      arn as "ARN",
-      is_logging as "Logging"
-    from
-      aws_cloudtrail_trail
-    where
-      region = home_region
-      and arn = $1;
-  EOQ
-}
-
 query "cloudtrail_trail_bucket" {
   sql = <<-EOQ
     select
-      t.arn,
       s3_bucket_name as "S3 Bucket Name",
       s.arn as "S3 Bucket ARN"
     from
