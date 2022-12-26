@@ -132,7 +132,7 @@ query "codepipeline_pipeline_age_table" {
       c.name as "Name",
       now()::date - c.created_at::date as "Age in Days",
       c.created_at as "Create Time",
-      c.title as "Account",
+      a.title as "Account",
       c.account_id as "Account ID",
       c.region as "Region",
       c.arn as "ARN"
