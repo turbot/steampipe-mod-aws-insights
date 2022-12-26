@@ -130,7 +130,7 @@ query "codebuild_project_age_table" {
       p.name as "Name",
       now()::date - p.created::date as "Age in Days",
       p.created as "Created Time",
-      p.title as "Account",
+      a.title as "Account",
       p.account_id as "Account ID",
       p.region as "Region",
       p.arn as "ARN"
