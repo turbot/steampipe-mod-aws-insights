@@ -69,13 +69,18 @@ node "iam_policy" {
     select
       arn as id,
       name as title,
-      jsonb_build_object(
+      case when is_aws_managed then jsonb_build_object(
+        'ARN', arn,
+        'AWS Managed', is_aws_managed::text,
+        'Attached', is_attached::text,
+        'Create Date', create_date
+      ) else jsonb_build_object(
         'ARN', arn,
         'AWS Managed', is_aws_managed::text,
         'Attached', is_attached::text,
         'Create Date', create_date,
         'Account ID', account_id
-      ) as properties
+      ) end as properties
     from
       aws_iam_policy
     where
@@ -128,7 +133,7 @@ node "iam_policy_statement_action_notaction" {
 
     select
       concat('action:', action) as id,
-      action as title
+      case when action = '*' then action || ' [All Actions]' else action end as title
     from
       jsonb_array_elements(($1 :: jsonb) ->  'Statement') with ordinality as t(stmt,i),
       jsonb_array_elements_text(coalesce(t.stmt -> 'Action','[]'::jsonb) || coalesce(t.stmt -> 'NotAction','[]'::jsonb)) as action
@@ -199,7 +204,7 @@ node "iam_policy_statement_resource_notresource" {
   sql = <<-EOQ
     select
       resource as id,
-      resource as title
+      case when resource = '*' then resource || ' [All Resources]' else resource end as title
     from
       jsonb_array_elements(($1 :: jsonb) ->  'Statement') with ordinality as t(stmt,i),
       jsonb_array_elements_text(coalesce(t.stmt -> 'Action','[]'::jsonb) || coalesce(t.stmt -> 'NotAction','[]'::jsonb)) as action,

@@ -31,7 +31,7 @@ category "iam_inline_policy" {
 
 category "iam_instance_profile" {
   title = "IAM Instance Profile"
-  icon  = "manage-accounts"
+  icon  = "manage_accounts"
   color = local.iam_color
 }
 
@@ -39,13 +39,13 @@ category "iam_policy" {
   title = "IAM Managed Policy"
   color = local.iam_color
   href  = "/aws_insights.dashboard.iam_policy_detail?input.policy_arn={{.properties.'ARN' | @uri}}"
-  icon  = "rule-folder"
+  icon  = "rule_folder"
 }
 
 category "iam_policy_action" {
   title = "IAM Policy Action"
   href  = "/aws_insights.dashboard.iam_action_glob_report?input.action_glob={{.title | @uri}}"
-  icon  = "electric-bolt"
+  icon  = "electric_bolt"
   color = local.iam_color
 }
 
@@ -57,7 +57,7 @@ category "iam_policy_condition" {
 
 category "iam_policy_condition_key" {
   title = "IAM Policy Condition Key"
-  icon  = "vpn-key"
+  icon  = "vpn_key"
   color = local.iam_color
 }
 
@@ -69,13 +69,13 @@ category "iam_policy_condition_value" {
 
 category "iam_policy_notaction" {
   title = "IAM Policy NotAction"
-  icon  = "flash-off"
+  icon  = "flash_off"
   color = local.iam_color
 }
 
 category "iam_policy_notresource" {
   title = "IAM Policy NotResource"
-  icon  = "bookmark-remove"
+  icon  = "bookmark_remove"
   color = local.iam_color
 }
 
@@ -100,7 +100,7 @@ category "iam_role" {
 
 category "iam_service_principal" {
   title = "IAM Service Service"
-  icon  = "component-exchange"
+  icon  = "component_exchange"
   color = local.iam_color
 }
 

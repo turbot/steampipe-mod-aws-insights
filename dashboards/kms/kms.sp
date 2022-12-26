@@ -6,7 +6,7 @@ locals {
 
 category "kms_alias" {
   title = "KMS Alias"
-  icon  = "alternate-email"
+  icon  = "alternate_email"
   color = local.security_color
 }
 

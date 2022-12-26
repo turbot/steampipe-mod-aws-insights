@@ -7,7 +7,7 @@ locals {
 category "dynamodb_backup" {
   title = "DynamoDB Backup"
   color = local.database_color
-  icon  = "settings-backup-restore"
+  icon  = "settings_backup_restore"
 }
 
 category "dynamodb_table" {

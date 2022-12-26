@@ -20,14 +20,14 @@ category "ecs_container_instance" {
 category "ecs_service" {
   title = "ECS Service"
   color = local.compute_color
-  icon  = "settings-suggest"
+  icon  = "settings_suggest"
   href  = "/aws_insights.dashboard.ecs_service_detail?input.service_arn={{.properties.'ARN' | @uri}}"
 }
 
 category "ecs_task" {
   title = "ECS Task"
   color = local.compute_color
-  icon  = "task-alt"
+  icon  = "task_alt"
 }
 
 category "ecs_task_definition" {
