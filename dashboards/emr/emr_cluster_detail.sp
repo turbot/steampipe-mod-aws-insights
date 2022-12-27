@@ -17,42 +17,42 @@ dashboard "emr_cluster_detail" {
     card {
       width = 2
       query = query.emr_cluster_auto_termination
-      args = [self.input.emr_cluster_arn.value]
+      args  = [self.input.emr_cluster_arn.value]
     }
 
     card {
       width = 2
       query = query.emr_cluster_state
-      args = [self.input.emr_cluster_arn.value]
+      args  = [self.input.emr_cluster_arn.value]
     }
 
     card {
       width = 2
       query = query.emr_cluster_logging
-      args = [self.input.emr_cluster_arn.value]
+      args  = [self.input.emr_cluster_arn.value]
     }
 
     card {
       width = 2
       query = query.emr_cluster_log_encryption
-      args = [self.input.emr_cluster_arn.value]
+      args  = [self.input.emr_cluster_arn.value]
     }
 
   }
 
   with "ec2_amis" {
     query = query.emr_cluster_ec2_amis
-    args = [self.input.emr_cluster_arn.value]
+    args  = [self.input.emr_cluster_arn.value]
   }
 
   with "iam_roles" {
     query = query.emr_cluster_iam_roles
-    args = [self.input.emr_cluster_arn.value]
+    args  = [self.input.emr_cluster_arn.value]
   }
 
   with "s3_buckets" {
     query = query.emr_cluster_s3_buckets
-    args = [self.input.emr_cluster_arn.value]
+    args  = [self.input.emr_cluster_arn.value]
   }
 
   container {
@@ -171,14 +171,14 @@ dashboard "emr_cluster_detail" {
         type  = "line"
         width = 6
         query = query.emr_cluster_overview
-        args = [self.input.emr_cluster_arn.value]
+        args  = [self.input.emr_cluster_arn.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.emr_cluster_tags
-        args = [self.input.emr_cluster_arn.value]
+        args  = [self.input.emr_cluster_arn.value]
       }
     }
     container {
@@ -187,13 +187,13 @@ dashboard "emr_cluster_detail" {
       table {
         title = "Status"
         query = query.emr_cluster_status
-        args = [self.input.emr_cluster_arn.value]
+        args  = [self.input.emr_cluster_arn.value]
       }
 
       table {
         title = "Instances"
         query = query.emr_cluster_instance
-        args = [self.input.emr_cluster_arn.value]
+        args  = [self.input.emr_cluster_arn.value]
 
         column "ARN" {
           display = "none"
@@ -213,7 +213,7 @@ dashboard "emr_cluster_detail" {
       title = "Applications"
       width = 6
       query = query.emr_cluster_applications
-      args = [self.input.emr_cluster_arn.value]
+      args  = [self.input.emr_cluster_arn.value]
 
     }
 
@@ -221,7 +221,7 @@ dashboard "emr_cluster_detail" {
       title = "EC2 Instance Attributes"
       width = 6
       query = query.emr_cluster_ec2_instance_attributes
-      args = [self.input.emr_cluster_arn.value]
+      args  = [self.input.emr_cluster_arn.value]
 
     }
   }
@@ -283,7 +283,8 @@ query "emr_cluster_s3_buckets" {
       aws_s3_bucket as b
       on split_part(log_uri, '/', 3) = b.name
     where
-      cluster_arn = $1;
+      log_uri is not null
+      and cluster_arn = $1;
   EOQ
 }
 
