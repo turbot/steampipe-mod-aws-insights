@@ -27,7 +27,7 @@ edge "eks_cluster_to_eks_fargate_profile" {
       left join aws_eks_fargate_profile as p on p.cluster_name = c.name
     where
       p.region = c.region
-      and p.arn = any($1);
+      and p.fargate_profile_arn = any($1);
   EOQ
 
   param "eks_fargate_profile_arns" {}
@@ -41,7 +41,7 @@ edge "eks_cluster_to_eks_identity_provider_config" {
       c.arn as from_id,
       i.arn as to_id
     from
-      aws_eks_cluster as c,
+      aws_eks_cluster as c
       left join aws_eks_identity_provider_config as i on i.cluster_name = c.name
     where
       i.arn = any($1);
