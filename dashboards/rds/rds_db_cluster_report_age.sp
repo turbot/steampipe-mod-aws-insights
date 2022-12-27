@@ -55,6 +55,10 @@ dashboard "rds_db_cluster_age_report" {
     column "ARN" {
       display = "none"
     }
+    
+    column "DB Cluster Identifier" {
+      href = "${dashboard.rds_db_cluster_detail.url_path}?input.db_cluster_arn={{.ARN | @uri}}"
+    }
 
     query = query.rds_db_cluster_age_table
   }
