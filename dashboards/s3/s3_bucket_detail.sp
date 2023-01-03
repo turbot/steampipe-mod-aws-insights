@@ -302,25 +302,7 @@ dashboard "s3_bucket_detail" {
       }
 
     }
-
-    container {
-      title = "Resource Policy"
-      width = 12
-
-      graph {
-        base = graph.iam_resource_policy_structure
-        args = {
-          policy_std = with.bucket_policy_std.rows[0].policy_std
-        }
-      }
       
-      table {
-        query = query.s3_bucket_policy
-        args  = [self.input.bucket_arn.value]
-      }
-
-    }
-
     container {
       width = 12
       table {
@@ -339,6 +321,13 @@ dashboard "s3_bucket_detail" {
       }
     }
 
+    graph {
+      title = "Resource Policy"
+      base = graph.iam_resource_policy_structure
+      args = {
+        policy_std = with.bucket_policy_std.rows[0].policy_std
+      }
+    }
   }
 
 }
@@ -697,24 +686,6 @@ query "s3_bucket_public_access" {
       aws_s3_bucket
     where
       arn = $1;
-  EOQ
-}
-
-query "s3_bucket_policy" {
-  sql = <<-EOQ
-    select
-      p ->> 'Sid' as "SID",
-      p -> 'Action' as "Action",
-      p ->> 'Effect' as "Effect",
-      p -> 'Principal' as "Principal",
-      p -> 'Resource' as "Resource",
-      p -> 'Condition' as "Condition"
-    from
-      aws_s3_bucket,
-      jsonb_array_elements(policy_std -> 'Statement') as p
-    where
-      arn = $1
-    order by p ->> 'SID';
   EOQ
 }
 
