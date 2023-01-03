@@ -193,10 +193,10 @@ query "eventbridge_rule_eventbridge_buses" {
     from
       aws_eventbridge_rule r
       join aws_eventbridge_bus b on b.name = r.event_bus_name
-      and b.region = r.region
-      and b.account_id = r.account_id
     where
-      r.arn = $1;
+      r.arn = $1
+      and b.region = split_part($1, ':', 4)
+      and b.account_id = split_part($1, ':', 5)
   EOQ
 }
 
