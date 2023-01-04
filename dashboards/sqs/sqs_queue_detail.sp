@@ -57,6 +57,11 @@ dashboard "sqs_queue_detail" {
     args  = [self.input.queue_arn.value]
   }
 
+  with "queue_policy_std" {
+    query = query.sqs_queue_policy_std
+    args  = [self.input.queue_arn.value]
+  }
+
   with "s3_buckets" {
     query = query.sqs_queue_s3_buckets
     args  = [self.input.queue_arn.value]
@@ -244,16 +249,12 @@ dashboard "sqs_queue_detail" {
 
   }
 
-  container {
-
-    width = 12
-
-    table {
-      title = "Policy"
-      query = query.sqs_queue_policy
-      args  = [self.input.queue_arn.value]
+  graph {
+    title = "Resource Policy"
+    base  = graph.iam_resource_policy_structure
+    args = {
+      policy_std = with.queue_policy_std.rows[0].policy_std
     }
-
   }
 
 }
@@ -367,6 +368,17 @@ query "sqs_queue_lambda_functions" {
       aws_lambda_function
     where
       dead_letter_config_target_arn = $1;
+  EOQ
+}
+
+query "sqs_queue_policy_std" {
+  sql = <<-EOQ
+    select
+      policy_std
+    from
+      aws_sqs_queue
+    where
+      queue_arn = $1;
   EOQ
 }
 
