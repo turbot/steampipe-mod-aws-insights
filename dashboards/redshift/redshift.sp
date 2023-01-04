@@ -21,11 +21,11 @@ category "redshift_snapshot" {
   title = "Redshift Snapshot"
   color = local.database_color
   href  = "/aws_insights.dashboard.redshift_snapshot_detail?input.redshift_snapshot_arn={{.properties.'ARN' | @uri}}"
-  icon  = "add-a-photo"
+  icon  = "add_a_photo"
 }
 
 category "redshift_subnet_group" {
   title = "Redshift Subnet Group"
   color = local.database_color
-  icon  = "account-tree"
+  icon  = "account_tree"
 }

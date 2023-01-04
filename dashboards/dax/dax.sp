@@ -14,7 +14,7 @@ category "dax_cluster" {
 category "dax_cluster_node" {
   title = "DAX Cluster Node"
   color = local.database_color
-  icon  = "sd-card"
+  icon  = "sd_card"
 }
 
 category "dax_parameter_group" {
@@ -26,5 +26,5 @@ category "dax_parameter_group" {
 category "dax_subnet_group" {
   title = "DAX Subnet Group"
   color = local.database_color
-  icon  = "account-tree"
+  icon  = "account_tree"
 }

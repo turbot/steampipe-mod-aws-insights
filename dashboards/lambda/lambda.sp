@@ -6,7 +6,7 @@ locals {
 
 category "lambda_alias" {
   title = "Lambda Alias"
-  icon  = "alternate-email"
+  icon  = "alternate_email"
   color = local.compute_color
 }
 

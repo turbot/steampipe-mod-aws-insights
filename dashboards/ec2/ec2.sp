@@ -8,7 +8,7 @@ category "ec2_ami" {
   title = "EC2 AMI"
   href  = "/aws_insights.dashboard.ec2_ami_detail?input.ami={{.properties.'Image ID' | @uri}}"
   color = local.compute_color
-  icon  = "developer-board"
+  icon  = "developer_board"
 }
 
 category "ec2_application_load_balancer" {
@@ -20,7 +20,7 @@ category "ec2_application_load_balancer" {
 
 category "ec2_autoscaling_group" {
   title = "EC2 Autoscaling Group"
-  icon  = "library-add"
+  icon  = "library_add"
   color = local.compute_color
 }
 
@@ -47,14 +47,14 @@ category "ec2_instance" {
 
 category "ec2_key_pair" {
   title = "EC2 Key Pair"
-  icon  = "vpn-key"
+  icon  = "vpn_key"
   color = local.compute_color
 }
 
 category "ec2_launch_configuration" {
   title = "EC2 Launch Configuration"
   color = local.compute_color
-  icon  = "rocket-launch"
+  icon  = "rocket_launch"
 }
 
 category "ec2_load_balancer_listener" {
@@ -66,7 +66,7 @@ category "ec2_load_balancer_listener" {
 category "ec2_network_interface" {
   title = "EC2 Network Interface"
   href  = "/aws_insights.dashboard.ec2_network_interface_detail?input.network_interface_id={{.properties.'ID' | @uri}}"
-  icon  = "settings-input-antenna"
+  icon  = "settings_input_antenna"
   color = local.compute_color
 }
 

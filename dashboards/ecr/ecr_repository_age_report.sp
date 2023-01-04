@@ -11,38 +11,38 @@ dashboard "ecr_repository_age_report" {
   container {
 
     card {
-      query =query.ecr_repository_count 
+      query =query.ecr_repository_count
       width = 2
     }
 
     card {
       type  = "info"
       width = 2
-      query =query.ecr_repository_24_hours_count 
+      query =query.ecr_repository_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      query =query.ecr_repository_30_days_count 
+      query =query.ecr_repository_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query =query.ecr_repository_30_90_days_count 
+      query =query.ecr_repository_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query =query.ecr_repository_90_365_days_count 
+      query =query.ecr_repository_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query =query.ecr_repository_1_year_count 
+      query =query.ecr_repository_1_year_count
     }
 
   }
@@ -59,7 +59,7 @@ dashboard "ecr_repository_age_report" {
     column "Name" {
       href = "${dashboard.ecr_repository_detail.url_path}?input.ecr_repository_arn={{.ARN | @uri}}"
     }
-    query = query.ecr_repository_age_table 
+    query = query.ecr_repository_age_table
   }
 
 }
@@ -130,7 +130,7 @@ query "ecr_repository_age_table" {
       e.repository_name as "Name",
       now()::date - e.created_at::date as "Age in Days",
       e.created_at as "Created Time",
-      e.title as "Account",
+      a.title as "Account",
       e.account_id as "Account ID",
       e.region as "Region",
       e.arn as "ARN"

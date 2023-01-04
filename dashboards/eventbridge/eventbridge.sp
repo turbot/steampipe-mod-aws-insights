@@ -7,7 +7,7 @@ locals {
 category "eventbridge_bus" {
   title = "EventBridge Bus"
   color = local.application_integration_color
-  icon  = "family-history"
+  icon  = "family_history"
 }
 
 category "eventbridge_rule" {

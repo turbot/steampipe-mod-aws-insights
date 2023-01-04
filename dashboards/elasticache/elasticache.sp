@@ -13,10 +13,10 @@ category "elasticache_cluster_node" {
 
 category "elasticache_node_group" {
   # Following the AWS console terminology(Shard) over AWS CLI/API terminology(Node Group)
-  # https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/WhatIs.Terms.html
+  # https://docs.aws.amazon.com/AmazonElastiCache/latest/red_ug/WhatIs.Terms.html
   title = "ElastiCache Shard"
   color = local.database_color
-  icon  = "device-hub"
+  icon  = "device_hub"
 }
 
 category "elasticache_parameter_group" {
@@ -35,5 +35,5 @@ category "elasticache_cluster" {
 category "elasticache_subnet_group" {
   title = "ElastiCache Subnet Group"
   color = local.database_color
-  icon  = "account-tree"
+  icon  = "account_tree"
 }

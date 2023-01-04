@@ -106,24 +106,20 @@ dashboard "backup_vault_detail" {
         type  = "line"
         width = 3
         query = query.backup_vault_overview
-        args = {
-          arn = self.input.backup_vault_arn.value
-        }
+        args  = [self.input.backup_vault_arn.value]
       }
 
       table {
         title = "Policy"
         width = 9
         query = query.backup_vault_policy
-        args = {
-          arn = self.input.backup_vault_arn.value
-        }
+        args  = [self.input.backup_vault_arn.value]
       }
 
     }
 
   }
-  
+
 }
 
 # Input queries
