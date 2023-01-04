@@ -7,7 +7,7 @@ dashboard "ebs_snapshot_detail" {
     type = "Detail"
   })
 
-  input "ebs_snapshot_arn" {
+  input "ebs_snapshot_id" {
     title = "Select a snapshot:"
     query = query.ebs_snapshot_input
     width = 4
@@ -17,45 +17,45 @@ dashboard "ebs_snapshot_detail" {
     card {
       width = 2
       query = query.ebs_snapshot_state
-      args = [self.input.ebs_snapshot_arn.value]
+      args  = [self.input.ebs_snapshot_id.value]
     }
 
     card {
       width = 2
       query = query.ebs_snapshot_storage
-      args = [self.input.ebs_snapshot_arn.value]
+      args  = [self.input.ebs_snapshot_id.value]
     }
     card {
       width = 2
       query = query.ebs_snapshot_encryption
-      args = [self.input.ebs_snapshot_arn.value]
+      args  = [self.input.ebs_snapshot_id.value]
     }
 
     card {
       width = 2
       query = query.ebs_snapshot_age
-      args = [self.input.ebs_snapshot_arn.value]
+      args  = [self.input.ebs_snapshot_id.value]
     }
   }
 
   with "ebs_volumes" {
     query = query.ebs_snapshot_ebs_volumes
-    args = [self.input.ebs_snapshot_arn.value]
+    args  = [self.input.ebs_snapshot_id.value]
   }
 
   with "ec2_amis" {
     query = query.ebs_snapshot_ec2_amis
-    args = [self.input.ebs_snapshot_arn.value]
+    args  = [self.input.ebs_snapshot_id.value]
   }
 
   with "ec2_launch_configurations" {
     query = query.ebs_snapshot_ec2_launch_configurations
-    args = [self.input.ebs_snapshot_arn.value]
+    args  = [self.input.ebs_snapshot_id.value]
   }
 
   with "kms_keys" {
     query = query.ebs_snapshot_kms_keys
-    args = [self.input.ebs_snapshot_arn.value]
+    args  = [self.input.ebs_snapshot_id.value]
   }
 
   container {
@@ -68,7 +68,7 @@ dashboard "ebs_snapshot_detail" {
       node {
         base = node.ebs_snapshot
         args = {
-          ebs_snapshot_arns = [self.input.ebs_snapshot_arn.value]
+          ebs_snapshot_ids = [self.input.ebs_snapshot_id.value]
         }
       }
 
@@ -103,14 +103,14 @@ dashboard "ebs_snapshot_detail" {
       edge {
         base = edge.ebs_snapshot_to_ec2_ami
         args = {
-          ebs_snapshot_arns = [self.input.ebs_snapshot_arn.value]
+          ebs_snapshot_ids = [self.input.ebs_snapshot_id.value]
         }
       }
 
       edge {
         base = edge.ebs_snapshot_to_kms_key
         args = {
-          ebs_snapshot_arns = [self.input.ebs_snapshot_arn.value]
+          ebs_snapshot_ids = [self.input.ebs_snapshot_id.value]
         }
       }
 
@@ -124,7 +124,7 @@ dashboard "ebs_snapshot_detail" {
       edge {
         base = edge.ec2_launch_configuration_to_ebs_snapshot
         args = {
-          ebs_snapshot_arns = [self.input.ebs_snapshot_arn.value]
+          ebs_snapshot_ids = [self.input.ebs_snapshot_id.value]
         }
       }
     }
@@ -137,14 +137,14 @@ dashboard "ebs_snapshot_detail" {
       type  = "line"
       width = 3
       query = query.ebs_snapshot_overview
-      args = [self.input.ebs_snapshot_arn.value]
+      args  = [self.input.ebs_snapshot_id.value]
     }
 
     table {
       title = "Tags"
       width = 3
       query = query.ebs_snapshot_tags
-      args = [self.input.ebs_snapshot_arn.value]
+      args  = [self.input.ebs_snapshot_id.value]
     }
   }
 }
@@ -155,7 +155,7 @@ query "ebs_snapshot_input" {
   sql = <<-EOQ
     select
       title as label,
-      arn as value,
+      snapshot_id as value,
       json_build_object(
         'account_id', account_id,
         'region', region,
@@ -176,11 +176,9 @@ query "ebs_snapshot_ebs_volumes" {
     select
       v.arn as volume_arn
     from
-      aws_ebs_volume as v,
-      aws_ebs_snapshot as s
+      aws_ebs_volume as v
     where
-      s.snapshot_id = v.snapshot_id
-      and s.arn = $1;
+      v.snapshot_id = $1;
   EOQ
 }
 
@@ -195,7 +193,7 @@ query "ebs_snapshot_ec2_amis" {
     where
       bdm -> 'Ebs' is not null
       and bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
-      and s.arn = $1;
+      and s.snapshot_id = $1;
   EOQ
 }
 
@@ -209,7 +207,7 @@ query "ebs_snapshot_ec2_launch_configurations" {
       aws_ebs_snapshot as s
     where
       bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
-      and s.arn = $1;
+      and s.snapshot_id = $1;
   EOQ
 }
 
@@ -221,7 +219,7 @@ query "ebs_snapshot_kms_keys" {
       aws_ebs_snapshot
     where
       kms_key_id is not null
-      and arn = $1
+      and snapshot_id = $1
   EOQ
 }
 
@@ -235,7 +233,7 @@ query "ebs_snapshot_storage" {
     from
       aws_ebs_snapshot
     where
-      arn = $1;
+      snapshot_id = $1;
   EOQ
 }
 
@@ -248,7 +246,7 @@ query "ebs_snapshot_encryption" {
     from
       aws_ebs_snapshot
     where
-      arn = $1;
+      snapshot_id = $1;
   EOQ
 }
 
@@ -260,7 +258,7 @@ query "ebs_snapshot_state" {
     from
       aws_ebs_snapshot
     where
-      arn = $1;
+      snapshot_id = $1;
   EOQ
 }
 
@@ -272,7 +270,7 @@ query "ebs_snapshot_age" {
       from
         aws_ebs_snapshot
       where
-        arn = $1
+        snapshot_id = $1
     )
     select
       'Age (in Days)' as label,
@@ -297,7 +295,7 @@ query "ebs_snapshot_overview" {
     from
       aws_ebs_snapshot
     where
-      arn = $1
+      snapshot_id = $1
   EOQ
 }
 
@@ -310,7 +308,7 @@ query "ebs_snapshot_tags" {
       aws_ebs_snapshot,
       jsonb_array_elements(tags_src) as tag
     where
-      arn = $1
+      snapshot_id = $1
     order by
       tag ->> 'Key';
   EOQ

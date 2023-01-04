@@ -18,37 +18,37 @@ dashboard "ec2_ami_detail" {
     card {
       width = 2
       query = query.ec2_ami_state
-      args = [self.input.ami.value]
+      args  = [self.input.ami.value]
     }
 
     card {
       width = 2
       query = query.ec2_ami_architecture
-      args = [self.input.ami.value]
+      args  = [self.input.ami.value]
     }
 
     card {
       width = 2
       query = query.ec2_ami_hypervisor
-      args = [self.input.ami.value]
+      args  = [self.input.ami.value]
     }
 
     card {
       width = 2
       query = query.ec2_ami_virtualization
-      args = [self.input.ami.value]
+      args  = [self.input.ami.value]
     }
 
   }
 
   with "ebs_snapshots" {
     query = query.ec2_ami_ebs_snapshots
-    args = [self.input.ami.value]
+    args  = [self.input.ami.value]
   }
 
   with "ec2_instances" {
     query = query.ec2_ami_ec2_instances
-    args = [self.input.ami.value]
+    args  = [self.input.ami.value]
   }
 
   container {
@@ -61,7 +61,7 @@ dashboard "ec2_ami_detail" {
       node {
         base = node.ebs_snapshot
         args = {
-          ebs_snapshot_arns = with.ebs_snapshots.rows[*].ebs_snapshot_arn
+          ebs_snapshot_ids = with.ebs_snapshots.rows[*].ebs_snapshot_id
         }
       }
 
@@ -82,7 +82,7 @@ dashboard "ec2_ami_detail" {
       edge {
         base = edge.ebs_snapshot_to_ec2_ami
         args = {
-          ebs_snapshot_arns = with.ebs_snapshots.rows[*].ebs_snapshot_arn
+          ebs_snapshot_ids = with.ebs_snapshots.rows[*].ebs_snapshot_id
         }
       }
 
@@ -104,14 +104,14 @@ dashboard "ec2_ami_detail" {
         type  = "line"
         width = 6
         query = query.ec2_ami_overview
-        args = [self.input.ami.value]
+        args  = [self.input.ami.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.ec2_ami_tags
-        args = [self.input.ami.value]
+        args  = [self.input.ami.value]
       }
     }
 
@@ -121,13 +121,13 @@ dashboard "ec2_ami_detail" {
       table {
         title = "Sharing"
         query = query.ec2_ami_shared_with
-        args = [self.input.ami.value]
+        args  = [self.input.ami.value]
       }
 
       table {
         title = "Instances"
         query = query.ec2_ami_instances
-        args = [self.input.ami.value]
+        args  = [self.input.ami.value]
         column "link" {
           display = "none"
         }
@@ -164,7 +164,7 @@ query "ec2_ami_input" {
 query "ec2_ami_ebs_snapshots" {
   sql = <<-EOQ
     select
-      s.arn as ebs_snapshot_arn
+      s.snapshot_id as ebs_snapshot_id
     from
       aws_ebs_snapshot as s,
       aws_ec2_ami as ami,

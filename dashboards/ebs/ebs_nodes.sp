@@ -3,7 +3,7 @@ node "ebs_snapshot" {
 
   sql = <<-EOQ
     select
-      arn as id,
+      snapshot_id as id,
       title as title,
       jsonb_build_object(
         'ID', snapshot_id,
@@ -15,10 +15,10 @@ node "ebs_snapshot" {
     from
       aws_ebs_snapshot
     where
-      arn = any($1);
+      snapshot_id = any($1);
   EOQ
 
-  param "ebs_snapshot_arns" {}
+  param "ebs_snapshot_ids" {}
 }
 
 node "ebs_volume" {

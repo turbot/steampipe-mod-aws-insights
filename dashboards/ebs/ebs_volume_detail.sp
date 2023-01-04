@@ -18,52 +18,52 @@ dashboard "ebs_volume_detail" {
     card {
       width = 2
       query = query.ebs_volume_storage
-      args = [self.input.volume_arn.value]
+      args  = [self.input.volume_arn.value]
     }
 
     card {
       width = 2
       query = query.ebs_volume_iops
-      args = [self.input.volume_arn.value]
+      args  = [self.input.volume_arn.value]
     }
 
     card {
       width = 2
       query = query.ebs_volume_type
-      args = [self.input.volume_arn.value]
+      args  = [self.input.volume_arn.value]
     }
 
     card {
       width = 2
       query = query.ebs_volume_attached_instances_count
-      args = [self.input.volume_arn.value]
+      args  = [self.input.volume_arn.value]
     }
 
     card {
       width = 2
       query = query.ebs_volume_encryption
-      args = [self.input.volume_arn.value]
+      args  = [self.input.volume_arn.value]
     }
   }
 
   with "ebs_snapshots" {
     query = query.ebs_volume_ebs_snapshots
-    args = [self.input.volume_arn.value]
+    args  = [self.input.volume_arn.value]
   }
 
   with "ec2_amis" {
     query = query.ebs_volume_ec2_amis
-    args = [self.input.volume_arn.value]
+    args  = [self.input.volume_arn.value]
   }
 
   with "ec2_instances" {
     query = query.ebs_volume_ec2_instances
-    args = [self.input.volume_arn.value]
+    args  = [self.input.volume_arn.value]
   }
 
   with "kms_keys" {
     query = query.ebs_volume_kms_keys
-    args = [self.input.volume_arn.value]
+    args  = [self.input.volume_arn.value]
   }
 
   container {
@@ -76,7 +76,7 @@ dashboard "ebs_volume_detail" {
       node {
         base = node.ebs_snapshot
         args = {
-          ebs_snapshot_arns = with.ebs_snapshots.rows[*].snapshot_arn
+          ebs_snapshot_ids = with.ebs_snapshots.rows[*].snapshot_id
         }
       }
 
@@ -111,7 +111,7 @@ dashboard "ebs_volume_detail" {
       edge {
         base = edge.ebs_snapshot_to_ec2_ami
         args = {
-          ebs_snapshot_arns = with.ebs_snapshots.rows[*].snapshot_arn
+          ebs_snapshot_ids = with.ebs_snapshots.rows[*].snapshot_id
         }
       }
 
@@ -149,14 +149,14 @@ dashboard "ebs_volume_detail" {
         type  = "line"
         width = 6
         query = query.ebs_volume_overview
-        args = [self.input.volume_arn.value]
+        args  = [self.input.volume_arn.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.ebs_volume_tags
-        args = [self.input.volume_arn.value]
+        args  = [self.input.volume_arn.value]
       }
     }
 
@@ -167,7 +167,7 @@ dashboard "ebs_volume_detail" {
       table {
         title = "Attached To"
         query = query.ebs_volume_attached_instances
-        args = [self.input.volume_arn.value]
+        args  = [self.input.volume_arn.value]
 
         column "Instance ARN" {
           display = "none"
@@ -184,7 +184,7 @@ dashboard "ebs_volume_detail" {
           href = "${dashboard.kms_key_detail.url_path}?input.key_arn={{.'KMS Key ID' | @uri}}"
         }
         query = query.ebs_volume_encryption_status
-        args = [self.input.volume_arn.value]
+        args  = [self.input.volume_arn.value]
       }
     }
   }
@@ -259,12 +259,13 @@ query "ebs_volume_input" {
 query "ebs_volume_ebs_snapshots" {
   sql = <<-EOQ
     select
-      s.arn as snapshot_arn
+      s.snapshot_id as snapshot_id
     from
-      aws_ebs_volume as v,
-      aws_ebs_snapshot as s
+      aws_ebs_volume as v
+      join aws_ebs_snapshot as s on s.snapshot_id = v.snapshot_id
     where
-      s.snapshot_id = v.snapshot_id
+      v.account_id = s.account_id
+      and s.arn is not null
       and v.arn = $1;
   EOQ
 }

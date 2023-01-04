@@ -32,7 +32,7 @@ dashboard "ebs_snapshot_public_access_report" {
     }
 
     column "Snapshot ID" {
-      href = "${dashboard.ebs_snapshot_detail.url_path}?input.ebs_snapshot_arn={{.ARN | @uri}}"
+      href = "${dashboard.ebs_snapshot_detail.url_path}?input.ebs_snapshot_id={{.'Snapshot ID' | @uri}}"
     }
 
     query = query.ebs_snapshot_public_table

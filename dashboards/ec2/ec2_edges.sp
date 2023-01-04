@@ -449,17 +449,15 @@ edge "ec2_launch_configuration_to_ebs_snapshot" {
   sql = <<-EOQ
     select
       launch_config.launch_configuration_arn as from_id,
-      s.arn as to_id
+      bdm -> 'Ebs' ->> 'SnapshotId' as to_id
     from
       aws_ec2_launch_configuration as launch_config,
-      jsonb_array_elements(launch_config.block_device_mappings) as bdm,
-      aws_ebs_snapshot as s
+      jsonb_array_elements(launch_config.block_device_mappings) as bdm
     where
-      bdm -> 'Ebs' ->> 'SnapshotId' = s.snapshot_id
-      and s.arn = any($1);
+      bdm -> 'Ebs' ->> 'SnapshotId' = any($1);
   EOQ
 
-  param "ebs_snapshot_arns" {}
+  param "ebs_snapshot_ids" {}
 }
 
 edge "ec2_load_balancer_listener_to_ec2_load_balancer" {
