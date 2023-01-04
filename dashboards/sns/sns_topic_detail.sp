@@ -63,6 +63,11 @@ dashboard "sns_topic_detail" {
     args  = [self.input.topic_arn.value]
   }
 
+  with "topic_policy_std" {
+    query = query.sns_topic_policy_std
+    args  = [self.input.topic_arn.value]
+  }
+
   container {
 
     graph {
@@ -234,11 +239,13 @@ dashboard "sns_topic_detail" {
         query = query.sns_topic_delivery_policy
         args  = [self.input.topic_arn.value]
       }
+    }
 
-      table {
-        title = "Policy"
-        query = query.sns_topic_policy_standard
-        args  = [self.input.topic_arn.value]
+    graph {
+      title = "Resource Policy"
+      base  = graph.iam_resource_policy_structure
+      args = {
+        policy_std = with.topic_policy_std.rows[0].policy_std
       }
     }
 
@@ -320,6 +327,17 @@ query "sns_topic_kms_keys" {
     where
       kms_master_key_id is not null
       and topic_arn = $1;
+  EOQ
+}
+
+query "sns_topic_policy_std" {
+  sql = <<-EOQ
+    select
+      policy_std
+    from
+      aws_sns_topic
+    where
+      topic_arn = $1;
   EOQ
 }
 
@@ -448,20 +466,3 @@ query "sns_topic_delivery_policy" {
 
 }
 
-query "sns_topic_policy_standard" {
-  sql = <<-EOQ
-    select
-      statement ->> 'Sid' as "SID",
-      statement ->> 'Effect' as "Effect",
-      statement ->> 'Principal' as "Principal",
-      statement ->> 'Action' as "Action",
-      statement ->> 'Resource' as "Resource",
-      statement ->> 'Condition' as "Condition"
-    from
-      aws_sns_topic as t,
-      jsonb_array_elements(policy_std -> 'Statement') as statement
-    where
-      topic_arn = $1;
-  EOQ
-
-}

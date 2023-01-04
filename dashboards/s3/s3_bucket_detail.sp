@@ -52,6 +52,12 @@ dashboard "s3_bucket_detail" {
     }
 
   }
+
+  with "bucket_policy_std" {
+    query = query.s3_bucket_policy_std
+    args  = [self.input.bucket_arn.value]
+  }
+
   with "cloudtrail_trails" {
     query = query.s3_bucket_cloudtrail_trails
     args  = [self.input.bucket_arn.value]
@@ -301,15 +307,6 @@ dashboard "s3_bucket_detail" {
     container {
       width = 12
       table {
-        title = "Policy"
-        query = query.s3_bucket_policy
-        args  = [self.input.bucket_arn.value]
-      }
-    }
-
-    container {
-      width = 12
-      table {
         title = "Lifecycle Rules"
         query = query.s3_bucket_lifecycle_policy
         args  = [self.input.bucket_arn.value]
@@ -325,6 +322,13 @@ dashboard "s3_bucket_detail" {
       }
     }
 
+    graph {
+      title = "Resource Policy"
+      base  = graph.iam_resource_policy_structure
+      args = {
+        policy_std = with.bucket_policy_std.rows[0].policy_std
+      }
+    }
   }
 
 }
@@ -445,6 +449,17 @@ query "s3_bucket_lambda_functions" {
   EOQ
 }
 
+query "s3_bucket_policy_std" {
+  sql = <<-EOQ
+    select
+      policy_std
+    from
+      aws_s3_bucket
+    where
+      arn = $1;
+  EOQ
+}
+
 query "s3_bucket_sns_topics" {
   sql = <<-EOQ
     select
@@ -476,7 +491,8 @@ query "s3_bucket_sqs_queues" {
         as t
       left join aws_sqs_queue as q on q.queue_arn = t ->> 'QueueArn'
     where
-      b.arn = $1;
+      q.queue_arn is not null
+      and b.arn = $1;
   EOQ
 }
 
@@ -672,24 +688,6 @@ query "s3_bucket_public_access" {
       aws_s3_bucket
     where
       arn = $1;
-  EOQ
-}
-
-query "s3_bucket_policy" {
-  sql = <<-EOQ
-    select
-      p ->> 'Sid' as "SID",
-      p -> 'Action' as "Action",
-      p ->> 'Effect' as "Effect",
-      p -> 'Principal' as "Principal",
-      p -> 'Resource' as "Resource",
-      p -> 'Condition' as "Condition"
-    from
-      aws_s3_bucket,
-      jsonb_array_elements(policy_std -> 'Statement') as p
-    where
-      arn = $1
-    order by p ->> 'SID';
   EOQ
 }
 
