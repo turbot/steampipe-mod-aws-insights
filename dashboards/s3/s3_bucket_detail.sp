@@ -52,6 +52,12 @@ dashboard "s3_bucket_detail" {
     }
 
   }
+
+  with "bucket_policy_std" {
+    query = query.s3_bucket_policy_std
+    args  = [self.input.bucket_arn.value]
+  }
+
   with "cloudtrail_trails" {
     query = query.s3_bucket_cloudtrail_trails
     args  = [self.input.bucket_arn.value]
@@ -99,11 +105,6 @@ dashboard "s3_bucket_detail" {
 
   with "to_s3_buckets" {
     query = query.s3_bucket_to_s3_buckets
-    args  = [self.input.bucket_arn.value]
-  }
-
-  with "bucket_policy_std" {
-    query = query.s3_bucket_policy_std
     args  = [self.input.bucket_arn.value]
   }
 
@@ -302,7 +303,7 @@ dashboard "s3_bucket_detail" {
       }
 
     }
-      
+
     container {
       width = 12
       table {
@@ -323,7 +324,7 @@ dashboard "s3_bucket_detail" {
 
     graph {
       title = "Resource Policy"
-      base = graph.iam_resource_policy_structure
+      base  = graph.iam_resource_policy_structure
       args = {
         policy_std = with.bucket_policy_std.rows[0].policy_std
       }
@@ -448,6 +449,17 @@ query "s3_bucket_lambda_functions" {
   EOQ
 }
 
+query "s3_bucket_policy_std" {
+  sql = <<-EOQ
+    select
+      policy_std
+    from
+      aws_s3_bucket
+    where
+      arn = $1;
+  EOQ
+}
+
 query "s3_bucket_sns_topics" {
   sql = <<-EOQ
     select
@@ -479,7 +491,8 @@ query "s3_bucket_sqs_queues" {
         as t
       left join aws_sqs_queue as q on q.queue_arn = t ->> 'QueueArn'
     where
-      b.arn = $1;
+      q.queue_arn is not null
+      and b.arn = $1;
   EOQ
 }
 
@@ -493,17 +506,6 @@ query "s3_bucket_to_s3_buckets" {
     where
       b.arn = $1
       and lb.name = b.logging ->> 'TargetBucket';
-  EOQ
-}
-
-query "s3_bucket_policy_std" {
-  sql = <<-EOQ
-    select
-      policy_std
-    from
-      aws_s3_bucket 
-    where
-      arn = $1;
   EOQ
 }
 

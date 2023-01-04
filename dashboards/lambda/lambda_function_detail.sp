@@ -19,72 +19,77 @@ dashboard "lambda_function_detail" {
     card {
       width = 2
       query = query.lambda_function_memory
-      args = [self.input.lambda_arn.value]
+      args  = [self.input.lambda_arn.value]
     }
 
     card {
       width = 2
       query = query.lambda_function_runtime
-      args = [self.input.lambda_arn.value]
+      args  = [self.input.lambda_arn.value]
     }
 
     card {
       width = 2
       query = query.lambda_function_encryption
-      args = [self.input.lambda_arn.value]
+      args  = [self.input.lambda_arn.value]
     }
 
     card {
       width = 2
       query = query.lambda_function_public
-      args = [self.input.lambda_arn.value]
+      args  = [self.input.lambda_arn.value]
     }
 
   }
 
   with "api_gateway_apis" {
     query = query.lambda_function_api_gateway_apis
-    args = [self.input.lambda_arn.value]
+    args  = [self.input.lambda_arn.value]
   }
 
   with "iam_roles" {
     query = query.lambda_function_iam_roles
-    args = [self.input.lambda_arn.value]
+    args  = [self.input.lambda_arn.value]
   }
 
   with "kms_keys" {
     query = query.lambda_function_kms_keys
-    args = [self.input.lambda_arn.value]
+    args  = [self.input.lambda_arn.value]
+  }
+
+  with "lambda_policy_std" {
+    query = query.lambda_function_policy_std
+    args  = [self.input.lambda_arn.value]
   }
 
   with "s3_buckets" {
     query = query.lambda_function_s3_buckets
-    args = [self.input.lambda_arn.value]
+    args  = [self.input.lambda_arn.value]
   }
 
   with "sns_topic_subscriptions" {
     query = query.lambda_function_sns_topic_subscriptions
-    args = [self.input.lambda_arn.value]
+    args  = [self.input.lambda_arn.value]
   }
 
   with "sns_topics" {
     query = query.lambda_function_sns_topics
-    args = [self.input.lambda_arn.value]
+    args  = [self.input.lambda_arn.value]
   }
 
   with "vpc_security_groups" {
     query = query.lambda_function_vpc_security_groups
-    args = [self.input.lambda_arn.value]
+    args  = [self.input.lambda_arn.value]
   }
 
   with "vpc_subnets" {
     query = query.lambda_function_vpc_subnets
-    args = [self.input.lambda_arn.value]
+    args  = [self.input.lambda_arn.value]
   }
 
   with "vpc_vpcs" {
     query = query.lambda_function_vpc_vpcs
-    args = [self.input.lambda_arn.value]
+    args  = [self.input.lambda_arn.value]
   }
 
   container {
@@ -282,7 +287,7 @@ dashboard "lambda_function_detail" {
         type  = "line"
         width = 6
         query = query.lambda_function_overview
-        args = [self.input.lambda_arn.value]
+        args  = [self.input.lambda_arn.value]
 
       }
 
@@ -290,7 +295,7 @@ dashboard "lambda_function_detail" {
         title = "Tags"
         width = 6
         query = query.lambda_function_tags
-        args = [self.input.lambda_arn.value]
+        args  = [self.input.lambda_arn.value]
       }
 
     }
@@ -299,29 +304,31 @@ dashboard "lambda_function_detail" {
       width = 6
       title = "Last Update Status"
       query = query.lambda_function_last_update_status
-      args = [self.input.lambda_arn.value]
+      args  = [self.input.lambda_arn.value]
     }
 
-  }
-
-  table {
-    title = "Policy"
-    query = query.lambda_function_policy
-    args = [self.input.lambda_arn.value]
   }
 
   table {
     width = 6
     title = "Security Groups"
     query = query.lambda_function_security_groups
-    args = [self.input.lambda_arn.value]
+    args  = [self.input.lambda_arn.value]
   }
 
   table {
     width = 6
     title = "Subnets"
     query = query.lambda_function_subnet_ids
-    args = [self.input.lambda_arn.value]
+    args  = [self.input.lambda_arn.value]
+  }
+
+  graph {
+    title = "Resource Policy"
+    base  = graph.iam_resource_policy_structure
+    args = {
+      policy_std = with.lambda_policy_std.rows[0].policy_std
+    }
   }
 
 }
@@ -377,6 +384,17 @@ query "lambda_function_kms_keys" {
     where
       kms_key_arn is not null
       and arn = $1;
+  EOQ
+}
+
+query "lambda_function_policy_std" {
+  sql = <<-EOQ
+    select
+      policy_std
+    from
+      aws_lambda_function
+    where
+      arn = $1;
   EOQ
 }
 
