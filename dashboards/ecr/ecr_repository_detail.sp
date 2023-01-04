@@ -18,37 +18,42 @@ dashboard "ecr_repository_detail" {
     card {
       query = query.ecr_repository_encrypted
       width = 2
-      args = [self.input.ecr_repository_arn.value]
+      args  = [self.input.ecr_repository_arn.value]
     }
 
     card {
       query = query.ecr_repository_scan_on_push
       width = 2
-      args = [self.input.ecr_repository_arn.value]
+      args  = [self.input.ecr_repository_arn.value]
     }
 
     card {
       query = query.ecr_repository_tagging
       width = 2
-      args = [self.input.ecr_repository_arn.value]
+      args  = [self.input.ecr_repository_arn.value]
     }
 
     card {
       query = query.ecr_repository_tag_immutability
       width = 2
-      args = [self.input.ecr_repository_arn.value]
+      args  = [self.input.ecr_repository_arn.value]
     }
 
   }
 
   with "ecs_task_definitions" {
     query = query.ecr_repository_ecs_task_definitions
-    args = [self.input.ecr_repository_arn.value]
+    args  = [self.input.ecr_repository_arn.value]
   }
 
   with "kms_keys" {
     query = query.ecr_repository_kms_keys
-    args = [self.input.ecr_repository_arn.value]
+    args  = [self.input.ecr_repository_arn.value]
+  }
+
+  with "ecr_policy_std" {
+    query = query.ecr_repository_policy_std
+    args  = [self.input.ecr_repository_arn.value]
   }
 
   container {
@@ -132,15 +137,23 @@ dashboard "ecr_repository_detail" {
         type  = "line"
         width = 6
         query = query.ecr_repository_overview
-        args = [self.input.ecr_repository_arn.value]
+        args  = [self.input.ecr_repository_arn.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.ecr_repository_tags
-        args = [self.input.ecr_repository_arn.value]
+        args  = [self.input.ecr_repository_arn.value]
       }
+    }
+  }
+
+  graph {
+    title = "Resource Policy"
+    base  = graph.iam_resource_policy_structure
+    args = {
+      policy_std = with.ecr_policy_std.rows[0].policy_std
     }
   }
 }
@@ -183,6 +196,17 @@ query "ecr_repository_kms_keys" {
   sql = <<-EOQ
     select
       encryption_configuration ->> 'KmsKey' as kms_key_arn
+    from
+      aws_ecr_repository
+    where
+      arn = $1;
+  EOQ
+}
+
+query "ecr_repository_policy_std" {
+  sql = <<-EOQ
+    select
+      policy_std
     from
       aws_ecr_repository
     where

@@ -652,7 +652,7 @@ query "s3_bucket_tags_detail" {
 query "s3_bucket_server_side_encryption" {
   sql = <<-EOQ
     select
-      rules -> 'ApplyServerSideEncryptionByDefault' -> 'KMSMasterKeyID' as "KMS Master Key ID",
+      rules -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID' as "KMS Master Key ID",
       rules -> 'ApplyServerSideEncryptionByDefault' ->> 'SSEAlgorithm' as "SSE Algorithm",
       rules -> 'BucketKeyEnabled'  as "Bucket Key Enabled"
     from
