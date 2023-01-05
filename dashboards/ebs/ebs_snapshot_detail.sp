@@ -38,8 +38,13 @@ dashboard "ebs_snapshot_detail" {
     }
   }
 
-  with "ebs_volumes" {
-    query = query.ebs_snapshot_ebs_volumes
+  with "to_ebs_volumes" {
+    query = query.ebs_snapshot_to_ebs_volumes
+    args  = [self.input.ebs_snapshot_id.value]
+  }
+
+  with "from_ebs_volumes" {
+    query = query.ebs_snapshot_from_ebs_volumes
     args  = [self.input.ebs_snapshot_id.value]
   }
 
@@ -75,7 +80,14 @@ dashboard "ebs_snapshot_detail" {
       node {
         base = node.ebs_volume
         args = {
-          ebs_volume_arns = with.ebs_volumes.rows[*].volume_arn
+          ebs_volume_arns = with.to_ebs_volumes.rows[*].volume_arn
+        }
+      }
+
+      node {
+        base = node.ebs_volume
+        args = {
+          ebs_volume_arns = with.from_ebs_volumes.rows[*].volume_arn
         }
       }
 
@@ -118,6 +130,13 @@ dashboard "ebs_snapshot_detail" {
         base = edge.ebs_snapshot_to_ebs_volume
         args = {
           ebs_snapshot_ids = [self.input.ebs_snapshot_id.value]
+        }
+      }
+
+      edge {
+        base = edge.ebs_volume_to_ebs_snapshot
+        args = {
+          ebs_volume_arns = with.from_ebs_volumes.rows[*].volume_arn
         }
       }
 
@@ -171,7 +190,7 @@ query "ebs_snapshot_input" {
 
 # With queries
 
-query "ebs_snapshot_ebs_volumes" {
+query "ebs_snapshot_to_ebs_volumes" {
   sql = <<-EOQ
     select
       v.arn as volume_arn
@@ -179,6 +198,19 @@ query "ebs_snapshot_ebs_volumes" {
       aws_ebs_volume as v
     where
       v.snapshot_id = $1;
+  EOQ
+}
+
+query "ebs_snapshot_from_ebs_volumes" {
+  sql = <<-EOQ
+    select
+      v.arn as volume_arn
+    from
+      aws_ebs_snapshot as s,
+      aws_ebs_volume as v
+    where
+      s.volume_id = v.volume_id
+      and s.snapshot_id = $1;
   EOQ
 }
 

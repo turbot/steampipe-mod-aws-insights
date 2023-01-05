@@ -33,7 +33,7 @@ edge "ebs_snapshot_to_kms_key" {
 }
 
 edge "ebs_snapshot_to_ebs_volume" {
-  title = "snapshot"
+  title = "volume"
 
   sql = <<-EOQ
     select
@@ -53,8 +53,8 @@ edge "ebs_volume_to_ebs_snapshot" {
 
   sql = <<-EOQ
     select
-      v.arn as from_id
-      s.snapshot_id as to_id,
+      v.arn as from_id,
+      s.snapshot_id as to_id
     from
       aws_ebs_snapshot as s,
       aws_ebs_volume as v

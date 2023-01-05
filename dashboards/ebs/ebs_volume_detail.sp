@@ -46,8 +46,13 @@ dashboard "ebs_volume_detail" {
     }
   }
 
-  with "ebs_snapshots" {
-    query = query.ebs_volume_ebs_snapshots
+  with "to_ebs_snapshots" {
+    query = query.ebs_volume_to_ebs_snapshots
+    args  = [self.input.volume_arn.value]
+  }
+
+  with "from_ebs_snapshots" {
+    query = query.ebs_volume_from_ebs_snapshots
     args  = [self.input.volume_arn.value]
   }
 
@@ -76,14 +81,21 @@ dashboard "ebs_volume_detail" {
       node {
         base = node.ebs_snapshot
         args = {
-          ebs_snapshot_ids = with.ebs_snapshots.rows[*].snapshot_id
+          ebs_snapshot_ids = with.from_ebs_snapshots.rows[*].snapshot_id
+        }
+      }
+
+      node {
+        base = node.ebs_snapshot
+        args = {
+          ebs_snapshot_ids = with.to_ebs_snapshots.rows[*].snapshot_id
         }
       }
 
       node {
         base = node.ebs_shared_snapshot
         args = {
-          ebs_snapshot_ids = with.ebs_snapshots.rows[*].snapshot_id
+          ebs_snapshot_ids = with.from_ebs_snapshots.rows[*].snapshot_id
         }
       }
 
@@ -118,14 +130,21 @@ dashboard "ebs_volume_detail" {
       edge {
         base = edge.ebs_snapshot_to_ec2_ami
         args = {
-          ebs_snapshot_ids = with.ebs_snapshots.rows[*].snapshot_id
+          ebs_snapshot_ids = with.from_ebs_snapshots.rows[*].snapshot_id
         }
       }
 
       edge {
         base = edge.ebs_snapshot_to_ebs_volume
         args = {
-          ebs_snapshot_ids = with.ebs_snapshots.rows[*].snapshot_id
+          ebs_snapshot_ids = with.from_ebs_snapshots.rows[*].snapshot_id
+        }
+      }
+
+      edge {
+        base = edge.ebs_volume_to_ebs_snapshot
+        args = {
+          ebs_volume_arns = [self.input.volume_arn.value]
         }
       }
 
@@ -263,16 +282,26 @@ query "ebs_volume_input" {
 
 # With queries
 
-query "ebs_volume_ebs_snapshots" {
+query "ebs_volume_from_ebs_snapshots" {
   sql = <<-EOQ
     select
-      s.snapshot_id as snapshot_id
+      v.snapshot_id
     from
       aws_ebs_volume as v
-      join aws_ebs_snapshot as s on s.snapshot_id = v.snapshot_id
     where
-      v.account_id = s.account_id
-      and s.arn is not null
+      v.arn = $1;
+  EOQ
+}
+
+query "ebs_volume_to_ebs_snapshots" {
+  sql = <<-EOQ
+    select
+      s.snapshot_id
+    from
+      aws_ebs_volume as v,
+      aws_ebs_snapshot as s
+    where
+      s.volume_id = v.volume_id
       and v.arn = $1;
   EOQ
 }
