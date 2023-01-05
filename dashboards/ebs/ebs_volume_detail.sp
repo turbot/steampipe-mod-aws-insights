@@ -81,6 +81,13 @@ dashboard "ebs_volume_detail" {
       }
 
       node {
+        base = node.ebs_shared_snapshot
+        args = {
+          ebs_snapshot_ids = with.ebs_snapshots.rows[*].snapshot_id
+        }
+      }
+
+      node {
         base = node.ebs_volume
         args = {
           ebs_volume_arns = [self.input.volume_arn.value]

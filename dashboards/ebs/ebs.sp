@@ -11,6 +11,12 @@ category "ebs_snapshot" {
   icon  = "add_a_photo"
 }
 
+category "ebs_shared_snapshot" {
+  title = "EBS Shared Snapshot"
+  color = local.storage_color
+  icon  = "add_a_photo"
+}
+
 category "ebs_volume" {
   title = "EBS Volume"
   href  = "/aws_insights.dashboard.ebs_volume_detail?input.volume_arn={{.properties.'ARN' | @uri}}"

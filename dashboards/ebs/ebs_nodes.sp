@@ -15,7 +15,32 @@ node "ebs_snapshot" {
     from
       aws_ebs_snapshot
     where
-      snapshot_id = any($1);
+      snapshot_id = any($1)
+      and owner_id = account_id;
+  EOQ
+
+  param "ebs_snapshot_ids" {}
+}
+
+node "ebs_shared_snapshot" {
+  category = category.ebs_shared_snapshot
+
+  sql = <<-EOQ
+    select
+      snapshot_id as id,
+      title as title,
+      jsonb_build_object(
+        'ID', snapshot_id,
+        'ARN', arn,
+        'Start Time', start_time,
+        'Account ID', account_id,
+        'Region', region
+      ) as properties
+    from
+      aws_ebs_snapshot
+    where
+      snapshot_id = any($1)
+      and owner_id <> account_id;
   EOQ
 
   param "ebs_snapshot_ids" {}
