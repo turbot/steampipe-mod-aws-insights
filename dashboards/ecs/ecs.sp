@@ -6,22 +6,22 @@ locals {
 
 category "ecs_cluster" {
   title = "ECS Cluster"
+  color = local.compute_color
   href  = "/aws_insights.dashboard.ecs_cluster_detail?input.ecs_cluster_arn={{.properties.'ARN' | @uri}}"
   icon  = "token"
-  color = local.compute_color
 }
 
 category "ecs_container_instance" {
   title = "ECS Container Instance"
-  icon  = "memory"
   color = local.compute_color
+  icon  = "memory"
 }
 
 category "ecs_service" {
   title = "ECS Service"
   color = local.compute_color
-  icon  = "settings_suggest"
   href  = "/aws_insights.dashboard.ecs_service_detail?input.service_arn={{.properties.'ARN' | @uri}}"
+  icon  = "settings_suggest"
 }
 
 category "ecs_task" {

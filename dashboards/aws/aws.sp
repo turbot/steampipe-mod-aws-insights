@@ -6,18 +6,18 @@ locals {
 
 category "account" {
   title = "Account"
-  icon  = "cloud_circle"
   color = local.compute_color
+  icon  = "cloud_circle"
 }
 
 category "availability_zone" {
   title = "Availability Zone"
-  icon  = "apartment"
   color = local.networking_color
+  icon  = "apartment"
 }
 
 category "region" {
   title = "Region"
-  icon  = "travel_explore"
   color = local.compute_color
+  icon  = "travel_explore"
 }

@@ -8,7 +8,7 @@ category "emr_cluster" {
   title = "EMR Cluster"
   color = local.analytics_color
   href  = "/aws_insights.dashboard.emr_cluster_detail?input.emr_cluster_arn={{.properties.'ARN' | @uri}}"
-  icon  = "hub"
+  icon  = "filter_alt"
 }
 
 category "emr_instance" {
@@ -21,11 +21,11 @@ category "emr_instance" {
 category "emr_instance_fleet" {
   title = "EMR Instance Fleet"
   color = local.analytics_color
-  icon  = "text:EMR"
+  icon  = "widgets"
 }
 
 category "emr_instance_group" {
   title = "EMR Instance Group"
   color = local.analytics_color
-  icon  = "dashboard"
+  icon  = "grid_view"
 }

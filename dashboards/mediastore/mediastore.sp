@@ -1,5 +1,5 @@
 category "media_store_container" {
   title = "Media Store Container"
   color = local.containers_color
-  icon  = "heroicons-outline:building-storefront"
+  icon  = "video_file"
 }

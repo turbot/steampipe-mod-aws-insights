@@ -8,7 +8,7 @@ category "elasticache_cluster_node" {
   title = "ElastiCache Cluster Node"
   color = local.database_color
   href  = "/aws_insights.dashboard.elasticache_cluster_node_detail?input.elasticache_cluster_node_arn={{.properties.ARN | @uri}}"
-  icon  = "database"
+  icon  = "flash_on"
 }
 
 category "elasticache_node_group" {

@@ -12,7 +12,7 @@ category "s3_access_point" {
 
 category "s3_bucket" {
   title = "S3 Bucket"
+  color = local.storage_color
   href  = "/aws_insights.dashboard.s3_bucket_detail?input.bucket_arn={{.properties.'ARN' | @uri}}"
   icon  = "cleaning_bucket"
-  color = local.storage_color
 }

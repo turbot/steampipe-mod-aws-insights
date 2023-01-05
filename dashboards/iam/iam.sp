@@ -12,8 +12,8 @@ category "iam_access_key" {
 
 category "iam_federated_principal" {
   title = "IAM Federated Principal"
-  icon  = "groups"
   color = local.iam_color
+  icon  = "groups"
 }
 
 category "iam_group" {
@@ -25,14 +25,14 @@ category "iam_group" {
 
 category "iam_inline_policy" {
   title = "IAM Inline Policy"
-  icon  = "rule"
   color = local.iam_color
+  icon  = "rule"
 }
 
 category "iam_instance_profile" {
   title = "IAM Instance Profile"
-  icon  = "manage_accounts"
   color = local.iam_color
+  icon  = "manage_accounts"
 }
 
 category "iam_policy" {
@@ -44,51 +44,51 @@ category "iam_policy" {
 
 category "iam_policy_action" {
   title = "IAM Policy Action"
+  color = local.iam_color
   href  = "/aws_insights.dashboard.iam_action_glob_report?input.action_glob={{.title | @uri}}"
   icon  = "electric_bolt"
-  color = local.iam_color
 }
 
 category "iam_policy_condition" {
   title = "IAM Policy Condition"
-  icon  = "help"
   color = local.iam_color
+  icon  = "help"
 }
 
 category "iam_policy_condition_key" {
   title = "IAM Policy Condition Key"
-  icon  = "vpn_key"
   color = local.iam_color
+  icon  = "vpn_key"
 }
 
 category "iam_policy_condition_value" {
   title = "IAM Policy Condition Value"
-  icon  = "numbers"
   color = local.iam_color
+  icon  = "numbers"
 }
 
 category "iam_policy_notaction" {
   title = "IAM Policy NotAction"
-  icon  = "flash_off"
   color = local.iam_color
+  icon  = "flash_off"
 }
 
 category "iam_policy_notresource" {
   title = "IAM Policy NotResource"
-  icon  = "bookmark_remove"
   color = local.iam_color
+  icon  = "bookmark_remove"
 }
 
 category "iam_policy_resource" {
   title = "IAM Policy Resource"
-  icon  = "bookmark"
   color = local.iam_color
+  icon  = "bookmark"
 }
 
 category "iam_policy_statement" {
   title = "IAM Policy Statement"
-  icon  = "assignment"
   color = local.iam_color
+  icon  = "assignment"
 }
 
 category "iam_resource_policy" {
@@ -99,15 +99,15 @@ category "iam_resource_policy" {
 
 category "iam_role" {
   title = "IAM Role"
+  color = local.iam_color
   href  = "/aws_insights.dashboard.iam_role_detail?input.role_arn={{.properties.'ARN' | @uri}}"
   icon  = "engineering"
-  color = local.iam_color
 }
 
 category "iam_service_principal" {
   title = "IAM Service Service"
-  icon  = "component_exchange"
   color = local.iam_color
+  icon  = "component_exchange"
 }
 
 category "iam_user" {
