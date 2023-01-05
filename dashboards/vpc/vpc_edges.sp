@@ -304,7 +304,7 @@ edge "vpc_security_group_to_elasticache_subnet_group" {
       g.arn as to_id
     from
       aws_elasticache_cluster as c
-      left join jsonb_array_elements(security_groups) as sg 
+      left join jsonb_array_elements(security_groups) as sg
       on security_groups is not null
       join aws_elasticache_subnet_group as g
       on g.cache_subnet_group_name = c.cache_subnet_group_name
@@ -374,7 +374,7 @@ edge "vpc_security_group_to_rds_db_subnet_group" {
     select
       sg ->> 'VpcSecurityGroupId' as from_id,
       sng.arn as to_id
-    from 
+    from
       aws_rds_db_subnet_group sng,
       aws_rds_db_instance i,
       jsonb_array_elements(vpc_security_groups) sg
@@ -798,7 +798,8 @@ edge "vpc_vpc_to_vpc_route_table" {
         aws_vpc_route_table as rt,
         jsonb_array_elements(associations) as a
       where
-        rt.vpc_id = any($1);
+        a ->> 'SubnetId' is null
+        and rt.vpc_id = any($1);
   EOQ
 
   param "vpc_vpc_ids" {}

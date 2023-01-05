@@ -38,6 +38,11 @@ dashboard "backup_vault_detail" {
     args  = [self.input.backup_vault_arn.value]
   }
 
+  with "vault_policy_std" {
+    query = query.backup_vault_policy_std
+    args  = [self.input.backup_vault_arn.value]
+  }
+
   container {
 
     graph {
@@ -108,14 +113,14 @@ dashboard "backup_vault_detail" {
         query = query.backup_vault_overview
         args  = [self.input.backup_vault_arn.value]
       }
+    }
 
-      table {
-        title = "Policy"
-        width = 9
-        query = query.backup_vault_policy
-        args  = [self.input.backup_vault_arn.value]
+    graph {
+      title = "Resource Policy"
+      base  = graph.iam_resource_policy_structure
+      args = {
+        policy_std = with.vault_policy_std.rows[0].policy_std
       }
-
     }
 
   }
@@ -177,6 +182,17 @@ query "backup_vault_to_sns_topics" {
     where
       sns_topic_arn is not null
       and arn = $1;
+  EOQ
+}
+
+query "backup_vault_policy_std" {
+  sql = <<-EOQ
+    select
+      policy_std
+    from
+      aws_backup_vault
+    where
+      arn = $1;
   EOQ
 }
 

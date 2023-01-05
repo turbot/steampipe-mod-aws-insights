@@ -19,84 +19,89 @@ dashboard "kms_key_detail" {
     card {
       width = 2
       query = query.kms_key_type
-      args = [self.input.key_arn.value]
+      args  = [self.input.key_arn.value]
     }
 
     card {
       width = 2
       query = query.kms_key_origin
-      args = [self.input.key_arn.value]
+      args  = [self.input.key_arn.value]
     }
 
     card {
       width = 2
       query = query.kms_key_state
-      args = [self.input.key_arn.value]
+      args  = [self.input.key_arn.value]
     }
 
     card {
       width = 2
       query = query.kms_key_rotation_enabled
-      args = [self.input.key_arn.value]
+      args  = [self.input.key_arn.value]
     }
 
   }
 
   with "cloudtrail_trails" {
     query = query.kms_key_cloudtrail_trails
-    args = [self.input.key_arn.value]
+    args  = [self.input.key_arn.value]
   }
 
   with "ebs_volumes" {
     query = query.kms_key_ebs_volumes
-    args = [self.input.key_arn.value]
+    args  = [self.input.key_arn.value]
   }
 
   with "lambda_functions" {
     query = query.kms_key_lambda_functions
-    args = [self.input.key_arn.value]
+    args  = [self.input.key_arn.value]
+  }
+
+  with "key_policy_std" {
+    query = query.kms_key_policy_std
+    args  = [self.input.key_arn.value]
   }
 
   with "rds_db_clusters" {
     query = query.kms_key_rds_db_clusters
-    args = [self.input.key_arn.value]
+    args  = [self.input.key_arn.value]
   }
 
   with "rds_db_cluster_snapshots" {
     query = query.kms_key_rds_db_cluster_snapshots
-    args = [self.input.key_arn.value]
+    args  = [self.input.key_arn.value]
   }
 
   with "rds_db_instances" {
     query = query.kms_key_rds_db_instances
-    args = [self.input.key_arn.value]
+    args  = [self.input.key_arn.value]
   }
 
   with "rds_db_snapshots" {
     query = query.kms_key_rds_db_snapshots
-    args = [self.input.key_arn.value]
+    args  = [self.input.key_arn.value]
 
   }
 
   with "redshift_clusters" {
     query = query.kms_key_redshift_clusters
-    args = [self.input.key_arn.value]
+    args  = [self.input.key_arn.value]
   }
 
   with "s3_buckets" {
     query = query.kms_key_s3_buckets
-    args = [self.input.key_arn.value]
+    args  = [self.input.key_arn.value]
 
   }
 
   with "sns_topics" {
     query = query.kms_key_sns_topics
-    args = [self.input.key_arn.value]
+    args  = [self.input.key_arn.value]
   }
 
   with "sqs_queues" {
     query = query.kms_key_sqs_queues
-    args = [self.input.key_arn.value]
+    args  = [self.input.key_arn.value]
   }
 
   container {
@@ -294,14 +299,14 @@ dashboard "kms_key_detail" {
         type  = "line"
         width = 6
         query = query.kms_key_overview
-        args = [self.input.key_arn.value]
+        args  = [self.input.key_arn.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.kms_key_tags
-        args = [self.input.key_arn.value]
+        args  = [self.input.key_arn.value]
       }
 
     }
@@ -313,7 +318,7 @@ dashboard "kms_key_detail" {
       table {
         title = "Key Age"
         query = query.kms_key_age
-        args = [self.input.key_arn.value]
+        args  = [self.input.key_arn.value]
       }
 
     }
@@ -321,17 +326,18 @@ dashboard "kms_key_detail" {
   }
 
   table {
-    title = "Policy"
-    query = query.kms_key_policy
-    args = [self.input.key_arn.value]
-  }
-
-  table {
     title = "Key Aliases"
     query = query.kms_key_aliases
-    args = [self.input.key_arn.value]
+    args  = [self.input.key_arn.value]
   }
 
+  graph {
+    title = "Resource Policy"
+    base  = graph.iam_resource_policy_structure
+    args = {
+      policy_std = with.key_policy_std.rows[0].policy_std
+    }
+  }
 }
 
 # Input queries
@@ -387,6 +393,17 @@ query "kms_key_lambda_functions" {
       aws_lambda_function
     where
       kms_key_arn = $1;
+  EOQ
+}
+
+query "kms_key_policy_std" {
+  sql = <<-EOQ
+    select
+      policy_std
+    from
+      aws_kms_key
+    where
+      arn = $1;
   EOQ
 }
 
