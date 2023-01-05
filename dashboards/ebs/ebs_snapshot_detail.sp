@@ -115,9 +115,9 @@ dashboard "ebs_snapshot_detail" {
       }
 
       edge {
-        base = edge.ebs_volume_to_ebs_snapshot
+        base = edge.ebs_snapshot_to_ebs_volume
         args = {
-          ebs_volume_arns = with.ebs_volumes.rows[*].volume_arn
+          ebs_snapshot_ids = [self.input.ebs_snapshot_id.value]
         }
       }
 
