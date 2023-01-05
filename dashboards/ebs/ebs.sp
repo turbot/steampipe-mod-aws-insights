@@ -11,6 +11,12 @@ category "ebs_snapshot" {
   icon  = "add_a_photo"
 }
 
+category "ebs_shared_snapshot" {
+  title = "EBS Shared Snapshot"
+  color = local.storage_color
+  icon  = "add_a_photo"
+}
+
 category "ebs_volume" {
   title = "EBS Volume"
   color = local.storage_color

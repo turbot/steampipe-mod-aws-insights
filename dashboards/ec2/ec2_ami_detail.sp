@@ -66,6 +66,13 @@ dashboard "ec2_ami_detail" {
       }
 
       node {
+        base = node.ebs_shared_snapshot
+        args = {
+          ebs_snapshot_ids = with.ebs_snapshots.rows[*].ebs_snapshot_id
+        }
+      }
+
+      node {
         base = node.ec2_ami
         args = {
           ec2_ami_image_ids = [self.input.ami.value]
