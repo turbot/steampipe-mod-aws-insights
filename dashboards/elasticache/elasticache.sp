@@ -29,7 +29,7 @@ category "elasticache_cluster" {
   title = "ElastiCache Cluster"
   color = local.database_color
   href  = "/aws_insights.dashboard.elasticache_cluster_detail?input.elasticache_cluster_arn={{.properties.ARN | @uri}}"
-  icon  = "hub"
+  icon  = "dynamic_form"
 }
 
 category "elasticache_subnet_group" {
