@@ -94,7 +94,7 @@ category "iam_policy_statement" {
 category "iam_resource_policy" {
   title = "Resource Policy"
   color = local.iam_color
-  icon  = "rule-folder"
+  icon  = "rule_folder"
 }
 
 category "iam_role" {
