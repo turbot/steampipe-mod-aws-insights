@@ -101,7 +101,7 @@ edge "codepipeline_pipeline_source_to_s3_bucket" {
 
   sql = <<-EOQ
     select
-      'pipeline_deploy' as from_id,
+      'pipeline_source' as from_id,
       arn as to_id
     from
       aws_s3_bucket
@@ -109,7 +109,7 @@ edge "codepipeline_pipeline_source_to_s3_bucket" {
       name in
       (
         select
-          a -> 'Configuration' ->> 'BucketName' as bucket_name
+          a -> 'Configuration' ->> 'S3Bucket' as bucket_name
         from
           aws_codepipeline_pipeline,
           jsonb_array_elements(stages) as s,
