@@ -18,46 +18,50 @@ dashboard "codepipeline_pipeline_detail" {
     card {
       query = query.codepipeline_pipeline_encryption
       width = 2
-      args = [self.input.pipeline_arn.value]
+      args  = [self.input.pipeline_arn.value]
     }
 
   }
   with "codebuild_projects" {
     query = query.codepipeline_pipeline_codebuild_projects
-    args = [self.input.pipeline_arn.value]
+    args  = [self.input.pipeline_arn.value]
   }
 
   with "codecommit_repositories" {
     query = query.codepipeline_pipeline_codecommit_repositories
-    args = [self.input.pipeline_arn.value]
+    args  = [self.input.pipeline_arn.value]
   }
 
   with "ecr_repositories" {
     query = query.codepipeline_pipeline_ecr_repositories
-    args = [self.input.pipeline_arn.value]
+    args  = [self.input.pipeline_arn.value]
   }
 
   with "iam_roles" {
     query = query.codepipeline_pipeline_iam_roles
-    args = [self.input.pipeline_arn.value]
+    args  = [self.input.pipeline_arn.value]
   }
 
   with "kms_keys" {
     query = query.codepipeline_pipeline_kms_keys
-    args = [self.input.pipeline_arn.value]
+    args  = [self.input.pipeline_arn.value]
   }
 
   with "s3_buckets" {
     query = query.codepipeline_pipeline_s3_buckets
-    args = [self.input.pipeline_arn.value]
+    args  = [self.input.pipeline_arn.value]
   }
 
   container {
 
     graph {
       title     = "Relationships"
+      base      = graph.codepipeline_pipeline_structures
       type      = "graph"
       direction = "TD"
+      args = {
+        codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
+      }
 
       node {
         base = node.codebuild_project
@@ -116,37 +120,37 @@ dashboard "codepipeline_pipeline_detail" {
       }
 
       edge {
-        base = edge.codebuild_project_to_codepipeline_pipeline
+        base = edge.codepipeline_pipeline_build_to_codebuild_project
         args = {
-          codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
+          codebuild_project_arns = with.codebuild_projects.rows[*].codebuild_project_arn
         }
       }
 
       edge {
-        base = edge.codecommit_repository_to_codepipeline_pipeline
+        base = edge.codepipeline_pipeline_source_to_codecommit_repository
         args = {
           codecommit_repository_arns = with.codecommit_repositories.rows[*].codecommit_repository_arn
         }
       }
 
       edge {
-        base = edge.codedeploy_app_to_codepipeline_pipeline
+        base = edge.codepipeline_pipeline_deploy_to_codedeploy_app
         args = {
           codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
         }
       }
 
       edge {
-        base = edge.codepipeline_pipeline_to_s3_bucket
+        base = edge.codepipeline_pipeline_deploy_to_s3_bucket
         args = {
-          codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
+          s3_bucket_arns = with.s3_buckets.rows[*].s3_bucket_deploy_arn
         }
       }
 
       edge {
-        base = edge.ecr_repository_to_codepipeline_pipeline
+        base = edge.codepipeline_pipeline_source_to_ecr_repository
         args = {
-          codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
+          ecr_repository_arns = with.ecr_repositories.rows[*].ecr_repository_arn
         }
       }
 
@@ -158,14 +162,14 @@ dashboard "codepipeline_pipeline_detail" {
       }
 
       edge {
-        base = edge.kms_key_to_codepipeline_pipeline
+        base = edge.codepipeline_pipeline_to_kms_key
         args = {
           codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
         }
       }
 
       edge {
-        base = edge.s3_bucket_to_codepipeline_pipeline
+        base = edge.codepipeline_pipeline_source_to_s3_bucket
         args = {
           s3_bucket_arns = with.s3_buckets.rows[*].s3_bucket_deploy_arn
         }
@@ -183,7 +187,7 @@ dashboard "codepipeline_pipeline_detail" {
         type  = "line"
         width = 6
         query = query.codepipeline_pipeline_overview
-        args = [self.input.pipeline_arn.value]
+        args  = [self.input.pipeline_arn.value]
 
       }
 
@@ -191,7 +195,7 @@ dashboard "codepipeline_pipeline_detail" {
         title = "Tags"
         width = 6
         query = query.codepipeline_pipeline_tags
-        args = [self.input.pipeline_arn.value]
+        args  = [self.input.pipeline_arn.value]
 
       }
     }
@@ -201,7 +205,7 @@ dashboard "codepipeline_pipeline_detail" {
       table {
         title = "Stages"
         query = query.codepipeline_pipeline_stages
-        args = [self.input.pipeline_arn.value]
+        args  = [self.input.pipeline_arn.value]
       }
     }
   }
@@ -318,12 +322,14 @@ query "codepipeline_pipeline_iam_roles" {
 query "codepipeline_pipeline_kms_keys" {
   sql = <<-EOQ
     select
-      encryption_key ->> 'Id' as kms_key_arn
+      k.arn as kms_key_arn
     from
-      aws_codepipeline_pipeline
+      aws_codepipeline_pipeline as p,
+      aws_kms_key as k,
+      jsonb_array_elements(aliases) as a
     where
-      encryption_key ->> 'Id' is not null
-      and arn = $1
+      a ->> 'AliasArn' = p.encryption_key ->> 'Id'
+      and p.arn = $1;
   EOQ
 }
 
