@@ -42,6 +42,34 @@ edge "codepipeline_pipeline_build_to_codebuild_project" {
   param "codebuild_project_arns" {}
 }
 
+edge "codepipeline_pipeline_deploy_to_ecs_cluster" {
+  title = "deploys to"
+
+  sql = <<-EOQ
+    select
+      'pipeline_deploy' as from_id,
+      cluster_arn as to_id
+    from
+      aws_ecs_cluster
+    where
+      cluster_name in
+      (
+        select
+          a -> 'Configuration' ->> 'ClusterName'
+        from
+          aws_codepipeline_pipeline,
+          jsonb_array_elements(stages) as s,
+          jsonb_array_elements(s -> 'Actions') as a
+        where
+          s ->> 'Name' = 'Deploy'
+          and a -> 'ActionTypeId' ->> 'Provider' = 'ECS'
+          and arn = any($1)
+      );
+  EOQ
+
+  param "codepipeline_pipeline_arns" {}
+}
+
 edge "codepipeline_pipeline_source_to_codecommit_repository" {
   title = "source provider"
 

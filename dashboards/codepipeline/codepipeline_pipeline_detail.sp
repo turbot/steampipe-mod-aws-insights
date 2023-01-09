@@ -32,6 +32,11 @@ dashboard "codepipeline_pipeline_detail" {
     args  = [self.input.pipeline_arn.value]
   }
 
+  with "ecs_clusters" {
+    query = query.codepipeline_pipeline_ecs_clusters
+    args  = [self.input.pipeline_arn.value]
+  }
+
   with "ecr_repositories" {
     query = query.codepipeline_pipeline_ecr_repositories
     args  = [self.input.pipeline_arn.value]
@@ -92,6 +97,13 @@ dashboard "codepipeline_pipeline_detail" {
       }
 
       node {
+        base = node.ecs_cluster
+        args = {
+          ecs_cluster_arns = with.ecs_clusters.rows[*].ecs_cluster_arn
+        }
+      }
+
+      node {
         base = node.ecr_repository
         args = {
           ecr_repository_arns = with.ecr_repositories.rows[*].ecr_repository_arn
@@ -142,6 +154,13 @@ dashboard "codepipeline_pipeline_detail" {
 
       edge {
         base = edge.codepipeline_pipeline_deploy_to_s3_bucket
+        args = {
+          codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.codepipeline_pipeline_deploy_to_ecs_cluster
         args = {
           codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
         }
@@ -230,6 +249,29 @@ query "codepipeline_pipeline_input" {
 }
 
 # With queries
+
+query "codepipeline_pipeline_ecs_clusters" {
+  sql = <<-EOQ
+    select
+      cluster_arn as ecs_cluster_arn
+    from
+      aws_ecs_cluster
+    where
+      cluster_name in
+      (
+        select
+          a -> 'Configuration' ->> 'ClusterName'
+        from
+          aws_codepipeline_pipeline,
+          jsonb_array_elements(stages) as s,
+          jsonb_array_elements(s -> 'Actions') as a
+        where
+          s ->> 'Name' = 'Deploy'
+          and a -> 'ActionTypeId' ->> 'Provider' = 'ECS'
+          and arn = $1
+      );
+  EOQ
+}
 
 query "codepipeline_pipeline_codebuild_projects" {
   sql = <<-EOQ
