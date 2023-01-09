@@ -23,18 +23,8 @@ dashboard "codepipeline_pipeline_detail" {
 
   }
 
-  with "elastic_beanstalk_applications" {
-    query = query.codepipeline_pipeline_elastic_beanstalk_applications
-    args  = [self.input.pipeline_arn.value]
-  }
-
   with "appconfig_applications" {
     query = query.codepipeline_pipeline_appconfig_applications
-    args  = [self.input.pipeline_arn.value]
-  }
-
-    with "codebuild_projects" {
-    query = query.codepipeline_pipeline_codebuild_projects
     args  = [self.input.pipeline_arn.value]
   }
 
@@ -43,8 +33,18 @@ dashboard "codepipeline_pipeline_detail" {
     args  = [self.input.pipeline_arn.value]
   }
 
+  with "codebuild_projects" {
+    query = query.codepipeline_pipeline_codebuild_projects
+    args  = [self.input.pipeline_arn.value]
+  }
+
   with "codecommit_repositories" {
     query = query.codepipeline_pipeline_codecommit_repositories
+    args  = [self.input.pipeline_arn.value]
+  }
+
+  with "ecr_repositories" {
+    query = query.codepipeline_pipeline_ecr_repositories
     args  = [self.input.pipeline_arn.value]
   }
 
@@ -53,8 +53,8 @@ dashboard "codepipeline_pipeline_detail" {
     args  = [self.input.pipeline_arn.value]
   }
 
-  with "ecr_repositories" {
-    query = query.codepipeline_pipeline_ecr_repositories
+  with "elastic_beanstalk_applications" {
+    query = query.codepipeline_pipeline_elastic_beanstalk_applications
     args  = [self.input.pipeline_arn.value]
   }
 
@@ -88,13 +88,6 @@ dashboard "codepipeline_pipeline_detail" {
         base = node.appconfig_application
         args = {
           appconfig_application_arns = with.appconfig_applications.rows[*].app_arn
-        }
-      }
-
-      node {
-        base = node.elastic_beanstalk_application
-        args = {
-          elastic_beanstalk_application_arns = with.elastic_beanstalk_applications.rows[*].beanstalk_app_arn
         }
       }
 
@@ -148,6 +141,13 @@ dashboard "codepipeline_pipeline_detail" {
       }
 
       node {
+        base = node.elastic_beanstalk_application
+        args = {
+          elastic_beanstalk_application_arns = with.elastic_beanstalk_applications.rows[*].beanstalk_app_arn
+        }
+      }
+
+      node {
         base = node.iam_role
         args = {
           iam_role_arns = with.iam_roles.rows[*].iam_role_arn
@@ -176,21 +176,7 @@ dashboard "codepipeline_pipeline_detail" {
       }
 
       edge {
-        base = edge.codepipeline_pipeline_source_to_codecommit_repository
-        args = {
-          codecommit_repository_arns = with.codecommit_repositories.rows[*].codecommit_repository_arn
-        }
-      }
-
-      edge {
         base = edge.codepipeline_pipeline_deploy_to_appconfig_application
-        args = {
-          codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
-        }
-      }
-
-      edge {
-        base = edge.codepipeline_pipeline_deploy_to_elastic_beanstalk_application
         args = {
           codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
         }
@@ -211,6 +197,20 @@ dashboard "codepipeline_pipeline_detail" {
       }
 
       edge {
+        base = edge.codepipeline_pipeline_deploy_to_ecs_cluster
+        args = {
+          codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.codepipeline_pipeline_deploy_to_elastic_beanstalk_application
+        args = {
+          codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
+        }
+      }
+
+      edge {
         base = edge.codepipeline_pipeline_deploy_to_s3_bucket
         args = {
           codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
@@ -218,9 +218,9 @@ dashboard "codepipeline_pipeline_detail" {
       }
 
       edge {
-        base = edge.codepipeline_pipeline_deploy_to_ecs_cluster
+        base = edge.codepipeline_pipeline_source_to_codecommit_repository
         args = {
-          codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
+          codecommit_repository_arns = with.codecommit_repositories.rows[*].codecommit_repository_arn
         }
       }
 
@@ -232,7 +232,7 @@ dashboard "codepipeline_pipeline_detail" {
       }
 
       edge {
-        base = edge.codepipeline_pipeline_to_iam_role
+        base = edge.codepipeline_pipeline_source_to_s3_bucket
         args = {
           codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
         }
@@ -246,7 +246,7 @@ dashboard "codepipeline_pipeline_detail" {
       }
 
       edge {
-        base = edge.codepipeline_pipeline_source_to_s3_bucket
+        base = edge.codepipeline_pipeline_to_iam_role
         args = {
           codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
         }

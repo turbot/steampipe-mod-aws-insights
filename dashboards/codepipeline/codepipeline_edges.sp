@@ -1,3 +1,19 @@
+edge "codepipeline_pipeline_build_to_codebuild_project" {
+  title = "codebuild project"
+
+  sql = <<-EOQ
+    select
+      'pipeline_build' as from_id,
+      arn as to_id
+    from
+      aws_codebuild_project
+    where
+      arn = any($1);
+  EOQ
+
+  param "codebuild_project_arns" {}
+}
+
 edge "codepipeline_pipeline_deploy_to_appconfig_application" {
   title = "deploys to"
 
@@ -19,34 +35,6 @@ edge "codepipeline_pipeline_deploy_to_appconfig_application" {
         where
           s ->> 'Name' = 'Deploy'
           and a -> 'ActionTypeId' ->> 'Provider' = 'AppConfig'
-          and arn = any($1)
-      );
-  EOQ
-
-  param "codepipeline_pipeline_arns" {}
-}
-
-edge "codepipeline_pipeline_deploy_to_elastic_beanstalk_application" {
-  title = "deploys to"
-
-  sql = <<-EOQ
-    select
-      'pipeline_deploy' as from_id,
-      arn as to_id
-    from
-      aws_elastic_beanstalk_application
-    where
-      name in
-      (
-        select
-          a -> 'Configuration' ->> 'ApplicationName'
-        from
-          aws_codepipeline_pipeline,
-          jsonb_array_elements(stages) as s,
-          jsonb_array_elements(s -> 'Actions') as a
-        where
-          s ->> 'Name' = 'Deploy'
-          and a -> 'ActionTypeId' ->> 'Provider' = 'ElasticBeanstalk'
           and arn = any($1)
       );
   EOQ
@@ -82,48 +70,26 @@ edge "codepipeline_pipeline_deploy_to_cloudformation" {
   param "codepipeline_pipeline_arns" {}
 }
 
-edge "codepipeline_pipeline_deploy_to_s3_bucket" {
+edge "codepipeline_pipeline_deploy_to_codedeploy_app" {
   title = "deploys to"
 
   sql = <<-EOQ
-    select
+  select
       'pipeline_deploy' as from_id,
-      arn as to_id
+      app.arn as to_id
     from
-      aws_s3_bucket
+      aws_codedeploy_app as app,
+      aws_codepipeline_pipeline as p,
+      jsonb_array_elements(stages) as s,
+      jsonb_array_elements(s -> 'Actions') as a
     where
-      name in
-      (
-        select
-          a -> 'Configuration' ->> 'BucketName' as bucket_name
-        from
-          aws_codepipeline_pipeline,
-          jsonb_array_elements(stages) as s,
-          jsonb_array_elements(s -> 'Actions') as a
-        where
-          s ->> 'Name' = 'Deploy'
-          and a -> 'ActionTypeId' ->> 'Provider' = 'S3'
-          and arn = any($1)
-      );
+      s ->> 'Name' = 'Deploy'
+      and a -> 'ActionTypeId' ->> 'Provider' = 'CodeDeploy'
+      and a -> 'Configuration' ->> 'ApplicationName' = app.application_name
+      and p.arn = any($1);
   EOQ
 
   param "codepipeline_pipeline_arns" {}
-}
-
-edge "codepipeline_pipeline_build_to_codebuild_project" {
-  title = "codebuild project"
-
-  sql = <<-EOQ
-    select
-      'pipeline_build' as from_id,
-      arn as to_id
-    from
-      aws_codebuild_project
-    where
-      arn = any($1);
-  EOQ
-
-  param "codebuild_project_arns" {}
 }
 
 edge "codepipeline_pipeline_deploy_to_ecs_cluster" {
@@ -154,6 +120,62 @@ edge "codepipeline_pipeline_deploy_to_ecs_cluster" {
   param "codepipeline_pipeline_arns" {}
 }
 
+edge "codepipeline_pipeline_deploy_to_elastic_beanstalk_application" {
+  title = "deploys to"
+
+  sql = <<-EOQ
+    select
+      'pipeline_deploy' as from_id,
+      arn as to_id
+    from
+      aws_elastic_beanstalk_application
+    where
+      name in
+      (
+        select
+          a -> 'Configuration' ->> 'ApplicationName'
+        from
+          aws_codepipeline_pipeline,
+          jsonb_array_elements(stages) as s,
+          jsonb_array_elements(s -> 'Actions') as a
+        where
+          s ->> 'Name' = 'Deploy'
+          and a -> 'ActionTypeId' ->> 'Provider' = 'ElasticBeanstalk'
+          and arn = any($1)
+      );
+  EOQ
+
+  param "codepipeline_pipeline_arns" {}
+}
+
+edge "codepipeline_pipeline_deploy_to_s3_bucket" {
+  title = "deploys to"
+
+  sql = <<-EOQ
+    select
+      'pipeline_deploy' as from_id,
+      arn as to_id
+    from
+      aws_s3_bucket
+    where
+      name in
+      (
+        select
+          a -> 'Configuration' ->> 'BucketName' as bucket_name
+        from
+          aws_codepipeline_pipeline,
+          jsonb_array_elements(stages) as s,
+          jsonb_array_elements(s -> 'Actions') as a
+        where
+          s ->> 'Name' = 'Deploy'
+          and a -> 'ActionTypeId' ->> 'Provider' = 'S3'
+          and arn = any($1)
+      );
+  EOQ
+
+  param "codepipeline_pipeline_arns" {}
+}
+
 edge "codepipeline_pipeline_source_to_codecommit_repository" {
   title = "source provider"
 
@@ -168,28 +190,6 @@ edge "codepipeline_pipeline_source_to_codecommit_repository" {
   EOQ
 
   param "codecommit_repository_arns" {}
-}
-
-edge "codepipeline_pipeline_deploy_to_codedeploy_app" {
-  title = "deploys to"
-
-  sql = <<-EOQ
-  select
-      'pipeline_deploy' as from_id,
-      app.arn as to_id
-    from
-      aws_codedeploy_app as app,
-      aws_codepipeline_pipeline as p,
-      jsonb_array_elements(stages) as s,
-      jsonb_array_elements(s -> 'Actions') as a
-    where
-      s ->> 'Name' = 'Deploy'
-      and a -> 'ActionTypeId' ->> 'Provider' = 'CodeDeploy'
-      and a -> 'Configuration' ->> 'ApplicationName' = app.application_name
-      and p.arn = any($1);
-  EOQ
-
-  param "codepipeline_pipeline_arns" {}
 }
 
 edge "codepipeline_pipeline_source_to_ecr_repository" {
