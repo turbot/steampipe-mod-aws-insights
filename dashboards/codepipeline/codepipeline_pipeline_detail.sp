@@ -22,8 +22,24 @@ dashboard "codepipeline_pipeline_detail" {
     }
 
   }
-  with "codebuild_projects" {
+
+  with "elastic_beanstalk_applications" {
+    query = query.codepipeline_pipeline_elastic_beanstalk_applications
+    args  = [self.input.pipeline_arn.value]
+  }
+
+  with "appconfig_applications" {
+    query = query.codepipeline_pipeline_appconfig_applications
+    args  = [self.input.pipeline_arn.value]
+  }
+
+    with "codebuild_projects" {
     query = query.codepipeline_pipeline_codebuild_projects
+    args  = [self.input.pipeline_arn.value]
+  }
+
+  with "cloudformation_stacks" {
+    query = query.codepipeline_pipeline_cloudformation_stacks
     args  = [self.input.pipeline_arn.value]
   }
 
@@ -66,6 +82,27 @@ dashboard "codepipeline_pipeline_detail" {
       direction = "TD"
       args = {
         codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
+      }
+
+      node {
+        base = node.appconfig_application
+        args = {
+          appconfig_application_arns = with.appconfig_applications.rows[*].app_arn
+        }
+      }
+
+      node {
+        base = node.elastic_beanstalk_application
+        args = {
+          elastic_beanstalk_application_arns = with.elastic_beanstalk_applications.rows[*].beanstalk_app_arn
+        }
+      }
+
+      node {
+        base = node.cloudformation_stack
+        args = {
+          cloudformation_stack_ids = with.cloudformation_stacks.rows[*].stack_id
+        }
       }
 
       node {
@@ -142,6 +179,27 @@ dashboard "codepipeline_pipeline_detail" {
         base = edge.codepipeline_pipeline_source_to_codecommit_repository
         args = {
           codecommit_repository_arns = with.codecommit_repositories.rows[*].codecommit_repository_arn
+        }
+      }
+
+      edge {
+        base = edge.codepipeline_pipeline_deploy_to_appconfig_application
+        args = {
+          codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.codepipeline_pipeline_deploy_to_elastic_beanstalk_application
+        args = {
+          codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.codepipeline_pipeline_deploy_to_cloudformation
+        args = {
+          codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
         }
       }
 
@@ -249,6 +307,74 @@ query "codepipeline_pipeline_input" {
 }
 
 # With queries
+query "codepipeline_pipeline_elastic_beanstalk_applications" {
+sql = <<-EOQ
+    select
+      arn as beanstalk_app_arn
+    from
+      aws_elastic_beanstalk_application
+    where
+      name in
+      (
+        select
+          a -> 'Configuration' ->> 'ApplicationName'
+        from
+          aws_codepipeline_pipeline,
+          jsonb_array_elements(stages) as s,
+          jsonb_array_elements(s -> 'Actions') as a
+        where
+          s ->> 'Name' = 'Deploy'
+          and a -> 'ActionTypeId' ->> 'Provider' = 'ElasticBeanstalk'
+          and arn = $1
+      );
+  EOQ
+}
+
+query "codepipeline_pipeline_appconfig_applications" {
+  sql = <<-EOQ
+    select
+      arn as app_arn
+    from
+      aws_appconfig_application
+    where
+      id in
+      (
+        select
+          a -> 'Configuration' ->> 'Application'
+        from
+          aws_codepipeline_pipeline,
+          jsonb_array_elements(stages) as s,
+          jsonb_array_elements(s -> 'Actions') as a
+        where
+          s ->> 'Name' = 'Deploy'
+          and a -> 'ActionTypeId' ->> 'Provider' = 'AppConfig'
+          and arn = $1
+      );
+  EOQ
+}
+
+query "codepipeline_pipeline_cloudformation_stacks" {
+  sql = <<-EOQ
+    select
+      id as stack_id
+    from
+      aws_cloudformation_stack
+    where
+      name in
+      (
+        select
+          a -> 'Configuration' ->> 'StackName'
+        from
+          aws_codepipeline_pipeline,
+          jsonb_array_elements(stages) as s,
+          jsonb_array_elements(s -> 'Actions') as a
+        where
+          s ->> 'Name' = 'Deploy'
+          and a -> 'ActionTypeId' ->> 'Provider' = 'CloudFormation'
+          and arn = $1
+      );
+  EOQ
+}
 
 query "codepipeline_pipeline_ecs_clusters" {
   sql = <<-EOQ

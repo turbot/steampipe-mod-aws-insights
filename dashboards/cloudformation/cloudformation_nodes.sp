@@ -3,25 +3,20 @@ node "cloudformation_stack" {
 
   sql = <<-EOQ
     select
-      s.id as id,
+      id as id,
       title as title,
       jsonb_build_object(
-        'ARN', s.id,
-        'Last Updated Time', s.last_updated_time,
-        'Status', s.status,
-        'Account ID', s.account_id,
-        'Region', s.region
+        'ARN', id,
+        'Last Updated Time', last_updated_time,
+        'Status', status,
+        'Account ID', account_id,
+        'Region', region
       ) as properties
     from
-      aws_cloudformation_stack as s,
-      jsonb_array_elements(
-        case jsonb_typeof(notification_arns)
-          when 'array' then (notification_arns)
-          else null end
-      ) n
+      aws_cloudformation_stack
     where
-      trim((n::text ), '""') = any($1);
+      id = any($1);
   EOQ
 
-  param "sns_topic_arns" {}
+  param "cloudformation_stack_ids" {}
 }

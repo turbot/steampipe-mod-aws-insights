@@ -1,3 +1,87 @@
+edge "codepipeline_pipeline_deploy_to_appconfig_application" {
+  title = "deploys to"
+
+  sql = <<-EOQ
+    select
+      'pipeline_deploy' as from_id,
+      arn as to_id
+    from
+      aws_appconfig_application
+    where
+      id in
+      (
+        select
+          a -> 'Configuration' ->> 'Application'
+        from
+          aws_codepipeline_pipeline,
+          jsonb_array_elements(stages) as s,
+          jsonb_array_elements(s -> 'Actions') as a
+        where
+          s ->> 'Name' = 'Deploy'
+          and a -> 'ActionTypeId' ->> 'Provider' = 'AppConfig'
+          and arn = any($1)
+      );
+  EOQ
+
+  param "codepipeline_pipeline_arns" {}
+}
+
+edge "codepipeline_pipeline_deploy_to_elastic_beanstalk_application" {
+  title = "deploys to"
+
+  sql = <<-EOQ
+    select
+      'pipeline_deploy' as from_id,
+      arn as to_id
+    from
+      aws_elastic_beanstalk_application
+    where
+      name in
+      (
+        select
+          a -> 'Configuration' ->> 'ApplicationName'
+        from
+          aws_codepipeline_pipeline,
+          jsonb_array_elements(stages) as s,
+          jsonb_array_elements(s -> 'Actions') as a
+        where
+          s ->> 'Name' = 'Deploy'
+          and a -> 'ActionTypeId' ->> 'Provider' = 'ElasticBeanstalk'
+          and arn = any($1)
+      );
+  EOQ
+
+  param "codepipeline_pipeline_arns" {}
+}
+
+edge "codepipeline_pipeline_deploy_to_cloudformation" {
+  title = "deploys to"
+
+  sql = <<-EOQ
+    select
+      'pipeline_deploy' as from_id,
+      id as to_id
+    from
+      aws_cloudformation_stack
+    where
+      name in
+      (
+        select
+          a -> 'Configuration' ->> 'StackName'
+        from
+          aws_codepipeline_pipeline,
+          jsonb_array_elements(stages) as s,
+          jsonb_array_elements(s -> 'Actions') as a
+        where
+          s ->> 'Name' = 'Deploy'
+          and a -> 'ActionTypeId' ->> 'Provider' = 'CloudFormation'
+          and arn =  any($1)
+      );
+  EOQ
+
+  param "codepipeline_pipeline_arns" {}
+}
+
 edge "codepipeline_pipeline_deploy_to_s3_bucket" {
   title = "deploys to"
 
