@@ -109,7 +109,7 @@ edge "codepipeline_pipeline_source_to_s3_bucket" {
       name in
       (
         select
-          a -> 'Configuration' ->> 'BucketName' as bucket_name
+          a -> 'Configuration' ->> 'S3Bucket' as bucket_name
         from
           aws_codepipeline_pipeline,
           jsonb_array_elements(stages) as s,
