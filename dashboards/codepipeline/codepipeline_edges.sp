@@ -3,21 +3,27 @@ edge "codepipeline_pipeline_deploy_to_s3_bucket" {
 
   sql = <<-EOQ
     select
-     'pipeline_deploy' as from_id,
-      b.arn as to_id
+      'pipeline_deploy' as from_id,
+      arn as to_id
     from
-      aws_s3_bucket as b,
-      aws_codepipeline_pipeline as p,
-      jsonb_array_elements(stages) as s,
-      jsonb_array_elements(s -> 'Actions') as a
+      aws_s3_bucket
     where
-      s ->> 'Name' = 'Deploy'
-      and a -> 'Configuration' ->> 'BucketName' = b.name
-      and a -> 'ActionTypeId' ->> 'Provider' = 'S3'
-      and b.arn = any($1);
+      name in
+      (
+        select
+          a -> 'Configuration' ->> 'BucketName' as bucket_name
+        from
+          aws_codepipeline_pipeline,
+          jsonb_array_elements(stages) as s,
+          jsonb_array_elements(s -> 'Actions') as a
+        where
+          s ->> 'Name' = 'Deploy'
+          and a -> 'ActionTypeId' ->> 'Provider' = 'S3'
+          and arn = any($1)
+      );
   EOQ
 
-  param "s3_bucket_arns" {}
+  param "codepipeline_pipeline_arns" {}
 }
 
 edge "codepipeline_pipeline_build_to_codebuild_project" {
@@ -95,21 +101,27 @@ edge "codepipeline_pipeline_source_to_s3_bucket" {
 
   sql = <<-EOQ
     select
-     'pipeline_source' as from_id,
-      b.arn as to_id
+      'pipeline_deploy' as from_id,
+      arn as to_id
     from
-      aws_s3_bucket as b,
-      aws_codepipeline_pipeline as p,
-      jsonb_array_elements(stages) as s,
-      jsonb_array_elements(s -> 'Actions') as a
+      aws_s3_bucket
     where
-      s ->> 'Name' = 'Source'
-      and a -> 'ActionTypeId' ->> 'Provider' = 'S3'
-      and a -> 'Configuration' ->> 'S3Bucket' = b.name
-      and b.arn = any($1);
+      name in
+      (
+        select
+          a -> 'Configuration' ->> 'BucketName' as bucket_name
+        from
+          aws_codepipeline_pipeline,
+          jsonb_array_elements(stages) as s,
+          jsonb_array_elements(s -> 'Actions') as a
+        where
+          s ->> 'Name' = 'Source'
+          and a -> 'ActionTypeId' ->> 'Provider' = 'S3'
+          and arn = any($1)
+      );
   EOQ
 
-  param "s3_bucket_arns" {}
+  param "codepipeline_pipeline_arns" {}
 }
 
 edge "codepipeline_pipeline_to_kms_key" {

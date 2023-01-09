@@ -143,7 +143,7 @@ dashboard "codepipeline_pipeline_detail" {
       edge {
         base = edge.codepipeline_pipeline_deploy_to_s3_bucket
         args = {
-          s3_bucket_arns = with.s3_buckets.rows[*].s3_bucket_deploy_arn
+          codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
         }
       }
 
@@ -171,7 +171,7 @@ dashboard "codepipeline_pipeline_detail" {
       edge {
         base = edge.codepipeline_pipeline_source_to_s3_bucket
         args = {
-          s3_bucket_arns = with.s3_buckets.rows[*].s3_bucket_deploy_arn
+          codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
         }
       }
     }
