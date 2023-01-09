@@ -142,3 +142,21 @@ edge "codepipeline_pipeline_to_kms_key" {
 
   param "codepipeline_pipeline_arns" {}
 }
+
+edge "codepipeline_pipeline_to_iam_role" {
+  title = "assumes"
+
+  sql = <<-EOQ
+    select
+      p.arn as from_id,
+      r.arn as to_id
+    from
+      aws_iam_role as r,
+      aws_codepipeline_pipeline as p
+    where
+      r.arn = p.role_arn
+      and p.arn = any($1);
+  EOQ
+
+  param "codepipeline_pipeline_arns" {}
+}
