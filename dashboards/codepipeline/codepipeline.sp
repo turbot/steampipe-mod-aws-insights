@@ -14,7 +14,7 @@ category "codepipeline_pipeline" {
 category "codepipeline_pipeline_source" {
   title = "Pipeline Source"
   color = local.developer_tools_color
-  icon  = "valve"
+  icon  = "code_blocks"
 }
 
 category "codepipeline_pipeline_build" {

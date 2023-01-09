@@ -101,7 +101,7 @@ dashboard "codepipeline_pipeline_detail" {
       node {
         base = node.iam_role
         args = {
-          iam_role_arns = with.iam_roles.rows[*].iam_role_id
+          iam_role_arns = with.iam_roles.rows[*].iam_role_arn
         }
       }
 
@@ -155,7 +155,7 @@ dashboard "codepipeline_pipeline_detail" {
       }
 
       edge {
-        base = edge.iam_role_to_codepipeline_pipeline
+        base = edge.codepipeline_pipeline_to_iam_role
         args = {
           codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
         }
@@ -303,7 +303,7 @@ query "codepipeline_pipeline_ecr_repositories" {
 query "codepipeline_pipeline_iam_roles" {
   sql = <<-EOQ
     select
-      role_id as iam_role_id
+      arn as iam_role_arn
     from
       aws_iam_role
     where
