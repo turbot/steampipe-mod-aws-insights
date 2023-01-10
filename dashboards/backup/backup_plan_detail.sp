@@ -20,11 +20,11 @@ dashboard "backup_plan_detail" {
       width = 2
       args  = [self.input.backup_plan_arn.value]
     }
-    
+
   }
 
-  with "backup_vaults" {
-    query = query.backup_plan_backup_vaults
+  with "backup_vaults_for_backup_plan" {
+    query = query.backup_vaults_for_backup_plan
     args  = [self.input.backup_plan_arn.value]
   }
 
@@ -59,7 +59,7 @@ dashboard "backup_plan_detail" {
       node {
         base = node.backup_vault
         args = {
-          backup_vault_arns = with.backup_vaults.rows[*].backup_vault_arn
+          backup_vault_arns = with.backup_vaults_for_backup_plan.rows[*].backup_vault_arn
         }
       }
 
@@ -134,7 +134,7 @@ query "backup_plan_input" {
 
 # With queries
 
-query "backup_plan_backup_vaults" {
+query "backup_vaults_for_backup_plan" {
   sql = <<-EOQ
     select
       v.arn as backup_vault_arn

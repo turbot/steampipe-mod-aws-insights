@@ -35,58 +35,58 @@ dashboard "vpc_subnet_detail" {
 
   }
 
-  with "ec2_application_load_balancers" {
-    query = query.vpc_subnet_ec2_application_load_balancers
+  with "ec2_application_load_balancers_for_vpc_subnet" {
+    query = query.ec2_application_load_balancers_for_vpc_subnet
     args  = [self.input.subnet_id.value]
   }
 
-  with "ec2_classic_load_balancers" {
-    query = query.vpc_subnet_ec2_classic_load_balancers
+  with "ec2_classic_load_balancers_for_vpc_subnet" {
+    query = query.ec2_classic_load_balancers_for_vpc_subnet
     args  = [self.input.subnet_id.value]
   }
 
-  with "ec2_gateway_load_balancers" {
-    query = query.vpc_subnet_ec2_gateway_load_balancers
+  with "ec2_gateway_load_balancers_for_vpc_subnet" {
+    query = query.ec2_gateway_load_balancers_for_vpc_subnet
     args  = [self.input.subnet_id.value]
   }
 
-  with "ec2_instances" {
-    query = query.vpc_subnet_ec2_instances
+  with "ec2_instances_for_vpc_subnet" {
+    query = query.ec2_instances_for_vpc_subnet
     args  = [self.input.subnet_id.value]
   }
 
-  with "ec2_network_interfaces" {
-    query = query.vpc_subnet_ec2_network_interfaces
+  with "ec2_network_interfaces_for_vpc_subnet" {
+    query = query.ec2_network_interfaces_for_vpc_subnet
     args  = [self.input.subnet_id.value]
   }
 
-  with "ec2_network_load_balancers" {
-    query = query.vpc_subnet_ec2_network_load_balancers
+  with "ec2_network_load_balancers_for_vpc_subnet" {
+    query = query.ec2_network_load_balancers_for_vpc_subnet
     args  = [self.input.subnet_id.value]
   }
 
-  with "lambda_functions" {
-    query = query.vpc_subnet_lambda_functions
+  with "lambda_functions_for_vpc_subnet" {
+    query = query.lambda_functions_for_vpc_subnet
     args  = [self.input.subnet_id.value]
   }
 
-  with "rds_db_instances" {
-    query = query.vpc_subnet_rds_db_instances
+  with "rds_db_instances_for_vpc_subnet" {
+    query = query.rds_db_instances_for_vpc_subnet
     args  = [self.input.subnet_id.value]
   }
 
-  with "sagemaker_notebook_instances" {
-    query = query.vpc_subnet_sagemaker_notebook_instances
+  with "sagemaker_notebook_instances_for_vpc_subnet" {
+    query = query.sagemaker_notebook_instances_for_vpc_subnet
     args  = [self.input.subnet_id.value]
   }
 
-  with "vpc_flow_logs" {
-    query = query.vpc_subnet_vpc_flow_logs
+  with "vpc_flow_logs_for_vpc_subnet" {
+    query = query.vpc_flow_logs_for_vpc_subnet
     args  = [self.input.subnet_id.value]
   }
 
-  with "vpc_vpcs" {
-    query = query.vpc_subnet_vpc_vpcs
+  with "vpc_vpcs_for_vpc_subnet" {
+    query = query.vpc_vpcs_for_vpc_subnet
     args  = [self.input.subnet_id.value]
   }
 
@@ -100,70 +100,70 @@ dashboard "vpc_subnet_detail" {
       node {
         base = node.ec2_application_load_balancer
         args = {
-          ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
+          ec2_application_load_balancer_arns = with.ec2_application_load_balancers_for_vpc_subnet.rows[*].alb_arn
         }
       }
 
       node {
         base = node.ec2_classic_load_balancer
         args = {
-          ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers.rows[*].clb_arn
+          ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers_for_vpc_subnet.rows[*].clb_arn
         }
       }
 
       node {
         base = node.ec2_gateway_load_balancer
         args = {
-          ec2_gateway_load_balancer_arns = with.ec2_gateway_load_balancers.rows[*].glb_arn
+          ec2_gateway_load_balancer_arns = with.ec2_gateway_load_balancers_for_vpc_subnet.rows[*].glb_arn
         }
       }
 
       node {
         base = node.ec2_instance
         args = {
-          ec2_instance_arns = with.ec2_instances.rows[*].instance_arn
+          ec2_instance_arns = with.ec2_instances_for_vpc_subnet.rows[*].instance_arn
         }
       }
 
       node {
         base = node.ec2_network_interface
         args = {
-          ec2_network_interface_ids = with.ec2_network_interfaces.rows[*].eni_id
+          ec2_network_interface_ids = with.ec2_network_interfaces_for_vpc_subnet.rows[*].eni_id
         }
       }
 
       node {
         base = node.ec2_network_load_balancer
         args = {
-          ec2_network_load_balancer_arns = with.ec2_network_load_balancers.rows[*].nlb_arn
+          ec2_network_load_balancer_arns = with.ec2_network_load_balancers_for_vpc_subnet.rows[*].nlb_arn
         }
       }
 
       node {
         base = node.lambda_function
         args = {
-          lambda_function_arns = with.lambda_functions.rows[*].lambda_arn
+          lambda_function_arns = with.lambda_functions_for_vpc_subnet.rows[*].lambda_arn
         }
       }
 
       node {
         base = node.rds_db_instance
         args = {
-          rds_db_instance_arns = with.rds_db_instances.rows[*].rds_instance_arn
+          rds_db_instance_arns = with.rds_db_instances_for_vpc_subnet.rows[*].rds_instance_arn
         }
       }
 
       node {
         base = node.sagemaker_notebook_instance
         args = {
-          sagemaker_notebook_instance_arns = with.sagemaker_notebook_instances.rows[*].notebook_instance_arn
+          sagemaker_notebook_instance_arns = with.sagemaker_notebook_instances_for_vpc_subnet.rows[*].notebook_instance_arn
         }
       }
 
       node {
         base = node.vpc_flow_log
         args = {
-          vpc_flow_log_ids = with.vpc_flow_logs.rows[*].flow_log_id
+          vpc_flow_log_ids = with.vpc_flow_logs_for_vpc_subnet.rows[*].flow_log_id
         }
       }
 
@@ -191,7 +191,7 @@ dashboard "vpc_subnet_detail" {
       node {
         base = node.vpc_vpc
         args = {
-          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_id
+          vpc_vpc_ids = with.vpc_vpcs_for_vpc_subnet.rows[*].vpc_id
         }
       }
 
@@ -282,7 +282,7 @@ dashboard "vpc_subnet_detail" {
       edge {
         base = edge.vpc_vpc_to_vpc_subnet
         args = {
-          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_id
+          vpc_vpc_ids = with.vpc_vpcs_for_vpc_subnet.rows[*].vpc_id
         }
       }
     }
@@ -394,7 +394,7 @@ query "vpc_subnet_map_public_ip_on_launch_disabled" {
 
 # with queries
 
-query "vpc_subnet_ec2_application_load_balancers" {
+query "ec2_application_load_balancers_for_vpc_subnet" {
   sql = <<-EOQ
     select
       arn as alb_arn
@@ -406,7 +406,7 @@ query "vpc_subnet_ec2_application_load_balancers" {
   EOQ
 }
 
-query "vpc_subnet_ec2_classic_load_balancers" {
+query "ec2_classic_load_balancers_for_vpc_subnet" {
   sql = <<-EOQ
     select
       arn as clb_arn
@@ -418,7 +418,7 @@ query "vpc_subnet_ec2_classic_load_balancers" {
   EOQ
 }
 
-query "vpc_subnet_ec2_gateway_load_balancers" {
+query "ec2_gateway_load_balancers_for_vpc_subnet" {
   sql = <<-EOQ
     select
       arn as glb_arn
@@ -430,8 +430,8 @@ query "vpc_subnet_ec2_gateway_load_balancers" {
   EOQ
 }
 
-query "vpc_subnet_ec2_instances" {
-  sql   = <<-EOQ
+query "ec2_instances_for_vpc_subnet" {
+  sql = <<-EOQ
     select
       arn as instance_arn
     from
@@ -441,8 +441,8 @@ query "vpc_subnet_ec2_instances" {
   EOQ
 }
 
-query "vpc_subnet_ec2_network_interfaces" {
-  sql   = <<-EOQ
+query "ec2_network_interfaces_for_vpc_subnet" {
+  sql = <<-EOQ
     select
       network_interface_id as eni_id
     from
@@ -452,8 +452,8 @@ query "vpc_subnet_ec2_network_interfaces" {
   EOQ
 }
 
-query "vpc_subnet_ec2_network_load_balancers" {
-  sql   = <<-EOQ
+query "ec2_network_load_balancers_for_vpc_subnet" {
+  sql = <<-EOQ
     select
       arn as nlb_arn
     from
@@ -464,8 +464,8 @@ query "vpc_subnet_ec2_network_load_balancers" {
   EOQ
 }
 
-query "vpc_subnet_lambda_functions" {
-  sql   = <<-EOQ
+query "lambda_functions_for_vpc_subnet" {
+  sql = <<-EOQ
     select
       arn as lambda_arn
     from
@@ -476,8 +476,8 @@ query "vpc_subnet_lambda_functions" {
   EOQ
 }
 
-query "vpc_subnet_rds_db_instances" {
-  sql   = <<-EOQ
+query "rds_db_instances_for_vpc_subnet" {
+  sql = <<-EOQ
     select
       arn as rds_instance_arn
     from
@@ -488,8 +488,8 @@ query "vpc_subnet_rds_db_instances" {
   EOQ
 }
 
-query "vpc_subnet_sagemaker_notebook_instances" {
-  sql   = <<-EOQ
+query "sagemaker_notebook_instances_for_vpc_subnet" {
+  sql = <<-EOQ
     select
       arn as notebook_instance_arn
     from
@@ -499,8 +499,8 @@ query "vpc_subnet_sagemaker_notebook_instances" {
   EOQ
 }
 
-query "vpc_subnet_vpc_flow_logs" {
-  sql   = <<-EOQ
+query "vpc_flow_logs_for_vpc_subnet" {
+  sql = <<-EOQ
     select
       flow_log_id as flow_log_id
     from
@@ -510,8 +510,8 @@ query "vpc_subnet_vpc_flow_logs" {
   EOQ
 }
 
-query "vpc_subnet_vpc_vpcs" {
-  sql   = <<-EOQ
+query "vpc_vpcs_for_vpc_subnet" {
+  sql = <<-EOQ
     select
       vpc_id as vpc_id
     from

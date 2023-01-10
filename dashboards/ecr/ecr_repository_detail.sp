@@ -41,18 +41,18 @@ dashboard "ecr_repository_detail" {
 
   }
 
-  with "ecs_task_definitions" {
-    query = query.ecr_repository_ecs_task_definitions
+  with "ecs_task_definitions_for_ecr_repository" {
+    query = query.ecs_task_definitions_for_ecr_repository
     args  = [self.input.ecr_repository_arn.value]
   }
 
-  with "kms_keys" {
-    query = query.ecr_repository_kms_keys
+  with "kms_keys_for_ecr_repository" {
+    query = query.kms_keys_for_ecr_repository
     args  = [self.input.ecr_repository_arn.value]
   }
 
-  with "ecr_policy_std" {
-    query = query.ecr_repository_policy_std
+  with "ecr_policy_std_for_ecr_repository" {
+    query = query.ecr_policy_std_for_ecr_repository
     args  = [self.input.ecr_repository_arn.value]
   }
 
@@ -86,14 +86,14 @@ dashboard "ecr_repository_detail" {
       node {
         base = node.ecs_task_definition
         args = {
-          ecs_task_definition_arns = with.ecs_task_definitions.rows[*].task_definition_arn
+          ecs_task_definition_arns = with.ecs_task_definitions_for_ecr_repository.rows[*].task_definition_arn
         }
       }
 
       node {
         base = node.kms_key
         args = {
-          kms_key_arns = with.kms_keys.rows[*].kms_key_arn
+          kms_key_arns = with.kms_keys_for_ecr_repository.rows[*].kms_key_arn
         }
       }
 
@@ -153,7 +153,7 @@ dashboard "ecr_repository_detail" {
     title = "Resource Policy"
     base  = graph.iam_resource_policy_structure
     args = {
-      policy_std = with.ecr_policy_std.rows[0].policy_std
+      policy_std = with.ecr_policy_std_for_ecr_repository.rows[0].policy_std
     }
   }
 }
@@ -178,7 +178,7 @@ query "ecr_repository_input" {
 
 # With queries
 
-query "ecr_repository_ecs_task_definitions" {
+query "ecs_task_definitions_for_ecr_repository" {
   sql = <<-EOQ
     select
       t.task_definition_arn as task_definition_arn
@@ -192,7 +192,7 @@ query "ecr_repository_ecs_task_definitions" {
   EOQ
 }
 
-query "ecr_repository_kms_keys" {
+query "kms_keys_for_ecr_repository" {
   sql = <<-EOQ
     select
       encryption_configuration ->> 'KmsKey' as kms_key_arn
@@ -203,7 +203,7 @@ query "ecr_repository_kms_keys" {
   EOQ
 }
 
-query "ecr_repository_policy_std" {
+query "ecr_policy_std_for_ecr_repository" {
   sql = <<-EOQ
     select
       policy_std

@@ -34,18 +34,18 @@ dashboard "vpc_eip_detail" {
     }
   }
 
-  with "ec2_instances" {
-    query = query.vpc_eip_ec2_instances
+  with "ec2_instances_for_vpc_eip" {
+    query = query.ec2_instances_for_vpc_eip
     args  = [self.input.eip_arn.value]
   }
 
-  with "ec2_network_interfaces" {
-    query = query.vpc_eip_ec2_network_interfaces
+  with "ec2_network_interfaces_for_vpc_eip" {
+    query = query.ec2_network_interfaces_for_vpc_eip
     args  = [self.input.eip_arn.value]
   }
 
-  with "vpc_nat_gateways" {
-    query = query.vpc_eip_vpc_nat_gateways
+  with "vpc_nat_gateways_for_vpc_eip" {
+    query = query.vpc_nat_gateways_for_vpc_eip
     args  = [self.input.eip_arn.value]
   }
 
@@ -59,14 +59,14 @@ dashboard "vpc_eip_detail" {
       node {
         base = node.ec2_instance
         args = {
-          ec2_instance_arns = with.ec2_instances.rows[*].instance_arn
+          ec2_instance_arns = with.ec2_instances_for_vpc_eip.rows[*].instance_arn
         }
       }
 
       node {
         base = node.ec2_network_interface
         args = {
-          ec2_network_interface_ids = with.ec2_network_interfaces.rows[*].eni_id
+          ec2_network_interface_ids = with.ec2_network_interfaces_for_vpc_eip.rows[*].eni_id
         }
       }
 
@@ -80,28 +80,28 @@ dashboard "vpc_eip_detail" {
       node {
         base = node.vpc_nat_gateway
         args = {
-          vpc_nat_gateway_arns = with.vpc_nat_gateways.rows[*].gateway_arn
+          vpc_nat_gateway_arns = with.vpc_nat_gateways_for_vpc_eip.rows[*].gateway_arn
         }
       }
 
       edge {
         base = edge.ec2_instance_to_ec2_network_interface
         args = {
-          ec2_instance_arns = with.ec2_instances.rows[*].instance_arn
+          ec2_instance_arns = with.ec2_instances_for_vpc_eip.rows[*].instance_arn
         }
       }
 
       edge {
         base = edge.ec2_network_interface_to_vpc_eip
         args = {
-          ec2_network_interface_ids = with.ec2_network_interfaces.rows[*].eni_id
+          ec2_network_interface_ids = with.ec2_network_interfaces_for_vpc_eip.rows[*].eni_id
         }
       }
 
       edge {
         base = edge.vpc_nat_gateway_to_ec2_network_interface
         args = {
-          ec2_network_interface_ids = with.ec2_network_interfaces.rows[*].eni_id
+          ec2_network_interface_ids = with.ec2_network_interfaces_for_vpc_eip.rows[*].eni_id
         }
       }
     }
@@ -223,8 +223,8 @@ query "vpc_eip_public_ip_address" {
 
 # With Queries
 
-query "vpc_eip_ec2_instances" {
-  sql   = <<-EOQ
+query "ec2_instances_for_vpc_eip" {
+  sql = <<-EOQ
     select
       i.arn as instance_arn
     from
@@ -236,8 +236,8 @@ query "vpc_eip_ec2_instances" {
   EOQ
 }
 
-query "vpc_eip_ec2_network_interfaces" {
-  sql   = <<-EOQ
+query "ec2_network_interfaces_for_vpc_eip" {
+  sql = <<-EOQ
     select
       network_interface_id as eni_id
     from
@@ -248,8 +248,8 @@ query "vpc_eip_ec2_network_interfaces" {
   EOQ
 }
 
-query "vpc_eip_vpc_nat_gateways" {
-  sql   = <<-EOQ
+query "vpc_nat_gateways_for_vpc_eip" {
+  sql = <<-EOQ
     select
       g.arn as gateway_arn
     from

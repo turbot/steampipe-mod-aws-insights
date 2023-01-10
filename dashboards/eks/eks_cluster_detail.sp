@@ -46,48 +46,48 @@ dashboard "eks_cluster_detail" {
 
   }
 
-  with "eks_addons" {
-    query = query.eks_cluster_eks_addons
+  with "eks_addons_for_eks_cluster" {
+    query = query.eks_addons_for_eks_cluster
     args  = [self.input.eks_cluster_arn.value]
   }
 
-  with "eks_fargate_profiles" {
-    query = query.eks_cluster_eks_fargate_profiles
+  with "eks_fargate_profiles_for_eks_cluster" {
+    query = query.eks_fargate_profiles_for_eks_cluster
     args  = [self.input.eks_cluster_arn.value]
   }
 
-  with "eks_identity_providers" {
-    query = query.eks_cluster_eks_identity_providers
+  with "eks_identity_providers_for_eks_cluster" {
+    query = query.eks_identity_providers_for_eks_cluster
     args  = [self.input.eks_cluster_arn.value]
   }
 
-  with "eks_node_groups" {
-    query = query.eks_cluster_eks_node_groups
+  with "eks_node_groups_for_eks_cluster" {
+    query = query.eks_node_groups_for_eks_cluster
     args  = [self.input.eks_cluster_arn.value]
   }
 
-  with "iam_roles" {
-    query = query.eks_cluster_iam_roles
+  with "iam_roles_for_eks_cluster" {
+    query = query.iam_roles_for_eks_cluster
     args  = [self.input.eks_cluster_arn.value]
   }
 
-  with "kms_keys" {
-    query = query.eks_cluster_kms_keys
+  with "kms_keys_for_eks_cluster" {
+    query = query.kms_keys_for_eks_cluster
     args  = [self.input.eks_cluster_arn.value]
   }
 
-  with "vpc_security_groups" {
-    query = query.eks_cluster_vpc_security_groups
+  with "vpc_security_groups_for_eks_cluster" {
+    query = query.vpc_security_groups_for_eks_cluster
     args  = [self.input.eks_cluster_arn.value]
   }
 
-  with "vpc_subnets" {
-    query = query.eks_cluster_vpc_subnets
+  with "vpc_subnets_for_eks_cluster" {
+    query = query.vpc_subnets_for_eks_cluster
     args  = [self.input.eks_cluster_arn.value]
   }
 
-  with "vpc_vpcs" {
-    query = query.eks_cluster_vpc_vpcs
+  with "vpc_vpcs_for_eks_cluster" {
+    query = query.vpc_vpcs_for_eks_cluster
     args  = [self.input.eks_cluster_arn.value]
   }
 
@@ -100,7 +100,7 @@ dashboard "eks_cluster_detail" {
       node {
         base = node.eks_addon
         args = {
-          eks_addon_arns = with.eks_addons.rows[*].eks_addon_arn
+          eks_addon_arns = with.eks_addons_for_eks_cluster.rows[*].eks_addon_arn
         }
       }
 
@@ -114,105 +114,105 @@ dashboard "eks_cluster_detail" {
       node {
         base = node.eks_fargate_profile
         args = {
-          eks_fargate_profile_arns = with.eks_fargate_profiles.rows[*].eks_fargate_profile_arn
+          eks_fargate_profile_arns = with.eks_fargate_profiles_for_eks_cluster.rows[*].eks_fargate_profile_arn
         }
       }
 
       node {
         base = node.eks_identity_provider_config
         args = {
-          eks_identity_provider_arns = with.eks_identity_providers.rows[*].eks_identity_provider_arn
+          eks_identity_provider_arns = with.eks_identity_providers_for_eks_cluster.rows[*].eks_identity_provider_arn
         }
       }
 
       node {
         base = node.eks_node_group
         args = {
-          eks_node_group_arns = with.eks_node_groups.rows[*].eks_node_group_arn
+          eks_node_group_arns = with.eks_node_groups_for_eks_cluster.rows[*].eks_node_group_arn
         }
       }
 
       node {
         base = node.iam_role
         args = {
-          iam_role_arns = with.iam_roles.rows[*].iam_role_arn
+          iam_role_arns = with.iam_roles_for_eks_cluster.rows[*].iam_role_arn
         }
       }
 
       node {
         base = node.kms_key
         args = {
-          kms_key_arns = with.kms_keys.rows[*].kms_key_arn
+          kms_key_arns = with.kms_keys_for_eks_cluster.rows[*].kms_key_arn
         }
       }
 
       node {
         base = node.vpc_security_group
         args = {
-          vpc_security_group_ids = with.vpc_security_groups.rows[*].vpc_security_group_id
+          vpc_security_group_ids = with.vpc_security_groups_for_eks_cluster.rows[*].vpc_security_group_id
         }
       }
 
       node {
         base = node.vpc_subnet
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].vpc_subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_eks_cluster.rows[*].vpc_subnet_id
         }
       }
 
       node {
         base = node.vpc_vpc
         args = {
-          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_vpc_id
+          vpc_vpc_ids = with.vpc_vpcs_for_eks_cluster.rows[*].vpc_vpc_id
         }
       }
 
       edge {
         base = edge.eks_cluster_to_eks_addon
         args = {
-          eks_addon_arns = with.eks_addons.rows[*].eks_addon_arn
+          eks_addon_arns = with.eks_addons_for_eks_cluster.rows[*].eks_addon_arn
         }
       }
 
       edge {
         base = edge.eks_cluster_to_eks_fargate_profile
         args = {
-          eks_fargate_profile_arns = with.eks_fargate_profiles.rows[*].eks_fargate_profile_arn
+          eks_fargate_profile_arns = with.eks_fargate_profiles_for_eks_cluster.rows[*].eks_fargate_profile_arn
         }
       }
 
       edge {
         base = edge.eks_cluster_to_eks_identity_provider_config
         args = {
-          eks_identity_provider_arns = with.eks_identity_providers.rows[*].eks_identity_provider_arn
+          eks_identity_provider_arns = with.eks_identity_providers_for_eks_cluster.rows[*].eks_identity_provider_arn
         }
       }
 
       edge {
         base = edge.eks_cluster_to_eks_node_group
         args = {
-          eks_node_group_arns = with.eks_node_groups.rows[*].eks_node_group_arn
+          eks_node_group_arns = with.eks_node_groups_for_eks_cluster.rows[*].eks_node_group_arn
         }
       }
 
       edge {
         base = edge.eks_cluster_to_iam_role
         args = {
-          iam_role_arns = with.iam_roles.rows[*].iam_role_arn
+          iam_role_arns = with.iam_roles_for_eks_cluster.rows[*].iam_role_arn
         }
       }
 
       edge {
         base = edge.eks_cluster_to_kms_key
         args = {
-          kms_key_arns = with.kms_keys.rows[*].kms_key_arn
+          kms_key_arns = with.kms_keys_for_eks_cluster.rows[*].kms_key_arn
         }
       }
 
       edge {
         base = edge.eks_cluster_to_vpc_security_group
         args = {
-          vpc_security_group_ids = with.vpc_security_groups.rows[*].vpc_security_group_id
+          vpc_security_group_ids = with.vpc_security_groups_for_eks_cluster.rows[*].vpc_security_group_id
         }
       }
 
@@ -226,7 +226,7 @@ dashboard "eks_cluster_detail" {
       edge {
         base = edge.vpc_subnet_to_vpc_vpc
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].vpc_subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_eks_cluster.rows[*].vpc_subnet_id
         }
       }
     }
@@ -302,7 +302,7 @@ query "eks_cluster_input" {
 
 # With queries
 
-query "eks_cluster_eks_addons" {
+query "eks_addons_for_eks_cluster" {
   sql = <<-EOQ
     select
       arn as eks_addon_arn
@@ -321,7 +321,7 @@ query "eks_cluster_eks_addons" {
   EOQ
 }
 
-query "eks_cluster_eks_fargate_profiles" {
+query "eks_fargate_profiles_for_eks_cluster" {
   sql = <<-EOQ
     select
       p.fargate_profile_arn as eks_fargate_profile_arn
@@ -334,7 +334,7 @@ query "eks_cluster_eks_fargate_profiles" {
   EOQ
 }
 
-query "eks_cluster_eks_identity_providers" {
+query "eks_identity_providers_for_eks_cluster" {
   sql = <<-EOQ
     select
       arn as eks_identity_provider_arn
@@ -353,7 +353,7 @@ query "eks_cluster_eks_identity_providers" {
   EOQ
 }
 
-query "eks_cluster_eks_node_groups" {
+query "eks_node_groups_for_eks_cluster" {
   sql = <<-EOQ
     select
       arn as eks_node_group_arn
@@ -372,7 +372,7 @@ query "eks_cluster_eks_node_groups" {
   EOQ
 }
 
-query "eks_cluster_iam_roles" {
+query "iam_roles_for_eks_cluster" {
   sql = <<-EOQ
     select
       role_arn as iam_role_arn
@@ -383,7 +383,7 @@ query "eks_cluster_iam_roles" {
   EOQ
 }
 
-query "eks_cluster_kms_keys" {
+query "kms_keys_for_eks_cluster" {
   sql = <<-EOQ
     select
       e -> 'Provider' ->> 'KeyArn' as kms_key_arn
@@ -395,7 +395,7 @@ query "eks_cluster_kms_keys" {
   EOQ
 }
 
-query "eks_cluster_vpc_security_groups" {
+query "vpc_security_groups_for_eks_cluster" {
   sql = <<-EOQ
     select
       group_id as vpc_security_group_id
@@ -415,7 +415,7 @@ query "eks_cluster_vpc_security_groups" {
   EOQ
 }
 
-query "eks_cluster_vpc_subnets" {
+query "vpc_subnets_for_eks_cluster" {
   sql = <<-EOQ
     select
       subnet_id as vpc_subnet_id
@@ -435,7 +435,7 @@ query "eks_cluster_vpc_subnets" {
   EOQ
 }
 
-query "eks_cluster_vpc_vpcs" {
+query "vpc_vpcs_for_eks_cluster" {
   sql = <<-EOQ
     select
       resources_vpc_config ->> 'VpcId' as vpc_vpc_id

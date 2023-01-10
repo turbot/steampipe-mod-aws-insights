@@ -18,49 +18,49 @@ dashboard "redshift_snapshot_detail" {
     card {
       query = query.redshift_snapshot_status
       width = 2
-      args = [self.input.redshift_snapshot_arn.value]
+      args  = [self.input.redshift_snapshot_arn.value]
     }
 
     card {
       query = query.redshift_snapshot_type
       width = 2
-      args = [self.input.redshift_snapshot_arn.value]
+      args  = [self.input.redshift_snapshot_arn.value]
     }
 
     card {
       query = query.redshift_snapshot_engine
       width = 2
-      args = [self.input.redshift_snapshot_arn.value]
+      args  = [self.input.redshift_snapshot_arn.value]
     }
 
     card {
       query = query.redshift_snapshot_backup_size
       width = 2
-      args = [self.input.redshift_snapshot_arn.value]
+      args  = [self.input.redshift_snapshot_arn.value]
     }
 
     card {
       query = query.redshift_snapshot_node_type
       width = 2
-      args = [self.input.redshift_snapshot_arn.value]
+      args  = [self.input.redshift_snapshot_arn.value]
     }
 
     card {
       query = query.redshift_snapshot_unencrypted
       width = 2
-      args = [self.input.redshift_snapshot_arn.value]
+      args  = [self.input.redshift_snapshot_arn.value]
     }
 
   }
 
-  with "kms_keys" {
-    query = query.redshift_snapshot_kms_keys
-    args = [self.input.redshift_snapshot_arn.value]
+  with "kms_keys_for_redshift_snapshot" {
+    query = query.kms_keys_for_redshift_snapshot
+    args  = [self.input.redshift_snapshot_arn.value]
   }
 
-  with "redshift_clusters" {
-    query = query.redshift_snapshot_redshift_clusters
-    args = [self.input.redshift_snapshot_arn.value]
+  with "redshift_clusters_for_redshift_snapshot" {
+    query = query.redshift_clusters_for_redshift_snapshot
+    args  = [self.input.redshift_snapshot_arn.value]
   }
 
   container {
@@ -73,14 +73,14 @@ dashboard "redshift_snapshot_detail" {
       node {
         base = node.kms_key
         args = {
-          kms_key_arns = with.kms_keys.rows[*].key_arn
+          kms_key_arns = with.kms_keys_for_redshift_snapshot.rows[*].key_arn
         }
       }
 
       node {
         base = node.redshift_cluster
         args = {
-          redshift_cluster_arns = with.redshift_clusters.rows[*].redshift_cluster_arn
+          redshift_cluster_arns = with.redshift_clusters_for_redshift_snapshot.rows[*].redshift_cluster_arn
         }
       }
 
@@ -94,7 +94,7 @@ dashboard "redshift_snapshot_detail" {
       edge {
         base = edge.redshift_cluster_to_redshift_snapshot
         args = {
-          redshift_cluster_arns = with.redshift_clusters.rows[*].redshift_cluster_arn
+          redshift_cluster_arns = with.redshift_clusters_for_redshift_snapshot.rows[*].redshift_cluster_arn
         }
       }
 
@@ -117,7 +117,7 @@ dashboard "redshift_snapshot_detail" {
         type  = "line"
         width = 6
         query = query.redshift_snapshot_overview
-        args = [self.input.redshift_snapshot_arn.value]
+        args  = [self.input.redshift_snapshot_arn.value]
 
       }
 
@@ -125,7 +125,7 @@ dashboard "redshift_snapshot_detail" {
         title = "Tags"
         width = 6
         query = query.redshift_snapshot_tags
-        args = [self.input.redshift_snapshot_arn.value]
+        args  = [self.input.redshift_snapshot_arn.value]
 
       }
     }
@@ -152,7 +152,7 @@ query "redshift_snapshot_input" {
 
 # With queries
 
-query "redshift_snapshot_kms_keys" {
+query "kms_keys_for_redshift_snapshot" {
   sql = <<-EOQ
     select
       kms_key_id as key_arn
@@ -164,7 +164,7 @@ query "redshift_snapshot_kms_keys" {
   EOQ
 }
 
-query "redshift_snapshot_redshift_clusters" {
+query "redshift_clusters_for_redshift_snapshot" {
   sql = <<-EOQ
     select
       c.arn as redshift_cluster_arn

@@ -19,62 +19,62 @@ dashboard "cloudtrail_trail_detail" {
       width = 2
 
       query = query.cloudtrail_trail_regional
-      args = [self.input.trail_arn.value]
+      args  = [self.input.trail_arn.value]
     }
 
     card {
       width = 2
 
       query = query.cloudtrail_trail_multi_region
-      args = [self.input.trail_arn.value]
+      args  = [self.input.trail_arn.value]
     }
 
     card {
       width = 2
 
       query = query.cloudtrail_trail_unencrypted
-      args = [self.input.trail_arn.value]
+      args  = [self.input.trail_arn.value]
     }
 
     card {
       width = 2
 
       query = query.cloudtrail_trail_log_file_validation
-      args = [self.input.trail_arn.value]
+      args  = [self.input.trail_arn.value]
     }
 
     card {
       width = 2
 
       query = query.cloudtrail_trail_logging
-      args = [self.input.trail_arn.value]
+      args  = [self.input.trail_arn.value]
     }
 
   }
 
-  with "cloudwatch_log_groups" {
-    query = query.cloudtrail_trail_cloudwatch_log_groups
-    args = [self.input.trail_arn.value]
+  with "cloudwatch_log_groups_for_cloudtrail_trail" {
+    query = query.cloudwatch_log_groups_for_cloudtrail_trail
+    args  = [self.input.trail_arn.value]
   }
 
-  with "guardduty_detectors" {
-    query = query.cloudtrail_trail_guardduty_detectors
-    args = [self.input.trail_arn.value]
+  with "guardduty_detectors_for_cloudtrail_trail" {
+    query = query.guardduty_detectors_for_cloudtrail_trail
+    args  = [self.input.trail_arn.value]
   }
 
-  with "kms_keys" {
-    query = query.cloudtrail_trail_kms_keys
-    args = [self.input.trail_arn.value]
+  with "kms_keys_for_cloudtrail_trail" {
+    query = query.kms_keys_for_cloudtrail_trail
+    args  = [self.input.trail_arn.value]
   }
 
-  with "s3_buckets" {
-    query = query.cloudtrail_trail_s3_buckets
-    args = [self.input.trail_arn.value]
+  with "s3_buckets_for_cloudtrail_trail" {
+    query = query.s3_buckets_for_cloudtrail_trail
+    args  = [self.input.trail_arn.value]
   }
 
-  with "sns_topics" {
-    query = query.cloudtrail_trail_sns_topics
-    args = [self.input.trail_arn.value]
+  with "sns_topics_for_cloudtrail_trail" {
+    query = query.sns_topics_for_cloudtrail_trail
+    args  = [self.input.trail_arn.value]
   }
 
   container {
@@ -94,35 +94,35 @@ dashboard "cloudtrail_trail_detail" {
       node {
         base = node.cloudwatch_log_group
         args = {
-          cloudwatch_log_group_arns = with.cloudwatch_log_groups.rows[*].cloudwatch_log_group_arn
+          cloudwatch_log_group_arns = with.cloudwatch_log_groups_for_cloudtrail_trail.rows[*].cloudwatch_log_group_arn
         }
       }
 
       node {
         base = node.guardduty_detector
         args = {
-          guardduty_detector_arns = with.guardduty_detectors.rows[*].guardduty_detector_arn
+          guardduty_detector_arns = with.guardduty_detectors_for_cloudtrail_trail.rows[*].guardduty_detector_arn
         }
       }
 
       node {
         base = node.kms_key
         args = {
-          kms_key_arns = with.kms_keys.rows[*].kms_key_arn
+          kms_key_arns = with.kms_keys_for_cloudtrail_trail.rows[*].kms_key_arn
         }
       }
 
       node {
         base = node.s3_bucket
         args = {
-          s3_bucket_arns = with.s3_buckets.rows[*].s3_bucket_arn
+          s3_bucket_arns = with.s3_buckets_for_cloudtrail_trail.rows[*].s3_bucket_arn
         }
       }
 
       node {
         base = node.sns_topic
         args = {
-          sns_topic_arns = with.sns_topics.rows[*].sns_topic_arn
+          sns_topic_arns = with.sns_topics_for_cloudtrail_trail.rows[*].sns_topic_arn
         }
       }
 
@@ -157,7 +157,7 @@ dashboard "cloudtrail_trail_detail" {
       edge {
         base = edge.guardduty_detector_to_cloudtrail_trail
         args = {
-          guardduty_detector_arns = with.guardduty_detectors.rows[*].guardduty_detector_arn
+          guardduty_detector_arns = with.guardduty_detectors_for_cloudtrail_trail.rows[*].guardduty_detector_arn
         }
       }
 
@@ -174,7 +174,7 @@ dashboard "cloudtrail_trail_detail" {
         type  = "line"
         width = 6
         query = query.cloudtrail_trail_overview
-        args = [self.input.trail_arn.value]
+        args  = [self.input.trail_arn.value]
 
       }
 
@@ -182,7 +182,7 @@ dashboard "cloudtrail_trail_detail" {
         title = "Tags"
         width = 6
         query = query.cloudtrail_trail_tags
-        args = [self.input.trail_arn.value]
+        args  = [self.input.trail_arn.value]
       }
 
     }
@@ -197,7 +197,7 @@ dashboard "cloudtrail_trail_detail" {
         }
 
         query = query.cloudtrail_trail_bucket
-        args = [self.input.trail_arn.value]
+        args  = [self.input.trail_arn.value]
       }
 
     }
@@ -228,7 +228,7 @@ query "cloudtrail_trail_input" {
 
 # With queries
 
-query "cloudtrail_trail_cloudwatch_log_groups" {
+query "cloudwatch_log_groups_for_cloudtrail_trail" {
   sql = <<-EOQ
     select
       log_group_arn as cloudwatch_log_group_arn
@@ -241,7 +241,7 @@ query "cloudtrail_trail_cloudwatch_log_groups" {
   EOQ
 }
 
-query "cloudtrail_trail_guardduty_detectors" {
+query "guardduty_detectors_for_cloudtrail_trail" {
   sql = <<-EOQ
     select
       detector.arn as guardduty_detector_arn
@@ -258,7 +258,7 @@ query "cloudtrail_trail_guardduty_detectors" {
   EOQ
 }
 
-query "cloudtrail_trail_kms_keys" {
+query "kms_keys_for_cloudtrail_trail" {
   sql = <<-EOQ
     select
       kms_key_id as kms_key_arn
@@ -271,7 +271,7 @@ query "cloudtrail_trail_kms_keys" {
   EOQ
 }
 
-query "cloudtrail_trail_s3_buckets" {
+query "s3_buckets_for_cloudtrail_trail" {
   sql = <<-EOQ
     select
       s.arn as s3_bucket_arn
@@ -286,7 +286,7 @@ query "cloudtrail_trail_s3_buckets" {
   EOQ
 }
 
-query "cloudtrail_trail_sns_topics" {
+query "sns_topics_for_cloudtrail_trail" {
   sql = <<-EOQ
     select
       sns_topic_arn

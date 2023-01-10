@@ -38,28 +38,28 @@ dashboard "ebs_snapshot_detail" {
     }
   }
 
-  with "to_ebs_volumes" {
-    query = query.ebs_snapshot_to_ebs_volumes
+  with "target_ebs_volumes_for_ebs_snapshot" {
+    query = query.target_ebs_volumes_for_ebs_snapshot
     args  = [self.input.ebs_snapshot_id.value]
   }
 
-  with "from_ebs_volumes" {
-    query = query.ebs_snapshot_from_ebs_volumes
+  with "source_ebs_volumes_for_ebs_snapshot" {
+    query = query.source_ebs_volumes_for_ebs_snapshot
     args  = [self.input.ebs_snapshot_id.value]
   }
 
-  with "ec2_amis" {
-    query = query.ebs_snapshot_ec2_amis
+  with "ec2_amis_for_ebs_snapshot" {
+    query = query.ec2_amis_for_ebs_snapshot
     args  = [self.input.ebs_snapshot_id.value]
   }
 
-  with "ec2_launch_configurations" {
-    query = query.ebs_snapshot_ec2_launch_configurations
+  with "ec2_launch_configurations_for_ebs_snapshot" {
+    query = query.ec2_launch_configurations_for_ebs_snapshot
     args  = [self.input.ebs_snapshot_id.value]
   }
 
-  with "kms_keys" {
-    query = query.ebs_snapshot_kms_keys
+  with "kms_keys_for_ebs_snapshot" {
+    query = query.kms_keys_for_ebs_snapshot
     args  = [self.input.ebs_snapshot_id.value]
   }
 
@@ -80,35 +80,35 @@ dashboard "ebs_snapshot_detail" {
       node {
         base = node.ebs_volume
         args = {
-          ebs_volume_arns = with.to_ebs_volumes.rows[*].volume_arn
+          ebs_volume_arns = with.target_ebs_volumes_for_ebs_snapshot.rows[*].volume_arn
         }
       }
 
       node {
         base = node.ebs_volume
         args = {
-          ebs_volume_arns = with.from_ebs_volumes.rows[*].volume_arn
+          ebs_volume_arns = with.source_ebs_volumes_for_ebs_snapshot.rows[*].volume_arn
         }
       }
 
       node {
         base = node.ec2_ami
         args = {
-          ec2_ami_image_ids = with.ec2_amis.rows[*].image_id
+          ec2_ami_image_ids = with.ec2_amis_for_ebs_snapshot.rows[*].image_id
         }
       }
 
       node {
         base = node.ec2_launch_configuration
         args = {
-          ec2_launch_configuration_arns = with.ec2_launch_configurations.rows[*].launch_configuration_arn
+          ec2_launch_configuration_arns = with.ec2_launch_configurations_for_ebs_snapshot.rows[*].launch_configuration_arn
         }
       }
 
       node {
         base = node.kms_key
         args = {
-          kms_key_arns = with.kms_keys.rows[*].key_arn
+          kms_key_arns = with.kms_keys_for_ebs_snapshot.rows[*].key_arn
         }
       }
 
@@ -136,7 +136,7 @@ dashboard "ebs_snapshot_detail" {
       edge {
         base = edge.ebs_volume_to_ebs_snapshot
         args = {
-          ebs_volume_arns = with.from_ebs_volumes.rows[*].volume_arn
+          ebs_volume_arns = with.source_ebs_volumes_for_ebs_snapshot.rows[*].volume_arn
         }
       }
 
@@ -190,7 +190,7 @@ query "ebs_snapshot_input" {
 
 # With queries
 
-query "ebs_snapshot_to_ebs_volumes" {
+query "target_ebs_volumes_for_ebs_snapshot" {
   sql = <<-EOQ
     select
       v.arn as volume_arn
@@ -201,7 +201,7 @@ query "ebs_snapshot_to_ebs_volumes" {
   EOQ
 }
 
-query "ebs_snapshot_from_ebs_volumes" {
+query "source_ebs_volumes_for_ebs_snapshot" {
   sql = <<-EOQ
     select
       v.arn as volume_arn
@@ -214,7 +214,7 @@ query "ebs_snapshot_from_ebs_volumes" {
   EOQ
 }
 
-query "ebs_snapshot_ec2_amis" {
+query "ec2_amis_for_ebs_snapshot" {
   sql = <<-EOQ
     select
       images.image_id as image_id
@@ -229,7 +229,7 @@ query "ebs_snapshot_ec2_amis" {
   EOQ
 }
 
-query "ebs_snapshot_ec2_launch_configurations" {
+query "ec2_launch_configurations_for_ebs_snapshot" {
   sql = <<-EOQ
     select
       launch_config.launch_configuration_arn as launch_configuration_arn
@@ -243,7 +243,7 @@ query "ebs_snapshot_ec2_launch_configurations" {
   EOQ
 }
 
-query "ebs_snapshot_kms_keys" {
+query "kms_keys_for_ebs_snapshot" {
   sql = <<-EOQ
     select
       kms_key_id as key_arn

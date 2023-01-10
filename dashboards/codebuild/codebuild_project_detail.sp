@@ -35,48 +35,48 @@ dashboard "codebuild_project_detail" {
 
   }
 
-  with "cloudwatch_groups" {
-    query = query.codebuild_project_cloudwatch_groups
+  with "cloudwatch_groups_for_codebuild_project" {
+    query = query.cloudwatch_groups_for_codebuild_project
     args  = [self.input.codebuild_project_arn.value]
   }
 
-  with "codecommit_repositories" {
-    query = query.codebuild_project_codecommit_repositories
+  with "codecommit_repositories_for_codebuild_project" {
+    query = query.codecommit_repositories_for_codebuild_project
     args  = [self.input.codebuild_project_arn.value]
   }
 
-  with "ecr_repositories" {
-    query = query.codebuild_project_ecr_repositories
+  with "ecr_repositories_for_codebuild_project" {
+    query = query.ecr_repositories_for_codebuild_project
     args  = [self.input.codebuild_project_arn.value]
   }
 
-  with "iam_roles" {
-    query = query.codebuild_project_iam_roles
+  with "iam_roles_for_codebuild_project" {
+    query = query.iam_roles_for_codebuild_project
     args  = [self.input.codebuild_project_arn.value]
   }
 
-  with "kms_keys" {
-    query = query.codebuild_project_kms_keys
+  with "kms_keys_for_codebuild_project" {
+    query = query.kms_keys_for_codebuild_project
     args  = [self.input.codebuild_project_arn.value]
   }
 
-  with "s3_buckets" {
-    query = query.codebuild_project_s3_buckets
+  with "s3_buckets_for_codebuild_project" {
+    query = query.s3_buckets_for_codebuild_project
     args  = [self.input.codebuild_project_arn.value]
   }
 
-  with "vpc_security_groups" {
-    query = query.codebuild_project_vpc_security_groups
+  with "vpc_security_groups_for_codebuild_project" {
+    query = query.vpc_security_groups_for_codebuild_project
     args  = [self.input.codebuild_project_arn.value]
   }
 
-  with "vpc_subnets" {
-    query = query.codebuild_project_vpc_subnets
+  with "vpc_subnets_for_codebuild_project" {
+    query = query.vpc_subnets_for_codebuild_project
     args  = [self.input.codebuild_project_arn.value]
   }
 
-  with "vpc_vpcs" {
-    query = query.codebuild_project_vpc_vpcs
+  with "vpc_vpcs_for_codebuild_project" {
+    query = query.vpc_vpcs_for_codebuild_project
     args  = [self.input.codebuild_project_arn.value]
   }
 
@@ -91,7 +91,7 @@ dashboard "codebuild_project_detail" {
       node {
         base = node.cloudwatch_log_group
         args = {
-          cloudwatch_log_group_arns = with.cloudwatch_groups.rows[*].cloudwatch_log_group_arn
+          cloudwatch_log_group_arns = with.cloudwatch_groups_for_codebuild_project.rows[*].cloudwatch_log_group_arn
         }
       }
 
@@ -105,56 +105,56 @@ dashboard "codebuild_project_detail" {
       node {
         base = node.codecommit_repository
         args = {
-          codecommit_repository_arns = with.codecommit_repositories.rows[*].codecommit_repository_arn
+          codecommit_repository_arns = with.codecommit_repositories_for_codebuild_project.rows[*].codecommit_repository_arn
         }
       }
 
       node {
         base = node.ecr_repository
         args = {
-          ecr_repository_arns = with.ecr_repositories.rows[*].ecr_repository_arn
+          ecr_repository_arns = with.ecr_repositories_for_codebuild_project.rows[*].ecr_repository_arn
         }
       }
 
       node {
         base = node.iam_role
         args = {
-          iam_role_arns = with.iam_roles.rows[*].iam_role_arn
+          iam_role_arns = with.iam_roles_for_codebuild_project.rows[*].iam_role_arn
         }
       }
 
       node {
         base = node.kms_key
         args = {
-          kms_key_arns = with.kms_keys.rows[*].kms_key_arn
+          kms_key_arns = with.kms_keys_for_codebuild_project.rows[*].kms_key_arn
         }
       }
 
       node {
         base = node.s3_bucket
         args = {
-          s3_bucket_arns = with.s3_buckets.rows[*].s3_bucket_arn
+          s3_bucket_arns = with.s3_buckets_for_codebuild_project.rows[*].s3_bucket_arn
         }
       }
 
       node {
         base = node.vpc_security_group
         args = {
-          vpc_security_group_ids = with.vpc_security_groups.rows[*].vpc_security_group_id
+          vpc_security_group_ids = with.vpc_security_groups_for_codebuild_project.rows[*].vpc_security_group_id
         }
       }
 
       node {
         base = node.vpc_subnet
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].vpc_subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_codebuild_project.rows[*].vpc_subnet_id
         }
       }
 
       node {
         base = node.vpc_vpc
         args = {
-          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_vpc_id
+          vpc_vpc_ids = with.vpc_vpcs_for_codebuild_project.rows[*].vpc_vpc_id
         }
       }
 
@@ -224,7 +224,7 @@ dashboard "codebuild_project_detail" {
       edge {
         base = edge.codecommit_repository_to_codebuild_project
         args = {
-          codecommit_repository_arns = with.codecommit_repositories.rows[*].codecommit_repository_arn
+          codecommit_repository_arns = with.codecommit_repositories_for_codebuild_project.rows[*].codecommit_repository_arn
         }
       }
 
@@ -238,7 +238,7 @@ dashboard "codebuild_project_detail" {
       edge {
         base = edge.vpc_subnet_to_vpc_vpc
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].vpc_subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_codebuild_project.rows[*].vpc_subnet_id
         }
       }
 
@@ -298,7 +298,7 @@ query "codebuild_project_input" {
 
 # With queries
 
-query "codebuild_project_cloudwatch_groups" {
+query "cloudwatch_groups_for_codebuild_project" {
   sql = <<-EOQ
     select
       c.arn as cloudwatch_log_group_arn
@@ -312,7 +312,7 @@ query "codebuild_project_cloudwatch_groups" {
   EOQ
 }
 
-query "codebuild_project_codecommit_repositories" {
+query "codecommit_repositories_for_codebuild_project" {
   sql = <<-EOQ
     select
       distinct r.arn as codecommit_repository_arn
@@ -338,7 +338,7 @@ query "codebuild_project_codecommit_repositories" {
   EOQ
 }
 
-query "codebuild_project_ecr_repositories" {
+query "ecr_repositories_for_codebuild_project" {
   sql = <<-EOQ
     select
       r.arn as ecr_repository_arn
@@ -351,7 +351,7 @@ query "codebuild_project_ecr_repositories" {
   EOQ
 }
 
-query "codebuild_project_iam_roles" {
+query "iam_roles_for_codebuild_project" {
   sql = <<-EOQ
     select
       service_role as iam_role_arn
@@ -362,7 +362,7 @@ query "codebuild_project_iam_roles" {
   EOQ
 }
 
-query "codebuild_project_kms_keys" {
+query "kms_keys_for_codebuild_project" {
   sql = <<-EOQ
     select
       encryption_key as kms_key_arn
@@ -373,7 +373,7 @@ query "codebuild_project_kms_keys" {
   EOQ
 }
 
-query "codebuild_project_s3_buckets" {
+query "s3_buckets_for_codebuild_project" {
   sql = <<-EOQ
     select
       s3.arn as s3_bucket_arn
@@ -390,7 +390,7 @@ query "codebuild_project_s3_buckets" {
   EOQ
 }
 
-query "codebuild_project_vpc_security_groups" {
+query "vpc_security_groups_for_codebuild_project" {
   sql = <<-EOQ
     with sg_id as (
     select
@@ -410,7 +410,7 @@ query "codebuild_project_vpc_security_groups" {
   EOQ
 }
 
-query "codebuild_project_vpc_subnets" {
+query "vpc_subnets_for_codebuild_project" {
   sql = <<-EOQ
     select
       trim((s::text), '""') as vpc_subnet_id
@@ -422,7 +422,7 @@ query "codebuild_project_vpc_subnets" {
   EOQ
 }
 
-query "codebuild_project_vpc_vpcs" {
+query "vpc_vpcs_for_codebuild_project" {
   sql = <<-EOQ
     select
       vpc_config ->> 'VpcId' as vpc_vpc_id

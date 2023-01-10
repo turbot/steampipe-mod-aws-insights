@@ -29,33 +29,33 @@ dashboard "vpc_flow_logs_detail" {
 
   }
 
-  with "cloudwatch_log_groups" {
-    query = query.vpc_flow_log_cloudwatch_log_groups
+  with "cloudwatch_log_groups_for_vpc_flow_log" {
+    query = query.cloudwatch_log_groups_for_vpc_flow_log
     args  = [self.input.flow_log_id.value]
   }
 
-  with "ec2_network_interfaces" {
-    query = query.vpc_flow_log_ec2_network_interfaces
+  with "ec2_network_interfaces_for_vpc_flow_log" {
+    query = query.ec2_network_interfaces_for_vpc_flow_log
     args  = [self.input.flow_log_id.value]
   }
 
-  with "iam_roles" {
-    query = query.vpc_flow_log_iam_roles
+  with "iam_roles_for_vpc_flow_log" {
+    query = query.iam_roles_for_vpc_flow_log
     args  = [self.input.flow_log_id.value]
   }
 
-  with "s3_buckets" {
-    query = query.vpc_flow_log_s3_buckets
+  with "s3_buckets_for_vpc_flow_log" {
+    query = query.s3_buckets_for_vpc_flow_log
     args  = [self.input.flow_log_id.value]
   }
 
-  with "vpc_subnets" {
-    query = query.vpc_flow_log_vpc_subnets
+  with "vpc_subnets_for_vpc_flow_log" {
+    query = query.vpc_subnets_for_vpc_flow_log
     args  = [self.input.flow_log_id.value]
   }
 
-  with "vpc_vpcs" {
-    query = query.vpc_flow_log_vpc_vpcs
+  with "vpc_vpcs_for_vpc_flow_log" {
+    query = query.vpc_vpcs_for_vpc_flow_log
     args  = [self.input.flow_log_id.value]
   }
 
@@ -69,28 +69,28 @@ dashboard "vpc_flow_logs_detail" {
       node {
         base = node.cloudwatch_log_group
         args = {
-          cloudwatch_log_group_arns = with.cloudwatch_log_groups.rows[*].log_group_arn
+          cloudwatch_log_group_arns = with.cloudwatch_log_groups_for_vpc_flow_log.rows[*].log_group_arn
         }
       }
 
       node {
         base = node.ec2_network_interface
         args = {
-          ec2_network_interface_ids = with.ec2_network_interfaces.rows[*].eni_id
+          ec2_network_interface_ids = with.ec2_network_interfaces_for_vpc_flow_log.rows[*].eni_id
         }
       }
 
       node {
         base = node.iam_role
         args = {
-          iam_role_arns = with.iam_roles.rows[*].role_arn
+          iam_role_arns = with.iam_roles_for_vpc_flow_log.rows[*].role_arn
         }
       }
 
       node {
         base = node.s3_bucket
         args = {
-          s3_bucket_arns = with.s3_buckets.rows[*].bucket_arn
+          s3_bucket_arns = with.s3_buckets_for_vpc_flow_log.rows[*].bucket_arn
         }
       }
 
@@ -104,21 +104,21 @@ dashboard "vpc_flow_logs_detail" {
       node {
         base = node.vpc_subnet
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_vpc_flow_log.rows[*].subnet_id
         }
       }
 
       node {
         base = node.vpc_vpc
         args = {
-          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_id
+          vpc_vpc_ids = with.vpc_vpcs_for_vpc_flow_log.rows[*].vpc_id
         }
       }
 
       edge {
         base = edge.ec2_network_interface_to_vpc_flow_log
         args = {
-          ec2_network_interface_ids = with.ec2_network_interfaces.rows[*].eni_id
+          ec2_network_interface_ids = with.ec2_network_interfaces_for_vpc_flow_log.rows[*].eni_id
         }
       }
 
@@ -146,14 +146,14 @@ dashboard "vpc_flow_logs_detail" {
       edge {
         base = edge.vpc_subnet_to_vpc_flow_log
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_vpc_flow_log.rows[*].subnet_id
         }
       }
 
       edge {
         base = edge.vpc_vpc_to_vpc_flow_log
         args = {
-          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_id
+          vpc_vpc_ids = with.vpc_vpcs_for_vpc_flow_log.rows[*].vpc_id
         }
       }
     }
@@ -251,7 +251,7 @@ query "vpc_flow_log_deliver_logs_status" {
 
 # with queries
 
-query "vpc_flow_log_cloudwatch_log_groups" {
+query "cloudwatch_log_groups_for_vpc_flow_log" {
   sql = <<-EOQ
     select
       g.arn as log_group_arn
@@ -267,7 +267,7 @@ query "vpc_flow_log_cloudwatch_log_groups" {
   EOQ
 }
 
-query "vpc_flow_log_ec2_network_interfaces" {
+query "ec2_network_interfaces_for_vpc_flow_log" {
   sql = <<-EOQ
     select
       resource_id as eni_id
@@ -279,7 +279,7 @@ query "vpc_flow_log_ec2_network_interfaces" {
   EOQ
 }
 
-query "vpc_flow_log_iam_roles" {
+query "iam_roles_for_vpc_flow_log" {
   sql = <<-EOQ
     select
       deliver_logs_permission_arn as role_arn
@@ -291,7 +291,7 @@ query "vpc_flow_log_iam_roles" {
   EOQ
 }
 
-query "vpc_flow_log_s3_buckets" {
+query "s3_buckets_for_vpc_flow_log" {
   sql = <<-EOQ
     select
       distinct s.arn as bucket_arn
@@ -305,7 +305,7 @@ query "vpc_flow_log_s3_buckets" {
   EOQ
 }
 
-query "vpc_flow_log_vpc_subnets" {
+query "vpc_subnets_for_vpc_flow_log" {
   sql = <<-EOQ
     select
       resource_id as subnet_id
@@ -317,7 +317,7 @@ query "vpc_flow_log_vpc_subnets" {
   EOQ
 }
 
-query "vpc_flow_log_vpc_vpcs" {
+query "vpc_vpcs_for_vpc_flow_log" {
   sql = <<-EOQ
     select
       resource_id as vpc_id

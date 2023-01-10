@@ -17,68 +17,68 @@ dashboard "ec2_network_interface_detail" {
     card {
       width = 2
       query = query.ec2_network_interface_public_ip
-      args = [self.input.network_interface_id.value]
+      args  = [self.input.network_interface_id.value]
     }
 
     card {
       width = 2
       query = query.ec2_network_interface_type
-      args = [self.input.network_interface_id.value]
+      args  = [self.input.network_interface_id.value]
     }
 
     card {
       width = 2
       query = query.ec2_network_interface_delete_on_termination
-      args = [self.input.network_interface_id.value]
+      args  = [self.input.network_interface_id.value]
     }
 
     card {
       width = 2
       query = query.ec2_network_interface_status
-      args = [self.input.network_interface_id.value]
+      args  = [self.input.network_interface_id.value]
     }
 
     card {
       width = 2
       query = query.ec2_network_interface_attachment_status
-      args = [self.input.network_interface_id.value]
+      args  = [self.input.network_interface_id.value]
     }
 
   }
 
-  with "ec2_instances" {
-    query = query.ec2_network_interface_ec2_instances
-    args = [self.input.network_interface_id.value]
+  with "ec2_instances_for_ec2_network_interface" {
+    query = query.ec2_instances_for_ec2_network_interface
+    args  = [self.input.network_interface_id.value]
   }
 
-  with "vpc_eips" {
-    query = query.ec2_network_interface_vpc_eips
-    args = [self.input.network_interface_id.value]
+  with "vpc_eips_for_ec2_network_interface" {
+    query = query.vpc_eips_for_ec2_network_interface
+    args  = [self.input.network_interface_id.value]
   }
 
-  with "vpc_flow_logs" {
-    query = query.ec2_network_interface_vpc_flow_logs
-    args = [self.input.network_interface_id.value]
+  with "vpc_flow_logs_for_ec2_network_interface" {
+    query = query.vpc_flow_logs_for_ec2_network_interface
+    args  = [self.input.network_interface_id.value]
   }
 
-  with "vpc_nat_gateways" {
-    query = query.ec2_network_interface_vpc_nat_gateways
-    args = [self.input.network_interface_id.value]
+  with "vpc_nat_gateways_for_ec2_network_interface" {
+    query = query.vpc_nat_gateways_for_ec2_network_interface
+    args  = [self.input.network_interface_id.value]
   }
 
-  with "vpc_security_groups" {
-    query = query.ec2_network_interface_vpc_security_groups
-    args = [self.input.network_interface_id.value]
+  with "vpc_security_groups_for_ec2_network_interface" {
+    query = query.vpc_security_groups_for_ec2_network_interface
+    args  = [self.input.network_interface_id.value]
   }
 
-  with "vpc_subnets" {
-    query = query.ec2_network_interface_vpc_subnets
-    args = [self.input.network_interface_id.value]
+  with "vpc_subnets_for_ec2_network_interface" {
+    query = query.vpc_subnets_for_ec2_network_interface
+    args  = [self.input.network_interface_id.value]
   }
 
-  with "vpc_vpcs" {
-    query = query.ec2_network_interface_vpc_vpcs
-    args = [self.input.network_interface_id.value]
+  with "vpc_vpcs_for_ec2_network_interface" {
+    query = query.vpc_vpcs_for_ec2_network_interface
+    args  = [self.input.network_interface_id.value]
   }
 
   container {
@@ -91,7 +91,7 @@ dashboard "ec2_network_interface_detail" {
       node {
         base = node.ec2_instance
         args = {
-          ec2_instance_arns = with.ec2_instances.rows[*].instance_arn
+          ec2_instance_arns = with.ec2_instances_for_ec2_network_interface.rows[*].instance_arn
         }
       }
 
@@ -105,49 +105,49 @@ dashboard "ec2_network_interface_detail" {
       node {
         base = node.vpc_eip
         args = {
-          vpc_eip_arns = with.vpc_eips.rows[*].eip_arn
+          vpc_eip_arns = with.vpc_eips_for_ec2_network_interface.rows[*].eip_arn
         }
       }
 
       node {
         base = node.vpc_flow_log
         args = {
-          vpc_flow_log_ids = with.vpc_flow_logs.rows[*].flow_log_id
+          vpc_flow_log_ids = with.vpc_flow_logs_for_ec2_network_interface.rows[*].flow_log_id
         }
       }
 
       node {
         base = node.vpc_nat_gateway
         args = {
-          vpc_nat_gateway_arns = with.vpc_nat_gateways.rows[*].gateway_arn
+          vpc_nat_gateway_arns = with.vpc_nat_gateways_for_ec2_network_interface.rows[*].gateway_arn
         }
       }
 
       node {
         base = node.vpc_security_group
         args = {
-          vpc_security_group_ids = with.vpc_security_groups.rows[*].security_group_id
+          vpc_security_group_ids = with.vpc_security_groups_for_ec2_network_interface.rows[*].security_group_id
         }
       }
 
       node {
         base = node.vpc_subnet
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_ec2_network_interface.rows[*].subnet_id
         }
       }
 
       node {
         base = node.vpc_vpc
         args = {
-          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_id
+          vpc_vpc_ids = with.vpc_vpcs_for_ec2_network_interface.rows[*].vpc_id
         }
       }
 
       edge {
         base = edge.ec2_instance_to_ec2_network_interface
         args = {
-          ec2_instance_arns = with.ec2_instances.rows[*].instance_arn
+          ec2_instance_arns = with.ec2_instances_for_ec2_network_interface.rows[*].instance_arn
         }
       }
 
@@ -189,7 +189,7 @@ dashboard "ec2_network_interface_detail" {
       edge {
         base = edge.vpc_subnet_to_vpc_vpc
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_ec2_network_interface.rows[*].subnet_id
         }
       }
     }
@@ -202,14 +202,14 @@ dashboard "ec2_network_interface_detail" {
       type  = "line"
       width = 2
       query = query.ec2_network_interface_overview
-      args = [self.input.network_interface_id.value]
+      args  = [self.input.network_interface_id.value]
     }
 
     table {
       title = "Tags"
       width = 3
       query = query.ec2_network_interface_tags
-      args = [self.input.network_interface_id.value]
+      args  = [self.input.network_interface_id.value]
     }
 
     container {
@@ -218,7 +218,7 @@ dashboard "ec2_network_interface_detail" {
       table {
         title = "Associations"
         query = query.ec2_network_interface_association_details
-        args = [self.input.network_interface_id.value]
+        args  = [self.input.network_interface_id.value]
         column "eip_alloc_arn" {
           display = "none"
         }
@@ -230,7 +230,7 @@ dashboard "ec2_network_interface_detail" {
       table {
         title = "Private IP Addresses"
         query = query.ec2_network_interface_private_ip
-        args = [self.input.network_interface_id.value]
+        args  = [self.input.network_interface_id.value]
       }
     }
 
@@ -258,7 +258,7 @@ query "network_interface_id" {
 
 # With queries
 
-query "ec2_network_interface_ec2_instances" {
+query "ec2_instances_for_ec2_network_interface" {
   sql = <<-EOQ
     select
       i.arn as instance_arn
@@ -270,7 +270,7 @@ query "ec2_network_interface_ec2_instances" {
   EOQ
 }
 
-query "ec2_network_interface_vpc_eips" {
+query "vpc_eips_for_ec2_network_interface" {
   sql = <<-EOQ
     select
       arn as eip_arn
@@ -281,7 +281,7 @@ query "ec2_network_interface_vpc_eips" {
   EOQ
 }
 
-query "ec2_network_interface_vpc_flow_logs" {
+query "vpc_flow_logs_for_ec2_network_interface" {
   sql = <<-EOQ
     select
       flow_log_id as flow_log_id
@@ -292,7 +292,7 @@ query "ec2_network_interface_vpc_flow_logs" {
   EOQ
 }
 
-query "ec2_network_interface_vpc_nat_gateways" {
+query "vpc_nat_gateways_for_ec2_network_interface" {
   sql = <<-EOQ
     select
       arn as gateway_arn
@@ -304,7 +304,7 @@ query "ec2_network_interface_vpc_nat_gateways" {
   EOQ
 }
 
-query "ec2_network_interface_vpc_security_groups" {
+query "vpc_security_groups_for_ec2_network_interface" {
   sql = <<-EOQ
     select
       distinct sg ->> 'GroupId' as security_group_id
@@ -316,7 +316,7 @@ query "ec2_network_interface_vpc_security_groups" {
   EOQ
 }
 
-query "ec2_network_interface_vpc_subnets" {
+query "vpc_subnets_for_ec2_network_interface" {
   sql = <<-EOQ
     select
       subnet_id as subnet_id
@@ -327,7 +327,7 @@ query "ec2_network_interface_vpc_subnets" {
   EOQ
 }
 
-query "ec2_network_interface_vpc_vpcs" {
+query "vpc_vpcs_for_ec2_network_interface" {
   sql = <<-EOQ
     select
       vpc_id as vpc_id

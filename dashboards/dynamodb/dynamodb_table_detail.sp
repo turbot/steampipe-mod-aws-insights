@@ -52,23 +52,23 @@ dashboard "dynamodb_table_detail" {
     }
   }
 
-  with "dynamodb_backups" {
-    query = query.dynamodb_table_dynamodb_backups
+  with "dynamodb_backups_for_dynamodb_table" {
+    query = query.dynamodb_backups_for_dynamodb_table
     args  = [self.input.table_arn.value]
   }
 
-  with "kinesis_streams" {
-    query = query.dynamodb_table_kinesis_streams
+  with "kinesis_streams_for_dynamodb_table" {
+    query = query.kinesis_streams_for_dynamodb_table
     args  = [self.input.table_arn.value]
   }
 
-  with "kms_keys" {
-    query = query.dynamodb_table_kms_keys
+  with "kms_keys_for_dynamodb_table" {
+    query = query.kms_keys_for_dynamodb_table
     args  = [self.input.table_arn.value]
   }
 
-  with "s3_buckets" {
-    query = query.dynamodb_table_s3_buckets
+  with "s3_buckets_for_dynamodb_table" {
+    query = query.s3_buckets_for_dynamodb_table
     args  = [self.input.table_arn.value]
   }
 
@@ -82,7 +82,7 @@ dashboard "dynamodb_table_detail" {
       node {
         base = node.dynamodb_backup
         args = {
-          dbynamodb_backup_arns = with.dynamodb_backups.rows[*].dbynamodb_backup_arn
+          dbynamodb_backup_arns = with.dynamodb_backups_for_dynamodb_table.rows[*].dbynamodb_backup_arn
         }
       }
 
@@ -96,21 +96,21 @@ dashboard "dynamodb_table_detail" {
       node {
         base = node.kinesis_stream
         args = {
-          kinesis_stream_arns = with.kinesis_streams.rows[*].kinesis_stream_arn
+          kinesis_stream_arns = with.kinesis_streams_for_dynamodb_table.rows[*].kinesis_stream_arn
         }
       }
 
       node {
         base = node.kms_key
         args = {
-          kms_key_arns = with.kms_keys.rows[*].key_arn
+          kms_key_arns = with.kms_keys_for_dynamodb_table.rows[*].key_arn
         }
       }
 
       node {
         base = node.s3_bucket
         args = {
-          s3_bucket_arns = with.s3_buckets.rows[*].bucket_arn
+          s3_bucket_arns = with.s3_buckets_for_dynamodb_table.rows[*].bucket_arn
         }
       }
 
@@ -217,7 +217,7 @@ query "dynamodb_table_input" {
 
 # With queries
 
-query "dynamodb_table_dynamodb_backups" {
+query "dynamodb_backups_for_dynamodb_table" {
   sql = <<-EOQ
     select
       b.arn as dbynamodb_backup_arn
@@ -230,7 +230,7 @@ query "dynamodb_table_dynamodb_backups" {
   EOQ
 }
 
-query "dynamodb_table_kinesis_streams" {
+query "kinesis_streams_for_dynamodb_table" {
   sql = <<-EOQ
     select
       s.stream_arn as kinesis_stream_arn
@@ -244,7 +244,7 @@ query "dynamodb_table_kinesis_streams" {
     EOQ
 }
 
-query "dynamodb_table_kms_keys" {
+query "kms_keys_for_dynamodb_table" {
   sql = <<-EOQ
     select
       sse_description ->> 'KMSMasterKeyArn' as key_arn
@@ -256,7 +256,7 @@ query "dynamodb_table_kms_keys" {
   EOQ
 }
 
-query "dynamodb_table_s3_buckets" {
+query "s3_buckets_for_dynamodb_table" {
   sql = <<-EOQ
     select
       b.arn as bucket_arn

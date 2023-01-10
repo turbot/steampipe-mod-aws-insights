@@ -28,48 +28,48 @@ dashboard "sns_topic_detail" {
     }
   }
 
-  with "cloudformation_stacks" {
-    query = query.sns_topic_cloudformation_stacks
+  with "cloudformation_stacks_for_sns_topic" {
+    query = query.cloudformation_stacks_for_sns_topic
     args  = [self.input.topic_arn.value]
   }
 
-  with "cloudtrail_trails" {
-    query = query.sns_topic_cloudtrail_trails
+  with "cloudtrail_trails_for_sns_topic" {
+    query = query.cloudtrail_trails_for_sns_topic
     args  = [self.input.topic_arn.value]
   }
 
-  with "elasticache_clusters" {
-    query = query.sns_topic_elasticache_clusters
+  with "elasticache_clusters_for_sns_topic" {
+    query = query.elasticache_clusters_for_sns_topic
     args  = [self.input.topic_arn.value]
   }
 
-  with "kms_keys" {
-    query = query.sns_topic_kms_keys
+  with "kms_keys_for_sns_topic" {
+    query = query.kms_keys_for_sns_topic
     args  = [self.input.topic_arn.value]
   }
 
-  with "rds_db_instances" {
-    query = query.sns_topic_rds_db_instances
+  with "rds_db_instances_for_sns_topic" {
+    query = query.rds_db_instances_for_sns_topic
     args  = [self.input.topic_arn.value]
   }
 
-  with "redshift_clusters" {
-    query = query.sns_topic_redshift_clusters
+  with "redshift_clusters_for_sns_topic" {
+    query = query.redshift_clusters_for_sns_topic
     args  = [self.input.topic_arn.value]
   }
 
-  with "s3_buckets" {
-    query = query.sns_topic_s3_buckets
+  with "s3_buckets_for_sns_topic" {
+    query = query.s3_buckets_for_sns_topic
     args  = [self.input.topic_arn.value]
   }
 
-  with "sns_topic_subscriptions" {
-    query = query.sns_topic_sns_topic_subscriptions
+  with "sns_topic_subscriptions_for_sns_topic" {
+    query = query.sns_topic_subscriptions_for_sns_topic
     args  = [self.input.topic_arn.value]
   }
 
-  with "topic_policy_std" {
-    query = query.sns_topic_policy_std
+  with "topic_policy_std_for_sns_topic" {
+    query = query.topic_policy_std_for_sns_topic
     args  = [self.input.topic_arn.value]
   }
 
@@ -84,49 +84,49 @@ dashboard "sns_topic_detail" {
       node {
         base = node.cloudformation_stack
         args = {
-          cloudformation_stack_ids = with.cloudformation_stacks.rows[*].stack_id
+          cloudformation_stack_ids = with.cloudformation_stacks_for_sns_topic.rows[*].stack_id
         }
       }
 
       node {
         base = node.cloudtrail_trail
         args = {
-          cloudtrail_trail_arns = with.cloudtrail_trails.rows[*].trail_arn
+          cloudtrail_trail_arns = with.cloudtrail_trails_for_sns_topic.rows[*].trail_arn
         }
       }
 
       node {
         base = node.elasticache_cluster_node
         args = {
-          elasticache_cluster_node_arns = with.elasticache_clusters.rows[*].elasticache_cluster_arn
+          elasticache_cluster_node_arns = with.elasticache_clusters_for_sns_topic.rows[*].elasticache_cluster_arn
         }
       }
 
       node {
         base = node.kms_key
         args = {
-          kms_key_arns = with.kms_keys.rows[*].key_arn
+          kms_key_arns = with.kms_keys_for_sns_topic.rows[*].key_arn
         }
       }
 
       node {
         base = node.rds_db_instance
         args = {
-          rds_db_instance_arns = with.rds_db_instances.rows[*].db_instance_arn
+          rds_db_instance_arns = with.rds_db_instances_for_sns_topic.rows[*].db_instance_arn
         }
       }
 
       node {
         base = node.redshift_cluster
         args = {
-          redshift_cluster_arns = with.redshift_clusters.rows[*].cluster_arn
+          redshift_cluster_arns = with.redshift_clusters_for_sns_topic.rows[*].cluster_arn
         }
       }
 
       node {
         base = node.s3_bucket
         args = {
-          s3_bucket_arns = with.s3_buckets.rows[*].bucket_arn
+          s3_bucket_arns = with.s3_buckets_for_sns_topic.rows[*].bucket_arn
         }
       }
 
@@ -140,7 +140,7 @@ dashboard "sns_topic_detail" {
       node {
         base = node.sns_topic_subscription
         args = {
-          sns_topic_subscription_arns = with.sns_topic_subscriptions.rows[*].subscription_arn
+          sns_topic_subscription_arns = with.sns_topic_subscriptions_for_sns_topic.rows[*].subscription_arn
         }
       }
 
@@ -154,35 +154,35 @@ dashboard "sns_topic_detail" {
       edge {
         base = edge.cloudtrail_trail_to_sns_topic
         args = {
-          cloudtrail_trail_arns = with.cloudtrail_trails.rows[*].trail_arn
+          cloudtrail_trail_arns = with.cloudtrail_trails_for_sns_topic.rows[*].trail_arn
         }
       }
 
       edge {
         base = edge.elasticache_cluster_node_to_sns_topic
         args = {
-          elasticache_cluster_node_arns = with.elasticache_clusters.rows[*].elasticache_cluster_arn
+          elasticache_cluster_node_arns = with.elasticache_clusters_for_sns_topic.rows[*].elasticache_cluster_arn
         }
       }
 
       edge {
         base = edge.rds_db_instance_to_sns_topic
         args = {
-          rds_db_instance_arns = with.rds_db_instances.rows[*].db_instance_arn
+          rds_db_instance_arns = with.rds_db_instances_for_sns_topic.rows[*].db_instance_arn
         }
       }
 
       edge {
         base = edge.redshift_cluster_to_sns_topic
         args = {
-          redshift_cluster_arns = with.redshift_clusters.rows[*].cluster_arn
+          redshift_cluster_arns = with.redshift_clusters_for_sns_topic.rows[*].cluster_arn
         }
       }
 
       edge {
         base = edge.s3_bucket_to_sns_topic
         args = {
-          s3_bucket_arns = with.s3_buckets.rows[*].bucket_arn
+          s3_bucket_arns = with.s3_buckets_for_sns_topic.rows[*].bucket_arn
         }
       }
 
@@ -230,7 +230,7 @@ dashboard "sns_topic_detail" {
 
       table {
         title = "Subscription Counts"
-        query = query.sns_topic_subscriptions
+        query = query.sns_topic_subscription_count
         args  = [self.input.topic_arn.value]
       }
 
@@ -250,7 +250,7 @@ dashboard "sns_topic_detail" {
       title = "Resource Policy"
       base  = graph.iam_resource_policy_structure
       args = {
-        policy_std = with.topic_policy_std.rows[0].policy_std
+        policy_std = with.topic_policy_std_for_sns_topic.rows[0].policy_std
       }
     }
 
@@ -300,7 +300,7 @@ query "sns_topic_subscriptions_confirmed_count" {
 }
 
 # with queries
-query "sns_topic_cloudformation_stacks" {
+query "cloudformation_stacks_for_sns_topic" {
   sql = <<-EOQ
     select
       s.id as stack_id
@@ -318,7 +318,7 @@ query "sns_topic_cloudformation_stacks" {
   EOQ
 }
 
-query "sns_topic_cloudtrail_trails" {
+query "cloudtrail_trails_for_sns_topic" {
   sql = <<-EOQ
     select
       arn as trail_arn
@@ -329,7 +329,7 @@ query "sns_topic_cloudtrail_trails" {
   EOQ
 }
 
-query "sns_topic_elasticache_clusters" {
+query "elasticache_clusters_for_sns_topic" {
   sql = <<-EOQ
     select
       arn as elasticache_cluster_arn
@@ -340,7 +340,7 @@ query "sns_topic_elasticache_clusters" {
   EOQ
 }
 
-query "sns_topic_kms_keys" {
+query "kms_keys_for_sns_topic" {
   sql = <<-EOQ
     select
       kms_master_key_id as key_arn
@@ -352,7 +352,7 @@ query "sns_topic_kms_keys" {
   EOQ
 }
 
-query "sns_topic_policy_std" {
+query "topic_policy_std_for_sns_topic" {
   sql = <<-EOQ
     select
       policy_std
@@ -363,7 +363,7 @@ query "sns_topic_policy_std" {
   EOQ
 }
 
-query "sns_topic_rds_db_instances" {
+query "rds_db_instances_for_sns_topic" {
   sql = <<-EOQ
     select
       i.arn as db_instance_arn
@@ -377,7 +377,7 @@ query "sns_topic_rds_db_instances" {
   EOQ
 }
 
-query "sns_topic_redshift_clusters" {
+query "redshift_clusters_for_sns_topic" {
   sql = <<-EOQ
     select
       c.arn as cluster_arn
@@ -391,7 +391,7 @@ query "sns_topic_redshift_clusters" {
   EOQ
 }
 
-query "sns_topic_s3_buckets" {
+query "s3_buckets_for_sns_topic" {
   sql = <<-EOQ
     select
       b.arn as bucket_arn
@@ -408,7 +408,7 @@ query "sns_topic_s3_buckets" {
   EOQ
 }
 
-query "sns_topic_sns_topic_subscriptions" {
+query "sns_topic_subscriptions_for_sns_topic" {
   sql = <<-EOQ
     select
       subscription_arn as subscription_arn
@@ -455,7 +455,7 @@ query "sns_topic_tags" {
 
 }
 
-query "sns_topic_subscriptions" {
+query "sns_topic_subscription_count" {
   sql = <<-EOQ
     select
       subscriptions_confirmed as "Confirmed",

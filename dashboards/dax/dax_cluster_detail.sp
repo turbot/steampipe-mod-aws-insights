@@ -18,45 +18,45 @@ dashboard "dax_cluster_detail" {
     card {
       query = query.dax_cluster_status
       width = 2
-      args = [self.input.dax_cluster_arn.value]
+      args  = [self.input.dax_cluster_arn.value]
     }
 
     card {
       query = query.dax_cluster_node_type
       width = 2
-      args = [self.input.dax_cluster_arn.value]
+      args  = [self.input.dax_cluster_arn.value]
     }
 
     card {
       query = query.dax_cluster_encryption
       width = 2
-      args = [self.input.dax_cluster_arn.value]
+      args  = [self.input.dax_cluster_arn.value]
     }
   }
 
-  with "iam_roles" {
-    query = query.dax_cluster_iam_roles
-    args = [self.input.dax_cluster_arn.value]
+  with "iam_roles_for_dax_cluster" {
+    query = query.iam_roles_for_dax_cluster
+    args  = [self.input.dax_cluster_arn.value]
   }
 
-  with "sns_topics" {
-    query = query.dax_cluster_sns_topics
-    args = [self.input.dax_cluster_arn.value]
+  with "sns_topics_for_dax_cluster" {
+    query = query.sns_topics_for_dax_cluster
+    args  = [self.input.dax_cluster_arn.value]
   }
 
-  with "vpc_security_groups" {
-    query = query.dax_cluster_vpc_security_groups
-    args = [self.input.dax_cluster_arn.value]
+  with "vpc_security_groups_for_dax_cluster" {
+    query = query.vpc_security_groups_for_dax_cluster
+    args  = [self.input.dax_cluster_arn.value]
   }
 
-  with "vpc_subnets" {
-    query = query.dax_cluster_vpc_subnets
-    args = [self.input.dax_cluster_arn.value]
+  with "vpc_subnets_for_dax_cluster" {
+    query = query.vpc_subnets_for_dax_cluster
+    args  = [self.input.dax_cluster_arn.value]
   }
 
-  with "vpc_vpcs" {
-    query = query.dax_cluster_vpc_vpcs
-    args = [self.input.dax_cluster_arn.value]
+  with "vpc_vpcs_for_dax_cluster" {
+    query = query.vpc_vpcs_for_dax_cluster
+    args  = [self.input.dax_cluster_arn.value]
   }
 
   container {
@@ -96,35 +96,35 @@ dashboard "dax_cluster_detail" {
       node {
         base = node.iam_role
         args = {
-          iam_role_arns = with.iam_roles.rows[*].iam_role_arn
+          iam_role_arns = with.iam_roles_for_dax_cluster.rows[*].iam_role_arn
         }
       }
 
       node {
         base = node.sns_topic
         args = {
-          sns_topic_arns = with.sns_topics.rows[*].topic_arn
+          sns_topic_arns = with.sns_topics_for_dax_cluster.rows[*].topic_arn
         }
       }
 
       node {
         base = node.vpc_security_group
         args = {
-          vpc_security_group_ids = with.vpc_security_groups.rows[*].security_group_id
+          vpc_security_group_ids = with.vpc_security_groups_for_dax_cluster.rows[*].security_group_id
         }
       }
 
       node {
         base = node.vpc_subnet
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_dax_cluster.rows[*].subnet_id
         }
       }
 
       node {
         base = node.vpc_vpc
         args = {
-          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_id
+          vpc_vpc_ids = with.vpc_vpcs_for_dax_cluster.rows[*].vpc_id
         }
       }
 
@@ -180,7 +180,7 @@ dashboard "dax_cluster_detail" {
       edge {
         base = edge.vpc_subnet_to_vpc_vpc
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_dax_cluster.rows[*].subnet_id
         }
       }
     }
@@ -196,7 +196,7 @@ dashboard "dax_cluster_detail" {
         type  = "line"
         width = 6
         query = query.dax_cluster_overview
-        args = [self.input.dax_cluster_arn.value]
+        args  = [self.input.dax_cluster_arn.value]
 
       }
 
@@ -204,7 +204,7 @@ dashboard "dax_cluster_detail" {
         title = "Tags"
         width = 6
         query = query.dax_cluster_tags
-        args = [self.input.dax_cluster_arn.value]
+        args  = [self.input.dax_cluster_arn.value]
 
       }
     }
@@ -214,13 +214,13 @@ dashboard "dax_cluster_detail" {
       table {
         title = "Cluster Discovery Endpoint"
         query = query.dax_cluster_discovery_endpoint
-        args = [self.input.dax_cluster_arn.value]
+        args  = [self.input.dax_cluster_arn.value]
       }
 
       table {
         title = "Nodes"
         query = query.dax_cluster_node_details
-        args = [self.input.dax_cluster_arn.value]
+        args  = [self.input.dax_cluster_arn.value]
       }
     }
   }
@@ -247,7 +247,7 @@ query "dax_cluster_input" {
 
 # With queries
 
-query "dax_cluster_iam_roles" {
+query "iam_roles_for_dax_cluster" {
   sql = <<-EOQ
     select
       iam_role_arn
@@ -258,7 +258,7 @@ query "dax_cluster_iam_roles" {
   EOQ
 }
 
-query "dax_cluster_sns_topics" {
+query "sns_topics_for_dax_cluster" {
   sql = <<-EOQ
     select
       notification_configuration ->> 'TopicArn' as topic_arn
@@ -270,7 +270,7 @@ query "dax_cluster_sns_topics" {
   EOQ
 }
 
-query "dax_cluster_vpc_security_groups" {
+query "vpc_security_groups_for_dax_cluster" {
   sql = <<-EOQ
     select
       sg ->> 'SecurityGroupIdentifier' as security_group_id
@@ -282,7 +282,7 @@ query "dax_cluster_vpc_security_groups" {
   EOQ
 }
 
-query "dax_cluster_vpc_subnets" {
+query "vpc_subnets_for_dax_cluster" {
   sql = <<-EOQ
     select
       s ->> 'SubnetIdentifier' as subnet_id
@@ -296,7 +296,7 @@ query "dax_cluster_vpc_subnets" {
   EOQ
 }
 
-query "dax_cluster_vpc_vpcs" {
+query "vpc_vpcs_for_dax_cluster" {
   sql = <<-EOQ
     select
       g.vpc_id as vpc_id

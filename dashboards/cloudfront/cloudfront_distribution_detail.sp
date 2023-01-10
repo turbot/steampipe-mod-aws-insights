@@ -17,57 +17,57 @@ dashboard "cloudfront_distribution_detail" {
     card {
       query = query.cloudfront_distribution_status
       width = 2
-      args = [self.input.distribution_arn.value]
+      args  = [self.input.distribution_arn.value]
     }
 
     card {
       query = query.cloudfront_distribution_price_class
       width = 2
-      args = [self.input.distribution_arn.value]
+      args  = [self.input.distribution_arn.value]
     }
 
     card {
       query = query.cloudfront_distribution_logging
       width = 2
-      args = [self.input.distribution_arn.value]
+      args  = [self.input.distribution_arn.value]
     }
 
     card {
       query = query.cloudfront_distribution_field_level_encryption
       width = 2
-      args = [self.input.distribution_arn.value]
+      args  = [self.input.distribution_arn.value]
     }
 
     card {
       query = query.cloudfront_distribution_sni
       width = 2
-      args = [self.input.distribution_arn.value]
+      args  = [self.input.distribution_arn.value]
     }
 
   }
 
-  with "acm_certificates" {
-    query = query.cloudfront_distribution_acm_certificates
+  with "acm_certificates_for_cloudfront_distribution" {
+    query = query.acm_certificates_for_cloudfront_distribution
     args  = [self.input.distribution_arn.value]
   }
 
-  with "ec2_application_load_balancers" {
-    query = query.cloudfront_distribution_ec2_application_load_balancers
+  with "ec2_application_load_balancers_for_cloudfront_distribution" {
+    query = query.ec2_application_load_balancers_for_cloudfront_distribution
     args  = [self.input.distribution_arn.value]
   }
 
-  with "media_stores" {
-    query = query.cloudfront_distribution_media_stores
+  with "media_stores_for_cloudfront_distribution" {
+    query = query.media_stores_for_cloudfront_distribution
     args  = [self.input.distribution_arn.value]
   }
 
-  with "s3_buckets" {
-    query = query.cloudfront_distribution_s3_buckets
+  with "s3_buckets_for_cloudfront_distribution" {
+    query = query.s3_buckets_for_cloudfront_distribution
     args  = [self.input.distribution_arn.value]
   }
 
-  with "wafv2_web_acls" {
-    query = query.cloudfront_distribution_wafv2_web_acls
+  with "wafv2_web_acls_for_cloudfront_distribution" {
+    query = query.wafv2_web_acls_for_cloudfront_distribution
     args  = [self.input.distribution_arn.value]
   }
 
@@ -80,7 +80,7 @@ dashboard "cloudfront_distribution_detail" {
       node {
         base = node.acm_certificate
         args = {
-          acm_certificate_arns = with.acm_certificates.rows[*].certificate_arn
+          acm_certificate_arns = with.acm_certificates_for_cloudfront_distribution.rows[*].certificate_arn
         }
       }
 
@@ -94,28 +94,28 @@ dashboard "cloudfront_distribution_detail" {
       node {
         base = node.ec2_application_load_balancer
         args = {
-          ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
+          ec2_application_load_balancer_arns = with.ec2_application_load_balancers_for_cloudfront_distribution.rows[*].alb_arn
         }
       }
 
       node {
         base = node.media_store_container
         args = {
-          mediastore_arns = with.media_stores.rows[*].mediastore_arn
+          mediastore_arns = with.media_stores_for_cloudfront_distribution.rows[*].mediastore_arn
         }
       }
 
       node {
         base = node.s3_bucket
         args = {
-          s3_bucket_arns = with.s3_buckets.rows[*].bucket_arn
+          s3_bucket_arns = with.s3_buckets_for_cloudfront_distribution.rows[*].bucket_arn
         }
       }
 
       node {
         base = node.wafv2_web_acl
         args = {
-          wafv2_acl_arns = with.wafv2_web_acls.rows[*].wafv2_acl_arn
+          wafv2_acl_arns = with.wafv2_web_acls_for_cloudfront_distribution.rows[*].wafv2_acl_arn
         }
       }
 
@@ -166,7 +166,7 @@ dashboard "cloudfront_distribution_detail" {
         type  = "line"
         width = 6
         query = query.cloudfront_distribution_overview
-        args = [self.input.distribution_arn.value]
+        args  = [self.input.distribution_arn.value]
 
       }
 
@@ -174,7 +174,7 @@ dashboard "cloudfront_distribution_detail" {
         title = "Tags"
         width = 6
         query = query.cloudfront_distribution_tags
-        args = [self.input.distribution_arn.value]
+        args  = [self.input.distribution_arn.value]
 
       }
     }
@@ -184,7 +184,7 @@ dashboard "cloudfront_distribution_detail" {
       table {
         title = "Restrictions"
         query = query.cloudfront_distribution_restrictions
-        args = [self.input.distribution_arn.value]
+        args  = [self.input.distribution_arn.value]
       }
     }
   }
@@ -209,7 +209,7 @@ query "cloudfront_distribution_input" {
 
 # With queries
 
-query "cloudfront_distribution_acm_certificates" {
+query "acm_certificates_for_cloudfront_distribution" {
   sql = <<-EOQ
     select
       viewer_certificate ->> 'ACMCertificateArn' as certificate_arn
@@ -221,7 +221,7 @@ query "cloudfront_distribution_acm_certificates" {
   EOQ
 }
 
-query "cloudfront_distribution_ec2_application_load_balancers" {
+query "ec2_application_load_balancers_for_cloudfront_distribution" {
   sql = <<-EOQ
     select
       b.arn as alb_arn
@@ -235,7 +235,7 @@ query "cloudfront_distribution_ec2_application_load_balancers" {
     EOQ
 }
 
-query "cloudfront_distribution_media_stores" {
+query "media_stores_for_cloudfront_distribution" {
   sql = <<-EOQ
     select
       arn as mediastore_arn
@@ -255,7 +255,7 @@ query "cloudfront_distribution_media_stores" {
   EOQ
 }
 
-query "cloudfront_distribution_s3_buckets" {
+query "s3_buckets_for_cloudfront_distribution" {
   sql = <<-EOQ
     select
       arn as bucket_arn
@@ -276,7 +276,7 @@ query "cloudfront_distribution_s3_buckets" {
   EOQ
 }
 
-query "cloudfront_distribution_wafv2_web_acls" {
+query "wafv2_web_acls_for_cloudfront_distribution" {
   sql = <<-EOQ
     select
       arn as wafv2_acl_arn

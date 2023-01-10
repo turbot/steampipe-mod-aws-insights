@@ -41,13 +41,13 @@ dashboard "ec2_ami_detail" {
 
   }
 
-  with "ebs_snapshots" {
-    query = query.ec2_ami_ebs_snapshots
+  with "ebs_snapshots_for_ec2_ami" {
+    query = query.ebs_snapshots_for_ec2_ami
     args  = [self.input.ami.value]
   }
 
-  with "ec2_instances" {
-    query = query.ec2_ami_ec2_instances
+  with "ec2_instances_for_ec2_ami" {
+    query = query.ec2_instances_for_ec2_ami
     args  = [self.input.ami.value]
   }
 
@@ -61,14 +61,14 @@ dashboard "ec2_ami_detail" {
       node {
         base = node.ebs_snapshot
         args = {
-          ebs_snapshot_ids = with.ebs_snapshots.rows[*].ebs_snapshot_id
+          ebs_snapshot_ids = with.ebs_snapshots_for_ec2_ami.rows[*].ebs_snapshot_id
         }
       }
 
       node {
         base = node.ebs_shared_snapshot
         args = {
-          ebs_snapshot_ids = with.ebs_snapshots.rows[*].ebs_snapshot_id
+          ebs_snapshot_ids = with.ebs_snapshots_for_ec2_ami.rows[*].ebs_snapshot_id
         }
       }
 
@@ -82,21 +82,21 @@ dashboard "ec2_ami_detail" {
       node {
         base = node.ec2_instance
         args = {
-          ec2_instance_arns = with.ec2_instances.rows[*].ec2_instance_arn
+          ec2_instance_arns = with.ec2_instances_for_ec2_ami.rows[*].ec2_instance_arn
         }
       }
 
       edge {
         base = edge.ebs_snapshot_to_ec2_ami
         args = {
-          ebs_snapshot_ids = with.ebs_snapshots.rows[*].ebs_snapshot_id
+          ebs_snapshot_ids = with.ebs_snapshots_for_ec2_ami.rows[*].ebs_snapshot_id
         }
       }
 
       edge {
         base = edge.ec2_ami_to_ec2_instance_edge
         args = {
-          ec2_instance_arns = with.ec2_instances.rows[*].ec2_instance_arn
+          ec2_instance_arns = with.ec2_instances_for_ec2_ami.rows[*].ec2_instance_arn
         }
       }
     }
@@ -168,7 +168,7 @@ query "ec2_ami_input" {
 
 # With queries
 
-query "ec2_ami_ebs_snapshots" {
+query "ebs_snapshots_for_ec2_ami" {
   sql = <<-EOQ
     select
       s.snapshot_id as ebs_snapshot_id
@@ -183,7 +183,7 @@ query "ec2_ami_ebs_snapshots" {
   EOQ
 }
 
-query "ec2_ami_ec2_instances" {
+query "ec2_instances_for_ec2_ami" {
   sql = <<-EOQ
     select
       arn as ec2_instance_arn

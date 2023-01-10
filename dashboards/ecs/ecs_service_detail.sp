@@ -29,48 +29,48 @@ dashboard "ecs_service_detail" {
 
   }
 
-  with "ec2_target_groups" {
-    query = query.ecs_service_ec2_target_groups
+  with "ec2_target_groups_for_ecs_service" {
+    query = query.ec2_target_groups_for_ecs_service
     args  = [self.input.service_arn.value]
   }
 
-  with "ecs_clusters" {
-    query = query.ecs_service_ecs_clusters
+  with "ecs_clusters_for_ecs_service" {
+    query = query.ecs_clusters_for_ecs_service
     args  = [self.input.service_arn.value]
   }
 
-  with "ecs_container_instances" {
-    query = query.ecs_service_ecs_container_instances
+  with "ecs_container_instances_for_ecs_service" {
+    query = query.ecs_container_instances_for_ecs_service
     args  = [self.input.service_arn.value]
   }
 
-  with "ecs_tasks" {
-    query = query.ecs_service_ecs_tasks
+  with "ecs_tasks_for_ecs_service" {
+    query = query.ecs_tasks_for_ecs_service
     args  = [self.input.service_arn.value]
   }
 
-  with "ecs_task_definitions" {
-    query = query.ecs_service_ecs_task_definitions
+  with "ecs_task_definitions_for_ecs_service" {
+    query = query.ecs_task_definitions_for_ecs_service
     args  = [self.input.service_arn.value]
   }
 
-  with "iam_roles" {
-    query = query.ecs_service_iam_roles
+  with "iam_roles_for_ecs_service" {
+    query = query.iam_roles_for_ecs_service
     args  = [self.input.service_arn.value]
   }
 
-  with "vpc_security_groups" {
-    query = query.ecs_service_vpc_security_groups
+  with "vpc_security_groups_for_ecs_service" {
+    query = query.vpc_security_groups_for_ecs_service
     args  = [self.input.service_arn.value]
   }
 
-  with "vpc_subnets" {
-    query = query.ecs_service_vpc_subnets
+  with "vpc_subnets_for_ecs_service" {
+    query = query.vpc_subnets_for_ecs_service
     args  = [self.input.service_arn.value]
   }
 
-  with "vpc_vpcs" {
-    query = query.ecs_service_vpc_vpcs
+  with "vpc_vpcs_for_ecs_service" {
+    query = query.vpc_vpcs_for_ecs_service
     args  = [self.input.service_arn.value]
   }
 
@@ -84,21 +84,21 @@ dashboard "ecs_service_detail" {
       node {
         base = node.ec2_target_group
         args = {
-          ec2_target_group_arns = with.ec2_target_groups.rows[*].target_group_arn
+          ec2_target_group_arns = with.ec2_target_groups_for_ecs_service.rows[*].target_group_arn
         }
       }
 
       node {
         base = node.ecs_cluster
         args = {
-          ecs_cluster_arns = with.ecs_clusters.rows[*].cluster_arn
+          ecs_cluster_arns = with.ecs_clusters_for_ecs_service.rows[*].cluster_arn
         }
       }
 
       node {
         base = node.ecs_container_instance
         args = {
-          ecs_container_instance_arns = with.ecs_container_instances.rows[*].container_instance_arn
+          ecs_container_instance_arns = with.ecs_container_instances_for_ecs_service.rows[*].container_instance_arn
         }
       }
 
@@ -113,49 +113,49 @@ dashboard "ecs_service_detail" {
       node {
         base = node.ecs_task
         args = {
-          ecs_task_arns = with.ecs_tasks.rows[*].task_arn
+          ecs_task_arns = with.ecs_tasks_for_ecs_service.rows[*].task_arn
         }
       }
 
       node {
         base = node.ecs_task_definition
         args = {
-          ecs_task_definition_arns = with.ecs_task_definitions.rows[*].task_definition_arn
+          ecs_task_definition_arns = with.ecs_task_definitions_for_ecs_service.rows[*].task_definition_arn
         }
       }
 
       node {
         base = node.iam_role
         args = {
-          iam_role_arns = with.iam_roles.rows[*].role_arn
+          iam_role_arns = with.iam_roles_for_ecs_service.rows[*].role_arn
         }
       }
 
       node {
         base = node.vpc_security_group
         args = {
-          vpc_security_group_ids = with.vpc_security_groups.rows[*].group_id
+          vpc_security_group_ids = with.vpc_security_groups_for_ecs_service.rows[*].group_id
         }
       }
 
       node {
         base = node.vpc_subnet
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_ecs_service.rows[*].subnet_id
         }
       }
 
       node {
         base = node.vpc_vpc
         args = {
-          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_id
+          vpc_vpc_ids = with.vpc_vpcs_for_ecs_service.rows[*].vpc_id
         }
       }
 
       edge {
         base = edge.ecs_cluster_to_ecs_service
         args = {
-          ecs_cluster_arns = with.ecs_clusters.rows[*].cluster_arn
+          ecs_cluster_arns = with.ecs_clusters_for_ecs_service.rows[*].cluster_arn
         }
       }
 
@@ -176,7 +176,7 @@ dashboard "ecs_service_detail" {
       edge {
         base = edge.ecs_task_definition_to_ecs_task
         args = {
-          ecs_task_definition_arns = with.ecs_task_definitions.rows[*].task_definition_arn
+          ecs_task_definition_arns = with.ecs_task_definitions_for_ecs_service.rows[*].task_definition_arn
         }
       }
 
@@ -211,7 +211,7 @@ dashboard "ecs_service_detail" {
       edge {
         base = edge.vpc_subnet_to_vpc_vpc
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_ecs_service.rows[*].subnet_id
         }
       }
 
@@ -276,7 +276,7 @@ query "ecs_service_input" {
 
 # With queries
 
-query "ecs_service_ec2_target_groups" {
+query "ec2_target_groups_for_ecs_service" {
   sql = <<-EOQ
     select
       t.target_group_arn as target_group_arn
@@ -289,7 +289,7 @@ query "ecs_service_ec2_target_groups" {
   EOQ
 }
 
-query "ecs_service_ecs_clusters" {
+query "ecs_clusters_for_ecs_service" {
   sql = <<-EOQ
     select
       c.cluster_arn as cluster_arn
@@ -301,7 +301,7 @@ query "ecs_service_ecs_clusters" {
   EOQ
 }
 
-query "ecs_service_ecs_container_instances" {
+query "ecs_container_instances_for_ecs_service" {
   sql = <<-EOQ
     select
       i.arn as container_instance_arn
@@ -315,7 +315,7 @@ query "ecs_service_ecs_container_instances" {
   EOQ
 }
 
-query "ecs_service_ecs_tasks" {
+query "ecs_tasks_for_ecs_service" {
   sql = <<-EOQ
     select
       t.task_arn as task_arn
@@ -329,7 +329,7 @@ query "ecs_service_ecs_tasks" {
   EOQ
 }
 
-query "ecs_service_ecs_task_definitions" {
+query "ecs_task_definitions_for_ecs_service" {
   sql = <<-EOQ
     select
       d.task_definition_arn as task_definition_arn
@@ -342,7 +342,7 @@ query "ecs_service_ecs_task_definitions" {
   EOQ
 }
 
-query "ecs_service_iam_roles" {
+query "iam_roles_for_ecs_service" {
   sql = <<-EOQ
     select
       r.arn as role_arn
@@ -354,7 +354,7 @@ query "ecs_service_iam_roles" {
   EOQ
 }
 
-query "ecs_service_vpc_security_groups" {
+query "vpc_security_groups_for_ecs_service" {
   sql = <<-EOQ
     select
       sg.group_id as group_id
@@ -368,7 +368,7 @@ query "ecs_service_vpc_security_groups" {
   EOQ
 }
 
-query "ecs_service_vpc_subnets" {
+query "vpc_subnets_for_ecs_service" {
   sql = <<-EOQ
     select
       sb.subnet_id as subnet_id
@@ -382,7 +382,7 @@ query "ecs_service_vpc_subnets" {
   EOQ
 }
 
-query "ecs_service_vpc_vpcs" {
+query "vpc_vpcs_for_ecs_service" {
   sql = <<-EOQ
     select
       sb.vpc_id

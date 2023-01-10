@@ -23,23 +23,23 @@ dashboard "backup_vault_detail" {
 
   }
 
-  with "backup_plans" {
-    query = query.backup_vault_backup_plans
+  with "backup_plans_for_backup_vault" {
+    query = query.backup_plans_for_backup_vault
     args  = [self.input.backup_vault_arn.value]
   }
 
-  with "kms_keys" {
-    query = query.backup_vault_kms_keys
+  with "kms_keys_for_backup_vault" {
+    query = query.kms_keys_for_backup_vault
     args  = [self.input.backup_vault_arn.value]
   }
 
-  with "sns_topics" {
-    query = query.backup_vault_to_sns_topics
+  with "sns_topics_for_backup_vault" {
+    query = query.sns_topics_for_backup_vault
     args  = [self.input.backup_vault_arn.value]
   }
 
-  with "vault_policy_std" {
-    query = query.backup_vault_policy_std
+  with "policy_std_for_backup_vault" {
+    query = query.policy_std_for_backup_vault
     args  = [self.input.backup_vault_arn.value]
   }
 
@@ -53,7 +53,7 @@ dashboard "backup_vault_detail" {
       node {
         base = node.backup_plan
         args = {
-          backup_plan_arns = with.backup_plans.rows[*].backup_plan_arn
+          backup_plan_arns = with.backup_plans_for_backup_vault.rows[*].backup_plan_arn
         }
       }
 
@@ -67,21 +67,21 @@ dashboard "backup_vault_detail" {
       node {
         base = node.kms_key
         args = {
-          kms_key_arns = with.kms_keys.rows[*].kms_key_arn
+          kms_key_arns = with.kms_keys_for_backup_vault.rows[*].kms_key_arn
         }
       }
 
       node {
         base = node.sns_topic
         args = {
-          sns_topic_arns = with.sns_topics.rows[*].sns_topic_arn
+          sns_topic_arns = with.sns_topics_for_backup_vault.rows[*].sns_topic_arn
         }
       }
 
       edge {
         base = edge.backup_plan_to_backup_vault
         args = {
-          backup_plan_arns = with.backup_plans.rows[*].backup_plan_arn
+          backup_plan_arns = with.backup_plans_for_backup_vault.rows[*].backup_plan_arn
         }
       }
 
@@ -119,7 +119,7 @@ dashboard "backup_vault_detail" {
       title = "Resource Policy"
       base  = graph.iam_resource_policy_structure
       args = {
-        policy_std = with.vault_policy_std.rows[0].policy_std
+        policy_std = with.policy_std_for_backup_vault.rows[0].policy_std
       }
     }
 
@@ -147,7 +147,7 @@ query "backup_vault_input" {
 
 #With queries
 
-query "backup_vault_backup_plans" {
+query "backup_plans_for_backup_vault" {
   sql = <<-EOQ
     select
       p.arn as backup_plan_arn
@@ -161,7 +161,7 @@ query "backup_vault_backup_plans" {
   EOQ
 }
 
-query "backup_vault_kms_keys" {
+query "kms_keys_for_backup_vault" {
   sql = <<-EOQ
     select
       encryption_key_arn as kms_key_arn
@@ -173,7 +173,7 @@ query "backup_vault_kms_keys" {
   EOQ
 }
 
-query "backup_vault_to_sns_topics" {
+query "sns_topics_for_backup_vault" {
   sql = <<-EOQ
     select
       sns_topic_arn
@@ -185,7 +185,7 @@ query "backup_vault_to_sns_topics" {
   EOQ
 }
 
-query "backup_vault_policy_std" {
+query "policy_std_for_backup_vault" {
   sql = <<-EOQ
     select
       policy_std

@@ -41,33 +41,33 @@ dashboard "cloudwatch_log_group_detail" {
 
   }
 
-  with "cloudtrail_trails" {
-    query = query.cloudwatch_log_group_cloudtrail_trails
+  with "cloudtrail_trails_for_cloudwatch_log_group" {
+    query = query.cloudtrail_trails_for_cloudwatch_log_group
     args  = [self.input.log_group_arn.value]
   }
 
-  with "cloudwatch_log_metric_filters" {
-    query = query.cloudwatch_log_group_cloudwatch_log_metric_filters
+  with "cloudwatch_log_metric_filters_for_cloudwatch_log_group" {
+    query = query.cloudwatch_log_metric_filters_for_cloudwatch_log_group
     args  = [self.input.log_group_arn.value]
   }
 
-  with "kinesis_streams" {
-    query = query.cloudwatch_log_group_kinesis_streams
+  with "kinesis_streams_for_cloudwatch_log_group" {
+    query = query.kinesis_streams_for_cloudwatch_log_group
     args  = [self.input.log_group_arn.value]
   }
 
-  with "kms_keys" {
-    query = query.cloudwatch_log_group_kms_keys
+  with "kms_keys_for_cloudwatch_log_group" {
+    query = query.kms_keys_for_cloudwatch_log_group
     args  = [self.input.log_group_arn.value]
   }
 
-  with "lambda_functions" {
-    query = query.cloudwatch_log_group_lambda_functions
+  with "lambda_functions_for_cloudwatch_log_group" {
+    query = query.lambda_functions_for_cloudwatch_log_group
     args  = [self.input.log_group_arn.value]
   }
 
-  with "vpc_flow_logs" {
-    query = query.cloudwatch_log_group_vpc_flow_logs
+  with "vpc_flow_logs_for_cloudwatch_log_group" {
+    query = query.vpc_flow_logs_for_cloudwatch_log_group
     args  = [self.input.log_group_arn.value]
   }
 
@@ -82,7 +82,7 @@ dashboard "cloudwatch_log_group_detail" {
       node {
         base = node.cloudtrail_trail
         args = {
-          cloudtrail_trail_arns = with.cloudtrail_trails.rows[*].cloudtrail_trail_arn
+          cloudtrail_trail_arns = with.cloudtrail_trails_for_cloudwatch_log_group.rows[*].cloudtrail_trail_arn
         }
       }
 
@@ -103,35 +103,35 @@ dashboard "cloudwatch_log_group_detail" {
       node {
         base = node.kinesis_stream
         args = {
-          kinesis_stream_arns = with.kinesis_streams.rows[*].stream_arn
+          kinesis_stream_arns = with.kinesis_streams_for_cloudwatch_log_group.rows[*].stream_arn
         }
       }
 
       node {
         base = node.kms_key
         args = {
-          kms_key_arns = with.kms_keys.rows[*].kms_key_id
+          kms_key_arns = with.kms_keys_for_cloudwatch_log_group.rows[*].kms_key_id
         }
       }
 
       node {
         base = node.lambda_function
         args = {
-          lambda_function_arns = with.lambda_functions.rows[*].lambda_function_arn
+          lambda_function_arns = with.lambda_functions_for_cloudwatch_log_group.rows[*].lambda_function_arn
         }
       }
 
       node {
         base = node.vpc_flow_log
         args = {
-          vpc_flow_log_ids = with.vpc_flow_logs.rows[*].flow_log_id
+          vpc_flow_log_ids = with.vpc_flow_logs_for_cloudwatch_log_group.rows[*].flow_log_id
         }
       }
 
       edge {
         base = edge.cloudtrail_trail_to_cloudwatch_log_group
         args = {
-          cloudtrail_trail_arns = with.cloudtrail_trails.rows[*].cloudtrail_trail_arn
+          cloudtrail_trail_arns = with.cloudtrail_trails_for_cloudwatch_log_group.rows[*].cloudtrail_trail_arn
         }
       }
 
@@ -152,21 +152,21 @@ dashboard "cloudwatch_log_group_detail" {
       edge {
         base = edge.kinesis_stream_to_cloudwatch_log_group
         args = {
-          kinesis_stream_arns = with.kinesis_streams.rows[*].stream_arn
+          kinesis_stream_arns = with.kinesis_streams_for_cloudwatch_log_group.rows[*].stream_arn
         }
       }
 
       edge {
         base = edge.lambda_function_to_cloudwatch_log_group
         args = {
-          lambda_function_arns = with.lambda_functions.rows[*].lambda_function_arn
+          lambda_function_arns = with.lambda_functions_for_cloudwatch_log_group.rows[*].lambda_function_arn
         }
       }
 
       edge {
         base = edge.vpc_flow_log_to_cloudwatch_log_group
         args = {
-          vpc_flow_log_ids = with.vpc_flow_logs.rows[*].flow_log_id
+          vpc_flow_log_ids = with.vpc_flow_logs_for_cloudwatch_log_group.rows[*].flow_log_id
         }
       }
     }
@@ -235,7 +235,7 @@ query "cloudwatch_log_group_input" {
 
 # With queries
 
-query "cloudwatch_log_group_cloudtrail_trails" {
+query "cloudtrail_trails_for_cloudwatch_log_group" {
   sql = <<-EOQ
     select
       arn as cloudtrail_trail_arn
@@ -247,7 +247,7 @@ query "cloudwatch_log_group_cloudtrail_trails" {
   EOQ
 }
 
-query "cloudwatch_log_group_cloudwatch_log_metric_filters" {
+query "cloudwatch_log_metric_filters_for_cloudwatch_log_group" {
   sql = <<-EOQ
     select
       f.name as log_metric_filter_name
@@ -260,7 +260,7 @@ query "cloudwatch_log_group_cloudwatch_log_metric_filters" {
   EOQ
 }
 
-query "cloudwatch_log_group_kinesis_streams" {
+query "kinesis_streams_for_cloudwatch_log_group" {
   sql = <<-EOQ
     select
       s.stream_arn
@@ -276,7 +276,7 @@ query "cloudwatch_log_group_kinesis_streams" {
   EOQ
 }
 
-query "cloudwatch_log_group_kms_keys" {
+query "kms_keys_for_cloudwatch_log_group" {
   sql = <<-EOQ
     select
       kms_key_id
@@ -288,7 +288,7 @@ query "cloudwatch_log_group_kms_keys" {
   EOQ
 }
 
-query "cloudwatch_log_group_lambda_functions" {
+query "lambda_functions_for_cloudwatch_log_group" {
   sql = <<-EOQ
     select
       f.arn as lambda_function_arn
@@ -302,7 +302,7 @@ query "cloudwatch_log_group_lambda_functions" {
   EOQ
 }
 
-query "cloudwatch_log_group_vpc_flow_logs" {
+query "vpc_flow_logs_for_cloudwatch_log_group" {
   sql = <<-EOQ
     select
       distinct f.flow_log_id

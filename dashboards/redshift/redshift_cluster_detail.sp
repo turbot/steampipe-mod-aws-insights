@@ -53,48 +53,48 @@ dashboard "redshift_cluster_detail" {
 
   }
 
-  with "cloudwatch_log_groups" {
-    query = query.redshift_cluster_cloudwatch_log_groups
+  with "cloudwatch_log_groups_for_redshift_cluster" {
+    query = query.cloudwatch_log_groups_for_redshift_cluster
     args  = [self.input.cluster_arn.value]
   }
 
-  with "iam_roles" {
-    query = query.redshift_cluster_iam_roles
+  with "iam_roles_for_redshift_cluster" {
+    query = query.iam_roles_for_redshift_cluster
     args  = [self.input.cluster_arn.value]
   }
 
-  with "kms_keys" {
-    query = query.redshift_cluster_kms_keys
+  with "kms_keys_for_redshift_cluster" {
+    query = query.kms_keys_for_redshift_cluster
     args  = [self.input.cluster_arn.value]
   }
 
-  with "redshift_snapshots" {
-    query = query.redshift_cluster_redshift_snapshots
+  with "redshift_snapshots_for_redshift_cluster" {
+    query = query.redshift_snapshots_for_redshift_cluster
     args  = [self.input.cluster_arn.value]
   }
 
-  with "s3_buckets" {
-    query = query.redshift_cluster_s3_buckets
+  with "s3_buckets_for_redshift_cluster" {
+    query = query.s3_buckets_for_redshift_cluster
     args  = [self.input.cluster_arn.value]
   }
 
-  with "vpc_eips" {
-    query = query.redshift_cluster_vpc_eips
+  with "vpc_eips_for_redshift_cluster" {
+    query = query.vpc_eips_for_redshift_cluster
     args  = [self.input.cluster_arn.value]
   }
 
-  with "vpc_security_groups" {
-    query = query.redshift_cluster_vpc_security_groups
+  with "vpc_security_groups_for_redshift_cluster" {
+    query = query.vpc_security_groups_for_redshift_cluster
     args  = [self.input.cluster_arn.value]
   }
 
-  with "vpc_subnets" {
-    query = query.redshift_cluster_vpc_subnets
+  with "vpc_subnets_for_redshift_cluster" {
+    query = query.vpc_subnets_for_redshift_cluster
     args  = [self.input.cluster_arn.value]
   }
 
-  with "vpc_vpcs" {
-    query = query.redshift_cluster_vpc_vpcs
+  with "vpc_vpcs_for_redshift_cluster" {
+    query = query.vpc_vpcs_for_redshift_cluster
     args  = [self.input.cluster_arn.value]
   }
 
@@ -108,21 +108,21 @@ dashboard "redshift_cluster_detail" {
       node {
         base = node.cloudwatch_log_group
         args = {
-          cloudwatch_log_group_arns = with.cloudwatch_log_groups.rows[*].log_group_arn
+          cloudwatch_log_group_arns = with.cloudwatch_log_groups_for_redshift_cluster.rows[*].log_group_arn
         }
       }
 
       node {
         base = node.iam_role
         args = {
-          iam_role_arns = with.iam_roles.rows[*].role_arn
+          iam_role_arns = with.iam_roles_for_redshift_cluster.rows[*].role_arn
         }
       }
 
       node {
         base = node.kms_key
         args = {
-          kms_key_arns = with.kms_keys.rows[*].key_arn
+          kms_key_arns = with.kms_keys_for_redshift_cluster.rows[*].key_arn
         }
       }
 
@@ -143,7 +143,7 @@ dashboard "redshift_cluster_detail" {
       node {
         base = node.redshift_snapshot
         args = {
-          redshift_snapshot_arns = with.redshift_snapshots.rows[*].snapshot_arn
+          redshift_snapshot_arns = with.redshift_snapshots_for_redshift_cluster.rows[*].snapshot_arn
         }
       }
 
@@ -157,35 +157,35 @@ dashboard "redshift_cluster_detail" {
       node {
         base = node.s3_bucket
         args = {
-          s3_bucket_arns = with.s3_buckets.rows[*].bucket_arn
+          s3_bucket_arns = with.s3_buckets_for_redshift_cluster.rows[*].bucket_arn
         }
       }
 
       node {
         base = node.vpc_eip
         args = {
-          vpc_eip_arns = with.vpc_eips.rows[*].eip_arn
+          vpc_eip_arns = with.vpc_eips_for_redshift_cluster.rows[*].eip_arn
         }
       }
 
       node {
         base = node.vpc_security_group
         args = {
-          vpc_security_group_ids = with.vpc_security_groups.rows[*].security_group_id
+          vpc_security_group_ids = with.vpc_security_groups_for_redshift_cluster.rows[*].security_group_id
         }
       }
 
       node {
         base = node.vpc_subnet
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_redshift_cluster.rows[*].subnet_id
         }
       }
 
       node {
         base = node.vpc_vpc
         args = {
-          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_id
+          vpc_vpc_ids = with.vpc_vpcs_for_redshift_cluster.rows[*].vpc_id
         }
       }
 
@@ -262,7 +262,7 @@ dashboard "redshift_cluster_detail" {
       edge {
         base = edge.vpc_subnet_to_vpc_vpc
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_redshift_cluster.rows[*].subnet_id
         }
       }
     }
@@ -346,7 +346,7 @@ query "redshift_cluster_input" {
 
 # With queries
 
-query "redshift_cluster_cloudwatch_log_groups" {
+query "cloudwatch_log_groups_for_redshift_cluster" {
   sql = <<-EOQ
     select
       g.arn as log_group_arn
@@ -359,19 +359,19 @@ query "redshift_cluster_cloudwatch_log_groups" {
   EOQ
 }
 
-query "redshift_cluster_iam_roles" {
+query "iam_roles_for_redshift_cluster" {
   sql = <<-EOQ
     select
       r ->> 'IamRoleArn' as role_arn
     from
       aws_redshift_cluster,
-      jsonb_array_elements(iam_roles) as r
+      jsonb_array_elements(iam_roles_for_redshift_cluster) as r
     where
       arn = $1;
   EOQ
 }
 
-query "redshift_cluster_kms_keys" {
+query "kms_keys_for_redshift_cluster" {
   sql = <<-EOQ
     select
       kms_key_id as key_arn
@@ -383,7 +383,7 @@ query "redshift_cluster_kms_keys" {
   EOQ
 }
 
-query "redshift_cluster_redshift_snapshots" {
+query "redshift_snapshots_for_redshift_cluster" {
   sql = <<-EOQ
     select
       s.akas::text as snapshot_arn
@@ -398,7 +398,7 @@ query "redshift_cluster_redshift_snapshots" {
   EOQ
 }
 
-query "redshift_cluster_s3_buckets" {
+query "s3_buckets_for_redshift_cluster" {
   sql = <<-EOQ
     select
       b.arn as bucket_arn
@@ -411,7 +411,7 @@ query "redshift_cluster_s3_buckets" {
   EOQ
 }
 
-query "redshift_cluster_vpc_eips" {
+query "vpc_eips_for_redshift_cluster" {
   sql = <<-EOQ
     select
       e.arn as eip_arn
@@ -425,19 +425,19 @@ query "redshift_cluster_vpc_eips" {
   EOQ
 }
 
-query "redshift_cluster_vpc_security_groups" {
+query "vpc_security_groups_for_redshift_cluster" {
   sql = <<-EOQ
     select
       s ->> 'VpcSecurityGroupId' as security_group_id
     from
       aws_redshift_cluster,
-      jsonb_array_elements(vpc_security_groups) as s
+      jsonb_array_elements(vpc_security_groups_for_redshift_cluster) as s
     where
       arn = $1;
   EOQ
 }
 
-query "redshift_cluster_vpc_subnets" {
+query "vpc_subnets_for_redshift_cluster" {
   sql = <<-EOQ
     select
       subnet ->> 'SubnetIdentifier' as subnet_id
@@ -454,7 +454,7 @@ query "redshift_cluster_vpc_subnets" {
   EOQ
 }
 
-query "redshift_cluster_vpc_vpcs" {
+query "vpc_vpcs_for_redshift_cluster" {
   sql = <<-EOQ
     select
       vpc_id as vpc_id
@@ -614,7 +614,7 @@ query "redshift_cluster_security_groups" {
       s -> 'Status' as "Status"
     from
       aws_redshift_cluster,
-      jsonb_array_elements(vpc_security_groups) as s
+      jsonb_array_elements(vpc_security_groups_for_redshift_cluster) as s
     where
       arn = $1;
   EOQ
