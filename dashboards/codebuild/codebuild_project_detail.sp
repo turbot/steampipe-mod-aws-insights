@@ -18,66 +18,66 @@ dashboard "codebuild_project_detail" {
     card {
       width = 2
       query = query.codebuild_project_encrypted
-      args = [self.input.codebuild_project_arn.value]
+      args  = [self.input.codebuild_project_arn.value]
     }
 
     card {
       width = 2
       query = query.codebuild_project_logging_enabled
-      args = [self.input.codebuild_project_arn.value]
+      args  = [self.input.codebuild_project_arn.value]
     }
 
     card {
       width = 2
       query = query.codebuild_project_privileged_mode
-      args = [self.input.codebuild_project_arn.value]
+      args  = [self.input.codebuild_project_arn.value]
     }
 
   }
 
   with "cloudwatch_groups" {
     query = query.codebuild_project_cloudwatch_groups
-    args = [self.input.codebuild_project_arn.value]
+    args  = [self.input.codebuild_project_arn.value]
   }
 
   with "codecommit_repositories" {
     query = query.codebuild_project_codecommit_repositories
-    args = [self.input.codebuild_project_arn.value]
+    args  = [self.input.codebuild_project_arn.value]
   }
 
   with "ecr_repositories" {
     query = query.codebuild_project_ecr_repositories
-    args = [self.input.codebuild_project_arn.value]
+    args  = [self.input.codebuild_project_arn.value]
   }
 
   with "iam_roles" {
     query = query.codebuild_project_iam_roles
-    args = [self.input.codebuild_project_arn.value]
+    args  = [self.input.codebuild_project_arn.value]
   }
 
   with "kms_keys" {
     query = query.codebuild_project_kms_keys
-    args = [self.input.codebuild_project_arn.value]
+    args  = [self.input.codebuild_project_arn.value]
   }
 
   with "s3_buckets" {
     query = query.codebuild_project_s3_buckets
-    args = [self.input.codebuild_project_arn.value]
+    args  = [self.input.codebuild_project_arn.value]
   }
 
   with "vpc_security_groups" {
     query = query.codebuild_project_vpc_security_groups
-    args = [self.input.codebuild_project_arn.value]
+    args  = [self.input.codebuild_project_arn.value]
   }
 
   with "vpc_subnets" {
     query = query.codebuild_project_vpc_subnets
-    args = [self.input.codebuild_project_arn.value]
+    args  = [self.input.codebuild_project_arn.value]
   }
 
   with "vpc_vpcs" {
     query = query.codebuild_project_vpc_vpcs
-    args = [self.input.codebuild_project_arn.value]
+    args  = [self.input.codebuild_project_arn.value]
   }
 
 
@@ -238,7 +238,7 @@ dashboard "codebuild_project_detail" {
       edge {
         base = edge.vpc_subnet_to_vpc_vpc
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].vpc_subnet_i
+          vpc_subnet_ids = with.vpc_subnets.rows[*].vpc_subnet_id
         }
       }
 
@@ -253,14 +253,14 @@ dashboard "codebuild_project_detail" {
       type  = "line"
       width = 6
       query = query.codebuild_project_overview
-      args = [self.input.codebuild_project_arn.value]
+      args  = [self.input.codebuild_project_arn.value]
     }
 
     table {
       title = "Tags"
       width = 6
       query = query.codebuild_project_tags
-      args = [self.input.codebuild_project_arn.value]
+      args  = [self.input.codebuild_project_arn.value]
     }
   }
 
@@ -270,7 +270,7 @@ dashboard "codebuild_project_detail" {
     table {
       title = "Sources"
       query = query.codebuild_project_sources
-      args = [self.input.codebuild_project_arn.value]
+      args  = [self.input.codebuild_project_arn.value]
     }
 
   }
