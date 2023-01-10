@@ -42,38 +42,38 @@ dashboard "sqs_queue_detail" {
 
   }
 
-  with "eventbridge_rules" {
-    query = query.sqs_queue_eventbridge_rules
+  with "eventbridge_rules_for_sqs_queue" {
+    query = query.eventbridge_rules_for_sqs_queue
     args  = [self.input.queue_arn.value]
   }
 
-  with "kms_keys" {
-    query = query.sqs_queue_kms_keys
+  with "kms_keys_for_sqs_queue" {
+    query = query.kms_keys_for_sqs_queue
     args  = [self.input.queue_arn.value]
   }
 
-  with "lambda_functions" {
-    query = query.sqs_queue_lambda_functions
+  with "lambda_functions_for_sqs_queue" {
+    query = query.lambda_functions_for_sqs_queue
     args  = [self.input.queue_arn.value]
   }
 
-  with "queue_policy_std" {
-    query = query.sqs_queue_policy_std
+  with "queue_policy_std_for_sqs_queue" {
+    query = query.queue_policy_std_for_sqs_queue
     args  = [self.input.queue_arn.value]
   }
 
-  with "s3_buckets" {
-    query = query.sqs_queue_s3_buckets
+  with "s3_buckets_for_sqs_queue" {
+    query = query.s3_buckets_for_sqs_queue
     args  = [self.input.queue_arn.value]
   }
 
-  with "vpc_endpoints" {
-    query = query.sqs_queue_vpc_endpoints
+  with "vpc_endpoints_for_sqs_queue" {
+    query = query.vpc_endpoints_for_sqs_queue
     args  = [self.input.queue_arn.value]
   }
 
-  with "vpc_vpcs" {
-    query = query.sqs_queue_vpc_vpcs
+  with "vpc_vpcs_for_sqs_queue" {
+    query = query.vpc_vpcs_for_sqs_queue
     args  = [self.input.queue_arn.value]
   }
 
@@ -87,28 +87,28 @@ dashboard "sqs_queue_detail" {
       node {
         base = node.eventbridge_rule
         args = {
-          eventbridge_rule_arns = with.eventbridge_rules.rows[*].eventbridge_rule_arn
+          eventbridge_rule_arns = with.eventbridge_rules_for_sqs_queue.rows[*].eventbridge_rule_arn
         }
       }
 
       node {
         base = node.kms_key
         args = {
-          kms_key_arns = with.kms_keys.rows[*].key_arn
+          kms_key_arns = with.kms_keys_for_sqs_queue.rows[*].key_arn
         }
       }
 
       node {
         base = node.lambda_function
         args = {
-          lambda_function_arns = with.lambda_functions.rows[*].function_arn
+          lambda_function_arns = with.lambda_functions_for_sqs_queue.rows[*].function_arn
         }
       }
 
       node {
         base = node.s3_bucket
         args = {
-          s3_bucket_arns = with.s3_buckets.rows[*].bucket_arn
+          s3_bucket_arns = with.s3_buckets_for_sqs_queue.rows[*].bucket_arn
         }
       }
 
@@ -136,21 +136,21 @@ dashboard "sqs_queue_detail" {
       node {
         base = node.vpc_endpoint
         args = {
-          vpc_endpoint_ids = with.vpc_endpoints.rows[*].vpc_endpoint_id
+          vpc_endpoint_ids = with.vpc_endpoints_for_sqs_queue.rows[*].vpc_endpoint_id
         }
       }
 
       node {
         base = node.vpc_vpc
         args = {
-          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_id
+          vpc_vpc_ids = with.vpc_vpcs_for_sqs_queue.rows[*].vpc_id
         }
       }
 
       edge {
         base = edge.eventbridge_rule_to_sqs_queue
         args = {
-          eventbridge_rule_arns = with.eventbridge_rules.rows[*].eventbridge_rule_arn
+          eventbridge_rule_arns = with.eventbridge_rules_for_sqs_queue.rows[*].eventbridge_rule_arn
         }
       }
 
@@ -164,7 +164,7 @@ dashboard "sqs_queue_detail" {
       edge {
         base = edge.s3_bucket_to_sqs_queue
         args = {
-          s3_bucket_arns = with.s3_buckets.rows[*].bucket_arn
+          s3_bucket_arns = with.s3_buckets_for_sqs_queue.rows[*].bucket_arn
         }
       }
 
@@ -199,7 +199,7 @@ dashboard "sqs_queue_detail" {
       edge {
         base = edge.vpc_endpoint_to_vpc_vpc
         args = {
-          vpc_endpoint_ids = with.vpc_endpoints.rows[*].vpc_endpoint_id
+          vpc_endpoint_ids = with.vpc_endpoints_for_sqs_queue.rows[*].vpc_endpoint_id
         }
       }
     }
@@ -253,7 +253,7 @@ dashboard "sqs_queue_detail" {
     title = "Resource Policy"
     base  = graph.iam_resource_policy_structure
     args = {
-      policy_std = with.queue_policy_std.rows[0].policy_std
+      policy_std = with.queue_policy_std_for_sqs_queue.rows[0].policy_std
     }
   }
 
@@ -332,7 +332,7 @@ query "sqs_queue_message_retention_seconds" {
 
 # with queries
 
-query "sqs_queue_eventbridge_rules" {
+query "eventbridge_rules_for_sqs_queue" {
   sql = <<-EOQ
     select
       arn as eventbridge_rule_arn
@@ -344,7 +344,7 @@ query "sqs_queue_eventbridge_rules" {
   EOQ
 }
 
-query "sqs_queue_kms_keys" {
+query "kms_keys_for_sqs_queue" {
   sql = <<-EOQ
     select
       k.arn as key_arn
@@ -360,7 +360,7 @@ query "sqs_queue_kms_keys" {
   EOQ
 }
 
-query "sqs_queue_lambda_functions" {
+query "lambda_functions_for_sqs_queue" {
   sql = <<-EOQ
     select
       arn as function_arn
@@ -371,7 +371,7 @@ query "sqs_queue_lambda_functions" {
   EOQ
 }
 
-query "sqs_queue_policy_std" {
+query "queue_policy_std_for_sqs_queue" {
   sql = <<-EOQ
     select
       policy_std
@@ -382,7 +382,7 @@ query "sqs_queue_policy_std" {
   EOQ
 }
 
-query "sqs_queue_s3_buckets" {
+query "s3_buckets_for_sqs_queue" {
   sql = <<-EOQ
     select
       b.arn as bucket_arn
@@ -395,7 +395,7 @@ query "sqs_queue_s3_buckets" {
   EOQ
 }
 
-query "sqs_queue_vpc_endpoints" {
+query "vpc_endpoints_for_sqs_queue" {
   sql = <<-EOQ
     select
       vpc_endpoint_id
@@ -408,7 +408,7 @@ query "sqs_queue_vpc_endpoints" {
   EOQ
 }
 
-query "sqs_queue_vpc_vpcs" {
+query "vpc_vpcs_for_sqs_queue" {
   sql = <<-EOQ
     select
       vpc_id

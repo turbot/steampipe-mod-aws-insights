@@ -18,64 +18,64 @@ dashboard "ecs_cluster_detail" {
     card {
       query = query.ecs_cluster_status
       width = 2
-      args = [self.input.ecs_cluster_arn.value]
+      args  = [self.input.ecs_cluster_arn.value]
     }
 
     card {
       query = query.ecs_cluster_registered_container_instances_count
       width = 2
-      args = [self.input.ecs_cluster_arn.value]
+      args  = [self.input.ecs_cluster_arn.value]
     }
 
     card {
       query = query.ecs_cluster_active_services_count
       width = 2
-      args = [self.input.ecs_cluster_arn.value]
+      args  = [self.input.ecs_cluster_arn.value]
     }
 
     card {
       query = query.ecs_cluster_running_tasks_count
       width = 2
-      args = [self.input.ecs_cluster_arn.value]
+      args  = [self.input.ecs_cluster_arn.value]
     }
 
     card {
       query = query.ecs_cluster_pending_tasks_count
       width = 2
-      args = [self.input.ecs_cluster_arn.value]
+      args  = [self.input.ecs_cluster_arn.value]
     }
 
     card {
       query = query.ecs_cluster_container_insights_enabled
       width = 2
-      args = [self.input.ecs_cluster_arn.value]
+      args  = [self.input.ecs_cluster_arn.value]
     }
 
   }
 
-  with "ecs_container_instances" {
-    query = query.ecs_cluster_ecs_container_instances
-    args = [self.input.ecs_cluster_arn.value]
+  with "ecs_container_instances_for_ecs_cluster" {
+    query = query.ecs_container_instances_for_ecs_cluster
+    args  = [self.input.ecs_cluster_arn.value]
   }
 
-  with "ecs_services" {
-    query = query.ecs_cluster_ecs_services
-    args = [self.input.ecs_cluster_arn.value]
+  with "ecs_services_for_ecs_cluster" {
+    query = query.ecs_services_for_ecs_cluster
+    args  = [self.input.ecs_cluster_arn.value]
   }
 
-  with "ecs_task_definitions" {
-    query = query.ecs_cluster_ecs_task_definitions
-    args = [self.input.ecs_cluster_arn.value]
+  with "ecs_task_definitions_for_ecs_cluster" {
+    query = query.ecs_task_definitions_for_ecs_cluster
+    args  = [self.input.ecs_cluster_arn.value]
   }
 
-  with "vpc_subnets" {
-    query = query.ecs_cluster_vpc_subnets
-    args = [self.input.ecs_cluster_arn.value]
+  with "vpc_subnets_for_ecs_cluster" {
+    query = query.vpc_subnets_for_ecs_cluster
+    args  = [self.input.ecs_cluster_arn.value]
   }
 
-  with "vpc_vpcs" {
-    query = query.ecs_cluster_vpc_vpcs
-    args = [self.input.ecs_cluster_arn.value]
+  with "vpc_vpcs_for_ecs_cluster" {
+    query = query.vpc_vpcs_for_ecs_cluster
+    args  = [self.input.ecs_cluster_arn.value]
   }
 
   container {
@@ -116,49 +116,49 @@ dashboard "ecs_cluster_detail" {
       node {
         base = node.ecs_container_instance
         args = {
-          ecs_container_instance_arns = with.ecs_container_instances.rows[*].container_instance_arn
+          ecs_container_instance_arns = with.ecs_container_instances_for_ecs_cluster.rows[*].container_instance_arn
         }
       }
 
       node {
         base = node.ecs_service
         args = {
-          ecs_service_arns = with.ecs_services.rows[*].service_arn
+          ecs_service_arns = with.ecs_services_for_ecs_cluster.rows[*].service_arn
         }
       }
 
       node {
         base = node.ecs_task_definition
         args = {
-          ecs_task_definition_arns = with.ecs_task_definitions.rows[*].task_definition_arn
+          ecs_task_definition_arns = with.ecs_task_definitions_for_ecs_cluster.rows[*].task_definition_arn
         }
       }
 
       node {
         base = node.ecs_service
         args = {
-          ecs_service_arns = with.ecs_services.rows[*].service_arn
+          ecs_service_arns = with.ecs_services_for_ecs_cluster.rows[*].service_arn
         }
       }
 
       node {
         base = node.ecs_task_definition
         args = {
-          ecs_task_definition_arns = with.ecs_task_definitions.rows[*].task_definition_arn
+          ecs_task_definition_arns = with.ecs_task_definitions_for_ecs_cluster.rows[*].task_definition_arn
         }
       }
 
       node {
         base = node.vpc_subnet
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_ecs_cluster.rows[*].subnet_id
         }
       }
 
       node {
         base = node.vpc_vpc
         args = {
-          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_id
+          vpc_vpc_ids = with.vpc_vpcs_for_ecs_cluster.rows[*].vpc_id
         }
       }
 
@@ -200,21 +200,21 @@ dashboard "ecs_cluster_detail" {
       edge {
         base = edge.ecs_container_instance_to_vpc_subnet
         args = {
-          ecs_container_instance_arns = with.ecs_container_instances.rows[*].container_instance_arn
+          ecs_container_instance_arns = with.ecs_container_instances_for_ecs_cluster.rows[*].container_instance_arn
         }
       }
 
       edge {
         base = edge.ecs_task_definition_to_ecs_service
         args = {
-          ecs_task_definition_arns = with.ecs_task_definitions.rows[*].task_definition_arn
+          ecs_task_definition_arns = with.ecs_task_definitions_for_ecs_cluster.rows[*].task_definition_arn
         }
       }
 
       edge {
         base = edge.vpc_subnet_to_vpc_vpc
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_ecs_cluster.rows[*].subnet_id
         }
       }
     }
@@ -230,7 +230,7 @@ dashboard "ecs_cluster_detail" {
         type  = "line"
         width = 6
         query = query.ecs_cluster_overview
-        args = [self.input.ecs_cluster_arn.value]
+        args  = [self.input.ecs_cluster_arn.value]
 
       }
 
@@ -238,7 +238,7 @@ dashboard "ecs_cluster_detail" {
         title = "Tags"
         width = 6
         query = query.ecs_cluster_tags
-        args =[self.input.ecs_cluster_arn.value]
+        args  = [self.input.ecs_cluster_arn.value]
 
       }
     }
@@ -249,7 +249,7 @@ dashboard "ecs_cluster_detail" {
       table {
         title = "Registered Container Instances"
         query = query.ecs_cluster_container_instances
-        args = [self.input.ecs_cluster_arn.value]
+        args  = [self.input.ecs_cluster_arn.value]
 
         column "Instance ARN" {
           display = "none"
@@ -264,7 +264,7 @@ dashboard "ecs_cluster_detail" {
       table {
         title = "Statistics"
         query = query.ecs_cluster_statistics
-        args = [self.input.ecs_cluster_arn.value]
+        args  = [self.input.ecs_cluster_arn.value]
 
       }
 
@@ -295,7 +295,7 @@ query "ecs_cluster_input" {
 
 # With queries
 
-query "ecs_cluster_ecs_container_instances" {
+query "ecs_container_instances_for_ecs_cluster" {
   sql = <<-EOQ
     select
       i.arn as container_instance_arn
@@ -308,7 +308,7 @@ query "ecs_cluster_ecs_container_instances" {
   EOQ
 }
 
-query "ecs_cluster_ecs_services" {
+query "ecs_services_for_ecs_cluster" {
   sql = <<-EOQ
     select
       s.arn as service_arn
@@ -319,7 +319,7 @@ query "ecs_cluster_ecs_services" {
   EOQ
 }
 
-query "ecs_cluster_ecs_task_definitions" {
+query "ecs_task_definitions_for_ecs_cluster" {
   sql = <<-EOQ
     with list_all_task_definitions as (
       select
@@ -350,7 +350,7 @@ query "ecs_cluster_ecs_task_definitions" {
   EOQ
 }
 
-query "ecs_cluster_vpc_subnets" {
+query "vpc_subnets_for_ecs_cluster" {
   sql = <<-EOQ
     select
       s.subnet_id as subnet_id
@@ -367,7 +367,7 @@ query "ecs_cluster_vpc_subnets" {
   EOQ
 }
 
-query "ecs_cluster_vpc_vpcs" {
+query "vpc_vpcs_for_ecs_cluster" {
   sql = <<-EOQ
     select
     v.vpc_id as vpc_id

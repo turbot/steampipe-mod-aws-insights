@@ -52,33 +52,33 @@ dashboard "efs_file_system_detail" {
     }
 
   }
-  with "efs_access_points" {
-    query = query.efs_file_system_efs_access_points
+  with "efs_access_points_for_efs_file_system" {
+    query = query.efs_access_points_for_efs_file_system
     args  = [self.input.efs_file_system_arn.value]
   }
 
-  with "efs_mount_targets" {
-    query = query.efs_file_system_efs_mount_targets
+  with "efs_mount_targets_for_efs_file_system" {
+    query = query.efs_mount_targets_for_efs_file_system
     args  = [self.input.efs_file_system_arn.value]
   }
 
-  with "kms_keys" {
-    query = query.efs_file_system_kms_keys
+  with "kms_keys_for_efs_file_system" {
+    query = query.kms_keys_for_efs_file_system
     args  = [self.input.efs_file_system_arn.value]
   }
 
-  with "vpc_security_groups" {
-    query = query.efs_file_system_vpc_security_groups
+  with "vpc_security_groups_for_efs_file_system" {
+    query = query.vpc_security_groups_for_efs_file_system
     args  = [self.input.efs_file_system_arn.value]
   }
 
-  with "vpc_subnets" {
-    query = query.efs_file_system_vpc_subnets
+  with "vpc_subnets_for_efs_file_system" {
+    query = query.vpc_subnets_for_efs_file_system
     args  = [self.input.efs_file_system_arn.value]
   }
 
-  with "vpc_vpcs" {
-    query = query.efs_file_system_vpc_vpcs
+  with "vpc_vpcs_for_efs_file_system" {
+    query = query.vpc_vpcs_for_efs_file_system
     args  = [self.input.efs_file_system_arn.value]
   }
   container {
@@ -91,7 +91,7 @@ dashboard "efs_file_system_detail" {
       node {
         base = node.efs_access_point
         args = {
-          efs_access_point_arns = with.efs_access_points.rows[*].access_point_arn
+          efs_access_point_arns = with.efs_access_points_for_efs_file_system.rows[*].access_point_arn
         }
       }
 
@@ -105,35 +105,35 @@ dashboard "efs_file_system_detail" {
       node {
         base = node.efs_mount_target
         args = {
-          efs_mount_target_ids = with.efs_mount_targets.rows[*].mount_target_id
+          efs_mount_target_ids = with.efs_mount_targets_for_efs_file_system.rows[*].mount_target_id
         }
       }
 
       node {
         base = node.kms_key
         args = {
-          kms_key_arns = with.kms_keys.rows[*].key_arn
+          kms_key_arns = with.kms_keys_for_efs_file_system.rows[*].key_arn
         }
       }
 
       node {
         base = node.vpc_security_group
         args = {
-          vpc_security_group_ids = with.vpc_security_groups.rows[*].security_group_id
+          vpc_security_group_ids = with.vpc_security_groups_for_efs_file_system.rows[*].security_group_id
         }
       }
 
       node {
         base = node.vpc_subnet
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_efs_file_system.rows[*].subnet_id
         }
       }
 
       node {
         base = node.vpc_vpc
         args = {
-          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_id
+          vpc_vpc_ids = with.vpc_vpcs_for_efs_file_system.rows[*].vpc_id
         }
       }
 
@@ -161,21 +161,21 @@ dashboard "efs_file_system_detail" {
       edge {
         base = edge.efs_mount_target_to_vpc_security_group
         args = {
-          efs_mount_target_ids = with.efs_mount_targets.rows[*].mount_target_id
+          efs_mount_target_ids = with.efs_mount_targets_for_efs_file_system.rows[*].mount_target_id
         }
       }
 
       edge {
         base = edge.efs_mount_target_to_vpc_subnet
         args = {
-          efs_mount_target_ids = with.efs_mount_targets.rows[*].mount_target_id
+          efs_mount_target_ids = with.efs_mount_targets_for_efs_file_system.rows[*].mount_target_id
         }
       }
 
       edge {
         base = edge.vpc_subnet_to_vpc_vpc
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_efs_file_system.rows[*].subnet_id
         }
       }
 
@@ -321,8 +321,8 @@ query "efs_file_system_automatic_backup" {
 
 # with queries
 
-query "efs_file_system_efs_access_points" {
-  sql   = <<-EOQ
+query "efs_access_points_for_efs_file_system" {
+  sql = <<-EOQ
     select
       a.access_point_arn as access_point_arn
     from
@@ -333,8 +333,8 @@ query "efs_file_system_efs_access_points" {
   EOQ
 }
 
-query "efs_file_system_efs_mount_targets" {
-  sql   = <<-EOQ
+query "efs_mount_targets_for_efs_file_system" {
+  sql = <<-EOQ
     select
       mount_target_id
     from
@@ -345,8 +345,8 @@ query "efs_file_system_efs_mount_targets" {
   EOQ
 }
 
-query "efs_file_system_kms_keys" {
-  sql   = <<-EOQ
+query "kms_keys_for_efs_file_system" {
+  sql = <<-EOQ
     select
       kms_key_id as key_arn
     from
@@ -356,8 +356,8 @@ query "efs_file_system_kms_keys" {
   EOQ
 }
 
-query "efs_file_system_vpc_security_groups" {
-  sql   = <<-EOQ
+query "vpc_security_groups_for_efs_file_system" {
+  sql = <<-EOQ
     select
       jsonb_array_elements_text(t.security_groups) as security_group_id
     from
@@ -369,8 +369,8 @@ query "efs_file_system_vpc_security_groups" {
   EOQ
 }
 
-query "efs_file_system_vpc_subnets" {
-  sql   = <<-EOQ
+query "vpc_subnets_for_efs_file_system" {
+  sql = <<-EOQ
     select
       s.subnet_id as subnet_id
     from
@@ -382,8 +382,8 @@ query "efs_file_system_vpc_subnets" {
   EOQ
 }
 
-query "efs_file_system_vpc_vpcs" {
-  sql   = <<-EOQ
+query "vpc_vpcs_for_efs_file_system" {
+  sql = <<-EOQ
     select
       v.vpc_id as vpc_id
     from

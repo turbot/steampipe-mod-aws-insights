@@ -17,61 +17,61 @@ dashboard "ec2_gateway_load_balancer_detail" {
     card {
       width = 2
       query = query.ec2_gateway_load_balancer_state
-      args = [self.input.gateway_load_balancer.value]
+      args  = [self.input.gateway_load_balancer.value]
     }
 
     card {
       width = 2
       query = query.ec2_gateway_load_balancer_az_zone
-      args = [self.input.gateway_load_balancer.value]
+      args  = [self.input.gateway_load_balancer.value]
     }
 
     card {
       width = 2
       query = query.ec2_gateway_load_balancer_deletion_protection
-      args = [self.input.gateway_load_balancer.value]
+      args  = [self.input.gateway_load_balancer.value]
     }
 
   }
 
-  with "acm_certificates" {
-    query = query.ec2_gateway_load_balancer_acm_certificates
-    args = [self.input.gateway_load_balancer.value]
+  with "acm_certificates_for_ec2_gateway_load_balancer" {
+    query = query.acm_certificates_for_ec2_gateway_load_balancer
+    args  = [self.input.gateway_load_balancer.value]
   }
 
-  with "ec2_instances" {
-    query = query.ec2_gateway_load_balancer_ec2_instances
-    args = [self.input.gateway_load_balancer.value]
+  with "ec2_instances_for_ec2_gateway_load_balancer" {
+    query = query.ec2_instances_for_ec2_gateway_load_balancer
+    args  = [self.input.gateway_load_balancer.value]
   }
 
-  with "ec2_load_balancer_listeners" {
-    query = query.ec2_gateway_load_balancer_ec2_load_balancer_listeners
-    args = [self.input.gateway_load_balancer.value]
+  with "ec2_load_balancer_listeners_for_ec2_gateway_load_balancer" {
+    query = query.ec2_load_balancer_listeners_for_ec2_gateway_load_balancer
+    args  = [self.input.gateway_load_balancer.value]
   }
 
-  with "ec2_target_groups" {
-    query = query.ec2_gateway_load_balancer_ec2_target_groups
-    args = [self.input.gateway_load_balancer.value]
+  with "ec2_target_groups_for_ec2_gateway_load_balancer" {
+    query = query.ec2_target_groups_for_ec2_gateway_load_balancer
+    args  = [self.input.gateway_load_balancer.value]
   }
 
-  with "s3_buckets" {
-    query = query.ec2_gateway_load_balancer_s3_buckets
-    args = [self.input.gateway_load_balancer.value]
+  with "s3_buckets_for_ec2_gateway_load_balancer" {
+    query = query.s3_buckets_for_ec2_gateway_load_balancer
+    args  = [self.input.gateway_load_balancer.value]
   }
 
-  with "vpc_security_groups" {
-    query = query.ec2_gateway_load_balancer_vpc_security_groups
-    args = [self.input.gateway_load_balancer.value]
+  with "vpc_security_groups_for_ec2_gateway_load_balancer" {
+    query = query.vpc_security_groups_for_ec2_gateway_load_balancer
+    args  = [self.input.gateway_load_balancer.value]
   }
 
-  with "vpc_subnets" {
-    query = query.ec2_gateway_load_balancer_vpc_subnets
-    args = [self.input.gateway_load_balancer.value]
+  with "vpc_subnets_for_ec2_gateway_load_balancer" {
+    query = query.vpc_subnets_for_ec2_gateway_load_balancer
+    args  = [self.input.gateway_load_balancer.value]
   }
 
-  with "vpc_vpcs" {
-    query = query.ec2_gateway_load_balancer_vpc_vpcs
-    args = [self.input.gateway_load_balancer.value]
+  with "vpc_vpcs_for_ec2_gateway_load_balancer" {
+    query = query.vpc_vpcs_for_ec2_gateway_load_balancer
+    args  = [self.input.gateway_load_balancer.value]
   }
 
   container {
@@ -82,7 +82,7 @@ dashboard "ec2_gateway_load_balancer_detail" {
       node {
         base = node.acm_certificate
         args = {
-          acm_certificate_arns = with.acm_certificates.rows[*].certificate_arn
+          acm_certificate_arns = with.acm_certificates_for_ec2_gateway_load_balancer.rows[*].certificate_arn
         }
       }
 
@@ -96,42 +96,42 @@ dashboard "ec2_gateway_load_balancer_detail" {
       node {
         base = node.ec2_instance
         args = {
-          ec2_instance_arns = with.ec2_instances.rows[*].instance_arn
+          ec2_instance_arns = with.ec2_instances_for_ec2_gateway_load_balancer.rows[*].instance_arn
         }
       }
 
       node {
         base = node.ec2_load_balancer_listener
         args = {
-          ec2_load_balancer_listener_arns = with.ec2_load_balancer_listeners.rows[*].listener_arn
+          ec2_load_balancer_listener_arns = with.ec2_load_balancer_listeners_for_ec2_gateway_load_balancer.rows[*].listener_arn
         }
       }
 
       node {
         base = node.ec2_target_group
         args = {
-          ec2_target_group_arns = with.ec2_target_groups.rows[*].target_group_arn
+          ec2_target_group_arns = with.ec2_target_groups_for_ec2_gateway_load_balancer.rows[*].target_group_arn
         }
       }
 
       node {
         base = node.vpc_security_group
         args = {
-          vpc_security_group_ids = with.vpc_security_groups.rows[*].group_id
+          vpc_security_group_ids = with.vpc_security_groups_for_ec2_gateway_load_balancer.rows[*].group_id
         }
       }
 
       node {
         base = node.vpc_subnet
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_ec2_gateway_load_balancer.rows[*].subnet_id
         }
       }
 
       node {
         base = node.vpc_vpc
         args = {
-          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_id
+          vpc_vpc_ids = with.vpc_vpcs_for_ec2_gateway_load_balancer.rows[*].vpc_id
         }
       }
 
@@ -173,21 +173,21 @@ dashboard "ec2_gateway_load_balancer_detail" {
       edge {
         base = edge.ec2_load_balancer_listener_to_ec2_load_balancer
         args = {
-          ec2_load_balancer_listener_arns = with.ec2_load_balancer_listeners.rows[*].listener_arn
+          ec2_load_balancer_listener_arns = with.ec2_load_balancer_listeners_for_ec2_gateway_load_balancer.rows[*].listener_arn
         }
       }
 
       edge {
         base = edge.ec2_target_group_to_ec2_instance
         args = {
-          ec2_target_group_arns = with.ec2_target_groups.rows[*].target_group_arn
+          ec2_target_group_arns = with.ec2_target_groups_for_ec2_gateway_load_balancer.rows[*].target_group_arn
         }
       }
 
       edge {
         base = edge.vpc_subnet_to_vpc_vpc
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_ec2_gateway_load_balancer.rows[*].subnet_id
         }
       }
     }
@@ -200,7 +200,7 @@ dashboard "ec2_gateway_load_balancer_detail" {
       type  = "line"
       width = 3
       query = query.ec2_gateway_load_balancer_overview
-      args = [self.input.gateway_load_balancer.value]
+      args  = [self.input.gateway_load_balancer.value]
 
     }
 
@@ -208,14 +208,14 @@ dashboard "ec2_gateway_load_balancer_detail" {
       title = "Tags"
       width = 3
       query = query.ec2_gateway_load_balancer_tags
-      args = [self.input.gateway_load_balancer.value]
+      args  = [self.input.gateway_load_balancer.value]
     }
 
     table {
       title = "Attributes"
       width = 6
       query = query.ec2_gateway_load_balancer_attributes
-      args = [self.input.gateway_load_balancer.value]
+      args  = [self.input.gateway_load_balancer.value]
     }
   }
 
@@ -241,7 +241,7 @@ query "ec2_gateway_load_balancer_input" {
 
 # With queries
 
-query "ec2_gateway_load_balancer_acm_certificates" {
+query "acm_certificates_for_ec2_gateway_load_balancer" {
   sql = <<-EOQ
       select
         c.certificate_arn
@@ -253,7 +253,7 @@ query "ec2_gateway_load_balancer_acm_certificates" {
     EOQ
 }
 
-query "ec2_gateway_load_balancer_ec2_instances" {
+query "ec2_instances_for_ec2_gateway_load_balancer" {
   sql = <<-EOQ
     select
       instance.arn as instance_arn
@@ -271,7 +271,7 @@ query "ec2_gateway_load_balancer_ec2_instances" {
   EOQ
 }
 
-query "ec2_gateway_load_balancer_ec2_load_balancer_listeners" {
+query "ec2_load_balancer_listeners_for_ec2_gateway_load_balancer" {
   sql = <<-EOQ
     select
       arn as listener_arn
@@ -282,7 +282,7 @@ query "ec2_gateway_load_balancer_ec2_load_balancer_listeners" {
   EOQ
 }
 
-query "ec2_gateway_load_balancer_ec2_target_groups" {
+query "ec2_target_groups_for_ec2_gateway_load_balancer" {
   sql = <<-EOQ
     select
       tg.target_group_arn
@@ -297,7 +297,7 @@ query "ec2_gateway_load_balancer_ec2_target_groups" {
   EOQ
 }
 
-query "ec2_gateway_load_balancer_s3_buckets" {
+query "s3_buckets_for_ec2_gateway_load_balancer" {
   sql = <<-EOQ
     select
       b.arn as bucket_arn
@@ -312,7 +312,7 @@ query "ec2_gateway_load_balancer_s3_buckets" {
   EOQ
 }
 
-query "ec2_gateway_load_balancer_vpc_security_groups" {
+query "vpc_security_groups_for_ec2_gateway_load_balancer" {
   sql = <<-EOQ
     select
       sg.group_id
@@ -329,7 +329,7 @@ query "ec2_gateway_load_balancer_vpc_security_groups" {
   EOQ
 }
 
-query "ec2_gateway_load_balancer_vpc_subnets" {
+query "vpc_subnets_for_ec2_gateway_load_balancer" {
   sql = <<-EOQ
     select
       s.subnet_id as subnet_id
@@ -343,7 +343,7 @@ query "ec2_gateway_load_balancer_vpc_subnets" {
   EOQ
 }
 
-query "ec2_gateway_load_balancer_vpc_vpcs" {
+query "vpc_vpcs_for_ec2_gateway_load_balancer" {
   sql = <<-EOQ
     select
       alb.vpc_id as vpc_id

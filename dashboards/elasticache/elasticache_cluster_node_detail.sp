@@ -53,48 +53,48 @@ dashboard "elasticache_cluster_node_detail" {
 
   }
 
-  with "elasticache_node_groups" {
-    query = query.elasticache_cluster_node_elasticache_node_groups
+  with "elasticache_node_groups_for_elasticache_cluster_node" {
+    query = query.elasticache_node_groups_for_elasticache_cluster_node
     args  = [self.input.elasticache_cluster_node_arn.value]
   }
 
-  with "elasticache_parameter_groups" {
-    query = query.elasticache_cluster_node_elasticache_parameter_groups
+  with "elasticache_parameter_groups_for_elasticache_cluster_node" {
+    query = query.elasticache_parameter_groups_for_elasticache_cluster_node
     args  = [self.input.elasticache_cluster_node_arn.value]
   }
 
-  with "elasticache_clusters" {
-    query = query.elasticache_cluster_node_elasticache_clusters
+  with "elasticache_clusters_for_elasticache_cluster_node" {
+    query = query.elasticache_clusters_for_elasticache_cluster_node
     args  = [self.input.elasticache_cluster_node_arn.value]
   }
 
-  with "elasticache_subnet_groups" {
-    query = query.elasticache_cluster_node_elasticache_subnet_groups
+  with "elasticache_subnet_groups_for_elasticache_cluster_node" {
+    query = query.elasticache_subnet_groups_for_elasticache_cluster_node
     args  = [self.input.elasticache_cluster_node_arn.value]
   }
 
-  with "kms_keys" {
-    query = query.elasticache_cluster_node_kms_keys
+  with "kms_keys_for_elasticache_cluster_node" {
+    query = query.kms_keys_for_elasticache_cluster_node
     args  = [self.input.elasticache_cluster_node_arn.value]
   }
 
-  with "sns_topics" {
-    query = query.elasticache_cluster_node_sns_topics
+  with "sns_topics_for_elasticache_cluster_node" {
+    query = query.sns_topics_for_elasticache_cluster_node
     args  = [self.input.elasticache_cluster_node_arn.value]
   }
 
-  with "vpc_security_groups" {
-    query = query.elasticache_cluster_node_vpc_security_groups
+  with "vpc_security_groups_for_elasticache_cluster_node" {
+    query = query.vpc_security_groups_for_elasticache_cluster_node
     args  = [self.input.elasticache_cluster_node_arn.value]
   }
 
-  with "vpc_subnets" {
-    query = query.elasticache_cluster_node_vpc_subnets
+  with "vpc_subnets_for_elasticache_cluster_node" {
+    query = query.vpc_subnets_for_elasticache_cluster_node
     args  = [self.input.elasticache_cluster_node_arn.value]
   }
 
-  with "vpc_vpcs" {
-    query = query.elasticache_cluster_node_vpc_vpcs
+  with "vpc_vpcs_for_elasticache_cluster_node" {
+    query = query.vpc_vpcs_for_elasticache_cluster_node
     args  = [self.input.elasticache_cluster_node_arn.value]
   }
 
@@ -108,7 +108,7 @@ dashboard "elasticache_cluster_node_detail" {
       node {
         base = node.elasticache_cluster
         args = {
-          elasticache_cluster_arns = with.elasticache_clusters.rows[*].elasticache_cluster_arn
+          elasticache_cluster_arns = with.elasticache_clusters_for_elasticache_cluster_node.rows[*].elasticache_cluster_arn
         }
       }
 
@@ -122,70 +122,70 @@ dashboard "elasticache_cluster_node_detail" {
       node {
         base = node.elasticache_parameter_group
         args = {
-          elsticache_parameter_group_arns = with.elasticache_parameter_groups.rows[*].elasticache_parameter_group_arn
+          elsticache_parameter_group_arns = with.elasticache_parameter_groups_for_elasticache_cluster_node.rows[*].elasticache_parameter_group_arn
         }
       }
 
       node {
         base = node.elasticache_node_group
         args = {
-          elasticache_node_group_ids = with.elasticache_node_groups.rows[*].elasticache_node_group_id
+          elasticache_node_group_ids = with.elasticache_node_groups_for_elasticache_cluster_node.rows[*].elasticache_node_group_id
         }
       }
 
       node {
         base = node.elasticache_subnet_group
         args = {
-          elasticache_subnet_group_arns = with.elasticache_subnet_groups.rows[*].elasticache_subnet_group_arn
+          elasticache_subnet_group_arns = with.elasticache_subnet_groups_for_elasticache_cluster_node.rows[*].elasticache_subnet_group_arn
         }
       }
 
       node {
         base = node.kms_key
         args = {
-          kms_key_arns = with.kms_keys.rows[*].kms_key_arn
+          kms_key_arns = with.kms_keys_for_elasticache_cluster_node.rows[*].kms_key_arn
         }
       }
 
       node {
         base = node.sns_topic
         args = {
-          sns_topic_arns = with.sns_topics.rows[*].sns_topic_arn
+          sns_topic_arns = with.sns_topics_for_elasticache_cluster_node.rows[*].sns_topic_arn
         }
       }
 
       node {
         base = node.vpc_security_group
         args = {
-          vpc_security_group_ids = with.vpc_security_groups.rows[*].vpc_security_group_id
+          vpc_security_group_ids = with.vpc_security_groups_for_elasticache_cluster_node.rows[*].vpc_security_group_id
         }
       }
 
       node {
         base = node.vpc_subnet
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].vpc_subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_elasticache_cluster_node.rows[*].vpc_subnet_id
         }
       }
 
       node {
         base = node.vpc_vpc
         args = {
-          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_vpc_id
+          vpc_vpc_ids = with.vpc_vpcs_for_elasticache_cluster_node.rows[*].vpc_vpc_id
         }
       }
 
       edge {
         base = edge.elasticache_cluster_node_to_elasticache_parameter_group
         args = {
-          elsticache_parameter_group_arns = with.elasticache_parameter_groups.rows[*].elasticache_parameter_group_arn
+          elsticache_parameter_group_arns = with.elasticache_parameter_groups_for_elasticache_cluster_node.rows[*].elasticache_parameter_group_arn
         }
       }
 
       edge {
         base = edge.elasticache_cluster_node_to_kms_key
         args = {
-          kms_key_arns = with.kms_keys.rows[*].kms_key_arn
+          kms_key_arns = with.kms_keys_for_elasticache_cluster_node.rows[*].kms_key_arn
         }
       }
 
@@ -199,28 +199,28 @@ dashboard "elasticache_cluster_node_detail" {
       edge {
         base = edge.elasticache_cluster_node_to_vpc_security_group
         args = {
-          vpc_security_group_ids = with.vpc_security_groups.rows[*].vpc_security_group_id
+          vpc_security_group_ids = with.vpc_security_groups_for_elasticache_cluster_node.rows[*].vpc_security_group_id
         }
       }
 
       edge {
         base = edge.elasticache_cluster_to_elasticache_node_group
         args = {
-          elasticache_cluster_arns = with.elasticache_clusters.rows[*].elasticache_cluster_arn
+          elasticache_cluster_arns = with.elasticache_clusters_for_elasticache_cluster_node.rows[*].elasticache_cluster_arn
         }
       }
 
       edge {
         base = edge.elasticache_node_group_to_elasticache_cluster_node
         args = {
-          elasticache_cluster_arns = with.elasticache_clusters.rows[*].elasticache_cluster_arn
+          elasticache_cluster_arns = with.elasticache_clusters_for_elasticache_cluster_node.rows[*].elasticache_cluster_arn
         }
       }
 
       edge {
         base = edge.elasticache_subnet_group_to_vpc_subnet
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].vpc_subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_elasticache_cluster_node.rows[*].vpc_subnet_id
         }
       }
 
@@ -234,7 +234,7 @@ dashboard "elasticache_cluster_node_detail" {
       edge {
         base = edge.vpc_subnet_to_vpc_vpc
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].vpc_subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_elasticache_cluster_node.rows[*].vpc_subnet_id
         }
       }
     }
@@ -294,7 +294,7 @@ query "elasticache_cluster_node_input" {
 
 # With queries
 
-query "elasticache_cluster_node_elasticache_parameter_groups" {
+query "elasticache_parameter_groups_for_elasticache_cluster_node" {
   sql = <<-EOQ
     select
       g.arn as elasticache_parameter_group_arn
@@ -309,7 +309,7 @@ query "elasticache_cluster_node_elasticache_parameter_groups" {
   EOQ
 }
 
-query "elasticache_cluster_node_elasticache_clusters" {
+query "elasticache_clusters_for_elasticache_cluster_node" {
   sql = <<-EOQ
     select
       g.arn as elasticache_cluster_arn
@@ -322,7 +322,7 @@ query "elasticache_cluster_node_elasticache_clusters" {
   EOQ
 }
 
-query "elasticache_cluster_node_elasticache_node_groups" {
+query "elasticache_node_groups_for_elasticache_cluster_node" {
   sql = <<-EOQ
     select
       rg.title || '-' || (ng ->> 'NodeGroupId') as elasticache_node_group_id
@@ -337,7 +337,7 @@ query "elasticache_cluster_node_elasticache_node_groups" {
   EOQ
 }
 
-query "elasticache_cluster_node_elasticache_subnet_groups" {
+query "elasticache_subnet_groups_for_elasticache_cluster_node" {
   sql = <<-EOQ
     select
       g.arn as elasticache_subnet_group_arn
@@ -351,7 +351,7 @@ query "elasticache_cluster_node_elasticache_subnet_groups" {
   EOQ
 }
 
-query "elasticache_cluster_node_kms_keys" {
+query "kms_keys_for_elasticache_cluster_node" {
   sql = <<-EOQ
     select
       kms_key_id as kms_key_arn
@@ -365,7 +365,7 @@ query "elasticache_cluster_node_kms_keys" {
   EOQ
 }
 
-query "elasticache_cluster_node_sns_topics" {
+query "sns_topics_for_elasticache_cluster_node" {
   sql = <<-EOQ
     select
       notification_configuration ->> 'TopicArn' as sns_topic_arn
@@ -377,7 +377,7 @@ query "elasticache_cluster_node_sns_topics" {
   EOQ
 }
 
-query "elasticache_cluster_node_vpc_security_groups" {
+query "vpc_security_groups_for_elasticache_cluster_node" {
   sql = <<-EOQ
     select
       group_id as vpc_security_group_id
@@ -397,7 +397,7 @@ query "elasticache_cluster_node_vpc_security_groups" {
   EOQ
 }
 
-query "elasticache_cluster_node_vpc_subnets" {
+query "vpc_subnets_for_elasticache_cluster_node" {
   sql = <<-EOQ
     select
       subnet ->> 'SubnetIdentifier' as vpc_subnet_id
@@ -412,7 +412,7 @@ query "elasticache_cluster_node_vpc_subnets" {
   EOQ
 }
 
-query "elasticache_cluster_node_vpc_vpcs" {
+query "vpc_vpcs_for_elasticache_cluster_node" {
   sql = <<-EOQ
     select
       vpc_id as vpc_vpc_id

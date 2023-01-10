@@ -53,13 +53,13 @@ dashboard "rds_db_cluster_snapshot_detail" {
 
   }
 
-  with "kms_keys" {
-    query = query.rds_db_cluster_snapshot_kms_keys
+  with "kms_keys_for_rds_db_cluster_snapshot" {
+    query = query.kms_keys_for_rds_db_cluster_snapshot
     args  = [self.input.db_cluster_snapshot_arn.value]
   }
 
-  with "rds_clusters" {
-    query = query.rds_db_cluster_snapshot_rds_clusters
+  with "rds_clusters_for_rds_db_cluster_snapshot" {
+    query = query.rds_clusters_for_rds_db_cluster_snapshot
     args  = [self.input.db_cluster_snapshot_arn.value]
   }
 
@@ -73,14 +73,14 @@ dashboard "rds_db_cluster_snapshot_detail" {
       node {
         base = node.kms_key
         args = {
-          kms_key_arns = with.kms_keys.rows[*].key_arn
+          kms_key_arns = with.kms_keys_for_rds_db_cluster_snapshot.rows[*].key_arn
         }
       }
 
       node {
         base = node.rds_db_cluster
         args = {
-          rds_db_cluster_arns = with.rds_clusters.rows[*].rds_cluster_arn
+          rds_db_cluster_arns = with.rds_clusters_for_rds_db_cluster_snapshot.rows[*].rds_cluster_arn
         }
       }
 
@@ -101,7 +101,7 @@ dashboard "rds_db_cluster_snapshot_detail" {
       edge {
         base = edge.rds_db_cluster_to_rds_db_cluster_snapshot
         args = {
-          rds_db_cluster_arns = with.rds_clusters.rows[*].rds_cluster_arn
+          rds_db_cluster_arns = with.rds_clusters_for_rds_db_cluster_snapshot.rows[*].rds_cluster_arn
         }
       }
     }
@@ -164,7 +164,7 @@ query "rds_db_cluster_snapshot_input" {
 
 # With queries
 
-query "rds_db_cluster_snapshot_kms_keys" {
+query "kms_keys_for_rds_db_cluster_snapshot" {
   sql = <<-EOQ
     select
       kms_key_id as key_arn
@@ -176,7 +176,7 @@ query "rds_db_cluster_snapshot_kms_keys" {
   EOQ
 }
 
-query "rds_db_cluster_snapshot_rds_clusters" {
+query "rds_clusters_for_rds_db_cluster_snapshot" {
   sql = <<-EOQ
     select
       c.arn as rds_cluster_arn

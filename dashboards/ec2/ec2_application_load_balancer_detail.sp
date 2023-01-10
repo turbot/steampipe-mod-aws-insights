@@ -52,48 +52,48 @@ dashboard "ec2_application_load_balancer_detail" {
 
   }
 
-  with "acm_certificates" {
-    query = query.ec2_application_load_balancer_acm_certificates
+  with "acm_certificates_for_ec2_application_load_balancer" {
+    query = query.acm_certificates_for_ec2_application_load_balancer
     args  = [self.input.alb.value]
   }
 
-  with "cloudfront_distributions" {
-    query = query.ec2_application_load_balancer_cloudfront_distributions
+  with "cloudfront_distributions_for_ec2_application_load_balancer" {
+    query = query.cloudfront_distributions_for_ec2_application_load_balancer
     args  = [self.input.alb.value]
   }
 
-  with "ec2_instances" {
-    query = query.ec2_application_load_balancer_ec2_instances
+  with "ec2_instances_for_ec2_application_load_balancer" {
+    query = query.ec2_instances_for_ec2_application_load_balancer
     args  = [self.input.alb.value]
   }
 
-  with "ec2_load_balancer_listeners" {
-    query = query.ec2_application_load_balancer_ec2_load_balancer_listeners
+  with "ec2_load_balancer_listeners_for_ec2_application_load_balancer" {
+    query = query.ec2_load_balancer_listeners_for_ec2_application_load_balancer
     args  = [self.input.alb.value]
   }
 
-  with "ec2_target_groups" {
-    query = query.ec2_application_load_balancer_ec2_target_groups
+  with "ec2_target_groups_for_ec2_application_load_balancer" {
+    query = query.ec2_target_groups_for_ec2_application_load_balancer
     args  = [self.input.alb.value]
   }
 
-  with "s3_buckets" {
-    query = query.ec2_application_load_balancer_s3_buckets
+  with "s3_buckets_for_ec2_application_load_balancer" {
+    query = query.s3_buckets_for_ec2_application_load_balancer
     args  = [self.input.alb.value]
   }
 
-  with "vpc_security_groups" {
-    query = query.ec2_application_load_balancer_vpc_security_groups
+  with "vpc_security_groups_for_ec2_application_load_balancer" {
+    query = query.vpc_security_groups_for_ec2_application_load_balancer
     args  = [self.input.alb.value]
   }
 
-  with "vpc_subnets" {
-    query = query.ec2_application_load_balancer_vpc_subnets
+  with "vpc_subnets_for_ec2_application_load_balancer" {
+    query = query.vpc_subnets_for_ec2_application_load_balancer
     args  = [self.input.alb.value]
   }
 
-  with "vpc_vpcs" {
-    query = query.ec2_application_load_balancer_vpc_vpcs
+  with "vpc_vpcs_for_ec2_application_load_balancer" {
+    query = query.vpc_vpcs_for_ec2_application_load_balancer
     args  = [self.input.alb.value]
   }
 
@@ -105,14 +105,14 @@ dashboard "ec2_application_load_balancer_detail" {
       node {
         base = node.acm_certificate
         args = {
-          acm_certificate_arns = with.acm_certificates.rows[*].certificate_arn
+          acm_certificate_arns = with.acm_certificates_for_ec2_application_load_balancer.rows[*].certificate_arn
         }
       }
 
       node {
         base = node.cloudfront_distribution
         args = {
-          cloudfront_distribution_arns = with.cloudfront_distributions.rows[*].distribution_arn
+          cloudfront_distribution_arns = with.cloudfront_distributions_for_ec2_application_load_balancer.rows[*].distribution_arn
         }
       }
 
@@ -126,49 +126,49 @@ dashboard "ec2_application_load_balancer_detail" {
       node {
         base = node.ec2_instance
         args = {
-          ec2_instance_arns = with.ec2_instances.rows[*].instance_arn
+          ec2_instance_arns = with.ec2_instances_for_ec2_application_load_balancer.rows[*].instance_arn
         }
       }
 
       node {
         base = node.ec2_load_balancer_listener
         args = {
-          ec2_load_balancer_listener_arns = with.ec2_load_balancer_listeners.rows[*].listener_arn
+          ec2_load_balancer_listener_arns = with.ec2_load_balancer_listeners_for_ec2_application_load_balancer.rows[*].listener_arn
         }
       }
 
       node {
         base = node.ec2_target_group
         args = {
-          ec2_target_group_arns = with.ec2_target_groups.rows[*].target_group_arn
+          ec2_target_group_arns = with.ec2_target_groups_for_ec2_application_load_balancer.rows[*].target_group_arn
         }
       }
 
       node {
         base = node.s3_bucket
         args = {
-          s3_bucket_arns = with.s3_buckets.rows[*].bucket_arn
+          s3_bucket_arns = with.s3_buckets_for_ec2_application_load_balancer.rows[*].bucket_arn
         }
       }
 
       node {
         base = node.vpc_security_group
         args = {
-          vpc_security_group_ids = with.vpc_security_groups.rows[*].group_id
+          vpc_security_group_ids = with.vpc_security_groups_for_ec2_application_load_balancer.rows[*].group_id
         }
       }
 
       node {
         base = node.vpc_subnet
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_ec2_application_load_balancer.rows[*].subnet_id
         }
       }
 
       node {
         base = node.vpc_vpc
         args = {
-          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_id
+          vpc_vpc_ids = with.vpc_vpcs_for_ec2_application_load_balancer.rows[*].vpc_id
         }
       }
 
@@ -182,7 +182,7 @@ dashboard "ec2_application_load_balancer_detail" {
       edge {
         base = edge.ec2_application_load_balancer_to_cloudfront_distribution
         args = {
-          cloudfront_distribution_arns = with.cloudfront_distributions.rows[*].distribution_arn
+          cloudfront_distribution_arns = with.cloudfront_distributions_for_ec2_application_load_balancer.rows[*].distribution_arn
         }
       }
 
@@ -217,21 +217,21 @@ dashboard "ec2_application_load_balancer_detail" {
       edge {
         base = edge.ec2_load_balancer_listener_to_ec2_load_balancer
         args = {
-          ec2_load_balancer_listener_arns = with.ec2_load_balancer_listeners.rows[*].listener_arn
+          ec2_load_balancer_listener_arns = with.ec2_load_balancer_listeners_for_ec2_application_load_balancer.rows[*].listener_arn
         }
       }
 
       edge {
         base = edge.ec2_target_group_to_ec2_instance
         args = {
-          ec2_target_group_arns = with.ec2_target_groups.rows[*].target_group_arn
+          ec2_target_group_arns = with.ec2_target_groups_for_ec2_application_load_balancer.rows[*].target_group_arn
         }
       }
 
       edge {
         base = edge.vpc_subnet_to_vpc_vpc
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_ec2_application_load_balancer.rows[*].subnet_id
         }
       }
     }
@@ -285,7 +285,7 @@ query "ec2_application_load_balancer_input" {
 
 # With queries
 
-query "ec2_application_load_balancer_acm_certificates" {
+query "acm_certificates_for_ec2_application_load_balancer" {
   sql = <<-EOQ
     select
       c.certificate_arn
@@ -297,7 +297,7 @@ query "ec2_application_load_balancer_acm_certificates" {
   EOQ
 }
 
-query "ec2_application_load_balancer_cloudfront_distributions" {
+query "cloudfront_distributions_for_ec2_application_load_balancer" {
   sql = <<-EOQ
     select
       d.arn as distribution_arn
@@ -310,7 +310,7 @@ query "ec2_application_load_balancer_cloudfront_distributions" {
   EOQ
 }
 
-query "ec2_application_load_balancer_ec2_instances" {
+query "ec2_instances_for_ec2_application_load_balancer" {
   sql = <<-EOQ
     select
       instance.arn as instance_arn
@@ -328,7 +328,7 @@ query "ec2_application_load_balancer_ec2_instances" {
   EOQ
 }
 
-query "ec2_application_load_balancer_ec2_load_balancer_listeners" {
+query "ec2_load_balancer_listeners_for_ec2_application_load_balancer" {
   sql = <<-EOQ
     select
       lblistener.arn as listener_arn
@@ -339,7 +339,7 @@ query "ec2_application_load_balancer_ec2_load_balancer_listeners" {
   EOQ
 }
 
-query "ec2_application_load_balancer_ec2_target_groups" {
+query "ec2_target_groups_for_ec2_application_load_balancer" {
   sql = <<-EOQ
     select
       tg.target_group_arn
@@ -354,7 +354,7 @@ query "ec2_application_load_balancer_ec2_target_groups" {
   EOQ
 }
 
-query "ec2_application_load_balancer_s3_buckets" {
+query "s3_buckets_for_ec2_application_load_balancer" {
   sql = <<-EOQ
     select
       b.arn as bucket_arn
@@ -369,7 +369,7 @@ query "ec2_application_load_balancer_s3_buckets" {
   EOQ
 }
 
-query "ec2_application_load_balancer_vpc_security_groups" {
+query "vpc_security_groups_for_ec2_application_load_balancer" {
   sql = <<-EOQ
     select
       sg.group_id
@@ -386,7 +386,7 @@ query "ec2_application_load_balancer_vpc_security_groups" {
   EOQ
 }
 
-query "ec2_application_load_balancer_vpc_subnets" {
+query "vpc_subnets_for_ec2_application_load_balancer" {
   sql = <<-EOQ
     select
       s.subnet_id as subnet_id
@@ -400,7 +400,7 @@ query "ec2_application_load_balancer_vpc_subnets" {
   EOQ
 }
 
-query "ec2_application_load_balancer_vpc_vpcs" {
+query "vpc_vpcs_for_ec2_application_load_balancer" {
   sql = <<-EOQ
     select
       alb.vpc_id as vpc_id

@@ -20,47 +20,47 @@ dashboard "rds_db_snapshot_detail" {
       width = 2
 
       query = query.rds_db_snapshot_type
-      args = [self.input.db_snapshot_arn.value]
+      args  = [self.input.db_snapshot_arn.value]
     }
 
     card {
       width = 2
 
       query = query.rds_db_snapshot_engine
-      args = [self.input.db_snapshot_arn.value]
+      args  = [self.input.db_snapshot_arn.value]
     }
 
     card {
       width = 2
 
       query = query.rds_db_snapshot_status
-      args = [self.input.db_snapshot_arn.value]
+      args  = [self.input.db_snapshot_arn.value]
     }
 
     card {
       width = 2
 
       query = query.rds_db_snapshot_unencrypted
-      args = [self.input.db_snapshot_arn.value]
+      args  = [self.input.db_snapshot_arn.value]
     }
 
     card {
       width = 2
 
       query = query.rds_db_snapshot_iam_database_authentication_enabled
-      args = [self.input.db_snapshot_arn.value]
+      args  = [self.input.db_snapshot_arn.value]
     }
 
   }
 
-  with "kms_keys" {
-    query = query.rds_db_instance_snapshot_kms_keys
-    args = [self.input.db_snapshot_arn.value]
+  with "kms_keys_for_rds_db_instance_snapshot" {
+    query = query.kms_keys_for_rds_db_instance_snapshot
+    args  = [self.input.db_snapshot_arn.value]
   }
 
-  with "rds_instances" {
-    query = query.rds_db_instance_snapshot_rds_instances
-    args = [self.input.db_snapshot_arn.value]
+  with "rds_instances_for_rds_db_instance_snapshot" {
+    query = query.rds_instances_for_rds_db_instance_snapshot
+    args  = [self.input.db_snapshot_arn.value]
   }
 
   container {
@@ -73,14 +73,14 @@ dashboard "rds_db_snapshot_detail" {
       node {
         base = node.kms_key
         args = {
-          kms_key_arns = with.kms_keys.rows[*].key_arn
+          kms_key_arns = with.kms_keys_for_rds_db_instance_snapshot.rows[*].key_arn
         }
       }
 
       node {
         base = node.rds_db_instance
         args = {
-          rds_db_instance_arns = with.rds_instances.rows[*].rds_instance_arn
+          rds_db_instance_arns = with.rds_instances_for_rds_db_instance_snapshot.rows[*].rds_instance_arn
         }
       }
 
@@ -94,7 +94,7 @@ dashboard "rds_db_snapshot_detail" {
       edge {
         base = edge.rds_db_instance_to_rds_db_snapshot
         args = {
-          rds_db_instance_arns = with.rds_instances.rows[*].rds_instance_arn
+          rds_db_instance_arns = with.rds_instances_for_rds_db_instance_snapshot.rows[*].rds_instance_arn
         }
       }
 
@@ -117,7 +117,7 @@ dashboard "rds_db_snapshot_detail" {
         type  = "line"
         width = 6
         query = query.rds_db_snapshot_overview
-        args = [self.input.db_snapshot_arn.value]
+        args  = [self.input.db_snapshot_arn.value]
 
       }
 
@@ -125,7 +125,7 @@ dashboard "rds_db_snapshot_detail" {
         title = "Tags"
         width = 6
         query = query.rds_db_snapshot_tag
-        args = [self.input.db_snapshot_arn.value]
+        args  = [self.input.db_snapshot_arn.value]
       }
 
     }
@@ -136,7 +136,7 @@ dashboard "rds_db_snapshot_detail" {
       table {
         title = "Storage"
         query = query.rds_db_snapshot_storage
-        args = [self.input.db_snapshot_arn.value]
+        args  = [self.input.db_snapshot_arn.value]
       }
 
       table {
@@ -172,7 +172,7 @@ query "rds_db_snapshot_input" {
 
 # With queries
 
-query "rds_db_instance_snapshot_kms_keys" {
+query "kms_keys_for_rds_db_instance_snapshot" {
   sql = <<-EOQ
     select
       kms_key_id as key_arn
@@ -184,7 +184,7 @@ query "rds_db_instance_snapshot_kms_keys" {
   EOQ
 }
 
-query "rds_db_instance_snapshot_rds_instances" {
+query "rds_instances_for_rds_db_instance_snapshot" {
   sql = <<-EOQ
     select
       i.arn as rds_instance_arn

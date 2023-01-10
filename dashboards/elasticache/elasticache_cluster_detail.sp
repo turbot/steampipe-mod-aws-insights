@@ -52,13 +52,13 @@ dashboard "elasticache_cluster_detail" {
     }
   }
 
-  with "elasticache_cluster_nodes" {
-    query = query.elasticache_cluster_elasticache_cluster_nodes
+  with "elasticache_cluster_nodes_for_elasticache_cluster" {
+    query = query.elasticache_cluster_nodes_for_elasticache_cluster
     args  = [self.input.elasticache_cluster_arn.value]
   }
 
-  with "elasticache_node_groups" {
-    query = query.elasticache_cluster_elasticache_node_groups
+  with "elasticache_node_groups_for_elasticache_cluster" {
+    query = query.elasticache_node_groups_for_elasticache_cluster
     args  = [self.input.elasticache_cluster_arn.value]
   }
 
@@ -71,14 +71,14 @@ dashboard "elasticache_cluster_detail" {
       node {
         base = node.elasticache_cluster_node
         args = {
-          elasticache_cluster_node_arns = with.elasticache_cluster_nodes.rows[*].elasticache_cluster_node_arn
+          elasticache_cluster_node_arns = with.elasticache_cluster_nodes_for_elasticache_cluster.rows[*].elasticache_cluster_node_arn
         }
       }
 
       node {
         base = node.elasticache_node_group
         args = {
-          elasticache_node_group_ids = with.elasticache_node_groups.rows[*].elasticache_node_group_id
+          elasticache_node_group_ids = with.elasticache_node_groups_for_elasticache_cluster.rows[*].elasticache_node_group_id
         }
       }
 
@@ -227,7 +227,7 @@ query "elasticache_cluster_auth_token" {
 
 # With queries
 
-query "elasticache_cluster_elasticache_cluster_nodes" {
+query "elasticache_cluster_nodes_for_elasticache_cluster" {
   sql = <<-EOQ
     select
       c.arn as elasticache_cluster_node_arn
@@ -240,7 +240,7 @@ query "elasticache_cluster_elasticache_cluster_nodes" {
   EOQ
 }
 
-query "elasticache_cluster_elasticache_node_groups" {
+query "elasticache_node_groups_for_elasticache_cluster" {
   sql = <<-EOQ
     select
       (rg.title || '-' || (ng ->> 'NodeGroupId')) as elasticache_node_group_id

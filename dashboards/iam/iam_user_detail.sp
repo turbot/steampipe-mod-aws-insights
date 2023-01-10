@@ -18,37 +18,37 @@ dashboard "iam_user_detail" {
     card {
       width = 2
       query = query.iam_user_mfa_for_user
-      args = [self.input.user_arn.value]
+      args  = [self.input.user_arn.value]
     }
 
     card {
       width = 2
       query = query.iam_boundary_policy_for_user
-      args = [self.input.user_arn.value]
+      args  = [self.input.user_arn.value]
     }
 
     card {
       width = 2
       query = query.iam_user_inline_policy_count_for_user
-      args = [self.input.user_arn.value]
+      args  = [self.input.user_arn.value]
     }
 
     card {
       width = 2
       query = query.iam_user_direct_attached_policy_count_for_user
-      args = [self.input.user_arn.value]
+      args  = [self.input.user_arn.value]
     }
 
   }
 
-  with "iam_groups" {
-    query = query.iam_user_iam_groups
-    args = [self.input.user_arn.value]
+  with "iam_groups_for_iam_user" {
+    query = query.iam_groups_for_iam_user
+    args  = [self.input.user_arn.value]
   }
 
-  with "iam_policies" {
-    query = query.iam_user_iam_policies
-    args = [self.input.user_arn.value]
+  with "iam_policies_for_iam_user" {
+    query = query.iam_policies_for_iam_user
+    args  = [self.input.user_arn.value]
   }
 
 
@@ -62,14 +62,14 @@ dashboard "iam_user_detail" {
       node {
         base = node.iam_group
         args = {
-          iam_group_arns = with.iam_groups.rows[*].group_arn
+          iam_group_arns = with.iam_groups_for_iam_user.rows[*].group_arn
         }
       }
 
       node {
         base = node.iam_policy
         args = {
-          iam_policy_arns = with.iam_policies.rows[*].policy_arn
+          iam_policy_arns = with.iam_policies_for_iam_user.rows[*].policy_arn
         }
       }
 
@@ -97,7 +97,7 @@ dashboard "iam_user_detail" {
       edge {
         base = edge.iam_group_to_iam_user
         args = {
-          iam_group_arns = with.iam_groups.rows[*].group_arn
+          iam_group_arns = with.iam_groups_for_iam_user.rows[*].group_arn
         }
       }
 
@@ -135,14 +135,14 @@ dashboard "iam_user_detail" {
         type  = "line"
         width = 6
         query = query.iam_user_overview
-        args = [self.input.user_arn.value]
+        args  = [self.input.user_arn.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.iam_user_tags
-        args = [self.input.user_arn.value]
+        args  = [self.input.user_arn.value]
       }
 
     }
@@ -154,19 +154,19 @@ dashboard "iam_user_detail" {
       table {
         title = "Console Password"
         query = query.iam_user_console_password
-        args = [self.input.user_arn.value]
+        args  = [self.input.user_arn.value]
       }
 
       table {
         title = "Access Keys"
         query = query.iam_user_access_keys
-        args = [self.input.user_arn.value]
+        args  = [self.input.user_arn.value]
       }
 
       table {
         title = "MFA Devices"
         query = query.iam_user_mfa_devices
-        args = [self.input.user_arn.value]
+        args  = [self.input.user_arn.value]
       }
 
     }
@@ -181,7 +181,7 @@ dashboard "iam_user_detail" {
       type  = "sankey"
       title = "Attached Policies"
       query = query.iam_user_manage_policies_sankey
-      args = [self.input.user_arn.value]
+      args  = [self.input.user_arn.value]
 
       category "iam_group" {
         color = "ok"
@@ -192,7 +192,7 @@ dashboard "iam_user_detail" {
       title = "Groups"
       width = 6
       query = query.iam_groups_for_user
-      args = [self.input.user_arn.value]
+      args  = [self.input.user_arn.value]
 
       column "Name" {
         // cyclic dependency prevents use of url_path, hardcode for now
@@ -206,7 +206,7 @@ dashboard "iam_user_detail" {
       title = "Policies"
       width = 6
       query = query.iam_all_policies_for_user
-      args = [self.input.user_arn.value]
+      args  = [self.input.user_arn.value]
     }
 
   }
@@ -232,7 +232,7 @@ query "iam_user_input" {
 
 # With queries
 
-query "iam_user_iam_groups" {
+query "iam_groups_for_iam_user" {
   sql = <<-EOQ
     select
       g ->> 'Arn' as group_arn
@@ -244,7 +244,7 @@ query "iam_user_iam_groups" {
   EOQ
 }
 
-query "iam_user_iam_policies" {
+query "iam_policies_for_iam_user" {
   sql = <<-EOQ
     select
       jsonb_array_elements_text(attached_policy_arns) as policy_arn

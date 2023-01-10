@@ -47,68 +47,68 @@ dashboard "vpc_security_group_detail" {
 
   }
 
-  with "dax_clusters" {
-    query = query.vpc_security_group_dax_clusters
+  with "dax_clusters_for_vpc_security_group" {
+    query = query.dax_clusters_for_vpc_security_group
     args  = [self.input.security_group_id.value]
   }
 
-  with "ec2_application_load_balancers" {
-    query = query.vpc_security_group_ec2_application_load_balancers
+  with "ec2_application_load_balancers_for_vpc_security_group" {
+    query = query.ec2_application_load_balancers_for_vpc_security_group
     args  = [self.input.security_group_id.value]
   }
 
-  with "ec2_classic_load_balancers" {
-    query = query.vpc_security_group_ec2_classic_load_balancers
+  with "ec2_classic_load_balancers_for_vpc_security_group" {
+    query = query.ec2_classic_load_balancers_for_vpc_security_group
     args  = [self.input.security_group_id.value]
   }
 
-  with "ec2_instances" {
-    query = query.vpc_security_group_ec2_instances
+  with "ec2_instances_for_vpc_security_group" {
+    query = query.ec2_instances_for_vpc_security_group
     args  = [self.input.security_group_id.value]
   }
 
-  with "ec2_launch_configurations" {
-    query = query.vpc_security_group_ec2_launch_configurations
+  with "ec2_launch_configurations_for_vpc_security_group" {
+    query = query.ec2_launch_configurations_for_vpc_security_group
     args  = [self.input.security_group_id.value]
   }
 
-  with "efs_mount_targets" {
-    query = query.vpc_security_group_efs_mount_targets
+  with "efs_mount_targets_for_vpc_security_group" {
+    query = query.efs_mount_targets_for_vpc_security_group
     args  = [self.input.security_group_id.value]
   }
 
-  with "elasticache_clusters" {
-    query = query.vpc_security_group_elasticache_clusters
+  with "elasticache_clusters_for_vpc_security_group" {
+    query = query.elasticache_clusters_for_vpc_security_group
     args  = [self.input.security_group_id.value]
   }
 
-  with "lambda_functions" {
-    query = query.vpc_security_group_lambda_functions
+  with "lambda_functions_for_vpc_security_group" {
+    query = query.lambda_functions_for_vpc_security_group
     args  = [self.input.security_group_id.value]
   }
 
-  with "rds_db_clusters" {
-    query = query.vpc_security_group_rds_db_clusters
+  with "rds_db_clusters_for_vpc_security_group" {
+    query = query.rds_db_clusters_for_vpc_security_group
     args  = [self.input.security_group_id.value]
   }
 
-  with "rds_db_instances" {
-    query = query.vpc_security_group_rds_db_instances
+  with "rds_db_instances_for_vpc_security_group" {
+    query = query.rds_db_instances_for_vpc_security_group
     args  = [self.input.security_group_id.value]
   }
 
-  with "redshift_clusters" {
-    query = query.vpc_security_group_redshift_clusters
+  with "redshift_clusters_for_vpc_security_group" {
+    query = query.redshift_clusters_for_vpc_security_group
     args  = [self.input.security_group_id.value]
   }
 
-  with "sagemaker_notebook_instances" {
-    query = query.vpc_security_group_sagemaker_notebook_instances
+  with "sagemaker_notebook_instances_for_vpc_security_group" {
+    query = query.sagemaker_notebook_instances_for_vpc_security_group
     args  = [self.input.security_group_id.value]
   }
 
-  with "vpc_vpcs" {
-    query = query.vpc_security_group_vpc_vpcs
+  with "vpc_vpcs_for_vpc_security_group" {
+    query = query.vpc_vpcs_for_vpc_security_group
     args  = [self.input.security_group_id.value]
   }
 
@@ -122,7 +122,7 @@ dashboard "vpc_security_group_detail" {
       node {
         base = node.dax_cluster
         args = {
-          dax_cluster_arns = with.dax_clusters.rows[*].dax_cluster_arn
+          dax_cluster_arns = with.dax_clusters_for_vpc_security_group.rows[*].dax_cluster_arn
         }
       }
 
@@ -143,77 +143,77 @@ dashboard "vpc_security_group_detail" {
       node {
         base = node.ec2_application_load_balancer
         args = {
-          ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
+          ec2_application_load_balancer_arns = with.ec2_application_load_balancers_for_vpc_security_group.rows[*].alb_arn
         }
       }
 
       node {
         base = node.ec2_classic_load_balancer
         args = {
-          ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers.rows[*].clb_arn
+          ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers_for_vpc_security_group.rows[*].clb_arn
         }
       }
 
       node {
         base = node.ec2_instance
         args = {
-          ec2_instance_arns = with.ec2_instances.rows[*].instance_arn
+          ec2_instance_arns = with.ec2_instances_for_vpc_security_group.rows[*].instance_arn
         }
       }
 
       node {
         base = node.ec2_launch_configuration
         args = {
-          ec2_launch_configuration_arns = with.ec2_launch_configurations.rows[*].launch_configuration_arn
+          ec2_launch_configuration_arns = with.ec2_launch_configurations_for_vpc_security_group.rows[*].launch_configuration_arn
         }
       }
 
       node {
         base = node.efs_mount_target
         args = {
-          efs_mount_target_ids = with.efs_mount_targets.rows[*].mount_target_id
+          efs_mount_target_ids = with.efs_mount_targets_for_vpc_security_group.rows[*].mount_target_id
         }
       }
 
       node {
         base = node.elasticache_cluster_node
         args = {
-          elasticache_cluster_node_arns = with.elasticache_clusters.rows[*].elasticache_cluster_arn
+          elasticache_cluster_node_arns = with.elasticache_clusters_for_vpc_security_group.rows[*].elasticache_cluster_arn
         }
       }
 
       node {
         base = node.lambda_function
         args = {
-          lambda_function_arns = with.lambda_functions.rows[*].lambda_arn
+          lambda_function_arns = with.lambda_functions_for_vpc_security_group.rows[*].lambda_arn
         }
       }
 
       node {
         base = node.rds_db_cluster
         args = {
-          rds_db_cluster_arns = with.rds_db_clusters.rows[*].rds_db_cluster_arn
+          rds_db_cluster_arns = with.rds_db_clusters_for_vpc_security_group.rows[*].rds_db_cluster_arn
         }
       }
 
       node {
         base = node.rds_db_instance
         args = {
-          rds_db_instance_arns = with.rds_db_instances.rows[*].rds_db_instance_arn
+          rds_db_instance_arns = with.rds_db_instances_for_vpc_security_group.rows[*].rds_db_instance_arn
         }
       }
 
       node {
         base = node.redshift_cluster
         args = {
-          redshift_cluster_arns = with.redshift_clusters.rows[*].redshift_cluster_arn
+          redshift_cluster_arns = with.redshift_clusters_for_vpc_security_group.rows[*].redshift_cluster_arn
         }
       }
 
       node {
         base = node.sagemaker_notebook_instance
         args = {
-          sagemaker_notebook_instance_arns = with.sagemaker_notebook_instances.rows[*].notebook_instance_arn
+          sagemaker_notebook_instance_arns = with.sagemaker_notebook_instances_for_vpc_security_group.rows[*].notebook_instance_arn
         }
       }
 
@@ -227,7 +227,7 @@ dashboard "vpc_security_group_detail" {
       node {
         base = node.vpc_vpc
         args = {
-          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_id
+          vpc_vpc_ids = with.vpc_vpcs_for_vpc_security_group.rows[*].vpc_id
         }
       }
 
@@ -332,7 +332,7 @@ dashboard "vpc_security_group_detail" {
       edge {
         base = edge.vpc_vpc_to_vpc_security_group
         args = {
-          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_id
+          vpc_vpc_ids = with.vpc_vpcs_for_vpc_security_group.rows[*].vpc_id
         }
       }
 
@@ -558,7 +558,7 @@ query "vpc_security_unrestricted_egress" {
 
 # with queries
 
-query "vpc_security_group_dax_clusters" {
+query "dax_clusters_for_vpc_security_group" {
   sql = <<-EOQ
     select
       arn as dax_cluster_arn
@@ -570,7 +570,7 @@ query "vpc_security_group_dax_clusters" {
   EOQ
 }
 
-query "vpc_security_group_ec2_application_load_balancers" {
+query "ec2_application_load_balancers_for_vpc_security_group" {
   sql = <<-EOQ
     select
       arn as alb_arn
@@ -582,7 +582,7 @@ query "vpc_security_group_ec2_application_load_balancers" {
   EOQ
 }
 
-query "vpc_security_group_ec2_classic_load_balancers" {
+query "ec2_classic_load_balancers_for_vpc_security_group" {
   sql = <<-EOQ
     select
       arn as clb_arn
@@ -594,7 +594,7 @@ query "vpc_security_group_ec2_classic_load_balancers" {
   EOQ
 }
 
-query "vpc_security_group_ec2_instances" {
+query "ec2_instances_for_vpc_security_group" {
   sql = <<-EOQ
     select
       arn as instance_arn
@@ -606,7 +606,7 @@ query "vpc_security_group_ec2_instances" {
   EOQ
 }
 
-query "vpc_security_group_ec2_launch_configurations" {
+query "ec2_launch_configurations_for_vpc_security_group" {
   sql = <<-EOQ
     select
       launch_configuration_arn as launch_configuration_arn
@@ -618,7 +618,7 @@ query "vpc_security_group_ec2_launch_configurations" {
   EOQ
 }
 
-query "vpc_security_group_efs_mount_targets" {
+query "efs_mount_targets_for_vpc_security_group" {
   sql = <<-EOQ
     select
       mount_target_id as mount_target_id
@@ -630,7 +630,7 @@ query "vpc_security_group_efs_mount_targets" {
   EOQ
 }
 
-query "vpc_security_group_elasticache_clusters" {
+query "elasticache_clusters_for_vpc_security_group" {
   sql = <<-EOQ
     select
       arn as elasticache_cluster_arn
@@ -642,7 +642,7 @@ query "vpc_security_group_elasticache_clusters" {
   EOQ 
 }
 
-query "vpc_security_group_lambda_functions" {
+query "lambda_functions_for_vpc_security_group" {
   sql = <<-EOQ
     select
       arn as lambda_arn
@@ -654,7 +654,7 @@ query "vpc_security_group_lambda_functions" {
   EOQ
 }
 
-query "vpc_security_group_rds_db_clusters" {
+query "rds_db_clusters_for_vpc_security_group" {
   sql = <<-EOQ
     select
       arn as rds_db_cluster_arn
@@ -666,7 +666,7 @@ query "vpc_security_group_rds_db_clusters" {
   EOQ
 }
 
-query "vpc_security_group_rds_db_instances" {
+query "rds_db_instances_for_vpc_security_group" {
   sql = <<-EOQ
           select
             arn as rds_db_instance_arn
@@ -678,7 +678,7 @@ query "vpc_security_group_rds_db_instances" {
         EOQ
 }
 
-query "vpc_security_group_redshift_clusters" {
+query "redshift_clusters_for_vpc_security_group" {
   sql = <<-EOQ
     select
       arn as redshift_cluster_arn
@@ -690,7 +690,7 @@ query "vpc_security_group_redshift_clusters" {
   EOQ
 }
 
-query "vpc_security_group_sagemaker_notebook_instances" {
+query "sagemaker_notebook_instances_for_vpc_security_group" {
   sql = <<-EOQ
     select
       arn as notebook_instance_arn
@@ -702,7 +702,7 @@ query "vpc_security_group_sagemaker_notebook_instances" {
   EOQ
 }
 
-query "vpc_security_group_vpc_vpcs" {
+query "vpc_vpcs_for_vpc_security_group" {
   sql = <<-EOQ
     select
       vpc_id as vpc_id

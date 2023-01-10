@@ -53,58 +53,58 @@ dashboard "s3_bucket_detail" {
 
   }
 
-  with "bucket_policy_std" {
-    query = query.s3_bucket_policy_std
+  with "bucket_policy_stds_for_s3_bucket" {
+    query = query.bucket_policy_stds_for_s3_bucket
     args  = [self.input.bucket_arn.value]
   }
 
-  with "cloudtrail_trails" {
-    query = query.s3_bucket_cloudtrail_trails
+  with "cloudtrail_trails_for_s3_bucket" {
+    query = query.cloudtrail_trails_for_s3_bucket
     args  = [self.input.bucket_arn.value]
   }
 
-  with "ec2_application_load_balancers" {
-    query = query.s3_bucket_ec2_application_load_balancers
+  with "ec2_application_load_balancers_for_s3_bucket" {
+    query = query.ec2_application_load_balancers_for_s3_bucket
     args  = [self.input.bucket_arn.value]
   }
 
-  with "ec2_classic_load_balancers" {
-    query = query.s3_bucket_ec2_classic_load_balancers
+  with "ec2_classic_load_balancers_for_s3_bucket" {
+    query = query.ec2_classic_load_balancers_for_s3_bucket
     args  = [self.input.bucket_arn.value]
   }
 
-  with "ec2_network_load_balancers" {
-    query = query.s3_bucket_ec2_network_load_balancers
+  with "ec2_network_load_balancers_for_s3_bucket" {
+    query = query.ec2_network_load_balancers_for_s3_bucket
     args  = [self.input.bucket_arn.value]
   }
 
-  with "from_s3_buckets" {
-    query = query.s3_bucket_from_s3_buckets
+  with "logging_source_s3_buckets_for_s3_bucket" {
+    query = query.logging_source_s3_buckets_for_s3_bucket
     args  = [self.input.bucket_arn.value]
   }
 
-  with "kms_keys" {
-    query = query.s3_bucket_kms_keys
+  with "kms_keys_for_s3_bucket" {
+    query = query.kms_keys_for_s3_bucket
     args  = [self.input.bucket_arn.value]
   }
 
-  with "lambda_functions" {
-    query = query.s3_bucket_lambda_functions
+  with "lambda_functions_for_s3_bucket" {
+    query = query.lambda_functions_for_s3_bucket
     args  = [self.input.bucket_arn.value]
   }
 
-  with "sns_topics" {
-    query = query.s3_bucket_sns_topics
+  with "sns_topics_for_s3_bucket" {
+    query = query.sns_topics_for_s3_bucket
     args  = [self.input.bucket_arn.value]
   }
 
-  with "sqs_queues" {
-    query = query.s3_bucket_sqs_queues
+  with "sqs_queues_for_s3_bucket" {
+    query = query.sqs_queues_for_s3_bucket
     args  = [self.input.bucket_arn.value]
   }
 
-  with "to_s3_buckets" {
-    query = query.s3_bucket_to_s3_buckets
+  with "logging_destination_s3_buckets_for_s3_bucket" {
+    query = query.logging_destination_s3_buckets_for_s3_bucket
     args  = [self.input.bucket_arn.value]
   }
 
@@ -119,42 +119,42 @@ dashboard "s3_bucket_detail" {
       node {
         base = node.cloudtrail_trail
         args = {
-          cloudtrail_trail_arns = with.cloudtrail_trails.rows[*].trail_arn
+          cloudtrail_trail_arns = with.cloudtrail_trails_for_s3_bucket.rows[*].trail_arn
         }
       }
 
       node {
         base = node.ec2_application_load_balancer
         args = {
-          ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
+          ec2_application_load_balancer_arns = with.ec2_application_load_balancers_for_s3_bucket.rows[*].alb_arn
         }
       }
 
       node {
         base = node.ec2_classic_load_balancer
         args = {
-          ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers.rows[*].clb_arn
+          ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers_for_s3_bucket.rows[*].clb_arn
         }
       }
 
       node {
         base = node.ec2_network_load_balancer
         args = {
-          ec2_network_load_balancer_arns = with.ec2_network_load_balancers.rows[*].nlb_arn
+          ec2_network_load_balancer_arns = with.ec2_network_load_balancers_for_s3_bucket.rows[*].nlb_arn
         }
       }
 
       node {
         base = node.kms_key
         args = {
-          kms_key_arns = with.kms_keys.rows[*].key_arn
+          kms_key_arns = with.kms_keys_for_s3_bucket.rows[*].key_arn
         }
       }
 
       node {
         base = node.lambda_function
         args = {
-          lambda_function_arns = with.lambda_functions.rows[*].function_arn
+          lambda_function_arns = with.lambda_functions_for_s3_bucket.rows[*].function_arn
         }
       }
 
@@ -168,56 +168,56 @@ dashboard "s3_bucket_detail" {
       node {
         base = node.s3_bucket
         args = {
-          s3_bucket_arns = with.from_s3_buckets.rows[*].bucket_arn
+          s3_bucket_arns = with.logging_source_s3_buckets_for_s3_bucket.rows[*].bucket_arn
         }
       }
 
       node {
         base = node.s3_bucket
         args = {
-          s3_bucket_arns = with.to_s3_buckets.rows[*].bucket_arn
+          s3_bucket_arns = with.logging_destination_s3_buckets_for_s3_bucket.rows[*].bucket_arn
         }
       }
 
       node {
         base = node.sns_topic
         args = {
-          sns_topic_arns = with.sns_topics.rows[*].topic_arn
+          sns_topic_arns = with.sns_topics_for_s3_bucket.rows[*].topic_arn
         }
       }
 
       node {
         base = node.sqs_queue
         args = {
-          sqs_queue_arns = with.sqs_queues.rows[*].queue_arn
+          sqs_queue_arns = with.sqs_queues_for_s3_bucket.rows[*].queue_arn
         }
       }
 
       edge {
         base = edge.cloudtrail_trail_to_s3_bucket
         args = {
-          cloudtrail_trail_arns = with.cloudtrail_trails.rows[*].trail_arn
+          cloudtrail_trail_arns = with.cloudtrail_trails_for_s3_bucket.rows[*].trail_arn
         }
       }
 
       edge {
         base = edge.ec2_application_load_balancer_to_s3_bucket
         args = {
-          ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
+          ec2_application_load_balancer_arns = with.ec2_application_load_balancers_for_s3_bucket.rows[*].alb_arn
         }
       }
 
       edge {
         base = edge.ec2_classic_load_balancer_to_s3_bucket
         args = {
-          ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers.rows[*].clb_arn
+          ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers_for_s3_bucket.rows[*].clb_arn
         }
       }
 
       edge {
         base = edge.ec2_network_load_balancer_to_s3_bucket
         args = {
-          ec2_network_load_balancer_arns = with.ec2_network_load_balancers.rows[*].nlb_arn
+          ec2_network_load_balancer_arns = with.ec2_network_load_balancers_for_s3_bucket.rows[*].nlb_arn
         }
       }
 
@@ -245,7 +245,7 @@ dashboard "s3_bucket_detail" {
       edge {
         base = edge.s3_bucket_to_s3_bucket
         args = {
-          s3_bucket_arns = with.from_s3_buckets.rows[*].bucket_arn
+          s3_bucket_arns = with.logging_source_s3_buckets_for_s3_bucket.rows[*].bucket_arn
         }
       }
 
@@ -326,7 +326,7 @@ dashboard "s3_bucket_detail" {
       title = "Resource Policy"
       base  = graph.iam_resource_policy_structure
       args = {
-        policy_std = with.bucket_policy_std.rows[0].policy_std
+        policy_std = with.bucket_policy_stds_for_s3_bucket.rows[0].policy_std
       }
     }
   }
@@ -353,7 +353,7 @@ query "s3_bucket_input" {
 
 # With queries
 
-query "s3_bucket_cloudtrail_trails" {
+query "cloudtrail_trails_for_s3_bucket" {
   sql = <<-EOQ
     select
       distinct trail.arn as trail_arn
@@ -366,7 +366,7 @@ query "s3_bucket_cloudtrail_trails" {
   EOQ
 }
 
-query "s3_bucket_ec2_application_load_balancers" {
+query "ec2_application_load_balancers_for_s3_bucket" {
   sql = <<-EOQ
     select
       alb.arn as alb_arn
@@ -381,7 +381,7 @@ query "s3_bucket_ec2_application_load_balancers" {
   EOQ
 }
 
-query "s3_bucket_ec2_classic_load_balancers" {
+query "ec2_classic_load_balancers_for_s3_bucket" {
   sql = <<-EOQ
     select
       clb.arn as clb_arn
@@ -394,7 +394,7 @@ query "s3_bucket_ec2_classic_load_balancers" {
   EOQ
 }
 
-query "s3_bucket_ec2_network_load_balancers" {
+query "ec2_network_load_balancers_for_s3_bucket" {
   sql = <<-EOQ
     select
       nlb.arn as nlb_arn
@@ -409,7 +409,7 @@ query "s3_bucket_ec2_network_load_balancers" {
   EOQ
 }
 
-query "s3_bucket_from_s3_buckets" {
+query "logging_source_s3_buckets_for_s3_bucket" {
   sql = <<-EOQ
     select
       lb.arn as bucket_arn
@@ -422,7 +422,7 @@ query "s3_bucket_from_s3_buckets" {
   EOQ
 }
 
-query "s3_bucket_kms_keys" {
+query "kms_keys_for_s3_bucket" {
   sql = <<-EOQ
     select
       k.arn as key_arn
@@ -436,7 +436,7 @@ query "s3_bucket_kms_keys" {
   EOQ
 }
 
-query "s3_bucket_lambda_functions" {
+query "lambda_functions_for_s3_bucket" {
   sql = <<-EOQ
     select
       t ->> 'LambdaFunctionArn' as function_arn
@@ -449,7 +449,7 @@ query "s3_bucket_lambda_functions" {
   EOQ
 }
 
-query "s3_bucket_policy_std" {
+query "bucket_policy_stds_for_s3_bucket" {
   sql = <<-EOQ
     select
       policy_std
@@ -460,7 +460,7 @@ query "s3_bucket_policy_std" {
   EOQ
 }
 
-query "s3_bucket_sns_topics" {
+query "sns_topics_for_s3_bucket" {
   sql = <<-EOQ
     select
       t ->> 'TopicArn' as topic_arn
@@ -477,7 +477,7 @@ query "s3_bucket_sns_topics" {
   EOQ
 }
 
-query "s3_bucket_sqs_queues" {
+query "sqs_queues_for_s3_bucket" {
   sql = <<-EOQ
     select
       q.queue_arn as queue_arn
@@ -496,7 +496,7 @@ query "s3_bucket_sqs_queues" {
   EOQ
 }
 
-query "s3_bucket_to_s3_buckets" {
+query "logging_destination_s3_buckets_for_s3_bucket" {
   sql = <<-EOQ
     select
       lb.arn as bucket_arn

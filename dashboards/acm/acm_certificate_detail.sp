@@ -46,28 +46,28 @@ dashboard "acm_certificate_detail" {
 
   }
 
-  with "cloudfront_distributions" {
-    query = query.acm_certificate_cloudfront_distributions
+  with "cloudfront_distributions_for_acm_certificate" {
+    query = query.cloudfront_distributions_for_acm_certificate
     args  = [self.input.certificate_arn.value]
   }
 
-  with "ec2_application_load_balancers" {
-    query = query.acm_certificate_ec2_application_load_balancers
+  with "ec2_application_load_balancers_for_acm_certificate" {
+    query = query.ec2_application_load_balancers_for_acm_certificate
     args  = [self.input.certificate_arn.value]
   }
 
-  with "ec2_classic_load_balancers" {
-    query = query.acm_certificate_ec2_classic_load_balancers
+  with "ec2_classic_load_balancers_for_acm_certificate" {
+    query = query.ec2_classic_load_balancers_for_acm_certificate
     args  = [self.input.certificate_arn.value]
   }
 
-  with "ec2_network_load_balancers" {
-    query = query.acm_certificate_ec2_network_load_balancers
+  with "ec2_network_load_balancers_for_acm_certificate" {
+    query = query.ec2_network_load_balancers_for_acm_certificate
     args  = [self.input.certificate_arn.value]
   }
 
-  with "opensearch_domains" {
-    query = query.acm_certificate_opensearch_domains
+  with "opensearch_domains_for_acm_certificate" {
+    query = query.opensearch_domains_for_acm_certificate
     args  = [self.input.certificate_arn.value]
   }
 
@@ -88,63 +88,63 @@ dashboard "acm_certificate_detail" {
       node {
         base = node.cloudfront_distribution
         args = {
-          cloudfront_distribution_arns = with.cloudfront_distributions.rows[*].distribution_arn
+          cloudfront_distribution_arns = with.cloudfront_distributions_for_acm_certificate.rows[*].distribution_arn
         }
       }
 
       node {
         base = node.ec2_application_load_balancer
         args = {
-          ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
+          ec2_application_load_balancer_arns = with.ec2_application_load_balancers_for_acm_certificate.rows[*].alb_arn
         }
       }
 
       node {
         base = node.ec2_classic_load_balancer
         args = {
-          ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers.rows[*].clb_arn
+          ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers_for_acm_certificate.rows[*].clb_arn
         }
       }
 
       node {
         base = node.ec2_network_load_balancer
         args = {
-          ec2_network_load_balancer_arns = with.ec2_network_load_balancers.rows[*].nlb_arn
+          ec2_network_load_balancer_arns = with.ec2_network_load_balancers_for_acm_certificate.rows[*].nlb_arn
         }
       }
 
       node {
         base = node.opensearch_domain
         args = {
-          opensearch_arns = with.opensearch_domains.rows[*].opensearch_arn
+          opensearch_arns = with.opensearch_domains_for_acm_certificate.rows[*].opensearch_arn
         }
       }
 
       edge {
         base = edge.cloudfront_distribution_to_acm_certificate
         args = {
-          cloudfront_distribution_arns = with.cloudfront_distributions.rows[*].distribution_arn
+          cloudfront_distribution_arns = with.cloudfront_distributions_for_acm_certificate.rows[*].distribution_arn
         }
       }
 
       edge {
         base = edge.ec2_application_load_balancer_to_acm_certificate
         args = {
-          ec2_application_load_balancer_arns = with.ec2_application_load_balancers.rows[*].alb_arn
+          ec2_application_load_balancer_arns = with.ec2_application_load_balancers_for_acm_certificate.rows[*].alb_arn
         }
       }
 
       edge {
         base = edge.ec2_classic_load_balancer_to_acm_certificate
         args = {
-          ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers.rows[*].clb_arn
+          ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers_for_acm_certificate.rows[*].clb_arn
         }
       }
 
       edge {
         base = edge.ec2_network_load_balancer_to_acm_certificate
         args = {
-          ec2_network_load_balancer_arns = with.ec2_network_load_balancers.rows[*].nlb_arn
+          ec2_network_load_balancer_arns = with.ec2_network_load_balancers_for_acm_certificate.rows[*].nlb_arn
         }
       }
 
@@ -232,7 +232,7 @@ query "acm_certificate_input" {
 
 # With queries
 
-query "acm_certificate_cloudfront_distributions" {
+query "cloudfront_distributions_for_acm_certificate" {
   sql = <<-EOQ
     select
       arn as distribution_arn
@@ -251,7 +251,7 @@ query "acm_certificate_cloudfront_distributions" {
     EOQ
 }
 
-query "acm_certificate_ec2_application_load_balancers" {
+query "ec2_application_load_balancers_for_acm_certificate" {
   sql = <<-EOQ
     select
       arn as alb_arn
@@ -270,7 +270,7 @@ query "acm_certificate_ec2_application_load_balancers" {
     EOQ
 }
 
-query "acm_certificate_ec2_classic_load_balancers" {
+query "ec2_classic_load_balancers_for_acm_certificate" {
   sql = <<-EOQ
     select
       arn as clb_arn
@@ -289,7 +289,7 @@ query "acm_certificate_ec2_classic_load_balancers" {
     EOQ
 }
 
-query "acm_certificate_ec2_network_load_balancers" {
+query "ec2_network_load_balancers_for_acm_certificate" {
   sql = <<-EOQ
     select
       arn as nlb_arn
@@ -308,7 +308,7 @@ query "acm_certificate_ec2_network_load_balancers" {
     EOQ
 }
 
-query "acm_certificate_opensearch_domains" {
+query "opensearch_domains_for_acm_certificate" {
   sql = <<-EOQ
     select
       arn as opensearch_arn

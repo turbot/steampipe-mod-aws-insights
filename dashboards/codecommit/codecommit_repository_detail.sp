@@ -18,18 +18,18 @@ dashboard "codecommit_repository_detail" {
     card {
       width = 2
       query = query.codecommit_repository_default_branch
-      args = [self.input.codecommit_repository_arn.value]
+      args  = [self.input.codecommit_repository_arn.value]
     }
   }
 
-  with "codebuild_projects" {
-    query = query.codecommit_repository_codebuild_projects
-    args = [self.input.codecommit_repository_arn.value]
+  with "codebuild_projects_for_codecommit_repository" {
+    query = query.codebuild_projects_for_codecommit_repository
+    args  = [self.input.codecommit_repository_arn.value]
   }
 
-  with "codepipeline_pipelines" {
-    query = query.codecommit_repository_codepipeline_pipelines
-    args = [self.input.codecommit_repository_arn.value]
+  with "codepipeline_pipelines_for_codecommit_repository" {
+    query = query.codepipeline_pipelines_for_codecommit_repository
+    args  = [self.input.codecommit_repository_arn.value]
   }
 
   container {
@@ -41,7 +41,7 @@ dashboard "codecommit_repository_detail" {
       node {
         base = node.codebuild_project
         args = {
-          codebuild_project_arns = with.codebuild_projects.rows[*].codebuild_project_arn
+          codebuild_project_arns = with.codebuild_projects_for_codecommit_repository.rows[*].codebuild_project_arn
         }
       }
 
@@ -55,7 +55,7 @@ dashboard "codecommit_repository_detail" {
       node {
         base = node.codepipeline_pipeline
         args = {
-          codepipeline_pipeline_arns = with.codepipeline_pipelines.rows[*].codepipeline_pipeline_arn
+          codepipeline_pipeline_arns = with.codepipeline_pipelines_for_codecommit_repository.rows[*].codepipeline_pipeline_arn
         }
       }
 
@@ -84,14 +84,14 @@ dashboard "codecommit_repository_detail" {
       type  = "line"
       width = 6
       query = query.codecommit_repository_overview
-      args = [self.input.codecommit_repository_arn.value]
+      args  = [self.input.codecommit_repository_arn.value]
     }
 
     table {
       title = "Tags"
       width = 6
       query = query.codecommit_repository_tags
-      args = [self.input.codecommit_repository_arn.value]
+      args  = [self.input.codecommit_repository_arn.value]
     }
   }
 }
@@ -117,7 +117,7 @@ query "codecommit_repository_input" {
 
 # With queries
 
-query "codecommit_repository_codebuild_projects" {
+query "codebuild_projects_for_codecommit_repository" {
   sql = <<-EOQ
     select
       p.arn as codebuild_project_arn
@@ -141,7 +141,7 @@ query "codecommit_repository_codebuild_projects" {
   EOQ
 }
 
-query "codecommit_repository_codepipeline_pipelines" {
+query "codepipeline_pipelines_for_codecommit_repository" {
   sql = <<-EOQ
     select
       p.arn as codepipeline_pipeline_arn

@@ -35,28 +35,28 @@ dashboard "iam_role_detail" {
 
   }
 
-  with "ec2_instances" {
-    query = query.iam_role_ec2_instances
+  with "ec2_instances_for_iam_role" {
+    query = query.ec2_instances_for_iam_role
     args  = [self.input.role_arn.value]
   }
 
-  with "emr_clusters" {
-    query = query.iam_role_emr_clusters
+  with "emr_clusters_for_iam_role" {
+    query = query.emr_clusters_for_iam_role
     args  = [self.input.role_arn.value]
   }
 
-  with "guardduty_detectors" {
-    query = query.iam_role_guardduty_detectors
+  with "guardduty_detectors_for_iam_role" {
+    query = query.guardduty_detectors_for_iam_role
     args  = [self.input.role_arn.value]
   }
 
-  with "iam_policies" {
-    query = query.iam_role_iam_policies
+  with "iam_policies_for_iam_role" {
+    query = query.iam_policies_for_iam_role
     args  = [self.input.role_arn.value]
   }
 
-  with "lambda_functions" {
-    query = query.iam_role_lambda_functions
+  with "lambda_functions_for_iam_role" {
+    query = query.lambda_functions_for_iam_role
     args  = [self.input.role_arn.value]
   }
 
@@ -70,35 +70,35 @@ dashboard "iam_role_detail" {
       node {
         base = node.ec2_instance
         args = {
-          ec2_instance_arns = with.ec2_instances.rows[*].instance_arn
+          ec2_instance_arns = with.ec2_instances_for_iam_role.rows[*].instance_arn
         }
       }
 
       node {
         base = node.emr_cluster
         args = {
-          emr_cluster_arns = with.emr_clusters.rows[*].cluster_arn
+          emr_cluster_arns = with.emr_clusters_for_iam_role.rows[*].cluster_arn
         }
       }
 
       node {
         base = node.guardduty_detector
         args = {
-          guardduty_detector_arns = with.guardduty_detectors.rows[*].guardduty_detector_arn
+          guardduty_detector_arns = with.guardduty_detectors_for_iam_role.rows[*].guardduty_detector_arn
         }
       }
 
       node {
         base = node.iam_instance_profile
         args = {
-          ec2_instance_arns = with.ec2_instances.rows[*].instance_arn
+          ec2_instance_arns = with.ec2_instances_for_iam_role.rows[*].instance_arn
         }
       }
 
       node {
         base = node.iam_policy
         args = {
-          iam_policy_arns = with.iam_policies.rows[*].policy_arn
+          iam_policy_arns = with.iam_policies_for_iam_role.rows[*].policy_arn
         }
       }
 
@@ -133,21 +133,21 @@ dashboard "iam_role_detail" {
       node {
         base = node.lambda_function
         args = {
-          lambda_function_arns = with.lambda_functions.rows[*].function_arn
+          lambda_function_arns = with.lambda_functions_for_iam_role.rows[*].function_arn
         }
       }
 
       edge {
         base = edge.ec2_instance_to_iam_instance_profile
         args = {
-          ec2_instance_arns = with.ec2_instances.rows[*].instance_arn
+          ec2_instance_arns = with.ec2_instances_for_iam_role.rows[*].instance_arn
         }
       }
 
       edge {
         base = edge.emr_cluster_to_iam_role
         args = {
-          emr_cluster_arns = with.emr_clusters.rows[*].cluster_arn
+          emr_cluster_arns = with.emr_clusters_for_iam_role.rows[*].cluster_arn
         }
       }
 
@@ -196,7 +196,7 @@ dashboard "iam_role_detail" {
       edge {
         base = edge.lambda_function_to_iam_role
         args = {
-          lambda_function_arns = with.lambda_functions.rows[*].function_arn
+          lambda_function_arns = with.lambda_functions_for_iam_role.rows[*].function_arn
         }
       }
     }
@@ -276,7 +276,7 @@ query "iam_role_input" {
 
 # With queries
 
-query "iam_role_ec2_instances" {
+query "ec2_instances_for_iam_role" {
   sql = <<-EOQ
     select
       i.arn as instance_arn
@@ -290,7 +290,7 @@ query "iam_role_ec2_instances" {
   EOQ
 }
 
-query "iam_role_emr_clusters" {
+query "emr_clusters_for_iam_role" {
   sql = <<-EOQ
     select
       c.cluster_arn as cluster_arn
@@ -303,7 +303,7 @@ query "iam_role_emr_clusters" {
   EOQ
 }
 
-query "iam_role_guardduty_detectors" {
+query "guardduty_detectors_for_iam_role" {
   sql = <<-EOQ
     select
       arn as guardduty_detector_arn
@@ -314,7 +314,7 @@ query "iam_role_guardduty_detectors" {
   EOQ
 }
 
-query "iam_role_iam_policies" {
+query "iam_policies_for_iam_role" {
   sql = <<-EOQ
     select
       policy_arn
@@ -326,7 +326,7 @@ query "iam_role_iam_policies" {
   EOQ
 }
 
-query "iam_role_lambda_functions" {
+query "lambda_functions_for_iam_role" {
   sql = <<-EOQ
     select
       arn as function_arn

@@ -30,13 +30,13 @@ dashboard "iam_group_detail" {
 
   }
 
-  with "iam_policies" {
-    query = query.iam_group_iam_policies
+  with "iam_policies_for_iam_group" {
+    query = query.iam_policies_for_iam_group
     args  = [self.input.group_arn.value]
   }
 
-  with "iam_users" {
-    query = query.iam_group_iam_users
+  with "iam_users_for_iam_group" {
+    query = query.iam_users_for_iam_group
     args  = [self.input.group_arn.value]
   }
 
@@ -64,14 +64,14 @@ dashboard "iam_group_detail" {
       node {
         base = node.iam_policy
         args = {
-          iam_policy_arns = with.iam_policies.rows[*].policy_arn
+          iam_policy_arns = with.iam_policies_for_iam_group.rows[*].policy_arn
         }
       }
 
       node {
         base = node.iam_user
         args = {
-          iam_user_arns = with.iam_users.rows[*].user_arn
+          iam_user_arns = with.iam_users_for_iam_group.rows[*].user_arn
         }
       }
 
@@ -161,7 +161,7 @@ query "iam_group_input" {
 
 # With queries
 
-query "iam_group_iam_policies" {
+query "iam_policies_for_iam_group" {
   sql = <<-EOQ
     select
       jsonb_array_elements_text(attached_policy_arns) as policy_arn
@@ -172,7 +172,7 @@ query "iam_group_iam_policies" {
   EOQ
 }
 
-query "iam_group_iam_users" {
+query "iam_users_for_iam_group" {
   sql = <<-EOQ
     select
       member ->> 'Arn' as user_arn

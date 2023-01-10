@@ -47,43 +47,43 @@ dashboard "rds_db_instance_detail" {
 
   }
 
-  with "kms_keys" {
-    query = query.rds_db_instance_kms_keys
+  with "kms_keys_for_rds_db_instance" {
+    query = query.kms_keys_for_rds_db_instance
     args  = [self.input.db_instance_arn.value]
   }
 
-  with "rds_db_clusters" {
-    query = query.rds_db_instance_rds_db_clusters
+  with "rds_db_clusters_for_rds_db_instance" {
+    query = query.rds_db_clusters_for_rds_db_instance
     args  = [self.input.db_instance_arn.value]
   }
 
-  with "rds_db_snapshots" {
-    query = query.rds_db_instance_rds_db_snapshots
+  with "rds_db_snapshots_for_rds_db_instance" {
+    query = query.rds_db_snapshots_for_rds_db_instance
     args  = [self.input.db_instance_arn.value]
   }
 
-  with "rds_db_subnet_groups" {
-    query = query.rds_db_instance_rds_db_subnet_groups
+  with "rds_db_subnet_groups_for_rds_db_instance" {
+    query = query.rds_db_subnet_groups_for_rds_db_instance
     args  = [self.input.db_instance_arn.value]
   }
 
-  with "sns_topics" {
-    query = query.rds_db_instance_sns_topics
+  with "sns_topics_for_rds_db_instance" {
+    query = query.sns_topics_for_rds_db_instance
     args  = [self.input.db_instance_arn.value]
   }
 
-  with "vpc_security_groups" {
-    query = query.rds_db_instance_vpc_security_groups
+  with "vpc_security_groups_for_rds_db_instance" {
+    query = query.vpc_security_groups_for_rds_db_instance
     args  = [self.input.db_instance_arn.value]
   }
 
-  with "vpc_subnets" {
-    query = query.rds_db_instance_vpc_subnets
+  with "vpc_subnets_for_rds_db_instance" {
+    query = query.vpc_subnets_for_rds_db_instance
     args  = [self.input.db_instance_arn.value]
   }
 
-  with "vpc_vpcs" {
-    query = query.rds_db_instance_vpc_vpcs
+  with "vpc_vpcs_for_rds_db_instance" {
+    query = query.vpc_vpcs_for_rds_db_instance
     args  = [self.input.db_instance_arn.value]
   }
 
@@ -97,14 +97,14 @@ dashboard "rds_db_instance_detail" {
       node {
         base = node.kms_key
         args = {
-          kms_key_arns = with.kms_keys.rows[*].key_arn
+          kms_key_arns = with.kms_keys_for_rds_db_instance.rows[*].key_arn
         }
       }
 
       node {
         base = node.rds_db_cluster
         args = {
-          rds_db_cluster_arns = with.rds_db_clusters.rows[*].cluster_arn
+          rds_db_cluster_arns = with.rds_db_clusters_for_rds_db_instance.rows[*].cluster_arn
         }
       }
 
@@ -125,49 +125,49 @@ dashboard "rds_db_instance_detail" {
       node {
         base = node.rds_db_snapshot
         args = {
-          rds_db_snapshot_arns = with.rds_db_snapshots.rows[*].snapshot_arn
+          rds_db_snapshot_arns = with.rds_db_snapshots_for_rds_db_instance.rows[*].snapshot_arn
         }
       }
 
       node {
         base = node.rds_db_subnet_group
         args = {
-          rds_db_subnet_group_arns = with.rds_db_subnet_groups.rows[*].db_subnet_group_arn
+          rds_db_subnet_group_arns = with.rds_db_subnet_groups_for_rds_db_instance.rows[*].db_subnet_group_arn
         }
       }
 
       node {
         base = node.sns_topic
         args = {
-          sns_topic_arns = with.sns_topics.rows[*].sns_topic_arn
+          sns_topic_arns = with.sns_topics_for_rds_db_instance.rows[*].sns_topic_arn
         }
       }
 
       node {
         base = node.vpc_security_group
         args = {
-          vpc_security_group_ids = with.vpc_security_groups.rows[*].security_group_id
+          vpc_security_group_ids = with.vpc_security_groups_for_rds_db_instance.rows[*].security_group_id
         }
       }
 
       node {
         base = node.vpc_subnet
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_rds_db_instance.rows[*].subnet_id
         }
       }
 
       node {
         base = node.vpc_vpc
         args = {
-          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_id
+          vpc_vpc_ids = with.vpc_vpcs_for_rds_db_instance.rows[*].vpc_id
         }
       }
 
       edge {
         base = edge.rds_db_cluster_to_rds_db_instance
         args = {
-          rds_db_cluster_arns = with.rds_db_clusters.rows[*].cluster_arn
+          rds_db_cluster_arns = with.rds_db_clusters_for_rds_db_instance.rows[*].cluster_arn
         }
       }
 
@@ -209,21 +209,21 @@ dashboard "rds_db_instance_detail" {
       edge {
         base = edge.rds_db_subnet_group_to_vpc_subnet
         args = {
-          rds_db_subnet_group_arns = with.rds_db_subnet_groups.rows[*].db_subnet_group_arn
+          rds_db_subnet_group_arns = with.rds_db_subnet_groups_for_rds_db_instance.rows[*].db_subnet_group_arn
         }
       }
 
       edge {
         base = edge.vpc_security_group_to_rds_db_subnet_group
         args = {
-          rds_db_subnet_group_arns = with.rds_db_subnet_groups.rows[*].db_subnet_group_arn
+          rds_db_subnet_group_arns = with.rds_db_subnet_groups_for_rds_db_instance.rows[*].db_subnet_group_arn
         }
       }
 
       edge {
         base = edge.vpc_subnet_to_vpc_vpc
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_rds_db_instance.rows[*].subnet_id
         }
       }
     }
@@ -334,7 +334,7 @@ query "rds_db_instance_input" {
 
 # With queries
 
-query "rds_db_instance_kms_keys" {
+query "kms_keys_for_rds_db_instance" {
   sql = <<-EOQ
     select
       rdb.kms_key_id as key_arn
@@ -346,7 +346,7 @@ query "rds_db_instance_kms_keys" {
   EOQ
 }
 
-query "rds_db_instance_rds_db_clusters" {
+query "rds_db_clusters_for_rds_db_instance" {
   sql = <<-EOQ
     select
       c.arn as cluster_arn
@@ -360,7 +360,7 @@ query "rds_db_instance_rds_db_clusters" {
   EOQ
 }
 
-query "rds_db_instance_rds_db_snapshots" {
+query "rds_db_snapshots_for_rds_db_instance" {
   sql = <<-EOQ
     select
       s.arn as snapshot_arn
@@ -373,7 +373,7 @@ query "rds_db_instance_rds_db_snapshots" {
   EOQ
 }
 
-query "rds_db_instance_rds_db_subnet_groups" {
+query "rds_db_subnet_groups_for_rds_db_instance" {
   sql = <<-EOQ
     select
       g.arn as db_subnet_group_arn
@@ -388,7 +388,7 @@ query "rds_db_instance_rds_db_subnet_groups" {
   EOQ
 }
 
-query "rds_db_instance_sns_topics" {
+query "sns_topics_for_rds_db_instance" {
   sql = <<-EOQ
     select
       s.sns_topic_arn
@@ -402,19 +402,19 @@ query "rds_db_instance_sns_topics" {
   EOQ
 }
 
-query "rds_db_instance_vpc_security_groups" {
+query "vpc_security_groups_for_rds_db_instance" {
   sql = <<-EOQ
     select
       dsg ->> 'VpcSecurityGroupId' as security_group_id
     from
       aws_rds_db_instance as di,
-      jsonb_array_elements(di.vpc_security_groups) as dsg
+      jsonb_array_elements(di.vpc_security_groups_for_rds_db_instance) as dsg
     where
       di.arn = $1;
   EOQ
 }
 
-query "rds_db_instance_vpc_subnets" {
+query "vpc_subnets_for_rds_db_instance" {
   sql = <<-EOQ
     select
       subnet ->> 'SubnetIdentifier' as subnet_id
@@ -426,7 +426,7 @@ query "rds_db_instance_vpc_subnets" {
   EOQ
 }
 
-query "rds_db_instance_vpc_vpcs" {
+query "vpc_vpcs_for_rds_db_instance" {
   sql = <<-EOQ
     select
       vpc_id
@@ -564,7 +564,7 @@ query "rds_db_instance_security_groups" {
       s ->> 'Status' as "Status"
     from
       aws_rds_db_instance,
-      jsonb_array_elements(vpc_security_groups) as s
+      jsonb_array_elements(vpc_security_groups_for_rds_db_instance) as s
     where
       arn = $1;
   EOQ

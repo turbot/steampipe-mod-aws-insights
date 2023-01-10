@@ -27,23 +27,23 @@ dashboard "eventbridge_rule_detail" {
     }
   }
 
-  with "cloudwatch_log_groups" {
-    query = query.eventbridge_rule_cloudwatch_log_groups
+  with "cloudwatch_log_groups_for_eventbridge_rule" {
+    query = query.cloudwatch_log_groups_for_eventbridge_rule
     args  = [self.input.eventbridge_rule_arn.value]
   }
 
-  with "eventbridge_buses" {
-    query = query.eventbridge_rule_eventbridge_buses
+  with "eventbridge_buses_for_eventbridge_rule" {
+    query = query.eventbridge_buses_for_eventbridge_rule
     args  = [self.input.eventbridge_rule_arn.value]
   }
 
-  with "lambda_functions" {
-    query = query.eventbridge_rule_lambda_functions
+  with "lambda_functions_for_eventbridge_rule" {
+    query = query.lambda_functions_for_eventbridge_rule
     args  = [self.input.eventbridge_rule_arn.value]
   }
 
-  with "sns_topics" {
-    query = query.eventbridge_rule_sns_topics
+  with "sns_topics_for_eventbridge_rule" {
+    query = query.sns_topics_for_eventbridge_rule
     args  = [self.input.eventbridge_rule_arn.value]
   }
 
@@ -57,14 +57,14 @@ dashboard "eventbridge_rule_detail" {
       node {
         base = node.cloudwatch_log_group
         args = {
-          cloudwatch_log_group_arns = with.cloudwatch_log_groups.rows[*].cloudwatch_log_group_arn
+          cloudwatch_log_group_arns = with.cloudwatch_log_groups_for_eventbridge_rule.rows[*].cloudwatch_log_group_arn
         }
       }
 
       node {
         base = node.eventbridge_bus
         args = {
-          eventbridge_bus_arns = with.eventbridge_buses.rows[*].eventbridge_bus_arn
+          eventbridge_bus_arns = with.eventbridge_buses_for_eventbridge_rule.rows[*].eventbridge_bus_arn
         }
       }
 
@@ -78,14 +78,14 @@ dashboard "eventbridge_rule_detail" {
       node {
         base = node.lambda_function
         args = {
-          lambda_function_arns = with.lambda_functions.rows[*].function_arn
+          lambda_function_arns = with.lambda_functions_for_eventbridge_rule.rows[*].function_arn
         }
       }
 
       node {
         base = node.sns_topic
         args = {
-          sns_topic_arns = with.sns_topics.rows[*].topic_arn
+          sns_topic_arns = with.sns_topics_for_eventbridge_rule.rows[*].topic_arn
         }
       }
 
@@ -173,7 +173,7 @@ query "eventbridge_rule_input" {
 
 # With queries
 
-query "eventbridge_rule_cloudwatch_log_groups" {
+query "cloudwatch_log_groups_for_eventbridge_rule" {
   sql = <<-EOQ
     select
       (t ->> 'Arn')::text || ':*' as cloudwatch_log_group_arn
@@ -186,7 +186,7 @@ query "eventbridge_rule_cloudwatch_log_groups" {
   EOQ
 }
 
-query "eventbridge_rule_eventbridge_buses" {
+query "eventbridge_buses_for_eventbridge_rule" {
   sql = <<-EOQ
     select
       b.arn as eventbridge_bus_arn
@@ -200,7 +200,7 @@ query "eventbridge_rule_eventbridge_buses" {
   EOQ
 }
 
-query "eventbridge_rule_lambda_functions" {
+query "lambda_functions_for_eventbridge_rule" {
   sql = <<-EOQ
     select
       (t ->> 'Arn')::text as function_arn
@@ -213,7 +213,7 @@ query "eventbridge_rule_lambda_functions" {
   EOQ
 }
 
-query "eventbridge_rule_sns_topics" {
+query "sns_topics_for_eventbridge_rule" {
   sql = <<-EOQ
     select
       (t ->> 'Arn')::text as topic_arn

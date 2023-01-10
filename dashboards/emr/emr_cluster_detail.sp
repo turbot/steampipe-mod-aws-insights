@@ -40,18 +40,18 @@ dashboard "emr_cluster_detail" {
 
   }
 
-  with "ec2_amis" {
-    query = query.emr_cluster_ec2_amis
+  with "ec2_amis_for_emr_cluster" {
+    query = query.ec2_amis_for_emr_cluster
     args  = [self.input.emr_cluster_arn.value]
   }
 
-  with "iam_roles" {
-    query = query.emr_cluster_iam_roles
+  with "iam_roles_for_emr_cluster" {
+    query = query.iam_roles_for_emr_cluster
     args  = [self.input.emr_cluster_arn.value]
   }
 
-  with "s3_buckets" {
-    query = query.emr_cluster_s3_buckets
+  with "s3_buckets_for_emr_cluster" {
+    query = query.s3_buckets_for_emr_cluster
     args  = [self.input.emr_cluster_arn.value]
   }
 
@@ -64,7 +64,7 @@ dashboard "emr_cluster_detail" {
       node {
         base = node.ec2_ami
         args = {
-          ec2_ami_image_ids = with.ec2_amis.rows[*].image_id
+          ec2_ami_image_ids = with.ec2_amis_for_emr_cluster.rows[*].image_id
         }
       }
 
@@ -99,14 +99,14 @@ dashboard "emr_cluster_detail" {
       node {
         base = node.iam_role
         args = {
-          iam_role_arns = with.iam_roles.rows[*].role_arn
+          iam_role_arns = with.iam_roles_for_emr_cluster.rows[*].role_arn
         }
       }
 
       node {
         base = node.s3_bucket
         args = {
-          s3_bucket_arns = with.s3_buckets.rows[*].s3_bucket_arn
+          s3_bucket_arns = with.s3_buckets_for_emr_cluster.rows[*].s3_bucket_arn
         }
       }
 
@@ -248,7 +248,7 @@ EOQ
 
 # With queries
 
-query "emr_cluster_ec2_amis" {
+query "ec2_amis_for_emr_cluster" {
   sql = <<-EOQ
     select
       custom_ami_id as image_id
@@ -260,7 +260,7 @@ query "emr_cluster_ec2_amis" {
   EOQ
 }
 
-query "emr_cluster_iam_roles" {
+query "iam_roles_for_emr_cluster" {
   sql = <<-EOQ
     select
       r.arn as role_arn
@@ -273,7 +273,7 @@ query "emr_cluster_iam_roles" {
   EOQ
 }
 
-query "emr_cluster_s3_buckets" {
+query "s3_buckets_for_emr_cluster" {
   sql = <<-EOQ
     select
       b.arn as s3_bucket_arn

@@ -34,23 +34,23 @@ dashboard "api_gatewayv2_api_detail" {
 
   }
 
-  with "ec2_load_balancer_listeners" {
-    query = query.api_gatewayv2_api_ec2_load_balancer_listeners
+  with "ec2_load_balancer_listeners_for_api_gatewayv2_api" {
+    query = query.ec2_load_balancer_listeners_for_api_gatewayv2_api
     args  = [self.input.api_id.value]
   }
 
-  with "kinesis_streams" {
-    query = query.api_gatewayv2_api_kinesis_streams
+  with "kinesis_streams_for_api_gatewayv2_api" {
+    query = query.kinesis_streams_for_api_gatewayv2_api
     args  = [self.input.api_id.value]
   }
 
-  with "lambda_functions" {
-    query = query.api_gatewayv2_api_lambda_functions
+  with "lambda_functions_for_api_gatewayv2_api" {
+    query = query.lambda_functions_for_api_gatewayv2_api
     args  = [self.input.api_id.value]
   }
 
-  with "sqs_queues" {
-    query = query.api_gatewayv2_api_sqs_queues
+  with "sqs_queues_for_api_gatewayv2_api" {
+    query = query.sqs_queues_for_api_gatewayv2_api
     args  = [self.input.api_id.value]
   }
 
@@ -78,21 +78,21 @@ dashboard "api_gatewayv2_api_detail" {
       node {
         base = node.ec2_load_balancer_listener
         args = {
-          ec2_load_balancer_listener_arns = with.ec2_load_balancer_listeners.rows[*].listener_arn
+          ec2_load_balancer_listener_arns = with.ec2_load_balancer_listeners_for_api_gatewayv2_api.rows[*].listener_arn
         }
       }
 
       node {
         base = node.kinesis_stream
         args = {
-          kinesis_stream_arns = with.kinesis_streams.rows[*].kinesis_stream_arn
+          kinesis_stream_arns = with.kinesis_streams_for_api_gatewayv2_api.rows[*].kinesis_stream_arn
         }
       }
 
       node {
         base = node.lambda_function
         args = {
-          lambda_function_arns = with.lambda_functions.rows[*].function_arn
+          lambda_function_arns = with.lambda_functions_for_api_gatewayv2_api.rows[*].function_arn
         }
       }
 
@@ -106,7 +106,7 @@ dashboard "api_gatewayv2_api_detail" {
       node {
         base = node.sqs_queue
         args = {
-          sqs_queue_arns = with.sqs_queues.rows[*].queue_arn
+          sqs_queue_arns = with.sqs_queues_for_api_gatewayv2_api.rows[*].queue_arn
         }
       }
 
@@ -197,7 +197,7 @@ dashboard "api_gatewayv2_api_detail" {
         query = query.api_gatewayv2_api_integrations
         args  = [self.input.api_id.value]
       }
-      
+
     }
 
   }
@@ -223,7 +223,7 @@ query "api_gatewayv2_api_input" {
 
 # With queries
 
-query "api_gatewayv2_api_ec2_load_balancer_listeners" {
+query "ec2_load_balancer_listeners_for_api_gatewayv2_api" {
   sql = <<-EOQ
     select
       lb.arn as listener_arn
@@ -236,7 +236,7 @@ query "api_gatewayv2_api_ec2_load_balancer_listeners" {
   EOQ
 }
 
-query "api_gatewayv2_api_kinesis_streams" {
+query "kinesis_streams_for_api_gatewayv2_api" {
   sql = <<-EOQ
     select
       s.stream_arn as kinesis_stream_arn
@@ -249,7 +249,7 @@ query "api_gatewayv2_api_kinesis_streams" {
   EOQ
 }
 
-query "api_gatewayv2_api_lambda_functions" {
+query "lambda_functions_for_api_gatewayv2_api" {
   sql = <<-EOQ
     select
       f.arn as function_arn
@@ -262,7 +262,7 @@ query "api_gatewayv2_api_lambda_functions" {
   EOQ
 }
 
-query "api_gatewayv2_api_sqs_queues" {
+query "sqs_queues_for_api_gatewayv2_api" {
   sql = <<-EOQ
     select
       q.queue_arn as queue_arn

@@ -42,65 +42,65 @@ dashboard "kms_key_detail" {
 
   }
 
-  with "cloudtrail_trails" {
-    query = query.kms_key_cloudtrail_trails
+  with "cloudtrail_trails_for_kms_key" {
+    query = query.cloudtrail_trails_for_kms_key
     args  = [self.input.key_arn.value]
   }
 
-  with "ebs_volumes" {
-    query = query.kms_key_ebs_volumes
+  with "ebs_volumes_for_kms_key" {
+    query = query.ebs_volumes_for_kms_key
     args  = [self.input.key_arn.value]
   }
 
-  with "lambda_functions" {
-    query = query.kms_key_lambda_functions
+  with "lambda_functions_for_kms_key" {
+    query = query.lambda_functions_for_kms_key
     args  = [self.input.key_arn.value]
   }
 
-  with "key_policy_std" {
-    query = query.kms_key_policy_std
+  with "key_policy_std_for_kms_key" {
+    query = query.key_policy_std_for_kms_key
     args  = [self.input.key_arn.value]
   }
 
-  with "rds_db_clusters" {
-    query = query.kms_key_rds_db_clusters
+  with "rds_db_clusters_for_kms_key" {
+    query = query.rds_db_clusters_for_kms_key
     args  = [self.input.key_arn.value]
   }
 
-  with "rds_db_cluster_snapshots" {
-    query = query.kms_key_rds_db_cluster_snapshots
+  with "rds_db_cluster_snapshots_for_kms_key" {
+    query = query.rds_db_cluster_snapshots_for_kms_key
     args  = [self.input.key_arn.value]
   }
 
-  with "rds_db_instances" {
-    query = query.kms_key_rds_db_instances
+  with "rds_db_instances_for_kms_key" {
+    query = query.rds_db_instances_for_kms_key
     args  = [self.input.key_arn.value]
   }
 
-  with "rds_db_snapshots" {
-    query = query.kms_key_rds_db_snapshots
-    args  = [self.input.key_arn.value]
-
-  }
-
-  with "redshift_clusters" {
-    query = query.kms_key_redshift_clusters
-    args  = [self.input.key_arn.value]
-  }
-
-  with "s3_buckets" {
-    query = query.kms_key_s3_buckets
+  with "rds_db_snapshots_for_kms_key" {
+    query = query.rds_db_snapshots_for_kms_key
     args  = [self.input.key_arn.value]
 
   }
 
-  with "sns_topics" {
-    query = query.kms_key_sns_topics
+  with "redshift_clusters_for_kms_key" {
+    query = query.redshift_clusters_for_kms_key
     args  = [self.input.key_arn.value]
   }
 
-  with "sqs_queues" {
-    query = query.kms_key_sqs_queues
+  with "s3_buckets_for_kms_key" {
+    query = query.s3_buckets_for_kms_key
+    args  = [self.input.key_arn.value]
+
+  }
+
+  with "sns_topics_for_kms_key" {
+    query = query.sns_topics_for_kms_key
+    args  = [self.input.key_arn.value]
+  }
+
+  with "sqs_queues_for_kms_key" {
+    query = query.sqs_queues_for_kms_key
     args  = [self.input.key_arn.value]
   }
 
@@ -114,14 +114,14 @@ dashboard "kms_key_detail" {
       node {
         base = node.cloudtrail_trail
         args = {
-          cloudtrail_trail_arns = with.cloudtrail_trails.rows[*].trail_arn
+          cloudtrail_trail_arns = with.cloudtrail_trails_for_kms_key.rows[*].trail_arn
         }
       }
 
       node {
         base = node.ebs_volume
         args = {
-          ebs_volume_arns = with.ebs_volumes.rows[*].volume_arn
+          ebs_volume_arns = with.ebs_volumes_for_kms_key.rows[*].volume_arn
         }
       }
 
@@ -142,77 +142,77 @@ dashboard "kms_key_detail" {
       node {
         base = node.lambda_function
         args = {
-          lambda_function_arns = with.lambda_functions.rows[*].function_arn
+          lambda_function_arns = with.lambda_functions_for_kms_key.rows[*].function_arn
         }
       }
 
       node {
         base = node.rds_db_cluster
         args = {
-          rds_db_cluster_arns = with.rds_db_clusters.rows[*].cluster_arn
+          rds_db_cluster_arns = with.rds_db_clusters_for_kms_key.rows[*].cluster_arn
         }
       }
 
       node {
         base = node.rds_db_cluster_snapshot
         args = {
-          rds_db_cluster_snapshot_arns = with.rds_db_cluster_snapshots.rows[*].cluster_snapshot_arn
+          rds_db_cluster_snapshot_arns = with.rds_db_cluster_snapshots_for_kms_key.rows[*].cluster_snapshot_arn
         }
       }
 
       node {
         base = node.rds_db_instance
         args = {
-          rds_db_instance_arns = with.rds_db_instances.rows[*].db_instance_arn
+          rds_db_instance_arns = with.rds_db_instances_for_kms_key.rows[*].db_instance_arn
         }
       }
 
       node {
         base = node.rds_db_snapshot
         args = {
-          rds_db_snapshot_arns = with.rds_db_snapshots.rows[*].db_snapshot_arn
+          rds_db_snapshot_arns = with.rds_db_snapshots_for_kms_key.rows[*].db_snapshot_arn
         }
       }
 
       node {
         base = node.redshift_cluster
         args = {
-          redshift_cluster_arns = with.redshift_clusters.rows[*].redshift_cluster_arn
+          redshift_cluster_arns = with.redshift_clusters_for_kms_key.rows[*].redshift_cluster_arn
         }
       }
 
       node {
         base = node.s3_bucket
         args = {
-          s3_bucket_arns = with.s3_buckets.rows[*].bucket_arn
+          s3_bucket_arns = with.s3_buckets_for_kms_key.rows[*].bucket_arn
         }
       }
 
       node {
         base = node.sns_topic
         args = {
-          sns_topic_arns = with.sns_topics.rows[*].topic_arn
+          sns_topic_arns = with.sns_topics_for_kms_key.rows[*].topic_arn
         }
       }
 
       node {
         base = node.sqs_queue
         args = {
-          sqs_queue_arns = with.sqs_queues.rows[*].queue_arn
+          sqs_queue_arns = with.sqs_queues_for_kms_key.rows[*].queue_arn
         }
       }
 
       edge {
         base = edge.cloudtrail_trail_to_kms_key
         args = {
-          cloudtrail_trail_arns = with.cloudtrail_trails.rows[*].trail_arn
+          cloudtrail_trail_arns = with.cloudtrail_trails_for_kms_key.rows[*].trail_arn
         }
       }
 
       edge {
         base = edge.ebs_volume_to_kms_key
         args = {
-          ebs_volume_arns = with.ebs_volumes.rows[*].volume_arn
+          ebs_volume_arns = with.ebs_volumes_for_kms_key.rows[*].volume_arn
         }
       }
 
@@ -226,63 +226,63 @@ dashboard "kms_key_detail" {
       edge {
         base = edge.lambda_function_to_kms_key
         args = {
-          lambda_function_arns = with.lambda_functions.rows[*].function_arn
+          lambda_function_arns = with.lambda_functions_for_kms_key.rows[*].function_arn
         }
       }
 
       edge {
         base = edge.rds_db_cluster_snapshot_to_kms_key
         args = {
-          rds_db_cluster_snapshot_arns = with.rds_db_cluster_snapshots.rows[*].cluster_snapshot_arn
+          rds_db_cluster_snapshot_arns = with.rds_db_cluster_snapshots_for_kms_key.rows[*].cluster_snapshot_arn
         }
       }
 
       edge {
         base = edge.rds_db_cluster_to_kms_key
         args = {
-          rds_db_cluster_arns = with.rds_db_clusters.rows[*].cluster_arn
+          rds_db_cluster_arns = with.rds_db_clusters_for_kms_key.rows[*].cluster_arn
         }
       }
 
       edge {
         base = edge.rds_db_instance_to_kms_key
         args = {
-          rds_db_instance_arns = with.rds_db_instances.rows[*].db_instance_arn
+          rds_db_instance_arns = with.rds_db_instances_for_kms_key.rows[*].db_instance_arn
         }
       }
 
       edge {
         base = edge.rds_db_snapshot_to_kms_key
         args = {
-          rds_db_snapshot_arns = with.rds_db_snapshots.rows[*].db_snapshot_arn
+          rds_db_snapshot_arns = with.rds_db_snapshots_for_kms_key.rows[*].db_snapshot_arn
         }
       }
 
       edge {
         base = edge.redshift_cluster_to_kms_key
         args = {
-          redshift_cluster_arns = with.redshift_clusters.rows[*].redshift_cluster_arn
+          redshift_cluster_arns = with.redshift_clusters_for_kms_key.rows[*].redshift_cluster_arn
         }
       }
 
       edge {
         base = edge.s3_bucket_to_kms_key
         args = {
-          s3_bucket_arns = with.s3_buckets.rows[*].bucket_arn
+          s3_bucket_arns = with.s3_buckets_for_kms_key.rows[*].bucket_arn
         }
       }
 
       edge {
         base = edge.sns_topic_to_kms_key
         args = {
-          sns_topic_arns = with.sns_topics.rows[*].topic_arn
+          sns_topic_arns = with.sns_topics_for_kms_key.rows[*].topic_arn
         }
       }
 
       edge {
         base = edge.sqs_queue_to_kms_key_alias
         args = {
-          sqs_queue_arns = with.sqs_queues.rows[*].queue_arn
+          sqs_queue_arns = with.sqs_queues_for_kms_key.rows[*].queue_arn
         }
       }
     }
@@ -335,7 +335,7 @@ dashboard "kms_key_detail" {
     title = "Resource Policy"
     base  = graph.iam_resource_policy_structure
     args = {
-      policy_std = with.key_policy_std.rows[0].policy_std
+      policy_std = with.key_policy_std_for_kms_key.rows[0].policy_std
     }
   }
 }
@@ -363,7 +363,7 @@ query "kms_key_input" {
 
 # With queries
 
-query "kms_key_cloudtrail_trails" {
+query "cloudtrail_trails_for_kms_key" {
   sql = <<-EOQ
     select
       t.arn as trail_arn
@@ -374,7 +374,7 @@ query "kms_key_cloudtrail_trails" {
   EOQ
 }
 
-query "kms_key_ebs_volumes" {
+query "ebs_volumes_for_kms_key" {
   sql = <<-EOQ
     select
       v.arn as volume_arn
@@ -385,7 +385,7 @@ query "kms_key_ebs_volumes" {
   EOQ
 }
 
-query "kms_key_lambda_functions" {
+query "lambda_functions_for_kms_key" {
   sql = <<-EOQ
     select
       arn as function_arn
@@ -396,7 +396,7 @@ query "kms_key_lambda_functions" {
   EOQ
 }
 
-query "kms_key_policy_std" {
+query "key_policy_std_for_kms_key" {
   sql = <<-EOQ
     select
       policy_std
@@ -407,7 +407,7 @@ query "kms_key_policy_std" {
   EOQ
 }
 
-query "kms_key_rds_db_clusters" {
+query "rds_db_clusters_for_kms_key" {
   sql = <<-EOQ
     select
       arn as cluster_arn
@@ -418,7 +418,7 @@ query "kms_key_rds_db_clusters" {
   EOQ
 }
 
-query "kms_key_rds_db_cluster_snapshots" {
+query "rds_db_cluster_snapshots_for_kms_key" {
   sql = <<-EOQ
     select
       s.arn as cluster_snapshot_arn
@@ -429,7 +429,7 @@ query "kms_key_rds_db_cluster_snapshots" {
   EOQ
 }
 
-query "kms_key_rds_db_instances" {
+query "rds_db_instances_for_kms_key" {
   sql = <<-EOQ
     select
       arn as db_instance_arn
@@ -440,7 +440,7 @@ query "kms_key_rds_db_instances" {
   EOQ
 }
 
-query "kms_key_rds_db_snapshots" {
+query "rds_db_snapshots_for_kms_key" {
   sql = <<-EOQ
     select
       arn as db_snapshot_arn
@@ -451,7 +451,7 @@ query "kms_key_rds_db_snapshots" {
   EOQ
 }
 
-query "kms_key_redshift_clusters" {
+query "redshift_clusters_for_kms_key" {
   sql = <<-EOQ
     select
       arn as redshift_cluster_arn
@@ -462,7 +462,7 @@ query "kms_key_redshift_clusters" {
   EOQ
 }
 
-query "kms_key_s3_buckets" {
+query "s3_buckets_for_kms_key" {
   sql = <<-EOQ
     select
       b.arn as bucket_arn
@@ -476,7 +476,7 @@ query "kms_key_s3_buckets" {
   EOQ
 }
 
-query "kms_key_sns_topics" {
+query "sns_topics_for_kms_key" {
   sql = <<-EOQ
     select
       t.topic_arn as topic_arn
@@ -490,7 +490,7 @@ query "kms_key_sns_topics" {
   EOQ
 }
 
-query "kms_key_sqs_queues" {
+query "sqs_queues_for_kms_key" {
   sql = <<-EOQ
     select
       q.queue_arn as queue_arn

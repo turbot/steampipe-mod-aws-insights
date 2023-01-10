@@ -26,23 +26,23 @@ dashboard "iam_policy_detail" {
     }
   }
 
-  with "iam_groups" {
-    query = query.iam_policy_iam_groups
+  with "iam_groups_for_iam_policy" {
+    query = query.iam_groups_for_iam_policy
     args  = [self.input.policy_arn.value]
   }
 
-  with "iam_policy_std" {
-    query = query.iam_policy_iam_policy_std
+  with "iam_policy_std_for_iam_policy" {
+    query = query.iam_policy_std_for_iam_policy
     args  = [self.input.policy_arn.value]
   }
 
-  with "iam_roles" {
-    query = query.iam_policy_iam_roles
+  with "iam_roles_for_iam_policy" {
+    query = query.iam_roles_for_iam_policy
     args  = [self.input.policy_arn.value]
   }
 
-  with "iam_users" {
-    query = query.iam_policy_iam_users
+  with "iam_users_for_iam_policy" {
+    query = query.iam_users_for_iam_policy
     args  = [self.input.policy_arn.value]
   }
 
@@ -55,7 +55,7 @@ dashboard "iam_policy_detail" {
       node {
         base = node.iam_group
         args = {
-          iam_group_arns = with.iam_groups.rows[*].group_arn
+          iam_group_arns = with.iam_groups_for_iam_policy.rows[*].group_arn
         }
       }
 
@@ -69,63 +69,63 @@ dashboard "iam_policy_detail" {
       node {
         base = node.iam_policy_statement
         args = {
-          iam_policy_stds = with.iam_policy_std.rows[0].policy_std
+          iam_policy_stds = with.iam_policy_std_for_iam_policy.rows[0].policy_std
         }
       }
 
       node {
         base = node.iam_policy_statement_action_notaction
         args = {
-          iam_policy_stds = with.iam_policy_std.rows[0].policy_std
+          iam_policy_stds = with.iam_policy_std_for_iam_policy.rows[0].policy_std
         }
       }
 
       node {
         base = node.iam_policy_statement_condition
         args = {
-          iam_policy_stds = with.iam_policy_std.rows[0].policy_std
+          iam_policy_stds = with.iam_policy_std_for_iam_policy.rows[0].policy_std
         }
       }
 
       node {
         base = node.iam_policy_statement_condition_key
         args = {
-          iam_policy_stds = with.iam_policy_std.rows[0].policy_std
+          iam_policy_stds = with.iam_policy_std_for_iam_policy.rows[0].policy_std
         }
       }
 
       node {
         base = node.iam_policy_statement_condition_key_value
         args = {
-          iam_policy_stds = with.iam_policy_std.rows[0].policy_std
+          iam_policy_stds = with.iam_policy_std_for_iam_policy.rows[0].policy_std
         }
       }
 
       node {
         base = node.iam_policy_statement_resource_notresource
         args = {
-          iam_policy_stds = with.iam_policy_std.rows[0].policy_std
+          iam_policy_stds = with.iam_policy_std_for_iam_policy.rows[0].policy_std
         }
       }
 
       node {
         base = node.iam_role
         args = {
-          iam_role_arns = with.iam_roles.rows[*].role_arn
+          iam_role_arns = with.iam_roles_for_iam_policy.rows[*].role_arn
         }
       }
 
       node {
         base = node.iam_user
         args = {
-          iam_user_arns = with.iam_users.rows[*].user_arn
+          iam_user_arns = with.iam_users_for_iam_policy.rows[*].user_arn
         }
       }
 
       edge {
         base = edge.iam_group_to_iam_policy
         args = {
-          iam_group_arns = with.iam_groups.rows[*].group_arn
+          iam_group_arns = with.iam_groups_for_iam_policy.rows[*].group_arn
         }
       }
 
@@ -139,63 +139,63 @@ dashboard "iam_policy_detail" {
       edge {
         base = edge.iam_policy_statement_action
         args = {
-          iam_policy_stds = with.iam_policy_std.rows[0].policy_std
+          iam_policy_stds = with.iam_policy_std_for_iam_policy.rows[0].policy_std
         }
       }
 
       edge {
         base = edge.iam_policy_statement_condition
         args = {
-          iam_policy_stds = with.iam_policy_std.rows[0].policy_std
+          iam_policy_stds = with.iam_policy_std_for_iam_policy.rows[0].policy_std
         }
       }
 
       edge {
         base = edge.iam_policy_statement_condition_key
         args = {
-          iam_policy_stds = with.iam_policy_std.rows[0].policy_std
+          iam_policy_stds = with.iam_policy_std_for_iam_policy.rows[0].policy_std
         }
       }
 
       edge {
         base = edge.iam_policy_statement_condition_key_value
         args = {
-          iam_policy_stds = with.iam_policy_std.rows[0].policy_std
+          iam_policy_stds = with.iam_policy_std_for_iam_policy.rows[0].policy_std
         }
       }
 
       edge {
         base = edge.iam_policy_statement_notaction
         args = {
-          iam_policy_stds = with.iam_policy_std.rows[0].policy_std
+          iam_policy_stds = with.iam_policy_std_for_iam_policy.rows[0].policy_std
         }
       }
 
       edge {
         base = edge.iam_policy_statement_notresource
         args = {
-          iam_policy_stds = with.iam_policy_std.rows[0].policy_std
+          iam_policy_stds = with.iam_policy_std_for_iam_policy.rows[0].policy_std
         }
       }
 
       edge {
         base = edge.iam_policy_statement_resource
         args = {
-          iam_policy_stds = with.iam_policy_std.rows[0].policy_std
+          iam_policy_stds = with.iam_policy_std_for_iam_policy.rows[0].policy_std
         }
       }
 
       edge {
         base = edge.iam_role_to_iam_policy
         args = {
-          iam_role_arns = with.iam_roles.rows[*].role_arn
+          iam_role_arns = with.iam_roles_for_iam_policy.rows[*].role_arn
         }
       }
 
       edge {
         base = edge.iam_user_to_iam_policy
         args = {
-          iam_user_arns = with.iam_users.rows[*].user_arn
+          iam_user_arns = with.iam_users_for_iam_policy.rows[*].user_arn
         }
       }
     }
@@ -284,7 +284,7 @@ query "iam_policy_input" {
 
 # With queries
 
-query "iam_policy_iam_groups" {
+query "iam_groups_for_iam_policy" {
   sql = <<-EOQ
     select
       arn as group_arn
@@ -296,7 +296,7 @@ query "iam_policy_iam_groups" {
   EOQ
 }
 
-query "iam_policy_iam_policy_std" {
+query "iam_policy_std_for_iam_policy" {
   sql = <<-EOQ
     select
       policy_std
@@ -308,7 +308,7 @@ query "iam_policy_iam_policy_std" {
   EOQ
 }
 
-query "iam_policy_iam_roles" {
+query "iam_roles_for_iam_policy" {
   sql = <<-EOQ
     select
       arn as role_arn
@@ -320,7 +320,7 @@ query "iam_policy_iam_roles" {
   EOQ
 }
 
-query "iam_policy_iam_users" {
+query "iam_users_for_iam_policy" {
   sql = <<-EOQ
     select
       arn as user_arn

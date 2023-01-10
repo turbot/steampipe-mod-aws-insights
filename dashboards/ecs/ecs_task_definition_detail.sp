@@ -18,57 +18,57 @@ dashboard "ecs_task_definition_detail" {
     card {
       query = query.ecs_task_definition_network_mode
       width = 2
-      args = [self.input.task_definition_arn.value]
+      args  = [self.input.task_definition_arn.value]
     }
 
     card {
       query = query.ecs_task_definition_cpu_units
       width = 2
-      args = [self.input.task_definition_arn.value]
+      args  = [self.input.task_definition_arn.value]
     }
 
     card {
       query = query.ecs_task_definition_memory
       width = 2
-      args = [self.input.task_definition_arn.value]
+      args  = [self.input.task_definition_arn.value]
     }
 
     card {
       query = query.ecs_task_definition_requires_compatibilities
       width = 2
-      args = [self.input.task_definition_arn.value]
+      args  = [self.input.task_definition_arn.value]
     }
 
   }
 
-  with "cloudwatch_log_groups" {
-    query = query.ecs_task_definition_cloudwatch_log_groups
-    args = [self.input.task_definition_arn.value]
+  with "cloudwatch_log_groups_for_ecs_task_definition" {
+    query = query.cloudwatch_log_groups_for_ecs_task_definition
+    args  = [self.input.task_definition_arn.value]
   }
 
-  with "ecr_repositories" {
-    query = query.ecs_task_definition_ecr_repositories
-    args = [self.input.task_definition_arn.value]
+  with "ecr_repositories_for_ecs_task_definition" {
+    query = query.ecr_repositories_for_ecs_task_definition
+    args  = [self.input.task_definition_arn.value]
   }
 
-  with "ecs_services" {
-    query = query.ecs_task_definition_ecs_services
-    args = [self.input.task_definition_arn.value]
+  with "ecs_services_for_ecs_task_definition" {
+    query = query.ecs_services_for_ecs_task_definition
+    args  = [self.input.task_definition_arn.value]
   }
 
-  with "ecs_tasks" {
-    query = query.ecs_task_definition_ecs_tasks
-    args = [self.input.task_definition_arn.value]
+  with "ecs_tasks_for_ecs_task_definition" {
+    query = query.ecs_tasks_for_ecs_task_definition
+    args  = [self.input.task_definition_arn.value]
   }
 
-  with "efs_file_systems" {
-    query = query.ecs_task_definition_efs_file_systems
-    args = [self.input.task_definition_arn.value]
+  with "efs_file_systems_for_ecs_task_definition" {
+    query = query.efs_file_systems_for_ecs_task_definition
+    args  = [self.input.task_definition_arn.value]
   }
 
-  with "iam_roles" {
-    query = query.ecs_task_definition_iam_roles
-    args = [self.input.task_definition_arn.value]
+  with "iam_roles_for_ecs_task_definition" {
+    query = query.iam_roles_for_ecs_task_definition
+    args  = [self.input.task_definition_arn.value]
   }
 
 
@@ -82,28 +82,28 @@ dashboard "ecs_task_definition_detail" {
       node {
         base = node.cloudwatch_log_group
         args = {
-          cloudwatch_log_group_arns = with.cloudwatch_log_groups.rows[*].log_group_arn
+          cloudwatch_log_group_arns = with.cloudwatch_log_groups_for_ecs_task_definition.rows[*].log_group_arn
         }
       }
 
       node {
         base = node.ecr_repository
         args = {
-          ecr_repository_arns = with.ecr_repositories.rows[*].repository_arn
+          ecr_repository_arns = with.ecr_repositories_for_ecs_task_definition.rows[*].repository_arn
         }
       }
 
       node {
         base = node.ecs_service
         args = {
-          ecs_service_arns = with.ecs_services.rows[*].service_arn
+          ecs_service_arns = with.ecs_services_for_ecs_task_definition.rows[*].service_arn
         }
       }
 
       node {
         base = node.ecs_task
         args = {
-          ecs_task_arns = with.ecs_tasks.rows[*].task_arn
+          ecs_task_arns = with.ecs_tasks_for_ecs_task_definition.rows[*].task_arn
         }
       }
 
@@ -117,28 +117,28 @@ dashboard "ecs_task_definition_detail" {
       node {
         base = node.efs_file_system
         args = {
-          efs_file_system_arns = with.efs_file_systems.rows[*].file_system_arn
+          efs_file_system_arns = with.efs_file_systems_for_ecs_task_definition.rows[*].file_system_arn
         }
       }
 
       node {
         base = node.iam_role
         args = {
-          iam_role_arns = with.iam_roles.rows[*].role_arn
+          iam_role_arns = with.iam_roles_for_ecs_task_definition.rows[*].role_arn
         }
       }
 
       edge {
         base = edge.ecs_service_to_ecs_task
         args = {
-          ecs_service_arns = with.ecs_services.rows[*].service_arn
+          ecs_service_arns = with.ecs_services_for_ecs_task_definition.rows[*].service_arn
         }
       }
 
       edge {
         base = edge.ecs_service_to_ecs_task_definition
         args = {
-          ecs_service_arns = with.ecs_services.rows[*].service_arn
+          ecs_service_arns = with.ecs_services_for_ecs_task_definition.rows[*].service_arn
         }
       }
 
@@ -180,7 +180,7 @@ dashboard "ecs_task_definition_detail" {
       edge {
         base = edge.ecs_task_to_ecs_task_definition
         args = {
-          ecs_task_arns = with.ecs_tasks.rows[*].task_arn
+          ecs_task_arns = with.ecs_tasks_for_ecs_task_definition.rows[*].task_arn
         }
       }
 
@@ -197,7 +197,7 @@ dashboard "ecs_task_definition_detail" {
         type  = "line"
         width = 6
         query = query.ecs_task_definition_overview
-        args = [self.input.task_definition_arn.value]
+        args  = [self.input.task_definition_arn.value]
 
       }
 
@@ -205,7 +205,7 @@ dashboard "ecs_task_definition_detail" {
         title = "Tags"
         width = 6
         query = query.ecs_task_definition_tags
-        args = [self.input.task_definition_arn.value]
+        args  = [self.input.task_definition_arn.value]
 
       }
     }
@@ -234,7 +234,7 @@ query "ecs_task_definition_input" {
 
 # With queries
 
-query "ecs_task_definition_cloudwatch_log_groups" {
+query "cloudwatch_log_groups_for_ecs_task_definition" {
   sql = <<-EOQ
     select
       g.arn as log_group_arn
@@ -248,7 +248,7 @@ query "ecs_task_definition_cloudwatch_log_groups" {
   EOQ
 }
 
-query "ecs_task_definition_ecr_repositories" {
+query "ecr_repositories_for_ecs_task_definition" {
   sql = <<-EOQ
     select
       r.arn as repository_arn
@@ -262,7 +262,7 @@ query "ecs_task_definition_ecr_repositories" {
   EOQ
 }
 
-query "ecs_task_definition_ecs_services" {
+query "ecs_services_for_ecs_task_definition" {
   sql = <<-EOQ
     select
       arn as service_arn
@@ -273,7 +273,7 @@ query "ecs_task_definition_ecs_services" {
   EOQ
 }
 
-query "ecs_task_definition_ecs_tasks" {
+query "ecs_tasks_for_ecs_task_definition" {
   sql = <<-EOQ
     select
       task_arn as task_arn
@@ -284,7 +284,7 @@ query "ecs_task_definition_ecs_tasks" {
   EOQ
 }
 
-query "ecs_task_definition_efs_file_systems" {
+query "efs_file_systems_for_ecs_task_definition" {
   sql = <<-EOQ
     select
       f.arn as file_system_arn
@@ -297,7 +297,7 @@ query "ecs_task_definition_efs_file_systems" {
   EOQ
 }
 
-query "ecs_task_definition_iam_roles" {
+query "iam_roles_for_ecs_task_definition" {
   sql = <<-EOQ
     select
       r.arn as role_arn

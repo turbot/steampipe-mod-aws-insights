@@ -42,53 +42,53 @@ dashboard "lambda_function_detail" {
 
   }
 
-  with "api_gateway_apis" {
-    query = query.lambda_function_api_gateway_apis
+  with "api_gateway_apis_for_lambda_function" {
+    query = query.api_gateway_apis_for_lambda_function
     args  = [self.input.lambda_arn.value]
   }
 
-  with "iam_roles" {
-    query = query.lambda_function_iam_roles
+  with "iam_roles_for_lambda_function" {
+    query = query.iam_roles_for_lambda_function
     args  = [self.input.lambda_arn.value]
   }
 
-  with "kms_keys" {
-    query = query.lambda_function_kms_keys
+  with "kms_keys_for_lambda_function" {
+    query = query.kms_keys_for_lambda_function
     args  = [self.input.lambda_arn.value]
   }
 
-  with "lambda_policy_std" {
-    query = query.lambda_function_policy_std
+  with "policy_std_for_lambda_function" {
+    query = query.policy_std_for_lambda_function
     args  = [self.input.lambda_arn.value]
   }
 
-  with "s3_buckets" {
-    query = query.lambda_function_s3_buckets
+  with "s3_buckets_for_lambda_function" {
+    query = query.s3_buckets_for_lambda_function
     args  = [self.input.lambda_arn.value]
   }
 
-  with "sns_topic_subscriptions" {
-    query = query.lambda_function_sns_topic_subscriptions
+  with "sns_topic_subscriptions_for_lambda_function" {
+    query = query.sns_topic_subscriptions_for_lambda_function
     args  = [self.input.lambda_arn.value]
   }
 
-  with "sns_topics" {
-    query = query.lambda_function_sns_topics
+  with "sns_topics_for_lambda_function" {
+    query = query.sns_topics_for_lambda_function
     args  = [self.input.lambda_arn.value]
   }
 
-  with "vpc_security_groups" {
-    query = query.lambda_function_vpc_security_groups
+  with "vpc_security_groups_for_lambda_function" {
+    query = query.vpc_security_groups_for_lambda_function
     args  = [self.input.lambda_arn.value]
   }
 
-  with "vpc_subnets" {
-    query = query.lambda_function_vpc_subnets
+  with "vpc_subnets_for_lambda_function" {
+    query = query.vpc_subnets_for_lambda_function
     args  = [self.input.lambda_arn.value]
   }
 
-  with "vpc_vpcs" {
-    query = query.lambda_function_vpc_vpcs
+  with "vpc_vpcs_for_lambda_function" {
+    query = query.vpc_vpcs_for_lambda_function
     args  = [self.input.lambda_arn.value]
   }
 
@@ -102,7 +102,7 @@ dashboard "lambda_function_detail" {
       node {
         base = node.api_gatewayv2_api
         args = {
-          api_gatewayv2_api_ids = with.api_gateway_apis.rows[*].api_id
+          api_gatewayv2_api_ids = with.api_gateway_apis_for_lambda_function.rows[*].api_id
         }
       }
 
@@ -116,14 +116,14 @@ dashboard "lambda_function_detail" {
       node {
         base = node.iam_role
         args = {
-          iam_role_arns = with.iam_roles.rows[*].role_arn
+          iam_role_arns = with.iam_roles_for_lambda_function.rows[*].role_arn
         }
       }
 
       node {
         base = node.kms_key
         args = {
-          kms_key_arns = with.kms_keys.rows[*].kms_key_arn
+          kms_key_arns = with.kms_keys_for_lambda_function.rows[*].kms_key_arn
         }
       }
 
@@ -151,49 +151,49 @@ dashboard "lambda_function_detail" {
       node {
         base = node.s3_bucket
         args = {
-          s3_bucket_arns = with.s3_buckets.rows[*].bucket_arn
+          s3_bucket_arns = with.s3_buckets_for_lambda_function.rows[*].bucket_arn
         }
       }
 
       node {
         base = node.sns_topic
         args = {
-          sns_topic_arns = with.sns_topics.rows[*].topic_arn
+          sns_topic_arns = with.sns_topics_for_lambda_function.rows[*].topic_arn
         }
       }
 
       node {
         base = node.sns_topic_subscription
         args = {
-          sns_topic_subscription_arns = with.sns_topic_subscriptions.rows[*].subscription_arn
+          sns_topic_subscription_arns = with.sns_topic_subscriptions_for_lambda_function.rows[*].subscription_arn
         }
       }
 
       node {
         base = node.vpc_security_group
         args = {
-          vpc_security_group_ids = with.vpc_security_groups.rows[*].group_id
+          vpc_security_group_ids = with.vpc_security_groups_for_lambda_function.rows[*].group_id
         }
       }
 
       node {
         base = node.vpc_subnet
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_lambda_function.rows[*].subnet_id
         }
       }
 
       node {
         base = node.vpc_vpc
         args = {
-          vpc_vpc_ids = with.vpc_vpcs.rows[*].vpc_id
+          vpc_vpc_ids = with.vpc_vpcs_for_lambda_function.rows[*].vpc_id
         }
       }
 
       edge {
         base = edge.api_gateway_api_to_api_gateway_integration
         args = {
-          api_gatewayv2_api_ids = with.api_gateway_apis.rows[*].api_id
+          api_gatewayv2_api_ids = with.api_gateway_apis_for_lambda_function.rows[*].api_id
         }
       }
 
@@ -249,28 +249,28 @@ dashboard "lambda_function_detail" {
       edge {
         base = edge.s3_bucket_to_lambda_function
         args = {
-          s3_bucket_arns = with.s3_buckets.rows[*].bucket_arn
+          s3_bucket_arns = with.s3_buckets_for_lambda_function.rows[*].bucket_arn
         }
       }
 
       edge {
         base = edge.sns_subscription_to_lambda_function
         args = {
-          sns_topic_subscription_arns = with.sns_topic_subscriptions.rows[*].subscription_arn
+          sns_topic_subscription_arns = with.sns_topic_subscriptions_for_lambda_function.rows[*].subscription_arn
         }
       }
 
       edge {
         base = edge.sns_topic_to_sns_subscription
         args = {
-          sns_topic_arns = with.sns_topics.rows[*].topic_arn
+          sns_topic_arns = with.sns_topics_for_lambda_function.rows[*].topic_arn
         }
       }
 
       edge {
         base = edge.vpc_subnet_to_vpc_vpc
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_lambda_function.rows[*].subnet_id
         }
       }
     }
@@ -327,7 +327,7 @@ dashboard "lambda_function_detail" {
     title = "Resource Policy"
     base  = graph.iam_resource_policy_structure
     args = {
-      policy_std = with.lambda_policy_std.rows[0].policy_std
+      policy_std = with.policy_std_for_lambda_function.rows[0].policy_std
     }
   }
 
@@ -353,7 +353,7 @@ query "lambda_function_input" {
 
 # With queries
 
-query "lambda_function_api_gateway_apis" {
+query "api_gateway_apis_for_lambda_function" {
   sql = <<-EOQ
     select
       api_id
@@ -364,7 +364,7 @@ query "lambda_function_api_gateway_apis" {
   EOQ
 }
 
-query "lambda_function_iam_roles" {
+query "iam_roles_for_lambda_function" {
   sql = <<-EOQ
     select
       role as role_arn
@@ -375,7 +375,7 @@ query "lambda_function_iam_roles" {
   EOQ
 }
 
-query "lambda_function_kms_keys" {
+query "kms_keys_for_lambda_function" {
   sql = <<-EOQ
     select
       kms_key_arn
@@ -387,7 +387,7 @@ query "lambda_function_kms_keys" {
   EOQ
 }
 
-query "lambda_function_policy_std" {
+query "policy_std_for_lambda_function" {
   sql = <<-EOQ
     select
       policy_std
@@ -398,7 +398,7 @@ query "lambda_function_policy_std" {
   EOQ
 }
 
-query "lambda_function_s3_buckets" {
+query "s3_buckets_for_lambda_function" {
   sql = <<-EOQ
     select
       arn as bucket_arn
@@ -411,7 +411,7 @@ query "lambda_function_s3_buckets" {
   EOQ
 }
 
-query "lambda_function_sns_topic_subscriptions" {
+query "sns_topic_subscriptions_for_lambda_function" {
   sql = <<-EOQ
     select
       subscription_arn as subscription_arn
@@ -423,7 +423,7 @@ query "lambda_function_sns_topic_subscriptions" {
   EOQ
 }
 
-query "lambda_function_sns_topics" {
+query "sns_topics_for_lambda_function" {
   sql = <<-EOQ
     select
       topic_arn as topic_arn
@@ -435,7 +435,7 @@ query "lambda_function_sns_topics" {
   EOQ
 }
 
-query "lambda_function_vpc_security_groups" {
+query "vpc_security_groups_for_lambda_function" {
   sql = <<-EOQ
     select
       s as group_id
@@ -447,7 +447,7 @@ query "lambda_function_vpc_security_groups" {
   EOQ
 }
 
-query "lambda_function_vpc_subnets" {
+query "vpc_subnets_for_lambda_function" {
   sql = <<-EOQ
     select
       s as subnet_id
@@ -459,7 +459,7 @@ query "lambda_function_vpc_subnets" {
   EOQ
 }
 
-query "lambda_function_vpc_vpcs" {
+query "vpc_vpcs_for_lambda_function" {
   sql = <<-EOQ
     select
       vpc_id

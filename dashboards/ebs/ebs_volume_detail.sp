@@ -46,28 +46,28 @@ dashboard "ebs_volume_detail" {
     }
   }
 
-  with "to_ebs_snapshots" {
-    query = query.ebs_volume_to_ebs_snapshots
+  with "target_ebs_snapshots_for_ebs_volume" {
+    query = query.target_ebs_snapshots_for_ebs_volume
     args  = [self.input.volume_arn.value]
   }
 
-  with "from_ebs_snapshots" {
-    query = query.ebs_volume_from_ebs_snapshots
+  with "source_ebs_snapshots_for_ebs_volume" {
+    query = query.source_ebs_snapshots_for_ebs_volume
     args  = [self.input.volume_arn.value]
   }
 
-  with "ec2_amis" {
-    query = query.ebs_volume_ec2_amis
+  with "ec2_amis_for_ebs_volume" {
+    query = query.ec2_amis_for_ebs_volume
     args  = [self.input.volume_arn.value]
   }
 
-  with "ec2_instances" {
-    query = query.ebs_volume_ec2_instances
+  with "ec2_instances_for_ebs_volume" {
+    query = query.ec2_instances_for_ebs_volume
     args  = [self.input.volume_arn.value]
   }
 
-  with "kms_keys" {
-    query = query.ebs_volume_kms_keys
+  with "kms_keys_for_ebs_volume" {
+    query = query.kms_keys_for_ebs_volume
     args  = [self.input.volume_arn.value]
   }
 
@@ -81,21 +81,21 @@ dashboard "ebs_volume_detail" {
       node {
         base = node.ebs_snapshot
         args = {
-          ebs_snapshot_ids = with.from_ebs_snapshots.rows[*].snapshot_id
+          ebs_snapshot_ids = with.source_ebs_snapshots_for_ebs_volume.rows[*].snapshot_id
         }
       }
 
       node {
         base = node.ebs_snapshot
         args = {
-          ebs_snapshot_ids = with.to_ebs_snapshots.rows[*].snapshot_id
+          ebs_snapshot_ids = with.target_ebs_snapshots_for_ebs_volume.rows[*].snapshot_id
         }
       }
 
       node {
         base = node.ebs_shared_snapshot
         args = {
-          ebs_snapshot_ids = with.from_ebs_snapshots.rows[*].snapshot_id
+          ebs_snapshot_ids = with.source_ebs_snapshots_for_ebs_volume.rows[*].snapshot_id
         }
       }
 
@@ -109,35 +109,35 @@ dashboard "ebs_volume_detail" {
       node {
         base = node.ec2_ami
         args = {
-          ec2_ami_image_ids = with.ec2_amis.rows[*].image_id
+          ec2_ami_image_ids = with.ec2_amis_for_ebs_volume.rows[*].image_id
         }
       }
 
       node {
         base = node.ec2_instance
         args = {
-          ec2_instance_arns = with.ec2_instances.rows[*].instance_arn
+          ec2_instance_arns = with.ec2_instances_for_ebs_volume.rows[*].instance_arn
         }
       }
 
       node {
         base = node.kms_key
         args = {
-          kms_key_arns = with.kms_keys.rows[*].key_arn
+          kms_key_arns = with.kms_keys_for_ebs_volume.rows[*].key_arn
         }
       }
 
       edge {
         base = edge.ebs_snapshot_to_ec2_ami
         args = {
-          ebs_snapshot_ids = with.from_ebs_snapshots.rows[*].snapshot_id
+          ebs_snapshot_ids = with.source_ebs_snapshots_for_ebs_volume.rows[*].snapshot_id
         }
       }
 
       edge {
         base = edge.ebs_snapshot_to_ebs_volume
         args = {
-          ebs_snapshot_ids = with.from_ebs_snapshots.rows[*].snapshot_id
+          ebs_snapshot_ids = with.source_ebs_snapshots_for_ebs_volume.rows[*].snapshot_id
         }
       }
 
@@ -158,7 +158,7 @@ dashboard "ebs_volume_detail" {
       edge {
         base = edge.ec2_instance_to_ebs_volume
         args = {
-          ec2_instance_arns = with.ec2_instances.rows[*].instance_arn
+          ec2_instance_arns = with.ec2_instances_for_ebs_volume.rows[*].instance_arn
         }
       }
     }
@@ -282,7 +282,7 @@ query "ebs_volume_input" {
 
 # With queries
 
-query "ebs_volume_from_ebs_snapshots" {
+query "source_ebs_snapshots_for_ebs_volume" {
   sql = <<-EOQ
     select
       v.snapshot_id
@@ -293,7 +293,7 @@ query "ebs_volume_from_ebs_snapshots" {
   EOQ
 }
 
-query "ebs_volume_to_ebs_snapshots" {
+query "target_ebs_snapshots_for_ebs_volume" {
   sql = <<-EOQ
     select
       s.snapshot_id
@@ -306,7 +306,7 @@ query "ebs_volume_to_ebs_snapshots" {
   EOQ
 }
 
-query "ebs_volume_ec2_amis" {
+query "ec2_amis_for_ebs_volume" {
   sql = <<-EOQ
     select
       a.image_id as image_id
@@ -322,7 +322,7 @@ query "ebs_volume_ec2_amis" {
   EOQ
 }
 
-query "ebs_volume_ec2_instances" {
+query "ec2_instances_for_ebs_volume" {
   sql = <<-EOQ
     select
       e.arn as instance_arn
@@ -336,7 +336,7 @@ query "ebs_volume_ec2_instances" {
   EOQ
 }
 
-query "ebs_volume_kms_keys" {
+query "kms_keys_for_ebs_volume" {
   sql = <<-EOQ
     select
       kms_key_id as key_arn
