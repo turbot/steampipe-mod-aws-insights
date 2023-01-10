@@ -351,7 +351,7 @@ dashboard "vpc_detail" {
       edge {
         base = edge.vpc_subnet_to_redshift_cluster
         args = {
-          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+          vpc_subnet_ids = with.vpc_subnets_for_vpc.rows[*].subnet_id
         }
       }
 
