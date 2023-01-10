@@ -349,6 +349,13 @@ dashboard "vpc_detail" {
       }
 
       edge {
+        base = edge.vpc_subnet_to_redshift_cluster
+        args = {
+          vpc_subnet_ids = with.vpc_subnets.rows[*].subnet_id
+        }
+      }
+
+      edge {
         base = edge.vpc_subnet_to_vpc_endpoint
         args = {
           vpc_vpc_ids = [self.input.vpc_id.value]

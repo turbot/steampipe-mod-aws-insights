@@ -597,6 +597,28 @@ edge "vpc_subnet_to_rds_db_instance" {
   param "vpc_subnet_ids" {}
 }
 
+edge "vpc_subnet_to_redshift_cluster" {
+  title = "redshift cluster"
+
+  sql = <<-EOQ
+    select
+      subnet ->> 'SubnetIdentifier' as from_id,
+      c.arn as to_id
+    from
+      aws_redshift_subnet_group s
+    join
+      aws_redshift_cluster as c
+      on c.cluster_subnet_group_name = s.cluster_subnet_group_name
+      and c.region = s.region
+      and c.account_id = s.account_id,
+      jsonb_array_elements(s.subnets) subnet
+    where
+      subnet ->> 'SubnetIdentifier' = any($1);
+  EOQ
+
+  param "vpc_subnet_ids" {}
+}
+
 edge "vpc_subnet_to_sagemaker_notebook_instance" {
   title = "notebook instance"
 

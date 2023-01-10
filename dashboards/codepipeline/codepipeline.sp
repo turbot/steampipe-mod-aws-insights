@@ -20,11 +20,11 @@ category "codepipeline_pipeline_source" {
 category "codepipeline_pipeline_build" {
   title = "Pipeline Build"
   color = local.developer_tools_color
-  icon  = "build"
+  icon  = "construction"
 }
 
 category "codepipeline_pipeline_deploy" {
   title = "Pipeline Deploy"
   color = local.developer_tools_color
-  icon  = "publish"
+  icon  = "published_with_changes"
 }
