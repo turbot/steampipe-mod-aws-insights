@@ -18,46 +18,85 @@ dashboard "codepipeline_pipeline_detail" {
     card {
       query = query.codepipeline_pipeline_encryption
       width = 2
-      args = [self.input.pipeline_arn.value]
+      args  = [self.input.pipeline_arn.value]
     }
 
   }
+
+  with "appconfig_applications" {
+    query = query.codepipeline_pipeline_appconfig_applications
+    args  = [self.input.pipeline_arn.value]
+  }
+
+  with "cloudformation_stacks" {
+    query = query.codepipeline_pipeline_cloudformation_stacks
+    args  = [self.input.pipeline_arn.value]
+  }
+
   with "codebuild_projects" {
     query = query.codepipeline_pipeline_codebuild_projects
-    args = [self.input.pipeline_arn.value]
+    args  = [self.input.pipeline_arn.value]
   }
 
   with "codecommit_repositories" {
     query = query.codepipeline_pipeline_codecommit_repositories
-    args = [self.input.pipeline_arn.value]
+    args  = [self.input.pipeline_arn.value]
   }
 
   with "ecr_repositories" {
     query = query.codepipeline_pipeline_ecr_repositories
-    args = [self.input.pipeline_arn.value]
+    args  = [self.input.pipeline_arn.value]
+  }
+
+  with "ecs_clusters" {
+    query = query.codepipeline_pipeline_ecs_clusters
+    args  = [self.input.pipeline_arn.value]
+  }
+
+  with "elastic_beanstalk_applications" {
+    query = query.codepipeline_pipeline_elastic_beanstalk_applications
+    args  = [self.input.pipeline_arn.value]
   }
 
   with "iam_roles" {
     query = query.codepipeline_pipeline_iam_roles
-    args = [self.input.pipeline_arn.value]
+    args  = [self.input.pipeline_arn.value]
   }
 
   with "kms_keys" {
     query = query.codepipeline_pipeline_kms_keys
-    args = [self.input.pipeline_arn.value]
+    args  = [self.input.pipeline_arn.value]
   }
 
   with "s3_buckets" {
     query = query.codepipeline_pipeline_s3_buckets
-    args = [self.input.pipeline_arn.value]
+    args  = [self.input.pipeline_arn.value]
   }
 
   container {
 
     graph {
       title     = "Relationships"
+      base      = graph.codepipeline_pipeline_structures
       type      = "graph"
       direction = "TD"
+      args = {
+        codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
+      }
+
+      node {
+        base = node.appconfig_application
+        args = {
+          appconfig_application_arns = with.appconfig_applications.rows[*].app_arn
+        }
+      }
+
+      node {
+        base = node.cloudformation_stack
+        args = {
+          cloudformation_stack_ids = with.cloudformation_stacks.rows[*].stack_id
+        }
+      }
 
       node {
         base = node.codebuild_project
@@ -88,6 +127,13 @@ dashboard "codepipeline_pipeline_detail" {
       }
 
       node {
+        base = node.ecs_cluster
+        args = {
+          ecs_cluster_arns = with.ecs_clusters.rows[*].ecs_cluster_arn
+        }
+      }
+
+      node {
         base = node.ecr_repository
         args = {
           ecr_repository_arns = with.ecr_repositories.rows[*].ecr_repository_arn
@@ -95,9 +141,16 @@ dashboard "codepipeline_pipeline_detail" {
       }
 
       node {
+        base = node.elastic_beanstalk_application
+        args = {
+          elastic_beanstalk_application_arns = with.elastic_beanstalk_applications.rows[*].beanstalk_app_arn
+        }
+      }
+
+      node {
         base = node.iam_role
         args = {
-          iam_role_arns = with.iam_roles.rows[*].iam_role_id
+          iam_role_arns = with.iam_roles.rows[*].iam_role_arn
         }
       }
 
@@ -116,58 +169,86 @@ dashboard "codepipeline_pipeline_detail" {
       }
 
       edge {
-        base = edge.codebuild_project_to_codepipeline_pipeline
+        base = edge.codepipeline_pipeline_build_to_codebuild_project
+        args = {
+          codebuild_project_arns = with.codebuild_projects.rows[*].codebuild_project_arn
+        }
+      }
+
+      edge {
+        base = edge.codepipeline_pipeline_deploy_to_appconfig_application
         args = {
           codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
         }
       }
 
       edge {
-        base = edge.codecommit_repository_to_codepipeline_pipeline
+        base = edge.codepipeline_pipeline_deploy_to_cloudformation
+        args = {
+          codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.codepipeline_pipeline_deploy_to_codedeploy_app
+        args = {
+          codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.codepipeline_pipeline_deploy_to_ecs_cluster
+        args = {
+          codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.codepipeline_pipeline_deploy_to_elastic_beanstalk_application
+        args = {
+          codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.codepipeline_pipeline_deploy_to_s3_bucket
+        args = {
+          codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.codepipeline_pipeline_source_to_codecommit_repository
         args = {
           codecommit_repository_arns = with.codecommit_repositories.rows[*].codecommit_repository_arn
         }
       }
 
       edge {
-        base = edge.codedeploy_app_to_codepipeline_pipeline
+        base = edge.codepipeline_pipeline_source_to_ecr_repository
+        args = {
+          ecr_repository_arns = with.ecr_repositories.rows[*].ecr_repository_arn
+        }
+      }
+
+      edge {
+        base = edge.codepipeline_pipeline_source_to_s3_bucket
         args = {
           codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
         }
       }
 
       edge {
-        base = edge.codepipeline_pipeline_to_s3_bucket
+        base = edge.codepipeline_pipeline_to_kms_key
         args = {
           codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
         }
       }
 
       edge {
-        base = edge.ecr_repository_to_codepipeline_pipeline
+        base = edge.codepipeline_pipeline_to_iam_role
         args = {
           codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
-        }
-      }
-
-      edge {
-        base = edge.iam_role_to_codepipeline_pipeline
-        args = {
-          codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
-        }
-      }
-
-      edge {
-        base = edge.kms_key_to_codepipeline_pipeline
-        args = {
-          codepipeline_pipeline_arns = [self.input.pipeline_arn.value]
-        }
-      }
-
-      edge {
-        base = edge.s3_bucket_to_codepipeline_pipeline
-        args = {
-          s3_bucket_arns = with.s3_buckets.rows[*].s3_bucket_deploy_arn
         }
       }
     }
@@ -183,7 +264,7 @@ dashboard "codepipeline_pipeline_detail" {
         type  = "line"
         width = 6
         query = query.codepipeline_pipeline_overview
-        args = [self.input.pipeline_arn.value]
+        args  = [self.input.pipeline_arn.value]
 
       }
 
@@ -191,7 +272,7 @@ dashboard "codepipeline_pipeline_detail" {
         title = "Tags"
         width = 6
         query = query.codepipeline_pipeline_tags
-        args = [self.input.pipeline_arn.value]
+        args  = [self.input.pipeline_arn.value]
 
       }
     }
@@ -201,7 +282,7 @@ dashboard "codepipeline_pipeline_detail" {
       table {
         title = "Stages"
         query = query.codepipeline_pipeline_stages
-        args = [self.input.pipeline_arn.value]
+        args  = [self.input.pipeline_arn.value]
       }
     }
   }
@@ -226,6 +307,97 @@ query "codepipeline_pipeline_input" {
 }
 
 # With queries
+query "codepipeline_pipeline_elastic_beanstalk_applications" {
+sql = <<-EOQ
+    select
+      arn as beanstalk_app_arn
+    from
+      aws_elastic_beanstalk_application
+    where
+      name in
+      (
+        select
+          a -> 'Configuration' ->> 'ApplicationName'
+        from
+          aws_codepipeline_pipeline,
+          jsonb_array_elements(stages) as s,
+          jsonb_array_elements(s -> 'Actions') as a
+        where
+          s ->> 'Name' = 'Deploy'
+          and a -> 'ActionTypeId' ->> 'Provider' = 'ElasticBeanstalk'
+          and arn = $1
+      );
+  EOQ
+}
+
+query "codepipeline_pipeline_appconfig_applications" {
+  sql = <<-EOQ
+    select
+      arn as app_arn
+    from
+      aws_appconfig_application
+    where
+      id in
+      (
+        select
+          a -> 'Configuration' ->> 'Application'
+        from
+          aws_codepipeline_pipeline,
+          jsonb_array_elements(stages) as s,
+          jsonb_array_elements(s -> 'Actions') as a
+        where
+          s ->> 'Name' = 'Deploy'
+          and a -> 'ActionTypeId' ->> 'Provider' = 'AppConfig'
+          and arn = $1
+      );
+  EOQ
+}
+
+query "codepipeline_pipeline_cloudformation_stacks" {
+  sql = <<-EOQ
+    select
+      id as stack_id
+    from
+      aws_cloudformation_stack
+    where
+      name in
+      (
+        select
+          a -> 'Configuration' ->> 'StackName'
+        from
+          aws_codepipeline_pipeline,
+          jsonb_array_elements(stages) as s,
+          jsonb_array_elements(s -> 'Actions') as a
+        where
+          s ->> 'Name' = 'Deploy'
+          and a -> 'ActionTypeId' ->> 'Provider' = 'CloudFormation'
+          and arn = $1
+      );
+  EOQ
+}
+
+query "codepipeline_pipeline_ecs_clusters" {
+  sql = <<-EOQ
+    select
+      cluster_arn as ecs_cluster_arn
+    from
+      aws_ecs_cluster
+    where
+      cluster_name in
+      (
+        select
+          a -> 'Configuration' ->> 'ClusterName'
+        from
+          aws_codepipeline_pipeline,
+          jsonb_array_elements(stages) as s,
+          jsonb_array_elements(s -> 'Actions') as a
+        where
+          s ->> 'Name' = 'Deploy'
+          and a -> 'ActionTypeId' ->> 'Provider' = 'ECS'
+          and arn = $1
+      );
+  EOQ
+}
 
 query "codepipeline_pipeline_codebuild_projects" {
   sql = <<-EOQ
@@ -299,7 +471,7 @@ query "codepipeline_pipeline_ecr_repositories" {
 query "codepipeline_pipeline_iam_roles" {
   sql = <<-EOQ
     select
-      role_id as iam_role_id
+      arn as iam_role_arn
     from
       aws_iam_role
     where
@@ -318,12 +490,14 @@ query "codepipeline_pipeline_iam_roles" {
 query "codepipeline_pipeline_kms_keys" {
   sql = <<-EOQ
     select
-      encryption_key ->> 'Id' as kms_key_arn
+      k.arn as kms_key_arn
     from
-      aws_codepipeline_pipeline
+      aws_codepipeline_pipeline as p,
+      aws_kms_key as k,
+      jsonb_array_elements(aliases) as a
     where
-      encryption_key ->> 'Id' is not null
-      and arn = $1
+      a ->> 'AliasArn' = p.encryption_key ->> 'Id'
+      and p.arn = $1;
   EOQ
 }
 

@@ -1,5 +1,5 @@
-node "codepipeline_pipeline" {
-  category = category.codepipeline_pipeline
+node "appconfig_application" {
+  category = category.appconfig_application
 
   sql = <<-EOQ
     select
@@ -7,17 +7,16 @@ node "codepipeline_pipeline" {
       title as title,
       jsonb_build_object(
         'ARN', arn,
-        'Name', name,
-        'Created At', created_at,
+        'ID', id,
+        'Description', description,
         'Account ID', account_id,
         'Region', region
       ) as properties
     from
-      aws_codepipeline_pipeline
+      aws_appconfig_application
     where
       arn = any($1);
   EOQ
 
-  param "codepipeline_pipeline_arns" {}
+  param "appconfig_application_arns" {}
 }
-

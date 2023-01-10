@@ -28,6 +28,11 @@ dashboard "sns_topic_detail" {
     }
   }
 
+  with "cloudformation_stacks" {
+    query = query.sns_topic_cloudformation_stacks
+    args  = [self.input.topic_arn.value]
+  }
+
   with "cloudtrail_trails" {
     query = query.sns_topic_cloudtrail_trails
     args  = [self.input.topic_arn.value]
@@ -79,7 +84,7 @@ dashboard "sns_topic_detail" {
       node {
         base = node.cloudformation_stack
         args = {
-          sns_topic_arns = [self.input.topic_arn.value]
+          cloudformation_stack_ids = with.cloudformation_stacks.rows[*].stack_id
         }
       }
 
@@ -295,6 +300,23 @@ query "sns_topic_subscriptions_confirmed_count" {
 }
 
 # with queries
+query "sns_topic_cloudformation_stacks" {
+  sql = <<-EOQ
+    select
+      s.id as stack_id
+    from
+      aws_sns_topic as t,
+      aws_cloudformation_stack as s,
+      jsonb_array_elements(
+        case jsonb_typeof(notification_arns)
+          when 'array' then (notification_arns)
+          else null end
+      ) n
+    where
+      t.topic_arn = trim((n::text ), '""')
+      and t.topic_arn = $1;
+  EOQ
+}
 
 query "sns_topic_cloudtrail_trails" {
   sql = <<-EOQ

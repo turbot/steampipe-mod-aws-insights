@@ -1,5 +1,5 @@
-node "codepipeline_pipeline" {
-  category = category.codepipeline_pipeline
+node "elastic_beanstalk_application" {
+  category = category.elastic_beanstalk
 
   sql = <<-EOQ
     select
@@ -8,16 +8,16 @@ node "codepipeline_pipeline" {
       jsonb_build_object(
         'ARN', arn,
         'Name', name,
-        'Created At', created_at,
+        'Date Created',date_created,
+        'Description', description,
         'Account ID', account_id,
         'Region', region
       ) as properties
     from
-      aws_codepipeline_pipeline
+      aws_elastic_beanstalk_application
     where
       arn = any($1);
   EOQ
 
-  param "codepipeline_pipeline_arns" {}
+  param "elastic_beanstalk_application_arns" {}
 }
-
