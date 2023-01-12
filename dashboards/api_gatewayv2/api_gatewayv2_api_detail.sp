@@ -49,8 +49,13 @@ dashboard "api_gatewayv2_api_detail" {
     args  = [self.input.api_id.value]
   }
 
-  with "sqs_queues_for_api_gatewayv2_api" {
-    query = query.sqs_queues_for_api_gatewayv2_api
+  with "source_sqs_queues_for_api_gatewayv2_api" {
+    query = query.source_sqs_queues_for_api_gatewayv2_api
+    args  = [self.input.api_id.value]
+  }
+
+  with "target_sqs_queues_for_api_gatewayv2_api" {
+    query = query.target_sqs_queues_for_api_gatewayv2_api
     args  = [self.input.api_id.value]
   }
 
@@ -106,7 +111,14 @@ dashboard "api_gatewayv2_api_detail" {
       node {
         base = node.sqs_queue
         args = {
-          sqs_queue_arns = with.sqs_queues_for_api_gatewayv2_api.rows[*].queue_arn
+          sqs_queue_arns = with.source_sqs_queues_for_api_gatewayv2_api.rows[*].queue_arn
+        }
+      }
+
+      node {
+        base = node.sqs_queue
+        args = {
+          sqs_queue_arns = with.target_sqs_queues_for_api_gatewayv2_api.rows[*].queue_arn
         }
       }
 
@@ -141,6 +153,13 @@ dashboard "api_gatewayv2_api_detail" {
 
       edge {
         base = edge.api_gatewayv2_api_to_sqs_queue
+        args = {
+          api_gatewayv2_api_ids = [self.input.api_id.value]
+        }
+      }
+
+      edge {
+        base = edge.sqs_queue_to_api_gatewayv2_api
         args = {
           api_gatewayv2_api_ids = [self.input.api_id.value]
         }
@@ -262,7 +281,7 @@ query "lambda_functions_for_api_gatewayv2_api" {
   EOQ
 }
 
-query "sqs_queues_for_api_gatewayv2_api" {
+query "source_sqs_queues_for_api_gatewayv2_api" {
   sql = <<-EOQ
     select
       q.queue_arn as queue_arn
@@ -271,7 +290,20 @@ query "sqs_queues_for_api_gatewayv2_api" {
       join aws_sqs_queue as q on i.request_parameters ->> 'QueueUrl' = q.queue_url
       join aws_api_gatewayv2_api as a on a.api_id = i.api_id
     where
-      integration_subtype like '%SQS-%' and a.api_id = $1;
+      integration_subtype like '%SQS-ReceiveMessage%' and a.api_id = $1;
+  EOQ
+}
+
+query "target_sqs_queues_for_api_gatewayv2_api" {
+  sql = <<-EOQ
+    select
+      q.queue_arn as queue_arn
+    from
+      aws_api_gatewayv2_integration as i
+      join aws_sqs_queue as q on i.request_parameters ->> 'QueueUrl' = q.queue_url
+      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
+    where
+      integration_subtype like '%SQS-SendMessage%' and a.api_id = $1;
   EOQ
 }
 

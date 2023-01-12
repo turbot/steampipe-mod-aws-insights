@@ -103,7 +103,7 @@ edge "api_gatewayv2_api_to_sfn_state_machine" {
 }
 
 edge "api_gatewayv2_api_to_sqs_queue" {
-  title = "sqs queue"
+  title = "send message"
 
   sql = <<-EOQ
     select
@@ -114,7 +114,25 @@ edge "api_gatewayv2_api_to_sqs_queue" {
       join aws_sqs_queue as q on i.request_parameters ->> 'QueueUrl' = q.queue_url
       join aws_api_gatewayv2_api as a on a.api_id = i.api_id
     where
-      integration_subtype like '%SQS-%' and a.api_id = any($1);
+      integration_subtype like '%SQS-SendMessage%' and a.api_id = any($1);
+  EOQ
+
+  param "api_gatewayv2_api_ids" {}
+}
+
+edge "sqs_queue_to_api_gatewayv2_api" {
+  title = "receive message"
+
+  sql = <<-EOQ
+    select
+      q.queue_arn as from_id,
+      a.api_id as to_id
+    from
+      aws_api_gatewayv2_integration as i
+      join aws_sqs_queue as q on i.request_parameters ->> 'QueueUrl' = q.queue_url
+      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
+    where
+      integration_subtype like '%SQS-ReceiveMessage%' and a.api_id = any($1);
   EOQ
 
   param "api_gatewayv2_api_ids" {}

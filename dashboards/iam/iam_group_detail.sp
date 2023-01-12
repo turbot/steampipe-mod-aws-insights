@@ -102,14 +102,12 @@ dashboard "iam_group_detail" {
 
     container {
 
-      title = "Overview"
-
       table {
         type  = "line"
+        title = "Overview"
         width = 6
         query = query.iam_group_overview
         args  = [self.input.group_arn.value]
-
       }
 
     }
