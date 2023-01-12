@@ -47,6 +47,9 @@ node "dax_cluster_node" {
   param "dax_cluster_arns" {}
 }
 
+# Incorrect results when joining aws_dax_parameter_group and aws_dax_cluster with multiple join conditions for parameter_group, account_id and region
+# Using inner query to compare the region
+# https://github.com/turbot/steampipe-postgres-fdw/issues/271
 node "dax_parameter_group" {
   category = category.dax_parameter_group
   sql      = <<-EOQ
@@ -55,17 +58,18 @@ node "dax_parameter_group" {
       p.title as title,
       jsonb_build_object(
         'Name', p.parameter_group_name,
-        'Region', p.region,
-        'Partition', p.partition
+        'Account ID', p.account_id,
+        'Region', p.region
       ) as properties
     from
-      aws_dax_parameter_group as p,
-      aws_dax_cluster as c
+      aws_dax_parameter_group as p
+      join aws_dax_cluster as c
+        on c.parameter_group ->> 'ParameterGroupName' = p.parameter_group_name
+        and p.account_id = c.account_id
     where
-      c.parameter_group ->> 'ParameterGroupName' = p.parameter_group_name
-      and p.account_id = c.account_id
-      and p.region = c.region
-      and c.arn = any($1);
+      c.arn = any($1)
+      and p.region in (select region from aws_dax_cluster where arn = any($1))
+
   EOQ
 
   param "dax_cluster_arns" {}
