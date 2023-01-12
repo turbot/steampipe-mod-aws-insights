@@ -1,4 +1,4 @@
-dashboard "aws_ebs_snapshot_public_access_report" {
+dashboard "ebs_snapshot_public_access_report" {
 
   title         = "AWS EBS Snapshot Public Access Report"
   documentation = file("./dashboards/ebs/docs/ebs_snapshot_report_public_access.md")
@@ -11,12 +11,12 @@ dashboard "aws_ebs_snapshot_public_access_report" {
   container {
 
     card {
-      sql   = query.aws_ebs_snapshot_count.sql
+      query = query.ebs_snapshot_count
       width = 2
     }
 
     card {
-      sql   = query.aws_ebs_snapshot_public_count.sql
+      query = query.ebs_snapshot_public_count
       width = 2
     }
 
@@ -31,15 +31,19 @@ dashboard "aws_ebs_snapshot_public_access_report" {
       display = "none"
     }
 
-    sql = query.aws_ebs_snapshot_public_table.sql
+    column "Snapshot ID" {
+      href = "${dashboard.ebs_snapshot_detail.url_path}?input.ebs_snapshot_id={{.'Snapshot ID' | @uri}}"
+    }
+
+    query = query.ebs_snapshot_public_table
   }
 
 }
 
-query "aws_ebs_snapshot_public_table" {
+query "ebs_snapshot_public_table" {
   sql = <<-EOQ
     select
-      s.snapshot_id as "Snapshot",
+      s.snapshot_id as "Snapshot ID",
       s.tags ->> 'Name' as "Name",
       case when s.create_volume_permissions @> '[{"Group": "all"}]' then 'Enabled' else null end as "Public Access",
       a.title as "Account",

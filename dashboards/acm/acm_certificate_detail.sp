@@ -9,51 +9,153 @@ dashboard "acm_certificate_detail" {
 
   input "certificate_arn" {
     title = "Select a certificate:"
-    sql   = query.aws_acm_certificate_input.sql
+    query = query.acm_certificate_input
     width = 4
   }
 
   container {
 
     card {
-      query = query.aws_acm_certificate_status
+      query = query.acm_certificate_status
       width = 2
-      args = {
-        arn = self.input.certificate_arn.value
-      }
+      args  = [self.input.certificate_arn.value]
     }
 
     card {
-      query = query.aws_acm_certificate_key_algorithm
+      query = query.acm_certificate_key_algorithm
       width = 2
-      args = {
-        arn = self.input.certificate_arn.value
-      }
+      args  = [self.input.certificate_arn.value]
     }
-      card {
-      query = query.aws_acm_certificate_renewal_eligibility_status
+    card {
+      query = query.acm_certificate_renewal_eligibility_status
       width = 2
-      args = {
-        arn = self.input.certificate_arn.value
-      }
+      args  = [self.input.certificate_arn.value]
     }
 
     card {
-      query = query.aws_acm_certificate_validity
+      query = query.acm_certificate_validity
       width = 2
-      args = {
-        arn = self.input.certificate_arn.value
-      }
+      args  = [self.input.certificate_arn.value]
     }
 
     card {
-      query = query.aws_acm_certificate_transparency_logging_status
+      query = query.acm_certificate_transparency_logging_status
       width = 2
-      args = {
-        arn = self.input.certificate_arn.value
-      }
+      args  = [self.input.certificate_arn.value]
     }
 
+  }
+
+  with "cloudfront_distributions_for_acm_certificate" {
+    query = query.cloudfront_distributions_for_acm_certificate
+    args  = [self.input.certificate_arn.value]
+  }
+
+  with "ec2_application_load_balancers_for_acm_certificate" {
+    query = query.ec2_application_load_balancers_for_acm_certificate
+    args  = [self.input.certificate_arn.value]
+  }
+
+  with "ec2_classic_load_balancers_for_acm_certificate" {
+    query = query.ec2_classic_load_balancers_for_acm_certificate
+    args  = [self.input.certificate_arn.value]
+  }
+
+  with "ec2_network_load_balancers_for_acm_certificate" {
+    query = query.ec2_network_load_balancers_for_acm_certificate
+    args  = [self.input.certificate_arn.value]
+  }
+
+  with "opensearch_domains_for_acm_certificate" {
+    query = query.opensearch_domains_for_acm_certificate
+    args  = [self.input.certificate_arn.value]
+  }
+
+  container {
+
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      node {
+        base = node.acm_certificate
+        args = {
+          acm_certificate_arns = [self.input.certificate_arn.value]
+        }
+      }
+
+      node {
+        base = node.cloudfront_distribution
+        args = {
+          cloudfront_distribution_arns = with.cloudfront_distributions_for_acm_certificate.rows[*].distribution_arn
+        }
+      }
+
+      node {
+        base = node.ec2_application_load_balancer
+        args = {
+          ec2_application_load_balancer_arns = with.ec2_application_load_balancers_for_acm_certificate.rows[*].alb_arn
+        }
+      }
+
+      node {
+        base = node.ec2_classic_load_balancer
+        args = {
+          ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers_for_acm_certificate.rows[*].clb_arn
+        }
+      }
+
+      node {
+        base = node.ec2_network_load_balancer
+        args = {
+          ec2_network_load_balancer_arns = with.ec2_network_load_balancers_for_acm_certificate.rows[*].nlb_arn
+        }
+      }
+
+      node {
+        base = node.opensearch_domain
+        args = {
+          opensearch_arns = with.opensearch_domains_for_acm_certificate.rows[*].opensearch_arn
+        }
+      }
+
+      edge {
+        base = edge.cloudfront_distribution_to_acm_certificate
+        args = {
+          cloudfront_distribution_arns = with.cloudfront_distributions_for_acm_certificate.rows[*].distribution_arn
+        }
+      }
+
+      edge {
+        base = edge.ec2_application_load_balancer_to_acm_certificate
+        args = {
+          ec2_application_load_balancer_arns = with.ec2_application_load_balancers_for_acm_certificate.rows[*].alb_arn
+        }
+      }
+
+      edge {
+        base = edge.ec2_classic_load_balancer_to_acm_certificate
+        args = {
+          ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers_for_acm_certificate.rows[*].clb_arn
+        }
+      }
+
+      edge {
+        base = edge.ec2_network_load_balancer_to_acm_certificate
+        args = {
+          ec2_network_load_balancer_arns = with.ec2_network_load_balancers_for_acm_certificate.rows[*].nlb_arn
+        }
+      }
+
+      edge {
+        base = edge.opensearch_domain_to_acm_certificate
+        args = {
+          acm_certificate_arns = [self.input.certificate_arn.value]
+        }
+      }
+
+    }
   }
 
   container {
@@ -65,21 +167,15 @@ dashboard "acm_certificate_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_acm_certificate_overview
-        args = {
-          arn = self.input.certificate_arn.value
-        }
-
+        query = query.acm_certificate_overview
+        args  = [self.input.certificate_arn.value]
       }
 
       table {
         title = "Tags"
         width = 6
-        query = query.aws_acm_certificate_tags
-        args = {
-          arn = self.input.certificate_arn.value
-        }
-
+        query = query.acm_certificate_tags
+        args  = [self.input.certificate_arn.value]
       }
     }
 
@@ -88,25 +184,19 @@ dashboard "acm_certificate_detail" {
 
       table {
         title = "In Use By"
-        query = query.aws_acm_certificate_in_use_by
-        args = {
-          arn = self.input.certificate_arn.value
-        }
+        query = query.acm_certificate_in_use_by
+        args  = [self.input.certificate_arn.value]
       }
       table {
         title = "Key Usages"
-        query = query.aws_acm_certificate_key_usage
-        args = {
-          arn = self.input.certificate_arn.value
-        }
+        query = query.acm_certificate_key_usage
+        args  = [self.input.certificate_arn.value]
       }
 
       table {
         title = "Revocation Details"
-        query = query.aws_acm_certificate_revocation_detail
-        args = {
-          arn = self.input.certificate_arn.value
-        }
+        query = query.acm_certificate_revocation_detail
+        args  = [self.input.certificate_arn.value]
       }
     }
 
@@ -115,18 +205,16 @@ dashboard "acm_certificate_detail" {
 
       table {
         title = "Domain Validation Options"
-        query = query.aws_acm_certificate_domain_validation_options
-        args = {
-          arn = self.input.certificate_arn.value
-        }
+        query = query.acm_certificate_domain_validation_options
+        args  = [self.input.certificate_arn.value]
       }
-
     }
-
   }
 }
 
-query "aws_acm_certificate_input" {
+# Input queries
+
+query "acm_certificate_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -142,7 +230,98 @@ query "aws_acm_certificate_input" {
   EOQ
 }
 
-query "aws_acm_certificate_status" {
+# With queries
+
+query "cloudfront_distributions_for_acm_certificate" {
+  sql = <<-EOQ
+    select
+      arn as distribution_arn
+    from
+      aws_cloudfront_distribution
+    where
+      arn in
+      (
+        select
+          jsonb_array_elements_text(in_use_by)
+        from
+          aws_acm_certificate
+        where
+          certificate_arn = $1
+      );
+    EOQ
+}
+
+query "ec2_application_load_balancers_for_acm_certificate" {
+  sql = <<-EOQ
+    select
+      arn as alb_arn
+    from
+      aws_ec2_application_load_balancer
+    where
+      arn in
+      (
+        select
+          jsonb_array_elements_text(in_use_by)
+        from
+          aws_acm_certificate
+        where
+          certificate_arn = $1
+      );
+    EOQ
+}
+
+query "ec2_classic_load_balancers_for_acm_certificate" {
+  sql = <<-EOQ
+    select
+      arn as clb_arn
+    from
+      aws_ec2_classic_load_balancer
+    where
+      arn in
+      (
+        select
+          jsonb_array_elements_text(in_use_by)
+        from
+          aws_acm_certificate
+        where
+          certificate_arn = $1
+      );
+    EOQ
+}
+
+query "ec2_network_load_balancers_for_acm_certificate" {
+  sql = <<-EOQ
+    select
+      arn as nlb_arn
+    from
+      aws_ec2_network_load_balancer
+    where
+      arn in
+      (
+        select
+          jsonb_array_elements_text(in_use_by)
+        from
+          aws_acm_certificate
+        where
+          certificate_arn = $1
+      );
+    EOQ
+}
+
+query "opensearch_domains_for_acm_certificate" {
+  sql = <<-EOQ
+    select
+      arn as opensearch_arn
+    from
+      aws_opensearch_domain
+    where
+      domain_endpoint_options ->> 'CustomEndpointCertificateArn' = $1;
+    EOQ
+}
+
+# Card queries
+
+query "acm_certificate_status" {
   sql = <<-EOQ
     select
       'Status' as label,
@@ -152,11 +331,9 @@ query "aws_acm_certificate_status" {
     where
       certificate_arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_acm_certificate_key_algorithm" {
+query "acm_certificate_key_algorithm" {
   sql = <<-EOQ
     select
       'Key Algorithm' as label,
@@ -166,11 +343,9 @@ query "aws_acm_certificate_key_algorithm" {
     where
       certificate_arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_acm_certificate_renewal_eligibility_status" {
+query "acm_certificate_renewal_eligibility_status" {
   sql = <<-EOQ
     select
       case when renewal_eligibility = 'INELIGIBLE' then 'Ineligible' else 'Eligible' end as value,
@@ -180,11 +355,9 @@ query "aws_acm_certificate_renewal_eligibility_status" {
     where
       certificate_arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_acm_certificate_validity" {
+query "acm_certificate_validity" {
   sql = <<-EOQ
     select
       case when not_after is null or not_after < now() then 'Invalid' else 'Valid' end as value,
@@ -195,11 +368,9 @@ query "aws_acm_certificate_validity" {
     where
       certificate_arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_acm_certificate_transparency_logging_status" {
+query "acm_certificate_transparency_logging_status" {
   sql = <<-EOQ
     select
       case when certificate_transparency_logging_preference = 'ENABLED' then 'Enabled' else 'Disabled' end as value,
@@ -210,11 +381,11 @@ query "aws_acm_certificate_transparency_logging_status" {
     where
       certificate_arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_acm_certificate_overview" {
+# Other detail page queries
+
+query "acm_certificate_overview" {
   sql = <<-EOQ
     select
       domain_name as "Domain Name",
@@ -231,11 +402,9 @@ query "aws_acm_certificate_overview" {
     where
       certificate_arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_acm_certificate_tags" {
+query "acm_certificate_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -248,11 +417,9 @@ query "aws_acm_certificate_tags" {
     order by
       tag ->> 'Key';
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_acm_certificate_in_use_by" {
+query "acm_certificate_in_use_by" {
   sql = <<-EOQ
     select
       c.certificate_arn as "ARN",
@@ -263,11 +430,9 @@ query "aws_acm_certificate_in_use_by" {
     where
       certificate_arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_acm_certificate_revocation_detail" {
+query "acm_certificate_revocation_detail" {
   sql = <<-EOQ
     select
       revocation_reason as "Revocation Reason",
@@ -277,11 +442,9 @@ query "aws_acm_certificate_revocation_detail" {
     where
       certificate_arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_acm_certificate_key_usage" {
+query "acm_certificate_key_usage" {
   sql = <<-EOQ
     select
       usage ->> 'Name' as "Usage Name",
@@ -292,11 +455,9 @@ query "aws_acm_certificate_key_usage" {
     where
       certificate_arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_acm_certificate_domain_validation_options" {
+query "acm_certificate_domain_validation_options" {
   sql = <<-EOQ
     select
       option ->> 'DomainName' as "Domain Name",
@@ -311,6 +472,4 @@ query "aws_acm_certificate_domain_validation_options" {
     where
       certificate_arn = $1;
   EOQ
-
-  param "arn" {}
 }

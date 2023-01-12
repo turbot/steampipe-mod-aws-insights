@@ -1,4 +1,4 @@
-dashboard "aws_sns_topic_detail" {
+dashboard "sns_topic_detail" {
 
   title         = "AWS SNS Topic Detail"
   documentation = file("./dashboards/sns/docs/sns_topic_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_sns_topic_detail" {
 
   input "topic_arn" {
     title = "Select a topic:"
-    sql   = query.aws_sns_topic_input.sql
+    query = query.sns_topic_input
     width = 4
   }
 
@@ -17,20 +17,189 @@ dashboard "aws_sns_topic_detail" {
 
     card {
       width = 2
-      query = query.aws_sns_topic_encryption_status
-      args = {
-        arn = self.input.topic_arn.value
-      }
+      query = query.sns_topic_encryption_status
+      args  = [self.input.topic_arn.value]
     }
 
     card {
-      query = query.aws_sns_topic_subscriptions_confirmed_count
+      query = query.sns_topic_subscriptions_confirmed_count
       width = 2
-      args = {
-        arn = self.input.topic_arn.value
+      args  = [self.input.topic_arn.value]
+    }
+  }
+
+  with "cloudformation_stacks_for_sns_topic" {
+    query = query.cloudformation_stacks_for_sns_topic
+    args  = [self.input.topic_arn.value]
+  }
+
+  with "cloudtrail_trails_for_sns_topic" {
+    query = query.cloudtrail_trails_for_sns_topic
+    args  = [self.input.topic_arn.value]
+  }
+
+  with "elasticache_clusters_for_sns_topic" {
+    query = query.elasticache_clusters_for_sns_topic
+    args  = [self.input.topic_arn.value]
+  }
+
+  with "kms_keys_for_sns_topic" {
+    query = query.kms_keys_for_sns_topic
+    args  = [self.input.topic_arn.value]
+  }
+
+  with "rds_db_instances_for_sns_topic" {
+    query = query.rds_db_instances_for_sns_topic
+    args  = [self.input.topic_arn.value]
+  }
+
+  with "redshift_clusters_for_sns_topic" {
+    query = query.redshift_clusters_for_sns_topic
+    args  = [self.input.topic_arn.value]
+  }
+
+  with "s3_buckets_for_sns_topic" {
+    query = query.s3_buckets_for_sns_topic
+    args  = [self.input.topic_arn.value]
+  }
+
+  with "sns_topic_subscriptions_for_sns_topic" {
+    query = query.sns_topic_subscriptions_for_sns_topic
+    args  = [self.input.topic_arn.value]
+  }
+
+  with "topic_policy_std_for_sns_topic" {
+    query = query.topic_policy_std_for_sns_topic
+    args  = [self.input.topic_arn.value]
+  }
+
+  container {
+
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+
+      node {
+        base = node.cloudformation_stack
+        args = {
+          cloudformation_stack_ids = with.cloudformation_stacks_for_sns_topic.rows[*].stack_id
+        }
+      }
+
+      node {
+        base = node.cloudtrail_trail
+        args = {
+          cloudtrail_trail_arns = with.cloudtrail_trails_for_sns_topic.rows[*].trail_arn
+        }
+      }
+
+      node {
+        base = node.elasticache_cluster_node
+        args = {
+          elasticache_cluster_node_arns = with.elasticache_clusters_for_sns_topic.rows[*].elasticache_cluster_arn
+        }
+      }
+
+      node {
+        base = node.kms_key
+        args = {
+          kms_key_arns = with.kms_keys_for_sns_topic.rows[*].key_arn
+        }
+      }
+
+      node {
+        base = node.rds_db_instance
+        args = {
+          rds_db_instance_arns = with.rds_db_instances_for_sns_topic.rows[*].db_instance_arn
+        }
+      }
+
+      node {
+        base = node.redshift_cluster
+        args = {
+          redshift_cluster_arns = with.redshift_clusters_for_sns_topic.rows[*].cluster_arn
+        }
+      }
+
+      node {
+        base = node.s3_bucket
+        args = {
+          s3_bucket_arns = with.s3_buckets_for_sns_topic.rows[*].bucket_arn
+        }
+      }
+
+      node {
+        base = node.sns_topic
+        args = {
+          sns_topic_arns = [self.input.topic_arn.value]
+        }
+      }
+
+      node {
+        base = node.sns_topic_subscription
+        args = {
+          sns_topic_subscription_arns = with.sns_topic_subscriptions_for_sns_topic.rows[*].subscription_arn
+        }
+      }
+
+      edge {
+        base = edge.cloudformation_stack_to_sns_topic
+        args = {
+          sns_topic_arns = [self.input.topic_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.cloudtrail_trail_to_sns_topic
+        args = {
+          cloudtrail_trail_arns = with.cloudtrail_trails_for_sns_topic.rows[*].trail_arn
+        }
+      }
+
+      edge {
+        base = edge.elasticache_cluster_node_to_sns_topic
+        args = {
+          elasticache_cluster_node_arns = with.elasticache_clusters_for_sns_topic.rows[*].elasticache_cluster_arn
+        }
+      }
+
+      edge {
+        base = edge.rds_db_instance_to_sns_topic
+        args = {
+          rds_db_instance_arns = with.rds_db_instances_for_sns_topic.rows[*].db_instance_arn
+        }
+      }
+
+      edge {
+        base = edge.redshift_cluster_to_sns_topic
+        args = {
+          redshift_cluster_arns = with.redshift_clusters_for_sns_topic.rows[*].cluster_arn
+        }
+      }
+
+      edge {
+        base = edge.s3_bucket_to_sns_topic
+        args = {
+          s3_bucket_arns = with.s3_buckets_for_sns_topic.rows[*].bucket_arn
+        }
+      }
+
+      edge {
+        base = edge.sns_topic_to_kms_key
+        args = {
+          sns_topic_arns = [self.input.topic_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.sns_topic_to_sns_subscription
+        args = {
+          sns_topic_arns = [self.input.topic_arn.value]
+        }
       }
     }
-
   }
 
   container {
@@ -42,20 +211,16 @@ dashboard "aws_sns_topic_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_sns_topic_overview
-        args = {
-          arn = self.input.topic_arn.value
-        }
+        query = query.sns_topic_overview
+        args  = [self.input.topic_arn.value]
 
       }
 
       table {
         title = "Tags"
         width = 6
-        query = query.aws_sns_topic_tags
-        args = {
-          arn = self.input.topic_arn.value
-        }
+        query = query.sns_topic_tags
+        args  = [self.input.topic_arn.value]
 
       }
     }
@@ -65,10 +230,8 @@ dashboard "aws_sns_topic_detail" {
 
       table {
         title = "Subscription Counts"
-        query = query.aws_sns_topic_subscriptions
-        args = {
-          arn = self.input.topic_arn.value
-        }
+        query = query.sns_topic_subscription_count
+        args  = [self.input.topic_arn.value]
       }
 
     }
@@ -78,25 +241,23 @@ dashboard "aws_sns_topic_detail" {
 
       table {
         title = "Effective Delivery Policy"
-        query = query.aws_sns_topic_delivery_policy
-        args = {
-          arn = self.input.topic_arn.value
-        }
+        query = query.sns_topic_delivery_policy
+        args  = [self.input.topic_arn.value]
       }
+    }
 
-      table {
-        title = "Policy"
-        query = query.aws_sns_topic_policy_standard
-        args = {
-          arn = self.input.topic_arn.value
-        }
+    graph {
+      title = "Resource Policy"
+      base  = graph.iam_resource_policy_structure
+      args = {
+        policy_std = with.topic_policy_std_for_sns_topic.rows[0].policy_std
       }
     }
 
   }
 }
 
-query "aws_sns_topic_input" {
+query "sns_topic_input" {
   sql = <<-EOQ
     select
       topic_arn as label,
@@ -108,7 +269,9 @@ query "aws_sns_topic_input" {
 EOQ
 }
 
-query "aws_sns_topic_encryption_status" {
+# card queries
+
+query "sns_topic_encryption_status" {
   sql = <<-EOQ
     select
       case when kms_master_key_id is not null then 'Enabled' else 'Disabled' end as value,
@@ -120,10 +283,9 @@ query "aws_sns_topic_encryption_status" {
       topic_arn = $1;
   EOQ
 
-  param "arn" {}
 }
 
-query "aws_sns_topic_subscriptions_confirmed_count" {
+query "sns_topic_subscriptions_confirmed_count" {
   sql = <<-EOQ
     select
       subscriptions_confirmed::int as value,
@@ -135,10 +297,131 @@ query "aws_sns_topic_subscriptions_confirmed_count" {
       topic_arn = $1;
   EOQ
 
-  param "arn" {}
 }
 
-query "aws_sns_topic_overview" {
+# with queries
+query "cloudformation_stacks_for_sns_topic" {
+  sql = <<-EOQ
+    select
+      s.id as stack_id
+    from
+      aws_sns_topic as t,
+      aws_cloudformation_stack as s,
+      jsonb_array_elements(
+        case jsonb_typeof(notification_arns)
+          when 'array' then (notification_arns)
+          else null end
+      ) n
+    where
+      t.topic_arn = trim((n::text ), '""')
+      and t.topic_arn = $1;
+  EOQ
+}
+
+query "cloudtrail_trails_for_sns_topic" {
+  sql = <<-EOQ
+    select
+      arn as trail_arn
+    from
+      aws_cloudtrail_trail
+    where
+      sns_topic_arn = $1;
+  EOQ
+}
+
+query "elasticache_clusters_for_sns_topic" {
+  sql = <<-EOQ
+    select
+      arn as elasticache_cluster_arn
+    from
+      aws_elasticache_cluster
+    where
+      notification_configuration ->> 'TopicArn' = $1;
+  EOQ
+}
+
+query "kms_keys_for_sns_topic" {
+  sql = <<-EOQ
+    select
+      kms_master_key_id as key_arn
+    from
+      aws_sns_topic
+    where
+      kms_master_key_id is not null
+      and topic_arn = $1;
+  EOQ
+}
+
+query "topic_policy_std_for_sns_topic" {
+  sql = <<-EOQ
+    select
+      policy_std
+    from
+      aws_sns_topic
+    where
+      topic_arn = $1;
+  EOQ
+}
+
+query "rds_db_instances_for_sns_topic" {
+  sql = <<-EOQ
+    select
+      i.arn as db_instance_arn
+    from
+      aws_rds_db_event_subscription as s,
+      jsonb_array_elements_text(source_ids_list) as ids
+      join aws_rds_db_instance as i
+      on ids = i.db_instance_identifier
+    where
+      s.sns_topic_arn = $1;
+  EOQ
+}
+
+query "redshift_clusters_for_sns_topic" {
+  sql = <<-EOQ
+    select
+      c.arn as cluster_arn
+    from
+      aws_redshift_event_subscription as s,
+      jsonb_array_elements_text(source_ids_list) as ids
+      join aws_redshift_cluster as c
+      on ids = c.cluster_identifier
+    where
+      s.sns_topic_arn = $1;
+  EOQ
+}
+
+query "s3_buckets_for_sns_topic" {
+  sql = <<-EOQ
+    select
+      b.arn as bucket_arn
+    from
+      aws_s3_bucket as b,
+      jsonb_array_elements(
+        case jsonb_typeof(event_notification_configuration -> 'TopicConfigurations')
+          when 'array' then (event_notification_configuration -> 'TopicConfigurations')
+          else null end
+        )
+        as t
+    where
+      t ->> 'TopicArn' = $1;
+  EOQ
+}
+
+query "sns_topic_subscriptions_for_sns_topic" {
+  sql = <<-EOQ
+    select
+      subscription_arn as subscription_arn
+    from
+      aws_sns_topic_subscription
+    where
+      topic_arn = $1;
+  EOQ
+}
+
+# table queries
+
+query "sns_topic_overview" {
   sql = <<-EOQ
     select
       display_name as "Display Name",
@@ -154,10 +437,9 @@ query "aws_sns_topic_overview" {
       topic_arn = $1;
   EOQ
 
-  param "arn" {}
 }
 
-query "aws_sns_topic_tags" {
+query "sns_topic_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -171,10 +453,9 @@ query "aws_sns_topic_tags" {
       tag ->> 'Key';
   EOQ
 
-  param "arn" {}
 }
 
-query "aws_sns_topic_subscriptions" {
+query "sns_topic_subscription_count" {
   sql = <<-EOQ
     select
       subscriptions_confirmed as "Confirmed",
@@ -186,10 +467,9 @@ query "aws_sns_topic_subscriptions" {
       topic_arn = $1;
   EOQ
 
-  param "arn" {}
 }
 
-query "aws_sns_topic_delivery_policy" {
+query "sns_topic_delivery_policy" {
   sql = <<-EOQ
     select
       effective_delivery_policy -> 'http' -> 'defaultHealthyRetryPolicy' ->> 'numRetries' as "Retries",
@@ -206,24 +486,5 @@ query "aws_sns_topic_delivery_policy" {
       topic_arn = $1;
   EOQ
 
-  param "arn" {}
 }
 
-query "aws_sns_topic_policy_standard" {
-  sql = <<-EOQ
-    select
-      statement ->> 'Sid' as "SID",
-      statement ->> 'Effect' as "Effect",
-      statement ->> 'Principal' as "Principal",
-      statement ->> 'Action' as "Action",
-      statement ->> 'Resource' as "Resource",
-      statement ->> 'Condition' as "Condition"
-    from
-      aws_sns_topic as t,
-      jsonb_array_elements(policy_std -> 'Statement') as statement
-    where
-      topic_arn = $1;
-  EOQ
-
-  param "arn" {}
-}

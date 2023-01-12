@@ -1,4 +1,4 @@
-dashboard "aws_lambda_function_public_access_report" {
+dashboard "lambda_function_public_access_report" {
 
   title         = "AWS Lambda Function Public Access Report"
   documentation = file("./dashboards/lambda/docs/lambda_function_report_public_access.md")
@@ -11,12 +11,12 @@ dashboard "aws_lambda_function_public_access_report" {
   container {
 
     card {
-      sql   = query.aws_lambda_function_count.sql
+      query = query.lambda_function_count
       width = 2
     }
 
     card {
-      sql = query.aws_lambda_function_public_count.sql
+      query = query.lambda_function_public_count
       width = 2
     }
 
@@ -33,16 +33,16 @@ dashboard "aws_lambda_function_public_access_report" {
     }
 
     column "Name" {
-      href = "${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn={{.ARN | @uri}}"
-      
+      href = "${dashboard.lambda_function_detail.url_path}?input.lambda_arn={{.ARN | @uri}}"
+
     }
 
-    sql = query.aws_lambda_function_public_access_table.sql
+    query = query.lambda_function_public_access_table
   }
 
 }
 
-query "aws_lambda_function_public_access_table" {
+query "lambda_function_public_access_table" {
   sql = <<-EOQ
     select
       f.name as "Name",

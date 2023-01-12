@@ -1,4 +1,4 @@
-dashboard "aws_rds_db_instance_snapshot_age_report" {
+dashboard "rds_db_instance_snapshot_age_report" {
 
   title         = "AWS RDS DB Instance Snapshot Age Report"
   documentation = file("./dashboards/rds/docs/rds_db_instance_snapshot_report_age.md")
@@ -11,38 +11,38 @@ dashboard "aws_rds_db_instance_snapshot_age_report" {
   container {
 
     card {
-      sql   = query.aws_rds_db_instance_snapshot_count.sql
+      query = query.rds_db_instance_snapshot_count
       width = 2
-    }
-
-   card {
-      type  = "info"
-      width = 2
-      sql   = query.aws_rds_db_instance_snapshot_24_hours_count.sql
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_rds_db_instance_snapshot_30_days_count.sql
+      query = query.rds_db_instance_snapshot_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_rds_db_instance_snapshot_30_90_days_count.sql
+      query = query.rds_db_instance_snapshot_30_days_count
+    }
+
+    card {
+      type  = "info"
+      width = 2
+      query = query.rds_db_instance_snapshot_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_rds_db_instance_snapshot_90_365_days_count.sql
+      query = query.rds_db_instance_snapshot_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_rds_db_instance_snapshot_1_year_count.sql
+      query = query.rds_db_instance_snapshot_1_year_count
     }
 
   }
@@ -58,15 +58,15 @@ dashboard "aws_rds_db_instance_snapshot_age_report" {
     }
 
     column "DB Snapshot Identifier" {
-      href = "${dashboard.aws_rds_db_snapshot_detail.url_path}?input.db_snapshot_arn={{.ARN | @uri}}"
+      href = "${dashboard.rds_db_snapshot_detail.url_path}?input.db_snapshot_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_rds_db_instance_snapshot_age_table.sql
+    query = query.rds_db_instance_snapshot_age_table
   }
 
 }
 
-query "aws_rds_db_instance_snapshot_24_hours_count" {
+query "rds_db_instance_snapshot_24_hours_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -78,7 +78,7 @@ query "aws_rds_db_instance_snapshot_24_hours_count" {
   EOQ
 }
 
-query "aws_rds_db_instance_snapshot_30_days_count" {
+query "rds_db_instance_snapshot_30_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -90,7 +90,7 @@ query "aws_rds_db_instance_snapshot_30_days_count" {
   EOQ
 }
 
-query "aws_rds_db_instance_snapshot_30_90_days_count" {
+query "rds_db_instance_snapshot_30_90_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -102,7 +102,7 @@ query "aws_rds_db_instance_snapshot_30_90_days_count" {
   EOQ
 }
 
-query "aws_rds_db_instance_snapshot_90_365_days_count" {
+query "rds_db_instance_snapshot_90_365_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -114,7 +114,7 @@ query "aws_rds_db_instance_snapshot_90_365_days_count" {
   EOQ
 }
 
-query "aws_rds_db_instance_snapshot_1_year_count" {
+query "rds_db_instance_snapshot_1_year_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -126,7 +126,7 @@ query "aws_rds_db_instance_snapshot_1_year_count" {
   EOQ
 }
 
-query "aws_rds_db_instance_snapshot_age_table" {
+query "rds_db_instance_snapshot_age_table" {
   sql = <<-EOQ
     select
       s.db_snapshot_identifier as "DB Snapshot Identifier",

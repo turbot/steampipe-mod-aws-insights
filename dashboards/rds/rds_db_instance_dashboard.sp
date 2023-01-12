@@ -1,4 +1,4 @@
-dashboard "aws_rds_db_instance_dashboard" {
+dashboard "rds_db_instance_dashboard" {
 
   title         = "AWS RDS DB Instance Dashboard"
   documentation = file("./dashboards/rds/docs/rds_db_instance_dashboard.md")
@@ -11,35 +11,35 @@ dashboard "aws_rds_db_instance_dashboard" {
 
     # Analysis
     card {
-      sql   = query.aws_rds_db_instance_count.sql
+      query = query.rds_db_instance_count
       width = 2
     }
 
     # Assessments
     card {
-      sql   = query.aws_rds_db_instance_public_count.sql
+      query = query.rds_db_instance_public_count
       width = 2
-      href  = dashboard.aws_rds_db_instance_public_access_report.url_path
+      href  = dashboard.rds_db_instance_public_access_report.url_path
     }
 
     card {
-      sql   = query.aws_rds_db_instance_unencrypted_count.sql
+      query = query.rds_db_instance_unencrypted_count
       width = 2
-      href  = dashboard.aws_rds_db_instance_encryption_report.url_path
+      href  = dashboard.rds_db_instance_encryption_report.url_path
     }
 
     card {
-      sql   = query.aws_rds_db_instance_logging_disabled_count.sql
+      query = query.rds_db_instance_logging_disabled_count
       width = 2
-      href  = dashboard.aws_rds_db_instance_logging_report.url_path
+      href  = dashboard.rds_db_instance_logging_report.url_path
     }
 
     # Costs
     card {
-      type = "info"
-      icon = "currency-dollar"
+      type  = "info"
+      icon  = "currency-dollar"
       width = 2
-      sql = query.aws_rds_db_instance_cost_mtd.sql
+      query = query.rds_db_instance_cost_mtd
     }
 
   }
@@ -51,7 +51,7 @@ dashboard "aws_rds_db_instance_dashboard" {
 
     chart {
       title = "Public/Private Status"
-      sql   = query.aws_rds_db_instance_public_status.sql
+      query = query.rds_db_instance_public_status
       type  = "donut"
       width = 4
 
@@ -67,7 +67,7 @@ dashboard "aws_rds_db_instance_dashboard" {
 
     chart {
       title = "Encryption Status"
-      sql = query.aws_rds_db_instance_by_encryption_status.sql
+      query = query.rds_db_instance_by_encryption_status
       type  = "donut"
       width = 4
 
@@ -83,7 +83,7 @@ dashboard "aws_rds_db_instance_dashboard" {
 
     chart {
       title = "Logging Status"
-      sql = query.aws_rds_db_instance_logging_status.sql
+      query = query.rds_db_instance_logging_status
       type  = "donut"
       width = 4
 
@@ -99,7 +99,7 @@ dashboard "aws_rds_db_instance_dashboard" {
 
     chart {
       title = "Multi-AZ Status"
-      sql = query.aws_rds_db_instance_multiple_az_status.sql
+      query = query.rds_db_instance_multiple_az_status
       type  = "donut"
       width = 4
 
@@ -115,7 +115,7 @@ dashboard "aws_rds_db_instance_dashboard" {
 
     chart {
       title = "Deletion Protection Status"
-      sql = query.aws_rds_db_instance_deletion_protection_status.sql
+      query = query.rds_db_instance_deletion_protection_status
       type  = "donut"
       width = 4
 
@@ -137,17 +137,17 @@ dashboard "aws_rds_db_instance_dashboard" {
     title = "Cost"
     width = 6
 
-    table  {
+    table {
       width = 6
       title = "Forecast"
-      sql   = query.aws_rds_db_instance_monthly_forecast_table.sql
+      query = query.rds_db_instance_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      sql   = query.aws_rds_db_instance_cost_per_month.sql
+      query = query.rds_db_instance_cost_per_month
     }
 
   }
@@ -158,42 +158,42 @@ dashboard "aws_rds_db_instance_dashboard" {
 
     chart {
       title = "Instances by Account"
-      sql   = query.aws_rds_db_instance_by_account.sql
+      query = query.rds_db_instance_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Instances by Region"
-      sql   = query.aws_rds_db_instance_by_region.sql
+      query = query.rds_db_instance_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Instances by State"
-      sql   = query.aws_rds_db_instance_by_state.sql
+      query = query.rds_db_instance_by_state
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Instances by Age"
-      sql   = query.aws_rds_db_instance_by_creation_month.sql
+      query = query.rds_db_instance_by_creation_month
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Instances by Engine Type"
-      sql   = query.aws_rds_db_instance_by_engine_type.sql
+      query = query.rds_db_instance_by_engine_type
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Instances by Class"
-      sql   = query.aws_rds_db_instance_by_class.sql
+      query = query.rds_db_instance_by_class
       type  = "column"
       width = 4
     }
@@ -202,19 +202,19 @@ dashboard "aws_rds_db_instance_dashboard" {
 
   container {
 
-    title  = "Performance & Utilization"
+    title = "Performance & Utilization"
     width = 12
 
     chart {
       title = "Top 10 CPU - Last 7 days"
-      sql   = query.aws_rds_db_instance_top10_cpu_past_week.sql
+      query = query.rds_db_instance_top10_cpu_past_week
       type  = "line"
       width = 6
     }
 
     chart {
       title = "Average max daily CPU - Last 30 days"
-      sql   = query.aws_rds_db_instance_by_cpu_utilization_category.sql
+      query = query.rds_db_instance_by_cpu_utilization_category
       type  = "column"
       width = 6
     }
@@ -225,13 +225,13 @@ dashboard "aws_rds_db_instance_dashboard" {
 
 # Card Queries
 
-query "aws_rds_db_instance_count" {
+query "rds_db_instance_count" {
   sql = <<-EOQ
     select count(*) as "RDS DB Instances" from aws_rds_db_instance
   EOQ
 }
 
-query "aws_rds_db_instance_public_count" {
+query "rds_db_instance_public_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -244,7 +244,7 @@ query "aws_rds_db_instance_public_count" {
   EOQ
 }
 
-query "aws_rds_db_instance_unencrypted_count" {
+query "rds_db_instance_unencrypted_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -257,7 +257,7 @@ query "aws_rds_db_instance_unencrypted_count" {
   EOQ
 }
 
-query "aws_rds_db_instance_logging_disabled_count" {
+query "rds_db_instance_logging_disabled_count" {
   sql = <<-EOQ
     with logging_stat as (
       select
@@ -282,7 +282,7 @@ query "aws_rds_db_instance_logging_disabled_count" {
   EOQ
 }
 
-query "aws_rds_db_instance_cost_mtd" {
+query "rds_db_instance_cost_mtd" {
   sql = <<-EOQ
     select
       'Cost - MTD' as label,
@@ -298,7 +298,7 @@ query "aws_rds_db_instance_cost_mtd" {
 
 # Assessment Queries
 
-query "aws_rds_db_instance_public_status" {
+query "rds_db_instance_public_status" {
   sql = <<-EOQ
     with db_instances as (
       select
@@ -319,7 +319,7 @@ query "aws_rds_db_instance_public_status" {
   EOQ
 }
 
-query "aws_rds_db_instance_by_encryption_status" {
+query "rds_db_instance_by_encryption_status" {
   sql = <<-EOQ
     select
       encryption_status,
@@ -340,7 +340,7 @@ query "aws_rds_db_instance_by_encryption_status" {
   EOQ
 }
 
-query "aws_rds_db_instance_logging_status" {
+query "rds_db_instance_logging_status" {
   sql = <<-EOQ
     with logging_enabled as (
       select
@@ -373,7 +373,7 @@ query "aws_rds_db_instance_logging_status" {
   EOQ
 }
 
-query "aws_rds_db_instance_multiple_az_status" {
+query "rds_db_instance_multiple_az_status" {
   sql = <<-EOQ
     with db_instances as (
       select
@@ -396,7 +396,7 @@ query "aws_rds_db_instance_multiple_az_status" {
   EOQ
 }
 
-query "aws_rds_db_instance_deletion_protection_status" {
+query "rds_db_instance_deletion_protection_status" {
   sql = <<-EOQ
     with db_instances as (
       select
@@ -419,7 +419,7 @@ query "aws_rds_db_instance_deletion_protection_status" {
 
 # Cost Queries
 
-query "aws_rds_db_instance_monthly_forecast_table" {
+query "rds_db_instance_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
       select
@@ -459,7 +459,7 @@ query "aws_rds_db_instance_monthly_forecast_table" {
   EOQ
 }
 
-query "aws_rds_db_instance_cost_per_month" {
+query "rds_db_instance_cost_per_month" {
   sql = <<-EOQ
     select
       to_char(period_start, 'Mon-YY') as "Month",
@@ -478,10 +478,10 @@ query "aws_rds_db_instance_cost_per_month" {
 
 # Analysis Queries
 
-query "aws_rds_db_instance_by_account" {
+query "rds_db_instance_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       count(i.*) as "total"
     from
       aws_rds_db_instance as i,
@@ -489,12 +489,13 @@ query "aws_rds_db_instance_by_account" {
     where
       a.account_id = i.account_id
     group by
-      account
-    order by count(i.*) desc;
+      a.title
+    order by 
+      count(i.*) desc;
   EOQ
 }
 
-query "aws_rds_db_instance_by_region" {
+query "rds_db_instance_by_region" {
   sql = <<-EOQ
     select
       region,
@@ -506,7 +507,7 @@ query "aws_rds_db_instance_by_region" {
   EOQ
 }
 
-query "aws_rds_db_instance_by_state" {
+query "rds_db_instance_by_state" {
   sql = <<-EOQ
     select
       status,
@@ -518,7 +519,7 @@ query "aws_rds_db_instance_by_state" {
   EOQ
 }
 
-query "aws_rds_db_instance_by_creation_month" {
+query "rds_db_instance_by_creation_month" {
   sql = <<-EOQ
     with instances as (
       select
@@ -563,13 +564,13 @@ query "aws_rds_db_instance_by_creation_month" {
   EOQ
 }
 
-query "aws_rds_db_instance_by_engine_type" {
+query "rds_db_instance_by_engine_type" {
   sql = <<-EOQ
     select engine as "Engine Type", count(*) as "instances" from aws_rds_db_instance group by engine order by engine;
   EOQ
 }
 
-query "aws_rds_db_instance_by_class" {
+query "rds_db_instance_by_class" {
   sql = <<-EOQ
     select
       class,
@@ -583,7 +584,7 @@ query "aws_rds_db_instance_by_class" {
 
 # Performance Queries
 
-query "aws_rds_db_instance_top10_cpu_past_week" {
+query "rds_db_instance_top10_cpu_past_week" {
   sql = <<-EOQ
     with top_n as (
       select
@@ -613,7 +614,7 @@ query "aws_rds_db_instance_top10_cpu_past_week" {
   EOQ
 }
 
-query "aws_rds_db_instance_by_cpu_utilization_category" {
+query "rds_db_instance_by_cpu_utilization_category" {
   sql = <<-EOQ
     with cpu_buckets as (
       select

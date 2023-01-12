@@ -1,4 +1,4 @@
-dashboard "aws_lambda_function_detail" {
+dashboard "lambda_function_detail" {
 
   title         = "AWS Lambda Function Detail"
   documentation = file("./dashboards/lambda/docs/lambda_function_detail.md")
@@ -10,7 +10,7 @@ dashboard "aws_lambda_function_detail" {
 
   input "lambda_arn" {
     title = "Select a lambda function:"
-    sql   = query.aws_lambda_function_input.sql
+    query = query.lambda_function_input
     width = 4
   }
 
@@ -18,36 +18,262 @@ dashboard "aws_lambda_function_detail" {
 
     card {
       width = 2
-      query = query.aws_lambda_function_memory
-      args = {
-        arn = self.input.lambda_arn.value
-      }
+      query = query.lambda_function_memory
+      args  = [self.input.lambda_arn.value]
     }
 
     card {
       width = 2
-      query = query.aws_lambda_function_runtime
-      args = {
-        arn = self.input.lambda_arn.value
-      }
+      query = query.lambda_function_runtime
+      args  = [self.input.lambda_arn.value]
     }
 
     card {
       width = 2
-      query = query.aws_lambda_function_encryption
-      args = {
-        arn = self.input.lambda_arn.value
-      }
+      query = query.lambda_function_encryption
+      args  = [self.input.lambda_arn.value]
     }
 
     card {
       width = 2
-      query = query.aws_lambda_function_public
-      args = {
-        arn = self.input.lambda_arn.value
-      }
+      query = query.lambda_function_public
+      args  = [self.input.lambda_arn.value]
     }
 
+  }
+
+  with "api_gateway_apis_for_lambda_function" {
+    query = query.api_gateway_apis_for_lambda_function
+    args  = [self.input.lambda_arn.value]
+  }
+
+  with "iam_roles_for_lambda_function" {
+    query = query.iam_roles_for_lambda_function
+    args  = [self.input.lambda_arn.value]
+  }
+
+  with "kms_keys_for_lambda_function" {
+    query = query.kms_keys_for_lambda_function
+    args  = [self.input.lambda_arn.value]
+  }
+
+  with "policy_std_for_lambda_function" {
+    query = query.policy_std_for_lambda_function
+    args  = [self.input.lambda_arn.value]
+  }
+
+  with "s3_buckets_for_lambda_function" {
+    query = query.s3_buckets_for_lambda_function
+    args  = [self.input.lambda_arn.value]
+  }
+
+  with "sns_topic_subscriptions_for_lambda_function" {
+    query = query.sns_topic_subscriptions_for_lambda_function
+    args  = [self.input.lambda_arn.value]
+  }
+
+  with "sns_topics_for_lambda_function" {
+    query = query.sns_topics_for_lambda_function
+    args  = [self.input.lambda_arn.value]
+  }
+
+  with "vpc_security_groups_for_lambda_function" {
+    query = query.vpc_security_groups_for_lambda_function
+    args  = [self.input.lambda_arn.value]
+  }
+
+  with "vpc_subnets_for_lambda_function" {
+    query = query.vpc_subnets_for_lambda_function
+    args  = [self.input.lambda_arn.value]
+  }
+
+  with "vpc_vpcs_for_lambda_function" {
+    query = query.vpc_vpcs_for_lambda_function
+    args  = [self.input.lambda_arn.value]
+  }
+
+  container {
+
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      node {
+        base = node.api_gatewayv2_api
+        args = {
+          api_gatewayv2_api_ids = with.api_gateway_apis_for_lambda_function.rows[*].api_id
+        }
+      }
+
+      node {
+        base = node.api_gatewayv2_integration
+        args = {
+          lambda_function_arns = [self.input.lambda_arn.value]
+        }
+      }
+
+      node {
+        base = node.iam_role
+        args = {
+          iam_role_arns = with.iam_roles_for_lambda_function.rows[*].role_arn
+        }
+      }
+
+      node {
+        base = node.kms_key
+        args = {
+          kms_key_arns = with.kms_keys_for_lambda_function.rows[*].kms_key_arn
+        }
+      }
+
+      node {
+        base = node.lambda_alias
+        args = {
+          lambda_function_arns = [self.input.lambda_arn.value]
+        }
+      }
+
+      node {
+        base = node.lambda_function
+        args = {
+          lambda_function_arns = [self.input.lambda_arn.value]
+        }
+      }
+
+      node {
+        base = node.lambda_version
+        args = {
+          lambda_function_arns = [self.input.lambda_arn.value]
+        }
+      }
+
+      node {
+        base = node.s3_bucket
+        args = {
+          s3_bucket_arns = with.s3_buckets_for_lambda_function.rows[*].bucket_arn
+        }
+      }
+
+      node {
+        base = node.sns_topic
+        args = {
+          sns_topic_arns = with.sns_topics_for_lambda_function.rows[*].topic_arn
+        }
+      }
+
+      node {
+        base = node.sns_topic_subscription
+        args = {
+          sns_topic_subscription_arns = with.sns_topic_subscriptions_for_lambda_function.rows[*].subscription_arn
+        }
+      }
+
+      node {
+        base = node.vpc_security_group
+        args = {
+          vpc_security_group_ids = with.vpc_security_groups_for_lambda_function.rows[*].group_id
+        }
+      }
+
+      node {
+        base = node.vpc_subnet
+        args = {
+          vpc_subnet_ids = with.vpc_subnets_for_lambda_function.rows[*].subnet_id
+        }
+      }
+
+      node {
+        base = node.vpc_vpc
+        args = {
+          vpc_vpc_ids = with.vpc_vpcs_for_lambda_function.rows[*].vpc_id
+        }
+      }
+
+      edge {
+        base = edge.api_gateway_api_to_api_gateway_integration
+        args = {
+          api_gatewayv2_api_ids = with.api_gateway_apis_for_lambda_function.rows[*].api_id
+        }
+      }
+
+      edge {
+        base = edge.api_gateway_integration_to_lambda_function
+        args = {
+          lambda_function_arns = [self.input.lambda_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.lambda_function_to_iam_role
+        args = {
+          lambda_function_arns = [self.input.lambda_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.lambda_function_to_kms_key
+        args = {
+          lambda_function_arns = [self.input.lambda_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.lambda_function_to_lambda_alias
+        args = {
+          lambda_function_arns = [self.input.lambda_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.lambda_function_to_lambda_version
+        args = {
+          lambda_function_arns = [self.input.lambda_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.lambda_function_to_vpc_security_group
+        args = {
+          lambda_function_arns = [self.input.lambda_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.lambda_function_to_vpc_subnet
+        args = {
+          lambda_function_arns = [self.input.lambda_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.s3_bucket_to_lambda_function
+        args = {
+          s3_bucket_arns = with.s3_buckets_for_lambda_function.rows[*].bucket_arn
+        }
+      }
+
+      edge {
+        base = edge.sns_subscription_to_lambda_function
+        args = {
+          sns_topic_subscription_arns = with.sns_topic_subscriptions_for_lambda_function.rows[*].subscription_arn
+        }
+      }
+
+      edge {
+        base = edge.sns_topic_to_sns_subscription
+        args = {
+          sns_topic_arns = with.sns_topics_for_lambda_function.rows[*].topic_arn
+        }
+      }
+
+      edge {
+        base = edge.vpc_subnet_to_vpc_vpc
+        args = {
+          vpc_subnet_ids = with.vpc_subnets_for_lambda_function.rows[*].subnet_id
+        }
+      }
+    }
   }
 
   container {
@@ -60,20 +286,16 @@ dashboard "aws_lambda_function_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_lambda_function_overview
-        args = {
-          arn = self.input.lambda_arn.value
-        }
+        query = query.lambda_function_overview
+        args  = [self.input.lambda_arn.value]
 
       }
 
       table {
         title = "Tags"
         width = 6
-        query = query.aws_lambda_function_tags
-        args = {
-          arn = self.input.lambda_arn.value
-        }
+        query = query.lambda_function_tags
+        args  = [self.input.lambda_arn.value]
       }
 
     }
@@ -81,43 +303,39 @@ dashboard "aws_lambda_function_detail" {
     table {
       width = 6
       title = "Last Update Status"
-      query = query.aws_lambda_function_last_update_status
-      args = {
-        arn = self.input.lambda_arn.value
-      }
+      query = query.lambda_function_last_update_status
+      args  = [self.input.lambda_arn.value]
     }
 
-  }
-
-  table {
-    title = "Policy"
-    query = query.aws_lambda_function_policy
-    args = {
-      arn = self.input.lambda_arn.value
-    }
   }
 
   table {
     width = 6
     title = "Security Groups"
-    query = query.aws_lambda_function_security_groups
-    args = {
-      arn = self.input.lambda_arn.value
-    }
+    query = query.lambda_function_security_groups
+    args  = [self.input.lambda_arn.value]
   }
 
   table {
     width = 6
     title = "Subnets"
-    query = query.aws_lambda_function_subnet_ids
+    query = query.lambda_function_subnet_ids
+    args  = [self.input.lambda_arn.value]
+  }
+
+  graph {
+    title = "Resource Policy"
+    base  = graph.iam_resource_policy_structure
     args = {
-      arn = self.input.lambda_arn.value
+      policy_std = with.policy_std_for_lambda_function.rows[0].policy_std
     }
   }
 
 }
 
-query "aws_lambda_function_input" {
+# Input queries
+
+query "lambda_function_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -133,7 +351,129 @@ query "aws_lambda_function_input" {
   EOQ
 }
 
-query "aws_lambda_function_memory" {
+# With queries
+
+query "api_gateway_apis_for_lambda_function" {
+  sql = <<-EOQ
+    select
+      api_id
+    from
+      aws_api_gatewayv2_integration
+    where
+      integration_uri = $1;
+  EOQ
+}
+
+query "iam_roles_for_lambda_function" {
+  sql = <<-EOQ
+    select
+      role as role_arn
+    from
+      aws_lambda_function
+    where
+      arn = $1;
+  EOQ
+}
+
+query "kms_keys_for_lambda_function" {
+  sql = <<-EOQ
+    select
+      kms_key_arn
+    from
+      aws_lambda_function
+    where
+      kms_key_arn is not null
+      and arn = $1;
+  EOQ
+}
+
+query "policy_std_for_lambda_function" {
+  sql = <<-EOQ
+    select
+      policy_std
+    from
+      aws_lambda_function
+    where
+      arn = $1;
+  EOQ
+}
+
+query "s3_buckets_for_lambda_function" {
+  sql = <<-EOQ
+    select
+      arn as bucket_arn
+    from
+      aws_s3_bucket,
+      jsonb_array_elements(event_notification_configuration -> 'LambdaFunctionConfigurations') as t
+    where
+      event_notification_configuration -> 'LambdaFunctionConfigurations' <> 'null'
+      and t ->> 'LambdaFunctionArn' = $1;
+  EOQ
+}
+
+query "sns_topic_subscriptions_for_lambda_function" {
+  sql = <<-EOQ
+    select
+      subscription_arn as subscription_arn
+    from
+      aws_sns_topic_subscription
+    where
+      protocol = 'lambda'
+      and endpoint = $1;
+  EOQ
+}
+
+query "sns_topics_for_lambda_function" {
+  sql = <<-EOQ
+    select
+      topic_arn as topic_arn
+    from
+      aws_sns_topic_subscription
+    where
+      protocol = 'lambda'
+      and endpoint = $1;
+  EOQ
+}
+
+query "vpc_security_groups_for_lambda_function" {
+  sql = <<-EOQ
+    select
+      s as group_id
+    from
+      aws_lambda_function,
+      jsonb_array_elements_text(vpc_security_group_ids) as s
+    where
+      arn = $1;
+  EOQ
+}
+
+query "vpc_subnets_for_lambda_function" {
+  sql = <<-EOQ
+    select
+      s as subnet_id
+    from
+      aws_lambda_function,
+      jsonb_array_elements_text(vpc_subnet_ids) as s
+    where
+      arn = $1;
+  EOQ
+}
+
+query "vpc_vpcs_for_lambda_function" {
+  sql = <<-EOQ
+    select
+      vpc_id
+    from
+      aws_lambda_function
+    where
+      vpc_id is not null
+      and arn = $1;
+  EOQ
+}
+
+# Card queries
+
+query "lambda_function_memory" {
   sql = <<-EOQ
     select
       'Memory (MB)' as label,
@@ -143,11 +483,9 @@ query "aws_lambda_function_memory" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_lambda_function_runtime" {
+query "lambda_function_runtime" {
   sql = <<-EOQ
     select
       'Runtime' as label,
@@ -157,11 +495,9 @@ query "aws_lambda_function_runtime" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_lambda_function_public" {
+query "lambda_function_public" {
   sql = <<-EOQ
     select
       'Public Access' as label,
@@ -181,11 +517,9 @@ query "aws_lambda_function_public" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_lambda_function_encryption" {
+query "lambda_function_encryption" {
   sql = <<-EOQ
     select
       'Encryption' as label,
@@ -196,11 +530,11 @@ query "aws_lambda_function_encryption" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_lambda_function_last_update_status" {
+# Other detail page queries
+
+query "lambda_function_last_update_status" {
   sql = <<-EOQ
     select
       last_modified as "Last Modified",
@@ -212,11 +546,9 @@ query "aws_lambda_function_last_update_status" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_lambda_function_policy" {
+query "lambda_function_policy" {
   sql = <<-EOQ
     select
       p ->> 'Sid' as "Sid",
@@ -230,11 +562,9 @@ query "aws_lambda_function_policy" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_lambda_function_security_groups" {
+query "lambda_function_security_groups" {
   sql = <<-EOQ
     select
       p as "ID"
@@ -244,11 +574,9 @@ query "aws_lambda_function_security_groups" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_lambda_function_subnet_ids" {
+query "lambda_function_subnet_ids" {
   sql = <<-EOQ
     select
       p as "ID"
@@ -258,11 +586,9 @@ query "aws_lambda_function_subnet_ids" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_lambda_function_overview" {
+query "lambda_function_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -279,11 +605,9 @@ query "aws_lambda_function_overview" {
     where
       arn = $1;
     EOQ
-
-  param "arn" {}
 }
 
-query "aws_lambda_function_tags" {
+query "lambda_function_tags" {
   sql = <<-EOQ
     with jsondata as (
       select
@@ -301,7 +625,5 @@ query "aws_lambda_function_tags" {
       json_each_text(tags)
     order by
       key;
-    EOQ
-
-  param "arn" {}
+  EOQ
 }

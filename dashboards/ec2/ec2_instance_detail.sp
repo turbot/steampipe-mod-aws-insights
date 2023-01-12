@@ -1,4 +1,4 @@
-dashboard "aws_ec2_instance_detail" {
+dashboard "ec2_instance_detail" {
 
   title         = "AWS EC2 Instance Detail"
   documentation = file("./dashboards/ec2/docs/ec2_instance_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_ec2_instance_detail" {
 
   input "instance_arn" {
     title = "Select an instance:"
-    sql   = query.aws_ec2_instance_input.sql
+    query = query.ec2_instance_input
     width = 4
   }
 
@@ -17,43 +17,331 @@ dashboard "aws_ec2_instance_detail" {
 
     card {
       width = 2
-      query = query.aws_ec2_instance_status
-      args = {
-        arn = self.input.instance_arn.value
-      }
+      query = query.ec2_instance_status
+      args  = [self.input.instance_arn.value]
     }
 
     card {
       width = 2
-      query = query.aws_ec2_instance_type
-      args = {
-        arn = self.input.instance_arn.value
-      }
+      query = query.ec2_instance_type
+      args  = [self.input.instance_arn.value]
     }
 
     card {
       width = 2
-      query = query.aws_ec2_instance_total_cores_count
-      args = {
-        arn = self.input.instance_arn.value
-      }
+      query = query.ec2_instance_total_cores_count
+      args  = [self.input.instance_arn.value]
     }
 
     card {
       width = 2
-      query = query.aws_ec2_instance_public_access
-      args = {
-        arn = self.input.instance_arn.value
-      }
+      query = query.ec2_instance_public_access
+      args  = [self.input.instance_arn.value]
     }
 
     card {
       width = 2
-      query = query.aws_ec2_instance_ebs_optimized
-      args = {
-        arn = self.input.instance_arn.value
-      }
+      query = query.ec2_instance_ebs_optimized
+      args  = [self.input.instance_arn.value]
     }
+  }
+
+  with "ebs_volumes_for_ec2_instance" {
+    query = query.ebs_volumes_for_ec2_instance
+    args  = [self.input.instance_arn.value]
+  }
+
+  with "ec2_application_load_balancers_for_ec2_instance" {
+    query = query.ec2_application_load_balancers_for_ec2_instance
+    args  = [self.input.instance_arn.value]
+  }
+
+  with "ec2_classic_load_balancers_for_ec2_instance" {
+    query = query.ec2_classic_load_balancers_for_ec2_instance
+    args  = [self.input.instance_arn.value]
+  }
+
+  with "ec2_gateway_load_balancers_for_ec2_instance" {
+    query = query.ec2_gateway_load_balancers_for_ec2_instance
+    args  = [self.input.instance_arn.value]
+  }
+
+  with "ec2_network_interfaces_for_ec2_instance" {
+    query = query.ec2_network_interfaces_for_ec2_instance
+    args  = [self.input.instance_arn.value]
+  }
+
+  with "ec2_network_load_balancers_for_ec2_instance" {
+    query = query.ec2_network_load_balancers_for_ec2_instance
+    args  = [self.input.instance_arn.value]
+  }
+
+  with "ec2_target_groups_for_ec2_instance" {
+    query = query.ec2_target_groups_for_ec2_instance
+    args  = [self.input.instance_arn.value]
+  }
+
+  with "ecs_clusters_for_ec2_instance" {
+    query = query.ecs_clusters_for_ec2_instance
+    args  = [self.input.instance_arn.value]
+  }
+
+  with "iam_roles_for_ec2_instance" {
+    query = query.iam_roles_for_ec2_instance
+    args  = [self.input.instance_arn.value]
+  }
+
+  with "vpc_eips_for_ec2_instance" {
+    query = query.vpc_eips_for_ec2_instance
+    args  = [self.input.instance_arn.value]
+  }
+
+  with "vpc_security_groups_for_ec2_instance" {
+    query = query.vpc_security_groups_for_ec2_instance
+    args  = [self.input.instance_arn.value]
+  }
+
+  with "vpc_subnets_for_ec2_instance" {
+    query = query.vpc_subnets_for_ec2_instance
+    args  = [self.input.instance_arn.value]
+  }
+
+  with "vpc_vpcs_for_ec2_instance" {
+    query = query.vpc_vpcs_for_ec2_instance
+    args  = [self.input.instance_arn.value]
+  }
+
+  container {
+
+    graph {
+
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      node {
+        base = node.ebs_volume
+        args = {
+          ebs_volume_arns = with.ebs_volumes_for_ec2_instance.rows[*].volume_arn
+        }
+      }
+
+      node {
+        base = node.ec2_application_load_balancer
+        args = {
+          ec2_application_load_balancer_arns = with.ec2_application_load_balancers_for_ec2_instance.rows[*].application_load_balancer_arn
+        }
+      }
+
+      node {
+        base = node.ec2_autoscaling_group
+        args = {
+          ec2_instance_arns = [self.input.instance_arn.value]
+        }
+      }
+
+
+      node {
+        base = node.ec2_classic_load_balancer
+        args = {
+          ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers_for_ec2_instance.rows[*].classic_load_balancer_arn
+        }
+      }
+
+
+      node {
+        base = node.ec2_gateway_load_balancer
+        args = {
+          ec2_gateway_load_balancer_arns = with.ec2_gateway_load_balancers_for_ec2_instance.rows[*].gateway_load_balancer_arn
+        }
+      }
+
+      node {
+        base = node.ec2_instance
+        args = {
+          ec2_instance_arns = [self.input.instance_arn.value]
+        }
+      }
+
+      node {
+        base = node.ec2_key_pair
+        args = {
+          ec2_instance_arns = [self.input.instance_arn.value]
+        }
+      }
+
+
+      node {
+        base = node.ec2_network_interface
+        args = {
+          ec2_network_interface_ids = with.ec2_network_interfaces_for_ec2_instance.rows[*].network_interface_id
+        }
+      }
+
+      node {
+        base = node.ec2_network_load_balancer
+        args = {
+          ec2_network_load_balancer_arns = with.ec2_network_load_balancers_for_ec2_instance.rows[*].network_load_balancer_arn
+        }
+      }
+
+
+      node {
+        base = node.ec2_target_group
+        args = {
+          ec2_target_group_arns = with.ec2_target_groups_for_ec2_instance.rows[*].target_group_arn
+        }
+      }
+
+      node {
+        base = node.ecs_cluster
+        args = {
+          ecs_cluster_arns = with.ecs_clusters_for_ec2_instance.rows[*].cluster_arn
+        }
+      }
+
+      node {
+        base = node.iam_instance_profile
+        args = {
+          ec2_instance_arns = [self.input.instance_arn.value]
+        }
+      }
+
+      node {
+        base = node.iam_role
+        args = {
+          iam_role_arns = with.iam_roles_for_ec2_instance.rows[*].role_arn
+        }
+      }
+
+      node {
+        base = node.vpc_eip
+        args = {
+          vpc_eip_arns = with.vpc_eips_for_ec2_instance.rows[*].eip_arn
+        }
+      }
+
+      node {
+        base = node.vpc_security_group
+        args = {
+          vpc_security_group_ids = with.vpc_security_groups_for_ec2_instance.rows[*].security_group_id
+        }
+      }
+
+      node {
+        base = node.vpc_subnet
+        args = {
+          vpc_subnet_ids = with.vpc_subnets_for_ec2_instance.rows[*].subnet_id
+        }
+      }
+
+      node {
+        base = node.vpc_vpc
+        args = {
+          vpc_vpc_ids = with.vpc_vpcs_for_ec2_instance.rows[*].vpc_id
+        }
+      }
+
+      edge {
+        base = edge.ec2_autoscaling_group_to_ec2_instance
+        args = {
+          ec2_instance_arns = [self.input.instance_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.ec2_classic_load_balancer_to_ec2_instance
+        args = {
+          ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers_for_ec2_instance.rows[*].classic_load_balancer_arn
+        }
+      }
+
+      edge {
+        base = edge.ec2_instance_to_ebs_volume
+        args = {
+          ec2_instance_arns = [self.input.instance_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.ec2_instance_to_ec2_key_pair
+        args = {
+          ec2_instance_arns = [self.input.instance_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.ec2_instance_to_ec2_network_interface
+        args = {
+          ec2_instance_arns = [self.input.instance_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.ec2_instance_to_iam_instance_profile
+        args = {
+          ec2_instance_arns = [self.input.instance_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.ec2_instance_to_vpc_security_group
+        args = {
+          ec2_instance_arns = [self.input.instance_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.ec2_instance_to_vpc_subnet
+        args = {
+          ec2_instance_arns = [self.input.instance_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.ec2_load_balancer_to_ec2_target_group
+        args = {
+          ec2_instance_arns = [self.input.instance_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.ec2_network_interface_to_vpc_eip
+        args = {
+          ec2_network_interface_ids = with.ec2_network_interfaces_for_ec2_instance.rows[*].network_interface_id
+        }
+      }
+
+      edge {
+        base = edge.ec2_target_group_to_ec2_instance
+        args = {
+          ec2_target_group_arns = with.ec2_target_groups_for_ec2_instance.rows[*].target_group_arn
+        }
+      }
+
+      edge {
+        base = edge.ecs_cluster_to_ec2_instance
+        args = {
+          ec2_instance_arns = [self.input.instance_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.iam_instance_profile_to_iam_role
+        args = {
+          iam_role_arns = with.iam_roles_for_ec2_instance.rows[*].role_arn
+        }
+      }
+
+      edge {
+        base = edge.vpc_subnet_to_vpc_vpc
+        args = {
+          vpc_subnet_ids = with.vpc_subnets_for_ec2_instance.rows[*].subnet_id
+        }
+      }
+
+    }
+
   }
 
   container {
@@ -65,31 +353,26 @@ dashboard "aws_ec2_instance_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_ec2_instance_overview
-        args = {
-          arn = self.input.instance_arn.value
-        }
+        query = query.ec2_instance_overview
+        args  = [self.input.instance_arn.value]
 
       }
 
       table {
         title = "Tags"
         width = 6
-        query = query.aws_ec2_instance_tags
-        args = {
-          arn = self.input.instance_arn.value
-        }
+        query = query.ec2_instance_tags
+        args  = [self.input.instance_arn.value]
       }
     }
+
     container {
       width = 6
 
       table {
         title = "Block Device Mappings"
-        query = query.aws_ec2_instance_block_device_mapping
-        args = {
-          arn = self.input.instance_arn.value
-        }
+        query = query.ec2_instance_block_device_mapping
+        args  = [self.input.instance_arn.value]
 
         column "Volume ARN" {
           display = "none"
@@ -97,7 +380,7 @@ dashboard "aws_ec2_instance_detail" {
 
         column "Volume ID" {
           // cyclic dependency prevents use of url_path, hardcode for now
-          href = "/aws_insights.dashboard.aws_ebs_volume_detail?input.volume_arn={{.'Volume ARN' | @uri}}"
+          href = "/aws_insights.dashboard.ebs_volume_detail?input.volume_arn={{.'Volume ARN' | @uri}}"
         }
       }
     }
@@ -109,9 +392,12 @@ dashboard "aws_ec2_instance_detail" {
 
     table {
       title = "Network Interfaces"
-      query = query.aws_ec2_instance_network_interfaces
-      args = {
-        arn = self.input.instance_arn.value
+      query = query.ec2_instance_network_interfaces
+      args  = [self.input.instance_arn.value]
+
+      column "VPC ID" {
+        // cyclic dependency prevents use of url_path, hardcode for now
+        href = "/aws_insights.dashboard.vpc_detail?input.vpc_id={{ .'VPC ID' | @uri }}"
       }
     }
 
@@ -122,14 +408,12 @@ dashboard "aws_ec2_instance_detail" {
 
     table {
       title = "Security Groups"
-      query = query.aws_ec2_instance_security_groups
-      args = {
-        arn = self.input.instance_arn.value
-      }
+      query = query.ec2_instance_security_groups
+      args  = [self.input.instance_arn.value]
 
       column "Group ID" {
         // cyclic dependency prevents use of url_path, hardcode for now
-        href = "/aws_insights.dashboard.aws_vpc_security_group_detail?input.security_group_id={{.'Group ID' | @uri}}"
+        href = "/aws_insights.dashboard.vpc_security_group_detail?input.security_group_id={{.'Group ID' | @uri}}"
       }
     }
 
@@ -139,18 +423,18 @@ dashboard "aws_ec2_instance_detail" {
     width = 6
 
     table {
-      title = " CPU cores"
-      query = query.aws_ec2_instance_cpu_cores
-      args = {
-        arn = self.input.instance_arn.value
-      }
+      title = "CPU cores"
+      query = query.ec2_instance_cpu_cores
+      args  = [self.input.instance_arn.value]
     }
 
   }
 
 }
 
-query "aws_ec2_instance_input" {
+# Input queries
+
+query "ec2_instance_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -167,22 +451,204 @@ query "aws_ec2_instance_input" {
   EOQ
 }
 
-query "aws_ec2_instance_status" {
+# With queries
+
+query "ebs_volumes_for_ec2_instance" {
   sql = <<-EOQ
     select
-      'Status' as label,
-      instance_state as value
+      v.arn as volume_arn
+    from
+      aws_ec2_instance as i,
+      jsonb_array_elements(block_device_mappings) as bd,
+      aws_ebs_volume as v
+    where
+      v.volume_id = bd -> 'Ebs' ->> 'VolumeId'
+      and i.arn = $1;
+  EOQ
+}
+
+query "ec2_application_load_balancers_for_ec2_instance" {
+  sql = <<-EOQ
+    select
+      distinct lb.arn as application_load_balancer_arn
+    from
+      aws_ec2_instance as i,
+      aws_ec2_target_group as target,
+      jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
+      jsonb_array_elements_text(target.load_balancer_arns) as l,
+      aws_ec2_application_load_balancer as lb
+    where
+      health_descriptions -> 'Target' ->> 'Id' = i.instance_id
+      and l = lb.arn
+      and i.arn = $1;
+  EOQ
+}
+
+query "ec2_classic_load_balancers_for_ec2_instance" {
+  sql = <<-EOQ
+    select
+      distinct clb.arn as classic_load_balancer_arn
+    from
+      aws_ec2_classic_load_balancer as clb,
+      jsonb_array_elements(clb.instances) as instance,
+      aws_ec2_instance as i
+    where
+      i.arn = $1
+      and instance ->> 'InstanceId' = i.instance_id;
+  EOQ
+}
+
+query "ec2_gateway_load_balancers_for_ec2_instance" {
+  sql = <<-EOQ
+    select
+      distinct lb.arn as gateway_load_balancer_arn
+    from
+      aws_ec2_instance as i,
+      aws_ec2_target_group as target,
+      jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
+      jsonb_array_elements_text(target.load_balancer_arns) as l,
+      aws_ec2_gateway_load_balancer as lb
+    where
+      health_descriptions -> 'Target' ->> 'Id' = i.instance_id
+      and l = lb.arn
+      and i.arn = $1;
+  EOQ
+}
+
+query "ec2_network_interfaces_for_ec2_instance" {
+  sql = <<-EOQ
+    select
+      network_interface ->> 'NetworkInterfaceId' as network_interface_id
+    from
+      aws_ec2_instance as i,
+      jsonb_array_elements(network_interfaces) as network_interface
+    where
+      i.arn = $1;
+  EOQ
+}
+
+query "ec2_network_load_balancers_for_ec2_instance" {
+  sql = <<-EOQ
+    select
+      distinct lb.arn as network_load_balancer_arn
+    from
+      aws_ec2_instance as i,
+      aws_ec2_target_group as target,
+      jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
+      jsonb_array_elements_text(target.load_balancer_arns) as l,
+      aws_ec2_network_load_balancer as lb
+    where
+      health_descriptions -> 'Target' ->> 'Id' = i.instance_id
+      and l = lb.arn
+      and i.arn = $1;
+  EOQ
+}
+
+query "ec2_target_groups_for_ec2_instance" {
+  sql = <<-EOQ
+    select
+      target.target_group_arn
+    from
+      aws_ec2_instance as i,
+      aws_ec2_target_group as target,
+      jsonb_array_elements(target.target_health_descriptions) as health_descriptions
+    where
+      i.arn = $1
+      and health_descriptions -> 'Target' ->> 'Id' = i.instance_id;
+  EOQ
+}
+
+query "ecs_clusters_for_ec2_instance" {
+  sql = <<-EOQ
+    select
+      distinct cluster.cluster_arn as cluster_arn
+    from
+      aws_ec2_instance as i,
+      aws_ecs_container_instance as ci,
+      aws_ecs_cluster as cluster
+    where
+      ci.ec2_instance_id = i.instance_id
+      and ci.cluster_arn = cluster.cluster_arn
+      and i.arn = $1;
+  EOQ
+}
+
+query "iam_roles_for_ec2_instance" {
+  sql = <<-EOQ
+    select
+      distinct r.arn as role_arn
+    from
+      aws_ec2_instance as i,
+      aws_iam_role as r,
+      jsonb_array_elements_text(instance_profile_arns) as instance_profile
+    where
+      instance_profile = i.iam_instance_profile_arn
+      and i.arn = $1;
+  EOQ
+}
+
+query "vpc_eips_for_ec2_instance" {
+  sql = <<-EOQ
+    select
+      e.arn as eip_arn
+    from
+      aws_vpc_eip as e,
+      aws_ec2_instance as i
+    where
+      e.instance_id = i.instance_id
+      and i.arn = $1;
+  EOQ
+}
+
+query "vpc_security_groups_for_ec2_instance" {
+  sql = <<-EOQ
+    select
+      sg ->> 'GroupId' as security_group_id
+    from
+      aws_ec2_instance as i,
+      jsonb_array_elements(security_groups) as sg
+    where
+      arn = $1;
+  EOQ
+}
+
+query "vpc_subnets_for_ec2_instance" {
+  sql = <<-EOQ
+    select
+      subnet_id as subnet_id
+    from
+      aws_ec2_instance as i
+    where
+      arn = $1;
+  EOQ
+}
+
+query "vpc_vpcs_for_ec2_instance" {
+  sql = <<-EOQ
+    select
+      vpc_id as vpc_id
     from
       aws_ec2_instance
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
-
 }
 
-query "aws_ec2_instance_type" {
+# Card queries
+
+query "ec2_instance_status" {
+  sql = <<-EOQ
+    select
+      'Status' as label,
+      initcap(instance_state) as value
+    from
+      aws_ec2_instance
+    where
+      arn = $1;
+  EOQ
+}
+
+query "ec2_instance_type" {
   sql = <<-EOQ
     select
       'Type' as label,
@@ -192,11 +658,9 @@ query "aws_ec2_instance_type" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_ec2_instance_total_cores_count" {
+query "ec2_instance_total_cores_count" {
   sql = <<-EOQ
     select
       'Total Cores' as label,
@@ -206,26 +670,22 @@ query "aws_ec2_instance_total_cores_count" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_ec2_instance_public_access" {
+query "ec2_instance_public_access" {
   sql = <<-EOQ
     select
-      'Public Access' as label,
-      case when public_ip_address is null then 'Disabled' else 'Enabled' end as value,
+      'Public IP Address' as label,
+      case when public_ip_address is null then 'Disabled' else host(public_ip_address) end as value,
       case when public_ip_address is null then 'ok' else 'alert' end as type
     from
       aws_ec2_instance
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_ec2_instance_ebs_optimized" {
+query "ec2_instance_ebs_optimized" {
   sql = <<-EOQ
     select
       'EBS Optimized' as label,
@@ -236,11 +696,11 @@ query "aws_ec2_instance_ebs_optimized" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_ec2_instance_overview" {
+# Misc queries
+
+query "ec2_instance_overview" {
   sql = <<-EOQ
     select
       tags ->> 'Name' as "Name",
@@ -253,13 +713,11 @@ query "aws_ec2_instance_overview" {
     from
       aws_ec2_instance
     where
-      arn = $1
+      arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_ec2_instance_tags" {
+query "ec2_instance_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -272,11 +730,9 @@ query "aws_ec2_instance_tags" {
     order by
       tag ->> 'Key';
     EOQ
-
-  param "arn" {}
 }
 
-query "aws_ec2_instance_block_device_mapping" {
+query "ec2_instance_block_device_mapping" {
   sql = <<-EOQ
     with volume_details as (
     select
@@ -305,44 +761,41 @@ query "aws_ec2_instance_block_device_mapping" {
     where
       v.volume_id in (select "Volume ID" from volume_details)
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_ec2_instance_security_groups" {
+query "ec2_instance_security_groups" {
   sql = <<-EOQ
     select
       p ->> 'GroupId'  as "Group ID",
-      p -> 'GroupName' ->> 'AttachTime' as "Group Name"
+      p ->> 'GroupName' as "Group Name"
     from
       aws_ec2_instance,
       jsonb_array_elements(security_groups) as p
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_ec2_instance_network_interfaces" {
+query "ec2_instance_network_interfaces" {
   sql = <<-EOQ
     select
       p ->> 'NetworkInterfaceId' as "Network Interface ID",
       p ->> 'InterfaceType' as "Interface Type",
+      ips -> 'Association' ->> 'PublicIp' as "Public IP Address",
+      ips ->> 'PrivateIpAddress' as "Private IP Address",
       p ->> 'Status' as "Status",
       p ->> 'SubnetId' as "Subnet ID",
       p ->> 'VpcId' as "VPC ID"
     from
       aws_ec2_instance,
-      jsonb_array_elements(network_interfaces) as p
+      jsonb_array_elements(network_interfaces) as p,
+      jsonb_array_elements(p -> 'PrivateIpAddresses') as ips
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_ec2_instance_cpu_cores" {
+query "ec2_instance_cpu_cores" {
   sql = <<-EOQ
     select
       cpu_options_core_count  as "CPU Options Core Count",
@@ -352,6 +805,4 @@ query "aws_ec2_instance_cpu_cores" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }

@@ -5,3 +5,4 @@ This dashboard answers the following questions for each volume:
 - What instances is it attached to?
 - How is encryption configured?
 - What is the read and write throughput?
+- What relationships does the volume have with other resources?

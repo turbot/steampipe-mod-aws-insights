@@ -1,4 +1,4 @@
-dashboard "aws_rds_db_snapshot_detail" {
+dashboard "rds_db_snapshot_detail" {
 
   title         = "AWS RDS DB Instance Snapshot Detail"
   documentation = file("./dashboards/rds/docs/rds_db_instance_snapshot_detail.md")
@@ -9,7 +9,7 @@ dashboard "aws_rds_db_snapshot_detail" {
 
   input "db_snapshot_arn" {
     title = "Select a DB Snapshot:"
-    sql   = query.aws_rds_db_snapshot_input.sql
+    query = query.rds_db_snapshot_input
     width = 4
   }
 
@@ -19,48 +19,92 @@ dashboard "aws_rds_db_snapshot_detail" {
     card {
       width = 2
 
-      query = query.aws_rds_db_snapshot_type
-      args = {
-        arn = self.input.db_snapshot_arn.value
-      }
+      query = query.rds_db_snapshot_type
+      args  = [self.input.db_snapshot_arn.value]
     }
 
     card {
       width = 2
 
-      query = query.aws_rds_db_snapshot_engine
-      args = {
-        arn = self.input.db_snapshot_arn.value
-      }
+      query = query.rds_db_snapshot_engine
+      args  = [self.input.db_snapshot_arn.value]
     }
 
     card {
       width = 2
 
-      query = query.aws_rds_db_snapshot_status
-      args = {
-        arn = self.input.db_snapshot_arn.value
-      }
+      query = query.rds_db_snapshot_status
+      args  = [self.input.db_snapshot_arn.value]
     }
 
     card {
       width = 2
 
-      query = query.aws_rds_db_snapshot_unencrypted
-      args = {
-        arn = self.input.db_snapshot_arn.value
-      }
+      query = query.rds_db_snapshot_unencrypted
+      args  = [self.input.db_snapshot_arn.value]
     }
 
     card {
       width = 2
 
-      query = query.aws_rds_db_snapshot_iam_database_authentication_enabled
-      args = {
-        arn = self.input.db_snapshot_arn.value
-      }
+      query = query.rds_db_snapshot_iam_database_authentication_enabled
+      args  = [self.input.db_snapshot_arn.value]
     }
 
+  }
+
+  with "kms_keys_for_rds_db_instance_snapshot" {
+    query = query.kms_keys_for_rds_db_instance_snapshot
+    args  = [self.input.db_snapshot_arn.value]
+  }
+
+  with "rds_instances_for_rds_db_instance_snapshot" {
+    query = query.rds_instances_for_rds_db_instance_snapshot
+    args  = [self.input.db_snapshot_arn.value]
+  }
+
+  container {
+
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      node {
+        base = node.kms_key
+        args = {
+          kms_key_arns = with.kms_keys_for_rds_db_instance_snapshot.rows[*].key_arn
+        }
+      }
+
+      node {
+        base = node.rds_db_instance
+        args = {
+          rds_db_instance_arns = with.rds_instances_for_rds_db_instance_snapshot.rows[*].rds_instance_arn
+        }
+      }
+
+      node {
+        base = node.rds_db_snapshot
+        args = {
+          rds_db_snapshot_arns = [self.input.db_snapshot_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.rds_db_instance_to_rds_db_snapshot
+        args = {
+          rds_db_instance_arns = with.rds_instances_for_rds_db_instance_snapshot.rows[*].rds_instance_arn
+        }
+      }
+
+      edge {
+        base = edge.rds_db_snapshot_to_kms_key
+        args = {
+          rds_db_snapshot_arns = [self.input.db_snapshot_arn.value]
+        }
+      }
+    }
   }
 
   container {
@@ -72,20 +116,16 @@ dashboard "aws_rds_db_snapshot_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_rds_db_snapshot_overview
-        args = {
-          arn = self.input.db_snapshot_arn.value
-        }
+        query = query.rds_db_snapshot_overview
+        args  = [self.input.db_snapshot_arn.value]
 
       }
 
       table {
         title = "Tags"
         width = 6
-        query = query.aws_rds_db_snapshot_tag
-        args = {
-          arn = self.input.db_snapshot_arn.value
-        }
+        query = query.rds_db_snapshot_tag
+        args  = [self.input.db_snapshot_arn.value]
       }
 
     }
@@ -95,19 +135,15 @@ dashboard "aws_rds_db_snapshot_detail" {
 
       table {
         title = "Storage"
-        query = query.aws_rds_db_snapshot_storage
-        args = {
-          arn = self.input.db_snapshot_arn.value
-        }
+        query = query.rds_db_snapshot_storage
+        args  = [self.input.db_snapshot_arn.value]
       }
 
       table {
         title = "Attributes"
-        query = query.aws_rds_db_snapshot_attribute
+        query = query.rds_db_snapshot_attribute
 
-        args = {
-          arn = self.input.db_snapshot_arn.value
-        }
+        args = [self.input.db_snapshot_arn.value]
       }
 
     }
@@ -116,8 +152,9 @@ dashboard "aws_rds_db_snapshot_detail" {
 
 }
 
-# Card Queries
-query "aws_rds_db_snapshot_input" {
+# Input queries
+
+query "rds_db_snapshot_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -133,7 +170,36 @@ query "aws_rds_db_snapshot_input" {
   EOQ
 }
 
-query "aws_rds_db_snapshot_type" {
+# With queries
+
+query "kms_keys_for_rds_db_instance_snapshot" {
+  sql = <<-EOQ
+    select
+      kms_key_id as key_arn
+    from
+      aws_rds_db_snapshot
+    where
+      kms_key_id is not null
+      and arn = $1;
+  EOQ
+}
+
+query "rds_instances_for_rds_db_instance_snapshot" {
+  sql = <<-EOQ
+    select
+      i.arn as rds_instance_arn
+    from
+      aws_rds_db_instance as i
+      join aws_rds_db_snapshot as s
+        on s.dbi_resource_id = i.resource_id
+    where
+      s.arn = $1;
+  EOQ
+}
+
+# Card queries
+
+query "rds_db_snapshot_type" {
   sql = <<-EOQ
     select
       'Type' as label,
@@ -143,11 +209,9 @@ query "aws_rds_db_snapshot_type" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_rds_db_snapshot_engine" {
+query "rds_db_snapshot_engine" {
   sql = <<-EOQ
     select
       'Engine' as label,
@@ -157,11 +221,9 @@ query "aws_rds_db_snapshot_engine" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_rds_db_snapshot_status" {
+query "rds_db_snapshot_status" {
   sql = <<-EOQ
     select
       status as value,
@@ -172,11 +234,9 @@ query "aws_rds_db_snapshot_status" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_rds_db_snapshot_unencrypted" {
+query "rds_db_snapshot_unencrypted" {
   sql = <<-EOQ
     select
       'Encryption' as label,
@@ -187,11 +247,9 @@ query "aws_rds_db_snapshot_unencrypted" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_rds_db_snapshot_iam_database_authentication_enabled" {
+query "rds_db_snapshot_iam_database_authentication_enabled" {
   sql = <<-EOQ
     select
       'IAM Database Authentication' as label,
@@ -202,11 +260,11 @@ query "aws_rds_db_snapshot_iam_database_authentication_enabled" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_rds_db_snapshot_overview" {
+# Other detail page queries
+
+query "rds_db_snapshot_overview" {
   sql = <<-EOQ
     select
       db_snapshot_identifier as "DB Snapshot Identifier",
@@ -227,11 +285,9 @@ query "aws_rds_db_snapshot_overview" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_rds_db_snapshot_tag" {
+query "rds_db_snapshot_tag" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -244,11 +300,9 @@ query "aws_rds_db_snapshot_tag" {
     order by
       tag ->> 'Key';
     EOQ
-
-  param "arn" {}
 }
 
-query "aws_rds_db_snapshot_attribute" {
+query "rds_db_snapshot_attribute" {
   sql = <<-EOQ
     select
       a ->> 'AttributeName' as "Attribute Name",
@@ -259,11 +313,9 @@ query "aws_rds_db_snapshot_attribute" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_rds_db_snapshot_storage" {
+query "rds_db_snapshot_storage" {
   sql = <<-EOQ
     select
       storage_type as "Storage Type",
@@ -273,6 +325,4 @@ query "aws_rds_db_snapshot_storage" {
     where
       arn = $1;
   EOQ
-
-  param "arn" {}
 }

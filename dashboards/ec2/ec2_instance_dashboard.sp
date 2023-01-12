@@ -1,4 +1,4 @@
-dashboard "aws_ec2_instance_dashboard" {
+dashboard "ec2_instance_dashboard" {
 
   title         = "AWS EC2 Instance Dashboard"
   documentation = file("./dashboards/ec2/docs/ec2_instance_dashboard.md")
@@ -11,24 +11,24 @@ dashboard "aws_ec2_instance_dashboard" {
 
     # Analysis
     card {
-      sql   = query.aws_ec2_instance_count.sql
+      query = query.ec2_instance_count
       width = 2
     }
 
     card {
-      sql   = query.aws_ec2_instance_total_cores.sql
+      query = query.ec2_instance_total_cores
       width = 2
     }
 
     # Assessments
     card {
-      sql   = query.aws_ec2_public_instance_count.sql
+      query = query.ec2_public_instance_count
       width = 2
-      href  = dashboard.aws_ec2_instance_public_access_report.url_path
+      href  = dashboard.ec2_instance_public_access_report.url_path
     }
 
     card {
-      sql   = query.aws_ec2_ebs_optimized_count.sql
+      query = query.ec2_ebs_optimized_count
       width = 2
     }
 
@@ -36,7 +36,7 @@ dashboard "aws_ec2_instance_dashboard" {
     card {
       type  = "info"
       icon  = "currency-dollar"
-      sql   = query.aws_ec2_instance_cost_mtd.sql
+      query = query.ec2_instance_cost_mtd
       width = 2
     }
 
@@ -49,7 +49,7 @@ dashboard "aws_ec2_instance_dashboard" {
 
     chart {
       title = "Public/Private"
-      sql   = query.aws_ec2_instance_by_public_ip.sql
+      query = query.ec2_instance_by_public_ip
       type  = "donut"
       width = 4
 
@@ -65,7 +65,7 @@ dashboard "aws_ec2_instance_dashboard" {
 
     chart {
       title = "EBS Optimized Status"
-      sql   = query.aws_ec2_instance_ebs_optimized_status.sql
+      query = query.ec2_instance_ebs_optimized_status
       type  = "donut"
       width = 4
 
@@ -81,7 +81,7 @@ dashboard "aws_ec2_instance_dashboard" {
 
     chart {
       title = "Detailed Monitoring Status"
-      sql   = query.aws_ec2_instance_detailed_monitoring_enabled.sql
+      query = query.ec2_instance_detailed_monitoring_enabled
       type  = "donut"
       width = 4
 
@@ -105,14 +105,14 @@ dashboard "aws_ec2_instance_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      sql   = query.aws_ec2_monthly_forecast_table.sql
+      query = query.ec2_monthly_forecast_table
     }
 
     chart {
       width = 6
       title = "EC2 Compute Monthly Unblended Cost"
       type  = "column"
-      sql   = query.aws_ec2_instance_cost_per_month.sql
+      query = query.ec2_instance_cost_per_month
     }
 
   }
@@ -123,35 +123,35 @@ dashboard "aws_ec2_instance_dashboard" {
 
     chart {
       title = "Instances by Account"
-      sql   = query.aws_ec2_instance_by_account.sql
+      query = query.ec2_instance_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Instances by Region"
-      sql   = query.aws_ec2_instance_by_region.sql
+      query = query.ec2_instance_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Instances by State"
-      sql   = query.aws_ec2_instance_by_state.sql
+      query = query.ec2_instance_by_state
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Instances by Age"
-      sql   = query.aws_ec2_instance_by_creation_month.sql
+      query = query.ec2_instance_by_creation_month
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Instances by Type"
-      sql   = query.aws_ec2_instance_by_type.sql
+      query = query.ec2_instance_by_type
       type  = "column"
       width = 4
     }
@@ -164,14 +164,14 @@ dashboard "aws_ec2_instance_dashboard" {
 
     chart {
       title = "Top 10 CPU - Last 7 days"
-      sql   = query.aws_ec2_top10_cpu_past_week.sql
+      query = query.ec2_top10_cpu_past_week
       type  = "line"
       width = 6
     }
 
     chart {
       title = "Average Max Daily CPU - Last 30 days"
-      sql   = query.aws_ec2_instance_by_cpu_utilization_category.sql
+      query = query.ec2_instance_by_cpu_utilization_category
       type  = "column"
       width = 6
     }
@@ -182,13 +182,13 @@ dashboard "aws_ec2_instance_dashboard" {
 
 # Card Queries
 
-query "aws_ec2_instance_count" {
+query "ec2_instance_count" {
   sql = <<-EOQ
     select count(*) as "Instances" from aws_ec2_instance
   EOQ
 }
 
-query "aws_ec2_instance_total_cores" {
+query "ec2_instance_total_cores" {
   sql = <<-EOQ
     select
       sum(cpu_options_core_count) as "Total Cores"
@@ -197,7 +197,7 @@ query "aws_ec2_instance_total_cores" {
   EOQ
 }
 
-query "aws_ec2_public_instance_count" {
+query "ec2_public_instance_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -210,7 +210,7 @@ query "aws_ec2_public_instance_count" {
   EOQ
 }
 
-query "aws_ec2_ebs_optimized_count" {
+query "ec2_ebs_optimized_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -223,7 +223,7 @@ query "aws_ec2_ebs_optimized_count" {
   EOQ
 }
 
-query "aws_ec2_instance_cost_mtd" {
+query "ec2_instance_cost_mtd" {
   sql = <<-EOQ
     select
       'Cost - MTD' as label,
@@ -238,7 +238,7 @@ query "aws_ec2_instance_cost_mtd" {
 
 # Assessment Queries
 
-query "aws_ec2_instance_by_public_ip" {
+query "ec2_instance_by_public_ip" {
   sql = <<-EOQ
     with instances as (
       select
@@ -259,7 +259,7 @@ query "aws_ec2_instance_by_public_ip" {
   EOQ
 }
 
-query "aws_ec2_instance_ebs_optimized_status" {
+query "ec2_instance_ebs_optimized_status" {
   sql = <<-EOQ
     with instances as (
       select
@@ -280,7 +280,7 @@ query "aws_ec2_instance_ebs_optimized_status" {
   EOQ
 }
 
-query "aws_ec2_instance_detailed_monitoring_enabled" {
+query "ec2_instance_detailed_monitoring_enabled" {
   sql = <<-EOQ
     with instances as (
       select
@@ -303,7 +303,7 @@ query "aws_ec2_instance_detailed_monitoring_enabled" {
 
 # Cost Queries
 
-query "aws_ec2_monthly_forecast_table" {
+query "ec2_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
       select
@@ -347,7 +347,7 @@ query "aws_ec2_monthly_forecast_table" {
   EOQ
 }
 
-query "aws_ec2_instance_cost_per_month" {
+query "ec2_instance_cost_per_month" {
   sql = <<-EOQ
     select
       to_char(period_start, 'Mon-YY') as "Month",
@@ -365,10 +365,10 @@ query "aws_ec2_instance_cost_per_month" {
 
 # Analysis Queries
 
-query "aws_ec2_instance_by_account" {
+query "ec2_instance_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       count(i.*) as "total"
     from
       aws_ec2_instance as i,
@@ -376,12 +376,13 @@ query "aws_ec2_instance_by_account" {
     where
       a.account_id = i.account_id
     group by
-      account
-    order by count(i.*) desc
+      a.title
+    order by 
+      count(i.*) desc;
   EOQ
 }
 
-query "aws_ec2_instance_by_region" {
+query "ec2_instance_by_region" {
   sql = <<-EOQ
     select
       region,
@@ -393,7 +394,7 @@ query "aws_ec2_instance_by_region" {
   EOQ
 }
 
-query "aws_ec2_instance_by_state" {
+query "ec2_instance_by_state" {
   sql = <<-EOQ
     select
       instance_state,
@@ -405,7 +406,7 @@ query "aws_ec2_instance_by_state" {
   EOQ
 }
 
-query "aws_ec2_instance_by_creation_month" {
+query "ec2_instance_by_creation_month" {
   sql = <<-EOQ
     with instances as (
       select
@@ -450,7 +451,7 @@ query "aws_ec2_instance_by_creation_month" {
   EOQ
 }
 
-query "aws_ec2_instance_by_type" {
+query "ec2_instance_by_type" {
   sql = <<-EOQ
     select instance_type as "Type", count(*) as "instances" from aws_ec2_instance group by instance_type order by instance_type
   EOQ
@@ -461,7 +462,7 @@ query "aws_ec2_instance_by_type" {
 
 # Performance Queries
 
-query "aws_ec2_top10_cpu_past_week" {
+query "ec2_top10_cpu_past_week" {
   sql = <<-EOQ
     with top_n as (
     select
@@ -487,12 +488,12 @@ query "aws_ec2_top10_cpu_past_week" {
       timestamp  >= CURRENT_DATE - INTERVAL '7 day'
       and instance_id in (select instance_id from top_n)
     order by
-      timestamp
+      timestamp;
   EOQ
 }
 
 # underused if avg CPU < 10% every day for last month
-query "aws_ec2_instance_by_cpu_utilization_category" {
+query "ec2_instance_by_cpu_utilization_category" {
   sql = <<-EOQ
     with cpu_buckets as (
       select
@@ -522,6 +523,6 @@ query "aws_ec2_instance_by_cpu_utilization_category" {
       cpu_buckets as b
     left join max_averages as a on b.cpu_bucket = a.cpu_bucket
     group by
-      b.cpu_bucket
+      b.cpu_bucket;
   EOQ
 }

@@ -10,3 +10,4 @@ This dashboard answers the following questions for each VPC:
 - How are NACLs configured?
 - How gateways and endpoints are configured?
 - How security groups are configured?
+- What relationships does the VPC have with other resources?

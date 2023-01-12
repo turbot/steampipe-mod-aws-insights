@@ -1,4 +1,4 @@
-dashboard "aws_cloudtrail_trail_encryption_report" {
+dashboard "cloudtrail_trail_encryption_report" {
 
   title         = "AWS CloudTrail Trail Encryption Report"
   documentation = file("./dashboards/cloudtrail/docs/cloudtrail_trail_report_encryption.md")
@@ -11,12 +11,12 @@ dashboard "aws_cloudtrail_trail_encryption_report" {
   container {
 
     card {
-      sql   = query.aws_cloudtrail_trail_count.sql
+      query = query.cloudtrail_trail_count
       width = 2
     }
 
     card {
-      sql   = query.aws_cloudtrail_trail_unencrypted_count.sql
+      query = query.cloudtrail_trail_unencrypted_count
       width = 2
     }
   }
@@ -31,16 +31,16 @@ dashboard "aws_cloudtrail_trail_encryption_report" {
     }
 
     column "Name" {
-      href = "${dashboard.aws_cloudtrail_trail_detail.url_path}?input.trail_arn={{.ARN | @uri}}"
+      href = "${dashboard.cloudtrail_trail_detail.url_path}?input.trail_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_cloudtrail_trail_encryption_table.sql
+    query = query.cloudtrail_trail_encryption_table
 
   }
 
 }
 
-query "aws_cloudtrail_trail_encryption_table" {
+query "cloudtrail_trail_encryption_table" {
   sql = <<-EOQ
     select
       t.name as "Name",

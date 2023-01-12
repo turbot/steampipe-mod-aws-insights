@@ -1,6 +1,6 @@
-dashboard "aws_iam_role_detail" {
+dashboard "iam_role_detail" {
 
-  title = "AWS IAM Role Detail"
+  title         = "AWS IAM Role Detail"
   documentation = file("./dashboards/iam/docs/iam_role_detail.md")
 
   tags = merge(local.iam_common_tags, {
@@ -9,36 +9,197 @@ dashboard "aws_iam_role_detail" {
 
   input "role_arn" {
     title = "Select a role:"
-    sql   = query.aws_iam_role_input.sql
-    width = 2
+    query = query.iam_role_input
+    width = 4
   }
 
   container {
 
     card {
       width = 2
-      query = query.aws_iam_boundary_policy_for_role
-      args  = {
-        arn = self.input.role_arn.value
-      }
+      query = query.iam_boundary_policy_for_role
+      args  = [self.input.role_arn.value]
     }
 
     card {
       width = 2
-      query = query.aws_iam_role_inline_policy_count_for_role
-      args  = {
-        arn = self.input.role_arn.value
-      }
+      query = query.iam_role_inline_policy_count_for_role
+      args  = [self.input.role_arn.value]
     }
 
     card {
       width = 2
-      query = query.aws_iam_role_direct_attached_policy_count_for_role
-      args  = {
-        arn = self.input.role_arn.value
-      }
+      query = query.iam_role_direct_attached_policy_count_for_role
+      args  = [self.input.role_arn.value]
     }
 
+  }
+
+  with "ec2_instances_for_iam_role" {
+    query = query.ec2_instances_for_iam_role
+    args  = [self.input.role_arn.value]
+  }
+
+  with "emr_clusters_for_iam_role" {
+    query = query.emr_clusters_for_iam_role
+    args  = [self.input.role_arn.value]
+  }
+
+  with "guardduty_detectors_for_iam_role" {
+    query = query.guardduty_detectors_for_iam_role
+    args  = [self.input.role_arn.value]
+  }
+
+  with "iam_policies_for_iam_role" {
+    query = query.iam_policies_for_iam_role
+    args  = [self.input.role_arn.value]
+  }
+
+  with "lambda_functions_for_iam_role" {
+    query = query.lambda_functions_for_iam_role
+    args  = [self.input.role_arn.value]
+  }
+
+  container {
+
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      node {
+        base = node.ec2_instance
+        args = {
+          ec2_instance_arns = with.ec2_instances_for_iam_role.rows[*].instance_arn
+        }
+      }
+
+      node {
+        base = node.emr_cluster
+        args = {
+          emr_cluster_arns = with.emr_clusters_for_iam_role.rows[*].cluster_arn
+        }
+      }
+
+      node {
+        base = node.guardduty_detector
+        args = {
+          guardduty_detector_arns = with.guardduty_detectors_for_iam_role.rows[*].guardduty_detector_arn
+        }
+      }
+
+      node {
+        base = node.iam_instance_profile
+        args = {
+          ec2_instance_arns = with.ec2_instances_for_iam_role.rows[*].instance_arn
+        }
+      }
+
+      node {
+        base = node.iam_policy
+        args = {
+          iam_policy_arns = with.iam_policies_for_iam_role.rows[*].policy_arn
+        }
+      }
+
+      node {
+        base = node.iam_role
+        args = {
+          iam_role_arns = [self.input.role_arn.value]
+        }
+      }
+
+      node {
+        base = node.iam_role_trusted_aws
+        args = {
+          iam_role_arns = [self.input.role_arn.value]
+        }
+      }
+
+      node {
+        base = node.iam_role_trusted_federated
+        args = {
+          iam_role_arns = [self.input.role_arn.value]
+        }
+      }
+
+      node {
+        base = node.iam_role_trusted_service
+        args = {
+          iam_role_arns = [self.input.role_arn.value]
+        }
+      }
+
+      node {
+        base = node.lambda_function
+        args = {
+          lambda_function_arns = with.lambda_functions_for_iam_role.rows[*].function_arn
+        }
+      }
+
+      edge {
+        base = edge.ec2_instance_to_iam_instance_profile
+        args = {
+          ec2_instance_arns = with.ec2_instances_for_iam_role.rows[*].instance_arn
+        }
+      }
+
+      edge {
+        base = edge.emr_cluster_to_iam_role
+        args = {
+          emr_cluster_arns = with.emr_clusters_for_iam_role.rows[*].cluster_arn
+        }
+      }
+
+      edge {
+        base = edge.guardduty_detector_to_iam_role
+        args = {
+          iam_role_arns = [self.input.role_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.iam_instance_profile_to_iam_role
+        args = {
+          iam_role_arns = [self.input.role_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.iam_role_to_iam_policy
+        args = {
+          iam_role_arns = [self.input.role_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.iam_role_trusted_aws
+        args = {
+          iam_role_arns = [self.input.role_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.iam_role_trusted_federated
+        args = {
+          iam_role_arns = [self.input.role_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.iam_role_trusted_service
+        args = {
+          iam_role_arns = [self.input.role_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.lambda_function_to_iam_role
+        args = {
+          lambda_function_arns = with.lambda_functions_for_iam_role.rows[*].function_arn
+        }
+      }
+    }
   }
 
   container {
@@ -51,19 +212,15 @@ dashboard "aws_iam_role_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_iam_role_overview
-        args  = {
-          arn = self.input.role_arn.value
-        }
+        query = query.iam_role_overview
+        args  = [self.input.role_arn.value]
       }
 
       table {
         title = "Tags"
         width = 6
-        query = query.aws_iam_role_tags
-        args  = {
-          arn = self.input.role_arn.value
-        }
+        query = query.iam_role_tags
+        args  = [self.input.role_arn.value]
       }
     }
 
@@ -75,10 +232,8 @@ dashboard "aws_iam_role_detail" {
         type  = "tree"
         width = 6
         title = "Attached Policies"
-        query = query.aws_iam_user_manage_policies_hierarchy
-        args  = {
-          arn = self.input.role_arn.value
-        }
+        query = query.iam_user_manage_policies_hierarchy
+        args  = [self.input.role_arn.value]
 
         category "inline_policy" {
           color = "alert"
@@ -93,10 +248,8 @@ dashboard "aws_iam_role_detail" {
       table {
         title = "Policies"
         width = 6
-        query = query.aws_iam_all_policies_for_role
-        args  = {
-          arn = self.input.role_arn.value
-        }
+        query = query.iam_all_policies_for_role
+        args  = [self.input.role_arn.value]
       }
 
     }
@@ -104,7 +257,9 @@ dashboard "aws_iam_role_detail" {
 
 }
 
-query "aws_iam_role_input" {
+# Input queries
+
+query "iam_role_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -119,7 +274,72 @@ query "aws_iam_role_input" {
   EOQ
 }
 
-query "aws_iam_boundary_policy_for_role" {
+# With queries
+
+query "ec2_instances_for_iam_role" {
+  sql = <<-EOQ
+    select
+      i.arn as instance_arn
+    from
+      aws_ec2_instance as i,
+      aws_iam_role as r,
+      jsonb_array_elements_text(instance_profile_arns) as instance_profile
+    where
+      r.arn = $1
+      and instance_profile = i.iam_instance_profile_arn;
+  EOQ
+}
+
+query "emr_clusters_for_iam_role" {
+  sql = <<-EOQ
+    select
+      c.cluster_arn as cluster_arn
+    from
+      aws_iam_role as r,
+      aws_emr_cluster as c
+    where
+      r.arn = $1
+      and r.name = c.service_role;
+  EOQ
+}
+
+query "guardduty_detectors_for_iam_role" {
+  sql = <<-EOQ
+    select
+      arn as guardduty_detector_arn
+    from
+      aws_guardduty_detector
+    where
+      service_role = $1;
+  EOQ
+}
+
+query "iam_policies_for_iam_role" {
+  sql = <<-EOQ
+    select
+      policy_arn
+    from
+      aws_iam_role,
+      jsonb_array_elements_text(attached_policy_arns) as policy_arn
+    where
+      arn = $1;
+  EOQ
+}
+
+query "lambda_functions_for_iam_role" {
+  sql = <<-EOQ
+    select
+      arn as function_arn
+    from
+      aws_lambda_function
+    where
+      role = $1;
+  EOQ
+}
+
+# Card queries
+
+query "iam_boundary_policy_for_role" {
   sql = <<-EOQ
     select
       case
@@ -138,11 +358,9 @@ query "aws_iam_boundary_policy_for_role" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_iam_role_inline_policy_count_for_role" {
+query "iam_role_inline_policy_count_for_role" {
   sql = <<-EOQ
     select
       case when inline_policies is null then 0 else jsonb_array_length(inline_policies) end as value,
@@ -153,11 +371,9 @@ query "aws_iam_role_inline_policy_count_for_role" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_iam_role_direct_attached_policy_count_for_role" {
+query "iam_role_direct_attached_policy_count_for_role" {
   sql = <<-EOQ
     select
       case when attached_policy_arns is null then 0 else jsonb_array_length(attached_policy_arns) end as value,
@@ -168,11 +384,11 @@ query "aws_iam_role_direct_attached_policy_count_for_role" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_iam_role_overview" {
+# Other detail page queries
+
+query "iam_role_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -186,11 +402,9 @@ query "aws_iam_role_overview" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_iam_all_policies_for_role" {
+query "iam_all_policies_for_role" {
   sql = <<-EOQ
     -- Policies (attached to groups)
     select
@@ -204,7 +418,6 @@ query "aws_iam_all_policies_for_role" {
     where
       p.arn = policy_arn
       and r.arn = $1
-
     -- Inline Policies (defined on role)
     union select
       i ->> 'PolicyName' as "Policy",
@@ -216,11 +429,9 @@ query "aws_iam_all_policies_for_role" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_iam_role_tags" {
+query "iam_role_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -233,18 +444,15 @@ query "aws_iam_role_tags" {
     order by
       tag ->> 'Key'
   EOQ
-
-  param "arn" {} 
 }
 
-query "aws_iam_user_manage_policies_hierarchy" {
-    sql = <<-EOQ
+query "iam_user_manage_policies_hierarchy" {
+  sql = <<-EOQ
     select
       $1 as id,
       $1 as title,
       'role' as category,
       null as from_id
-
     -- Policies (attached to groups)
     union select
       policy_arn as id,
@@ -258,7 +466,6 @@ query "aws_iam_user_manage_policies_hierarchy" {
     where
       p.arn = policy_arn
       and r.arn = $1
-
     -- Inline Policies (defined on role)
     union select
       concat('inline_', i ->> 'PolicyName') as id,
@@ -271,6 +478,4 @@ query "aws_iam_user_manage_policies_hierarchy" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }

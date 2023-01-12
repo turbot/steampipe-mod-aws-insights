@@ -1,6 +1,6 @@
-dashboard "aws_redshift_cluster_age_report" {
+dashboard "redshift_cluster_age_report" {
 
-  title = "AWS Redshift Cluster Age Report"
+  title         = "AWS Redshift Cluster Age Report"
   documentation = file("./dashboards/redshift/docs/redshift_cluster_report_age.md")
 
   tags = merge(local.redshift_common_tags, {
@@ -8,41 +8,41 @@ dashboard "aws_redshift_cluster_age_report" {
     category = "Age"
   })
 
-   container {
+  container {
 
     card {
-      sql   = query.aws_redshift_cluster_count.sql
+      query = query.redshift_cluster_count
       width = 2
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_redshift_cluster_24_hours_count.sql
+      query = query.redshift_cluster_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_redshift_cluster_30_days_count.sql
+      query = query.redshift_cluster_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_redshift_cluster_30_90_days_count.sql
+      query = query.redshift_cluster_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_redshift_cluster_90_365_days_count.sql
+      query = query.redshift_cluster_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_redshift_cluster_1_year_count.sql
+      query = query.redshift_cluster_1_year_count
     }
 
   }
@@ -57,15 +57,15 @@ dashboard "aws_redshift_cluster_age_report" {
     }
 
     column "Cluster Identifier" {
-      href = "${dashboard.aws_redshift_cluster_detail.url_path}?input.cluster_arn={{.ARN | @uri}}"
+      href = "${dashboard.redshift_cluster_detail.url_path}?input.cluster_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_redshift_cluster_age_table.sql
+    query = query.redshift_cluster_age_table
   }
 
 }
 
-query "aws_redshift_cluster_24_hours_count" {
+query "redshift_cluster_24_hours_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -77,7 +77,7 @@ query "aws_redshift_cluster_24_hours_count" {
   EOQ
 }
 
-query "aws_redshift_cluster_30_days_count" {
+query "redshift_cluster_30_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -89,7 +89,7 @@ query "aws_redshift_cluster_30_days_count" {
   EOQ
 }
 
-query "aws_redshift_cluster_30_90_days_count" {
+query "redshift_cluster_30_90_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -101,7 +101,7 @@ query "aws_redshift_cluster_30_90_days_count" {
   EOQ
 }
 
-query "aws_redshift_cluster_90_365_days_count" {
+query "redshift_cluster_90_365_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -113,7 +113,7 @@ query "aws_redshift_cluster_90_365_days_count" {
   EOQ
 }
 
-query "aws_redshift_cluster_1_year_count" {
+query "redshift_cluster_1_year_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -125,7 +125,7 @@ query "aws_redshift_cluster_1_year_count" {
   EOQ
 }
 
-query "aws_redshift_cluster_age_table" {
+query "redshift_cluster_age_table" {
   sql = <<-EOQ
     select
       c.cluster_identifier as "Cluster Identifier",
