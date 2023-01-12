@@ -1,4 +1,4 @@
-dashboard "aws_s3_bucket_lifecycle_report" {
+dashboard "s3_bucket_lifecycle_report" {
 
   title         = "AWS S3 Bucket Lifecycle Report"
   documentation = file("./dashboards/s3/docs/s3_bucket_report_lifecycle.md")
@@ -11,17 +11,17 @@ dashboard "aws_s3_bucket_lifecycle_report" {
   container {
 
     card {
-      sql   = query.aws_s3_bucket_count.sql
+      query = query.s3_bucket_count
       width = 2
     }
 
     card {
-      sql   = query.aws_s3_bucket_versioning_disabled_count.sql
+      query = query.s3_bucket_versioning_disabled_count
       width = 2
     }
 
     card {
-      sql   = query.aws_s3_bucket_versioning_mfa_disabled_count.sql
+      query = query.s3_bucket_versioning_mfa_disabled_count
       width = 2
     }
 
@@ -37,15 +37,15 @@ dashboard "aws_s3_bucket_lifecycle_report" {
     }
 
     column "Name" {
-      href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.ARN | @uri}}"
+      href = "${dashboard.s3_bucket_detail.url_path}?input.bucket_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_s3_bucket_lifecycle_table.sql
+    query = query.s3_bucket_lifecycle_table
   }
 
 }
 
-query "aws_s3_bucket_versioning_mfa_disabled_count" {
+query "s3_bucket_versioning_mfa_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -58,7 +58,7 @@ query "aws_s3_bucket_versioning_mfa_disabled_count" {
   EOQ
 }
 
-query "aws_s3_bucket_lifecycle_table" {
+query "s3_bucket_lifecycle_table" {
   sql = <<-EOQ
     select
       b.name as "Name",

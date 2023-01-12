@@ -1,4 +1,4 @@
-dashboard "aws_lambda_function_dashboard" {
+dashboard "lambda_function_dashboard" {
 
   title         = "AWS Lambda Function Dashboard"
   documentation = file("./dashboards/lambda/docs/lambda_function_dashboard.md")
@@ -11,21 +11,21 @@ dashboard "aws_lambda_function_dashboard" {
 
     # Analysis
     card {
-      sql   = query.aws_lambda_function_count.sql
+      query = query.lambda_function_count
       width = 2
     }
 
     # Assessments
     card {
-      sql   = query.aws_lambda_function_unencrypted_count.sql
+      query = query.lambda_function_unencrypted_count
       width = 2
-      href  = dashboard.aws_lambda_function_encryption_report.url_path
+      href  = dashboard.lambda_function_encryption_report.url_path
     }
 
     card {
-      sql   = query.aws_lambda_function_public_count.sql
+      query = query.lambda_function_public_count
       width = 2
-      href  = dashboard.aws_lambda_function_public_access_report.url_path
+      href  = dashboard.lambda_function_public_access_report.url_path
     }
 
     # Costs
@@ -33,7 +33,7 @@ dashboard "aws_lambda_function_dashboard" {
       type  = "info"
       icon  = "currency-dollar"
       width = 2
-      sql   = query.aws_lambda_function_cost_mtd.sql
+      query = query.lambda_function_cost_mtd
     }
 
   }
@@ -45,7 +45,7 @@ dashboard "aws_lambda_function_dashboard" {
 
     chart {
       title = "Encryption Status"
-      sql   = query.aws_lambda_function_by_encryption_status.sql
+      query = query.lambda_function_by_encryption_status
       type  = "donut"
       width = 4
 
@@ -61,7 +61,7 @@ dashboard "aws_lambda_function_dashboard" {
 
     chart {
       title = "Public/Private Status"
-      sql   = query.aws_lambda_function_public_status.sql
+      query = query.lambda_function_public_status
       type  = "donut"
       width = 4
 
@@ -77,7 +77,7 @@ dashboard "aws_lambda_function_dashboard" {
 
     chart {
       title = "Runtime Version"
-      sql   = query.aws_lambda_function_uses_latest_runtime_status.sql
+      query = query.lambda_function_uses_latest_runtime_status
       type  = "donut"
       width = 4
 
@@ -93,7 +93,7 @@ dashboard "aws_lambda_function_dashboard" {
 
     chart {
       title = "DLQ Configuration"
-      sql   = query.aws_lambda_function_dead_letter_config_status.sql
+      query = query.lambda_function_dead_letter_config_status
       type  = "donut"
       width = 4
 
@@ -117,14 +117,14 @@ dashboard "aws_lambda_function_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      sql   = query.aws_lambda_monthly_forecast_table.sql
+      query = query.lambda_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      sql   = query.aws_lambda_function_cost_per_month.sql
+      query = query.lambda_function_cost_per_month
     }
 
   }
@@ -135,28 +135,28 @@ dashboard "aws_lambda_function_dashboard" {
 
     chart {
       title = "Functions by Account"
-      sql   = query.aws_lambda_function_by_account.sql
+      query = query.lambda_function_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Functions by Region"
-      sql   = query.aws_lambda_function_by_region.sql
+      query = query.lambda_function_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Functions by Runtime"
-      sql   = query.aws_lambda_function_by_runtime.sql
+      query = query.lambda_function_by_runtime
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Function Code Size by Account (MB)"
-      sql   = query.aws_lambda_function_code_size_by_account.sql
+      query = query.lambda_function_code_size_by_account
       type  = "column"
       width = 4
 
@@ -167,7 +167,7 @@ dashboard "aws_lambda_function_dashboard" {
 
     chart {
       title = "Function Code Size by Region (MB)"
-      sql   = query.aws_lambda_function_code_size_by_region.sql
+      query = query.lambda_function_code_size_by_region
       type  = "column"
       width = 4
 
@@ -178,7 +178,7 @@ dashboard "aws_lambda_function_dashboard" {
 
     chart {
       title = "Function Code Size by Runtime (MB)"
-      sql   = query.aws_lambda_function_code_size_by_runtime.sql
+      query = query.lambda_function_code_size_by_runtime
       type  = "column"
       width = 4
 
@@ -189,7 +189,7 @@ dashboard "aws_lambda_function_dashboard" {
 
     chart {
       title = "Function Memory Usage by Account (GB)"
-      sql   = query.aws_lambda_function_memory_size_by_account.sql
+      query = query.lambda_function_memory_size_by_account
       type  = "column"
       width = 4
 
@@ -200,7 +200,7 @@ dashboard "aws_lambda_function_dashboard" {
 
     chart {
       title = "Function Memory Usage by Region (GB)"
-      sql   = query.aws_lambda_function_memory_size_by_region.sql
+      query = query.lambda_function_memory_size_by_region
       type  = "column"
       width = 4
 
@@ -211,7 +211,7 @@ dashboard "aws_lambda_function_dashboard" {
 
     chart {
       title = "Function Memory Usage by Runtime (GB)"
-      sql   = query.aws_lambda_function_memory_size_by_runtime.sql
+      query = query.lambda_function_memory_size_by_runtime
       type  = "column"
       width = 4
 
@@ -229,14 +229,14 @@ dashboard "aws_lambda_function_dashboard" {
 
     chart {
       title = "High Error Rate (> 10 In Last 1 Month)"
-      sql   = query.aws_lambda_high_error_rate.sql
+      query = query.lambda_high_error_rate
       type  = "line"
       width = 6
     }
 
     chart {
       title = "Top 10 Average Invocation Rate"
-      sql   = query.aws_lambda_function_invocation_rate.sql
+      query = query.lambda_function_invocation_rate
       type  = "line"
       width = 6
     }
@@ -247,13 +247,13 @@ dashboard "aws_lambda_function_dashboard" {
 
 # Card Queries
 
-query "aws_lambda_function_count" {
+query "lambda_function_count" {
   sql = <<-EOQ
     select count(*) as "Functions" from aws_lambda_function
   EOQ
 }
 
-query "aws_lambda_function_unencrypted_count" {
+query "lambda_function_unencrypted_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -266,7 +266,7 @@ query "aws_lambda_function_unencrypted_count" {
   EOQ
 }
 
-query "aws_lambda_function_public_count" {
+query "lambda_function_public_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -283,7 +283,7 @@ query "aws_lambda_function_public_count" {
   EOQ
 }
 
-query "aws_lambda_function_cost_mtd" {
+query "lambda_function_cost_mtd" {
   sql = <<-EOQ
     select
       'Cost - MTD' as label,
@@ -298,7 +298,7 @@ query "aws_lambda_function_cost_mtd" {
 
 # Assessment Queries
 
-query "aws_lambda_function_by_encryption_status" {
+query "lambda_function_by_encryption_status" {
   sql = <<-EOQ
     select
       encryption_status,
@@ -319,7 +319,7 @@ query "aws_lambda_function_by_encryption_status" {
   EOQ
 }
 
-query "aws_lambda_function_public_status" {
+query "lambda_function_public_status" {
   sql = <<-EOQ
     with functions as (
       select
@@ -344,7 +344,7 @@ query "aws_lambda_function_public_status" {
   EOQ
 }
 
-query "aws_lambda_function_uses_latest_runtime_status" {
+query "lambda_function_uses_latest_runtime_status" {
   sql = <<-EOQ
     select
       runtime_status,
@@ -365,7 +365,7 @@ query "aws_lambda_function_uses_latest_runtime_status" {
   EOQ
 }
 
-query "aws_lambda_function_dead_letter_config_status" {
+query "lambda_function_dead_letter_config_status" {
   sql = <<-EOQ
     select
       dead_letter_config_status,
@@ -388,7 +388,7 @@ query "aws_lambda_function_dead_letter_config_status" {
 
 # Cost Queries
 
-query "aws_lambda_monthly_forecast_table" {
+query "lambda_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
       select
@@ -429,7 +429,7 @@ query "aws_lambda_monthly_forecast_table" {
     EOQ
 }
 
-query "aws_lambda_function_cost_per_month" {
+query "lambda_function_cost_per_month" {
   sql = <<-EOQ
     select
       to_char(period_start, 'Mon-YY') as "Month",
@@ -447,10 +447,10 @@ query "aws_lambda_function_cost_per_month" {
 
 # Analysis Queries
 
-query "aws_lambda_function_by_account" {
+query "lambda_function_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       count(i.*) as "functions"
     from
       aws_lambda_function as i,
@@ -464,7 +464,7 @@ query "aws_lambda_function_by_account" {
   EOQ
 }
 
-query "aws_lambda_function_by_region" {
+query "lambda_function_by_region" {
   sql = <<-EOQ
     select
       region,
@@ -476,7 +476,7 @@ query "aws_lambda_function_by_region" {
   EOQ
 }
 
-query "aws_lambda_function_by_runtime" {
+query "lambda_function_by_runtime" {
   sql = <<-EOQ
     select
       runtime,
@@ -488,10 +488,10 @@ query "aws_lambda_function_by_runtime" {
   EOQ
 }
 
-query "aws_lambda_function_code_size_by_account" {
+query "lambda_function_code_size_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       round(cast(sum(i.code_size)/1024/1024 as numeric), 1) as "MB"
     from
       aws_lambda_function as i,
@@ -505,7 +505,7 @@ query "aws_lambda_function_code_size_by_account" {
   EOQ
 }
 
-query "aws_lambda_function_code_size_by_region" {
+query "lambda_function_code_size_by_region" {
   sql = <<-EOQ
     select
       region,
@@ -517,7 +517,7 @@ query "aws_lambda_function_code_size_by_region" {
   EOQ
 }
 
-query "aws_lambda_function_code_size_by_runtime" {
+query "lambda_function_code_size_by_runtime" {
   sql = <<-EOQ
     select
       runtime,
@@ -529,10 +529,10 @@ query "aws_lambda_function_code_size_by_runtime" {
   EOQ
 }
 
-query "aws_lambda_function_memory_size_by_account" {
+query "lambda_function_memory_size_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       round(cast(sum(i.memory_size)/1024.0 as numeric), 2) as "GB"
     from
       aws_lambda_function as i,
@@ -546,7 +546,7 @@ query "aws_lambda_function_memory_size_by_account" {
   EOQ
 }
 
-query "aws_lambda_function_memory_size_by_region" {
+query "lambda_function_memory_size_by_region" {
   sql = <<-EOQ
     select
       region,
@@ -558,7 +558,7 @@ query "aws_lambda_function_memory_size_by_region" {
   EOQ
 }
 
-query "aws_lambda_function_memory_size_by_runtime" {
+query "lambda_function_memory_size_by_runtime" {
   sql = <<-EOQ
     select
       runtime,
@@ -572,7 +572,7 @@ query "aws_lambda_function_memory_size_by_runtime" {
 
 # Performance Queries
 
-query "aws_lambda_high_error_rate" {
+query "lambda_high_error_rate" {
   sql = <<-EOQ
     with error_rates as (
       select
@@ -594,7 +594,7 @@ query "aws_lambda_high_error_rate" {
   EOQ
 }
 
-query "aws_lambda_function_invocation_rate" {
+query "lambda_function_invocation_rate" {
   sql = <<-EOQ
     with top_n as (
       select

@@ -1,4 +1,4 @@
-dashboard "aws_rds_db_cluster_encryption_report" {
+dashboard "rds_db_cluster_encryption_report" {
 
   title         = "AWS RDS DB Cluster Encryption Report"
   documentation = file("./dashboards/rds/docs/rds_db_cluster_report_encryption.md")
@@ -11,12 +11,12 @@ dashboard "aws_rds_db_cluster_encryption_report" {
   container {
 
     card {
-      sql   = query.aws_rds_db_cluster_count.sql
+      query = query.rds_db_cluster_count
       width = 2
     }
 
     card {
-      sql = query.aws_rds_db_cluster_unencrypted_count.sql
+      query = query.rds_db_cluster_unencrypted_count
       width = 2
     }
 
@@ -31,12 +31,16 @@ dashboard "aws_rds_db_cluster_encryption_report" {
       display = "none"
     }
 
-    sql = query.aws_rds_db_cluster_encryption_table.sql
+    column "DB Cluster Identifier" {
+      href = "${dashboard.rds_db_cluster_detail.url_path}?input.db_cluster_arn={{.ARN | @uri}}"
+    }
+
+    query = query.rds_db_cluster_encryption_table
   }
 
 }
 
-query "aws_rds_db_cluster_encryption_table" {
+query "rds_db_cluster_encryption_table" {
   sql = <<-EOQ
     select
       c.db_cluster_identifier as "DB Cluster Identifier",

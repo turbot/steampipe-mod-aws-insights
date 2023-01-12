@@ -1,4 +1,4 @@
-dashboard "aws_rds_db_instance_public_access_report" {
+dashboard "rds_db_instance_public_access_report" {
 
   title         = "AWS RDS DB Instance Public Access Report"
   documentation = file("./dashboards/rds/docs/rds_db_instance_report_public_access.md")
@@ -11,12 +11,12 @@ dashboard "aws_rds_db_instance_public_access_report" {
   container {
 
     card {
-      sql   = query.aws_rds_db_instance_count.sql
+      query = query.rds_db_instance_count
       width = 2
     }
 
     card {
-      sql = query.aws_rds_db_instance_public_count.sql
+      query = query.rds_db_instance_public_count
       width = 2
     }
   }
@@ -32,15 +32,15 @@ dashboard "aws_rds_db_instance_public_access_report" {
     }
 
     column "DB Instance Identifier" {
-      href = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn={{.ARN | @uri}}"
+      href = "${dashboard.rds_db_instance_detail.url_path}?input.db_instance_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_rds_db_instance_public_access_table.sql
+    query = query.rds_db_instance_public_access_table
   }
 
 }
 
-query "aws_rds_db_instance_public_access_table" {
+query "rds_db_instance_public_access_table" {
   sql = <<-EOQ
     select
       i.db_instance_identifier as "DB Instance Identifier",

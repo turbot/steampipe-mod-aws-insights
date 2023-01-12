@@ -1,6 +1,6 @@
-dashboard "aws_iam_group_detail" {
+dashboard "iam_group_detail" {
 
-  title = "AWS IAM Group Detail"
+  title         = "AWS IAM Group Detail"
   documentation = file("./dashboards/iam/docs/iam_group_detail.md")
 
 
@@ -10,44 +10,104 @@ dashboard "aws_iam_group_detail" {
 
   input "group_arn" {
     title = "Select a group:"
-    sql   = query.aws_iam_group_input.sql
-    width = 2
+    query = query.iam_group_input
+    width = 4
   }
 
   container {
 
     card {
       width = 2
-      query = query.aws_iam_group_inline_policy_count_for_group
-      args  = {
-        arn = self.input.group_arn.value
-      }
+      query = query.iam_group_inline_policy_count_for_group
+      args  = [self.input.group_arn.value]
     }
 
     card {
       width = 2
-      query = query.aws_iam_group_direct_attached_policy_count_for_group
-      args  = {
-        arn = self.input.group_arn.value
-      }
+      query = query.iam_group_direct_attached_policy_count_for_group
+      args  = [self.input.group_arn.value]
     }
 
+  }
+
+  with "iam_policies_for_iam_group" {
+    query = query.iam_policies_for_iam_group
+    args  = [self.input.group_arn.value]
+  }
+
+  with "iam_users_for_iam_group" {
+    query = query.iam_users_for_iam_group
+    args  = [self.input.group_arn.value]
+  }
+
+  container {
+
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      node {
+        base = node.iam_group
+        args = {
+          iam_group_arns = [self.input.group_arn.value]
+        }
+      }
+
+      node {
+        base = node.iam_group_inline_policy
+        args = {
+          iam_group_arns = [self.input.group_arn.value]
+        }
+      }
+
+      node {
+        base = node.iam_policy
+        args = {
+          iam_policy_arns = with.iam_policies_for_iam_group.rows[*].policy_arn
+        }
+      }
+
+      node {
+        base = node.iam_user
+        args = {
+          iam_user_arns = with.iam_users_for_iam_group.rows[*].user_arn
+        }
+      }
+
+      edge {
+        base = edge.iam_group_to_iam_policy
+        args = {
+          iam_group_arns = [self.input.group_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.iam_group_to_iam_user
+        args = {
+          iam_group_arns = [self.input.group_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.iam_group_to_inline_policy
+        args = {
+          iam_group_arns = [self.input.group_arn.value]
+        }
+      }
+    }
   }
 
   container {
 
     container {
 
-      title = "Overview"
-
       table {
         type  = "line"
+        title = "Overview"
         width = 6
-        query = query.aws_iam_group_overview
-        args  = {
-          arn = self.input.group_arn.value
-        }
-
+        query = query.iam_group_overview
+        args  = [self.input.group_arn.value]
       }
 
     }
@@ -62,30 +122,27 @@ dashboard "aws_iam_group_detail" {
       title = "Users"
       width = 6
       column "User Name" {
-        href = "${dashboard.aws_iam_user_detail.url_path}?input.user_arn={{.'User ARN' | @uri}}"
+        href = "${dashboard.iam_user_detail.url_path}?input.user_arn={{.'User ARN' | @uri}}"
       }
 
-      query = query.aws_iam_users_for_group
-      args  = {
-        arn = self.input.group_arn.value
-      }
+      query = query.iam_users_for_group
+      args  = [self.input.group_arn.value]
 
     }
 
     table {
       title = "Policies"
       width = 6
-      query = query.aws_iam_all_policies_for_group
-      args  = {
-        arn = self.input.group_arn.value
-      }
+      query = query.iam_all_policies_for_group
+      args  = [self.input.group_arn.value]
     }
 
   }
-
 }
 
-query "aws_iam_group_input" {
+# Input queries
+
+query "iam_group_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -100,7 +157,34 @@ query "aws_iam_group_input" {
   EOQ
 }
 
-query "aws_iam_group_inline_policy_count_for_group" {
+# With queries
+
+query "iam_policies_for_iam_group" {
+  sql = <<-EOQ
+    select
+      jsonb_array_elements_text(attached_policy_arns) as policy_arn
+    from
+      aws_iam_group
+    where
+      arn = $1
+  EOQ
+}
+
+query "iam_users_for_iam_group" {
+  sql = <<-EOQ
+    select
+      member ->> 'Arn' as user_arn
+    from
+      aws_iam_group,
+      jsonb_array_elements(users) as member
+    where
+      arn = $1
+  EOQ
+}
+
+# Card queries
+
+query "iam_group_inline_policy_count_for_group" {
   sql = <<-EOQ
     select
       case when inline_policies is null then 0 else jsonb_array_length(inline_policies) end as value,
@@ -111,11 +195,9 @@ query "aws_iam_group_inline_policy_count_for_group" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_iam_group_direct_attached_policy_count_for_group" {
+query "iam_group_direct_attached_policy_count_for_group" {
   sql = <<-EOQ
     select
       case when attached_policy_arns is null then 0 else jsonb_array_length(attached_policy_arns) end as value,
@@ -126,11 +208,11 @@ query "aws_iam_group_direct_attached_policy_count_for_group" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_iam_group_overview" {
+# Other detail page queries
+
+query "iam_group_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -143,11 +225,9 @@ query "aws_iam_group_overview" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_iam_users_for_group" {
+query "iam_users_for_group" {
   sql = <<-EOQ
     select
       u ->> 'UserName' as "User Name",
@@ -159,11 +239,9 @@ query "aws_iam_users_for_group" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_iam_all_policies_for_group" {
+query "iam_all_policies_for_group" {
   sql = <<-EOQ
     -- Policies (attached to groups)
     select
@@ -175,7 +253,6 @@ query "aws_iam_all_policies_for_group" {
       jsonb_array_elements_text(g.attached_policy_arns) as policy_arn
     where
       g.arn = $1
-
     -- Policies (inline from groups)
     union select
       i ->> 'PolicyName' as "Policy",
@@ -187,7 +264,4 @@ query "aws_iam_all_policies_for_group" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }
-

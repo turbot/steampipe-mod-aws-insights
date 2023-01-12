@@ -1,4 +1,4 @@
-dashboard "aws_lambda_function_encryption_report" {
+dashboard "lambda_function_encryption_report" {
 
   title         = "AWS Lambda Function Encryption Report"
   documentation = file("./dashboards/lambda/docs/lambda_function_report_encryption.md")
@@ -11,12 +11,12 @@ dashboard "aws_lambda_function_encryption_report" {
   container {
 
     card {
-      sql   = query.aws_lambda_function_count.sql
+      query = query.lambda_function_count
       width = 2
     }
 
     card {
-      sql = query.aws_lambda_function_unencrypted_count.sql
+      query = query.lambda_function_unencrypted_count
       width = 2
     }
 
@@ -33,15 +33,15 @@ dashboard "aws_lambda_function_encryption_report" {
     }
 
     column "Name" {
-      href = "/aws_insights.dashboard.aws_lambda_function_detail?input.lambda_arn={{.ARN | @uri}}"
+      href = "/aws_insights.dashboard.lambda_function_detail?input.lambda_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_lambda_function_encryption_table.sql
+    query = query.lambda_function_encryption_table
   }
 
 }
 
-query "aws_lambda_function_encryption_table" {
+query "lambda_function_encryption_table" {
   sql = <<-EOQ
     select
       f.name as "Name",

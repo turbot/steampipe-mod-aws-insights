@@ -1,4 +1,4 @@
-dashboard "aws_s3_bucket_logging_report" {
+dashboard "s3_bucket_logging_report" {
 
   title         = "AWS S3 Bucket Logging Report"
   documentation = file("./dashboards/s3/docs/s3_bucket_report_logging.md")
@@ -11,12 +11,12 @@ dashboard "aws_s3_bucket_logging_report" {
   container {
 
     card {
-      sql   = query.aws_s3_bucket_count.sql
+      query = query.s3_bucket_count
       width = 2
     }
 
     card {
-      sql   = query.aws_s3_bucket_logging_disabled_count.sql
+      query = query.s3_bucket_logging_disabled_count
       width = 2
     }
 
@@ -32,15 +32,15 @@ dashboard "aws_s3_bucket_logging_report" {
     }
 
     column "Name" {
-      href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.ARN | @uri}}"
+      href = "${dashboard.s3_bucket_detail.url_path}?input.bucket_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_s3_bucket_logging_table.sql
+    query = query.s3_bucket_logging_table
   }
 
 }
 
-query "aws_s3_bucket_logging_table" {
+query "s3_bucket_logging_table" {
   sql = <<-EOQ
     select
       b.name as "Name",

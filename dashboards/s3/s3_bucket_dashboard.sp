@@ -1,4 +1,4 @@
-dashboard "aws_s3_bucket_dashboard" {
+dashboard "s3_bucket_dashboard" {
 
   title         = "AWS S3 Bucket Dashboard"
   documentation = file("./dashboards/s3/docs/s3_bucket_dashboard.md")
@@ -11,38 +11,38 @@ dashboard "aws_s3_bucket_dashboard" {
 
     # Analysis
     card {
-      sql   = query.aws_s3_bucket_count.sql
+      query = query.s3_bucket_count
       width = 2
     }
 
     # Assessments
     card {
-      sql   = query.aws_s3_bucket_public_block_count.sql
+      query = query.s3_bucket_public_block_count
       width = 2
-      href  = dashboard.aws_s3_bucket_public_access_report.url_path
+      href  = dashboard.s3_bucket_public_access_report.url_path
     }
 
     card {
-      sql   = query.aws_s3_bucket_unencrypted_count.sql
+      query = query.s3_bucket_unencrypted_count
       width = 2
-      href  = dashboard.aws_s3_bucket_encryption_report.url_path
+      href  = dashboard.s3_bucket_encryption_report.url_path
     }
 
     card {
-      sql   = query.aws_s3_bucket_logging_disabled_count.sql
+      query = query.s3_bucket_logging_disabled_count
       width = 2
-      href  = dashboard.aws_s3_bucket_logging_report.url_path
+      href  = dashboard.s3_bucket_logging_report.url_path
     }
 
     card {
-      sql   = query.aws_s3_bucket_versioning_disabled_count.sql
+      query = query.s3_bucket_versioning_disabled_count
       width = 2
-      href  = dashboard.aws_s3_bucket_lifecycle_report.url_path
+      href  = dashboard.s3_bucket_lifecycle_report.url_path
     }
 
     # Costs
     card {
-      sql   = query.aws_s3_bucket_cost_mtd.sql
+      query = query.s3_bucket_cost_mtd
       type  = "info"
       icon  = "currency-dollar"
       width = 2
@@ -55,7 +55,7 @@ dashboard "aws_s3_bucket_dashboard" {
 
     chart {
       title = "Public Access Blocked"
-      sql   = query.aws_s3_bucket_public_access_blocked.sql
+      query = query.s3_bucket_public_access_blocked
       type  = "donut"
       width = 4
 
@@ -71,7 +71,7 @@ dashboard "aws_s3_bucket_dashboard" {
 
     chart {
       title = "Default Encryption Status"
-      sql   = query.aws_s3_bucket_by_default_encryption_status.sql
+      query = query.s3_bucket_by_default_encryption_status
       type  = "donut"
       width = 4
 
@@ -87,7 +87,7 @@ dashboard "aws_s3_bucket_dashboard" {
 
     chart {
       title = "Logging Status"
-      sql   = query.aws_s3_bucket_logging_status.sql
+      query = query.s3_bucket_logging_status
       type  = "donut"
       width = 4
 
@@ -103,7 +103,7 @@ dashboard "aws_s3_bucket_dashboard" {
 
     chart {
       title = "Versioning Status"
-      sql   = query.aws_s3_bucket_versioning_status.sql
+      query = query.s3_bucket_versioning_status
       type  = "donut"
       width = 4
 
@@ -119,7 +119,7 @@ dashboard "aws_s3_bucket_dashboard" {
 
     chart {
       title = "Versioning MFA Status"
-      sql   = query.aws_s3_bucket_versioning_mfa_status.sql
+      query = query.s3_bucket_versioning_mfa_status
       type  = "donut"
       width = 4
 
@@ -135,7 +135,7 @@ dashboard "aws_s3_bucket_dashboard" {
 
     chart {
       title = "Cross-Region Replication"
-      sql   = query.aws_s3_bucket_cross_region_replication_status.sql
+      query = query.s3_bucket_cross_region_replication_status
       type  = "donut"
       width = 4
 
@@ -158,14 +158,14 @@ dashboard "aws_s3_bucket_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      sql   = query.aws_s3_monthly_forecast_table.sql
+      query = query.s3_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      sql   = query.aws_s3_bucket_cost_per_month.sql
+      query = query.s3_bucket_cost_per_month
     }
 
   }
@@ -175,21 +175,21 @@ dashboard "aws_s3_bucket_dashboard" {
 
     chart {
       title = "Buckets by Account"
-      sql   = query.aws_s3_bucket_by_account.sql
+      query = query.s3_bucket_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Buckets by Region"
-      sql   = query.aws_s3_bucket_by_region.sql
+      query = query.s3_bucket_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Buckets by Age"
-      sql   = query.aws_s3_bucket_by_creation_month.sql
+      query = query.s3_bucket_by_creation_month
       type  = "column"
       width = 4
     }
@@ -201,13 +201,13 @@ dashboard "aws_s3_bucket_dashboard" {
 
 # Card Queries
 
-query "aws_s3_bucket_count" {
+query "s3_bucket_count" {
   sql = <<-EOQ
     select count(*) as "Buckets" from aws_s3_bucket;
   EOQ
 }
 
-query "aws_s3_bucket_versioning_disabled_count" {
+query "s3_bucket_versioning_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -220,7 +220,7 @@ query "aws_s3_bucket_versioning_disabled_count" {
   EOQ
 }
 
-query "aws_s3_bucket_unencrypted_count" {
+query "s3_bucket_unencrypted_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -233,7 +233,7 @@ query "aws_s3_bucket_unencrypted_count" {
   EOQ
 }
 
-query "aws_s3_bucket_public_block_count" {
+query "s3_bucket_public_block_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -249,7 +249,7 @@ query "aws_s3_bucket_public_block_count" {
   EOQ
 }
 
-query "aws_s3_bucket_logging_disabled_count" {
+query "s3_bucket_logging_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -262,7 +262,7 @@ query "aws_s3_bucket_logging_disabled_count" {
   EOQ
 }
 
-query "aws_s3_bucket_cost_mtd" {
+query "s3_bucket_cost_mtd" {
   sql = <<-EOQ
         select
           'Cost - MTD' as label,
@@ -277,7 +277,7 @@ query "aws_s3_bucket_cost_mtd" {
 
 # Assessment Queries
 
-query "aws_s3_bucket_versioning_status" {
+query "s3_bucket_versioning_status" {
   sql = <<-EOQ
     with versioning_status as (
       select
@@ -297,7 +297,7 @@ query "aws_s3_bucket_versioning_status" {
   EOQ
 }
 
-query "aws_s3_bucket_by_default_encryption_status" {
+query "s3_bucket_by_default_encryption_status" {
   sql = <<-EOQ
     with default_encryption as (
       select
@@ -316,7 +316,7 @@ query "aws_s3_bucket_by_default_encryption_status" {
   EOQ
 }
 
-query "aws_s3_bucket_public_access_blocked" {
+query "s3_bucket_public_access_blocked" {
   sql = <<-EOQ
     with public_block_status as (
       select
@@ -341,7 +341,7 @@ query "aws_s3_bucket_public_access_blocked" {
   EOQ
 }
 
-query "aws_s3_bucket_logging_status" {
+query "s3_bucket_logging_status" {
   sql = <<-EOQ
     with logging_status as (
       select
@@ -360,7 +360,7 @@ query "aws_s3_bucket_logging_status" {
       EOQ
 }
 
-query "aws_s3_bucket_versioning_mfa_status" {
+query "s3_bucket_versioning_mfa_status" {
   sql = <<-EOQ
     with versioning_mfa_status as (
       select
@@ -380,7 +380,7 @@ query "aws_s3_bucket_versioning_mfa_status" {
   EOQ
 }
 
-query "aws_s3_bucket_cross_region_replication_status" {
+query "s3_bucket_cross_region_replication_status" {
   sql = <<-EOQ
     with bucket_with_replication as (
           select
@@ -410,7 +410,7 @@ query "aws_s3_bucket_cross_region_replication_status" {
 
 # Cost Queries
 
-query "aws_s3_monthly_forecast_table" {
+query "s3_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
       select
@@ -448,7 +448,7 @@ query "aws_s3_monthly_forecast_table" {
   EOQ
 }
 
-query "aws_s3_bucket_cost_per_month" {
+query "s3_bucket_cost_per_month" {
   sql = <<-EOQ
     select
       to_char(period_start, 'Mon-YY') as "Month",
@@ -466,10 +466,10 @@ query "aws_s3_bucket_cost_per_month" {
 
 # Analysis Queries
 
-query "aws_s3_bucket_by_account" {
+query "s3_bucket_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       count(i.*) as "total"
     from
       aws_s3_bucket as i,
@@ -482,7 +482,7 @@ query "aws_s3_bucket_by_account" {
   EOQ
 }
 
-query "aws_s3_bucket_by_region" {
+query "s3_bucket_by_region" {
   sql = <<-EOQ
     select
       region,
@@ -494,9 +494,9 @@ query "aws_s3_bucket_by_region" {
   EOQ
 }
 
-query "aws_s3_bucket_by_creation_month" {
+query "s3_bucket_by_creation_month" {
   sql = <<-EOQ
-    with buckets as (
+    with s3_buckets as (
       select
         title,
         creation_date,
@@ -514,7 +514,7 @@ query "aws_s3_bucket_by_creation_month" {
             (
               select
                 min(creation_date)
-                from buckets)),
+                from s3_buckets)),
             date_trunc('month',
               current_date),
             interval '1 month') as d
@@ -524,7 +524,7 @@ query "aws_s3_bucket_by_creation_month" {
         creation_month,
         count(*)
       from
-        buckets
+        s3_buckets
       group by
         creation_month
     )

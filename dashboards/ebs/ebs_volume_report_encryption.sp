@@ -1,4 +1,4 @@
-dashboard "aws_ebs_volume_encryption_report" {
+dashboard "ebs_volume_encryption_report" {
 
   title         = "AWS EBS Volume Encryption Report"
   documentation = file("./dashboards/ebs/docs/ebs_volume_report_encryption.md")
@@ -11,12 +11,12 @@ dashboard "aws_ebs_volume_encryption_report" {
   container {
 
     card {
-      sql   = query.aws_ebs_volume_count.sql
+      query = query.ebs_volume_count
       width = 2
     }
 
     card {
-      sql   = query.aws_ebs_volume_unencrypted_count.sql
+      query = query.ebs_volume_unencrypted_count
       width = 2
     }
 
@@ -32,15 +32,15 @@ dashboard "aws_ebs_volume_encryption_report" {
     }
 
     column "Volume ID" {
-      href = "${dashboard.aws_ebs_volume_detail.url_path}?input.volume_arn={{.ARN | @uri}}"
+      href = "${dashboard.ebs_volume_detail.url_path}?input.volume_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_ebs_volume_encryption_table.sql
+    query = query.ebs_volume_encryption_table
   }
 
 }
 
-query "aws_ebs_volume_encryption_table" {
+query "ebs_volume_encryption_table" {
   sql = <<-EOQ
     select
       v.volume_id as "Volume ID",

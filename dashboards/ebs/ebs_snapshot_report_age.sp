@@ -1,4 +1,4 @@
-dashboard "aws_ebs_snapshot_age_report" {
+dashboard "ebs_snapshot_age_report" {
 
   title         = "AWS EBS Snapshot Age Report"
   documentation = file("./dashboards/ebs/docs/ebs_snapshot_report_age.md")
@@ -11,38 +11,38 @@ dashboard "aws_ebs_snapshot_age_report" {
   container {
 
     card {
-      sql   = query.aws_ebs_snapshot_count.sql
+      query = query.ebs_snapshot_count
       width = 2
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_ebs_snapshot_24_hours_count.sql
+      query = query.ebs_snapshot_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_ebs_snapshot_30_days_count.sql
+      query = query.ebs_snapshot_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_ebs_snapshot_30_90_days_count.sql
+      query = query.ebs_snapshot_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_ebs_snapshot_90_365_days_count.sql
+      query = query.ebs_snapshot_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_ebs_snapshot_1_year_count.sql
+      query = query.ebs_snapshot_1_year_count
     }
 
   }
@@ -56,13 +56,17 @@ dashboard "aws_ebs_snapshot_age_report" {
       display = "none"
     }
 
-    sql = query.aws_ebs_snapshot_age_table.sql
+    column "Snapshot ID" {
+      href = "${dashboard.ebs_snapshot_detail.url_path}?input.ebs_snapshot_id={{.'Snapshot ID' | @uri}}"
+    }
+
+    query = query.ebs_snapshot_age_table
   }
 
 }
 
-query "aws_ebs_snapshot_24_hours_count" {
-  sql   = <<-EOQ
+query "ebs_snapshot_24_hours_count" {
+  sql = <<-EOQ
     select
       count(*) as value,
       '< 24 hours' as label
@@ -73,8 +77,8 @@ query "aws_ebs_snapshot_24_hours_count" {
   EOQ
 }
 
-query "aws_ebs_snapshot_30_days_count" {
-  sql   = <<-EOQ
+query "ebs_snapshot_30_days_count" {
+  sql = <<-EOQ
     select
       count(*) as value,
       '1-30 Days' as label
@@ -85,8 +89,8 @@ query "aws_ebs_snapshot_30_days_count" {
   EOQ
 }
 
-query "aws_ebs_snapshot_30_90_days_count" {
-  sql   = <<-EOQ
+query "ebs_snapshot_30_90_days_count" {
+  sql = <<-EOQ
     select
       count(*) as value,
       '30-90 Days' as label
@@ -97,8 +101,8 @@ query "aws_ebs_snapshot_30_90_days_count" {
   EOQ
 }
 
-query "aws_ebs_snapshot_90_365_days_count" {
-  sql   = <<-EOQ
+query "ebs_snapshot_90_365_days_count" {
+  sql = <<-EOQ
     select
       count(*) as value,
       '90-365 Days' as label
@@ -109,8 +113,8 @@ query "aws_ebs_snapshot_90_365_days_count" {
   EOQ
 }
 
-query "aws_ebs_snapshot_1_year_count" {
-  sql   = <<-EOQ
+query "ebs_snapshot_1_year_count" {
+  sql = <<-EOQ
     select
       count(*) as value,
       '> 1 Year' as label
@@ -121,7 +125,7 @@ query "aws_ebs_snapshot_1_year_count" {
   EOQ
 }
 
-query "aws_ebs_snapshot_age_table" {
+query "ebs_snapshot_age_table" {
   sql = <<-EOQ
     select
       s.snapshot_id as "Snapshot ID",

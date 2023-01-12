@@ -5,3 +5,4 @@ This dashboard answers the following questions for each snapshot:
 - What is the storage configuration of the snapshot?
 - What is the status of the snapshot?
 - How is encryption configured?
+- What relationships does the instance snapshot have with other resources?

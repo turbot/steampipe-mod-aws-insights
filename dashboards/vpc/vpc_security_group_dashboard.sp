@@ -1,6 +1,6 @@
-dashboard "aws_vpc_security_group_dashboard" {
+dashboard "vpc_security_group_dashboard" {
 
-  title = "AWS VPC Security Group Dashboard"
+  title         = "AWS VPC Security Group Dashboard"
   documentation = file("./dashboards/vpc/docs/vpc_security_group_dashboard.md")
 
   tags = merge(local.vpc_common_tags, {
@@ -10,23 +10,23 @@ dashboard "aws_vpc_security_group_dashboard" {
   container {
 
     card {
-      sql = query.aws_vpc_security_group_count.sql
+      query = query.vpc_security_group_count
       width = 2
     }
 
     card {
-      sql = query.aws_vpc_security_group_unassociated_count.sql
+      query = query.vpc_security_group_unassociated_count
       width = 2
     }
 
     card {
-      sql = query.aws_vpc_security_unrestricted_ingress_count.sql
+      query = query.vpc_security_unrestricted_ingress_count
       width = 2
     }
 
 
     card {
-      sql = query.aws_vpc_security_unrestricted_egress_count.sql
+      query = query.vpc_security_unrestricted_egress_count
       width = 2
     }
 
@@ -40,7 +40,7 @@ dashboard "aws_vpc_security_group_dashboard" {
       title = "Association Status"
       type  = "donut"
       width = 3
-      sql   = query.aws_vpc_security_group_unassociated_status.sql
+      query = query.vpc_security_group_unassociated_status
 
       series "count" {
         point "associated" {
@@ -56,7 +56,7 @@ dashboard "aws_vpc_security_group_dashboard" {
       title = "With Unrestricted Ingress (Excludes ICMP)"
       type  = "donut"
       width = 3
-      sql   = query.aws_vpc_security_group_unrestricted_ingress_status.sql
+      query = query.vpc_security_group_unrestricted_ingress_status
 
       series "count" {
         point "restricted" {
@@ -72,7 +72,7 @@ dashboard "aws_vpc_security_group_dashboard" {
       title = "With Unrestricted Egress (Excludes ICMP)"
       type  = "donut"
       width = 3
-      sql   = query.aws_vpc_security_group_unrestricted_egress_status.sql
+      query = query.vpc_security_group_unrestricted_egress_status
 
       series "count" {
         point "restricted" {
@@ -88,7 +88,7 @@ dashboard "aws_vpc_security_group_dashboard" {
       title = "Default Security Group"
       type  = "donut"
       width = 3
-      sql   = query.aws_vpc_default_security_group_status.sql
+      query = query.vpc_default_security_group_status
 
       series "count" {
         point "default" {
@@ -108,21 +108,21 @@ dashboard "aws_vpc_security_group_dashboard" {
 
     chart {
       title = "Security Groups by Account"
-      sql   = query.aws_vpc_security_group_by_acount.sql
+      query = query.vpc_security_group_by_acount
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Security Groups by Region"
-      sql = query.aws_vpc_security_group_by_region.sql
+      query = query.vpc_security_group_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Security Groups by VPC"
-      sql = query.aws_vpc_security_group_by_vpc.sql
+      query = query.vpc_security_group_by_vpc
       type  = "column"
       width = 4
     }
@@ -133,13 +133,13 @@ dashboard "aws_vpc_security_group_dashboard" {
 
 # Card Queries
 
-query "aws_vpc_security_group_count" {
+query "vpc_security_group_count" {
   sql = <<-EOQ
     select count(*) as "Security Groups" from aws_vpc_security_group;
   EOQ
 }
 
-query "aws_vpc_security_group_unassociated_count" {
+query "vpc_security_group_unassociated_count" {
   sql = <<-EOQ
     with associated_sg as (
       select
@@ -161,7 +161,7 @@ query "aws_vpc_security_group_unassociated_count" {
   EOQ
 }
 
-query "aws_vpc_security_unrestricted_ingress_count" {
+query "vpc_security_unrestricted_ingress_count" {
   sql = <<-EOQ
     with ingress_sg as (
       select
@@ -192,7 +192,7 @@ query "aws_vpc_security_unrestricted_ingress_count" {
   EOQ
 }
 
-query "aws_vpc_security_unrestricted_egress_count" {
+query "vpc_security_unrestricted_egress_count" {
   sql = <<-EOQ
     with egress_sg as (
       select
@@ -225,7 +225,7 @@ query "aws_vpc_security_unrestricted_egress_count" {
 
 # Assessment Queries
 
-query "aws_vpc_security_group_unassociated_status" {
+query "vpc_security_group_unassociated_status" {
   sql = <<-EOQ
     with associated_sg as (
       select
@@ -259,7 +259,7 @@ query "aws_vpc_security_group_unassociated_status" {
 }
 
 
-query "aws_vpc_security_group_unrestricted_ingress_status" {
+query "vpc_security_group_unrestricted_ingress_status" {
   sql = <<-EOQ
     with ingress_sg as (
       select
@@ -287,7 +287,7 @@ query "aws_vpc_security_group_unrestricted_ingress_status" {
   EOQ
 }
 
-query "aws_vpc_security_group_unrestricted_egress_status" {
+query "vpc_security_group_unrestricted_egress_status" {
   sql = <<-EOQ
     with egress_sg as (
       select
@@ -315,7 +315,7 @@ query "aws_vpc_security_group_unrestricted_egress_status" {
   EOQ
 }
 
-query "aws_vpc_default_security_group_status" {
+query "vpc_default_security_group_status" {
   sql = <<-EOQ
     with default_sg as (
       select
@@ -338,10 +338,10 @@ query "aws_vpc_default_security_group_status" {
 
 # Analysis Queries
 
-query "aws_vpc_security_group_by_acount" {
+query "vpc_security_group_by_acount" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       count(s.*) as "security_groups"
     from
       aws_vpc_security_group as s,
@@ -355,7 +355,7 @@ query "aws_vpc_security_group_by_acount" {
   EOQ
 }
 
-query "aws_vpc_security_group_by_region" {
+query "vpc_security_group_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
@@ -369,7 +369,7 @@ query "aws_vpc_security_group_by_region" {
   EOQ
 }
 
-query "aws_vpc_security_group_by_vpc" {
+query "vpc_security_group_by_vpc" {
   sql = <<-EOQ
     select
       vpc_id as "VPC",

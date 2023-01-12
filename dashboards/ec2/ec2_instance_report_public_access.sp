@@ -1,4 +1,4 @@
-dashboard "aws_ec2_instance_public_access_report" {
+dashboard "ec2_instance_public_access_report" {
 
   title         = "AWS EC2 Instance Public Access Report"
   documentation = file("./dashboards/ec2/docs/ec2_instance_report_public_access.md")
@@ -11,12 +11,12 @@ dashboard "aws_ec2_instance_public_access_report" {
   container {
 
     card {
-      sql   = query.aws_ec2_instance_count.sql
+      query = query.ec2_instance_count
       width = 2
     }
 
     card {
-      sql   = query.aws_ec2_instance_public_access_count.sql
+      query = query.ec2_instance_public_access_count
       width = 2
     }
 
@@ -32,15 +32,15 @@ dashboard "aws_ec2_instance_public_access_report" {
     }
 
     column "Instance ID" {
-      href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.ARN | @uri}}"
+      href = "${dashboard.ec2_instance_detail.url_path}?input.instance_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_ec2_instance_public_access_table.sql
+    query = query.ec2_instance_public_access_table
   }
 
 }
 
-query "aws_ec2_instance_public_access_count" {
+query "ec2_instance_public_access_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -53,7 +53,7 @@ query "aws_ec2_instance_public_access_count" {
   EOQ
 }
 
-query "aws_ec2_instance_public_access_table" {
+query "ec2_instance_public_access_table" {
   sql = <<-EOQ
     select
       i.instance_id as "Instance ID",

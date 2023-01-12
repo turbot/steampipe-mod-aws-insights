@@ -1,6 +1,6 @@
-dashboard "aws_iam_user_detail" {
+dashboard "iam_user_detail" {
 
-  title = "AWS IAM User Detail"
+  title         = "AWS IAM User Detail"
   documentation = file("./dashboards/iam/docs/iam_user_detail.md")
 
   tags = merge(local.iam_common_tags, {
@@ -9,7 +9,7 @@ dashboard "aws_iam_user_detail" {
 
   input "user_arn" {
     title = "Select a user:"
-    sql   = query.aws_iam_user_input.sql
+    sql   = query.iam_user_input.sql
     width = 4
   }
 
@@ -17,36 +17,111 @@ dashboard "aws_iam_user_detail" {
 
     card {
       width = 2
-      query = query.aws_iam_user_mfa_for_user
-      args  = {
-        arn = self.input.user_arn.value
-      }
+      query = query.iam_user_mfa_for_user
+      args  = [self.input.user_arn.value]
     }
 
     card {
       width = 2
-      query = query.aws_iam_boundary_policy_for_user
-      args  = {
-        arn = self.input.user_arn.value
-      }
+      query = query.iam_boundary_policy_for_user
+      args  = [self.input.user_arn.value]
     }
 
     card {
       width = 2
-      query = query.aws_iam_user_inline_policy_count_for_user
-      args  = {
-        arn = self.input.user_arn.value
-      }
+      query = query.iam_user_inline_policy_count_for_user
+      args  = [self.input.user_arn.value]
     }
 
     card {
       width = 2
-      query = query.aws_iam_user_direct_attached_policy_count_for_user
-      args  = {
-        arn = self.input.user_arn.value
-      }
+      query = query.iam_user_direct_attached_policy_count_for_user
+      args  = [self.input.user_arn.value]
     }
 
+  }
+
+  with "iam_groups_for_iam_user" {
+    query = query.iam_groups_for_iam_user
+    args  = [self.input.user_arn.value]
+  }
+
+  with "iam_policies_for_iam_user" {
+    query = query.iam_policies_for_iam_user
+    args  = [self.input.user_arn.value]
+  }
+
+
+  container {
+
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      node {
+        base = node.iam_group
+        args = {
+          iam_group_arns = with.iam_groups_for_iam_user.rows[*].group_arn
+        }
+      }
+
+      node {
+        base = node.iam_policy
+        args = {
+          iam_policy_arns = with.iam_policies_for_iam_user.rows[*].policy_arn
+        }
+      }
+
+      node {
+        base = node.iam_user
+        args = {
+          iam_user_arns = [self.input.user_arn.value]
+        }
+      }
+
+      node {
+        base = node.iam_user_access_key
+        args = {
+          iam_user_arns = [self.input.user_arn.value]
+        }
+      }
+
+      node {
+        base = node.iam_user_inline_policy
+        args = {
+          iam_user_arns = [self.input.user_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.iam_group_to_iam_user
+        args = {
+          iam_group_arns = with.iam_groups_for_iam_user.rows[*].group_arn
+        }
+      }
+
+      edge {
+        base = edge.iam_user_to_iam_access_key
+        args = {
+          iam_user_arns = [self.input.user_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.iam_user_to_iam_policy
+        args = {
+          iam_user_arns = [self.input.user_arn.value]
+        }
+      }
+
+      edge {
+        base = edge.iam_user_to_inline_policy
+        args = {
+          iam_user_arns = [self.input.user_arn.value]
+        }
+      }
+    }
   }
 
   container {
@@ -59,19 +134,15 @@ dashboard "aws_iam_user_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_iam_user_overview
-        args  = {
-          arn = self.input.user_arn.value
-        }
+        query = query.iam_user_overview
+        args  = [self.input.user_arn.value]
       }
 
       table {
         title = "Tags"
         width = 6
-        query = query.aws_iam_user_tags
-        args  = {
-          arn = self.input.user_arn.value
-        }
+        query = query.iam_user_tags
+        args  = [self.input.user_arn.value]
       }
 
     }
@@ -82,26 +153,20 @@ dashboard "aws_iam_user_detail" {
 
       table {
         title = "Console Password"
-        query = query.aws_iam_user_console_password
-        args  = {
-          arn = self.input.user_arn.value
-        }
+        query = query.iam_user_console_password
+        args  = [self.input.user_arn.value]
       }
 
       table {
         title = "Access Keys"
-        query = query.aws_iam_user_access_keys
-        args  = {
-          arn = self.input.user_arn.value
-        }
+        query = query.iam_user_access_keys
+        args  = [self.input.user_arn.value]
       }
 
       table {
         title = "MFA Devices"
-        query = query.aws_iam_user_mfa_devices
-        args  = {
-          arn = self.input.user_arn.value
-        }
+        query = query.iam_user_mfa_devices
+        args  = [self.input.user_arn.value]
       }
 
     }
@@ -115,12 +180,10 @@ dashboard "aws_iam_user_detail" {
     flow {
       type  = "sankey"
       title = "Attached Policies"
-      query = query.aws_iam_user_manage_policies_sankey
-      args  = {
-        arn = self.input.user_arn.value
-      }
+      query = query.iam_user_manage_policies_sankey
+      args  = [self.input.user_arn.value]
 
-      category "aws_iam_group" {
+      category "iam_group" {
         color = "ok"
       }
     }
@@ -128,15 +191,13 @@ dashboard "aws_iam_user_detail" {
     table {
       title = "Groups"
       width = 6
-      query = query.aws_iam_groups_for_user
-      args  = {
-        arn = self.input.user_arn.value
-      }
+      query = query.iam_groups_for_user
+      args  = [self.input.user_arn.value]
 
       column "Name" {
         // cyclic dependency prevents use of url_path, hardcode for now
-        //href = "${dashboard.aws_iam_group_detail.url_path}?input.group_arn={{.'ARN' | @uri}}"
-        href = "/aws_insights.dashboard.aws_iam_group_detail?input.group_arn={{.ARN | @uri}}"
+        //href = "${dashboard.iam_group_detail.url_path}?input.group_arn={{.'ARN' | @uri}}"
+        href = "/aws_insights.dashboard.iam_group_detail?input.group_arn={{.ARN | @uri}}"
 
       }
     }
@@ -144,17 +205,17 @@ dashboard "aws_iam_user_detail" {
     table {
       title = "Policies"
       width = 6
-      query = query.aws_iam_all_policies_for_user
-      args  = {
-        arn = self.input.user_arn.value
-      }
+      query = query.iam_all_policies_for_user
+      args  = [self.input.user_arn.value]
     }
 
   }
 
 }
 
-query "aws_iam_user_input" {
+# Input queries
+
+query "iam_user_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -169,7 +230,34 @@ query "aws_iam_user_input" {
   EOQ
 }
 
-query "aws_iam_user_mfa_for_user" {
+# With queries
+
+query "iam_groups_for_iam_user" {
+  sql = <<-EOQ
+    select
+      g ->> 'Arn' as group_arn
+    from
+      aws_iam_user,
+      jsonb_array_elements(groups) as g
+    where
+      arn = $1
+  EOQ
+}
+
+query "iam_policies_for_iam_user" {
+  sql = <<-EOQ
+    select
+      jsonb_array_elements_text(attached_policy_arns) as policy_arn
+    from
+      aws_iam_user
+    where
+      arn = $1
+  EOQ
+}
+
+# Card queries
+
+query "iam_user_mfa_for_user" {
   sql = <<-EOQ
     select
       case when mfa_enabled then 'Enabled' else 'Disabled' end as value,
@@ -180,11 +268,9 @@ query "aws_iam_user_mfa_for_user" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_iam_boundary_policy_for_user" {
+query "iam_boundary_policy_for_user" {
   sql = <<-EOQ
     select
       case
@@ -204,11 +290,9 @@ query "aws_iam_boundary_policy_for_user" {
       arn = $1
   EOQ
 
-  param "arn" {}
-
 }
 
-query "aws_iam_user_inline_policy_count_for_user" {
+query "iam_user_inline_policy_count_for_user" {
   sql = <<-EOQ
     select
       coalesce(jsonb_array_length(inline_policies),0) as value,
@@ -219,11 +303,9 @@ query "aws_iam_user_inline_policy_count_for_user" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_iam_user_direct_attached_policy_count_for_user" {
+query "iam_user_direct_attached_policy_count_for_user" {
   sql = <<-EOQ
     select
       coalesce(jsonb_array_length(attached_policy_arns), 0) as value,
@@ -234,11 +316,11 @@ query "aws_iam_user_direct_attached_policy_count_for_user" {
     where
      arn = $1
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_iam_user_overview" {
+# Other detail page queries
+
+query "iam_user_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -252,11 +334,9 @@ query "aws_iam_user_overview" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_iam_user_tags" {
+query "iam_user_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -269,11 +349,9 @@ query "aws_iam_user_tags" {
     order by
       tag ->> 'Key'
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_iam_user_console_password" {
+query "iam_user_console_password" {
   sql = <<-EOQ
     select
       password_last_used as "Password Last Used",
@@ -283,11 +361,9 @@ query "aws_iam_user_console_password" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_iam_user_access_keys" {
+query "iam_user_access_keys" {
   sql = <<-EOQ
     select
       access_key_id as "Access Key ID",
@@ -298,11 +374,9 @@ query "aws_iam_user_access_keys" {
     where
       u.arn = $1
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_iam_user_mfa_devices" {
+query "iam_user_mfa_devices" {
   sql = <<-EOQ
     select
       mfa ->> 'SerialNumber' as "Serial Number",
@@ -314,17 +388,13 @@ query "aws_iam_user_mfa_devices" {
     where
       arn = $1
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_iam_user_manage_policies_sankey" {
+query "iam_user_manage_policies_sankey" {
   sql = <<-EOQ
-
     with args as (
         select $1 as iam_user_arn
     )
-
     -- User
     select
       null as from_id,
@@ -336,7 +406,6 @@ query "aws_iam_user_manage_policies_sankey" {
       aws_iam_user
     where
       arn in (select iam_user_arn from args)
-
     -- Groups
     union select
       u.arn as from_id,
@@ -349,7 +418,6 @@ query "aws_iam_user_manage_policies_sankey" {
       jsonb_array_elements(groups) as g
     where
       u.arn in (select iam_user_arn from args)
-
     -- Policies (attached to groups)
     union select
       g.arn as from_id,
@@ -365,7 +433,6 @@ query "aws_iam_user_manage_policies_sankey" {
     where
       g.attached_policy_arns :: jsonb ? p.arn
       and u.arn in (select iam_user_arn from args)
-
     -- Policies (inline from groups)
     union select
       grp.arn as from_id,
@@ -381,7 +448,6 @@ query "aws_iam_user_manage_policies_sankey" {
     where
       grp.arn = g ->> 'Arn'
       and u.arn in (select iam_user_arn from args)
-
     -- Policies (attached to user)
     union select
       u.arn as from_id,
@@ -397,7 +463,6 @@ query "aws_iam_user_manage_policies_sankey" {
       u.attached_policy_arns :: jsonb ? p.arn
       and pol_arn = p.arn
       and u.arn in (select iam_user_arn from args)
-
     -- Inline Policies (defined on user)
     union select
       u.arn as from_id,
@@ -411,12 +476,10 @@ query "aws_iam_user_manage_policies_sankey" {
     where
       u.arn in (select iam_user_arn from args)
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_iam_groups_for_user" {
-  sql   = <<-EOQ
+query "iam_groups_for_user" {
+  sql = <<-EOQ
     select
       g ->> 'GroupName' as "Name",
       g ->> 'Arn' as "ARN"
@@ -426,13 +489,10 @@ query "aws_iam_groups_for_user" {
     where
       u.arn = $1
   EOQ
-
-  param "arn" {}
 }
 
-query "aws_iam_all_policies_for_user" {
+query "iam_all_policies_for_user" {
   sql = <<-EOQ
-
     -- Policies (attached to groups)
     select
       p.title as "Policy",
@@ -446,7 +506,6 @@ query "aws_iam_all_policies_for_user" {
     where
       g.attached_policy_arns :: jsonb ? p.arn
       and u.arn = $1
-
     -- Policies (inline from groups)
     union select
       i ->> 'PolicyName' as "Policy",
@@ -460,7 +519,6 @@ query "aws_iam_all_policies_for_user" {
     where
       grp.arn = g ->> 'Arn'
       and u.arn = $1
-
     -- Policies (attached to user)
     union select
       p.title as "Policy",
@@ -474,7 +532,6 @@ query "aws_iam_all_policies_for_user" {
       u.attached_policy_arns :: jsonb ? p.arn
       and pol_arn = p.arn
       and u.arn = $1
-
     -- Inline Policies (defined on user)
     union select
       i ->> 'PolicyName' as "Policy",
@@ -486,6 +543,6 @@ query "aws_iam_all_policies_for_user" {
     where
       u.arn = $1
   EOQ
-
-  param "arn" {}
 }
+
+

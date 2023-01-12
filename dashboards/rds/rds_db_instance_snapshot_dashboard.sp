@@ -1,4 +1,4 @@
-dashboard "aws_rds_db_instance_snapshot_dashboard" {
+dashboard "rds_db_instance_snapshot_dashboard" {
 
   title         = "AWS RDS DB Instance Snapshot Dashboard"
   documentation = file("./dashboards/rds/docs/rds_db_instance_snapshot_dashboard.md")
@@ -11,15 +11,15 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
 
     # Analysis
     card {
-      sql   = query.aws_rds_db_instance_snapshot_count.sql
+      query = query.rds_db_instance_snapshot_count
       width = 2
     }
 
     # Assessments
     card {
-      sql   = query.aws_rds_db_instance_snapshot_unencrypted_count.sql
+      query = query.rds_db_instance_snapshot_unencrypted_count
       width = 2
-      href  = dashboard.aws_rds_db_instace_snapshot_encryption_report.url_path
+      href  = dashboard.rds_db_instace_snapshot_encryption_report.url_path
     }
 
     # Costs
@@ -27,7 +27,7 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
       type  = "info"
       icon  = "currency-dollar"
       width = 2
-      sql   = query.aws_rds_db_instance_snapshot_cost_mtd.sql
+      query = query.rds_db_instance_snapshot_cost_mtd
     }
 
   }
@@ -39,7 +39,7 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
 
     chart {
       title = "Encryption Status"
-      sql   = query.aws_rds_db_instance_snapshot_by_encryption_status.sql
+      query = query.rds_db_instance_snapshot_by_encryption_status
       type  = "donut"
       width = 4
 
@@ -55,7 +55,7 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
 
     chart {
       title = "IAM Authentication Status"
-      sql   = query.aws_rds_db_instance_snapshot_iam_authentication_enabled.sql
+      query = query.rds_db_instance_snapshot_iam_authentication_enabled
       type  = "donut"
       width = 4
 
@@ -76,17 +76,17 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
     title = "Cost"
     width = 6
 
-    table  {
+    table {
       width = 6
       title = "Forecast"
-      sql   = query.aws_rds_db_instance_snapshot_monthly_forecast_table.sql
+      query = query.rds_db_instance_snapshot_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      sql   = query.aws_rds_db_instance_snapshot_cost_per_month.sql
+      query = query.rds_db_instance_snapshot_cost_per_month
     }
 
   }
@@ -97,35 +97,35 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
 
     chart {
       title = "Snapshots by Account"
-      sql   = query.aws_rds_db_instance_snapshot_by_account.sql
+      query = query.rds_db_instance_snapshot_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Snapshots by Region"
-      sql   = query.aws_rds_db_instance_snapshot_by_region.sql
+      query = query.rds_db_instance_snapshot_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Snapshots by State"
-      sql   = query.aws_rds_db_instance_snapshot_by_state.sql
+      query = query.rds_db_instance_snapshot_by_state
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Snapshots by Age"
-      sql   = query.aws_rds_db_instance_snapshot_by_creation_month.sql
+      query = query.rds_db_instance_snapshot_by_creation_month
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Snapshots by Engine Type"
-      sql   = query.aws_rds_db_instance_snapshot_by_engine_type.sql
+      query = query.rds_db_instance_snapshot_by_engine_type
       type  = "column"
       width = 4
     }
@@ -136,13 +136,13 @@ dashboard "aws_rds_db_instance_snapshot_dashboard" {
 
 # Card Queries
 
-query "aws_rds_db_instance_snapshot_count" {
+query "rds_db_instance_snapshot_count" {
   sql = <<-EOQ
     select count(*) as "RDS DB Instance Snapshots" from aws_rds_db_snapshot;
   EOQ
 }
 
-query "aws_rds_db_instance_snapshot_unencrypted_count" {
+query "rds_db_instance_snapshot_unencrypted_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -155,7 +155,7 @@ query "aws_rds_db_instance_snapshot_unencrypted_count" {
   EOQ
 }
 
-query "aws_rds_db_instance_snapshot_cost_mtd" {
+query "rds_db_instance_snapshot_cost_mtd" {
   sql = <<-EOQ
     select
       'Cost - MTD' as label,
@@ -170,7 +170,7 @@ query "aws_rds_db_instance_snapshot_cost_mtd" {
 
 # Assessment Queries
 
-query "aws_rds_db_instance_snapshot_by_encryption_status" {
+query "rds_db_instance_snapshot_by_encryption_status" {
   sql = <<-EOQ
     select
       encryption_status,
@@ -191,7 +191,7 @@ query "aws_rds_db_instance_snapshot_by_encryption_status" {
   EOQ
 }
 
-query "aws_rds_db_instance_snapshot_iam_authentication_enabled" {
+query "rds_db_instance_snapshot_iam_authentication_enabled" {
   sql = <<-EOQ
     with iam_authentication_enabled as (
       select
@@ -223,7 +223,7 @@ query "aws_rds_db_instance_snapshot_iam_authentication_enabled" {
 
 # Cost Queries
 
-query "aws_rds_db_instance_snapshot_monthly_forecast_table" {
+query "rds_db_instance_snapshot_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
       select
@@ -263,7 +263,7 @@ query "aws_rds_db_instance_snapshot_monthly_forecast_table" {
   EOQ
 }
 
-query "aws_rds_db_instance_snapshot_cost_per_month" {
+query "rds_db_instance_snapshot_cost_per_month" {
   sql = <<-EOQ
     select
       to_char(period_start, 'Mon-YY') as "Month",
@@ -281,10 +281,10 @@ query "aws_rds_db_instance_snapshot_cost_per_month" {
 
 # Analysis Queries
 
-query "aws_rds_db_instance_snapshot_by_account" {
+query "rds_db_instance_snapshot_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       count(i.*) as "total"
     from
       aws_rds_db_snapshot as i,
@@ -297,7 +297,7 @@ query "aws_rds_db_instance_snapshot_by_account" {
   EOQ
 }
 
-query "aws_rds_db_instance_snapshot_by_region" {
+query "rds_db_instance_snapshot_by_region" {
   sql = <<-EOQ
     select
       region,
@@ -309,7 +309,7 @@ query "aws_rds_db_instance_snapshot_by_region" {
   EOQ
 }
 
-query "aws_rds_db_instance_snapshot_by_state" {
+query "rds_db_instance_snapshot_by_state" {
   sql = <<-EOQ
     select
       status,
@@ -321,7 +321,7 @@ query "aws_rds_db_instance_snapshot_by_state" {
   EOQ
 }
 
-query "aws_rds_db_instance_snapshot_by_creation_month" {
+query "rds_db_instance_snapshot_by_creation_month" {
   sql = <<-EOQ
     with snapshots as (
       select
@@ -366,7 +366,7 @@ query "aws_rds_db_instance_snapshot_by_creation_month" {
   EOQ
 }
 
-query "aws_rds_db_instance_snapshot_by_engine_type" {
+query "rds_db_instance_snapshot_by_engine_type" {
   sql = <<-EOQ
     select engine as "Engine Type", count(*) as "Instance Snapshots" from aws_rds_db_snapshot group by engine order by engine;
   EOQ

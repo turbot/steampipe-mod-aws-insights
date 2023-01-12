@@ -1,4 +1,4 @@
-dashboard "aws_ebs_snapshot_dashboard" {
+dashboard "ebs_snapshot_dashboard" {
 
   title         = "AWS EBS Snapshot Dashboard"
   documentation = file("./dashboards/ebs/docs/ebs_snapshot_dashboard.md")
@@ -10,24 +10,24 @@ dashboard "aws_ebs_snapshot_dashboard" {
   container {
 
     card {
-      sql   = query.aws_ebs_snapshot_count.sql
+      query = query.ebs_snapshot_count
       width = 2
     }
 
     card {
-      sql   = query.aws_ebs_snapshot_storage_total.sql
+      query = query.ebs_snapshot_storage_total
       width = 2
     }
 
     card {
-      sql   = query.aws_ebs_unencrypted_snapshot_count.sql
+      query = query.ebs_unencrypted_snapshot_count
       width = 2
     }
 
     card {
-      sql   = query.aws_ebs_snapshot_public_count.sql
+      query = query.ebs_snapshot_public_count
       width = 2
-      href  = dashboard.aws_ebs_snapshot_public_access_report.url_path
+      href  = dashboard.ebs_snapshot_public_access_report.url_path
     }
 
     # Costs
@@ -35,7 +35,7 @@ dashboard "aws_ebs_snapshot_dashboard" {
       type  = "info"
       icon  = "currency-dollar"
       width = 2
-      sql   = query.aws_ebs_snapshot_cost_mtd.sql
+      query = query.ebs_snapshot_cost_mtd
     }
 
   }
@@ -47,7 +47,7 @@ dashboard "aws_ebs_snapshot_dashboard" {
 
     chart {
       title = "Encryption Status"
-      sql   = query.aws_ebs_snapshot_by_encryption_status.sql
+      query = query.ebs_snapshot_by_encryption_status
       type  = "donut"
       width = 4
 
@@ -63,7 +63,7 @@ dashboard "aws_ebs_snapshot_dashboard" {
 
     chart {
       title = "Public/Private"
-      sql   = query.aws_ebs_snapshot_by_public_status.sql
+      query = query.ebs_snapshot_by_public_status
       type  = "donut"
       width = 4
 
@@ -88,14 +88,14 @@ dashboard "aws_ebs_snapshot_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      sql   = query.aws_ebs_snapshot_monthly_forecast_table.sql
+      query = query.ebs_snapshot_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      sql   = query.aws_ebs_snapshot_cost_per_month.sql
+      query = query.ebs_snapshot_cost_per_month
     }
 
   }
@@ -106,21 +106,21 @@ dashboard "aws_ebs_snapshot_dashboard" {
 
     chart {
       title = "Snapshots by Account"
-      sql   = query.aws_ebs_snapshot_by_account.sql
+      query = query.ebs_snapshot_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Snapshots by Region"
-      sql   = query.aws_ebs_snapshot_by_region.sql
+      query = query.ebs_snapshot_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Snapshots by Age"
-      sql   = query.aws_ebs_snapshot_by_creation_month.sql
+      query = query.ebs_snapshot_by_creation_month
       type  = "column"
       width = 4
     }
@@ -131,7 +131,7 @@ dashboard "aws_ebs_snapshot_dashboard" {
 
     chart {
       title = "Storage by Account (GB)"
-      sql   = query.aws_ebs_snapshot_storage_by_account.sql
+      query = query.ebs_snapshot_storage_by_account
       type  = "column"
       width = 4
 
@@ -142,7 +142,7 @@ dashboard "aws_ebs_snapshot_dashboard" {
 
     chart {
       title = "Storage by Region (GB)"
-      sql   = query.aws_ebs_snapshot_storage_by_region.sql
+      query = query.ebs_snapshot_storage_by_region
       type  = "column"
       width = 4
 
@@ -153,7 +153,7 @@ dashboard "aws_ebs_snapshot_dashboard" {
 
     chart {
       title = "Storage by Age (GB)"
-      sql   = query.aws_ebs_snapshot_storage_by_age.sql
+      query = query.ebs_snapshot_storage_by_age
       type  = "column"
       width = 4
 
@@ -168,13 +168,13 @@ dashboard "aws_ebs_snapshot_dashboard" {
 
 # Card Queries
 
-query "aws_ebs_snapshot_count" {
+query "ebs_snapshot_count" {
   sql = <<-EOQ
     select count(*) as "Snapshots" from aws_ebs_snapshot;
   EOQ
 }
 
-query "aws_ebs_snapshot_storage_total" {
+query "ebs_snapshot_storage_total" {
   sql = <<-EOQ
     select
       sum(volume_size) as "Total Storage (GB)"
@@ -183,7 +183,7 @@ query "aws_ebs_snapshot_storage_total" {
   EOQ
 }
 
-query "aws_ebs_unencrypted_snapshot_count" {
+query "ebs_unencrypted_snapshot_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -196,7 +196,7 @@ query "aws_ebs_unencrypted_snapshot_count" {
   EOQ
 }
 
-query "aws_ebs_snapshot_public_count" {
+query "ebs_snapshot_public_count" {
   sql = <<-EOQ
       select
         count(*) as value,
@@ -209,7 +209,7 @@ query "aws_ebs_snapshot_public_count" {
   EOQ
 }
 
-query "aws_ebs_snapshot_cost_mtd" {
+query "ebs_snapshot_cost_mtd" {
   sql = <<-EOQ
     select
       'Cost - MTD' as label,
@@ -225,7 +225,7 @@ query "aws_ebs_snapshot_cost_mtd" {
 
 # Assessment Queries
 
-query "aws_ebs_snapshot_by_encryption_status" {
+query "ebs_snapshot_by_encryption_status" {
   sql = <<-EOQ
     select
       encryption_status,
@@ -246,7 +246,7 @@ query "aws_ebs_snapshot_by_encryption_status" {
   EOQ
 }
 
-query "aws_ebs_snapshot_by_public_status" {
+query "ebs_snapshot_by_public_status" {
   sql = <<-EOQ
     with public_status as (
       select
@@ -269,7 +269,7 @@ query "aws_ebs_snapshot_by_public_status" {
 
 # Cost Queries
 
-query "aws_ebs_snapshot_monthly_forecast_table" {
+query "ebs_snapshot_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
       select
@@ -313,7 +313,7 @@ query "aws_ebs_snapshot_monthly_forecast_table" {
   EOQ
 }
 
-query "aws_ebs_snapshot_cost_per_month" {
+query "ebs_snapshot_cost_per_month" {
   sql = <<-EOQ
     select
       to_char(period_start, 'Mon-YY') as "Month",
@@ -332,7 +332,7 @@ query "aws_ebs_snapshot_cost_per_month" {
 
 # Analysis Queries
 
-query "aws_ebs_snapshot_by_account" {
+query "ebs_snapshot_by_account" {
   sql = <<-EOQ
     select
       a.title as "Account",
@@ -349,13 +349,13 @@ query "aws_ebs_snapshot_by_account" {
   EOQ
 }
 
-query "aws_ebs_snapshot_by_region" {
+query "ebs_snapshot_by_region" {
   sql = <<-EOQ
     select region as "Region", count(*) as "Snapshots" from aws_ebs_snapshot group by region order by region
   EOQ
 }
 
-query "aws_ebs_snapshot_by_creation_month" {
+query "ebs_snapshot_by_creation_month" {
   sql = <<-EOQ
     with snapshots as (
       select
@@ -400,7 +400,7 @@ query "aws_ebs_snapshot_by_creation_month" {
   EOQ
 }
 
-query "aws_ebs_snapshot_storage_by_account" {
+query "ebs_snapshot_storage_by_account" {
   sql = <<-EOQ
     select
       a.title as "Account",
@@ -417,7 +417,7 @@ query "aws_ebs_snapshot_storage_by_account" {
   EOQ
 }
 
-query "aws_ebs_snapshot_storage_by_region" {
+query "ebs_snapshot_storage_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
@@ -431,7 +431,7 @@ query "aws_ebs_snapshot_storage_by_region" {
   EOQ
 }
 
-query "aws_ebs_snapshot_storage_by_age" {
+query "ebs_snapshot_storage_by_age" {
   sql = <<-EOQ
     with snapshots as (
       select

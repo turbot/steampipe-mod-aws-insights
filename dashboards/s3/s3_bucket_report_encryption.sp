@@ -1,4 +1,4 @@
-dashboard "aws_s3_bucket_encryption_report" {
+dashboard "s3_bucket_encryption_report" {
 
   title         = "AWS S3 Bucket Encryption Report"
   documentation = file("./dashboards/s3/docs/s3_bucket_report_encryption.md")
@@ -11,17 +11,17 @@ dashboard "aws_s3_bucket_encryption_report" {
   container {
 
     card {
-      sql   = query.aws_s3_bucket_count.sql
+      query = query.s3_bucket_count
       width = 2
     }
 
     card {
-      sql   = query.aws_s3_bucket_unencrypted_count.sql
+      query = query.s3_bucket_unencrypted_count
       width = 2
     }
 
     card {
-      sql   = query.aws_s3_bucket_https_unenforced_count.sql
+      query = query.s3_bucket_https_unenforced_count
       width = 2
     }
 
@@ -37,16 +37,16 @@ dashboard "aws_s3_bucket_encryption_report" {
     }
 
     column "Name" {
-      href = "${dashboard.aws_s3_bucket_detail.url_path}?input.bucket_arn={{.ARN | @uri}}"
+      href = "${dashboard.s3_bucket_detail.url_path}?input.bucket_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_s3_bucket_encryption_table.sql
+    query = query.s3_bucket_encryption_table
   }
 
 }
 
 
-query "aws_s3_bucket_https_unenforced_count" {
+query "s3_bucket_https_unenforced_count" {
   sql = <<-EOQ
     with ssl_ok as (
       select
@@ -78,7 +78,7 @@ query "aws_s3_bucket_https_unenforced_count" {
   EOQ
 }
 
-query "aws_s3_bucket_encryption_table" {
+query "s3_bucket_encryption_table" {
   sql = <<-EOQ
     with default_encryption as (
       select

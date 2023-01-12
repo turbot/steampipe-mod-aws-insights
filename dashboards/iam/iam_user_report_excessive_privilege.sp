@@ -1,4 +1,4 @@
-dashboard "aws_iam_user_excessive_privilege_report" {
+dashboard "iam_user_excessive_privilege_report" {
 
   title = "AWS IAM User Excessive Privilege Report"
 
@@ -7,48 +7,48 @@ dashboard "aws_iam_user_excessive_privilege_report" {
     category = "Permissions"
   })
 
-   input "threshold_in_days" {
-     title = "Last Authenticated Threshold"
-     width = 2
+  input "threshold_in_days" {
+    title = "Last Authenticated Threshold"
+    width = 2
 
-     option "30" {
-       label = "More than 30 days ago"
-     }
-     option "60" {
-       label = "More than 60 days ago"
-     }
-     option "90" {
-       label = "More than 90 days ago"
-     }
-     option "180" {
-       label = "More than 180 days ago"
-     }
-     option "360" {
-       label = "More than 360 days ago"
-     }
-   }
+    option "30" {
+      label = "More than 30 days ago"
+    }
+    option "60" {
+      label = "More than 60 days ago"
+    }
+    option "90" {
+      label = "More than 90 days ago"
+    }
+    option "180" {
+      label = "More than 180 days ago"
+    }
+    option "360" {
+      label = "More than 360 days ago"
+    }
+  }
 
   container {
 
     card {
-      query = query.aws_iam_user_count
+      query = query.iam_user_count
       width = 2
     }
 
     card {
-      query = query.aws_iam_user_with_excessive_permissions_count
+      query = query.iam_user_with_excessive_permissions_count
       width = 2
 
-      args  = {
+      args = {
         threshold_in_days = self.input.threshold_in_days.value
       }
     }
 
     card {
-      query = query.aws_iam_user_excessive_permissions_count
+      query = query.iam_user_excessive_permissions_count
       width = 2
 
-      args  = {
+      args = {
         threshold_in_days = self.input.threshold_in_days.value
       }
     }
@@ -66,19 +66,19 @@ dashboard "aws_iam_user_excessive_privilege_report" {
     }
 
     column "User Name" {
-      href = "/aws_insights.dashboard.aws_iam_user_detail?input.user_arn={{.ARN | @uri}}"
+      href = "/aws_insights.dashboard.iam_user_detail?input.user_arn={{.ARN | @uri}}"
     }
 
-    query = query.aws_iam_user_excessive_permissions_report
+    query = query.iam_user_excessive_permissions_report
 
-    args  = {
+    args = {
       threshold_in_days = self.input.threshold_in_days.value
     }
   }
 
 }
 
-query "aws_iam_user_with_excessive_permissions_count" {
+query "iam_user_with_excessive_permissions_count" {
   sql = <<-EOQ
     select
       count(distinct principal_arn) as value,
@@ -98,7 +98,7 @@ query "aws_iam_user_with_excessive_permissions_count" {
   param "threshold_in_days" {}
 }
 
-query "aws_iam_user_excessive_permissions_count" {
+query "iam_user_excessive_permissions_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -118,7 +118,7 @@ query "aws_iam_user_excessive_permissions_count" {
   param "threshold_in_days" {}
 }
 
-query "aws_iam_user_excessive_permissions_report" {
+query "iam_user_excessive_permissions_report" {
   sql = <<-EOQ
     select
       u.name as "User Name",

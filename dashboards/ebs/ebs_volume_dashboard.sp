@@ -1,4 +1,4 @@
-dashboard "aws_ebs_volume_dashboard" {
+dashboard "ebs_volume_dashboard" {
 
   title         = "AWS EBS Volume Dashboard"
   documentation = file("./dashboards/ebs/docs/ebs_volume_dashboard.md")
@@ -11,24 +11,24 @@ dashboard "aws_ebs_volume_dashboard" {
 
     # Analysis
     card {
-      sql   = query.aws_ebs_volume_count.sql
+      query = query.ebs_volume_count
       width = 2
     }
 
     card {
-      sql   = query.aws_ebs_volume_storage_total.sql
+      query = query.ebs_volume_storage_total
       width = 2
     }
 
     # Assessments
     card {
-      sql   = query.aws_ebs_volume_unencrypted_count.sql
+      query = query.ebs_volume_unencrypted_count
       width = 2
-      href  = dashboard.aws_ebs_volume_encryption_report.url_path
+      href  = dashboard.ebs_volume_encryption_report.url_path
     }
 
     card {
-      sql   = query.aws_ebs_volume_unattached_count.sql
+      query = query.ebs_volume_unattached_count
       width = 2
     }
 
@@ -37,7 +37,7 @@ dashboard "aws_ebs_volume_dashboard" {
       type  = "info"
       icon  = "currency-dollar"
       width = 2
-      sql   = query.aws_ebs_volume_cost_mtd.sql
+      query = query.ebs_volume_cost_mtd
     }
 
   }
@@ -49,7 +49,7 @@ dashboard "aws_ebs_volume_dashboard" {
 
     chart {
       title = "Encryption Status"
-      sql   = query.aws_ebs_volume_by_encryption_status.sql
+      query = query.ebs_volume_by_encryption_status
       type  = "donut"
       width = 4
 
@@ -65,7 +65,7 @@ dashboard "aws_ebs_volume_dashboard" {
 
     chart {
       title = "Volume State"
-      sql   = query.aws_ebs_volume_by_state.sql
+      query = query.ebs_volume_by_state
       type  = "donut"
       width = 4
 
@@ -89,14 +89,14 @@ dashboard "aws_ebs_volume_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      sql   = query.aws_ebs_volume_monthly_forecast_table.sql
+      query = query.ebs_volume_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      sql   = query.aws_ebs_volume_cost_per_month.sql
+      query = query.ebs_volume_cost_per_month
     }
 
   }
@@ -107,28 +107,28 @@ dashboard "aws_ebs_volume_dashboard" {
 
     chart {
       title = "Volumes by Account"
-      sql   = query.aws_ebs_volume_by_account.sql
+      query = query.ebs_volume_by_account
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Volumes by Region"
-      sql   = query.aws_ebs_volume_by_region.sql
+      query = query.ebs_volume_by_region
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Volumes by Type"
-      sql   = query.aws_ebs_volume_by_type.sql
+      query = query.ebs_volume_by_type
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Volumes by Age"
-      sql   = query.aws_ebs_volume_by_creation_month.sql
+      query = query.ebs_volume_by_creation_month
       type  = "column"
       width = 3
     }
@@ -139,7 +139,7 @@ dashboard "aws_ebs_volume_dashboard" {
 
     chart {
       title = "Storage by Account (GB)"
-      sql   = query.aws_ebs_volume_storage_by_account.sql
+      query = query.ebs_volume_storage_by_account
       type  = "column"
       width = 3
 
@@ -150,7 +150,7 @@ dashboard "aws_ebs_volume_dashboard" {
 
     chart {
       title = "Storage by Region (GB)"
-      sql   = query.aws_ebs_volume_storage_by_region.sql
+      query = query.ebs_volume_storage_by_region
       type  = "column"
       width = 3
 
@@ -161,7 +161,7 @@ dashboard "aws_ebs_volume_dashboard" {
 
     chart {
       title = "Storage by Type (GB)"
-      sql   = query.aws_ebs_volume_storage_by_type.sql
+      query = query.ebs_volume_storage_by_type
       type  = "column"
       width = 3
 
@@ -172,7 +172,7 @@ dashboard "aws_ebs_volume_dashboard" {
 
     chart {
       title = "Storage by Age (GB)"
-      sql   = query.aws_ebs_volume_storage_by_creation_month.sql
+      query = query.ebs_volume_storage_by_creation_month
       type  = "column"
       width = 3
 
@@ -191,14 +191,14 @@ dashboard "aws_ebs_volume_dashboard" {
       title = "Top 10 Average Read IOPS - Last 7 days"
       type  = "line"
       width = 6
-      sql   = query.aws_ebs_volume_top_10_read_ops_avg.sql
+      query = query.ebs_volume_top_10_read_ops_avg
     }
 
     chart {
       title = "Top 10 Average Write IOPS - Last 7 days"
       type  = "line"
       width = 6
-      sql   = query.aws_ebs_volume_top_10_write_ops_avg.sql
+      query = query.ebs_volume_top_10_write_ops_avg
     }
 
   }
@@ -207,7 +207,7 @@ dashboard "aws_ebs_volume_dashboard" {
 
 # Card Queries
 
-query "aws_ebs_volume_count" {
+query "ebs_volume_count" {
   sql = <<-EOQ
     select
       count(*) as "Volumes"
@@ -216,7 +216,7 @@ query "aws_ebs_volume_count" {
   EOQ
 }
 
-query "aws_ebs_volume_storage_total" {
+query "ebs_volume_storage_total" {
   sql = <<-EOQ
     select
       sum(size) as "Total Storage (GB)"
@@ -225,7 +225,7 @@ query "aws_ebs_volume_storage_total" {
   EOQ
 }
 
-query "aws_ebs_volume_unencrypted_count" {
+query "ebs_volume_unencrypted_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -238,7 +238,7 @@ query "aws_ebs_volume_unencrypted_count" {
   EOQ
 }
 
-query "aws_ebs_volume_unattached_count" {
+query "ebs_volume_unattached_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -251,7 +251,7 @@ query "aws_ebs_volume_unattached_count" {
   EOQ
 }
 
-query "aws_ebs_volume_cost_mtd" {
+query "ebs_volume_cost_mtd" {
   sql = <<-EOQ
     select
       'Cost - MTD' as label,
@@ -267,7 +267,7 @@ query "aws_ebs_volume_cost_mtd" {
 
 # Assessment Queries
 
-query "aws_ebs_volume_by_encryption_status" {
+query "ebs_volume_by_encryption_status" {
   sql = <<-EOQ
     select
       encryption_status,
@@ -288,7 +288,7 @@ query "aws_ebs_volume_by_encryption_status" {
   EOQ
 }
 
-query "aws_ebs_volume_by_state" {
+query "ebs_volume_by_state" {
   sql = <<-EOQ
     select
       state,
@@ -302,7 +302,7 @@ query "aws_ebs_volume_by_state" {
 
 # Cost Queries
 
-query "aws_ebs_volume_monthly_forecast_table" {
+query "ebs_volume_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
       select
@@ -342,7 +342,7 @@ query "aws_ebs_volume_monthly_forecast_table" {
   EOQ
 }
 
-query "aws_ebs_volume_cost_per_month" {
+query "ebs_volume_cost_per_month" {
   sql = <<-EOQ
     select
       to_char(period_start, 'Mon-YY') as "Month",
@@ -361,10 +361,10 @@ query "aws_ebs_volume_cost_per_month" {
 
 # Analysis Queries
 
-query "aws_ebs_volume_by_account" {
+query "ebs_volume_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       count(v.*) as "volumes"
     from
       aws_ebs_volume as v,
@@ -378,10 +378,10 @@ query "aws_ebs_volume_by_account" {
   EOQ
 }
 
-query "aws_ebs_volume_storage_by_account" {
+query "ebs_volume_storage_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       sum(v.size) as "GB"
     from
       aws_ebs_volume as v,
@@ -395,7 +395,7 @@ query "aws_ebs_volume_storage_by_account" {
   EOQ
 }
 
-query "aws_ebs_volume_by_type" {
+query "ebs_volume_by_type" {
   sql = <<-EOQ
     select
       volume_type as "Type",
@@ -409,7 +409,7 @@ query "aws_ebs_volume_by_type" {
   EOQ
 }
 
-query "aws_ebs_volume_storage_by_type" {
+query "ebs_volume_storage_by_type" {
   sql = <<-EOQ
     select
       volume_type,
@@ -423,7 +423,7 @@ query "aws_ebs_volume_storage_by_type" {
   EOQ
 }
 
-query "aws_ebs_volume_by_region" {
+query "ebs_volume_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
@@ -437,7 +437,7 @@ query "aws_ebs_volume_by_region" {
   EOQ
 }
 
-query "aws_ebs_volume_storage_by_region" {
+query "ebs_volume_storage_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
@@ -451,7 +451,7 @@ query "aws_ebs_volume_storage_by_region" {
   EOQ
 }
 
-query "aws_ebs_volume_by_creation_month" {
+query "ebs_volume_by_creation_month" {
   sql = <<-EOQ
     with volumes as (
       select
@@ -496,7 +496,7 @@ query "aws_ebs_volume_by_creation_month" {
   EOQ
 }
 
-query "aws_ebs_volume_storage_by_creation_month" {
+query "ebs_volume_storage_by_creation_month" {
   sql = <<-EOQ
     with volumes as (
       select
@@ -544,7 +544,7 @@ query "aws_ebs_volume_storage_by_creation_month" {
 
 # Performance Queries
 
-query "aws_ebs_volume_top_10_read_ops_avg" {
+query "ebs_volume_top_10_read_ops_avg" {
   sql = <<-EOQ
     with top_n as (
       select
@@ -572,7 +572,7 @@ query "aws_ebs_volume_top_10_read_ops_avg" {
   EOQ
 }
 
-query "aws_ebs_volume_top_10_write_ops_avg" {
+query "ebs_volume_top_10_write_ops_avg" {
   sql = <<-EOQ
     with top_n as (
       select

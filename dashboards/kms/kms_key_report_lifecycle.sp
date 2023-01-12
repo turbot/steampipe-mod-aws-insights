@@ -1,4 +1,4 @@
-dashboard "aws_kms_key_lifecycle_report" {
+dashboard "kms_key_lifecycle_report" {
 
   title         = "AWS KMS CMK Lifecycle Report"
   documentation = file("./dashboards/kms/docs/kms_key_report_lifecycle.md")
@@ -11,41 +11,41 @@ dashboard "aws_kms_key_lifecycle_report" {
   container {
 
     card {
-      sql   = query.aws_kms_customer_managed_key_count.sql
+      query = query.kms_customer_managed_key_count
       width = 2
     }
 
     card {
-      sql = query.aws_kms_key_rotation_disabled_count.sql
+      query = query.kms_key_rotation_disabled_count
       width = 2
     }
 
     card {
-      sql = query.aws_kms_cmk_pending_deletion_count.sql
+      query = query.kms_cmk_pending_deletion_count
       width = 2
     }
 
   }
 
-    table {
-      column "Account ID" {
-        display = "none"
-      }
-
-      column "ARN" {
-        display = "none"
-      }
-
-      column "Key ID" {
-        href = "${dashboard.aws_kms_key_detail.url_path}?input.key_arn={{.ARN | @uri}}"
-      }
-
-      sql = query.aws_kms_cmk_lifecycle_table.sql
+  table {
+    column "Account ID" {
+      display = "none"
     }
+
+    column "ARN" {
+      display = "none"
+    }
+
+    column "Key ID" {
+      href = "${dashboard.kms_key_detail.url_path}?input.key_arn={{.ARN | @uri}}"
+    }
+
+    query = query.kms_cmk_lifecycle_table
+  }
 
 }
 
-query "aws_kms_key_rotation_disabled_count" {
+query "kms_key_rotation_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -59,7 +59,7 @@ query "aws_kms_key_rotation_disabled_count" {
   EOQ
 }
 
-query "aws_kms_cmk_pending_deletion_count" {
+query "kms_cmk_pending_deletion_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -73,7 +73,7 @@ query "aws_kms_cmk_pending_deletion_count" {
   EOQ
 }
 
-query "aws_kms_cmk_lifecycle_table" {
+query "kms_cmk_lifecycle_table" {
   sql = <<-EOQ
     select
       k.id as "Key ID",

@@ -1,4 +1,4 @@
-dashboard "aws_dynamodb_table_encryption_report" {
+dashboard "dynamodb_table_encryption_report" {
 
   title         = "AWS DynamoDB Table Encryption Report"
   documentation = file("./dashboards/dynamodb/docs/dynamodb_table_report_encryption.md")
@@ -11,22 +11,22 @@ dashboard "aws_dynamodb_table_encryption_report" {
   container {
 
     card {
-      sql   = query.aws_dynamodb_table_count.sql
+      query = query.dynamodb_table_count
       width = 2
     }
 
     card {
-      sql   = query.aws_dynamodb_table_default_encryption.sql
+      query = query.dynamodb_table_default_encryption
       width = 2
     }
 
     card {
-      sql   = query.aws_dynamodb_table_aws_managed_key_encryption.sql
+      query = query.dynamodb_table_aws_managed_key_encryption
       width = 2
     }
 
     card {
-      sql   = query.aws_dynamodb_table_customer_managed_key_encryption.sql
+      query = query.dynamodb_table_customer_managed_key_encryption
       width = 2
     }
 
@@ -42,15 +42,15 @@ dashboard "aws_dynamodb_table_encryption_report" {
     }
 
     column "Name" {
-      href = "${dashboard.aws_dynamodb_table_detail.url_path}?input.table_arn={{.ARN | @uri}}"
+      href = "${dashboard.dynamodb_table_detail.url_path}?input.table_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_dynamodb_table_encryption_table.sql
+    query = query.dynamodb_table_encryption_table
   }
 
 }
 
-query "aws_dynamodb_table_default_encryption" {
+query "dynamodb_table_default_encryption" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -63,7 +63,7 @@ query "aws_dynamodb_table_default_encryption" {
   EOQ
 }
 
-query "aws_dynamodb_table_aws_managed_key_encryption" {
+query "dynamodb_table_aws_managed_key_encryption" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -79,7 +79,7 @@ query "aws_dynamodb_table_aws_managed_key_encryption" {
   EOQ
 }
 
-query "aws_dynamodb_table_customer_managed_key_encryption" {
+query "dynamodb_table_customer_managed_key_encryption" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -95,7 +95,7 @@ query "aws_dynamodb_table_customer_managed_key_encryption" {
   EOQ
 }
 
-query "aws_dynamodb_table_encryption_table" {
+query "dynamodb_table_encryption_table" {
   sql = <<-EOQ
     select
       t.name as "Name",

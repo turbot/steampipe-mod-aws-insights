@@ -1,4 +1,4 @@
-dashboard "aws_dynamodb_table_dashboard" {
+dashboard "dynamodb_table_dashboard" {
 
   title         = "AWS DynamoDB Table Dashboard"
   documentation = file("./dashboards/dynamodb/docs/dynamodb_table_dashboard.md")
@@ -12,23 +12,23 @@ dashboard "aws_dynamodb_table_dashboard" {
 
     # Analysis
     card {
-      sql   = query.aws_dynamodb_table_count.sql
+      query = query.dynamodb_table_count
       width = 2
     }
 
     # Assessments
     card {
-      sql = query.aws_dynamodb_table_unused_count.sql
+      query = query.dynamodb_table_unused_count
       width = 2
     }
 
     card {
-      sql = query.aws_dynamodb_table_autoscaling_disabled_count.sql
+      query = query.dynamodb_table_autoscaling_disabled_count
       width = 2
     }
 
     card {
-      sql = query.aws_dynamodb_table_continuous_backups_count.sql
+      query = query.dynamodb_table_continuous_backups_count
       width = 2
     }
 
@@ -37,7 +37,7 @@ dashboard "aws_dynamodb_table_dashboard" {
       type  = "info"
       icon  = "currency-dollar"
       width = 2
-      sql   = query.aws_dynamodb_table_cost_mtd.sql
+      query = query.dynamodb_table_cost_mtd
     }
 
   }
@@ -50,7 +50,7 @@ dashboard "aws_dynamodb_table_dashboard" {
       title = "Unused Table Status"
       type  = "donut"
       width = 4
-      sql   = query.aws_dynamodb_table_unused_status.sql
+      query = query.dynamodb_table_unused_status
 
       series "table_count" {
         point "in-use" {
@@ -66,7 +66,7 @@ dashboard "aws_dynamodb_table_dashboard" {
       title = "Autoscaling Status"
       type  = "donut"
       width = 4
-      sql   = query.aws_dynamodb_table_autoscaling_status.sql
+      query = query.dynamodb_table_autoscaling_status
 
       series "table_count" {
         point "enabled" {
@@ -82,7 +82,7 @@ dashboard "aws_dynamodb_table_dashboard" {
       title = "Continuous Backups"
       type  = "donut"
       width = 4
-      sql   = query.aws_dynamodb_table_continuous_backups_status.sql
+      query = query.dynamodb_table_continuous_backups_status
 
       series "count" {
         point "enabled" {
@@ -98,7 +98,7 @@ dashboard "aws_dynamodb_table_dashboard" {
       title = "Backup Plan Protection"
       type  = "donut"
       width = 4
-      sql   = query.aws_dynamodb_table_backup_plan_protection_status.sql
+      query = query.dynamodb_table_backup_plan_protection_status
 
       series "table_count" {
         point "protected" {
@@ -115,17 +115,17 @@ dashboard "aws_dynamodb_table_dashboard" {
     title = "Costs"
     width = 6
 
-    table  {
+    table {
       width = 6
       title = "Forecast"
-      sql   = query.aws_dynamodb_monthly_forecast_table.sql
+      query = query.dynamodb_monthly_forecast_table
     }
 
     chart {
       width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      sql   = query.aws_dynamodb_table_cost_per_month.sql
+      query = query.dynamodb_table_cost_per_month
     }
 
   }
@@ -137,19 +137,19 @@ dashboard "aws_dynamodb_table_dashboard" {
       title = "Tables by Account"
       type  = "column"
       width = 4
-      sql   = query.aws_dynamodb_table_by_account.sql
+      query = query.dynamodb_table_by_account
     }
 
     chart {
       title = "Tables by Region"
       type  = "column"
       width = 4
-      sql   = query.aws_dynamodb_table_by_region.sql
+      query = query.dynamodb_table_by_region
     }
 
     chart {
       title = "Tables by Age"
-      sql   = query.aws_dynamodb_table_by_creation_month.sql
+      query = query.dynamodb_table_by_creation_month
       type  = "column"
       width = 4
     }
@@ -161,7 +161,7 @@ dashboard "aws_dynamodb_table_dashboard" {
       title = "Table Item Count by Account"
       type  = "column"
       width = 4
-      sql   = query.aws_dynamodb_table_item_count_by_account.sql
+      query = query.dynamodb_table_item_count_by_account
 
       series "GB" {
         color = "tan"
@@ -172,7 +172,7 @@ dashboard "aws_dynamodb_table_dashboard" {
       title = "Table Item Count by Region"
       type  = "column"
       width = 4
-      sql   = query.aws_dynamodb_table_item_count_by_region.sql
+      query = query.dynamodb_table_item_count_by_region
 
       series "GB" {
         color = "tan"
@@ -183,7 +183,7 @@ dashboard "aws_dynamodb_table_dashboard" {
       title = "Table Item Count by Age"
       type  = "column"
       width = 4
-      sql   = query.aws_dynamodb_table_item_count_by_creation_month.sql
+      query = query.dynamodb_table_item_count_by_creation_month
 
       series "GB" {
         color = "tan"
@@ -200,14 +200,14 @@ dashboard "aws_dynamodb_table_dashboard" {
       title = "Average Read Throughput - Last 7 days"
       type  = "line"
       width = 6
-      sql   = query.aws_dynamodb_table_average_read_throughput.sql
+      query = query.dynamodb_table_average_read_throughput
     }
 
     chart {
       title = "Average Write Throughput - Last 7 days"
       type  = "line"
       width = 6
-      sql   = query.aws_dynamodb_table_average_write_throughput.sql
+      query = query.dynamodb_table_average_write_throughput
     }
 
   }
@@ -215,13 +215,13 @@ dashboard "aws_dynamodb_table_dashboard" {
 
 # Card Queries
 
-query "aws_dynamodb_table_count" {
+query "dynamodb_table_count" {
   sql = <<-EOQ
     select count(*) as "Tables" from aws_dynamodb_table;
   EOQ
 }
 
-query "aws_dynamodb_table_unused_count" {
+query "dynamodb_table_unused_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -234,7 +234,7 @@ query "aws_dynamodb_table_unused_count" {
   EOQ
 }
 
-query "aws_dynamodb_table_autoscaling_disabled_count" {
+query "dynamodb_table_autoscaling_disabled_count" {
   sql = <<-EOQ
     with table_with_autoscaling as (
       select
@@ -257,7 +257,7 @@ query "aws_dynamodb_table_autoscaling_disabled_count" {
   EOQ
 }
 
-query "aws_dynamodb_table_continuous_backups_count" {
+query "dynamodb_table_continuous_backups_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -270,7 +270,7 @@ query "aws_dynamodb_table_continuous_backups_count" {
   EOQ
 }
 
-query "aws_dynamodb_table_cost_mtd" {
+query "dynamodb_table_cost_mtd" {
   sql = <<-EOQ
     select
       'Cost - MTD' as label,
@@ -285,7 +285,7 @@ query "aws_dynamodb_table_cost_mtd" {
 
 # Assessment Queries
 
-query "aws_dynamodb_table_unused_status" {
+query "dynamodb_table_unused_status" {
   sql = <<-EOQ
     with table_status as (
       select
@@ -306,7 +306,7 @@ query "aws_dynamodb_table_unused_status" {
   EOQ
 }
 
-query "aws_dynamodb_table_autoscaling_status" {
+query "dynamodb_table_autoscaling_status" {
   sql = <<-EOQ
     with table_with_autoscaling as (
       select
@@ -336,7 +336,7 @@ query "aws_dynamodb_table_autoscaling_status" {
   EOQ
 }
 
-query "aws_dynamodb_table_continuous_backups_status" {
+query "dynamodb_table_continuous_backups_status" {
   sql = <<-EOQ
     select
       case
@@ -350,7 +350,7 @@ query "aws_dynamodb_table_continuous_backups_status" {
   EOQ
 }
 
-query "aws_dynamodb_table_backup_plan_protection_status" {
+query "dynamodb_table_backup_plan_protection_status" {
   sql = <<-EOQ
     with backup_protected_table as (
       select
@@ -382,7 +382,7 @@ query "aws_dynamodb_table_backup_plan_protection_status" {
 
 # Cost Queries
 
-query "aws_dynamodb_monthly_forecast_table" {
+query "dynamodb_monthly_forecast_table" {
   sql = <<-EOQ
     with monthly_costs as (
       select
@@ -424,7 +424,7 @@ query "aws_dynamodb_monthly_forecast_table" {
   EOQ
 }
 
-query "aws_dynamodb_table_cost_per_month" {
+query "dynamodb_table_cost_per_month" {
   sql = <<-EOQ
     select
       to_char(period_start, 'Mon-YY') as "Month",
@@ -442,10 +442,10 @@ query "aws_dynamodb_table_cost_per_month" {
 
 # Analysis Queries
 
-query "aws_dynamodb_table_by_account" {
+query "dynamodb_table_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       count(t.*) as "tables"
     from
       aws_dynamodb_table as t,
@@ -457,19 +457,21 @@ query "aws_dynamodb_table_by_account" {
   EOQ
 }
 
-query "aws_dynamodb_table_by_region" {
-  sql   = <<-EOQ
+query "dynamodb_table_by_region" {
+  sql = <<-EOQ
     select
       region as "Region",
       count(*) as "tables"
     from
       aws_dynamodb_table
-    group by region
-    order by region;
+    group by
+      region
+    order by
+      region;
   EOQ
 }
 
-query "aws_dynamodb_table_by_creation_month" {
+query "dynamodb_table_by_creation_month" {
   sql = <<-EOQ
     with volumes as (
       select
@@ -516,10 +518,10 @@ query "aws_dynamodb_table_by_creation_month" {
   EOQ
 }
 
-query "aws_dynamodb_table_item_count_by_account" {
-  sql   = <<-EOQ
+query "dynamodb_table_item_count_by_account" {
+  sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       sum(t.item_count) as "Count"
     from
       aws_dynamodb_table as t,
@@ -531,19 +533,21 @@ query "aws_dynamodb_table_item_count_by_account" {
   EOQ
 }
 
-query "aws_dynamodb_table_item_count_by_region" {
-  sql   = <<-EOQ
+query "dynamodb_table_item_count_by_region" {
+  sql = <<-EOQ
     select
       region as "Region",
       sum(item_count) as "Count"
     from
       aws_dynamodb_table
-    group by region
-    order by region;
+    group by
+      region
+    order by
+      region;
   EOQ
 }
 
-query "aws_dynamodb_table_item_count_by_creation_month" {
+query "dynamodb_table_item_count_by_creation_month" {
   sql = <<-EOQ
     with volumes as (
       select
@@ -594,8 +598,8 @@ query "aws_dynamodb_table_item_count_by_creation_month" {
 
 # Performance Queries
 
-query "aws_dynamodb_table_average_read_throughput" {
-  sql   =  <<-EOQ
+query "dynamodb_table_average_read_throughput" {
+  sql = <<-EOQ
     select
       timestamp,
       average
@@ -607,8 +611,8 @@ query "aws_dynamodb_table_average_read_throughput" {
   EOQ
 }
 
-query "aws_dynamodb_table_average_write_throughput" {
-  sql   =  <<-EOQ
+query "dynamodb_table_average_write_throughput" {
+  sql = <<-EOQ
     select
       timestamp,
       average

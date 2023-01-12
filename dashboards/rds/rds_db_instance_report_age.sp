@@ -1,4 +1,4 @@
-dashboard "aws_rds_db_instance_age_report" {
+dashboard "rds_db_instance_age_report" {
 
   title         = "AWS RDS DB Instance Age Report"
   documentation = file("./dashboards/rds/docs/rds_db_instance_report_age.md")
@@ -8,41 +8,41 @@ dashboard "aws_rds_db_instance_age_report" {
     category = "Age"
   })
 
-   container {
+  container {
 
     card {
-      sql   = query.aws_rds_db_instance_count.sql
+      query = query.rds_db_instance_count
       width = 2
-    }
-
-     card {
-      type  = "info"
-      width = 2
-      sql   = query.aws_rds_db_instance_24_hours_count.sql
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_rds_db_instance_30_days_count.sql
+      query = query.rds_db_instance_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_rds_db_instance_30_90_days_count.sql
+      query = query.rds_db_instance_30_days_count
+    }
+
+    card {
+      type  = "info"
+      width = 2
+      query = query.rds_db_instance_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_rds_db_instance_90_365_days_count.sql
+      query = query.rds_db_instance_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_rds_db_instance_1_year_count.sql
+      query = query.rds_db_instance_1_year_count
     }
 
   }
@@ -57,15 +57,15 @@ dashboard "aws_rds_db_instance_age_report" {
     }
 
     column "DB Instance Identifier" {
-      href = "${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arnn={{.ARN | @uri}}"
+      href = "${dashboard.rds_db_instance_detail.url_path}?input.db_instance_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_rds_db_instance_age_table.sql
+    query = query.rds_db_instance_age_table
   }
 
 }
 
-query "aws_rds_db_instance_24_hours_count" {
+query "rds_db_instance_24_hours_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -77,7 +77,7 @@ query "aws_rds_db_instance_24_hours_count" {
   EOQ
 }
 
-query "aws_rds_db_instance_30_days_count" {
+query "rds_db_instance_30_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -89,7 +89,7 @@ query "aws_rds_db_instance_30_days_count" {
   EOQ
 }
 
-query "aws_rds_db_instance_30_90_days_count" {
+query "rds_db_instance_30_90_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -101,7 +101,7 @@ query "aws_rds_db_instance_30_90_days_count" {
   EOQ
 }
 
-query "aws_rds_db_instance_90_365_days_count" {
+query "rds_db_instance_90_365_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -113,7 +113,7 @@ query "aws_rds_db_instance_90_365_days_count" {
   EOQ
 }
 
-query "aws_rds_db_instance_1_year_count" {
+query "rds_db_instance_1_year_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -125,7 +125,7 @@ query "aws_rds_db_instance_1_year_count" {
   EOQ
 }
 
-query "aws_rds_db_instance_age_table" {
+query "rds_db_instance_age_table" {
   sql = <<-EOQ
     select
       i.db_instance_identifier as "DB Instance Identifier",

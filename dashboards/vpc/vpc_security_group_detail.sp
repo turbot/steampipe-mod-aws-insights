@@ -1,6 +1,6 @@
-dashboard "aws_vpc_security_group_detail" {
+dashboard "vpc_security_group_detail" {
 
-  title = "AWS VPC Security Group Detail"
+  title         = "AWS VPC Security Group Detail"
   documentation = file("./dashboards/vpc/docs/vpc_security_group_detail.md")
 
   tags = merge(local.vpc_common_tags, {
@@ -9,7 +9,7 @@ dashboard "aws_vpc_security_group_detail" {
 
   input "security_group_id" {
     title = "Select a security group:"
-    sql   = query.aws_vpc_security_group_input.sql
+    query = query.vpc_security_group_input
     width = 4
   }
 
@@ -17,44 +17,326 @@ dashboard "aws_vpc_security_group_detail" {
 
     card {
       width = 2
-      query = query.aws_vpc_security_group_ingress_rules_count
-      args  = {
-        group_id = self.input.security_group_id.value
-      }
+      query = query.vpc_security_group_ingress_rules_count
+      args  = [self.input.security_group_id.value]
     }
 
     card {
       width = 2
-      query = query.aws_vpc_security_group_egress_rules_count
-      args  = {
-        group_id = self.input.security_group_id.value
-      }
+      query = query.vpc_security_group_egress_rules_count
+      args  = [self.input.security_group_id.value]
     }
 
     card {
       width = 2
-      query = query.aws_vpc_security_attached_enis_count
-      args  = {
-        group_id = self.input.security_group_id.value
-      }
+      query = query.vpc_security_attached_enis_count
+      args  = [self.input.security_group_id.value]
     }
 
     card {
       width = 2
-      query = query.aws_vpc_security_unrestricted_ingress
-      args  = {
-        group_id = self.input.security_group_id.value
-      }
+      query = query.vpc_security_unrestricted_ingress
+      args  = [self.input.security_group_id.value]
     }
 
     card {
       width = 2
-      query = query.aws_vpc_security_unrestricted_egress
-      args  = {
-        group_id = self.input.security_group_id.value
-      }
+      query = query.vpc_security_unrestricted_egress
+      args  = [self.input.security_group_id.value]
     }
 
+  }
+
+  with "dax_clusters_for_vpc_security_group" {
+    query = query.dax_clusters_for_vpc_security_group
+    args  = [self.input.security_group_id.value]
+  }
+
+  with "ec2_application_load_balancers_for_vpc_security_group" {
+    query = query.ec2_application_load_balancers_for_vpc_security_group
+    args  = [self.input.security_group_id.value]
+  }
+
+  with "ec2_classic_load_balancers_for_vpc_security_group" {
+    query = query.ec2_classic_load_balancers_for_vpc_security_group
+    args  = [self.input.security_group_id.value]
+  }
+
+  with "ec2_instances_for_vpc_security_group" {
+    query = query.ec2_instances_for_vpc_security_group
+    args  = [self.input.security_group_id.value]
+  }
+
+  with "ec2_launch_configurations_for_vpc_security_group" {
+    query = query.ec2_launch_configurations_for_vpc_security_group
+    args  = [self.input.security_group_id.value]
+  }
+
+  with "efs_mount_targets_for_vpc_security_group" {
+    query = query.efs_mount_targets_for_vpc_security_group
+    args  = [self.input.security_group_id.value]
+  }
+
+  with "elasticache_clusters_for_vpc_security_group" {
+    query = query.elasticache_clusters_for_vpc_security_group
+    args  = [self.input.security_group_id.value]
+  }
+
+  with "lambda_functions_for_vpc_security_group" {
+    query = query.lambda_functions_for_vpc_security_group
+    args  = [self.input.security_group_id.value]
+  }
+
+  with "rds_db_clusters_for_vpc_security_group" {
+    query = query.rds_db_clusters_for_vpc_security_group
+    args  = [self.input.security_group_id.value]
+  }
+
+  with "rds_db_instances_for_vpc_security_group" {
+    query = query.rds_db_instances_for_vpc_security_group
+    args  = [self.input.security_group_id.value]
+  }
+
+  with "redshift_clusters_for_vpc_security_group" {
+    query = query.redshift_clusters_for_vpc_security_group
+    args  = [self.input.security_group_id.value]
+  }
+
+  with "sagemaker_notebook_instances_for_vpc_security_group" {
+    query = query.sagemaker_notebook_instances_for_vpc_security_group
+    args  = [self.input.security_group_id.value]
+  }
+
+  with "vpc_vpcs_for_vpc_security_group" {
+    query = query.vpc_vpcs_for_vpc_security_group
+    args  = [self.input.security_group_id.value]
+  }
+
+  container {
+
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      node {
+        base = node.dax_cluster
+        args = {
+          dax_cluster_arns = with.dax_clusters_for_vpc_security_group.rows[*].dax_cluster_arn
+        }
+      }
+
+      node {
+        base = node.dms_replication_instance
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      node {
+        base = node.docdb_cluster
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      node {
+        base = node.ec2_application_load_balancer
+        args = {
+          ec2_application_load_balancer_arns = with.ec2_application_load_balancers_for_vpc_security_group.rows[*].alb_arn
+        }
+      }
+
+      node {
+        base = node.ec2_classic_load_balancer
+        args = {
+          ec2_classic_load_balancer_arns = with.ec2_classic_load_balancers_for_vpc_security_group.rows[*].clb_arn
+        }
+      }
+
+      node {
+        base = node.ec2_instance
+        args = {
+          ec2_instance_arns = with.ec2_instances_for_vpc_security_group.rows[*].instance_arn
+        }
+      }
+
+      node {
+        base = node.ec2_launch_configuration
+        args = {
+          ec2_launch_configuration_arns = with.ec2_launch_configurations_for_vpc_security_group.rows[*].launch_configuration_arn
+        }
+      }
+
+      node {
+        base = node.efs_mount_target
+        args = {
+          efs_mount_target_ids = with.efs_mount_targets_for_vpc_security_group.rows[*].mount_target_id
+        }
+      }
+
+      node {
+        base = node.elasticache_cluster_node
+        args = {
+          elasticache_cluster_node_arns = with.elasticache_clusters_for_vpc_security_group.rows[*].elasticache_cluster_arn
+        }
+      }
+
+      node {
+        base = node.lambda_function
+        args = {
+          lambda_function_arns = with.lambda_functions_for_vpc_security_group.rows[*].lambda_arn
+        }
+      }
+
+      node {
+        base = node.rds_db_cluster
+        args = {
+          rds_db_cluster_arns = with.rds_db_clusters_for_vpc_security_group.rows[*].rds_db_cluster_arn
+        }
+      }
+
+      node {
+        base = node.rds_db_instance
+        args = {
+          rds_db_instance_arns = with.rds_db_instances_for_vpc_security_group.rows[*].rds_db_instance_arn
+        }
+      }
+
+      node {
+        base = node.redshift_cluster
+        args = {
+          redshift_cluster_arns = with.redshift_clusters_for_vpc_security_group.rows[*].redshift_cluster_arn
+        }
+      }
+
+      node {
+        base = node.sagemaker_notebook_instance
+        args = {
+          sagemaker_notebook_instance_arns = with.sagemaker_notebook_instances_for_vpc_security_group.rows[*].notebook_instance_arn
+        }
+      }
+
+      node {
+        base = node.vpc_security_group
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      node {
+        base = node.vpc_vpc
+        args = {
+          vpc_vpc_ids = with.vpc_vpcs_for_vpc_security_group.rows[*].vpc_id
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_dax_cluster
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_dms_replication_instance
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_docdb_cluster
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_ec2_application_load_balancer
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_ec2_classic_load_balancer
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_ec2_instance
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_ec2_launch_configuration
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_efs_mount_target
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_elasticache_cluster
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_lambda_function
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_rds_db_cluster
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_rds_db_instance
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_redshift_cluster
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_security_group_to_sagemaker_notebook_instance
+        args = {
+          vpc_security_group_ids = [self.input.security_group_id.value]
+        }
+      }
+
+      edge {
+        base = edge.vpc_vpc_to_vpc_security_group
+        args = {
+          vpc_vpc_ids = with.vpc_vpcs_for_vpc_security_group.rows[*].vpc_id
+        }
+      }
+
+    }
   }
 
   container {
@@ -66,15 +348,13 @@ dashboard "aws_vpc_security_group_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.aws_vpc_security_group_overview
-        args  = {
-          group_id = self.input.security_group_id.value
-        }
+        query = query.vpc_security_group_overview
+        args  = [self.input.security_group_id.value]
 
         column "VPC ID" {
           // cyclic dependency prevents use of url_path, hardcode for now
-          // href = "${dashboard.aws_vpc_detail.url_path}?input.vpc_id={{.'VPC ID' | @uri}}"
-          href = "/aws_insights.dashboard.aws_vpc_detail?input.vpc_id={{.'VPC ID' | @uri}}"
+          // href = "${dashboard.vpc_detail.url_path}?input.vpc_id={{.'VPC ID' | @uri}}"
+          href = "/aws_insights.dashboard.vpc_detail?input.vpc_id={{.'VPC ID' | @uri}}"
 
         }
 
@@ -83,10 +363,8 @@ dashboard "aws_vpc_security_group_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.aws_vpc_security_group_tags
-        args  = {
-          group_id = self.input.security_group_id.value
-        }
+        query = query.vpc_security_group_tags
+        args  = [self.input.security_group_id.value]
       }
 
     }
@@ -97,10 +375,8 @@ dashboard "aws_vpc_security_group_detail" {
 
       table {
         title = "Associated to"
-        query = query.aws_vpc_security_group_assoc
-        args  = {
-          group_id = self.input.security_group_id.value
-        }
+        query = query.vpc_security_group_assoc
+        args  = [self.input.security_group_id.value]
 
         column "link" {
           display = "none"
@@ -121,21 +397,17 @@ dashboard "aws_vpc_security_group_detail" {
     width = 6
 
     flow {
-      base = flow.security_group_rules_sankey
+      base  = flow.security_group_rules_sankey
       title = "Ingress Analysis"
-      query = query.aws_vpc_security_group_ingress_rule_sankey
-      args  = {
-        group_id = self.input.security_group_id.value
-      }
+      query = query.vpc_security_group_ingress_rule_sankey
+      args  = [self.input.security_group_id.value]
     }
 
 
     table {
       title = "Ingress Rules"
-      query = query.aws_vpc_security_group_ingress_rules
-      args  = {
-        group_id = self.input.security_group_id.value
-      }
+      query = query.vpc_security_group_ingress_rules
+      args  = [self.input.security_group_id.value]
     }
 
   }
@@ -145,43 +417,36 @@ dashboard "aws_vpc_security_group_detail" {
     width = 6
 
     flow {
-      base = flow.security_group_rules_sankey
+      base  = flow.security_group_rules_sankey
       title = "Egress Analysis"
-      query = query.aws_vpc_security_group_egress_rule_sankey
-      args  = {
-        group_id = self.input.security_group_id.value
-      }
+      query = query.vpc_security_group_egress_rule_sankey
+      args  = [self.input.security_group_id.value]
     }
 
     table {
       title = "Egress Rules"
-      query = query.aws_vpc_security_group_egress_rules
-      args = {
-        group_id = self.input.security_group_id.value
-      }
+      query = query.vpc_security_group_egress_rules
+      args  = [self.input.security_group_id.value]
     }
 
   }
 
 }
 
+flow "security_group_rules_sankey" {
+  type = "sankey"
 
+  category "alert" {
+    color = "alert"
+  }
 
- flow "security_group_rules_sankey" {
-      type  = "sankey"
+  category "ok" {
+    color = "ok"
+  }
 
-      category "alert" {
-        color = "alert"
-      }
+}
 
-      category "ok" {
-        color = "ok"
-      }
-
-    }
-
-
-query "aws_vpc_security_group_input" {
+query "vpc_security_group_input" {
   sql = <<-EOQ
     select
       title as label,
@@ -198,7 +463,9 @@ query "aws_vpc_security_group_input" {
   EOQ
 }
 
-query "aws_vpc_security_group_ingress_rules_count" {
+# card queries
+
+query "vpc_security_group_ingress_rules_count" {
   sql = <<-EOQ
     select
       'Ingress Rules' as label,
@@ -210,10 +477,9 @@ query "aws_vpc_security_group_ingress_rules_count" {
       and group_id = $1
   EOQ
 
-  param "group_id" {}
 }
 
-query "aws_vpc_security_group_egress_rules_count" {
+query "vpc_security_group_egress_rules_count" {
   sql = <<-EOQ
     select
       'Egress Rules' as label,
@@ -225,10 +491,9 @@ query "aws_vpc_security_group_egress_rules_count" {
       and group_id = $1;
   EOQ
 
-  param "group_id" {}
 }
 
-query "aws_vpc_security_attached_enis_count" {
+query "vpc_security_attached_enis_count" {
   sql = <<-EOQ
     select
       'Attached ENIs' as label,
@@ -241,10 +506,9 @@ query "aws_vpc_security_attached_enis_count" {
       sg ->> 'GroupId' = $1;
   EOQ
 
-  param "group_id" {}
 }
 
-query "aws_vpc_security_unrestricted_ingress" {
+query "vpc_security_unrestricted_ingress" {
   sql = <<-EOQ
     select
       'Unrestricted Ingress (Excludes ICMP)' as label,
@@ -266,10 +530,9 @@ query "aws_vpc_security_unrestricted_ingress" {
       and group_id = $1;
   EOQ
 
-  param "group_id" {}
 }
 
-query "aws_vpc_security_unrestricted_egress" {
+query "vpc_security_unrestricted_egress" {
   sql = <<-EOQ
     select
       'Unrestricted Egress (Excludes ICMP)' as label,
@@ -291,10 +554,168 @@ query "aws_vpc_security_unrestricted_egress" {
       and group_id = $1;
   EOQ
 
-  param "group_id" {}
 }
 
-query "aws_vpc_security_group_assoc" {
+# with queries
+
+query "dax_clusters_for_vpc_security_group" {
+  sql = <<-EOQ
+    select
+      arn as dax_cluster_arn
+    from
+      aws_dax_cluster,
+      jsonb_array_elements(security_groups) as sg
+    where
+      sg ->> 'SecurityGroupIdentifier' = $1;
+  EOQ
+}
+
+query "ec2_application_load_balancers_for_vpc_security_group" {
+  sql = <<-EOQ
+    select
+      arn as alb_arn
+    from
+      aws_ec2_application_load_balancer,
+      jsonb_array_elements_text(security_groups) as sg
+    where
+      sg = $1;
+  EOQ
+}
+
+query "ec2_classic_load_balancers_for_vpc_security_group" {
+  sql = <<-EOQ
+    select
+      arn as clb_arn
+    from
+      aws_ec2_classic_load_balancer,
+      jsonb_array_elements_text(security_groups) as sg
+    where
+      sg = $1;
+  EOQ
+}
+
+query "ec2_instances_for_vpc_security_group" {
+  sql = <<-EOQ
+    select
+      arn as instance_arn
+    from
+      aws_ec2_instance as i,
+      jsonb_array_elements(security_groups) as sg
+    where
+      sg ->> 'GroupId' = $1;
+  EOQ
+}
+
+query "ec2_launch_configurations_for_vpc_security_group" {
+  sql = <<-EOQ
+    select
+      launch_configuration_arn as launch_configuration_arn
+    from
+      aws_ec2_launch_configuration,
+      jsonb_array_elements_text(security_groups) as sg
+    where
+      sg = $1;
+  EOQ
+}
+
+query "efs_mount_targets_for_vpc_security_group" {
+  sql = <<-EOQ
+    select
+      mount_target_id as mount_target_id
+    from
+      aws_efs_mount_target,
+      jsonb_array_elements_text(security_groups) as sg
+    where
+      sg = $1;
+  EOQ
+}
+
+query "elasticache_clusters_for_vpc_security_group" {
+  sql = <<-EOQ
+    select
+      arn as elasticache_cluster_arn
+    from
+      aws_elasticache_cluster,
+      jsonb_array_elements(security_groups) as sg
+    where
+      sg ->> 'SecurityGroupId' = $1;
+  EOQ 
+}
+
+query "lambda_functions_for_vpc_security_group" {
+  sql = <<-EOQ
+    select
+      arn as lambda_arn
+    from
+      aws_lambda_function,
+      jsonb_array_elements_text(vpc_security_group_ids) as s
+    where
+      s = $1;
+  EOQ
+}
+
+query "rds_db_clusters_for_vpc_security_group" {
+  sql = <<-EOQ
+    select
+      arn as rds_db_cluster_arn
+    from
+      aws_rds_db_cluster,
+      jsonb_array_elements(vpc_security_groups) as sg
+    where
+      sg ->> 'VpcSecurityGroupId' = $1;
+  EOQ
+}
+
+query "rds_db_instances_for_vpc_security_group" {
+  sql = <<-EOQ
+          select
+            arn as rds_db_instance_arn
+          from
+            aws_rds_db_instance,
+            jsonb_array_elements(vpc_security_groups) as sg
+          where
+            sg ->> 'VpcSecurityGroupId' = $1;
+        EOQ
+}
+
+query "redshift_clusters_for_vpc_security_group" {
+  sql = <<-EOQ
+    select
+      arn as redshift_cluster_arn
+    from
+      aws_redshift_cluster,
+      jsonb_array_elements(vpc_security_groups) as sg
+    where
+      sg ->> 'VpcSecurityGroupId' = $1;
+  EOQ
+}
+
+query "sagemaker_notebook_instances_for_vpc_security_group" {
+  sql = <<-EOQ
+    select
+      arn as notebook_instance_arn
+    from
+      aws_sagemaker_notebook_instance,
+      jsonb_array_elements_text(security_groups) as sg
+    where
+      sg = $1;
+  EOQ
+}
+
+query "vpc_vpcs_for_vpc_security_group" {
+  sql = <<-EOQ
+    select
+      vpc_id as vpc_id
+    from
+      aws_vpc_security_group
+    where
+      group_id = $1;
+  EOQ
+}
+
+# table queries
+
+query "vpc_security_group_assoc" {
   sql = <<-EOQ
 
     -- EC2 instances
@@ -302,11 +723,11 @@ query "aws_vpc_security_group_assoc" {
       title as "Title",
       'aws_ec2_instance' as "Type",
       arn as "ARN",
-      '${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn=' || arn as link
-     from
-       aws_ec2_instance,
-       jsonb_array_elements(security_groups) as sg
-     where
+      '${dashboard.ec2_instance_detail.url_path}?input.instance_arn=' || arn as link
+    from
+      aws_ec2_instance,
+      jsonb_array_elements(security_groups) as sg
+    where
       sg ->> 'GroupId' = $1
 
     -- Lambda functions
@@ -314,10 +735,10 @@ query "aws_vpc_security_group_assoc" {
       title as "Title",
       'aws_lambda_function' as "Type",
       arn as "ARN",
-      '${dashboard.aws_lambda_function_detail.url_path}?input.lambda_arn=' || arn as link
+      '${dashboard.lambda_function_detail.url_path}?input.lambda_arn=' || arn as link
     from
-       aws_lambda_function,
-       jsonb_array_elements_text(vpc_security_group_ids) as sg
+      aws_lambda_function,
+      jsonb_array_elements_text(vpc_security_group_ids) as sg
     where
       sg = $1
 
@@ -393,9 +814,9 @@ query "aws_vpc_security_group_assoc" {
         null as link
       from
         aws_dax_cluster,
-        jsonb_array_elements_text(security_groups) as sg
+        jsonb_array_elements(security_groups) as sg
       where
-        sg = $1
+        sg ->> 'SecurityGroupIdentifier' = $1
 
     -- attached aws_dms_replication_instance
     union all select
@@ -405,9 +826,9 @@ query "aws_vpc_security_group_assoc" {
         null as link
       from
         aws_dms_replication_instance,
-        jsonb_array_elements_text(vpc_security_groups) as sg
+        jsonb_array_elements(vpc_security_groups) as sg
       where
-        sg = $1
+        sg ->> 'VpcSecurityGroupId' = $1
 
     -- attached aws_efs_mount_target
     union all select
@@ -429,9 +850,9 @@ query "aws_vpc_security_group_assoc" {
         null as link
       from
         aws_elasticache_cluster,
-        jsonb_array_elements_text(security_groups) as sg
+        jsonb_array_elements(security_groups) as sg
       where
-        sg = $1
+        sg ->> 'SecurityGroupId' = $1
 
 
     -- attached aws_rds_db_cluster
@@ -442,21 +863,21 @@ query "aws_vpc_security_group_assoc" {
         null as link
       from
         aws_rds_db_cluster,
-        jsonb_array_elements_text(vpc_security_groups) as sg
+        jsonb_array_elements(vpc_security_groups) as sg
       where
-        sg = $1
+        sg ->> 'SecurityGroupId' = $1
 
     -- attached aws_rds_db_instance
     union all select
         title as "Title",
         'aws_rds_db_instance' as "Type",
         arn as "ARN",
-      '${dashboard.aws_rds_db_instance_detail.url_path}?input.db_instance_arn=' || arn as link
+      '${dashboard.rds_db_instance_detail.url_path}?input.db_instance_arn=' || arn as link
       from
         aws_rds_db_instance,
-        jsonb_array_elements_text(vpc_security_groups) as sg
+        jsonb_array_elements(vpc_security_groups) as sg
       where
-        sg = $1
+        sg ->> 'VpcSecurityGroupId' = $1
 
 
     -- attached aws_redshift_cluster
@@ -464,12 +885,12 @@ query "aws_vpc_security_group_assoc" {
         title as "Title",
         'aws_redshift_cluster' as "Type",
         arn as "ARN",
-      '${dashboard.aws_redshift_cluster_detail.url_path}?input.cluster_arn=' || arn as link
+      '${dashboard.redshift_cluster_detail.url_path}?input.cluster_arn=' || arn as link
       from
         aws_redshift_cluster,
-        jsonb_array_elements_text(vpc_security_groups) as sg
+        jsonb_array_elements(vpc_security_groups) as sg
       where
-        sg = $1
+        sg ->> 'VpcSecurityGroupId' = $1
 
 
     -- attached aws_sagemaker_notebook_instance
@@ -484,15 +905,12 @@ query "aws_vpc_security_group_assoc" {
       where
         sg = $1
 
-
   EOQ
-
-  param "group_id" {}
 
 }
 ## TODO: Add aws_rds_db_instance / db_security_groups, ELB, ALB, elasticache, etc....
 
-query "aws_vpc_security_group_ingress_rule_sankey" {
+query "vpc_security_group_ingress_rule_sankey" {
   sql = <<-EOQ
 
     with associations as (
@@ -790,10 +1208,9 @@ query "aws_vpc_security_group_ingress_rule_sankey" {
         rules
   EOQ
 
-  param "group_id" {}
 }
 
-query "aws_vpc_security_group_egress_rule_sankey" {
+query "vpc_security_group_egress_rule_sankey" {
   sql = <<-EOQ
 
 
@@ -1091,11 +1508,9 @@ query "aws_vpc_security_group_egress_rule_sankey" {
       from
         rules
   EOQ
-    param "group_id" {}
 }
 
-
-query "aws_vpc_security_group_ingress_rules" {
+query "vpc_security_group_ingress_rules" {
   sql = <<-EOQ
     select
       concat(text(cidr_ipv4), text(cidr_ipv6), referenced_group_id, referenced_vpc_id,prefix_list_id) as "Source",
@@ -1123,10 +1538,9 @@ query "aws_vpc_security_group_ingress_rules" {
       and not is_egress
   EOQ
 
-  param "group_id" {}
 }
 
-query "aws_vpc_security_group_egress_rules" {
+query "vpc_security_group_egress_rules" {
   sql = <<-EOQ
     select
       concat(text(cidr_ipv4), text(cidr_ipv6), referenced_group_id, referenced_vpc_id,prefix_list_id) as "Destination",
@@ -1154,11 +1568,10 @@ query "aws_vpc_security_group_egress_rules" {
       and is_egress
   EOQ
 
-  param "group_id" {}
 }
 
-query "aws_vpc_security_group_overview" {
-  sql   = <<-EOQ
+query "vpc_security_group_overview" {
+  sql = <<-EOQ
     select
       group_name as "Group Name",
       group_id as "Group ID",
@@ -1173,10 +1586,9 @@ query "aws_vpc_security_group_overview" {
       group_id = $1
     EOQ
 
-  param "group_id" {}
 }
 
-query "aws_vpc_security_group_tags" {
+query "vpc_security_group_tags" {
   sql = <<-EOQ
     select
       tag ->> 'Key' as "Key",
@@ -1190,5 +1602,4 @@ query "aws_vpc_security_group_tags" {
       tag ->> 'Key';
     EOQ
 
-  param "group_id" {}
 }

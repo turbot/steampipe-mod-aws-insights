@@ -1,6 +1,6 @@
-dashboard "aws_iam_root_access_report" {
+dashboard "iam_root_access_report" {
 
-  title = "AWS IAM Root Access Report"
+  title         = "AWS IAM Root Access Report"
   documentation = file("./dashboards/iam/docs/iam_root_access_report.md")
 
   tags = merge(local.iam_common_tags, {
@@ -12,12 +12,12 @@ dashboard "aws_iam_root_access_report" {
 
     card {
       width = 2
-      sql   = query.aws_iam_root_access_keys_count.sql
+      query = query.iam_root_access_keys_count
     }
 
     card {
       width = 2
-      sql   = query.aws_iam_accounts_without_root_mfa.sql
+      query = query.iam_accounts_without_root_mfa
     }
 
   }
@@ -28,12 +28,12 @@ dashboard "aws_iam_root_access_report" {
       display = "none"
     }
 
-    sql   = query.aws_iam_root_access_keys_table.sql
+    query = query.iam_root_access_keys_table
   }
 
 }
 
-query "aws_iam_root_access_keys_count" {
+query "iam_root_access_keys_count" {
   sql = <<-EOQ
     select
       sum(account_access_keys_present) as value,
@@ -44,7 +44,7 @@ query "aws_iam_root_access_keys_count" {
   EOQ
 }
 
-query "aws_iam_accounts_without_root_mfa" {
+query "iam_accounts_without_root_mfa" {
   sql = <<-EOQ
     select
       count(*) filter (where not account_mfa_enabled) as value,
@@ -55,7 +55,7 @@ query "aws_iam_accounts_without_root_mfa" {
   EOQ
 }
 
-query "aws_iam_root_access_keys_table" {
+query "iam_root_access_keys_table" {
   sql = <<-EOQ
     select
       a.title as "Account",

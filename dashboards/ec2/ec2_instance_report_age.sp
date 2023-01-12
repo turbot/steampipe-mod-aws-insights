@@ -1,4 +1,4 @@
-dashboard "aws_ec2_instance_age_report" {
+dashboard "ec2_instance_age_report" {
 
   title         = "AWS EC2 Instance Age Report"
   documentation = file("./dashboards/ec2/docs/ec2_instance_report_age.md")
@@ -11,38 +11,38 @@ dashboard "aws_ec2_instance_age_report" {
   container {
 
     card {
-      sql   = query.aws_ec2_instance_count.sql
+      query = query.ec2_instance_count
       width = 2
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_ec2_instance_24_hours_count.sql
+      query = query.ec2_instance_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_ec2_instance_30_days_count.sql
+      query = query.ec2_instance_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.aws_ec2_instance_30_90_days_count.sql
+      query = query.ec2_instance_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_ec2_instance_90_365_days_count.sql
+      query = query.ec2_instance_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.aws_ec2_instance_1_year_count.sql
+      query = query.ec2_instance_1_year_count
     }
 
   }
@@ -57,15 +57,15 @@ dashboard "aws_ec2_instance_age_report" {
     }
 
     column "Instance ID" {
-      href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.ARN | @uri}}"
+      href = "${dashboard.ec2_instance_detail.url_path}?input.instance_arn={{.ARN | @uri}}"
     }
 
-    sql = query.aws_ec2_instance_age_table.sql
+    query = query.ec2_instance_age_table
   }
 
 }
 
-query "aws_ec2_instance_24_hours_count" {
+query "ec2_instance_24_hours_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -77,7 +77,7 @@ query "aws_ec2_instance_24_hours_count" {
   EOQ
 }
 
-query "aws_ec2_instance_30_days_count" {
+query "ec2_instance_30_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -89,7 +89,7 @@ query "aws_ec2_instance_30_days_count" {
   EOQ
 }
 
-query "aws_ec2_instance_30_90_days_count" {
+query "ec2_instance_30_90_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -101,7 +101,7 @@ query "aws_ec2_instance_30_90_days_count" {
   EOQ
 }
 
-query "aws_ec2_instance_90_365_days_count" {
+query "ec2_instance_90_365_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -113,7 +113,7 @@ query "aws_ec2_instance_90_365_days_count" {
   EOQ
 }
 
-query "aws_ec2_instance_1_year_count" {
+query "ec2_instance_1_year_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -125,7 +125,7 @@ query "aws_ec2_instance_1_year_count" {
   EOQ
 }
 
-query "aws_ec2_instance_age_table" {
+query "ec2_instance_age_table" {
   sql = <<-EOQ
     select
       i.instance_id as "Instance ID",
