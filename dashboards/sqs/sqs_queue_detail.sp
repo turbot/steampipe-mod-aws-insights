@@ -281,8 +281,8 @@ query "sqs_queue_encryption" {
   sql = <<-EOQ
     select
       'Encryption' as label,
-      case when kms_master_key_id is not null then 'Enabled' else 'Disabled' end as value,
-      case when kms_master_key_id is not null then 'ok' else 'alert' end as "type"
+      case when kms_master_key_id is not null or sqs_managed_sse_enabled then 'Enabled' else 'Disabled' end as value,
+      case when kms_master_key_id is not null or sqs_managed_sse_enabled then 'ok' else 'alert' end as "type"
     from
       aws_sqs_queue
     where
