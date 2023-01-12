@@ -49,20 +49,22 @@ node "dax_cluster_node" {
 
 node "dax_parameter_group" {
   category = category.dax_parameter_group
-  sql = <<-EOQ
+  sql      = <<-EOQ
     select
       p.parameter_group_name as id,
       p.title as title,
       jsonb_build_object(
         'Name', p.parameter_group_name,
-        'Account ID', p.account_id,
-        'Region', p.region
+        'Region', p.region,
+        'Partition', p.partition
       ) as properties
     from
       aws_dax_parameter_group as p,
       aws_dax_cluster as c
     where
       c.parameter_group ->> 'ParameterGroupName' = p.parameter_group_name
+      and p.account_id = c.account_id
+      and p.region = c.region
       and c.arn = any($1);
   EOQ
 
@@ -78,7 +80,6 @@ node "dax_subnet_group" {
       jsonb_build_object(
         'Name', g.subnet_group_name,
         'VPC ID', g.vpc_id,
-        'Account ID', g.account_id,
         'Region', g.region
       ) as properties
     from
