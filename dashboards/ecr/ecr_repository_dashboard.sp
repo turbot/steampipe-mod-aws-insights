@@ -157,7 +157,7 @@ query "ecr_repository_encryption_disabled_count" {
     select
       count(*) as value,
       'Encryption Disabled' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as "type"
+      case count(*) when 0 then 'alert' else 'ok' end as "type"
     from
       aws_ecr_repository
     where

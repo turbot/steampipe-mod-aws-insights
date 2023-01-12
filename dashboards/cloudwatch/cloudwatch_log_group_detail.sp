@@ -374,7 +374,7 @@ query "cloudwatch_log_group_overview" {
   sql = <<-EOQ
     select
       name as "Name",
-      creation_time as "Create Date",
+      creation_time as "Creation Date",
       region as "Region",
       account_id as "Account ID",
       arn as "ARN"

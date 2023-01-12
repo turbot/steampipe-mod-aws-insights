@@ -7,7 +7,7 @@ dashboard "ec2_network_load_balancer_detail" {
   })
 
   input "nlb" {
-    title = "Select a Network Load balancer:"
+    title = "Select a Network Load Balancer:"
     query = query.ec2_network_load_balancer_input
     width = 4
   }

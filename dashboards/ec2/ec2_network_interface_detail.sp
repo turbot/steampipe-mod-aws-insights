@@ -475,7 +475,7 @@ query "ec2_network_interface_association_details" {
       eni.association_id as "Association ID",
       eni.association_ip_owner_id as "IP Owner ID",
       eni.association_public_dns_name as "Public DNS Name",
-      eip_alloc.arn as "eip_alloc_arn"
+      eip_alloc.arn as "EIP Alloc ARN"
     from
       aws_ec2_network_interface eni
     left join aws_vpc_eip eip_alloc on

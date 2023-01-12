@@ -7,7 +7,7 @@ dashboard "ec2_gateway_load_balancer_detail" {
   })
 
   input "gateway_load_balancer" {
-    title = "Select a Gateway Load balancer:"
+    title = "Select a Gateway Load Balancer:"
     query = query.ec2_gateway_load_balancer_input
     width = 4
   }

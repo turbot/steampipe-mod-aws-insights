@@ -175,50 +175,41 @@ dashboard "api_gatewayv2_api_detail" {
     }
   }
 
+
   container {
 
-    container {
+    table {
+      title = "Overview"
+      type  = "line"
+      width = 3
+      query = query.api_gatewayv2_api_overview
+      args  = [self.input.api_id.value]
 
-      table {
-        title = "Overview"
-        type  = "line"
-        width = 3
-        query = query.api_gatewayv2_api_overview
-        args  = [self.input.api_id.value]
-
-      }
-
-      table {
-        title = "Tags"
-        width = 3
-        query = query.api_gatewayv2_api_tags
-        args  = [self.input.api_id.value]
-      }
-
-
-      table {
-        title = "Stages"
-        width = 6
-        query = query.api_gatewayv2_api_stages
-        args  = [self.input.api_id.value]
-      }
     }
 
+    table {
+      title = "Tags"
+      width = 3
+      query = query.api_gatewayv2_api_tags
+      args  = [self.input.api_id.value]
+    }
+
+
+    table {
+      title = "Stages"
+      width = 6
+      query = query.api_gatewayv2_api_stages
+      args  = [self.input.api_id.value]
+    }
   }
 
   container {
 
-
-    container {
-
-      table {
-        title = "Integrations"
-        query = query.api_gatewayv2_api_integrations
-        args  = [self.input.api_id.value]
-      }
-
+    table {
+      title = "Integrations"
+      query = query.api_gatewayv2_api_integrations
+      args  = [self.input.api_id.value]
     }
-
   }
 }
 
@@ -264,7 +255,8 @@ query "kinesis_streams_for_api_gatewayv2_api" {
       join aws_kinesis_stream as s on i.request_parameters ->> 'StreamName' = s.stream_name
       join aws_api_gatewayv2_api as a on a.api_id = i.api_id
     where
-      integration_subtype like '%Kinesis-%' and a.api_id = $1;
+      integration_subtype like '%Kinesis-%'
+      and a.api_id = $1;
   EOQ
 }
 

@@ -298,7 +298,7 @@ query "ebs_snapshot_age" {
   sql = <<-EOQ
     with data as (
       select
-        (EXTRACT(epoch FROM (SELECT (NOW() - start_time)))/86400)::int as age
+        (extract(epoch from (select (now() - start_time)))/86400)::int as age
       from
         aws_ebs_snapshot
       where

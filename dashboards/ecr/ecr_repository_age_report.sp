@@ -11,38 +11,38 @@ dashboard "ecr_repository_age_report" {
   container {
 
     card {
-      query =query.ecr_repository_count
+      query = query.ecr_repository_count
       width = 2
     }
 
     card {
       type  = "info"
       width = 2
-      query =query.ecr_repository_24_hours_count
+      query = query.ecr_repository_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      query =query.ecr_repository_30_days_count
+      query = query.ecr_repository_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query =query.ecr_repository_30_90_days_count
+      query = query.ecr_repository_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query =query.ecr_repository_90_365_days_count
+      query = query.ecr_repository_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query =query.ecr_repository_1_year_count
+      query = query.ecr_repository_1_year_count
     }
 
   }
@@ -140,6 +140,6 @@ query "ecr_repository_age_table" {
     where
       e.account_id = a.account_id
     order by
-      e.arn;
+      e.repository_name;
   EOQ
 }

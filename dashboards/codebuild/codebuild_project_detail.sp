@@ -154,7 +154,7 @@ dashboard "codebuild_project_detail" {
       node {
         base = node.vpc_vpc
         args = {
-          vpc_vpc_ids = with.vpc_vpcs_for_codebuild_project.rows[*].vpc_vpc_id
+          vpc_vpc_ids = with.vpc_vpcs_for_codebuild_project.rows[*].vpc_id
         }
       }
 
@@ -425,7 +425,7 @@ query "vpc_subnets_for_codebuild_project" {
 query "vpc_vpcs_for_codebuild_project" {
   sql = <<-EOQ
     select
-      vpc_config ->> 'VpcId' as vpc_vpc_id
+      vpc_config ->> 'VpcId' as vpc_id
     from
       aws_codebuild_project
     where

@@ -96,7 +96,7 @@ query "codepipeline_pipeline_unencrypted_count" {
   EOQ
 }
 
-// # Assessment Queries
+# Assessment Queries
 
 query "codepipeline_pipeline_encryption_status" {
   sql = <<-EOQ
