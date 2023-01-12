@@ -1,3 +1,44 @@
+## v0.10 [2023-01-12]
+
+_Dependencies_
+
+- AWS plugin `v0.91.0` or higher is now required. (TBD)
+- Steampipe `v0.18.0` or higher is now required (TBD)
+
+_What's new?_
+
+- Added resource relationship graphs across all the detail dashboards to highlight the relationship the resource shares with other resources.
+- New dashboards added:
+  - [AWS API Gateway V2 API Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.api_gatewayv2_detail)
+  - [AWS Backup Plan Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.backup_plan_detail)
+  - [AWS Backup Vault Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.backup_vault_detail)
+  - [AWS CloudFront Distribution Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.cloudfront_distribution_detail)
+  - [AWS CloudWatch Log Group Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.cloudwatch_log_group_detail)
+  - [AWS CodeBuild Project Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.codebuild_project_detail)
+  - [AWS CodeCommit Repository Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.codecommit_repository_detail)
+  - [AWS CodePipeline Pipeline Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.codepipeline_pipeline_detail)
+  - [AWS DAX Cluster Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.dax_cluster_detail)
+  - [AWS EBS Snapshot Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.ebs_snapshot_detail)
+  - [AWS EC2 AMI Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/dashboard.ec2_ami_detail)
+  - [AWS EC2 Application Load Balancer Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.ec2_application_load_balancer_detail)
+  - [AWS EC2 Classic Load Balancer Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.ec2_classic_load_balancer_detail)
+  - [AWS EC2 Gateway Load Balancer Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.ec2_gateway_load_balancer_detail)
+  - [AWS EC2 Network Load Balancer Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.ec2_network_load_balancer_detail)
+  - [AWS EC2 Network Interface Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.ec2_network_interface_detail)
+  - [AWS ECR Repository Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.ecr_repository_detail)
+  - [AWS ECS Cluster Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.ecs_cluster_detail)
+  - [AWS ECS Service Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.ecs_service_detail)
+  - [AWS ECS Task Definition Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.ecs_task_detail)
+  - [AWS EKS Cluster Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.eks_cluster_detail)
+  - [AWS ElastiCache Cluster Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.elasticache_cluster_detail)
+  - [AWS ElastiCache Cluster Node Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.elasticache_cluster_node_detail)
+  - [AWS EMR Cluster Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.emr_cluster_detail)
+  - [AWS EventBridge Rule Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.eventbridge_rule_detail)
+  - [AWS IAM Policy Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/dashboard.iam_policy_detail)
+  - [AWS Redshift Snapshot Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.redshift_snapshot_detail)
+  - [AWS VPC Elastic IP Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.vpc_elastic_ip_detail)
+  - [AWS VPC Flow Logs Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/ dashboard.vpc_flow_logs_detail)
+
 ## v0.9 [2022-12-02]
 
 _Bug fixes_
