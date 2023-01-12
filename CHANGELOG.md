@@ -12,7 +12,7 @@ _What's new?_
   - [AWS API Gateway V2 API Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/dashboard.api_gatewayv2_detail)
   - [AWS Backup Plan Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/dashboard.backup_plan_detail)
   - [AWS Backup Vault Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/dashboard.backup_vault_detail)
-  - [AWS Cloudfront Distribution Dashboard](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/  dashboard.cloudfront_distribution_dashboard)
+  - [AWS Cloudfront Distribution Dashboard](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/dashboard.cloudfront_distribution_dashboard)
   - [AWS CloudFront Distribution Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/dashboard.cloudfront_distribution_detail)
   - [AWS CloudWatch Log Group Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/dashboard.cloudwatch_log_group_detail)
   - [AWS Codebuild Project Dashboard](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/dashboard.codebuild_project_dashboard)
