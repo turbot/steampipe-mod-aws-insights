@@ -34,7 +34,7 @@ dashboard "efs_file_system_dashboard" {
 
     chart {
       title = "File System Encryption Status"
-      query   = query.efs_file_system_by_encryption_status
+      query = query.efs_file_system_by_encryption_status
       type  = "donut"
       width = 3
 
@@ -50,7 +50,7 @@ dashboard "efs_file_system_dashboard" {
 
     chart {
       title = "File System Automatic Backup Status"
-      query   = query.efs_file_system_by_automatic_backup_status
+      query = query.efs_file_system_by_automatic_backup_status
       type  = "donut"
       width = 3
 
@@ -79,35 +79,35 @@ dashboard "efs_file_system_dashboard" {
 
     chart {
       title = "File Systems by Region"
-      query   = query.efs_file_system_by_region
+      query = query.efs_file_system_by_region
       type  = "column"
       width = 3
     }
 
     chart {
       title = "File Systems by State"
-      query   = query.efs_file_system_by_state
+      query = query.efs_file_system_by_state
       type  = "column"
       width = 3
     }
 
     chart {
       title = "File Systems by Age"
-      query   = query.efs_file_system_by_age
+      query = query.efs_file_system_by_age
       type  = "column"
       width = 3
     }
 
     chart {
       title = "File Systems by Performance Mode"
-      query   = query.efs_file_system_by_performance_mode
+      query = query.efs_file_system_by_performance_mode
       type  = "column"
       width = 3
     }
 
     chart {
       title = "File Systems by Throughput Mode"
-      query   = query.efs_file_system_by_throughput_mode
+      query = query.efs_file_system_by_throughput_mode
       type  = "column"
       width = 3
     }
@@ -217,8 +217,10 @@ query "efs_file_system_by_region" {
       count(*)
     from
       aws_efs_file_system
-    group by region
-    order by region;
+    group by
+      region
+    order by
+      region;
   EOQ
 }
 

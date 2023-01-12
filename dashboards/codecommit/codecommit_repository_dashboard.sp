@@ -79,19 +79,19 @@ dashboard "codecommit_repository_dashboard" {
       title = "Repositories by Account"
       type  = "column"
       width = 4
-      query   = query.codecommit_repository_by_account
+      query = query.codecommit_repository_by_account
     }
 
     chart {
       title = "Repositories by Region"
       type  = "column"
       width = 4
-      query  = query.codecommit_repository_by_region
+      query = query.codecommit_repository_by_region
     }
 
     chart {
       title = "Repositories by Age"
-      query   = query.codecommit_repository_by_creation_month
+      query = query.codecommit_repository_by_creation_month
       type  = "column"
       width = 4
     }
@@ -213,7 +213,7 @@ query "codecommit_repository_cost_per_month" {
 query "codecommit_repository_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       count(t.*) as "repositories"
     from
       aws_codecommit_repository as t,

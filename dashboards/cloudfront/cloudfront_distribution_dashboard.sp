@@ -43,15 +43,15 @@ dashboard "cloudfront_distribution_dashboard" {
 
     chart {
       title = "Logging Status"
-      query   = query.cloudfront_distribution_logging_status
+      query = query.cloudfront_distribution_logging_status
       type  = "donut"
       width = 3
 
       series "count" {
-        point "Enabled" {
+        point "enabled" {
           color = "ok"
         }
-        point "Disabled" {
+        point "disabled" {
           color = "alert"
         }
       }
@@ -59,15 +59,15 @@ dashboard "cloudfront_distribution_dashboard" {
 
     chart {
       title = "SNI Status"
-      query   = query.cloudfront_distribution_sni_status
+      query = query.cloudfront_distribution_sni_status
       type  = "donut"
       width = 3
 
       series "count" {
-        point "Enabled" {
+        point "enabled" {
           color = "ok"
         }
-        point "Disabled" {
+        point "disabled" {
           color = "alert"
         }
       }
@@ -75,15 +75,15 @@ dashboard "cloudfront_distribution_dashboard" {
 
     chart {
       title = "Encryption in Transit Status"
-      query   = query.cloudfront_distribution_encryption_in_transit_status
+      query = query.cloudfront_distribution_encryption_in_transit_status
       type  = "donut"
       width = 3
 
       series "count" {
-        point "Enabled" {
+        point "enabled" {
           color = "ok"
         }
-        point "Disabled" {
+        point "disabled" {
           color = "alert"
         }
       }
@@ -91,15 +91,15 @@ dashboard "cloudfront_distribution_dashboard" {
 
     chart {
       title = "WAF Status"
-      query   = query.cloudfront_distribution_waf_status
+      query = query.cloudfront_distribution_waf_status
       type  = "donut"
       width = 3
 
       series "count" {
-        point "Enabled" {
+        point "enabled" {
           color = "ok"
         }
-        point "Disabled" {
+        point "disabled" {
           color = "alert"
         }
       }
@@ -198,7 +198,7 @@ query "cloudfront_distribution_logging_status" {
       count(*)
     from (
       select
-        case when logging ->> 'Enabled' = 'false' then 'Disabled' else 'Enabled' end as logging_status
+        case when logging ->> 'Enabled' = 'false' then 'disabled' else 'enabled' end as logging_status
       from
         aws_cloudfront_distribution
     ) as d
@@ -216,7 +216,7 @@ query "cloudfront_distribution_sni_status" {
       count(*)
     from (
       select
-        case when viewer_certificate ->> 'SSLSupportMethod' <> 'sni-only' then 'Disabled' else 'Enabled' end as sni_status
+        case when viewer_certificate ->> 'SSLSupportMethod' <> 'sni-only' then 'disabled' else 'enabled' end as sni_status
       from
         aws_cloudfront_distribution
     ) as d
@@ -234,7 +234,7 @@ query "cloudfront_distribution_encryption_in_transit_status" {
       count(*)
     from (
       select
-        case when default_cache_behavior ->> 'ViewerProtocolPolicy' = 'allow-all' then 'Disabled' else 'Enabled' end as eit_status
+        case when default_cache_behavior ->> 'ViewerProtocolPolicy' = 'allow-all' then 'disabled' else 'enabled' end as eit_status
       from
         aws_cloudfront_distribution
     ) as d
@@ -248,7 +248,7 @@ query "cloudfront_distribution_encryption_in_transit_status" {
 query "cloudfront_distribution_waf_status" {
   sql = <<-EOQ
     select
-      case when web_acl_id = '' then 'Disabled' else 'Enabled' end as waf_status,
+      case when web_acl_id = '' then 'disabled' else 'enabled' end as waf_status,
       count(*)
     from
       aws_cloudfront_distribution

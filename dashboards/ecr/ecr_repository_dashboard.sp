@@ -12,28 +12,28 @@ dashboard "ecr_repository_dashboard" {
   container {
 
     card {
-      query   = query.ecr_repository_count
+      query = query.ecr_repository_count
       width = 2
     }
 
     #Assessments
     card {
-      query   = query.ecr_repository_encryption_disabled_count
+      query = query.ecr_repository_encryption_disabled_count
       width = 2
     }
 
     card {
-      query   = query.ecr_repository_scan_on_push_disabled_count
+      query = query.ecr_repository_scan_on_push_disabled_count
       width = 2
     }
 
     card {
-      query   = query.ecr_repository_tagging_disabled_count
+      query = query.ecr_repository_tagging_disabled_count
       width = 2
     }
 
     card {
-      query   = query.ecr_repository_tag_mutability_count
+      query = query.ecr_repository_tag_mutability_count
       width = 2
     }
 
@@ -44,10 +44,10 @@ dashboard "ecr_repository_dashboard" {
   container {
 
     title = "Assessments"
-    
+
     chart {
       title = "Encryption Status"
-      query   = query.ecr_repository_encryption_status
+      query = query.ecr_repository_encryption_status
       type  = "donut"
       width = 3
 
@@ -63,7 +63,7 @@ dashboard "ecr_repository_dashboard" {
 
     chart {
       title = "Scan on Push Status"
-      query   = query.ecr_repository_scan_on_push_status
+      query = query.ecr_repository_scan_on_push_status
       type  = "donut"
       width = 3
 
@@ -79,7 +79,7 @@ dashboard "ecr_repository_dashboard" {
 
     chart {
       title = "Untagged"
-      query   = query.ecr_repository_tagging_status
+      query = query.ecr_repository_tagging_status
       type  = "donut"
       width = 3
 
@@ -95,7 +95,7 @@ dashboard "ecr_repository_dashboard" {
 
     chart {
       title = "Tag Immutability Status"
-      query   = query.ecr_repository_tag_immutability_status
+      query = query.ecr_repository_tag_immutability_status
       type  = "donut"
       width = 3
 
@@ -118,21 +118,21 @@ dashboard "ecr_repository_dashboard" {
 
     chart {
       title = "ECR Repositories by Account"
-      query   = query.ecr_repository_by_account
+      query = query.ecr_repository_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "ECR Repositories by Region"
-      query   = query.ecr_repository_by_region
+      query = query.ecr_repository_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "ECR Repositories by Creation Month"
-      query   = query.ecr_repository_by_creation_month
+      query = query.ecr_repository_by_creation_month
       type  = "column"
       width = 4
     }
@@ -204,7 +204,7 @@ query "ecr_repository_tag_mutability_count" {
   EOQ
 }
 
-// # Assessment Queries
+# Assessment Queries
 
 query "ecr_repository_encryption_status" {
   sql = <<-EOQ
@@ -212,7 +212,7 @@ query "ecr_repository_encryption_status" {
       encryption_status,
       count(*)
     from (
-      select 
+      select
         encryption_configuration,
         case when encryption_configuration is not null then
           'enabled'
@@ -356,7 +356,7 @@ query "ecr_repository_tag_immutability_status" {
 query "ecr_repository_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       count(p.*) as "ecr repositories"
     from
       aws_ecr_repository as p,

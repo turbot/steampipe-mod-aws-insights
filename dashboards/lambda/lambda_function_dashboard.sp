@@ -450,7 +450,7 @@ query "lambda_function_cost_per_month" {
 query "lambda_function_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       count(i.*) as "functions"
     from
       aws_lambda_function as i,
@@ -491,7 +491,7 @@ query "lambda_function_by_runtime" {
 query "lambda_function_code_size_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       round(cast(sum(i.code_size)/1024/1024 as numeric), 1) as "MB"
     from
       aws_lambda_function as i,
@@ -532,7 +532,7 @@ query "lambda_function_code_size_by_runtime" {
 query "lambda_function_memory_size_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       round(cast(sum(i.memory_size)/1024.0 as numeric), 2) as "GB"
     from
       aws_lambda_function as i,

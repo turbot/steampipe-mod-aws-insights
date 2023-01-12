@@ -345,7 +345,7 @@ query "iam_roles_by_boundary_policy" {
 query "iam_roles_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       count(i.*) as "total"
     from
       aws_iam_role as i,

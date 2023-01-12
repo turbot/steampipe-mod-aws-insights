@@ -12,38 +12,38 @@ dashboard "codepipeline_pipeline_age_report" {
   container {
 
     card {
-      query   = query.codepipeline_pipeline_count
+      query = query.codepipeline_pipeline_count
       width = 2
     }
 
     card {
       type  = "info"
       width = 2
-      query   = query.codepipeline_pipeline_24_hours_count
+      query = query.codepipeline_pipeline_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      query   = query.codepipeline_pipeline_30_days_count
+      query = query.codepipeline_pipeline_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query   = query.codepipeline_pipeline_30_90_days_count
+      query = query.codepipeline_pipeline_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query   = query.codepipeline_pipeline_90_365_days_count
+      query = query.codepipeline_pipeline_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query   = query.codepipeline_pipeline_1_year_count
+      query = query.codepipeline_pipeline_1_year_count
     }
 
   }
@@ -142,6 +142,6 @@ query "codepipeline_pipeline_age_table" {
     where
       c.account_id = a.account_id
     order by
-      c.arn;
+      c.name;
   EOQ
 }

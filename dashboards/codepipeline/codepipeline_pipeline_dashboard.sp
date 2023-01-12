@@ -11,12 +11,12 @@ dashboard "codepipeline_pipeline_dashboard" {
 
     # Analysis
     card {
-      query   = query.codepipeline_pipeline_count
+      query = query.codepipeline_pipeline_count
       width = 2
     }
 
     card {
-      query   = query.codepipeline_pipeline_unencrypted_count
+      query = query.codepipeline_pipeline_unencrypted_count
       width = 2
     }
   }
@@ -28,7 +28,7 @@ dashboard "codepipeline_pipeline_dashboard" {
 
     chart {
       title = "Encryption status"
-      query   = query.codepipeline_pipeline_encryption_status
+      query = query.codepipeline_pipeline_encryption_status
       type  = "donut"
       width = 4
 
@@ -41,7 +41,7 @@ dashboard "codepipeline_pipeline_dashboard" {
         }
       }
     }
-    }
+  }
 
   container {
 
@@ -49,21 +49,21 @@ dashboard "codepipeline_pipeline_dashboard" {
 
     chart {
       title = "Pipelines by Account"
-      query   = query.codepipeline_pipeline_by_account
+      query = query.codepipeline_pipeline_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Pipelines by Region"
-      query   = query.codepipeline_pipeline_by_region
+      query = query.codepipeline_pipeline_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Pipelines by Age"
-      query   = query.codepipeline_pipeline_by_creation_month
+      query = query.codepipeline_pipeline_by_creation_month
       width = 4
     }
 
@@ -124,7 +124,7 @@ query "codepipeline_pipeline_encryption_status" {
 query "codepipeline_pipeline_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       count(c.*) as "pipelines"
     from
       aws_codepipeline_pipeline as c,

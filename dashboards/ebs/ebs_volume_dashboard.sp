@@ -364,7 +364,7 @@ query "ebs_volume_cost_per_month" {
 query "ebs_volume_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       count(v.*) as "volumes"
     from
       aws_ebs_volume as v,
@@ -381,7 +381,7 @@ query "ebs_volume_by_account" {
 query "ebs_volume_storage_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       sum(v.size) as "GB"
     from
       aws_ebs_volume as v,

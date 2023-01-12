@@ -340,7 +340,7 @@ query "eks_cost_per_month" {
 query "eks_cluster_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       count(c.*) as "clusters"
     from
       aws_eks_cluster as c,

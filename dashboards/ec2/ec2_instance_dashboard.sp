@@ -368,7 +368,7 @@ query "ec2_instance_cost_per_month" {
 query "ec2_instance_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       count(i.*) as "total"
     from
       aws_ec2_instance as i,

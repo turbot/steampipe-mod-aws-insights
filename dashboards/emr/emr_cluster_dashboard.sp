@@ -229,7 +229,7 @@ query "emr_cluster_termination_protection_status" {
 query "emr_cluster_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       count(c.*) as "total"
     from
       aws_emr_cluster as c,

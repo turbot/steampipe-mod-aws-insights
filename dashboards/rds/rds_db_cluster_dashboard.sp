@@ -398,7 +398,7 @@ query "rds_db_cluster_cost_per_month" {
 query "rds_db_cluster_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       count(i.*) as "total"
     from
       aws_rds_db_cluster as i,

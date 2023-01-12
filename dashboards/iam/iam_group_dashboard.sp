@@ -181,7 +181,7 @@ query "iam_groups_with_inline_policy" {
 query "iam_groups_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       count(g.*) as "total"
     from
       aws_iam_group as g,

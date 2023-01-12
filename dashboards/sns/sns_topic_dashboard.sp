@@ -274,7 +274,7 @@ query "sns_topic_cost_per_month" {
 query "sns_topic_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       count(i.*) as "total"
     from
       aws_sns_topic as i,

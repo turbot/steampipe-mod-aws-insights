@@ -145,7 +145,7 @@ query "backup_vault_input" {
   EOQ
 }
 
-#With queries
+# With queries
 
 query "backup_plans_for_backup_vault" {
   sql = <<-EOQ

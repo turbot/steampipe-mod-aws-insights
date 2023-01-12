@@ -126,8 +126,8 @@ query "api_gatewayv2_api_table" {
       api.api_id as "ID",
       now()::date - api.created_date::date as "Age in Days",
       api.created_date as "Create Time",
-      acc.title as "Account",
       api.protocol_type as "Protocol",
+      acc.title as "Account",
       api.account_id as "Account ID",
       api.region as "Region"
     from

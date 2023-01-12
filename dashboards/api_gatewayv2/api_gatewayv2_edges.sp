@@ -31,7 +31,7 @@ edge "api_gateway_integration_to_lambda_function" {
 }
 
 edge "api_gatewayv2_api_to_ec2_load_balancer_listener" {
-  title = "lb listener"
+  title = "load balancer listener"
 
   sql = <<-EOQ
     select

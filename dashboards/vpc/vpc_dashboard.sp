@@ -339,7 +339,7 @@ query "vpc_cost_per_month" {
 query "vpc_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       count(v.*) as "volumes"
     from
       aws_vpc as v,

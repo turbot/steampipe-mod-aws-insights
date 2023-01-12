@@ -341,7 +341,7 @@ query "vpc_default_security_group_status" {
 query "vpc_security_group_by_acount" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       count(s.*) as "security_groups"
     from
       aws_vpc_security_group as s,

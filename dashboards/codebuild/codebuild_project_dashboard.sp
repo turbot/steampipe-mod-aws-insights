@@ -12,28 +12,28 @@ dashboard "codebuild_project_dashboard" {
   container {
 
     card {
-      query   = query.codebuild_project_count
+      query = query.codebuild_project_count
       width = 2
     }
 
     #Assessments
     card {
-      query   = query.codebuild_project_encryption_disabled
+      query = query.codebuild_project_encryption_disabled
       width = 2
     }
 
     card {
-      query   = query.codebuild_project_logging_disabled
+      query = query.codebuild_project_logging_disabled
       width = 2
     }
 
     card {
-      query   = query.codebuild_project_privileged_mode_disabled
+      query = query.codebuild_project_privileged_mode_disabled
       width = 2
     }
 
     card {
-      query   = query.codebuild_project_badge_disabled
+      query = query.codebuild_project_badge_disabled
       width = 2
     }
 
@@ -48,7 +48,7 @@ dashboard "codebuild_project_dashboard" {
 
     chart {
       title = "Encryption Status"
-      query   = query.codebuild_project_encryption_status
+      query = query.codebuild_project_encryption_status
       type  = "donut"
       width = 3
 
@@ -64,7 +64,7 @@ dashboard "codebuild_project_dashboard" {
 
     chart {
       title = "Logging Status"
-      query   = query.codebuild_project_logging_status
+      query = query.codebuild_project_logging_status
       type  = "donut"
       width = 3
 
@@ -80,7 +80,7 @@ dashboard "codebuild_project_dashboard" {
 
     chart {
       title = "Privileged Mode Status"
-      query   = query.codebuild_project_privileged_mode_status
+      query = query.codebuild_project_privileged_mode_status
       type  = "donut"
       width = 3
 
@@ -96,7 +96,7 @@ dashboard "codebuild_project_dashboard" {
 
     chart {
       title = "Badge Status"
-      query   = query.codebuild_project_badge_status
+      query = query.codebuild_project_badge_status
       type  = "donut"
       width = 3
 
@@ -119,14 +119,14 @@ dashboard "codebuild_project_dashboard" {
     table {
       width = 6
       title = "Forecast"
-      query   = query.codebuild_project_forecast_table
+      query = query.codebuild_project_forecast_table
     }
 
     chart {
       width = 4
       type  = "column"
       title = "Monthly Cost - 12 Months"
-      query   = query.codebuild_project_cost_per_month
+      query = query.codebuild_project_cost_per_month
     }
 
   }
@@ -139,42 +139,42 @@ dashboard "codebuild_project_dashboard" {
 
     chart {
       title = "Projects by Account"
-      query   = query.codebuild_project_by_account
+      query = query.codebuild_project_by_account
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Projects by Region"
-      query   = query.codebuild_project_by_region
+      query = query.codebuild_project_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Projects by Visibility"
-      query   = query.codebuild_project_by_visibility
+      query = query.codebuild_project_by_visibility
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Projects by Creation Month"
-      query   = query.codebuild_project_by_creation_month
+      query = query.codebuild_project_by_creation_month
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Projects by Environment Type"
-      query   = query.codebuild_project_by_environment_type
+      query = query.codebuild_project_by_environment_type
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Projects by Source Type"
-      query   = query.codebuild_project_by_source_type
+      query = query.codebuild_project_by_source_type
       type  = "column"
       width = 4
     }
@@ -246,7 +246,7 @@ query "codebuild_project_badge_disabled" {
   EOQ
 }
 
-// # Assessment Queries
+# Assessment Queries
 
 query "codebuild_project_encryption_status" {
   sql = <<-EOQ
@@ -398,7 +398,7 @@ query "codebuild_project_cost_per_month" {
 query "codebuild_project_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       count(p.*) as "projects"
     from
       aws_codebuild_project as p,

@@ -445,7 +445,7 @@ query "dynamodb_table_cost_per_month" {
 query "dynamodb_table_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       count(t.*) as "tables"
     from
       aws_dynamodb_table as t,
@@ -464,8 +464,10 @@ query "dynamodb_table_by_region" {
       count(*) as "tables"
     from
       aws_dynamodb_table
-    group by region
-    order by region;
+    group by
+      region
+    order by
+      region;
   EOQ
 }
 
@@ -519,7 +521,7 @@ query "dynamodb_table_by_creation_month" {
 query "dynamodb_table_item_count_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       sum(t.item_count) as "Count"
     from
       aws_dynamodb_table as t,
@@ -538,8 +540,10 @@ query "dynamodb_table_item_count_by_region" {
       sum(item_count) as "Count"
     from
       aws_dynamodb_table
-    group by region
-    order by region;
+    group by
+      region
+    order by
+      region;
   EOQ
 }
 

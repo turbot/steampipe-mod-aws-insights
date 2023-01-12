@@ -356,7 +356,7 @@ query "sqs_queue_cost_per_month" {
 query "sqs_queue_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       count(i.*) as "total"
     from
       aws_sqs_queue as i,

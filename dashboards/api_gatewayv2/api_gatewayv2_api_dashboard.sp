@@ -133,7 +133,7 @@ query "api_gatewayv2_api_endpoint_status" {
 query "api_gatewayv2_api_by_account" {
   sql = <<-EOQ
     select
-      acc.title as "account",
+      acc.title as "Account",
       count(api.*)
     from
       aws_api_gatewayv2_api as api,
@@ -152,8 +152,10 @@ query "api_gatewayv2_api_by_region" {
       count(*)
     from
       aws_api_gatewayv2_api
-    group by region
-    order by region;
+    group by
+      region
+    order by
+      region;
   EOQ
 }
 

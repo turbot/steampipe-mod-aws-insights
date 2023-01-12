@@ -333,7 +333,7 @@ query "elasticache_cluster_node_cost_per_month" {
 query "elasticache_cluster_node_by_account" {
   sql = <<-EOQ
     select
-      a.title as "account",
+      a.title as "Account",
       count(c.*) as "clusters"
     from
       aws_elasticache_cluster as c,

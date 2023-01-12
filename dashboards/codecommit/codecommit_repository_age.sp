@@ -130,7 +130,7 @@ query "codecommit_repository_age_table" {
       r.repository_id as "Repository ID",
       r.repository_name as "Repository Name",
       now()::date - r.creation_date::date as "Age in Days",
-      r.creation_date as "Create Time",
+      r.creation_date as "Creation Time",
       a.title as "Account",
       r.account_id as "Account ID",
       r.region as "Region",

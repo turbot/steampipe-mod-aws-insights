@@ -1,5 +1,5 @@
 edge "backup_plan_to_backup_rule" {
-  title = "rule"
+  title = "backup rule"
 
   sql = <<-EOQ
     select
