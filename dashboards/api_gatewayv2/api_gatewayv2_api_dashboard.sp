@@ -140,8 +140,10 @@ query "api_gatewayv2_api_by_account" {
       aws_account as acc
     where
       api.account_id = acc.account_id
-    group by account
-    order by account;
+    group by 
+      acc.title
+    order by 
+      acc.title;
   EOQ
 }
 
@@ -213,7 +215,9 @@ query "api_gatewayv2_api_by_protocol" {
       count(*)
     from
       aws_api_gatewayv2_api
-    group by protocol_type
-    order by protocol_type;
+    group by 
+      protocol_type
+    order by 
+      protocol_type;
   EOQ
 }

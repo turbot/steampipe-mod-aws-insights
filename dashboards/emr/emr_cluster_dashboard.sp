@@ -237,9 +237,9 @@ query "emr_cluster_by_account" {
     where
       a.account_id = c.account_id
     group by
-      account
+      a.title
     order by
-      count(c.*) desc
+      count(c.*) desc;
   EOQ
 }
 

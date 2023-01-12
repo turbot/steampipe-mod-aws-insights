@@ -376,8 +376,9 @@ query "ec2_instance_by_account" {
     where
       a.account_id = i.account_id
     group by
-      account
-    order by count(i.*) desc
+      a.title
+    order by 
+      count(i.*) desc;
   EOQ
 }
 
@@ -487,7 +488,7 @@ query "ec2_top10_cpu_past_week" {
       timestamp  >= CURRENT_DATE - INTERVAL '7 day'
       and instance_id in (select instance_id from top_n)
     order by
-      timestamp
+      timestamp;
   EOQ
 }
 
@@ -522,6 +523,6 @@ query "ec2_instance_by_cpu_utilization_category" {
       cpu_buckets as b
     left join max_averages as a on b.cpu_bucket = a.cpu_bucket
     group by
-      b.cpu_bucket
+      b.cpu_bucket;
   EOQ
 }

@@ -422,7 +422,9 @@ query "cloudtrail_trail_per_account" {
       aws_cloudtrail_trail
     where
       region = home_region
-    group by account_id, status
+    group by 
+      account_id, 
+      status;
   EOQ
 }
 
@@ -436,6 +438,8 @@ query "cloudtrail_trail_per_region" {
       aws_cloudtrail_trail
     where
       region = home_region
-    group by region, status
+    group by 
+      region, 
+      status;
   EOQ
 }

@@ -489,8 +489,9 @@ query "rds_db_instance_by_account" {
     where
       a.account_id = i.account_id
     group by
-      account
-    order by count(i.*) desc;
+      a.title
+    order by 
+      count(i.*) desc;
   EOQ
 }
 

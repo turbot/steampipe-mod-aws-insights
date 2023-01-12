@@ -347,9 +347,9 @@ query "vpc_by_account" {
     where
       a.account_id = v.account_id
     group by
-      account
+      a.title
     order by
-      account;
+      a.title;
   EOQ
 }
 

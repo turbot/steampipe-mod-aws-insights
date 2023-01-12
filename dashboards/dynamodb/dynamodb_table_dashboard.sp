@@ -452,8 +452,10 @@ query "dynamodb_table_by_account" {
       aws_account as a
     where
       a.account_id = t.account_id
-    group by account
-    order by account;
+    group by 
+      a.title
+    order by 
+      a.title;
   EOQ
 }
 
@@ -528,8 +530,10 @@ query "dynamodb_table_item_count_by_account" {
       aws_account as a
     where
       a.account_id = t.account_id
-    group by account
-    order by account;
+    group by 
+      a.title
+    order by 
+      a.title;
   EOQ
 }
 

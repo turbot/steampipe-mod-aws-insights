@@ -406,9 +406,9 @@ query "codebuild_project_by_account" {
     where
       a.account_id = p.account_id
     group by
-      account
+      a.title
     order by
-      account;
+      a.title;
   EOQ
 }
 

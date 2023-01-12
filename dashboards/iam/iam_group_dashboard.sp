@@ -189,8 +189,9 @@ query "iam_groups_by_account" {
     where
       a.account_id = g.account_id
     group by
-      account
-    order by count(g.*) desc;
+      a.title
+    order by 
+      count(g.*) desc;
   EOQ
 }
 

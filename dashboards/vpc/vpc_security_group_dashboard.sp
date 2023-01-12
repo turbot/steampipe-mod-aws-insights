@@ -349,9 +349,9 @@ query "vpc_security_group_by_acount" {
     where
       a.account_id = s.account_id
     group by
-      account
+      a.title
     order by
-      account;
+      a.title;
   EOQ
 }
 

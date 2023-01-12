@@ -458,9 +458,9 @@ query "lambda_function_by_account" {
     where
       a.account_id = i.account_id
     group by
-      account
+      a.title
     order by
-      account;
+      a.title;
   EOQ
 }
 
@@ -499,9 +499,9 @@ query "lambda_function_code_size_by_account" {
     where
       a.account_id = i.account_id
     group by
-      account
+      a.title
     order by
-      account;
+      a.title;
   EOQ
 }
 
@@ -540,9 +540,9 @@ query "lambda_function_memory_size_by_account" {
     where
       a.account_id = i.account_id
     group by
-      account
+      a.title
     order by
-      account;
+      a.title;
   EOQ
 }
 
