@@ -372,9 +372,8 @@ query "vpc_security_groups_for_rds_db_cluster" {
     select
       csg ->> 'VpcSecurityGroupId' as group_id
     from
-      aws_rds_db_cluster as c
-      cross join
-        jsonb_array_elements(c.vpc_security_groups_for_rds_db_cluster) as csg
+      aws_rds_db_cluster as c,
+      jsonb_array_elements(c.vpc_security_groups) as csg
     where
       c.arn = $1;
   EOQ

@@ -199,7 +199,8 @@ query "kms_keys_for_ecr_repository" {
     from
       aws_ecr_repository
     where
-      arn = $1;
+      encryption_configuration ->> 'KmsKey' is not null
+      and arn = $1;
   EOQ
 }
 
