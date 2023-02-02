@@ -17,7 +17,7 @@ dashboard "backup_vault_detail" {
 
     card {
       query = query.backup_vault_recovery_points
-      width = 2
+      width = 3
       args  = [self.input.backup_vault_arn.value]
     }
 

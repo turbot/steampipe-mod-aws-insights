@@ -15,19 +15,19 @@ dashboard "ec2_gateway_load_balancer_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.ec2_gateway_load_balancer_state
       args  = [self.input.gateway_load_balancer.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.ec2_gateway_load_balancer_az_zone
       args  = [self.input.gateway_load_balancer.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.ec2_gateway_load_balancer_deletion_protection
       args  = [self.input.gateway_load_balancer.value]
     }

@@ -12,12 +12,12 @@ dashboard "s3_bucket_logging_report" {
 
     card {
       query = query.s3_bucket_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.s3_bucket_logging_disabled_count
-      width = 2
+      width = 3
     }
 
   }

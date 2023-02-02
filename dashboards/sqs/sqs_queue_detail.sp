@@ -17,25 +17,25 @@ dashboard "sqs_queue_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.sqs_queue_encryption
       args  = [self.input.queue_arn.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.sqs_queue_content_based_deduplication
       args  = [self.input.queue_arn.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.sqs_queue_delay_seconds
       args  = [self.input.queue_arn.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.sqs_queue_message_retention_seconds
       args  = [self.input.queue_arn.value]
     }

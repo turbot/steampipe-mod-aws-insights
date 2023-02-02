@@ -16,7 +16,7 @@ dashboard "codecommit_repository_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.codecommit_repository_default_branch
       args  = [self.input.codecommit_repository_arn.value]
     }

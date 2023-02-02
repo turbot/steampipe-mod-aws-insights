@@ -12,12 +12,12 @@ dashboard "lambda_function_public_access_report" {
 
     card {
       query = query.lambda_function_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.lambda_function_public_count
-      width = 2
+      width = 3
     }
 
   }

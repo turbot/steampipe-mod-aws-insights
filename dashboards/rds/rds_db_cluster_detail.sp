@@ -17,25 +17,25 @@ dashboard "rds_db_cluster_detail" {
 
     card {
       query = query.rds_db_cluster_unencrypted
-      width = 2
+      width = 3
       args  = [self.input.db_cluster_arn.value]
     }
 
     card {
       query = query.rds_db_cluster_logging_disabled
-      width = 2
+      width = 3
       args  = [self.input.db_cluster_arn.value]
     }
 
     card {
       query = query.rds_db_cluster_no_deletion_protection
-      width = 2
+      width = 3
       args  = [self.input.db_cluster_arn.value]
     }
 
     card {
       query = query.rds_db_cluster_status
-      width = 2
+      width = 3
       args  = [self.input.db_cluster_arn.value]
     }
 

@@ -16,19 +16,19 @@ dashboard "vpc_subnet_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.vpc_subnet_num_ips
       args  = [self.input.subnet_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.vpc_subnet_cidr_block
       args  = [self.input.subnet_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.vpc_subnet_map_public_ip_on_launch_disabled
       args  = [self.input.subnet_id.value]
     }

@@ -12,12 +12,12 @@ dashboard "rds_db_cluster_snapshot_encryption_report" {
 
     card {
       query = query.rds_db_cluster_snapshot_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.rds_db_cluster_snapshot_unencrypted_count
-      width = 2
+      width = 3
     }
 
   }

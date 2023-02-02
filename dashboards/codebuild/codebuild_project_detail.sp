@@ -16,19 +16,19 @@ dashboard "codebuild_project_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.codebuild_project_encrypted
       args  = [self.input.codebuild_project_arn.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.codebuild_project_logging_enabled
       args  = [self.input.codebuild_project_arn.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.codebuild_project_privileged_mode
       args  = [self.input.codebuild_project_arn.value]
     }

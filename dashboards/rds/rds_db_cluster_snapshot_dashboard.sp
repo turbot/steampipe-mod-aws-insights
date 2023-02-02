@@ -12,13 +12,13 @@ dashboard "rds_db_cluster_snapshot_dashboard" {
     # Analysis
     card {
       query = query.rds_db_cluster_snapshot_count
-      width = 2
+      width = 3
     }
 
     # Assessments
     card {
       query = query.rds_db_cluster_snapshot_unencrypted_count
-      width = 2
+      width = 3
       href  = dashboard.rds_db_cluster_snapshot_encryption_report.url_path
     }
 
@@ -26,7 +26,7 @@ dashboard "rds_db_cluster_snapshot_dashboard" {
     card {
       type  = "info"
       icon  = "currency-dollar"
-      width = 2
+      width = 3
       query = query.rds_db_cluster_snapshot_cost_mtd
     }
 
@@ -293,7 +293,7 @@ query "rds_db_cluster_snapshot_by_account" {
       a.account_id = i.account_id
     group by
       a.title
-    order by 
+    order by
       count(i.*) desc;
   EOQ
 }

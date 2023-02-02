@@ -15,24 +15,24 @@ dashboard "ebs_snapshot_detail" {
 
   container {
     card {
-      width = 2
+      width = 3
       query = query.ebs_snapshot_state
       args  = [self.input.ebs_snapshot_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.ebs_snapshot_storage
       args  = [self.input.ebs_snapshot_id.value]
     }
     card {
-      width = 2
+      width = 3
       query = query.ebs_snapshot_encryption
       args  = [self.input.ebs_snapshot_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.ebs_snapshot_age
       args  = [self.input.ebs_snapshot_id.value]
     }

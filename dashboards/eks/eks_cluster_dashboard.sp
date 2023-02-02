@@ -13,23 +13,23 @@ dashboard "eks_cluster_dashboard" {
 
     card {
       query = query.eks_cluster_count
-      width = 2
+      width = 3
     }
 
     #Assessments
     card {
       query = query.eks_cluster_secrets_encryption_disabled
-      width = 2
+      width = 3
     }
 
     card {
       query = query.eks_cluster_endpoint_endpoint_public_access_disabled
-      width = 2
+      width = 3
     }
 
     card {
       query = query.eks_cluster_audit_logging_disabled
-      width = 2
+      width = 3
     }
 
   }

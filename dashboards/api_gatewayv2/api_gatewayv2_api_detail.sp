@@ -15,19 +15,19 @@ dashboard "api_gatewayv2_api_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.api_gatewayv2_api_protocol
       args  = [self.input.api_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.api_gatewayv2_stage_count
       args  = [self.input.api_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.api_gatewayv2_default_endpoint
       args  = [self.input.api_id.value]
     }

@@ -17,25 +17,25 @@ dashboard "lambda_function_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.lambda_function_memory
       args  = [self.input.lambda_arn.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.lambda_function_runtime
       args  = [self.input.lambda_arn.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.lambda_function_encryption
       args  = [self.input.lambda_arn.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.lambda_function_public
       args  = [self.input.lambda_arn.value]
     }

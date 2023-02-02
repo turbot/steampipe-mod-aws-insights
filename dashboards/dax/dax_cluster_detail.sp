@@ -17,19 +17,19 @@ dashboard "dax_cluster_detail" {
 
     card {
       query = query.dax_cluster_status
-      width = 2
+      width = 3
       args  = [self.input.dax_cluster_arn.value]
     }
 
     card {
       query = query.dax_cluster_node_type
-      width = 2
+      width = 3
       args  = [self.input.dax_cluster_arn.value]
     }
 
     card {
       query = query.dax_cluster_encryption
-      width = 2
+      width = 3
       args  = [self.input.dax_cluster_arn.value]
     }
   }

@@ -17,13 +17,13 @@ dashboard "iam_group_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.iam_group_inline_policy_count_for_group
       args  = [self.input.group_arn.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.iam_group_direct_attached_policy_count_for_group
       args  = [self.input.group_arn.value]
     }

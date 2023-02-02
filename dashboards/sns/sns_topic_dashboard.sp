@@ -13,26 +13,26 @@ dashboard "sns_topic_dashboard" {
     # Analysis
     card {
       query = query.sns_topic_count
-      width = 2
+      width = 3
     }
 
     # Assessments
     card {
       query = query.sns_topic_encrypted_count
-      width = 2
+      width = 3
       href  = dashboard.sns_topic_encryption_report.url_path
     }
 
     card {
       query = query.sns_topic_by_subscription_count
-      width = 2
+      width = 3
     }
 
     # Costs
     card {
       type  = "info"
       icon  = "currency-dollar"
-      width = 2
+      width = 3
       query = query.sns_topic_cost_mtd
     }
 
@@ -283,7 +283,7 @@ query "sns_topic_by_account" {
       a.account_id = i.account_id
     group by
       a.title
-    order by 
+    order by
     count(i.*) desc;
   EOQ
 }
