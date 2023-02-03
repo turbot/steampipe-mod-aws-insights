@@ -17,7 +17,7 @@ dashboard "backup_plan_detail" {
 
     card {
       query = query.backup_plan_resource_assignment
-      width = 2
+      width = 3
       args  = [self.input.backup_plan_arn.value]
     }
 

@@ -17,7 +17,7 @@ dashboard "codepipeline_pipeline_detail" {
 
     card {
       query = query.codepipeline_pipeline_encryption
-      width = 2
+      width = 3
       args  = [self.input.pipeline_arn.value]
     }
 

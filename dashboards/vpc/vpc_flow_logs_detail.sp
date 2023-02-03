@@ -16,13 +16,13 @@ dashboard "vpc_flow_logs_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.vpc_flow_log_resource_id
       args  = [self.input.flow_log_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.vpc_flow_log_deliver_logs_status
       args  = [self.input.flow_log_id.value]
     }

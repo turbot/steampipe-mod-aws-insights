@@ -12,23 +12,23 @@ dashboard "elasticache_cluster_node_dashboard" {
     # Analysis
     card {
       query = query.elasticache_cluster_node_count
-      width = 2
+      width = 3
     }
 
     # Assessments
     card {
       query = query.elasticache_cluster_node_encryption_at_rest_disabled_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.elasticache_cluster_node_encryption_at_transit_disabled_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.elasticache_cluster_node_automatic_backup_disabled_count
-      width = 2
+      width = 3
     }
 
     # Costs

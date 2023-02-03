@@ -408,7 +408,7 @@ query "vpc_security_groups_for_rds_db_instance" {
       dsg ->> 'VpcSecurityGroupId' as security_group_id
     from
       aws_rds_db_instance as di,
-      jsonb_array_elements(di.vpc_security_groups_for_rds_db_instance) as dsg
+      jsonb_array_elements(di.vpc_security_groups) as dsg
     where
       di.arn = $1;
   EOQ
@@ -564,7 +564,7 @@ query "rds_db_instance_security_groups" {
       s ->> 'Status' as "Status"
     from
       aws_rds_db_instance,
-      jsonb_array_elements(vpc_security_groups_for_rds_db_instance) as s
+      jsonb_array_elements(vpc_security_groups) as s
     where
       arn = $1;
   EOQ

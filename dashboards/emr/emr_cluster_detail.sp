@@ -15,25 +15,25 @@ dashboard "emr_cluster_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.emr_cluster_auto_termination
       args  = [self.input.emr_cluster_arn.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.emr_cluster_state
       args  = [self.input.emr_cluster_arn.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.emr_cluster_logging
       args  = [self.input.emr_cluster_arn.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.emr_cluster_log_encryption
       args  = [self.input.emr_cluster_arn.value]
     }

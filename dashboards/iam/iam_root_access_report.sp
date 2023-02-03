@@ -11,12 +11,12 @@ dashboard "iam_root_access_report" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.iam_root_access_keys_count
     }
 
     card {
-      width = 2
+      width = 3
       query = query.iam_accounts_without_root_mfa
     }
 

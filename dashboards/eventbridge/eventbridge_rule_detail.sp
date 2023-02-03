@@ -16,12 +16,12 @@ dashboard "eventbridge_rule_detail" {
   container {
     card {
       query = query.eventbridge_rule_state
-      width = 2
+      width = 3
       args  = [self.input.eventbridge_rule_arn.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.eventbridge_rule_target_count
       args  = [self.input.eventbridge_rule_arn.value]
     }

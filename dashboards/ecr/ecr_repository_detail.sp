@@ -17,25 +17,25 @@ dashboard "ecr_repository_detail" {
 
     card {
       query = query.ecr_repository_encrypted
-      width = 2
+      width = 3
       args  = [self.input.ecr_repository_arn.value]
     }
 
     card {
       query = query.ecr_repository_scan_on_push
-      width = 2
+      width = 3
       args  = [self.input.ecr_repository_arn.value]
     }
 
     card {
       query = query.ecr_repository_tagging
-      width = 2
+      width = 3
       args  = [self.input.ecr_repository_arn.value]
     }
 
     card {
       query = query.ecr_repository_tag_immutability
-      width = 2
+      width = 3
       args  = [self.input.ecr_repository_arn.value]
     }
 
@@ -199,7 +199,8 @@ query "kms_keys_for_ecr_repository" {
     from
       aws_ecr_repository
     where
-      arn = $1;
+      encryption_configuration ->> 'KmsKey' is not null
+      and arn = $1;
   EOQ
 }
 

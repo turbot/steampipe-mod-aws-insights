@@ -12,17 +12,17 @@ dashboard "kms_key_lifecycle_report" {
 
     card {
       query = query.kms_customer_managed_key_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.kms_key_rotation_disabled_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.kms_cmk_pending_deletion_count
-      width = 2
+      width = 3
     }
 
   }

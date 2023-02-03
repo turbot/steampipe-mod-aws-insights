@@ -12,22 +12,22 @@ dashboard "dynamodb_table_encryption_report" {
 
     card {
       query = query.dynamodb_table_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.dynamodb_table_default_encryption
-      width = 2
+      width = 3
     }
 
     card {
       query = query.dynamodb_table_aws_managed_key_encryption
-      width = 2
+      width = 3
     }
 
     card {
       query = query.dynamodb_table_customer_managed_key_encryption
-      width = 2
+      width = 3
     }
 
   }

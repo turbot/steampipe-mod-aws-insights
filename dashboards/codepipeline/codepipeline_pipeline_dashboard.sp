@@ -12,12 +12,12 @@ dashboard "codepipeline_pipeline_dashboard" {
     # Analysis
     card {
       query = query.codepipeline_pipeline_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.codepipeline_pipeline_unencrypted_count
-      width = 2
+      width = 3
     }
   }
 

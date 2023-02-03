@@ -17,25 +17,25 @@ dashboard "ecs_task_definition_detail" {
 
     card {
       query = query.ecs_task_definition_network_mode
-      width = 2
+      width = 3
       args  = [self.input.task_definition_arn.value]
     }
 
     card {
       query = query.ecs_task_definition_cpu_units
-      width = 2
+      width = 3
       args  = [self.input.task_definition_arn.value]
     }
 
     card {
       query = query.ecs_task_definition_memory
-      width = 2
+      width = 3
       args  = [self.input.task_definition_arn.value]
     }
 
     card {
       query = query.ecs_task_definition_requires_compatibilities
-      width = 2
+      width = 3
       args  = [self.input.task_definition_arn.value]
     }
 

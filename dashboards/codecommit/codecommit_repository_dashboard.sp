@@ -13,20 +13,20 @@ dashboard "codecommit_repository_dashboard" {
     # Analysis
     card {
       query = query.codecommit_repository_count
-      width = 2
+      width = 3
     }
 
     # Assessments
     card {
       query = query.codecommit_repository_untagged_count
-      width = 2
+      width = 3
     }
 
     # Costs
     card {
       type  = "info"
       icon  = "currency-dollar"
-      width = 2
+      width = 3
       query = query.codecommit_repository_cost_mtd
     }
   }

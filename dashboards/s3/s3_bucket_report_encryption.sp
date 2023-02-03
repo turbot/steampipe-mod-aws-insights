@@ -12,17 +12,17 @@ dashboard "s3_bucket_encryption_report" {
 
     card {
       query = query.s3_bucket_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.s3_bucket_unencrypted_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.s3_bucket_https_unenforced_count
-      width = 2
+      width = 3
     }
 
   }

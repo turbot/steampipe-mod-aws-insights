@@ -1,6 +1,6 @@
-dashboard "elasticache_cluster_node_node_age_report" {
+dashboard "elasticache_cluster_node_age_report" {
 
-  title         = "AWS Elasticache Age Report"
+  title         = "AWS ElastiCache Cluster Node Age Report"
   documentation = file("./dashboards/elasticache/docs/elasticache_cluster_node_report_age.md")
 
   tags = merge(local.elasticache_common_tags, {

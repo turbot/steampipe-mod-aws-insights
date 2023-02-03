@@ -12,12 +12,12 @@ dashboard "iam_user_mfa_report" {
 
     card {
       query = query.iam_user_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.iam_user_no_mfa_count
-      width = 2
+      width = 3
     }
   }
 

@@ -16,14 +16,14 @@ dashboard "sns_topic_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.sns_topic_encryption_status
       args  = [self.input.topic_arn.value]
     }
 
     card {
       query = query.sns_topic_subscriptions_confirmed_count
-      width = 2
+      width = 3
       args  = [self.input.topic_arn.value]
     }
   }

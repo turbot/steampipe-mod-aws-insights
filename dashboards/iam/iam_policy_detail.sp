@@ -14,13 +14,13 @@ dashboard "iam_policy_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.iam_policy_aws_managed
       args  = [self.input.policy_arn.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.iam_policy_attached
       args  = [self.input.policy_arn.value]
     }

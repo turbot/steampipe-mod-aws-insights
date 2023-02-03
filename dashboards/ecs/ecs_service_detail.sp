@@ -17,13 +17,13 @@ dashboard "ecs_service_detail" {
 
     card {
       query = query.ecs_service_status
-      width = 2
+      width = 3
       args  = [self.input.service_arn.value]
     }
 
     card {
       query = query.ecs_service_launch_type
-      width = 2
+      width = 3
       args  = [self.input.service_arn.value]
     }
 

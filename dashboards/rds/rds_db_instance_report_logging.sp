@@ -12,12 +12,12 @@ dashboard "rds_db_instance_logging_report" {
 
     card {
       query = query.rds_db_instance_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.rds_db_instance_logging_disabled_count
-      width = 2
+      width = 3
     }
 
   }

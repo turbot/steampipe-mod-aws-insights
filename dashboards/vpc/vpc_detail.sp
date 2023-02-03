@@ -16,25 +16,25 @@ dashboard "vpc_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.vpc_num_ips_for_vpc
       args  = [self.input.vpc_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.subnet_count_for_vpc
       args  = [self.input.vpc_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.vpc_is_default
       args  = [self.input.vpc_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.flow_logs_count_for_vpc
       args  = [self.input.vpc_id.value]
     }

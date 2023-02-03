@@ -11,6 +11,12 @@ category "ecs_cluster" {
   icon  = "token"
 }
 
+category "ecs_cluster_launch_type" {
+  title = "ECS Cluster Launch Type"
+  color = local.compute_color
+  icon  = "memory"
+}
+
 category "ecs_container_instance" {
   title = "ECS Container Instance"
   color = local.compute_color
