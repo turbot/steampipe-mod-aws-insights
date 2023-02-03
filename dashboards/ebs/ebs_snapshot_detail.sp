@@ -31,11 +31,6 @@ dashboard "ebs_snapshot_detail" {
       args  = [self.input.ebs_snapshot_id.value]
     }
 
-    card {
-      width = 3
-      query = query.ebs_snapshot_age
-      args  = [self.input.ebs_snapshot_id.value]
-    }
   }
 
   with "target_ebs_volumes_for_ebs_snapshot" {
@@ -293,26 +288,6 @@ query "ebs_snapshot_state" {
       snapshot_id = $1;
   EOQ
 }
-
-query "ebs_snapshot_age" {
-  sql = <<-EOQ
-    with data as (
-      select
-        (extract(epoch from (select (now() - start_time)))/86400)::int as age
-      from
-        aws_ebs_snapshot
-      where
-        snapshot_id = $1
-    )
-    select
-      'Age (in Days)' as label,
-      age as value,
-      case when age<35 then 'ok' else 'alert' end as type
-    from
-      data;
-  EOQ
-}
-
 
 # Other detail page queries
 
