@@ -12,12 +12,12 @@ dashboard "redshift_cluster_public_access_report" {
 
     card {
       query = query.redshift_cluster_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.redshift_cluster_publicly_accessible
-      width = 2
+      width = 3
     }
 
   }

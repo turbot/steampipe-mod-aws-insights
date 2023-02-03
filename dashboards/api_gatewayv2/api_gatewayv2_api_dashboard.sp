@@ -9,12 +9,12 @@ dashboard "api_gatewayv2_api_dashboard" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.api_gatewayv2_api_count
     }
 
     card {
-      width = 2
+      width = 3
       query = query.api_gatewayv2_api_default_endpoint_enabled
     }
 
@@ -140,9 +140,9 @@ query "api_gatewayv2_api_by_account" {
       aws_account as acc
     where
       api.account_id = acc.account_id
-    group by 
+    group by
       acc.title
-    order by 
+    order by
       acc.title;
   EOQ
 }
@@ -215,9 +215,9 @@ query "api_gatewayv2_api_by_protocol" {
       count(*)
     from
       aws_api_gatewayv2_api
-    group by 
+    group by
       protocol_type
-    order by 
+    order by
       protocol_type;
   EOQ
 }

@@ -12,12 +12,12 @@ dashboard "cloudtrail_trail_encryption_report" {
 
     card {
       query = query.cloudtrail_trail_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.cloudtrail_trail_unencrypted_count
-      width = 2
+      width = 3
     }
   }
 

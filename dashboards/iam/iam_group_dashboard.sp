@@ -13,18 +13,18 @@ dashboard "iam_group_dashboard" {
     # Analysis
     card {
       query = query.iam_group_count
-      width = 2
+      width = 3
     }
 
     # Assessments
     card {
       query = query.iam_groups_without_users_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.iam_groups_with_inline_policy_count
-      width = 2
+      width = 3
     }
 
   }
@@ -190,7 +190,7 @@ query "iam_groups_by_account" {
       a.account_id = g.account_id
     group by
       a.title
-    order by 
+    order by
       count(g.*) desc;
   EOQ
 }

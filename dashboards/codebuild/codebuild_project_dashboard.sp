@@ -123,7 +123,7 @@ dashboard "codebuild_project_dashboard" {
     }
 
     chart {
-      width = 4
+      width = 6
       type  = "column"
       title = "Monthly Cost - 12 Months"
       query = query.codebuild_project_cost_per_month

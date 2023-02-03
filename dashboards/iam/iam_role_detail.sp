@@ -16,19 +16,19 @@ dashboard "iam_role_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.iam_boundary_policy_for_role
       args  = [self.input.role_arn.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.iam_role_inline_policy_count_for_role
       args  = [self.input.role_arn.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.iam_role_direct_attached_policy_count_for_role
       args  = [self.input.role_arn.value]
     }

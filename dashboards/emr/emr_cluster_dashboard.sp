@@ -12,22 +12,22 @@ dashboard "emr_cluster_dashboard" {
     # Analysis
     card {
       query = query.emr_cluster_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.emr_cluster_logging_disbaled_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.emr_cluster_logging_encryption_disabled_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.emr_cluster_termination_protection_disabled_count
-      width = 2
+      width = 3
     }
 
   }

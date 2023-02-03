@@ -12,17 +12,17 @@ dashboard "s3_bucket_lifecycle_report" {
 
     card {
       query = query.s3_bucket_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.s3_bucket_versioning_disabled_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.s3_bucket_versioning_mfa_disabled_count
-      width = 2
+      width = 3
     }
 
   }

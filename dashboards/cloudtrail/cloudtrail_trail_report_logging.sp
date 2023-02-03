@@ -12,17 +12,17 @@ dashboard "cloudtrail_trail_logging_report" {
 
     card {
       query = query.cloudtrail_trail_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.cloudtrail_trail_logging_disabled_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.cloudtrail_trail_log_file_validation_disabled_count
-      width = 2
+      width = 3
     }
 
   }

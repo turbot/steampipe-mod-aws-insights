@@ -12,19 +12,19 @@ dashboard "redshift_cluster_dashboard" {
     # Analysis
     card {
       query = query.redshift_cluster_count
-      width = 2
+      width = 3
     }
 
     # Assessments
     card {
       query = query.redshift_cluster_unencrypted_count
-      width = 2
+      width = 3
       href  = dashboard.redshift_cluster_encryption_report.url_path
     }
 
     card {
       query = query.redshift_cluster_publicly_accessible
-      width = 2
+      width = 3
       href  = dashboard.redshift_cluster_public_access_report.url_path
     }
 
@@ -32,7 +32,7 @@ dashboard "redshift_cluster_dashboard" {
     card {
       type  = "info"
       icon  = "currency-dollar"
-      width = 2
+      width = 3
       query = query.redshift_cluster_cost_mtd
     }
 

@@ -23,7 +23,7 @@ node "ecs_cluster" {
 }
 
 node "ecs_cluster_ec2_launch_type" {
-  # category = category.kms_key
+  category = category.ecs_cluster_launch_type
 
   sql = <<-EOQ
     with list_all_task_definitions as (
@@ -118,7 +118,7 @@ node "ecs_cluster_external_launch_type" {
 }
 
 node "ecs_cluster_fargate_launch_type" {
-  # category = category.fargate_launch_type
+  category = category.ecs_cluster_launch_type
 
   sql = <<-EOQ
     with list_all_task_definitions as (

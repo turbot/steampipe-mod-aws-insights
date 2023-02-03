@@ -13,17 +13,17 @@ dashboard "efs_file_system_dashboard" {
 
     card {
       query = query.efs_file_system_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.efs_file_system_encryption_disabled_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.efs_file_system_automatic_backup_disabled_count
-      width = 2
+      width = 3
     }
 
   }

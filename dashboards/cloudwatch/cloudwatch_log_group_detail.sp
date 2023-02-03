@@ -17,24 +17,24 @@ dashboard "cloudwatch_log_group_detail" {
 
     card {
       query = query.cloudwatch_log_group_retention_in_days
-      width = 2
+      width = 3
       args  = [self.input.log_group_arn.value]
     }
 
     card {
       query = query.cloudwatch_log_group_stored_bytes
-      width = 2
+      width = 3
       args  = [self.input.log_group_arn.value]
     }
 
     card {
       query = query.cloudwatch_log_group_metric_filter_count
-      width = 2
+      width = 3
       args  = [self.input.log_group_arn.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.cloudwatch_log_group_unencrypted
       args  = [self.input.log_group_arn.value]
     }

@@ -32,12 +32,12 @@ dashboard "iam_user_excessive_privilege_report" {
 
     card {
       query = query.iam_user_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.iam_user_with_excessive_permissions_count
-      width = 2
+      width = 3
 
       args = {
         threshold_in_days = self.input.threshold_in_days.value
@@ -46,7 +46,7 @@ dashboard "iam_user_excessive_privilege_report" {
 
     card {
       query = query.iam_user_excessive_permissions_count
-      width = 2
+      width = 3
 
       args = {
         threshold_in_days = self.input.threshold_in_days.value

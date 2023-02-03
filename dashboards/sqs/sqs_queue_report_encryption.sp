@@ -12,12 +12,12 @@ dashboard "sqs_queue_encryption_report" {
 
     card {
       query = query.sqs_queue_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.sqs_queue_unencrypted_count
-      width = 2
+      width = 3
     }
 
   }

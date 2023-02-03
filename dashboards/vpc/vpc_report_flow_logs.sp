@@ -12,12 +12,12 @@ dashboard "vpc_flow_logs_report" {
 
     card {
       query = query.vpc_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.vpc_no_flow_logs_count
-      width = 2
+      width = 3
     }
 
   }

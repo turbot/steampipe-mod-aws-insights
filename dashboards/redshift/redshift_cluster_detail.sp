@@ -365,7 +365,7 @@ query "iam_roles_for_redshift_cluster" {
       r ->> 'IamRoleArn' as role_arn
     from
       aws_redshift_cluster,
-      jsonb_array_elements(iam_roles_for_redshift_cluster) as r
+      jsonb_array_elements(iam_roles) as r
     where
       arn = $1;
   EOQ
@@ -431,7 +431,7 @@ query "vpc_security_groups_for_redshift_cluster" {
       s ->> 'VpcSecurityGroupId' as security_group_id
     from
       aws_redshift_cluster,
-      jsonb_array_elements(vpc_security_groups_for_redshift_cluster) as s
+      jsonb_array_elements(vpc_security_groups) as s
     where
       arn = $1;
   EOQ

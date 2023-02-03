@@ -12,12 +12,12 @@ dashboard "redshift_cluster_encryption_report" {
 
     card {
       query = query.redshift_cluster_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.redshift_cluster_unencrypted_count
-      width = 2
+      width = 3
     }
   }
 

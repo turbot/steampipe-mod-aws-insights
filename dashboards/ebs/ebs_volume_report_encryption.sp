@@ -12,12 +12,12 @@ dashboard "ebs_volume_encryption_report" {
 
     card {
       query = query.ebs_volume_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.ebs_volume_unencrypted_count
-      width = 2
+      width = 3
     }
 
   }

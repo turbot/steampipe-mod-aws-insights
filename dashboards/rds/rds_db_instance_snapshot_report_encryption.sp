@@ -12,12 +12,12 @@ dashboard "rds_db_instace_snapshot_encryption_report" {
 
     card {
       query = query.rds_db_instance_snapshot_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.rds_db_instance_snapshot_unencrypted_count
-      width = 2
+      width = 3
     }
 
   }

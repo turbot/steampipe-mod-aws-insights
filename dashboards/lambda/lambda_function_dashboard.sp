@@ -12,19 +12,19 @@ dashboard "lambda_function_dashboard" {
     # Analysis
     card {
       query = query.lambda_function_count
-      width = 2
+      width = 3
     }
 
     # Assessments
     card {
       query = query.lambda_function_unencrypted_count
-      width = 2
+      width = 3
       href  = dashboard.lambda_function_encryption_report.url_path
     }
 
     card {
       query = query.lambda_function_public_count
-      width = 2
+      width = 3
       href  = dashboard.lambda_function_public_access_report.url_path
     }
 
@@ -32,7 +32,7 @@ dashboard "lambda_function_dashboard" {
     card {
       type  = "info"
       icon  = "currency-dollar"
-      width = 2
+      width = 3
       query = query.lambda_function_cost_mtd
     }
 

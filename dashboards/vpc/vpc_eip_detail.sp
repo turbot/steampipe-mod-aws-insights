@@ -16,19 +16,19 @@ dashboard "vpc_eip_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.vpc_eip_association
       args  = [self.input.eip_arn.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.vpc_eip_private_ip_address
       args  = [self.input.eip_arn.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.vpc_eip_public_ip_address
       args  = [self.input.eip_arn.value]
     }

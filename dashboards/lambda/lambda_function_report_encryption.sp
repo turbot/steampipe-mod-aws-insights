@@ -12,12 +12,12 @@ dashboard "lambda_function_encryption_report" {
 
     card {
       query = query.lambda_function_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.lambda_function_unencrypted_count
-      width = 2
+      width = 3
     }
 
   }

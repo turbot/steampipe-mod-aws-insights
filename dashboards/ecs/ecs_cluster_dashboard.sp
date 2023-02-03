@@ -12,18 +12,18 @@ dashboard "ecs_cluster_dashboard" {
     # Analysis
     card {
       query = query.ecs_cluster_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.ecs_cluster_active_service_count
-      width = 2
+      width = 3
     }
 
     # Assessments
     card {
       query = query.ecs_cluster_container_insights_disabled
-      width = 2
+      width = 3
     }
 
 

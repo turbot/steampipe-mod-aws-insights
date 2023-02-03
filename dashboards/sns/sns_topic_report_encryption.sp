@@ -12,12 +12,12 @@ dashboard "sns_topic_encryption_report" {
 
     card {
       query = query.sns_topic_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.sns_topic_encrypted_count
-      width = 2
+      width = 3
     }
 
   }

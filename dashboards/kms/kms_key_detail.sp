@@ -17,25 +17,25 @@ dashboard "kms_key_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.kms_key_type
       args  = [self.input.key_arn.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.kms_key_origin
       args  = [self.input.key_arn.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.kms_key_state
       args  = [self.input.key_arn.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.kms_key_rotation_enabled
       args  = [self.input.key_arn.value]
     }

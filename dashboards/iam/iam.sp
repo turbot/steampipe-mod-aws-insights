@@ -105,7 +105,7 @@ category "iam_role" {
 }
 
 category "iam_service_principal" {
-  title = "IAM Service Service"
+  title = "IAM Service Principal"
   color = local.iam_color
   icon  = "component_exchange"
 }
