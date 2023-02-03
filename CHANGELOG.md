@@ -1,3 +1,14 @@
+## v0.11 [2023-02-03]
+
+_Enhancements_
+
+- Updated the `card` width across all the dashboards to enhance readability. ([#298](https://github.com/turbot/steampipe-mod-aws-insights/pull/298))
+
+_Bug fixes_
+
+- Fixed the resource relationship graph in `AWS RDS DB Instance Detail` dashboard to correctly reflect the associated VPC security group resources. ([#296](https://github.com/turbot/steampipe-mod-aws-insights/pull/296))
+- Removed the incorrectly placed `card` reflecting the EBS snapshot age in `AWS EBS Snapshot Detail` dashboard. ([#298](https://github.com/turbot/steampipe-mod-aws-insights/pull/298))
+
 ## v0.10 [2023-01-12]
 
 _Dependencies_
