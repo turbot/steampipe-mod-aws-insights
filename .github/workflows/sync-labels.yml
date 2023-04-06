@@ -1,9 +1,0 @@
-name: Sync Labels
-on:
-  schedule:
-    - cron: "30 22 * * 1"
-  workflow_dispatch:
-
-jobs:
-  sync_labels_workflow:
-    uses: turbot/steampipe-workflows/.github/workflows/sync-labels.yml@main
