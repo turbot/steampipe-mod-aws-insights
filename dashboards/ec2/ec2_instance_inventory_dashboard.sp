@@ -13,31 +13,29 @@ dashboard "ec2_inventory_dashboard" {
 
   # Cards
   container {
-    title = "Top Items"
-
     card {
-      title = "Account with EC2 Instances"
+      title = "AWS Account with the most VMs"
       query = query.ec2_instance_top_by_account
       type  = "info"
       width = 3
     }
 
     card {
-      title = "Used EC2 type"
+      title = "Most used EC2 type"
       query = query.ec2_instance_top_by_type
       type  = "info"
       width = 3
     }
 
     card {
-      title = "Used region"
+      title = "Most used region"
       query = query.ec2_instance_top_by_region
       type  = "info"
       width = 3
     }
 
     card {
-      title = "Used Availability Zone"
+      title = "Most used Availability Zone"
       query = query.ec2_instance_top_by_zone
       type  = "info"
       width = 3
@@ -52,7 +50,17 @@ dashboard "ec2_inventory_dashboard" {
     table {
       query = query.ec2_instance_details
       width = 12
+
+      column "ARN" {
+        display = "none"
+      }
+
+      column "Instance ID" {
+        href = "/aws_insights.dashboard.ec2_instance_detail?input.instance_arn={{ .'ARN' | @uri }}"
+      }
     }
+
+
   }
 
 }
@@ -146,7 +154,8 @@ query "ec2_instance_details" {
       ec2.ebs_optimized as "EBS Optimized",
       ec2.hypervisor as "Hypervisor",
       ec2.image_id as "Image ID",
-      ec2.key_name as "Key Name"
+      ec2.key_name as "Key Name",
+      ec2.arn as "ARN"
     from 
       aws_ec2_instance as ec2
       join aws_account as acc on ec2.account_id = acc.account_id
