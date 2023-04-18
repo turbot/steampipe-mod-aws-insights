@@ -1,11 +1,11 @@
 #---------------------------------------------------------------------------------------------------------
-# Dashboard: ec2_inventory_dashboard
+# Dashboard: ec2_instance_inventory_dashboard
 #---------------------------------------------------------------------------------------------------------
 
-dashboard "ec2_inventory_dashboard" {
+dashboard "ec2_instance_inventory_dashboard" {
 
   title         = "AWS EC2 Inventory"
-  documentation = file("./dashboards/ec2/docs/ec2_inventory_dashboard.md")
+  documentation = file("./dashboards/ec2/docs/ec2_instance_inventory_dashboard.md")
 
   tags = merge(local.ec2_common_tags, {
     type = "Inventory"

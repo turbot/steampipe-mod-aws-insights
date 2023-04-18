@@ -13,7 +13,6 @@ dashboard "ec2_instance_dashboard" {
     card {
       query = query.ec2_instance_count
       width = 2
-      href  = "/aws_insights.dashboard.ec2_inventory_dashboard"
     }
 
     card {
@@ -39,6 +38,16 @@ dashboard "ec2_instance_dashboard" {
       icon  = "currency-dollar"
       query = query.ec2_instance_cost_mtd
       width = 2
+    }
+
+    # Inventory
+    card {
+      value = "EC2 Inventory"
+      label = "More information"
+      width = 2
+      type  = "ok"
+      icon  = "read_more"
+      href  = dashboard.ec2_instance_inventory_dashboard.url_path
     }
 
   }
