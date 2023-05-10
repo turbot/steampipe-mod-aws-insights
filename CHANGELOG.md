@@ -1,3 +1,9 @@
+## v0.12 [2023-05-10]
+
+_Bug fixes_
+
+- Removed the `card` reflecting the RDS DB cluster snapshot cost in `AWS RDS DB Cluster Snapshot Dashboard` dashboard. ([#304](https://github.com/turbot/steampipe-mod-aws-insights/pull/304))
+
 ## v0.11 [2023-02-03]
 
 _Enhancements_
