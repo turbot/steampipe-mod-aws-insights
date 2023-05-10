@@ -22,14 +22,6 @@ dashboard "rds_db_cluster_snapshot_dashboard" {
       href  = dashboard.rds_db_cluster_snapshot_encryption_report.url_path
     }
 
-    # Costs
-    card {
-      type  = "info"
-      icon  = "currency-dollar"
-      width = 3
-      query = query.rds_db_cluster_snapshot_cost_mtd
-    }
-
   }
 
   container {
@@ -152,19 +144,6 @@ query "rds_db_cluster_snapshot_unencrypted_count" {
       aws_rds_db_cluster_snapshot
     where
       not storage_encrypted;
-  EOQ
-}
-
-query "rds_db_cluster_snapshot_cost_mtd" {
-  sql = <<-EOQ
-    select
-      'Cost - MTD' as label,
-      sum(unblended_cost_amount)::numeric::money as value
-    from
-      aws_cost_by_service_usage_type_monthly as c
-    where
-      service = 'Amazon Relational Database Service'
-      and period_end > date_trunc('month', CURRENT_DATE::timestamp);
   EOQ
 }
 
