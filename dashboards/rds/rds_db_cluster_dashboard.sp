@@ -407,7 +407,7 @@ query "rds_db_cluster_by_account" {
       a.account_id = i.account_id
     group by
       a.title
-    order by 
+    order by
       count(i.*) desc;
   EOQ
 }
