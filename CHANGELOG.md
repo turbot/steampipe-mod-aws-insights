@@ -1,3 +1,9 @@
+## v0.12 [2023-05-10]
+
+_Bug fixes_
+
+- Removed cards, charts, and tables displaying inaccurate cost-based information from both `AWS RDS DB Cluster Snapshot Dashboard` and `AWS RDS DB Instance Snapshot Dashboard` dashboards. ([#304](https://github.com/turbot/steampipe-mod-aws-insights/pull/304)) ([#308](https://github.com/turbot/steampipe-mod-aws-insights/pull/308))
+
 ## v0.11 [2023-02-03]
 
 _Enhancements_
