@@ -143,6 +143,7 @@ query "ec2_instance_age_table" {
     where
       i.account_id = a.account_id
     order by
-      i.launch_time;
+      i.launch_time,
+      i.instance_id;
   EOQ
 }
