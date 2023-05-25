@@ -140,6 +140,6 @@ query "ecr_repository_age_table" {
     where
       e.account_id = a.account_id
     order by
-      e.repository_name;
+      e.created_at;
   EOQ
 }

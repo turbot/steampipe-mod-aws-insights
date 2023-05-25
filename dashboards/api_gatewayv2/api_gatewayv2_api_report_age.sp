@@ -136,6 +136,7 @@ query "api_gatewayv2_api_table" {
     where
       api.account_id = acc.account_id
     order by
+      api.created_date,
       api.name;
   EOQ
 }

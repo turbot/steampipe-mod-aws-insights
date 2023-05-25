@@ -140,6 +140,6 @@ query "efs_file_system_table" {
     where
       fs.account_id = acc.account_id
     order by
-      fs.name;
+      fs.creation_time;
   EOQ
 }

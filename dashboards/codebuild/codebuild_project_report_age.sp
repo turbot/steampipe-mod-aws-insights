@@ -140,6 +140,7 @@ query "codebuild_project_age_table" {
     where
       p.account_id = a.account_id
     order by
+      p.created,
       p.arn;
   EOQ
 }

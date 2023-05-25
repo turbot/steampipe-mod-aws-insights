@@ -142,6 +142,7 @@ query "rds_db_instance_age_table" {
     where
       i.account_id = a.account_id
     order by
+      i.create_time,
       i.db_instance_identifier;
   EOQ
 }

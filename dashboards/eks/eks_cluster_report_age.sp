@@ -150,6 +150,7 @@ query "eks_cluster_age_table" {
     where
       e.account_id = a.account_id
     order by
+      e.created_at,
       e.arn;
   EOQ
 }

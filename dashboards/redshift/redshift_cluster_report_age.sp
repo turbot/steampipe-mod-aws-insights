@@ -142,6 +142,7 @@ query "redshift_cluster_age_table" {
     where
       c.account_id = a.account_id
     order by
+      c.cluster_create_time,
       c.cluster_identifier
   EOQ
 }
