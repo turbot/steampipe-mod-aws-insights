@@ -151,6 +151,6 @@ query "eks_cluster_age_table" {
       e.account_id = a.account_id
     order by
       e.created_at,
-      e.arn;
+      e.name;
   EOQ
 }
