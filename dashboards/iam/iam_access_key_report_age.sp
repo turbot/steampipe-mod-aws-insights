@@ -89,7 +89,7 @@ query "iam_access_key_24_hours_count" {
 
 query "iam_access_key_30_days_count" {
   sql = <<-EOQ
-    select
+     select
         count(*) as value,
         '1-30 Days' as label
       from
