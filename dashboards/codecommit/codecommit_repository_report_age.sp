@@ -1,4 +1,4 @@
-dashboard "codecommit_repository_age_report" {
+dashboard "codecommit_repository_report_age" {
 
   title         = "AWS CodeCommit Repository Age Report"
   documentation = file("./dashboards/codecommit/docs/codecommit_repository_report_age.md")
