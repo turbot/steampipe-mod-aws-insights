@@ -143,6 +143,7 @@ query "elasticache_cluster_node_age_table" {
     where
       e.account_id = a.account_id
     order by
+      e.cache_cluster_create_time,
       e.cache_cluster_id;
   EOQ
 }

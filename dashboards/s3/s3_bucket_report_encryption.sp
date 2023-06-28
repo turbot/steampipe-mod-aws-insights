@@ -86,7 +86,7 @@ query "s3_bucket_encryption_table" {
         arn,
         rules -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID' as kms_key_master_id,
         rules -> 'ApplyServerSideEncryptionByDefault' ->> 'SSEAlgorithm' as sse_algorithm,
-        rules -> 'ApplyServerSideEncryptionByDefault' ->> 'BucketKeyEnabled' as bucket_key_enabled
+        rules -> 'BucketKeyEnabled' as bucket_key_enabled
       from
         aws_s3_bucket,
         jsonb_array_elements(server_side_encryption_configuration -> 'Rules') as rules

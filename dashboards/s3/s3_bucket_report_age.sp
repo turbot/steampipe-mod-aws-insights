@@ -144,6 +144,7 @@ query "s3_bucket_age_table" {
     where
       b.account_id = a.account_id
     order by
+      b.creation_date,
       b.name;
   EOQ
 }

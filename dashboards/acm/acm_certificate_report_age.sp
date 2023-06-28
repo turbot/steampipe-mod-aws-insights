@@ -147,6 +147,7 @@ query "acm_certificate_age_table" {
     where
       c.account_id = a.account_id
     order by
+      c.created_at,
       c.domain_name;
   EOQ
 }

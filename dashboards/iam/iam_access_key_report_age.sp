@@ -154,11 +154,11 @@ query "iam_access_key_age_table" {
       )
       select
         ak.user as "User",
-        ak.user_arn as "User ARN",
         ak.access_key_id as "Access Key ID",
-        ak.status as "Status",
         ak.age_in_days as "Age in Days",
         ak.create_date as "Create Date",
+        ak.status as "Status",
+        ak.user_arn as "User ARN",
         a.title as "Account",
         ak.account_id as "Account ID"
       from
@@ -167,6 +167,7 @@ query "iam_access_key_age_table" {
       where
         a.account_id = ak.account_id
       order by
+        ak.create_date,
         ak.user;
   EOQ
 }

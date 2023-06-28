@@ -143,6 +143,7 @@ query "kms_key_age_table" {
     where
       k.account_id = a.account_id
     order by
+      k.creation_date,
       k.id;
   EOQ
 }

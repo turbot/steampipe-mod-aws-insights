@@ -1,3 +1,11 @@
+## v0.13 [2023-06-28]
+
+_Bug fixes_
+
+- Updated the Age Report dashboards to order by the creation time of the resource. ([#311](https://github.com/turbot/steampipe-mod-aws-insights/pull/311))
+- Fixed the `s3_bucket_encryption_table` query to correctly check if S3 buckets are configured to use an `S3 Bucket Key` for SSE-KMS. ([#313](https://github.com/turbot/steampipe-mod-aws-insights/pull/313)) (Thanks [@andy-werderman](https://github.com/andy-werderman) for the contribution!)
+- Fixed dashboard localhost URLs in README and index doc. ([#310](https://github.com/turbot/steampipe-mod-aws-insights/pull/310))
+
 ## v0.12 [2023-05-10]
 
 _Bug fixes_

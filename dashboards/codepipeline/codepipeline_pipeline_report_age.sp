@@ -142,6 +142,7 @@ query "codepipeline_pipeline_age_table" {
     where
       c.account_id = a.account_id
     order by
+      c.created_at,
       c.name;
   EOQ
 }
