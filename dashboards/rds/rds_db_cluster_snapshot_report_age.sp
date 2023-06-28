@@ -146,6 +146,7 @@ query "rds_db_cluster_snapshot_age_table" {
     where
       s.account_id = a.account_id
     order by
+      s.create_time,
       s.db_cluster_snapshot_identifier;
   EOQ
 }

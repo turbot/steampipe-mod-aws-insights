@@ -146,6 +146,7 @@ query "ebs_volume_age_table" {
     where
       v.account_id = a.account_id
     order by
+      v.create_time,
       v.volume_id;
   EOQ
 }

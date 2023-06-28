@@ -126,11 +126,11 @@ query "efs_file_system_1_year_count" {
 query "efs_file_system_table" {
   sql = <<-EOQ
     select
-      fs.arn as "ARN",
       fs.name as "Name",
       fs.file_system_id as "ID",
       now()::date - fs.creation_time::date as "Age in Days",
       fs.creation_time as "Create Time",
+      fs.arn as "ARN",
       acc.title as "Account",
       fs.account_id as "Account ID",
       fs.region as "Region"
@@ -140,6 +140,7 @@ query "efs_file_system_table" {
     where
       fs.account_id = acc.account_id
     order by
+      fs.creation_time,
       fs.name;
   EOQ
 }

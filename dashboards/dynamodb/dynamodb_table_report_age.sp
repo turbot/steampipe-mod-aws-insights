@@ -142,6 +142,7 @@ query "dynamodb_table_age_table" {
     where
       d.account_id = a.account_id
     order by
+      d.creation_date_time,
       d.name;
   EOQ
 }

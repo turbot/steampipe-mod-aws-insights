@@ -141,6 +141,7 @@ query "rds_db_cluster_age_table" {
     where
       c.account_id = a.account_id
     order by
+      c.create_time,
       c.db_cluster_identifier;
   EOQ
 }

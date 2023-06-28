@@ -141,6 +141,7 @@ query "codecommit_repository_age_table" {
     where
       r.account_id = a.account_id
     order by
+      r.creation_date,
       r.repository_id;
   EOQ
 }
