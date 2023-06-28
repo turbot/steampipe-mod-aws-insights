@@ -1,3 +1,11 @@
+## v0.13 [2023-06-28]
+
+_Bug fixes_
+
+- Updated the queries in Age Reports to order by `Create Time`. ([#311](https://github.com/turbot/steampipe-mod-aws-insights/pull/311))
+- Fixed the `s3_bucket_encryption_table` query to correctly check for s3 buckets with `bucket key` enabled. ([#313](https://github.com/turbot/steampipe-mod-aws-insights/pull/313))
+- Fixed dashboard localhost URLs in README and index doc. ([#310](https://github.com/turbot/steampipe-mod-aws-insights/pull/310))
+
 ## v0.12 [2023-05-10]
 
 _Bug fixes_
