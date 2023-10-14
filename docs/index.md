@@ -1,30 +1,46 @@
 ---
 repository: "https://github.com/turbot/steampipe-mod-aws-insights"
+title: "AWS Insights Mod - Visualize and report on resource configuration across your AWS accounts."
+description: "DevOps pros use these dashboards to analyze cloud metrics, report on resource config, and enhance cloud security with interactive visualizations built using HCL and SQL."
 ---
 
-# AWS Insights Mod
+# AWS Insights Mod - Visualize and report on resource configuration across your AWS accounts.
 
-Create dashboards and reports for your AWS resources using Steampipe.
+DevOps professionals use the AWS insights mod to visualize cloud intelligence and security metrics using interactive dashboards. Report on AWS resource configuration, visualize relationships, and aggregate metrics to better understand your cloud infrastructure. The dashboards are specified using a "low code" HCL format (similar to Terraform). Making it easy to inspect, modify and compose new dashboards to meet specific compliance and security objectives for your organization.
 
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_s3_bucket_dashboard.png" width="50%" type="thumbnail"/>
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_s3_bucket_detail.png" width="50%" type="thumbnail"/>
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_ebs_snapshot_age.png" width="50%" type="thumbnail"/>
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_ebs_volume_encryption.png" width="50%" type="thumbnail"/>
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_ec2_instance_public_access.png" width="50%" type="thumbnail"/>
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_iam_policy_detail.png" width="50%" type="thumbnail"/>
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_vpc_detail.png" width="50%" type="thumbnail"/>
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_vpc_security_group_detail.png" width="50%" type="thumbnail"/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_insights_console_graphic.png" width="100%" alt="Screenshot of 'AWS S3 Bucket Dashboard' on 'pipes.turbot.com' with metrics on bucket privacy, encryption, logging, and costs."/> 
+
+<figure class="figure">
+  <img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_insights_console_graphic.png" class="figure-img img-fluid" alt="Screenshot of 'AWS S3 Bucket Dashboard' on 'pipes.turbot.com' with metrics on bucket privacy, encryption, logging, and costs.">
+  <figcaption class="figure-caption">'AWS S3 Bucket Dashboard' example using 'pipes.turbot.com' showing metrics on bucket privacy, encryption, logging, and costs.</figcaption>
+</figure>
+
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_s3_bucket_dashboard.png" width="50%" type="thumbnail" alt="Example of the 'AWS S3 Bucket Dashboard' with metrics on bucket privacy, encryption, logging, and costs."/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_s3_bucket_detail.png" width="50%" type="thumbnail" alt="Detailed report for AWS S3 bucket 'ria-example-test'. Highlights: no public access, encryption on, logging off. Shows AWS service connections."/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_ebs_snapshot_age.png" width="50%" type="thumbnail" alt="Dashboard for 'AWS EBS Snapshot Age Report' with filters like '<24 hours', '1-30 Days', and '>1 Year'. Table columns include Snapshot ID, Name, Age, and Region."/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_ebs_volume_encryption.png" width="50%" type="thumbnail" alt="'AWS EBS Volume Encryption Report' dashboard highlighting 'Unencrypted' volumes. Table columns: Volume ID, Name, Encryption status, and Region."/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_ec2_instance_public_access.png" width="50%" type="thumbnail" alt="'AWS EC2 Instance Public Access Report' from Steampipe showing 5 instances with 1 publicly accessible. Table includes Instance ID, Name, and access status."/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_iam_policy_detail.png" width="50%" type="thumbnail" alt="Dashboard for 'AWS IAM Policy Detail' from Steampipe. Top section has a policy selector. Main section shows policy's relationships with AWS services."/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_vpc_detail.png" width="50%" type="thumbnail" alt="Detailed dashboard of AWS VPC 'VPC Test' detailing relationships with resources like CIDR blocks, subnets, and security groups."/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_vpc_security_group_detail.png" width="50%" type="thumbnail" alt="Visualization of AWS VPC Security Group 'default'. Details on ingress/egress rules and associated AWS connections."/>
 
 ## Overview
 
-Dashboards can help answer questions like:
+Resource type **Dashboards** have interactive elements that can answer questions like:
 
-- How many resources do I have?
+- How many of this resource type do I have? 
+- Counts by accounts and regions?
+- Cost of these resources over time.
+- Percentage of resources that are configured in specific ways (e.g. encryption on?)
 - How old are my resources?
-- Are there any publicly accessible resources?
+
+Resource **detail reports** can be reached by drilling down from dashboards or manually selecting the resource name.  They drill into a **specific resource** and can answer detailed configuration questions and provide a visualization of relationships to other resources. Use these to answer deep questions:
+- What are the relationships between this resource and others?
+- Is this resource publicly accessible?
 - Is encryption enabled and what keys are used for encryption?
 - Is versioning enabled?
-- What are the relationships between closely connected resources like IAM users, groups, and policies?
+- What networking ingress and egress rules are associated with this resource.
+
 
 Dashboards are available for 15+ services, including CloudTrail, EC2, IAM, RDS, S3, VPC, and more!
 
