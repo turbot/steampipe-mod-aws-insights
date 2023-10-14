@@ -1,3 +1,9 @@
+## v0.14 [2023-10-13]
+
+_Enhancements_
+
+- Added additional dashboard and query docs and updated metadata descriptions in docs. ([#323](https://github.com/turbot/steampipe-mod-aws-insights/pull/323))
+
 ## v0.13 [2023-06-28]
 
 _Bug fixes_
