@@ -46,11 +46,15 @@ dashboard "iam_role_dashboard" {
   container {
     title = "Assessments"
 
+    container {
+      width = 2
+    }
+
     chart {
       title = "Inline Policies"
       query = query.iam_roles_with_inline_policy
       type  = "donut"
-      width = 3
+      width = 2
 
       series "count" {
         point "no inline policies" {
@@ -66,7 +70,7 @@ dashboard "iam_role_dashboard" {
       title = "Attached Policies"
       query = query.iam_roles_with_direct_attached_policy
       type  = "donut"
-      width = 3
+      width = 2
 
       series "count" {
         point "with policies" {
@@ -82,7 +86,7 @@ dashboard "iam_role_dashboard" {
       title = "Allows All Actions"
       query = query.iam_roles_allow_all_action
       type  = "donut"
-      width = 3
+      width = 2
 
       series "count" {
         point "limited actions" {
@@ -98,7 +102,23 @@ dashboard "iam_role_dashboard" {
       title = "Boundary Policy"
       query = query.iam_roles_by_boundary_policy
       type  = "donut"
-      width = 3
+      width = 2
+
+      series "count" {
+        point "configured" {
+          color = "ok"
+        }
+        point "not configured" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Allow All Principals"
+      query = query.iam_role_allows_assume_role_to_all_principal
+      type  = "donut"
+      width = 2
 
       series "count" {
         point "configured" {
@@ -337,6 +357,23 @@ query "iam_roles_by_boundary_policy" {
       aws_iam_role
     group by
       permissions_boundary_type;
+  EOQ
+}
+
+query "iam_role_allows_assume_role_to_all_principal" {
+  sql = <<-EOQ
+    select
+    case
+      when principal = '*' and stmt ->> 'Effect' = 'Allow' then 'allows all principals'
+      else 'limited principals'
+    end as allow_all_principals, 
+    count (*)
+    from
+      aws_iam_role role,
+      jsonb_array_elements(role.assume_role_policy_std -> 'Statement') as stmt,
+      jsonb_array_elements_text(stmt -> 'Principal' -> 'AWS') as principal
+    group by
+      allow_all_principals;
   EOQ
 }
 
