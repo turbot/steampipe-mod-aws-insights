@@ -14,9 +14,8 @@ mod "aws_insights" {
   }
 
   require {
-    steampipe = "0.18.0"
     plugin "aws" {
-      version = "0.91.0"
+      min_version = "0.91.0"
     }
   }
 }
