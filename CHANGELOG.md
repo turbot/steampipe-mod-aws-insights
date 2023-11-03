@@ -1,3 +1,9 @@
+## v0.15 [2023-11-03]
+
+_Breaking changes_
+
+- Updated the plugin dependency section of the mod to use `min_version` instead of `version`. ([#326](https://github.com/turbot/steampipe-mod-aws-insights/pull/326))
+
 ## v0.14 [2023-10-13]
 
 _Enhancements_
