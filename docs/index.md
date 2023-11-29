@@ -11,7 +11,7 @@ DevOps professionals use the AWS insights mod to visualize cloud intelligence an
 <img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_insights_console_graphic.png" width="100%" alt="Screenshot of 'AWS S3 Bucket Dashboard' on 'pipes.turbot.com' with metrics on bucket privacy, encryption, logging, and costs."/> 
 
 <figure class="figure">
-  <img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_insights_console_graphic.png" class="figure-img img-fluid" alt="Screenshot of 'AWS S3 Bucket Dashboard' on 'pipes.turbot.com' with metrics on bucket privacy, encryption, logging, and costs.">
+  <img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_insights_console_graphic.png" class="figure-img img-fluid" alt="Screenshot of 'AWS S3 Bucket Dashboard' on 'pipes.turbot.com' with metrics on bucket privacy, encryption, logging, and costs."/>
   <figcaption class="figure-caption">'AWS S3 Bucket Dashboard' example using 'pipes.turbot.com' showing metrics on bucket privacy, encryption, logging, and costs.</figcaption>
 </figure>
 
