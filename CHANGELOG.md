@@ -1,3 +1,9 @@
+## v0.16 [2023-11-29]
+
+_Bug fixes_
+
+- Fixed missing closing tag in index doc. ([#331](https://github.com/turbot/steampipe-mod-aws-insights/pull/331))
+
 ## v0.15 [2023-11-03]
 
 _Breaking changes_
