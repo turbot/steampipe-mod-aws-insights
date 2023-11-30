@@ -2,7 +2,7 @@
 
 _Bug fixes_
 
-- Fixed the index docs by removing unsupported images. ([#334](https://github.com/turbot/steampipe-mod-aws-insights/pull/334))
+- Fixed the index doc by removing unsupported images. ([#334](https://github.com/turbot/steampipe-mod-aws-insights/pull/334))
 
 ## v0.16 [2023-11-29]
 
