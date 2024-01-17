@@ -110,6 +110,81 @@ edge "iam_policy_statement" {
   param "iam_policy_arns" {}
 }
 
+edge "iam_policy_statement_principal" {
+  title = "principal"
+  sql = <<-EOQ
+
+    select
+      --distinct on (p.arn,action)
+      concat('principal:', principal) to_id,
+      concat('statement:', i) as from_id
+    from
+     jsonb_array_elements(($1 :: jsonb) ->  'Statement') with ordinality as t(stmt,i),
+      jsonb_array_elements_text(
+          jsonb_path_query_array((t.stmt :: jsonb), '$.Principal.*')
+        ) as principal
+  EOQ
+
+  param "iam_policy_stds" {}
+}
+
+edge "iam_resource_policy_statement_action" {
+  title = "action"
+  sql = <<-EOQ
+
+    select
+      concat('principal:', principal) as from_id,
+      concat('action:', action) as to_id
+    from
+     jsonb_array_elements(($1 :: jsonb) ->  'Statement') with ordinality as t(stmt,i),
+     jsonb_array_elements_text(
+          jsonb_path_query_array((t.stmt :: jsonb), '$.Principal.*')
+      ) as principal,
+     jsonb_array_elements_text(t.stmt -> 'Action') as action
+  EOQ
+
+  param "iam_policy_stds" {}
+}
+
+edge "iam_resource_policy_statement_condition" {
+  title = "condition"
+  sql   = <<-EOQ
+
+    select
+      concat('statement:', i, ':condition:', condition.key) as to_id,
+      concat('principal:', principal) as from_id
+    from
+      jsonb_array_elements(($1 :: jsonb) ->  'Statement') with ordinality as t(stmt,i),
+      jsonb_array_elements_text(
+          jsonb_path_query_array((t.stmt :: jsonb), '$.Principal.*')
+      ) as principal,
+      jsonb_each(t.stmt -> 'Condition') as condition
+    where
+      stmt -> 'Condition' <> 'null'
+  EOQ
+
+  param "iam_policy_stds" {}
+}
+
+edge "iam_resource_policy_statement_notaction" {
+  sql = <<-EOQ
+
+    select
+      concat('action:', notaction) as to_id,
+      concat('principal:', principal) as from_id,
+      concat(lower(t.stmt ->> 'Effect'), ' not action') as title,
+      lower(t.stmt ->> 'Effect') as category
+    from
+      jsonb_array_elements(($1 :: jsonb) ->  'Statement') with ordinality as t(stmt,i),
+      jsonb_array_elements_text(
+        jsonb_path_query_array((t.stmt :: jsonb), '$.Principal.*')
+      ) as principal,
+      jsonb_array_elements_text(t.stmt -> 'NotAction') as notaction
+  EOQ
+
+  param "iam_policy_stds" {}
+}
+
 edge "iam_policy_statement_action" {
   //title = "allows"
   sql = <<-EOQ

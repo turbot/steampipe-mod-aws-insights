@@ -33,6 +33,13 @@ graph "iam_resource_policy_structure" {
     }
 
     node {
+      base = node.iam_policy_statement_principal
+      args = {
+        iam_policy_stds = param.policy_std
+      }
+    }
+
+    node {
       base = node.iam_policy_statement_action_notaction
       args = {
         iam_policy_stds = param.policy_std
@@ -68,14 +75,21 @@ graph "iam_resource_policy_structure" {
     }
 
     edge {
-      base = edge.iam_policy_statement_action
+      base = edge.iam_policy_statement_principal
       args = {
         iam_policy_stds = param.policy_std
       }
     }
 
     edge {
-      base = edge.iam_policy_statement_condition
+      base = edge.iam_resource_policy_statement_action
+      args = {
+        iam_policy_stds = param.policy_std
+      }
+    }
+
+    edge {
+      base = edge.iam_resource_policy_statement_condition
       args = {
         iam_policy_stds = param.policy_std
       }
@@ -96,7 +110,7 @@ graph "iam_resource_policy_structure" {
     }
 
     edge {
-      base = edge.iam_policy_statement_notaction
+      base = edge.iam_resource_policy_statement_notaction
       args = {
         iam_policy_stds = param.policy_std
       }
