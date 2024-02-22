@@ -14,7 +14,7 @@ dashboard "opensearch_domain_detail" {
   })
 
   input "opensearch_domain_name" {
-    title = "Select an OpenSearch domain:"
+    title = "Select a domain:"
     query = query.opensearch_domain_input
     width = 4
   }
