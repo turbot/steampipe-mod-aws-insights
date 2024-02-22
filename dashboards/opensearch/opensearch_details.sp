@@ -14,7 +14,7 @@ dashboard "opensearch_domain_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.opensearch_domain_instance_type
       args  = [self.input.opensearch_arn.value]
     }
