@@ -1,5 +1,5 @@
 dashboard "opensearch_domain_detail" {
-  title = "OpenSearch Domain Detail"
+  title = "AWS OpenSearch Domain Detail"
 
   tags = merge(local.opensearch_common_tags, {
     type = "Detail"
