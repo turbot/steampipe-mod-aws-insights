@@ -39,7 +39,7 @@ dashboard "opensearch_domain_detail" {
       type      = "graph"
       direction = "TD"
       node {
-        base = node.opensearch_domain_arn
+        base = node.opensearch_domain
         args = {
           opensearch_arns = [self.input.opensearch_arn.value]
         }
