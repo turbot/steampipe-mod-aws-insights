@@ -1,11 +1,3 @@
-
-locals {
-  opensearch_common_tags = {
-    service = "AWS/OpenSearch"
-  }
-}
-
-
 dashboard "opensearch_domain_detail" {
   title         = "OpenSearch Domain Detail"
 
