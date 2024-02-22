@@ -110,16 +110,16 @@ dashboard "opensearch_domain_detail" {
 
 query "opensearch_domain_input" {
   sql = <<-EOQ
-    SELECT
-      domain_name AS label,
-      arn AS value,
+    select
+      domain_name as label,
+      arn as value,
       json_build_object(
         'domain_name', domain_name,
         'arn', arn
-      ) AS tags
-    FROM
+      ) as tags
+    from
       aws_opensearch_domain
-    ORDER BY
+    order by
       domain_name;
   EOQ
 }
