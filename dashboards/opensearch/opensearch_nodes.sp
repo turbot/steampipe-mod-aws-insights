@@ -23,15 +23,16 @@ node "opensearch_domain" {
 }
 
 
-
-node "opensearch_domain_name" {
+node "opensearch_domain_arn" {
   category = category.opensearch_domain
+
   sql = <<-EOQ
     select
       arn as id,
-      domain_name as title,
+      title as title,
       jsonb_build_object(
         'ARN', arn,
+        'Domain ID', domain_id,
         'Domain Name', domain_name,
         'Engine Version', engine_version,
         'Account ID', account_id,
@@ -40,9 +41,8 @@ node "opensearch_domain_name" {
     from
       aws_opensearch_domain
     where
-      domain_name = $1; -- Use domain_name instead of arn
+      arn = any($1);
   EOQ
-  param "opensearch_domain_name" {}
+
+  param "opensearch_arns" {}
 }
-
-
