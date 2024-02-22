@@ -14,37 +14,35 @@ edge "opensearch_domain_to_acm_certificate" {
   param "acm_certificate_arns" {}
 }
 
-
-edge "opensearch_domain_name_to_vpc_security_group" {
+edge "opensearch_domain_to_vpc_security_group" {
   title = "Security Groups"
-  sql = <<-EOQ
+  sql   = <<-EOQ
     SELECT
-      s ->> 'GroupId' as from_id,
+      arn as from_id,
       jsonb_array_elements_text(vpc_options -> 'SecurityGroupIds') AS to_id
     FROM
       aws_opensearch_domain
       JOIN jsonb_array_elements(vpc_options -> 'SecurityGroupIds') AS s ON true
     WHERE
-      domain_name = $1;
+      arn = $1;
   EOQ
-  param "opensearch_domain_name" {}
+  param "opensearch_arn" {}
 }
 
 
-
-edge "opensearch_domain_name_to_vpc_subnet" {
+edge "opensearch_domain_to_vpc_subnet" {
   title = "subnet"
 
   sql = <<-EOQ
     SELECT
-      s ->> 'GroupId' as from_id,
+      jsonb_array_elements_text(vpc_options -> 'SecurityGroupIds') as from_id,
       jsonb_array_elements_text(vpc_options -> 'SubnetIds') AS to_id
     FROM
       aws_opensearch_domain
       JOIN jsonb_array_elements(vpc_options -> 'SecurityGroupIds') AS s ON true
     WHERE
-      domain_name = $1;
+      arn = $1;
   EOQ
 
-  param "opensearch_domain_name" {}
+  param "opensearch_arn" {}
 }
