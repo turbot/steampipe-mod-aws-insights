@@ -5,7 +5,6 @@ locals {
   }
 }
 
-# dashboard.tf
 
 dashboard "opensearch_domain_detail" {
   title         = "OpenSearch Domain Detail"
