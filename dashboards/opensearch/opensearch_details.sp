@@ -1,4 +1,3 @@
-# locals.tf
 
 locals {
   opensearch_common_tags = {
