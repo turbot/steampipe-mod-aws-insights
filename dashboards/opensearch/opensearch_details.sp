@@ -1,11 +1,11 @@
 dashboard "opensearch_domain_detail" {
-  title         = "OpenSearch Domain Detail"
+  title = "OpenSearch Domain Detail"
 
   tags = merge(local.opensearch_common_tags, {
     type = "Detail"
   })
 
-  input "opensearch_domain_name" {
+  input "opensearch_arn" {
     title = "Select a domain:"
     query = query.opensearch_domain_input
     width = 4
@@ -16,32 +16,31 @@ dashboard "opensearch_domain_detail" {
     card {
       width = 2
       query = query.opensearch_domain_instance_type
-      args  = [self.input.opensearch_domain_name.value]
+      args  = [self.input.opensearch_arn.value]
     }
 
     card {
       width = 2
       query = query.opensearch_domain_version
-      args  = [self.input.opensearch_domain_name.value]
+      args  = [self.input.opensearch_arn.value]
     }
 
     card {
       width = 2
       query = query.opensearch_domain_endpoint
-      args  = [self.input.opensearch_domain_name.value]
+      args  = [self.input.opensearch_arn.value]
     }
   }
 
   with "vpc_security_groups_for_opensearch" {
     query = query.vpc_security_groups_for_opensearch
-    args  = [self.input.opensearch_domain_name.value]
+    args  = [self.input.opensearch_arn.value]
   }
 
   with "vpc_subnet_for_opensearch" {
     query = query.vpc_subnet_ids_for_opensearch
-    args  = [self.input.opensearch_domain_name.value]
+    args  = [self.input.opensearch_arn.value]
   }
-  
 
   container {
 
@@ -52,39 +51,41 @@ dashboard "opensearch_domain_detail" {
       direction = "TD"
 
       node {
-        base = node.opensearch_domain_name
+        base = node.opensearch_domain_arn
         args = {
-          opensearch_domain_name = self.input.opensearch_domain_name.value
-       }
+          opensearch_arns = [self.input.opensearch_arn.value]
+        }
       }
+
       node {
         base = node.vpc_security_group
         args = {
           vpc_security_group_ids = with.vpc_security_groups_for_opensearch.rows[*].security_group_id
         }
       }
+
       node {
         base = node.vpc_subnet
         args = {
           vpc_subnet_ids = with.vpc_subnet_for_opensearch.rows[*].subnet_id
         }
       }
+
       edge {
-        base = edge.opensearch_domain_name_to_vpc_security_group
+        base = edge.opensearch_domain_to_vpc_security_group
         args = {
-          opensearch_domain_name = self.input.opensearch_domain_name.value
+          opensearch_arn = self.input.opensearch_arn.value
         }
       }
+
       edge {
-        base = edge.opensearch_domain_name_to_vpc_subnet
+        base = edge.opensearch_domain_to_vpc_subnet
         args = {
-          opensearch_domain_name = self.input.opensearch_domain_name.value
+          opensearch_arn = self.input.opensearch_arn.value
         }
       }
     }
   }
-
-
 
   container {
     width = 12
@@ -94,21 +95,18 @@ dashboard "opensearch_domain_detail" {
       type  = "line"
       width = 6
       query = query.opensearch_domain_overview
-      args  = [self.input.opensearch_domain_name.value]
+      args  = [self.input.opensearch_arn.value]
     }
 
     table {
       title = "Tags"
       width = 6
       query = query.opensearch_domain_tags
-      args  = [self.input.opensearch_domain_name.value]
+      args  = [self.input.opensearch_arn.value]
     }
   }
 
-
 }
-
-# queries.tf
 
 query "opensearch_domain_input" {
   sql = <<-EOQ
@@ -143,7 +141,7 @@ query "opensearch_domain_tags" {
 query "opensearch_domain_version" {
   sql = <<-EOQ
     SELECT
-      engine_version
+      engine_version as "Engine Version"
     FROM
       aws_opensearch_domain
     WHERE
@@ -154,7 +152,7 @@ query "opensearch_domain_version" {
 query "opensearch_domain_instance_type" {
   sql = <<-EOQ
     SELECT
-      cluster_config->>'InstanceType' AS instance_type
+      cluster_config->>'InstanceType' AS "Instance Type"
     FROM
       aws_opensearch_domain
     WHERE
@@ -182,7 +180,7 @@ query "opensearch_domain_overview" {
 query "opensearch_domain_endpoint" {
   sql = <<-EOQ
     SELECT
-      endpoint
+      endpoint as "Endpoint"
     FROM
       aws_opensearch_domain
     WHERE
