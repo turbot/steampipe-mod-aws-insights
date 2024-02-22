@@ -26,7 +26,7 @@ dashboard "opensearch_domain_detail" {
     }
 
     card {
-      width = 2
+      width = 3
       query = query.opensearch_domain_endpoint
       args  = [self.input.opensearch_arn.value]
     }
