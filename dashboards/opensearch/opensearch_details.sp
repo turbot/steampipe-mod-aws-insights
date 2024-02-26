@@ -33,6 +33,10 @@ dashboard "opensearch_domain_detail" {
     query = query.vpc_subnet_ids_for_opensearch
     args  = [self.input.opensearch_arn.value]
   }
+  with "vpc_vpcs_for_opensearch" {
+    query = query.vpc_vpcs_for_opensearch
+    args  = [self.input.opensearch_arn.value]
+  }
   container {
     graph {
       title     = "Relationships"
@@ -56,6 +60,12 @@ dashboard "opensearch_domain_detail" {
           vpc_subnet_ids = with.vpc_subnet_for_opensearch.rows[*].subnet_id
         }
       }
+      node {
+        base = node.vpc_vpc
+        args = {
+          vpc_vpc_ids = with.vpc_vpcs_for_opensearch.rows[*].vpc_id
+        }
+      }
       edge {
         base = edge.opensearch_domain_to_vpc_security_group
         args = {
@@ -66,6 +76,12 @@ dashboard "opensearch_domain_detail" {
         base = edge.opensearch_domain_to_vpc_subnet
         args = {
           opensearch_arn = self.input.opensearch_arn.value
+        }
+      }
+      edge {
+        base = edge.vpc_subnet_to_vpc_vpc
+        args = {
+          vpc_subnet_ids = with.vpc_subnet_for_opensearch.rows[*].subnet_id
         }
       }
     }
@@ -84,6 +100,30 @@ dashboard "opensearch_domain_detail" {
       title = "Tags"
       width = 6
       query = query.opensearch_domain_tags
+      args  = [self.input.opensearch_arn.value]
+    }
+  }
+container {
+    width = 6
+
+    table {
+      title = "Security Groups"
+      query = query.opensearch_domain_security_groups
+      args  = [self.input.opensearch_arn.value]
+
+      column "Group ID" {
+        // cyclic dependency prevents use of url_path, hardcode for now
+        href = "/aws_insights.dashboard.vpc_security_group_detail?input.security_group_id={{.'Group ID' | @uri}}"
+      }
+    }
+
+  }
+  container {
+    width = 6
+
+    table {
+      title = "Access Policy"
+      query = query.opensearch_domain_access_policies
       args  = [self.input.opensearch_arn.value]
     }
   }
@@ -177,6 +217,37 @@ query "vpc_subnet_ids_for_opensearch" {
     from
       aws_opensearch_domain
     where
+      arn = $1;
+  EOQ
+}
+query "vpc_vpcs_for_opensearch" {
+  sql = <<-EOQ
+    select
+      vpc_options ->> 'VPCId' AS vpc_id
+    from
+      aws_opensearch_domain
+    where
+      arn = $1;
+  EOQ
+}
+query "opensearch_domain_security_groups" {
+  sql = <<-EOQ
+    SELECT
+      GroupID AS "Group ID"
+    FROM (
+      SELECT jsonb_array_elements_text(vpc_options -> 'SecurityGroupIds') AS GroupID
+      FROM aws_opensearch_domain
+      WHERE arn = $1
+    ) AS subquery;
+  EOQ
+}
+query "opensearch_domain_access_policies" {
+  sql = <<-EOQ
+    SELECT
+      access_policies as "Access Policy"
+    FROM
+      aws_opensearch_domain
+    WHERE
       arn = $1;
   EOQ
 }
