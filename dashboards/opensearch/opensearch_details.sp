@@ -193,7 +193,7 @@ query "opensearch_domain_overview" {
 query "opensearch_domain_endpoint" {
   sql = <<-EOQ
     select
-      endpoint as "VPC Endpoint"
+      endpoints as "VPC Endpoint"
     from
       aws_opensearch_domain
     where
