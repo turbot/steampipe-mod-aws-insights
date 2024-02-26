@@ -4,7 +4,7 @@ dashboard "opensearch_domain_detail" {
     type = "Detail"
   })
   input "opensearch_arn" {
-    title = "Select a domain:"
+    title = "select a domain:"
     query = query.opensearch_domain_input
     width = 4
   }
@@ -193,7 +193,7 @@ query "opensearch_domain_overview" {
 query "opensearch_domain_endpoint" {
   sql = <<-EOQ
     select
-      endpoint as "Endpoint"
+      endpoint as "VPC Endpoint"
     from
       aws_opensearch_domain
     where
@@ -232,22 +232,22 @@ query "vpc_vpcs_for_opensearch" {
 }
 query "opensearch_domain_security_groups" {
   sql = <<-EOQ
-    SELECT
+    select
       GroupID AS "Group ID"
-    FROM (
-      SELECT jsonb_array_elements_text(vpc_options -> 'SecurityGroupIds') AS GroupID
-      FROM aws_opensearch_domain
-      WHERE arn = $1
+    from (
+      select jsonb_array_elements_text(vpc_options -> 'SecurityGroupIds') AS GroupID
+      from aws_opensearch_domain
+      where arn = $1
     ) AS subquery;
   EOQ
 }
 query "opensearch_domain_access_policies" {
   sql = <<-EOQ
-    SELECT
+    select
       access_policies as "Access Policy"
-    FROM
+    from
       aws_opensearch_domain
-    WHERE
+    where
       arn = $1;
   EOQ
 }
