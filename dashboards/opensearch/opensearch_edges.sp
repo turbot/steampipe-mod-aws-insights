@@ -13,8 +13,10 @@ edge "opensearch_domain_to_acm_certificate" {
 
   param "acm_certificate_arns" {}
 }
+
 edge "opensearch_domain_to_vpc_security_group" {
   title = "Security Groups"
+
   sql   = <<-EOQ
     select
       arn as from_id,
@@ -25,8 +27,10 @@ edge "opensearch_domain_to_vpc_security_group" {
     where
       arn = $1;
   EOQ
+
   param "opensearch_arn" {}
 }
+
 edge "opensearch_domain_to_vpc_subnet" {
   title = "subnet"
 
