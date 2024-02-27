@@ -282,9 +282,9 @@ query "opensearch_domain_security_groups" {
 query "opensearch_domain_subnet" {
   sql = <<-EOQ
     select
-      GroupID AS "Group ID"
+      SubnetID AS "Subnet ID"
     from (
-      select jsonb_array_elements_text(vpc_options -> 'SubnetIds') AS GroupID
+      select jsonb_array_elements_text(vpc_options -> 'SubnetIds') AS SubnetID
       from aws_opensearch_domain
       where arn = $1
     ) AS subquery;
