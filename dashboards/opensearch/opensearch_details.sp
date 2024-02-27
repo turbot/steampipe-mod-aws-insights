@@ -1,91 +1,114 @@
 dashboard "opensearch_domain_detail" {
+
   title = "AWS OpenSearch Domain Detail"
+
   tags = merge(local.opensearch_common_tags, {
     type = "Detail"
   })
+
   input "opensearch_arn" {
     title = "select a domain:"
     query = query.opensearch_domain_input
     width = 4
   }
+
   container {
+
     card {
       width = 3
       query = query.opensearch_domain_instance_type
       args  = [self.input.opensearch_arn.value]
     }
+
     card {
       width = 2
       query = query.opensearch_domain_version
       args  = [self.input.opensearch_arn.value]
     }
+
     card {
       width = 3
       query = query.opensearch_domain_endpoint
       args  = [self.input.opensearch_arn.value]
     }
   }
+
   with "vpc_security_groups_for_opensearch" {
     query = query.vpc_security_groups_for_opensearch
     args  = [self.input.opensearch_arn.value]
   }
+
   with "vpc_subnet_for_opensearch" {
     query = query.vpc_subnet_ids_for_opensearch
     args  = [self.input.opensearch_arn.value]
   }
+
   with "vpc_vpcs_for_opensearch" {
     query = query.vpc_vpcs_for_opensearch
     args  = [self.input.opensearch_arn.value]
   }
+
   container {
+
     graph {
+
       title     = "Relationships"
       type      = "graph"
       direction = "TD"
+
       node {
         base = node.opensearch_domain
         args = {
           opensearch_arns = [self.input.opensearch_arn.value]
         }
       }
+
       node {
         base = node.vpc_security_group
         args = {
           vpc_security_group_ids = with.vpc_security_groups_for_opensearch.rows[*].security_group_id
         }
       }
+
       node {
         base = node.vpc_subnet
         args = {
           vpc_subnet_ids = with.vpc_subnet_for_opensearch.rows[*].subnet_id
         }
       }
+
       node {
         base = node.vpc_vpc
         args = {
           vpc_vpc_ids = with.vpc_vpcs_for_opensearch.rows[*].vpc_id
         }
       }
+
       edge {
         base = edge.opensearch_domain_to_vpc_security_group
         args = {
           opensearch_arn = self.input.opensearch_arn.value
         }
       }
+
       edge {
         base = edge.opensearch_domain_to_vpc_subnet
         args = {
           opensearch_arn = self.input.opensearch_arn.value
         }
       }
+
       edge {
         base = edge.vpc_subnet_to_vpc_vpc
         args = {
           vpc_subnet_ids = with.vpc_subnet_for_opensearch.rows[*].subnet_id
         }
       }
+
     }
+
   }
+
   container {
     width = 12
 
@@ -96,13 +119,16 @@ dashboard "opensearch_domain_detail" {
       query = query.opensearch_domain_overview
       args  = [self.input.opensearch_arn.value]
     }
+
     table {
       title = "Tags"
       width = 6
       query = query.opensearch_domain_tags
       args  = [self.input.opensearch_arn.value]
     }
+
   }
+
 container {
     width = 6
 
@@ -122,12 +148,14 @@ container {
     width = 6
 
     table {
-      title = "Access Policy"
-      query = query.opensearch_domain_access_policies
+      title = "Subnet"
+      query = query.opensearch_domain_subnet
       args  = [self.input.opensearch_arn.value]
     }
   }
+
 }
+
 query "opensearch_domain_input" {
   sql = <<-EOQ
     select
@@ -143,6 +171,7 @@ query "opensearch_domain_input" {
       domain_name;
   EOQ
 }
+
 query "opensearch_domain_tags" {
   sql = <<-EOQ
     select
@@ -155,6 +184,7 @@ query "opensearch_domain_tags" {
     ) AS subquery;
   EOQ
 }
+
 query "opensearch_domain_version" {
   sql = <<-EOQ
     select
@@ -165,6 +195,7 @@ query "opensearch_domain_version" {
       arn = $1;
   EOQ
 }
+
 query "opensearch_domain_instance_type" {
   sql = <<-EOQ
     select
@@ -175,6 +206,7 @@ query "opensearch_domain_instance_type" {
       arn = $1;
   EOQ
 }
+
 query "opensearch_domain_overview" {
   sql = <<-EOQ
     select
@@ -190,6 +222,7 @@ query "opensearch_domain_overview" {
       arn = $1;
   EOQ
 }
+
 query "opensearch_domain_endpoint" {
   sql = <<-EOQ
     select
@@ -200,6 +233,7 @@ query "opensearch_domain_endpoint" {
       arn = $1;
   EOQ
 }
+
 query "vpc_security_groups_for_opensearch" {
   sql = <<-EOQ
     select
@@ -210,6 +244,7 @@ query "vpc_security_groups_for_opensearch" {
       arn = $1;
   EOQ
 }
+
 query "vpc_subnet_ids_for_opensearch" {
   sql = <<-EOQ
     select
@@ -220,6 +255,7 @@ query "vpc_subnet_ids_for_opensearch" {
       arn = $1;
   EOQ
 }
+
 query "vpc_vpcs_for_opensearch" {
   sql = <<-EOQ
     select
@@ -230,6 +266,7 @@ query "vpc_vpcs_for_opensearch" {
       arn = $1;
   EOQ
 }
+
 query "opensearch_domain_security_groups" {
   sql = <<-EOQ
     select
@@ -241,13 +278,15 @@ query "opensearch_domain_security_groups" {
     ) AS subquery;
   EOQ
 }
-query "opensearch_domain_access_policies" {
+
+query "opensearch_domain_subnet" {
   sql = <<-EOQ
     select
-      access_policies as "Access Policy"
-    from
-      aws_opensearch_domain
-    where
-      arn = $1;
+      GroupID AS "Group ID"
+    from (
+      select jsonb_array_elements_text(vpc_options -> 'SubnetIds') AS GroupID
+      from aws_opensearch_domain
+      where arn = $1
+    ) AS subquery;
   EOQ
 }
