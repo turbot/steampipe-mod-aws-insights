@@ -1,10 +1,4 @@
----
-repository: "https://github.com/turbot/steampipe-mod-aws-insights"
-title: "AWS Insights Mod - Visualize and report on resource configuration across your AWS accounts."
-description: "DevOps pros use these dashboards to analyze cloud metrics, report on resource config, and enhance cloud security with interactive visualizations built using HCL and SQL."
----
-
-# AWS Insights Mod - Visualize and report on resource configuration across your AWS accounts.
+# AWS Insights Mod - Visualize and report on resource configuration across your AWS accounts
 
 DevOps professionals use the AWS insights mod to visualize cloud intelligence and security metrics using interactive dashboards. Report on AWS resource configuration, visualize relationships, and aggregate metrics to better understand your cloud infrastructure. The dashboards are specified using a "low code" HCL format (similar to Terraform). Making it easy to inspect, modify and compose new dashboards to meet specific compliance and security objectives for your organization.
 
