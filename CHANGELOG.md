@@ -1,3 +1,10 @@
+## v0.18 [2024-02-28]
+
+_What's new?_
+
+- New dashboards added:
+  - [OpenSearch Domain Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/dashboard.opensearch_domain_detail) ([#75](https://github.com/turbot/steampipe-mod-aws-insights/pull/338)) (Thanks [@Errahulaws](https://github.com/Errahulaws) for the contribution!)
+
 ## v0.17 [2023-11-30]
 
 _Bug fixes_
