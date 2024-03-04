@@ -22,7 +22,7 @@ Dashboards are available for 15+ services, including CloudTrail, EC2, IAM, RDS, 
 
 ### Documentation
 
-- **[Dashboards →](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards)**
+- **[Dashboards →](https://hub.powerpipe.io/mods/turbot/aws_insights/dashboards)**
 
 ## Getting Started
 
