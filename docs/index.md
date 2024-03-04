@@ -2,14 +2,14 @@
 
 DevOps professionals use the AWS insights mod to visualize cloud intelligence and security metrics using interactive dashboards. Report on AWS resource configuration, visualize relationships, and aggregate metrics to better understand your cloud infrastructure. The dashboards are specified using a "low code" HCL format (similar to Terraform). Making it easy to inspect, modify and compose new dashboards to meet specific compliance and security objectives for your organization.
 
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_s3_bucket_dashboard.png" width="50%" type="thumbnail" alt="Example of the 'AWS S3 Bucket Dashboard' with metrics on bucket privacy, encryption, logging, and costs."/>
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_s3_bucket_detail.png" width="50%" type="thumbnail" alt="Detailed report for AWS S3 bucket 'ria-example-test'. Highlights: no public access, encryption on, logging off. Shows AWS service connections."/>
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_ebs_snapshot_age.png" width="50%" type="thumbnail" alt="Dashboard for 'AWS EBS Snapshot Age Report' with filters like '<24 hours', '1-30 Days', and '>1 Year'. Table columns include Snapshot ID, Name, Age, and Region."/>
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_ebs_volume_encryption.png" width="50%" type="thumbnail" alt="'AWS EBS Volume Encryption Report' dashboard highlighting 'Unencrypted' volumes. Table columns: Volume ID, Name, Encryption status, and Region."/>
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_ec2_instance_public_access.png" width="50%" type="thumbnail" alt="'AWS EC2 Instance Public Access Report' from Steampipe showing 5 instances with 1 publicly accessible. Table includes Instance ID, Name, and access status."/>
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_iam_policy_detail.png" width="50%" type="thumbnail" alt="Dashboard for 'AWS IAM Policy Detail' from Steampipe. Top section has a policy selector. Main section shows policy's relationships with AWS services."/>
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_vpc_detail.png" width="50%" type="thumbnail" alt="Detailed dashboard of AWS VPC 'VPC Test' detailing relationships with resources like CIDR blocks, subnets, and security groups."/>
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/main/docs/images/aws_vpc_security_group_detail.png" width="50%" type="thumbnail" alt="Visualization of AWS VPC Security Group 'default'. Details on ingress/egress rules and associated AWS connections."/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/add-new-checks/docs/images/aws_s3_bucket_dashboard.png" width="50%" type="thumbnail" alt="Example of the 'AWS S3 Bucket Dashboard' with metrics on bucket privacy, encryption, logging, and costs."/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/add-new-checks/docs/images/aws_s3_bucket_detail.png" width="50%" type="thumbnail" alt="Detailed report for AWS S3 bucket 'ria-example-test'. Highlights: no public access, encryption on, logging off. Shows AWS service connections."/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/add-new-checks/docs/images/aws_ebs_snapshot_age.png" width="50%" type="thumbnail" alt="Dashboard for 'AWS EBS Snapshot Age Report' with filters like '<24 hours', '1-30 Days', and '>1 Year'. Table columns include Snapshot ID, Name, Age, and Region."/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/add-new-checks/docs/images/aws_ebs_volume_encryption.png" width="50%" type="thumbnail" alt="'AWS EBS Volume Encryption Report' dashboard highlighting 'Unencrypted' volumes. Table columns: Volume ID, Name, Encryption status, and Region."/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/add-new-checks/docs/images/aws_ec2_instance_public_access.png" width="50%" type="thumbnail" alt="'AWS EC2 Instance Public Access Report' from Steampipe showing 5 instances with 1 publicly accessible. Table includes Instance ID, Name, and access status."/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/add-new-checks/docs/images/aws_iam_policy_detail.png" width="50%" type="thumbnail" alt="Dashboard for 'AWS IAM Policy Detail' from Steampipe. Top section has a policy selector. Main section shows policy's relationships with AWS services."/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/add-new-checks/docs/images/aws_vpc_detail.png" width="50%" type="thumbnail" alt="Detailed dashboard of AWS VPC 'VPC Test' detailing relationships with resources like CIDR blocks, subnets, and security groups."/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-aws-insights/add-new-checks/docs/images/aws_vpc_security_group_detail.png" width="50%" type="thumbnail" alt="Visualization of AWS VPC Security Group 'default'. Details on ingress/egress rules and associated AWS connections."/>
 
 ## Overview
 
@@ -78,26 +78,6 @@ powerpipe server
 ```
 
 Browse and view your dashboards at **http://localhost:9033**.
-
-### Running Dashboards in Your Terminal
-
-Instead of running dashboards on the server, you can also run them within your
-terminal with the `powerpipe dashboard` command:
-
-List available benchmarks:
-
-```sh
-powerpipe dashboard list
-```
-
-Run a benchmark:
-
-```sh
-powerpipe dashboard run rds_db_instance_dashboard
-```
-
-Different output formats are also available, for more information please see
-[Output Formats](https://powerpipe.io/docs/reference/cli/benchmark#output-formats).
 
 ## Open Source & Contributing
 
