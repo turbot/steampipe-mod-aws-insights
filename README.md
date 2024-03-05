@@ -20,7 +20,7 @@ Dashboards can help answer questions like:
 
 Dashboards are available for 15+ services, including CloudTrail, EC2, IAM, RDS, S3, VPC, and more!
 
-### Documentation
+## Documentation
 
 - **[Dashboards →](https://hub.powerpipe.io/mods/turbot/aws_insights/dashboards)**
 
@@ -67,26 +67,6 @@ powerpipe server
 ```
 
 Browse and view your dashboards at **http://localhost:9033**.
-
-### Running Dashboards in Your Terminal
-
-Instead of running dashboards on the server, you can also run them within your
-terminal with the `powerpipe dashboard` command:
-
-List available benchmarks:
-
-```sh
-powerpipe dashboard list
-```
-
-Run a benchmark:
-
-```sh
-powerpipe dashboard run rds_db_instance_dashboard
-```
-
-Different output formats are also available, for more information please see
-[Output Formats](https://powerpipe.io/docs/reference/cli/benchmark#output-formats).
 
 ## Open Source & Contributing
 
