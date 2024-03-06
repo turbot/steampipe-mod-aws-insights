@@ -1,3 +1,23 @@
+## v0.19 [2024-04-06]
+
+_Powerpipe_
+
+[Powerpipe](https://powerpipe.io) is now the preferred way to run this mod!  [Migrating from Steampipe →](https://powerpipe.io/blog/migrating-from-steampipe)
+
+All v0.x versions of this mod will work in both Steampipe and Powerpipe, but v1.0.0 onwards will be in Powerpipe format only.
+
+_Enhancements_
+
+- Focus documentation on Powerpipe commands.
+- Show how to combine Powerpipe mods with Steampipe plugins.
+
+## v0.18 [2024-02-28]
+
+_What's new?_
+
+- New dashboards added:
+  - [OpenSearch Domain Detail](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/dashboard.opensearch_domain_detail) ([#75](https://github.com/turbot/steampipe-mod-aws-insights/pull/338)) (Thanks [@Errahulaws](https://github.com/Errahulaws) for the contribution!)
+
 ## v0.17 [2023-11-30]
 
 _Bug fixes_
