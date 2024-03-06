@@ -1,7 +1,9 @@
 # AWS Insights Mod for Powerpipe
 
 > [!IMPORTANT]  
-> Steampipe mods are [migrating to Powerpipe format](https://powerpipe.io) to gain new features. This mod currently works with both Steampipe and Powerpipe, but will only support Powerpipe from v1.x onward.
+> [Powerpipe](https://powerpipe.io) is now the preferred way to run this mod! [Migrating from Steampipe →](https://powerpipe.io/blog/migrating-from-steampipe)
+>
+> All v0.x versions of this mod will work in both Steampipe and Powerpipe, but v1.0.0 onwards will be in Powerpipe format only.
 
 An AWS dashboarding tool that can be used to view dashboards and reports across all of your AWS accounts.
 
@@ -18,7 +20,7 @@ Dashboards can help answer questions like:
 - Is versioning enabled?
 - What are the relationships between closely connected resources like IAM users, groups, and policies?
 
-Dashboards are available for 15+ services, including CloudTrail, EC2, IAM, RDS, S3, VPC, and more!
+Dashboards are available for 30+ services, including CloudTrail, EC2, IAM, RDS, S3, VPC, and more!
 
 ## Documentation
 
