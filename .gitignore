@@ -10,3 +10,7 @@
 
 # Ignore Apple custom attributes file
 .DS_Store
+
+# Powerpipe variable files
+*.ppvars
+*.auto.ppvars
