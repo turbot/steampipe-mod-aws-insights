@@ -126,6 +126,23 @@ node "iam_policy_statement" {
   param "iam_policy_stds" {}
 }
 
+node "iam_policy_statement_principal" {
+  category = category.iam_policy_principal
+
+  sql = <<-EOQ
+   select
+      concat('principal:', principal ) as id,
+      case when principal = '*' then principal || ' [All principal]' else principal end as title
+    from
+      jsonb_array_elements(($1 :: jsonb) ->  'Statement') with ordinality as t(stmt,i),
+      jsonb_array_elements_text(
+          jsonb_path_query_array(($1 :: jsonb), '$.Statement[*].Principal.*')
+        ) as principal
+  EOQ
+
+  param "iam_policy_stds" {}
+}
+
 node "iam_policy_statement_action_notaction" {
   category = category.iam_policy_action
 
