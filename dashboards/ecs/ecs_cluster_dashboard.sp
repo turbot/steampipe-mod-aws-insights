@@ -11,98 +11,98 @@ dashboard "ecs_cluster_dashboard" {
 
     # Analysis
     card {
-      query = query.ecs_cluster_count
-      width = 3
+        query = query.ecs_cluster_count
+        width = 3
+      }
+
+      card {
+        query = query.ecs_cluster_active_service_count
+        width = 3
+      }
+
+      # Assessments
+      card {
+        query = query.ecs_cluster_container_insights_disabled
+        width = 3
+      }
+
+
     }
 
-    card {
-      query = query.ecs_cluster_active_service_count
-      width = 3
-    }
+    container {
 
-    # Assessments
-    card {
-      query = query.ecs_cluster_container_insights_disabled
-      width = 3
-    }
+      title = "Assessments"
+      width = 6
 
+      chart {
+        title = "Container Insights Status"
+        query = query.ecs_cluster_container_insights_status
+        type  = "donut"
+        width = 4
 
-  }
-
-  container {
-
-    title = "Assessments"
-    width = 6
-
-    chart {
-      title = "Container Insights Status"
-      query = query.ecs_cluster_container_insights_status
-      type  = "donut"
-      width = 4
-
-      series "count" {
-        point "enabled" {
-          color = "ok"
-        }
-        point "disabled" {
-          color = "alert"
+        series "count" {
+          point "enabled" {
+            color = "ok"
+          }
+          point "disabled" {
+            color = "alert"
+          }
         }
       }
     }
-  }
 
-  container {
+    container {
 
-    title = "Cost"
-    width = 6
-
-    table {
+      title = "Cost"
       width = 6
-      title = "Forecast"
-      query = query.ecs_cluster_monthly_forecast_table
+
+      table {
+        width = 6
+        title = "Forecast"
+        query = query.ecs_cluster_monthly_forecast_table
+      }
+
+      chart {
+        width = 6
+        type  = "column"
+        title = "Monthly Cost - 12 Months"
+        query = query.ecs_cluster_cost_per_month
+      }
+
     }
 
-    chart {
-      width = 6
-      type  = "column"
-      title = "Monthly Cost - 12 Months"
-      query = query.ecs_cluster_cost_per_month
+    container {
+
+      title = "Analysis"
+
+      chart {
+        title = "Clusters by Account"
+        query = query.ecs_cluster_by_account
+        type  = "column"
+        width = 4
+      }
+
+      chart {
+        title = "Clusters by Region"
+        query = query.ecs_cluster_by_region
+        type  = "column"
+        width = 4
+      }
+
+      chart {
+        title = "Clusters by Status"
+        query = query.ecs_cluster_by_status
+        type  = "column"
+        width = 4
+      }
+
     }
 
   }
 
-  container {
+  # Card Queries
 
-    title = "Analysis"
-
-    chart {
-      title = "Clusters by Account"
-      query = query.ecs_cluster_by_account
-      type  = "column"
-      width = 4
-    }
-
-    chart {
-      title = "Clusters by Region"
-      query = query.ecs_cluster_by_region
-      type  = "column"
-      width = 4
-    }
-
-    chart {
-      title = "Clusters by Status"
-      query = query.ecs_cluster_by_status
-      type  = "column"
-      width = 4
-    }
-
-  }
-
-}
-
-# Card Queries
-
-query "ecs_cluster_count" {
+  query "ecs_cluster_count" {
   sql = <<-EOQ
     select
       count(*) as "Clusters"
@@ -114,7 +114,7 @@ query "ecs_cluster_count" {
 query "ecs_cluster_active_service_count" {
   sql = <<-EOQ
     select
-      count(*) as "Cluster Active Services"
+      sum(active_services_count) as "Cluster Active Services"
     from
       aws_ecs_cluster;
   EOQ
