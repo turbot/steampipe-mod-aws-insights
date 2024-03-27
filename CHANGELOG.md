@@ -4,7 +4,7 @@ _Bug fixes_
 
 - Fixed the `ecs_cluster_active_service_count` query in the `AWS ECS Cluster Dashboard` to correctly return the count of `Cluster Active Services` instead of `ECS Clusters`. ([#341](https://github.com/turbot/steampipe-mod-aws-insights/pull/341)) (Thanks [@mupi2k](https://github.com/mupi2k) for the contribution!)
 
-## v0.19 [2024-04-06]
+## v0.19 [2024-03-06]
 
 _Powerpipe_
 
