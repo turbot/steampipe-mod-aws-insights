@@ -463,6 +463,10 @@ query "ebs_volumes_for_ec2_instance" {
       aws_ebs_volume as v
     where
       v.volume_id = bd -> 'Ebs' ->> 'VolumeId'
+      and v.region = split_part($1, ':', 4)
+      and v.account_id = split_part($1, ':', 5)
+      and i.region = split_part($1, ':', 4)
+      and i.account_id = split_part($1, ':', 5)
       and i.arn = $1;
   EOQ
 }
@@ -480,6 +484,8 @@ query "ec2_application_load_balancers_for_ec2_instance" {
     where
       health_descriptions -> 'Target' ->> 'Id' = i.instance_id
       and l = lb.arn
+      and lb.region = split_part($1, ':', 4)
+      and lb.account_id = split_part($1, ':', 5)
       and i.arn = $1;
   EOQ
 }
@@ -494,6 +500,8 @@ query "ec2_classic_load_balancers_for_ec2_instance" {
       aws_ec2_instance as i
     where
       i.arn = $1
+      and clb.region = split_part($1, ':', 4)
+      and clb.account_id = split_part($1, ':', 5)
       and instance ->> 'InstanceId' = i.instance_id;
   EOQ
 }
@@ -511,6 +519,8 @@ query "ec2_gateway_load_balancers_for_ec2_instance" {
     where
       health_descriptions -> 'Target' ->> 'Id' = i.instance_id
       and l = lb.arn
+      and lb.region = split_part($1, ':', 4)
+      and lb.account_id = split_part($1, ':', 5)
       and i.arn = $1;
   EOQ
 }
@@ -523,7 +533,9 @@ query "ec2_network_interfaces_for_ec2_instance" {
       aws_ec2_instance as i,
       jsonb_array_elements(network_interfaces) as network_interface
     where
-      i.arn = $1;
+      i.arn = $1
+      and i.region = split_part($1, ':', 4)
+      and i.account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -540,6 +552,8 @@ query "ec2_network_load_balancers_for_ec2_instance" {
     where
       health_descriptions -> 'Target' ->> 'Id' = i.instance_id
       and l = lb.arn
+      and lb.region = split_part($1, ':', 4)
+      and lb.account_id = split_part($1, ':', 5)
       and i.arn = $1;
   EOQ
 }
@@ -554,6 +568,8 @@ query "ec2_target_groups_for_ec2_instance" {
       jsonb_array_elements(target.target_health_descriptions) as health_descriptions
     where
       i.arn = $1
+      and target.region = split_part($1, ':', 4)
+      and target.account_id = split_part($1, ':', 5)
       and health_descriptions -> 'Target' ->> 'Id' = i.instance_id;
   EOQ
 }
@@ -569,6 +585,8 @@ query "ecs_clusters_for_ec2_instance" {
     where
       ci.ec2_instance_id = i.instance_id
       and ci.cluster_arn = cluster.cluster_arn
+      and cluster.account_id = split_part($1, ':', 5)
+      and cluster.region = split_part($1, ':', 5)
       and i.arn = $1;
   EOQ
 }
@@ -583,6 +601,10 @@ query "iam_roles_for_ec2_instance" {
       jsonb_array_elements_text(instance_profile_arns) as instance_profile
     where
       instance_profile = i.iam_instance_profile_arn
+      and r.account_id = split_part($1, ':', 5)
+      and i.account_id = split_part($1, ':', 5)
+      and r.region = split_part($1, ':', 4)
+      and i.region = split_part($1, ':', 4)
       and i.arn = $1;
   EOQ
 }
@@ -596,6 +618,10 @@ query "vpc_eips_for_ec2_instance" {
       aws_ec2_instance as i
     where
       e.instance_id = i.instance_id
+      and i.account_id = split_part($1, ':', 5)
+      and e.account_id = split_part($1, ':', 5)
+      and i.region = split_part($1, ':', 4)
+      and e.region = split_part($1, ':', 4 )
       and i.arn = $1;
   EOQ
 }
@@ -608,7 +634,9 @@ query "vpc_security_groups_for_ec2_instance" {
       aws_ec2_instance as i,
       jsonb_array_elements(security_groups) as sg
     where
-      arn = $1;
+      i.account_id = split_part($1, ':', 5)
+      and i.region = split_part($1, ':', 4)
+      and arn = $1;
   EOQ
 }
 
@@ -619,7 +647,9 @@ query "vpc_subnets_for_ec2_instance" {
     from
       aws_ec2_instance as i
     where
-      arn = $1;
+      i.account_id = split_part($1, ':', 5)
+      and i.region = split_part($1, ':', 4)
+      and arn = $1;
   EOQ
 }
 
@@ -630,7 +660,9 @@ query "vpc_vpcs_for_ec2_instance" {
     from
       aws_ec2_instance
     where
-      arn = $1;
+      aws_ec2_instance.account_id = split_part($1, ':', 5)
+      and aws_ec2_instance.region = split_part($1, ':', 4)
+      and arn = $1;
   EOQ
 }
 
@@ -644,7 +676,9 @@ query "ec2_instance_status" {
     from
       aws_ec2_instance
     where
-      arn = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and arn = $1;
   EOQ
 }
 
@@ -656,7 +690,9 @@ query "ec2_instance_type" {
     from
       aws_ec2_instance
     where
-      arn = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and arn = $1;
   EOQ
 }
 
@@ -668,7 +704,9 @@ query "ec2_instance_total_cores_count" {
     from
       aws_ec2_instance
     where
-      arn = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and arn = $1;
   EOQ
 }
 
@@ -681,7 +719,9 @@ query "ec2_instance_public_access" {
     from
       aws_ec2_instance
     where
-      arn = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and arn = $1;
   EOQ
 }
 
@@ -694,7 +734,9 @@ query "ec2_instance_ebs_optimized" {
     from
       aws_ec2_instance
     where
-      arn = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and arn = $1;
   EOQ
 }
 
@@ -713,7 +755,9 @@ query "ec2_instance_overview" {
     from
       aws_ec2_instance
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -727,6 +771,7 @@ query "ec2_instance_tags" {
       jsonb_array_elements(tags_src) as tag
     where
       arn = $1
+      and account_id = split_part($1, ':', 5)
     order by
       tag ->> 'Key';
     EOQ
@@ -772,7 +817,9 @@ query "ec2_instance_security_groups" {
       aws_ec2_instance,
       jsonb_array_elements(security_groups) as p
     where
-      arn = $1;
+      region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5)
+      and arn = $1;
   EOQ
 }
 
@@ -791,7 +838,9 @@ query "ec2_instance_network_interfaces" {
       jsonb_array_elements(network_interfaces) as p,
       jsonb_array_elements(p -> 'PrivateIpAddresses') as ips
     where
-      arn = $1;
+      region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5)
+      and arn = $1;
   EOQ
 }
 
@@ -803,6 +852,8 @@ query "ec2_instance_cpu_cores" {
     from
       aws_ec2_instance
     where
-      arn = $1;
+      region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5)
+      and arn = $1;
   EOQ
 }
