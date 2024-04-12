@@ -232,81 +232,196 @@ query "acm_certificate_input" {
 
 # With queries
 
+// query "cloudfront_distributions_for_acm_certificate" {
+//   sql = <<-EOQ
+//     select
+//       arn as distribution_arn
+//     from
+//       aws_cloudfront_distribution
+//     where
+//       arn in
+//       (
+//         select
+//           jsonb_array_elements_text(in_use_by)
+//         from
+//           aws_acm_certificate
+//         where
+//           certificate_arn = $1
+//       );
+//     EOQ
+// } Time: 3.1s. Rows fetched: 1. Hydrate calls: 1.
+
+// query "cloudfront_distributions_for_acm_certificate" {
+//   sql = <<-EOQ
+//     select
+//       arn as distribution_arn
+//     from
+//       aws_cloudfront_distribution
+//     where
+//       arn = (
+//         select
+//           jsonb_array_elements_text(in_use_by)
+//         from
+//           aws_acm_certificate
+//         where
+//           certificate_arn = $1
+//           and account_id = split_part($1, ':', 5)
+//           and region = split_part($1, ':', 4)
+//       );
+//     EOQ
+// } // Time: 2.9s. Rows fetched: 1. Hydrate calls: 1.
+
 query "cloudfront_distributions_for_acm_certificate" {
   sql = <<-EOQ
-    select
-      arn as distribution_arn
-    from
-      aws_cloudfront_distribution
-    where
-      arn in
-      (
+    with certificate_usage as (
         select
-          jsonb_array_elements_text(in_use_by)
+          jsonb_array_elements_text(in_use_by) as in_use_arn
         from
           aws_acm_certificate
         where
-          certificate_arn = $1
-      );
+          account_id = split_part($1, ':', 5)
+          and region = split_part($1, ':', 4)
+          and certificate_arn = $1
+    )
+    select
+      d.arn as distribution_arn
+    from
+      aws_cloudfront_distribution d
+    join
+      certificate_usage cu on d.arn = cu.in_use_arn;
     EOQ
-}
+} // Time: 340ms. Rows fetched: 3. Hydrate calls: 0.
+
+// query "ec2_application_load_balancers_for_acm_certificate" {
+//   sql = <<-EOQ
+//     select
+//       arn as alb_arn
+//     from
+//       aws_ec2_application_load_balancer
+//     where
+//       arn in
+//       (
+//         select
+//           jsonb_array_elements_text(in_use_by)
+//         from
+//           aws_acm_certificate
+//         where
+//           certificate_arn = $1
+//       );
+//     EOQ
+// } // Time: 2.9s. Rows fetched: 1. Hydrate calls: 0.
 
 query "ec2_application_load_balancers_for_acm_certificate" {
   sql = <<-EOQ
+    with certificate_usage as (
+      select
+        jsonb_array_elements_text(in_use_by) as in_use_arn
+      from
+        aws_acm_certificate
+      where
+        account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+        and certificate_arn = $1
+    )
     select
-      arn as alb_arn
+      alb.arn as alb_arn
     from
-      aws_ec2_application_load_balancer
-    where
-      arn in
-      (
-        select
-          jsonb_array_elements_text(in_use_by)
-        from
-          aws_acm_certificate
-        where
-          certificate_arn = $1
-      );
+      aws_ec2_application_load_balancer alb
+    join
+      certificate_usage cu on alb.arn = cu.in_use_arn;
     EOQ
-}
+} // Time: 384ms. Rows fetched: 3. Hydrate calls: 0.
+
+// query "ec2_classic_load_balancers_for_acm_certificate" {
+//   sql = <<-EOQ
+//     select
+//       arn as clb_arn
+//     from
+//       aws_ec2_classic_load_balancer
+//     where
+//       arn in
+//       (
+//         select
+//           jsonb_array_elements_text(in_use_by)
+//         from
+//           aws_acm_certificate
+//         where
+//           certificate_arn = $1
+//       );
+//     EOQ
+// } // Time: 1.9s. Rows fetched: 1. Hydrate calls: 0.
 
 query "ec2_classic_load_balancers_for_acm_certificate" {
   sql = <<-EOQ
+    with certificate_usage as (
+      select
+        jsonb_array_elements_text(in_use_by) as in_use_arn
+      from
+        aws_acm_certificate
+      where
+        account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+        and certificate_arn = $1
+    )
     select
-      arn as clb_arn
+      clb.arn as clb_arn
     from
-      aws_ec2_classic_load_balancer
-    where
-      arn in
-      (
-        select
-          jsonb_array_elements_text(in_use_by)
-        from
-          aws_acm_certificate
-        where
-          certificate_arn = $1
-      );
-    EOQ
-}
+      aws_ec2_classic_load_balancer clb
+    join
+      certificate_usage cu on clb.arn = cu.in_use_arn;
+  EOQ
+} // Time: 478ms. Rows fetched: 3. Hydrate calls: 0.
+
+// query "ec2_network_load_balancers_for_acm_certificate" {
+//   sql = <<-EOQ
+//     select
+//       arn as nlb_arn
+//     from
+//       aws_ec2_network_load_balancer
+//     where
+//       arn in
+//       (
+//         select
+//           jsonb_array_elements_text(in_use_by)
+//         from
+//           aws_acm_certificate
+//         where
+//           certificate_arn = $1
+//       );
+//     EOQ
+// } // Time: 1.9s. Rows fetched: 1. Hydrate calls: 1.
 
 query "ec2_network_load_balancers_for_acm_certificate" {
   sql = <<-EOQ
+    with certificate_usage as (
+      select
+        jsonb_array_elements_text(in_use_by) as in_use_arn
+      from
+        aws_acm_certificate
+      where
+        account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+        and certificate_arn = $1
+    )
     select
-      arn as nlb_arn
+      nlb.arn as nlb_arn
     from
-      aws_ec2_network_load_balancer
-    where
-      arn in
-      (
-        select
-          jsonb_array_elements_text(in_use_by)
-        from
-          aws_acm_certificate
-        where
-          certificate_arn = $1
-      );
-    EOQ
-}
+      aws_ec2_network_load_balancer nlb
+    join
+      certificate_usage cu on nlb.arn = cu.in_use_arn;
+  EOQ
+} // Time: 380ms. Rows fetched: 1. Hydrate calls: 0.
+
+// query "opensearch_domains_for_acm_certificate" {
+//   sql = <<-EOQ
+//     select
+//       arn as opensearch_arn
+//     from
+//       aws_opensearch_domain
+//     where
+//       domain_endpoint_options ->> 'CustomEndpointCertificateArn' = $1;
+//     EOQ
+// } // Time: 3.6s. Rows fetched: 0. Hydrate calls: 0.
 
 query "opensearch_domains_for_acm_certificate" {
   sql = <<-EOQ
@@ -315,9 +430,11 @@ query "opensearch_domains_for_acm_certificate" {
     from
       aws_opensearch_domain
     where
-      domain_endpoint_options ->> 'CustomEndpointCertificateArn' = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and domain_endpoint_options ->> 'CustomEndpointCertificateArn' = $1;
     EOQ
-}
+} // Time: 88ms. Rows fetched: 1. Hydrate calls: 1.
 
 # Card queries
 
@@ -329,7 +446,9 @@ query "acm_certificate_status" {
     from
       aws_acm_certificate
     where
-      certificate_arn = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and certificate_arn = $1;
   EOQ
 }
 
@@ -341,7 +460,9 @@ query "acm_certificate_key_algorithm" {
     from
       aws_acm_certificate
     where
-      certificate_arn = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and certificate_arn = $1;
   EOQ
 }
 
@@ -353,7 +474,9 @@ query "acm_certificate_renewal_eligibility_status" {
     from
       aws_acm_certificate
     where
-      certificate_arn = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and certificate_arn = $1;
   EOQ
 }
 
@@ -366,7 +489,9 @@ query "acm_certificate_validity" {
     from
       aws_acm_certificate
     where
-      certificate_arn = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and certificate_arn = $1;
   EOQ
 }
 
@@ -379,7 +504,9 @@ query "acm_certificate_transparency_logging_status" {
     from
       aws_acm_certificate
     where
-      certificate_arn = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and certificate_arn = $1;
   EOQ
 }
 
@@ -400,7 +527,9 @@ query "acm_certificate_overview" {
     from
       aws_acm_certificate
     where
-      certificate_arn = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and certificate_arn = $1;
   EOQ
 }
 
@@ -413,7 +542,9 @@ query "acm_certificate_tags" {
       aws_acm_certificate,
       jsonb_array_elements(tags_src) as tag
     where
-      certificate_arn = $1
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and certificate_arn = $1;
     order by
       tag ->> 'Key';
   EOQ
@@ -428,7 +559,9 @@ query "acm_certificate_in_use_by" {
       aws_acm_certificate as c,
       jsonb_array_elements_text(in_use_by) as in_use
     where
-      certificate_arn = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and certificate_arn = $1;
   EOQ
 }
 
@@ -440,7 +573,9 @@ query "acm_certificate_revocation_detail" {
     from
       aws_acm_certificate
     where
-      certificate_arn = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and certificate_arn = $1;
   EOQ
 }
 
@@ -453,7 +588,9 @@ query "acm_certificate_key_usage" {
       aws_acm_certificate as c,
       jsonb_array_elements(extended_key_usages) as usage
     where
-      certificate_arn = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and certificate_arn = $1;
   EOQ
 }
 
@@ -470,6 +607,8 @@ query "acm_certificate_domain_validation_options" {
       aws_acm_certificate as c,
       jsonb_array_elements(domain_validation_options) as option
     where
-      certificate_arn = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and certificate_arn = $1;
   EOQ
 }
