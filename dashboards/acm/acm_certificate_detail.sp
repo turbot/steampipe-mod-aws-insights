@@ -544,7 +544,7 @@ query "acm_certificate_tags" {
     where
       account_id = split_part($1, ':', 5)
       and region = split_part($1, ':', 4)
-      and certificate_arn = $1;
+      and certificate_arn = $1
     order by
       tag ->> 'Key';
   EOQ
