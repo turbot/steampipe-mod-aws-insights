@@ -147,19 +147,65 @@ query "backup_vault_input" {
 
 # With queries
 
+// query "backup_plans_for_backup_vault" {
+//   sql = <<-EOQ
+//     select
+//       p.arn as backup_plan_arn
+//     from
+//       aws_backup_vault as v,
+//       aws_backup_plan as p,
+//       jsonb_array_elements(backup_plan -> 'Rules') as r
+//     where
+//       r ->> 'TargetBackupVaultName' = v.name
+//       and v.arn = 'arn:aws:backup:ap-south-1:533793682495:backup-vault:Default'
+//   EOQ 
+// } // Time: 271.6s. Rows fetched: 99. Hydrate calls: 99.
+
+// query "backup_plans_for_backup_vault" {
+//   sql = <<-EOQ
+//     select
+//       p.arn as backup_plan_arn
+//     from
+//       aws_backup_vault as v,
+//       aws_backup_plan as p,
+//       jsonb_array_elements(backup_plan -> 'Rules') as r
+//     where
+//       r ->> 'TargetBackupVaultName' = v.name
+//       and v.account_id = split_part('arn:aws:backup:ap-south-1:533793682495:backup-vault:Default', ':', 5)
+//       and v.region = split_part('arn:aws:backup:ap-south-1:533793682495:backup-vault:Default', ':', 4)
+//       and v.arn = 'arn:aws:backup:ap-south-1:533793682495:backup-vault:Default';
+//   EOQ 
+// } // Time: 6.2s. Rows fetched: 14. Hydrate calls: 0.
+
 query "backup_plans_for_backup_vault" {
   sql = <<-EOQ
-    select
-      p.arn as backup_plan_arn
-    from
-      aws_backup_vault as v,
-      aws_backup_plan as p,
-      jsonb_array_elements(backup_plan -> 'Rules') as r
+    with filtered_vault as (
+      select
+        name
+      from
+        aws_backup_vault
+      where
+        arn = $1
+        and account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+    ),
+    backup_rules as (
+      select
+        p.arn as backup_plan_arn,
+        jsonb_array_elements(p.backup_plan -> 'Rules') as rule
+      from
+        aws_backup_plan p
     where
-      r ->> 'TargetBackupVaultName' = v.name
-      and v.arn = $1
+      p.account_id = split_part($1, ':', 5)
+      and p.region = split_part($1, ':', 4)
+    )
+    select
+      br.backup_plan_arn
+    from
+      backup_rules br
+      join filtered_vault fv on br.rule ->> 'TargetBackupVaultName' = fv.name;
   EOQ
-}
+} // Time: 0.5s. Rows fetched: 2. Hydrate calls: 2.
 
 query "kms_keys_for_backup_vault" {
   sql = <<-EOQ
@@ -169,7 +215,9 @@ query "kms_keys_for_backup_vault" {
       aws_backup_vault
     where
       encryption_key_arn is not null
-      and arn = $1;
+      and arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -181,7 +229,9 @@ query "sns_topics_for_backup_vault" {
       aws_backup_vault
     where
       sns_topic_arn is not null
-      and arn = $1;
+      and arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -192,7 +242,9 @@ query "policy_std_for_backup_vault" {
     from
       aws_backup_vault
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -206,7 +258,9 @@ query "backup_vault_recovery_points" {
     from
       aws_backup_vault
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -223,7 +277,9 @@ query "backup_vault_overview" {
     from
       aws_backup_vault
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -238,6 +294,8 @@ query "backup_vault_policy" {
       aws_backup_vault,
       jsonb_array_elements(policy_std -> 'Statement') as s
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
