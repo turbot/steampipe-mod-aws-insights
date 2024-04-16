@@ -694,7 +694,9 @@ query "ec2_application_load_balancers_for_vpc" {
     from
       aws_ec2_application_load_balancer
     where
-      vpc_id = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and vpc_id = $1;
   EOQ
 }
 
@@ -705,7 +707,9 @@ query "ec2_classic_load_balancers_for_vpc" {
     from
       aws_ec2_classic_load_balancer
     where
-      vpc_id = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and vpc_id = $1;
   EOQ
 }
 
@@ -716,7 +720,9 @@ query "ec2_gateway_load_balancers_for_vpc" {
     from
       aws_ec2_gateway_load_balancer
     where
-      vpc_id = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and vpc_id = $1;
   EOQ
 }
 
@@ -727,7 +733,9 @@ query "ec2_instances_for_vpc" {
     from
       aws_ec2_instance
     where
-      vpc_id = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and vpc_id = $1;
   EOQ
 }
 
@@ -738,7 +746,9 @@ query "ec2_network_interfaces_for_vpc" {
     from
       aws_ec2_network_interface
     where
-      vpc_id = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and vpc_id = $1;
   EOQ
 }
 
@@ -749,7 +759,9 @@ query "ec2_network_load_balancers_for_vpc" {
     from
       aws_ec2_network_load_balancer
     where
-      vpc_id = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and vpc_id = $1;
   EOQ
 }
 
@@ -760,7 +772,9 @@ query "lambda_functions_for_vpc" {
     from
       aws_lambda_function
     where
-      vpc_id = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and vpc_id = $1;
   EOQ
 }
 
@@ -771,7 +785,9 @@ query "rds_db_instances_for_vpc" {
     from
       aws_rds_db_instance
     where
-      vpc_id = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and vpc_id = $1;
   EOQ
 }
 
@@ -782,7 +798,9 @@ query "redshift_clusters_for_vpc" {
     from
       aws_redshift_cluster
     where
-      vpc_id = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and vpc_id = $1;
   EOQ
 }
 
@@ -793,7 +811,9 @@ query "vpc_endpoints_for_vpc" {
     from
       aws_vpc_endpoint
     where
-      vpc_id = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and vpc_id = $1;
   EOQ
 }
 
@@ -804,7 +824,9 @@ query "vpc_flow_logs_for_vpc" {
     from
       aws_vpc_flow_log
     where
-      resource_id = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and resource_id = $1;
   EOQ
 }
 
@@ -815,7 +837,9 @@ query "vpc_nat_gateways_for_vpc" {
     from
       aws_vpc_nat_gateway
     where
-      vpc_id = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and vpc_id = $1;
   EOQ
 }
 
@@ -826,7 +850,9 @@ query "vpc_security_groups_for_vpc" {
     from
       aws_vpc_security_group
     where
-      vpc_id = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and vpc_id = $1;
   EOQ
 }
 
@@ -837,7 +863,9 @@ query "vpc_subnets_for_vpc" {
     from
       aws_vpc_subnet
     where
-      vpc_id = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and vpc_id = $1;
   EOQ
 }
 
