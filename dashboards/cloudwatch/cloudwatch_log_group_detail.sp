@@ -243,36 +243,99 @@ query "cloudtrail_trails_for_cloudwatch_log_group" {
       aws_cloudtrail_trail
     where
       log_group_arn is not null
-      and log_group_arn = $1;
+      and log_group_arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
+
+// query "cloudwatch_log_metric_filters_for_cloudwatch_log_group" {
+//   sql = <<-EOQ
+//     select
+//       f.name as log_metric_filter_name
+//     from
+//       aws_cloudwatch_log_group as g
+//       left join aws_cloudwatch_log_metric_filter as f on g.name = f.log_group_name
+//     where
+//       f.region = g.region
+//       and g.arn = $1;
+//   EOQ
+// }
 
 query "cloudwatch_log_metric_filters_for_cloudwatch_log_group" {
   sql = <<-EOQ
+    with filtered_log_group as (
+      select
+        arn,
+        name,
+        region,
+        account_id
+      from
+        aws_cloudwatch_log_group
+      where
+        arn = $1
+        and region = split_part($1, ':', 4)
+        and account_id = split_part($1, ':', 5)
+    )
     select
       f.name as log_metric_filter_name
     from
-      aws_cloudwatch_log_group as g
-      left join aws_cloudwatch_log_metric_filter as f on g.name = f.log_group_name
-    where
-      f.region = g.region
-      and g.arn = $1;
+      filtered_log_group g
+      left join aws_cloudwatch_log_metric_filter f on g.name = f.log_group_name and g.region = f.region and g.account_id = f.account_id;
   EOQ
 }
 
+// query "kinesis_streams_for_cloudwatch_log_group" {
+//   sql = <<-EOQ
+//     select
+//       s.stream_arn
+//     from
+//       aws_cloudwatch_log_group as g,
+//       aws_cloudwatch_log_subscription_filter as f,
+//       aws_kinesis_stream as s
+//     where
+//       f.region = g.region
+//       and g.name = f.log_group_name
+//       and s.stream_arn = f.destination_arn
+//       and g.arn = $1
+//       and g.account_id = split_part(s.stream_arn, ':', 5);
+//   EOQ
+// }
+
 query "kinesis_streams_for_cloudwatch_log_group" {
   sql = <<-EOQ
+    with filtered_log_group as (
+      select
+        name,
+        region,
+        account_id
+      from
+        aws_cloudwatch_log_group
+      where
+        arn = $1
+        and region = split_part($1, ':', 4)
+        and account_id = split_part($1, ':', 5)
+    ),
+    matching_subscription_filters as (
+      select
+        f.destination_arn
+      from
+        aws_cloudwatch_log_subscription_filter f
+      join
+        filtered_log_group g on g.name = f.log_group_name
+      where
+        f.region = split_part($1, ':', 4)
+        and g.account_id = split_part($1, ':', 5)
+    )
     select
       s.stream_arn
     from
-      aws_cloudwatch_log_group as g,
-      aws_cloudwatch_log_subscription_filter as f,
-      aws_kinesis_stream as s
+      aws_kinesis_stream s
+    join
+      matching_subscription_filters msf on s.stream_arn = msf.destination_arn
     where
-      f.region = g.region
-      and g.name = f.log_group_name
-      and s.stream_arn = f.destination_arn
-      and g.arn = $1;
+      s.account_id = split_part($1, ':', 5)
+      s.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -284,7 +347,9 @@ query "kms_keys_for_cloudwatch_log_group" {
       aws_cloudwatch_log_group
     where
       kms_key_id is not null
-      and arn = $1;
+      and arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -302,20 +367,73 @@ query "lambda_functions_for_cloudwatch_log_group" {
   EOQ
 }
 
+query "lambda_functions_for_cloudwatch_log_group" {
+  sql = <<-EOQ
+    with filtered_log_group as (
+      select
+        name,
+        region,
+        account_id
+      from
+        aws_cloudwatch_log_group
+      where
+        arn = $1
+        and name like '/aws/lambda/%'
+        and region = split_part($1, ':', 4)
+        and account_id = split_part($1, ':', 5)
+    )
+    select
+      f.arn as lambda_function_arn
+    from
+      aws_lambda_function f
+    join
+      filtered_log_group efn on f.name = split_part(efn.name, '/', 4)
+    where
+      f.region = efn.region
+      and f.account_id = efn.account_id;
+  EOQ
+}
+
+// query "vpc_flow_logs_for_cloudwatch_log_group" {
+//   sql = <<-EOQ
+//     select
+//       distinct f.flow_log_id
+//     from
+//       aws_cloudwatch_log_group as g,
+//       aws_vpc_flow_log as f
+//     where
+//       f.log_group_name = g.name
+//       and f.log_destination_type = 'cloud-watch-logs'
+//       and f.region = g.region
+//       and g.arn = $1
+//       and g.account_id = split_part($1, ':', 5);
+//   EOQ
+// } // Time: 3.1s. Rows fetched: 0. Hydrate calls: 0.
+
 query "vpc_flow_logs_for_cloudwatch_log_group" {
   sql = <<-EOQ
+    with filtered_log_group as (
+      select
+        name,
+        region,
+        account_id
+      from
+        aws_cloudwatch_log_group
+      where
+        arn = $1
+        and region = split_part($1, ':', 4)
+        and account_id = split_part($1, ':', 5)
+    )
     select
       distinct f.flow_log_id
     from
-      aws_cloudwatch_log_group as g,
-      aws_vpc_flow_log as f
+      aws_vpc_flow_log f
+      join filtered_log_group g on f.log_group_name = g.name and f.region = g.region
     where
-      f.log_group_name = g.name
-      and f.log_destination_type = 'cloud-watch-logs'
-      and f.region = g.region
-      and g.arn = $1;
+      f.log_destination_type = 'cloud-watch-logs'
+      and f.account_id = split_part($1, ':', 5);
   EOQ
-}
+} // Time: 327ms. Rows fetched: 27. Hydrate calls: 27.
 
 # Card queries
 
@@ -327,7 +445,9 @@ query "cloudwatch_log_group_retention_in_days" {
     from
       aws_cloudwatch_log_group
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -339,7 +459,9 @@ query "cloudwatch_log_group_stored_bytes" {
     from
       aws_cloudwatch_log_group
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -351,7 +473,9 @@ query "cloudwatch_log_group_metric_filter_count" {
     from
       aws_cloudwatch_log_group
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -364,7 +488,9 @@ query "cloudwatch_log_group_unencrypted" {
     from
       aws_cloudwatch_log_group
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -381,7 +507,9 @@ query "cloudwatch_log_group_overview" {
     from
       aws_cloudwatch_log_group
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -394,6 +522,8 @@ query "cloudwatch_log_group_tags" {
         aws_cloudwatch_log_group
       where
         arn = $1
+        and region = split_part($1, ':', 4)
+        and account_id = split_part($1, ':', 5)
     )
     select
       key as "Key",
@@ -407,12 +537,14 @@ query "cloudwatch_log_group_tags" {
 query "cloudwatch_log_group_encryption_details" {
   sql = <<-EOQ
     select
-       case when kms_key_id is not null then 'Enabled' else 'Disabled' end as "Encryption",
-       kms_key_id as "KMS Key ID"
+      case when kms_key_id is not null then 'Enabled' else 'Disabled' end as "Encryption",
+      kms_key_id as "KMS Key ID"
     from
       aws_cloudwatch_log_group
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 

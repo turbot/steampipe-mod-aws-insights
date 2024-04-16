@@ -254,7 +254,10 @@ query "iam_roles_for_dax_cluster" {
     from
       aws_dax_cluster
     where
-      arn = $1;
+      arn = $1
+      and iam_role_arn is not null
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -267,6 +270,8 @@ query "sns_topics_for_dax_cluster" {
     where
       notification_configuration ->> 'TopicArn' is not null
       and arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -278,34 +283,90 @@ query "vpc_security_groups_for_dax_cluster" {
       aws_dax_cluster,
       jsonb_array_elements(security_groups) as sg
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
+
+// query "vpc_subnets_for_dax_cluster" {
+//   sql = <<-EOQ
+//     select
+//       s ->> 'SubnetIdentifier' as subnet_id
+//     from
+//       aws_dax_cluster as c,
+//       aws_dax_subnet_group as g,
+//       jsonb_array_elements(g.subnets) as s
+//     where
+//       g.subnet_group_name = c.subnet_group
+//       and c.arn = $1;
+//   EOQ
+// }
 
 query "vpc_subnets_for_dax_cluster" {
   sql = <<-EOQ
+    with cluster_details as (
+      select
+        subnet_group
+      from
+        aws_dax_cluster
+      where
+        arn = $1
+        and account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+    ),
+    subnet_group_details as (
+      select
+        jsonb_array_elements(g.subnets) ->> 'SubnetIdentifier' as subnet_id
+      from
+        aws_dax_subnet_group g
+      join
+        cluster_details c on g.subnet_group_name = c.subnet_group
+      where
+        g.account_id = split_part($1, ':', 5)
+        and g.region = split_part($1, ':', 4)
+    )
     select
-      s ->> 'SubnetIdentifier' as subnet_id
+      subnet_id
     from
-      aws_dax_cluster as c,
-      aws_dax_subnet_group as g,
-      jsonb_array_elements(subnets) as s
-    where
-      g.subnet_group_name = c.subnet_group
-      and c.arn = $1;
+      subnet_group_details;
   EOQ
 }
 
+// query "vpc_vpcs_for_dax_cluster" {
+//   sql = <<-EOQ
+//     select
+//       g.vpc_id as vpc_id
+//     from
+//       aws_dax_cluster as c,
+//       aws_dax_subnet_group as g
+//     where
+//       g.subnet_group_name = c.subnet_group
+//       and c.arn = $1;
+//   EOQ
+// }
+
 query "vpc_vpcs_for_dax_cluster" {
   sql = <<-EOQ
+    with cluster_subnet_group as (
+      select
+        subnet_group
+      from
+        aws_dax_cluster
+      where
+        arn = $1
+        and account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+    )
     select
       g.vpc_id as vpc_id
     from
-      aws_dax_cluster as c,
-      aws_dax_subnet_group as g
+      aws_dax_subnet_group g
+    join
+      cluster_subnet_group csg on g.subnet_group_name = csg.subnet_group
     where
-      g.subnet_group_name = c.subnet_group
-      and c.arn = $1;
+      g.account_id = split_part($1, ':', 5)
+      and g.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -319,7 +380,9 @@ query "dax_cluster_status" {
     from
       aws_dax_cluster
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -331,7 +394,9 @@ query "dax_cluster_node_type" {
     from
       aws_dax_cluster
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -344,7 +409,9 @@ query "dax_cluster_encryption" {
     from
       aws_dax_cluster
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -362,7 +429,9 @@ query "dax_cluster_overview" {
     from
       aws_dax_cluster
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -376,6 +445,8 @@ query "dax_cluster_tags" {
       jsonb_array_elements(tags_src) as tag
     where
       arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
     order by
       tag ->> 'Key';
   EOQ
@@ -390,7 +461,9 @@ query "dax_cluster_discovery_endpoint" {
     from
       aws_dax_cluster
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -406,6 +479,8 @@ query "dax_cluster_node_details" {
       aws_dax_cluster,
       jsonb_array_elements(nodes) as n
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
