@@ -335,7 +335,7 @@ query "kinesis_streams_for_cloudwatch_log_group" {
       matching_subscription_filters msf on s.stream_arn = msf.destination_arn
     where
       s.account_id = split_part($1, ':', 5)
-      s.region = split_part($1, ':', 4);
+      and s.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -353,19 +353,19 @@ query "kms_keys_for_cloudwatch_log_group" {
   EOQ
 }
 
-query "lambda_functions_for_cloudwatch_log_group" {
-  sql = <<-EOQ
-    select
-      f.arn as lambda_function_arn
-    from
-      aws_cloudwatch_log_group as g
-      left join aws_lambda_function as f on f.name = split_part(g.name, '/', 4)
-    where
-      g.name like '/aws/lambda/%'
-      and g.region = f.region
-      and g.arn = $1;
-  EOQ
-}
+// query "lambda_functions_for_cloudwatch_log_group" {
+//   sql = <<-EOQ
+//     select
+//       f.arn as lambda_function_arn
+//     from
+//       aws_cloudwatch_log_group as g
+//       left join aws_lambda_function as f on f.name = split_part(g.name, '/', 4)
+//     where
+//       g.name like '/aws/lambda/%'
+//       and g.region = f.region
+//       and g.arn = $1;
+//   EOQ
+// }
 
 query "lambda_functions_for_cloudwatch_log_group" {
   sql = <<-EOQ
