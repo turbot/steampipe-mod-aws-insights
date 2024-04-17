@@ -217,31 +217,77 @@ query "dynamodb_table_input" {
 
 # With queries
 
+// query "dynamodb_backups_for_dynamodb_table" {
+//   sql = <<-EOQ
+//     select
+//       b.arn as dbynamodb_backup_arn
+//     from
+//       aws_dynamodb_backup as b,
+//       aws_dynamodb_table as t
+//     where
+//       t.arn = b.table_arn
+//       and t.arn = $1;
+//   EOQ
+// }
+
 query "dynamodb_backups_for_dynamodb_table" {
   sql = <<-EOQ
     select
       b.arn as dbynamodb_backup_arn
     from
-      aws_dynamodb_backup as b,
-      aws_dynamodb_table as t
+      aws_dynamodb_backup as b
     where
-      t.arn = b.table_arn
-      and t.arn = $1;
+      b.region = split_part($1, ':', 4)
+      and b.account_id = split_part($1, ':', 5)
+      and b.table_arn = $1;
   EOQ
 }
 
+// query "kinesis_streams_for_dynamodb_table" {
+//   sql = <<-EOQ
+//     select
+//       s.stream_arn as kinesis_stream_arn
+//     from
+//       aws_kinesis_stream as s,
+//       aws_dynamodb_table as t,
+//       jsonb_array_elements(t.streaming_destination -> 'KinesisDataStreamDestinations') as d
+//     where
+//       d ->> 'StreamArn' = s.stream_arn
+//       and t.arn = $1;
+//     EOQ
+// }
+
 query "kinesis_streams_for_dynamodb_table" {
   sql = <<-EOQ
+    with dynamodb_details as (
+      select
+        arn,
+        region,
+        account_id,
+        jsonb_array_elements(streaming_destination -> 'KinesisDataStreamDestinations') as destination
+      from
+        aws_dynamodb_table
+      where
+        arn = $1
+        and region = split_part($1, ':', 4)
+        and account_id = split_part($1, ':', 5)
+    ),
+    kinesis_stream_details as (
+      select
+        stream_arn
+      from
+        aws_kinesis_stream
+      where
+        region = split_part($1, ':', 4)
+        and account_id = split_part($1, ':', 5)
+    )
     select
-      s.stream_arn as kinesis_stream_arn
+      ksd.stream_arn as kinesis_stream_arn
     from
-      aws_kinesis_stream as s,
-      aws_dynamodb_table as t,
-      jsonb_array_elements(t.streaming_destination -> 'KinesisDataStreamDestinations') as d
-    where
-      d ->> 'StreamArn' = s.stream_arn
-      and t.arn = $1;
-    EOQ
+      kinesis_stream_details ksd
+    join
+      dynamodb_details dd on dd.destination ->> 'StreamArn' = ksd.stream_arn;
+  EOQ
 }
 
 query "kms_keys_for_dynamodb_table" {
@@ -252,7 +298,9 @@ query "kms_keys_for_dynamodb_table" {
       aws_dynamodb_table
     where
       sse_description is not null
-      and arn = $1;
+      and arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -265,7 +313,9 @@ query "s3_buckets_for_dynamodb_table" {
       aws_dynamodb_table_export as t
     where
       b.name = t.s3_bucket
-      and t.table_arn = $1;
+      and t.table_arn = $1
+      and t.region = split_part($1, ':', 4)
+      and t.account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -279,7 +329,9 @@ query "dynamodb_table_status" {
     from
       aws_dynamodb_table
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -291,7 +343,9 @@ query "dynamodb_table_size" {
     from
       aws_dynamodb_table
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -303,7 +357,9 @@ query "dynamodb_table_backup_count" {
     from
       aws_dynamodb_backup
     where
-      table_arn = $1;
+      table_arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -326,7 +382,6 @@ query "dynamodb_table_encryption_type" {
     select
       encryption_type as value,
       'Encryption Type' as label
-      -- case when encryption_type is not null then 'ok' else 'alert' end as type
     from
       table_encryption_status
       group by encryption_type;
@@ -341,7 +396,9 @@ query "dynamodb_table_class" {
     from
       aws_dynamodb_table
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -354,7 +411,9 @@ query "dynamodb_table_continuous_backups" {
     from
       aws_dynamodb_table
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -376,7 +435,9 @@ query "dynamodb_table_autoscaling_state" {
       aws_dynamodb_table as d
       left join table_with_autoscaling as t on concat('table/', d.name) = t.resource_id
     where
-      d.arn = $1;
+      d.arn = $1
+      and d.region = split_part($1, ':', 4)
+      and d.account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -395,7 +456,9 @@ query "dynamodb_table_overview" {
     from
       aws_dynamodb_table
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -409,6 +472,8 @@ query "dynamodb_table_tags" {
       jsonb_array_elements(tags_src) as tag
     where
       arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5)
     order by
       tag ->> 'Key';
   EOQ
@@ -423,7 +488,9 @@ query "dynamodb_table_key_schema" {
       aws_dynamodb_table,
       jsonb_array_elements(key_schema) as schema
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -435,7 +502,9 @@ query "dynamodb_table_read_write_capacity" {
     from
       aws_dynamodb_table
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -448,6 +517,8 @@ query "dynamodb_table_point_in_time_recovery" {
     from
       aws_dynamodb_table
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }

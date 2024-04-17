@@ -312,6 +312,45 @@ query "cloudwatch_groups_for_codebuild_project" {
   EOQ
 }
 
+// query "cloudwatch_groups_for_codebuild_project" {
+//   sql = <<-EOQ
+//     select
+//       c.arn as cloudwatch_log_group_arn
+//     from
+//       aws_codebuild_project as p
+//       left join aws_cloudwatch_log_group c
+//       on c.name = logs_config -> 'CloudWatchLogs' ->> 'GroupName'
+//     where
+//       c.arn is not null
+//       and p.arn = $1
+//       and p.account_id = split_part($1, ':', 5)
+//       and p.region = split_part($1, ':', 4);
+//   EOQ
+// } // Time: 68.7s. Rows fetched: 1. Hydrate calls: 2.
+
+// query "cloudwatch_groups_for_codebuild_project" {
+//   sql = <<-EOQ
+//     with project_log_group as (
+//       select
+//         logs_config -> 'CloudWatchLogs' ->> 'GroupName' as log_group_name
+//       from
+//         aws_codebuild_project
+//       where
+//         account_id = split_part($1, ':', 5)
+//         and region = split_part($1, ':', 4)
+//         and arn = $1
+//     )
+//     select
+//       c.arn as cloudwatch_log_group_arn
+//     from
+//       aws_cloudwatch_log_group c
+//     join
+//       project_log_group plg on c.name = plg.log_group_name
+//     where
+//       c.arn is not null;
+//   EOQ
+// } // Time: 70.0s. Rows fetched: 1. Hydrate calls: 2.
+
 query "codecommit_repositories_for_codebuild_project" {
   sql = <<-EOQ
     select
@@ -327,6 +366,8 @@ query "codecommit_repositories_for_codebuild_project" {
             aws_codebuild_project
           where
             arn = $1
+            and account_id = split_part($1, ':', 5)
+            and region = split_part($1, ':', 4)
         )
         select source ->> 'Location' as "Location" from code_sources
         union all
@@ -334,20 +375,45 @@ query "codecommit_repositories_for_codebuild_project" {
       )
     where
       r.arn is not null
-      and p.arn = $1;
+      and p.arn = $1
+      and p.account_id = split_part($1, ':', 5)
+      and p.region = split_part($1, ':', 4);
   EOQ
 }
 
+// query "ecr_repositories_for_codebuild_project" {
+//   sql = <<-EOQ
+//     select
+//       r.arn as ecr_repository_arn
+//     from
+//       aws_codebuild_project as p
+//       left join aws_ecr_repository as r on r.repository_uri = split_part(p.environment ->> 'Image', ':', 1)
+//     where
+//       r.arn is not null
+//       and p.arn = $1;
+//   EOQ
+// }
+
 query "ecr_repositories_for_codebuild_project" {
   sql = <<-EOQ
+    with project_image_details as (
+      select
+        split_part(environment ->> 'Image', ':', 1) as image_uri
+      from
+        aws_codebuild_project
+      where
+        account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+        and arn = $1
+    )
     select
       r.arn as ecr_repository_arn
     from
-      aws_codebuild_project as p
-      left join aws_ecr_repository as r on r.repository_uri = split_part(p.environment ->> 'Image', ':', 1)
+      aws_ecr_repository r,
+      project_image_details pid
     where
-      r.arn is not null
-      and p.arn = $1;
+      r.repository_uri = pid.image_uri
+      and r.arn is not null;
   EOQ
 }
 
@@ -358,7 +424,9 @@ query "iam_roles_for_codebuild_project" {
     from
       aws_codebuild_project
     where
-      arn = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and arn = $1;
   EOQ
 }
 
@@ -369,7 +437,9 @@ query "kms_keys_for_codebuild_project" {
     from
       aws_codebuild_project
     where
-      arn = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and arn = $1;
   EOQ
 }
 
@@ -381,7 +451,9 @@ query "s3_buckets_for_codebuild_project" {
       aws_codebuild_project as p,
       aws_s3_bucket as s3
     where
-      p.arn = $1
+      p.account_id = split_part($1, ':', 5)
+      and p.region = split_part($1, ':', 4)
+      and p.arn = $1
       and (s3.name = split_part(p.cache ->> 'Location', '/', 1)
         or s3.name = p.artifacts ->> 'Location'
         or s3.name = split_part(p.logs_config -> 'S3Logs' ->> 'Location', '/', 1)
@@ -398,6 +470,10 @@ query "vpc_security_groups_for_codebuild_project" {
       arn
     from
       aws_codebuild_project
+    where
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and arn = $1
   )
   select
     s.group_id as vpc_security_group_id
@@ -419,6 +495,8 @@ query "vpc_subnets_for_codebuild_project" {
       jsonb_array_elements( vpc_config -> 'Subnets') as s
     where
       arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -430,6 +508,8 @@ query "vpc_vpcs_for_codebuild_project" {
       aws_codebuild_project
     where
       vpc_config ->> 'VpcId' is not null
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
       and arn = $1;
   EOQ
 }
@@ -445,7 +525,9 @@ query "codebuild_project_encrypted" {
     from
       aws_codebuild_project
     where
-      arn = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and arn = $1;
   EOQ
 }
 
@@ -457,7 +539,9 @@ query "codebuild_project_logging_enabled" {
       from
         aws_codebuild_project
       where
-        arn = $1
+        account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+        and arn = $1
     )
     select
       'Logging' as label,
@@ -477,7 +561,9 @@ query "codebuild_project_privileged_mode" {
     from
       aws_codebuild_project
     where
-      arn = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and arn = $1;
   EOQ
 }
 
@@ -496,7 +582,9 @@ query "codebuild_project_overview" {
     from
       aws_codebuild_project
     where
-      arn = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and arn = $1;
   EOQ
 }
 
@@ -509,7 +597,9 @@ query "codebuild_project_tags" {
       aws_codebuild_project,
       jsonb_array_elements(tags_src) as tag
     where
-      arn = $1
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and arn = $1
     order by
       tag ->> 'Key';
   EOQ
@@ -524,7 +614,9 @@ query "codebuild_project_sources" {
       from
         aws_codebuild_project
       where
-        arn = $1
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and arn = $1
     )
     select
       source ->> 'Type' as "Type",

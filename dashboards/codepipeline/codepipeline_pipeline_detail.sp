@@ -307,51 +307,115 @@ query "codepipeline_pipeline_input" {
 }
 
 # With queries
+// query "elastic_beanstalk_applications_for_codepipeline_pipeline" {
+//   sql = <<-EOQ
+//     select
+//       arn as beanstalk_app_arn
+//     from
+//       aws_elastic_beanstalk_application
+//     where
+//       name in
+//       (
+//         select
+//           a -> 'Configuration' ->> 'ApplicationName'
+//         from
+//           aws_codepipeline_pipeline,
+//           jsonb_array_elements(stages) as s,
+//           jsonb_array_elements(s -> 'Actions') as a
+//         where
+//           s ->> 'Name' = 'Deploy'
+//           and a -> 'ActionTypeId' ->> 'Provider' = 'ElasticBeanstalk'
+//           and arn = $1
+//           and region = split_part($1, ':', 4)
+//           and account_id = split_part($1, ':', 5)
+//       );
+//   EOQ
+// }
+
 query "elastic_beanstalk_applications_for_codepipeline_pipeline" {
   sql = <<-EOQ
+    with pipeline_details as (
+      select
+        jsonb_array_elements(stages) as stage
+      from
+        aws_codepipeline_pipeline
+      where
+        arn = $1
+        and region = 'qwerty'
+        and account_id = '123456789012'
+    ),
+    beanstalk_actions as (
+      select
+        a -> 'Configuration' ->> 'ApplicationName' as application_name
+      from
+        pipeline_details,
+        jsonb_array_elements(stage -> 'Actions') as a
+      where
+        stage ->> 'Name' = 'Deploy'
+        and a -> 'ActionTypeId' ->> 'Provider' = 'ElasticBeanstalk'
+    )
     select
       arn as beanstalk_app_arn
     from
       aws_elastic_beanstalk_application
     where
-      name in
-      (
-        select
-          a -> 'Configuration' ->> 'ApplicationName'
-        from
-          aws_codepipeline_pipeline,
-          jsonb_array_elements(stages) as s,
-          jsonb_array_elements(s -> 'Actions') as a
-        where
-          s ->> 'Name' = 'Deploy'
-          and a -> 'ActionTypeId' ->> 'Provider' = 'ElasticBeanstalk'
-          and arn = $1
-      );
+      name in (select application_name from beanstalk_actions);
   EOQ
 }
 
+// query "appconfig_applications_for_codepipeline_pipeline" {
+//   sql = <<-EOQ
+//     select
+//       arn as app_arn
+//     from
+//       aws_appconfig_application
+//     where
+//       id in
+//       (
+//         select
+//           a -> 'Configuration' ->> 'Application'
+//         from
+//           aws_codepipeline_pipeline,
+//           jsonb_array_elements(stages) as s,
+//           jsonb_array_elements(s -> 'Actions') as a
+//         where
+//           s ->> 'Name' = 'Deploy'
+//           and a -> 'ActionTypeId' ->> 'Provider' = 'AppConfig'
+//           and arn = $1
+//       );
+//   EOQ
+// } // Time: 1.1s. Rows fetched: 0. Hydrate calls: 0.
+
 query "appconfig_applications_for_codepipeline_pipeline" {
   sql = <<-EOQ
+    with pipeline_details as (
+      select
+        jsonb_array_elements(stages) as stage,
+        jsonb_array_elements(stages -> 'Actions') as action
+      from
+        aws_codepipeline_pipeline
+      where
+        arn = $1
+        and region = split_part($1, ':', 4)
+        and account_id = split_part($1, ':', 5)
+    ),
+    appconfig_actions as (
+      select
+        action -> 'Configuration' ->> 'Application' as application_id
+      from
+        pipeline_details
+      where
+        stage ->> 'Name' = 'Deploy'
+        and action -> 'ActionTypeId' ->> 'Provider' = 'AppConfig'
+    )
     select
-      arn as app_arn
+      aa.arn as app_arn
     from
-      aws_appconfig_application
+      aws_appconfig_application aa
     where
-      id in
-      (
-        select
-          a -> 'Configuration' ->> 'Application'
-        from
-          aws_codepipeline_pipeline,
-          jsonb_array_elements(stages) as s,
-          jsonb_array_elements(s -> 'Actions') as a
-        where
-          s ->> 'Name' = 'Deploy'
-          and a -> 'ActionTypeId' ->> 'Provider' = 'AppConfig'
-          and arn = $1
-      );
+      aa.id in (select application_id from appconfig_actions);
   EOQ
-}
+} // Time: 1.2s. Rows fetched: 4. Hydrate calls: 0.
 
 query "cloudformation_stacks_for_codepipeline_pipeline" {
   sql = <<-EOQ
@@ -372,32 +436,63 @@ query "cloudformation_stacks_for_codepipeline_pipeline" {
           s ->> 'Name' = 'Deploy'
           and a -> 'ActionTypeId' ->> 'Provider' = 'CloudFormation'
           and arn = $1
+          and region = split_part($1, ':', 4)
+          and account_id = split_part($1, ':', 5)
       );
   EOQ
 }
 
+// query "ecs_clusters_for_codepipeline_pipeline" {
+//   sql = <<-EOQ
+//     select
+//       cluster_arn as ecs_cluster_arn
+//     from
+//       aws_ecs_cluster
+//     where
+//       cluster_name in
+//       (
+//         select
+//           a -> 'Configuration' ->> 'ClusterName'
+//         from
+//           aws_codepipeline_pipeline,
+//           jsonb_array_elements(stages) as s,
+//           jsonb_array_elements(s -> 'Actions') as a
+//         where
+//           s ->> 'Name' = 'Deploy'
+//           and a -> 'ActionTypeId' ->> 'Provider' = 'ECS'
+//           and arn = $1
+//       );
+//   EOQ
+// } // Time: 3.9s. Rows fetched: 0. Hydrate calls: 0.
+
 query "ecs_clusters_for_codepipeline_pipeline" {
   sql = <<-EOQ
+    with pipeline_action_details as (
+      select
+        jsonb_array_elements(stages) -> 'Actions' -> 'Configuration' ->> 'ClusterName' as cluster_name
+      from
+        aws_codepipeline_pipeline
+      where
+        arn = $1
+        and region = split_part($1, ':', 4)
+        and account_id = split_part($1, ':', 5)
+    ),
+    distinct_cluster_names as (
+      select distinct
+        cluster_name
+      from
+        pipeline_action_details
+      where
+        cluster_name is not null
+    )
     select
-      cluster_arn as ecs_cluster_arn
+      ec.cluster_arn as ecs_cluster_arn
     from
-      aws_ecs_cluster
-    where
-      cluster_name in
-      (
-        select
-          a -> 'Configuration' ->> 'ClusterName'
-        from
-          aws_codepipeline_pipeline,
-          jsonb_array_elements(stages) as s,
-          jsonb_array_elements(s -> 'Actions') as a
-        where
-          s ->> 'Name' = 'Deploy'
-          and a -> 'ActionTypeId' ->> 'Provider' = 'ECS'
-          and arn = $1
-      );
+      aws_ecs_cluster ec
+    join
+      distinct_cluster_names dcn on ec.cluster_name = dcn.cluster_name;
   EOQ
-}
+} // Time: 1.5s. Rows fetched: 1. Hydrate calls: 1.
 
 query "codebuild_projects_for_codepipeline_pipeline" {
   sql = <<-EOQ
@@ -418,6 +513,8 @@ query "codebuild_projects_for_codepipeline_pipeline" {
           s ->> 'Name' = 'Build'
           and a -> 'ActionTypeId' ->> 'Provider' = 'CodeBuild'
           and arn = $1
+          and region = split_part($1, ':', 4)
+          and account_id = split_part($1, ':', 5)
       );
   EOQ
 }
@@ -441,6 +538,8 @@ query "codecommit_repositories_for_codepipeline_pipeline" {
           s ->> 'Name' = 'Source'
           and a -> 'ActionTypeId' ->> 'Provider' = 'CodeCommit'
           and arn = $1
+          and region = split_part($1, ':', 4)
+          and account_id = split_part($1, ':', 5)
       );
   EOQ
 }
@@ -464,6 +563,8 @@ query "ecr_repositories_for_codepipeline_pipeline" {
           s ->> 'Name' = 'Source'
           and a -> 'ActionTypeId' ->> 'Provider' = 'ECR'
           and arn = $1
+          and region = split_part($1, ':', 4)
+          and account_id = split_part($1, ':', 5)
       );
   EOQ
 }
@@ -483,6 +584,8 @@ query "iam_roles_for_codepipeline_pipeline" {
           aws_codepipeline_pipeline
         where
           arn = $1
+          and region = split_part($1, ':', 4)
+          and account_id = split_part($1, ':', 5)
       );
   EOQ
 }
@@ -497,7 +600,9 @@ query "kms_keys_for_codepipeline_pipeline" {
       jsonb_array_elements(aliases) as a
     where
       a ->> 'AliasArn' = p.encryption_key ->> 'Id'
-      and p.arn = $1;
+      and p.arn = $1
+      and p.region = split_part($1, ':', 4)
+      and p.account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -520,6 +625,8 @@ query "s3_buckets_for_codepipeline_pipeline" {
           s ->> 'Name' = 'Deploy'
           and a -> 'ActionTypeId' ->> 'Provider' = 'S3'
           and arn = $1
+          and region = split_part($1, ':', 4)
+          and account_id = split_part($1, ':', 5)
         union
         select
           a -> 'Configuration' ->> 'S3Bucket' as bucket_name
@@ -531,6 +638,8 @@ query "s3_buckets_for_codepipeline_pipeline" {
           s ->> 'Name' = 'Source'
           and a -> 'ActionTypeId' ->> 'Provider' = 'S3'
           and arn = $1
+          and region = split_part($1, ':', 4)
+          and account_id = split_part($1, ':', 5)
       );
   EOQ
 }
@@ -546,7 +655,9 @@ query "codepipeline_pipeline_encryption" {
     from
       aws_codepipeline_pipeline
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -565,7 +676,9 @@ query "codepipeline_pipeline_overview" {
     from
       aws_codepipeline_pipeline
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -579,6 +692,8 @@ query "codepipeline_pipeline_tags" {
       jsonb_array_elements(tags_src) as tag
     where
       arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5)
     order by
       tag ->> 'Key';
   EOQ
@@ -594,6 +709,8 @@ query "codepipeline_pipeline_stages" {
       jsonb_array_elements(stages) as s,
       jsonb_array_elements(s -> 'Actions') as a
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
