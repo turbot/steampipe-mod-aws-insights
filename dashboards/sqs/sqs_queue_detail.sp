@@ -340,23 +340,55 @@ query "eventbridge_rules_for_sqs_queue" {
       aws_eventbridge_rule as r,
       jsonb_array_elements(targets) as t
     where
-      t ->> 'Arn' = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and t ->> 'Arn' = $1;
   EOQ
 }
 
 query "kms_keys_for_sqs_queue" {
   sql = <<-EOQ
+    with sqs_queue as (
+      select
+        kms_master_key_id,
+        queue_arn,
+        region,
+        account_id
+      from
+        aws_sqs_queue
+      where
+        account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+        and queue_arn = $1
+      order by
+        queue_arn,
+        region,
+        account_id
+    ), kms_keys as (
+      select
+        aliases,
+        arn,
+        region,
+        account_id
+      from
+        aws_kms_key
+      where
+        account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+      order by
+        region,
+        account_id
+    )
     select
       k.arn as key_arn
     from
-      aws_sqs_queue as q,
-      aws_kms_key as k,
+      sqs_queue as q,
+      kms_keys as k,
       jsonb_array_elements(aliases) as a
     where
       a ->> 'AliasName' = q.kms_master_key_id
       and k.region = q.region
-      and k.account_id = q.account_id
-      and q.queue_arn = $1;
+      and k.account_id = q.account_id;
   EOQ
 }
 
@@ -367,7 +399,9 @@ query "lambda_functions_for_sqs_queue" {
     from
       aws_lambda_function
     where
-      dead_letter_config_target_arn = $1;
+      dead_letter_config_target_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
   EOQ
 }
 
@@ -378,7 +412,9 @@ query "queue_policy_std_for_sqs_queue" {
     from
       aws_sqs_queue
     where
-      queue_arn = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and queue_arn = $1;
   EOQ
 }
 
@@ -391,7 +427,9 @@ query "s3_buckets_for_sqs_queue" {
       jsonb_array_elements(event_notification_configuration -> 'QueueConfigurations') as q
     where
       event_notification_configuration -> 'QueueConfigurations' <> 'null'
-      and q ->> 'QueueArn' = $1;
+      and q ->> 'QueueArn' = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -404,7 +442,9 @@ query "vpc_endpoints_for_sqs_queue" {
       jsonb_array_elements(policy_std -> 'Statement') as s,
       jsonb_array_elements_text(s -> 'Resource') as r
     where
-      r = $1;
+      r = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -417,7 +457,9 @@ query "vpc_vpcs_for_sqs_queue" {
       jsonb_array_elements(policy_std -> 'Statement') as s,
       jsonb_array_elements_text(s -> 'Resource') as r
     where
-      r = $1;
+      r = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
   EOQ
 }
 
