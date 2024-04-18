@@ -341,8 +341,8 @@ query "elastic_beanstalk_applications_for_codepipeline_pipeline" {
         aws_codepipeline_pipeline
       where
         arn = $1
-        and region = 'qwerty'
-        and account_id = '123456789012'
+        and region = split_part($1, ':', 4)
+        and account_id = split_part($1, ':', 5)
     ),
     beanstalk_actions as (
       select

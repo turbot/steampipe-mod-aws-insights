@@ -137,7 +137,9 @@ query "codebuild_projects_for_codecommit_repository" {
       )
     where
       p.arn is not null
-      and r.arn = $1;
+      and r.arn = $1
+      and r.region = split_part($1, ':', 4)
+      and r.account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -149,7 +151,7 @@ query "codepipeline_pipelines_for_codecommit_repository" {
       aws_codecommit_repository r
       cross join aws_codepipeline_pipeline as p
     where
-      r.arn = $1 and p.stages is not null
+      r.arn = $1 and r.account_id = split_part($1, ':', 5) and r.region = split_part($1, ':', 4) and p.stages is not null
       and r.repository_name in (
         select
           jsonb_path_query(p.stages, '$[*].Actions[*].Configuration.RepositoryName')::text
@@ -167,7 +169,9 @@ query "codecommit_repository_default_branch" {
     from
       aws_codecommit_repository
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -187,7 +191,9 @@ query "codecommit_repository_overview" {
     from
       aws_codecommit_repository
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -201,6 +207,8 @@ query "codecommit_repository_tags" {
       jsonb_each_text(tags) as tag
     where
       arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5)
     order by
       tag.Key;
   EOQ
