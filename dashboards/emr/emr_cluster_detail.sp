@@ -256,7 +256,9 @@ query "ec2_amis_for_emr_cluster" {
       aws_emr_cluster
     where
       custom_ami_id is not null
-      and cluster_arn = $1;
+      and cluster_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -271,7 +273,22 @@ query "iam_roles_for_emr_cluster" {
       c.cluster_arn = $1
       and r.name = c.service_role;
   EOQ
-}
+} // Time: 4.3s. Rows fetched: 6. Hydrate calls: 6.
+
+// query "iam_roles_for_emr_cluster" {
+//   sql = <<-EOQ
+//     select
+//       r.arn as role_arn
+//     from
+//       aws_iam_role as r,
+//       aws_emr_cluster as c
+//     where
+//       c.cluster_arn = $1
+//       and r.name = c.service_role
+//       and c.account_id = split_part($1, ':', 5)
+//       and c.region = split_part($1, ':', 4);
+//   EOQ
+// } // infinite loop
 
 query "s3_buckets_for_emr_cluster" {
   sql = <<-EOQ
@@ -284,7 +301,9 @@ query "s3_buckets_for_emr_cluster" {
       on split_part(log_uri, '/', 3) = b.name
     where
       log_uri is not null
-      and cluster_arn = $1;
+      and cluster_arn = $1
+      and c.account_id = split_part($1, ':', 5)
+      and c.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -298,7 +317,9 @@ query "emr_cluster_auto_termination" {
     from
       aws_emr_cluster
     where
-      cluster_arn = $1;
+      cluster_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -311,7 +332,9 @@ query "emr_cluster_state" {
     from
       aws_emr_cluster
     where
-      cluster_arn = $1;
+      cluster_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -324,7 +347,9 @@ query "emr_cluster_logging" {
     from
       aws_emr_cluster
     where
-      cluster_arn = $1;
+      cluster_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -337,7 +362,9 @@ query "emr_cluster_log_encryption" {
     from
       aws_emr_cluster
     where
-      cluster_arn = $1;
+      cluster_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -356,6 +383,8 @@ query "emr_cluster_overview" {
       aws_emr_cluster
     where
       cluster_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -369,6 +398,8 @@ query "emr_cluster_tags" {
       jsonb_array_elements(tags_src) as tag
     where
       cluster_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
     order by
       tag ->> 'Key';
     EOQ
@@ -390,7 +421,9 @@ query "emr_cluster_instance" {
     where
       i.cluster_id = c.id
       and i.ec2_instance_id = ec2i.instance_id
-      and cluster_arn = $1;
+      and cluster_arn = $1
+      and c.account_id = split_part($1, ':', 5)
+      and c.region = split_part($1, ':', 4);
     EOQ
 }
 
@@ -405,7 +438,9 @@ query "emr_cluster_status" {
     from
       aws_emr_cluster
     where
-      cluster_arn = $1;
+      cluster_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
     EOQ
 }
 
@@ -420,7 +455,9 @@ query "emr_cluster_applications" {
       aws_emr_cluster,
       jsonb_array_elements(applications) as app
     where
-      cluster_arn = $1;
+      cluster_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
     EOQ
 }
 
@@ -437,6 +474,8 @@ query "emr_cluster_ec2_instance_attributes" {
     from
       aws_emr_cluster
     where
-      cluster_arn = $1;
+      cluster_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
     EOQ
 }
