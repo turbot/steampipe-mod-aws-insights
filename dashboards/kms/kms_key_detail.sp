@@ -370,7 +370,9 @@ query "cloudtrail_trails_for_kms_key" {
     from
       aws_cloudtrail_trail as t
     where
-      t.kms_key_id = $1;
+      t.kms_key_id = $1
+      and t.region = split_part($1, ':', 4)
+      and t.account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -381,7 +383,9 @@ query "ebs_volumes_for_kms_key" {
     from
       aws_ebs_volume as v
     where
-      v.kms_key_id = $1;
+      v.kms_key_id = $1
+      and v.region = split_part($1, ':', 4)
+      and v.account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -392,7 +396,9 @@ query "lambda_functions_for_kms_key" {
     from
       aws_lambda_function
     where
-      kms_key_arn = $1;
+      kms_key_arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -403,7 +409,9 @@ query "key_policy_std_for_kms_key" {
     from
       aws_kms_key
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -414,7 +422,9 @@ query "rds_db_clusters_for_kms_key" {
     from
       aws_rds_db_cluster as c
     where
-      c.kms_key_id = $1;
+      c.kms_key_id = $1
+      and c.region = split_part($1, ':', 4)
+      and c.account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -425,7 +435,9 @@ query "rds_db_cluster_snapshots_for_kms_key" {
     from
       aws_rds_db_cluster_snapshot as s
     where
-      s.kms_key_id = $1;
+      s.kms_key_id = $1
+      and s.region = split_part($1, ':', 4)
+      and s.account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -436,7 +448,9 @@ query "rds_db_instances_for_kms_key" {
     from
       aws_rds_db_instance as i
     where
-      i.kms_key_id = $1;
+      i.kms_key_id = $1
+      and i.region = split_part($1, ':', 4)
+      and i.account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -447,7 +461,9 @@ query "rds_db_snapshots_for_kms_key" {
     from
       aws_rds_db_snapshot as s
     where
-      s.kms_key_id = $1;
+      s.kms_key_id = $1
+      and s.region = split_part($1, ':', 4)
+      and s.account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -458,7 +474,9 @@ query "redshift_clusters_for_kms_key" {
     from
       aws_redshift_cluster as c
     where
-      c.kms_key_id = $1;
+      c.kms_key_id = $1
+      and c.region = split_part($1, ':', 4)
+      and c.account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -472,7 +490,9 @@ query "s3_buckets_for_kms_key" {
       join aws_kms_key as k
       on k.arn = r -> 'ApplyServerSideEncryptionByDefault' ->> 'KMSMasterKeyID'
     where
-      k.arn = $1;
+      k.arn = $1
+      and k.region = split_part($1, ':', 4)
+      and k.account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -517,7 +537,9 @@ query "kms_key_type" {
     from
       aws_kms_key
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -529,7 +551,9 @@ query "kms_key_origin" {
     from
       aws_kms_key
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -542,7 +566,9 @@ query "kms_key_state" {
     from
       aws_kms_key
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -557,7 +583,9 @@ query "kms_key_rotation_enabled" {
     from
       aws_kms_key
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -575,6 +603,8 @@ query "kms_key_overview" {
       aws_kms_key
     where
       arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
     EOQ
 }
 
@@ -588,6 +618,8 @@ query "kms_key_tags" {
       jsonb_array_elements(tags_src) as tag
     where
       arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5)
     order by
       tag ->> 'Key';
     EOQ
@@ -602,7 +634,9 @@ query "kms_key_age" {
     from
       aws_kms_key
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -617,7 +651,9 @@ query "kms_key_aliases" {
       aws_kms_key,
       jsonb_array_elements(aliases) as p
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -634,6 +670,8 @@ query "kms_key_policy" {
       aws_kms_key,
       jsonb_array_elements(policy_std -> 'Statement') as p
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
