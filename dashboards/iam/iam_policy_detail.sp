@@ -346,7 +346,7 @@ query "iam_policy_aws_managed" {
       aws_iam_policy
     where
       arn = $1
-      and account_id=split_part($1, ':', 5);
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
