@@ -292,7 +292,8 @@ query "iam_groups_for_iam_policy" {
       aws_iam_group,
       jsonb_array_elements_text(attached_policy_arns) as policy_arn
     where
-      policy_arn = $1;
+      policy_arn = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -316,7 +317,8 @@ query "iam_roles_for_iam_policy" {
       aws_iam_role,
       jsonb_array_elements_text(attached_policy_arns) as policy_arn
     where
-      policy_arn = $1;
+      policy_arn = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -328,7 +330,8 @@ query "iam_users_for_iam_policy" {
       aws_iam_user,
       jsonb_array_elements_text(attached_policy_arns) as policy_arn
     where
-      policy_arn = $1;
+      policy_arn = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -343,6 +346,7 @@ query "iam_policy_aws_managed" {
       aws_iam_policy
     where
       arn = $1
+      and account_id=split_part($1, ':', 5);
   EOQ
 }
 
@@ -356,6 +360,7 @@ query "iam_policy_attached" {
       aws_iam_policy
     where
       arn = $1
+      and account_id=split_part($1, ':', 5);
   EOQ
 }
 
@@ -378,6 +383,7 @@ query "iam_policy_overview" {
       aws_iam_policy
     where
       arn = $1
+      and account_id = split_part($1, ':', 5)
     limit 1
   EOQ
 }
@@ -392,6 +398,7 @@ query "iam_policy_tags" {
       jsonb_array_elements(tags_src) as tag
     where
       arn = $1
+      and account_id = split_part($1, ':', 5)
     order by
       tag ->> 'Key'
   EOQ
@@ -406,7 +413,8 @@ query "iam_policy_statement" {
       from
         aws_iam_policy
       where
-        arn =  $1
+        arn = $1
+        and account_id = split_part($1, ':', 5)
     )
     select
       coalesce(t.stmt ->> 'Sid', concat('[', i::text, ']')) as "Statement",
@@ -425,6 +433,3 @@ query "iam_policy_statement" {
       left join jsonb_array_elements_text(t.stmt -> 'NotResource') as notresource on true
   EOQ
 }
-
-
-
