@@ -14,8 +14,7 @@ node "kinesis_stream" {
     ) as properties
   from
     aws_kinesis_stream
-  where
-    stream_arn = any($1);
+    join unnest($1::text[]) as arn on stream_arn = arn and account_id = split_part(arn, ':', 5) and region = split_part(arn, ':', 4);
   EOQ
 
   param "kinesis_stream_arns" {}

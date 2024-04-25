@@ -14,8 +14,7 @@ node "emr_cluster" {
         'Region', region ) as properties
     from
       aws_emr_cluster
-    where
-      cluster_arn = any($1);
+      join unnest($1::text[]) as a on cluster_arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
   EOQ
 
   param "emr_cluster_arns" {}
@@ -46,7 +45,7 @@ node "emr_instance" {
   EOQ
 
   param "emr_cluster_arns" {}
-}      
+}
 
 node "emr_instance_fleet" {
   category = category.emr_instance_fleet

@@ -15,8 +15,7 @@ node "kms_key" {
       ) as properties
     from
       aws_kms_key
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "kms_key_arns" {}
