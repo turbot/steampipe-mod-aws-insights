@@ -41,8 +41,7 @@ node "lambda_function" {
       ) as properties
     from
       aws_lambda_function
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "lambda_function_arns" {}

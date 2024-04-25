@@ -26,9 +26,9 @@ edge "lambda_function_to_iam_role" {
       l.role as to_id
     from
       aws_lambda_function as l
+      join unnest($1::text[]) as a on l.arn = a and l.account_id = split_part(a, ':', 5) and l.region = split_part(a, ':', 4)
     where
-      l.role is not null
-      and l.arn = any($1);
+      l.role is not null;
   EOQ
 
   param "lambda_function_arns" {}
@@ -43,9 +43,10 @@ edge "lambda_function_to_kms_key" {
       l.kms_key_arn as to_id
     from
       aws_lambda_function as l
+      join unnest($1::text[]) as a on l.arn = a and l.account_id = split_part(a, ':', 5) and l.region = split_part(a, ':', 4)
     where
-      l.kms_key_arn is not null
-      and l.arn = any($1);
+      l.kms_key_arn is not null;
+
   EOQ
 
   param "lambda_function_arns" {}
