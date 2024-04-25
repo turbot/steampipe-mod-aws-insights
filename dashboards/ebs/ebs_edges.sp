@@ -52,15 +52,22 @@ edge "ebs_volume_to_ebs_snapshot" {
   title = "snapshot"
 
   sql = <<-EOQ
+    with ebs_snapshot as (
+      select
+        snapshot_id,
+        volume_id
+      from
+        aws_ebs_snapshot
+    )
     select
       v.arn as from_id,
       s.snapshot_id as to_id
     from
-      aws_ebs_snapshot as s,
+      ebs_snapshot as s,
       aws_ebs_volume as v
+      join unnest($1::text[]) as a on v.arn = a and v.account_id = split_part(a, ':', 5) and v.region = split_part(a, ':', 4)
     where
       s.volume_id = v.volume_id
-      and v.arn = any($1);
   EOQ
 
   param "ebs_volume_arns" {}
@@ -75,8 +82,7 @@ edge "ebs_volume_to_kms_key" {
       kms_key_id as to_id
     from
       aws_ebs_volume as v
-    where
-      v.arn = any($1);
+      join unnest($1::text[]) as a on v.arn = a and v.account_id = split_part(a, ':', 5) and v.region = split_part(a, ':', 4);
   EOQ
 
   param "ebs_volume_arns" {}
