@@ -7,8 +7,7 @@ edge "cloudfront_distribution_to_acm_certificate" {
       viewer_certificate ->> 'ACMCertificateArn' as to_id
     from
       aws_cloudfront_distribution
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "cloudfront_distribution_arns" {}

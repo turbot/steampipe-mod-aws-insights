@@ -2,15 +2,22 @@ edge "s3_bucket_to_codebuild_project" {
   title = "source provider"
 
   sql = <<-EOQ
+    with s3_bucket as (
+      select
+        name,
+        arn
+      from
+        aws_s3_bucket
+    )
     select
       s3.arn as from_id,
       p.arn as to_id
     from
-      aws_codebuild_project as p,
-      aws_s3_bucket as s3
+      aws_codebuild_project as p
+      join unnest($1::text[]) as a on p.arn = a and p.account_id = split_part(a, ':', 5) and p.region = split_part(a, ':', 4),
+      s3_bucket as s3
     where
-      p.arn = any($1)
-      and s3.name = split_part(p.source ->> 'Location', '/', 1);
+      s3.name = split_part(p.source ->> 'Location', '/', 1);
   EOQ
 
   param "codebuild_project_arns" {}
@@ -20,15 +27,21 @@ edge "s3_bucket_to_cloudfront_distribution" {
   title = "origin for"
 
   sql = <<-EOQ
+    with s3_bucket as (
+      select
+        name,
+        arn
+      from
+        aws_s3_bucket
+    )
     select
       b.arn as from_id,
       d.arn as to_id
     from
-      aws_cloudfront_distribution as d,
+      aws_cloudfront_distribution as d
+      join unnest($1::text[]) as a on d.arn = a and d.account_id = split_part(a, ':', 5) and d.region = split_part(a, ':', 4),
       jsonb_array_elements(origins) as origin
-      left join aws_s3_bucket as b on origin ->> 'DomainName' like '%' || b.name || '%'
-    where
-      d.arn = any($1);
+      left join s3_bucket as b on origin ->> 'DomainName' like '%' || b.name || '%';
   EOQ
 
   param "cloudfront_distribution_arns" {}

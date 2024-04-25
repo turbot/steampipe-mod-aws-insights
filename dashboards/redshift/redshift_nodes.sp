@@ -16,8 +16,7 @@ node "redshift_cluster" {
       ) as properties
     from
       aws_redshift_cluster
-    where
-      arn = any($1);
+      join unnest($1::text[]) as arn on certificate_arn = arn and account_id = split_part(arn, ':', 5) and region = split_part(arn, ':', 4);
   EOQ
 
   param "redshift_cluster_arns" {}

@@ -280,7 +280,9 @@ query "sns_topic_encryption_status" {
     from
       aws_sns_topic
     where
-      topic_arn = $1;
+      topic_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 
 }
@@ -294,7 +296,9 @@ query "sns_topic_subscriptions_confirmed_count" {
     from
       aws_sns_topic
     where
-      topic_arn = $1;
+      topic_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 
 }
@@ -472,7 +476,9 @@ query "sns_topic_overview" {
     from
       aws_sns_topic
     where
-      topic_arn = $1;
+      topic_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 
 }
@@ -487,6 +493,8 @@ query "sns_topic_tags" {
       jsonb_array_elements(tags_src) as tag
     where
       topic_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
     order by
       tag ->> 'Key';
   EOQ
@@ -502,7 +510,9 @@ query "sns_topic_subscription_count" {
     from
       aws_sns_topic
     where
-      topic_arn = $1;
+      topic_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 
 }
@@ -521,7 +531,9 @@ query "sns_topic_delivery_policy" {
     from
       aws_sns_topic
     where
-      topic_arn = $1;
+      topic_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 
 }
