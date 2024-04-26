@@ -26,11 +26,11 @@ edge "redshift_cluster_to_cloudwatch_log_group" {
       c.arn as from_id,
       g.arn as to_id
     from
-      aws_redshift_cluster as c,
+      aws_redshift_cluster as c
+      join unnest($1::text[]) as a on c.arn = a and c.account_id = split_part(a, ':', 5) and c.region = split_part(a, ':', 4),
       aws_cloudwatch_log_group as g
     where
-      g.title like '%' || c.title || '%'
-      and c.arn = any($1);
+      g.title like '%' || c.title || '%';
   EOQ
 
   param "redshift_cluster_arns" {}

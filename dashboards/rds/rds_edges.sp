@@ -7,9 +7,9 @@ edge "rds_db_cluster_snapshot_to_kms_key" {
       kms_key_id as to_id
     from
       aws_rds_db_cluster_snapshot
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
     where
-      kms_key_id is not null
-      and arn = any($1);
+      kms_key_id is not null;
   EOQ
 
   param "rds_db_cluster_snapshot_arns" {}
@@ -24,9 +24,8 @@ edge "rds_db_cluster_to_iam_role" {
       roles ->> 'RoleArn' as to_id
     from
       aws_rds_db_cluster
-      cross join jsonb_array_elements(associated_roles) as roles
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
+      cross join jsonb_array_elements(associated_roles) as roles;
   EOQ
 
   param "rds_db_cluster_arns" {}
@@ -41,8 +40,7 @@ edge "rds_db_cluster_to_kms_key" {
       kms_key_id as to_id
     from
       aws_rds_db_cluster
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "rds_db_cluster_arns" {}
@@ -78,10 +76,8 @@ edge "rds_db_cluster_to_rds_db_cluster_snapshot" {
       s.arn as to_id
     from
       aws_rds_db_cluster as c
-      join aws_rds_db_cluster_snapshot as s
-      on s.db_cluster_identifier = c.db_cluster_identifier
-    where
-      c.arn = any($1);
+      join unnest($1::text[]) as a on c.arn = a and c.account_id = split_part(a, ':', 5) and c.region = split_part(a, ':', 4)
+      join aws_rds_db_cluster_snapshot as s on s.db_cluster_identifier = c.db_cluster_identifier;
   EOQ
 
   param "rds_db_cluster_arns" {}
@@ -96,9 +92,7 @@ edge "rds_db_cluster_to_rds_db_instance" {
       i.arn as to_id
     from
       aws_rds_db_instance as i
-      join
-        aws_rds_db_cluster as c
-        on i.db_cluster_identifier = c.db_cluster_identifier
+      join aws_rds_db_cluster as c on i.db_cluster_identifier = c.db_cluster_identifier
     where
       c.arn = any($1);
   EOQ
@@ -134,10 +128,8 @@ edge "rds_db_cluster_to_vpc_security_group" {
       csg ->> 'VpcSecurityGroupId' as to_id
     from
       aws_rds_db_cluster as c
-      cross join
-        jsonb_array_elements(c.vpc_security_groups) as csg
-    where
-      c.arn = any($1);
+      join unnest($1::text[]) as a on c.arn = a and c.account_id = split_part(a, ':', 5) and c.region = split_part(a, ':', 4)
+      cross join jsonb_array_elements(c.vpc_security_groups) as csg;
   EOQ
 
   param "rds_db_cluster_arns" {}
@@ -152,8 +144,7 @@ edge "rds_db_instance_to_kms_key" {
       kms_key_id as to_id
     from
       aws_rds_db_instance
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);;
   EOQ
 
   param "rds_db_instance_arns" {}
@@ -189,10 +180,8 @@ edge "rds_db_instance_to_rds_db_snapshot" {
       s.arn as to_id
     from
       aws_rds_db_instance as i
-      join aws_rds_db_snapshot as s
-        on s.dbi_resource_id = i.resource_id
-    where
-      i.arn = any($1);
+      join unnest($1::text[]) as a on i.arn = a and i.account_id = split_part(a, ':', 5) and i.region = split_part(a, ':', 4);
+      join aws_rds_db_snapshot as s on s.dbi_resource_id = i.resource_id;
   EOQ
 
   param "rds_db_instance_arns" {}
@@ -208,10 +197,8 @@ edge "rds_db_instance_to_sns_topic" {
     from
       aws_rds_db_event_subscription as s,
       jsonb_array_elements_text(source_ids_list) as ids
-      join aws_rds_db_instance as i
-      on ids = i.db_instance_identifier
-    where
-      i.arn = any($1);
+      join aws_rds_db_instance as i on ids = i.db_instance_identifier
+      join unnest($1::text[]) as a on i.arn = a and i.account_id = split_part(a, ':', 5) and i.region = split_part(a, ':', 4);
   EOQ
 
   param "rds_db_instance_arns" {}
@@ -225,10 +212,9 @@ edge "rds_db_instance_to_vpc_security_group" {
       arn as from_id,
       dsg ->> 'VpcSecurityGroupId' as to_id
     from
-      aws_rds_db_instance as di,
-      jsonb_array_elements(di.vpc_security_groups) as dsg
-    where
-      arn = any($1);
+      aws_rds_db_instance as di
+      join unnest($1::text[]) as a on di.arn = a and di.account_id = split_part(a, ':', 5) and di.region = split_part(a, ':', 4),
+      jsonb_array_elements(di.vpc_security_groups) as dsg;
   EOQ
 
   param "rds_db_instance_arns" {}
@@ -243,9 +229,9 @@ edge "rds_db_snapshot_to_kms_key" {
       kms_key_id as to_id
     from
       aws_rds_db_snapshot
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
     where
       kms_key_id is not null
-      and arn = any($1);
   EOQ
 
   param "rds_db_snapshot_arns" {}
@@ -259,10 +245,9 @@ edge "rds_db_subnet_group_to_vpc_subnet" {
       rdsg.arn as from_id,
       vs ->> 'SubnetIdentifier' as to_id
     from
-      aws_rds_db_subnet_group as rdsg,
-      jsonb_array_elements(rdsg.subnets) as vs
-    where
-      rdsg.arn = any($1);
+      aws_rds_db_subnet_group as rdsg
+      join unnest($1::text[]) as a on rdsg.arn = a and rdsg.account_id = split_part(a, ':', 5) and rdsg.region = split_part(a, ':', 4),
+      jsonb_array_elements(rdsg.subnets) as vs;
   EOQ
 
   param "rds_db_subnet_group_arns" {}
