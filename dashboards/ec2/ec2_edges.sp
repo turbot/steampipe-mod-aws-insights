@@ -7,8 +7,7 @@ edge "ec2_ami_to_ec2_instance_edge" {
       arn as to_id
     from
       aws_ec2_instance
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "ec2_instance_arns" {}
@@ -39,11 +38,10 @@ edge "ec2_application_load_balancer_to_cloudfront_distribution" {
       b.arn as from_id,
       d.arn as to_id
     from
-      aws_cloudfront_distribution as d,
+      aws_cloudfront_distribution as d
+      join unnest($1::text[]) as a on d.arn = a and d.account_id = split_part(a, ':', 5) and d.region = split_part(a, ':', 4),
       jsonb_array_elements(origins) as origin
-      left join aws_ec2_application_load_balancer as b on b.dns_name = origin ->> 'DomainName'
-    where
-      d.arn = any($1);
+      left join aws_ec2_application_load_balancer as b on b.dns_name = origin ->> 'DomainName';
   EOQ
 
   param "cloudfront_distribution_arns" {}
@@ -70,16 +68,29 @@ edge "ec2_application_load_balancer_to_s3_bucket" {
   title = "logs to"
 
   sql = <<-EOQ
+    with s3_bucket as (
+      select
+        name,
+        arn
+      from
+        aws_s3_bucket
+    ), ec2_application_load_balancer as (
+      select
+        load_balancer_attributes,
+        arn
+      from
+        aws_ec2_application_load_balancer
+        join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
+    )
     select
       alb.arn as from_id,
       b.arn as to_id
     from
-      aws_s3_bucket b,
-      aws_ec2_application_load_balancer as alb,
+      s3_bucket b,
+      ec2_application_load_balancer as alb,
       jsonb_array_elements(alb.load_balancer_attributes) attributes
     where
-      alb.arn = any($1)
-      and attributes ->> 'Key' = 'access_logs.s3.bucket'
+      attributes ->> 'Key' = 'access_logs.s3.bucket'
       and b.name = attributes ->> 'Value';
   EOQ
 
@@ -96,9 +107,9 @@ edge "ec2_application_load_balancer_to_vpc_security_group" {
     from
       aws_vpc_security_group sg,
       aws_ec2_application_load_balancer as alb
+      join unnest($1::text[]) as a on alb.arn = a and alb.account_id = split_part(a, ':', 5) and alb.region = split_part(a, ':', 4)
     where
-      alb.arn = any($1)
-      and sg.group_id in
+      sg.group_id in
       (
         select
           jsonb_array_elements_text(alb.security_groups)
@@ -117,12 +128,12 @@ edge "ec2_application_load_balancer_to_vpc_subnet" {
       s.subnet_id as to_id
     from
       aws_vpc_subnet s,
-      aws_ec2_application_load_balancer as alb,
+      aws_ec2_application_load_balancer as alb
+      join unnest($1::text[]) as a on alb.arn = a and alb.account_id = split_part(a, ':', 5) and alb.region = split_part(a, ':', 4),
       jsonb_array_elements_text(alb.security_groups) as sg,
       jsonb_array_elements(availability_zones) as az
     where
-      alb.arn = any($1)
-      and s.subnet_id = az ->> 'SubnetId';
+      s.subnet_id = az ->> 'SubnetId';
   EOQ
 
   param "ec2_application_load_balancer_arns" {}
@@ -173,10 +184,9 @@ edge "ec2_classic_load_balancer_to_ec2_instance" {
       i.arn as to_id
     from
       aws_ec2_classic_load_balancer as clb
+      join unnest($1::text[]) as a on clb.arn = a and clb.account_id = split_part(a, ':', 5) and clb.region = split_part(a, ':', 4)
       cross join jsonb_array_elements(clb.instances) as ci
-      left join aws_ec2_instance i on i.instance_id = ci ->> 'InstanceId'
-    where
-      clb.arn = any($1);
+      left join aws_ec2_instance i on i.instance_id = ci ->> 'InstanceId';
   EOQ
 
   param "ec2_classic_load_balancer_arns" {}
@@ -186,15 +196,28 @@ edge "ec2_classic_load_balancer_to_s3_bucket" {
   title = "logs to"
 
   sql = <<-EOQ
+    with s3_bucket as (
+      select
+       name,
+       arn
+      from
+        aws_s3_bucket
+    ), ec2_classic_load_balancer as (
+      select
+       arn,
+       access_log_s3_bucket_name
+      from
+        aws_ec2_classic_load_balancer
+        join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
+    )
     select
       clb.arn as from_id,
       b.arn as to_id
     from
-      aws_s3_bucket b,
-      aws_ec2_classic_load_balancer as clb
+      s3_bucket b,
+      ec2_classic_load_balancer as clb
     where
-      clb.arn = any($1)
-      and b.name = clb.access_log_s3_bucket_name;
+      b.name = clb.access_log_s3_bucket_name;
   EOQ
 
   param "ec2_classic_load_balancer_arns" {}
@@ -210,9 +233,9 @@ edge "ec2_classic_load_balancer_to_vpc_security_group" {
     from
       aws_vpc_security_group sg,
       aws_ec2_classic_load_balancer as clb
+      join unnest($1::text[]) as a on clb.arn = a and clb.account_id = split_part(a, ':', 5) and clb.region = split_part(a, ':', 4)
     where
-      clb.arn = any($1)
-      and sg.group_id in
+      sg.group_id in
       (
         select
           jsonb_array_elements_text(clb.security_groups)
@@ -230,7 +253,8 @@ edge "ec2_classic_load_balancer_to_vpc_subnet" {
       sg as from_id,
       s as to_id
     from
-      aws_ec2_classic_load_balancer,
+      aws_ec2_classic_load_balancer
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
       jsonb_array_elements_text(security_groups) as sg,
       jsonb_array_elements_text(subnets) as s
     where
@@ -278,11 +302,18 @@ edge "ec2_gateway_load_balancer_to_s3_bucket" {
   title = "logs to"
 
   sql = <<-EOQ
+    with s3_bucket as (
+      select
+        name,
+        arn
+      from
+        aws_s3_bucket
+    )
     select
       glb.arn as from_id,
       b.arn as to_id
     from
-      aws_s3_bucket b,
+      s3_bucket b,
       aws_ec2_gateway_load_balancer as glb,
       jsonb_array_elements(glb.load_balancer_attributes) attributes
     where
@@ -304,9 +335,9 @@ edge "ec2_gateway_load_balancer_to_vpc_security_group" {
     from
       aws_vpc_security_group sg,
       aws_ec2_gateway_load_balancer as clb
+      join unnest($1::text[]) as a on clb.arn = a and clb.account_id = split_part(a, ':', 5) and clb.region = split_part(a, ':', 4)
     where
-      clb.arn = any($1)
-      and sg.group_id in
+      sg.group_id in
       (
         select
           jsonb_array_elements_text(clb.security_groups)
@@ -325,11 +356,11 @@ edge "ec2_gateway_load_balancer_to_vpc_subnet" {
       s.subnet_id as to_id
     from
       aws_vpc_subnet s,
-      aws_ec2_gateway_load_balancer as glb,
+      aws_ec2_gateway_load_balancer as glb
+      join unnest($1::text[]) as a on glb.arn = a and glb.account_id = split_part(a, ':', 5) and glb.region = split_part(a, ':', 4),
       jsonb_array_elements(availability_zones) as az
     where
-      glb.arn = any($1)
-      and s.subnet_id = az ->> 'SubnetId';
+      s.subnet_id = az ->> 'SubnetId';
   EOQ
 
   param "ec2_gateway_load_balancer_arns" {}
@@ -343,12 +374,12 @@ edge "ec2_instance_to_ebs_volume" {
       i.arn as from_id,
       v.arn as to_id
     from
-      aws_ec2_instance as i,
+      aws_ec2_instance as i
+      join unnest($1::text[]) as a on i.arn = a and i.account_id = split_part(a, ':', 5) and i.region = split_part(a, ':', 4),
       jsonb_array_elements(block_device_mappings) as bd,
       aws_ebs_volume as v
     where
-      v.volume_id = bd -> 'Ebs' ->> 'VolumeId'
-      and i.arn = any($1);
+      v.volume_id = bd -> 'Ebs' ->> 'VolumeId';
   EOQ
 
   param "ec2_instance_arns" {}
@@ -363,9 +394,9 @@ edge "ec2_instance_to_ec2_key_pair" {
       key_name as to_id
     from
       aws_ec2_instance as i
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
     where
-      key_name is not null
-      and i.arn = any($1);
+      key_name is not null;
   EOQ
 
   param "ec2_instance_arns" {}
@@ -380,9 +411,8 @@ edge "ec2_instance_to_ec2_network_interface" {
       i ->> 'NetworkInterfaceId' as to_id
     from
       aws_ec2_instance
-      join jsonb_array_elements(network_interfaces) as i on true
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
+      join jsonb_array_elements(network_interfaces) as i on true;
   EOQ
 
   param "ec2_instance_arns" {}
@@ -397,9 +427,9 @@ edge "ec2_instance_to_iam_instance_profile" {
       iam_instance_profile_arn as to_id
     from
       aws_ec2_instance as i
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
     where
-      iam_instance_profile_arn is not null
-      and i.arn = any($1);
+      iam_instance_profile_arn is not null;
   EOQ
 
   param "ec2_instance_arns" {}
@@ -417,10 +447,9 @@ edge "ec2_instance_to_vpc_security_group" {
       s ->> 'GroupId' as to_id
     from
       aws_ec2_instance
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
       join jsonb_array_elements(network_interfaces) as i on true
-      join jsonb_array_elements(security_groups) as s on true
-    where
-      arn = any($1);
+      join jsonb_array_elements(security_groups) as s on true;
   EOQ
 
   param "ec2_instance_arns" {}
@@ -435,9 +464,8 @@ edge "ec2_instance_to_vpc_subnet" {
       subnet_id as to_id
     from
       aws_ec2_instance
-      join jsonb_array_elements(security_groups) as s on true
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
+      join jsonb_array_elements(security_groups) as s on true;
   EOQ
 
   param "ec2_instance_arns" {}
@@ -469,8 +497,7 @@ edge "ec2_load_balancer_listener_to_ec2_load_balancer" {
       load_balancer_arn as to_id
     from
       aws_ec2_load_balancer_listener
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "ec2_load_balancer_listener_arns" {}
@@ -484,13 +511,13 @@ edge "ec2_load_balancer_to_ec2_target_group" {
       l as from_id,
       target.target_group_arn as to_id
     from
-      aws_ec2_instance as i,
+      aws_ec2_instance as i
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
       aws_ec2_target_group as target,
       jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
       jsonb_array_elements_text(target.load_balancer_arns) as l
     where
-      health_descriptions -> 'Target' ->> 'Id' = i.instance_id
-      and i.arn = any($1);
+      health_descriptions -> 'Target' ->> 'Id' = i.instance_id;
   EOQ
 
   param "ec2_instance_arns" {}
@@ -604,12 +631,20 @@ edge "ec2_network_load_balancer_to_s3_bucket" {
   title = "logs to"
 
   sql = <<-EOQ
+    with s3_bucket as (
+      select
+        arn,
+        name
+      from
+        aws_s3_bucket
+    )
     select
       nlb.arn as from_id,
       s3_buckets.arn as to_id
     from
-      aws_s3_bucket s3_buckets,
-      aws_ec2_network_load_balancer as nlb,
+      s3_bucket s3_buckets,
+      aws_ec2_network_load_balancer as nlb
+      join unnest($1::text[]) as a on nlb.arn = a and nlb.account_id = split_part(a, ':', 5) and nlb.region = split_part(a, ':', 4),
       jsonb_array_elements(nlb.load_balancer_attributes) attributes
     where
       nlb.arn = any($1)
@@ -630,9 +665,9 @@ edge "ec2_network_load_balancer_to_vpc_security_group" {
     from
       aws_vpc_security_group sg,
       aws_ec2_network_load_balancer as clb
+      join unnest($1::text[]) as a on clb.arn = a and clb.account_id = split_part(a, ':', 5) and clb.region = split_part(a, ':', 4)
     where
-      clb.arn = any($1)
-      and sg.group_id in
+      sg.group_id in
       (
         select
           jsonb_array_elements_text(clb.security_groups)
@@ -651,7 +686,8 @@ edge "ec2_network_load_balancer_to_vpc_subnet" {
       s.subnet_id as to_id
     from
       aws_vpc_subnet s,
-      aws_ec2_network_load_balancer as glb,
+      aws_ec2_network_load_balancer as glb
+      join unnest($1::text[]) as a on glb.arn = a and glb.account_id = split_part(a, ':', 5) and glb.region = split_part(a, ':', 4),
       jsonb_array_elements(availability_zones) as az
     where
       glb.arn = any($1)
@@ -670,11 +706,11 @@ edge "ec2_target_group_to_ec2_instance" {
       i.arn as to_id
     from
       aws_ec2_instance as i,
-      aws_ec2_target_group as target,
+      aws_ec2_target_group as target
+      join unnest($1::text[]) as a on target.target_group_arn = a and target.account_id = split_part(a, ':', 5) and target.region = split_part(a, ':', 4),
       jsonb_array_elements(target.target_health_descriptions) as health_descriptions
     where
-      target.target_group_arn = any($1)
-      and health_descriptions -> 'Target' ->> 'Id' = i.instance_id;
+      health_descriptions -> 'Target' ->> 'Id' = i.instance_id;
   EOQ
 
   param "ec2_target_group_arns" {}
