@@ -44,8 +44,7 @@ edge "elasticache_cluster_node_to_sns_topic" {
       notification_configuration ->> 'TopicArn' as to_id
     from
       aws_elasticache_cluster as c
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on c.arn = a and c.account_id = split_part(a, ':', 5) and c.region = split_part(a, ':', 4);
   EOQ
 
   param "elasticache_cluster_node_arns" {}
@@ -96,10 +95,9 @@ edge "elasticache_cluster_to_elasticache_node_group" {
       rg.arn as from_id,
       rg.title || '-' || (ng ->> 'NodeGroupId') as to_id
     from
-      aws_elasticache_replication_group rg,
-      jsonb_array_elements(node_groups) ng
-    where
-      rg.arn = any($1);
+      aws_elasticache_replication_group rg
+      join unnest($1::text[]) as a on rg.arn = a and rg.account_id = split_part(a, ':', 5) and rg.region = split_part(a, ':', 4),
+      jsonb_array_elements(node_groups) ng;
   EOQ
 
   param "elasticache_cluster_arns" {}
