@@ -271,7 +271,7 @@ query "iam_roles_for_emr_cluster" {
       aws_emr_cluster as c
     where
       c.cluster_arn = $1
-      and r.name = c.service_role;
+      and r.arn = c.service_role;
   EOQ
 } // Time: 4.3s. Rows fetched: 6. Hydrate calls: 6.
 
