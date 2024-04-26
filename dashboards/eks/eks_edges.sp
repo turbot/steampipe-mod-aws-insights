@@ -2,14 +2,26 @@ edge "eks_cluster_to_eks_addon" {
   title = "addon"
 
   sql = <<-EOQ
+    with eks_addon as (
+      select
+        cluster_name,
+        arn
+      from
+        aws_eks_addon
+        join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
+    ),  eks_cluster as (
+      select
+        name,
+        arn
+      from
+       aws_eks_cluster
+    )
     select
       c.arn as from_id,
       a.arn as to_id
     from
-      aws_eks_cluster as c
+      eks_cluster as c
       left join aws_eks_addon as a on a.cluster_name = c.name
-    where
-      a.arn = any($1);
   EOQ
 
   param "eks_addon_arns" {}
@@ -19,15 +31,30 @@ edge "eks_cluster_to_eks_fargate_profile" {
   title = "fargate profile"
 
   sql = <<-EOQ
+    with eks_fargate_profile as (
+      select
+        cluster_name,
+        fargate_profile_arn,
+        region
+      from
+        aws_eks_fargate_profile
+        join unnest($1::text[]) as a on fargate_profile_arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
+    ), eks_cluster as (
+      select
+        name,
+        arn,
+        region
+      from
+        aws_eks_cluster
+    )
     select
       c.arn as from_id,
       p.fargate_profile_arn as to_id
     from
-      aws_eks_cluster as c
-      left join aws_eks_fargate_profile as p on p.cluster_name = c.name
+      eks_cluster as c
+      left join eks_fargate_profile as p on p.cluster_name = c.name
     where
-      p.region = c.region
-      and p.fargate_profile_arn = any($1);
+      p.region = c.region;
   EOQ
 
   param "eks_fargate_profile_arns" {}
@@ -37,14 +64,26 @@ edge "eks_cluster_to_eks_identity_provider_config" {
   title = "identity provider config"
 
   sql = <<-EOQ
+    with eks_identity_provider_config as (
+      select
+        cluster_name,
+        arn
+      from
+        aws_eks_identity_provider_config
+        join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
+    ), eks_cluster as (
+      select
+        name,
+        arn
+      from
+       aws_eks_cluster
+    )
     select
       c.arn as from_id,
       i.arn as to_id
     from
-      aws_eks_cluster as c
-      left join aws_eks_identity_provider_config as i on i.cluster_name = c.name
-    where
-      i.arn = any($1);
+      eks_cluster as c
+      left join eks_identity_provider_config as i on i.cluster_name = c.name;
   EOQ
 
   param "eks_identity_provider_arns" {}
@@ -54,14 +93,26 @@ edge "eks_cluster_to_eks_node_group" {
   title = "node group"
 
   sql = <<-EOQ
+    with eks_node_group as (
+      select
+        cluster_name,
+        arn
+      from
+        aws_eks_node_group
+        join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
+    ), eks_cluster as (
+      select
+        name,
+        arn
+      from
+       aws_eks_cluster
+    )
     select
       c.arn as from_id,
       g.arn as to_id
     from
-      aws_eks_cluster as c
-      left join aws_eks_node_group as g on g.cluster_name = c.name
-    where
-      c.arn = any($1)
+      eks_cluster as c
+      left join eks_node_group as g on g.cluster_name = c.name;
   EOQ
 
   param "eks_node_group_arns" {}
@@ -125,11 +176,10 @@ edge "eks_cluster_to_vpc_subnet" {
       group_id as from_id,
       subnet_id as to_id
     from
-      aws_eks_cluster as c,
+      aws_eks_cluster as c
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
       jsonb_array_elements_text(resources_vpc_config -> 'SecurityGroupIds') as group_id,
-      jsonb_array_elements_text(resources_vpc_config -> 'SubnetIds') as subnet_id
-    where
-      arn = any($1)
+      jsonb_array_elements_text(resources_vpc_config -> 'SubnetIds') as subnet_id;
   EOQ
 
   param "eks_cluster_arns" {}

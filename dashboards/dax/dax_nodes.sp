@@ -15,8 +15,7 @@ node "dax_cluster" {
       ) as properties
     from
       aws_dax_cluster
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "dax_cluster_arns" {}
@@ -38,10 +37,9 @@ node "dax_cluster_node" {
         'Parameter Group Status', n ->> 'ParameterGroupStatus'
       ) as properties
     from
-      aws_dax_cluster,
-      jsonb_array_elements(nodes) as n
-    where
-      arn = any($1);
+      aws_dax_cluster
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
+      jsonb_array_elements(nodes) as n;
   EOQ
 
   param "dax_cluster_arns" {}
@@ -69,7 +67,6 @@ node "dax_parameter_group" {
     where
       c.arn = any($1)
       and p.region in (select region from aws_dax_cluster where arn = any($1))
-
   EOQ
 
   param "dax_cluster_arns" {}
@@ -78,6 +75,22 @@ node "dax_parameter_group" {
 node "dax_subnet_group" {
   category = category.dax_subnet_group
   sql      = <<-EOQ
+    with dax_cluster as (
+      select
+        arn,
+        subnet_group
+      from
+        aws_dax_cluster
+        join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
+    ),  dax_subnet_group as (
+      select
+        subnet_group_name,
+        title,
+        vpc_id,
+        region
+      from
+        aws_dax_subnet_group
+    )
     select
       g.subnet_group_name as id,
       g.title as title,
@@ -87,11 +100,10 @@ node "dax_subnet_group" {
         'Region', g.region
       ) as properties
     from
-      aws_dax_cluster as c,
-      aws_dax_subnet_group as g
+      dax_cluster as c,
+      dax_subnet_group as g
     where
       g.subnet_group_name = c.subnet_group
-      and c.arn = any($1);
   EOQ
 
   param "dax_cluster_arns" {}

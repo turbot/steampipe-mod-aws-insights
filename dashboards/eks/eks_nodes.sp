@@ -15,8 +15,7 @@ node "eks_addon" {
         ) as properties
     from
       aws_eks_addon
-    where
-      arn = any($1)
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "eks_addon_arns" {}
@@ -38,8 +37,7 @@ node "eks_cluster" {
         'Region', region ) as properties
     from
       aws_eks_cluster
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "eks_cluster_arns" {}
@@ -59,13 +57,8 @@ node "eks_fargate_profile" {
         'Region', p.region
         ) as properties
     from
-      aws_eks_cluster as c
-      left join
-        aws_eks_fargate_profile as p
-        on p.cluster_name = c.name
-    where
-      p.region = c.region
-      and c.arn = any($1);
+      aws_eks_fargate_profile as p
+      join unnest($1::text[]) as a on fargate_profile_arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "eks_fargate_profile_arns" {}
@@ -88,8 +81,7 @@ node "eks_identity_provider_config" {
         ) as properties
     from
       aws_eks_identity_provider_config
-    where
-      arn = any($1)
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "eks_identity_provider_arns" {}
@@ -112,16 +104,7 @@ node "eks_node_group" {
         ) as properties
     from
       aws_eks_node_group
-    where
-      cluster_name in
-      (
-        select
-          name
-        from
-          aws_eks_cluster
-        where
-          arn = any($1)
-      )
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "eks_node_group_arns" {}
