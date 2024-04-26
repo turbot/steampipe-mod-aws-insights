@@ -3,6 +3,27 @@ node "lambda_alias" {
   category = category.lambda_alias
 
   sql = <<-EOQ
+    with lambda_alias as (
+      select
+        function_name,
+        alias_arn,
+        title,
+        name,
+        description,
+        region,
+        account_id
+      from
+        aws_lambda_alias
+    ), lambda_function as (
+      select
+        name,
+        arn,
+        region,
+        account_id
+      from
+        aws_lambda_function
+        join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
+    )
     select
       a.alias_arn as id,
       a.title as title,
@@ -14,13 +35,12 @@ node "lambda_alias" {
         'Account ID', a.account_id
       ) as properties
     from
-      aws_lambda_function as l,
-      aws_lambda_alias as a
+      lambda_function as l,
+      lambda_alias as a
     where
       a.function_name = l.name
       and a.account_id = l.account_id
-      and a.region = l.region
-      and l.arn = any($1);
+      and a.region = l.region;
   EOQ
 
   param "lambda_function_arns" {}
@@ -78,6 +98,28 @@ node "lambda_version" {
   category = category.lambda_version
 
   sql = <<-EOQ
+    with lambda_version as (
+      select
+        arn,
+        function_name,
+        title,
+        version,
+        runtime,
+        description,
+        region,
+        account_id
+      from
+        aws_lambda_version
+    ), lambda_function as (
+      select
+        name,
+        arn,
+        region,
+        account_id
+      from
+        aws_lambda_function
+        join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
+    )
     select
       v.arn as id,
       v.title as title,
@@ -89,13 +131,12 @@ node "lambda_version" {
         'Account ID', v.account_id
       ) as properties
     from
-      aws_lambda_function as l,
-      aws_lambda_version as v
+      lambda_function as l,
+      lambda_version as v
     where
       l.name = v.function_name
       and l.account_id = v.account_id
-      and l.region = v.region
-      and l.arn = any($1);
+      and l.region = v.region;
   EOQ
 
   param "lambda_function_arns" {}
