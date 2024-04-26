@@ -20,13 +20,13 @@ node "codedeploy_app" {
         select
           a -> 'Configuration' ->> 'ApplicationName'
         from
-          aws_codepipeline_pipeline,
+          aws_codepipeline_pipeline
+          join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
           jsonb_array_elements(stages) as s,
           jsonb_array_elements(s -> 'Actions') as a
         where
           s ->> 'Name' = 'Deploy'
           and a -> 'ActionTypeId' ->> 'Provider' = 'CodeDeploy'
-          and arn = any($1)
       );
   EOQ
 

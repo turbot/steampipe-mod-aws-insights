@@ -7,6 +7,7 @@ edge "codepipeline_pipeline_build_to_codebuild_project" {
       arn as to_id
     from
       aws_codebuild_project
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
     where
       arn = any($1);
   EOQ
@@ -29,13 +30,13 @@ edge "codepipeline_pipeline_deploy_to_appconfig_application" {
         select
           a -> 'Configuration' ->> 'Application'
         from
-          aws_codepipeline_pipeline,
+          aws_codepipeline_pipeline
+          join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
           jsonb_array_elements(stages) as s,
           jsonb_array_elements(s -> 'Actions') as a
         where
           s ->> 'Name' = 'Deploy'
           and a -> 'ActionTypeId' ->> 'Provider' = 'AppConfig'
-          and arn = any($1)
       );
   EOQ
 
@@ -57,13 +58,13 @@ edge "codepipeline_pipeline_deploy_to_cloudformation" {
         select
           a -> 'Configuration' ->> 'StackName'
         from
-          aws_codepipeline_pipeline,
+          aws_codepipeline_pipeline
+          join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
           jsonb_array_elements(stages) as s,
           jsonb_array_elements(s -> 'Actions') as a
         where
           s ->> 'Name' = 'Deploy'
           and a -> 'ActionTypeId' ->> 'Provider' = 'CloudFormation'
-          and arn =  any($1)
       );
   EOQ
 
@@ -79,14 +80,14 @@ edge "codepipeline_pipeline_deploy_to_codedeploy_app" {
       app.arn as to_id
     from
       aws_codedeploy_app as app,
-      aws_codepipeline_pipeline as p,
+      aws_codepipeline_pipeline as p
+      join unnest($1::text[]) as a on p.arn = a and p.account_id = split_part(a, ':', 5) and p.region = split_part(a, ':', 4),
       jsonb_array_elements(stages) as s,
       jsonb_array_elements(s -> 'Actions') as a
     where
       s ->> 'Name' = 'Deploy'
       and a -> 'ActionTypeId' ->> 'Provider' = 'CodeDeploy'
-      and a -> 'Configuration' ->> 'ApplicationName' = app.application_name
-      and p.arn = any($1);
+      and a -> 'Configuration' ->> 'ApplicationName' = app.application_name;
   EOQ
 
   param "codepipeline_pipeline_arns" {}
@@ -107,13 +108,13 @@ edge "codepipeline_pipeline_deploy_to_ecs_cluster" {
         select
           a -> 'Configuration' ->> 'ClusterName'
         from
-          aws_codepipeline_pipeline,
+          aws_codepipeline_pipeline
+          join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
           jsonb_array_elements(stages) as s,
           jsonb_array_elements(s -> 'Actions') as a
         where
           s ->> 'Name' = 'Deploy'
           and a -> 'ActionTypeId' ->> 'Provider' = 'ECS'
-          and arn = any($1)
       );
   EOQ
 
@@ -135,13 +136,13 @@ edge "codepipeline_pipeline_deploy_to_elastic_beanstalk_application" {
         select
           a -> 'Configuration' ->> 'ApplicationName'
         from
-          aws_codepipeline_pipeline,
+          aws_codepipeline_pipeline
+          join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
           jsonb_array_elements(stages) as s,
           jsonb_array_elements(s -> 'Actions') as a
         where
           s ->> 'Name' = 'Deploy'
           and a -> 'ActionTypeId' ->> 'Provider' = 'ElasticBeanstalk'
-          and arn = any($1)
       );
   EOQ
 
@@ -163,7 +164,8 @@ edge "codepipeline_pipeline_deploy_to_s3_bucket" {
         select
           a -> 'Configuration' ->> 'BucketName' as bucket_name
         from
-          aws_codepipeline_pipeline,
+          aws_codepipeline_pipeline
+          join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
           jsonb_array_elements(stages) as s,
           jsonb_array_elements(s -> 'Actions') as a
         where
@@ -185,8 +187,7 @@ edge "codepipeline_pipeline_source_to_codecommit_repository" {
       arn as to_id
     from
       aws_codecommit_repository
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "codecommit_repository_arns" {}
@@ -201,8 +202,7 @@ edge "codepipeline_pipeline_source_to_ecr_repository" {
       arn as to_id
     from
       aws_ecr_repository
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "ecr_repository_arns" {}
@@ -223,13 +223,13 @@ edge "codepipeline_pipeline_source_to_s3_bucket" {
         select
           a -> 'Configuration' ->> 'S3Bucket' as bucket_name
         from
-          aws_codepipeline_pipeline,
+          aws_codepipeline_pipeline
+          join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
           jsonb_array_elements(stages) as s,
           jsonb_array_elements(s -> 'Actions') as a
         where
           s ->> 'Name' = 'Source'
-          and a -> 'ActionTypeId' ->> 'Provider' = 'S3'
-          and arn = any($1)
+          and a -> 'ActionTypeId' ->> 'Provider' = 'S3';
       );
   EOQ
 
@@ -244,12 +244,12 @@ edge "codepipeline_pipeline_to_kms_key" {
       p.arn as from_id,
       k.arn as to_id
     from
-      aws_codepipeline_pipeline as p,
+      aws_codepipeline_pipeline as p
+      join unnest($1::text[]) as a on p.arn = a and p.account_id = split_part(a, ':', 5) and p.region = split_part(a, ':', 4),
       aws_kms_key as k,
       jsonb_array_elements(aliases) as a
     where
-      a ->> 'AliasArn' = p.encryption_key ->> 'Id'
-      and p.arn = any($1);
+      a ->> 'AliasArn' = p.encryption_key ->> 'Id';
   EOQ
 
   param "codepipeline_pipeline_arns" {}
@@ -265,9 +265,9 @@ edge "codepipeline_pipeline_to_iam_role" {
     from
       aws_iam_role as r,
       aws_codepipeline_pipeline as p
+      join unnest($1::text[]) as a on p.arn = a and p.account_id = split_part(a, ':', 5) and p.region = split_part(a, ':', 4)
     where
-      r.arn = p.role_arn
-      and p.arn = any($1);
+      r.arn = p.role_arn;
   EOQ
 
   param "codepipeline_pipeline_arns" {}
