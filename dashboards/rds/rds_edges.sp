@@ -180,7 +180,7 @@ edge "rds_db_instance_to_rds_db_snapshot" {
       s.arn as to_id
     from
       aws_rds_db_instance as i
-      join unnest($1::text[]) as a on i.arn = a and i.account_id = split_part(a, ':', 5) and i.region = split_part(a, ':', 4);
+      join unnest($1::text[]) as a on i.arn = a and i.account_id = split_part(a, ':', 5) and i.region = split_part(a, ':', 4)
       join aws_rds_db_snapshot as s on s.dbi_resource_id = i.resource_id;
   EOQ
 

@@ -31,7 +31,7 @@ edge "codepipeline_pipeline_deploy_to_appconfig_application" {
           a -> 'Configuration' ->> 'Application'
         from
           aws_codepipeline_pipeline
-          join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
+          join unnest($1::text[]) as b on arn = b and account_id = split_part(b, ':', 5) and region = split_part(b, ':', 4),
           jsonb_array_elements(stages) as s,
           jsonb_array_elements(s -> 'Actions') as a
         where
@@ -59,7 +59,7 @@ edge "codepipeline_pipeline_deploy_to_cloudformation" {
           a -> 'Configuration' ->> 'StackName'
         from
           aws_codepipeline_pipeline
-          join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
+          join unnest($1::text[]) as b on arn = b and account_id = split_part(b, ':', 5) and region = split_part(b, ':', 4),
           jsonb_array_elements(stages) as s,
           jsonb_array_elements(s -> 'Actions') as a
         where
@@ -81,7 +81,7 @@ edge "codepipeline_pipeline_deploy_to_codedeploy_app" {
     from
       aws_codedeploy_app as app,
       aws_codepipeline_pipeline as p
-      join unnest($1::text[]) as a on p.arn = a and p.account_id = split_part(a, ':', 5) and p.region = split_part(a, ':', 4),
+      join unnest($1::text[]) as b on p.arn = b and p.account_id = split_part(b, ':', 5) and p.region = split_part(b, ':', 4),
       jsonb_array_elements(stages) as s,
       jsonb_array_elements(s -> 'Actions') as a
     where
@@ -109,7 +109,7 @@ edge "codepipeline_pipeline_deploy_to_ecs_cluster" {
           a -> 'Configuration' ->> 'ClusterName'
         from
           aws_codepipeline_pipeline
-          join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
+          join unnest($1::text[]) as b on arn = b and account_id = split_part(b, ':', 5) and region = split_part(b, ':', 4),
           jsonb_array_elements(stages) as s,
           jsonb_array_elements(s -> 'Actions') as a
         where
@@ -137,7 +137,7 @@ edge "codepipeline_pipeline_deploy_to_elastic_beanstalk_application" {
           a -> 'Configuration' ->> 'ApplicationName'
         from
           aws_codepipeline_pipeline
-          join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
+          join unnest($1::text[]) as b on arn = b and account_id = split_part(b, ':', 5) and region = split_part(b, ':', 4),
           jsonb_array_elements(stages) as s,
           jsonb_array_elements(s -> 'Actions') as a
         where
@@ -165,7 +165,7 @@ edge "codepipeline_pipeline_deploy_to_s3_bucket" {
           a -> 'Configuration' ->> 'BucketName' as bucket_name
         from
           aws_codepipeline_pipeline
-          join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
+          join unnest($1::text[]) as b on arn = b and account_id = split_part(b, ':', 5) and region = split_part(b, ':', 4),
           jsonb_array_elements(stages) as s,
           jsonb_array_elements(s -> 'Actions') as a
         where
@@ -224,12 +224,12 @@ edge "codepipeline_pipeline_source_to_s3_bucket" {
           a -> 'Configuration' ->> 'S3Bucket' as bucket_name
         from
           aws_codepipeline_pipeline
-          join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
+          join unnest($1::text[]) as b on arn = b and account_id = split_part(b, ':', 5) and region = split_part(b, ':', 4),
           jsonb_array_elements(stages) as s,
           jsonb_array_elements(s -> 'Actions') as a
         where
           s ->> 'Name' = 'Source'
-          and a -> 'ActionTypeId' ->> 'Provider' = 'S3';
+          and a -> 'ActionTypeId' ->> 'Provider' = 'S3'
       );
   EOQ
 
@@ -245,7 +245,7 @@ edge "codepipeline_pipeline_to_kms_key" {
       k.arn as to_id
     from
       aws_codepipeline_pipeline as p
-      join unnest($1::text[]) as a on p.arn = a and p.account_id = split_part(a, ':', 5) and p.region = split_part(a, ':', 4),
+      join unnest($1::text[]) as b on p.arn = b and p.account_id = split_part(b, ':', 5) and p.region = split_part(b, ':', 4),
       aws_kms_key as k,
       jsonb_array_elements(aliases) as a
     where

@@ -141,7 +141,7 @@ edge "backup_vault_to_sns_topic" {
       sns_topic_arn as to_id
     from
       aws_backup_vault
-      join unnest($1::text[]) as a on p.arn = a and p.account_id = split_part(a, ':', 5) and p.region = split_part(a, ':', 4);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "backup_vault_arns" {}

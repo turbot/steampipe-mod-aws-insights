@@ -20,7 +20,7 @@ node "media_store_container" {
           'https://' || (origin ->> 'DomainName')
         from
           aws_cloudfront_distribution
-          join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
+          join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
           jsonb_array_elements(origins) as origin
       );
   EOQ
