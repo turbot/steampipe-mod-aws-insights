@@ -87,14 +87,14 @@ dashboard "opensearch_domain_detail" {
       edge {
         base = edge.opensearch_domain_to_vpc_security_group
         args = {
-          opensearch_arn = self.input.opensearch_arn.value
+          opensearch_arn = [self.input.opensearch_arn.value]
         }
       }
 
       edge {
         base = edge.opensearch_domain_to_vpc_subnet
         args = {
-          opensearch_arn = self.input.opensearch_arn.value
+          opensearch_arn = [self.input.opensearch_arn.value]
         }
       }
 
