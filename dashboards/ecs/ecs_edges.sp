@@ -360,9 +360,9 @@ edge "ecs_service_to_vpc_subnet" {
       s as to_id
     from
       aws_ecs_service as e
-      join unnest($1::text[]) as a on e.arn = a and e.account_id = split_part(a, ':', 5) and e.region = split_part(a, ':', 4),
-      jsonb_array_elements_text(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s,
-      jsonb_array_elements_text(e.network_configuration -> 'AwsvpcConfiguration' -> 'SecurityGroups') as sg
+      join unnest($1::text[]) as a on e.arn = a and e.account_id = split_part(a, ':', 5) and e.region = split_part(a, ':', 4)
+      cross join jsonb_array_elements_text(e.network_configuration -> 'AwsvpcConfiguration' -> 'Subnets') as s
+      cross join jsonb_array_elements_text(e.network_configuration -> 'AwsvpcConfiguration' -> 'SecurityGroups') as sg
     where
       e.network_configuration is not null;
   EOQ
@@ -397,7 +397,7 @@ edge "ecs_task_definition_to_ecr_repository" {
       task_definition_arn as from_id,
       r.arn as to_id
     from
-      aws_ecs_task_definition as td,
+      aws_ecs_task_definition as td
       join unnest($1::text[]) as a on td.task_definition_arn = a and td.account_id = split_part(a, ':', 5) and td.region = split_part(a, ':', 4),
       jsonb_array_elements(container_definitions) as d
       left join aws_ecr_repository as r on r.repository_uri = split_part(d ->> 'Image', ':', 1);
@@ -464,7 +464,7 @@ edge "ecs_task_definition_to_iam_task_role" {
       d.task_role_arn as to_id
     from
       aws_ecs_task_definition as d
-      join unnest($1::text[]) as a on d.task_definition_arn = a and d.account_id = split_part(a, ':', 5) and d.region = split_part(a, ':', 4);
+      join unnest($1::text[]) as a on d.task_definition_arn = a and d.account_id = split_part(a, ':', 5) and d.region = split_part(a, ':', 4)
       left join aws_iam_role as r on r.arn = d.task_role_arn;
   EOQ
 

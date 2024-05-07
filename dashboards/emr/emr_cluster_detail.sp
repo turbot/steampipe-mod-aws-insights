@@ -464,13 +464,13 @@ query "emr_cluster_applications" {
 query "emr_cluster_ec2_instance_attributes" {
   sql = <<-EOQ
     select
-      ec2_instance_attributes ->> 'Ec2KeyName' as "Ec2 Key Name",
-      ec2_instance_attributes ->> 'Ec2SubnetId' as "Ec2 Subnet Id",
-      ec2_instance_attributes ->> 'IamInstanceProfile' as "Iam Instance Profile",
-      ec2_instance_attributes ->> 'Ec2AvailabilityZone' as "Ec2 Availability Zone",
+      ec2_instance_attributes ->> 'Ec2KeyName' as "EC2 Key Name",
+      ec2_instance_attributes ->> 'Ec2SubnetId' as "EC2 Subnet Id",
+      ec2_instance_attributes ->> 'IamInstanceProfile' as "IAM Instance Profile",
+      ec2_instance_attributes ->> 'Ec2AvailabilityZone' as "EC2 Availability Zone",
       ec2_instance_attributes ->> 'ServiceAccessSecurityGroup' as "Service Access Security Group",
-      ec2_instance_attributes ->> 'EmrManagedSlaveSecurityGroup' as "Emr Managed Slave Security Group",
-      ec2_instance_attributes ->> 'EmrManagedMasterSecurityGroup' as "Emr Managed Master Security Group"
+      ec2_instance_attributes ->> 'EmrManagedSlaveSecurityGroup' as "EMR Managed Slave Security Group",
+      ec2_instance_attributes ->> 'EmrManagedMasterSecurityGroup' as "EMR Managed Master Security Group"
     from
       aws_emr_cluster
     where

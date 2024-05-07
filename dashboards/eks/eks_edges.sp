@@ -173,13 +173,13 @@ edge "eks_cluster_to_vpc_subnet" {
 
   sql = <<-EOQ
     select
-      group_id as from_id,
+      coalesce(group_id, arn) as from_id,
       subnet_id as to_id
     from
       aws_eks_cluster as c
-      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
-      jsonb_array_elements_text(resources_vpc_config -> 'SecurityGroupIds') as group_id,
-      jsonb_array_elements_text(resources_vpc_config -> 'SubnetIds') as subnet_id;
+      join unnest($1::text[]) as a on c.arn = a and c.account_id = split_part(a, ':', 5) and c.region = split_part(a, ':', 4)
+      left join jsonb_array_elements_text(resources_vpc_config -> 'SubnetIds') as subnet_id on 1 = 1
+      left join jsonb_array_elements_text(resources_vpc_config -> 'SecurityGroupIds') as group_id on 1 = 1
   EOQ
 
   param "eks_cluster_arns" {}

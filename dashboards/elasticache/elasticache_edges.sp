@@ -6,12 +6,12 @@ edge "elasticache_cluster_node_to_elasticache_parameter_group" {
       c.arn as from_id,
       g.arn as to_id
     from
-      aws_elasticache_cluster as c,
       aws_elasticache_parameter_group as g
+      join unnest($1::text[]) as a on g.arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
+      aws_elasticache_cluster as c
     where
-      c.cache_parameter_group ->> 'CacheParameterGroupName' = g.cache_parameter_group_name
-      and c.region = g.region
-      and g.arn = any($1);
+      c.cache_parameter_group ->> 'CacheParameterGroupName' = g.cache_parameter_group_name;
+
   EOQ
 
   param "elsticache_parameter_group_arns" {}
