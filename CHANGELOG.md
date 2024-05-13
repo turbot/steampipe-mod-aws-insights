@@ -2,7 +2,7 @@
 
 _Enhancements_
 
-- Optimized the queries to leverage the [connection-level qualifiers](https://steampipe.io/blog/connection-level-qualifiers) for faster queries and lower API load. To benefit from these enhancements, please upgrade to [AWS v0.136.0](https://github.com/turbot/steampipe-plugin-aws/blob/main/CHANGELOG.md#v01360-2024-04-19) or higher. ([#347](https://github.com/turbot/steampipe-mod-aws-insights/pull/347))
+- Optimized queries to leverage the [connection-level qualifiers](https://steampipe.io/blog/connection-level-qualifiers) for faster execution time and lower API load. To benefit from these enhancements, please upgrade to [AWS v0.136.0](https://github.com/turbot/steampipe-plugin-aws/blob/main/CHANGELOG.md#v01360-2024-04-19) or higher. ([#347](https://github.com/turbot/steampipe-mod-aws-insights/pull/347))
 
 ## v0.20 [2024-03-27]
 
