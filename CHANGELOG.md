@@ -1,3 +1,9 @@
+## v0.21 [2024-05-13]
+
+_Enhancements_
+
+- Queries have been optimized to better work with the connection quals. ([#347](https://github.com/turbot/steampipe-mod-aws-insights/pull/347))
+
 ## v0.20 [2024-03-27]
 
 _Bug fixes_
