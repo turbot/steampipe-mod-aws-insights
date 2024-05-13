@@ -14,8 +14,7 @@ node "backup_plan" {
       ) as properties
     from
       aws_backup_plan
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "backup_plan_arns" {}
@@ -36,10 +35,9 @@ node "backup_plan_rule" {
         'Region', region
       ) as properties
     from
-      aws_backup_plan,
-      jsonb_array_elements(backup_plan -> 'Rules') as r
-    where
-      arn = any($1);
+      aws_backup_plan
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
+      jsonb_array_elements(backup_plan -> 'Rules') as r;
   EOQ
 
   param "backup_plan_arns" {}
@@ -68,8 +66,7 @@ node "backup_selection" {
           backup_plan_id
         from
           aws_backup_plan
-        where
-          arn = any($1)
+          join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
       );
   EOQ
 
@@ -92,8 +89,7 @@ node "backup_vault" {
       ) as properties
     from
       aws_backup_vault
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "backup_vault_arns" {}

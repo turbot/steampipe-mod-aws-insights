@@ -18,8 +18,7 @@ node "acm_certificate" {
       ) as properties
     from
       aws_acm_certificate
-    where
-      certificate_arn = any($1);
+      join unnest($1::text[]) as arn on certificate_arn = arn and account_id = split_part(arn, ':', 5) and region = split_part(arn, ':', 4);
   EOQ
 
   param "acm_certificate_arns" {}

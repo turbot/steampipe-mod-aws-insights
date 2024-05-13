@@ -13,8 +13,7 @@ node "efs_access_point" {
       ) as properties
     from
       aws_efs_access_point
-    where
-      access_point_arn = any($1);
+      join unnest($1::text[]) as a on access_point_arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
   EOQ
 
   param "efs_access_point_arns" {}
@@ -38,8 +37,7 @@ node "efs_file_system" {
       ) as properties
     from
       aws_efs_file_system
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "efs_file_system_arns" {}

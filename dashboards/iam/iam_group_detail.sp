@@ -167,6 +167,7 @@ query "iam_policies_for_iam_group" {
       aws_iam_group
     where
       arn = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -179,6 +180,7 @@ query "iam_users_for_iam_group" {
       jsonb_array_elements(users) as member
     where
       arn = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -194,6 +196,7 @@ query "iam_group_inline_policy_count_for_group" {
       aws_iam_group
     where
       arn = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -207,6 +210,7 @@ query "iam_group_direct_attached_policy_count_for_group" {
       aws_iam_group
     where
       arn = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -224,6 +228,7 @@ query "iam_group_overview" {
       aws_iam_group
     where
       arn = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -238,6 +243,7 @@ query "iam_users_for_group" {
       jsonb_array_elements(users) as u
     where
       arn = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -253,6 +259,7 @@ query "iam_all_policies_for_group" {
       jsonb_array_elements_text(g.attached_policy_arns) as policy_arn
     where
       g.arn = $1
+      and g.account_id = split_part($1, ':', 5)
     -- Policies (inline from groups)
     union select
       i ->> 'PolicyName' as "Policy",
@@ -263,5 +270,6 @@ query "iam_all_policies_for_group" {
       jsonb_array_elements(grp.inline_policies_std) as i
     where
       arn = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 }

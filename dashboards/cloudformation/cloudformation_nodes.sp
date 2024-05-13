@@ -14,8 +14,7 @@ node "cloudformation_stack" {
       ) as properties
     from
       aws_cloudformation_stack
-    where
-      id = any($1);
+      join unnest($1::text[]) as a on id = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "cloudformation_stack_ids" {}

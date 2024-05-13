@@ -241,6 +241,7 @@ query "iam_groups_for_iam_user" {
       jsonb_array_elements(groups) as g
     where
       arn = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -252,6 +253,7 @@ query "iam_policies_for_iam_user" {
       aws_iam_user
     where
       arn = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -267,6 +269,7 @@ query "iam_user_mfa_for_user" {
       aws_iam_user
     where
       arn = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -288,6 +291,7 @@ query "iam_boundary_policy_for_user" {
       aws_iam_user
     where
       arn = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 
 }
@@ -302,6 +306,7 @@ query "iam_user_inline_policy_count_for_user" {
       aws_iam_user
     where
       arn = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -314,7 +319,8 @@ query "iam_user_direct_attached_policy_count_for_user" {
     from
       aws_iam_user
     where
-     arn = $1
+      arn = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -333,6 +339,7 @@ query "iam_user_overview" {
       aws_iam_user
     where
       arn = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -346,6 +353,7 @@ query "iam_user_tags" {
       jsonb_array_elements(tags_src) as tag
     where
       arn = $1
+      and account_id = split_part($1, ':', 5)
     order by
       tag ->> 'Key'
   EOQ
@@ -360,6 +368,7 @@ query "iam_user_console_password" {
       aws_iam_user
     where
       arn = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -373,6 +382,7 @@ query "iam_user_access_keys" {
       aws_iam_access_key as a left join aws_iam_user as u on u.name = a.user_name and u.account_id = a.account_id
     where
       u.arn = $1
+      and u.account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -387,6 +397,7 @@ query "iam_user_mfa_devices" {
       jsonb_array_elements(mfa_devices) as mfa
     where
       arn = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -488,6 +499,7 @@ query "iam_groups_for_user" {
       jsonb_array_elements(groups) as g
     where
       u.arn = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 

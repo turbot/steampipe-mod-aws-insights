@@ -172,20 +172,51 @@ query "kms_keys_for_rds_db_cluster_snapshot" {
       aws_rds_db_cluster_snapshot
     where
       kms_key_id is not null
-      and arn = $1;
+      and arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
 query "rds_clusters_for_rds_db_cluster_snapshot" {
   sql = <<-EOQ
+    with rds_db_cluster_snapshot as (
+      select
+        arn,
+        db_cluster_identifier,
+        region,
+        account_id
+      from
+        aws_rds_db_cluster_snapshot
+      where
+        account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+        and arn = $1
+      order by
+        arn,
+        db_cluster_identifier,
+        region,
+        account_id
+    ), rds_db_cluster as (
+      select
+        arn,
+        db_cluster_identifier,
+        region,
+        account_id
+      from
+        aws_rds_db_cluster
+      order by
+        arn,
+        db_cluster_identifier,
+        region,
+        account_id
+    )
     select
       c.arn as rds_cluster_arn
     from
-      aws_rds_db_cluster as c
-      join aws_rds_db_cluster_snapshot as s
-      on s.db_cluster_identifier = c.db_cluster_identifier
-    where
-      s.arn = $1;
+      rds_db_cluster as c
+      join rds_db_cluster_snapshot as s
+      on s.db_cluster_identifier = c.db_cluster_identifier;
   EOQ
 }
 

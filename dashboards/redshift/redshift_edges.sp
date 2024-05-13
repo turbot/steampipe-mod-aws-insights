@@ -26,11 +26,11 @@ edge "redshift_cluster_to_cloudwatch_log_group" {
       c.arn as from_id,
       g.arn as to_id
     from
-      aws_redshift_cluster as c,
+      aws_redshift_cluster as c
+      join unnest($1::text[]) as a on c.arn = a and c.account_id = split_part(a, ':', 5) and c.region = split_part(a, ':', 4),
       aws_cloudwatch_log_group as g
     where
-      g.title like '%' || c.title || '%'
-      and c.arn = any($1);
+      g.title like '%' || c.title || '%';
   EOQ
 
   param "redshift_cluster_arns" {}
@@ -44,10 +44,9 @@ edge "redshift_cluster_to_iam_role" {
       arn as from_id,
       r ->> 'IamRoleArn' as to_id
     from
-      aws_redshift_cluster,
-      jsonb_array_elements(iam_roles) as r
-    where
-      arn = any($1);
+      aws_redshift_cluster
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
+      jsonb_array_elements(iam_roles) as r;
   EOQ
 
   param "redshift_cluster_arns" {}
@@ -62,8 +61,7 @@ edge "redshift_cluster_to_kms_key" {
       kms_key_id as to_id
     from
       aws_redshift_cluster
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
   EOQ
 
   param "redshift_cluster_arns" {}
@@ -99,9 +97,9 @@ edge "redshift_cluster_to_redshift_snapshot" {
     from
       aws_redshift_snapshot as s,
       aws_redshift_cluster as c
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
     where
-      s.cluster_identifier = c.cluster_identifier
-      and c.arn = any($1);
+      s.cluster_identifier = c.cluster_identifier;
   EOQ
 
   param "redshift_cluster_arns" {}
@@ -111,15 +109,22 @@ edge "redshift_cluster_to_s3_bucket" {
   title = "logs to"
 
   sql = <<-EOQ
+    with s3_bucket as (
+      select
+        name,
+        arn
+      from
+        aws_s3_bucket
+    )
     select
       c.arn as from_id,
       b.arn as to_id
     from
-      aws_redshift_cluster as c,
-      aws_s3_bucket as b
+      aws_redshift_cluster as c
+      join unnest($1::text[]) as a on c.arn = a and c.account_id = split_part(a, ':', 5) and c.region = split_part(a, ':', 4),
+      s3_bucket as b
     where
-      b.name = c.logging_status ->> 'BucketName'
-      and c.arn = any($1);
+      b.name = c.logging_status ->> 'BucketName';
   EOQ
 
   param "redshift_cluster_arns" {}
@@ -135,10 +140,8 @@ edge "redshift_cluster_to_sns_topic" {
     from
       aws_redshift_event_subscription as s,
       jsonb_array_elements_text(source_ids_list) as ids
-      join aws_redshift_cluster as c
-      on ids = c.cluster_identifier
-    where
-      c.arn = any($1);
+      join aws_redshift_cluster as c on ids = c.cluster_identifier
+      join unnest($1::text[]) as a on c.arn = a and c.account_id = split_part(a, ':', 5) and c.region = split_part(a, ':', 4);
   EOQ
 
   param "redshift_cluster_arns" {}
@@ -152,12 +155,12 @@ edge "redshift_cluster_to_vpc_eip" {
       c.arn as from_id,
       e.arn as to_id
     from
-      aws_redshift_cluster as c,
+      aws_redshift_cluster as c
+      join unnest($1::text[]) as a on c.arn = a and c.account_id = split_part(a, ':', 5) and c.region = split_part(a, ':', 4),
       aws_vpc_eip as e
     where
       c.elastic_ip_status is not null
-      and e.public_ip = (c.elastic_ip_status ->> 'ElasticIp')::inet
-      and c.arn = any($1);
+      and e.public_ip = (c.elastic_ip_status ->> 'ElasticIp')::inet;
   EOQ
 
   param "redshift_cluster_arns" {}
@@ -171,10 +174,9 @@ edge "redshift_cluster_to_vpc_security_group" {
       arn as from_id,
       s ->> 'VpcSecurityGroupId' as to_id
     from
-      aws_redshift_cluster,
+      aws_redshift_cluster
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
       jsonb_array_elements(vpc_security_groups) as s
-    where
-      arn = any($1);
   EOQ
 
   param "redshift_cluster_arns" {}

@@ -14,8 +14,7 @@ node "sagemaker_notebook_instance" {
       ) as properties
     from
       aws_sagemaker_notebook_instance
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "sagemaker_notebook_instance_arns" {}

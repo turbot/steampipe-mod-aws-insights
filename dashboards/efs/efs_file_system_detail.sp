@@ -247,7 +247,9 @@ query "efs_file_system_status" {
     from
       aws_efs_file_system
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 
 }
@@ -260,7 +262,9 @@ query "efs_file_system_performance_mode" {
     from
       aws_efs_file_system
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 
 }
@@ -273,7 +277,9 @@ query "efs_file_system_throughput_mode" {
     from
       aws_efs_file_system
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 
 }
@@ -286,7 +292,9 @@ query "efs_file_system_mount_targets" {
     from
       aws_efs_file_system
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 
 }
@@ -300,7 +308,9 @@ query "efs_file_system_encryption" {
     from
       aws_efs_file_system
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 
 }
@@ -314,7 +324,9 @@ query "efs_file_system_automatic_backup" {
     from
       aws_efs_file_system
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 
 }
@@ -323,25 +335,43 @@ query "efs_file_system_automatic_backup" {
 
 query "efs_access_points_for_efs_file_system" {
   sql = <<-EOQ
+    with efs_file_system_id as (
+      select
+        file_system_id
+      from
+        aws_efs_file_system
+      where
+        arn = $1
+        and account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+    )
     select
       a.access_point_arn as access_point_arn
     from
-      aws_efs_access_point as a
-      left join aws_efs_file_system as f on a.file_system_id = f.file_system_id
-    where
-      f.arn = $1;
+      aws_efs_access_point a
+    join
+      efs_file_system_id efs on efs.file_system_id = a.file_system_id;
   EOQ
 }
 
 query "efs_mount_targets_for_efs_file_system" {
   sql = <<-EOQ
+    with efs_details as (
+      select
+        file_system_id
+      from
+        aws_efs_file_system
+      where
+        arn = $1
+        and account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+    )
     select
-      mount_target_id
+      mt.mount_target_id
     from
-      aws_efs_mount_target as m
-      left join aws_efs_file_system as f on m.file_system_id = f.file_system_id
-    where
-      f.arn = $1;
+      aws_efs_mount_target mt
+    join
+      efs_details ed on mt.file_system_id = ed.file_system_id;
   EOQ
 }
 
@@ -353,6 +383,8 @@ query "kms_keys_for_efs_file_system" {
       aws_efs_file_system
     where
       arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -366,34 +398,56 @@ query "vpc_security_groups_for_efs_file_system" {
     where
       s.file_system_id = t.file_system_id
       and s.arn = $1
+      and s.account_id = split_part($1, ':', 5)
+      and s.region = split_part($1, ':', 4);
   EOQ
 }
 
 query "vpc_subnets_for_efs_file_system" {
   sql = <<-EOQ
+    with relevant_mount_targets as (
+      select
+        m.subnet_id
+      from
+        aws_efs_mount_target m
+      join
+        aws_efs_file_system f on f.file_system_id = m.file_system_id
+      where
+        f.arn = $1
+        and f.account_id = split_part($1, ':', 5)
+        and f.region = split_part($1, ':', 4)
+    )
     select
       s.subnet_id as subnet_id
     from
-      aws_efs_mount_target as m
-      left join aws_efs_file_system as f on f.file_system_id = m.file_system_id
-      left join aws_vpc_subnet as s on m.subnet_id = s.subnet_id
-    where
-      f.arn = $1;
+      aws_vpc_subnet s
+    join
+      relevant_mount_targets rmt on rmt.subnet_id = s.subnet_id;
   EOQ
 }
 
 query "vpc_vpcs_for_efs_file_system" {
   sql = <<-EOQ
+    with efs_mount_details as (
+      select
+        m.vpc_id
+      from
+        aws_efs_mount_target m
+      join
+        aws_efs_file_system f on f.file_system_id = m.file_system_id
+      where
+        f.arn = $1
+        and f.account_id = split_part($1, ':', 5)
+        and f.region = split_part($1, ':', 4)
+    )
     select
       v.vpc_id as vpc_id
     from
-      aws_efs_mount_target as m
-      left join aws_efs_file_system as f on f.file_system_id = m.file_system_id
-      left join aws_vpc as v on m.vpc_id= v.vpc_id
-    where
-      f.arn = $1;
+      aws_vpc v
+    join
+      efs_mount_details emd on emd.vpc_id = v.vpc_id;
   EOQ
-}
+} 
 
 # table queries
 
@@ -410,7 +464,9 @@ query "efs_file_system_overview" {
     from
       aws_efs_file_system
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 
 }
@@ -425,6 +481,8 @@ query "efs_file_system_tags" {
       jsonb_array_elements(tags_src) as tag
     where
       arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
     order by
       tag ->> 'Key';
   EOQ
@@ -440,7 +498,9 @@ query "efs_file_system_size_in_bytes" {
     from
       aws_efs_file_system
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 
 }

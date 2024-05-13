@@ -6,11 +6,11 @@ edge "eventbridge_rule_to_cloudwatch_log_group" {
       r.arn as from_id,
       (t ->> 'Arn')::text || ':*' as to_id
     from
-      aws_eventbridge_rule r,
+      aws_eventbridge_rule r
+      join unnest($1::text[]) as a on r.arn = a and r.account_id = split_part(a, ':', 5) and r.region = split_part(a, ':', 4),
       jsonb_array_elements(targets) t
     where
-      r.arn = any($1)
-      and t ->> 'Arn' like '%logs%';
+      t ->> 'Arn' like '%logs%';
   EOQ
 
   param "eventbridge_rule_arns" {}
@@ -43,11 +43,11 @@ edge "eventbridge_rule_to_lambda_function" {
       r.arn as from_id,
       (t ->> 'Arn')::text as to_id
     from
-      aws_eventbridge_rule r,
+      aws_eventbridge_rule r
+      join unnest($1::text[]) as a on r.arn = a and r.account_id = split_part(a, ':', 5) and r.region = split_part(a, ':', 4),
       jsonb_array_elements(targets) t
     where
-      r.arn = any($1)
-      and t ->> 'Arn' like '%lambda%';
+      t ->> 'Arn' like '%lambda%';
   EOQ
 
   param "eventbridge_rule_arns" {}
@@ -61,11 +61,11 @@ edge "eventbridge_rule_to_sns_topic" {
       r.arn as from_id,
       (t ->> 'Arn')::text as to_id
     from
-      aws_eventbridge_rule r,
+      aws_eventbridge_rule r
+      join unnest($1::text[]) as a on r.arn = a and r.account_id = split_part(a, ':', 5) and r.region = split_part(a, ':', 4),
       jsonb_array_elements(targets) t
     where
-      r.arn = any($1)
-      and t ->> 'Arn' like '%sns%';
+      t ->> 'Arn' like '%sns%';
   EOQ
 
   param "eventbridge_rule_arns" {}
@@ -79,11 +79,11 @@ edge "eventbridge_rule_to_sqs_queue" {
       arn as from_id,
       t ->> 'Arn' as to_id
     from
-      aws_eventbridge_rule as r,
+      aws_eventbridge_rule as r
+      join unnest($1::text[]) as a on r.arn = a and r.account_id = split_part(a, ':', 5) and r.region = split_part(a, ':', 4),
       jsonb_array_elements(targets) as t
     where
-      t ->> 'Arn' like '%sqs%'
-      and arn = any($1);
+      t ->> 'Arn' like '%sqs%';
   EOQ
 
   param "eventbridge_rule_arns" {}

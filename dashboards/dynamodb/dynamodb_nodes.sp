@@ -14,8 +14,7 @@ node "dynamodb_backup" {
     ) as properties
   from
     aws_dynamodb_backup as b
-  where
-    b.table_arn = any($1);
+    join unnest($1::text[]) as a on b.arn = a and b.account_id = split_part(a, ':', 5) and b.region = split_part(a, ':', 4);
   EOQ
 
   param "dbynamodb_backup_arns" {}
@@ -37,8 +36,7 @@ node "dynamodb_table" {
       ) as properties
     from
       aws_dynamodb_table
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "dynamodb_table_arns" {}

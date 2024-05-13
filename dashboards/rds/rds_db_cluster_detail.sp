@@ -296,7 +296,9 @@ query "iam_roles_for_rds_db_cluster" {
       aws_rds_db_cluster
       cross join jsonb_array_elements(associated_roles) as roles
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -307,39 +309,131 @@ query "kms_keys_for_rds_db_cluster" {
     from
       aws_rds_db_cluster
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
 query "rds_db_cluster_snapshots_for_rds_db_cluster" {
   sql = <<-EOQ
+    with rds_db_cluster as (
+      select
+        arn,
+        db_cluster_identifier,
+        region,
+        account_id
+      from
+        aws_rds_db_cluster
+      where
+        account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+        and arn = $1
+      order by
+        arn,
+        db_cluster_identifier,
+        region,
+        account_id
+    ), rds_db_cluster_snapshot as (
+      select
+        arn,
+        db_cluster_identifier,
+        region,
+        account_id
+      from
+        aws_rds_db_cluster_snapshot
+      order by
+        arn,
+        db_cluster_identifier,
+        region,
+        account_id
+    )
     select
       s.arn as snapshot_arn
     from
-      aws_rds_db_cluster as c
-      join aws_rds_db_cluster_snapshot as s
-      on s.db_cluster_identifier = c.db_cluster_identifier
-    where
-      c.arn = $1;
+      rds_db_cluster as c
+      join rds_db_cluster_snapshot as s
+      on s.db_cluster_identifier = c.db_cluster_identifier;
   EOQ
 }
 
 query "rds_db_instances_for_rds_db_cluster" {
   sql = <<-EOQ
+    with rds_db_cluster as (
+      select
+        arn,
+        db_cluster_identifier,
+        region,
+        account_id
+      from
+        aws_rds_db_cluster
+      where
+        account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+        and arn = $1
+      order by
+        arn,
+        db_cluster_identifier,
+        region,
+        account_id
+    ), rds_db_instance as (
+      select
+        arn,
+        db_cluster_identifier,
+        region,
+        account_id
+      from
+        aws_rds_db_instance
+      order by
+        arn,
+        db_cluster_identifier,
+        region,
+        account_id
+    )
     select
       i.arn as instance_arn
     from
-      aws_rds_db_instance as i
-      join
-        aws_rds_db_cluster as c
-        on i.db_cluster_identifier = c.db_cluster_identifier
-    where
-      c.arn = $1;
+      rds_db_instance as i
+      join rds_db_cluster as c on i.db_cluster_identifier = c.db_cluster_identifier
   EOQ
 }
 
 query "rds_db_subnet_groups_for_rds_db_cluster" {
   sql = <<-EOQ
+    with rds_db_instance as (
+      select
+        arn,
+        db_subnet_group,
+        region,
+        account_id
+      from
+        aws_rds_db_cluster
+      where
+        account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+        and arn = $1
+      order by
+        arn,
+        db_subnet_group,
+        region,
+        account_id
+    ), rds_db_subnet_group as (
+      select
+        arn,
+        name,
+        region,
+        account_id
+      from
+        aws_rds_db_subnet_group
+      where
+        account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+      order by
+        arn,
+        name,
+        region,
+        account_id
+    )
     select
       g.arn as db_subnet_group_arn
     from
@@ -347,9 +441,6 @@ query "rds_db_subnet_groups_for_rds_db_cluster" {
       aws_rds_db_subnet_group g
     where
       c.db_subnet_group = g.name
-      and c.region = g.region
-      and c.account_id = g.account_id
-      and c.arn = $1;
   EOQ
 }
 
@@ -363,7 +454,9 @@ query "sns_topics_for_rds_db_cluster" {
       join aws_rds_db_cluster as c
       on ids = c.db_cluster_identifier
     where
-      c.arn = $1;
+      c.arn = $1
+      and c.account_id = split_part($1, ':', 5)
+      and c.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -375,7 +468,9 @@ query "vpc_security_groups_for_rds_db_cluster" {
       aws_rds_db_cluster as c,
       jsonb_array_elements(c.vpc_security_groups) as csg
     where
-      c.arn = $1;
+      c.arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 

@@ -289,7 +289,9 @@ query "source_ebs_snapshots_for_ebs_volume" {
     from
       aws_ebs_volume as v
     where
-      v.arn = $1;
+      v.arn = $1
+      and v.account_id = split_part($1, ':', 5)
+      and v.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -302,7 +304,9 @@ query "target_ebs_snapshots_for_ebs_volume" {
       aws_ebs_snapshot as s
     where
       s.volume_id = v.volume_id
-      and v.arn = $1;
+      and v.arn = $1
+      and v.account_id = split_part($1, ':', 5)
+      and v.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -319,6 +323,8 @@ query "ec2_amis_for_ebs_volume" {
       v.snapshot_id = s.snapshot_id
       and s_id -> 'Ebs'->> 'SnapshotId' = s.snapshot_id
       and v.arn = $1
+      and v.account_id = split_part($1, ':', 5)
+      and v.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -332,7 +338,9 @@ query "ec2_instances_for_ebs_volume" {
       aws_ec2_instance as e
     where
       a ->> 'InstanceId' = e.instance_id
-      and v.arn = $1;
+      and v.arn = $1
+      and v.account_id = split_part($1, ':', 5)
+      and v.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -344,7 +352,9 @@ query "kms_keys_for_ebs_volume" {
       aws_ebs_volume
     where
       kms_key_id is not null
-      and arn = $1;
+      and arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -358,7 +368,9 @@ query "ebs_volume_storage" {
     from
       aws_ebs_volume
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -370,7 +382,9 @@ query "ebs_volume_iops" {
     from
       aws_ebs_volume
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -382,7 +396,9 @@ query "ebs_volume_type" {
     from
       aws_ebs_volume
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -394,7 +410,9 @@ query "ebs_volume_state" {
     from
       aws_ebs_volume
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -413,7 +431,9 @@ query "ebs_volume_attached_instances_count" {
     from
       aws_ebs_volume
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -426,7 +446,9 @@ query "ebs_volume_encryption" {
     from
       aws_ebs_volume
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -446,6 +468,8 @@ query "ebs_volume_attached_instances" {
     where
       i.instance_id = attachment ->> 'InstanceId'
       and v.arn = $1
+      and v.account_id = split_part($1, ':', 5)
+      and v.region = split_part($1, ':', 4)
     order by
       i.instance_id;
   EOQ
@@ -459,7 +483,9 @@ query "ebs_volume_encryption_status" {
     from
       aws_ebs_volume
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -480,6 +506,8 @@ query "ebs_volume_overview" {
       aws_ebs_volume
     where
       arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -493,6 +521,8 @@ query "ebs_volume_tags" {
       jsonb_array_elements(tags_src) as tag
     where
       arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
     order by
       tag ->> 'Key';
   EOQ

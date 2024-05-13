@@ -820,8 +820,7 @@ edge "vpc_vpc_to_vpc_route_table" {
         aws_vpc_route_table as rt,
         jsonb_array_elements(associations) as a
       where
-        a ->> 'SubnetId' is null
-        and rt.vpc_id = any($1);
+        rt.vpc_id = any($1);
   EOQ
 
   param "vpc_vpc_ids" {}

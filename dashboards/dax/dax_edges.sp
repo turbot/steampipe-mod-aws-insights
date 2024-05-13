@@ -5,10 +5,9 @@ edge "dax_cluster_to_dax_cluster_node" {
       arn as from_id,
       n ->> 'NodeId' as to_id
     from
-      aws_dax_cluster,
-      jsonb_array_elements(nodes) as n
-    where
-      arn = any($1);
+      aws_dax_cluster
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
+      jsonb_array_elements(nodes) as n;
   EOQ
 
   param "dax_cluster_arns" {}
@@ -22,8 +21,7 @@ edge "dax_cluster_to_dax_parameter_group" {
       parameter_group ->> 'ParameterGroupName' as to_id
     from
       aws_dax_cluster
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "dax_cluster_arns" {}
@@ -37,8 +35,7 @@ edge "dax_cluster_to_iam_role" {
       iam_role_arn as to_id
     from
       aws_dax_cluster
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "dax_cluster_arns" {}
@@ -52,8 +49,7 @@ edge "dax_cluster_to_sns_topic" {
       notification_configuration ->> 'TopicArn' as to_id
     from
       aws_dax_cluster
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "dax_cluster_arns" {}
@@ -66,10 +62,9 @@ edge "dax_cluster_to_vpc_security_group" {
       c.arn as from_id,
       sg ->> 'SecurityGroupIdentifier' as to_id
     from
-      aws_dax_cluster as c,
-      jsonb_array_elements(security_groups) as sg
-    where
-      c.arn = any($1);
+      aws_dax_cluster as c
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
+      jsonb_array_elements(security_groups) as sg;
   EOQ
 
   param "dax_cluster_arns" {}
@@ -82,7 +77,8 @@ edge "dax_subnet_group_to_vpc_subnet" {
       g.subnet_group_name as from_id,
       s ->> 'SubnetIdentifier' as to_id
     from
-      aws_dax_cluster as c,
+      aws_dax_cluster as c
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
       aws_dax_subnet_group as g,
       jsonb_array_elements(subnets) as s
     where
