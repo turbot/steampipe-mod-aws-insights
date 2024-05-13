@@ -157,7 +157,9 @@ query "elasticache_cluster_status" {
     from
       aws_elasticache_replication_group
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -169,7 +171,9 @@ query "elasticache_cluster_cache_node_count" {
     from
       aws_elasticache_replication_group
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -182,7 +186,9 @@ query "elasticache_cluster_automatic_backup" {
     from
       aws_elasticache_replication_group
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -195,7 +201,9 @@ query "elasticache_cluster_encryption_transit" {
     from
       aws_elasticache_replication_group
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -208,7 +216,9 @@ query "elasticache_cluster_encryption_rest" {
     from
       aws_elasticache_replication_group
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -221,7 +231,9 @@ query "elasticache_cluster_auth_token" {
     from
       aws_elasticache_replication_group
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -236,7 +248,9 @@ query "elasticache_cluster_nodes_for_elasticache_cluster" {
       aws_elasticache_replication_group as g
     where
       c.replication_group_id = g.replication_group_id
-      and g.arn = $1;
+      and g.arn = $1
+      and g.account_id = split_part($1, ':', 5)
+      and g.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -248,7 +262,9 @@ query "elasticache_node_groups_for_elasticache_cluster" {
       aws_elasticache_replication_group rg,
       jsonb_array_elements(node_groups) ng
     where
-      rg.arn = $1;
+      rg.arn = $1
+      and rg.account_id = split_part($1, ':', 5)
+      and rg.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -267,7 +283,9 @@ query "elasticache_cluster_overview" {
     from
       aws_elasticache_replication_group
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -284,6 +302,8 @@ query "elasticache_shard_details" {
       aws_elasticache_replication_group rg,
       jsonb_array_elements(node_groups) ng
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }

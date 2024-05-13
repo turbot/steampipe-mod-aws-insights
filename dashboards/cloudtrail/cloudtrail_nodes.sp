@@ -14,8 +14,7 @@ node "cloudtrail_trail" {
       ) as properties
     from
       aws_cloudtrail_trail
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "cloudtrail_trail_arns" {}

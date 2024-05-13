@@ -360,7 +360,9 @@ query "api_gateway_apis_for_lambda_function" {
     from
       aws_api_gatewayv2_integration
     where
-      integration_uri = $1;
+      integration_uri = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -371,7 +373,9 @@ query "iam_roles_for_lambda_function" {
     from
       aws_lambda_function
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -383,7 +387,9 @@ query "kms_keys_for_lambda_function" {
       aws_lambda_function
     where
       kms_key_arn is not null
-      and arn = $1;
+      and arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -394,7 +400,9 @@ query "policy_std_for_lambda_function" {
     from
       aws_lambda_function
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -407,7 +415,9 @@ query "s3_buckets_for_lambda_function" {
       jsonb_array_elements(event_notification_configuration -> 'LambdaFunctionConfigurations') as t
     where
       event_notification_configuration -> 'LambdaFunctionConfigurations' <> 'null'
-      and t ->> 'LambdaFunctionArn' = $1;
+      and t ->> 'LambdaFunctionArn' = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -419,7 +429,9 @@ query "sns_topic_subscriptions_for_lambda_function" {
       aws_sns_topic_subscription
     where
       protocol = 'lambda'
-      and endpoint = $1;
+      and endpoint = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -431,7 +443,9 @@ query "sns_topics_for_lambda_function" {
       aws_sns_topic_subscription
     where
       protocol = 'lambda'
-      and endpoint = $1;
+      and endpoint = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -443,7 +457,9 @@ query "vpc_security_groups_for_lambda_function" {
       aws_lambda_function,
       jsonb_array_elements_text(vpc_security_group_ids) as s
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -455,7 +471,9 @@ query "vpc_subnets_for_lambda_function" {
       aws_lambda_function,
       jsonb_array_elements_text(vpc_subnet_ids) as s
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -467,7 +485,9 @@ query "vpc_vpcs_for_lambda_function" {
       aws_lambda_function
     where
       vpc_id is not null
-      and arn = $1;
+      and arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -481,7 +501,9 @@ query "lambda_function_memory" {
     from
       aws_lambda_function
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -493,7 +515,9 @@ query "lambda_function_runtime" {
     from
       aws_lambda_function
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -515,7 +539,9 @@ query "lambda_function_public" {
     from
       aws_lambda_function
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -528,7 +554,9 @@ query "lambda_function_encryption" {
     from
       aws_lambda_function
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -544,7 +572,9 @@ query "lambda_function_last_update_status" {
     from
       aws_lambda_function
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -560,7 +590,9 @@ query "lambda_function_policy" {
       aws_lambda_function,
       jsonb_array_elements(policy_std -> 'Statement') as p
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -572,7 +604,9 @@ query "lambda_function_security_groups" {
       aws_lambda_function,
       jsonb_array_elements(vpc_security_group_ids) as p
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -584,7 +618,9 @@ query "lambda_function_subnet_ids" {
       aws_lambda_function,
       jsonb_array_elements(vpc_subnet_ids) as p
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -603,7 +639,9 @@ query "lambda_function_overview" {
     from
       aws_lambda_function
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
     EOQ
 }
 
@@ -616,6 +654,8 @@ query "lambda_function_tags" {
         aws_lambda_function
       where
         arn = $1
+        and account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
     )
     select
       key as "Key",

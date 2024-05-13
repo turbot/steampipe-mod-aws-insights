@@ -14,8 +14,7 @@ node "appconfig_application" {
       ) as properties
     from
       aws_appconfig_application
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "appconfig_application_arns" {}

@@ -180,20 +180,50 @@ query "kms_keys_for_rds_db_instance_snapshot" {
       aws_rds_db_snapshot
     where
       kms_key_id is not null
-      and arn = $1;
+      and arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
 query "rds_instances_for_rds_db_instance_snapshot" {
   sql = <<-EOQ
+     with rds_db_instance as (
+      select
+        arn,
+        resource_id,
+        region,
+        account_id
+      from
+        aws_rds_db_instance
+      order by
+        arn,
+        resource_id,
+        region,
+        account_id
+    ), rds_db_snapshot as (
+      select
+        arn,
+        dbi_resource_id,
+        region,
+        account_id
+      from
+        aws_rds_db_snapshot
+      where
+        arn = $1
+        and account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+      order by
+        arn,
+        dbi_resource_id,
+        region,
+        account_id
+    )
     select
       i.arn as rds_instance_arn
     from
-      aws_rds_db_instance as i
-      join aws_rds_db_snapshot as s
-        on s.dbi_resource_id = i.resource_id
-    where
-      s.arn = $1;
+      rds_db_instance as i
+      join rds_db_snapshot as s on s.dbi_resource_id = i.resource_id;
   EOQ
 }
 

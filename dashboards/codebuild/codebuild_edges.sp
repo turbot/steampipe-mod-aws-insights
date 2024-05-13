@@ -107,8 +107,7 @@ edge "codebuild_project_to_iam_role" {
       service_role as to_id
     from
       aws_codebuild_project
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "codebuild_project_arns" {}
@@ -123,8 +122,7 @@ edge "codebuild_project_to_kms_key" {
       encryption_key as to_id
     from
       aws_codebuild_project
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "codebuild_project_arns" {}
@@ -181,11 +179,10 @@ edge "codebuild_project_to_vpc_subnet" {
       trim((sg::text), '""') as from_id,
       s as to_id
     from
-      aws_codebuild_project,
+      aws_codebuild_project
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4),
       jsonb_array_elements(vpc_config -> 'SecurityGroupIds') as sg,
-      jsonb_array_elements(vpc_config -> 'Subnets') as s
-    where
-      arn = any($1);
+      jsonb_array_elements(vpc_config -> 'Subnets') as s;
   EOQ
 
   param "codebuild_project_arns" {}

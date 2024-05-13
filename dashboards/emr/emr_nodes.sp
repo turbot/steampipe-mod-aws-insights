@@ -14,8 +14,7 @@ node "emr_cluster" {
         'Region', region ) as properties
     from
       aws_emr_cluster
-    where
-      cluster_arn = any($1);
+      join unnest($1::text[]) as a on cluster_arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
   EOQ
 
   param "emr_cluster_arns" {}
@@ -46,7 +45,7 @@ node "emr_instance" {
   EOQ
 
   param "emr_cluster_arns" {}
-}      
+}
 
 node "emr_instance_fleet" {
   category = category.emr_instance_fleet
@@ -62,9 +61,8 @@ node "emr_instance_fleet" {
         'Region', f.region ) as properties
     from
       aws_emr_cluster as c
-      left join
-        aws_emr_instance_fleet as f
-        on f.cluster_id = c.id
+      join unnest($1::text[]) as a on c.cluster_arn = a and c.account_id = split_part(a, ':', 5) and c.region = split_part(a, ':', 4)
+      join aws_emr_instance_fleet as f on f.cluster_id = c.id
     where
       cluster_arn = any($1);
   EOQ
@@ -86,11 +84,8 @@ node "emr_instance_group" {
         'Region', g.region ) as properties
     from
       aws_emr_cluster as c
-      left join
-        aws_emr_instance_group as g
-        on g.cluster_id = c.id
-    where
-      cluster_arn = any($1);
+      join unnest($1::text[]) as a on c.cluster_arn = a and c.account_id = split_part(a, ':', 5) and c.region = split_part(a, ':', 4)
+      join aws_emr_instance_group as g on g.cluster_id = c.id;
   EOQ
 
   param "emr_cluster_arns" {}

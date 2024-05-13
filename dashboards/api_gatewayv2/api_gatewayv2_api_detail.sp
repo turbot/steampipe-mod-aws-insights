@@ -235,67 +235,233 @@ query "api_gatewayv2_api_input" {
 
 query "ec2_load_balancer_listeners_for_api_gatewayv2_api" {
   sql = <<-EOQ
+  with filtered_api as (
     select
-      lb.arn as listener_arn
+      api_id,
+      account_id,
+      region
+    from
+      aws_api_gatewayv2_api
+    where
+      api_id = $1
+    order by
+      api_id
+  ),
+  filtered_integration as (
+    select
+      integration_uri,
+      account_id,
+      region,
+      api_id
     from
       aws_api_gatewayv2_integration as i
-      join aws_ec2_load_balancer_listener as lb on i.integration_uri = lb.arn
-      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
     where
-      a.api_id = $1;
+      api_id = $1
+      and account_id = (select account_id from filtered_api)
+      and region = (select region from filtered_api)
+    order by
+      integration_uri
+  ),
+  filtered_load_balancer_listener as (
+    select
+      arn,
+      account_id,
+      region
+    from
+      aws_ec2_load_balancer_listener
+    where
+    arn = (select integration_uri from filtered_integration)
+    and account_id = (select account_id from filtered_integration)
+    and region = (select region from filtered_integration)
+    order by
+      arn
+  )
+  select
+    lb.arn as listener_arn
+  from
+    filtered_integration i
+    join filtered_load_balancer_listener lb on i.integration_uri = lb.arn
+    join filtered_api a on a.api_id = i.api_id;
   EOQ
 }
 
 query "kinesis_streams_for_api_gatewayv2_api" {
   sql = <<-EOQ
+    with filtered_api as (
+      select
+          api_id,
+          account_id,
+          region
+      from
+          aws_api_gatewayv2_api
+      where
+          api_id = $1
+    ),
+    filtered_integration as (
+      select
+        request_parameters,
+        account_id,
+        region,
+        api_id
+      from
+        aws_api_gatewayv2_integration
+      where
+        integration_subtype like '%Kinesis-%'
+        and api_id = $1
+        and account_id = (select account_id from filtered_api)
+        and region = (select region from filtered_api)
+    ),
+    filtered_kinesis_stream as (
+      select
+        stream_arn,
+        stream_name
+      from
+        aws_kinesis_stream
+      where
+        stream_name = (select request_parameters ->> 'StreamName' from filtered_integration)
+        and account_id = (select account_id from filtered_integration)
+        and region = (select region from filtered_integration)
+    )
     select
       s.stream_arn as kinesis_stream_arn
     from
-      aws_api_gatewayv2_integration as i
-      join aws_kinesis_stream as s on i.request_parameters ->> 'StreamName' = s.stream_name
-      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
-    where
-      integration_subtype like '%Kinesis-%'
-      and a.api_id = $1;
+      filtered_integration i
+      join filtered_kinesis_stream s on i.request_parameters ->> 'StreamName' = s.stream_name
+      join filtered_api a on a.api_id = i.api_id;
   EOQ
 }
 
 query "lambda_functions_for_api_gatewayv2_api" {
   sql = <<-EOQ
+    with filtered_api as (
+      select
+        api_id,
+        account_id,
+        region
+      from
+        aws_api_gatewayv2_api
+      where
+        api_id = $1
+    ),
+    filtered_integration as (
+      select
+        integration_uri,
+        api_id,
+        account_id,
+        region
+      from
+        aws_api_gatewayv2_integration
+      where
+        api_id = $1
+        and account_id = (select account_id from filtered_api)
+        and region = (select region from filtered_api)
+    ),
+    filtered_lambda_function as (
+      select
+        arn
+      from
+        aws_lambda_function
+      where
+        arn in (select integration_uri from filtered_integration)
+        and account_id = (select account_id from filtered_integration)
+        and region = (select region from filtered_integration)
+    )
     select
       f.arn as function_arn
     from
-      aws_api_gatewayv2_integration as i
-      join aws_lambda_function as f on i.integration_uri = f.arn
-      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
-    where
-      a.api_id = $1;
+      filtered_integration i
+      join filtered_lambda_function f on i.integration_uri = f.arn
+      join filtered_api a on a.api_id = i.api_id;
   EOQ
 }
 
 query "source_sqs_queues_for_api_gatewayv2_api" {
   sql = <<-EOQ
+    with filtered_api as (
+      select
+        api_id,
+        account_id,
+        region
+      from
+        aws_api_gatewayv2_api
+      where
+        api_id = $1
+    ),
+    filtered_integration as (
+      select
+        request_parameters,
+        account_id,
+        region,
+        api_id
+      from
+        aws_api_gatewayv2_integration
+      where
+        integration_subtype like '%SQS-ReceiveMessage%'
+        and account_id = (select account_id from filtered_api)
+        and region = (select region from filtered_api)
+        and api_id = $1
+    ),
+    filtered_sqs_queue as (
+      select
+        queue_arn,
+        queue_url
+      from
+        aws_sqs_queue
+      where
+        queue_url in (select request_parameters ->> 'QueueUrl' from filtered_integration)
+        and account_id = (select account_id from filtered_integration)
+        and region = (select region from filtered_integration)
+    )
     select
       q.queue_arn as queue_arn
     from
-      aws_api_gatewayv2_integration as i
-      join aws_sqs_queue as q on i.request_parameters ->> 'QueueUrl' = q.queue_url
-      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
-    where
-      integration_subtype like '%SQS-ReceiveMessage%' and a.api_id = $1;
+      filtered_integration i
+      join filtered_sqs_queue q on i.request_parameters ->> 'QueueUrl' = q.queue_url
+      join filtered_api a on a.api_id = i.api_id;
   EOQ
 }
 
 query "target_sqs_queues_for_api_gatewayv2_api" {
   sql = <<-EOQ
+    with filtered_api as (
+      select
+        api_id,
+        account_id,
+        region
+      from
+        aws_api_gatewayv2_api
+      where
+        api_id = $1
+    ),
+    filtered_integration as (
+      select
+        request_parameters,
+        api_id
+      from
+        aws_api_gatewayv2_integration
+      where
+        api_id = $1
+        and integration_subtype like '%SQS-SendMessage%'
+        and account_id = (select account_id from filtered_api)
+        and region = (select region from filtered_api)
+    ),
+    filtered_sqs_queue as (
+      select
+        queue_arn,
+        queue_url
+      from
+        aws_sqs_queue
+      where
+        queue_url in (select request_parameters ->> 'QueueUrl' from filtered_integration)
+        and account_id = (select account_id from filtered_integration)
+        and region = (select region from filtered_integration)
+    )
     select
       q.queue_arn as queue_arn
     from
-      aws_api_gatewayv2_integration as i
-      join aws_sqs_queue as q on i.request_parameters ->> 'QueueUrl' = q.queue_url
-      join aws_api_gatewayv2_api as a on a.api_id = i.api_id
-    where
-      integration_subtype like '%SQS-SendMessage%' and a.api_id = $1;
+      filtered_integration i
+      join filtered_sqs_queue q on i.request_parameters ->> 'QueueUrl' = q.queue_url
+      join filtered_api a on a.api_id = i.api_id;
   EOQ
 }
 

@@ -87,14 +87,14 @@ dashboard "opensearch_domain_detail" {
       edge {
         base = edge.opensearch_domain_to_vpc_security_group
         args = {
-          opensearch_arn = self.input.opensearch_arn.value
+          opensearch_arn = [self.input.opensearch_arn.value]
         }
       }
 
       edge {
         base = edge.opensearch_domain_to_vpc_subnet
         args = {
-          opensearch_arn = self.input.opensearch_arn.value
+          opensearch_arn = [self.input.opensearch_arn.value]
         }
       }
 
@@ -178,9 +178,14 @@ query "opensearch_domain_tags" {
       tags->>'Key' AS "Key",
       tags->>'Value' AS "Value"
     from (
-      select jsonb_array_elements(tags_src) AS tags
-      from aws_opensearch_domain
-      where arn = $1
+      select
+        jsonb_array_elements(tags_src) AS tags
+      from
+        aws_opensearch_domain
+      where
+        arn = $1
+        and account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
     ) AS subquery;
   EOQ
 }
@@ -192,7 +197,9 @@ query "opensearch_domain_version" {
     from
       aws_opensearch_domain
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -203,7 +210,9 @@ query "opensearch_domain_instance_type" {
     from
       aws_opensearch_domain
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -219,7 +228,9 @@ query "opensearch_domain_overview" {
     from
       aws_opensearch_domain
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -230,7 +241,9 @@ query "opensearch_domain_endpoint" {
     from
       aws_opensearch_domain
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -241,7 +254,9 @@ query "vpc_security_groups_for_opensearch" {
     from
       aws_opensearch_domain
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -252,7 +267,9 @@ query "vpc_subnet_ids_for_opensearch" {
     from
       aws_opensearch_domain
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -263,7 +280,9 @@ query "vpc_vpcs_for_opensearch" {
     from
       aws_opensearch_domain
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -275,6 +294,8 @@ query "opensearch_domain_security_groups" {
       select jsonb_array_elements_text(vpc_options -> 'SecurityGroupIds') AS GroupID
       from aws_opensearch_domain
       where arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
     ) AS subquery;
   EOQ
 }
@@ -287,6 +308,8 @@ query "opensearch_domain_subnet" {
       select jsonb_array_elements_text(vpc_options -> 'SubnetIds') AS SubnetID
       from aws_opensearch_domain
       where arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
     ) AS subquery;
   EOQ
 }

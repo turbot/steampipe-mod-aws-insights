@@ -348,14 +348,39 @@ query "redshift_cluster_input" {
 
 query "cloudwatch_log_groups_for_redshift_cluster" {
   sql = <<-EOQ
+    with redshift_clusters as (
+      select
+        arn,
+        title,
+        region,
+        account_id
+      from
+        aws_redshift_cluster
+      where
+        account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+        and arn = $1
+      order by
+        arn,
+        title,
+        region,
+        account_id
+    ), cloudwatch_log_groups as (
+      select
+        title,
+        arn,
+        region,
+        account_id
+      from
+        aws_cloudwatch_log_group
+    )
     select
       g.arn as log_group_arn
     from
-      aws_redshift_cluster as c,
-      aws_cloudwatch_log_group as g
+      redshift_clusters as c,
+      cloudwatch_log_groups as g
     where
-      g.title like '%' || c.title || '%'
-      and c.arn = $1;
+      g.title like '%' || c.title || '%';
   EOQ
 }
 
@@ -367,7 +392,9 @@ query "iam_roles_for_redshift_cluster" {
       aws_redshift_cluster,
       jsonb_array_elements(iam_roles) as r
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -379,7 +406,9 @@ query "kms_keys_for_redshift_cluster" {
       aws_redshift_cluster
     where
       kms_key_id is not null
-      and arn = $1;
+      and arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -400,28 +429,81 @@ query "redshift_snapshots_for_redshift_cluster" {
 
 query "s3_buckets_for_redshift_cluster" {
   sql = <<-EOQ
+    with redshift_clusters as (
+      select
+        arn,
+        logging_status,
+        region,
+        account_id
+      from
+        aws_redshift_cluster
+      where
+        account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+        and arn = $1
+      order by
+        arn,
+        title,
+        region,
+        account_id
+    ), s3_buckets as (
+      select
+        name,
+        arn,
+        region,
+        account_id
+      from
+        aws_s3_bucket
+    )
     select
       b.arn as bucket_arn
     from
-      aws_redshift_cluster as c,
-      aws_s3_bucket as b
+      redshift_clusters as c,
+      s3_buckets as b
     where
-      b.name = c.logging_status ->> 'BucketName'
-      and c.arn = $1;
+      b.name = c.logging_status ->> 'BucketName';
   EOQ
 }
 
 query "vpc_eips_for_redshift_cluster" {
   sql = <<-EOQ
+    with redshift_clusters as (
+      select
+        arn,
+        elastic_ip_status,
+        region,
+        account_id
+      from
+        aws_redshift_cluster
+      where
+        account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+        and arn = $1
+      order by
+        arn,
+        title,
+        region,
+        account_id
+    ), vpc_eip as (
+      select
+        arn,
+        public_ip,
+        region,
+        account_id
+      from
+        aws_vpc_eip
+      where
+        account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+    )
     select
       e.arn as eip_arn
     from
-      aws_redshift_cluster as c,
-      aws_vpc_eip as e
+      redshift_clusters as c,
+      vpc_eip as e
     where
       c.elastic_ip_status is not null
-      and e.public_ip = (c.elastic_ip_status ->> 'ElasticIp')::inet
-      and c.arn = $1;
+      and e.public_ip = (c.elastic_ip_status ->> 'ElasticIp')::inet;
   EOQ
 }
 
@@ -433,24 +515,49 @@ query "vpc_security_groups_for_redshift_cluster" {
       aws_redshift_cluster,
       jsonb_array_elements(vpc_security_groups) as s
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
 query "vpc_subnets_for_redshift_cluster" {
   sql = <<-EOQ
+    with redshift_clusters as (
+      select
+        arn,
+        cluster_subnet_group_name,
+        region,
+        account_id
+      from
+        aws_redshift_cluster
+      where
+        account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+        and arn = $1
+      order by
+        arn,
+        title,
+        region,
+        account_id
+    ), redshift_subnet_group as (
+      select
+        cluster_subnet_group_name,
+        subnets,
+        region,
+        account_id
+      from
+        aws_redshift_subnet_group
+      where
+        account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+    )
     select
       subnet ->> 'SubnetIdentifier' as subnet_id
     from
-      aws_redshift_subnet_group s
-    join
-      aws_redshift_cluster as c
-      on c.cluster_subnet_group_name = s.cluster_subnet_group_name
-      and c.region = s.region
-      and c.account_id = s.account_id,
+      redshift_subnet_group s
+      join redshift_clusters as c on c.cluster_subnet_group_name = s.cluster_subnet_group_name,
       jsonb_array_elements(s.subnets) subnet
-    where
-      c.arn = $1;
   EOQ
 }
 
@@ -461,7 +568,9 @@ query "vpc_vpcs_for_redshift_cluster" {
     from
       aws_redshift_cluster
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 

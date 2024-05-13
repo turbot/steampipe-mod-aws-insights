@@ -14,8 +14,7 @@ node "codecommit_repository" {
       ) as properties
     from
       aws_codecommit_repository
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "codecommit_repository_arns" {}

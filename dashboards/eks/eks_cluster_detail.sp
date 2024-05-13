@@ -317,6 +317,8 @@ query "eks_addons_for_eks_cluster" {
           aws_eks_cluster
         where
           arn = $1
+          and account_id = split_part($1, ':', 5)
+          and region = split_part($1, ':', 4)
       )
   EOQ
 }
@@ -330,7 +332,9 @@ query "eks_fargate_profiles_for_eks_cluster" {
     left join aws_eks_fargate_profile as p on p.cluster_name = c.name
     where
       p.region = c.region
-      and c.arn = $1;
+      and c.arn = $1
+      and c.account_id = split_part($1, ':', 5)
+      and c.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -349,6 +353,8 @@ query "eks_identity_providers_for_eks_cluster" {
           aws_eks_cluster
         where
           arn = $1
+          and account_id = split_part($1, ':', 5)
+          and region = split_part($1, ':', 4)
       )
   EOQ
 }
@@ -368,6 +374,8 @@ query "eks_node_groups_for_eks_cluster" {
           aws_eks_cluster
         where
           arn = $1
+          and account_id = split_part($1, ':', 5)
+          and region = split_part($1, ':', 4)
       )
   EOQ
 }
@@ -380,6 +388,8 @@ query "iam_roles_for_eks_cluster" {
       aws_eks_cluster as c
     where
       arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -392,6 +402,8 @@ query "kms_keys_for_eks_cluster" {
       jsonb_array_elements(encryption_config) as e
     where
       arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -411,6 +423,8 @@ query "vpc_security_groups_for_eks_cluster" {
           jsonb_array_elements_text(resources_vpc_config -> 'SecurityGroupIds') as s
         where
           arn = $1
+          and account_id = split_part($1, ':', 5)
+          and region = split_part($1, ':', 4)
       )
   EOQ
 }
@@ -431,6 +445,8 @@ query "vpc_subnets_for_eks_cluster" {
           jsonb_array_elements_text(resources_vpc_config -> 'SubnetIds') as s
         where
           arn = $1
+          and account_id = split_part($1, ':', 5)
+          and region = split_part($1, ':', 4)
       )
   EOQ
 }
@@ -444,6 +460,8 @@ query "vpc_vpcs_for_eks_cluster" {
     where
       resources_vpc_config ->> 'VpcId' is not null
       and arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -457,7 +475,9 @@ query "eks_cluster_status" {
     from
       aws_eks_cluster
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -469,7 +489,9 @@ query "eks_cluster_kubernetes_version" {
     from
       aws_eks_cluster
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -482,7 +504,9 @@ query "eks_cluster_secrets_encryption" {
     from
       aws_eks_cluster
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -495,7 +519,9 @@ query "eks_cluster_endpoint_restrict_public_access" {
     from
       aws_eks_cluster
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -511,7 +537,9 @@ query "eks_cluster_control_plane_audit_logging" {
       jsonb_array_elements_text(l -> 'Types') as t
     where
       t = 'audit'
-      and arn = $1;
+      and arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -529,7 +557,9 @@ query "eks_cluster_overview" {
     from
       aws_eks_cluster
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -542,6 +572,8 @@ query "eks_cluster_tags" {
       aws_eks_cluster
     where
       arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
     )
     select
       key as "Key",
@@ -562,7 +594,9 @@ query "eks_cluster_logging" {
       jsonb_array_elements(logging -> 'ClusterLogging') as l,
       jsonb_array_elements_text(l -> 'Types') as t
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -578,7 +612,9 @@ query "eks_cluster_resources_vpc_config" {
     from
       aws_eks_cluster
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -599,6 +635,8 @@ query "eks_cluster_node_group" {
       aws_eks_cluster as c
     where
       g.cluster_name = c.name
-      and c.arn = $1;
+      and c.arn = $1
+      and c.account_id = split_part($1, ':', 5)
+      and c.region = split_part($1, ':', 4);
   EOQ
 }

@@ -286,6 +286,7 @@ query "ec2_instances_for_iam_role" {
       jsonb_array_elements_text(instance_profile_arns) as instance_profile
     where
       r.arn = $1
+      and r.account_id = split_part($1, ':', 5)
       and instance_profile = i.iam_instance_profile_arn;
   EOQ
 }
@@ -299,6 +300,7 @@ query "emr_clusters_for_iam_role" {
       aws_emr_cluster as c
     where
       r.arn = $1
+      and r.account_id = split_part($1, ':', 5)
       and r.name = c.service_role;
   EOQ
 }
@@ -310,7 +312,8 @@ query "guardduty_detectors_for_iam_role" {
     from
       aws_guardduty_detector
     where
-      service_role = $1;
+      service_role = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -322,7 +325,8 @@ query "iam_policies_for_iam_role" {
       aws_iam_role,
       jsonb_array_elements_text(attached_policy_arns) as policy_arn
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -333,7 +337,8 @@ query "lambda_functions_for_iam_role" {
     from
       aws_lambda_function
     where
-      role = $1;
+      role = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -357,6 +362,7 @@ query "iam_boundary_policy_for_role" {
       aws_iam_role
     where
       arn = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -370,6 +376,7 @@ query "iam_role_inline_policy_count_for_role" {
       aws_iam_role
     where
       arn = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -383,6 +390,7 @@ query "iam_role_direct_attached_policy_count_for_role" {
       aws_iam_role
     where
       arn = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -401,6 +409,7 @@ query "iam_role_overview" {
       aws_iam_role
     where
       arn = $1
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -418,6 +427,7 @@ query "iam_all_policies_for_role" {
     where
       p.arn = policy_arn
       and r.arn = $1
+      and r.account_id = split_part($1, ':', 5)
     -- Inline Policies (defined on role)
     union select
       i ->> 'PolicyName' as "Policy",
@@ -428,6 +438,7 @@ query "iam_all_policies_for_role" {
       jsonb_array_elements(inline_policies_std) as i
     where
       arn = $1
+      and account_id = split_part($1, ':', 5)
   EOQ
 }
 
@@ -441,6 +452,7 @@ query "iam_role_tags" {
       jsonb_array_elements(tags_src) as tag
     where
       arn = $1
+      and account_id = split_part($1, ':', 5)
     order by
       tag ->> 'Key'
   EOQ
@@ -466,6 +478,7 @@ query "iam_user_manage_policies_hierarchy" {
     where
       p.arn = policy_arn
       and r.arn = $1
+      and r.account_id = split_part($1, ':', 5)
     -- Inline Policies (defined on role)
     union select
       concat('inline_', i ->> 'PolicyName') as id,
@@ -477,5 +490,6 @@ query "iam_user_manage_policies_hierarchy" {
       jsonb_array_elements(inline_policies_std) as i
     where
       arn = $1
+      and account_id = split_part($1, ':', 5)
   EOQ
 }

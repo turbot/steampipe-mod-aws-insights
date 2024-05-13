@@ -35,8 +35,7 @@ node "sqs_queue" {
       ) as properties
     from
       aws_sqs_queue
-    where
-      queue_arn = any($1);
+      join unnest($1::text[]) as arn on queue_arn = arn and account_id = split_part(arn, ':', 5) and region = split_part(arn, ':', 4);
   EOQ
 
   param "sqs_queue_arns" {}

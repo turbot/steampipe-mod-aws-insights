@@ -14,8 +14,7 @@ node "elasticache_cluster_node" {
         'Region', region ) as properties
     from
       aws_elasticache_cluster
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "elasticache_cluster_node_arns" {}
@@ -58,8 +57,7 @@ node "elasticache_parameter_group" {
         'Region', region ) as properties
     from
       aws_elasticache_parameter_group
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "elsticache_parameter_group_arns" {}
@@ -81,8 +79,7 @@ node "elasticache_cluster" {
         'Region', region ) as properties
     from
       aws_elasticache_replication_group
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "elasticache_cluster_arns" {}
@@ -102,8 +99,7 @@ node "elasticache_subnet_group" {
         'Region', region ) as properties
     from
       aws_elasticache_subnet_group
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "elasticache_subnet_group_arns" {}

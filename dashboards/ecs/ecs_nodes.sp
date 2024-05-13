@@ -15,8 +15,7 @@ node "ecs_cluster" {
       ) as properties
     from
       aws_ecs_cluster
-    where
-      cluster_arn = any($1);
+      join unnest($1::text[]) as a on cluster_arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "ecs_cluster_arns" {}
@@ -180,8 +179,7 @@ node "ecs_container_instance" {
       ) as properties
     from
       aws_ecs_container_instance as i
-    where
-      i.arn = any($1);
+      join unnest($1::text[]) as a on i.arn = a and i.account_id = split_part(a, ':', 5) and i.region = split_part(a, ':', 4);
   EOQ
 
   param "ecs_container_instance_arns" {}
@@ -202,8 +200,7 @@ node "ecs_service" {
       ) as properties
     from
       aws_ecs_service
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "ecs_service_arns" {}
@@ -223,8 +220,7 @@ node "ecs_task" {
       ) as properties
     from
       aws_ecs_task as t
-    where
-      t.task_arn = any($1);
+      join unnest($1::text[]) as a on t.task_arn = a and t.account_id = split_part(a, ':', 5) and t.region = split_part(a, ':', 4);
   EOQ
 
   param "ecs_task_arns" {}
@@ -245,8 +241,7 @@ node "ecs_task_definition" {
       ) as properties
     from
       aws_ecs_task_definition
-    where
-      task_definition_arn = any($1)
+      join unnest($1::text[]) as a on task_definition_arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "ecs_task_definition_arns" {}

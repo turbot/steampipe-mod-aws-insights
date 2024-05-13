@@ -182,6 +182,8 @@ query "cloudwatch_log_groups_for_eventbridge_rule" {
       jsonb_array_elements(targets) t
     where
       r.arn = $1
+      and r.account_id = split_part($1, ':', 5)
+      and r.region = split_part($1, ':', 4)
       and t ->> 'Arn' like '%logs%';
   EOQ
 }
@@ -209,6 +211,8 @@ query "lambda_functions_for_eventbridge_rule" {
       jsonb_array_elements(targets) t
     where
       r.arn = $1
+      and r.account_id = split_part($1, ':', 5)
+      and r.region = split_part($1, ':', 4)
       and t ->> 'Arn' like '%lambda%';
   EOQ
 }
@@ -222,6 +226,8 @@ query "sns_topics_for_eventbridge_rule" {
       jsonb_array_elements(targets) t
     where
       arn = $1
+      and r.account_id = split_part($1, ':', 5)
+      and r.region = split_part($1, ':', 4)
       and t ->> 'Arn' like '%sns%';
   EOQ
 }
@@ -236,7 +242,9 @@ query "eventbridge_rule_state" {
     from
       aws_eventbridge_rule
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -249,6 +257,8 @@ query "eventbridge_rule_target_count" {
       aws_eventbridge_rule
     where
       arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -266,7 +276,9 @@ query "eventbridge_rule_overview" {
     from
       aws_eventbridge_rule
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -280,6 +292,8 @@ query "eventbridge_rule_tags" {
       jsonb_array_elements(tags_src) as tag
     where
       arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
     order by
       tag ->> 'Key';
   EOQ
@@ -295,6 +309,8 @@ query "eventbridge_rule_targets" {
       aws_eventbridge_rule as c,
       jsonb_array_elements(c.targets) as target
     where
-      c.arn = $1;
+      c.arn = $1
+      and c.account_id = split_part($1, ':', 5)
+      and c.region = split_part($1, ':', 4);
   EOQ
 }

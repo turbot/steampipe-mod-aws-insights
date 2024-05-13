@@ -15,8 +15,7 @@ node "kms_key" {
       ) as properties
     from
       aws_kms_key
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "kms_key_arns" {}
@@ -37,10 +36,8 @@ node "kms_key_alias" {
       ) as properties
     from
       aws_kms_alias as a
-      join aws_kms_key as k
-      on a.target_key_id = k.id
-    where
-      k.arn = any($1);
+      join aws_kms_key as k on a.target_key_id = k.id
+      join unnest($1::text[]) as b on k.arn = b and k.account_id = split_part(b, ':', 5) and k.region = split_part(b, ':', 4);
   EOQ
 
   param "kms_key_arns" {}

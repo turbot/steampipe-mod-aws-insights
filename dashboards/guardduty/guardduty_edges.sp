@@ -6,13 +6,13 @@ edge "guardduty_detector_to_cloudtrail_trail" {
       d.arn as from_id,
       t.arn as to_id
     from
-      aws_guardduty_detector as d,
+      aws_guardduty_detector as d
+      join unnest($1::text[]) as a on d.arn = a and d.account_id = split_part(a, ':', 5) and d.region = split_part(a, ':', 4),
       aws_cloudtrail_trail as t
     where
       d.status = 'ENABLED'
       and d.data_sources is not null
-      and d.data_sources -> 'CloudTrail' ->> 'Status' = 'ENABLED'
-      and d.arn = any($1);
+      and d.data_sources -> 'CloudTrail' ->> 'Status' = 'ENABLED';
   EOQ
 
   param "guardduty_detector_arns" {}

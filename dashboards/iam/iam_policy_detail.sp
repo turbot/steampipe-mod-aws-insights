@@ -342,7 +342,7 @@ query "iam_policy_aws_managed" {
     from
       aws_iam_policy
     where
-      arn = $1
+      arn = $1;
   EOQ
 }
 
@@ -355,7 +355,7 @@ query "iam_policy_attached" {
     from
       aws_iam_policy
     where
-      arn = $1
+      arn = $1;
   EOQ
 }
 
@@ -406,7 +406,7 @@ query "iam_policy_statement" {
       from
         aws_iam_policy
       where
-        arn =  $1
+        arn = $1
     )
     select
       coalesce(t.stmt ->> 'Sid', concat('[', i::text, ']')) as "Statement",
@@ -425,6 +425,3 @@ query "iam_policy_statement" {
       left join jsonb_array_elements_text(t.stmt -> 'NotResource') as notresource on true
   EOQ
 }
-
-
-

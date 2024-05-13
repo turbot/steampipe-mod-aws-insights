@@ -14,8 +14,7 @@ node "eventbridge_bus" {
       ) as properties
     from
       aws_eventbridge_bus
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "eventbridge_bus_arns" {}
@@ -38,8 +37,7 @@ node "eventbridge_rule" {
       ) as properties
     from
       aws_eventbridge_rule
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "eventbridge_rule_arns" {}

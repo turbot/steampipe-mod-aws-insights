@@ -136,33 +136,56 @@ query "backup_plan_input" {
 
 query "backup_vaults_for_backup_plan" {
   sql = <<-EOQ
+    with plan_details as (
+      select
+        arn,
+        jsonb_array_elements(backup_plan -> 'Rules') as rule
+      from
+        aws_backup_plan
+      where
+        arn = $1
+        and account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+    ),
+    vault_names as (
+      select
+        rule ->> 'TargetBackupVaultName' as vault_name
+      from
+        plan_details
+    )
     select
       v.arn as backup_vault_arn
     from
-      aws_backup_vault as v,
-      aws_backup_plan as p,
-      jsonb_array_elements(backup_plan -> 'Rules') as r
+      aws_backup_vault v
+    join
+      vault_names vn on v.name = vn.vault_name
     where
-      r ->> 'TargetBackupVaultName' = v.name
-      and p.arn = $1;
+      v.account_id = split_part($1, ':', 5)
+      and v.region = split_part($1, ':', 4);
   EOQ
 }
-
-# Card queries
 
 query "backup_plan_resource_assignment" {
   sql = <<-EOQ
+    with filtered_backup_plans as (
+      select
+        backup_plan_id
+      from
+        aws_backup_plan
+      where
+        arn = $1
+        and account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+    )
     select
       'Resource Assignments' as label,
-      count(selection_name) as value
+      count(s.selection_name) as value
     from
-      aws_backup_selection as s,
-      aws_backup_plan as p
-    where
-      s.backup_plan_id = p.backup_plan_id
-      and p.arn = $1;
+      aws_backup_selection s
+    join
+      filtered_backup_plans p on s.backup_plan_id = p.backup_plan_id;
   EOQ
-}
+} 
 
 # Other detail page queries
 
@@ -178,7 +201,9 @@ query "backup_plan_overview" {
     from
       aws_backup_plan
     where
-      arn = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and arn = $1;
   EOQ
 }
 
@@ -198,6 +223,8 @@ query "backup_plan_rules" {
       aws_backup_plan,
       jsonb_array_elements(backup_plan -> 'Rules') as r
     where
-      arn = $1;
+      account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
+      and arn = $1;
   EOQ
 }

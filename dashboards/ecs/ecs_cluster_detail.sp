@@ -304,7 +304,9 @@ query "ecs_container_instances_for_ecs_cluster" {
       left join aws_ec2_instance as e on i.ec2_instance_id = e.instance_id
     where
       i.arn is not null
-      and i.cluster_arn = $1;
+      and i.cluster_arn = $1
+      and i.account_id = split_part($1, ':', 5)
+      and i.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -315,7 +317,9 @@ query "ecs_services_for_ecs_cluster" {
     from
       aws_ecs_service as s
     where
-      s.cluster_arn = $1;
+      s.cluster_arn = $1
+      and s.account_id = split_part($1, ':', 5)
+      and s.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -335,6 +339,8 @@ query "ecs_task_definitions_for_ecs_cluster" {
         aws_ecs_service
       where
         cluster_arn = $1
+        and account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
     )
     select
       d.task_definition_arn as task_definition_arn
@@ -392,7 +398,9 @@ query "ecs_cluster_status" {
     from
       aws_ecs_cluster
     where
-      cluster_arn = $1;
+      cluster_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -404,7 +412,9 @@ query "ecs_cluster_registered_container_instances_count" {
     from
       aws_ecs_cluster
     where
-      cluster_arn = $1;
+      cluster_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -416,7 +426,9 @@ query "ecs_cluster_pending_tasks_count" {
     from
       aws_ecs_cluster
     where
-      cluster_arn = $1;
+      cluster_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -428,7 +440,9 @@ query "ecs_cluster_running_tasks_count" {
     from
       aws_ecs_cluster
     where
-      cluster_arn = $1;
+      cluster_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -440,7 +454,9 @@ query "ecs_cluster_active_services_count" {
     from
       aws_ecs_cluster
     where
-      cluster_arn = $1;
+      cluster_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -454,7 +470,9 @@ query "ecs_cluster_container_insights_enabled" {
       aws_ecs_cluster as c,
       jsonb_array_elements(settings) as s
     where
-      cluster_arn = $1;
+      cluster_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -470,7 +488,9 @@ query "ecs_cluster_overview" {
     from
       aws_ecs_cluster
     where
-      cluster_arn = $1;
+      cluster_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -484,6 +504,8 @@ query "ecs_cluster_tags" {
       jsonb_array_elements(tags_src) as tag
     where
       cluster_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
     order by
       tag ->> 'Key';
   EOQ
@@ -499,6 +521,8 @@ query "ecs_cluster_statistics" {
       jsonb_array_elements(statistics) as s
     where
       cluster_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
     order by
       s ->> 'Name';
   EOQ
@@ -516,6 +540,8 @@ query "ecs_cluster_container_instances" {
       left join aws_ec2_instance as i on c.ec2_instance_id = i.instance_id
     where
       cluster_arn = $1
+      and c.account_id = split_part($1, ':', 5)
+      and c.region = split_part($1, ':', 4)
     order by
       ec2_instance_id;
   EOQ

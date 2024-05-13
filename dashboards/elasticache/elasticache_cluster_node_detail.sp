@@ -318,7 +318,9 @@ query "elasticache_clusters_for_elasticache_cluster_node" {
       aws_elasticache_replication_group as g
     where
       c.replication_group_id = g.replication_group_id
-      and c.arn = $1;
+      and c.arn = $1
+      and c.account_id = split_part($1, ':', 5)
+      and c.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -333,7 +335,9 @@ query "elasticache_node_groups_for_elasticache_cluster_node" {
       jsonb_array_elements(ng -> 'NodeGroupMembers') ngm
     where
       c.cache_cluster_id = ngm ->> 'CacheClusterId'
-      and c.arn = $1;
+      and c.arn = $1
+      and c.account_id = split_part($1, ':', 5)
+      and c.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -347,7 +351,8 @@ query "elasticache_subnet_groups_for_elasticache_cluster_node" {
     where
       g.cache_subnet_group_name = c.cache_subnet_group_name
       and g.region = c.region
-      and c.arn = $1;
+      and c.arn = $1
+      and c.account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -360,6 +365,8 @@ query "kms_keys_for_elasticache_cluster_node" {
       aws_elasticache_replication_group as g
     where
       c.arn = $1
+      and c.account_id = split_part($1, ':', 5)
+      and c.region = split_part($1, ':', 4)
       and c.replication_group_id = g.replication_group_id
       and kms_key_id is not null;
   EOQ
@@ -373,7 +380,9 @@ query "sns_topics_for_elasticache_cluster_node" {
       aws_elasticache_cluster
     where
       arn = $1
-      and notification_configuration ->> 'TopicArn' is not null;
+      and notification_configuration ->> 'TopicArn' is not null
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -393,6 +402,8 @@ query "vpc_security_groups_for_elasticache_cluster_node" {
           jsonb_array_elements(security_groups) as sg
         where
           arn = $1
+          and account_id = split_part($1, ':', 5)
+          and region = split_part($1, ':', 4)
       );
   EOQ
 }
@@ -430,6 +441,7 @@ query "vpc_vpcs_for_elasticache_cluster_node" {
           g.cache_subnet_group_name = c.cache_subnet_group_name
           and g.region = c.region
           and c.arn = $1
+          and c.account_id = split_part($1, ':', 5)
       );
   EOQ
 }
@@ -444,7 +456,9 @@ query "elasticache_cluster_node_status" {
     from
       aws_elasticache_cluster
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -456,7 +470,9 @@ query "elasticache_cluster_node_node_type" {
     from
       aws_elasticache_cluster
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -469,7 +485,9 @@ query "elasticache_cluster_node_automatic_backup" {
     from
       aws_elasticache_cluster
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -482,7 +500,9 @@ query "elasticache_cluster_node_encryption_transit" {
     from
       aws_elasticache_cluster
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -495,7 +515,9 @@ query "elasticache_cluster_node_encryption_rest" {
     from
       aws_elasticache_cluster
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -508,7 +530,9 @@ query "elasticache_cluster_node_auth_token" {
     from
       aws_elasticache_cluster
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -531,7 +555,9 @@ query "elasticache_cluster_node_overview" {
     from
       aws_elasticache_cluster
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -545,6 +571,8 @@ query "elasticache_cluster_node_tags" {
       jsonb_array_elements(tags_src) as tag
     where
       arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
     order by
       tag ->> 'Key';
   EOQ
@@ -561,7 +589,9 @@ query "elasticache_cluster_node_notification_configuration" {
         aws_sns_topic as t
         on notification_configuration ->> 'TopicArn' = topic_arn
     where
-      c.arn = $1;
+      c.arn = $1
+      and c.account_id = split_part($1, ':', 5)
+      and c.region = split_part($1, ':', 4);
   EOQ
 }
 

@@ -13,10 +13,10 @@ node "guardduty_detector" {
       ) as properties
     from
       aws_guardduty_detector
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
     where
       status = 'ENABLED'
-      and data_sources is not null
-      and arn = any($1);
+      and data_sources is not null;
   EOQ
 
   param "guardduty_detector_arns" {}

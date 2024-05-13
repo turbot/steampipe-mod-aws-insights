@@ -16,8 +16,7 @@ node "rds_db_cluster" {
       ) as properties
     from
       aws_rds_db_cluster
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "rds_db_cluster_arns" {}
@@ -69,8 +68,7 @@ node "rds_db_cluster_snapshot" {
       ) as properties
     from
       aws_rds_db_cluster_snapshot
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "rds_db_cluster_snapshot_arns" {}
@@ -96,8 +94,7 @@ node "rds_db_instance" {
       ) as properties
     from
       aws_rds_db_instance
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "rds_db_instance_arns" {}
@@ -148,8 +145,7 @@ node "rds_db_snapshot" {
       ) as properties
     from
       aws_rds_db_snapshot
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "rds_db_snapshot_arns" {}
@@ -170,8 +166,7 @@ node "rds_db_subnet_group" {
       ) as properties
     from
       aws_rds_db_subnet_group as rdsg
-    where
-      rdsg.arn = any($1);
+      join unnest($1::text[]) as a on rdsg.arn = a and rdsg.account_id = split_part(a, ':', 5) and rdsg.region = split_part(a, ':', 4);
   EOQ
 
   param "rds_db_subnet_group_arns" {}

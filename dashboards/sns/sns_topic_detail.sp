@@ -280,7 +280,9 @@ query "sns_topic_encryption_status" {
     from
       aws_sns_topic
     where
-      topic_arn = $1;
+      topic_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 
 }
@@ -294,7 +296,9 @@ query "sns_topic_subscriptions_confirmed_count" {
     from
       aws_sns_topic
     where
-      topic_arn = $1;
+      topic_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 
 }
@@ -314,7 +318,9 @@ query "cloudformation_stacks_for_sns_topic" {
       ) n
     where
       t.topic_arn = trim((n::text ), '""')
-      and t.topic_arn = $1;
+      and t.topic_arn = $1
+      and t.account_id = split_part($1, ':', 5)
+      and t.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -325,7 +331,9 @@ query "cloudtrail_trails_for_sns_topic" {
     from
       aws_cloudtrail_trail
     where
-      sns_topic_arn = $1;
+      sns_topic_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -336,7 +344,9 @@ query "elasticache_clusters_for_sns_topic" {
     from
       aws_elasticache_cluster
     where
-      notification_configuration ->> 'TopicArn' = $1;
+      notification_configuration ->> 'TopicArn' = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -348,7 +358,9 @@ query "kms_keys_for_sns_topic" {
       aws_sns_topic
     where
       kms_master_key_id is not null
-      and topic_arn = $1;
+      and topic_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -359,35 +371,61 @@ query "topic_policy_std_for_sns_topic" {
     from
       aws_sns_topic
     where
-      topic_arn = $1;
+      topic_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
 query "rds_db_instances_for_sns_topic" {
   sql = <<-EOQ
+    with rds_event_subscriptions as (
+      select
+        source_ids_list,
+        sns_topic_arn
+      from
+        aws_rds_db_event_subscription
+      where
+        account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+    )
     select
       i.arn as db_instance_arn
     from
-      aws_rds_db_event_subscription as s,
+      rds_event_subscriptions as s,
       jsonb_array_elements_text(source_ids_list) as ids
       join aws_rds_db_instance as i
       on ids = i.db_instance_identifier
     where
-      s.sns_topic_arn = $1;
+      s.sns_topic_arn = $1
+      and i.account_id = split_part($1, ':', 5)
+      and i.region = split_part($1, ':', 4);
   EOQ
 }
 
 query "redshift_clusters_for_sns_topic" {
   sql = <<-EOQ
+    with redshift_event_subscriptions as (
+      select
+        source_ids_list,
+        sns_topic_arn
+      from
+        aws_redshift_event_subscription
+      where
+        account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+    )
     select
       c.arn as cluster_arn
     from
-      aws_redshift_event_subscription as s,
+      redshift_event_subscriptions as s,
       jsonb_array_elements_text(source_ids_list) as ids
       join aws_redshift_cluster as c
       on ids = c.cluster_identifier
     where
-      s.sns_topic_arn = $1;
+      s.sns_topic_arn = $1
+      and c.account_id = split_part($1, ':', 5)
+      and c.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -404,7 +442,9 @@ query "s3_buckets_for_sns_topic" {
         )
         as t
     where
-      t ->> 'TopicArn' = $1;
+      t ->> 'TopicArn' = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -415,7 +455,9 @@ query "sns_topic_subscriptions_for_sns_topic" {
     from
       aws_sns_topic_subscription
     where
-      topic_arn = $1;
+      topic_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -434,7 +476,9 @@ query "sns_topic_overview" {
     from
       aws_sns_topic
     where
-      topic_arn = $1;
+      topic_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 
 }
@@ -449,6 +493,8 @@ query "sns_topic_tags" {
       jsonb_array_elements(tags_src) as tag
     where
       topic_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
     order by
       tag ->> 'Key';
   EOQ
@@ -464,7 +510,9 @@ query "sns_topic_subscription_count" {
     from
       aws_sns_topic
     where
-      topic_arn = $1;
+      topic_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 
 }
@@ -483,7 +531,9 @@ query "sns_topic_delivery_policy" {
     from
       aws_sns_topic
     where
-      topic_arn = $1;
+      topic_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 
 }

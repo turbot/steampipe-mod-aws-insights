@@ -285,7 +285,9 @@ query "ec2_target_groups_for_ecs_service" {
       jsonb_array_elements(load_balancers) as l
       left join aws_ec2_target_group as t on t.target_group_arn = l ->> 'TargetGroupArn'
     where
-      s.arn = $1;
+      s.arn = $1
+      and s.account_id = split_part($1, ':', 5)
+      and s.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -298,6 +300,8 @@ query "ecs_clusters_for_ecs_service" {
       left join aws_ecs_cluster as c on s.cluster_arn = c.cluster_arn and s.arn = $1
     where
       c.cluster_arn is not null
+      and s.account_id = split_part($1, ':', 5)
+      and s.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -311,7 +315,9 @@ query "ecs_container_instances_for_ecs_service" {
       left join aws_ec2_instance as e on i.ec2_instance_id = e.instance_id
     where
       i.arn  is not null
-      and s.arn = $1;
+      and s.arn = $1
+      and s.account_id = split_part($1, ':', 5)
+      and s.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -324,6 +330,8 @@ query "ecs_tasks_for_ecs_service" {
       aws_ecs_service as s
     where
       s.arn = $1
+      and s.account_id = split_part($1, ':', 5)
+      and s.region = split_part($1, ':', 4)
       and t.service_name = s.service_name
       and t.region = s.region;
   EOQ
@@ -338,7 +346,9 @@ query "ecs_task_definitions_for_ecs_service" {
       aws_ecs_service as s
     where
       d.task_definition_arn = s.task_definition
-      and s.arn = $1;
+      and s.arn = $1
+      and s.account_id = split_part($1, ':', 5)
+      and s.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -351,6 +361,8 @@ query "iam_roles_for_ecs_service" {
       left join aws_iam_role as r on r.arn = s.role_arn and s.arn = $1
     where
       r.arn is not null
+      and s.account_id = split_part($1, ':', 5)
+      and s.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -364,7 +376,9 @@ query "vpc_security_groups_for_ecs_service" {
       left join aws_vpc_security_group as sg on sg.group_id = s
     where
       e.arn = $1
-      and e.network_configuration is not null;
+      and e.network_configuration is not null
+      and e.account_id = split_part($1, ':', 5)
+      and e.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -378,7 +392,9 @@ query "vpc_subnets_for_ecs_service" {
       left join aws_vpc_subnet as sb on sb.subnet_id = trim((s::text ), '""')
     where
       e.network_configuration is not null
-      and e.arn = $1;
+      and e.arn = $1
+      and e.account_id = split_part($1, ':', 5)
+      and e.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -392,7 +408,9 @@ query "vpc_vpcs_for_ecs_service" {
       left join aws_vpc_subnet as sb on sb.subnet_id = trim((s::text ), '""')
     where
       e.network_configuration is not null
-      and e.arn = $1;
+      and e.arn = $1
+      and e.account_id = split_part($1, ':', 5)
+      and e.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -406,7 +424,9 @@ query "ecs_service_status" {
     from
       aws_ecs_service
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -418,7 +438,9 @@ query "ecs_service_launch_type" {
     from
       aws_ecs_service
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -438,7 +460,9 @@ query "ecs_service_overview" {
     from
       aws_ecs_service
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -451,7 +475,9 @@ query "ecs_service_tasks" {
     from
       aws_ecs_service
     where
-      arn = $1;
+      arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -465,6 +491,8 @@ query "ecs_service_tags" {
       jsonb_array_elements(tags_src) as tag
     where
       arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
     order by
       tag ->> 'Key';
   EOQ

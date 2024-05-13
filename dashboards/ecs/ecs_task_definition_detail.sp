@@ -244,7 +244,9 @@ query "cloudwatch_log_groups_for_ecs_task_definition" {
       left join aws_cloudwatch_log_group as g on g.name = d -> 'LogConfiguration' -> 'Options' ->> 'awslogs-group'
     where
       d -> 'LogConfiguration' -> 'Options' ->> 'awslogs-region' = g.region
-      and td.task_definition_arn = $1;
+      and td.task_definition_arn = $1
+      and td.account_id = split_part($1, ':', 5)
+      and td.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -258,7 +260,9 @@ query "ecr_repositories_for_ecs_task_definition" {
       left join aws_ecr_repository as r on r.repository_uri = split_part(d ->> 'Image', ':', 1)
     where
       r.arn is not null
-      and td.task_definition_arn = $1;
+      and td.task_definition_arn = $1
+      and td.account_id = split_part($1, ':', 5)
+      and td.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -269,7 +273,9 @@ query "ecs_services_for_ecs_task_definition" {
     from
       aws_ecs_service
     where
-      task_definition = $1;
+      task_definition = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -280,7 +286,9 @@ query "ecs_tasks_for_ecs_task_definition" {
     from
       aws_ecs_task
     where
-      task_definition_arn = $1;
+      task_definition_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -293,7 +301,9 @@ query "efs_file_systems_for_ecs_task_definition" {
       jsonb_array_elements(volumes) as v
       left join aws_efs_file_system as f on f.file_system_id = v -> 'EfsVolumeConfiguration' ->> 'FileSystemId'
     where
-      td.task_definition_arn = $1;
+      td.task_definition_arn = $1
+      and td.account_id = split_part($1, ':', 5)
+      and td.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -330,7 +340,9 @@ query "ecs_task_definition_network_mode" {
     from
       aws_ecs_task_definition
     where
-      task_definition_arn = $1;
+      task_definition_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -342,7 +354,9 @@ query "ecs_task_definition_cpu_units" {
     from
       aws_ecs_task_definition
     where
-      task_definition_arn = $1;
+      task_definition_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -354,7 +368,9 @@ query "ecs_task_definition_memory" {
     from
       aws_ecs_task_definition
     where
-      task_definition_arn = $1;
+      task_definition_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -366,7 +382,9 @@ query "ecs_task_definition_requires_compatibilities" {
     from
       aws_ecs_task_definition
     where
-      task_definition_arn = $1;
+      task_definition_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -387,7 +405,9 @@ query "ecs_task_definition_overview" {
     from
       aws_ecs_task_definition
     where
-      task_definition_arn = $1;
+      task_definition_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -401,6 +421,8 @@ query "ecs_task_definition_tags" {
       jsonb_array_elements(tags_src) as tag
     where
       task_definition_arn = $1
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4)
     order by
       tag ->> 'Key';
   EOQ

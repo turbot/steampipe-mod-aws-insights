@@ -23,9 +23,8 @@ edge "opensearch_domain_to_vpc_security_group" {
       jsonb_array_elements_text(vpc_options -> 'SecurityGroupIds') AS to_id
     from
       aws_opensearch_domain
-      JOIN jsonb_array_elements(vpc_options -> 'SecurityGroupIds') AS s ON true
-    where
-      arn = $1;
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
+      join jsonb_array_elements(vpc_options -> 'SecurityGroupIds') as s on true;
   EOQ
 
   param "opensearch_arn" {}
@@ -40,9 +39,8 @@ edge "opensearch_domain_to_vpc_subnet" {
       jsonb_array_elements_text(vpc_options -> 'SubnetIds') AS to_id
     from
       aws_opensearch_domain
-      JOIN jsonb_array_elements(vpc_options -> 'SecurityGroupIds') AS s ON true
-    where
-      arn = $1;
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
+      join jsonb_array_elements(vpc_options -> 'SecurityGroupIds') as s on true;
   EOQ
 
   param "opensearch_arn" {}

@@ -39,8 +39,7 @@ node "ec2_application_load_balancer" {
       ) as properties
     from
       aws_ec2_application_load_balancer
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4)
   EOQ
 
   param "ec2_application_load_balancer_arns" {}
@@ -86,8 +85,7 @@ node "ec2_classic_load_balancer" {
       ) as properties
     from
       aws_ec2_classic_load_balancer
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "ec2_classic_load_balancer_arns" {}
@@ -110,8 +108,7 @@ node "ec2_gateway_load_balancer" {
       ) as properties
     from
       aws_ec2_gateway_load_balancer
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "ec2_gateway_load_balancer_arns" {}
@@ -133,8 +130,7 @@ node "ec2_instance" {
       ) as properties
     from
       aws_ec2_instance
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "ec2_instance_arns" {}
@@ -179,8 +175,7 @@ node "ec2_launch_configuration" {
       ) as properties
     from
       aws_ec2_launch_configuration
-    where
-      launch_configuration_arn = any($1);
+      join unnest($1::text[]) as a on launch_configuration_arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "ec2_launch_configuration_arns" {}
@@ -203,8 +198,7 @@ node "ec2_load_balancer_listener" {
       ) as properties
     from
       aws_ec2_load_balancer_listener lblistener
-    where
-      lblistener.arn = any($1);
+      join unnest($1::text[]) as a on lblistener.arn = a and lblistener.account_id = split_part(a, ':', 5) and lblistener.region = split_part(a, ':', 4);
   EOQ
 
   param "ec2_load_balancer_listener_arns" {}
@@ -250,8 +244,7 @@ node "ec2_network_load_balancer" {
       ) as properties
     from
       aws_ec2_network_load_balancer
-    where
-      arn = any($1);
+      join unnest($1::text[]) as a on arn = a and account_id = split_part(a, ':', 5) and region = split_part(a, ':', 4);
   EOQ
 
   param "ec2_network_load_balancer_arns" {}
@@ -273,8 +266,7 @@ node "ec2_target_group" {
       ) as properties
     from
       aws_ec2_target_group as target
-    where
-      target.target_group_arn = any($1)
+      join unnest($1::text[]) as a on target.target_group_arn = a and target.account_id = split_part(a, ':', 5) and target.region = split_part(a, ':', 4);
   EOQ
 
   param "ec2_target_group_arns" {}

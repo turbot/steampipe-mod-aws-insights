@@ -342,49 +342,140 @@ query "kms_keys_for_rds_db_instance" {
       aws_rds_db_instance rdb
     where
       rdb.arn = $1
-      and kms_key_id is not null;
+      and kms_key_id is not null
+      and account_id = split_part($1, ':', 5)
+      and region = split_part($1, ':', 4);
   EOQ
 }
 
 query "rds_db_clusters_for_rds_db_instance" {
   sql = <<-EOQ
+    with rds_db_instance as (
+      select
+        arn,
+        db_cluster_identifier,
+        region,
+        account_id
+      from
+        aws_rds_db_instance
+      where
+        account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+        and arn = $1
+      order by
+        arn,
+        db_cluster_identifier,
+        region,
+        account_id
+    ), rds_db_cluster as (
+      select
+        arn,
+        db_cluster_identifier,
+        region,
+        account_id
+      from
+        aws_rds_db_cluster
+      where
+        account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+      order by
+        arn,
+        db_cluster_identifier,
+        region,
+        account_id
+    )
     select
       c.arn as cluster_arn
     from
-      aws_rds_db_instance as i
-      join
-        aws_rds_db_cluster as c
-        on i.db_cluster_identifier = c.db_cluster_identifier
-    where
-      i.arn = $1;
+      rds_db_instance as i
+      join rds_db_cluster as c on i.db_cluster_identifier = c.db_cluster_identifier
   EOQ
 }
 
 query "rds_db_snapshots_for_rds_db_instance" {
   sql = <<-EOQ
+    with rds_db_instance as (
+      select
+        arn,
+        resource_id,
+        region,
+        account_id
+      from
+        aws_rds_db_instance
+      where
+        account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+        and arn = $1
+      order by
+        arn,
+        resource_id,
+        region,
+        account_id
+    ), rds_db_snapshot as (
+      select
+        arn,
+        dbi_resource_id,
+        region,
+        account_id
+      from
+        aws_rds_db_snapshot
+      order by
+        arn,
+        dbi_resource_id,
+        region,
+        account_id
+    )
     select
       s.arn as snapshot_arn
     from
-      aws_rds_db_instance as i
-      join aws_rds_db_snapshot as s
-        on s.dbi_resource_id = i.resource_id
-    where
-      i.arn = $1;
+      rds_db_instance as i
+      join rds_db_snapshot as s on s.dbi_resource_id = i.resource_id;
   EOQ
 }
 
 query "rds_db_subnet_groups_for_rds_db_instance" {
   sql = <<-EOQ
+    with rds_db_instance as (
+      select
+        arn,
+        db_subnet_group_name,
+        region,
+        account_id
+      from
+        aws_rds_db_instance
+      where
+        account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+        and arn = $1
+      order by
+        arn,
+        db_subnet_group_name,
+        region,
+        account_id
+    ), rds_db_subnet_group as (
+      select
+        arn,
+        name,
+        region,
+        account_id
+      from
+        aws_rds_db_subnet_group
+      where
+        account_id = split_part($1, ':', 5)
+        and region = split_part($1, ':', 4)
+      order by
+        arn,
+        name,
+        region,
+        account_id
+    )
     select
       g.arn as db_subnet_group_arn
     from
-      aws_rds_db_instance as i,
-      aws_rds_db_subnet_group g
+      rds_db_instance as i,
+      rds_db_subnet_group g
     where
-      i.db_subnet_group_name = g.name
-      and i.region = g.region
-      and i.account_id = g.account_id
-      and i.arn = $1;
+      i.db_subnet_group_name = g.name;
   EOQ
 }
 
@@ -398,7 +489,9 @@ query "sns_topics_for_rds_db_instance" {
       join aws_rds_db_instance as i
       on ids = i.db_instance_identifier
     where
-      i.arn = $1;
+      i.arn = $1
+      and i.account_id = split_part($1, ':', 5)
+      and i.region = split_part($1, ':', 4)
   EOQ
 }
 
@@ -410,7 +503,9 @@ query "vpc_security_groups_for_rds_db_instance" {
       aws_rds_db_instance as di,
       jsonb_array_elements(di.vpc_security_groups) as dsg
     where
-      di.arn = $1;
+      di.arn = $1
+      and di.account_id = split_part($1, ':', 5)
+      and di.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -422,7 +517,9 @@ query "vpc_subnets_for_rds_db_instance" {
       aws_rds_db_instance as rdb,
       jsonb_array_elements(subnets) as subnet
     where
-      rdb.arn = $1;
+      rdb.arn = $1
+      and rdb.account_id = split_part($1, ':', 5)
+      and rdb.region = split_part($1, ':', 4);
   EOQ
 }
 
@@ -433,7 +530,9 @@ query "vpc_vpcs_for_rds_db_instance" {
     from
       aws_rds_db_instance as di
     where
-      di.arn = $1;
+      di.arn = $1
+      and di.account_id = split_part($1, ':', 5)
+      and di.region = split_part($1, ':', 4);
   EOQ
 }
 

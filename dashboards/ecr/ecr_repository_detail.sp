@@ -189,6 +189,8 @@ query "ecs_task_definitions_for_ecr_repository" {
     where
       r.repository_uri = split_part(d ->> 'Image', ':', 1)
       and r.arn = $1
+      and r.region = split_part($1, ':', 4)
+      and r.account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -200,7 +202,9 @@ query "kms_keys_for_ecr_repository" {
       aws_ecr_repository
     where
       encryption_configuration ->> 'KmsKey' is not null
-      and arn = $1;
+      and arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -211,7 +215,9 @@ query "ecr_policy_std_for_ecr_repository" {
     from
       aws_ecr_repository
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -226,7 +232,9 @@ query "ecr_repository_encrypted" {
     from
       aws_ecr_repository
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -239,6 +247,8 @@ query "ecr_repository_tagging" {
         aws_ecr_repository
       where
         arn = $1
+        and region = split_part($1, ':', 4)
+        and account_id = split_part($1, ':', 5)
     )
     select
       'Tags' as label,
@@ -258,7 +268,9 @@ query "ecr_repository_public_access" {
     from
       aws_ecr_repository
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -271,7 +283,9 @@ query "ecr_repository_tag_immutability" {
     from
       aws_ecr_repository
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -284,6 +298,8 @@ query "ecr_repository_scan_on_push" {
         aws_ecr_repository
       where
         arn = $1
+        and region = split_part($1, ':', 4)
+        and account_id = split_part($1, ':', 5)
     )
     select
       'Scan on Push' as label,
@@ -309,7 +325,9 @@ query "ecr_repository_overview" {
     from
       aws_ecr_repository
     where
-      arn = $1;
+      arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5);
   EOQ
 }
 
@@ -323,6 +341,8 @@ query "ecr_repository_tags" {
       jsonb_array_elements(tags_src) as tag
     where
       arn = $1
+      and region = split_part($1, ':', 4)
+      and account_id = split_part($1, ':', 5)
     order by
       tag ->> 'Key';
   EOQ

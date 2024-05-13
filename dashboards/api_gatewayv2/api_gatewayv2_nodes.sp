@@ -64,6 +64,7 @@ node "api_gatewayv2_stage" {
       aws_api_gatewayv2_stage
     where
       api_id = any($1);
+
   EOQ
 
   param "api_gatewayv2_api_ids" {}
