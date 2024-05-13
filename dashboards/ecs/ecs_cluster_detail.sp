@@ -371,26 +371,7 @@ query "vpc_subnets_for_ecs_cluster" {
     where
       i.cluster_arn = $1;
   EOQ
-} // Time: 1.9s. Rows fetched: 0. Hydrate calls: 0.
-
-// query "vpc_subnets_for_ecs_cluster" {
-//   sql = <<-EOQ
-//     select
-//       s.subnet_id as subnet_id
-//     from
-//       aws_ecs_container_instance as i
-//       right join
-//         aws_ec2_instance as c
-//         on c.instance_id = i.ec2_instance_id
-//       right join
-//         aws_vpc_subnet as s
-//         on s.subnet_id = c.subnet_id
-//     where
-//       i.cluster_arn = $1
-//       and i.account_id = split_part($1, ':', 5)
-//       and i.region = split_part($1, ':', 4);
-//   EOQ
-// } // Time: 13.1s. Rows fetched: 1. Hydrate calls: 0.
+}
 
 query "vpc_vpcs_for_ecs_cluster" {
   sql = <<-EOQ
@@ -405,63 +386,7 @@ query "vpc_vpcs_for_ecs_cluster" {
     v.vpc_id is not null
     and i.cluster_arn = $1;
   EOQ
-} // Time: 2.0s. Rows fetched: 0. Hydrate calls: 0.
-
-// query "vpc_vpcs_for_ecs_cluster" {
-//   sql = <<-EOQ
-//     select
-//     v.vpc_id as vpc_id
-//   from
-//     aws_ecs_container_instance as i
-//     right join aws_ec2_instance as c on c.instance_id = i.ec2_instance_id
-//     right join aws_vpc_subnet as s on s.subnet_id = c.subnet_id
-//     right join aws_vpc as v on v.vpc_id = s.vpc_id
-//   where
-//     v.vpc_id is not null
-//     and i.cluster_arn = $1
-//     and i.account_id = split_part($1, ':', 5)
-//     and i.region = split_part($1, ':', 4);
-//   EOQ
-// } // Time: 12.0s. Rows fetched: 0. Hydrate calls: 0.
-
-// query "vpc_vpcs_for_ecs_cluster" {
-//   sql = <<-EOQ
-//     with ecs_instances as (
-//       select
-//         ec2_instance_id
-//       from
-//         aws_ecs_container_instance
-//       where
-//         cluster_arn = $1
-//         and account_id = split_part($1, ':', 5)
-//         and region = split_part($1, ':', 4)
-//     ),
-//     ec2_to_subnet as (
-//       select
-//         eci.ec2_instance_id,
-//         ci.subnet_id
-//       from
-//         ecs_instances eci
-//       join
-//         aws_ec2_instance ci on ci.instance_id = eci.ec2_instance_id
-//     ),
-//     subnet_to_vpc as (
-//       select
-//         distinct es.subnet_id,
-//         s.vpc_id
-//       from
-//         ec2_to_subnet es
-//       join
-//         aws_vpc_subnet s on s.subnet_id = es.subnet_id
-//     )
-//     select
-//       v.vpc_id as vpc_id
-//     from
-//       subnet_to_vpc stv
-//     join
-//       aws_vpc v on v.vpc_id = stv.vpc_id;
-//   EOQ
-// } // Time: 15.2s. Rows fetched: 3. Hydrate calls: 0.
+}
 
 # Card queries
 

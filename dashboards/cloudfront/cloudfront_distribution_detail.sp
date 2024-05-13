@@ -222,20 +222,6 @@ query "acm_certificates_for_cloudfront_distribution" {
   EOQ
 }
 
-// query "ec2_application_load_balancers_for_cloudfront_distribution" {
-//   sql = <<-EOQ
-//     select
-//       b.arn as alb_arn
-//     from
-//       aws_cloudfront_distribution as d,
-//       jsonb_array_elements(origins) as origin
-//       left join aws_ec2_application_load_balancer as b on b.dns_name = origin ->> 'DomainName'
-//     where
-//       b.arn is not null
-//       and d.arn = $1;
-//     EOQ
-// } // Time: 4.2s. Rows fetched: 2. Hydrate calls: 2.
-
 query "ec2_application_load_balancers_for_cloudfront_distribution" {
   sql = <<-EOQ
     with distribution_origins as (
@@ -265,27 +251,7 @@ query "ec2_application_load_balancers_for_cloudfront_distribution" {
     where
       alb_arn is not null;
   EOQ
-} // Time: 2.7s. Rows fetched: 2. Hydrate calls: 2.
-
-// query "media_stores_for_cloudfront_distribution" {
-//   sql = <<-EOQ
-//     select
-//       arn as mediastore_arn
-//     from
-//       aws_media_store_container
-//     where
-//       endpoint in
-//       (
-//         select
-//           'https://' || (origin ->> 'DomainName')
-//         from
-//           aws_cloudfront_distribution,
-//           jsonb_array_elements(origins) as origin
-//         where
-//           arn = $1
-//       );
-//   EOQ
-// } // Time: 2.2s. Rows fetched: 2. Hydrate calls: 2.
+}
 
 query "media_stores_for_cloudfront_distribution" {
   sql = <<-EOQ
@@ -307,28 +273,7 @@ query "media_stores_for_cloudfront_distribution" {
           and account_id = split_part($1,':',5)
       );
   EOQ
-} // Time: 321ms. Rows fetched: 2. Hydrate calls: 2. 
-
-// query "s3_buckets_for_cloudfront_distribution" {
-//   sql = <<-EOQ
-//     select
-//       arn as bucket_arn
-//     from
-//       aws_s3_bucket
-//     where
-//       name in
-//       (
-//         select distinct
-//           split_part(origin ->> 'DomainName', '.', 1) as bucket_name
-//         from
-//           aws_cloudfront_distribution,
-//           jsonb_array_elements(origins) as origin
-//         where
-//           origin ->> 'DomainName' like '%s3%'
-//           and arn = $1
-//       );
-//   EOQ
-// } // Time: 4.0s. Rows fetched: 2. Hydrate calls: 2.
+}
 
 query "s3_buckets_for_cloudfront_distribution" {
   sql = <<-EOQ
@@ -350,28 +295,7 @@ query "s3_buckets_for_cloudfront_distribution" {
           and account_id = split_part($1,':',5)
       );
   EOQ
-} // Time: 2.7s. Rows fetched: 2. Hydrate calls: 2.
-
-// query "wafv2_web_acls_for_cloudfront_distribution" {
-//   sql = <<-EOQ
-//     select
-//       arn as wafv2_acl_arn
-//     from
-//       aws_wafv2_web_acl
-//     where
-//       arn in
-//       (
-//         select
-//           web_acl_id
-//         from
-//           aws_cloudfront_distribution
-//         where
-//           arn = $1
-//           and account_id = split_part($1,':',5)
-//       )
-//       and account_id = split_part($1,':',5);
-//   EOQ
-// } // Time: 6.4s. Rows fetched: 2. Hydrate calls: 2.
+}
 
 query "wafv2_web_acls_for_cloudfront_distribution" {
   sql = <<-EOQ
@@ -393,7 +317,7 @@ query "wafv2_web_acls_for_cloudfront_distribution" {
     where
     account_id = split_part($1,':',5);
   EOQ
-} // Time: 397ms. Rows fetched: 2. Hydrate calls: 2.
+} 
 
 # Card queries
 

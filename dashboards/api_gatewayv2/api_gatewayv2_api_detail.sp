@@ -233,19 +233,6 @@ query "api_gatewayv2_api_input" {
 
 # With queries
 
-// query "ec2_load_balancer_listeners_for_api_gatewayv2_api" {
-//   sql = <<-EOQ
-//     select
-//       lb.arn as listener_arn
-//     from
-//       aws_api_gatewayv2_integration as i
-//       join aws_ec2_load_balancer_listener as lb on i.integration_uri = lb.arn
-//       join aws_api_gatewayv2_api as a on a.api_id = i.api_id
-//     where
-//       a.api_id = $1;
-//   EOQ
-// }
-
 query "ec2_load_balancer_listeners_for_api_gatewayv2_api" {
   sql = <<-EOQ
   with filtered_api as (
@@ -298,20 +285,6 @@ query "ec2_load_balancer_listeners_for_api_gatewayv2_api" {
   EOQ
 }
 
-// query "kinesis_streams_for_api_gatewayv2_api" {
-//   sql = <<-EOQ
-//     select
-//       s.stream_arn as kinesis_stream_arn
-//     from
-//       aws_api_gatewayv2_integration as i
-//       join aws_kinesis_stream as s on i.request_parameters ->> 'StreamName' = s.stream_name
-//       join aws_api_gatewayv2_api as a on a.api_id = i.api_id
-//     where
-//       integration_subtype like '%Kinesis-%'
-//       and a.api_id = $1;
-//   EOQ
-// }
-
 query "kinesis_streams_for_api_gatewayv2_api" {
   sql = <<-EOQ
     with filtered_api as (
@@ -358,19 +331,6 @@ query "kinesis_streams_for_api_gatewayv2_api" {
   EOQ
 }
 
-// query "lambda_functions_for_api_gatewayv2_api" {
-//   sql = <<-EOQ
-//     select
-//       f.arn as function_arn
-//     from
-//       aws_api_gatewayv2_integration as i
-//       join aws_lambda_function as f on i.integration_uri = f.arn
-//       join aws_api_gatewayv2_api as a on a.api_id = i.api_id
-//     where
-//       a.api_id = $1;
-//   EOQ
-// }
-
 query "lambda_functions_for_api_gatewayv2_api" {
   sql = <<-EOQ
     with filtered_api as (
@@ -414,19 +374,6 @@ query "lambda_functions_for_api_gatewayv2_api" {
       join filtered_api a on a.api_id = i.api_id;
   EOQ
 }
-
-// query "source_sqs_queues_for_api_gatewayv2_api" {
-//   sql = <<-EOQ
-//     select
-//       q.queue_arn as queue_arn
-//     from
-//       aws_api_gatewayv2_integration as i
-//       join aws_sqs_queue as q on i.request_parameters ->> 'QueueUrl' = q.queue_url
-//       join aws_api_gatewayv2_api as a on a.api_id = i.api_id
-//     where
-//       integration_subtype like '%SQS-ReceiveMessage%' and a.api_id = $1;
-//   EOQ
-// }
 
 query "source_sqs_queues_for_api_gatewayv2_api" {
   sql = <<-EOQ
@@ -474,25 +421,12 @@ query "source_sqs_queues_for_api_gatewayv2_api" {
   EOQ
 }
 
-// query "target_sqs_queues_for_api_gatewayv2_api" {
-//   sql = <<-EOQ
-//     select
-//       q.queue_arn as queue_arn
-//     from
-//       aws_api_gatewayv2_integration as i
-//       join aws_sqs_queue as q on i.request_parameters ->> 'QueueUrl' = q.queue_url
-//       join aws_api_gatewayv2_api as a on a.api_id = i.api_id
-//     where
-//       integration_subtype like '%SQS-SendMessage%' and a.api_id = $1;
-//   EOQ
-// }
-
 query "target_sqs_queues_for_api_gatewayv2_api" {
   sql = <<-EOQ
     with filtered_api as (
       select
         api_id,
-        account_id,  
+        account_id,
         region
       from
         aws_api_gatewayv2_api

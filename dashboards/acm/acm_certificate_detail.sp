@@ -232,45 +232,6 @@ query "acm_certificate_input" {
 
 # With queries
 
-// query "cloudfront_distributions_for_acm_certificate" {
-//   sql = <<-EOQ
-//     select
-//       arn as distribution_arn
-//     from
-//       aws_cloudfront_distribution
-//     where
-//       arn in
-//       (
-//         select
-//           jsonb_array_elements_text(in_use_by)
-//         from
-//           aws_acm_certificate
-//         where
-//           certificate_arn = $1
-//       );
-//     EOQ
-// } Time: 3.1s. Rows fetched: 1. Hydrate calls: 1.
-
-// query "cloudfront_distributions_for_acm_certificate" {
-//   sql = <<-EOQ
-//     select
-//       arn as distribution_arn
-//     from
-//       aws_cloudfront_distribution
-//     where
-//       arn = (
-//         select
-//           jsonb_array_elements_text(in_use_by)
-//         from
-//           aws_acm_certificate
-//         where
-//           certificate_arn = $1
-//           and account_id = split_part($1, ':', 5)
-//           and region = split_part($1, ':', 4)
-//       );
-//     EOQ
-// } // Time: 2.9s. Rows fetched: 1. Hydrate calls: 1.
-
 query "cloudfront_distributions_for_acm_certificate" {
   sql = <<-EOQ
     with certificate_usage as (
@@ -290,26 +251,7 @@ query "cloudfront_distributions_for_acm_certificate" {
     join
       certificate_usage cu on d.arn = cu.in_use_arn;
     EOQ
-} // Time: 340ms. Rows fetched: 3. Hydrate calls: 0.
-
-// query "ec2_application_load_balancers_for_acm_certificate" {
-//   sql = <<-EOQ
-//     select
-//       arn as alb_arn
-//     from
-//       aws_ec2_application_load_balancer
-//     where
-//       arn in
-//       (
-//         select
-//           jsonb_array_elements_text(in_use_by)
-//         from
-//           aws_acm_certificate
-//         where
-//           certificate_arn = $1
-//       );
-//     EOQ
-// } // Time: 2.9s. Rows fetched: 1. Hydrate calls: 0.
+}
 
 query "ec2_application_load_balancers_for_acm_certificate" {
   sql = <<-EOQ
@@ -330,26 +272,7 @@ query "ec2_application_load_balancers_for_acm_certificate" {
     join
       certificate_usage cu on alb.arn = cu.in_use_arn;
     EOQ
-} // Time: 384ms. Rows fetched: 3. Hydrate calls: 0.
-
-// query "ec2_classic_load_balancers_for_acm_certificate" {
-//   sql = <<-EOQ
-//     select
-//       arn as clb_arn
-//     from
-//       aws_ec2_classic_load_balancer
-//     where
-//       arn in
-//       (
-//         select
-//           jsonb_array_elements_text(in_use_by)
-//         from
-//           aws_acm_certificate
-//         where
-//           certificate_arn = $1
-//       );
-//     EOQ
-// } // Time: 1.9s. Rows fetched: 1. Hydrate calls: 0.
+}
 
 query "ec2_classic_load_balancers_for_acm_certificate" {
   sql = <<-EOQ
@@ -370,26 +293,7 @@ query "ec2_classic_load_balancers_for_acm_certificate" {
     join
       certificate_usage cu on clb.arn = cu.in_use_arn;
   EOQ
-} // Time: 478ms. Rows fetched: 3. Hydrate calls: 0.
-
-// query "ec2_network_load_balancers_for_acm_certificate" {
-//   sql = <<-EOQ
-//     select
-//       arn as nlb_arn
-//     from
-//       aws_ec2_network_load_balancer
-//     where
-//       arn in
-//       (
-//         select
-//           jsonb_array_elements_text(in_use_by)
-//         from
-//           aws_acm_certificate
-//         where
-//           certificate_arn = $1
-//       );
-//     EOQ
-// } // Time: 1.9s. Rows fetched: 1. Hydrate calls: 1.
+}
 
 query "ec2_network_load_balancers_for_acm_certificate" {
   sql = <<-EOQ
@@ -410,18 +314,7 @@ query "ec2_network_load_balancers_for_acm_certificate" {
     join
       certificate_usage cu on nlb.arn = cu.in_use_arn;
   EOQ
-} // Time: 380ms. Rows fetched: 1. Hydrate calls: 0.
-
-// query "opensearch_domains_for_acm_certificate" {
-//   sql = <<-EOQ
-//     select
-//       arn as opensearch_arn
-//     from
-//       aws_opensearch_domain
-//     where
-//       domain_endpoint_options ->> 'CustomEndpointCertificateArn' = $1;
-//     EOQ
-// } // Time: 3.6s. Rows fetched: 0. Hydrate calls: 0.
+}
 
 query "opensearch_domains_for_acm_certificate" {
   sql = <<-EOQ
@@ -434,7 +327,7 @@ query "opensearch_domains_for_acm_certificate" {
       and region = split_part($1, ':', 4)
       and domain_endpoint_options ->> 'CustomEndpointCertificateArn' = $1;
     EOQ
-} // Time: 88ms. Rows fetched: 1. Hydrate calls: 1.
+} 
 
 # Card queries
 

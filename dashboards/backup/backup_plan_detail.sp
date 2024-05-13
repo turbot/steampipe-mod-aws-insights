@@ -134,48 +134,6 @@ query "backup_plan_input" {
 
 # With queries
 
-// query "backup_vaults_for_backup_plan" {
-//   sql = <<-EOQ
-//     select
-//       v.arn as backup_vault_arn
-//     from
-//       aws_backup_vault as v,
-//       aws_backup_plan as p,
-//       jsonb_array_elements(backup_plan -> 'Rules') as r
-//     where
-//       r ->> 'TargetBackupVaultName' = v.name
-//       and p.arn = $1;
-//   EOQ
-// } // Time: 60.8s. Rows fetched: 38. Hydrate calls: 76.
-
-// query "backup_vaults_for_backup_plan" {
-//   sql = <<-EOQ
-//     with plan_details as (
-//       select
-//         arn,
-//         jsonb_array_elements(backup_plan -> 'Rules') as rule
-//       from
-//         aws_backup_plan
-//       where
-//         arn = $1
-//         and account_id = split_part($1, ':', 5)
-//         and region = split_part($1, ':', 4)
-//     ),
-//     vault_names as (
-//       select
-//         rule ->> 'TargetBackupVaultName' as vault_name
-//       from
-//         plan_details
-//     )
-//     select
-//       v.arn as backup_vault_arn
-//     from
-//       aws_backup_vault v
-//     join
-//       vault_names vn on v.name = vn.vault_name;
-//   EOQ
-// } // Time: 10.3s. Rows fetched: 14. Hydrate calls: 0.
-
 query "backup_vaults_for_backup_plan" {
   sql = <<-EOQ
     with plan_details as (
@@ -205,39 +163,7 @@ query "backup_vaults_for_backup_plan" {
       v.account_id = split_part($1, ':', 5)
       and v.region = split_part($1, ':', 4);
   EOQ
-} // Time: 2.6s. Rows fetched: 99. Hydrate calls: 99.
-
-# Card queries
-
-// query "backup_plan_resource_assignment" {
-//   sql = <<-EOQ
-//     select
-//       'Resource Assignments' as label,
-//       count(selection_name) as value
-//     from
-//       aws_backup_selection as s,
-//       aws_backup_plan as p
-//     where
-//       s.backup_plan_id = p.backup_plan_id
-//       and p.arn = $1;
-//   EOQ
-// } // Time: 1.9s. Rows fetched: 38. Hydrate calls: 38.
-
-// query "backup_plan_resource_assignment" {
-//   sql = <<-EOQ
-//     select
-//       'Resource Assignments' as label,
-//       count(selection_name) as value
-//     from
-//       aws_backup_selection as s,
-//       aws_backup_plan as p
-//     where
-//       s.backup_plan_id = p.backup_plan_id
-//       and p.arn = $1
-//       and account_id = split_part($1, ':', 5)
-//       and region = split_part($1, ':', 4);
-//   EOQ
-// } // Time: 1.8s. Rows fetched: 38. Hydrate calls: 38.
+}
 
 query "backup_plan_resource_assignment" {
   sql = <<-EOQ
@@ -259,7 +185,7 @@ query "backup_plan_resource_assignment" {
     join
       filtered_backup_plans p on s.backup_plan_id = p.backup_plan_id;
   EOQ
-} // Time: 1.6s. Rows fetched: 38. Hydrate calls: 38.
+} 
 
 # Other detail page queries
 

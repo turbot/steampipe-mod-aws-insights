@@ -453,70 +453,6 @@ query "ec2_instance_input" {
 
 # With queries
 
-# query "ebs_volumes_for_ec2_instance" {
-#   sql = <<-EOQ
-#     select
-#       v.arn as volume_arn
-#     from
-#       aws_ec2_instance as i,
-#       jsonb_array_elements(block_device_mappings) as bd,
-#       aws_ebs_volume as v
-#     where
-#       v.volume_id = bd -> 'Ebs' ->> 'VolumeId'
-#       and v.region = split_part($1, ':', 4)
-#       and v.account_id = split_part($1, ':', 5)
-#       and i.region = split_part($1, ':', 4)
-#       and i.account_id = split_part($1, ':', 5)
-#       and i.arn = $1;
-#   EOQ
-# }
-
-# query "ebs_volumes_for_ec2_instance" {
-#   sql = <<-EOQ
-#     with ec2_instances as (
-#       select
-#         arn,
-#         block_device_mappings,
-#         region,
-#         account_id
-#       from
-#         aws_ec2_instance
-#       where
-#         account_id = split_part($1, ':', 5)
-#         and region = split_part($1, ':', 4)
-#       order by
-#         arn,
-#         region,
-#         account_id
-#     ),
-#     ebs_volumes as (
-#       select
-#         arn,
-#         volume_id,
-#         region,
-#         account_id
-#       from
-#         aws_ebs_volume
-#       where
-#         account_id = split_part($1, ':', 5)
-#         and region = split_part($1, ':', 4)
-#       order by
-#         volume_id,
-#         region,
-#         account_id
-#     )
-#     select
-#       v.arn as volume_arn
-#     from
-#       ec2_instances as i,
-#       jsonb_array_elements(block_device_mappings) as bd,
-#       ebs_volumes as v
-#     where
-#       v.volume_id = bd -> 'Ebs' ->> 'VolumeId'
-#       and i.arn = $1;
-#   EOQ
-# }
-
 query "ebs_volumes_for_ec2_instance" {
   sql = <<-EOQ
     with ec2_instances as (
@@ -563,25 +499,6 @@ query "ebs_volumes_for_ec2_instance" {
   EOQ
 }
 
-# query "ec2_application_load_balancers_for_ec2_instance" {
-#   sql = <<-EOQ
-#     select
-#       distinct lb.arn as application_load_balancer_arn
-#     from
-#       aws_ec2_instance as i,
-#       aws_ec2_target_group as target,
-#       jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
-#       jsonb_array_elements_text(target.load_balancer_arns) as l,
-#       aws_ec2_application_load_balancer as lb
-#     where
-#       health_descriptions -> 'Target' ->> 'Id' = i.instance_id
-#       and l = lb.arn
-#       and lb.region = split_part($1, ':', 4)
-#       and lb.account_id = split_part($1, ':', 5)
-#       and i.arn = $1;
-#   EOQ
-# }
-
 query "ec2_application_load_balancers_for_ec2_instance" {
   sql = <<-EOQ
     with aws_ec2_instances as (
@@ -595,13 +512,13 @@ query "ec2_application_load_balancers_for_ec2_instance" {
       where
         account_id = split_part($1, ':', 5)
         and region = split_part($1, ':', 4)
-        and arn = $1        
+        and arn = $1
     ),
     aws_ec2_target_groups as (
       select
         target_health_descriptions,
         load_balancer_arns
-      from 
+      from
         aws_ec2_target_group
       where
         account_id = split_part($1, ':', 5)
@@ -630,22 +547,6 @@ query "ec2_application_load_balancers_for_ec2_instance" {
   EOQ
 }
 
-# query "ec2_classic_load_balancers_for_ec2_instance" {
-#   sql = <<-EOQ
-#     select
-#       distinct clb.arn as classic_load_balancer_arn
-#     from
-#       aws_ec2_classic_load_balancer as clb,
-#       jsonb_array_elements(clb.instances) as instance,
-#       aws_ec2_instance as i
-#     where
-#       i.arn = $1
-#       and clb.region = split_part($1, ':', 4)
-#       and clb.account_id = split_part($1, ':', 5)
-#       and instance ->> 'InstanceId' = i.instance_id;
-#   EOQ
-# }
-
 query "ec2_classic_load_balancers_for_ec2_instance" {
   sql = <<-EOQ
     with aws_ec2_instances as (
@@ -653,12 +554,12 @@ query "ec2_classic_load_balancers_for_ec2_instance" {
         instance_id,
         account_id,
         region
-      from 
+      from
         aws_ec2_instance
       where
         account_id = split_part($1, ':', 5)
         and region = split_part($1, ':', 4)
-        and arn = $1            
+        and arn = $1
     ),
     aws_ec2_classic_load_balancers as (
       select
@@ -683,24 +584,6 @@ query "ec2_classic_load_balancers_for_ec2_instance" {
   EOQ
 }
 
-# query "ec2_gateway_load_balancers_for_ec2_instance" {
-#   sql = <<-EOQ
-#     select
-#       distinct lb.arn as gateway_load_balancer_arn
-#     from
-#       aws_ec2_instance as i,
-#       aws_ec2_target_group as target,
-#       jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
-#       jsonb_array_elements_text(target.load_balancer_arns) as l,
-#       aws_ec2_gateway_load_balancer as lb
-#     where
-#       health_descriptions -> 'Target' ->> 'Id' = i.instance_id
-#       and l = lb.arn
-#       and lb.region = split_part($1, ':', 4)
-#       and lb.account_id = split_part($1, ':', 5)
-#       and i.arn = $1;
-#   EOQ
-# }
 
 query "ec2_gateway_load_balancers_for_ec2_instance" {
   sql = <<-EOQ
@@ -710,12 +593,12 @@ query "ec2_gateway_load_balancers_for_ec2_instance" {
         instance_id,
         account_id,
         region
-      from 
+      from
         aws_ec2_instance
       where
         account_id = split_part($1, ':', 5)
         and region = split_part($1, ':', 4)
-        and arn = $1            
+        and arn = $1
     ),
     aws_ec2_target_groups as (
       select
@@ -723,22 +606,22 @@ query "ec2_gateway_load_balancers_for_ec2_instance" {
         load_balancer_arns,
         account_id,
         region
-      from 
+      from
         aws_ec2_target_group
       where
         account_id = split_part($1, ':', 5)
-        and region = split_part($1, ':', 4)        
+        and region = split_part($1, ':', 4)
     ),
     aws_ec2_gateway_load_balancers as (
       select
         arn,
         account_id,
         region
-      from 
+      from
         aws_ec2_gateway_load_balancer
       where
         account_id = split_part($1, ':', 5)
-        and region = split_part($1, ':', 4)        
+        and region = split_part($1, ':', 4)
     )
     select
       distinct lb.arn as gateway_load_balancer_arn
@@ -768,25 +651,6 @@ query "ec2_network_interfaces_for_ec2_instance" {
   EOQ
 }
 
-# query "ec2_network_load_balancers_for_ec2_instance" {
-#   sql = <<-EOQ
-#     select
-#       distinct lb.arn as network_load_balancer_arn
-#     from
-#       aws_ec2_instance as i,
-#       aws_ec2_target_group as target,
-#       jsonb_array_elements(target.target_health_descriptions) as health_descriptions,
-#       jsonb_array_elements_text(target.load_balancer_arns) as l,
-#       aws_ec2_network_load_balancer as lb
-#     where
-#       health_descriptions -> 'Target' ->> 'Id' = i.instance_id
-#       and l = lb.arn
-#       and lb.region = split_part($1, ':', 4)
-#       and lb.account_id = split_part($1, ':', 5)
-#       and i.arn = $1;
-#   EOQ
-# }
-
 query "ec2_network_load_balancers_for_ec2_instance" {
   sql = <<-EOQ
     with aws_ec2_instances as (
@@ -795,12 +659,12 @@ query "ec2_network_load_balancers_for_ec2_instance" {
         instance_id,
         account_id,
         region
-      from 
+      from
         aws_ec2_instance
       where
         account_id = split_part($1, ':', 5)
         and region = split_part($1, ':', 4)
-        and arn = $1            
+        and arn = $1
     ),
     aws_ec2_target_groups as (
       select
@@ -808,22 +672,22 @@ query "ec2_network_load_balancers_for_ec2_instance" {
         load_balancer_arns,
         account_id,
         region
-      from 
+      from
         aws_ec2_target_group
       where
         account_id = split_part($1, ':', 5)
-        and region = split_part($1, ':', 4)        
+        and region = split_part($1, ':', 4)
     ),
     aws_ec2_network_load_balancers as (
       select
         arn,
         account_id,
         region
-      from 
+      from
         aws_ec2_network_load_balancer
       where
         account_id = split_part($1, ':', 5)
-        and region = split_part($1, ':', 4)        
+        and region = split_part($1, ':', 4)
     )
     select
       distinct lb.arn as gateway_load_balancer_arn
@@ -839,22 +703,6 @@ query "ec2_network_load_balancers_for_ec2_instance" {
   EOQ
 }
 
-# query "ec2_target_groups_for_ec2_instance" {
-#   sql = <<-EOQ
-#     select
-#       target.target_group_arn
-#     from
-#       aws_ec2_instance as i,
-#       aws_ec2_target_group as target,
-#       jsonb_array_elements(target.target_health_descriptions) as health_descriptions
-#     where
-#       i.arn = $1
-#       and target.region = split_part($1, ':', 4)
-#       and target.account_id = split_part($1, ':', 5)
-#       and health_descriptions -> 'Target' ->> 'Id' = i.instance_id;
-#   EOQ
-# }
-
 query "ec2_target_groups_for_ec2_instance" {
   sql = <<-EOQ
     with aws_ec2_instances as (
@@ -862,12 +710,12 @@ query "ec2_target_groups_for_ec2_instance" {
         instance_id,
         account_id,
         region
-      from 
+      from
         aws_ec2_instance
       where
         account_id = split_part($1, ':', 5)
         and region = split_part($1, ':', 4)
-        and arn = $1            
+        and arn = $1
     ),
     aws_ec2_target_groups as (
       select
@@ -875,11 +723,11 @@ query "ec2_target_groups_for_ec2_instance" {
         target_health_descriptions,
         account_id,
         region
-      from 
+      from
         aws_ec2_target_group
       where
         account_id = split_part($1, ':', 5)
-        and region = split_part($1, ':', 4)        
+        and region = split_part($1, ':', 4)
     )
     select
       target.target_group_arn
@@ -892,23 +740,6 @@ query "ec2_target_groups_for_ec2_instance" {
   EOQ
 }
 
-# query "ecs_clusters_for_ec2_instance" {
-#   sql = <<-EOQ
-#     select
-#       distinct cluster.cluster_arn as cluster_arn
-#     from
-#       aws_ec2_instance as i,
-#       aws_ecs_container_instance as ci,
-#       aws_ecs_cluster as cluster
-#     where
-#       ci.ec2_instance_id = i.instance_id
-#       and ci.cluster_arn = cluster.cluster_arn
-#       and cluster.account_id = split_part($1, ':', 5)
-#       and cluster.region = split_part($1, ':', 5)
-#       and i.arn = $1;
-#   EOQ
-# }
-
 query "ecs_clusters_for_ec2_instance" {
   sql = <<-EOQ
     with aws_ec2_instances as (
@@ -916,12 +747,12 @@ query "ecs_clusters_for_ec2_instance" {
         instance_id,
         account_id,
         region
-      from 
+      from
         aws_ec2_instance
       where
         account_id = split_part($1, ':', 5)
         and region = split_part($1, ':', 4)
-        and arn = $1            
+        and arn = $1
     ),
     aws_ecs_container_instances as (
       select
@@ -929,22 +760,22 @@ query "ecs_clusters_for_ec2_instance" {
         cluster_arn,
         account_id,
         region
-      from 
+      from
         aws_ecs_container_instance
       where
         account_id = split_part($1, ':', 5)
-        and region = split_part($1, ':', 4)           
+        and region = split_part($1, ':', 4)
     ),
     aws_ecs_clusters as (
       select
         cluster_arn,
         account_id,
         region
-      from 
+      from
         aws_ecs_cluster
       where
         account_id = split_part($1, ':', 5)
-        and region = split_part($1, ':', 4)          
+        and region = split_part($1, ':', 4)
     )
     select
       distinct cluster.cluster_arn as cluster_arn
@@ -958,24 +789,6 @@ query "ecs_clusters_for_ec2_instance" {
   EOQ
 }
 
-# query "iam_roles_for_ec2_instance" {
-#   sql = <<-EOQ
-#     select
-#       distinct r.arn as role_arn
-#     from
-#       aws_ec2_instance as i,
-#       aws_iam_role as r,
-#       jsonb_array_elements_text(instance_profile_arns) as instance_profile
-#     where
-#       instance_profile = i.iam_instance_profile_arn
-#       and r.account_id = split_part($1, ':', 5)
-#       and i.account_id = split_part($1, ':', 5)
-#       and r.region = split_part($1, ':', 4)
-#       and i.region = split_part($1, ':', 4)
-#       and i.arn = $1;
-#   EOQ
-# }
-
 query "iam_roles_for_ec2_instance" {
   sql = <<-EOQ
     with aws_ec2_instances as (
@@ -984,12 +797,12 @@ query "iam_roles_for_ec2_instance" {
         iam_instance_profile_arn,
         account_id,
         region
-      from 
+      from
         aws_ec2_instance
       where
         account_id = split_part($1, ':', 5)
         and region = split_part($1, ':', 4)
-        and arn = $1            
+        and arn = $1
     ),
     aws_iam_roles as (
       select
@@ -997,11 +810,11 @@ query "iam_roles_for_ec2_instance" {
         arn,
         account_id,
         region
-      from 
+      from
         aws_iam_role
       where
         account_id = split_part($1, ':', 5)
-        and region = split_part($1, ':', 4)           
+        and region = split_part($1, ':', 4)
     )
     select
       distinct r.arn as role_arn
@@ -1014,23 +827,6 @@ query "iam_roles_for_ec2_instance" {
   EOQ
 }
 
-# query "vpc_eips_for_ec2_instance" {
-#   sql = <<-EOQ
-#     select
-#       e.arn as eip_arn
-#     from
-#       aws_vpc_eip as e,
-#       aws_ec2_instance as i
-#     where
-#       e.instance_id = i.instance_id
-#       and i.account_id = split_part($1, ':', 5)
-#       and e.account_id = split_part($1, ':', 5)
-#       and i.region = split_part($1, ':', 4)
-#       and e.region = split_part($1, ':', 4 )
-#       and i.arn = $1;
-#   EOQ
-# }
-
 query "vpc_eips_for_ec2_instance" {
   sql = <<-EOQ
     with aws_ec2_instances as (
@@ -1038,12 +834,12 @@ query "vpc_eips_for_ec2_instance" {
         instance_id,
         account_id,
         region
-      from 
+      from
         aws_ec2_instance
       where
         account_id = split_part($1, ':', 5)
         and region = split_part($1, ':', 4)
-        and arn = $1            
+        and arn = $1
     ),
     aws_vpc_eips as (
       select
@@ -1051,11 +847,11 @@ query "vpc_eips_for_ec2_instance" {
         arn,
         account_id,
         region
-      from 
+      from
         aws_vpc_eip
       where
         account_id = split_part($1, ':', 5)
-        and region = split_part($1, ':', 4)           
+        and region = split_part($1, ':', 4)
     )
     select
       e.arn as eip_arn

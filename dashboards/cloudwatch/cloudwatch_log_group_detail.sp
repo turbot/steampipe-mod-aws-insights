@@ -249,19 +249,6 @@ query "cloudtrail_trails_for_cloudwatch_log_group" {
   EOQ
 }
 
-// query "cloudwatch_log_metric_filters_for_cloudwatch_log_group" {
-//   sql = <<-EOQ
-//     select
-//       f.name as log_metric_filter_name
-//     from
-//       aws_cloudwatch_log_group as g
-//       left join aws_cloudwatch_log_metric_filter as f on g.name = f.log_group_name
-//     where
-//       f.region = g.region
-//       and g.arn = $1;
-//   EOQ
-// }
-
 query "cloudwatch_log_metric_filters_for_cloudwatch_log_group" {
   sql = <<-EOQ
     with filtered_log_group as (
@@ -284,23 +271,6 @@ query "cloudwatch_log_metric_filters_for_cloudwatch_log_group" {
       left join aws_cloudwatch_log_metric_filter f on g.name = f.log_group_name and g.region = f.region and g.account_id = f.account_id;
   EOQ
 }
-
-// query "kinesis_streams_for_cloudwatch_log_group" {
-//   sql = <<-EOQ
-//     select
-//       s.stream_arn
-//     from
-//       aws_cloudwatch_log_group as g,
-//       aws_cloudwatch_log_subscription_filter as f,
-//       aws_kinesis_stream as s
-//     where
-//       f.region = g.region
-//       and g.name = f.log_group_name
-//       and s.stream_arn = f.destination_arn
-//       and g.arn = $1
-//       and g.account_id = split_part(s.stream_arn, ':', 5);
-//   EOQ
-// }
 
 query "kinesis_streams_for_cloudwatch_log_group" {
   sql = <<-EOQ
@@ -353,20 +323,6 @@ query "kms_keys_for_cloudwatch_log_group" {
   EOQ
 }
 
-// query "lambda_functions_for_cloudwatch_log_group" {
-//   sql = <<-EOQ
-//     select
-//       f.arn as lambda_function_arn
-//     from
-//       aws_cloudwatch_log_group as g
-//       left join aws_lambda_function as f on f.name = split_part(g.name, '/', 4)
-//     where
-//       g.name like '/aws/lambda/%'
-//       and g.region = f.region
-//       and g.arn = $1;
-//   EOQ
-// }
-
 query "lambda_functions_for_cloudwatch_log_group" {
   sql = <<-EOQ
     with filtered_log_group as (
@@ -394,22 +350,6 @@ query "lambda_functions_for_cloudwatch_log_group" {
   EOQ
 }
 
-// query "vpc_flow_logs_for_cloudwatch_log_group" {
-//   sql = <<-EOQ
-//     select
-//       distinct f.flow_log_id
-//     from
-//       aws_cloudwatch_log_group as g,
-//       aws_vpc_flow_log as f
-//     where
-//       f.log_group_name = g.name
-//       and f.log_destination_type = 'cloud-watch-logs'
-//       and f.region = g.region
-//       and g.arn = $1
-//       and g.account_id = split_part($1, ':', 5);
-//   EOQ
-// } // Time: 3.1s. Rows fetched: 0. Hydrate calls: 0.
-
 query "vpc_flow_logs_for_cloudwatch_log_group" {
   sql = <<-EOQ
     with filtered_log_group as (
@@ -433,7 +373,7 @@ query "vpc_flow_logs_for_cloudwatch_log_group" {
       f.log_destination_type = 'cloud-watch-logs'
       and f.account_id = split_part($1, ':', 5);
   EOQ
-} // Time: 327ms. Rows fetched: 27. Hydrate calls: 27.
+} 
 
 # Card queries
 

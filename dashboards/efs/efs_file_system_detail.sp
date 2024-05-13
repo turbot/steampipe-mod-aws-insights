@@ -333,18 +333,6 @@ query "efs_file_system_automatic_backup" {
 
 # with queries
 
-// query "efs_access_points_for_efs_file_system" {
-//   sql = <<-EOQ
-//     select
-//       a.access_point_arn as access_point_arn
-//     from
-//       aws_efs_access_point as a
-//       left join aws_efs_file_system as f on a.file_system_id = f.file_system_id
-//     where
-//       f.arn = $1;
-//   EOQ
-// } // Time: 2.0s. Rows fetched: 1. Hydrate calls: 0.
-
 query "efs_access_points_for_efs_file_system" {
   sql = <<-EOQ
     with efs_file_system_id as (
@@ -364,19 +352,7 @@ query "efs_access_points_for_efs_file_system" {
     join
       efs_file_system_id efs on efs.file_system_id = a.file_system_id;
   EOQ
-} // Time: 1.5s. Rows fetched: 3. Hydrate calls: 0.
-
-// query "efs_mount_targets_for_efs_file_system" {
-//   sql = <<-EOQ
-//     select
-//       mount_target_id
-//     from
-//       aws_efs_mount_target as m
-//       left join aws_efs_file_system as f on m.file_system_id = f.file_system_id
-//     where
-//       f.arn = $1;
-//   EOQ
-// } // Time: 2.9s. Rows fetched: 1. Hydrate calls: 1.
+}
 
 query "efs_mount_targets_for_efs_file_system" {
   sql = <<-EOQ
@@ -397,7 +373,7 @@ query "efs_mount_targets_for_efs_file_system" {
     join
       efs_details ed on mt.file_system_id = ed.file_system_id;
   EOQ
-} // Time: 1.8s. Rows fetched: 200. Hydrate calls: 0.
+}
 
 query "kms_keys_for_efs_file_system" {
   sql = <<-EOQ
@@ -427,19 +403,6 @@ query "vpc_security_groups_for_efs_file_system" {
   EOQ
 }
 
-// query "vpc_subnets_for_efs_file_system" {
-//   sql = <<-EOQ
-//     select
-//       s.subnet_id as subnet_id
-//     from
-//       aws_efs_mount_target as m
-//       left join aws_efs_file_system as f on f.file_system_id = m.file_system_id
-//       left join aws_vpc_subnet as s on m.subnet_id = s.subnet_id
-//     where
-//       f.arn = $1;
-//   EOQ
-// } // Time: 1.2s. Rows fetched: 3. Hydrate calls: 0.
-
 query "vpc_subnets_for_efs_file_system" {
   sql = <<-EOQ
     with relevant_mount_targets as (
@@ -461,20 +424,7 @@ query "vpc_subnets_for_efs_file_system" {
     join
       relevant_mount_targets rmt on rmt.subnet_id = s.subnet_id;
   EOQ
-} // Time: 1.8s. Rows fetched: 200. Hydrate calls: 0.
-
-// query "vpc_vpcs_for_efs_file_system" {
-//   sql = <<-EOQ
-//     select
-//       v.vpc_id as vpc_id
-//     from
-//       aws_efs_mount_target as m
-//       left join aws_efs_file_system as f on f.file_system_id = m.file_system_id
-//       left join aws_vpc as v on m.vpc_id= v.vpc_id
-//     where
-//       f.arn = $1;
-//   EOQ
-// } // Time: 2.9s. Rows fetched: 200. Hydrate calls: 0.
+}
 
 query "vpc_vpcs_for_efs_file_system" {
   sql = <<-EOQ
@@ -497,7 +447,7 @@ query "vpc_vpcs_for_efs_file_system" {
     join
       efs_mount_details emd on emd.vpc_id = v.vpc_id;
   EOQ
-} // Time: 2.9s. Rows fetched: 1. Hydrate calls: 0.
+} 
 
 # table queries
 

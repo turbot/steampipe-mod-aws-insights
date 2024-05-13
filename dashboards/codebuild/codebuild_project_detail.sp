@@ -312,45 +312,6 @@ query "cloudwatch_groups_for_codebuild_project" {
   EOQ
 }
 
-// query "cloudwatch_groups_for_codebuild_project" {
-//   sql = <<-EOQ
-//     select
-//       c.arn as cloudwatch_log_group_arn
-//     from
-//       aws_codebuild_project as p
-//       left join aws_cloudwatch_log_group c
-//       on c.name = logs_config -> 'CloudWatchLogs' ->> 'GroupName'
-//     where
-//       c.arn is not null
-//       and p.arn = $1
-//       and p.account_id = split_part($1, ':', 5)
-//       and p.region = split_part($1, ':', 4);
-//   EOQ
-// } // Time: 68.7s. Rows fetched: 1. Hydrate calls: 2.
-
-// query "cloudwatch_groups_for_codebuild_project" {
-//   sql = <<-EOQ
-//     with project_log_group as (
-//       select
-//         logs_config -> 'CloudWatchLogs' ->> 'GroupName' as log_group_name
-//       from
-//         aws_codebuild_project
-//       where
-//         account_id = split_part($1, ':', 5)
-//         and region = split_part($1, ':', 4)
-//         and arn = $1
-//     )
-//     select
-//       c.arn as cloudwatch_log_group_arn
-//     from
-//       aws_cloudwatch_log_group c
-//     join
-//       project_log_group plg on c.name = plg.log_group_name
-//     where
-//       c.arn is not null;
-//   EOQ
-// } // Time: 70.0s. Rows fetched: 1. Hydrate calls: 2.
-
 query "codecommit_repositories_for_codebuild_project" {
   sql = <<-EOQ
     select
@@ -380,19 +341,6 @@ query "codecommit_repositories_for_codebuild_project" {
       and p.region = split_part($1, ':', 4);
   EOQ
 }
-
-// query "ecr_repositories_for_codebuild_project" {
-//   sql = <<-EOQ
-//     select
-//       r.arn as ecr_repository_arn
-//     from
-//       aws_codebuild_project as p
-//       left join aws_ecr_repository as r on r.repository_uri = split_part(p.environment ->> 'Image', ':', 1)
-//     where
-//       r.arn is not null
-//       and p.arn = $1;
-//   EOQ
-// }
 
 query "ecr_repositories_for_codebuild_project" {
   sql = <<-EOQ

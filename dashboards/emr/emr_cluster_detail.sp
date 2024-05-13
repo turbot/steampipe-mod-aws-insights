@@ -273,22 +273,7 @@ query "iam_roles_for_emr_cluster" {
       c.cluster_arn = $1
       and r.arn = c.service_role;
   EOQ
-} // Time: 4.3s. Rows fetched: 6. Hydrate calls: 6.
-
-// query "iam_roles_for_emr_cluster" {
-//   sql = <<-EOQ
-//     select
-//       r.arn as role_arn
-//     from
-//       aws_iam_role as r,
-//       aws_emr_cluster as c
-//     where
-//       c.cluster_arn = $1
-//       and r.name = c.service_role
-//       and c.account_id = split_part($1, ':', 5)
-//       and c.region = split_part($1, ':', 4);
-//   EOQ
-// } // infinite loop
+} 
 
 query "s3_buckets_for_emr_cluster" {
   sql = <<-EOQ

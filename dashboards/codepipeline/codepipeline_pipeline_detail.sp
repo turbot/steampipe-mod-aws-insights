@@ -307,30 +307,6 @@ query "codepipeline_pipeline_input" {
 }
 
 # With queries
-// query "elastic_beanstalk_applications_for_codepipeline_pipeline" {
-//   sql = <<-EOQ
-//     select
-//       arn as beanstalk_app_arn
-//     from
-//       aws_elastic_beanstalk_application
-//     where
-//       name in
-//       (
-//         select
-//           a -> 'Configuration' ->> 'ApplicationName'
-//         from
-//           aws_codepipeline_pipeline,
-//           jsonb_array_elements(stages) as s,
-//           jsonb_array_elements(s -> 'Actions') as a
-//         where
-//           s ->> 'Name' = 'Deploy'
-//           and a -> 'ActionTypeId' ->> 'Provider' = 'ElasticBeanstalk'
-//           and arn = $1
-//           and region = split_part($1, ':', 4)
-//           and account_id = split_part($1, ':', 5)
-//       );
-//   EOQ
-// }
 
 query "elastic_beanstalk_applications_for_codepipeline_pipeline" {
   sql = <<-EOQ
@@ -363,29 +339,6 @@ query "elastic_beanstalk_applications_for_codepipeline_pipeline" {
   EOQ
 }
 
-// query "appconfig_applications_for_codepipeline_pipeline" {
-//   sql = <<-EOQ
-//     select
-//       arn as app_arn
-//     from
-//       aws_appconfig_application
-//     where
-//       id in
-//       (
-//         select
-//           a -> 'Configuration' ->> 'Application'
-//         from
-//           aws_codepipeline_pipeline,
-//           jsonb_array_elements(stages) as s,
-//           jsonb_array_elements(s -> 'Actions') as a
-//         where
-//           s ->> 'Name' = 'Deploy'
-//           and a -> 'ActionTypeId' ->> 'Provider' = 'AppConfig'
-//           and arn = $1
-//       );
-//   EOQ
-// } // Time: 1.1s. Rows fetched: 0. Hydrate calls: 0.
-
 query "appconfig_applications_for_codepipeline_pipeline" {
   sql = <<-EOQ
     with pipeline_details as (
@@ -415,7 +368,7 @@ query "appconfig_applications_for_codepipeline_pipeline" {
     where
       aa.id in (select application_id from appconfig_actions);
   EOQ
-} // Time: 1.2s. Rows fetched: 4. Hydrate calls: 0.
+}
 
 query "cloudformation_stacks_for_codepipeline_pipeline" {
   sql = <<-EOQ
@@ -441,29 +394,6 @@ query "cloudformation_stacks_for_codepipeline_pipeline" {
       );
   EOQ
 }
-
-// query "ecs_clusters_for_codepipeline_pipeline" {
-//   sql = <<-EOQ
-//     select
-//       cluster_arn as ecs_cluster_arn
-//     from
-//       aws_ecs_cluster
-//     where
-//       cluster_name in
-//       (
-//         select
-//           a -> 'Configuration' ->> 'ClusterName'
-//         from
-//           aws_codepipeline_pipeline,
-//           jsonb_array_elements(stages) as s,
-//           jsonb_array_elements(s -> 'Actions') as a
-//         where
-//           s ->> 'Name' = 'Deploy'
-//           and a -> 'ActionTypeId' ->> 'Provider' = 'ECS'
-//           and arn = $1
-//       );
-//   EOQ
-// } // Time: 3.9s. Rows fetched: 0. Hydrate calls: 0.
 
 query "ecs_clusters_for_codepipeline_pipeline" {
   sql = <<-EOQ
@@ -492,7 +422,7 @@ query "ecs_clusters_for_codepipeline_pipeline" {
     join
       distinct_cluster_names dcn on ec.cluster_name = dcn.cluster_name;
   EOQ
-} // Time: 1.5s. Rows fetched: 1. Hydrate calls: 1.
+} 
 
 query "codebuild_projects_for_codepipeline_pipeline" {
   sql = <<-EOQ

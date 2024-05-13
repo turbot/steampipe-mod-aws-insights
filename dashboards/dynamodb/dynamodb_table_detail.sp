@@ -217,19 +217,6 @@ query "dynamodb_table_input" {
 
 # With queries
 
-// query "dynamodb_backups_for_dynamodb_table" {
-//   sql = <<-EOQ
-//     select
-//       b.arn as dbynamodb_backup_arn
-//     from
-//       aws_dynamodb_backup as b,
-//       aws_dynamodb_table as t
-//     where
-//       t.arn = b.table_arn
-//       and t.arn = $1;
-//   EOQ
-// }
-
 query "dynamodb_backups_for_dynamodb_table" {
   sql = <<-EOQ
     select
@@ -242,20 +229,6 @@ query "dynamodb_backups_for_dynamodb_table" {
       and b.table_arn = $1;
   EOQ
 }
-
-// query "kinesis_streams_for_dynamodb_table" {
-//   sql = <<-EOQ
-//     select
-//       s.stream_arn as kinesis_stream_arn
-//     from
-//       aws_kinesis_stream as s,
-//       aws_dynamodb_table as t,
-//       jsonb_array_elements(t.streaming_destination -> 'KinesisDataStreamDestinations') as d
-//     where
-//       d ->> 'StreamArn' = s.stream_arn
-//       and t.arn = $1;
-//     EOQ
-// }
 
 query "kinesis_streams_for_dynamodb_table" {
   sql = <<-EOQ

@@ -289,20 +289,6 @@ query "vpc_security_groups_for_dax_cluster" {
   EOQ
 }
 
-// query "vpc_subnets_for_dax_cluster" {
-//   sql = <<-EOQ
-//     select
-//       s ->> 'SubnetIdentifier' as subnet_id
-//     from
-//       aws_dax_cluster as c,
-//       aws_dax_subnet_group as g,
-//       jsonb_array_elements(g.subnets) as s
-//     where
-//       g.subnet_group_name = c.subnet_group
-//       and c.arn = $1;
-//   EOQ
-// }
-
 query "vpc_subnets_for_dax_cluster" {
   sql = <<-EOQ
     with cluster_details as (
@@ -332,19 +318,6 @@ query "vpc_subnets_for_dax_cluster" {
       subnet_group_details;
   EOQ
 }
-
-// query "vpc_vpcs_for_dax_cluster" {
-//   sql = <<-EOQ
-//     select
-//       g.vpc_id as vpc_id
-//     from
-//       aws_dax_cluster as c,
-//       aws_dax_subnet_group as g
-//     where
-//       g.subnet_group_name = c.subnet_group
-//       and c.arn = $1;
-//   EOQ
-// }
 
 query "vpc_vpcs_for_dax_cluster" {
   sql = <<-EOQ

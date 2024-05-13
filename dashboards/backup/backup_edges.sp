@@ -98,24 +98,6 @@ edge "backup_selection_to_backup_plan" {
   param "backup_plan_arns" {}
 }
 
-# edge "backup_selection_to_backup_plan" {
-#   title = "backup plan"
-
-#   sql = <<-EOQ
-#     select
-#       s.arn as from_id,
-#       p.arn as to_id
-#     from
-#       aws_backup_selection as s,
-#       aws_backup_plan as p
-#     where
-#       s.backup_plan_id = p.backup_plan_id
-#       and p.arn = any($1);
-#   EOQ
-
-#   param "backup_plan_arns" {}
-# }
-
 edge "backup_vault_to_kms_key" {
   title = "encrypted with"
 

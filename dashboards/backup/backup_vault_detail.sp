@@ -147,36 +147,6 @@ query "backup_vault_input" {
 
 # With queries
 
-// query "backup_plans_for_backup_vault" {
-//   sql = <<-EOQ
-//     select
-//       p.arn as backup_plan_arn
-//     from
-//       aws_backup_vault as v,
-//       aws_backup_plan as p,
-//       jsonb_array_elements(backup_plan -> 'Rules') as r
-//     where
-//       r ->> 'TargetBackupVaultName' = v.name
-//       and v.arn = 'arn:aws:backup:ap-south-1:533793682495:backup-vault:Default'
-//   EOQ 
-// } // Time: 271.6s. Rows fetched: 99. Hydrate calls: 99.
-
-// query "backup_plans_for_backup_vault" {
-//   sql = <<-EOQ
-//     select
-//       p.arn as backup_plan_arn
-//     from
-//       aws_backup_vault as v,
-//       aws_backup_plan as p,
-//       jsonb_array_elements(backup_plan -> 'Rules') as r
-//     where
-//       r ->> 'TargetBackupVaultName' = v.name
-//       and v.account_id = split_part('arn:aws:backup:ap-south-1:533793682495:backup-vault:Default', ':', 5)
-//       and v.region = split_part('arn:aws:backup:ap-south-1:533793682495:backup-vault:Default', ':', 4)
-//       and v.arn = 'arn:aws:backup:ap-south-1:533793682495:backup-vault:Default';
-//   EOQ 
-// } // Time: 6.2s. Rows fetched: 14. Hydrate calls: 0.
-
 query "backup_plans_for_backup_vault" {
   sql = <<-EOQ
     with filtered_vault as (
