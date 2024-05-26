@@ -49,6 +49,12 @@ category "iam_policy_action" {
   icon  = "electric_bolt"
 }
 
+category "iam_policy_principal" {
+  title = "IAM Policy Principal"
+  color = local.iam_color
+  icon  = "person"
+}
+
 category "iam_policy_condition" {
   title = "IAM Policy Condition"
   color = local.iam_color
