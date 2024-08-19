@@ -742,6 +742,17 @@ query "vpc_security_group_assoc" {
     where
       sg = $1
 
+    -- ECS services
+    union all select
+      title as "Title",
+      'aws_ecs_service' as "Type",
+      arn as "ARN",
+      '${dashboard.ecs_service_detail.url_path}?input.service_arn=' || arn as link
+    from
+      aws_ecs_service,
+      jsonb_array_elements_text(network_configuration['AwsvpcConfiguration']['SecurityGroups']) as sg
+    where
+      sg = $1
 
     -- attached ELBs
     union all select
