@@ -754,6 +754,18 @@ query "vpc_security_group_assoc" {
     where
       sg = $1
 
+    -- Amazon MQ brokers
+    union all select
+      title as "Title",
+      'aws_mq_broker' as "Type",
+      arn as "ARN",
+      NULL as link
+    from
+      aws_mq_broker,
+      jsonb_array_elements_text(security_groups) as sg
+    where
+      sg = $1
+
     -- attached ELBs
     union all select
       title as "Title",
