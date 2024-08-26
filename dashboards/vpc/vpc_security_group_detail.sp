@@ -742,6 +742,61 @@ query "vpc_security_group_assoc" {
     where
       sg = $1
 
+    -- ECS services
+    union all select
+      title as "Title",
+      'aws_ecs_service' as "Type",
+      arn as "ARN",
+      '${dashboard.ecs_service_detail.url_path}?input.service_arn=' || arn as link
+    from
+      aws_ecs_service,
+      jsonb_array_elements_text(network_configuration['AwsvpcConfiguration']['SecurityGroups']) as sg
+    where
+      sg = $1
+
+    -- ECS tasks
+    union all select
+      tasks."group" as "Title",
+      'aws_ecs_task' as "Type",
+      tasks.task_definition_arn as "ARN",
+      '${dashboard.ecs_task_definition_detail.url_path}?input.task_definition_arn=' || tasks.task_definition_arn as link
+    from
+      (
+        select
+          network_interface_id,
+          jsonb_array_elements(groups)->>'GroupId' as security_group
+        from
+          aws_ec2_network_interface
+      ) as interfaces
+    join
+      (
+        select
+          task_definition_arn,
+          "group",
+          details->>'Value' as network_interface_id
+        from
+          aws_ecs_task,
+          jsonb_array_elements(attachments->0->'Details') as details
+        where
+          details->>'Name' = 'networkInterfaceId'
+      ) as tasks
+      on
+        interfaces.network_interface_id = tasks.network_interface_id
+    where
+      security_group = $1
+    group by "ARN", "Title"
+
+    -- Amazon MQ brokers
+    union all select
+      title as "Title",
+      'aws_mq_broker' as "Type",
+      arn as "ARN",
+      NULL as link
+    from
+      aws_mq_broker,
+      jsonb_array_elements_text(security_groups) as sg
+    where
+      sg = $1
 
     -- attached ELBs
     union all select
