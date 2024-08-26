@@ -1,3 +1,9 @@
+## v0.22 [2024-08-26]
+
+_Enhancements_
+
+- Added missing services to `Associated to` table in the VPC Security Group detail page. ([#352](https://github.com/turbot/steampipe-mod-aws-insights/pull/352)) (Thanks [@maxcorbin](https://github.com/maxcorbin) for the contribution!)
+
 ## v0.21 [2024-05-13]
 
 _Enhancements_
