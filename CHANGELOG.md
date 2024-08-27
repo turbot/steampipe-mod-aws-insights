@@ -2,10 +2,10 @@
 
 _Enhancements_
 
-- Added below missing services to `Associated to` table in the VPC Security Group detail page. ([#352](https://github.com/turbot/steampipe-mod-aws-insights/pull/352)) (Thanks [@maxcorbin](https://github.com/maxcorbin) for the contribution!)
+- The `VPC Security Group` detail page now includes information on the following associated services: ([#352](https://github.com/turbot/steampipe-mod-aws-insights/pull/352)) (Thanks [@maxcorbin](https://github.com/maxcorbin) for the contribution!)
+  - `Amazon MQ broker`
   - `ECS service`
   - `ECS task`
-  - `Amazon MQ broker`
 
 ## v0.21 [2024-05-13]
 
