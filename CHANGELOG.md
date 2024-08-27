@@ -1,3 +1,12 @@
+## v0.22 [2024-08-27]
+
+_Enhancements_
+
+- The `VPC Security Group` detail page now includes information on the following associated services: ([#352](https://github.com/turbot/steampipe-mod-aws-insights/pull/352)) (Thanks [@maxcorbin](https://github.com/maxcorbin) for the contribution!)
+  - `Amazon MQ broker`
+  - `ECS service`
+  - `ECS task`
+
 ## v0.21 [2024-05-13]
 
 _Enhancements_
