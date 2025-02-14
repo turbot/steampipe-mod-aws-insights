@@ -64,6 +64,7 @@ query "s3_bucket_lifecycle_table" {
       b.name as "Name",
       case when b.versioning_enabled then 'Enabled' else null end as "Versioning",
       case when b.versioning_mfa_delete then 'Enabled' else null end as "Versioning MFA Delete",
+      b.lifecycle_rules as "Lifecycle Rules",
       a.title as "Account",
       b.account_id as "Account ID",
       b.region as "Region",
