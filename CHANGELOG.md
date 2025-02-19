@@ -1,3 +1,9 @@
+## v1.1.0 [2025-02-19]
+
+_Enhancements_
+
+- Added `Lifecycle Rules` column to `AWS S3 Bucket Lifecycle Report` dashboard. ([#359](https://github.com/turbot/steampipe-mod-aws-insights/pull/359))
+
 ## v1.0.0 [2024-10-22]
 
 This mod now requires [Powerpipe](https://powerpipe.io). [Steampipe](https://steampipe.io) users should check the [migration guide](https://powerpipe.io/blog/migrating-from-steampipe).
