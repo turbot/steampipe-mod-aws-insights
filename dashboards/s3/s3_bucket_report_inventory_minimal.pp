@@ -45,4 +45,4 @@ query "s3_bucket_inventory_table_minimal" {
     order by
       b.name;
   EOQ
-} 
+}
