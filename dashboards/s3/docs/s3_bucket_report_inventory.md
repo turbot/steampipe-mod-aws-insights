@@ -1,4 +1,6 @@
 This report answers the following questions:
 
-- What are all my S3 buckets and their complete details?
-- What is the total inventory of S3 buckets across my accounts? 
+- How many buckets are there across my accounts?
+- What are the key properties and configurations of each bucket?
+- Which buckets have public policies, versioning, lifecycle rules, or logging enabled?
+- How are buckets distributed across accounts and regions?
