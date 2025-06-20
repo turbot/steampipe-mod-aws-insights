@@ -18,8 +18,8 @@ dashboard "ec2_instance_inventory_report" {
   }
 
   table {
-    column "Instance ID" {
-      href = "${dashboard.ec2_instance_detail.url_path}?input.instance_arn={{.arn | @uri}}"
+    column "Name" {
+      href = "${dashboard.ec2_instance_detail.url_path}?input.instance_arn={{.'ARN' | @uri}}"
     }
 
     query = query.ec2_instance_inventory_table
@@ -30,8 +30,8 @@ dashboard "ec2_instance_inventory_report" {
 query "ec2_instance_inventory_table" {
   sql = <<-EOQ
     select
-      i.instance_id as "Instance ID",
       i.title as "Name",
+      i.instance_id as "Instance ID",
       i.launch_time as "Launch Time",
       i.instance_type as "Instance Type",
       i.disable_api_termination as "Disable API Termination",

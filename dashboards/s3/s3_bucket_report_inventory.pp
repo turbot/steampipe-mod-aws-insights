@@ -19,7 +19,7 @@ dashboard "s3_bucket_inventory_report" {
 
   table {
     column "Name" {
-      href = "${dashboard.s3_bucket_detail.url_path}?input.bucket_arn={{.arn | @uri}}"
+      href = "${dashboard.s3_bucket_detail.url_path}?input.bucket_arn={{.'ARN' | @uri}}"
     }
 
     query = query.s3_bucket_inventory_table
