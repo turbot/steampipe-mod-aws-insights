@@ -12,6 +12,7 @@ dashboard "ebs_snapshot_dashboard" {
     card {
       query = query.ebs_snapshot_count
       width = 2
+      href  = dashboard.ebs_snapshot_inventory_report.url_path
     }
 
     card {

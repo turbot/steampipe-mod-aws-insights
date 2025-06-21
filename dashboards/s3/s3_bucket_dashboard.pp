@@ -13,6 +13,7 @@ dashboard "s3_bucket_dashboard" {
     card {
       query = query.s3_bucket_count
       width = 2
+      href  = dashboard.s3_bucket_inventory_report.url_path
     }
 
     # Assessments
@@ -194,6 +195,42 @@ dashboard "s3_bucket_dashboard" {
       width = 4
     }
 
+  }
+
+  container {
+    title = "Resources"
+
+    table {
+      column "name" {
+        href = "${dashboard.s3_bucket_detail.url_path}?input.bucket_arn={{.arn | @uri}}"
+      }
+
+    column "sp_connection_name" {
+      display = "none"
+    }
+
+    column "sp_ctx" {
+      display = "none"
+    }
+
+    column "_ctx" {
+      display = "none"
+    }
+
+    column "title" {
+      display = "none"
+    }
+
+    column "akas" {
+      display = "none"
+    }
+
+    column "partition" {
+      display = "none"
+    }
+
+      query = query.s3_bucket_inventory_table
+    }
   }
 
 }

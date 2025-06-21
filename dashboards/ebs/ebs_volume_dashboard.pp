@@ -13,6 +13,7 @@ dashboard "ebs_volume_dashboard" {
     card {
       query = query.ebs_volume_count
       width = 2
+      href  = dashboard.ebs_volume_inventory_report.url_path
     }
 
     card {

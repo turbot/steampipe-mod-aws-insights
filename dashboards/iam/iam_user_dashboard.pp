@@ -13,6 +13,7 @@ dashboard "iam_user_dashboard" {
     card {
       query = query.iam_user_count
       width = 2
+      href  = dashboard.iam_user_inventory_report.url_path
     }
 
     # Assessments
