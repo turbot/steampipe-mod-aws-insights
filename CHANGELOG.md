@@ -1,3 +1,20 @@
+## v1.2.0 [2025-06-20]
+
+_What's new?_
+
+- New dashboards added: ([#363](https://github.com/turbot/steampipe-mod-aws-insights/pull/363))
+  - [EC2 Instance Inventory Report](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/dashboard.ec2_instance_inventory_report)
+  - [Lambda Function Inventory Report](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/dashboard.lambda_function_inventory_report)
+  - [EBS Snapshot Inventory Report](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/dashboard.ebs_snapshot_inventory_report)
+  - [EBS Volume Inventory Report](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/dashboard.ebs_volume_inventory_report)
+  - [S3 Bucket Inventory Report](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/dashboard.s3_bucket_inventory_report)
+  - [RDS DB Instance Inventory Report](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/dashboard.rds_db_instance_inventory_report)
+  - [RDS DB Cluster Inventory Report](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/dashboard.rds_db_cluster_inventory_report)
+  - [CloudTrail Trail Inventory Report](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/dashboard.cloudtrail_trail_inventory_report)
+  - [IAM User Inventory Report](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/dashboard.iam_user_inventory_report)
+  - [KMS Key Inventory Report](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/dashboard.kms_key_inventory_report)
+  - [VPC Inventory Report](https://hub.steampipe.io/mods/turbot/aws_insights/dashboards/dashboard.vpc_inventory_report)
+
 ## v1.1.0 [2025-02-19]
 
 _Enhancements_
