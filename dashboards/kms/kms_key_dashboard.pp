@@ -13,6 +13,7 @@ dashboard "kms_key_dashboard" {
     card {
       query = query.kms_key_count
       width = 2
+      href  = dashboard.kms_key_inventory_report.url_path
     }
 
     card {

@@ -13,6 +13,7 @@ dashboard "ec2_instance_dashboard" {
     card {
       query = query.ec2_instance_count
       width = 2
+      href  = dashboard.ec2_instance_inventory_report.url_path
     }
 
     card {

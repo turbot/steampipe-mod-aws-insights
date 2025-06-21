@@ -12,6 +12,7 @@ dashboard "cloudtrail_trail_dashboard" {
     card {
       query = query.cloudtrail_trail_count
       width = 2
+      href  = dashboard.cloudtrail_trail_inventory_report.url_path
     }
 
     card {

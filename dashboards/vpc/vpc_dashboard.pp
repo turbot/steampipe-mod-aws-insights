@@ -13,6 +13,7 @@ dashboard "vpc_dashboard" {
     card {
       query = query.vpc_count
       width = 2
+      href  = dashboard.vpc_inventory_report.url_path
     }
 
     # Assessments

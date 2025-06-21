@@ -13,6 +13,7 @@ dashboard "rds_db_instance_dashboard" {
     card {
       query = query.rds_db_instance_count
       width = 2
+      href  = dashboard.rds_db_instance_inventory_report.url_path
     }
 
     # Assessments
