@@ -13,6 +13,7 @@ dashboard "lambda_function_dashboard" {
     card {
       query = query.lambda_function_count
       width = 3
+      href  = dashboard.lambda_function_inventory_report.url_path
     }
 
     # Assessments

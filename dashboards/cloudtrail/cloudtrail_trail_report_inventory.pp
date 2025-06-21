@@ -31,7 +31,6 @@ query "cloudtrail_trail_inventory_table" {
   sql = <<-EOQ
     select
       t.name as "Name",
-      t.created_timestamp as "Created Timestamp",
       t.is_multi_region_trail as "Multi Region Trail",
       t.is_organization_trail as "Organization Trail",
       t.is_logging as "Logging",
