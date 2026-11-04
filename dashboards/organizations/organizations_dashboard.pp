@@ -13,32 +13,38 @@ dashboard "organizations_dashboard" {
     card {
       query = query.organizations_account_count
       width = 2
+      href  = dashboard.organizations_account_inventory_report.url_path
     }
 
     card {
       query = query.organizations_organizational_unit_count
       width = 2
+      href  = dashboard.organizations_organizational_unit_inventory_report.url_path
     }
 
     card {
       query = query.organizations_service_control_policy_count
       width = 2
+      href  = dashboard.organizations_policy_inventory_report.url_path
     }
 
     card {
       query = query.organizations_resource_control_policy_count
       width = 2
+      href  = dashboard.organizations_policy_inventory_report.url_path
     }
 
     # Assessments
     card {
       query = query.organizations_policy_unattached_count
       width = 2
+      href  = dashboard.organizations_policy_attachment_report.url_path
     }
 
     card {
       query = query.organizations_account_suspended_count
       width = 2
+      href  = dashboard.organizations_account_inventory_report.url_path
     }
 
   }
@@ -146,7 +152,7 @@ dashboard "organizations_dashboard" {
       }
 
       column "Name" {
-        href = "/aws_insights.dashboard.organizations_policy_detail?input.policy_arn={{.ARN | @uri}}"
+        href = "${dashboard.organizations_policy_detail.url_path}?input.policy_arn={{.ARN | @uri}}"
       }
     }
 

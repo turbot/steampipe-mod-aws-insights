@@ -227,7 +227,7 @@ dashboard "organizations_root_detail" {
       }
 
       column "Policy" {
-        href = "/aws_insights.dashboard.organizations_policy_detail?input.policy_arn={{.'Policy ARN' | @uri}}"
+        href = "${dashboard.organizations_policy_detail.url_path}?input.policy_arn={{.'Policy ARN' | @uri}}"
       }
     }
 
