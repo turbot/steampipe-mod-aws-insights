@@ -26,6 +26,52 @@ dashboard "organizations_root_detail" {
     }
   }
 
+  input "accounts" {
+    title = "Accounts:"
+    width = 2
+
+    option "false" {
+      label = "Hide"
+    }
+
+    option "true" {
+      label = "Show"
+    }
+  }
+
+  input "policy_type" {
+    title = "Policy type:"
+    width = 2
+
+    option "all" {
+      label = "All"
+    }
+
+    option "SERVICE_CONTROL_POLICY" {
+      label = "Service Control Policies"
+    }
+
+    option "RESOURCE_CONTROL_POLICY" {
+      label = "Resource Control Policies"
+    }
+
+    option "DECLARATIVE_POLICY_EC2" {
+      label = "Declarative Policies"
+    }
+
+    option "TAG_POLICY" {
+      label = "Tag Policies"
+    }
+
+    option "BACKUP_POLICY" {
+      label = "Backup Policies"
+    }
+
+    option "AISERVICES_OPT_OUT_POLICY" {
+      label = "AI Services Opt-Out Policies"
+    }
+  }
+
   container {
 
     card {
@@ -50,7 +96,7 @@ dashboard "organizations_root_detail" {
 
   with "organizations_accounts_for_organizations_root" {
     query = query.organizations_accounts_for_organizations_root
-    args  = [self.input.root_arn.value]
+    args  = [self.input.root_arn.value, self.input.accounts.value]
   }
 
   with "organizations_organizational_units_for_organizations_root" {
@@ -70,7 +116,7 @@ dashboard "organizations_root_detail" {
 
   with "organizations_policies_for_organizations_root" {
     query = query.organizations_policies_for_organizations_root
-    args  = [with.organizations_policy_attachments_for_organizations_root.rows[0].attachments, self.input.aws_managed.value]
+    args  = [with.organizations_policy_attachments_for_organizations_root.rows[0].attachments, self.input.aws_managed.value, self.input.accounts.value, self.input.policy_type.value]
   }
 
   container {
@@ -262,7 +308,8 @@ query "organizations_accounts_for_organizations_root" {
     from
       aws_organizations_account
     where
-      split_part(arn, '/', 2) = split_part($1, '/', 2);
+      split_part(arn, '/', 2) = split_part($1, '/', 2)
+      and $2::bool;
   EOQ
 }
 
@@ -309,8 +356,9 @@ query "organizations_policies_for_organizations_root" {
     from
       (${local.organizations_policy_attachments_sql}) as policies
     where
-      not aws_managed
-      or $2::bool;
+      (not aws_managed or $2::bool)
+      and (target_type <> 'Account' or $3::bool)
+      and ($4 = 'all' or type = $4);
   EOQ
 }
 

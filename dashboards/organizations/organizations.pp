@@ -5,10 +5,8 @@ locals {
 }
 
 locals {
-  # Policies attached directly to each target in the "targets" CTE. The
-  # aws_organizations_policy_target table requires both target_id and type, so each policy type is
-  # joined separately, and only when that type is enabled at the root, to keep the number of
-  # ListPoliciesForTarget calls down.
+  # Policies attached directly to each target in the "targets" CTE, from each policy's targets
+  # (ListTargetsForPolicy), so there's one call per policy rather than one per target and type.
   organizations_policies_for_targets_sql = <<-EOQ
     select
       t.*,
@@ -18,123 +16,27 @@ locals {
       p.aws_managed
     from
       targets as t
-      join aws_organizations_policy_target as p on p.target_id = t.target_id and p.type = 'SERVICE_CONTROL_POLICY'
-    where
-      exists (
+      join (
         select
-          1
+          distinct on (p.arn, pt ->> 'TargetId')
+          p.name,
+          p.arn,
+          p.type,
+          p.aws_managed,
+          pt ->> 'TargetId' as target_id
         from
-          aws_organizations_root as r,
-          jsonb_array_elements(r.policy_types) as pt
+          aws_organizations_policy as p,
+          jsonb_array_elements(p.targets) as pt
         where
-          pt ->> 'Type' = 'SERVICE_CONTROL_POLICY'
-          and pt ->> 'Status' = 'ENABLED'
-      )
-    union all
-    select
-      t.*,
-      p.name,
-      p.arn,
-      p.type,
-      p.aws_managed
-    from
-      targets as t
-      join aws_organizations_policy_target as p on p.target_id = t.target_id and p.type = 'RESOURCE_CONTROL_POLICY'
-    where
-      exists (
-        select
-          1
-        from
-          aws_organizations_root as r,
-          jsonb_array_elements(r.policy_types) as pt
-        where
-          pt ->> 'Type' = 'RESOURCE_CONTROL_POLICY'
-          and pt ->> 'Status' = 'ENABLED'
-      )
-    union all
-    select
-      t.*,
-      p.name,
-      p.arn,
-      p.type,
-      p.aws_managed
-    from
-      targets as t
-      join aws_organizations_policy_target as p on p.target_id = t.target_id and p.type = 'DECLARATIVE_POLICY_EC2'
-    where
-      exists (
-        select
-          1
-        from
-          aws_organizations_root as r,
-          jsonb_array_elements(r.policy_types) as pt
-        where
-          pt ->> 'Type' = 'DECLARATIVE_POLICY_EC2'
-          and pt ->> 'Status' = 'ENABLED'
-      )
-    union all
-    select
-      t.*,
-      p.name,
-      p.arn,
-      p.type,
-      p.aws_managed
-    from
-      targets as t
-      join aws_organizations_policy_target as p on p.target_id = t.target_id and p.type = 'TAG_POLICY'
-    where
-      exists (
-        select
-          1
-        from
-          aws_organizations_root as r,
-          jsonb_array_elements(r.policy_types) as pt
-        where
-          pt ->> 'Type' = 'TAG_POLICY'
-          and pt ->> 'Status' = 'ENABLED'
-      )
-    union all
-    select
-      t.*,
-      p.name,
-      p.arn,
-      p.type,
-      p.aws_managed
-    from
-      targets as t
-      join aws_organizations_policy_target as p on p.target_id = t.target_id and p.type = 'BACKUP_POLICY'
-    where
-      exists (
-        select
-          1
-        from
-          aws_organizations_root as r,
-          jsonb_array_elements(r.policy_types) as pt
-        where
-          pt ->> 'Type' = 'BACKUP_POLICY'
-          and pt ->> 'Status' = 'ENABLED'
-      )
-    union all
-    select
-      t.*,
-      p.name,
-      p.arn,
-      p.type,
-      p.aws_managed
-    from
-      targets as t
-      join aws_organizations_policy_target as p on p.target_id = t.target_id and p.type = 'AISERVICES_OPT_OUT_POLICY'
-    where
-      exists (
-        select
-          1
-        from
-          aws_organizations_root as r,
-          jsonb_array_elements(r.policy_types) as pt
-        where
-          pt ->> 'Type' = 'AISERVICES_OPT_OUT_POLICY'
-          and pt ->> 'Status' = 'ENABLED'
-      )
+          p.type in (
+            'SERVICE_CONTROL_POLICY',
+            'RESOURCE_CONTROL_POLICY',
+            'DECLARATIVE_POLICY_EC2',
+            'TAG_POLICY',
+            'BACKUP_POLICY',
+            'AISERVICES_OPT_OUT_POLICY'
+          )
+      ) as p on p.target_id = t.target_id
   EOQ
 }
 

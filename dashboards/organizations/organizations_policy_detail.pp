@@ -290,32 +290,13 @@ query "organizations_policy_input" {
 # arn:aws:organizations::123456789012:policy/o-exampleorgid/service_control_policy/p-examplepolicyid
 query "organizations_targets_for_organizations_policy" {
   sql = <<-EOQ
-    with targets as (
-      select
-        id,
-        arn
-      from
-        aws_organizations_root
-      union all
-      select
-        id,
-        arn
-      from
-        aws_organizations_organizational_unit
-      union all
-      select
-        id,
-        arn
-      from
-        aws_organizations_account
-    )
     select
-      t.arn as target_arn
+      t ->> 'Arn' as target_arn
     from
-      targets as t
-      join aws_organizations_policy_target as p on p.target_id = t.id and p.type = upper(split_part($1, '/', -2))
+      aws_organizations_policy as p,
+      jsonb_array_elements(p.targets) as t
     where
-      p.arn = $1;
+      p.id = split_part($1, '/', -1);
   EOQ
 }
 
