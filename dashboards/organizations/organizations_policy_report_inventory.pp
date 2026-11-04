@@ -68,8 +68,7 @@ query "organizations_policy_inventory_table" {
         arn,
         type,
         aws_managed,
-        description,
-        content
+        description
       from
         aws_organizations_policy
       where
@@ -87,15 +86,6 @@ query "organizations_policy_inventory_table" {
       id as "ID",
       type as "Type",
       aws_managed as "AWS Managed",
-      case
-        when type in ('SERVICE_CONTROL_POLICY', 'RESOURCE_CONTROL_POLICY') then jsonb_array_length(
-          case jsonb_typeof(content -> 'Statement')
-            when 'array' then content -> 'Statement'
-            else jsonb_build_array(content -> 'Statement')
-          end
-        )
-      end as "Statements",
-      length(content::text) as "Size (Characters)",
       description as "Description",
       arn as "ARN"
     from
